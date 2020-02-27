@@ -85,9 +85,9 @@ _API_GOLDEN_FOLDER_V2 = None
 def _InitPathConstants():
     global _API_GOLDEN_FOLDER_V1
     global _API_GOLDEN_FOLDER_V2
-    root_golden_path_v2 = os.path.join(
-        resource_loader.get_data_files_path(), "..", "golden", "v2", "tensorflow.pbtxt"
-    )
+    root_golden_path_v2 = os.path.join(resource_loader.get_data_files_path(),
+                                       "..", "golden", "v2",
+                                       "tensorflow.pbtxt")
 
     if FLAGS.update_goldens:
         root_golden_path_v2 = os.path.realpath(root_golden_path_v2)
@@ -95,15 +95,14 @@ def _InitPathConstants():
     # we make sure to resolve symbolic links before creating new files.
     _API_GOLDEN_FOLDER_V2 = os.path.dirname(root_golden_path_v2)
     _API_GOLDEN_FOLDER_V1 = os.path.normpath(
-        os.path.join(_API_GOLDEN_FOLDER_V2, "..", "v1")
-    )
+        os.path.join(_API_GOLDEN_FOLDER_V2, "..", "v1"))
 
 
 _TEST_README_FILE = resource_loader.get_path_to_datafile("README.txt")
-_UPDATE_WARNING_FILE = resource_loader.get_path_to_datafile("API_UPDATE_WARNING.txt")
+_UPDATE_WARNING_FILE = resource_loader.get_path_to_datafile(
+    "API_UPDATE_WARNING.txt")
 
 _NON_CORE_PACKAGES = ["estimator"]
-
 
 # TODO(annarev): remove this once we test with newer version of
 # estimator that actually has compat v1 version.
@@ -129,9 +128,8 @@ def _KeyToFilePath(key, api_version):
         match = matchobj.group(0)
         return "-%s" % (match.lower())
 
-    case_insensitive_key = re.sub(
-        "([A-Z]{1})", _ReplaceCapsWithDash, six.ensure_str(key)
-    )
+    case_insensitive_key = re.sub("([A-Z]{1})", _ReplaceCapsWithDash,
+                                  six.ensure_str(key))
     api_folder = _API_GOLDEN_FOLDER_V2 if api_version == 2 else _API_GOLDEN_FOLDER_V1
     return os.path.join(api_folder, "%s.pbtxt" % case_insensitive_key)
 
@@ -145,9 +143,8 @@ def _FileNameToKey(filename):
 
     base_filename = os.path.basename(filename)
     base_filename_without_ext = os.path.splitext(base_filename)[0]
-    api_object_key = re.sub(
-        "((-[a-z]){1})", _ReplaceDashWithCaps, six.ensure_str(base_filename_without_ext)
-    )
+    api_object_key = re.sub("((-[a-z]){1})", _ReplaceDashWithCaps,
+                            six.ensure_str(base_filename_without_ext))
     return api_object_key
 
 
@@ -162,19 +159,19 @@ def _VerifyNoSubclassOfMessageVisitor(path, parent, unused_children):
     if message.Message not in parent.__bases__:
         raise NotImplementedError(
             "Object tf.%s is a subclass of a generated proto Message. "
-            "They are not yet supported by the API tools." % path
-        )
+            "They are not yet supported by the API tools." % path)
 
 
 def _FilterNonCoreGoldenFiles(golden_file_list):
     """Filter out non-core API pbtxt files."""
     filtered_file_list = []
-    filtered_package_prefixes = ["tensorflow.%s." % p for p in _NON_CORE_PACKAGES]
+    filtered_package_prefixes = [
+        "tensorflow.%s." % p for p in _NON_CORE_PACKAGES
+    ]
     for f in golden_file_list:
         if any(
-            six.ensure_str(f).rsplit("/")[-1].startswith(pre)
-            for pre in filtered_package_prefixes
-        ):
+                six.ensure_str(f).rsplit("/")[-1].startswith(pre)
+                for pre in filtered_package_prefixes):
             continue
         filtered_file_list.append(f)
     return filtered_file_list
@@ -195,8 +192,11 @@ def _FilterGoldenProtoDict(golden_proto_dict, omit_golden_symbols_map):
         elif api_object.HasField("tf_class"):
             module_or_class = api_object.tf_class
         if module_or_class is not None:
-            for members in (module_or_class.member, module_or_class.member_method):
-                filtered_members = [m for m in members if m.name not in symbol_list]
+            for members in (module_or_class.member,
+                            module_or_class.member_method):
+                filtered_members = [
+                    m for m in members if m.name not in symbol_list
+                ]
                 # Two steps because protobuf repeated fields disallow slice assignment.
                 del members[:]
                 members.extend(filtered_members)
@@ -208,25 +208,25 @@ class ApiCompatibilityTest(test.TestCase):
         super(ApiCompatibilityTest, self).__init__(*args, **kwargs)
 
         golden_update_warning_filename = os.path.join(
-            resource_loader.get_root_dir_with_all_resources(), _UPDATE_WARNING_FILE
-        )
+            resource_loader.get_root_dir_with_all_resources(),
+            _UPDATE_WARNING_FILE)
         self._update_golden_warning = file_io.read_file_to_string(
-            golden_update_warning_filename
-        )
+            golden_update_warning_filename)
 
         test_readme_filename = os.path.join(
-            resource_loader.get_root_dir_with_all_resources(), _TEST_README_FILE
-        )
-        self._test_readme_message = file_io.read_file_to_string(test_readme_filename)
+            resource_loader.get_root_dir_with_all_resources(),
+            _TEST_README_FILE)
+        self._test_readme_message = file_io.read_file_to_string(
+            test_readme_filename)
 
     def _AssertProtoDictEquals(
-        self,
-        expected_dict,
-        actual_dict,
-        verbose=False,
-        update_goldens=False,
-        additional_missing_object_message="",
-        api_version=2,
+            self,
+            expected_dict,
+            actual_dict,
+            verbose=False,
+            update_goldens=False,
+            additional_missing_object_message="",
+            api_version=2,
     ):
         """Diff given dicts of protobufs and report differences a readable way.
 
@@ -271,7 +271,8 @@ class ApiCompatibilityTest(test.TestCase):
                 self.maxDiff = None  # pylint: disable=invalid-name
                 # Now we can run an actual proto diff.
                 try:
-                    self.assertProtoEquals(expected_dict[key], actual_dict[key])
+                    self.assertProtoEquals(expected_dict[key],
+                                           actual_dict[key])
                 except AssertionError as e:
                     updated_keys.append(key)
                     diff_message = "Change detected in python object: %s." % key
@@ -287,7 +288,8 @@ class ApiCompatibilityTest(test.TestCase):
         if diffs:
             diff_count = len(diffs)
             logging.error(self._test_readme_message)
-            logging.error("%d differences found between API and golden.", diff_count)
+            logging.error("%d differences found between API and golden.",
+                          diff_count)
             messages = verbose_diffs if verbose else diffs
             for i in range(diff_count):
                 print("Issue %d\t: %s" % (i + 1, messages[i]), file=sys.stderr)
@@ -307,17 +309,19 @@ class ApiCompatibilityTest(test.TestCase):
                 for key in only_in_actual | set(updated_keys):
                     filepath = _KeyToFilePath(key, api_version)
                     file_io.write_string_to_file(
-                        filepath, text_format.MessageToString(actual_dict[key])
-                    )
+                        filepath,
+                        text_format.MessageToString(actual_dict[key]))
             else:
                 # Fail if we cannot fix the test by updating goldens.
-                self.fail("%d differences found between API and golden." % diff_count)
+                self.fail("%d differences found between API and golden." %
+                          diff_count)
 
         else:
             logging.info("No differences found between API and golden.")
 
     def testNoSubclassOfMessage(self):
-        visitor = public_api.PublicAPIVisitor(_VerifyNoSubclassOfMessageVisitor)
+        visitor = public_api.PublicAPIVisitor(
+            _VerifyNoSubclassOfMessageVisitor)
         visitor.do_not_descend_map["tf"].append("contrib")
         # Skip compat.v1 and compat.v2 since they are validated in separate tests.
         visitor.private_map["tf.compat"] = ["v1", "v2"]
@@ -326,7 +330,8 @@ class ApiCompatibilityTest(test.TestCase):
     def testNoSubclassOfMessageV1(self):
         if not hasattr(tf.compat, "v1"):
             return
-        visitor = public_api.PublicAPIVisitor(_VerifyNoSubclassOfMessageVisitor)
+        visitor = public_api.PublicAPIVisitor(
+            _VerifyNoSubclassOfMessageVisitor)
         visitor.do_not_descend_map["tf"].append("contrib")
         if FLAGS.only_test_core_api:
             visitor.do_not_descend_map["tf"].extend(_NON_CORE_PACKAGES)
@@ -336,7 +341,8 @@ class ApiCompatibilityTest(test.TestCase):
     def testNoSubclassOfMessageV2(self):
         if not hasattr(tf.compat, "v2"):
             return
-        visitor = public_api.PublicAPIVisitor(_VerifyNoSubclassOfMessageVisitor)
+        visitor = public_api.PublicAPIVisitor(
+            _VerifyNoSubclassOfMessageVisitor)
         visitor.do_not_descend_map["tf"].append("contrib")
         if FLAGS.only_test_core_api:
             visitor.do_not_descend_map["tf"].extend(_NON_CORE_PACKAGES)
@@ -344,12 +350,12 @@ class ApiCompatibilityTest(test.TestCase):
         traverse.traverse(tf.compat.v2, visitor)
 
     def _checkBackwardsCompatibility(
-        self,
-        root,
-        golden_file_pattern,
-        api_version,
-        additional_private_map=None,
-        omit_golden_symbols_map=None,
+            self,
+            root,
+            golden_file_pattern,
+            api_version,
+            additional_private_map=None,
+            omit_golden_symbols_map=None,
     ):
         # Extract all API stuff.
         visitor = python_object_to_proto_visitor.PythonObjectToProtoVisitor()
@@ -359,9 +365,12 @@ class ApiCompatibilityTest(test.TestCase):
         if api_version == 2:
             public_api_visitor.private_map["tf"].append("enable_v2_behavior")
 
-        public_api_visitor.do_not_descend_map["tf.GPUOptions"] = ["Experimental"]
+        public_api_visitor.do_not_descend_map["tf.GPUOptions"] = [
+            "Experimental"
+        ]
         if FLAGS.only_test_core_api:
-            public_api_visitor.do_not_descend_map["tf"].extend(_NON_CORE_PACKAGES)
+            public_api_visitor.do_not_descend_map["tf"].extend(
+                _NON_CORE_PACKAGES)
         if additional_private_map:
             public_api_visitor.private_map.update(additional_private_map)
 
@@ -383,9 +392,8 @@ class ApiCompatibilityTest(test.TestCase):
             _FileNameToKey(filename): _ReadFileToProto(filename)
             for filename in golden_file_list
         }
-        golden_proto_dict = _FilterGoldenProtoDict(
-            golden_proto_dict, omit_golden_symbols_map
-        )
+        golden_proto_dict = _FilterGoldenProtoDict(golden_proto_dict,
+                                                   omit_golden_symbols_map)
 
         # Diff them. Do not fail if called with update.
         # If the test is run to update goldens, only report diffs but do not fail.
@@ -473,9 +481,10 @@ class ApiCompatibilityTest(test.TestCase):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--update_goldens", type=bool, default=False, help=_UPDATE_GOLDENS_HELP
-    )
+    parser.add_argument("--update_goldens",
+                        type=bool,
+                        default=False,
+                        help=_UPDATE_GOLDENS_HELP)
     # TODO(mikecase): Create Estimator's own API compatibility test or
     # a more general API compatibility test for use for TF components.
     parser.add_argument(
@@ -484,9 +493,10 @@ if __name__ == "__main__":
         default=True,  # only_test_core_api default value
         help=_ONLY_TEST_CORE_API_HELP,
     )
-    parser.add_argument(
-        "--verbose_diffs", type=bool, default=True, help=_VERBOSE_DIFFS_HELP
-    )
+    parser.add_argument("--verbose_diffs",
+                        type=bool,
+                        default=True,
+                        help=_VERBOSE_DIFFS_HELP)
     FLAGS, unparsed = parser.parse_known_args()
     _InitPathConstants()
 
