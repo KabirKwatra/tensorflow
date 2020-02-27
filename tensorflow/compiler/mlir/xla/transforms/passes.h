@@ -35,7 +35,7 @@ namespace xla_hlo {
 /// Lowers from TF dialect to HLO dialect. When allow_partial_conversion is
 /// false, emits an error if there is any operation that can't be legalized.
 std::unique_ptr<OpPassBase<FuncOp>> createLegalizeTFPass(
-    bool allow_partial_conversion = false);
+                                     bool allow_partial_conversion = false);
 
 /// Lowers from TF dialect's control flow to HLO dialect's control flow.
 std::unique_ptr<OpPassBase<ModuleOp>> createLegalizeTFControlFlowPass();
@@ -87,7 +87,7 @@ std::unique_ptr<OpPassBase<FuncOp>> createLegalizeToGpuPass();
 // operation has more dimensions than tile sizes provided, 1 is used as
 // default.
 std::unique_ptr<OpPassBase<FuncOp>> createLhloFuseLinalg(
-    bool use_parallel_loops = false, ArrayRef<unsigned> tile_sizes = {});
+                                     bool use_parallel_loops = false, ArrayRef<unsigned> tile_sizes = {});
 
 }  // namespace xla_lhlo
 }  // namespace mlir

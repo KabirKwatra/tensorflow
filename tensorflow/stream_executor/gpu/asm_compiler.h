@@ -32,8 +32,8 @@ namespace stream_executor {
 // 'options' is used to query for the CUDA location in case it is
 // customized in a passed flag, and for controlling ptxas optimizations.
 port::StatusOr<std::vector<uint8>> CompileGpuAsm(int device_ordinal,
-                                                 const char* ptx_contents,
-                                                 GpuAsmOpts options);
+                                const char* ptx_contents,
+                                GpuAsmOpts options);
 
 // Compiles the given PTX string using ptxas and returns the resulting machine
 // code (i.e. a cubin) as a byte array. The generated cubin matches the compute
@@ -42,15 +42,15 @@ port::StatusOr<std::vector<uint8>> CompileGpuAsm(int device_ordinal,
 // 'options' is used to query for the CUDA location in case it is
 // customized in a passed flag, and for controlling ptxas optimizations.
 port::StatusOr<std::vector<uint8>> CompileGpuAsm(int cc_major, int cc_minor,
-                                                 const char* ptx_contents,
-                                                 GpuAsmOpts options);
+                                const char* ptx_contents,
+                                GpuAsmOpts options);
 
 // Same as CompileGpuAsm, but caches the result, and returns unowned view of
 // the compiled binary.
 //
 // A copy of the string provided in ptx will be made.
 port::StatusOr<absl::Span<const uint8>> CompileGpuAsmOrGetCached(
-    int device_ordinal, const char* ptx, GpuAsmOpts compilation_options);
+        int device_ordinal, const char* ptx, GpuAsmOpts compilation_options);
 
 }  // namespace stream_executor
 
