@@ -3,7 +3,7 @@
 This document explains how to use the Tensorflow Lite Hexagon Delegate in your
 application using the Java and/or C API. The delegate leverages the Qualcomm
 Hexagon library to execute quantized kernels on the DSP. Note that the delegate
-is intended to *complement* NNAPI functionality, particularly for devices where
+is intended to _complement_ NNAPI functionality, particularly for devices where
 NNAPI DSP acceleration is unavailable (e.g., on older devices, or devices that
 don’t yet have a DSP NNAPI driver).
 
@@ -15,10 +15,10 @@ Currently most
 [Qualcomm SoCs](https://en.wikipedia.org/wiki/List_of_Qualcomm_Snapdragon_systems-on-chip)
 are supported, including:
 
-*   Snapdragon 835 (682 DSP)
-*   Snapdragon 660/820/821 (680 DSP)
-*   Snapdragon 710/845 (685 DSP)
-*   Snapdragon 8150/855 (690 DSP)
+- Snapdragon 835 (682 DSP)
+- Snapdragon 660/820/821 (680 DSP)
+- Snapdragon 710/845 (685 DSP)
+- Snapdragon 8150/855 (690 DSP)
 
 **Supported models:**
 
@@ -69,11 +69,11 @@ dependencies {
 
 #### Step 2. Add Hexagon libraries to your Android app
 
-*   Download and run hexagon_nn_skel.run. It should provide 3 different shared
-    libraries “libhexagon_nn_skel.so”, “libhexagon_nn_skel_v65.so”,
-    “libhexagon_nn_skel_v66.so”
-    *   [v1.10.3](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_1_10_3_1.run)
-    *   [v1.14](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_v1.14.run)
+- Download and run hexagon_nn_skel.run. It should provide 3 different shared
+  libraries “libhexagon_nn_skel.so”, “libhexagon_nn_skel_v65.so”,
+  “libhexagon_nn_skel_v66.so”
+  - [v1.10.3](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_1_10_3_1.run)
+  - [v1.14](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_v1.14.run)
 
 Note: You will need to accept the license agreement.
 
@@ -86,10 +86,10 @@ through the
 [config](https://github.com/tensorflow/tensorflow/blob/master/third_party/hexagon/workspace.bzl)
 The version in the bazel config is the version you should use.
 
-*   Include all 3 in your app with other shared libraries. See
-    [How to add shared library to your app](#how-to-add-shared-library-to-your-app).
-    The delegate will automatically pick the one with best performance depending
-    on the device.
+- Include all 3 in your app with other shared libraries. See
+  [How to add shared library to your app](#how-to-add-shared-library-to-your-app).
+  The delegate will automatically pick the one with best performance depending
+  on the device.
 
 Note: If your app will be built for both 32 and 64-bit ARM devices, then you
 will need to add the Hexagon shared libs to both 32 and 64-bit lib folders.
@@ -175,11 +175,11 @@ dependencies {
 
 #### Step 2. Add Hexagon libraries to your Android app
 
-*   Download and run hexagon_nn_skel.run. It should provide 3 different shared
-    libraries “libhexagon_nn_skel.so”, “libhexagon_nn_skel_v65.so”,
-    “libhexagon_nn_skel_v66.so”
-    *   [v1.10.3](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_1_10_3_1.run)
-    *   [v1.14](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_v1.14.run)
+- Download and run hexagon_nn_skel.run. It should provide 3 different shared
+  libraries “libhexagon_nn_skel.so”, “libhexagon_nn_skel_v65.so”,
+  “libhexagon_nn_skel_v66.so”
+  - [v1.10.3](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_1_10_3_1.run)
+  - [v1.14](https://storage.cloud.google.com/download.tensorflow.org/tflite/hexagon_nn_skel_v1.14.run)
 
 Note: You will need to accept the license agreement.
 
@@ -192,27 +192,27 @@ through the
 [config](https://github.com/tensorflow/tensorflow/blob/master/third_party/hexagon/workspace.bzl).
 The version in the bazel config is the version you should use.
 
-*   Include all 3 in your app with other shared libraries. See
-    [How to add shared library to your app](#how-to-add-shared-library-to-your-app).
-    The delegate will automatically pick the one with best performance depending
-    on the device.
+- Include all 3 in your app with other shared libraries. See
+  [How to add shared library to your app](#how-to-add-shared-library-to-your-app).
+  The delegate will automatically pick the one with best performance depending
+  on the device.
 
 Note: If your app will be built for both 32 and 64-bit ARM devices, then you
 will need to add the Hexagon shared libs to both 32 and 64-bit lib folders.
 
 #### Step 3. Include the C header
 
-*   The header file "hexagon_delegate.h" can be downloaded from
-    [GitHub](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/delegates/hexagon/hexagon_delegate.h)
-    or extracted from the Hexagon delegate AAR.
+- The header file "hexagon_delegate.h" can be downloaded from
+  [GitHub](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/delegates/hexagon/hexagon_delegate.h)
+  or extracted from the Hexagon delegate AAR.
 
 #### Step 4. Create a delegate and initialize a TensorFlow Lite Interpreter
 
-*   In your code, ensure the native Hexagon library is loaded. This can be done
-    by calling `System.loadLibrary("tensorflowlite_hexagon_jni");` \
-    in your Activity or Java entry-point.
+- In your code, ensure the native Hexagon library is loaded. This can be done by
+  calling `System.loadLibrary("tensorflowlite_hexagon_jni");` \
+  in your Activity or Java entry-point.
 
-*   Create a delegate, example:
+- Create a delegate, example:
 
 ```
 #include "tensorflow/lite/experimental/delegates/hexagon/hexagon_delegate.h"
@@ -239,83 +239,82 @@ TfLiteHexagonTearDown();  // Needed once at end of app/DSP usage.
 
 ## Add the shared library to your app
 
-*   Create folder “app/src/main/jniLibs”, and create a directory for each target
-    architecture. For example,
-    *   ARM 64-bit: `app/src/main/jniLibs/arm64-v8a`
-    *   ARM 32-bit: `app/src/main/jniLibs/armeabi-v7a`
-*   Put your .so in the directory that match the architecture.
+- Create folder “app/src/main/jniLibs”, and create a directory for each target
+  architecture. For example,
+  - ARM 64-bit: `app/src/main/jniLibs/arm64-v8a`
+  - ARM 32-bit: `app/src/main/jniLibs/armeabi-v7a`
+- Put your .so in the directory that match the architecture.
 
 ## Feedback
 
 For issues, please create a
 [GitHub](https://github.com/tensorflow/tensorflow/issues/new?template=50-other-issues.md)
 issue with all the necessary repro details, including the phone model and board
-used (`adb shell getprop ro.product.device` and `adb shell getprop
-ro.board.platform`).
+used (`adb shell getprop ro.product.device` and
+`adb shell getprop ro.board.platform`).
 
 ## FAQ
 
-*   Will the delegate support models created using
-    [post-training quantization](https://www.tensorflow.org/lite/performance/post_training_quantization)?
-    *   This is tentatively planned for a future release, though there is no
-        concrete timeline.
-*   Which ops are supported by the delegate?
-    *   Initial list of supported ops:
-        *   Add
-        *   ArgMax
-        *   ArgMin
-        *   AveragePool2D (without any activation)
-        *   Concat
-        *   Conv2D with following constraints:
-            *   stride width/height <= 3
-        *   DepthToSpace
-        *   DepthwiseConv2D with following constraints:
-            *   Filter width == 3
-            *   depth_multiplier == 1
-            *   dilation only supported when stride == 1
-            *   Otherwise, stride height/width <= 3
-        *   FullyConnected (without any activation)
-        *   L2Normalization (without any activation)
-        *   Logistic (aka Sigmoid)
-        *   MaxPool2D (without any activation)
-        *   Mul (without any activation)
-        *   Neg
-        *   Pad: Only supports 0 padding
-        *   Relu
-        *   Relu6
-        *   Reshape
-        *   Resize Bilinear with following constraints:
-            *   Requested size <= 65
-        *   Resize Nearest Neighbor
-        *   SoftMax
-        *   SpaceToDepth
-        *   Split
-        *   Sub
-        *   Tanh
-        *   Transpose
-        *   TransposeConv2D with following constraints:
-            *   stride height/width <= 3
-            *   dilation height/width == 1
-*   How can I tell that the model is using the DSP when I enable the delegate?
-    *   Two log messages will be printed when you enable the delegate - one to
-        indicate if the delegate was created and another to indicate how many
-        nodes are running using the delegate. \
-        `Created TensorFlow Lite delegate for Hexagon.` \
-        `Hexagon delegate: X nodes delegated out of Y nodes.`
-*   Do I need all Ops in the model to be supported to run the delegate?
-    *   No, the Model will be partitioned into subgraphs based on the supported
-        ops. Any unsupported ops will run on the CPU.
-*   How can I build the Hexagon delegate AAR from source?
-    *   Use `bazel build -c opt --config=android_arm64
-        tensorflow/lite/experimental/delegates/hexagon/java:tensorflow-lite-hexagon`.
-*   Why does Hexagon delegate fail to initialize although my Android device has
-    a supported SoC?
-    *   Verify if your device indeed has a supported SoC. Run `adb shell cat
-        /proc/cpuinfo | grep Hardware` and see if it returns something like
-        "Hardware : Qualcomm Technologies, Inc MSMXXXX".
-    *   Some phone manufacturers use different SoCs for the same phone model.
-        Therefore, Hexagon delegate may only work on some but not all devices of
-        the same phone model.
-    *   Some phone manufactures intentionally restrict the use of Hexagon DSP
-        from non-system Android apps, making the Hexagon delegate unable to
-        work.
+- Will the delegate support models created using
+  [post-training quantization](https://www.tensorflow.org/lite/performance/post_training_quantization)?
+  - This is tentatively planned for a future release, though there is no
+    concrete timeline.
+- Which ops are supported by the delegate?
+  - Initial list of supported ops:
+    - Add
+    - ArgMax
+    - ArgMin
+    - AveragePool2D (without any activation)
+    - Concat
+    - Conv2D with following constraints:
+      - stride width/height <= 3
+    - DepthToSpace
+    - DepthwiseConv2D with following constraints:
+      - Filter width == 3
+      - depth_multiplier == 1
+      - dilation only supported when stride == 1
+      - Otherwise, stride height/width <= 3
+    - FullyConnected (without any activation)
+    - L2Normalization (without any activation)
+    - Logistic (aka Sigmoid)
+    - MaxPool2D (without any activation)
+    - Mul (without any activation)
+    - Neg
+    - Pad: Only supports 0 padding
+    - Relu
+    - Relu6
+    - Reshape
+    - Resize Bilinear with following constraints:
+      - Requested size <= 65
+    - Resize Nearest Neighbor
+    - SoftMax
+    - SpaceToDepth
+    - Split
+    - Sub
+    - Tanh
+    - Transpose
+    - TransposeConv2D with following constraints:
+      - stride height/width <= 3
+      - dilation height/width == 1
+- How can I tell that the model is using the DSP when I enable the delegate?
+  - Two log messages will be printed when you enable the delegate - one to
+    indicate if the delegate was created and another to indicate how many nodes
+    are running using the delegate. \
+    `Created TensorFlow Lite delegate for Hexagon.` \
+    `Hexagon delegate: X nodes delegated out of Y nodes.`
+- Do I need all Ops in the model to be supported to run the delegate?
+  - No, the Model will be partitioned into subgraphs based on the supported ops.
+    Any unsupported ops will run on the CPU.
+- How can I build the Hexagon delegate AAR from source?
+  - Use
+    `bazel build -c opt --config=android_arm64 tensorflow/lite/experimental/delegates/hexagon/java:tensorflow-lite-hexagon`.
+- Why does Hexagon delegate fail to initialize although my Android device has a
+  supported SoC?
+  - Verify if your device indeed has a supported SoC. Run
+    `adb shell cat /proc/cpuinfo | grep Hardware` and see if it returns
+    something like "Hardware : Qualcomm Technologies, Inc MSMXXXX".
+  - Some phone manufacturers use different SoCs for the same phone model.
+    Therefore, Hexagon delegate may only work on some but not all devices of the
+    same phone model.
+  - Some phone manufactures intentionally restrict the use of Hexagon DSP from
+    non-system Android apps, making the Hexagon delegate unable to work.
