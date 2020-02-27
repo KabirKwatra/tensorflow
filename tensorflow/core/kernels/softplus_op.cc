@@ -18,12 +18,13 @@ limitations under the License.
 #define EIGEN_USE_THREADS
 
 #include "tensorflow/core/kernels/softplus_op.h"
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+
 #include "tensorflow/core/framework/numeric_op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/lib/core/errors.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
 
@@ -32,37 +33,37 @@ typedef Eigen::GpuDevice GPUDevice;
 
 template <typename Device, typename T>
 class SoftplusOp : public UnaryElementWiseOp<T, SoftplusOp<Device, T>> {
-public:
-    explicit SoftplusOp(OpKernelConstruction* context)
-        : UnaryElementWiseOp<T, SoftplusOp<Device, T>>(context) {}
+ public:
+  explicit SoftplusOp(OpKernelConstruction* context)
+      : UnaryElementWiseOp<T, SoftplusOp<Device, T>>(context) {}
 
-    void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
-        functor::Softplus<Device, T> functor;
-        functor(context->eigen_device<Device>(), input.flat<T>(),
-                output->flat<T>());
-    }
+  void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
+    functor::Softplus<Device, T> functor;
+    functor(context->eigen_device<Device>(), input.flat<T>(),
+            output->flat<T>());
+  }
 };
 
 template <typename Device, typename T>
 class SoftplusGradOp
     : public BinaryElementWiseOp<T, SoftplusGradOp<Device, T>> {
-public:
-    explicit SoftplusGradOp(OpKernelConstruction* context)
-        : BinaryElementWiseOp<T, SoftplusGradOp<Device, T>>(context) {}
+ public:
+  explicit SoftplusGradOp(OpKernelConstruction* context)
+      : BinaryElementWiseOp<T, SoftplusGradOp<Device, T>>(context) {}
 
-    // INPUTS:
-    //   g (gradients): backpropagated gradients
-    //   a (inputs): inputs that were passed to SoftplusOp()
-    // OUTPUT:
-    //   gradients to backprop
-    void Operate(OpKernelContext* context, const Tensor& g, const Tensor& a,
-                 Tensor* output) {
-        OP_REQUIRES(context, a.IsSameSize(g),
-                    errors::InvalidArgument("g and a must be the same size"));
-        functor::SoftplusGrad<Device, T> functor;
-        functor(context->eigen_device<Device>(), g.flat<T>(), a.flat<T>(),
-                output->flat<T>());
-    }
+  // INPUTS:
+  //   g (gradients): backpropagated gradients
+  //   a (inputs): inputs that were passed to SoftplusOp()
+  // OUTPUT:
+  //   gradients to backprop
+  void Operate(OpKernelContext* context, const Tensor& g, const Tensor& a,
+               Tensor* output) {
+    OP_REQUIRES(context, a.IsSameSize(g),
+                errors::InvalidArgument("g and a must be the same size"));
+    functor::SoftplusGrad<Device, T> functor;
+    functor(context->eigen_device<Device>(), g.flat<T>(), a.flat<T>(),
+            output->flat<T>());
+  }
 };
 
 #define REGISTER_KERNELS(type)                                           \
