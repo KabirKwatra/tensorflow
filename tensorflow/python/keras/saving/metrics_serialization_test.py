@@ -36,30 +36,30 @@ from tensorflow.python.platform import test
 from tensorflow.python.util import nest
 
 try:
-  import h5py  # pylint:disable=g-import-not-at-top
+    import h5py  # pylint:disable=g-import-not-at-top
 except ImportError:
-  h5py = None
+    h5py = None
 
 
 # Custom metric
 class MyMeanAbsoluteError(metrics.MeanMetricWrapper):
 
-  def __init__(self, name='my_mae', dtype=None):
-    super(MyMeanAbsoluteError, self).__init__(_my_mae, name, dtype=dtype)
+    def __init__(self, name='my_mae', dtype=None):
+        super(MyMeanAbsoluteError, self).__init__(_my_mae, name, dtype=dtype)
 
 
 # Custom metric function
 def _my_mae(y_true, y_pred):
-  return keras.backend.mean(math_ops.abs(y_pred - y_true), axis=-1)
+    return keras.backend.mean(math_ops.abs(y_pred - y_true), axis=-1)
 
 
 def _get_multi_io_model():
-  inp_1 = layers.Input(shape=(1,), name='input_1')
-  inp_2 = layers.Input(shape=(1,), name='input_2')
-  d = testing_utils.Bias(name='output')
-  out_1 = d(inp_1)
-  out_2 = d(inp_2)
-  return keras.Model([inp_1, inp_2], [out_1, out_2])
+    inp_1 = layers.Input(shape=(1,), name='input_1')
+    inp_2 = layers.Input(shape=(1,), name='input_2')
+    d = testing_utils.Bias(name='output')
+    out_1 = d(inp_1)
+    out_2 = d(inp_2)
+    return keras.Model([inp_1, inp_2], [out_1, out_2])
 
 
 @keras_parameterized.run_all_keras_modes
@@ -149,107 +149,107 @@ def _get_multi_io_model():
 )
 class MetricsSerialization(keras_parameterized.TestCase):
 
-  def setUp(self):
-    super(MetricsSerialization, self).setUp()
-    tmpdir = self.get_temp_dir()
-    self.addCleanup(shutil.rmtree, tmpdir)
-    self.model_filename = os.path.join(tmpdir, 'tmp_model_metric.h5')
-    self.x = np.array([[0.], [1.], [2.]], dtype='float32')
-    self.y = np.array([[0.5], [2.], [3.5]], dtype='float32')
-    self.w = np.array([1.25, 0.5, 1.25], dtype='float32')
+    def setUp(self):
+        super(MetricsSerialization, self).setUp()
+        tmpdir = self.get_temp_dir()
+        self.addCleanup(shutil.rmtree, tmpdir)
+        self.model_filename = os.path.join(tmpdir, 'tmp_model_metric.h5')
+        self.x = np.array([[0.], [1.], [2.]], dtype='float32')
+        self.y = np.array([[0.5], [2.], [3.5]], dtype='float32')
+        self.w = np.array([1.25, 0.5, 1.25], dtype='float32')
 
-  def test_serializing_model_with_metric_with_custom_object_scope(self, value):
+    def test_serializing_model_with_metric_with_custom_object_scope(self, value):
 
-    def get_instance(x):
-      if isinstance(x, str):
-        return x
-      if isinstance(x, type) and issubclass(x, metrics.Metric):
-        return x()
-      return x
+        def get_instance(x):
+            if isinstance(x, str):
+                return x
+            if isinstance(x, type) and issubclass(x, metrics.Metric):
+                return x()
+            return x
 
-    metric_input = nest.map_structure(get_instance, value)
-    weighted_metric_input = nest.map_structure(get_instance, value)
+        metric_input = nest.map_structure(get_instance, value)
+        weighted_metric_input = nest.map_structure(get_instance, value)
 
-    with generic_utils.custom_object_scope({
-        'MyMeanAbsoluteError': MyMeanAbsoluteError,
-        '_my_mae': _my_mae,
-        'Bias': testing_utils.Bias,
-    }):
-      model = _get_multi_io_model()
-      model.compile(
-          optimizer_v2.gradient_descent.SGD(0.1),
-          'mae',
-          metrics=metric_input,
-          weighted_metrics=weighted_metric_input,
-          run_eagerly=testing_utils.should_run_eagerly())
-      history = model.fit([self.x, self.x], [self.y, self.y],
-                          batch_size=3,
-                          epochs=3,
-                          sample_weight=[self.w, self.w])
-
-      # Assert training.
-      self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
-      eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
-                                    sample_weight=[self.w, self.w])
-
-      if h5py is None:
-        return
-      model.save(self.model_filename)
-      loaded_model = keras.models.load_model(self.model_filename)
-      loaded_model.predict([self.x, self.x])
-      loaded_eval_results = loaded_model.evaluate(
-          [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w])
-
-      # Assert all evaluation results are the same.
-      self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
-
-  def test_serializing_model_with_metric_with_custom_objects(self, value):
-
-    def get_instance(x):
-      if isinstance(x, str):
-        return x
-      if isinstance(x, type) and issubclass(x, metrics.Metric):
-        return x()
-      return x
-
-    metric_input = nest.map_structure(get_instance, value)
-    weighted_metric_input = nest.map_structure(get_instance, value)
-
-    model = _get_multi_io_model()
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.1),
-        'mae',
-        metrics=metric_input,
-        weighted_metrics=weighted_metric_input,
-        run_eagerly=testing_utils.should_run_eagerly())
-    history = model.fit([self.x, self.x], [self.y, self.y],
-                        batch_size=3,
-                        epochs=3,
-                        sample_weight=[self.w, self.w])
-
-    # Assert training.
-    self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
-    eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
-                                  sample_weight=[self.w, self.w])
-
-    if h5py is None:
-      return
-    model.save(self.model_filename)
-    loaded_model = keras.models.load_model(
-        self.model_filename,
-        custom_objects={
+        with generic_utils.custom_object_scope({
             'MyMeanAbsoluteError': MyMeanAbsoluteError,
             '_my_mae': _my_mae,
             'Bias': testing_utils.Bias,
-        })
-    loaded_model.predict([self.x, self.x])
-    loaded_eval_results = loaded_model.evaluate([self.x, self.x],
-                                                [self.y, self.y],
-                                                sample_weight=[self.w, self.w])
+        }):
+            model = _get_multi_io_model()
+            model.compile(
+                optimizer_v2.gradient_descent.SGD(0.1),
+                'mae',
+                metrics=metric_input,
+                weighted_metrics=weighted_metric_input,
+                run_eagerly=testing_utils.should_run_eagerly())
+            history = model.fit([self.x, self.x], [self.y, self.y],
+                                batch_size=3,
+                                epochs=3,
+                                sample_weight=[self.w, self.w])
 
-    # Assert all evaluation results are the same.
-    self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
+            # Assert training.
+            self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
+            eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
+                                          sample_weight=[self.w, self.w])
+
+            if h5py is None:
+                return
+            model.save(self.model_filename)
+            loaded_model = keras.models.load_model(self.model_filename)
+            loaded_model.predict([self.x, self.x])
+            loaded_eval_results = loaded_model.evaluate(
+                [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w])
+
+            # Assert all evaluation results are the same.
+            self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
+
+    def test_serializing_model_with_metric_with_custom_objects(self, value):
+
+        def get_instance(x):
+            if isinstance(x, str):
+                return x
+            if isinstance(x, type) and issubclass(x, metrics.Metric):
+                return x()
+            return x
+
+        metric_input = nest.map_structure(get_instance, value)
+        weighted_metric_input = nest.map_structure(get_instance, value)
+
+        model = _get_multi_io_model()
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.1),
+            'mae',
+            metrics=metric_input,
+            weighted_metrics=weighted_metric_input,
+            run_eagerly=testing_utils.should_run_eagerly())
+        history = model.fit([self.x, self.x], [self.y, self.y],
+                            batch_size=3,
+                            epochs=3,
+                            sample_weight=[self.w, self.w])
+
+        # Assert training.
+        self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
+        eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
+                                      sample_weight=[self.w, self.w])
+
+        if h5py is None:
+            return
+        model.save(self.model_filename)
+        loaded_model = keras.models.load_model(
+            self.model_filename,
+            custom_objects={
+                'MyMeanAbsoluteError': MyMeanAbsoluteError,
+                '_my_mae': _my_mae,
+                'Bias': testing_utils.Bias,
+            })
+        loaded_model.predict([self.x, self.x])
+        loaded_eval_results = loaded_model.evaluate([self.x, self.x],
+                                                    [self.y, self.y],
+                                                    sample_weight=[self.w, self.w])
+
+        # Assert all evaluation results are the same.
+        self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()

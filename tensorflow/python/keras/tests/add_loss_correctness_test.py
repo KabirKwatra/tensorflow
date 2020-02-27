@@ -41,20 +41,20 @@ mae = losses.mean_absolute_error
 
 
 def get_ctl_train_step(model):
-  optimizer = optimizer_v2.gradient_descent.SGD(0.05)
+    optimizer = optimizer_v2.gradient_descent.SGD(0.05)
 
-  def train_step(x, y, w=None):
-    with backprop.GradientTape() as tape:
-      if w is not None:
-        model([x, y, w])
-      else:
-        model([x, y])
-      loss = math_ops.reduce_sum(model.losses)
-    gradients = tape.gradient(loss, model.trainable_weights)
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
-    return loss
+    def train_step(x, y, w=None):
+        with backprop.GradientTape() as tape:
+            if w is not None:
+                model([x, y, w])
+            else:
+                model([x, y])
+            loss = math_ops.reduce_sum(model.losses)
+        gradients = tape.gradient(loss, model.trainable_weights)
+        optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+        return loss
 
-  return train_step
+    return train_step
 
 
 # TODO(psv): Add tests cases where a model is used in loss function but is
@@ -63,393 +63,403 @@ def get_ctl_train_step(model):
 
 class TestAddLossCorrectness(keras_parameterized.TestCase):
 
-  def setUp(self):
-    super(TestAddLossCorrectness, self).setUp()
-    self.x = np.array([[0.], [1.], [2.]], dtype='float32')
-    self.y = np.array([[0.5], [2.], [3.5]], dtype='float32')
-    self.w = np.array([[1.25], [0.5], [1.25]], dtype='float32')
+    def setUp(self):
+        super(TestAddLossCorrectness, self).setUp()
+        self.x = np.array([[0.], [1.], [2.]], dtype='float32')
+        self.y = np.array([[0.5], [2.], [3.5]], dtype='float32')
+        self.w = np.array([[1.25], [0.5], [1.25]], dtype='float32')
 
-  @keras_parameterized.run_all_keras_modes
-  def test_loss_on_model_fit(self):
-    inputs = Input(shape=(1,))
-    targets = Input(shape=(1,))
-    outputs = testing_utils.Bias()(inputs)
-    model = Model([inputs, targets], outputs)
-    model.add_loss(MAE()(targets, outputs))
-    model.add_loss(math_ops.reduce_mean(mae(targets, outputs)))
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.05),
-        run_eagerly=testing_utils.should_run_eagerly())
-
-    history = model.fit([self.x, self.y], batch_size=3, epochs=5)
-    self.assertAllClose(history.history['loss'], [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
-
-  @keras_parameterized.run_with_all_model_types(exclude_models=['sequential'])
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
-  def test_loss_callable_on_model_fit(self):
-    model = testing_utils.get_model_from_layers([testing_utils.Bias()],
-                                                input_shape=(1,))
-
-    def callable_loss():
-      return math_ops.reduce_sum(model.weights)
-
-    model.add_loss(callable_loss)
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.1),
-        run_eagerly=testing_utils.should_run_eagerly())
-
-    history = model.fit(self.x, batch_size=3, epochs=5)
-    self.assertAllClose(history.history['loss'], [0., -.1, -.2, -.3, -.4], 1e-3)
-
-  def test_loss_on_model_ctl(self):
-    with context.eager_mode():
-
-      def get_model_and_train_step():
+    @keras_parameterized.run_all_keras_modes
+    def test_loss_on_model_fit(self):
         inputs = Input(shape=(1,))
         targets = Input(shape=(1,))
         outputs = testing_utils.Bias()(inputs)
         model = Model([inputs, targets], outputs)
         model.add_loss(MAE()(targets, outputs))
         model.add_loss(math_ops.reduce_mean(mae(targets, outputs)))
-        return get_ctl_train_step(model)
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.05),
+            run_eagerly=testing_utils.should_run_eagerly())
 
-      train_step = get_model_and_train_step()
-      loss = [train_step(self.x, self.y) for _ in range(5)]
-      self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
+        history = model.fit([self.x, self.y], batch_size=3, epochs=5)
+        self.assertAllClose(history.history['loss'], [
+                            2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-      train_step = def_function.function(get_model_and_train_step())
-      loss = [train_step(self.x, self.y) for _ in range(5)]
-      self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
-
-  def test_loss_callable_on_model_ctl(self):
-    with context.eager_mode():
-
-      def get_model_and_train_step():
-        inputs = Input(shape=(1,))
-        targets = Input(shape=(1,))
-        outputs = testing_utils.Bias()(inputs)
-        model = Model([inputs, targets], outputs)
+    @keras_parameterized.run_with_all_model_types(exclude_models=['sequential'])
+    @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
+    def test_loss_callable_on_model_fit(self):
+        model = testing_utils.get_model_from_layers([testing_utils.Bias()],
+                                                    input_shape=(1,))
 
         def callable_loss():
-          return math_ops.reduce_sum(model.weights)
+            return math_ops.reduce_sum(model.weights)
 
         model.add_loss(callable_loss)
-        return get_ctl_train_step(model)
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.1),
+            run_eagerly=testing_utils.should_run_eagerly())
 
-      train_step = get_model_and_train_step()
-      loss = [train_step(self.x, self.y) for _ in range(5)]
-      self.assertAllClose(loss, [0., -0.05, -0.1, -0.15, -0.2], 1e-3)
+        history = model.fit(self.x, batch_size=3, epochs=5)
+        self.assertAllClose(history.history['loss'], [
+                            0., -.1, -.2, -.3, -.4], 1e-3)
 
-      train_step = def_function.function(get_model_and_train_step())
-      loss = [train_step(self.x, self.y) for _ in range(5)]
-      self.assertAllClose(loss, [0., -0.05, -0.1, -0.15, -0.2], 1e-3)
+    def test_loss_on_model_ctl(self):
+        with context.eager_mode():
 
-  @keras_parameterized.run_all_keras_modes
-  def test_loss_with_sample_weight_on_model_fit(self):
-    inputs = Input(shape=(1,))
-    targets = Input(shape=(1,))
-    sw = Input(shape=(1,))
-    outputs = testing_utils.Bias()(inputs)
-    model = Model([inputs, targets, sw], outputs)
-    model.add_loss(MAE()(targets, outputs, sw))
-    model.add_loss(3 * math_ops.reduce_mean(sw * mae(targets, outputs)))
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.025),
-        run_eagerly=testing_utils.should_run_eagerly())
+            def get_model_and_train_step():
+                inputs = Input(shape=(1,))
+                targets = Input(shape=(1,))
+                outputs = testing_utils.Bias()(inputs)
+                model = Model([inputs, targets], outputs)
+                model.add_loss(MAE()(targets, outputs))
+                model.add_loss(math_ops.reduce_mean(mae(targets, outputs)))
+                return get_ctl_train_step(model)
 
-    history = model.fit([self.x, self.y, self.w], batch_size=3, epochs=5)
-    self.assertAllClose(history.history['loss'], [4., 3.6, 3.2, 2.8, 2.4], 1e-3)
+            train_step = get_model_and_train_step()
+            loss = [train_step(self.x, self.y) for _ in range(5)]
+            self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-  def test_loss_with_sample_weight_on_model_ctl(self):
-    with context.eager_mode():
+            train_step = def_function.function(get_model_and_train_step())
+            loss = [train_step(self.x, self.y) for _ in range(5)]
+            self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-      def get_model_and_train_step():
+    def test_loss_callable_on_model_ctl(self):
+        with context.eager_mode():
+
+            def get_model_and_train_step():
+                inputs = Input(shape=(1,))
+                targets = Input(shape=(1,))
+                outputs = testing_utils.Bias()(inputs)
+                model = Model([inputs, targets], outputs)
+
+                def callable_loss():
+                    return math_ops.reduce_sum(model.weights)
+
+                model.add_loss(callable_loss)
+                return get_ctl_train_step(model)
+
+            train_step = get_model_and_train_step()
+            loss = [train_step(self.x, self.y) for _ in range(5)]
+            self.assertAllClose(loss, [0., -0.05, -0.1, -0.15, -0.2], 1e-3)
+
+            train_step = def_function.function(get_model_and_train_step())
+            loss = [train_step(self.x, self.y) for _ in range(5)]
+            self.assertAllClose(loss, [0., -0.05, -0.1, -0.15, -0.2], 1e-3)
+
+    @keras_parameterized.run_all_keras_modes
+    def test_loss_with_sample_weight_on_model_fit(self):
         inputs = Input(shape=(1,))
         targets = Input(shape=(1,))
         sw = Input(shape=(1,))
         outputs = testing_utils.Bias()(inputs)
         model = Model([inputs, targets, sw], outputs)
         model.add_loss(MAE()(targets, outputs, sw))
-        model.add_loss(math_ops.reduce_mean(sw * mae(targets, outputs)))
-        return get_ctl_train_step(model)
+        model.add_loss(3 * math_ops.reduce_mean(sw * mae(targets, outputs)))
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.025),
+            run_eagerly=testing_utils.should_run_eagerly())
 
-      train_step = get_model_and_train_step()
-      loss = [train_step(self.x, self.y, self.w) for _ in range(5)]
-      self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
+        history = model.fit([self.x, self.y, self.w], batch_size=3, epochs=5)
+        self.assertAllClose(history.history['loss'], [
+                            4., 3.6, 3.2, 2.8, 2.4], 1e-3)
 
-      train_step = def_function.function(get_model_and_train_step())
-      loss = [train_step(self.x, self.y, self.w) for _ in range(5)]
-      self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
+    def test_loss_with_sample_weight_on_model_ctl(self):
+        with context.eager_mode():
 
-  @keras_parameterized.run_all_keras_modes
-  def test_loss_with_sample_weight_in_model_call(self):
+            def get_model_and_train_step():
+                inputs = Input(shape=(1,))
+                targets = Input(shape=(1,))
+                sw = Input(shape=(1,))
+                outputs = testing_utils.Bias()(inputs)
+                model = Model([inputs, targets, sw], outputs)
+                model.add_loss(MAE()(targets, outputs, sw))
+                model.add_loss(math_ops.reduce_mean(
+                    sw * mae(targets, outputs)))
+                return get_ctl_train_step(model)
 
-    class MyModel(Model):
+            train_step = get_model_and_train_step()
+            loss = [train_step(self.x, self.y, self.w) for _ in range(5)]
+            self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-      def __init__(self):
-        super(MyModel, self).__init__()
-        self.bias = testing_utils.Bias()
+            train_step = def_function.function(get_model_and_train_step())
+            loss = [train_step(self.x, self.y, self.w) for _ in range(5)]
+            self.assertAllClose(loss, [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-      def call(self, inputs):
-        outputs = self.bias(inputs[0])
-        self.add_loss(MAE()(inputs[1], outputs, inputs[2]))
-        self.add_loss(math_ops.reduce_mean(inputs[2] * mae(inputs[1], outputs)))
-        return outputs
+    @keras_parameterized.run_all_keras_modes
+    def test_loss_with_sample_weight_in_model_call(self):
 
-    model = MyModel()
-    model.predict([self.x, self.y, self.w])
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.05),
-        run_eagerly=testing_utils.should_run_eagerly())
+        class MyModel(Model):
 
-    history = model.fit([self.x, self.y, self.w], batch_size=3, epochs=5)
-    self.assertEqual(len(model.losses), 2)
-    self.assertAllClose(history.history['loss'], [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
+            def __init__(self):
+                super(MyModel, self).__init__()
+                self.bias = testing_utils.Bias()
 
-    eval_out = model.evaluate([self.x, self.y, self.w])
-    self.assertAlmostEqual(eval_out, 1.0, 3)
+            def call(self, inputs):
+                outputs = self.bias(inputs[0])
+                self.add_loss(MAE()(inputs[1], outputs, inputs[2]))
+                self.add_loss(math_ops.reduce_mean(
+                    inputs[2] * mae(inputs[1], outputs)))
+                return outputs
 
-  @keras_parameterized.run_all_keras_modes
-  def test_loss_with_sample_weight_in_layer_call(self):
+        model = MyModel()
+        model.predict([self.x, self.y, self.w])
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.05),
+            run_eagerly=testing_utils.should_run_eagerly())
 
-    class MyLayer(layers.Layer):
+        history = model.fit([self.x, self.y, self.w], batch_size=3, epochs=5)
+        self.assertEqual(len(model.losses), 2)
+        self.assertAllClose(history.history['loss'], [
+                            2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-      def __init__(self):
-        super(MyLayer, self).__init__()
-        self.bias = testing_utils.Bias()
+        eval_out = model.evaluate([self.x, self.y, self.w])
+        self.assertAlmostEqual(eval_out, 1.0, 3)
 
-      def call(self, inputs):
-        out = self.bias(inputs[0])
-        self.add_loss(MAE()(inputs[1], out, inputs[2]))
-        self.add_loss(math_ops.reduce_mean(inputs[2] * mae(inputs[1], out)))
-        return out
+    @keras_parameterized.run_all_keras_modes
+    def test_loss_with_sample_weight_in_layer_call(self):
 
-    inputs = Input(shape=(1,))
-    targets = Input(shape=(1,))
-    sw = Input(shape=(1,))
+        class MyLayer(layers.Layer):
 
-    outputs = MyLayer()([inputs, targets, sw])
-    model = Model([inputs, targets, sw], outputs)
-    model.predict([self.x, self.y, self.w])
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.05),
-        run_eagerly=testing_utils.should_run_eagerly())
+            def __init__(self):
+                super(MyLayer, self).__init__()
+                self.bias = testing_utils.Bias()
 
-    history = model.fit([self.x, self.y, self.w], batch_size=3, epochs=5)
-    self.assertAllClose(history.history['loss'], [2., 1.8, 1.6, 1.4, 1.2], 1e-3)
+            def call(self, inputs):
+                out = self.bias(inputs[0])
+                self.add_loss(MAE()(inputs[1], out, inputs[2]))
+                self.add_loss(math_ops.reduce_mean(
+                    inputs[2] * mae(inputs[1], out)))
+                return out
 
-    output = model.evaluate([self.x, self.y, self.w])
-    self.assertAlmostEqual(output, 1.0, 3)
+        inputs = Input(shape=(1,))
+        targets = Input(shape=(1,))
+        sw = Input(shape=(1,))
 
-    output = model.test_on_batch([self.x, self.y, self.w])
-    self.assertAlmostEqual(output, 1.0, 3)
+        outputs = MyLayer()([inputs, targets, sw])
+        model = Model([inputs, targets, sw], outputs)
+        model.predict([self.x, self.y, self.w])
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.05),
+            run_eagerly=testing_utils.should_run_eagerly())
 
-  @keras_parameterized.run_all_keras_modes
-  def test_loss_on_layer(self):
+        history = model.fit([self.x, self.y, self.w], batch_size=3, epochs=5)
+        self.assertAllClose(history.history['loss'], [
+                            2., 1.8, 1.6, 1.4, 1.2], 1e-3)
 
-    class MyLayer(layers.Layer):
+        output = model.evaluate([self.x, self.y, self.w])
+        self.assertAlmostEqual(output, 1.0, 3)
 
-      def call(self, inputs):
-        self.add_loss(math_ops.reduce_sum(inputs))
-        return inputs
+        output = model.test_on_batch([self.x, self.y, self.w])
+        self.assertAlmostEqual(output, 1.0, 3)
 
-    inputs = Input((3,))
-    layer = MyLayer()
-    outputs = layer(inputs)
-    model = Model(inputs, outputs)
-    self.assertEqual(len(model.losses), 1)
-    model.compile(
-        'sgd',
-        'mse',
-        run_eagerly=testing_utils.should_run_eagerly())
-    loss = model.train_on_batch(np.ones((2, 3)), np.ones((2, 3)))
-    self.assertEqual(loss, 2 * 3)
+    @keras_parameterized.run_all_keras_modes
+    def test_loss_on_layer(self):
 
-  @keras_parameterized.run_all_keras_modes
-  @keras_parameterized.run_with_all_model_types
-  def test_activity_regularizer(self):
-    loss = {}
-    for reg in [None, 'l2']:
-      model_layers = [
-          layers.Dense(
-              10,
-              activation='relu',
-              activity_regularizer=reg,
-              kernel_initializer='ones',
-              use_bias=False),
-          layers.Dense(
-              1,
-              activation='sigmoid',
-              kernel_initializer='ones',
-              use_bias=False),
-      ]
+        class MyLayer(layers.Layer):
 
-      model = testing_utils.get_model_from_layers(
-          model_layers, input_shape=(10,))
+            def call(self, inputs):
+                self.add_loss(math_ops.reduce_sum(inputs))
+                return inputs
 
-      x = np.ones((10, 10), 'float32')
-      y = np.ones((10, 1), 'float32')
+        inputs = Input((3,))
+        layer = MyLayer()
+        outputs = layer(inputs)
+        model = Model(inputs, outputs)
+        self.assertEqual(len(model.losses), 1)
+        model.compile(
+            'sgd',
+            'mse',
+            run_eagerly=testing_utils.should_run_eagerly())
+        loss = model.train_on_batch(np.ones((2, 3)), np.ones((2, 3)))
+        self.assertEqual(loss, 2 * 3)
 
-      optimizer = RMSPropOptimizer(learning_rate=0.001)
-      model.compile(
-          optimizer,
-          'binary_crossentropy',
-          run_eagerly=testing_utils.should_run_eagerly())
-      model.fit(x, y, batch_size=2, epochs=5)
-      loss[reg] = model.evaluate(x, y)
-    self.assertLess(loss[None], loss['l2'])
+    @keras_parameterized.run_all_keras_modes
+    @keras_parameterized.run_with_all_model_types
+    def test_activity_regularizer(self):
+        loss = {}
+        for reg in [None, 'l2']:
+            model_layers = [
+                layers.Dense(
+                    10,
+                    activation='relu',
+                    activity_regularizer=reg,
+                    kernel_initializer='ones',
+                    use_bias=False),
+                layers.Dense(
+                    1,
+                    activation='sigmoid',
+                    kernel_initializer='ones',
+                    use_bias=False),
+            ]
 
-  @keras_parameterized.run_all_keras_modes
-  @keras_parameterized.run_with_all_model_types
-  def test_activity_regularizer_loss_value(self):
-    layer = layers.Dense(
-        1,
-        kernel_initializer='zeros',
-        bias_initializer='ones',
-        activity_regularizer='l2')
+            model = testing_utils.get_model_from_layers(
+                model_layers, input_shape=(10,))
 
-    model = testing_utils.get_model_from_layers([layer], input_shape=(10,))
+            x = np.ones((10, 10), 'float32')
+            y = np.ones((10, 1), 'float32')
 
-    x = np.ones((10, 10), 'float32')
-    optimizer = RMSPropOptimizer(learning_rate=0.001)
-    model.compile(
-        optimizer,
-        run_eagerly=testing_utils.should_run_eagerly())
-    loss = model.test_on_batch(x)
-    self.assertAlmostEqual(0.01, loss, places=4)
+            optimizer = RMSPropOptimizer(learning_rate=0.001)
+            model.compile(
+                optimizer,
+                'binary_crossentropy',
+                run_eagerly=testing_utils.should_run_eagerly())
+            model.fit(x, y, batch_size=2, epochs=5)
+            loss[reg] = model.evaluate(x, y)
+        self.assertLess(loss[None], loss['l2'])
 
-  @keras_parameterized.run_all_keras_modes
-  def test_activity_regularizer_batch_independent(self):
-    inputs = layers.Input(shape=(10,))
-    x = layers.Dense(10, activation='relu', activity_regularizer='l2')(inputs)
-    outputs = layers.Dense(1, activation='sigmoid')(x)
-    model = Model(inputs, outputs)
+    @keras_parameterized.run_all_keras_modes
+    @keras_parameterized.run_with_all_model_types
+    def test_activity_regularizer_loss_value(self):
+        layer = layers.Dense(
+            1,
+            kernel_initializer='zeros',
+            bias_initializer='ones',
+            activity_regularizer='l2')
 
-    optimizer = RMSPropOptimizer(learning_rate=0.001)
-    model.compile(
-        optimizer,
-        run_eagerly=testing_utils.should_run_eagerly())
+        model = testing_utils.get_model_from_layers([layer], input_shape=(10,))
 
-    loss_small_batch = model.test_on_batch(np.ones((10, 10), 'float32'))
-    loss_big_batch = model.test_on_batch(np.ones((20, 10), 'float32'))
-    self.assertAlmostEqual(loss_small_batch, loss_big_batch, places=4)
+        x = np.ones((10, 10), 'float32')
+        optimizer = RMSPropOptimizer(learning_rate=0.001)
+        model.compile(
+            optimizer,
+            run_eagerly=testing_utils.should_run_eagerly())
+        loss = model.test_on_batch(x)
+        self.assertAlmostEqual(0.01, loss, places=4)
 
-  @keras_parameterized.run_all_keras_modes
-  def test_with_shared_layer(self):
+    @keras_parameterized.run_all_keras_modes
+    def test_activity_regularizer_batch_independent(self):
+        inputs = layers.Input(shape=(10,))
+        x = layers.Dense(10, activation='relu',
+                         activity_regularizer='l2')(inputs)
+        outputs = layers.Dense(1, activation='sigmoid')(x)
+        model = Model(inputs, outputs)
 
-    class LayerWithLoss(layers.Layer):
+        optimizer = RMSPropOptimizer(learning_rate=0.001)
+        model.compile(
+            optimizer,
+            run_eagerly=testing_utils.should_run_eagerly())
 
-      def call(self, inputs):
-        self.add_loss(math_ops.reduce_sum(inputs), inputs)
-        return inputs * 2
+        loss_small_batch = model.test_on_batch(np.ones((10, 10), 'float32'))
+        loss_big_batch = model.test_on_batch(np.ones((20, 10), 'float32'))
+        self.assertAlmostEqual(loss_small_batch, loss_big_batch, places=4)
 
-    shared_layer = LayerWithLoss()
+    @keras_parameterized.run_all_keras_modes
+    def test_with_shared_layer(self):
 
-    m = Sequential([shared_layer])
-    m2 = Sequential([shared_layer, m])
-    m2(array_ops.constant([1, 2, 3]))
-    self.assertEqual(len(m2.losses), 2)
-    self.assertAllClose(m2.losses, [6, 12])
+        class LayerWithLoss(layers.Layer):
 
-  @keras_parameterized.run_all_keras_modes
-  def test_with_shared_nested_layer(self):
+            def call(self, inputs):
+                self.add_loss(math_ops.reduce_sum(inputs), inputs)
+                return inputs * 2
 
-    class LayerWithLoss(layers.Layer):
+        shared_layer = LayerWithLoss()
 
-      def call(self, inputs):
-        self.add_loss(math_ops.reduce_sum(inputs), inputs)
-        return inputs * 2
+        m = Sequential([shared_layer])
+        m2 = Sequential([shared_layer, m])
+        m2(array_ops.constant([1, 2, 3]))
+        self.assertEqual(len(m2.losses), 2)
+        self.assertAllClose(m2.losses, [6, 12])
 
-    class LayerWithNestedLayerWithLoss(layers.Layer):
+    @keras_parameterized.run_all_keras_modes
+    def test_with_shared_nested_layer(self):
 
-      def __init__(self):
-        super(LayerWithNestedLayerWithLoss, self).__init__()
-        self.loss_layer = LayerWithLoss()
+        class LayerWithLoss(layers.Layer):
 
-      def call(self, inputs):
-        return self.loss_layer(inputs)
+            def call(self, inputs):
+                self.add_loss(math_ops.reduce_sum(inputs), inputs)
+                return inputs * 2
 
-    shared_layer = LayerWithNestedLayerWithLoss()
+        class LayerWithNestedLayerWithLoss(layers.Layer):
 
-    m = Sequential([shared_layer])
-    m2 = Sequential([shared_layer, m])
-    m2(array_ops.constant([1, 2, 3]))
-    self.assertEqual(len(m2.losses), 2)
-    self.assertAllClose(m2.losses, [6, 12])
+            def __init__(self):
+                super(LayerWithNestedLayerWithLoss, self).__init__()
+                self.loss_layer = LayerWithLoss()
 
-  @keras_parameterized.run_all_keras_modes
-  def test_clear_losses(self):
+            def call(self, inputs):
+                return self.loss_layer(inputs)
 
-    class LayerWithSharedNestedLossLayer(layers.Layer):
+        shared_layer = LayerWithNestedLayerWithLoss()
 
-      def __init__(self):
-        super(LayerWithSharedNestedLossLayer, self).__init__()
-        self.loss_layer = layers.ActivityRegularization(l2=0.001)
-        self.add_weight(shape=(1,), regularizer='l2')
+        m = Sequential([shared_layer])
+        m2 = Sequential([shared_layer, m])
+        m2(array_ops.constant([1, 2, 3]))
+        self.assertEqual(len(m2.losses), 2)
+        self.assertAllClose(m2.losses, [6, 12])
 
-      def call(self, x):
-        x = self.loss_layer(x)
-        return self.loss_layer(x)
+    @keras_parameterized.run_all_keras_modes
+    def test_clear_losses(self):
 
-    inputs = Input(shape=(1,))
-    l = LayerWithSharedNestedLossLayer()  # Weight loss + 2 activity losses.
+        class LayerWithSharedNestedLossLayer(layers.Layer):
 
-    x1 = array_ops.ones((1, 1))
-    _ = l(x1)
-    if not context.executing_eagerly():
-      self.assertEqual(len(l.get_losses_for(x1)), 2)
-      self.assertEqual(len(l.get_losses_for(None)), 1)
+            def __init__(self):
+                super(LayerWithSharedNestedLossLayer, self).__init__()
+                self.loss_layer = layers.ActivityRegularization(l2=0.001)
+                self.add_weight(shape=(1,), regularizer='l2')
 
-    x2 = array_ops.ones((1, 1))
-    _ = l(x2)
-    if not context.executing_eagerly():
-      self.assertEqual(len(l.get_losses_for(x1)), 2)
-      self.assertEqual(len(l.get_losses_for(x2)), 2)
-      self.assertEqual(len(l.get_losses_for(None)), 1)
+            def call(self, x):
+                x = self.loss_layer(x)
+                return self.loss_layer(x)
 
-    outputs = l(inputs)
-    model = Model(inputs, outputs)
-    if not context.executing_eagerly():
-      self.assertEqual(len(model.losses), 7)
-      self.assertEqual(len(l.get_losses_for(x1)), 2)
-      self.assertEqual(len(l.get_losses_for(x2)), 2)
-      self.assertEqual(len(l.get_losses_for(None)), 1)
+        inputs = Input(shape=(1,))
+        # Weight loss + 2 activity losses.
+        l = LayerWithSharedNestedLossLayer()
 
-    x3 = array_ops.ones((1, 1))
-    model(x3)
-    x4 = array_ops.ones((1, 1))
-    model(x4)
-    if context.executing_eagerly():
-      # Eager losses are cleared every `__call__`.
-      self.assertEqual(len(model.losses), 3)
-    else:
-      self.assertEqual(len(model.losses), 11)
-      self.assertEqual(len(model.get_losses_for(x3)), 2)
-      self.assertEqual(len(model.get_losses_for(x4)), 2)
-      self.assertEqual(len(model.get_losses_for(None)), 1)
+        x1 = array_ops.ones((1, 1))
+        _ = l(x1)
+        if not context.executing_eagerly():
+            self.assertEqual(len(l.get_losses_for(x1)), 2)
+            self.assertEqual(len(l.get_losses_for(None)), 1)
 
-  @keras_parameterized.run_all_keras_modes
-  def test_invalid_constant_input(self):
-    with context.eager_mode():
-      inputs = Input(shape=(1,))
-      outputs = testing_utils.Bias()(inputs)
-      model = Model(inputs, outputs)
-      with self.assertRaisesRegexp(
-          ValueError,
-          'Expected a symbolic Tensors or a callable for the loss value'):
-        model.add_loss(1.)
+        x2 = array_ops.ones((1, 1))
+        _ = l(x2)
+        if not context.executing_eagerly():
+            self.assertEqual(len(l.get_losses_for(x1)), 2)
+            self.assertEqual(len(l.get_losses_for(x2)), 2)
+            self.assertEqual(len(l.get_losses_for(None)), 1)
 
-  @keras_parameterized.run_all_keras_modes
-  def test_invalid_variable_input(self):
-    with context.eager_mode():
-      inputs = Input(shape=(1,))
-      outputs = testing_utils.Bias()(inputs)
-      model = Model(inputs, outputs)
-      with self.assertRaisesRegexp(
-          ValueError,
-          'Expected a symbolic Tensors or a callable for the loss value'):
-        model.add_loss(model.weights[0])
+        outputs = l(inputs)
+        model = Model(inputs, outputs)
+        if not context.executing_eagerly():
+            self.assertEqual(len(model.losses), 7)
+            self.assertEqual(len(l.get_losses_for(x1)), 2)
+            self.assertEqual(len(l.get_losses_for(x2)), 2)
+            self.assertEqual(len(l.get_losses_for(None)), 1)
+
+        x3 = array_ops.ones((1, 1))
+        model(x3)
+        x4 = array_ops.ones((1, 1))
+        model(x4)
+        if context.executing_eagerly():
+            # Eager losses are cleared every `__call__`.
+            self.assertEqual(len(model.losses), 3)
+        else:
+            self.assertEqual(len(model.losses), 11)
+            self.assertEqual(len(model.get_losses_for(x3)), 2)
+            self.assertEqual(len(model.get_losses_for(x4)), 2)
+            self.assertEqual(len(model.get_losses_for(None)), 1)
+
+    @keras_parameterized.run_all_keras_modes
+    def test_invalid_constant_input(self):
+        with context.eager_mode():
+            inputs = Input(shape=(1,))
+            outputs = testing_utils.Bias()(inputs)
+            model = Model(inputs, outputs)
+            with self.assertRaisesRegexp(
+                    ValueError,
+                    'Expected a symbolic Tensors or a callable for the loss value'):
+                model.add_loss(1.)
+
+    @keras_parameterized.run_all_keras_modes
+    def test_invalid_variable_input(self):
+        with context.eager_mode():
+            inputs = Input(shape=(1,))
+            outputs = testing_utils.Bias()(inputs)
+            model = Model(inputs, outputs)
+            with self.assertRaisesRegexp(
+                    ValueError,
+                    'Expected a symbolic Tensors or a callable for the loss value'):
+                model.add_loss(model.weights[0])
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()

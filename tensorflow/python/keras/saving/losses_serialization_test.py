@@ -36,33 +36,33 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.platform import test
 
 try:
-  import h5py  # pylint:disable=g-import-not-at-top
+    import h5py  # pylint:disable=g-import-not-at-top
 except ImportError:
-  h5py = None
+    h5py = None
 
 
 # Custom loss class
 class MyMeanAbsoluteError(losses.LossFunctionWrapper):
 
-  def __init__(self,
-               reduction=losses_utils.ReductionV2.AUTO,
-               name='mean_absolute_error'):
-    super(MyMeanAbsoluteError, self).__init__(
-        my_mae, name=name, reduction=reduction)
+    def __init__(self,
+                 reduction=losses_utils.ReductionV2.AUTO,
+                 name='mean_absolute_error'):
+        super(MyMeanAbsoluteError, self).__init__(
+            my_mae, name=name, reduction=reduction)
 
 
 # Custom loss function
 def my_mae(y_true, y_pred):
-  return keras.backend.mean(math_ops.abs(y_pred - y_true), axis=-1)
+    return keras.backend.mean(math_ops.abs(y_pred - y_true), axis=-1)
 
 
 def _get_multi_io_model():
-  inp_1 = layers.Input(shape=(1,), name='input_1')
-  inp_2 = layers.Input(shape=(1,), name='input_2')
-  d = testing_utils.Bias(name='output')
-  out_1 = d(inp_1)
-  out_2 = d(inp_2)
-  return keras.Model([inp_1, inp_2], [out_1, out_2])
+    inp_1 = layers.Input(shape=(1,), name='input_1')
+    inp_2 = layers.Input(shape=(1,), name='input_2')
+    d = testing_utils.Bias(name='output')
+    out_1 = d(inp_1)
+    out_2 = d(inp_2)
+    return keras.Model([inp_1, inp_2], [out_1, out_2])
 
 
 @keras_parameterized.run_all_keras_modes
@@ -116,81 +116,81 @@ def _get_multi_io_model():
 ])
 class LossesSerialization(keras_parameterized.TestCase):
 
-  def setUp(self):
-    super(LossesSerialization, self).setUp()
-    tmpdir = self.get_temp_dir()
-    self.addCleanup(shutil.rmtree, tmpdir)
-    self.model_filename = os.path.join(tmpdir, 'tmp_model_loss.h5')
-    self.x = np.array([[0.], [1.], [2.]], dtype='float32')
-    self.y = np.array([[0.5], [2.], [3.5]], dtype='float32')
-    self.w = np.array([1.25, 0.5, 1.25], dtype='float32')
+    def setUp(self):
+        super(LossesSerialization, self).setUp()
+        tmpdir = self.get_temp_dir()
+        self.addCleanup(shutil.rmtree, tmpdir)
+        self.model_filename = os.path.join(tmpdir, 'tmp_model_loss.h5')
+        self.x = np.array([[0.], [1.], [2.]], dtype='float32')
+        self.y = np.array([[0.5], [2.], [3.5]], dtype='float32')
+        self.w = np.array([1.25, 0.5, 1.25], dtype='float32')
 
-  def test_serializing_model_with_loss_with_custom_object_scope(self, value):
-    with generic_utils.custom_object_scope({
-        'MyMeanAbsoluteError': MyMeanAbsoluteError,
-        'my_mae': my_mae,
-        'Bias': testing_utils.Bias,
-    }):
-      model = _get_multi_io_model()
-      model.compile(
-          optimizer_v2.gradient_descent.SGD(0.1),
-          loss=value,
-          run_eagerly=testing_utils.should_run_eagerly())
-      history = model.fit([self.x, self.x], [self.y, self.y],
-                          batch_size=3,
-                          epochs=3,
-                          sample_weight=[self.w, self.w])
-
-      # Assert training.
-      self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
-      eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
-                                    sample_weight=[self.w, self.w])
-
-      if h5py is None:
-        return
-      model.save(self.model_filename)
-      loaded_model = keras.models.load_model(self.model_filename)
-      loaded_model.predict([self.x, self.x])
-      loaded_eval_results = loaded_model.evaluate(
-          [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w])
-
-      # Assert all evaluation results are the same.
-      self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
-
-  def test_serializing_model_with_loss_with_custom_objects(self, value):
-    model = _get_multi_io_model()
-    model.compile(
-        optimizer_v2.gradient_descent.SGD(0.1),
-        loss=value,
-        run_eagerly=testing_utils.should_run_eagerly())
-    history = model.fit([self.x, self.x], [self.y, self.y],
-                        batch_size=3,
-                        epochs=3,
-                        sample_weight=[self.w, self.w])
-
-    # Assert training.
-    self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
-    eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
-                                  sample_weight=[self.w, self.w])
-
-    if h5py is None:
-      return
-    model.save(self.model_filename)
-    loaded_model = keras.models.load_model(
-        self.model_filename,
-        custom_objects={
+    def test_serializing_model_with_loss_with_custom_object_scope(self, value):
+        with generic_utils.custom_object_scope({
             'MyMeanAbsoluteError': MyMeanAbsoluteError,
             'my_mae': my_mae,
             'Bias': testing_utils.Bias,
-        })
-    loaded_model.predict([self.x, self.x])
-    loaded_eval_results = loaded_model.evaluate([self.x, self.x],
-                                                [self.y, self.y],
-                                                sample_weight=[self.w, self.w])
+        }):
+            model = _get_multi_io_model()
+            model.compile(
+                optimizer_v2.gradient_descent.SGD(0.1),
+                loss=value,
+                run_eagerly=testing_utils.should_run_eagerly())
+            history = model.fit([self.x, self.x], [self.y, self.y],
+                                batch_size=3,
+                                epochs=3,
+                                sample_weight=[self.w, self.w])
 
-    # Assert all evaluation results are the same.
-    self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
+            # Assert training.
+            self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
+            eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
+                                          sample_weight=[self.w, self.w])
+
+            if h5py is None:
+                return
+            model.save(self.model_filename)
+            loaded_model = keras.models.load_model(self.model_filename)
+            loaded_model.predict([self.x, self.x])
+            loaded_eval_results = loaded_model.evaluate(
+                [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w])
+
+            # Assert all evaluation results are the same.
+            self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
+
+    def test_serializing_model_with_loss_with_custom_objects(self, value):
+        model = _get_multi_io_model()
+        model.compile(
+            optimizer_v2.gradient_descent.SGD(0.1),
+            loss=value,
+            run_eagerly=testing_utils.should_run_eagerly())
+        history = model.fit([self.x, self.x], [self.y, self.y],
+                            batch_size=3,
+                            epochs=3,
+                            sample_weight=[self.w, self.w])
+
+        # Assert training.
+        self.assertAllClose(history.history['loss'], [2., 1.6, 1.2], 1e-3)
+        eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
+                                      sample_weight=[self.w, self.w])
+
+        if h5py is None:
+            return
+        model.save(self.model_filename)
+        loaded_model = keras.models.load_model(
+            self.model_filename,
+            custom_objects={
+                'MyMeanAbsoluteError': MyMeanAbsoluteError,
+                'my_mae': my_mae,
+                'Bias': testing_utils.Bias,
+            })
+        loaded_model.predict([self.x, self.x])
+        loaded_eval_results = loaded_model.evaluate([self.x, self.x],
+                                                    [self.y, self.y],
+                                                    sample_weight=[self.w, self.w])
+
+        # Assert all evaluation results are the same.
+        self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()
