@@ -33,10 +33,11 @@ def make_strided_slice_np_style_tests(options):
         {
             "dtype": [tf.float32],
             "shape": [[12, 7], [33, 1]],
-            "spec": [[slice(3, 7, 2), slice(None)],
-                     [tf.newaxis,
-                      slice(3, 7, 1), tf.newaxis,
-                      slice(None)], [slice(1, 5, 1), slice(None)]],
+            "spec": [
+                [slice(3, 7, 2), slice(None)],
+                [tf.newaxis, slice(3, 7, 1), tf.newaxis, slice(None)],
+                [slice(1, 5, 1), slice(None)],
+            ],
         },
         # 1-D case
         {
@@ -54,53 +55,52 @@ def make_strided_slice_np_style_tests(options):
         {
             "dtype": [tf.float32],
             "shape": [[21, 15, 7]],
-            "spec": [[slice(3, 7, 2), Ellipsis], [Ellipsis,
-                                                  slice(3, 7, 2)],
-                     [slice(1, 11, 3), Ellipsis,
-                      slice(3, 7, 2)]],
+            "spec": [
+                [slice(3, 7, 2), Ellipsis],
+                [Ellipsis, slice(3, 7, 2)],
+                [slice(1, 11, 3), Ellipsis, slice(3, 7, 2)],
+            ],
         },
         # Ellipsis 4d.
         {
             "dtype": [tf.float32],
             "shape": [[21, 15, 7, 9]],
-            "spec": [[slice(3, 7, 2), Ellipsis], [Ellipsis,
-                                                  slice(3, 7, 2)],
-                     [slice(1, 11, 3), Ellipsis,
-                      slice(3, 7, 2)]],
+            "spec": [
+                [slice(3, 7, 2), Ellipsis],
+                [Ellipsis, slice(3, 7, 2)],
+                [slice(1, 11, 3), Ellipsis, slice(3, 7, 2)],
+            ],
         },
         # Ellipsis 5d.
         {
             "dtype": [tf.float32],
             "shape": [[11, 21, 15, 7, 9]],
-            "spec": [[
-                slice(3, 7, 2),
-                slice(None),
-                slice(None),
-                slice(None),
-                slice(None)
-            ], [Ellipsis, slice(3, 7, 2)]],
+            "spec": [
+                [slice(3, 7, 2), slice(None), slice(None), slice(None), slice(None)],
+                [Ellipsis, slice(3, 7, 2)],
+            ],
         },
         # All combinations.
         {
             "dtype": [tf.float32],
             "shape": [[21, 15, 7]],
-            "spec": [[tf.newaxis,
-                      slice(3, 7, 2),
-                      slice(None), Ellipsis]],
+            "spec": [[tf.newaxis, slice(3, 7, 2), slice(None), Ellipsis]],
         },
     ]
 
     def build_graph(parameters):
         """Build a simple graph with np style strided_slice."""
         input_value = tf.compat.v1.placeholder(
-            dtype=parameters["dtype"], shape=parameters["shape"])
+            dtype=parameters["dtype"], shape=parameters["shape"]
+        )
         out = input_value.__getitem__(parameters["spec"])
         return [input_value], [out]
 
     def build_inputs(parameters, sess, inputs, outputs):
-        input_value = create_tensor_data(
-            parameters["dtype"], parameters["shape"])
-        return [input_value], sess.run(
-            outputs, feed_dict=dict(zip(inputs, [input_value])))
+        input_value = create_tensor_data(parameters["dtype"], parameters["shape"])
+        return (
+            [input_value],
+            sess.run(outputs, feed_dict=dict(zip(inputs, [input_value]))),
+        )
 
     make_zip_of_tests(options, test_parameters, build_graph, build_inputs)
