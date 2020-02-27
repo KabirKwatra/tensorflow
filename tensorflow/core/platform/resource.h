@@ -22,8 +22,8 @@ namespace tensorflow {
 
 // Tracks resource usage for tagged code paths.
 class ResourceTagger {
-public:
-    ResourceTagger(StringPiece key, StringPiece value);
+ public:
+  ResourceTagger(StringPiece key, StringPiece value);
 };
 
 }  // namespace tensorflow
