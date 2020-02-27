@@ -19,8 +19,8 @@ limitations under the License.
 namespace tensorflow {
 
 class ResourceTagger::ResourceTaggerImpl {
- public:
-  ResourceTaggerImpl(StringPiece key, StringPiece value) {}
+public:
+    ResourceTaggerImpl(StringPiece key, StringPiece value) {}
 };
 
 ResourceTagger::ResourceTagger(StringPiece key, StringPiece value) {}

@@ -32,37 +32,37 @@ typedef Eigen::GpuDevice GPUDevice;
 
 template <typename Device, typename T>
 class SoftsignOp : public UnaryElementWiseOp<T, SoftsignOp<Device, T>> {
- public:
-  explicit SoftsignOp(OpKernelConstruction* context)
-      : UnaryElementWiseOp<T, SoftsignOp<Device, T>>(context) {}
+public:
+    explicit SoftsignOp(OpKernelConstruction* context)
+        : UnaryElementWiseOp<T, SoftsignOp<Device, T>>(context) {}
 
-  void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
-    functor::Softsign<Device, T> functor;
-    functor(context->eigen_device<Device>(), input.flat<T>(),
-            output->flat<T>());
-  }
+    void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
+        functor::Softsign<Device, T> functor;
+        functor(context->eigen_device<Device>(), input.flat<T>(),
+                output->flat<T>());
+    }
 };
 
 template <typename Device, typename T>
 class SoftsignGradOp
     : public BinaryElementWiseOp<T, SoftsignGradOp<Device, T>> {
- public:
-  explicit SoftsignGradOp(OpKernelConstruction* context)
-      : BinaryElementWiseOp<T, SoftsignGradOp<Device, T>>(context) {}
+public:
+    explicit SoftsignGradOp(OpKernelConstruction* context)
+        : BinaryElementWiseOp<T, SoftsignGradOp<Device, T>>(context) {}
 
-  // INPUTS:
-  //   g (gradients): backpropagated gradients
-  //   a (inputs): inputs that were passed to SoftsignOp()
-  // OUTPUT:
-  //   gradients to backprop
-  void Operate(OpKernelContext* context, const Tensor& g, const Tensor& a,
-               Tensor* output) {
-    OP_REQUIRES(context, a.IsSameSize(g),
-                errors::InvalidArgument("g and a must be the same size"));
-    functor::SoftsignGrad<Device, T> functor;
-    functor(context->eigen_device<Device>(), g.flat<T>(), a.flat<T>(),
-            output->flat<T>());
-  }
+    // INPUTS:
+    //   g (gradients): backpropagated gradients
+    //   a (inputs): inputs that were passed to SoftsignOp()
+    // OUTPUT:
+    //   gradients to backprop
+    void Operate(OpKernelContext* context, const Tensor& g, const Tensor& a,
+                 Tensor* output) {
+        OP_REQUIRES(context, a.IsSameSize(g),
+                    errors::InvalidArgument("g and a must be the same size"));
+        functor::SoftsignGrad<Device, T> functor;
+        functor(context->eigen_device<Device>(), g.flat<T>(), a.flat<T>(),
+                output->flat<T>());
+    }
 };
 
 #define REGISTER_KERNELS(type)                                           \
