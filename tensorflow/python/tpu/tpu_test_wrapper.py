@@ -25,7 +25,6 @@ The main responsibilities of this file are:
     default value of --model_dir. This is similar to how Bazel provides each
     test with a fresh local directory in $TEST_TMPDIR.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
