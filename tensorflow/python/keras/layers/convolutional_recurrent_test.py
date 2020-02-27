@@ -33,8 +33,7 @@ class ConvLSTMTest(keras_parameterized.TestCase):
         *test_util.generate_combinations_with_testcase_name(
             data_format=["channels_first", "channels_last"],
             return_sequences=[True, False],
-        )
-    )
+        ))
     def test_conv_lstm(self, data_format, return_sequences):
         num_row = 3
         num_col = 3
@@ -45,13 +44,11 @@ class ConvLSTMTest(keras_parameterized.TestCase):
         input_num_col = 5
         sequence_len = 2
         if data_format == "channels_first":
-            inputs = np.random.rand(
-                num_samples, sequence_len, input_channel, input_num_row, input_num_col
-            )
+            inputs = np.random.rand(num_samples, sequence_len, input_channel,
+                                    input_num_row, input_num_col)
         else:
-            inputs = np.random.rand(
-                num_samples, sequence_len, input_num_row, input_num_col, input_channel
-            )
+            inputs = np.random.rand(num_samples, sequence_len, input_num_row,
+                                    input_num_col, input_channel)
 
         # test for return state:
         x = keras.Input(batch_shape=inputs.shape)
@@ -72,7 +69,9 @@ class ConvLSTMTest(keras_parameterized.TestCase):
         model = keras.models.Model(x, states[0])
         state = model.predict(inputs)
 
-        self.assertAllClose(keras.backend.eval(layer.states[0]), state, atol=1e-4)
+        self.assertAllClose(keras.backend.eval(layer.states[0]),
+                            state,
+                            atol=1e-4)
 
         # test for output shape:
         testing_utils.layer_test(
@@ -97,9 +96,8 @@ class ConvLSTMTest(keras_parameterized.TestCase):
         input_num_row = 5
         input_num_col = 5
         sequence_len = 2
-        inputs = np.random.rand(
-            num_samples, sequence_len, input_num_row, input_num_col, input_channel
-        )
+        inputs = np.random.rand(num_samples, sequence_len, input_num_row,
+                                input_num_col, input_channel)
 
         with self.cached_session():
             model = keras.models.Sequential()
@@ -119,7 +117,8 @@ class ConvLSTMTest(keras_parameterized.TestCase):
             out1 = model.predict(np.ones_like(inputs))
 
             # train once so that the states change
-            model.train_on_batch(np.ones_like(inputs), np.random.random(out1.shape))
+            model.train_on_batch(np.ones_like(inputs),
+                                 np.random.random(out1.shape))
             out2 = model.predict(np.ones_like(inputs))
 
             # if the state is not reset, output should be different
@@ -150,9 +149,8 @@ class ConvLSTMTest(keras_parameterized.TestCase):
         input_num_row = 5
         input_num_col = 5
         sequence_len = 2
-        inputs = np.random.rand(
-            num_samples, sequence_len, input_num_row, input_num_col, input_channel
-        )
+        inputs = np.random.rand(num_samples, sequence_len, input_num_row,
+                                input_num_col, input_channel)
 
         with self.cached_session():
             kwargs = {
@@ -198,7 +196,8 @@ class ConvLSTMTest(keras_parameterized.TestCase):
     def test_conv_lstm_cloning(self):
         with self.cached_session():
             model = keras.models.Sequential()
-            model.add(keras.layers.ConvLSTM2D(5, 3, input_shape=(None, 5, 5, 3)))
+            model.add(
+                keras.layers.ConvLSTM2D(5, 3, input_shape=(None, 5, 5, 3)))
 
             test_inputs = np.random.random((2, 4, 5, 5, 3))
             reference_outputs = model.predict(test_inputs)
@@ -234,17 +233,19 @@ class ConvLSTMTest(keras_parameterized.TestCase):
             return_sequences=False,
             return_state=False,
         )
-        decoder_outputs = decoder_lstm(decoder_inputs, initial_state=encoder_states)
-        output = keras.layers.Conv2D(1, (3, 3), padding="same", activation="relu")(
-            decoder_outputs
-        )
+        decoder_outputs = decoder_lstm(decoder_inputs,
+                                       initial_state=encoder_states)
+        output = keras.layers.Conv2D(1, (3, 3),
+                                     padding="same",
+                                     activation="relu")(decoder_outputs)
         model = keras.Model([encoder_inputs, decoder_inputs], output)
 
         model.compile(
             optimizer="sgd",
             loss="mse",
             run_eagerly=testing_utils.should_run_eagerly(),
-            experimental_run_tf_function=testing_utils.should_run_tf_function(),
+            experimental_run_tf_function=testing_utils.should_run_tf_function(
+            ),
         )
         x_1 = np.random.rand(num_samples, sequence_len, 32, 32, 3)
         x_2 = np.random.rand(num_samples, sequence_len, 32, 32, 4)

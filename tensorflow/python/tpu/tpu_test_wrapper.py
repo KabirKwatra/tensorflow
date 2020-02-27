@@ -91,10 +91,8 @@ def calculate_parent_python_path(test_filepath):
     # We find the last occurrence of bazel_repo_root, and drop everything before.
     split_path = test_filepath.rsplit(FLAGS.bazel_repo_root, 1)
     if len(split_path) < 2:
-        raise ValueError(
-            'Filepath "%s" does not contain repo root "%s"'
-            % (test_filepath, FLAGS.bazel_repo_root)
-        )
+        raise ValueError('Filepath "%s" does not contain repo root "%s"' %
+                         (test_filepath, FLAGS.bazel_repo_root))
     path = FLAGS.bazel_repo_root + split_path[1]
 
     # We drop the last portion of the path, which is the name of the test wrapper.
@@ -131,8 +129,7 @@ def _is_test_class(obj):
       test libraries.
     """
     return tf_inspect.isclass(obj) and "TestCase" in (
-        p.__name__ for p in tf_inspect.getmro(obj)
-    )
+        p.__name__ for p in tf_inspect.getmro(obj))
 
 
 module_variables = vars()
@@ -175,7 +172,8 @@ def run_user_main(wrapped_test_module):
     tree = ast.parse(tf_inspect.getsource(wrapped_test_module))
 
     # Get string representation of just the condition `__name == "__main__"`.
-    target = ast.dump(ast.parse('if __name__ == "__main__": pass').body[0].test)
+    target = ast.dump(
+        ast.parse('if __name__ == "__main__": pass').body[0].test)
 
     # `tree.body` is a list of top-level statements in the module, like imports
     # and class definitions. We search for our main block, starting from the end.
@@ -184,16 +182,15 @@ def run_user_main(wrapped_test_module):
             break
     else:
         raise NotImplementedError(
-            'Could not find `if __name__ == "main":` block in %s.'
-            % wrapped_test_module.__name__
-        )
+            'Could not find `if __name__ == "main":` block in %s.' %
+            wrapped_test_module.__name__)
 
     # expr is defined because we would have raised an error otherwise.
-    new_ast = ast.Module(
-        body=expr.body, type_ignores=[]
-    )  # pylint:disable=undefined-loop-variable
+    new_ast = ast.Module(body=expr.body, type_ignores=[])  # pylint:disable=undefined-loop-variable
     exec(  # pylint:disable=exec-used
-        compile(new_ast, "<ast>", "exec"), globals(), wrapped_test_module.__dict__,
+        compile(new_ast, "<ast>", "exec"),
+        globals(),
+        wrapped_test_module.__dict__,
     )
 
 
