@@ -29,29 +29,29 @@ namespace {
 // A dummy shape representation function that simply converts given shape into
 // an xla::Shape without assigning any layouts.
 xla::StatusOr<xla::Shape> TestShapeRepresentation(const TensorShape& shape,
-                                                  DataType type,
-                                                  bool use_fast_memory) {
-  xla::Shape xla_shape;
-  TF_RETURN_IF_ERROR(TensorShapeToXLAShape(type, shape, &xla_shape));
-  return xla_shape;
+        DataType type,
+        bool use_fast_memory) {
+    xla::Shape xla_shape;
+    TF_RETURN_IF_ERROR(TensorShapeToXLAShape(type, shape, &xla_shape));
+    return xla_shape;
 }
 
 TEST(CompileSerializedMlirToXlaHloTest, InvalidSerializedMlirModule) {
-  string invalid_mlir_module = "totally @invalid MLIR module {here} <-";
-  std::vector<TensorShape> arg_shapes;
-  XlaCompiler::CompilationResult compilation_result;
+    string invalid_mlir_module = "totally @invalid MLIR module {here} <-";
+    std::vector<TensorShape> arg_shapes;
+    XlaCompiler::CompilationResult compilation_result;
 
-  Status s = CompileSerializedMlirToXlaHlo(invalid_mlir_module, arg_shapes,
-                                           TestShapeRepresentation,
-                                           &compilation_result);
-  EXPECT_EQ(s.code(), tensorflow::errors::Code::INVALID_ARGUMENT);
-  EXPECT_EQ(s.ToString(),
-            "Invalid argument: could not parse MLIR module<stdin>: error: "
-            "custom op 'totally' is unknown\n");
+    Status s = CompileSerializedMlirToXlaHlo(invalid_mlir_module, arg_shapes,
+               TestShapeRepresentation,
+               &compilation_result);
+    EXPECT_EQ(s.code(), tensorflow::errors::Code::INVALID_ARGUMENT);
+    EXPECT_EQ(s.ToString(),
+              "Invalid argument: could not parse MLIR module<stdin>: error: "
+              "custom op 'totally' is unknown\n");
 }
 
 TEST(CompileSerializedMlirToXlaHloTest, Success) {
-  string mlir_module = R"(
+    string mlir_module = R"(
     module attributes {tf.versions = {producer = 179 : i32}} {
       func @main(%arg0: tensor<f32>, %arg1: tensor<f32>) -> tensor<f32> {
         %0 = "tf.AddV2"(%arg0, %arg1) {T = "tfdtype$DT_FLOAT", name = "add"} : (tensor<f32>, tensor<f32>) -> tensor<f32>
@@ -60,19 +60,19 @@ TEST(CompileSerializedMlirToXlaHloTest, Success) {
     }
   )";
 
-  std::vector<TensorShape> arg_shapes(2, TensorShape());
-  XlaCompiler::CompilationResult compilation_result;
+    std::vector<TensorShape> arg_shapes(2, TensorShape());
+    XlaCompiler::CompilationResult compilation_result;
 
-  Status s = CompileSerializedMlirToXlaHlo(
-      mlir_module, arg_shapes, TestShapeRepresentation, &compilation_result);
-  ASSERT_TRUE(s.ok());
+    Status s = CompileSerializedMlirToXlaHlo(
+                   mlir_module, arg_shapes, TestShapeRepresentation, &compilation_result);
+    ASSERT_TRUE(s.ok());
 
-  const xla::HloModuleConfig module_config(
-      compilation_result.computation->GetProgramShape().ValueOrDie());
-  auto status_or_hlo_module = xla::HloModule::CreateFromProto(
-      compilation_result.computation->proto(), module_config);
-  ASSERT_TRUE(status_or_hlo_module.ok());
-  string expected_hlo_module_string = R"(HloModule main.6
+    const xla::HloModuleConfig module_config(
+        compilation_result.computation->GetProgramShape().ValueOrDie());
+    auto status_or_hlo_module = xla::HloModule::CreateFromProto(
+                                    compilation_result.computation->proto(), module_config);
+    ASSERT_TRUE(status_or_hlo_module.ok());
+    string expected_hlo_module_string = R"(HloModule main.6
 
 ENTRY %main.6 (arg_tuple.1: (f32[], f32[])) -> (f32[]) {
   %arg_tuple.1 = (f32[], f32[]) parameter(0)
@@ -131,20 +131,20 @@ TEST(CompileSerializedMlirToXlaHloTest, CompileTimeConstantFoldedSuccess) {
     }
   )";
 
-  std::vector<TensorShape> arg_shapes{TensorShape({10, 19}),
-                                      TensorShape({19, 10})};
-  XlaCompiler::CompilationResult compilation_result;
+    std::vector<TensorShape> arg_shapes{TensorShape({10, 19}),
+                                        TensorShape({19, 10})};
+    XlaCompiler::CompilationResult compilation_result;
 
-  Status s = CompileSerializedMlirToXlaHlo(
-      mlir_module, arg_shapes, TestShapeRepresentation, &compilation_result);
-  ASSERT_TRUE(s.ok());
+    Status s = CompileSerializedMlirToXlaHlo(
+                   mlir_module, arg_shapes, TestShapeRepresentation, &compilation_result);
+    ASSERT_TRUE(s.ok());
 
-  const xla::HloModuleConfig module_config(
-      compilation_result.computation->GetProgramShape().ValueOrDie());
-  auto status_or_hlo_module = xla::HloModule::CreateFromProto(
-      compilation_result.computation->proto(), module_config);
-  ASSERT_TRUE(status_or_hlo_module.ok());
-  string expected_hlo_module_string = R"(HloModule main.6
+    const xla::HloModuleConfig module_config(
+        compilation_result.computation->GetProgramShape().ValueOrDie());
+    auto status_or_hlo_module = xla::HloModule::CreateFromProto(
+                                    compilation_result.computation->proto(), module_config);
+    ASSERT_TRUE(status_or_hlo_module.ok());
+    string expected_hlo_module_string = R"(HloModule main.6
 
 ENTRY %main.6 (arg_tuple.1: (f32[10,19], f32[19,10])) -> (f32[10,19]) {
   %arg_tuple.1 = (f32[10,19]{1,0}, f32[19,10]{1,0}) parameter(0), parameter_replication={false,true}
@@ -169,24 +169,24 @@ TEST(CompileSerializedMlirToXlaHloTest, ShapeInference) {
     }
   )";
 
-  std::vector<TensorShape> arg_shapes{TensorShape({10, 17}),
-                                      TensorShape({17, 19})};
-  XlaCompiler::CompilationResult compilation_result;
+    std::vector<TensorShape> arg_shapes{TensorShape({10, 17}),
+                                        TensorShape({17, 19})};
+    XlaCompiler::CompilationResult compilation_result;
 
-  Status s = CompileSerializedMlirToXlaHlo(
-      mlir_module, arg_shapes, TestShapeRepresentation, &compilation_result);
-  TF_ASSERT_OK(s);
+    Status s = CompileSerializedMlirToXlaHlo(
+                   mlir_module, arg_shapes, TestShapeRepresentation, &compilation_result);
+    TF_ASSERT_OK(s);
 
-  const xla::HloModuleConfig module_config(
-      compilation_result.computation->GetProgramShape().ValueOrDie());
-  auto status_or_hlo_module = xla::HloModule::CreateFromProto(
-      compilation_result.computation->proto(), module_config);
-  ASSERT_TRUE(status_or_hlo_module.ok());
+    const xla::HloModuleConfig module_config(
+        compilation_result.computation->GetProgramShape().ValueOrDie());
+    auto status_or_hlo_module = xla::HloModule::CreateFromProto(
+                                    compilation_result.computation->proto(), module_config);
+    ASSERT_TRUE(status_or_hlo_module.ok());
 
-  string expected_signature =
-      R"((arg_tuple.1: (f32[10,17], f32[17,19])) -> (f32[10,19]))";
-  EXPECT_THAT(status_or_hlo_module.ValueOrDie()->ToString(),
-              ::testing::HasSubstr(expected_signature));
+    string expected_signature =
+        R"((arg_tuple.1: (f32[10,17], f32[17,19])) -> (f32[10,19]))";
+    EXPECT_THAT(status_or_hlo_module.ValueOrDie()->ToString(),
+                ::testing::HasSubstr(expected_signature));
 }
 
 }  // namespace

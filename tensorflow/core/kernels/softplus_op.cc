@@ -32,48 +32,48 @@ typedef Eigen::GpuDevice GPUDevice;
 
 template <typename Device, typename T>
 class SoftplusOp : public UnaryElementWiseOp<T, SoftplusOp<Device, T>> {
- public:
-  explicit SoftplusOp(OpKernelConstruction* context)
-      : UnaryElementWiseOp<T, SoftplusOp<Device, T>>(context) {}
+public:
+    explicit SoftplusOp(OpKernelConstruction* context)
+        : UnaryElementWiseOp<T, SoftplusOp<Device, T>>(context) {}
 
-  void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
-    functor::Softplus<Device, T> functor;
-    functor(context->eigen_device<Device>(), input.flat<T>(),
-            output->flat<T>());
-  }
+    void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
+        functor::Softplus<Device, T> functor;
+        functor(context->eigen_device<Device>(), input.flat<T>(),
+                output->flat<T>());
+    }
 };
 
 template <typename Device, typename T>
 class SoftplusGradOp
     : public BinaryElementWiseOp<T, SoftplusGradOp<Device, T>> {
- public:
-  explicit SoftplusGradOp(OpKernelConstruction* context)
-      : BinaryElementWiseOp<T, SoftplusGradOp<Device, T>>(context) {}
+public:
+    explicit SoftplusGradOp(OpKernelConstruction* context)
+        : BinaryElementWiseOp<T, SoftplusGradOp<Device, T>>(context) {}
 
-  void OperateNoTemplate(OpKernelContext* context, const Tensor& g,
-                         const Tensor& a, Tensor* output);
+    void OperateNoTemplate(OpKernelContext* context, const Tensor& g,
+                           const Tensor& a, Tensor* output);
 
-  // INPUTS:
-  //   g (gradients): backpropagated gradients
-  //   a (inputs): inputs that were passed to SoftplusOp()
-  // OUTPUT:
-  //   gradients to backprop
-  template <int NDIMS>
-  void Operate(OpKernelContext* context, const Tensor& g, const Tensor& a,
-               Tensor* output) {
-    OperateNoTemplate(context, g, a, output);
-  }
+    // INPUTS:
+    //   g (gradients): backpropagated gradients
+    //   a (inputs): inputs that were passed to SoftplusOp()
+    // OUTPUT:
+    //   gradients to backprop
+    template <int NDIMS>
+    void Operate(OpKernelContext* context, const Tensor& g, const Tensor& a,
+                 Tensor* output) {
+        OperateNoTemplate(context, g, a, output);
+    }
 };
 template <typename Device, typename T>
 void SoftplusGradOp<Device, T>::OperateNoTemplate(OpKernelContext* context,
-                                                  const Tensor& g,
-                                                  const Tensor& a,
-                                                  Tensor* output) {
-  OP_REQUIRES(context, a.IsSameSize(g),
-              errors::InvalidArgument("g and a must be the same size"));
-  functor::SoftplusGrad<Device, T> functor;
-  functor(context->eigen_device<Device>(), g.flat<T>(), a.flat<T>(),
-          output->flat<T>());
+        const Tensor& g,
+        const Tensor& a,
+        Tensor* output) {
+    OP_REQUIRES(context, a.IsSameSize(g),
+                errors::InvalidArgument("g and a must be the same size"));
+    functor::SoftplusGrad<Device, T> functor;
+    functor(context->eigen_device<Device>(), g.flat<T>(), a.flat<T>(),
+            output->flat<T>());
 }
 
 #define REGISTER_KERNELS(type)                                           \

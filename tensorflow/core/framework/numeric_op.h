@@ -28,21 +28,21 @@ namespace tensorflow {
 // One input and one output, both the same type.
 template <class T>
 class UnaryOp : public OpKernel {
- public:
-  explicit UnaryOp(OpKernelConstruction* context) : OpKernel(context) {
-    const DataType dt = DataTypeToEnum<T>::v();
-    OP_REQUIRES_OK(context, context->MatchSignature({dt}, {dt}));
-  }
+public:
+    explicit UnaryOp(OpKernelConstruction* context) : OpKernel(context) {
+        const DataType dt = DataTypeToEnum<T>::v();
+        OP_REQUIRES_OK(context, context->MatchSignature({dt}, {dt}));
+    }
 };
 
 // Two inputs and one output, all the same type.
 template <class T>
 class BinaryOp : public OpKernel {
- public:
-  explicit BinaryOp(OpKernelConstruction* context) : OpKernel(context) {
-    const DataType dt = DataTypeToEnum<T>::v();
-    OP_REQUIRES_OK(context, context->MatchSignature({dt, dt}, {dt}));
-  }
+public:
+    explicit BinaryOp(OpKernelConstruction* context) : OpKernel(context) {
+        const DataType dt = DataTypeToEnum<T>::v();
+        OP_REQUIRES_OK(context, context->MatchSignature({dt, dt}, {dt}));
+    }
 };
 
 // For operations where the input and output are the same shape.
@@ -50,62 +50,62 @@ class BinaryOp : public OpKernel {
 // For usage, see ../framework/elementwise_ops.cc.
 template <class T, class CHILD>
 class UnaryElementWiseOp : public UnaryOp<T> {
- public:
-  using UnaryOp<T>::UnaryOp;
+public:
+    using UnaryOp<T>::UnaryOp;
 
-  void Compute(OpKernelContext* context) override {
-    // Output shape is the same as input shape.
-    const Tensor& input = context->input(0);
-    Tensor* output = nullptr;
-    OP_REQUIRES_OK(context, context->forward_input_or_allocate_output(
-                                {0}, 0, input.shape(), &output));
-    static_cast<CHILD*>(this)->Operate(context, input, output);
-  }
+    void Compute(OpKernelContext* context) override {
+        // Output shape is the same as input shape.
+        const Tensor& input = context->input(0);
+        Tensor* output = nullptr;
+        OP_REQUIRES_OK(context, context->forward_input_or_allocate_output(
+        {0}, 0, input.shape(), &output));
+        static_cast<CHILD*>(this)->Operate(context, input, output);
+    }
 };
 
 // For binary elementwise operations.
 template <class T, class CHILD>
 class BinaryElementWiseOp : public BinaryOp<T> {
- public:
-  using BinaryOp<T>::BinaryOp;
+public:
+    using BinaryOp<T>::BinaryOp;
 
-  void Compute(OpKernelContext* context) override {
-    const Tensor& a = context->input(0);
-    const Tensor& b = context->input(1);
+    void Compute(OpKernelContext* context) override {
+        const Tensor& a = context->input(0);
+        const Tensor& b = context->input(1);
 
-    if (!context->ValidateInputsAreSameShape(this)) {
-      return;
-    }
+        if (!context->ValidateInputsAreSameShape(this)) {
+            return;
+        }
 
-    Tensor* output = nullptr;
-    OP_REQUIRES_OK(context, context->forward_input_or_allocate_output(
-                                {0, 1}, 0, a.shape(), &output));
+        Tensor* output = nullptr;
+        OP_REQUIRES_OK(context, context->forward_input_or_allocate_output(
+        {0, 1}, 0, a.shape(), &output));
 
-    // Dispatch to the descendant's Operate() function.
-    switch (a.dims()) {
+        // Dispatch to the descendant's Operate() function.
+        switch (a.dims()) {
 #define NDIM_CASE(NDIMS)                                                       \
   case NDIMS: {                                                                \
     static_cast<CHILD*>(this)->template Operate<NDIMS>(context, a, b, output); \
     break;                                                                     \
   }
 
-      NDIM_CASE(0);
-      NDIM_CASE(1);
-      NDIM_CASE(2);
-      NDIM_CASE(3);
-      NDIM_CASE(4);
-      NDIM_CASE(5);
-      NDIM_CASE(6);
-      NDIM_CASE(7);
-      NDIM_CASE(8);
+            NDIM_CASE(0);
+            NDIM_CASE(1);
+            NDIM_CASE(2);
+            NDIM_CASE(3);
+            NDIM_CASE(4);
+            NDIM_CASE(5);
+            NDIM_CASE(6);
+            NDIM_CASE(7);
+            NDIM_CASE(8);
 #undef NDIM_CASE
 
-      default:
-        context->SetStatus(errors::InvalidArgument(
-            "We only handle up to Tensor::dims() up to 8, not ", a.dims()));
-        break;
+        default:
+            context->SetStatus(errors::InvalidArgument(
+                                   "We only handle up to Tensor::dims() up to 8, not ", a.dims()));
+            break;
+        }
     }
-  }
 };
 
 }  // namespace tensorflow
