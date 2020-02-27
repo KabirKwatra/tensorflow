@@ -23,36 +23,36 @@ namespace tflite {
 
 // OpSignature contains operator parameters for version functions.
 typedef struct {
-    BuiltinOperator op;
-    std::vector<TensorType> input_types;
-    std::vector<TensorType> output_types;
-    union {
-        struct {
-            int32_t dilation_w_factor;
-            int32_t dilation_h_factor;
-        } depthwise_conv_2d;
-        struct {
-            bool narrow_range;
-        } fakequant;
-        struct {
-            bool keep_num_dims;
-            FullyConnectedOptionsWeightsFormat weights_format;
-        } fully_connected;
-        struct {
-            float input1_scale;
-            float input2_scale;
-            float output_scale;
-        } mul;
-        struct {
-            LSTMKernelType kernel_type;
-        } lstm;
-        struct {
-            bool half_pixel_centers;
-        } resize_bilinear;
-        struct {
-            int32_t num_dims;
-        } strided_slice;
-    } options;
+  BuiltinOperator op;
+  std::vector<TensorType> input_types;
+  std::vector<TensorType> output_types;
+  union {
+    struct {
+      int32_t dilation_w_factor;
+      int32_t dilation_h_factor;
+    } depthwise_conv_2d;
+    struct {
+      bool narrow_range;
+    } fakequant;
+    struct {
+      bool keep_num_dims;
+      FullyConnectedOptionsWeightsFormat weights_format;
+    } fully_connected;
+    struct {
+      float input1_scale;
+      float input2_scale;
+      float output_scale;
+    } mul;
+    struct {
+      LSTMKernelType kernel_type;
+    } lstm;
+    struct {
+      bool half_pixel_centers;
+    } resize_bilinear;
+    struct {
+      int32_t num_dims;
+    } strided_slice;
+  } options;
 } OpSignature;
 
 // Returns version of builtin ops by the given signature.
