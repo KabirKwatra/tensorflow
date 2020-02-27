@@ -13,15 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Base class for testing saving/loading with DS."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import os
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute import combinations

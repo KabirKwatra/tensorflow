@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for TensorFlow 2.0 layer behavior."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

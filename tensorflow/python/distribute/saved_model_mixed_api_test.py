@@ -19,7 +19,6 @@ saved_model's load() API is used. Keras's export_save_model() when used with
 `serving_only` parameter equals to True should be the same as using
 tf.saved_model.save().
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

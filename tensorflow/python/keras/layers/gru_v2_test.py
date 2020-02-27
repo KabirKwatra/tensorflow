@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for GRU V2 layer."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,8 +20,8 @@ from __future__ import print_function
 import os
 import shutil
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.core.protobuf import rewriter_config_pb2

@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for saving utility functions."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,7 +20,6 @@ from __future__ import print_function
 import os
 
 import numpy as np
-
 
 from tensorflow.python import keras
 from tensorflow.python import tf2

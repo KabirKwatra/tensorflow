@@ -13,16 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for model.fit calls with a Dataset object passed as validation_data."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import sys
 
-from absl.testing import parameterized
 import numpy as np
 import six
+from absl.testing import parameterized
 
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops

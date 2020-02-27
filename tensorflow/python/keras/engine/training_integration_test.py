@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """End-to-end tests for a variety of small models."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,8 +20,8 @@ from __future__ import print_function
 import collections
 import itertools
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops

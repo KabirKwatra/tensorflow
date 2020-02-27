@@ -19,9 +19,9 @@ from __future__ import print_function
 
 import gc
 
-from absl.testing import parameterized
 import numpy as np
 import scipy.sparse
+from absl.testing import parameterized
 
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python import keras
