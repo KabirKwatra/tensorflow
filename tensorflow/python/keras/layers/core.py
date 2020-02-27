@@ -56,7 +56,7 @@ from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export('keras.layers.Masking')
+@keras_export("keras.layers.Masking")
 class Masking(Layer):
     """Masks a sequence by using a mask value to skip timesteps.
 
@@ -97,7 +97,7 @@ class Masking(Layer):
     for more details.
     """
 
-    def __init__(self, mask_value=0., **kwargs):
+    def __init__(self, mask_value=0.0, **kwargs):
         super(Masking, self).__init__(**kwargs)
         self.supports_masking = True
         self.mask_value = mask_value
@@ -108,23 +108,25 @@ class Masking(Layer):
 
     def call(self, inputs):
         boolean_mask = K.any(
-            math_ops.not_equal(inputs, self.mask_value), axis=-1, keepdims=True)
+            math_ops.not_equal(inputs, self.mask_value), axis=-1, keepdims=True
+        )
         outputs = inputs * math_ops.cast(boolean_mask, inputs.dtype)
         # Compute the mask and outputs simultaneously.
         outputs._keras_mask = array_ops.squeeze(
-            boolean_mask, axis=-1)  # pylint: disable=protected-access
+            boolean_mask, axis=-1
+        )  # pylint: disable=protected-access
         return outputs
 
     def compute_output_shape(self, input_shape):
         return input_shape
 
     def get_config(self):
-        config = {'mask_value': self.mask_value}
+        config = {"mask_value": self.mask_value}
         base_config = super(Masking, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.Dropout')
+@keras_export("keras.layers.Dropout")
 class Dropout(Layer):
     """Applies Dropout to the input.
 
@@ -193,8 +195,7 @@ class Dropout(Layer):
         concrete_inputs_shape = array_ops.shape(inputs)
         noise_shape = []
         for i, value in enumerate(self.noise_shape):
-            noise_shape.append(
-                concrete_inputs_shape[i] if value is None else value)
+            noise_shape.append(concrete_inputs_shape[i] if value is None else value)
         return ops.convert_to_tensor_v2(noise_shape)
 
     def call(self, inputs, training=None):
@@ -206,27 +207,24 @@ class Dropout(Layer):
                 inputs,
                 noise_shape=self._get_noise_shape(inputs),
                 seed=self.seed,
-                rate=self.rate)
+                rate=self.rate,
+            )
 
-        output = tf_utils.smart_cond(training,
-                                     dropped_inputs,
-                                     lambda: array_ops.identity(inputs))
+        output = tf_utils.smart_cond(
+            training, dropped_inputs, lambda: array_ops.identity(inputs)
+        )
         return output
 
     def compute_output_shape(self, input_shape):
         return input_shape
 
     def get_config(self):
-        config = {
-            'rate': self.rate,
-            'noise_shape': self.noise_shape,
-            'seed': self.seed
-        }
+        config = {"rate": self.rate, "noise_shape": self.noise_shape, "seed": self.seed}
         base_config = super(Dropout, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.SpatialDropout1D')
+@keras_export("keras.layers.SpatialDropout1D")
 class SpatialDropout1D(Dropout):
     """Spatial 1D version of Dropout.
 
@@ -268,7 +266,7 @@ class SpatialDropout1D(Dropout):
         return noise_shape
 
 
-@keras_export('keras.layers.SpatialDropout2D')
+@keras_export("keras.layers.SpatialDropout2D")
 class SpatialDropout2D(Dropout):
     """Spatial 2D version of Dropout.
 
@@ -313,21 +311,22 @@ class SpatialDropout2D(Dropout):
         super(SpatialDropout2D, self).__init__(rate, **kwargs)
         if data_format is None:
             data_format = K.image_data_format()
-        if data_format not in {'channels_last', 'channels_first'}:
-            raise ValueError('data_format must be in '
-                             '{"channels_last", "channels_first"}')
+        if data_format not in {"channels_last", "channels_first"}:
+            raise ValueError(
+                "data_format must be in " '{"channels_last", "channels_first"}'
+            )
         self.data_format = data_format
         self.input_spec = InputSpec(ndim=4)
 
     def _get_noise_shape(self, inputs):
         input_shape = array_ops.shape(inputs)
-        if self.data_format == 'channels_first':
+        if self.data_format == "channels_first":
             return (input_shape[0], input_shape[1], 1, 1)
-        elif self.data_format == 'channels_last':
+        elif self.data_format == "channels_last":
             return (input_shape[0], 1, 1, input_shape[3])
 
 
-@keras_export('keras.layers.SpatialDropout3D')
+@keras_export("keras.layers.SpatialDropout3D")
 class SpatialDropout3D(Dropout):
     """Spatial 3D version of Dropout.
 
@@ -371,21 +370,22 @@ class SpatialDropout3D(Dropout):
         super(SpatialDropout3D, self).__init__(rate, **kwargs)
         if data_format is None:
             data_format = K.image_data_format()
-        if data_format not in {'channels_last', 'channels_first'}:
-            raise ValueError('data_format must be in '
-                             '{"channels_last", "channels_first"}')
+        if data_format not in {"channels_last", "channels_first"}:
+            raise ValueError(
+                "data_format must be in " '{"channels_last", "channels_first"}'
+            )
         self.data_format = data_format
         self.input_spec = InputSpec(ndim=5)
 
     def _get_noise_shape(self, inputs):
         input_shape = array_ops.shape(inputs)
-        if self.data_format == 'channels_first':
+        if self.data_format == "channels_first":
             return (input_shape[0], input_shape[1], 1, 1, 1)
-        elif self.data_format == 'channels_last':
+        elif self.data_format == "channels_last":
             return (input_shape[0], 1, 1, 1, input_shape[4])
 
 
-@keras_export('keras.layers.Activation')
+@keras_export("keras.layers.Activation")
 class Activation(Layer):
     """Applies an activation function to an output.
 
@@ -425,12 +425,12 @@ class Activation(Layer):
         return input_shape
 
     def get_config(self):
-        config = {'activation': activations.serialize(self.activation)}
+        config = {"activation": activations.serialize(self.activation)}
         base_config = super(Activation, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.Reshape')
+@keras_export("keras.layers.Reshape")
 class Reshape(Layer):
     """Layer that reshapes inputs into the given shape.
 
@@ -495,7 +495,7 @@ class Reshape(Layer):
           is specified.
         """
         output_shape = list(output_shape)
-        msg = 'total size of new array must be unchanged'
+        msg = "total size of new array must be unchanged"
 
         known, unknown = 1, None
         for index, dim in enumerate(output_shape):
@@ -503,7 +503,7 @@ class Reshape(Layer):
                 if unknown is None:
                     unknown = index
                 else:
-                    raise ValueError('Can only specify one unknown dimension.')
+                    raise ValueError("Can only specify one unknown dimension.")
             else:
                 known *= dim
 
@@ -521,25 +521,26 @@ class Reshape(Layer):
         if None in input_shape[1:]:
             output_shape = [input_shape[0]]
             # input shape (partially) unknown? replace -1's with None's
-            output_shape += tuple(s if s != -
-                                  1 else None for s in self.target_shape)
+            output_shape += tuple(s if s != -1 else None for s in self.target_shape)
         else:
             output_shape = [input_shape[0]]
-            output_shape += self._fix_unknown_dimension(input_shape[1:],
-                                                        self.target_shape)
+            output_shape += self._fix_unknown_dimension(
+                input_shape[1:], self.target_shape
+            )
         return tensor_shape.TensorShape(output_shape)
 
     def call(self, inputs):
-        return array_ops.reshape(inputs,
-                                 (array_ops.shape(inputs)[0],) + self.target_shape)
+        return array_ops.reshape(
+            inputs, (array_ops.shape(inputs)[0],) + self.target_shape
+        )
 
     def get_config(self):
-        config = {'target_shape': self.target_shape}
+        config = {"target_shape": self.target_shape}
         base_config = super(Reshape, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.Permute')
+@keras_export("keras.layers.Permute")
 class Permute(Layer):
     """Permutes the dimensions of the input according to a given pattern.
 
@@ -575,9 +576,10 @@ class Permute(Layer):
         self.dims = tuple(dims)
         if sorted(dims) != list(range(1, len(dims) + 1)):
             raise ValueError(
-                'Invalid permutation `dims` for Permute Layer: %s. '
-                'The set of indices in `dims` must be consecutive and start from 1.' %
-                (dims,))
+                "Invalid permutation `dims` for Permute Layer: %s. "
+                "The set of indices in `dims` must be consecutive and start from 1."
+                % (dims,)
+            )
         self.input_spec = InputSpec(ndim=len(self.dims) + 1)
 
     def compute_output_shape(self, input_shape):
@@ -592,12 +594,12 @@ class Permute(Layer):
         return array_ops.transpose(inputs, perm=(0,) + self.dims)
 
     def get_config(self):
-        config = {'dims': self.dims}
+        config = {"dims": self.dims}
         base_config = super(Permute, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.Flatten')
+@keras_export("keras.layers.Flatten")
 class Flatten(Layer):
     """Flattens the input. Does not affect the batch size.
 
@@ -635,8 +637,11 @@ class Flatten(Layer):
         self.input_spec = InputSpec(min_ndim=1)
 
     def call(self, inputs):
-        if (self.data_format == 'channels_first'
-                and K.ndim(inputs) is not None and K.ndim(inputs) > 1):
+        if (
+            self.data_format == "channels_first"
+            and K.ndim(inputs) is not None
+            and K.ndim(inputs) > 1
+        ):
             permutation = [0]
             permutation.extend(range(2, K.ndim(inputs)))
             permutation.append(1)
@@ -645,14 +650,16 @@ class Flatten(Layer):
         input_shape = inputs.shape
         if input_shape[1:].is_fully_defined():
             flattened_dim = tensor_shape.dimension_value(
-                np.prod(input_shape[1:], dtype=int))
+                np.prod(input_shape[1:], dtype=int)
+            )
             # Temporary fix for integer overflow issue.
             if flattened_dim > np.iinfo(np.int32).max:
                 shape_dtype = dtypes.int64
             else:
                 shape_dtype = dtypes.int32
             outputs = array_ops.reshape(
-                inputs, constant_op.constant((-1, flattened_dim), dtype=shape_dtype))
+                inputs, constant_op.constant((-1, flattened_dim), dtype=shape_dtype)
+            )
         else:
             batch_size = tensor_shape.dimension_value(inputs.shape[0])
             if batch_size:
@@ -662,10 +669,10 @@ class Flatten(Layer):
                 else:
                     shape_dtype = dtypes.int32
                 outputs = array_ops.reshape(
-                    inputs, constant_op.constant((batch_size, -1), dtype=shape_dtype))
+                    inputs, constant_op.constant((batch_size, -1), dtype=shape_dtype)
+                )
             else:
-                outputs = array_ops.reshape(
-                    inputs, (array_ops.shape(inputs)[0], -1))
+                outputs = array_ops.reshape(inputs, (array_ops.shape(inputs)[0], -1))
         if not context.executing_eagerly():
             outputs.set_shape(self.compute_output_shape(inputs.shape))
         return outputs
@@ -683,12 +690,12 @@ class Flatten(Layer):
         return tensor_shape.TensorShape(output_shape)
 
     def get_config(self):
-        config = {'data_format': self.data_format}
+        config = {"data_format": self.data_format}
         base_config = super(Flatten, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.RepeatVector')
+@keras_export("keras.layers.RepeatVector")
 class RepeatVector(Layer):
     """Repeats the input n times.
 
@@ -727,12 +734,12 @@ class RepeatVector(Layer):
         return K.repeat(inputs, self.n)
 
     def get_config(self):
-        config = {'n': self.n}
+        config = {"n": self.n}
         base_config = super(RepeatVector, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.Lambda')
+@keras_export("keras.layers.Lambda")
 class Lambda(Layer):
     """Wraps arbitrary expressions as a `Layer` object.
 
@@ -824,8 +831,9 @@ class Lambda(Layer):
     """
 
     @trackable.no_automatic_dependency_tracking
-    def __init__(self, function, output_shape=None, mask=None, arguments=None,
-                 **kwargs):
+    def __init__(
+        self, function, output_shape=None, mask=None, arguments=None, **kwargs
+    ):
         super(Lambda, self).__init__(**kwargs)
 
         self.arguments = arguments or {}
@@ -841,8 +849,8 @@ class Lambda(Layer):
         self._already_warned = False
 
         function_args = tf_inspect.getfullargspec(function).args
-        self._fn_expects_training_arg = 'training' in function_args
-        self._fn_expects_mask_arg = 'mask' in function_args
+        self._fn_expects_training_arg = "training" in function_args
+        self._fn_expects_mask_arg = "mask" in function_args
 
     @tf_utils.shape_type_conversion
     def compute_output_shape(self, input_shape):
@@ -856,33 +864,31 @@ class Lambda(Layer):
                     return super(Lambda, self).compute_output_shape(input_shape)
                 except NotImplementedError:
                     raise NotImplementedError(
-                        'We could not automatically infer the shape of the Lambda\'s '
-                        'output. Please specify `output_shape` for this Lambda.')
+                        "We could not automatically infer the shape of the Lambda's "
+                        "output. Please specify `output_shape` for this Lambda."
+                    )
 
         if callable(self._output_shape):
             output_shapes = self._output_shape(input_shape)
             return tf_utils.convert_shapes(output_shapes, to_tuples=False)
 
         # Output shapes are passed directly and don't include batch dimension.
-        input_tensor_shape = tf_utils.convert_shapes(
-            input_shape, to_tuples=False)
-        batch_size = nest.flatten(input_tensor_shape)[
-            0][0] if input_shape else None
+        input_tensor_shape = tf_utils.convert_shapes(input_shape, to_tuples=False)
+        batch_size = nest.flatten(input_tensor_shape)[0][0] if input_shape else None
 
         def _add_batch(shape):
             return tensor_shape.TensorShape([batch_size] + shape.as_list())
 
-        output_shapes = tf_utils.convert_shapes(
-            self._output_shape, to_tuples=False)
+        output_shapes = tf_utils.convert_shapes(self._output_shape, to_tuples=False)
         return nest.map_structure(_add_batch, output_shapes)
 
     def call(self, inputs, mask=None, training=None):
         # We must copy for thread safety, but it only needs to be a shallow copy.
         kwargs = {k: v for k, v in self.arguments.items()}
         if self._fn_expects_mask_arg:
-            kwargs['mask'] = mask
+            kwargs["mask"] = mask
         if self._fn_expects_training_arg:
-            kwargs['training'] = training
+            kwargs["training"] = training
 
         created_variables = []
 
@@ -891,8 +897,9 @@ class Lambda(Layer):
             created_variables.append(var)
             return var
 
-        with backprop.GradientTape(watch_accessed_variables=True) as tape,\
-                variable_scope.variable_creator_scope(_variable_creator):
+        with backprop.GradientTape(
+            watch_accessed_variables=True
+        ) as tape, variable_scope.variable_creator_scope(_variable_creator):
             result = self.function(inputs, **kwargs)
         self._check_variables(created_variables, tape.watched_variables())
         return result
@@ -909,10 +916,9 @@ class Lambda(Layer):
             v for v in created_variables if v.ref() not in tracked_weights
         ]
         if untracked_new_vars:
-            variable_str = '\n'.join('  {}'.format(i)
-                                     for i in untracked_new_vars)
+            variable_str = "\n".join("  {}".format(i) for i in untracked_new_vars)
             error_str = textwrap.dedent(
-                '''
+                """
           The following Variables were created within a Lambda layer ({name})
           but are not tracked by said layer:
           {variable_str}
@@ -920,7 +926,7 @@ class Lambda(Layer):
           calls, and consquently this behavior is disallowed for safety. Lambda
           layers are not well suited to stateful computation; instead, writing a
           subclassed Layer is the recommend way to define layers with
-          Variables.'''
+          Variables."""
             ).format(name=self.name, variable_str=variable_str)
             raise ValueError(error_str)
 
@@ -928,17 +934,18 @@ class Lambda(Layer):
             v for v in accessed_variables if v.ref() not in tracked_weights
         ]
         if untracked_used_vars and not self._already_warned:
-            variable_str = '\n'.join('  {}'.format(i)
-                                     for i in untracked_used_vars)
-            self._warn(textwrap.dedent(
-                '''
+            variable_str = "\n".join("  {}".format(i) for i in untracked_used_vars)
+            self._warn(
+                textwrap.dedent(
+                    """
           The following Variables were used a Lambda layer's call ({name}), but
           are not present in its tracked objects:
           {variable_str}
           It is possible that this is intended behavior, but it is more likely
           an omission. This is a strong indication that this layer should be
-          formulated as a subclassed Layer rather than a Lambda layer.'''
-            ).format(name=self.name, variable_str=variable_str))
+          formulated as a subclassed Layer rather than a Lambda layer."""
+                ).format(name=self.name, variable_str=variable_str)
+            )
             self._already_warned = True
 
     def _warn(self, msg):
@@ -953,24 +960,27 @@ class Lambda(Layer):
 
     def get_config(self):
         function_config = self._serialize_function_to_config(self.function)
-        output_shape_config = self._serialize_function_to_config(self._output_shape,
-                                                                 allow_raw=True)
+        output_shape_config = self._serialize_function_to_config(
+            self._output_shape, allow_raw=True
+        )
         config = {
-            'function': function_config[0],
-            'function_type': function_config[1],
-            'module': function_config[2],
-            'output_shape': output_shape_config[0],
-            'output_shape_type': output_shape_config[1],
-            'output_shape_module': output_shape_config[2],
+            "function": function_config[0],
+            "function_type": function_config[1],
+            "module": function_config[2],
+            "output_shape": output_shape_config[0],
+            "output_shape_type": output_shape_config[1],
+            "output_shape_module": output_shape_config[2],
         }
         if self.mask is not None:
             mask_config = self._serialize_function_to_config(self.mask)
-            config.update({
-                'mask': mask_config[0],
-                'mask_type': mask_config[1],
-                'mask_module': mask_config[2]
-            })
-        config['arguments'] = self.arguments
+            config.update(
+                {
+                    "mask": mask_config[0],
+                    "mask_type": mask_config[1],
+                    "mask_module": mask_config[2],
+                }
+            )
+        config["arguments"] = self.arguments
 
         base_config = super(Lambda, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -978,19 +988,20 @@ class Lambda(Layer):
     def _serialize_function_to_config(self, inputs, allow_raw=False):
         if isinstance(inputs, python_types.LambdaType):
             output = generic_utils.func_dump(inputs)
-            output_type = 'lambda'
+            output_type = "lambda"
             module = inputs.__module__
         elif callable(inputs):
             output = inputs.__name__
-            output_type = 'function'
+            output_type = "function"
             module = inputs.__module__
         elif allow_raw:
             output = inputs
-            output_type = 'raw'
+            output_type = "raw"
             module = None
         else:
             raise ValueError(
-                'Invalid input for serialization, type: %s ' % type(inputs))
+                "Invalid input for serialization, type: %s " % type(inputs)
+            )
 
         return output, output_type, module
 
@@ -998,66 +1009,80 @@ class Lambda(Layer):
     def from_config(cls, config, custom_objects=None):
         config = config.copy()
         function = cls._parse_function_from_config(
-            config, custom_objects, 'function', 'module', 'function_type')
+            config, custom_objects, "function", "module", "function_type"
+        )
 
         output_shape = cls._parse_function_from_config(
-            config, custom_objects, 'output_shape', 'output_shape_module',
-            'output_shape_type')
-        if 'mask' in config:
+            config,
+            custom_objects,
+            "output_shape",
+            "output_shape_module",
+            "output_shape_type",
+        )
+        if "mask" in config:
             mask = cls._parse_function_from_config(
-                config, custom_objects, 'mask', 'mask_module', 'mask_type')
+                config, custom_objects, "mask", "mask_module", "mask_type"
+            )
         else:
             mask = None
 
-        config['function'] = function
-        config['output_shape'] = output_shape
-        config['mask'] = mask
+        config["function"] = function
+        config["output_shape"] = output_shape
+        config["mask"] = mask
 
         # If arguments were numpy array, they have been saved as
         # list. We need to recover the ndarray
-        if 'arguments' in config:
-            for key in config['arguments']:
-                if isinstance(config['arguments'][key], dict):
-                    arg_dict = config['arguments'][key]
-                    if 'type' in arg_dict and arg_dict['type'] == 'ndarray':
+        if "arguments" in config:
+            for key in config["arguments"]:
+                if isinstance(config["arguments"][key], dict):
+                    arg_dict = config["arguments"][key]
+                    if "type" in arg_dict and arg_dict["type"] == "ndarray":
                         # Overwrite the argument with its numpy translation
-                        config['arguments'][key] = np.array(arg_dict['value'])
+                        config["arguments"][key] = np.array(arg_dict["value"])
 
         return cls(**config)
 
     @classmethod
     def _parse_function_from_config(
-            cls, config, custom_objects, func_attr_name, module_attr_name,
-            func_type_attr_name):
+        cls,
+        config,
+        custom_objects,
+        func_attr_name,
+        module_attr_name,
+        func_type_attr_name,
+    ):
         globs = globals()
         module = config.pop(module_attr_name, None)
         if module in sys.modules:
             globs.update(sys.modules[module].__dict__)
         elif module is not None:
             # Note: we don't know the name of the function if it's a lambda.
-            warnings.warn('{} is not loaded, but a Lambda layer uses it. '
-                          'It may cause errors.'.format(module), UserWarning)
+            warnings.warn(
+                "{} is not loaded, but a Lambda layer uses it. "
+                "It may cause errors.".format(module),
+                UserWarning,
+            )
         if custom_objects:
             globs.update(custom_objects)
         function_type = config.pop(func_type_attr_name)
-        if function_type == 'function':
+        if function_type == "function":
             # Simple lookup in custom objects
             function = generic_utils.deserialize_keras_object(
                 config[func_attr_name],
                 custom_objects=custom_objects,
-                printable_module_name='function in Lambda layer')
-        elif function_type == 'lambda':
+                printable_module_name="function in Lambda layer",
+            )
+        elif function_type == "lambda":
             # Unsafe deserialization from bytecode
-            function = generic_utils.func_load(
-                config[func_attr_name], globs=globs)
-        elif function_type == 'raw':
+            function = generic_utils.func_load(config[func_attr_name], globs=globs)
+        elif function_type == "raw":
             function = config[func_attr_name]
         else:
-            raise TypeError('Unknown function type:', function_type)
+            raise TypeError("Unknown function type:", function_type)
         return function
 
 
-@keras_export('keras.layers.Dense')
+@keras_export("keras.layers.Dense")
 class Dense(Layer):
     """Just your regular densely-connected NN layer.
 
@@ -1122,23 +1147,26 @@ class Dense(Layer):
       the output would have shape `(batch_size, units)`.
     """
 
-    def __init__(self,
-                 units,
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 **kwargs):
-        if 'input_shape' not in kwargs and 'input_dim' in kwargs:
-            kwargs['input_shape'] = (kwargs.pop('input_dim'),)
+    def __init__(
+        self,
+        units,
+        activation=None,
+        use_bias=True,
+        kernel_initializer="glorot_uniform",
+        bias_initializer="zeros",
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        **kwargs
+    ):
+        if "input_shape" not in kwargs and "input_dim" in kwargs:
+            kwargs["input_shape"] = (kwargs.pop("input_dim"),)
 
         super(Dense, self).__init__(
-            activity_regularizer=regularizers.get(activity_regularizer), **kwargs)
+            activity_regularizer=regularizers.get(activity_regularizer), **kwargs
+        )
 
         self.units = int(units) if not isinstance(units, int) else units
         self.activation = activations.get(activation)
@@ -1156,31 +1184,37 @@ class Dense(Layer):
     def build(self, input_shape):
         dtype = dtypes.as_dtype(self.dtype or K.floatx())
         if not (dtype.is_floating or dtype.is_complex):
-            raise TypeError('Unable to build `Dense` layer with non-floating point '
-                            'dtype %s' % (dtype,))
+            raise TypeError(
+                "Unable to build `Dense` layer with non-floating point "
+                "dtype %s" % (dtype,)
+            )
         input_shape = tensor_shape.TensorShape(input_shape)
         if tensor_shape.dimension_value(input_shape[-1]) is None:
-            raise ValueError('The last dimension of the inputs to `Dense` '
-                             'should be defined. Found `None`.')
+            raise ValueError(
+                "The last dimension of the inputs to `Dense` "
+                "should be defined. Found `None`."
+            )
         last_dim = tensor_shape.dimension_value(input_shape[-1])
         self.input_spec = InputSpec(min_ndim=2, axes={-1: last_dim})
         self.kernel = self.add_weight(
-            'kernel',
+            "kernel",
             shape=[last_dim, self.units],
             initializer=self.kernel_initializer,
             regularizer=self.kernel_regularizer,
             constraint=self.kernel_constraint,
             dtype=self.dtype,
-            trainable=True)
+            trainable=True,
+        )
         if self.use_bias:
             self.bias = self.add_weight(
-                'bias',
-                shape=[self.units, ],
+                "bias",
+                shape=[self.units,],
                 initializer=self.bias_initializer,
                 regularizer=self.bias_regularizer,
                 constraint=self.bias_constraint,
                 dtype=self.dtype,
-                trainable=True)
+                trainable=True,
+            )
         else:
             self.bias = None
         self.built = True
@@ -1189,8 +1223,7 @@ class Dense(Layer):
         rank = inputs.shape.rank
         if rank is not None and rank > 2:
             # Broadcasting is required for the inputs.
-            outputs = standard_ops.tensordot(
-                inputs, self.kernel, [[rank - 1], [0]])
+            outputs = standard_ops.tensordot(inputs, self.kernel, [[rank - 1], [0]])
             # Reshape the output back to the original ndim of the input.
             if not context.executing_eagerly():
                 shape = inputs.shape.as_list()
@@ -1199,8 +1232,7 @@ class Dense(Layer):
         else:
             inputs = math_ops.cast(inputs, self._compute_dtype)
             if K.is_sparse(inputs):
-                outputs = sparse_ops.sparse_tensor_dense_matmul(
-                    inputs, self.kernel)
+                outputs = sparse_ops.sparse_tensor_dense_matmul(inputs, self.kernel)
             else:
                 outputs = gen_math_ops.mat_mul(inputs, self.kernel)
         if self.use_bias:
@@ -1214,29 +1246,29 @@ class Dense(Layer):
         input_shape = input_shape.with_rank_at_least(2)
         if tensor_shape.dimension_value(input_shape[-1]) is None:
             raise ValueError(
-                'The innermost dimension of input_shape must be defined, but saw: %s'
-                % input_shape)
+                "The innermost dimension of input_shape must be defined, but saw: %s"
+                % input_shape
+            )
         return input_shape[:-1].concatenate(self.units)
 
     def get_config(self):
         config = {
-            'units': self.units,
-            'activation': activations.serialize(self.activation),
-            'use_bias': self.use_bias,
-            'kernel_initializer': initializers.serialize(self.kernel_initializer),
-            'bias_initializer': initializers.serialize(self.bias_initializer),
-            'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
-            'bias_regularizer': regularizers.serialize(self.bias_regularizer),
-            'activity_regularizer':
-                regularizers.serialize(self.activity_regularizer),
-            'kernel_constraint': constraints.serialize(self.kernel_constraint),
-            'bias_constraint': constraints.serialize(self.bias_constraint)
+            "units": self.units,
+            "activation": activations.serialize(self.activation),
+            "use_bias": self.use_bias,
+            "kernel_initializer": initializers.serialize(self.kernel_initializer),
+            "bias_initializer": initializers.serialize(self.bias_initializer),
+            "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
+            "bias_regularizer": regularizers.serialize(self.bias_regularizer),
+            "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+            "kernel_constraint": constraints.serialize(self.kernel_constraint),
+            "bias_constraint": constraints.serialize(self.bias_constraint),
         }
         base_config = super(Dense, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.ActivityRegularization')
+@keras_export("keras.layers.ActivityRegularization")
 class ActivityRegularization(Layer):
     """Layer that applies an update to the cost function based input activity.
 
@@ -1253,9 +1285,10 @@ class ActivityRegularization(Layer):
       Same shape as input.
     """
 
-    def __init__(self, l1=0., l2=0., **kwargs):
+    def __init__(self, l1=0.0, l2=0.0, **kwargs):
         super(ActivityRegularization, self).__init__(
-            activity_regularizer=regularizers.L1L2(l1=l1, l2=l2), **kwargs)
+            activity_regularizer=regularizers.L1L2(l1=l1, l2=l2), **kwargs
+        )
         self.supports_masking = True
         self.l1 = l1
         self.l2 = l2
@@ -1264,6 +1297,6 @@ class ActivityRegularization(Layer):
         return input_shape
 
     def get_config(self):
-        config = {'l1': self.l1, 'l2': self.l2}
+        config = {"l1": self.l1, "l2": self.l2}
         base_config = super(ActivityRegularization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
