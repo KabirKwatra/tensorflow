@@ -66,7 +66,10 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
         )
         testing_utils.layer_test(
             keras.layers.BatchNormalization,
-            kwargs={"scale": False, "center": False},
+            kwargs={
+                "scale": False,
+                "center": False
+            },
             input_shape=(3, 3),
         )
 
@@ -84,15 +87,13 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
 
     @tf_test_util.run_in_graph_and_eager_modes
     def test_batchnorm_regularization(self):
-        layer = keras.layers.BatchNormalization(
-            gamma_regularizer="l1", beta_regularizer="l1"
-        )
+        layer = keras.layers.BatchNormalization(gamma_regularizer="l1",
+                                                beta_regularizer="l1")
         layer.build((None, 3, 4))
         self.assertEqual(len(layer.losses), 2)
         max_norm = keras.constraints.max_norm
-        layer = keras.layers.BatchNormalization(
-            gamma_constraint=max_norm, beta_constraint=max_norm
-        )
+        layer = keras.layers.BatchNormalization(gamma_constraint=max_norm,
+                                                beta_constraint=max_norm)
         layer.build((None, 3, 4))
         self.assertEqual(layer.gamma.constraint, max_norm)
         self.assertEqual(layer.beta.constraint, max_norm)
@@ -102,9 +103,9 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
         if test.is_gpu_available(cuda_only=True):
             with self.session(use_gpu=True):
                 model = keras.models.Sequential()
-                norm = keras.layers.BatchNormalization(
-                    axis=1, input_shape=(3, 4, 4), momentum=0.8
-                )
+                norm = keras.layers.BatchNormalization(axis=1,
+                                                       input_shape=(3, 4, 4),
+                                                       momentum=0.8)
                 model.add(norm)
                 model.compile(
                     loss="mse",
@@ -119,15 +120,19 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
                 out -= np.reshape(keras.backend.eval(norm.beta), (1, 3, 1, 1))
                 out /= np.reshape(keras.backend.eval(norm.gamma), (1, 3, 1, 1))
 
-                np.testing.assert_allclose(np.mean(out, axis=(0, 2, 3)), 0.0, atol=1e-1)
-                np.testing.assert_allclose(np.std(out, axis=(0, 2, 3)), 1.0, atol=1e-1)
+                np.testing.assert_allclose(np.mean(out, axis=(0, 2, 3)),
+                                           0.0,
+                                           atol=1e-1)
+                np.testing.assert_allclose(np.std(out, axis=(0, 2, 3)),
+                                           1.0,
+                                           atol=1e-1)
 
     @keras_parameterized.run_all_keras_modes
     def test_batchnorm_convnet_channel_last(self):
         model = keras.models.Sequential()
-        norm = keras.layers.BatchNormalization(
-            axis=-1, input_shape=(4, 4, 3), momentum=0.8
-        )
+        norm = keras.layers.BatchNormalization(axis=-1,
+                                               input_shape=(4, 4, 3),
+                                               momentum=0.8)
         model.add(norm)
         model.compile(
             loss="mse",
@@ -142,26 +147,24 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
         out -= np.reshape(keras.backend.eval(norm.beta), (1, 1, 1, 3))
         out /= np.reshape(keras.backend.eval(norm.gamma), (1, 1, 1, 3))
 
-        np.testing.assert_allclose(np.mean(out, axis=(0, 1, 2)), 0.0, atol=1e-1)
+        np.testing.assert_allclose(np.mean(out, axis=(0, 1, 2)),
+                                   0.0,
+                                   atol=1e-1)
         np.testing.assert_allclose(np.std(out, axis=(0, 1, 2)), 1.0, atol=1e-1)
 
     @keras_parameterized.run_all_keras_modes
     def test_batchnorm_correctness(self):
-        _run_batchnorm_correctness_test(
-            normalization.BatchNormalization, dtype="float32"
-        )
-        _run_batchnorm_correctness_test(
-            normalization_v2.BatchNormalization, dtype="float32"
-        )
+        _run_batchnorm_correctness_test(normalization.BatchNormalization,
+                                        dtype="float32")
+        _run_batchnorm_correctness_test(normalization_v2.BatchNormalization,
+                                        dtype="float32")
 
     @keras_parameterized.run_all_keras_modes
     def test_batchnorm_mixed_precision(self):
-        _run_batchnorm_correctness_test(
-            normalization.BatchNormalization, dtype="float16"
-        )
-        _run_batchnorm_correctness_test(
-            normalization_v2.BatchNormalization, dtype="float16"
-        )
+        _run_batchnorm_correctness_test(normalization.BatchNormalization,
+                                        dtype="float16")
+        _run_batchnorm_correctness_test(normalization_v2.BatchNormalization,
+                                        dtype="float16")
 
     @tf_test_util.run_in_graph_and_eager_modes
     @testing_utils.enable_v2_dtype_behavior
@@ -180,11 +183,13 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
 
     @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
     def test_batchnorm_non_trainable_with_fit(self):
-        inputs = keras.Input((3,))
+        inputs = keras.Input((3, ))
         bn = normalization_v2.BatchNormalization()
         outputs = bn(inputs)
         model = keras.Model(inputs, outputs)
-        model.compile("rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("rmsprop",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         model.fit(np.random.random((100, 3)), np.random.random((100, 3)))
 
         test_data = np.random.random((10, 3))
@@ -192,13 +197,15 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
         test_loss = model.evaluate(test_data, test_targets)
 
         bn.trainable = False
-        model.compile("rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("rmsprop",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         train_loss = model.train_on_batch(test_data, test_targets)
         self.assertAlmostEqual(test_loss, train_loss)
 
     @tf_test_util.run_in_graph_and_eager_modes
     def test_batchnorm_non_trainable_with_tf_function(self):
-        inputs = keras.Input((3,))
+        inputs = keras.Input((3, ))
         bn = normalization_v2.BatchNormalization()
         outputs = bn(inputs)
         model = keras.Model(inputs, outputs)
@@ -249,8 +256,10 @@ class BatchNormalizationTest(keras_parameterized.TestCase):
                 model(x, training=True)
 
             # Make sure the moving mean and variance have been updated
-            self.assertAllClose(model.bn.moving_mean.numpy(), [0.047], atol=3e-3)
-            self.assertAllClose(model.bn.moving_variance.numpy(), [0.9], atol=3e-2)
+            self.assertAllClose(model.bn.moving_mean.numpy(), [0.047],
+                                atol=3e-3)
+            self.assertAllClose(model.bn.moving_variance.numpy(), [0.9],
+                                atol=3e-2)
 
 
 class BatchNormalizationV1Test(test.TestCase):
@@ -330,10 +339,12 @@ class BatchNormalizationV2Test(keras_parameterized.TestCase):
             normalization_v2.BatchNormalization(fused=True, axis=[1, 3])
 
         with self.assertRaisesRegexp(ValueError, "fused.*virtual_batch_size"):
-            normalization_v2.BatchNormalization(fused=True, virtual_batch_size=2)
+            normalization_v2.BatchNormalization(fused=True,
+                                                virtual_batch_size=2)
 
         with self.assertRaisesRegexp(ValueError, "fused.*adjustment"):
-            normalization_v2.BatchNormalization(fused=True, adjustment=lambda _: (1, 0))
+            normalization_v2.BatchNormalization(fused=True,
+                                                adjustment=lambda _: (1, 0))
 
         norm = normalization_v2.BatchNormalization(fused=True)
         self.assertEqual(norm.fused, True)
@@ -363,7 +374,8 @@ def _run_batchnorm_correctness_test(layer, dtype="float32", fused=False):
     model.add(norm)
     if dtype == "float16":
         # Keras models require float32 losses.
-        model.add(keras.layers.Lambda(lambda x: keras.backend.cast(x, "float32")))
+        model.add(
+            keras.layers.Lambda(lambda x: keras.backend.cast(x, "float32")))
     model.compile(
         loss="mse",
         optimizer=gradient_descent.GradientDescentOptimizer(0.01),
@@ -371,7 +383,8 @@ def _run_batchnorm_correctness_test(layer, dtype="float32", fused=False):
     )
 
     # centered on 5.0, variance 10.0
-    x = np.random.normal(loc=5.0, scale=10.0, size=(1000, 2, 2, 2)).astype(dtype)
+    x = np.random.normal(loc=5.0, scale=10.0,
+                         size=(1000, 2, 2, 2)).astype(dtype)
     model.fit(x, x, epochs=4, verbose=0)
     out = model.predict(x)
     out -= keras.backend.eval(norm.beta)
@@ -382,24 +395,25 @@ def _run_batchnorm_correctness_test(layer, dtype="float32", fused=False):
 
 
 @parameterized.parameters(
-    [normalization.BatchNormalization, normalization_v2.BatchNormalization]
-)
-class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase):
+    [normalization.BatchNormalization, normalization_v2.BatchNormalization])
+class NormalizationLayersGraphModeOnlyTest(test.TestCase,
+                                           parameterized.TestCase):
     def test_shared_batchnorm(self, layer):
         """Test that a BN layer can be shared across different data streams."""
         with self.cached_session():
             # Test single layer reuse
             bn = layer()
-            x1 = keras.layers.Input(shape=(10,))
+            x1 = keras.layers.Input(shape=(10, ))
             _ = bn(x1)
 
-            x2 = keras.layers.Input(shape=(10,))
+            x2 = keras.layers.Input(shape=(10, ))
             y2 = bn(x2)
 
             x = np.random.normal(loc=5.0, scale=10.0, size=(2, 10))
             model = keras.models.Model(x2, y2)
 
-            model.compile(gradient_descent.GradientDescentOptimizer(0.01), "mse")
+            model.compile(gradient_descent.GradientDescentOptimizer(0.01),
+                          "mse")
             model.train_on_batch(x, x)
 
             self.assertLen(bn.updates, 4)
@@ -407,14 +421,15 @@ class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase
             self.assertLen(model.get_updates_for(x2), 2)
 
             # Test model-level reuse
-            x3 = keras.layers.Input(shape=(10,))
+            x3 = keras.layers.Input(shape=(10, ))
             y3 = model(x3)
             new_model = keras.models.Model(x3, y3, name="new_model")
 
             self.assertLen(new_model.updates, 6)
             self.assertLen(model.updates, 6)
             self.assertLen(new_model.get_updates_for(x3), 2)
-            new_model.compile(gradient_descent.GradientDescentOptimizer(0.01), "mse")
+            new_model.compile(gradient_descent.GradientDescentOptimizer(0.01),
+                              "mse")
             new_model.train_on_batch(x, x)
 
     def test_that_trainable_disables_updates(self, layer):
@@ -422,15 +437,16 @@ class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase
             val_a = np.random.random((10, 4))
             val_out = np.random.random((10, 4))
 
-            a = keras.layers.Input(shape=(4,))
-            layer = layer(input_shape=(4,))
+            a = keras.layers.Input(shape=(4, ))
+            layer = layer(input_shape=(4, ))
             b = layer(a)
             model = keras.models.Model(a, b)
 
             model.trainable = False
             assert not model.updates
 
-            model.compile(gradient_descent.GradientDescentOptimizer(0.01), "mse")
+            model.compile(gradient_descent.GradientDescentOptimizer(0.01),
+                          "mse")
             assert not model.updates
 
             x1 = model.predict(val_a)
@@ -439,7 +455,8 @@ class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase
             self.assertAllClose(x1, x2, atol=1e-7)
 
             model.trainable = True
-            model.compile(gradient_descent.GradientDescentOptimizer(0.01), "mse")
+            model.compile(gradient_descent.GradientDescentOptimizer(0.01),
+                          "mse")
             assert model.updates
 
             model.train_on_batch(val_a, val_out)
@@ -447,7 +464,8 @@ class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase
             assert np.abs(np.sum(x1 - x2)) > 1e-5
 
             layer.trainable = False
-            model.compile(gradient_descent.GradientDescentOptimizer(0.01), "mse")
+            model.compile(gradient_descent.GradientDescentOptimizer(0.01),
+                          "mse")
             assert not model.updates
 
             x1 = model.predict(val_a)
@@ -472,17 +490,15 @@ class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase
             val_a = np.expand_dims(np.arange(10.0), axis=1)
 
             def get_model(bn_mean, bn_std):
-                inp = keras.layers.Input(shape=(1,))
+                inp = keras.layers.Input(shape=(1, ))
                 x = layer()(inp)
                 model1 = keras.models.Model(inp, x)
-                model1.set_weights(
-                    [
-                        np.array([1.0]),
-                        np.array([0.0]),
-                        np.array([bn_mean]),
-                        np.array([bn_std ** 2]),
-                    ]
-                )
+                model1.set_weights([
+                    np.array([1.0]),
+                    np.array([0.0]),
+                    np.array([bn_mean]),
+                    np.array([bn_std**2]),
+                ])
                 return model1
 
             # Simulates training-mode with trainable layer.
@@ -491,9 +507,9 @@ class NormalizationLayersGraphModeOnlyTest(test.TestCase, parameterized.TestCase
                 model = get_model(bn_mean, bn_std)
                 model.compile(loss="mse", optimizer="rmsprop")
                 out = model.predict(val_a)
-                self.assertAllClose(
-                    (val_a - np.mean(val_a)) / np.std(val_a), out, atol=1e-3
-                )
+                self.assertAllClose((val_a - np.mean(val_a)) / np.std(val_a),
+                                    out,
+                                    atol=1e-3)
 
 
 def _run_layernorm_correctness_test(layer, dtype="float32"):
@@ -508,7 +524,8 @@ def _run_layernorm_correctness_test(layer, dtype="float32"):
     )
 
     # centered on 5.0, variance 10.0
-    x = np.random.normal(loc=5.0, scale=10.0, size=(1000, 2, 2, 2)).astype(dtype)
+    x = np.random.normal(loc=5.0, scale=10.0,
+                         size=(1000, 2, 2, 2)).astype(dtype)
     model.fit(x, x, epochs=4, verbose=0)
     out = model.predict(x)
     out -= keras.backend.eval(norm.beta)
@@ -531,12 +548,18 @@ class LayerNormalizationTest(keras_parameterized.TestCase):
         )
         testing_utils.layer_test(
             keras.layers.LayerNormalization,
-            kwargs={"gamma_initializer": "ones", "beta_initializer": "ones",},
+            kwargs={
+                "gamma_initializer": "ones",
+                "beta_initializer": "ones",
+            },
             input_shape=(3, 4, 2),
         )
         testing_utils.layer_test(
             keras.layers.LayerNormalization,
-            kwargs={"scale": False, "center": False},
+            kwargs={
+                "scale": False,
+                "center": False
+            },
             input_shape=(3, 3),
         )
         testing_utils.layer_test(
@@ -547,9 +570,9 @@ class LayerNormalizationTest(keras_parameterized.TestCase):
 
     @keras_parameterized.run_all_keras_modes
     def test_non_fused_layernorm(self):
-        testing_utils.layer_test(
-            keras.layers.LayerNormalization, kwargs={"axis": -2}, input_shape=(3, 4, 2)
-        )
+        testing_utils.layer_test(keras.layers.LayerNormalization,
+                                 kwargs={"axis": -2},
+                                 input_shape=(3, 4, 2))
         testing_utils.layer_test(
             keras.layers.LayerNormalization,
             kwargs={"axis": (-3, -2)},
@@ -575,15 +598,13 @@ class LayerNormalizationTest(keras_parameterized.TestCase):
 
     @tf_test_util.run_in_graph_and_eager_modes
     def test_layernorm_regularization(self):
-        layer = keras.layers.LayerNormalization(
-            gamma_regularizer="l1", beta_regularizer="l1"
-        )
+        layer = keras.layers.LayerNormalization(gamma_regularizer="l1",
+                                                beta_regularizer="l1")
         layer.build((None, 3, 4))
         self.assertEqual(len(layer.losses), 2)
         max_norm = keras.constraints.max_norm
-        layer = keras.layers.LayerNormalization(
-            gamma_constraint=max_norm, beta_constraint=max_norm
-        )
+        layer = keras.layers.LayerNormalization(gamma_constraint=max_norm,
+                                                beta_constraint=max_norm)
         layer.build((None, 3, 4))
         self.assertEqual(layer.gamma.constraint, max_norm)
         self.assertEqual(layer.beta.constraint, max_norm)
@@ -606,26 +627,25 @@ class LayerNormalizationTest(keras_parameterized.TestCase):
         out -= np.reshape(keras.backend.eval(norm.beta), (1, 1, 1, 3))
         out /= np.reshape(keras.backend.eval(norm.gamma), (1, 1, 1, 3))
 
-        np.testing.assert_allclose(np.mean(out, axis=(0, 1, 2)), 0.0, atol=1e-1)
+        np.testing.assert_allclose(np.mean(out, axis=(0, 1, 2)),
+                                   0.0,
+                                   atol=1e-1)
         np.testing.assert_allclose(np.std(out, axis=(0, 1, 2)), 1.0, atol=1e-1)
 
     @keras_parameterized.run_all_keras_modes
     def test_layernorm_correctness(self):
-        _run_layernorm_correctness_test(
-            normalization.LayerNormalization, dtype="float32"
-        )
+        _run_layernorm_correctness_test(normalization.LayerNormalization,
+                                        dtype="float32")
 
     @keras_parameterized.run_all_keras_modes
     def test_layernorm_mixed_precision(self):
-        _run_layernorm_correctness_test(
-            normalization.LayerNormalization, dtype="float16"
-        )
+        _run_layernorm_correctness_test(normalization.LayerNormalization,
+                                        dtype="float16")
 
     @tf_test_util.run_in_graph_and_eager_modes
     def testIncorrectAxisType(self):
         with self.assertRaisesRegexp(
-            TypeError, r"Expected an int or a list/tuple of ints"
-        ):
+                TypeError, r"Expected an int or a list/tuple of ints"):
             _ = normalization.LayerNormalization(axis={"axis": -1})
 
     @tf_test_util.run_in_graph_and_eager_modes
@@ -650,7 +670,8 @@ class LayerNormalizationTest(keras_parameterized.TestCase):
 class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
     """Tests LayerNormalization has correct and numerically stable outputs."""
 
-    def _expected_layer_norm(self, x, beta, gamma, batch_input_shape, axis, epsilon):
+    def _expected_layer_norm(self, x, beta, gamma, batch_input_shape, axis,
+                             epsilon):
         """Returns the layer norm, which is computed using NumPy."""
         broadcast_shape = [
             batch_input_shape[i] if i in axis else 1
@@ -663,9 +684,12 @@ class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
         expected += np.reshape(beta, broadcast_shape)
         return expected
 
-    def _test_forward_pass(
-        self, batch_input_shape, axis, fp64_tol=1e-14, fp32_tol=1e-6, fp16_tol=1e-2
-    ):
+    def _test_forward_pass(self,
+                           batch_input_shape,
+                           axis,
+                           fp64_tol=1e-14,
+                           fp32_tol=1e-6,
+                           fp16_tol=1e-2):
         """Tests the forward pass of layer normalization.
 
         Args:
@@ -682,13 +706,14 @@ class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
         for dim in param_shape:
             param_elems *= dim
         beta = np.arange(param_elems, dtype="float64").reshape(param_shape)
-        gamma = np.arange(1, param_elems + 1, dtype="float64").reshape(param_shape)
+        gamma = np.arange(1, param_elems + 1,
+                          dtype="float64").reshape(param_shape)
         x = np.random.normal(size=batch_input_shape)
 
         for epsilon in 1e-12, 1e-3:
-            expected = self._expected_layer_norm(
-                x, beta, gamma, batch_input_shape, axis, epsilon
-            )
+            expected = self._expected_layer_norm(x, beta, gamma,
+                                                 batch_input_shape, axis,
+                                                 epsilon)
             for dtype in "float64", "float32", "float16":
                 norm = normalization.LayerNormalization(
                     axis=axis,
@@ -717,19 +742,22 @@ class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
     def test_forward(self):
         # For numeric stability, we ensure the axis's dimension(s) have at least 4
         # elements.
-        self._test_forward_pass((4, 3), (0,))
-        self._test_forward_pass((3, 4), (1,))
-        self._test_forward_pass((4, 3, 2), (0,))
-        self._test_forward_pass((2, 4, 2), (1,))
-        self._test_forward_pass((2, 3, 4), (2,), fp16_tol=5e-2)
+        self._test_forward_pass((4, 3), (0, ))
+        self._test_forward_pass((3, 4), (1, ))
+        self._test_forward_pass((4, 3, 2), (0, ))
+        self._test_forward_pass((2, 4, 2), (1, ))
+        self._test_forward_pass((2, 3, 4), (2, ), fp16_tol=5e-2)
         self._test_forward_pass((2, 3, 2), (0, 2))
         self._test_forward_pass((2, 2, 2, 2), (1, 3))
         self._test_forward_pass((2, 2, 2, 2), (2, 3))
-        self._test_forward_pass((2, 3, 4, 5), (3,))
+        self._test_forward_pass((2, 3, 4, 5), (3, ))
 
-    def _test_backward_pass(
-        self, batch_input_shape, axis, fp64_tol=1e-5, fp32_tol=1e-5, fp16_tol=2e-2
-    ):
+    def _test_backward_pass(self,
+                            batch_input_shape,
+                            axis,
+                            fp64_tol=1e-5,
+                            fp32_tol=1e-5,
+                            fp16_tol=2e-2):
         """Tests the backwards pass of layer normalization.
 
         Args:
@@ -746,7 +774,8 @@ class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
         for dim in param_shape:
             param_elems *= dim
         beta = np.arange(param_elems, dtype="float64").reshape(param_shape)
-        gamma = np.arange(1, param_elems + 1, dtype="float64").reshape(param_shape)
+        gamma = np.arange(1, param_elems + 1,
+                          dtype="float64").reshape(param_shape)
         x = np.random.normal(size=batch_input_shape)
 
         for epsilon in 1e-12, 1e-3:
@@ -777,8 +806,8 @@ class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
 
                 # pylint: enable=cell-var-from-loop
                 results = gradient_checker_v2.compute_gradient(
-                    forward_fn, [keras.backend.cast(x, dtype), norm.beta, norm.gamma]
-                )
+                    forward_fn,
+                    [keras.backend.cast(x, dtype), norm.beta, norm.gamma])
                 (
                     [x_grad_t, beta_grad_t, gamma_grad_t],
                     [x_grad_n, beta_grad_n, gamma_grad_n],
@@ -800,18 +829,26 @@ class LayerNormalizationNumericsTest(keras_parameterized.TestCase):
                 # We use absolute tolerances in addition to relative tolerances, because
                 # some of the values are very close to zero.
                 self.assertAllClose(x_grad_t, x_grad_ref, rtol=tol, atol=tol)
-                self.assertAllClose(beta_grad_t, beta_grad_ref, rtol=tol, atol=tol)
-                self.assertAllClose(gamma_grad_t, gamma_grad_ref, rtol=tol, atol=tol)
+                self.assertAllClose(beta_grad_t,
+                                    beta_grad_ref,
+                                    rtol=tol,
+                                    atol=tol)
+                self.assertAllClose(gamma_grad_t,
+                                    gamma_grad_ref,
+                                    rtol=tol,
+                                    atol=tol)
 
     # The gradient_checker_v2 does not work properly with LayerNorm in graph mode.
     @tf_test_util.run_v2_only
     def test_backward(self):
         # For numeric stability, we ensure the axis's dimension(s) have at least 4
         # elements.
-        self._test_backward_pass((4, 3), (0,))
-        self._test_backward_pass((2, 4, 2), (1,))
-        self._test_backward_pass((2, 3, 4), (2,))
-        self._test_backward_pass((2, 3, 2), (0, 2), fp64_tol=5e-4, fp32_tol=5e-4)
+        self._test_backward_pass((4, 3), (0, ))
+        self._test_backward_pass((2, 4, 2), (1, ))
+        self._test_backward_pass((2, 3, 4), (2, ))
+        self._test_backward_pass((2, 3, 2), (0, 2),
+                                 fp64_tol=5e-4,
+                                 fp32_tol=5e-4)
         self._test_backward_pass((2, 2, 2, 2), (1, 3))
         self._test_backward_pass((2, 2, 2, 2), (2, 3))
 

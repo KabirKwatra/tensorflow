@@ -39,7 +39,10 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={"units": units, "return_sequences": True},
+            kwargs={
+                "units": units,
+                "return_sequences": True
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
         )
 
@@ -53,7 +56,11 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={"units": units, "return_sequences": True, "dtype": "float64"},
+            kwargs={
+                "units": units,
+                "return_sequences": True,
+                "dtype": "float64"
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
             input_dtype="float64",
         )
@@ -66,7 +73,9 @@ class GRULayerTest(keras_parameterized.TestCase):
         layer = keras.layers.GRU(units, input_shape=(None, embedding_dim))
         model = keras.models.Sequential()
         model.add(layer)
-        model.compile("rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("rmsprop",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         x = np.random.random((num_samples, timesteps, embedding_dim))
         y = np.random.random((num_samples, units))
         model.train_on_batch(x, y)
@@ -78,7 +87,11 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={"units": units, "dropout": 0.1, "recurrent_dropout": 0.1},
+            kwargs={
+                "units": units,
+                "dropout": 0.1,
+                "recurrent_dropout": 0.1
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
         )
 
@@ -95,7 +108,10 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={"units": units, "implementation": implementation_mode},
+            kwargs={
+                "units": units,
+                "implementation": implementation_mode
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
         )
 
@@ -117,9 +133,9 @@ class GRULayerTest(keras_parameterized.TestCase):
         gru_layer = keras.layers.GRU(units, reset_after=True)
         output = gru_layer(inputs)
         gru_model = keras.models.Model(inputs, output)
-        gru_model.compile(
-            "rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        gru_model.compile("rmsprop",
+                          "mse",
+                          run_eagerly=testing_utils.should_run_eagerly())
         gru_model.fit(x_train, y_train)
         gru_model.predict(x_train)
 
@@ -157,20 +173,21 @@ class GRULayerTest(keras_parameterized.TestCase):
                 mask_zero=True,
                 input_length=timesteps,
                 batch_input_shape=(num_samples, timesteps),
-            )
-        )
-        layer = layer_class(units, return_sequences=False, stateful=True, weights=None)
+            ))
+        layer = layer_class(units,
+                            return_sequences=False,
+                            stateful=True,
+                            weights=None)
         model.add(layer)
-        model.compile(
-            optimizer="sgd", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile(optimizer="sgd",
+                      loss="mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         out1 = model.predict(np.ones((num_samples, timesteps)))
         self.assertEqual(out1.shape, (num_samples, units))
 
         # train once so that the states change
-        model.train_on_batch(
-            np.ones((num_samples, timesteps)), np.ones((num_samples, units))
-        )
+        model.train_on_batch(np.ones((num_samples, timesteps)),
+                             np.ones((num_samples, units)))
         out2 = model.predict(np.ones((num_samples, timesteps)))
 
         # if the state is not reset, output should be different
@@ -211,10 +228,10 @@ class GRULayerTest(keras_parameterized.TestCase):
     def test_get_initial_states(self):
         batch_size = 4
         cell = keras.layers.GRUCell(20)
-        initial_state = cell.get_initial_state(
-            batch_size=batch_size, dtype=dtypes.float32
-        )
-        _, state = cell(np.ones((batch_size, 20), dtype=np.float32), initial_state)
+        initial_state = cell.get_initial_state(batch_size=batch_size,
+                                               dtype=dtypes.float32)
+        _, state = cell(np.ones((batch_size, 20), dtype=np.float32),
+                        initial_state)
         self.assertLen(state, 1)
         self.assertEqual(state[0].shape, initial_state.shape)
 

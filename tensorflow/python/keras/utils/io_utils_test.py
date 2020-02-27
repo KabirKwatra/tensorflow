@@ -79,7 +79,8 @@ class TestIOUtils(keras_parameterized.TestCase):
         self.assertEqual(y_train.size, 150)
 
         model = keras.models.Sequential()
-        model.add(keras.layers.Dense(64, input_shape=(10,), activation="relu"))
+        model.add(keras.layers.Dense(64, input_shape=(10, ),
+                                     activation="relu"))
         model.add(keras.layers.Dense(1, activation="sigmoid"))
         model.compile(
             loss="binary_crossentropy",
@@ -88,7 +89,11 @@ class TestIOUtils(keras_parameterized.TestCase):
         )
 
         # Note: you have to use shuffle='batch' or False with HDF5Matrix
-        model.fit(x_train, y_train, batch_size=32, shuffle="batch", verbose=False)
+        model.fit(x_train,
+                  y_train,
+                  batch_size=32,
+                  shuffle="batch",
+                  verbose=False)
         # test that evaluation and prediction
         # don't crash and return reasonable results
         out_pred = model.predict(x_test, batch_size=32, verbose=False)
@@ -119,24 +124,30 @@ class TestIOUtils(keras_parameterized.TestCase):
         def normalizer(x):
             return x + 1
 
-        normalized_x_train = io_utils.HDF5Matrix(
-            h5_path, "my_data", start=0, end=150, normalizer=normalizer
-        )
+        normalized_x_train = io_utils.HDF5Matrix(h5_path,
+                                                 "my_data",
+                                                 start=0,
+                                                 end=150,
+                                                 normalizer=normalizer)
         self.assertAllClose(normalized_x_train[0][0], x_train[0][0] + 1)
 
     def test_ask_to_proceed_with_overwrite(self):
         with test.mock.patch.object(six.moves, "input") as mock_log:
             mock_log.return_value = "y"
-            self.assertTrue(io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
+            self.assertTrue(
+                io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
 
             mock_log.return_value = "n"
-            self.assertFalse(io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
+            self.assertFalse(
+                io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
 
             mock_log.side_effect = ["m", "y"]
-            self.assertTrue(io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
+            self.assertTrue(
+                io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
 
             mock_log.side_effect = ["m", "n"]
-            self.assertFalse(io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
+            self.assertFalse(
+                io_utils.ask_to_proceed_with_overwrite("/tmp/not_exists"))
 
 
 if __name__ == "__main__":

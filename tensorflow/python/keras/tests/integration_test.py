@@ -37,11 +37,13 @@ from tensorflow.python.platform import test
 class KerasIntegrationTest(keras_parameterized.TestCase):
     def _save_and_reload_model(self, model):
         self.temp_dir = self.get_temp_dir()
-        fpath = os.path.join(self.temp_dir, "test_model_%s" % (random.randint(0, 1e7),))
+        fpath = os.path.join(self.temp_dir,
+                             "test_model_%s" % (random.randint(0, 1e7), ))
         if context.executing_eagerly():
             save_format = "tf"
         else:
-            if not isinstance(model, keras.Sequential) and not model._is_graph_network:
+            if not isinstance(
+                    model, keras.Sequential) and not model._is_graph_network:
                 return model  # Not supported
             save_format = "h5"
         model.save(fpath, save_format=save_format)
@@ -54,9 +56,10 @@ class KerasIntegrationTest(keras_parameterized.TestCase):
 class VectorClassificationIntegrationTest(keras_parameterized.TestCase):
     def test_vector_classification(self):
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(10,), num_classes=2
-        )
+        (x_train, y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                            test_samples=0,
+                                                            input_shape=(10, ),
+                                                            num_classes=2)
         y_train = np_utils.to_categorical(y_train)
 
         model = testing_utils.get_model_from_layers(
@@ -91,9 +94,10 @@ class VectorClassificationIntegrationTest(keras_parameterized.TestCase):
         # Test that Sequential models that feature internal updates
         # and internal losses can be shared.
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(10,), num_classes=2
-        )
+        (x_train, y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                            test_samples=0,
+                                                            input_shape=(10, ),
+                                                            num_classes=2)
         y_train = np_utils.to_categorical(y_train)
 
         base_model = testing_utils.get_model_from_layers(
@@ -146,17 +150,16 @@ class SequentialIntegrationTest(KerasIntegrationTest):
         # - pop its last layer and add a new layer instead
         # - continue training
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(10,), num_classes=2
-        )
+        (x_train, y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                            test_samples=0,
+                                                            input_shape=(10, ),
+                                                            num_classes=2)
         y_train = np_utils.to_categorical(y_train)
-        model = keras.Sequential(
-            [
-                keras.layers.Dense(16, activation="relu"),
-                keras.layers.Dropout(0.1),
-                keras.layers.Dense(y_train.shape[-1], activation="softmax"),
-            ]
-        )
+        model = keras.Sequential([
+            keras.layers.Dense(16, activation="relu"),
+            keras.layers.Dropout(0.1),
+            keras.layers.Dense(y_train.shape[-1], activation="softmax"),
+        ])
         model.compile(
             loss="categorical_crossentropy",
             optimizer=keras.optimizer_v2.adam.Adam(0.005),
@@ -213,9 +216,11 @@ class TimeseriesClassificationIntegrationTest(keras_parameterized.TestCase):
     @keras_parameterized.run_with_all_model_types
     def test_timeseries_classification(self):
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(4, 10), num_classes=2
-        )
+        (x_train, y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                            test_samples=0,
+                                                            input_shape=(4,
+                                                                         10),
+                                                            num_classes=2)
         y_train = np_utils.to_categorical(y_train)
 
         layers = [
@@ -223,8 +228,7 @@ class TimeseriesClassificationIntegrationTest(keras_parameterized.TestCase):
             keras.layers.GRU(y_train.shape[-1], activation="softmax"),
         ]
         model = testing_utils.get_model_from_layers(
-            layers, input_shape=x_train.shape[1:]
-        )
+            layers, input_shape=x_train.shape[1:])
         model.compile(
             loss="categorical_crossentropy",
             optimizer=keras.optimizer_v2.adam.Adam(0.005),
@@ -247,9 +251,11 @@ class TimeseriesClassificationIntegrationTest(keras_parameterized.TestCase):
 
     def test_timeseries_classification_sequential_tf_rnn(self):
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(4, 10), num_classes=2
-        )
+        (x_train, y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                            test_samples=0,
+                                                            input_shape=(4,
+                                                                         10),
+                                                            num_classes=2)
         y_train = np_utils.to_categorical(y_train)
 
         with base_layer.keras_style_scope():
@@ -259,15 +265,12 @@ class TimeseriesClassificationIntegrationTest(keras_parameterized.TestCase):
                     rnn_cell.LSTMCell(5),
                     return_sequences=True,
                     input_shape=x_train.shape[1:],
-                )
-            )
+                ))
             model.add(
                 keras.layers.RNN(
-                    rnn_cell.GRUCell(
-                        y_train.shape[-1], activation="softmax", dtype=dtypes.float32
-                    )
-                )
-            )
+                    rnn_cell.GRUCell(y_train.shape[-1],
+                                     activation="softmax",
+                                     dtype=dtypes.float32)))
             model.compile(
                 loss="categorical_crossentropy",
                 optimizer=keras.optimizer_v2.adam.Adam(0.005),
@@ -295,9 +298,11 @@ class TimeseriesClassificationIntegrationTest(keras_parameterized.TestCase):
 class ImageClassificationIntegrationTest(keras_parameterized.TestCase):
     def test_image_classification(self):
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(10, 10, 3), num_classes=2
-        )
+        (x_train,
+         y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                   test_samples=0,
+                                                   input_shape=(10, 10, 3),
+                                                   num_classes=2)
         y_train = np_utils.to_categorical(y_train)
 
         layers = [
@@ -309,8 +314,7 @@ class ImageClassificationIntegrationTest(keras_parameterized.TestCase):
             keras.layers.Dense(y_train.shape[-1], activation="softmax"),
         ]
         model = testing_utils.get_model_from_layers(
-            layers, input_shape=x_train.shape[1:]
-        )
+            layers, input_shape=x_train.shape[1:])
         model.compile(
             loss="categorical_crossentropy",
             optimizer=keras.optimizer_v2.adam.Adam(0.005),
@@ -343,22 +347,22 @@ class ActivationV2IntegrationTest(keras_parameterized.TestCase):
 
     def test_serialization_v2_model(self):
         np.random.seed(1337)
-        (x_train, y_train), _ = testing_utils.get_test_data(
-            train_samples=100, test_samples=0, input_shape=(10,), num_classes=2
-        )
+        (x_train, y_train), _ = testing_utils.get_test_data(train_samples=100,
+                                                            test_samples=0,
+                                                            input_shape=(10, ),
+                                                            num_classes=2)
         y_train = np_utils.to_categorical(y_train)
 
-        model = keras.Sequential(
-            [
-                keras.layers.Flatten(input_shape=x_train.shape[1:]),
-                keras.layers.Dense(10, activation=nn.relu),
-                # To mimic 'tf.nn.softmax' used in TF 2.x.
-                keras.layers.Dense(y_train.shape[-1], activation=nn.softmax_v2),
-            ]
-        )
+        model = keras.Sequential([
+            keras.layers.Flatten(input_shape=x_train.shape[1:]),
+            keras.layers.Dense(10, activation=nn.relu),
+            # To mimic 'tf.nn.softmax' used in TF 2.x.
+            keras.layers.Dense(y_train.shape[-1], activation=nn.softmax_v2),
+        ])
 
         # Check if 'softmax' is in model.get_config().
-        last_layer_activation = model.get_layer(index=2).get_config()["activation"]
+        last_layer_activation = model.get_layer(
+            index=2).get_config()["activation"]
         self.assertEqual(last_layer_activation, "softmax")
 
         model.compile(

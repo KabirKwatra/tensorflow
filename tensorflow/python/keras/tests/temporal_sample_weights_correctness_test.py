@@ -32,7 +32,7 @@ class Bias(layers.Layer):
     """Layer that add a bias to its inputs."""
 
     def build(self, input_shape):
-        self.bias = self.add_variable("bias", (1,), initializer="zeros")
+        self.bias = self.add_variable("bias", (1, ), initializer="zeros")
 
     def call(self, inputs):
         return inputs + self.bias
@@ -43,8 +43,8 @@ class Bias(layers.Layer):
 
 def get_multi_io_temporal_model():
     timesteps = 2
-    inp_1 = layers.Input(shape=(1,), name="input_1")
-    inp_2 = layers.Input(shape=(1,), name="input_2")
+    inp_1 = layers.Input(shape=(1, ), name="input_1")
+    inp_2 = layers.Input(shape=(1, ), name="input_2")
     x = layers.RepeatVector(timesteps)
     out_1 = layers.TimeDistributed(Bias(), name="output_1")
     out_2 = layers.TimeDistributed(Bias(), name="output_2")
@@ -79,19 +79,18 @@ def run_with_different_sample_weight_mode_inputs(fn, partial_sw=True):
     fn(model)
 
     model = get_compiled_multi_io_model_temporal(
-        sample_weight_mode=["temporal", "temporal"]
-    )
+        sample_weight_mode=["temporal", "temporal"])
     fn(model)
 
-    model = get_compiled_multi_io_model_temporal(
-        sample_weight_mode={"output_1": "temporal", "output_2": "temporal"}
-    )
+    model = get_compiled_multi_io_model_temporal(sample_weight_mode={
+        "output_1": "temporal",
+        "output_2": "temporal"
+    })
     fn(model)
 
     if partial_sw:
         model = get_compiled_multi_io_model_temporal(
-            sample_weight_mode=[None, "temporal"]
-        )
+            sample_weight_mode=[None, "temporal"])
         fn(model)
 
         # TODO(b/129700800): Enable after bug is fixed.
@@ -283,21 +282,23 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
             for key, value in self.expected_fit_result_with_weights.items():
                 self.assertAllClose(history.history[key], value, 1e-3)
 
-        run_with_different_sample_weight_mode_inputs(
-            _train_and_assert, partial_sw=False
-        )
+        run_with_different_sample_weight_mode_inputs(_train_and_assert,
+                                                     partial_sw=False)
 
     def test_fit_with_partial_sample_weight(self):
         def _train_and_assert(model):
             history = model.fit(
                 [self.x, self.x],
                 [self.y1, self.y2],
-                sample_weight={"output_2": self.sample_weight_2,},
+                sample_weight={
+                    "output_2": self.sample_weight_2,
+                },
                 batch_size=3,
                 epochs=2,
                 shuffle=False,
             )
-            for key, value in self.expected_fit_result_with_weights_output_2.items():
+            for key, value in self.expected_fit_result_with_weights_output_2.items(
+            ):
                 self.assertAllClose(history.history[key], value, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_train_and_assert)
@@ -305,9 +306,8 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
     def test_eval(self):
         def _eval_and_assert(model):
             model.train_on_batch([self.x, self.x], [self.y1, self.y2])
-            eval_result = model.evaluate(
-                [self.x, self.x], [self.y1, self.y2], batch_size=3
-            )
+            eval_result = model.evaluate([self.x, self.x], [self.y1, self.y2],
+                                         batch_size=3)
             self.assertAllClose(eval_result, self.expected_batch_result, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_eval_and_assert)
@@ -331,35 +331,40 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
                     "output_2": self.sample_weight_2,
                 },
             )
-            self.assertAllClose(
-                eval_result, self.expected_batch_result_with_weights, 1e-3
-            )
+            self.assertAllClose(eval_result,
+                                self.expected_batch_result_with_weights, 1e-3)
 
-        run_with_different_sample_weight_mode_inputs(_eval_and_assert, partial_sw=False)
+        run_with_different_sample_weight_mode_inputs(_eval_and_assert,
+                                                     partial_sw=False)
 
     def test_eval_with_partial_sample_weight(self):
         def _eval_and_assert(model):
             model.train_on_batch(
                 [self.x, self.x],
                 [self.y1, self.y2],
-                sample_weight={"output_2": self.sample_weight_2,},
+                sample_weight={
+                    "output_2": self.sample_weight_2,
+                },
             )
             eval_result = model.evaluate(
                 [self.x, self.x],
                 [self.y1, self.y2],
                 batch_size=3,
-                sample_weight={"output_2": self.sample_weight_2,},
+                sample_weight={
+                    "output_2": self.sample_weight_2,
+                },
             )
             self.assertAllClose(
-                eval_result, self.expected_batch_result_with_weights_output_2, 1e-3
-            )
+                eval_result, self.expected_batch_result_with_weights_output_2,
+                1e-3)
 
         run_with_different_sample_weight_mode_inputs(_eval_and_assert)
 
     def test_train_on_batch(self):
         def _train_and_assert(model):
             for _ in range(2):
-                result = model.train_on_batch([self.x, self.x], [self.y1, self.y2])
+                result = model.train_on_batch([self.x, self.x],
+                                              [self.y1, self.y2])
             self.assertAllClose(result, self.expected_batch_result, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_train_and_assert)
@@ -375,11 +380,11 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
                         "output_2": self.sample_weight_2,
                     },
                 )
-            self.assertAllClose(result, self.expected_batch_result_with_weights, 1e-3)
+            self.assertAllClose(result,
+                                self.expected_batch_result_with_weights, 1e-3)
 
-        run_with_different_sample_weight_mode_inputs(
-            _train_and_assert, partial_sw=False
-        )
+        run_with_different_sample_weight_mode_inputs(_train_and_assert,
+                                                     partial_sw=False)
 
     def test_train_on_batch_with_partial_sample_weight(self):
         def _train_and_assert(model):
@@ -387,11 +392,12 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
                 result = model.train_on_batch(
                     [self.x, self.x],
                     [self.y1, self.y2],
-                    sample_weight={"output_2": self.sample_weight_2,},
+                    sample_weight={
+                        "output_2": self.sample_weight_2,
+                    },
                 )
             self.assertAllClose(
-                result, self.expected_batch_result_with_weights_output_2, 1e-3
-            )
+                result, self.expected_batch_result_with_weights_output_2, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_train_and_assert)
 
@@ -421,33 +427,39 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
                     "output_2": self.sample_weight_2,
                 },
             )
-            self.assertAllClose(result, self.expected_batch_result_with_weights, 1e-3)
+            self.assertAllClose(result,
+                                self.expected_batch_result_with_weights, 1e-3)
 
-        run_with_different_sample_weight_mode_inputs(_test_and_assert, partial_sw=False)
+        run_with_different_sample_weight_mode_inputs(_test_and_assert,
+                                                     partial_sw=False)
 
     def test_test_on_batch_with_partial_sample_weight(self):
         def _test_and_assert(model):
             model.train_on_batch(
                 [self.x, self.x],
                 [self.y1, self.y2],
-                sample_weight={"output_2": self.sample_weight_2,},
+                sample_weight={
+                    "output_2": self.sample_weight_2,
+                },
             )
             result = model.test_on_batch(
                 [self.x, self.x],
                 [self.y1, self.y2],
-                sample_weight={"output_2": self.sample_weight_2,},
+                sample_weight={
+                    "output_2": self.sample_weight_2,
+                },
             )
             self.assertAllClose(
-                result, self.expected_batch_result_with_weights_output_2, 1e-3
-            )
+                result, self.expected_batch_result_with_weights_output_2, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_test_and_assert)
 
     def test_fit_generator(self):
         def _train_and_assert(model):
             history = model.fit_generator(
-                self.custom_generator_multi_io_temporal(), steps_per_epoch=1, epochs=2
-            )
+                self.custom_generator_multi_io_temporal(),
+                steps_per_epoch=1,
+                epochs=2)
             for key, value in self.expected_fit_result.items():
                 self.assertAllClose(history.history[key], value, 1e-3)
 
@@ -456,29 +468,28 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
     def test_fit_generator_with_sample_weight(self):
         def _train_and_assert(model):
             history = model.fit_generator(
-                self.custom_generator_multi_io_temporal(
-                    sample_weights=[self.sample_weight_1, self.sample_weight_2]
-                ),
+                self.custom_generator_multi_io_temporal(sample_weights=[
+                    self.sample_weight_1, self.sample_weight_2
+                ]),
                 steps_per_epoch=1,
                 epochs=2,
             )
             for key, value in self.expected_fit_result_with_weights.items():
                 self.assertAllClose(history.history[key], value, 1e-3)
 
-        run_with_different_sample_weight_mode_inputs(
-            _train_and_assert, partial_sw=False
-        )
+        run_with_different_sample_weight_mode_inputs(_train_and_assert,
+                                                     partial_sw=False)
 
     def test_fit_generator_with_partial_sample_weight(self):
         def _train_and_assert(model):
             history = model.fit_generator(
                 self.custom_generator_multi_io_temporal(
-                    sample_weights={"output_2": self.sample_weight_2}
-                ),
+                    sample_weights={"output_2": self.sample_weight_2}),
                 steps_per_epoch=1,
                 epochs=2,
             )
-            for key, value in self.expected_fit_result_with_weights_output_2.items():
+            for key, value in self.expected_fit_result_with_weights_output_2.items(
+            ):
                 self.assertAllClose(history.history[key], value, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_train_and_assert)
@@ -487,8 +498,7 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
         def _test_and_assert(model):
             model.train_on_batch([self.x, self.x], [self.y1, self.y2])
             eval_result = model.evaluate_generator(
-                self.custom_generator_multi_io_temporal(), steps=1
-            )
+                self.custom_generator_multi_io_temporal(), steps=1)
             self.assertAllClose(eval_result, self.expected_batch_result, 1e-3)
 
         run_with_different_sample_weight_mode_inputs(_test_and_assert)
@@ -504,33 +514,34 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
                 },
             )
             eval_result = model.evaluate_generator(
-                self.custom_generator_multi_io_temporal(
-                    sample_weights=[self.sample_weight_1, self.sample_weight_2]
-                ),
+                self.custom_generator_multi_io_temporal(sample_weights=[
+                    self.sample_weight_1, self.sample_weight_2
+                ]),
                 steps=2,
             )
-            self.assertAllClose(
-                eval_result, self.expected_batch_result_with_weights, 1e-3
-            )
+            self.assertAllClose(eval_result,
+                                self.expected_batch_result_with_weights, 1e-3)
 
-        run_with_different_sample_weight_mode_inputs(_test_and_assert, partial_sw=False)
+        run_with_different_sample_weight_mode_inputs(_test_and_assert,
+                                                     partial_sw=False)
 
     def test_eval_generator_with_partial_sample_weight(self):
         def _test_and_assert(model):
             model.train_on_batch(
                 [self.x, self.x],
                 [self.y1, self.y2],
-                sample_weight={"output_2": self.sample_weight_2,},
+                sample_weight={
+                    "output_2": self.sample_weight_2,
+                },
             )
             eval_result = model.evaluate_generator(
                 self.custom_generator_multi_io_temporal(
-                    sample_weights={"output_2": self.sample_weight_2}
-                ),
+                    sample_weights={"output_2": self.sample_weight_2}),
                 steps=2,
             )
             self.assertAllClose(
-                eval_result, self.expected_batch_result_with_weights_output_2, 1e-3
-            )
+                eval_result, self.expected_batch_result_with_weights_output_2,
+                1e-3)
 
         run_with_different_sample_weight_mode_inputs(_test_and_assert)
 
@@ -540,7 +551,11 @@ class TestMetricsCorrectnessMultiIOTemporal(keras_parameterized.TestCase):
                 model.fit(
                     [self.x, self.x],
                     [self.y1, self.y2],
-                    class_weight={"output_1": {0.5: 0.5, 2.0: 0.5, 3.5: 0.5}},
+                    class_weight={"output_1": {
+                        0.5: 0.5,
+                        2.0: 0.5,
+                        3.5: 0.5
+                    }},
                     batch_size=3,
                     epochs=2,
                     shuffle=False,

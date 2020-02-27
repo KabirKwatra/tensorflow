@@ -32,7 +32,8 @@ from tensorflow.python.platform import test
 class TestDNNModel(keras.models.Model):
     def __init__(self, feature_columns, units, name=None, **kwargs):
         super(TestDNNModel, self).__init__(name=name, **kwargs)
-        self._input_layer = fc.DenseFeatures(feature_columns, name="input_layer")
+        self._input_layer = fc.DenseFeatures(feature_columns,
+                                             name="input_layer")
         self._dense_layer = keras.layers.Dense(units, name="dense_layer")
 
     def call(self, features):
@@ -49,13 +50,11 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
     def test_sequential_model(self):
         columns = [fc.numeric_column("a")]
-        model = keras.models.Sequential(
-            [
-                fc.DenseFeatures(columns),
-                keras.layers.Dense(64, activation="relu"),
-                keras.layers.Dense(20, activation="softmax"),
-            ]
-        )
+        model = keras.models.Sequential([
+            fc.DenseFeatures(columns),
+            keras.layers.Dense(64, activation="relu"),
+            keras.layers.Dense(20, activation="softmax"),
+        ])
         model.compile(
             optimizer="rmsprop",
             loss="categorical_crossentropy",
@@ -74,13 +73,11 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
     def test_sequential_model_with_ds_input(self):
         columns = [fc.numeric_column("a")]
-        model = keras.models.Sequential(
-            [
-                fc.DenseFeatures(columns),
-                keras.layers.Dense(64, activation="relu"),
-                keras.layers.Dense(20, activation="softmax"),
-            ]
-        )
+        model = keras.models.Sequential([
+            fc.DenseFeatures(columns),
+            keras.layers.Dense(64, activation="relu"),
+            keras.layers.Dense(20, activation="softmax"),
+        ])
         model.compile(
             optimizer="rmsprop",
             loss="categorical_crossentropy",
@@ -110,31 +107,32 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
 
         # indicator cols
         thal = fc.categorical_column_with_vocabulary_list(
-            "thal", ["fixed", "normal", "reversible"]
-        )
+            "thal", ["fixed", "normal", "reversible"])
 
-        crossed_feature = fc.crossed_column([age_buckets, thal], hash_bucket_size=1000)
+        crossed_feature = fc.crossed_column([age_buckets, thal],
+                                            hash_bucket_size=1000)
         crossed_feature = fc.indicator_column(crossed_feature)
         feature_columns.append(crossed_feature)
 
         feature_layer = fc.DenseFeatures(feature_columns)
 
-        model = keras.models.Sequential(
-            [
-                feature_layer,
-                keras.layers.Dense(128, activation="relu"),
-                keras.layers.Dense(128, activation="relu"),
-                keras.layers.Dense(1, activation="sigmoid"),
-            ]
-        )
+        model = keras.models.Sequential([
+            feature_layer,
+            keras.layers.Dense(128, activation="relu"),
+            keras.layers.Dense(128, activation="relu"),
+            keras.layers.Dense(1, activation="sigmoid"),
+        ])
 
         age_data = np.random.randint(10, 100, size=100)
-        thal_data = np.random.choice(["fixed", "normal", "reversible"], size=100)
+        thal_data = np.random.choice(["fixed", "normal", "reversible"],
+                                     size=100)
         inp_x = {"age": age_data, "thal": thal_data}
         inp_y = np.random.randint(0, 1, size=100)
         ds = dataset_ops.Dataset.from_tensor_slices((inp_x, inp_y)).batch(5)
         model.compile(
-            optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="binary_crossentropy",
+            metrics=["accuracy"],
         )
         model.fit(ds, epochs=1)
         model.fit(ds, epochs=1)
@@ -245,8 +243,14 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
 
         data_list = (
             [
-                {"a": np.arange(10), "b": np.arange(10)},
-                {"b": np.arange(10), "c": np.arange(10)},
+                {
+                    "a": np.arange(10),
+                    "b": np.arange(10)
+                },
+                {
+                    "b": np.arange(10),
+                    "c": np.arange(10)
+                },
             ],
             np.arange(10, 100),
         )
@@ -254,8 +258,16 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
 
         data_bloated_list = (
             [
-                {"a": np.arange(10), "b": np.arange(10), "c": np.arange(10)},
-                {"a": np.arange(10), "b": np.arange(10), "c": np.arange(10)},
+                {
+                    "a": np.arange(10),
+                    "b": np.arange(10),
+                    "c": np.arange(10)
+                },
+                {
+                    "a": np.arange(10),
+                    "b": np.arange(10),
+                    "c": np.arange(10)
+                },
             ],
             np.arange(10, 100),
         )
@@ -263,8 +275,14 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
 
         data_dict = (
             {
-                "fc1": {"a": np.arange(10), "b": np.arange(10)},
-                "fc2": {"b": np.arange(10), "c": np.arange(10)},
+                "fc1": {
+                    "a": np.arange(10),
+                    "b": np.arange(10)
+                },
+                "fc2": {
+                    "b": np.arange(10),
+                    "c": np.arange(10)
+                },
             },
             np.arange(10, 100),
         )
@@ -272,8 +290,16 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
 
         data_bloated_dict = (
             {
-                "fc1": {"a": np.arange(10), "b": np.arange(10), "c": np.arange(10)},
-                "fc2": {"a": np.arange(10), "b": np.arange(10), "c": np.arange(10)},
+                "fc1": {
+                    "a": np.arange(10),
+                    "b": np.arange(10),
+                    "c": np.arange(10)
+                },
+                "fc2": {
+                    "a": np.arange(10),
+                    "b": np.arange(10),
+                    "c": np.arange(10)
+                },
             },
             np.arange(10, 100),
         )
@@ -281,12 +307,17 @@ class FeatureColumnsIntegrationTest(keras_parameterized.TestCase):
 
     @keras_parameterized.run_all_keras_modes
     def test_string_input(self):
-        x = {"age": np.random.random((1024, 1)), "cabin": np.array(["a"] * 1024)}
+        x = {
+            "age": np.random.random((1024, 1)),
+            "cabin": np.array(["a"] * 1024)
+        }
         y = np.random.randint(2, size=(1024, 1))
         ds1 = dataset_ops.Dataset.from_tensor_slices(x)
         ds2 = dataset_ops.Dataset.from_tensor_slices(y)
         dataset = dataset_ops.Dataset.zip((ds1, ds2)).batch(4)
-        categorical_cols = [fc.categorical_column_with_hash_bucket("cabin", 10)]
+        categorical_cols = [
+            fc.categorical_column_with_hash_bucket("cabin", 10)
+        ]
         feature_cols = [fc.numeric_column("age")] + [
             fc.indicator_column(cc) for cc in categorical_cols
         ]

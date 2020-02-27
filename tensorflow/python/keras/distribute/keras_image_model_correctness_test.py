@@ -28,9 +28,11 @@ from tensorflow.python.platform import test
 
 
 class DistributionStrategyCnnCorrectnessTest(
-    keras_correctness_test_base.TestDistributionStrategyCorrectnessBase
-):
-    def get_model(self, initial_weights=None, distribution=None, input_shapes=None):
+        keras_correctness_test_base.TestDistributionStrategyCorrectnessBase):
+    def get_model(self,
+                  initial_weights=None,
+                  distribution=None,
+                  input_shapes=None):
         del input_shapes
         with keras_correctness_test_base.MaybeDistributionScope(distribution):
             image = keras.layers.Input(shape=(28, 28, 3), name="image")
@@ -47,8 +49,7 @@ class DistributionStrategyCnnCorrectnessTest(
                 c1 = keras.layers.SyncBatchNormalization(name="bn1")(c1)
             c1 = keras.layers.MaxPooling2D(pool_size=(2, 2))(c1)
             logits = keras.layers.Dense(10, activation="softmax", name="pred")(
-                keras.layers.Flatten()(c1)
-            )
+                keras.layers.Flatten()(c1))
             model = keras.Model(inputs=[image], outputs=[logits])
 
             if initial_weights:
@@ -80,9 +81,8 @@ class DistributionStrategyCnnCorrectnessTest(
 
     def get_data(self):
         x_train, y_train = self._get_data(
-            count=keras_correctness_test_base._GLOBAL_BATCH_SIZE
-            * keras_correctness_test_base._EVAL_STEPS
-        )
+            count=keras_correctness_test_base._GLOBAL_BATCH_SIZE *
+            keras_correctness_test_base._EVAL_STEPS)
         x_predict = x_train
         return x_train, y_train, x_predict
 
@@ -91,43 +91,41 @@ class DistributionStrategyCnnCorrectnessTest(
         x_eval, y_eval = self._get_data(count=1000)
         return x_train, y_train, x_eval, y_eval, x_eval
 
-    @combinations.generate(
-        keras_correctness_test_base.all_strategy_and_input_config_combinations()
-    )
-    def test_cnn_correctness(self, distribution, use_numpy, use_validation_data):
+    @combinations.generate(keras_correctness_test_base.
+                           all_strategy_and_input_config_combinations())
+    def test_cnn_correctness(self, distribution, use_numpy,
+                             use_validation_data):
         self.run_correctness_test(distribution, use_numpy, use_validation_data)
 
-    @combinations.generate(
-        keras_correctness_test_base.all_strategy_and_input_config_combinations()
-    )
-    def test_cnn_with_batch_norm_correctness(
-        self, distribution, use_numpy, use_validation_data
-    ):
+    @combinations.generate(keras_correctness_test_base.
+                           all_strategy_and_input_config_combinations())
+    def test_cnn_with_batch_norm_correctness(self, distribution, use_numpy,
+                                             use_validation_data):
         self.skipTest("Flakily times out, b/134670856")
-        self.run_correctness_test(
-            distribution, use_numpy, use_validation_data, with_batch_norm="regular"
-        )
+        self.run_correctness_test(distribution,
+                                  use_numpy,
+                                  use_validation_data,
+                                  with_batch_norm="regular")
 
-    @combinations.generate(
-        keras_correctness_test_base.all_strategy_and_input_config_combinations()
-    )
-    def test_cnn_with_sync_batch_norm_correctness(
-        self, distribution, use_numpy, use_validation_data
-    ):
+    @combinations.generate(keras_correctness_test_base.
+                           all_strategy_and_input_config_combinations())
+    def test_cnn_with_sync_batch_norm_correctness(self, distribution,
+                                                  use_numpy,
+                                                  use_validation_data):
         if not context.executing_eagerly():
             self.skipTest("SyncBatchNorm is not enabled in graph mode.")
 
-        self.run_correctness_test(
-            distribution, use_numpy, use_validation_data, with_batch_norm="sync"
-        )
+        self.run_correctness_test(distribution,
+                                  use_numpy,
+                                  use_validation_data,
+                                  with_batch_norm="sync")
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_with_tpu_strategies()
-        + keras_correctness_test_base.strategy_minus_tpu_and_input_config_combinations_eager()
-    )
+        keras_correctness_test_base.test_combinations_with_tpu_strategies() +
+        keras_correctness_test_base.
+        strategy_minus_tpu_and_input_config_combinations_eager())
     def test_cnn_correctness_with_partial_last_batch_eval(
-        self, distribution, use_numpy, use_validation_data
-    ):
+            self, distribution, use_numpy, use_validation_data):
         self.run_correctness_test(
             distribution,
             use_numpy,
@@ -137,12 +135,11 @@ class DistributionStrategyCnnCorrectnessTest(
         )
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_with_tpu_strategies()
-        + keras_correctness_test_base.strategy_minus_tpu_and_input_config_combinations_eager()
-    )
+        keras_correctness_test_base.test_combinations_with_tpu_strategies() +
+        keras_correctness_test_base.
+        strategy_minus_tpu_and_input_config_combinations_eager())
     def test_cnn_with_batch_norm_correctness_and_partial_last_batch_eval(
-        self, distribution, use_numpy, use_validation_data
-    ):
+            self, distribution, use_numpy, use_validation_data):
         self.run_correctness_test(
             distribution,
             use_numpy,

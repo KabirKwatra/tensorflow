@@ -65,11 +65,11 @@ from tensorflow.python.util import tf_inspect
 
 
 class _ConvertedEntityFactoryInfo(
-    collections.namedtuple(
-        "_ConvertedEntityFactoryInfo",
-        ("module_name", "converted_name", "factory_factory_name", "source_map"),
-    )
-):
+        collections.namedtuple(
+            "_ConvertedEntityFactoryInfo",
+            ("module_name", "converted_name", "factory_factory_name",
+             "source_map"),
+        )):
     """Holds metadata about a converted entity stored as a dynamic factory.
 
     The dynamic factory is assumed to be created by _wrap_into_dynamic_factory,
@@ -85,17 +85,15 @@ class _ConvertedEntityFactoryInfo(
 
     def __str__(self):
         return "_ConvertedEntityFactoryInfo({} in {})".format(
-            self.converted_name, self.module_name
-        )
+            self.converted_name, self.module_name)
 
     def get_module(self):
         return sys.modules[self.module_name]
 
     def get_factory(self):
         assert self.module_name in sys.modules
-        factory_factory = getattr(
-            sys.modules[self.module_name], self.factory_factory_name
-        )
+        factory_factory = getattr(sys.modules[self.module_name],
+                                  self.factory_factory_name)
         return factory_factory()
 
 
@@ -110,7 +108,7 @@ class _FunctionCache(object):
     defined.
     """
 
-    __slots__ = ("_cache",)
+    __slots__ = ("_cache", )
 
     def __init__(self):
         self._cache = weakref.WeakKeyDictionary()
@@ -172,7 +170,6 @@ class _UnboundInstanceCache(_FunctionCache):
 # conversion process triggers additional code execution.
 _CACHE_LOCK = threading.RLock()
 
-
 _CACHE = _CodeObjectCache()
 _WHITELIST_CACHE = _UnboundInstanceCache()
 
@@ -182,12 +179,12 @@ _WHITELIST_CACHE = _UnboundInstanceCache()
 # and globals of the converted code in a cleaner fashion.
 # TODO(mdan): A simple factory may be sufficient.
 def _wrap_into_dynamic_factory(
-    nodes,
-    entity_name,
-    factory_factory_name,
-    factory_name,
-    closure_vars,
-    future_features,
+        nodes,
+        entity_name,
+        factory_factory_name,
+        factory_name,
+        closure_vars,
+        future_features,
 ):
     """Wraps an AST into the body of a dynamic factory.
 
@@ -215,19 +212,22 @@ def _wrap_into_dynamic_factory(
       ast.AST
     """
     if not isinstance(nodes, (list, tuple)):
-        nodes = (nodes,)
+        nodes = (nodes, )
 
     dummy_closure_defs = []
     for var_name in closure_vars:
         template = """
       var_name = None
     """
-        dummy_closure_defs.extend(templates.replace(template, var_name=var_name))
+        dummy_closure_defs.extend(
+            templates.replace(template, var_name=var_name))
 
     if future_features:
         future_imports = gast.ImportFrom(
             module="__future__",
-            names=[gast.alias(name=name, asname=None) for name in future_features],
+            names=[
+                gast.alias(name=name, asname=None) for name in future_features
+            ],
             level=0,
         )
     else:
@@ -286,10 +286,12 @@ def _convert_with_cache(entity, program_ctx, free_nonglobal_var_names):
 
         logging.log(1, "Entity %s is not cached for subkey %s", entity, subkey)
 
-        nodes, converted_name, entity_info = convert_entity_to_ast(entity, program_ctx)
+        nodes, converted_name, entity_info = convert_entity_to_ast(
+            entity, program_ctx)
 
         namer = naming.Namer(entity_info.namespace)
-        factory_factory_name = namer.new_symbol("create_converted_entity_factory", ())
+        factory_factory_name = namer.new_symbol(
+            "create_converted_entity_factory", ())
         factory_name = namer.new_symbol("create_converted_entity", ())
         nodes = _wrap_into_dynamic_factory(
             nodes,
@@ -329,10 +331,10 @@ def _instantiate(entity, converted_entity_info, free_nonglobal_var_names):
     assert len(entity_closure) == len(free_nonglobal_var_names)
 
     # Fit the original entity's cells to match the order of factory's cells.
-    original_names_and_cells = dict(zip(free_nonglobal_var_names, entity_closure))
-    new_factory_cells = tuple(
-        original_names_and_cells[name] for name in factory.__code__.co_freevars
-    )
+    original_names_and_cells = dict(
+        zip(free_nonglobal_var_names, entity_closure))
+    new_factory_cells = tuple(original_names_and_cells[name]
+                              for name in factory.__code__.co_freevars)
 
     bound_factory = types.FunctionType(
         code=factory.__code__,
@@ -367,28 +369,29 @@ def convert(entity, program_ctx):
             raise ValueError(
                 "Cannot apply autograph to a function that doesn't "
                 "expose a __code__ object. If this is a @tf.function,"
-                " try passing f.python_function instead."
-            )
+                " try passing f.python_function instead.")
         free_nonglobal_var_names = entity.__code__.co_freevars
     else:
         free_nonglobal_var_names = ()
 
     for i, name in enumerate(free_nonglobal_var_names):
-        if name == "ag__" and entity.__closure__[i].cell_contents is not ag_internal:
-            raise ValueError(
-                'entity {} uses the reserved symbol "{}"'.format(entity, name)
-            )
+        if name == "ag__" and entity.__closure__[
+                i].cell_contents is not ag_internal:
+            raise ValueError('entity {} uses the reserved symbol "{}"'.format(
+                entity, name))
         # TODO(mdan): In extreme cases, other ag__ symbols may also be clobbered.
 
-    converted_entity_info = _convert_with_cache(
-        entity, program_ctx, free_nonglobal_var_names
-    )
+    converted_entity_info = _convert_with_cache(entity, program_ctx,
+                                                free_nonglobal_var_names)
 
-    return _instantiate(entity, converted_entity_info, free_nonglobal_var_names)
+    return _instantiate(entity, converted_entity_info,
+                        free_nonglobal_var_names)
 
 
 # TODO(mdan): allow_namedtuple_subclass should be hardcoded to True.
-def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False):
+def is_whitelisted(o,
+                   check_call_override=True,
+                   allow_namedtuple_subclass=False):
     """Checks whether an entity is whitelisted for use in graph mode.
 
     Examples of whitelisted entities include all members of the tensorflow
@@ -432,16 +435,17 @@ def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False)
             " by AutoGraph.",
             o,
         )
-        logging.log(2, "Whitelisted: %s: generator functions are not converted", o)
+        logging.log(2,
+                    "Whitelisted: %s: generator functions are not converted",
+                    o)
         return True
 
-    if check_call_override and not tf_inspect.isclass(o) and hasattr(o, "__call__"):
+    if check_call_override and not tf_inspect.isclass(o) and hasattr(
+            o, "__call__"):
         # Callable objects: whitelisted if their __call__ method is.
         # The type check avoids infinite recursion around the __call__ method
         # of function objects.
-        if (type(o) != type(o.__call__)) and is_whitelisted(
-            o.__call__
-        ):  # pylint: disable=unidiomatic-typecheck
+        if (type(o) != type(o.__call__)) and is_whitelisted(o.__call__):  # pylint: disable=unidiomatic-typecheck
             logging.log(2, "Whitelisted: %s: object __call__ whitelisted", o)
             return True
 
@@ -467,16 +471,16 @@ def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False)
             owner_class = o.__self__.target_class
         if owner_class is not None:
             if issubclass(owner_class, unittest.TestCase):
-                logging.log(2, "Whitelisted: %s: method of TestCase subclass", o)
+                logging.log(2, "Whitelisted: %s: method of TestCase subclass",
+                            o)
                 return True
 
             owner_class = inspect_utils.getdefiningclass(o, owner_class)
-            if is_whitelisted(
-                owner_class, check_call_override=False, allow_namedtuple_subclass=True
-            ):
-                logging.log(
-                    2, "Whitelisted: %s: owner is whitelisted %s", o, owner_class
-                )
+            if is_whitelisted(owner_class,
+                              check_call_override=False,
+                              allow_namedtuple_subclass=True):
+                logging.log(2, "Whitelisted: %s: owner is whitelisted %s", o,
+                            owner_class)
                 return True
 
     if inspect_utils.isnamedtuple(o):
@@ -484,7 +488,8 @@ def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False)
         # because they don't expose source code. But we assume they are safe for
         # graph mode since they are just containers.
         if allow_namedtuple_subclass:
-            if not any(inspect_utils.isnamedtuple(base) for base in o.__bases__):
+            if not any(
+                    inspect_utils.isnamedtuple(base) for base in o.__bases__):
                 logging.log(2, "Whitelisted: %s: named tuple", o)
                 return True
         else:
@@ -543,16 +548,15 @@ def convert_entity_to_ast(o, program_ctx):
         # directly. converted_call should still support it.
         raise NotImplementedError(
             'cannot convert entity "{}": object conversion is not yet'
-            " supported.".format(o)
-        )
+            " supported.".format(o))
     else:
         raise NotImplementedError(
             'Entity "%s" has unsupported type "%s". Only functions and classes are '
-            "supported for now." % (o, type(o))
-        )
+            "supported for now." % (o, type(o)))
 
     if logging.has_verbosity(2):
-        logging.log(2, "Compiled output of %s:\n\n%s\n", o, parser.unparse(nodes))
+        logging.log(2, "Compiled output of %s:\n\n%s\n", o,
+                    parser.unparse(nodes))
     if logging.has_verbosity(4):
         for n in nodes:
             logging.log(
@@ -598,23 +602,22 @@ def convert_class_to_ast(c, program_ctx):
         # Only convert the members that are directly defined by the class.
         if inspect_utils.getdefiningclass(m, c) is not c:
             continue
-        (node,), _, entity_info = convert_func_to_ast(
-            m, program_ctx=program_ctx, do_rename=False
-        )
+        (node, ), _, entity_info = convert_func_to_ast(m,
+                                                       program_ctx=program_ctx,
+                                                       do_rename=False)
         class_namespace.update(entity_info.namespace)
         converted_members[m] = node
 
         # TODO(mdan): Similarly check the globals.
         if future_features is None:
             future_features = entity_info.future_features
-        elif frozenset(future_features) ^ frozenset(entity_info.future_features):
+        elif frozenset(future_features) ^ frozenset(
+                entity_info.future_features):
             # Note: we can support this case if ever needed.
             raise ValueError(
                 "cannot convert {}: if has methods built with mismatched future"
-                " features: {} and {}".format(
-                    c, future_features, entity_info.future_features
-                )
-            )
+                " features: {} and {}".format(c, future_features,
+                                              entity_info.future_features))
     namer = naming.Namer(class_namespace)
     class_name = namer.class_name(c.__name__)
 
@@ -634,14 +637,12 @@ def convert_class_to_ast(c, program_ctx):
                     module=base.__module__,
                     names=[gast.alias(name=base.__name__, asname=alias)],
                     level=0,
-                )
-            )
+                ))
         else:
             raise NotImplementedError(
                 "Conversion of classes that do not directly extend classes from"
                 " whitelisted modules is temporarily suspended. If this breaks"
-                " existing code please notify the AutoGraph team immediately."
-            )
+                " existing code please notify the AutoGraph team immediately.")
         base_names.append(alias)
         renames[qual_names.QN(base.__name__)] = qual_names.QN(alias)
 
@@ -681,7 +682,8 @@ def _add_reserved_symbol(namespace, name, entity):
     if name not in namespace:
         namespace[name] = entity
     elif namespace[name] != entity:
-        raise ValueError('The name "%s" is reserved and may not be used.' % name)
+        raise ValueError('The name "%s" is reserved and may not be used.' %
+                         name)
 
 
 ag_internal = None
@@ -731,9 +733,8 @@ def convert_func_to_ast(f, program_ctx, do_rename=True):
                 "Unable to identify source code of lambda function {}. It was"
                 " defined on this line: {}, which must contain a single lambda with"
                 " matching signature. To avoid ambiguity, define each lambda"
-                " in a separate expression.".format(f, source)
-            )
-        (node,) = nodes
+                " in a separate expression.".format(f, source))
+        (node, ) = nodes
 
     # TODO(znado): Place inside standard_analysis.
     origin_info.resolve_entity(node, source, f)
@@ -755,15 +756,17 @@ def convert_func_to_ast(f, program_ctx, do_rename=True):
         future_features=future_features,
         namespace=namespace,
     )
-    context = converter.EntityContext(namer, entity_info, program_ctx, new_name)
+    context = converter.EntityContext(namer, entity_info, program_ctx,
+                                      new_name)
     node = node_to_graph(node, context)
 
     if isinstance(node, gast.Lambda):
         node = gast.Assign(
             targets=[
-                gast.Name(
-                    new_name, ctx=gast.Store(), annotation=None, type_comment=None
-                )
+                gast.Name(new_name,
+                          ctx=gast.Store(),
+                          annotation=None,
+                          type_comment=None)
             ],
             value=node,
         )
@@ -772,7 +775,7 @@ def convert_func_to_ast(f, program_ctx, do_rename=True):
     else:
         assert node.name == new_name
 
-    return (node,), new_name, entity_info
+    return (node, ), new_name, entity_info
 
 
 def node_to_graph(node, context):

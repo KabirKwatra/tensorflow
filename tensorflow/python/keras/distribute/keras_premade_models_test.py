@@ -81,7 +81,8 @@ class KerasPremadeModelsTest(test.TestCase, parameterized.TestCase):
             wide_deep_model = wide_deep.WideDeepModel(linear_model, dnn_model)
             linear_opt = gradient_descent.SGD(learning_rate=0.05)
             dnn_opt = adagrad.Adagrad(learning_rate=0.1)
-            wide_deep_model.compile(optimizer=[linear_opt, dnn_opt], loss="mse")
+            wide_deep_model.compile(optimizer=[linear_opt, dnn_opt],
+                                    loss="mse")
             if data_fn == get_numpy:
                 inputs, output = get_numpy()
                 hist = wide_deep_model.fit(inputs, output, epochs=5)

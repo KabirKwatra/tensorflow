@@ -50,7 +50,6 @@ from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import gradient_descent
 from tensorflow.python.util import nest
 
-
 # Global config for grappler setting that is used for graph mode test.
 _rewrites = rewriter_config_pb2.RewriterConfig()
 _rewrites.implementation_selector = rewriter_config_pb2.RewriterConfig.ON
@@ -68,9 +67,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
         ("unroll", "tanh", "sigmoid", 0, True, True),
         ("not_use_bias", "tanh", "sigmoid", 0, False, False),
     )
-    def test_could_use_defun_backend(
-        self, activation, recurrent_activation, recurrent_dropout, unroll, use_bias
-    ):
+    def test_could_use_defun_backend(self, activation, recurrent_activation,
+                                     recurrent_dropout, unroll, use_bias):
         layer = rnn.LSTM(
             1,
             activation=activation,
@@ -96,9 +94,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
         units = 2
 
         model = keras.models.Sequential()
-        inputs = keras.layers.Dense(
-            embedding_dim, input_shape=(timesteps, embedding_dim)
-        )
+        inputs = keras.layers.Dense(embedding_dim,
+                                    input_shape=(timesteps, embedding_dim))
         model.add(inputs)
         layer = rnn.LSTM(units, return_sequences=True)
         model.add(layer)
@@ -147,15 +144,15 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
         # Test with Keras tensor
         inputs = keras.Input((timesteps, embedding_dim))
-        initial_state = [keras.Input((units,)) for _ in range(num_states)]
+        initial_state = [keras.Input((units, )) for _ in range(num_states)]
         layer = rnn.LSTM(units)
         if len(initial_state) == 1:
             output = layer(inputs, initial_state=initial_state[0])
         else:
             output = layer(inputs, initial_state=initial_state)
         self.assertTrue(
-            any(initial_state[0] is t for t in layer._inbound_nodes[0].input_tensors)
-        )
+            any(initial_state[0] is t
+                for t in layer._inbound_nodes[0].input_tensors))
 
         model = keras.models.Model([inputs] + initial_state, output)
         model.compile(
@@ -214,7 +211,9 @@ class LSTMV2Test(keras_parameterized.TestCase):
             np.zeros(keras.backend.int_shape(layer.states[0])),
             atol=1e-4,
         )
-        state_shapes = [keras.backend.int_shape(state) for state in layer.states]
+        state_shapes = [
+            keras.backend.int_shape(state) for state in layer.states
+        ]
         values = [np.ones(shape) for shape in state_shapes]
         if len(values) == 1:
             values = values[0]
@@ -244,7 +243,7 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
         inputs = keras.Input((timesteps, embedding_dim))
         _ = keras.layers.Masking()(inputs)
-        initial_state = [keras.Input((units,)) for _ in range(num_states)]
+        initial_state = [keras.Input((units, )) for _ in range(num_states)]
         output = rnn.LSTM(units)(inputs, initial_state=initial_state)
 
         model = keras.models.Model([inputs] + initial_state, output)
@@ -262,16 +261,16 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
     def test_return_state(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
         num_states = 2
         timesteps = 3
         embedding_dim = 4
         units = 3
         num_samples = 2
 
-        inputs = keras.Input(batch_shape=(num_samples, timesteps, embedding_dim))
+        inputs = keras.Input(batch_shape=(num_samples, timesteps,
+                                          embedding_dim))
         masked = keras.layers.Masking()(inputs)
         layer = rnn.LSTM(units, return_state=True, stateful=True)
         outputs = layer(masked)
@@ -281,7 +280,9 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
         inputs = np.random.random((num_samples, timesteps, embedding_dim))
         state = model.predict(inputs)
-        self.assertAllClose(keras.backend.eval(layer.states[0]), state, atol=1e-4)
+        self.assertAllClose(keras.backend.eval(layer.states[0]),
+                            state,
+                            atol=1e-4)
 
     def test_state_reuse(self):
         timesteps = 3
@@ -289,7 +290,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
         units = 3
         num_samples = 2
 
-        inputs = keras.Input(batch_shape=(num_samples, timesteps, embedding_dim))
+        inputs = keras.Input(batch_shape=(num_samples, timesteps,
+                                          embedding_dim))
         layer = rnn.LSTM(units, return_state=True, return_sequences=True)
         outputs = layer(inputs)
         output, state = outputs[0], outputs[1:]
@@ -309,14 +311,14 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
         # Test with Keras tensor
         main_inputs = keras.Input((timesteps, embedding_dim))
-        initial_state = [keras.Input((units,)) for _ in range(num_states)]
+        initial_state = [keras.Input((units, )) for _ in range(num_states)]
         inputs = [main_inputs] + initial_state
 
         layer = layer_class(units)
         output = layer(inputs)
         self.assertTrue(
-            any(initial_state[0] is t for t in layer._inbound_nodes[0].input_tensors)
-        )
+            any(initial_state[0] is t
+                for t in layer._inbound_nodes[0].input_tensors))
 
         model = keras.models.Model(inputs, output)
         model.compile(
@@ -334,9 +336,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
     @test_util.run_v2_only
     def test_lstm_v2_feature_parity_with_canonical_lstm(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
         input_shape = 10
         rnn_state_size = 8
         timestep = 4
@@ -355,9 +356,11 @@ class LSTMV2Test(keras_parameterized.TestCase):
         x_train[-2:, -1, :] = 0.0
         y_train[-2:] = 0
 
-        inputs = keras.layers.Input(shape=[timestep, input_shape], dtype=dtypes.float32)
+        inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                    dtype=dtypes.float32)
         masked_input = keras.layers.Masking()(inputs)
-        lstm_layer = rnn_v1.LSTM(rnn_state_size, recurrent_activation="sigmoid")
+        lstm_layer = rnn_v1.LSTM(rnn_state_size,
+                                 recurrent_activation="sigmoid")
         output = lstm_layer(masked_input)
         lstm_model = keras.models.Model(inputs, output)
         weights = lstm_model.get_weights()
@@ -381,16 +384,18 @@ class LSTMV2Test(keras_parameterized.TestCase):
     @parameterized.named_parameters(("v0", 0), ("v1", 1), ("v2", 2))
     def test_implementation_mode_LSTM(self, implementation_mode):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
         units = 2
         testing_utils.layer_test(
             rnn.LSTM,
-            kwargs={"units": units, "implementation": implementation_mode},
+            kwargs={
+                "units": units,
+                "implementation": implementation_mode
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
         )
 
@@ -427,9 +432,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
     def test_masking_with_stacking_LSTM(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
         inputs = np.random.random((2, 3, 4))
         targets = np.abs(np.random.random((2, 3, 5)))
         targets /= targets.sum(axis=-1, keepdims=True)
@@ -459,9 +463,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
         x_train = np.random.random((batch, timestep, input_shape))
 
         def build_model(layer_cls):
-            inputs = keras.layers.Input(
-                shape=[timestep, input_shape], dtype=dtypes.float32
-            )
+            inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                        dtype=dtypes.float32)
             layer = layer_cls(
                 rnn_state_size,
                 recurrent_activation="sigmoid",
@@ -471,12 +474,10 @@ class LSTMV2Test(keras_parameterized.TestCase):
             )
             if time_major:
                 converted_input = keras.layers.Lambda(
-                    lambda t: array_ops.transpose(t, [1, 0, 2])
-                )(inputs)
+                    lambda t: array_ops.transpose(t, [1, 0, 2]))(inputs)
                 outputs = layer(converted_input)
-                outputs = keras.layers.Lambda(
-                    lambda t: array_ops.transpose(t, [1, 0, 2])
-                )(outputs)
+                outputs = keras.layers.Lambda(lambda t: array_ops.transpose(
+                    t, [1, 0, 2]))(outputs)
             else:
                 outputs = layer(inputs)
             return keras.models.Model(inputs, outputs)
@@ -508,7 +509,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
         layer = rnn.LSTM(rnn_state_size)
 
-        inputs = keras.layers.Input(shape=[timestep, input_shape], dtype=dtypes.float32)
+        inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                    dtype=dtypes.float32)
 
         outputs = layer(inputs)
         model = keras.models.Model(inputs, outputs)
@@ -536,12 +538,11 @@ class LSTMV2Test(keras_parameterized.TestCase):
         x = np.random.random((batch, timestep, input_dim))
 
         def build_model():
-            inputs = keras.layers.Input(
-                shape=[timestep, input_dim], dtype=dtypes.float32
-            )
-            layer = rnn.LSTM(
-                units, use_bias=use_bias, bias_initializer=bias_initializer
-            )
+            inputs = keras.layers.Input(shape=[timestep, input_dim],
+                                        dtype=dtypes.float32)
+            layer = rnn.LSTM(units,
+                             use_bias=use_bias,
+                             bias_initializer=bias_initializer)
             output = layer(inputs)
             return keras.models.Model(inputs, output), layer
 
@@ -564,7 +565,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
         x_train = np.random.random((batch, timestep, input_shape))
 
-        inputs = keras.layers.Input(shape=[timestep, input_shape], dtype=dtypes.float32)
+        inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                    dtype=dtypes.float32)
         with test_util.device(use_gpu=False):
             layer = rnn.LSTM(rnn_state_size)
             output = layer(inputs)
@@ -600,23 +602,29 @@ class LSTMV2Test(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             rnn.LSTM,
-            kwargs={"units": units, "return_sequences": True},
+            kwargs={
+                "units": units,
+                "return_sequences": True
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
         )
 
     @test_util.run_v2_only
     def test_float64_LSTM(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support float64 yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support float64 yet.")
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
         units = 2
         testing_utils.layer_test(
             rnn.LSTM,
-            kwargs={"units": units, "return_sequences": True, "dtype": "float64"},
+            kwargs={
+                "units": units,
+                "return_sequences": True,
+                "dtype": "float64"
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
             input_dtype="float64",
         )
@@ -645,9 +653,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
 
     def test_statefulness_LSTM(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
@@ -661,9 +668,11 @@ class LSTMV2Test(keras_parameterized.TestCase):
                 mask_zero=True,
                 input_length=timesteps,
                 batch_input_shape=(num_samples, timesteps),
-            )
-        )
-        layer = layer_class(units, return_sequences=False, stateful=True, weights=None)
+            ))
+        layer = layer_class(units,
+                            return_sequences=False,
+                            stateful=True,
+                            weights=None)
         model.add(layer)
         model.compile(
             optimizer=gradient_descent.GradientDescentOptimizer(0.01),
@@ -674,9 +683,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
         self.assertEqual(out1.shape, (num_samples, units))
 
         # train once so that the states change
-        model.train_on_batch(
-            np.ones((num_samples, timesteps)), np.ones((num_samples, units))
-        )
+        model.train_on_batch(np.ones((num_samples, timesteps)),
+                             np.ones((num_samples, units)))
         out2 = model.predict(np.ones((num_samples, timesteps)))
 
         # if the state is not reset, output should be different
@@ -733,15 +741,13 @@ class LSTMV2Test(keras_parameterized.TestCase):
         x = np.random.randint(0, vocab_size, size=(batch_size, timestep))
         y = np.random.randint(0, vocab_size, size=(batch_size, timestep))
 
-        model = keras.Sequential(
-            [
-                keras.layers.Embedding(
-                    vocab_size, embedding_dim, batch_input_shape=[batch_size, timestep]
-                ),
-                rnn.LSTM(units, return_sequences=True, stateful=True),
-                keras.layers.Dense(vocab_size),
-            ]
-        )
+        model = keras.Sequential([
+            keras.layers.Embedding(vocab_size,
+                                   embedding_dim,
+                                   batch_input_shape=[batch_size, timestep]),
+            rnn.LSTM(units, return_sequences=True, stateful=True),
+            keras.layers.Dense(vocab_size),
+        ])
         model.compile(
             optimizer="adam",
             loss="sparse_categorical_crossentropy",
@@ -756,7 +762,11 @@ class LSTMV2Test(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             rnn.LSTM,
-            kwargs={"units": units, "dropout": 0.1, "recurrent_dropout": 0.1},
+            kwargs={
+                "units": units,
+                "dropout": 0.1,
+                "recurrent_dropout": 0.1
+            },
             input_shape=(num_samples, timesteps, embedding_dim),
         )
 
@@ -764,19 +774,17 @@ class LSTMV2Test(keras_parameterized.TestCase):
         batch = 128
         timestep = 20
         vocab_size = 1000
-        model = keras.Sequential(
-            [
-                keras.layers.Embedding(vocab_size, 64),
-                keras.layers.Bidirectional(rnn.LSTM(64, return_sequences=True)),
-                keras.layers.Bidirectional(rnn.LSTM(32)),
-                keras.layers.Dense(64, activation="relu"),
-                keras.layers.Dense(1, activation="sigmoid"),
-            ]
-        )
+        model = keras.Sequential([
+            keras.layers.Embedding(vocab_size, 64),
+            keras.layers.Bidirectional(rnn.LSTM(64, return_sequences=True)),
+            keras.layers.Bidirectional(rnn.LSTM(32)),
+            keras.layers.Dense(64, activation="relu"),
+            keras.layers.Dense(1, activation="sigmoid"),
+        ])
 
-        model.compile(
-            loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
-        )
+        model.compile(loss="binary_crossentropy",
+                      optimizer="adam",
+                      metrics=["accuracy"])
 
         x = np.random.randint(0, vocab_size, size=(batch, timestep))
         y = np.random.randint(0, 1, size=(batch))
@@ -787,25 +795,27 @@ class LSTMV2Test(keras_parameterized.TestCase):
     @test_util.run_v2_only
     def test_explicit_device_with_go_backward_and_mask(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
 
         batch_size = 8
         timestep = 7
         masksteps = 5
         units = 4
 
-        inputs = np.random.randn(batch_size, timestep, units).astype(np.float32)
+        inputs = np.random.randn(batch_size, timestep,
+                                 units).astype(np.float32)
         mask = np.ones((batch_size, timestep)).astype(np.bool)
         mask[:, masksteps:] = 0
 
         # Test for V1 behavior.
         lstm_v1 = rnn_v1.LSTM(units, return_sequences=True, go_backwards=True)
         with test_util.device(use_gpu=True):
-            outputs_masked_v1 = lstm_v1(inputs, mask=constant_op.constant(mask))
+            outputs_masked_v1 = lstm_v1(inputs,
+                                        mask=constant_op.constant(mask))
             outputs_trimmed_v1 = lstm_v1(inputs[:, :masksteps])
-        self.assertAllClose(outputs_masked_v1[:, -masksteps:], outputs_trimmed_v1)
+        self.assertAllClose(outputs_masked_v1[:, -masksteps:],
+                            outputs_trimmed_v1)
 
         # Test for V2 behavior.
         lstm = rnn.LSTM(units, return_sequences=True, go_backwards=True)
@@ -819,9 +829,8 @@ class LSTMV2Test(keras_parameterized.TestCase):
             # See b/139132348 for more details.
             x = np.random.uniform(size=(100, 4, 8))
             y = np.random.uniform(size=(100, 1))
-            dataset = (
-                dataset_ops.Dataset.from_tensor_slices((x, y)).shuffle(100).batch(32)
-            )
+            dataset = (dataset_ops.Dataset.from_tensor_slices(
+                (x, y)).shuffle(100).batch(32))
 
             inp = keras.layers.Input(shape=(4, 8))
             layer = rnn.LSTM(1)(inp)
@@ -877,43 +886,38 @@ class LSTMGraphRewriteTest(keras_parameterized.TestCase):
     def test_LSTM_runtime(self):
         layer = rnn.LSTM(self.rnn_state_size, return_runtime=True)
 
-        inputs = keras.layers.Input(
-            shape=[self.timestep, self.input_shape], dtype=dtypes.float32
-        )
+        inputs = keras.layers.Input(shape=[self.timestep, self.input_shape],
+                                    dtype=dtypes.float32)
 
         outputs, runtime = layer(inputs)
         # Expand the runtime so that it is a 1D tensor instead of scalar.
         # TF model does not work with scalar model output, specially during
         # aggregation.
-        runtime = keras.layers.Lambda(lambda x: array_ops.expand_dims(x, axis=-1))(
-            runtime
-        )
+        runtime = keras.layers.Lambda(lambda x: array_ops.expand_dims(
+            x, axis=-1))(runtime)
         model = keras.models.Model(inputs=inputs, outputs=[outputs, runtime])
         self._test_runtime_with_model(model)
 
     @test_util.run_v2_only
     def test_LSTM_runtime_with_mask(self):
         if test.is_built_with_rocm():
-            self.skipTest(
-                "Skipping the test as ROCm MIOpen does not " "support padded input yet."
-            )
+            self.skipTest("Skipping the test as ROCm MIOpen does not "
+                          "support padded input yet.")
 
         # Masking will affect which backend is selected based on whether the mask
         # is strictly right padded.
         layer = rnn.LSTM(self.rnn_state_size, return_runtime=True)
 
-        inputs = keras.layers.Input(
-            shape=[self.timestep, self.input_shape], dtype=dtypes.float32
-        )
+        inputs = keras.layers.Input(shape=[self.timestep, self.input_shape],
+                                    dtype=dtypes.float32)
         masked_inputs = keras.layers.Masking()(inputs)
 
         outputs, runtime = layer(masked_inputs)
         # Expand the runtime so that it is a 1D tensor instead of scalar.
         # TF model does not work with scalar model output, specially during
         # aggregation.
-        runtime = keras.layers.Lambda(lambda x: array_ops.expand_dims(x, axis=-1))(
-            runtime
-        )
+        runtime = keras.layers.Lambda(lambda x: array_ops.expand_dims(
+            x, axis=-1))(runtime)
         model = keras.models.Model(inputs=inputs, outputs=[outputs, runtime])
 
         (x_train, y_train), _ = testing_utils.get_test_data(
@@ -962,9 +966,8 @@ class LSTMGraphRewriteTest(keras_parameterized.TestCase):
         # states.
         layer = rnn.LSTM(self.rnn_state_size, return_runtime=True)
 
-        inputs = keras.layers.Input(
-            shape=[self.timestep, self.input_shape], dtype=dtypes.float32
-        )
+        inputs = keras.layers.Input(shape=[self.timestep, self.input_shape],
+                                    dtype=dtypes.float32)
 
         zeros = array_ops.zeros([self.batch, self.output_shape])
         dummy_runtime = rnn._runtime(rnn._RUNTIME_UNKNOWN)
@@ -980,9 +983,8 @@ class LSTMGraphRewriteTest(keras_parameterized.TestCase):
         # Expand the runtime so that it is a 1D tensor instead of scalar.
         # TF model does not work with scalar model output, specially during
         # aggregation.
-        runtime = keras.layers.Lambda(lambda x: array_ops.expand_dims(x, axis=-1))(
-            runtime
-        )
+        runtime = keras.layers.Lambda(lambda x: array_ops.expand_dims(
+            x, axis=-1))(runtime)
         model = keras.models.Model(inputs=inputs, outputs=[outputs, runtime])
         self._test_runtime_with_model(model)
 
@@ -996,7 +998,10 @@ class LSTMPerformanceTest(test.Benchmark):
         # warm up the model
         model.fit(x_train, y_train, batch_size=batch, epochs=warmup_epoch)
         start_time = time.time()
-        model.fit(x_train, y_train, batch_size=batch, epochs=epoch - warmup_epoch)
+        model.fit(x_train,
+                  y_train,
+                  batch_size=batch,
+                  epochs=epoch - warmup_epoch)
         end_time = time.time()
         return (end_time - start_time) / (epoch - warmup_epoch)
 
@@ -1007,35 +1012,38 @@ class LSTMPerformanceTest(test.Benchmark):
         timestep = test_config["timestep"]
 
         cudnn_lstm_layer = keras.layers.CuDNNLSTM(rnn_state_size)
-        inputs = keras.layers.Input(shape=[timestep, input_shape], dtype=dtypes.float32)
+        inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                    dtype=dtypes.float32)
 
         outputs = cudnn_lstm_layer(inputs)
         model = keras.models.Model(inputs, outputs)
         model.compile("sgd", "mse")
 
-        sec_per_epoch = self._measure_performance(test_config, model, x_train, y_train)
-        logging.info(
-            "Average performance for %s per epoch is: %s", "CuDNN LSTM", sec_per_epoch
-        )
+        sec_per_epoch = self._measure_performance(test_config, model, x_train,
+                                                  y_train)
+        logging.info("Average performance for %s per epoch is: %s",
+                     "CuDNN LSTM", sec_per_epoch)
         return sec_per_epoch
 
-    def _time_performance_run_unifed_lstm_gpu(self, test_config, x_train, y_train):
+    def _time_performance_run_unifed_lstm_gpu(self, test_config, x_train,
+                                              y_train):
         # Get performance number for lstm_v2 with grappler swap the impl
         input_shape = test_config["input_shape"]
         rnn_state_size = test_config["rnn_state_size"]
         timestep = test_config["timestep"]
 
         layer = rnn.LSTM(rnn_state_size)
-        inputs = keras.layers.Input(shape=[timestep, input_shape], dtype=dtypes.float32)
+        inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                    dtype=dtypes.float32)
 
         outputs = layer(inputs)
         model = keras.models.Model(inputs, outputs)
         model.compile("sgd", "mse")
 
-        sec_per_epoch = self._measure_performance(test_config, model, x_train, y_train)
-        logging.info(
-            "Average performance for %s per epoch is: %s", "LSTM V2", sec_per_epoch
-        )
+        sec_per_epoch = self._measure_performance(test_config, model, x_train,
+                                                  y_train)
+        logging.info("Average performance for %s per epoch is: %s", "LSTM V2",
+                     sec_per_epoch)
         return sec_per_epoch
 
     def _time_performance_run_normal_lstm(self, test_config, x_train, y_train):
@@ -1045,16 +1053,17 @@ class LSTMPerformanceTest(test.Benchmark):
         timestep = test_config["timestep"]
 
         layer = rnn_v1.LSTM(rnn_state_size)
-        inputs = keras.layers.Input(shape=[timestep, input_shape], dtype=dtypes.float32)
+        inputs = keras.layers.Input(shape=[timestep, input_shape],
+                                    dtype=dtypes.float32)
 
         outputs = layer(inputs)
         model = keras.models.Model(inputs, outputs)
         model.compile("sgd", "mse")
 
-        sec_per_epoch = self._measure_performance(test_config, model, x_train, y_train)
-        logging.info(
-            "Average performance for %s per epoch is: %s", "Normal LSTM", sec_per_epoch
-        )
+        sec_per_epoch = self._measure_performance(test_config, model, x_train,
+                                                  y_train)
+        logging.info("Average performance for %s per epoch is: %s",
+                     "Normal LSTM", sec_per_epoch)
         return sec_per_epoch
 
     def _benchmark_performance_with_standard_cudnn_impl(self):
@@ -1083,14 +1092,11 @@ class LSTMPerformanceTest(test.Benchmark):
         y_train = np_utils.to_categorical(y_train, test_config["output_shape"])
 
         cudnn_sec_per_epoch = self._time_performance_run_cudnn_lstm(
-            test_config, x_train, y_train
-        )
+            test_config, x_train, y_train)
         lstm_v2_sec_per_epoch = self._time_performance_run_unifed_lstm_gpu(
-            test_config, x_train, y_train
-        )
+            test_config, x_train, y_train)
         normal_lstm_sec_per_epoch = self._time_performance_run_normal_lstm(
-            test_config, x_train, y_train
-        )
+            test_config, x_train, y_train)
 
         cudnn_vs_v2 = cudnn_sec_per_epoch / lstm_v2_sec_per_epoch
         v2_vs_normal = normal_lstm_sec_per_epoch / lstm_v2_sec_per_epoch
@@ -1114,14 +1120,10 @@ class LSTMPerformanceTest(test.Benchmark):
             extras=test_config,
         )
 
-        logging.info(
-            "Expect the performance of LSTM V2 is within 80% of "
-            "CuDNN LSTM, got {0:.2f}%".format(cudnn_vs_v2 * 100)
-        )
-        logging.info(
-            "Expect the performance of LSTM V2 is more than 5 times"
-            " of normal LSTM, got {0:.2f}".format(v2_vs_normal)
-        )
+        logging.info("Expect the performance of LSTM V2 is within 80% of "
+                     "CuDNN LSTM, got {0:.2f}%".format(cudnn_vs_v2 * 100))
+        logging.info("Expect the performance of LSTM V2 is more than 5 times"
+                     " of normal LSTM, got {0:.2f}".format(v2_vs_normal))
 
     def benchmark_performance_graph(self):
         with ops.get_default_graph().as_default():

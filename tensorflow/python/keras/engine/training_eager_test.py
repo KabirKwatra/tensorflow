@@ -44,9 +44,9 @@ class TrainingTest(keras_parameterized.TestCase):
         class DynamicModel(keras.Model):
             def __init__(self):
                 super(DynamicModel, self).__init__(dynamic=True)
-                self.dense = keras.layers.Dense(
-                    1, kernel_initializer="zeros", bias_initializer="ones"
-                )
+                self.dense = keras.layers.Dense(1,
+                                                kernel_initializer="zeros",
+                                                bias_initializer="ones")
 
             def call(self, inputs):
                 return self.dense(inputs)
@@ -69,15 +69,14 @@ class TrainingTest(keras_parameterized.TestCase):
             # symbolic tensors has different requirements.
             return
 
-        input_a = keras.layers.Input(shape=(3,), name="input_a")
-        input_b = keras.layers.Input(shape=(3,), name="input_b")
+        input_a = keras.layers.Input(shape=(3, ), name="input_a")
+        input_b = keras.layers.Input(shape=(3, ), name="input_b")
 
         dense = keras.layers.Dense(4, name="dense")
         dropout = keras.layers.Dropout(0.5, name="dropout")
 
-        model = testing_utils.get_multi_io_model(
-            [input_a, dense], [input_b, dense, dropout]
-        )
+        model = testing_utils.get_multi_io_model([input_a, dense],
+                                                 [input_b, dense, dropout])
 
         optimizer = rmsprop.RMSprop(learning_rate=0.001)
         loss = "mse"
@@ -97,9 +96,10 @@ class TrainingTest(keras_parameterized.TestCase):
         target_a = array_ops.zeros(shape=(10, 4))
         target_b = array_ops.zeros(shape=(10, 4))
 
-        model.fit(
-            [input_a, input_b], [target_a, target_b], epochs=1, batch_size=5, verbose=0
-        )
+        model.fit([input_a, input_b], [target_a, target_b],
+                  epochs=1,
+                  batch_size=5,
+                  verbose=0)
         # Test: no shuffle.
         model.fit(
             [input_a, input_b],
@@ -120,17 +120,18 @@ class TrainingTest(keras_parameterized.TestCase):
         )
         model.train_on_batch([input_a, input_b], [target_a, target_b])
         model.predict([input_a, input_b], batch_size=5)
-        model.evaluate(
-            [input_a, input_b], [target_a, target_b], batch_size=2, verbose=0
-        )
+        model.evaluate([input_a, input_b], [target_a, target_b],
+                       batch_size=2,
+                       verbose=0)
         model.test_on_batch([input_a, input_b], [target_a, target_b])
 
         # Test: mix np and tensors.
         input_b = np.zeros(shape=(10, 3)).astype("float32")
         target_b = np.zeros(shape=(10, 4)).astype("float32")
-        model.fit(
-            [input_a, input_b], [target_a, target_b], epochs=1, batch_size=5, verbose=0
-        )
+        model.fit([input_a, input_b], [target_a, target_b],
+                  epochs=1,
+                  batch_size=5,
+                  verbose=0)
         model.fit(
             [input_a, input_b],
             [target_a, target_b],
@@ -149,9 +150,9 @@ class TrainingTest(keras_parameterized.TestCase):
         )
         model.train_on_batch([input_a, input_b], [target_a, target_b])
         model.predict([input_a, input_b], batch_size=5)
-        model.evaluate(
-            [input_a, input_b], [target_a, target_b], batch_size=2, verbose=0
-        )
+        model.evaluate([input_a, input_b], [target_a, target_b],
+                       batch_size=2,
+                       verbose=0)
         model.test_on_batch([input_a, input_b], [target_a, target_b])
 
     @keras_parameterized.run_with_all_model_types
@@ -178,7 +179,12 @@ class TrainingTest(keras_parameterized.TestCase):
         targets = array_ops.zeros(shape=(10, 4))
 
         model.fit(inputs, targets, epochs=1, batch_size=2, verbose=0)
-        model.fit(inputs, targets, epochs=1, batch_size=3, verbose=0, shuffle=False)
+        model.fit(inputs,
+                  targets,
+                  epochs=1,
+                  batch_size=3,
+                  verbose=0,
+                  shuffle=False)
         model.fit(
             inputs,
             targets,
@@ -195,16 +201,16 @@ class TrainingTest(keras_parameterized.TestCase):
     @keras_parameterized.run_with_all_model_types
     def test_model_fit_and_validation_with_missing_arg_errors(self):
         model = testing_utils.get_small_mlp(10, 4, 3)
-        model.compile(
-            optimizer=rmsprop.RMSprop(learning_rate=0.001), loss="mse", run_eagerly=True
-        )
+        model.compile(optimizer=rmsprop.RMSprop(learning_rate=0.001),
+                      loss="mse",
+                      run_eagerly=True)
 
         x = array_ops.zeros(shape=(10, 3))
         y = array_ops.zeros(shape=(10, 4))
-        dataset = dataset_ops.Dataset.from_tensor_slices((x, y)).repeat(10).batch(5)
-        validation_dataset = (
-            dataset_ops.Dataset.from_tensor_slices((x, y)).repeat().batch(5)
-        )  # Infinite dataset.
+        dataset = dataset_ops.Dataset.from_tensor_slices(
+            (x, y)).repeat(10).batch(5)
+        validation_dataset = (dataset_ops.Dataset.from_tensor_slices(
+            (x, y)).repeat().batch(5))  # Infinite dataset.
 
         model.fit(dataset, epochs=1, verbose=0)
 
@@ -260,21 +266,26 @@ class TrainingTest(keras_parameterized.TestCase):
 class CorrectnessTest(keras_parameterized.TestCase):
     @keras_parameterized.run_with_all_model_types
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            ("", dict()),
-            ("_clipvalue_inf", {"clipvalue": 999999}),
-            ("_clipnorm_inf", {"clipnorm": 999999}),
-        ]
-    )
+    @parameterized.named_parameters([
+        ("", dict()),
+        ("_clipvalue_inf", {
+            "clipvalue": 999999
+        }),
+        ("_clipnorm_inf", {
+            "clipnorm": 999999
+        }),
+    ])
     def test_loss_correctness(self, optimizer_kwargs):
         # Test that training loss is the same in eager and graph
         # (by comparing it to a reference value in a deterministic case)
         layers = [
-            keras.layers.Dense(3, activation="relu", kernel_initializer="ones"),
-            keras.layers.Dense(2, activation="softmax", kernel_initializer="ones"),
+            keras.layers.Dense(3, activation="relu",
+                               kernel_initializer="ones"),
+            keras.layers.Dense(2,
+                               activation="softmax",
+                               kernel_initializer="ones"),
         ]
-        model = testing_utils.get_model_from_layers(layers, input_shape=(4,))
+        model = testing_utils.get_model_from_layers(layers, input_shape=(4, ))
         model.compile(
             loss="sparse_categorical_crossentropy",
             optimizer=rmsprop.RMSprop(learning_rate=0.001, **optimizer_kwargs),
@@ -293,10 +304,13 @@ class CorrectnessTest(keras_parameterized.TestCase):
         # (by comparing it to a reference value in a deterministic case)
         # And confirm that setting clipvalue to zero stops all training
         layers = [
-            keras.layers.Dense(3, activation="relu", kernel_initializer="ones"),
-            keras.layers.Dense(2, activation="softmax", kernel_initializer="ones"),
+            keras.layers.Dense(3, activation="relu",
+                               kernel_initializer="ones"),
+            keras.layers.Dense(2,
+                               activation="softmax",
+                               kernel_initializer="ones"),
         ]
-        model = testing_utils.get_model_from_layers(layers, input_shape=(4,))
+        model = testing_utils.get_model_from_layers(layers, input_shape=(4, ))
         model.compile(
             loss="sparse_categorical_crossentropy",
             optimizer=rmsprop.RMSprop(learning_rate=0.001, clipvalue=0.0),
@@ -316,10 +330,13 @@ class CorrectnessTest(keras_parameterized.TestCase):
         # Test that training loss is the same in eager and graph
         # (by comparing it to a reference value in a deterministic case)
         layers = [
-            keras.layers.Dense(3, activation="relu", kernel_initializer="ones"),
-            keras.layers.Dense(2, activation="softmax", kernel_initializer="ones"),
+            keras.layers.Dense(3, activation="relu",
+                               kernel_initializer="ones"),
+            keras.layers.Dense(2,
+                               activation="softmax",
+                               kernel_initializer="ones"),
         ]
-        model = testing_utils.get_model_from_layers(layers, input_shape=(4,))
+        model = testing_utils.get_model_from_layers(layers, input_shape=(4, ))
         model.compile(
             loss="sparse_categorical_crossentropy",
             optimizer=rmsprop.RMSprop(learning_rate=0.001),
@@ -334,20 +351,18 @@ class CorrectnessTest(keras_parameterized.TestCase):
         history = model.fit(dataset, epochs=1, steps_per_epoch=10)
         self.assertAlmostEqual(history.history["loss"][-1], 0.5836, 4)
 
-    @parameterized.named_parameters(
-        [
-            ("_None", contextlib.contextmanager(lambda: iter([None])), 0.0, 4.0),
-            ("_0", lambda: keras.backend.learning_phase_scope(0), 4.0, 4.0),
-            ("_1", lambda: keras.backend.learning_phase_scope(1), 0.0, 0.0),
-        ]
-    )
-    def test_nested_model_learning_phase(
-        self, nested_scope_fn, expected_training_loss, expected_validation_loss
-    ):
+    @parameterized.named_parameters([
+        ("_None", contextlib.contextmanager(lambda: iter([None])), 0.0, 4.0),
+        ("_0", lambda: keras.backend.learning_phase_scope(0), 4.0, 4.0),
+        ("_1", lambda: keras.backend.learning_phase_scope(1), 0.0, 0.0),
+    ])
+    def test_nested_model_learning_phase(self, nested_scope_fn,
+                                         expected_training_loss,
+                                         expected_validation_loss):
         """Tests that learning phase is correctly set in an intermediate layer."""
 
         def _make_unregularized_model():
-            inputs = keras.Input((4,))
+            inputs = keras.Input((4, ))
             # Zero out activations when `training=True`.
             x = keras.layers.Dropout(1.0 - 1.0 / (1 << 24))(inputs)
             x = keras.layers.Dense(
@@ -356,9 +371,7 @@ class CorrectnessTest(keras_parameterized.TestCase):
                 trainable=False,
                 bias_initializer="zeros",
                 kernel_initializer="ones",
-            )(
-                x
-            )  # Just sum together all the activations.
+            )(x)  # Just sum together all the activations.
             outputs = keras.layers.Dense(3)(x)
             return keras.Model(inputs, outputs)
 
@@ -369,14 +382,13 @@ class CorrectnessTest(keras_parameterized.TestCase):
             outputs = keras.activations.softmax(logits)
             model = keras.Model(inputs, outputs)
             # Regularize the most recent activations of a post-dropout layer.
-            sample_activations = unregularized_model.get_layer(index=-2).get_output_at(
-                -1
-            )
+            sample_activations = unregularized_model.get_layer(
+                index=-2).get_output_at(-1)
             regularization_loss = keras.backend.mean(sample_activations)
             model.add_loss(regularization_loss)
-            model.add_metric(
-                regularization_loss, aggregation="mean", name="regularization_loss"
-            )
+            model.add_metric(regularization_loss,
+                             aggregation="mean",
+                             name="regularization_loss")
             return model
 
         # Make and compile models.
@@ -384,21 +396,18 @@ class CorrectnessTest(keras_parameterized.TestCase):
         model.compile("sgd", "sparse_categorical_crossentropy")
         # Prepare fake data.
         x = np.ones((20, 4)).astype(np.float32)
-        y = np.random.randint(0, 3, size=(20,)).astype(np.int64)
+        y = np.random.randint(0, 3, size=(20, )).astype(np.int64)
         dataset = dataset_ops.Dataset.from_tensor_slices((x, y)).batch(2)
         results = model.evaluate(dataset)
         evaluation_results = dict(zip(model.metrics_names, results))
         # Rate of dropout depends on the learning phase.
-        self.assertEqual(
-            evaluation_results["regularization_loss"], expected_validation_loss
-        )
+        self.assertEqual(evaluation_results["regularization_loss"],
+                         expected_validation_loss)
         history = model.fit(dataset, epochs=2, validation_data=dataset).history
-        self.assertAllEqual(
-            history["regularization_loss"], [expected_training_loss] * 2
-        )
-        self.assertAllEqual(
-            history["val_regularization_loss"], [expected_validation_loss] * 2
-        )
+        self.assertAllEqual(history["regularization_loss"],
+                            [expected_training_loss] * 2)
+        self.assertAllEqual(history["val_regularization_loss"],
+                            [expected_validation_loss] * 2)
 
 
 if __name__ == "__main__":

@@ -42,12 +42,12 @@ except ImportError:
 
 # Custom loss class
 class MyMeanAbsoluteError(losses.LossFunctionWrapper):
-    def __init__(
-        self, reduction=losses_utils.ReductionV2.AUTO, name="mean_absolute_error"
-    ):
-        super(MyMeanAbsoluteError, self).__init__(
-            my_mae, name=name, reduction=reduction
-        )
+    def __init__(self,
+                 reduction=losses_utils.ReductionV2.AUTO,
+                 name="mean_absolute_error"):
+        super(MyMeanAbsoluteError, self).__init__(my_mae,
+                                                  name=name,
+                                                  reduction=reduction)
 
 
 # Custom loss function
@@ -56,8 +56,8 @@ def my_mae(y_true, y_pred):
 
 
 def _get_multi_io_model():
-    inp_1 = layers.Input(shape=(1,), name="input_1")
-    inp_2 = layers.Input(shape=(1,), name="input_2")
+    inp_1 = layers.Input(shape=(1, ), name="input_1")
+    inp_2 = layers.Input(shape=(1, ), name="input_2")
     d = testing_utils.Bias(name="output")
     out_1 = d(inp_1)
     out_2 = d(inp_2)
@@ -65,48 +65,59 @@ def _get_multi_io_model():
 
 
 @keras_parameterized.run_all_keras_modes
-@parameterized.named_parameters(
-    [
-        dict(testcase_name="string", value="mae"),
-        dict(testcase_name="built_in_fn", value=losses.mae),
-        dict(testcase_name="built_in_class", value=losses.MeanAbsoluteError()),
-        dict(testcase_name="custom_fn", value=my_mae),
-        dict(testcase_name="custom_class", value=MyMeanAbsoluteError()),
-        dict(testcase_name="list_of_strings", value=["mae", "mae"]),
-        dict(testcase_name="list_of_built_in_fns", value=[losses.mae, losses.mae]),
-        dict(
-            testcase_name="list_of_built_in_classes",
-            value=[losses.MeanAbsoluteError(), losses.MeanAbsoluteError()],
-        ),
-        dict(testcase_name="list_of_custom_fns", value=[my_mae, my_mae]),
-        dict(
-            testcase_name="list_of_custom_classes",
-            value=[MyMeanAbsoluteError(), MyMeanAbsoluteError()],
-        ),
-        dict(
-            testcase_name="dict_of_string", value={"output": "mae", "output_1": "mae",}
-        ),
-        dict(
-            testcase_name="dict_of_built_in_fn",
-            value={"output": losses.mae, "output_1": losses.mae,},
-        ),
-        dict(
-            testcase_name="dict_of_built_in_class",
-            value={
-                "output": losses.MeanAbsoluteError(),
-                "output_1": losses.MeanAbsoluteError(),
-            },
-        ),
-        dict(
-            testcase_name="dict_of_custom_fn",
-            value={"output": my_mae, "output_1": my_mae},
-        ),
-        dict(
-            testcase_name="dict_of_custom_class",
-            value={"output": MyMeanAbsoluteError(), "output_1": MyMeanAbsoluteError(),},
-        ),
-    ]
-)
+@parameterized.named_parameters([
+    dict(testcase_name="string", value="mae"),
+    dict(testcase_name="built_in_fn", value=losses.mae),
+    dict(testcase_name="built_in_class", value=losses.MeanAbsoluteError()),
+    dict(testcase_name="custom_fn", value=my_mae),
+    dict(testcase_name="custom_class", value=MyMeanAbsoluteError()),
+    dict(testcase_name="list_of_strings", value=["mae", "mae"]),
+    dict(testcase_name="list_of_built_in_fns", value=[losses.mae, losses.mae]),
+    dict(
+        testcase_name="list_of_built_in_classes",
+        value=[losses.MeanAbsoluteError(),
+               losses.MeanAbsoluteError()],
+    ),
+    dict(testcase_name="list_of_custom_fns", value=[my_mae, my_mae]),
+    dict(
+        testcase_name="list_of_custom_classes",
+        value=[MyMeanAbsoluteError(),
+               MyMeanAbsoluteError()],
+    ),
+    dict(testcase_name="dict_of_string",
+         value={
+             "output": "mae",
+             "output_1": "mae",
+         }),
+    dict(
+        testcase_name="dict_of_built_in_fn",
+        value={
+            "output": losses.mae,
+            "output_1": losses.mae,
+        },
+    ),
+    dict(
+        testcase_name="dict_of_built_in_class",
+        value={
+            "output": losses.MeanAbsoluteError(),
+            "output_1": losses.MeanAbsoluteError(),
+        },
+    ),
+    dict(
+        testcase_name="dict_of_custom_fn",
+        value={
+            "output": my_mae,
+            "output_1": my_mae
+        },
+    ),
+    dict(
+        testcase_name="dict_of_custom_class",
+        value={
+            "output": MyMeanAbsoluteError(),
+            "output_1": MyMeanAbsoluteError(),
+        },
+    ),
+])
 class LossesSerialization(keras_parameterized.TestCase):
     def setUp(self):
         super(LossesSerialization, self).setUp()
@@ -118,13 +129,11 @@ class LossesSerialization(keras_parameterized.TestCase):
         self.w = np.array([1.25, 0.5, 1.25], dtype="float32")
 
     def test_serializing_model_with_loss_with_custom_object_scope(self, value):
-        with generic_utils.custom_object_scope(
-            {
+        with generic_utils.custom_object_scope({
                 "MyMeanAbsoluteError": MyMeanAbsoluteError,
                 "my_mae": my_mae,
                 "Bias": testing_utils.Bias,
-            }
-        ):
+        }):
             model = _get_multi_io_model()
             model.compile(
                 optimizer_v2.gradient_descent.SGD(0.1),
@@ -141,9 +150,8 @@ class LossesSerialization(keras_parameterized.TestCase):
 
             # Assert training.
             self.assertAllClose(history.history["loss"], [2.0, 1.6, 1.2], 1e-3)
-            eval_results = model.evaluate(
-                [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w]
-            )
+            eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
+                                          sample_weight=[self.w, self.w])
 
             if h5py is None:
                 return
@@ -151,8 +159,8 @@ class LossesSerialization(keras_parameterized.TestCase):
             loaded_model = keras.models.load_model(self.model_filename)
             loaded_model.predict([self.x, self.x])
             loaded_eval_results = loaded_model.evaluate(
-                [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w]
-            )
+                [self.x, self.x], [self.y, self.y],
+                sample_weight=[self.w, self.w])
 
             # Assert all evaluation results are the same.
             self.assertAllClose(eval_results, loaded_eval_results, 1e-9)
@@ -174,9 +182,8 @@ class LossesSerialization(keras_parameterized.TestCase):
 
         # Assert training.
         self.assertAllClose(history.history["loss"], [2.0, 1.6, 1.2], 1e-3)
-        eval_results = model.evaluate(
-            [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w]
-        )
+        eval_results = model.evaluate([self.x, self.x], [self.y, self.y],
+                                      sample_weight=[self.w, self.w])
 
         if h5py is None:
             return
@@ -191,8 +198,7 @@ class LossesSerialization(keras_parameterized.TestCase):
         )
         loaded_model.predict([self.x, self.x])
         loaded_eval_results = loaded_model.evaluate(
-            [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w]
-        )
+            [self.x, self.x], [self.y, self.y], sample_weight=[self.w, self.w])
 
         # Assert all evaluation results are the same.
         self.assertAllClose(eval_results, loaded_eval_results, 1e-9)

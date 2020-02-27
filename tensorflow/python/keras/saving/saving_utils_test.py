@@ -61,12 +61,14 @@ class TraceModelCallTest(keras_parameterized.TestCase):
     @keras_parameterized.run_with_all_model_types
     @test_util.run_in_graph_and_eager_modes
     def test_trace_model_outputs(self):
-        input_dim = 5 if testing_utils.get_model_type() == "functional" else None
+        input_dim = 5 if testing_utils.get_model_type(
+        ) == "functional" else None
         model = testing_utils.get_small_mlp(10, 3, input_dim)
         inputs = array_ops.ones((8, 5))
 
         if input_dim is None:
-            with self.assertRaisesRegexp(ValueError, "input shapes have not been set"):
+            with self.assertRaisesRegexp(ValueError,
+                                         "input shapes have not been set"):
                 saving_utils.trace_model_call(model)
             model._set_inputs(inputs)
 
@@ -82,11 +84,12 @@ class TraceModelCallTest(keras_parameterized.TestCase):
     @keras_parameterized.run_with_all_model_types
     @keras_parameterized.run_all_keras_modes
     def test_trace_model_outputs_after_fitting(self):
-        input_dim = 5 if testing_utils.get_model_type() == "functional" else None
+        input_dim = 5 if testing_utils.get_model_type(
+        ) == "functional" else None
         model = testing_utils.get_small_mlp(10, 3, input_dim)
-        model.compile(
-            optimizer="sgd", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile(optimizer="sgd",
+                      loss="mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         model.fit(
             x=np.random.random((8, 5)).astype(np.float32),
             y=np.random.random((8, 3)).astype(np.float32),
@@ -110,8 +113,8 @@ class TraceModelCallTest(keras_parameterized.TestCase):
         input_dim = 5
         num_classes = 3
         num_classes_b = 4
-        input_a = keras.layers.Input(shape=(input_dim,), name="input_a")
-        input_b = keras.layers.Input(shape=(input_dim,), name="input_b")
+        input_a = keras.layers.Input(shape=(input_dim, ), name="input_a")
+        input_b = keras.layers.Input(shape=(input_dim, ), name="input_b")
 
         dense = keras.layers.Dense(num_classes, name="dense")
         dense2 = keras.layers.Dense(num_classes_b, name="dense2")
@@ -125,12 +128,13 @@ class TraceModelCallTest(keras_parameterized.TestCase):
         input_b_np = np.random.random((10, input_dim)).astype(np.float32)
 
         if testing_utils.get_model_type() == "subclass":
-            with self.assertRaisesRegexp(ValueError, "input shapes have not been set"):
+            with self.assertRaisesRegexp(ValueError,
+                                         "input shapes have not been set"):
                 saving_utils.trace_model_call(model)
 
-        model.compile(
-            optimizer="sgd", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile(optimizer="sgd",
+                      loss="mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         model.fit(
             x=[
                 np.random.random((8, input_dim)).astype(np.float32),
@@ -158,7 +162,8 @@ class TraceModelCallTest(keras_parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_trace_features_layer(self):
         columns = [feature_column_lib.numeric_column("x")]
-        model = sequential.Sequential([feature_column_lib.DenseFeatures(columns)])
+        model = sequential.Sequential(
+            [feature_column_lib.DenseFeatures(columns)])
         model_input = {"x": constant_op.constant([[1.0]])}
         model.predict(model_input, steps=1)
         fn = saving_utils.trace_model_call(model)
@@ -168,28 +173,32 @@ class TraceModelCallTest(keras_parameterized.TestCase):
             feature_column_lib.numeric_column("x"),
             feature_column_lib.numeric_column("y"),
         ]
-        model = sequential.Sequential([feature_column_lib.DenseFeatures(columns)])
+        model = sequential.Sequential(
+            [feature_column_lib.DenseFeatures(columns)])
         model_input = {
             "x": constant_op.constant([[1.0]]),
             "y": constant_op.constant([[2.0]]),
         }
         model.predict(model_input, steps=1)
         fn = saving_utils.trace_model_call(model)
-        self.assertAllClose(
-            {"output_1": [[1.0, 2.0]]}, fn({"x": [[1.0]], "y": [[2.0]]})
-        )
+        self.assertAllClose({"output_1": [[1.0, 2.0]]},
+                            fn({
+                                "x": [[1.0]],
+                                "y": [[2.0]]
+                            }))
 
     @test_util.run_in_graph_and_eager_modes
     def test_specify_input_signature(self):
         model = testing_utils.get_small_sequential_mlp(10, 3, None)
         inputs = array_ops.ones((8, 5))
 
-        with self.assertRaisesRegexp(ValueError, "input shapes have not been set"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "input shapes have not been set"):
             saving_utils.trace_model_call(model)
 
         fn = saving_utils.trace_model_call(
-            model, [tensor_spec.TensorSpec(shape=[None, 5], dtype=dtypes.float32)]
-        )
+            model,
+            [tensor_spec.TensorSpec(shape=[None, 5], dtype=dtypes.float32)])
         signature_outputs = fn(inputs)
         if model.output_names:
             expected_outputs = {model.output_names[0]: model(inputs)}
@@ -205,13 +214,10 @@ class TraceModelCallTest(keras_parameterized.TestCase):
                 self.dense = keras.layers.Dense(3, name="dense")
 
             @def_function.function(
-                input_signature=[
-                    [
-                        tensor_spec.TensorSpec([None, 5], dtypes.float32),
-                        tensor_spec.TensorSpec([None], dtypes.float32),
-                    ]
-                ],
-            )
+                input_signature=[[
+                    tensor_spec.TensorSpec([None, 5], dtypes.float32),
+                    tensor_spec.TensorSpec([None], dtypes.float32),
+                ]], )
             def call(self, inputs, *args):
                 x, y = inputs
                 return self.dense(x) + y
@@ -219,7 +225,7 @@ class TraceModelCallTest(keras_parameterized.TestCase):
         model = Model()
         fn = saving_utils.trace_model_call(model)
         x = array_ops.ones((8, 5), dtype=dtypes.float32)
-        y = array_ops.ones((3,), dtype=dtypes.float32)
+        y = array_ops.ones((3, ), dtype=dtypes.float32)
         expected_outputs = {"output_1": model([x, y])}
         signature_outputs = fn([x, y])
         self._assert_all_close(expected_outputs, signature_outputs)
@@ -243,7 +249,8 @@ class TraceModelCallTest(keras_parameterized.TestCase):
                 predictions = model(data)
                 loss = loss_object(labels, predictions)
             gradients = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+            optimizer.apply_gradients(zip(gradients,
+                                          model.trainable_variables))
 
         x = np.random.random((8, 5))
         y = np.random.random((8, 3))
@@ -263,19 +270,18 @@ def _import_and_infer(save_dir, inputs):
     with graph.as_default(), session_lib.Session() as session:
         model = loader.load(session, [tag_constants.SERVING], save_dir)
         signature = model.signature_def[
-            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
-        ]
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
         assert set(inputs.keys()) == set(
-            signature.inputs.keys()
-        ), "expected {}, found {}".format(signature.inputs.keys(), inputs.keys())
+            signature.inputs.keys()), "expected {}, found {}".format(
+                signature.inputs.keys(), inputs.keys())
         feed_dict = {}
         for arg_name in inputs.keys():
-            feed_dict[
-                graph.get_tensor_by_name(signature.inputs[arg_name].name)
-            ] = inputs[arg_name]
+            feed_dict[graph.get_tensor_by_name(
+                signature.inputs[arg_name].name)] = inputs[arg_name]
         output_dict = {}
         for output_name, output_tensor_info in signature.outputs.items():
-            output_dict[output_name] = graph.get_tensor_by_name(output_tensor_info.name)
+            output_dict[output_name] = graph.get_tensor_by_name(
+                output_tensor_info.name)
         return session.run(output_dict, feed_dict=feed_dict)
 
 
@@ -309,8 +315,8 @@ class ModelSaveTest(keras_parameterized.TestCase):
 @test_util.run_deprecated_v1  # Not used in v2.
 class ExtractModelMetricsTest(keras_parameterized.TestCase):
     def test_extract_model_metrics(self):
-        a = keras.layers.Input(shape=(3,), name="input_a")
-        b = keras.layers.Input(shape=(3,), name="input_b")
+        a = keras.layers.Input(shape=(3, ), name="input_a")
+        b = keras.layers.Input(shape=(3, ), name="input_b")
 
         dense = keras.layers.Dense(4, name="dense")
         c = dense(a)
@@ -331,8 +337,7 @@ class ExtractModelMetricsTest(keras_parameterized.TestCase):
             extract_metric_names.extend(["dense_mae", "dropout_mae"])
         else:
             extract_metric_names.extend(
-                ["dense_mean_absolute_error", "dropout_mean_absolute_error"]
-            )
+                ["dense_mean_absolute_error", "dropout_mean_absolute_error"])
 
         model_metric_names = [
             "loss",
@@ -350,7 +355,8 @@ class ExtractModelMetricsTest(keras_parameterized.TestCase):
         )
         extract_metrics = saving_utils.extract_model_metrics(model)
         self.assertEqual(set(model_metric_names), set(model.metrics_names))
-        self.assertEqual(set(extract_metric_names), set(extract_metrics.keys()))
+        self.assertEqual(set(extract_metric_names),
+                         set(extract_metrics.keys()))
 
 
 if __name__ == "__main__":

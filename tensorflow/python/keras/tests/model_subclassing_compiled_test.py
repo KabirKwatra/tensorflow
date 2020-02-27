@@ -41,9 +41,10 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         num_samples = 100
         input_dim = 50
 
-        model = testing_utils.SmallSubclassMLP(
-            num_hidden=32, num_classes=num_classes, use_dp=True, use_bn=True
-        )
+        model = testing_utils.SmallSubclassMLP(num_hidden=32,
+                                               num_classes=num_classes,
+                                               use_dp=True,
+                                               use_bn=True)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -62,9 +63,9 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         num_samples = 1000
         input_dim = 50
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_dp=True, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_dp=True,
+                                                       use_bn=True)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -86,9 +87,10 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         with self.cached_session():
-            model = testing_utils.SmallSubclassMLP(
-                num_hidden=32, num_classes=num_classes, use_dp=True, use_bn=True
-            )
+            model = testing_utils.SmallSubclassMLP(num_hidden=32,
+                                                   num_classes=num_classes,
+                                                   use_dp=True,
+                                                   use_bn=True)
             model.compile(
                 loss="mse",
                 optimizer="rmsprop",
@@ -111,9 +113,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         num_samples = 100
         input_dim = 50
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
 
         x1 = np.ones((num_samples, input_dim))
         x2 = np.ones((num_samples, input_dim))
@@ -146,8 +147,7 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             def __init__(self):
                 super(BNNet, self).__init__()
                 self.bn = keras.layers.BatchNormalization(
-                    beta_initializer="ones", gamma_initializer="ones"
-                )
+                    beta_initializer="ones", gamma_initializer="ones")
 
             def call(self, inputs):
                 return self.bn(inputs)
@@ -177,9 +177,9 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             def __init__(self):
                 super(DPNet, self).__init__()
                 self.dp = keras.layers.Dropout(0.5)
-                self.dense = keras.layers.Dense(
-                    1, use_bias=False, kernel_initializer="ones"
-                )
+                self.dense = keras.layers.Dense(1,
+                                                use_bias=False,
+                                                kernel_initializer="ones")
 
             def call(self, inputs):
                 x = self.dp(inputs)
@@ -210,9 +210,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y1 = np.zeros((num_samples, num_classes[0]))
         y2 = np.zeros((num_samples, num_classes[1]))
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -220,8 +219,14 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         )
         model.fit([x1, x2], [y1, y2], epochs=2, batch_size=32, verbose=0)
         model.fit(
-            {"input_1": x1, "input_2": x2},
-            {"output_1": y1, "output_2": y2},
+            {
+                "input_1": x1,
+                "input_2": x2
+            },
+            {
+                "output_1": y1,
+                "output_2": y2
+            },
             epochs=2,
             batch_size=32,
         )
@@ -234,18 +239,21 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             validation_data=([x1, x2], [y1, y2]),
         )
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
             run_eagerly=testing_utils.should_run_eagerly(),
         )
         model.train_on_batch([x1, x2], [y1, y2])
-        model.train_on_batch(
-            {"input_1": x1, "input_2": x2}, {"output_1": y1, "output_2": y2}
-        )
+        model.train_on_batch({
+            "input_1": x1,
+            "input_2": x2
+        }, {
+            "output_1": y1,
+            "output_2": y2
+        })
 
     def test_inference_methods(self):
         # test predict, evaluate, test_on_batch, predict_on_batch
@@ -259,9 +267,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y1 = np.zeros((num_samples, num_classes[0]))
         y2 = np.zeros((num_samples, num_classes[1]))
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -270,14 +277,12 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         model.evaluate([x1, x2], [y1, y2])
         model.test_on_batch([x1, x2], [y1, y2])
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
         model.predict([x1, x2])
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
         model.predict_on_batch([x1, x2])
 
     def test_saving(self):
@@ -290,9 +295,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y1 = np.zeros((num_samples, num_classes[0]))
         y2 = np.zeros((num_samples, num_classes[1]))
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -307,9 +311,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             hdf5_format_name = os.path.join(self.get_temp_dir(), "weights.h5")
             model.save_weights(hdf5_format_name)
 
-        model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True
-        )
+        model = model_util.get_multi_io_subclass_model(num_classes=num_classes,
+                                                       use_bn=True)
 
         if h5py is not None:
             with self.assertRaises(ValueError):
@@ -352,9 +355,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             len(model.non_trainable_weights),
             2 + len(model.test_net.non_trainable_weights),
         )
-        self.assertEqual(
-            len(model.trainable_weights), 6 + len(model.test_net.trainable_weights)
-        )
+        self.assertEqual(len(model.trainable_weights),
+                         6 + len(model.test_net.trainable_weights))
 
     def test_graph_nested_in_subclass(self):
         num_classes = 2
@@ -380,18 +382,16 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             len(model.non_trainable_weights),
             2 + len(model.test_net.non_trainable_weights),
         )
-        self.assertEqual(
-            len(model.trainable_weights), 6 + len(model.test_net.trainable_weights)
-        )
+        self.assertEqual(len(model.trainable_weights),
+                         6 + len(model.test_net.trainable_weights))
 
     def test_subclass_nested_in_graph(self):
         num_classes = 2
         num_samples = 100
         input_dim = 50
 
-        model = model_util.get_nested_model_3(
-            input_dim=input_dim, num_classes=num_classes
-        )
+        model = model_util.get_nested_model_3(input_dim=input_dim,
+                                              num_classes=num_classes)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -418,7 +418,8 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             def __init__(self):
                 super(Inner, self).__init__()
                 self.dense1 = keras.layers.Dense(32, activation="relu")
-                self.dense2 = keras.layers.Dense(num_classes, activation="relu")
+                self.dense2 = keras.layers.Dense(num_classes,
+                                                 activation="relu")
                 self.bn = keras.layers.BatchNormalization()
 
             def call(self, inputs):
@@ -455,9 +456,9 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
             def __init__(self):
                 super(DPNet, self).__init__()
                 self.dp = keras.layers.Dropout(0.5)
-                self.dense = keras.layers.Dense(
-                    1, use_bias=False, kernel_initializer="ones"
-                )
+                self.dense = keras.layers.Dense(1,
+                                                use_bias=False,
+                                                kernel_initializer="ones")
 
             def call(self, inputs, training=False):
                 x = self.dp(inputs, training=training)

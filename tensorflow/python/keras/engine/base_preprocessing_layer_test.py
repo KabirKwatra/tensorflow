@@ -40,19 +40,19 @@ from tensorflow.python.util import compat
 
 # Define a test-only implementation of CombinerPreprocessingLayer to validate
 # its correctness directly.
-class AddingPreprocessingLayer(base_preprocessing_layer.CombinerPreprocessingLayer):
+class AddingPreprocessingLayer(
+        base_preprocessing_layer.CombinerPreprocessingLayer):
     _SUM_NAME = "sum"
 
     def __init__(self, **kwargs):
-        super(AddingPreprocessingLayer, self).__init__(
-            combiner=self.AddingCombiner(), **kwargs
-        )
+        super(AddingPreprocessingLayer,
+              self).__init__(combiner=self.AddingCombiner(), **kwargs)
 
     def build(self, input_shape):
         super(AddingPreprocessingLayer, self).build(input_shape)
         self._sum = self._add_state_variable(
             name=self._SUM_NAME,
-            shape=(1,),
+            shape=(1, ),
             dtype=dtypes.float32,
             initializer=init_ops.zeros_initializer,
         )
@@ -76,7 +76,8 @@ class AddingPreprocessingLayer(base_preprocessing_layer.CombinerPreprocessingLay
     class AddingCombiner(base_preprocessing_layer.Combiner):
         def compute(self, batch_values, accumulator=None):
             """Compute a step in this computation, returning a new accumulator."""
-            new_accumulator = 0 if batch_values is None else np.sum(batch_values)
+            new_accumulator = 0 if batch_values is None else np.sum(
+                batch_values)
             if accumulator is None:
                 return new_accumulator
             else:
@@ -113,8 +114,8 @@ class AddingPreprocessingLayer(base_preprocessing_layer.CombinerPreprocessingLay
 
 
 class AddingPreprocessingLayerV1(
-    AddingPreprocessingLayer, base_preprocessing_layer_v1.CombinerPreprocessingLayer
-):
+        AddingPreprocessingLayer,
+        base_preprocessing_layer_v1.CombinerPreprocessingLayer):
     pass
 
 
@@ -138,11 +139,11 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
     def test_adapt_infinite_dataset_fails(self):
         """Test that preproc layers fail if an infinite dataset is passed."""
         input_dataset = dataset_ops.Dataset.from_tensor_slices(
-            np.array([[1], [2], [3], [4], [5], [0]])
-        ).repeat()
+            np.array([[1], [2], [3], [4], [5], [0]])).repeat()
 
         layer = get_layer()
-        with self.assertRaisesRegex(ValueError, ".*infinite number of elements.*"):
+        with self.assertRaisesRegex(ValueError,
+                                    ".*infinite number of elements.*"):
             layer.adapt(input_dataset)
 
     def test_pre_build_injected_update_with_no_build_fails(self):
@@ -158,7 +159,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
 
     def test_setter_update(self):
         """Test the prototyped setter method."""
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         layer = get_layer()
         output = layer(input_data)
         model = keras.Model(input_data, output)
@@ -175,7 +176,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
         layer = get_layer()
         layer.adapt(input_dataset)
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         output = layer(input_data)
         model = keras.Model(input_data, output)
         model._run_eagerly = testing_utils.should_run_eagerly()
@@ -186,7 +187,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
         """Test that preproc layers can adapt() after build() is called."""
         input_dataset = np.array([1, 2, 3, 4, 5])
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         layer = get_layer()
         output = layer(input_data)
         model = keras.Model(input_data, output)
@@ -204,10 +205,10 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
         combiner = layer._combiner
         updates = combiner.extract(combiner.compute(input_dataset))
 
-        layer.build((1,))
+        layer.build((1, ))
         layer._set_state_variables(updates)
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         output = layer(input_data)
         model = keras.Model(input_data, output)
         model._run_eagerly = testing_utils.should_run_eagerly()
@@ -217,7 +218,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
     def test_post_build_injected_update(self):
         """Test external update injection after build() is called."""
         input_dataset = np.array([1, 2, 3, 4, 5])
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         layer = get_layer()
         output = layer(input_data)
         model = keras.Model(input_data, output)
@@ -232,13 +233,12 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
     def test_pre_build_adapt_update_dataset(self):
         """Test that preproc layers can adapt() before build() is called."""
         input_dataset = dataset_ops.Dataset.from_tensor_slices(
-            np.array([[1], [2], [3], [4], [5], [0]])
-        )
+            np.array([[1], [2], [3], [4], [5], [0]]))
 
         layer = get_layer()
         layer.adapt(input_dataset)
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         output = layer(input_data)
         model = keras.Model(input_data, output)
         model._run_eagerly = testing_utils.should_run_eagerly()
@@ -248,10 +248,9 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
     def test_post_build_adapt_update_dataset(self):
         """Test that preproc layers can adapt() after build() is called."""
         input_dataset = dataset_ops.Dataset.from_tensor_slices(
-            np.array([[1], [2], [3], [4], [5], [0]])
-        )
+            np.array([[1], [2], [3], [4], [5], [0]]))
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         layer = get_layer()
         output = layer(input_data)
         model = keras.Model(input_data, output)
@@ -269,7 +268,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
         layer = get_layer()
         layer.adapt(input_dataset)
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         output = layer(input_data)
         model = keras.Model(input_data, output)
         model._run_eagerly = testing_utils.should_run_eagerly()
@@ -286,7 +285,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
 
         layer = get_layer()
 
-        input_data = keras.Input(shape=(1,))
+        input_data = keras.Input(shape=(1, ))
         output = layer(input_data)
         model = keras.Model(input_data, output)
         model._run_eagerly = testing_utils.should_run_eagerly()
@@ -303,7 +302,7 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
         """Test that preproc layers can transfer state via get/set weights.."""
 
         def get_model():
-            input_data = keras.Input(shape=(1,))
+            input_data = keras.Input(shape=(1, ))
             layer = get_layer()
             output = layer(input_data)
             model = keras.Model(input_data, output)
@@ -322,13 +321,14 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
 
         # Transfer state from model to model_2 via get/set weights.
         model_2.set_weights(weights)
-        self.assertAllEqual([[16], [17], [18]], model_2.predict([1.0, 2.0, 3.0]))
+        self.assertAllEqual([[16], [17], [18]],
+                            model_2.predict([1.0, 2.0, 3.0]))
 
     def test_weight_based_state_transfer_with_further_tuning(self):
         """Test that transferred state can be used to further tune a model.."""
 
         def get_model():
-            input_data = keras.Input(shape=(1,))
+            input_data = keras.Input(shape=(1, ))
             layer = get_layer()
             output = layer(input_data)
             model = keras.Model(input_data, output)
@@ -347,7 +347,8 @@ class PreprocessingLayerTest(keras_parameterized.TestCase):
 
         # Further adapt this layer based on the transferred weights.
         layer_2.adapt(np.array([1, 2]), reset_state=False)
-        self.assertAllEqual([[19], [20], [21]], model_2.predict([1.0, 2.0, 3.0]))
+        self.assertAllEqual([[19], [20], [21]],
+                            model_2.predict([1.0, 2.0, 3.0]))
 
 
 @keras_parameterized.run_all_keras_modes
@@ -374,13 +375,16 @@ class ConvertToListTest(keras_parameterized.TestCase):
             "expected": [[1, 2, 3], [4, 5, 6]],
         },
         {
-            "testcase_name": "ragged_tensor",
-            "inputs": lambda: ragged_factory_ops.constant([[1, 2, 3, 4], [4, 5, 6]]),
+            "testcase_name":
+            "ragged_tensor",
+            "inputs":
+            lambda: ragged_factory_ops.constant([[1, 2, 3, 4], [4, 5, 6]]),
             "expected": [[1, 2, 3, 4], [4, 5, 6]],
         },
         {
             "testcase_name": "sparse_tensor",
-            "inputs": lambda: sparse_ops.from_dense([[1, 2, 0, 4], [4, 5, 6, 0]]),
+            "inputs": lambda: sparse_ops.from_dense([[1, 2, 0, 4],
+                                                     [4, 5, 6, 0]]),
             "expected": [[1, 2, -1, 4], [4, 5, 6, -1]],
         },
     )

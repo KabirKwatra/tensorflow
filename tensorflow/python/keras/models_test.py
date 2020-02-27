@@ -47,14 +47,13 @@ class TestModel(keras.Model):
         super(TestModel, self).__init__()
         self.layer1 = keras.layers.Dense(n_outputs)
         self.n_outputs = resource_variable_ops.ResourceVariable(
-            n_outputs, trainable=trainable
-        )
+            n_outputs, trainable=trainable)
 
     def call(self, x):
         return self.layer1(x)
 
 
-def _get_layers(input_shape=(4,), add_input_layer=False):
+def _get_layers(input_shape=(4, ), add_input_layer=False):
     if add_input_layer:
         model_layers = [
             keras.layers.InputLayer(input_shape=input_shape),
@@ -74,71 +73,70 @@ def _get_layers(input_shape=(4,), add_input_layer=False):
     return model_layers
 
 
-def _get_model(input_shape=(4,)):
+def _get_model(input_shape=(4, )):
     model_layers = _get_layers(input_shape=None, add_input_layer=False)
-    return testing_utils.get_model_from_layers(model_layers, input_shape=input_shape)
+    return testing_utils.get_model_from_layers(model_layers,
+                                               input_shape=input_shape)
 
 
 class TestModelCloning(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            {
-                "testcase_name": "has_input_layer",
-                "input_shape": (4,),
-                "add_input_layer": True,
-                "share_weights": False,
-            },
-            {
-                "testcase_name": "no_input_layer",
-                "input_shape": None,
-                "add_input_layer": False,
-                "share_weights": False,
-            },
-            {
-                "testcase_name": "has_input_layer_share_weights",
-                "input_shape": (4,),
-                "add_input_layer": True,
-                "share_weights": True,
-            },
-            {
-                "testcase_name": "no_input_layer_share_weights",
-                "input_shape": None,
-                "add_input_layer": False,
-                "share_weights": True,
-            },
-        ]
-    )
-    def test_clone_sequential_model(self, input_shape, add_input_layer, share_weights):
+    @parameterized.named_parameters([
+        {
+            "testcase_name": "has_input_layer",
+            "input_shape": (4, ),
+            "add_input_layer": True,
+            "share_weights": False,
+        },
+        {
+            "testcase_name": "no_input_layer",
+            "input_shape": None,
+            "add_input_layer": False,
+            "share_weights": False,
+        },
+        {
+            "testcase_name": "has_input_layer_share_weights",
+            "input_shape": (4, ),
+            "add_input_layer": True,
+            "share_weights": True,
+        },
+        {
+            "testcase_name": "no_input_layer_share_weights",
+            "input_shape": None,
+            "add_input_layer": False,
+            "share_weights": True,
+        },
+    ])
+    def test_clone_sequential_model(self, input_shape, add_input_layer,
+                                    share_weights):
 
         if share_weights:
-            clone_fn = functools.partial(
-                keras.models._clone_sequential_model, layer_fn=models.share_weights
-            )
+            clone_fn = functools.partial(keras.models._clone_sequential_model,
+                                         layer_fn=models.share_weights)
         else:
             clone_fn = keras.models.clone_model
 
         val_a = np.random.random((10, 4))
         model = models.Sequential(_get_layers(input_shape, add_input_layer))
         # Sanity check
-        self.assertEqual(
-            isinstance(model._layers[0], keras.layers.InputLayer), add_input_layer
-        )
+        self.assertEqual(isinstance(model._layers[0], keras.layers.InputLayer),
+                         add_input_layer)
         self.assertEqual(model._is_graph_network, add_input_layer)
 
         # With placeholder creation -- clone model should have an InputLayer
         # if the original model has one.
         new_model = clone_fn(model)
         self.assertEqual(
-            isinstance(new_model._layers[0], keras.layers.InputLayer), add_input_layer
-        )
+            isinstance(new_model._layers[0], keras.layers.InputLayer),
+            add_input_layer)
         self.assertEqual(new_model._is_graph_network, model._is_graph_network)
         if input_shape:
             # update ops from batch norm needs to be included
-            self.assertEqual(len(new_model.get_updates_for(new_model.inputs)), 2)
+            self.assertEqual(len(new_model.get_updates_for(new_model.inputs)),
+                             2)
 
         # On top of new tensor  -- clone model should always have an InputLayer.
-        input_a = keras.Input(shape=(4,))
+        input_a = keras.Input(shape=(4, ))
         new_model = clone_fn(model, input_tensors=input_a)
         self.assertIsInstance(new_model._layers[0], keras.layers.InputLayer)
         self.assertTrue(new_model._is_graph_network)
@@ -150,21 +148,25 @@ class TestModelCloning(keras_parameterized.TestCase):
             # saying they should not be used with EagerTensors
             input_a = keras.backend.variable(val_a)
             new_model = clone_fn(model, input_tensors=input_a)
-            self.assertIsInstance(new_model._layers[0], keras.layers.InputLayer)
+            self.assertIsInstance(new_model._layers[0],
+                                  keras.layers.InputLayer)
             self.assertTrue(new_model._is_graph_network)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            {"testcase_name": "clone_weights", "share_weights": False},
-            {"testcase_name": "share_weights", "share_weights": True},
-        ]
-    )
+    @parameterized.named_parameters([
+        {
+            "testcase_name": "clone_weights",
+            "share_weights": False
+        },
+        {
+            "testcase_name": "share_weights",
+            "share_weights": True
+        },
+    ])
     def test_clone_functional_model(self, share_weights):
         if share_weights:
-            clone_fn = functools.partial(
-                keras.models._clone_functional_model, layer_fn=models.share_weights
-            )
+            clone_fn = functools.partial(keras.models._clone_functional_model,
+                                         layer_fn=models.share_weights)
         else:
             clone_fn = keras.models.clone_model
 
@@ -172,10 +174,10 @@ class TestModelCloning(keras_parameterized.TestCase):
         val_b = np.random.random((10, 4))
         val_out = np.random.random((10, 4))
 
-        input_a = keras.Input(shape=(4,))
-        input_b = keras.Input(shape=(4,))
-        dense_1 = keras.layers.Dense(4,)
-        dense_2 = keras.layers.Dense(4,)
+        input_a = keras.Input(shape=(4, ))
+        input_b = keras.Input(shape=(4, ))
+        dense_1 = keras.layers.Dense(4, )
+        dense_2 = keras.layers.Dense(4, )
 
         x_a = dense_1(input_a)
         x_a = keras.layers.Dropout(0.5)(x_a)
@@ -196,9 +198,10 @@ class TestModelCloning(keras_parameterized.TestCase):
         new_model.train_on_batch([val_a, val_b], val_out)
 
         # On top of new tensors
-        input_a = keras.Input(shape=(4,), name="a")
-        input_b = keras.Input(shape=(4,), name="b")
-        new_model = keras.models.clone_model(model, input_tensors=[input_a, input_b])
+        input_a = keras.Input(shape=(4, ), name="a")
+        input_b = keras.Input(shape=(4, ), name="b")
+        new_model = keras.models.clone_model(model,
+                                             input_tensors=[input_a, input_b])
         self.assertEqual(len(new_model.get_updates_for(new_model.inputs)), 2)
         new_model.compile(
             testing_utils.get_v2_optimizer("rmsprop"),
@@ -214,7 +217,8 @@ class TestModelCloning(keras_parameterized.TestCase):
             input_a = keras.backend.variable(val_a)
             input_b = keras.backend.variable(val_b)
             new_model = clone_fn(model, input_tensors=[input_a, input_b])
-            self.assertEqual(len(new_model.get_updates_for(new_model.inputs)), 2)
+            self.assertEqual(len(new_model.get_updates_for(new_model.inputs)),
+                             2)
             new_model.compile(
                 testing_utils.get_v2_optimizer("rmsprop"),
                 "mse",
@@ -223,17 +227,20 @@ class TestModelCloning(keras_parameterized.TestCase):
             new_model.train_on_batch(None, val_out)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            {"testcase_name": "clone_weights", "share_weights": False},
-            {"testcase_name": "share_weights", "share_weights": True},
-        ]
-    )
+    @parameterized.named_parameters([
+        {
+            "testcase_name": "clone_weights",
+            "share_weights": False
+        },
+        {
+            "testcase_name": "share_weights",
+            "share_weights": True
+        },
+    ])
     def test_clone_functional_with_masking(self, share_weights):
         if share_weights:
-            clone_fn = functools.partial(
-                keras.models._clone_functional_model, layer_fn=models.share_weights
-            )
+            clone_fn = functools.partial(keras.models._clone_functional_model,
+                                         layer_fn=models.share_weights)
         else:
             clone_fn = keras.models.clone_model
 
@@ -241,8 +248,7 @@ class TestModelCloning(keras_parameterized.TestCase):
         inputs = keras.Input((2, 1))
         outputs = keras.layers.Masking(mask_value=0)(inputs)
         outputs = keras.layers.TimeDistributed(
-            keras.layers.Dense(1, kernel_initializer="one")
-        )(outputs)
+            keras.layers.Dense(1, kernel_initializer="one"))(outputs)
         model = keras.Model(inputs, outputs)
 
         model = clone_fn(model)
@@ -257,9 +263,9 @@ class TestModelCloning(keras_parameterized.TestCase):
 
     def test_model_cloning_invalid_use_cases(self):
         seq_model = keras.models.Sequential()
-        seq_model.add(keras.layers.Dense(4, input_shape=(4,)))
+        seq_model.add(keras.layers.Dense(4, input_shape=(4, )))
 
-        x = keras.Input((4,))
+        x = keras.Input((4, ))
         y = keras.layers.Dense(4)(x)
         fn_model = keras.models.Model(x, y)
 
@@ -271,13 +277,14 @@ class TestModelCloning(keras_parameterized.TestCase):
             keras.models._clone_sequential_model(fn_model)
 
         with self.assertRaises(ValueError):
-            keras.models._clone_sequential_model(seq_model, input_tensors=[x, x])
+            keras.models._clone_sequential_model(seq_model,
+                                                 input_tensors=[x, x])
         with self.assertRaises(ValueError):
             keras.models._clone_sequential_model(seq_model, input_tensors=y)
 
     def test_functional_cloning_does_not_create_unnecessary_placeholders(self):
         with ops.Graph().as_default():
-            x = keras.Input((4,))
+            x = keras.Input((4, ))
             y = keras.layers.Dense(4)(x)
             model = keras.models.Model(x, y)
         graph = ops.Graph()
@@ -290,7 +297,7 @@ class TestModelCloning(keras_parameterized.TestCase):
     def test_sequential_cloning_does_not_create_unnecessary_placeholders(self):
         with ops.Graph().as_default():
             model = keras.models.Sequential()
-            model.add(keras.layers.Dense(4, input_shape=(4,)))
+            model.add(keras.layers.Dense(4, input_shape=(4, )))
         graph = ops.Graph()
         with graph.as_default():
             x = array_ops.ones((10, 4))
@@ -319,7 +326,8 @@ class TestModelCloning(keras_parameterized.TestCase):
                 clone = keras.models.clone_model(model)
                 self.assertLen(clone.losses, 1)
 
-                loss = sess.run(clone.losses[0], feed_dict={clone.input: input_arr})
+                loss = sess.run(clone.losses[0],
+                                feed_dict={clone.input: input_arr})
                 self.assertAllClose(np.sum(input_arr), loss)
 
 
@@ -334,9 +342,9 @@ class CheckpointingTests(keras_parameterized.TestCase):
     def test_optimizer_dependency(self):
         model = _get_model()
         opt = adam.AdamOptimizer(0.01)
-        model.compile(
-            optimizer=opt, loss="mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile(optimizer=opt,
+                      loss="mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
 
         model.fit(
             x=np.array([[1.0, 2.0, 3.0, 4.0]]),
@@ -359,7 +367,7 @@ class TestModelBackend(keras_parameterized.TestCase):
         floatx = keras.backend.floatx()
         keras.backend.set_floatx("float64")
 
-        x = keras.Input((5,))
+        x = keras.Input((5, ))
         y = keras.layers.Dense(1)(x)
         model = keras.models.Model(x, y)
         model.compile(
@@ -385,9 +393,9 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
 
         is_subclassed = testing_utils.get_model_type() == "subclass"
         # With placeholder creation
-        new_model = models.clone_and_build_model(
-            model, compile_clone=False, in_place_reset=is_subclassed
-        )
+        new_model = models.clone_and_build_model(model,
+                                                 compile_clone=False,
+                                                 in_place_reset=is_subclassed)
         with self.assertRaisesRegexp(RuntimeError, "must compile"):
             new_model.evaluate(inp, out)
         with self.assertRaisesRegexp(RuntimeError, "must compile"):
@@ -400,7 +408,7 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
         new_model.train_on_batch(inp, out)
 
         # Create new tensors for inputs.
-        input_a = keras.Input(shape=(4,))
+        input_a = keras.Input(shape=(4, ))
         new_model = models.clone_and_build_model(
             model,
             input_tensors=input_a,
@@ -426,8 +434,7 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
             isinstance(
                 model.optimizer,
                 (keras.optimizers.RMSprop, keras.optimizer_v2.rmsprop.RMSprop),
-            )
-        )
+            ))
 
     def _clone_and_build_test_helper(self, model, model_type):
         inp = np.random.random((10, 4))
@@ -436,16 +443,16 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
         is_subclassed = model_type == "subclass"
 
         # With placeholder creation
-        new_model = models.clone_and_build_model(
-            model, compile_clone=True, in_place_reset=is_subclassed
-        )
+        new_model = models.clone_and_build_model(model,
+                                                 compile_clone=True,
+                                                 in_place_reset=is_subclassed)
 
         self._assert_same_compile_params(new_model)
         new_model.train_on_batch(inp, out)
         new_model.evaluate(inp, out)
 
         # Create new tensors for inputs.
-        input_a = keras.Input(shape=(4,), name="a")
+        input_a = keras.Input(shape=(4, ), name="a")
         new_model = models.clone_and_build_model(
             model,
             input_tensors=input_a,
@@ -478,7 +485,8 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
             run_eagerly=testing_utils.should_run_eagerly(),
         )
 
-        self._clone_and_build_test_helper(model, testing_utils.get_model_type())
+        self._clone_and_build_test_helper(model,
+                                          testing_utils.get_model_type())
 
     @keras_parameterized.run_all_keras_modes
     def test_clone_and_build_sequential_without_inputs_defined(self):
@@ -537,7 +545,9 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
                 model = testing_utils.get_small_sequential_mlp(3, 4)
                 optimizer = keras.optimizer_v2.adam.Adam()
                 model.compile(
-                    optimizer, "mse", metrics=["acc", metrics.categorical_accuracy],
+                    optimizer,
+                    "mse",
+                    metrics=["acc", metrics.categorical_accuracy],
                 )
                 model.fit(
                     x=np.array([[1.0, 2.0, 3.0, 4.0]]),
@@ -547,15 +557,14 @@ class TestCloneAndBuildModel(keras_parameterized.TestCase):
                 optimizer_config = optimizer.get_config()
         with ops.Graph().as_default():
             with self.session():
-                with self.assertRaisesRegexp(
-                    ValueError, "Cannot use the given session"
-                ):
+                with self.assertRaisesRegexp(ValueError,
+                                             "Cannot use the given session"):
                     models.clone_and_build_model(model, compile_clone=True)
                 # The optimizer_config object allows the model to be cloned in a
                 # different graph.
-                models.clone_and_build_model(
-                    model, compile_clone=True, optimizer_config=optimizer_config
-                )
+                models.clone_and_build_model(model,
+                                             compile_clone=True,
+                                             optimizer_config=optimizer_config)
 
 
 if __name__ == "__main__":

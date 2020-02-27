@@ -38,7 +38,11 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
         testing_utils.layer_test(
             keras.layers.Embedding,
-            kwargs={"output_dim": 4, "input_dim": 10, "input_length": 2},
+            kwargs={
+                "output_dim": 4,
+                "input_dim": 10,
+                "input_length": 2
+            },
             input_shape=(3, 2),
             input_dtype="int32",
             expected_output_dtype="float32",
@@ -46,7 +50,11 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
         testing_utils.layer_test(
             keras.layers.Embedding,
-            kwargs={"output_dim": 4, "input_dim": 10, "mask_zero": True},
+            kwargs={
+                "output_dim": 4,
+                "input_dim": 10,
+                "mask_zero": True
+            },
             input_shape=(3, 2),
             input_dtype="int32",
             expected_output_dtype="float32",
@@ -54,7 +62,11 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
         testing_utils.layer_test(
             keras.layers.Embedding,
-            kwargs={"output_dim": 4, "input_dim": 10, "mask_zero": True},
+            kwargs={
+                "output_dim": 4,
+                "input_dim": 10,
+                "mask_zero": True
+            },
             input_shape=(3, 4, 2),
             input_dtype="int32",
             expected_output_dtype="float32",
@@ -102,19 +114,20 @@ class EmbeddingTest(keras_parameterized.TestCase):
             output_dim=2,
             weights=[np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]])],
         )
-        inputs = keras.layers.Input(shape=(None,), dtype=dtypes.float32, ragged=True)
+        inputs = keras.layers.Input(shape=(None, ),
+                                    dtype=dtypes.float32,
+                                    ragged=True)
         # pylint: disable=unnecessary-lambda
-        outputs = keras.layers.Lambda(lambda args: keras.backend.identity(args))(inputs)
+        outputs = keras.layers.Lambda(lambda args: keras.backend.identity(args)
+                                      )(inputs)
         # pylint: enable=unnecessary-lambda
         outputs = layer(outputs)
 
         model = keras.Model(inputs, outputs)
         model.run_eagerly = testing_utils.should_run_eagerly()
         outputs = model.predict(
-            ragged_factory_ops.constant(
-                [[1.0, 2.0, 2.0], [0.0], [1.0, 2.0]], ragged_rank=1
-            )
-        )
+            ragged_factory_ops.constant([[1.0, 2.0, 2.0], [0.0], [1.0, 2.0]],
+                                        ragged_rank=1))
         self.assertAllClose(
             outputs,
             ragged_factory_ops.constant(

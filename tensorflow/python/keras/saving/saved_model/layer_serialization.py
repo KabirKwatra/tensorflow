@@ -48,9 +48,7 @@ class LayerSavedModelSaver(base_serialization.SavedModelSaver):
             name=self.obj.name,
             trainable=self.obj.trainable,
             expects_training_arg=self.obj._expects_training_arg,  # pylint: disable=protected-access
-            dtype=policy.serialize(
-                self.obj._dtype_policy
-            ),  # pylint: disable=protected-access
+            dtype=policy.serialize(self.obj._dtype_policy),  # pylint: disable=protected-access
             batch_input_shape=getattr(self.obj, "_batch_input_shape", None),
         )
 
@@ -64,45 +62,43 @@ class LayerSavedModelSaver(base_serialization.SavedModelSaver):
         if self.obj.input_spec is not None:
             # Layer's input_spec has already been type-checked in the property setter.
             metadata["input_spec"] = nest.map_structure(
-                lambda x: generic_utils.serialize_keras_object(x) if x else None,
+                lambda x: generic_utils.serialize_keras_object(x)
+                if x else None,
                 self.obj.input_spec,
             )
         if self.obj.activity_regularizer is not None and hasattr(
-            self.obj.activity_regularizer, "get_config"
-        ):
-            metadata["activity_regularizer"] = generic_utils.serialize_keras_object(
-                self.obj.activity_regularizer
-            )
-        if self.obj._build_input_shape is not None:  # pylint: disable=protected-access
+                self.obj.activity_regularizer, "get_config"):
             metadata[
-                "build_input_shape"
-            ] = self.obj._build_input_shape  # pylint: disable=protected-access
+                "activity_regularizer"] = generic_utils.serialize_keras_object(
+                    self.obj.activity_regularizer)
+        if self.obj._build_input_shape is not None:  # pylint: disable=protected-access
+            metadata["build_input_shape"] = self.obj._build_input_shape  # pylint: disable=protected-access
         return metadata
 
     def objects_to_serialize(self, serialization_cache):
-        return self._get_serialized_attributes(serialization_cache).objects_to_serialize
+        return self._get_serialized_attributes(
+            serialization_cache).objects_to_serialize
 
     def functions_to_serialize(self, serialization_cache):
         return self._get_serialized_attributes(
-            serialization_cache
-        ).functions_to_serialize
+            serialization_cache).functions_to_serialize
 
     def _get_serialized_attributes(self, serialization_cache):
         """Generates or retrieves serialized attributes from cache."""
-        keras_cache = serialization_cache.setdefault(constants.KERAS_CACHE_KEY, {})
+        keras_cache = serialization_cache.setdefault(constants.KERAS_CACHE_KEY,
+                                                     {})
         if self.obj in keras_cache:
             return keras_cache[self.obj]
 
         serialized_attr = keras_cache[
-            self.obj
-        ] = serialized_attributes.SerializedAttributes.new(self.obj)
+            self.obj] = serialized_attributes.SerializedAttributes.new(
+                self.obj)
 
         if save_impl.should_skip_serialization(self.obj):
             return serialized_attr
 
         object_dict, function_dict = self._get_serialized_attributes_internal(
-            serialization_cache
-        )
+            serialization_cache)
 
         serialized_attr.set_and_validate_objects(object_dict)
         serialized_attr.set_and_validate_functions(function_dict)
@@ -111,7 +107,8 @@ class LayerSavedModelSaver(base_serialization.SavedModelSaver):
     def _get_serialized_attributes_internal(self, serialization_cache):
         """Returns dictionary of serialized attributes."""
         objects = save_impl.wrap_layer_objects(self.obj, serialization_cache)
-        functions = save_impl.wrap_layer_functions(self.obj, serialization_cache)
+        functions = save_impl.wrap_layer_functions(self.obj,
+                                                   serialization_cache)
         # Attribute validator requires that the default save signature is added to
         # function dict, even if the value is None.
         functions["_default_save_signature"] = None

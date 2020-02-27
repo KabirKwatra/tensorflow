@@ -42,8 +42,9 @@ class TestSequential(keras_parameterized.TestCase):
         model.add(keras.layers.Dense(1, input_dim=2))
         model.add(keras.layers.Dropout(0.3, name="dp"))
         model.add(
-            keras.layers.Dense(2, kernel_regularizer="l2", kernel_constraint="max_norm")
-        )
+            keras.layers.Dense(2,
+                               kernel_regularizer="l2",
+                               kernel_constraint="max_norm"))
         self.assertEqual(len(model.layers), 3)
         self.assertEqual(len(model.weights), 2 * 2)
         self.assertEqual(model.get_layer(name="dp").name, "dp")
@@ -51,12 +52,13 @@ class TestSequential(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
     def test_input_defined_first_layer(self):
         model = keras.models.Sequential()
-        model.add(keras.Input(shape=(2,), name="input_layer"))
+        model.add(keras.Input(shape=(2, ), name="input_layer"))
         model.add(keras.layers.Dense(1))
         model.add(keras.layers.Dropout(0.3, name="dp"))
         model.add(
-            keras.layers.Dense(2, kernel_regularizer="l2", kernel_constraint="max_norm")
-        )
+            keras.layers.Dense(2,
+                               kernel_regularizer="l2",
+                               kernel_constraint="max_norm"))
         self.assertLen(model.layers, 3)
         self.assertLen(model.weights, 2 * 2)
         self.assertEqual(model.get_layer(name="dp").name, "dp")
@@ -73,9 +75,8 @@ class TestSequential(keras_parameterized.TestCase):
         batch_size = 5
         num_classes = 2
 
-        model = testing_utils.get_small_sequential_mlp(
-            num_hidden, num_classes, input_dim
-        )
+        model = testing_utils.get_small_sequential_mlp(num_hidden, num_classes,
+                                                       input_dim)
         model.compile(
             loss="mse",
             optimizer="rmsprop",
@@ -123,8 +124,7 @@ class TestSequential(keras_parameterized.TestCase):
         )
         self.assertEqual(len(model.layers), 2)
         with self.assertRaisesRegexp(
-            ValueError, "Weights for model .* have not yet been created"
-        ):
+                ValueError, "Weights for model .* have not yet been created"):
             len(model.weights)
         self.assertFalse(model.built)
 
@@ -152,8 +152,7 @@ class TestSequential(keras_parameterized.TestCase):
         )
         self.assertEqual(len(model.layers), 2)
         with self.assertRaisesRegexp(
-            ValueError, "Weights for model .* have not yet been created"
-        ):
+                ValueError, "Weights for model .* have not yet been created"):
             len(model.weights)
         self.assertFalse(model.built)
 
@@ -169,7 +168,7 @@ class TestSequential(keras_parameterized.TestCase):
         self.assertFalse(model._is_graph_network)
 
     # TODO(kaftan) This test fails w/ run_with_all_keras_modes. File ticket
-    @parameterized.parameters((True,), (False,))
+    @parameterized.parameters((True, ), (False, ))
     def test_training_and_eval_methods_on_symbolic_tensors(self, deferred):
         with ops.Graph().as_default(), self.cached_session():
 
@@ -177,7 +176,9 @@ class TestSequential(keras_parameterized.TestCase):
                 if deferred:
                     model = testing_utils.get_small_sequential_mlp(10, 4)
                 else:
-                    model = testing_utils.get_small_sequential_mlp(10, 4, input_dim=3)
+                    model = testing_utils.get_small_sequential_mlp(10,
+                                                                   4,
+                                                                   input_dim=3)
                 model.compile(
                     optimizer="rmsprop",
                     loss="categorical_crossentropy",
@@ -228,7 +229,8 @@ class TestSequential(keras_parameterized.TestCase):
         num_classes = 2
 
         inner_model = keras.models.Sequential()
-        inner_model.add(keras.layers.Dense(num_units, input_shape=(input_dim,)))
+        inner_model.add(
+            keras.layers.Dense(num_units, input_shape=(input_dim, )))
 
         model = keras.models.Sequential()
         model.add(inner_model)
@@ -248,7 +250,7 @@ class TestSequential(keras_parameterized.TestCase):
 
         with self.cached_session():
             model = keras.models.Sequential()
-            model.add(keras.layers.BatchNormalization(input_shape=(4,)))
+            model.add(keras.layers.BatchNormalization(input_shape=(4, )))
             assert model.updates
 
             model.trainable = False
@@ -334,9 +336,9 @@ class TestSequential(keras_parameterized.TestCase):
         self.assertFalse(model.built)
         model(array_ops.zeros([1, 2]))
         self.assertTrue(model.built)
-        model.compile(
-            "rmsprop", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile("rmsprop",
+                      loss="mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         model.train_on_batch(np.zeros((1, 2)), np.zeros((1, 5)))
 
     @keras_parameterized.run_all_keras_modes
@@ -374,22 +376,19 @@ class TestSequential(keras_parameterized.TestCase):
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(1))
         if context.executing_eagerly():
-            with self.assertRaisesRegexp(
-                ValueError, "expected min_ndim=2, found ndim=0"
-            ):
+            with self.assertRaisesRegexp(ValueError,
+                                         "expected min_ndim=2, found ndim=0"):
                 model(1.0)
 
     @keras_parameterized.run_all_keras_modes
     def test_string_input(self):
-        seq = keras.Sequential(
-            [
-                keras.layers.InputLayer(input_shape=(1,), dtype=dtypes.string),
-                keras.layers.Lambda(lambda x: x[0]),
-            ]
-        )
+        seq = keras.Sequential([
+            keras.layers.InputLayer(input_shape=(1, ), dtype=dtypes.string),
+            keras.layers.Lambda(lambda x: x[0]),
+        ])
         seq.run_eagerly = testing_utils.should_run_eagerly()
         preds = seq.predict([["tensorflow eager"]])
-        self.assertEqual(preds.shape, (1,))
+        self.assertEqual(preds.shape, (1, ))
 
     @keras_parameterized.run_all_keras_modes
     def test_multi_output_layer_not_accepted(self):
@@ -397,16 +396,19 @@ class TestSequential(keras_parameterized.TestCase):
             def call(self, inputs):
                 return inputs, inputs
 
-        with self.assertRaisesRegexp(ValueError, "should have a single output tensor"):
-            keras.Sequential([MultiOutputLayer(input_shape=(3,))])
+        with self.assertRaisesRegexp(ValueError,
+                                     "should have a single output tensor"):
+            keras.Sequential([MultiOutputLayer(input_shape=(3, ))])
 
-        with self.assertRaisesRegexp(ValueError, "should have a single output tensor"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "should have a single output tensor"):
             keras.Sequential(
-                [keras.layers.Dense(1, input_shape=(3,)), MultiOutputLayer()]
-            )
+                [keras.layers.Dense(1, input_shape=(3, )),
+                 MultiOutputLayer()])
 
         # Should also raise error in a deferred build mode
-        with self.assertRaisesRegexp(ValueError, "should have a single output tensor"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "should have a single output tensor"):
             keras.Sequential([MultiOutputLayer()])(np.zeros((10, 10)))
 
     @keras_parameterized.run_all_keras_modes(always_skip_v1=True)

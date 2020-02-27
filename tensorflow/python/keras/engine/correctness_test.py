@@ -41,9 +41,9 @@ class MultiInputSubclassed(keras.Model):
 
 def multi_input_functional():
     """Functional Model that adds its inputs and then adds a bias."""
-    input_1 = keras.Input(shape=(1,))
-    input_2 = keras.Input(shape=(1,))
-    input_3 = keras.Input(shape=(1,))
+    input_1 = keras.Input(shape=(1, ))
+    input_2 = keras.Input(shape=(1, ))
+    input_3 = keras.Input(shape=(1, ))
     added = keras.layers.Add()([input_1, input_2, input_3])
     output = testing_utils.Bias()(added)
     return keras.Model([input_1, input_2, input_3], output)
@@ -53,9 +53,8 @@ def multi_input_functional():
 @keras_parameterized.run_all_keras_modes
 class SimpleBiasTest(keras_parameterized.TestCase):
     def _get_simple_bias_model(self):
-        model = testing_utils.get_model_from_layers(
-            [testing_utils.Bias()], input_shape=(1,)
-        )
+        model = testing_utils.get_model_from_layers([testing_utils.Bias()],
+                                                    input_shape=(1, ))
         model.compile(
             keras.optimizer_v2.gradient_descent.SGD(0.1),
             "mae",
@@ -101,7 +100,8 @@ class MultipleInputTest(keras_parameterized.TestCase):
         )
         return model
 
-    @parameterized.named_parameters(("subclassed", True), ("functional", False))
+    @parameterized.named_parameters(("subclassed", True),
+                                    ("functional", False))
     def test_multiple_input_fit(self, subclassed):
         x = [
             np.array([[1.0], [2.0], [3.0]]),
@@ -114,7 +114,8 @@ class MultipleInputTest(keras_parameterized.TestCase):
         history = model.fit(x, y, batch_size=3, epochs=5)
         self.assertAllClose(history.history["loss"], [1.0, 0.9, 0.8, 0.7, 0.6])
 
-    @parameterized.named_parameters(("subclassed", True), ("functional", False))
+    @parameterized.named_parameters(("subclassed", True),
+                                    ("functional", False))
     def test_multiple_input_evaluate(self, subclassed):
         x = [
             np.array([[1.0], [2.0], [3.0]]),
@@ -127,7 +128,8 @@ class MultipleInputTest(keras_parameterized.TestCase):
         loss = model.evaluate(x, y, batch_size=3)
         self.assertAlmostEqual(loss, 2.0)
 
-    @parameterized.named_parameters(("subclassed", True), ("functional", False))
+    @parameterized.named_parameters(("subclassed", True),
+                                    ("functional", False))
     def test_multiple_input_predict(self, subclassed):
         x = [
             np.array([[1.0], [2.0], [3.0]]),

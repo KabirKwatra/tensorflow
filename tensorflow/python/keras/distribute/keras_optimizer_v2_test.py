@@ -37,7 +37,7 @@ from tensorflow.python.platform import test
 
 
 def get_model():
-    x = keras.layers.Input(shape=(3,), name="input")
+    x = keras.layers.Input(shape=(3, ), name="input")
     y = keras.layers.Dense(4, name="dense")(x)
     model = keras.Model(x, y)
     return model
@@ -50,14 +50,14 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
             mode=["graph", "eager"],
-        )
-    )
+        ))
     def testKerasOptimizerWithUnequalInput(self, distribution):
         self.skipTest("b/130309197")
         with distribution.scope():
             var = variables.Variable(
-                2.0, name="var", aggregation=variable_scope.VariableAggregation.SUM
-            )
+                2.0,
+                name="var",
+                aggregation=variable_scope.VariableAggregation.SUM)
             optimizer = adam.Adam(learning_rate=0.01, beta_1=0.2, beta_2=0.2)
             all_vars = []
 
@@ -65,8 +65,8 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
                 def loss_fn():
                     replica_id = _replica_id()
                     return (
-                        math_ops.cast(replica_id + 1, dtype=dtypes.float32) * 0.5 * var
-                    )
+                        math_ops.cast(replica_id + 1, dtype=dtypes.float32) *
+                        0.5 * var)
 
                 train_op = optimizer.minimize(loss_fn, var_list=[var])
 
@@ -74,8 +74,7 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
 
             def train_fn():
                 train_op, optimizer = distribution.extended.call_for_each_replica(
-                    model_fn
-                )
+                    model_fn)
                 if not all_vars:
                     all_vars.append(var)
                     all_vars.append(optimizer.get_slot(var, "m"))
@@ -112,8 +111,7 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
             mode=["graph", "eager"],
-        )
-    )
+        ))
     def testOptimizerWithKerasModelAndNumpyArrays(self, distribution):
         self.skipTest("b/130309197")
         with self.cached_session():

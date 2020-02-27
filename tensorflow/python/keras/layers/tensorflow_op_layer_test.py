@@ -40,14 +40,14 @@ from tensorflow.python.util import nest
 
 
 def _single_op_at_end():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10)(inputs)
     outputs = gen_nn_ops.relu(x)
     return keras.Model(inputs, outputs)
 
 
 def _single_identity_op_at_end():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10)(inputs)
     outputs = array_ops.identity(x)
     assert "Identity" in outputs.name
@@ -55,7 +55,7 @@ def _single_identity_op_at_end():
 
 
 def _multiple_ops_at_end():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10)(inputs)
     x = gen_nn_ops.relu(x)
     outputs = gen_nn_ops.relu(x)
@@ -63,7 +63,7 @@ def _multiple_ops_at_end():
 
 
 def _single_op_in_middle():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10)(inputs)
     x = gen_nn_ops.relu(x)
     outputs = keras.layers.Dense(10)(x)
@@ -71,7 +71,7 @@ def _single_op_in_middle():
 
 
 def _multiple_ops_in_middle():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10)(inputs)
     x = gen_nn_ops.relu(x)
     x = gen_nn_ops.relu(x)
@@ -80,21 +80,21 @@ def _multiple_ops_in_middle():
 
 
 def _single_standalone_branch():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10)(inputs)
     outputs = x * 2
     return keras.Model(inputs, outputs)
 
 
 def _single_op_with_attrs():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = math_ops.reduce_mean(inputs, axis=1, keepdims=True)
     outputs = keras.layers.Dense(10)(x)
     return keras.Model(inputs, outputs)
 
 
 def _multiple_uses():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = math_ops.reduce_mean(inputs, axis=1, keepdims=True)
     x1 = keras.layers.Dense(10)(x)
     x2 = keras.layers.Dense(10)(x)
@@ -103,20 +103,20 @@ def _multiple_uses():
 
 
 def _op_with_tensor_list():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = array_ops.concat([inputs, inputs], axis=1)
     outputs = keras.layers.Dense(10)(x)
     return keras.Model(inputs, outputs)
 
 
 def _add_n():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     outputs = math_ops.add_n([inputs, inputs, inputs])
     return keras.Model(inputs, outputs)
 
 
 def _reuse_op():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     # This op needs to be checked multiple times.
     x = gen_nn_ops.relu(inputs)
     y = keras.layers.Dense(10)(x)
@@ -127,7 +127,7 @@ def _reuse_op():
 
 
 def _float64_op():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = keras.layers.Dense(10, dtype="float64")(inputs)
     x = gen_nn_ops.relu(x)
     assert x.dtype == "float64", "x has dtype: %s" % x.dtype
@@ -141,7 +141,7 @@ class MyAdd(keras.layers.Layer):
 
 
 def _layer_with_tensor_arg():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     x = inputs * 2
     outputs = MyAdd()(inputs, x)
     return keras.Model(inputs, outputs)
@@ -159,26 +159,26 @@ class LayerWithLayer(keras.layers.Layer):
 
 
 def _inner_layer():
-    inputs = keras.Input(shape=(10,))
+    inputs = keras.Input(shape=(10, ))
     outputs = LayerWithLayer()(inputs)
     return keras.Model(inputs, outputs)
 
 
 def _reuse_ancillary_layer():
-    inputs = (keras.Input(shape=(5,)), keras.Input(shape=(5,)))
-    base_model = keras.Sequential([keras.layers.Dense(3, input_shape=(5,)),])
+    inputs = (keras.Input(shape=(5, )), keras.Input(shape=(5, )))
+    base_model = keras.Sequential([
+        keras.layers.Dense(3, input_shape=(5, )),
+    ])
     outputs = base_model(inputs[0])
     model = keras.Model(inputs, outputs)
     # The second input is only involved in ancillary layers.
     outputs_delta = outputs - base_model(0.5 * inputs[1])
     l2_loss = math_ops.reduce_mean(
-        math_ops.reduce_sum(math_ops.square(outputs_delta), -1)
-    )
+        math_ops.reduce_sum(math_ops.square(outputs_delta), -1))
     model.add_loss(l2_loss)
     model.add_metric(l2_loss, aggregation="mean", name="l2_loss")
     l1_loss = 0.01 * math_ops.reduce_mean(
-        math_ops.reduce_sum(math_ops.abs(outputs_delta), -1)
-    )
+        math_ops.reduce_sum(math_ops.abs(outputs_delta), -1))
     model.add_loss(l1_loss)
     model.add_metric(l1_loss, aggregation="mean", name="l1_loss")
     return model
@@ -205,26 +205,29 @@ class AutoLambdaTest(keras_parameterized.TestCase):
     )
     def test_autolambda(self, model_fn):
         model = model_fn()
-        model.compile(
-            adam.Adam(0.001), "mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile(adam.Adam(0.001),
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
 
         np_inputs = nest.map_structure(
-            lambda x: np.ones((10,) + tuple(x.shape[1:]), "float32"), model.inputs
-        )
+            lambda x: np.ones((10, ) + tuple(x.shape[1:]), "float32"),
+            model.inputs)
         np_outputs = nest.map_structure(
-            lambda x: np.ones((10,) + tuple(x.shape[1:]), "float32"), model.outputs
-        )
+            lambda x: np.ones((10, ) + tuple(x.shape[1:]), "float32"),
+            model.outputs)
         model.fit(np_inputs, np_outputs, batch_size=2)
         model(np_inputs)  # Test calling the model directly on inputs.
 
         new_model = keras.Model.from_config(
             model.get_config(),
-            custom_objects={"LayerWithLayer": LayerWithLayer, "MyAdd": MyAdd},
+            custom_objects={
+                "LayerWithLayer": LayerWithLayer,
+                "MyAdd": MyAdd
+            },
         )
-        new_model.compile(
-            adam.Adam(0.001), "mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        new_model.compile(adam.Adam(0.001),
+                          "mse",
+                          run_eagerly=testing_utils.should_run_eagerly())
         new_model.fit(np_inputs, np_outputs, batch_size=2)
         new_model(np_inputs)  # Test calling the new model directly on inputs.
         # Assert that metrics are preserved and in the right order.
@@ -237,7 +240,7 @@ class AutoLambdaTest(keras_parameterized.TestCase):
 
     def test_numerical_correctness_simple(self):
         x = ops.convert_to_tensor_v2([[-1.0, 0.0, -2.0, 1.0]])
-        inputs = keras.Input(shape=(4,))
+        inputs = keras.Input(shape=(4, ))
         outputs = gen_nn_ops.relu(inputs)
         model = keras.Model(inputs, outputs)
         y = self.evaluate(model(x))
@@ -245,7 +248,7 @@ class AutoLambdaTest(keras_parameterized.TestCase):
 
     def test_numerical_correctness_with_attrs(self):
         x = ops.convert_to_tensor_v2([[1.5, 1.5], [2.5, 3.5]])
-        inputs = keras.Input(shape=(10,))
+        inputs = keras.Input(shape=(10, ))
         outputs = math_ops.reduce_mean(inputs, axis=1)
         model = keras.Model(inputs, outputs)
         y = self.evaluate(model(x))
@@ -253,7 +256,7 @@ class AutoLambdaTest(keras_parameterized.TestCase):
 
     def test_numerical_correctness_serialization(self):
         x = ops.convert_to_tensor_v2([-1.0, 0.0, -2.0, 1.0])
-        inputs = keras.Input(shape=(4,))
+        inputs = keras.Input(shape=(4, ))
         outputs = gen_nn_ops.relu(inputs)
         model1 = keras.Model(inputs, outputs)
         y1 = self.evaluate(model1(x))
@@ -262,7 +265,7 @@ class AutoLambdaTest(keras_parameterized.TestCase):
         self.assertAllClose(y1, y2)
 
     def test_gradient_tape_in_function(self):
-        z = keras.Input((1,))
+        z = keras.Input((1, ))
         x = math_ops.matmul(z, constant_op.constant(2.0, shape=(1, 1)))
         x = math_ops.reduce_mean(x, axis=0, keepdims=True)
         h = gen_nn_ops.relu(x)
@@ -272,7 +275,7 @@ class AutoLambdaTest(keras_parameterized.TestCase):
         def f(x):
             with backprop.GradientTape() as t:
                 t.watch(x)
-                z = m(x ** 2)
+                z = m(x**2)
             grads = t.gradient(z, x)
             return grads
 
@@ -318,7 +321,7 @@ class AutoLambdaTest(keras_parameterized.TestCase):
         self.assertTrue(y._keras_mask._keras_history_checked)
 
     def test_built(self):
-        inputs = keras.Input(shape=(10,))
+        inputs = keras.Input(shape=(10, ))
         outputs = gen_nn_ops.relu(inputs)
         model = keras.Model(inputs, outputs)
         model.compile("sgd", "mse")
@@ -328,9 +331,10 @@ class AutoLambdaTest(keras_parameterized.TestCase):
         model.summary()
 
     def test_json_serialization(self):
-        inputs = keras.Input(shape=(4,), dtype="uint8")
+        inputs = keras.Input(shape=(4, ), dtype="uint8")
         outputs = math_ops.cast(inputs, "float32") / 4.0
-        model = model_config.model_from_json(keras.Model(inputs, outputs).to_json())
+        model = model_config.model_from_json(
+            keras.Model(inputs, outputs).to_json())
         self.assertAllEqual(
             self.evaluate(model(np.array([0, 64, 128, 192], np.uint8))),
             [0.0, 16.0, 32.0, 48.0],
@@ -348,7 +352,7 @@ class InputInEagerTest(test.TestCase):
 
     def test_identity(self):
         with context.eager_mode():
-            x = keras.Input(shape=(1,))
+            x = keras.Input(shape=(1, ))
             self.assertTrue(hasattr(x, "graph"))
             ident = array_ops.identity(x)
 
@@ -357,7 +361,7 @@ class InputInEagerTest(test.TestCase):
 
     def test_size(self):
         with context.eager_mode():
-            x = keras.Input(shape=(3,))
+            x = keras.Input(shape=(3, ))
             self.assertTrue(hasattr(x, "graph"))
             self.assertAllEqual(x.get_shape().as_list(), [None, 3])
             sz = array_ops.size(x)

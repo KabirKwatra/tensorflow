@@ -23,27 +23,28 @@ from tensorflow.python import keras
 from tensorflow.python.distribute import combinations
 from tensorflow.python.keras.distribute import keras_correctness_test_base
 from tensorflow.python.keras.optimizer_v2 import (
-    gradient_descent as gradient_descent_keras,
-)
+    gradient_descent as gradient_descent_keras, )
 from tensorflow.python.platform import test
 
 
 class DistributionStrategyEmbeddingModelCorrectnessTest(
-    keras_correctness_test_base.TestDistributionStrategyEmbeddingModelCorrectnessBase
-):
-    def get_model(
-        self, max_words=10, initial_weights=None, distribution=None, input_shapes=None
-    ):
+        keras_correctness_test_base.
+        TestDistributionStrategyEmbeddingModelCorrectnessBase):
+    def get_model(self,
+                  max_words=10,
+                  initial_weights=None,
+                  distribution=None,
+                  input_shapes=None):
         del input_shapes
         with keras_correctness_test_base.MaybeDistributionScope(distribution):
-            word_ids = keras.layers.Input(
-                shape=(max_words,), dtype=np.int32, name="words"
-            )
-            word_embed = keras.layers.Embedding(input_dim=20, output_dim=10)(word_ids)
+            word_ids = keras.layers.Input(shape=(max_words, ),
+                                          dtype=np.int32,
+                                          name="words")
+            word_embed = keras.layers.Embedding(input_dim=20,
+                                                output_dim=10)(word_ids)
             if self.use_distributed_dense:
-                word_embed = keras.layers.TimeDistributed(keras.layers.Dense(4))(
-                    word_embed
-                )
+                word_embed = keras.layers.TimeDistributed(
+                    keras.layers.Dense(4))(word_embed)
             avg = keras.layers.GlobalAveragePooling1D()(word_embed)
             preds = keras.layers.Dense(2, activation="softmax")(avg)
             model = keras.Model(inputs=[word_ids], outputs=[preds])
@@ -59,39 +60,37 @@ class DistributionStrategyEmbeddingModelCorrectnessTest(
         return model
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_for_embedding_model()
-    )
-    def test_embedding_model_correctness(
-        self, distribution, use_numpy, use_validation_data
-    ):
+        keras_correctness_test_base.test_combinations_for_embedding_model())
+    def test_embedding_model_correctness(self, distribution, use_numpy,
+                                         use_validation_data):
 
         self.use_distributed_dense = False
         self.run_correctness_test(distribution, use_numpy, use_validation_data)
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_for_embedding_model()
-    )
+        keras_correctness_test_base.test_combinations_for_embedding_model())
     def test_embedding_time_distributed_model_correctness(
-        self, distribution, use_numpy, use_validation_data
-    ):
+            self, distribution, use_numpy, use_validation_data):
         self.use_distributed_dense = True
         self.run_correctness_test(distribution, use_numpy, use_validation_data)
 
 
 class DistributionStrategySiameseEmbeddingModelCorrectnessTest(
-    keras_correctness_test_base.TestDistributionStrategyEmbeddingModelCorrectnessBase
-):
-    def get_model(
-        self, max_words=10, initial_weights=None, distribution=None, input_shapes=None
-    ):
+        keras_correctness_test_base.
+        TestDistributionStrategyEmbeddingModelCorrectnessBase):
+    def get_model(self,
+                  max_words=10,
+                  initial_weights=None,
+                  distribution=None,
+                  input_shapes=None):
         del input_shapes
         with keras_correctness_test_base.MaybeDistributionScope(distribution):
-            word_ids_a = keras.layers.Input(
-                shape=(max_words,), dtype=np.int32, name="words_a"
-            )
-            word_ids_b = keras.layers.Input(
-                shape=(max_words,), dtype=np.int32, name="words_b"
-            )
+            word_ids_a = keras.layers.Input(shape=(max_words, ),
+                                            dtype=np.int32,
+                                            name="words_a")
+            word_ids_b = keras.layers.Input(shape=(max_words, ),
+                                            dtype=np.int32,
+                                            name="words_b")
 
             def submodel(embedding, word_ids):
                 word_embed = embedding(word_ids)
@@ -124,23 +123,23 @@ class DistributionStrategySiameseEmbeddingModelCorrectnessTest(
         return model
 
     def get_data(
-        self,
-        count=(
-            keras_correctness_test_base._GLOBAL_BATCH_SIZE
-            * keras_correctness_test_base._EVAL_STEPS
-        ),
-        min_words=5,
-        max_words=10,
-        max_word_id=19,
-        num_classes=2,
+            self,
+            count=(keras_correctness_test_base._GLOBAL_BATCH_SIZE *
+                   keras_correctness_test_base._EVAL_STEPS),
+            min_words=5,
+            max_words=10,
+            max_word_id=19,
+            num_classes=2,
     ):
         features_a, labels_a, _ = super(
-            DistributionStrategySiameseEmbeddingModelCorrectnessTest, self
-        ).get_data(count, min_words, max_words, max_word_id, num_classes)
+            DistributionStrategySiameseEmbeddingModelCorrectnessTest,
+            self).get_data(count, min_words, max_words, max_word_id,
+                           num_classes)
 
         features_b, labels_b, _ = super(
-            DistributionStrategySiameseEmbeddingModelCorrectnessTest, self
-        ).get_data(count, min_words, max_words, max_word_id, num_classes)
+            DistributionStrategySiameseEmbeddingModelCorrectnessTest,
+            self).get_data(count, min_words, max_words, max_word_id,
+                           num_classes)
 
         y_train = np.zeros((count, 1), dtype=np.float32)
         y_train[labels_a == labels_b] = 1.0
@@ -156,11 +155,9 @@ class DistributionStrategySiameseEmbeddingModelCorrectnessTest(
         return x_train, y_train, x_predict
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_for_embedding_model()
-    )
-    def test_siamese_embedding_model_correctness(
-        self, distribution, use_numpy, use_validation_data
-    ):
+        keras_correctness_test_base.test_combinations_for_embedding_model())
+    def test_siamese_embedding_model_correctness(self, distribution, use_numpy,
+                                                 use_validation_data):
         self.run_correctness_test(distribution, use_numpy, use_validation_data)
 
 

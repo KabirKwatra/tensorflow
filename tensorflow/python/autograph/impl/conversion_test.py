@@ -42,8 +42,8 @@ from tensorflow.python.platform import test
 class ConversionTest(test.TestCase):
     def _simple_program_ctx(self):
         return converter.ProgramContext(
-            options=converter.ConversionOptions(recursive=True), autograph_module=api
-        )
+            options=converter.ConversionOptions(recursive=True),
+            autograph_module=api)
 
     def test_is_whitelisted(self):
         def test_fn():
@@ -69,9 +69,8 @@ class ConversionTest(test.TestCase):
 
         whitelisted_mod = imp.new_module("test_whitelisted_call")
         sys.modules["test_whitelisted_call"] = whitelisted_mod
-        config.CONVERSION_RULES = (
-            config.DoNotConvert("test_whitelisted_call"),
-        ) + config.CONVERSION_RULES
+        config.CONVERSION_RULES = (config.DoNotConvert(
+            "test_whitelisted_call"), ) + config.CONVERSION_RULES
 
         class TestClass(object):
             def __call__(self):
@@ -112,7 +111,8 @@ class ConversionTest(test.TestCase):
 
         bound_method = types.MethodType(
             test_fn,
-            function.TfMethodTarget(weakref.ref(test_obj), test_obj.member_function),
+            function.TfMethodTarget(weakref.ref(test_obj),
+                                    test_obj.member_function),
         )
 
         self.assertTrue(conversion.is_whitelisted(bound_method))
@@ -137,7 +137,7 @@ class ConversionTest(test.TestCase):
 
         program_ctx = self._simple_program_ctx()
         nodes, name, info = conversion.convert_entity_to_ast(f, program_ctx)
-        (fn_node,) = nodes
+        (fn_node, ) = nodes
         self.assertIsInstance(fn_node, gast.FunctionDef)
         self.assertEqual("tf__f", name)
         self.assertIs(info.namespace["b"], b)
@@ -151,13 +151,12 @@ class ConversionTest(test.TestCase):
 
         program_ctx = self._simple_program_ctx()
         nodes, name, _ = conversion.convert_entity_to_ast(f, program_ctx)
-        (fn_node,) = nodes
+        (fn_node, ) = nodes
         self.assertIsInstance(fn_node, gast.FunctionDef)
         self.assertEqual("tf__f", name)
         self.assertEqual(
-            parser.unparse(
-                fn_node.args.defaults[0], include_encoding_marker=False
-            ).strip(),
+            parser.unparse(fn_node.args.defaults[0],
+                           include_encoding_marker=False).strip(),
             "None",
         )
 
@@ -170,7 +169,7 @@ class ConversionTest(test.TestCase):
 
         program_ctx = self._simple_program_ctx()
         nodes, _, _ = conversion.convert_entity_to_ast(f, program_ctx)
-        (f_node,) = nodes
+        (f_node, ) = nodes
         self.assertEqual("tf__f", f_node.name)
 
     def test_convert_entity_to_ast_class_hierarchy(self):
@@ -196,7 +195,8 @@ class ConversionTest(test.TestCase):
                 return self.y
 
         program_ctx = self._simple_program_ctx()
-        with self.assertRaisesRegex(NotImplementedError, "classes.*whitelisted"):
+        with self.assertRaisesRegex(NotImplementedError,
+                                    "classes.*whitelisted"):
             conversion.convert_entity_to_ast(TestSubclass, program_ctx)
 
     def test_convert_entity_to_ast_class_hierarchy_whitelisted(self):
@@ -210,8 +210,7 @@ class ConversionTest(test.TestCase):
 
         program_ctx = self._simple_program_ctx()
         (import_node, class_node), name, _ = conversion.convert_entity_to_ast(
-            TestSubclass, program_ctx
-        )
+            TestSubclass, program_ctx)
         self.assertEqual(import_node.names[0].name, "Model")
         self.assertEqual(name, "TfTestSubclass")
         self.assertEqual(class_node.name, "TfTestSubclass")
@@ -223,7 +222,8 @@ class ConversionTest(test.TestCase):
             return b * x if x > 0 else -x
 
         program_ctx = self._simple_program_ctx()
-        (fn_node,), name, entity_info = conversion.convert_entity_to_ast(f, program_ctx)
+        (fn_node, ), name, entity_info = conversion.convert_entity_to_ast(
+            f, program_ctx)
         self.assertIsInstance(fn_node, gast.Assign)
         self.assertIsInstance(fn_node.value, gast.Lambda)
         self.assertEqual("tf__lambda", name)
@@ -234,13 +234,15 @@ class ConversionTest(test.TestCase):
         f, _ = (lambda x: a * x, lambda y: b * y)
 
         program_ctx = self._simple_program_ctx()
-        (fn_node,), name, entity_info = conversion.convert_entity_to_ast(f, program_ctx)
+        (fn_node, ), name, entity_info = conversion.convert_entity_to_ast(
+            f, program_ctx)
         self.assertIsInstance(fn_node, gast.Assign)
         self.assertIsInstance(fn_node.value, gast.Lambda)
         self.assertEqual("tf__lambda", name)
         self.assertIs(entity_info.namespace["a"], a)
 
-    def test_convert_entity_to_ast_multiple_lambdas_ambiguous_definitions(self):
+    def test_convert_entity_to_ast_multiple_lambdas_ambiguous_definitions(
+            self):
         a, b = 1, 2
         f, _ = (lambda x: a * x, lambda x: b * x)
 
@@ -250,11 +252,11 @@ class ConversionTest(test.TestCase):
 
     def test_convert_entity_to_ast_lambda_code_with_garbage(self):
         # pylint:disable=g-long-lambda
-        f = (lambda x: (x + 1),)[0]  # intentional wrap  # intentional wrap
+        f = (lambda x: (x + 1), )[0]  # intentional wrap  # intentional wrap
         # pylint:enable=g-long-lambda
 
         program_ctx = self._simple_program_ctx()
-        (fn_node,), name, _ = conversion.convert_entity_to_ast(f, program_ctx)
+        (fn_node, ), name, _ = conversion.convert_entity_to_ast(f, program_ctx)
         self.assertIsInstance(fn_node, gast.Assign)
         self.assertIsInstance(fn_node.value, gast.Lambda)
         self.assertEqual("tf__lambda", name)
@@ -269,7 +271,8 @@ class ConversionTest(test.TestCase):
             return g(x)
 
         program_ctx = self._simple_program_ctx()
-        (fn_node,), name, entity_info = conversion.convert_entity_to_ast(f, program_ctx)
+        (fn_node, ), name, entity_info = conversion.convert_entity_to_ast(
+            f, program_ctx)
         self.assertIsInstance(fn_node, gast.FunctionDef)
         self.assertEqual(fn_node.name, "tf__f")
         self.assertEqual("tf__f", name)
@@ -285,7 +288,8 @@ class ConversionTest(test.TestCase):
             new_f = conversion.convert(test_fn, self._simple_program_ctx())
             generated_file_names.append(new_f.__code__.co_filename)
 
-        threads = tuple(threading.Thread(target=conversion_thread) for _ in range(10))
+        threads = tuple(
+            threading.Thread(target=conversion_thread) for _ in range(10))
         for t in threads:
             t.start()
         for t in threads:

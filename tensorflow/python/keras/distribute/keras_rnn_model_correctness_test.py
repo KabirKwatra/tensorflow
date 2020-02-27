@@ -30,28 +30,30 @@ from tensorflow.python.keras.layers import recurrent as rnn_v1
 from tensorflow.python.keras.layers import recurrent_v2 as rnn_v2
 from tensorflow.python.keras.mixed_precision.experimental import policy
 from tensorflow.python.keras.optimizer_v2 import (
-    gradient_descent as gradient_descent_keras,
-)
+    gradient_descent as gradient_descent_keras, )
 from tensorflow.python.platform import test
 
 
 class _DistributionStrategyRnnModelCorrectnessTest(
-    keras_correctness_test_base.TestDistributionStrategyEmbeddingModelCorrectnessBase
-):
+        keras_correctness_test_base.
+        TestDistributionStrategyEmbeddingModelCorrectnessBase):
     def _get_layer_class(self):
         raise NotImplementedError
 
-    def get_model(
-        self, max_words=10, initial_weights=None, distribution=None, input_shapes=None
-    ):
+    def get_model(self,
+                  max_words=10,
+                  initial_weights=None,
+                  distribution=None,
+                  input_shapes=None):
         del input_shapes
         rnn_cls = self._get_layer_class()
 
         with keras_correctness_test_base.MaybeDistributionScope(distribution):
-            word_ids = keras.layers.Input(
-                shape=(max_words,), dtype=np.int32, name="words"
-            )
-            word_embed = keras.layers.Embedding(input_dim=20, output_dim=10)(word_ids)
+            word_ids = keras.layers.Input(shape=(max_words, ),
+                                          dtype=np.int32,
+                                          name="words")
+            word_embed = keras.layers.Embedding(input_dim=20,
+                                                output_dim=10)(word_ids)
             rnn_embed = rnn_cls(units=4, return_sequences=False)(word_embed)
 
             dense_output = keras.layers.Dense(2)(rnn_embed)
@@ -72,57 +74,56 @@ class _DistributionStrategyRnnModelCorrectnessTest(
 
 
 class DistributionStrategyGruModelCorrectnessTest(
-    _DistributionStrategyRnnModelCorrectnessTest
-):
+        _DistributionStrategyRnnModelCorrectnessTest):
     def _get_layer_class(self):
         if tf2.enabled():
             if not context.executing_eagerly():
-                self.skipTest("GRU v2 and legacy graph mode don't work together.")
+                self.skipTest(
+                    "GRU v2 and legacy graph mode don't work together.")
             return rnn_v2.GRU
         else:
             return rnn_v1.GRU
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_for_embedding_model()
-    )
-    def test_gru_model_correctness(self, distribution, use_numpy, use_validation_data):
+        keras_correctness_test_base.test_combinations_for_embedding_model())
+    def test_gru_model_correctness(self, distribution, use_numpy,
+                                   use_validation_data):
         self.skipTest("Test is sensitive to TF random seed, b/TBD")
         self.run_correctness_test(distribution, use_numpy, use_validation_data)
 
 
 class DistributionStrategyLstmModelCorrectnessTest(
-    _DistributionStrategyRnnModelCorrectnessTest
-):
+        _DistributionStrategyRnnModelCorrectnessTest):
     def _get_layer_class(self):
         if tf2.enabled():
             if not context.executing_eagerly():
-                self.skipTest("LSTM v2 and legacy graph mode don't work together.")
+                self.skipTest(
+                    "LSTM v2 and legacy graph mode don't work together.")
             return rnn_v2.LSTM
         else:
             return rnn_v1.LSTM
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_for_embedding_model()
-    )
-    def test_lstm_model_correctness(self, distribution, use_numpy, use_validation_data):
+        keras_correctness_test_base.test_combinations_for_embedding_model())
+    def test_lstm_model_correctness(self, distribution, use_numpy,
+                                    use_validation_data):
         self.run_correctness_test(distribution, use_numpy, use_validation_data)
 
     @combinations.generate(
-        keras_correctness_test_base.test_combinations_for_embedding_model()
-    )
+        keras_correctness_test_base.test_combinations_for_embedding_model())
     @testing_utils.enable_v2_dtype_behavior
-    def test_lstm_model_correctness_mixed_precision(
-        self, distribution, use_numpy, use_validation_data
-    ):
-        if isinstance(
-            distribution, (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)
-        ):
+    def test_lstm_model_correctness_mixed_precision(self, distribution,
+                                                    use_numpy,
+                                                    use_validation_data):
+        if isinstance(distribution,
+                      (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)):
             policy_name = "mixed_bfloat16"
         else:
             policy_name = "mixed_float16"
 
         with policy.policy_scope(policy_name):
-            self.run_correctness_test(distribution, use_numpy, use_validation_data)
+            self.run_correctness_test(distribution, use_numpy,
+                                      use_validation_data)
 
 
 if __name__ == "__main__":

@@ -29,12 +29,12 @@ from tensorflow.python.keras.utils import np_utils
 from tensorflow.python.ops import math_ops
 from tensorflow.python.platform import test
 
-
 DATA_DIM = 5
 NUM_CLASSES = 2
 
 
-class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase):
+class KerasRegularizersTest(keras_parameterized.TestCase,
+                            parameterized.TestCase):
     def create_model(self, kernel_regularizer=None, activity_regularizer=None):
         model = keras.models.Sequential()
         model.add(
@@ -42,16 +42,15 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
                 NUM_CLASSES,
                 kernel_regularizer=kernel_regularizer,
                 activity_regularizer=activity_regularizer,
-                input_shape=(DATA_DIM,),
-            )
-        )
+                input_shape=(DATA_DIM, ),
+            ))
         return model
 
     def get_data(self):
         (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
             train_samples=10,
             test_samples=10,
-            input_shape=(DATA_DIM,),
+            input_shape=(DATA_DIM, ),
             num_classes=NUM_CLASSES,
         )
         y_train = np_utils.to_categorical(y_train, NUM_CLASSES)
@@ -59,8 +58,8 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         return (x_train, y_train), (x_test, y_test)
 
     def create_multi_input_model_from(self, layer1, layer2):
-        input_1 = keras.layers.Input(shape=(DATA_DIM,))
-        input_2 = keras.layers.Input(shape=(DATA_DIM,))
+        input_1 = keras.layers.Input(shape=(DATA_DIM, ))
+        input_2 = keras.layers.Input(shape=(DATA_DIM, ))
         out1 = layer1(input_1)
         out2 = layer2(input_2)
         out = keras.layers.Average()([out1, out2])
@@ -70,13 +69,11 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         return model
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            ("l1", regularizers.l1()),
-            ("l2", regularizers.l2()),
-            ("l1_l2", regularizers.l1_l2()),
-        ]
-    )
+    @parameterized.named_parameters([
+        ("l1", regularizers.l1()),
+        ("l2", regularizers.l2()),
+        ("l1_l2", regularizers.l1_l2()),
+    ])
     def test_kernel_regularization(self, regularizer):
         (x_train, y_train), _ = self.get_data()
         model = self.create_model(kernel_regularizer=regularizer)
@@ -89,14 +86,12 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         model.fit(x_train, y_train, batch_size=10, epochs=1, verbose=0)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            ("l1", regularizers.l1()),
-            ("l2", regularizers.l2()),
-            ("l1_l2", regularizers.l1_l2()),
-            ("l2_zero", keras.regularizers.l2(0.0)),
-        ]
-    )
+    @parameterized.named_parameters([
+        ("l1", regularizers.l1()),
+        ("l2", regularizers.l2()),
+        ("l1_l2", regularizers.l1_l2()),
+        ("l2_zero", keras.regularizers.l2(0.0)),
+    ])
     def test_activity_regularization(self, regularizer):
         (x_train, y_train), _ = self.get_data()
         model = self.create_model(activity_regularizer=regularizer)
@@ -105,7 +100,8 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
             optimizer="sgd",
             run_eagerly=testing_utils.should_run_eagerly(),
         )
-        self.assertEqual(len(model.losses), 1 if context.executing_eagerly() else 1)
+        self.assertEqual(len(model.losses),
+                         1 if context.executing_eagerly() else 1)
         model.fit(x_train, y_train, batch_size=10, epochs=1, verbose=0)
 
     @keras_parameterized.run_all_keras_modes
@@ -114,32 +110,36 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         # Verifies that training with zero regularization works.
         x, y = np.ones((10, 10)), np.ones((10, 3))
         model = testing_utils.get_model_from_layers(
-            [keras.layers.Dense(3, kernel_regularizer=keras.regularizers.l2(0))],
-            input_shape=(10,),
+            [
+                keras.layers.Dense(3,
+                                   kernel_regularizer=keras.regularizers.l2(0))
+            ],
+            input_shape=(10, ),
         )
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         model.fit(x, y, batch_size=5, epochs=1)
 
     def test_custom_regularizer_saving(self):
         def my_regularizer(weights):
             return math_ops.reduce_sum(math_ops.abs(weights))
 
-        inputs = keras.Input((10,))
-        outputs = keras.layers.Dense(1, kernel_regularizer=my_regularizer)(inputs)
+        inputs = keras.Input((10, ))
+        outputs = keras.layers.Dense(1,
+                                     kernel_regularizer=my_regularizer)(inputs)
         model = keras.Model(inputs, outputs)
         model2 = model.from_config(
-            model.get_config(), custom_objects={"my_regularizer": my_regularizer}
-        )
+            model.get_config(),
+            custom_objects={"my_regularizer": my_regularizer})
         self.assertEqual(model2.layers[1].kernel_regularizer, my_regularizer)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            ("l1", regularizers.l1()),
-            ("l2", regularizers.l2()),
-            ("l1_l2", regularizers.l1_l2()),
-        ]
-    )
+    @parameterized.named_parameters([
+        ("l1", regularizers.l1()),
+        ("l2", regularizers.l2()),
+        ("l1_l2", regularizers.l1_l2()),
+    ])
     def test_regularization_shared_layer(self, regularizer):
         dense_layer = keras.layers.Dense(
             NUM_CLASSES,
@@ -155,13 +155,11 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         self.assertLen(model.losses, 5)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            ("l1", regularizers.l1()),
-            ("l2", regularizers.l2()),
-            ("l1_l2", regularizers.l1_l2()),
-        ]
-    )
+    @parameterized.named_parameters([
+        ("l1", regularizers.l1()),
+        ("l2", regularizers.l2()),
+        ("l1_l2", regularizers.l1_l2()),
+    ])
     def test_regularization_shared_model(self, regularizer):
         dense_layer = keras.layers.Dense(
             NUM_CLASSES,
@@ -169,8 +167,9 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
             activity_regularizer=regularizer,
         )
 
-        input_tensor = keras.layers.Input(shape=(DATA_DIM,))
-        dummy_model = keras.models.Model(input_tensor, dense_layer(input_tensor))
+        input_tensor = keras.layers.Input(shape=(DATA_DIM, ))
+        dummy_model = keras.models.Model(input_tensor,
+                                         dense_layer(input_tensor))
 
         model = self.create_multi_input_model_from(dummy_model, dummy_model)
         model.compile(
@@ -181,14 +180,13 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         self.assertLen(model.losses, 6)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(
-        [
-            ("l1", regularizers.l1()),
-            ("l2", regularizers.l2()),
-            ("l1_l2", regularizers.l1_l2()),
-        ]
-    )
-    def test_regularization_shared_layer_in_different_models(self, regularizer):
+    @parameterized.named_parameters([
+        ("l1", regularizers.l1()),
+        ("l2", regularizers.l2()),
+        ("l1_l2", regularizers.l1_l2()),
+    ])
+    def test_regularization_shared_layer_in_different_models(
+            self, regularizer):
         shared_dense = keras.layers.Dense(
             NUM_CLASSES,
             kernel_regularizer=regularizer,
@@ -196,14 +194,14 @@ class KerasRegularizersTest(keras_parameterized.TestCase, parameterized.TestCase
         )
         models = []
         for _ in range(2):
-            input_tensor = keras.layers.Input(shape=(DATA_DIM,))
-            unshared_dense = keras.layers.Dense(
-                NUM_CLASSES, kernel_regularizer=regularizer
-            )
+            input_tensor = keras.layers.Input(shape=(DATA_DIM, ))
+            unshared_dense = keras.layers.Dense(NUM_CLASSES,
+                                                kernel_regularizer=regularizer)
             out = unshared_dense(shared_dense(input_tensor))
             models.append(keras.models.Model(input_tensor, out))
 
-        model = self.create_multi_input_model_from(layer1=models[0], layer2=models[1])
+        model = self.create_multi_input_model_from(layer1=models[0],
+                                                   layer2=models[1])
         model.compile(
             loss="categorical_crossentropy",
             optimizer="sgd",
