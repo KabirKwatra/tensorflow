@@ -37,19 +37,20 @@ except ImportError:
 
 @keras_parameterized.run_all_keras_modes
 class ModelSubclassCompiledTest(keras_parameterized.TestCase):
-
     def test_single_io_workflow_with_np_arrays(self):
         num_classes = 2
         num_samples = 100
         input_dim = 50
 
         model = testing_utils.SmallSubclassMLP(
-            num_hidden=32, num_classes=num_classes, use_dp=True, use_bn=True)
+            num_hidden=32, num_classes=num_classes, use_dp=True, use_bn=True
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            metrics=['acc', keras.metrics.CategoricalAccuracy()],
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            metrics=["acc", keras.metrics.CategoricalAccuracy()],
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x = np.ones((num_samples, input_dim))
         y = np.zeros((num_samples, num_classes))
@@ -63,12 +64,14 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_dp=True, use_bn=True)
+            num_classes=num_classes, use_dp=True, use_bn=True
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            metrics=['acc'],
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            metrics=["acc"],
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x1 = np.ones((num_samples, input_dim))
         x2 = np.ones((num_samples, input_dim))
@@ -85,11 +88,13 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
 
         with self.cached_session():
             model = testing_utils.SmallSubclassMLP(
-                num_hidden=32, num_classes=num_classes, use_dp=True, use_bn=True)
+                num_hidden=32, num_classes=num_classes, use_dp=True, use_bn=True
+            )
             model.compile(
-                loss='mse',
-                optimizer='rmsprop',
-                run_eagerly=testing_utils.should_run_eagerly())
+                loss="mse",
+                optimizer="rmsprop",
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
 
             x = np.ones((num_samples, input_dim), dtype=np.float32)
             y = np.zeros((num_samples, num_classes), dtype=np.float32)
@@ -108,21 +113,23 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
 
         x1 = np.ones((num_samples, input_dim))
         x2 = np.ones((num_samples, input_dim))
         y1 = np.zeros((num_samples, num_classes[0]))
         y2 = np.zeros((num_samples, num_classes[1]))
 
-        self.assertEqual(model.name, 'test_model')
+        self.assertEqual(model.name, "test_model")
         self.assertEqual(model.built, False)
         self.assertEqual(len(model.weights), 0)
 
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.train_on_batch([x1, x2], [y1, y2])
 
         self.assertEqual(model.built, True)
@@ -137,11 +144,11 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         class BNNet(keras.Model):
-
             def __init__(self):
                 super(BNNet, self).__init__()
-                self.bn = keras.layers.BatchNormalization(beta_initializer='ones',
-                                                          gamma_initializer='ones')
+                self.bn = keras.layers.BatchNormalization(
+                    beta_initializer="ones", gamma_initializer="ones"
+                )
 
             def call(self, inputs):
                 return self.bn(inputs)
@@ -151,9 +158,10 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
 
         model = BNNet()
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         y_ref = model.predict(x)
 
         model.train_on_batch(x, y)
@@ -167,13 +175,12 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         class DPNet(keras.Model):
-
             def __init__(self):
                 super(DPNet, self).__init__()
                 self.dp = keras.layers.Dropout(0.5)
-                self.dense = keras.layers.Dense(1,
-                                                use_bias=False,
-                                                kernel_initializer='ones')
+                self.dense = keras.layers.Dense(
+                    1, use_bias=False, kernel_initializer="ones"
+                )
 
             def call(self, inputs):
                 x = self.dp(inputs)
@@ -184,9 +191,10 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y = model.predict(x)
         self.assertEqual(np.sum(y), np.sum(x))
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         loss = model.train_on_batch(x, y)
         self.assertGreater(loss, 0.1)
 
@@ -204,27 +212,41 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y2 = np.zeros((num_samples, num_classes[1]))
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.fit([x1, x2], [y1, y2], epochs=2, batch_size=32, verbose=0)
-        model.fit({'input_1': x1, 'input_2': x2},
-                  {'output_1': y1, 'output_2': y2},
-                  epochs=2, batch_size=32)
-        model.fit([x1, x2], [y1, y2], epochs=2, batch_size=32, verbose=0,
-                  validation_data=([x1, x2], [y1, y2]))
+        model.fit(
+            {"input_1": x1, "input_2": x2},
+            {"output_1": y1, "output_2": y2},
+            epochs=2,
+            batch_size=32,
+        )
+        model.fit(
+            [x1, x2],
+            [y1, y2],
+            epochs=2,
+            batch_size=32,
+            verbose=0,
+            validation_data=([x1, x2], [y1, y2]),
+        )
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.train_on_batch([x1, x2], [y1, y2])
-        model.train_on_batch({'input_1': x1, 'input_2': x2},
-                             {'output_1': y1, 'output_2': y2})
+        model.train_on_batch(
+            {"input_1": x1, "input_2": x2}, {"output_1": y1, "output_2": y2}
+        )
 
     def test_inference_methods(self):
         # test predict, evaluate, test_on_batch, predict_on_batch
@@ -239,20 +261,24 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y2 = np.zeros((num_samples, num_classes[1]))
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.evaluate([x1, x2], [y1, y2])
         model.test_on_batch([x1, x2], [y1, y2])
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
         model.predict([x1, x2])
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
         model.predict_on_batch([x1, x2])
 
     def test_saving(self):
@@ -266,22 +292,25 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y2 = np.zeros((num_samples, num_classes[1]))
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.fit([x1, x2], [y1, y2], epochs=2, batch_size=32, verbose=0)
         y_ref_1, y_ref_2 = model.predict([x1, x2])
 
-        tf_format_name = os.path.join(self.get_temp_dir(), 'ckpt')
+        tf_format_name = os.path.join(self.get_temp_dir(), "ckpt")
         model.save_weights(tf_format_name)
         if h5py is not None:
-            hdf5_format_name = os.path.join(self.get_temp_dir(), 'weights.h5')
+            hdf5_format_name = os.path.join(self.get_temp_dir(), "weights.h5")
             model.save_weights(hdf5_format_name)
 
         model = model_util.get_multi_io_subclass_model(
-            num_classes=num_classes, use_bn=True)
+            num_classes=num_classes, use_bn=True
+        )
 
         if h5py is not None:
             with self.assertRaises(ValueError):
@@ -307,10 +336,11 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
 
         model = model_util.NestedTestModel1(num_classes=num_classes)
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            metrics=['acc'],
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            metrics=["acc"],
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x = np.ones((num_samples, input_dim))
         y = np.zeros((num_samples, num_classes))
@@ -319,10 +349,13 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         _ = model.evaluate(x, y, verbose=0)
 
         self.assertEqual(len(model.weights), 8 + len(model.test_net.weights))
-        self.assertEqual(len(model.non_trainable_weights),
-                         2 + len(model.test_net.non_trainable_weights))
-        self.assertEqual(len(model.trainable_weights),
-                         6 + len(model.test_net.trainable_weights))
+        self.assertEqual(
+            len(model.non_trainable_weights),
+            2 + len(model.test_net.non_trainable_weights),
+        )
+        self.assertEqual(
+            len(model.trainable_weights), 6 + len(model.test_net.trainable_weights)
+        )
 
     def test_graph_nested_in_subclass(self):
         num_classes = 2
@@ -331,10 +364,11 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
 
         model = model_util.NestedTestModel2(num_classes=num_classes)
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            metrics=['acc'],
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            metrics=["acc"],
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x = np.ones((num_samples, input_dim))
         y = np.zeros((num_samples, num_classes))
@@ -343,10 +377,13 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         _ = model.evaluate(x, y, verbose=0)
 
         self.assertEqual(len(model.weights), 8 + len(model.test_net.weights))
-        self.assertEqual(len(model.non_trainable_weights),
-                         2 + len(model.test_net.non_trainable_weights))
-        self.assertEqual(len(model.trainable_weights),
-                         6 + len(model.test_net.trainable_weights))
+        self.assertEqual(
+            len(model.non_trainable_weights),
+            2 + len(model.test_net.non_trainable_weights),
+        )
+        self.assertEqual(
+            len(model.trainable_weights), 6 + len(model.test_net.trainable_weights)
+        )
 
     def test_subclass_nested_in_graph(self):
         num_classes = 2
@@ -354,12 +391,14 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         model = model_util.get_nested_model_3(
-            input_dim=input_dim, num_classes=num_classes)
+            input_dim=input_dim, num_classes=num_classes
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            metrics=['acc'],
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            metrics=["acc"],
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x = np.ones((num_samples, input_dim))
         y = np.zeros((num_samples, num_classes))
@@ -377,12 +416,10 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         input_dim = 50
 
         class Inner(keras.Model):
-
             def __init__(self):
                 super(Inner, self).__init__()
-                self.dense1 = keras.layers.Dense(32, activation='relu')
-                self.dense2 = keras.layers.Dense(
-                    num_classes, activation='relu')
+                self.dense1 = keras.layers.Dense(32, activation="relu")
+                self.dense2 = keras.layers.Dense(num_classes, activation="relu")
                 self.bn = keras.layers.BatchNormalization()
 
             def call(self, inputs):
@@ -392,10 +429,11 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
 
         model = keras.Sequential([Inner()])
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            metrics=['acc'],
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            metrics=["acc"],
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x = np.ones((num_samples, input_dim))
         y = np.zeros((num_samples, num_classes))
@@ -415,13 +453,12 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         # is being passed to the model for each method call.
 
         class DPNet(keras.Model):
-
             def __init__(self):
                 super(DPNet, self).__init__()
                 self.dp = keras.layers.Dropout(0.5)
-                self.dense = keras.layers.Dense(1,
-                                                use_bias=False,
-                                                kernel_initializer='ones')
+                self.dense = keras.layers.Dense(
+                    1, use_bias=False, kernel_initializer="ones"
+                )
 
             def call(self, inputs, training=False):
                 x = self.dp(inputs, training=training)
@@ -432,12 +469,13 @@ class ModelSubclassCompiledTest(keras_parameterized.TestCase):
         y = model.predict(x)
         self.assertEqual(np.sum(y), np.sum(x))
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         loss = model.train_on_batch(x, y)
         self.assertGreater(loss, 0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

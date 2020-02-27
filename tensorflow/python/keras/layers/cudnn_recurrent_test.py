@@ -37,11 +37,12 @@ from tensorflow.python.training import gradient_descent
 
 @keras_parameterized.run_all_keras_modes
 class CuDNNTest(keras_parameterized.TestCase):
-
     @parameterized.named_parameters(
         *test_util.generate_combinations_with_testcase_name(
             layer_class=[keras.layers.CuDNNGRU, keras.layers.CuDNNLSTM],
-            return_sequences=[True, False]))
+            return_sequences=[True, False],
+        )
+    )
     @test_util.run_gpu_only
     def test_cudnn_rnn_return_sequence(self, layer_class, return_sequences):
         input_size = 10
@@ -50,14 +51,16 @@ class CuDNNTest(keras_parameterized.TestCase):
         num_samples = 32
         testing_utils.layer_test(
             layer_class,
-            kwargs={'units': units,
-                    'return_sequences': return_sequences},
-            input_shape=(num_samples, timesteps, input_size))
+            kwargs={"units": units, "return_sequences": return_sequences},
+            input_shape=(num_samples, timesteps, input_size),
+        )
 
     @parameterized.named_parameters(
         *test_util.generate_combinations_with_testcase_name(
             layer_class=[keras.layers.CuDNNGRU, keras.layers.CuDNNLSTM],
-            go_backwards=[True, False]))
+            go_backwards=[True, False],
+        )
+    )
     @test_util.run_gpu_only
     def test_cudnn_rnn_go_backward(self, layer_class, go_backwards):
         input_size = 10
@@ -66,13 +69,12 @@ class CuDNNTest(keras_parameterized.TestCase):
         num_samples = 32
         testing_utils.layer_test(
             layer_class,
-            kwargs={'units': units,
-                    'go_backwards': go_backwards},
-            input_shape=(num_samples, timesteps, input_size))
+            kwargs={"units": units, "go_backwards": go_backwards},
+            input_shape=(num_samples, timesteps, input_size),
+        )
 
     @parameterized.named_parameters(
-        ('cudnngru', keras.layers.CuDNNGRU),
-        ('cudnnlstm', keras.layers.CuDNNLSTM),
+        ("cudnngru", keras.layers.CuDNNGRU), ("cudnnlstm", keras.layers.CuDNNLSTM),
     )
     @test_util.run_gpu_only
     def test_return_state(self, layer_class):
@@ -93,11 +95,11 @@ class CuDNNTest(keras_parameterized.TestCase):
         inputs = np.random.random((num_samples, timesteps, input_size))
         state = model.predict(inputs)
         np.testing.assert_allclose(
-            keras.backend.eval(layer.states[0]), state, atol=1e-4)
+            keras.backend.eval(layer.states[0]), state, atol=1e-4
+        )
 
     @parameterized.named_parameters(
-        ('cudnngru', keras.layers.CuDNNGRU),
-        ('cudnnlstm', keras.layers.CuDNNLSTM),
+        ("cudnngru", keras.layers.CuDNNGRU), ("cudnnlstm", keras.layers.CuDNNLSTM),
     )
     @test_util.run_gpu_only
     def test_time_major_input(self, layer_class):
@@ -107,23 +109,22 @@ class CuDNNTest(keras_parameterized.TestCase):
         num_samples = 32
 
         model = keras.models.Sequential()
-        model.add(
-            keras.layers.Lambda(lambda t: array_ops.transpose(t, [1, 0, 2])))
+        model.add(keras.layers.Lambda(lambda t: array_ops.transpose(t, [1, 0, 2])))
         layer = layer_class(units, time_major=True, return_sequences=True)
         model.add(layer)
-        model.add(
-            keras.layers.Lambda(lambda t: array_ops.transpose(t, [1, 0, 2])))
-        model.compile(loss='categorical_crossentropy',
-                      optimizer=RMSprop(learning_rate=0.001))
+        model.add(keras.layers.Lambda(lambda t: array_ops.transpose(t, [1, 0, 2])))
+        model.compile(
+            loss="categorical_crossentropy", optimizer=RMSprop(learning_rate=0.001)
+        )
         model.fit(
             np.ones((num_samples, timesteps, input_size)),
-            np.ones((num_samples, timesteps, units)))
+            np.ones((num_samples, timesteps, units)),
+        )
         out = model.predict(np.ones((num_samples, timesteps, input_size)))
         self.assertEqual(out.shape, (num_samples, timesteps, units))
 
     @parameterized.named_parameters(
-        ('cudnngru', keras.layers.CuDNNGRU),
-        ('cudnnlstm', keras.layers.CuDNNLSTM),
+        ("cudnngru", keras.layers.CuDNNGRU), ("cudnnlstm", keras.layers.CuDNNLSTM),
     )
     @test_util.run_gpu_only
     def test_specify_initial_state_keras_tensor(self, layer_class):
@@ -141,14 +142,15 @@ class CuDNNTest(keras_parameterized.TestCase):
         else:
             output = layer(inputs, initial_state=initial_state)
         self.assertTrue(
-            any(initial_state[0] is t
-                for t in layer._inbound_nodes[0].input_tensors))
+            any(initial_state[0] is t for t in layer._inbound_nodes[0].input_tensors)
+        )
 
         model = keras.models.Model([inputs] + initial_state, output)
         model.compile(
-            loss='categorical_crossentropy',
+            loss="categorical_crossentropy",
             optimizer=RMSprop(learning_rate=0.001),
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         inputs = np.random.random((num_samples, timesteps, input_size))
         initial_state = [
@@ -159,10 +161,8 @@ class CuDNNTest(keras_parameterized.TestCase):
 
 
 class CuDNNGraphOnlyTest(keras_parameterized.TestCase):
-
     @parameterized.named_parameters(
-        ('cudnngru', keras.layers.CuDNNGRU),
-        ('cudnnlstm', keras.layers.CuDNNLSTM),
+        ("cudnngru", keras.layers.CuDNNGRU), ("cudnnlstm", keras.layers.CuDNNLSTM),
     )
     @test_util.run_gpu_only
     def test_regularizer(self, layer_class):
@@ -177,7 +177,8 @@ class CuDNNGraphOnlyTest(keras_parameterized.TestCase):
                 input_shape=(timesteps, input_size),
                 kernel_regularizer=keras.regularizers.l1(0.01),
                 recurrent_regularizer=keras.regularizers.l1(0.01),
-                bias_regularizer='l2')
+                bias_regularizer="l2",
+            )
             layer.build((None, None, input_size))
             self.assertEqual(len(layer.losses), 3)
 
@@ -185,19 +186,18 @@ class CuDNNGraphOnlyTest(keras_parameterized.TestCase):
                 units,
                 return_sequences=False,
                 input_shape=(timesteps, input_size),
-                activity_regularizer='l2')
+                activity_regularizer="l2",
+            )
             self.assertTrue(layer.activity_regularizer)
-            x = keras.backend.variable(
-                np.ones((num_samples, timesteps, input_size)))
+            x = keras.backend.variable(np.ones((num_samples, timesteps, input_size)))
             layer(x)
             self.assertEqual(len(layer.get_losses_for(x)), 1)
 
     @parameterized.named_parameters(
-        ('cudnngru', keras.layers.CuDNNGRU),
-        ('cudnnlstm', keras.layers.CuDNNLSTM),
+        ("cudnngru", keras.layers.CuDNNGRU), ("cudnnlstm", keras.layers.CuDNNLSTM),
     )
     @test_util.run_gpu_only
-    @test_util.run_v1_only('b/120941292')
+    @test_util.run_v1_only("b/120941292")
     def test_statefulness(self, layer_class):
         input_size = 10
         timesteps = 6
@@ -211,18 +211,23 @@ class CuDNNGraphOnlyTest(keras_parameterized.TestCase):
                     10,
                     input_size,
                     input_length=timesteps,
-                    batch_input_shape=(num_samples, timesteps)))
+                    batch_input_shape=(num_samples, timesteps),
+                )
+            )
             layer = layer_class(
-                units, return_sequences=False, stateful=True, weights=None)
+                units, return_sequences=False, stateful=True, weights=None
+            )
             model.add(layer)
-            model.compile(optimizer=gradient_descent.GradientDescentOptimizer(0.01),
-                          loss='mse')
+            model.compile(
+                optimizer=gradient_descent.GradientDescentOptimizer(0.01), loss="mse"
+            )
             out1 = model.predict(np.ones((num_samples, timesteps)))
             self.assertEqual(out1.shape, (num_samples, units))
 
             # train once so that the states change
             model.train_on_batch(
-                np.ones((num_samples, timesteps)), np.ones((num_samples, units)))
+                np.ones((num_samples, timesteps)), np.ones((num_samples, units))
+            )
             out2 = model.predict(np.ones((num_samples, timesteps)))
 
             # if the state is not reset, output should be different
@@ -246,7 +251,6 @@ class CuDNNGraphOnlyTest(keras_parameterized.TestCase):
 
 @test_util.run_all_in_graph_and_eager_modes
 class CuDNNV1OnlyTest(keras_parameterized.TestCase):
-
     @test_util.run_gpu_only
     def test_trainability(self):
         input_size = 10
@@ -268,14 +272,25 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
 
     @parameterized.named_parameters(
         *test_util.generate_combinations_with_testcase_name(
-            rnn_type=['LSTM', 'GRU'], to_cudnn=[True, False],
-            bidirectional=[True, False], implementation=[1, 2],
-            model_nest_level=[1, 2], model_type=['seq', 'func']))
-    @test_util.run_v1_only('b/120911602, b/112083752')
+            rnn_type=["LSTM", "GRU"],
+            to_cudnn=[True, False],
+            bidirectional=[True, False],
+            implementation=[1, 2],
+            model_nest_level=[1, 2],
+            model_type=["seq", "func"],
+        )
+    )
+    @test_util.run_v1_only("b/120911602, b/112083752")
     @test_util.run_gpu_only
-    def test_load_weights_between_noncudnn_rnn(self, rnn_type, to_cudnn,
-                                               bidirectional, implementation,
-                                               model_nest_level, model_type):
+    def test_load_weights_between_noncudnn_rnn(
+        self,
+        rnn_type,
+        to_cudnn,
+        bidirectional,
+        implementation,
+        model_nest_level,
+        model_type,
+    ):
         input_size = 10
         timesteps = 6
         input_shape = (timesteps, input_size)
@@ -284,18 +299,18 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
         inputs = np.random.random((num_samples, timesteps, input_size))
 
         rnn_layer_kwargs = {
-            'recurrent_activation': 'sigmoid',
+            "recurrent_activation": "sigmoid",
             # ensure biases are non-zero and properly converted
-            'bias_initializer': 'random_uniform',
-            'implementation': implementation
+            "bias_initializer": "random_uniform",
+            "implementation": implementation,
         }
-        if rnn_type == 'LSTM':
+        if rnn_type == "LSTM":
             rnn_layer_class = keras.layers.LSTM
             cudnn_rnn_layer_class = keras.layers.CuDNNLSTM
         else:
             rnn_layer_class = keras.layers.GRU
             cudnn_rnn_layer_class = keras.layers.CuDNNGRU
-            rnn_layer_kwargs['reset_after'] = True
+            rnn_layer_kwargs["reset_after"] = True
 
         layer = rnn_layer_class(units, **rnn_layer_kwargs)
         if bidirectional:
@@ -305,26 +320,32 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
         if bidirectional:
             cudnn_layer = keras.layers.Bidirectional(cudnn_layer)
 
-        model = self._make_nested_model(input_shape, layer, model_nest_level,
-                                        model_type)
-        cudnn_model = self._make_nested_model(input_shape, cudnn_layer,
-                                              model_nest_level, model_type)
+        model = self._make_nested_model(
+            input_shape, layer, model_nest_level, model_type
+        )
+        cudnn_model = self._make_nested_model(
+            input_shape, cudnn_layer, model_nest_level, model_type
+        )
 
         if to_cudnn:
             self._convert_model_weights(model, cudnn_model)
         else:
             self._convert_model_weights(cudnn_model, model)
 
-        self.assertAllClose(model.predict(inputs), cudnn_model.predict(inputs),
-                            atol=1e-4)
+        self.assertAllClose(
+            model.predict(inputs), cudnn_model.predict(inputs), atol=1e-4
+        )
 
-    def _make_nested_model(self, input_shape, layer, level=1, model_type='func'):
+    def _make_nested_model(self, input_shape, layer, level=1, model_type="func"):
         # example: make_nested_seq_model((1,), Dense(10), level=2).summary()
         def make_nested_seq_model(input_shape, layer, level=1):
             model = layer
             for i in range(1, level + 1):
-                layers = [keras.layers.InputLayer(input_shape),
-                          model] if (i == 1) else [model]
+                layers = (
+                    [keras.layers.InputLayer(input_shape), model]
+                    if (i == 1)
+                    else [model]
+                )
                 model = keras.models.Sequential(layers)
                 if i > 1:
                     model.build((None,) + input_shape)
@@ -338,24 +359,27 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
                 model = keras.models.Model(model_input, model(model_input))
             return model
 
-        if model_type == 'func':
+        if model_type == "func":
             return make_nested_func_model(input_shape, layer, level)
-        elif model_type == 'seq':
+        elif model_type == "seq":
             return make_nested_seq_model(input_shape, layer, level)
 
     def _convert_model_weights(self, source_model, target_model):
-        _, fname = tempfile.mkstemp('.h5')
+        _, fname = tempfile.mkstemp(".h5")
         source_model.save_weights(fname)
         target_model.load_weights(fname)
         os.remove(fname)
 
     @parameterized.named_parameters(
         *test_util.generate_combinations_with_testcase_name(
-            rnn_type=['LSTM', 'GRU'], to_cudnn=[True, False]))
-    @test_util.run_v1_only('b/120911602')
+            rnn_type=["LSTM", "GRU"], to_cudnn=[True, False]
+        )
+    )
+    @test_util.run_v1_only("b/120911602")
     @test_util.run_gpu_only
-    def test_load_weights_between_noncudnn_rnn_time_distributed(self, rnn_type,
-                                                                to_cudnn):
+    def test_load_weights_between_noncudnn_rnn_time_distributed(
+        self, rnn_type, to_cudnn
+    ):
         # Similar test as test_load_weights_between_noncudnn_rnn() but has different
         # rank of input due to usage of TimeDistributed. Issue: #10356.
         input_size = 10
@@ -367,17 +391,17 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
         inputs = np.random.random((num_samples, timesteps, steps, input_size))
 
         rnn_layer_kwargs = {
-            'recurrent_activation': 'sigmoid',
+            "recurrent_activation": "sigmoid",
             # ensure biases are non-zero and properly converted
-            'bias_initializer': 'random_uniform',
+            "bias_initializer": "random_uniform",
         }
-        if rnn_type == 'LSTM':
+        if rnn_type == "LSTM":
             rnn_layer_class = keras.layers.LSTM
             cudnn_rnn_layer_class = keras.layers.CuDNNLSTM
         else:
             rnn_layer_class = keras.layers.GRU
             cudnn_rnn_layer_class = keras.layers.CuDNNGRU
-            rnn_layer_kwargs['reset_after'] = True
+            rnn_layer_kwargs["reset_after"] = True
 
         layer = rnn_layer_class(units, **rnn_layer_kwargs)
         layer = keras.layers.TimeDistributed(layer)
@@ -393,8 +417,9 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
         else:
             self._convert_model_weights(cudnn_model, model)
 
-        self.assertAllClose(model.predict(inputs), cudnn_model.predict(inputs),
-                            atol=1e-4)
+        self.assertAllClose(
+            model.predict(inputs), cudnn_model.predict(inputs), atol=1e-4
+        )
 
     @test_util.run_gpu_only
     def test_cudnnrnn_bidirectional(self):
@@ -403,18 +428,20 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
         dim = 2
         timesteps = 2
         output_dim = 2
-        mode = 'concat'
+        mode = "concat"
 
         x = np.random.random((samples, timesteps, dim))
-        target_dim = 2 * output_dim if mode == 'concat' else output_dim
+        target_dim = 2 * output_dim if mode == "concat" else output_dim
         y = np.random.random((samples, target_dim))
 
         # test with Sequential model
         model = keras.Sequential()
         model.add(
             keras.layers.Bidirectional(
-                rnn(output_dim), merge_mode=mode, input_shape=(None, dim)))
-        model.compile(loss='mse', optimizer='rmsprop')
+                rnn(output_dim), merge_mode=mode, input_shape=(None, dim)
+            )
+        )
+        model.compile(loss="mse", optimizer="rmsprop")
         model.fit(x, y, epochs=1, batch_size=1)
 
         # test config
@@ -428,27 +455,27 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
             keras.layers.Bidirectional(
                 rnn(output_dim, return_sequences=True),
                 merge_mode=mode,
-                input_shape=(None, dim)))
+                input_shape=(None, dim),
+            )
+        )
         model.add(keras.layers.Bidirectional(rnn(output_dim), merge_mode=mode))
-        model.compile(loss='mse', optimizer=R'rmsprop')
+        model.compile(loss="mse", optimizer=r"rmsprop")
         model.fit(x, y, epochs=1, batch_size=1)
 
         # test with functional API
         inputs = keras.Input((timesteps, dim))
-        outputs = keras.layers.Bidirectional(
-            rnn(output_dim), merge_mode=mode)(
-                inputs)
+        outputs = keras.layers.Bidirectional(rnn(output_dim), merge_mode=mode)(inputs)
         model = keras.Model(inputs, outputs)
-        model.compile(loss='mse', optimizer=R'rmsprop')
+        model.compile(loss="mse", optimizer=r"rmsprop")
         model.fit(x, y, epochs=1, batch_size=1)
 
         # Bidirectional and stateful
         inputs = keras.Input(batch_shape=(1, timesteps, dim))
         outputs = keras.layers.Bidirectional(
-            rnn(output_dim, stateful=True), merge_mode=mode)(
-                inputs)
+            rnn(output_dim, stateful=True), merge_mode=mode
+        )(inputs)
         model = keras.Model(inputs, outputs)
-        model.compile(loss='mse', optimizer='rmsprop')
+        model.compile(loss="mse", optimizer="rmsprop")
         model.fit(x, y, epochs=1, batch_size=1)
 
     @test_util.run_gpu_only
@@ -470,29 +497,31 @@ class CuDNNV1OnlyTest(keras_parameterized.TestCase):
         def assert_not_compatible(src, dest, message):
             with self.assertRaises(ValueError) as ex:
                 keras.saving.hdf5_format.preprocess_weights_for_loading(
-                    dest,
-                    get_layer_weights(src))
+                    dest, get_layer_weights(src)
+                )
             self.assertIn(message, str(ex.exception))
 
         assert_not_compatible(
             gru(),
             gru(cudnn=True),
-            'GRU(reset_after=False) is not compatible with CuDNNGRU')
+            "GRU(reset_after=False) is not compatible with CuDNNGRU",
+        )
         assert_not_compatible(
             gru(cudnn=True),
             gru(),
-            'CuDNNGRU is not compatible with GRU(reset_after=False)')
+            "CuDNNGRU is not compatible with GRU(reset_after=False)",
+        )
         assert_not_compatible(
             gru(),
             gru(reset_after=True),
-            'GRU(reset_after=False) is not compatible with '
-            'GRU(reset_after=True)')
+            "GRU(reset_after=False) is not compatible with " "GRU(reset_after=True)",
+        )
         assert_not_compatible(
             gru(reset_after=True),
             gru(),
-            'GRU(reset_after=True) is not compatible with '
-            'GRU(reset_after=False)')
+            "GRU(reset_after=True) is not compatible with " "GRU(reset_after=False)",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

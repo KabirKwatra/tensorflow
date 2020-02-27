@@ -37,33 +37,36 @@ from tensorflow.python.platform import test
 
 
 def get_model():
-    x = keras.layers.Input(shape=(3,), name='input')
-    y = keras.layers.Dense(4, name='dense')(x)
+    x = keras.layers.Input(shape=(3,), name="input")
+    y = keras.layers.Dense(4, name="dense")(x)
     model = keras.Model(x, y)
     return model
 
 
 class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.combine(
             distribution=[
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
-            mode=['graph', 'eager']))
+            mode=["graph", "eager"],
+        )
+    )
     def testKerasOptimizerWithUnequalInput(self, distribution):
-        self.skipTest('b/130309197')
+        self.skipTest("b/130309197")
         with distribution.scope():
             var = variables.Variable(
-                2.0, name='var', aggregation=variable_scope.VariableAggregation.SUM)
+                2.0, name="var", aggregation=variable_scope.VariableAggregation.SUM
+            )
             optimizer = adam.Adam(learning_rate=0.01, beta_1=0.2, beta_2=0.2)
             all_vars = []
 
             def model_fn():
-
                 def loss_fn():
                     replica_id = _replica_id()
-                    return math_ops.cast(replica_id + 1, dtype=dtypes.float32) * 0.5 * var
+                    return (
+                        math_ops.cast(replica_id + 1, dtype=dtypes.float32) * 0.5 * var
+                    )
 
                 train_op = optimizer.minimize(loss_fn, var_list=[var])
 
@@ -71,11 +74,12 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
 
             def train_fn():
                 train_op, optimizer = distribution.extended.call_for_each_replica(
-                    model_fn)
+                    model_fn
+                )
                 if not all_vars:
                     all_vars.append(var)
-                    all_vars.append(optimizer.get_slot(var, 'm'))
-                    all_vars.append(optimizer.get_slot(var, 'v'))
+                    all_vars.append(optimizer.get_slot(var, "m"))
+                    all_vars.append(optimizer.get_slot(var, "v"))
                 return distribution.group(train_op)
 
             if not context.executing_eagerly():
@@ -107,19 +111,18 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
             distribution=[
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
-            mode=['graph', 'eager']))
+            mode=["graph", "eager"],
+        )
+    )
     def testOptimizerWithKerasModelAndNumpyArrays(self, distribution):
-        self.skipTest('b/130309197')
+        self.skipTest("b/130309197")
         with self.cached_session():
             with distribution.scope():
                 model = get_model()
                 optimizer = gradient_descent.SGD(0.001)
-                loss = 'mse'
-                metrics = ['mae']
-                model.compile(
-                    optimizer,
-                    loss,
-                    metrics=metrics)
+                loss = "mse"
+                metrics = ["mae"]
+                model.compile(optimizer, loss, metrics=metrics)
 
             inputs = np.zeros((64, 3), dtype=np.float32)
             targets = np.zeros((64, 4), dtype=np.float32)
@@ -130,7 +133,8 @@ class MirroredStrategyOptimizerV2Test(test.TestCase, parameterized.TestCase):
                 epochs=1,
                 batch_size=2,
                 verbose=0,
-                validation_data=(inputs, targets))
+                validation_data=(inputs, targets),
+            )
             model.evaluate(inputs, targets)
             model.predict(inputs)
 
@@ -142,5 +146,5 @@ def _replica_id():
     return replica_id
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

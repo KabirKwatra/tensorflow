@@ -29,54 +29,61 @@ from tensorflow.python.distribute import saved_model_test_base as test_base
 from tensorflow.python.eager import test
 from tensorflow.python.keras.saving import saved_model_experimental as keras_saved_model
 
-_DEFAULT_FUNCTION_KEY = 'serving_default'
+_DEFAULT_FUNCTION_KEY = "serving_default"
 
 
 class SavedModelSaveAndLoadTest(test_base.TestSavedModelBase):
-
     def setUp(self):
-        self._root_dir = 'saved_model_save_load'
+        self._root_dir = "saved_model_save_load"
         super(SavedModelSaveAndLoadTest, self).setUp()
 
     def _save_model(self, model, saved_dir):
-        keras_saved_model.export_saved_model(
-            model, saved_dir, serving_only=True)
+        keras_saved_model.export_saved_model(model, saved_dir, serving_only=True)
 
-    def _load_and_run_model(self,
-                            distribution,
-                            saved_dir,
-                            predict_dataset,
-                            output_name='output_1'):
-        return test_base.load_and_run_with_saved_model_api(distribution, saved_dir,
-                                                           predict_dataset,
-                                                           output_name)
+    def _load_and_run_model(
+        self, distribution, saved_dir, predict_dataset, output_name="output_1"
+    ):
+        return test_base.load_and_run_with_saved_model_api(
+            distribution, saved_dir, predict_dataset, output_name
+        )
 
     @combinations.generate(test_base.simple_models_with_strategies())
-    def test_save_no_strategy_restore_strategy(self, model_and_input,
-                                               distribution):
-        self.run_test_save_no_strategy_restore_strategy(
-            model_and_input, distribution)
+    def test_save_no_strategy_restore_strategy(self, model_and_input, distribution):
+        self.run_test_save_no_strategy_restore_strategy(model_and_input, distribution)
 
     @combinations.generate(
-        combinations.times(test_base.simple_models_with_strategies(),
-                           combinations.combine(save_in_scope=[True, False])))
-    def test_save_strategy_restore_no_strategy(self, model_and_input,
-                                               distribution, save_in_scope):
+        combinations.times(
+            test_base.simple_models_with_strategies(),
+            combinations.combine(save_in_scope=[True, False]),
+        )
+    )
+    def test_save_strategy_restore_no_strategy(
+        self, model_and_input, distribution, save_in_scope
+    ):
         self.run_test_save_strategy_restore_no_strategy(
-            model_and_input, distribution, save_in_scope)
+            model_and_input, distribution, save_in_scope
+        )
 
     @combinations.generate(
-        combinations.times(test_base.simple_models_with_strategy_pairs(),
-                           combinations.combine(save_in_scope=[True, False])))
-    def test_save_strategy_restore_strategy(self, model_and_input,
-                                            distribution_for_saving,
-                                            distribution_for_restoring,
-                                            save_in_scope):
-        self.run_test_save_strategy_restore_strategy(model_and_input,
-                                                     distribution_for_saving,
-                                                     distribution_for_restoring,
-                                                     save_in_scope)
+        combinations.times(
+            test_base.simple_models_with_strategy_pairs(),
+            combinations.combine(save_in_scope=[True, False]),
+        )
+    )
+    def test_save_strategy_restore_strategy(
+        self,
+        model_and_input,
+        distribution_for_saving,
+        distribution_for_restoring,
+        save_in_scope,
+    ):
+        self.run_test_save_strategy_restore_strategy(
+            model_and_input,
+            distribution_for_saving,
+            distribution_for_restoring,
+            save_in_scope,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

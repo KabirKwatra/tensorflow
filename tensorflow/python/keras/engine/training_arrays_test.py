@@ -36,81 +36,72 @@ from tensorflow.python.platform import test
 @keras_parameterized.run_with_all_model_types
 @keras_parameterized.run_all_keras_modes
 class ValidationDatasetNoLimitTest(keras_parameterized.TestCase):
-
     def create_dataset(self, num_samples, batch_size):
         input_data = np.random.rand(num_samples, 1)
         expected_data = input_data * 3
-        dataset = dataset_ops.Dataset.from_tensor_slices((input_data,
-                                                          expected_data))
+        dataset = dataset_ops.Dataset.from_tensor_slices((input_data, expected_data))
         return dataset.shuffle(10 * batch_size).batch(batch_size)
 
     def test_validation_dataset_with_no_step_arg(self):
         # Create a model that learns y=Mx.
         layers = [core.Dense(1)]
         model = testing_utils.get_model_from_layers(layers, input_shape=(1,))
-        model.compile(loss="mse", optimizer="adam",
-                      metrics=["mean_absolute_error"])
+        model.compile(loss="mse", optimizer="adam", metrics=["mean_absolute_error"])
 
         train_dataset = self.create_dataset(num_samples=200, batch_size=10)
         eval_dataset = self.create_dataset(num_samples=50, batch_size=25)
 
-        history = model.fit(
-            x=train_dataset, validation_data=eval_dataset, epochs=2)
+        history = model.fit(x=train_dataset, validation_data=eval_dataset, epochs=2)
         evaluation = model.evaluate(x=eval_dataset)
 
         # If the fit call used the entire dataset, then the final val MAE error
         # from the fit history should be equal to the final element in the output
         # of evaluating the model on the same eval dataset.
-        self.assertAlmostEqual(history.history["val_mean_absolute_error"][-1],
-                               evaluation[-1], places=5)
+        self.assertAlmostEqual(
+            history.history["val_mean_absolute_error"][-1], evaluation[-1], places=5
+        )
 
 
-class PrintTrainingInfoTest(keras_parameterized.TestCase,
-                            parameterized.TestCase):
-
+class PrintTrainingInfoTest(keras_parameterized.TestCase, parameterized.TestCase):
     @test_util.run_v1_only("Only relevant in graph mode.")
     def test_print_info_with_datasets(self):
         """Print training info should work with val datasets (b/133391839)."""
 
-        model = keras.models.Sequential(
-            [keras.layers.Dense(1, input_shape=(1,))])
+        model = keras.models.Sequential([keras.layers.Dense(1, input_shape=(1,))])
         model.compile(loss="mse", optimizer="sgd")
 
-        dataset = dataset_ops.Dataset.from_tensors(
-            ([1.], [1.])).repeat(100).batch(10)
+        dataset = dataset_ops.Dataset.from_tensors(([1.0], [1.0])).repeat(100).batch(10)
 
-        val_dataset = dataset_ops.Dataset.from_tensors(
-            ([1.], [1.])).repeat(50).batch(10)
+        val_dataset = (
+            dataset_ops.Dataset.from_tensors(([1.0], [1.0])).repeat(50).batch(10)
+        )
 
         mock_stdout = six.StringIO()
         with test.mock.patch.object(sys, "stdout", mock_stdout):
             model.fit(dataset, epochs=2, validation_data=val_dataset)
 
-        self.assertIn(
-            "Train on 10 steps, validate on 5 steps", mock_stdout.getvalue())
+        self.assertIn("Train on 10 steps, validate on 5 steps", mock_stdout.getvalue())
 
     @parameterized.named_parameters(
-        ("with_validation", True), ("without_validation", False))
+        ("with_validation", True), ("without_validation", False)
+    )
     @test_util.run_v1_only("Only relevant in graph mode.")
     def test_print_info_with_numpy(self, do_validation):
         """Print training info should work with val datasets (b/133391839)."""
 
-        model = keras.models.Sequential(
-            [keras.layers.Dense(1, input_shape=(2,))])
+        model = keras.models.Sequential([keras.layers.Dense(1, input_shape=(2,))])
         model.compile(loss="mse", optimizer="sgd")
 
         dataset = np.arange(200).reshape(100, 2)
 
         if do_validation:
-            val_data = (np.arange(100).reshape(50, 2),
-                        np.arange(50).reshape(50, 1))
+            val_data = (np.arange(100).reshape(50, 2), np.arange(50).reshape(50, 1))
         else:
             val_data = None
 
         mock_stdout = six.StringIO()
         with test.mock.patch.object(sys, "stdout", mock_stdout):
-            model.fit(dataset, batch_size=10, epochs=2,
-                      validation_data=val_data)
+            model.fit(dataset, batch_size=10, epochs=2, validation_data=val_data)
 
         self.assertIn("Train on 100 samples", mock_stdout.getvalue())
 
@@ -119,9 +110,7 @@ class PrintTrainingInfoTest(keras_parameterized.TestCase,
 
     @keras_parameterized.run_all_keras_modes
     def test_dict_float64_input(self):
-
         class MyModel(keras.Model):
-
             def __init__(self):
                 super(MyModel, self).__init__(self)
                 self.dense1 = keras.layers.Dense(10, activation="relu")
@@ -137,16 +126,13 @@ class PrintTrainingInfoTest(keras_parameterized.TestCase,
 
         model = MyModel()
         model.compile(
-            loss="mae",
-            optimizer="adam",
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mae", optimizer="adam", run_eagerly=testing_utils.should_run_eagerly()
+        )
 
         model.fit(
-            x={
-                "one": np.random.rand(100, 10, 1),
-                "two": np.random.rand(100, 10, 1)
-            },
-            y=np.random.rand(100, 10, 1))
+            x={"one": np.random.rand(100, 10, 1), "two": np.random.rand(100, 10, 1)},
+            y=np.random.rand(100, 10, 1),
+        )
 
     def test_dict_validation_input(self):
         """Test case for GitHub issue 30122."""
@@ -161,13 +147,10 @@ class PrintTrainingInfoTest(keras_parameterized.TestCase,
         input_1 = keras.Input(shape=(None,), name="input_1")
 
         class my_model(keras.Model):
-
             def __init__(self):
                 super(my_model, self).__init__(self)
-                self.hidden_layer_0 = keras.layers.Dense(
-                    100, activation="relu")
-                self.hidden_layer_1 = keras.layers.Dense(
-                    100, activation="relu")
+                self.hidden_layer_0 = keras.layers.Dense(100, activation="relu")
+                self.hidden_layer_1 = keras.layers.Dense(100, activation="relu")
                 self.concat = keras.layers.Concatenate()
                 self.out_layer = keras.layers.Dense(1, activation="sigmoid")
 
@@ -181,15 +164,13 @@ class PrintTrainingInfoTest(keras_parameterized.TestCase,
         model.compile(loss="mae", optimizer="adam")
 
         model.fit(
-            x={
-                "input_0": train_input_0,
-                "input_1": train_input_1
-            },
+            x={"input_0": train_input_0, "input_1": train_input_1},
             y=train_labels,
-            validation_data=({
-                "input_0": val_input_0,
-                "input_1": val_input_1
-            }, val_labels))
+            validation_data=(
+                {"input_0": val_input_0, "input_1": val_input_1},
+                val_labels,
+            ),
+        )
 
 
 if __name__ == "__main__":

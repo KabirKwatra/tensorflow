@@ -41,24 +41,26 @@ class TestSequential(keras_parameterized.TestCase):
     def test_basic_methods(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(1, input_dim=2))
-        model.add(keras.layers.Dropout(0.3, name='dp'))
-        model.add(keras.layers.Dense(2, kernel_regularizer='l2',
-                                     kernel_constraint='max_norm'))
+        model.add(keras.layers.Dropout(0.3, name="dp"))
+        model.add(
+            keras.layers.Dense(2, kernel_regularizer="l2", kernel_constraint="max_norm")
+        )
         self.assertEqual(len(model.layers), 3)
         self.assertEqual(len(model.weights), 2 * 2)
-        self.assertEqual(model.get_layer(name='dp').name, 'dp')
+        self.assertEqual(model.get_layer(name="dp").name, "dp")
 
     @keras_parameterized.run_all_keras_modes
     def test_input_defined_first_layer(self):
         model = keras.models.Sequential()
-        model.add(keras.Input(shape=(2,), name='input_layer'))
+        model.add(keras.Input(shape=(2,), name="input_layer"))
         model.add(keras.layers.Dense(1))
-        model.add(keras.layers.Dropout(0.3, name='dp'))
-        model.add(keras.layers.Dense(2, kernel_regularizer='l2',
-                                     kernel_constraint='max_norm'))
+        model.add(keras.layers.Dropout(0.3, name="dp"))
+        model.add(
+            keras.layers.Dense(2, kernel_regularizer="l2", kernel_constraint="max_norm")
+        )
         self.assertLen(model.layers, 3)
         self.assertLen(model.weights, 2 * 2)
-        self.assertEqual(model.get_layer(name='dp').name, 'dp')
+        self.assertEqual(model.get_layer(name="dp").name, "dp")
 
     @keras_parameterized.run_all_keras_modes
     def test_single_layer_in_init(self):
@@ -73,11 +75,13 @@ class TestSequential(keras_parameterized.TestCase):
         num_classes = 2
 
         model = testing_utils.get_small_sequential_mlp(
-            num_hidden, num_classes, input_dim)
+            num_hidden, num_classes, input_dim
+        )
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         x = np.random.random((batch_size, input_dim))
         y = np.random.random((batch_size, num_classes))
         model.fit(x, y, epochs=1)
@@ -85,9 +89,10 @@ class TestSequential(keras_parameterized.TestCase):
         self.assertEqual(len(model.layers), 1)
         self.assertEqual(model.output_shape, (None, num_hidden))
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         y = np.random.random((batch_size, num_hidden))
         model.fit(x, y, epochs=1)
 
@@ -112,13 +117,15 @@ class TestSequential(keras_parameterized.TestCase):
 
         model = testing_utils.get_small_sequential_mlp(num_hidden, num_classes)
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
+            loss="mse",
+            optimizer="rmsprop",
             metrics=[keras.metrics.CategoricalAccuracy()],
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         self.assertEqual(len(model.layers), 2)
         with self.assertRaisesRegexp(
-                ValueError, 'Weights for model .* have not yet been created'):
+            ValueError, "Weights for model .* have not yet been created"
+        ):
             len(model.weights)
         self.assertFalse(model.built)
 
@@ -139,13 +146,15 @@ class TestSequential(keras_parameterized.TestCase):
 
         model = testing_utils.get_small_sequential_mlp(num_hidden, num_classes)
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
+            loss="mse",
+            optimizer="rmsprop",
             metrics=[keras.metrics.CategoricalAccuracy()],
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         self.assertEqual(len(model.layers), 2)
         with self.assertRaisesRegexp(
-                ValueError, 'Weights for model .* have not yet been created'):
+            ValueError, "Weights for model .* have not yet been created"
+        ):
             len(model.weights)
         self.assertFalse(model.built)
 
@@ -169,12 +178,12 @@ class TestSequential(keras_parameterized.TestCase):
                 if deferred:
                     model = testing_utils.get_small_sequential_mlp(10, 4)
                 else:
-                    model = testing_utils.get_small_sequential_mlp(
-                        10, 4, input_dim=3)
+                    model = testing_utils.get_small_sequential_mlp(10, 4, input_dim=3)
                 model.compile(
-                    optimizer='rmsprop',
-                    loss='categorical_crossentropy',
-                    metrics=['accuracy'])
+                    optimizer="rmsprop",
+                    loss="categorical_crossentropy",
+                    metrics=["accuracy"],
+                )
                 return model
 
             inputs = keras.backend.zeros(shape=(10, 3))
@@ -203,7 +212,8 @@ class TestSequential(keras_parameterized.TestCase):
                 steps_per_epoch=2,
                 verbose=0,
                 validation_data=(inputs, targets),
-                validation_steps=2)
+                validation_steps=2,
+            )
 
     @keras_parameterized.run_all_keras_modes
     def test_invalid_use_cases(self):
@@ -219,8 +229,7 @@ class TestSequential(keras_parameterized.TestCase):
         num_classes = 2
 
         inner_model = keras.models.Sequential()
-        inner_model.add(keras.layers.Dense(
-            num_units, input_shape=(input_dim,)))
+        inner_model.add(keras.layers.Dense(num_units, input_shape=(input_dim,)))
 
         model = keras.models.Sequential()
         model.add(inner_model)
@@ -246,7 +255,7 @@ class TestSequential(keras_parameterized.TestCase):
             model.trainable = False
             assert not model.updates
 
-            model.compile('sgd', 'mse')
+            model.compile("sgd", "mse")
             assert not model.updates
 
             x1 = model.predict(val_a)
@@ -255,7 +264,7 @@ class TestSequential(keras_parameterized.TestCase):
             self.assertAllClose(x1, x2, atol=1e-7)
 
             model.trainable = True
-            model.compile('sgd', 'mse')
+            model.compile("sgd", "mse")
             assert model.updates
 
             model.train_on_batch(val_a, val_out)
@@ -271,10 +280,11 @@ class TestSequential(keras_parameterized.TestCase):
 
         model = testing_utils.get_small_sequential_mlp(num_hidden, num_classes)
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
+            loss="mse",
+            optimizer="rmsprop",
             metrics=[keras.metrics.CategoricalAccuracy()],
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         self.assertFalse(model.built)
 
         x = np.random.random((batch_size, input_dim))
@@ -285,10 +295,11 @@ class TestSequential(keras_parameterized.TestCase):
         config = model.get_config()
         new_model = keras.models.Sequential.from_config(config)
         new_model.compile(
-            loss='mse',
-            optimizer='rmsprop',
+            loss="mse",
+            optimizer="rmsprop",
             metrics=[keras.metrics.CategoricalAccuracy()],
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         x = np.random.random((batch_size, input_dim))
         y = np.random.random((batch_size, num_classes))
         new_model.train_on_batch(x, y)
@@ -325,9 +336,8 @@ class TestSequential(keras_parameterized.TestCase):
         model(array_ops.zeros([1, 2]))
         self.assertTrue(model.built)
         model.compile(
-            'rmsprop',
-            loss='mse',
-            run_eagerly=testing_utils.should_run_eagerly())
+            "rmsprop", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
+        )
         model.train_on_batch(np.zeros((1, 2)), np.zeros((1, 5)))
 
     @keras_parameterized.run_all_keras_modes
@@ -337,9 +347,10 @@ class TestSequential(keras_parameterized.TestCase):
         model.add(inner_model)
 
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         x = np.random.random((2, 6))
         y = np.random.random((2, 5))
         model.fit(x, y, epochs=1)
@@ -350,50 +361,53 @@ class TestSequential(keras_parameterized.TestCase):
         model.add(keras.layers.Dense(2))
         model(array_ops.ones([2, 4]))
         self.assertEqual(
-            ['sequential/dense/kernel:0', 'sequential/dense/bias:0',
-             'sequential/dense_1/kernel:0', 'sequential/dense_1/bias:0'],
-            [v.name for v in model.variables])
+            [
+                "sequential/dense/kernel:0",
+                "sequential/dense/bias:0",
+                "sequential/dense_1/kernel:0",
+                "sequential/dense_1/bias:0",
+            ],
+            [v.name for v in model.variables],
+        )
 
     @keras_parameterized.run_all_keras_modes
     def test_input_assumptions_propagation(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(1))
         if context.executing_eagerly():
-            with self.assertRaisesRegexp(ValueError,
-                                         'expected min_ndim=2, found ndim=0'):
+            with self.assertRaisesRegexp(
+                ValueError, "expected min_ndim=2, found ndim=0"
+            ):
                 model(1.0)
 
     @keras_parameterized.run_all_keras_modes
     def test_string_input(self):
-        seq = keras.Sequential([
-            keras.layers.InputLayer(input_shape=(1,), dtype=dtypes.string),
-            keras.layers.Lambda(lambda x: x[0])
-        ])
+        seq = keras.Sequential(
+            [
+                keras.layers.InputLayer(input_shape=(1,), dtype=dtypes.string),
+                keras.layers.Lambda(lambda x: x[0]),
+            ]
+        )
         seq.run_eagerly = testing_utils.should_run_eagerly()
-        preds = seq.predict([['tensorflow eager']])
+        preds = seq.predict([["tensorflow eager"]])
         self.assertEqual(preds.shape, (1,))
 
     @keras_parameterized.run_all_keras_modes
     def test_multi_output_layer_not_accepted(self):
-
         class MultiOutputLayer(keras.layers.Layer):
-
             def call(self, inputs):
                 return inputs, inputs
 
-        with self.assertRaisesRegexp(
-                ValueError, 'should have a single output tensor'):
+        with self.assertRaisesRegexp(ValueError, "should have a single output tensor"):
             keras.Sequential([MultiOutputLayer(input_shape=(3,))])
 
-        with self.assertRaisesRegexp(
-                ValueError, 'should have a single output tensor'):
-            keras.Sequential([
-                keras.layers.Dense(1, input_shape=(3,)),
-                MultiOutputLayer()])
+        with self.assertRaisesRegexp(ValueError, "should have a single output tensor"):
+            keras.Sequential(
+                [keras.layers.Dense(1, input_shape=(3,)), MultiOutputLayer()]
+            )
 
         # Should also raise error in a deferred build mode
-        with self.assertRaisesRegexp(
-                ValueError, 'should have a single output tensor'):
+        with self.assertRaisesRegexp(ValueError, "should have a single output tensor"):
             keras.Sequential([MultiOutputLayer()])(np.zeros((10, 10)))
 
     @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
@@ -401,14 +415,14 @@ class TestSequential(keras_parameterized.TestCase):
         model = keras.Sequential([keras.layers.Dense(3)])
         self.assertFalse(model.built)
 
-        model.compile('adam', loss='mse')
+        model.compile("adam", loss="mse")
         model.fit(np.random.random((1, 3)), np.random.random((1, 3)))
         self.assertTrue(model.built)
 
         model.add(keras.layers.Dense(3))
         self.assertFalse(model.built)
 
-        model.compile('adam', loss='mse')
+        model.compile("adam", loss="mse")
         model.fit(np.random.random((1, 3)), np.random.random((1, 3)))
         self.assertTrue(model.built)
 
@@ -435,25 +449,24 @@ class TestSequential(keras_parameterized.TestCase):
 
 
 class TestSequentialEagerIntegration(keras_parameterized.TestCase):
-
     @keras_parameterized.run_all_keras_modes
     def test_defun_on_call(self):
         # Check that one can subclass Sequential and place the `call` in a `defun`.
 
         class MySequential(keras.Sequential):
-
             def __init__(self, name=None):
                 super(MySequential, self).__init__(name=name)
                 self.call = function.defun(self.call)
 
         model = MySequential()
-        model.add(keras.layers.Dense(4, activation='relu'))
-        model.add(keras.layers.Dense(5, activation='softmax'))
+        model.add(keras.layers.Dense(4, activation="relu"))
+        model.add(keras.layers.Dense(5, activation="softmax"))
 
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         x = np.random.random((2, 6))
         y = np.random.random((2, 5))
@@ -464,9 +477,10 @@ class TestSequentialEagerIntegration(keras_parameterized.TestCase):
         # Fix for b/112433577
         model = testing_utils.get_small_sequential_mlp(4, 5)
         model.compile(
-            loss='mse',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         model.build((None, 6))
 
@@ -475,5 +489,5 @@ class TestSequentialEagerIntegration(keras_parameterized.TestCase):
         model.fit(x, y, epochs=1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

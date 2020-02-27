@@ -33,7 +33,6 @@ from tensorflow.python.training import gradient_descent
 
 @keras_parameterized.run_all_keras_modes
 class LSTMLayerTest(keras_parameterized.TestCase):
-
     def test_return_sequences_LSTM(self):
         num_samples = 2
         timesteps = 3
@@ -41,25 +40,24 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.LSTM,
-            kwargs={'units': units,
-                    'return_sequences': True},
-            input_shape=(num_samples, timesteps, embedding_dim))
+            kwargs={"units": units, "return_sequences": True},
+            input_shape=(num_samples, timesteps, embedding_dim),
+        )
 
     @tf_test_util.run_v2_only
     def test_float64_LSTM(self):
         if test.is_built_with_rocm():
-            self.skipTest('Double type is yet not supported in ROCm')
+            self.skipTest("Double type is yet not supported in ROCm")
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
         units = 2
         testing_utils.layer_test(
             keras.layers.LSTM,
-            kwargs={'units': units,
-                    'return_sequences': True,
-                    'dtype': 'float64'},
+            kwargs={"units": units, "return_sequences": True, "dtype": "float64"},
             input_shape=(num_samples, timesteps, embedding_dim),
-            input_dtype='float64')
+            input_dtype="float64",
+        )
 
     def test_static_shape_inference_LSTM(self):
         # Github issue: 15165
@@ -68,8 +66,9 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         units = 2
 
         model = keras.models.Sequential()
-        inputs = keras.layers.Dense(embedding_dim,
-                                    input_shape=(timesteps, embedding_dim))
+        inputs = keras.layers.Dense(
+            embedding_dim, input_shape=(timesteps, embedding_dim)
+        )
         model.add(inputs)
         layer = keras.layers.LSTM(units, return_sequences=True)
         model.add(layer)
@@ -84,10 +83,7 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         layer = keras.layers.LSTM(units, input_shape=(None, embedding_dim))
         model = keras.models.Sequential()
         model.add(layer)
-        model.compile(
-            'rmsprop',
-            'mse',
-            run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly())
 
         x = np.random.random((num_samples, timesteps, embedding_dim))
         y = np.random.random((num_samples, units))
@@ -100,10 +96,9 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.LSTM,
-            kwargs={'units': units,
-                    'dropout': 0.1,
-                    'recurrent_dropout': 0.1},
-            input_shape=(num_samples, timesteps, embedding_dim))
+            kwargs={"units": units, "dropout": 0.1, "recurrent_dropout": 0.1},
+            input_shape=(num_samples, timesteps, embedding_dim),
+        )
 
     def test_recurrent_dropout_with_implementation_restriction(self):
         layer = keras.layers.LSTM(2, recurrent_dropout=0.1, implementation=2)
@@ -118,9 +113,9 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.LSTM,
-            kwargs={'units': units,
-                    'implementation': implementation_mode},
-            input_shape=(num_samples, timesteps, embedding_dim))
+            kwargs={"units": units, "implementation": implementation_mode},
+            input_shape=(num_samples, timesteps, embedding_dim),
+        )
 
     def test_constraints_LSTM(self):
         embedding_dim = 4
@@ -135,7 +130,8 @@ class LSTMLayerTest(keras_parameterized.TestCase):
             input_shape=(None, embedding_dim),
             kernel_constraint=k_constraint,
             recurrent_constraint=r_constraint,
-            bias_constraint=b_constraint)
+            bias_constraint=b_constraint,
+        )
         layer.build((None, None, embedding_dim))
         self.assertEqual(layer.cell.kernel.constraint, k_constraint)
         self.assertEqual(layer.cell.recurrent_kernel.constraint, r_constraint)
@@ -145,7 +141,8 @@ class LSTMLayerTest(keras_parameterized.TestCase):
     def test_with_masking_layer_LSTM(self, unroll):
         if test.is_built_with_rocm():
             self.skipTest(
-                'Skipping the test as ROCm MIOpen does not support padded input.')
+                "Skipping the test as ROCm MIOpen does not support padded input."
+            )
         layer_class = keras.layers.LSTM
         inputs = np.random.random((2, 3, 4))
         targets = np.abs(np.random.random((2, 3, 5)))
@@ -154,9 +151,10 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         model.add(keras.layers.Masking(input_shape=(3, 4)))
         model.add(layer_class(units=5, return_sequences=True, unroll=unroll))
         model.compile(
-            loss='categorical_crossentropy',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="categorical_crossentropy",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.fit(inputs, targets, epochs=1, batch_size=2, verbose=1)
 
     @parameterized.parameters([True, False])
@@ -167,12 +165,12 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         model = keras.models.Sequential()
         model.add(keras.layers.Masking(input_shape=(3, 4)))
         lstm_cells = [keras.layers.LSTMCell(10), keras.layers.LSTMCell(5)]
-        model.add(keras.layers.RNN(
-            lstm_cells, return_sequences=True, unroll=unroll))
+        model.add(keras.layers.RNN(lstm_cells, return_sequences=True, unroll=unroll))
         model.compile(
-            loss='categorical_crossentropy',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="categorical_crossentropy",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.fit(inputs, targets, epochs=1, batch_size=2, verbose=1)
 
     def test_from_config_LSTM(self):
@@ -198,18 +196,20 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         else:
             output = layer(inputs, initial_state=initial_state)
         self.assertTrue(
-            any(initial_state[0] is t
-                for t in layer._inbound_nodes[0].input_tensors))
+            any(initial_state[0] is t for t in layer._inbound_nodes[0].input_tensors)
+        )
 
         model = keras.models.Model([inputs] + initial_state, output)
         model.compile(
-            loss='categorical_crossentropy',
+            loss="categorical_crossentropy",
             optimizer=adam.AdamOptimizer(),
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         inputs = np.random.random((num_samples, timesteps, embedding_dim))
-        initial_state = [np.random.random((num_samples, units))
-                         for _ in range(num_states)]
+        initial_state = [
+            np.random.random((num_samples, units)) for _ in range(num_states)
+        ]
         targets = np.random.random((num_samples, units))
         model.train_on_batch([inputs] + initial_state, targets)
 
@@ -222,17 +222,19 @@ class LSTMLayerTest(keras_parameterized.TestCase):
 
         # Test with non-Keras tensor
         inputs = keras.Input((timesteps, embedding_dim))
-        initial_state = [keras.backend.random_normal_variable(
-            (num_samples, units), 0, 1)
-            for _ in range(num_states)]
+        initial_state = [
+            keras.backend.random_normal_variable((num_samples, units), 0, 1)
+            for _ in range(num_states)
+        ]
         layer = keras.layers.LSTM(units)
         output = layer(inputs, initial_state=initial_state)
 
         model = keras.models.Model(inputs, output)
         model.compile(
-            loss='categorical_crossentropy',
+            loss="categorical_crossentropy",
             optimizer=adam.AdamOptimizer(),
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         inputs = np.random.random((num_samples, timesteps, embedding_dim))
         targets = np.random.random((num_samples, units))
@@ -253,9 +255,9 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         self.assertAllClose(
             keras.backend.eval(layer.states[0]),
             np.zeros(keras.backend.int_shape(layer.states[0])),
-            atol=1e-4)
-        state_shapes = [keras.backend.int_shape(
-            state) for state in layer.states]
+            atol=1e-4,
+        )
+        state_shapes = [keras.backend.int_shape(state) for state in layer.states]
         values = [np.ones(shape) for shape in state_shapes]
         if len(values) == 1:
             values = values[0]
@@ -263,7 +265,8 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         self.assertAllClose(
             keras.backend.eval(layer.states[0]),
             np.ones(keras.backend.int_shape(layer.states[0])),
-            atol=1e-4)
+            atol=1e-4,
+        )
 
         # Test with invalid data
         with self.assertRaises(ValueError):
@@ -283,13 +286,15 @@ class LSTMLayerTest(keras_parameterized.TestCase):
 
         model = keras.models.Model([inputs] + initial_state, output)
         model.compile(
-            loss='categorical_crossentropy',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="categorical_crossentropy",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         inputs = np.random.random((num_samples, timesteps, embedding_dim))
-        initial_state = [np.random.random((num_samples, units))
-                         for _ in range(num_states)]
+        initial_state = [
+            np.random.random((num_samples, units)) for _ in range(num_states)
+        ]
         targets = np.random.random((num_samples, units))
         model.train_on_batch([inputs] + initial_state, targets)
 
@@ -300,8 +305,7 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         units = 3
         num_samples = 2
 
-        inputs = keras.Input(batch_shape=(
-            num_samples, timesteps, embedding_dim))
+        inputs = keras.Input(batch_shape=(num_samples, timesteps, embedding_dim))
         layer = keras.layers.LSTM(units, return_state=True, stateful=True)
         outputs = layer(inputs)
         state = outputs[1:]
@@ -310,8 +314,7 @@ class LSTMLayerTest(keras_parameterized.TestCase):
 
         inputs = np.random.random((num_samples, timesteps, embedding_dim))
         state = model.predict(inputs)
-        self.assertAllClose(keras.backend.eval(
-            layer.states[0]), state, atol=1e-4)
+        self.assertAllClose(keras.backend.eval(layer.states[0]), state, atol=1e-4)
 
     def test_state_reuse(self):
         timesteps = 3
@@ -319,10 +322,8 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         units = 3
         num_samples = 2
 
-        inputs = keras.Input(batch_shape=(
-            num_samples, timesteps, embedding_dim))
-        layer = keras.layers.LSTM(
-            units, return_state=True, return_sequences=True)
+        inputs = keras.Input(batch_shape=(num_samples, timesteps, embedding_dim))
+        layer = keras.layers.LSTM(units, return_state=True, return_sequences=True)
         outputs = layer(inputs)
         output, state = outputs[0], outputs[1:]
         output = keras.layers.LSTM(units)(output, initial_state=state)
@@ -347,18 +348,20 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         layer = layer_class(units)
         output = layer(inputs)
         self.assertTrue(
-            any(initial_state[0] is t
-                for t in layer._inbound_nodes[0].input_tensors))
+            any(initial_state[0] is t for t in layer._inbound_nodes[0].input_tensors)
+        )
 
         model = keras.models.Model(inputs, output)
         model.compile(
-            loss='categorical_crossentropy',
+            loss="categorical_crossentropy",
             optimizer=adam.AdamOptimizer(),
-            run_eagerly=testing_utils.should_run_eagerly())
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
 
         main_inputs = np.random.random((num_samples, timesteps, embedding_dim))
-        initial_state = [np.random.random((num_samples, units))
-                         for _ in range(num_states)]
+        initial_state = [
+            np.random.random((num_samples, units)) for _ in range(num_states)
+        ]
         targets = np.random.random((num_samples, units))
         model.train_on_batch([main_inputs] + initial_state, targets)
 
@@ -372,8 +375,9 @@ class LSTMLayerTest(keras_parameterized.TestCase):
             input_shape=(None, embedding_dim),
             kernel_regularizer=keras.regularizers.l1(0.01),
             recurrent_regularizer=keras.regularizers.l1(0.01),
-            bias_regularizer='l2',
-            activity_regularizer='l1')
+            bias_regularizer="l2",
+            activity_regularizer="l1",
+        )
         layer.build((None, None, 2))
         self.assertEqual(len(layer.losses), 3)
         x = keras.backend.variable(np.ones((2, 3, 2)))
@@ -386,7 +390,8 @@ class LSTMLayerTest(keras_parameterized.TestCase):
     def test_statefulness_LSTM(self):
         if test.is_built_with_rocm():
             self.skipTest(
-                'Skipping the test as ROCm MIOpen does not support padded input.')
+                "Skipping the test as ROCm MIOpen does not support padded input."
+            )
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
@@ -399,20 +404,23 @@ class LSTMLayerTest(keras_parameterized.TestCase):
                 embedding_dim,
                 mask_zero=True,
                 input_length=timesteps,
-                batch_input_shape=(num_samples, timesteps)))
-        layer = layer_class(
-            units, return_sequences=False, stateful=True, weights=None)
+                batch_input_shape=(num_samples, timesteps),
+            )
+        )
+        layer = layer_class(units, return_sequences=False, stateful=True, weights=None)
         model.add(layer)
         model.compile(
             optimizer=gradient_descent.GradientDescentOptimizer(0.01),
-            loss='mse',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="mse",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         out1 = model.predict(np.ones((num_samples, timesteps)))
         self.assertEqual(out1.shape, (num_samples, units))
 
         # train once so that the states change
         model.train_on_batch(
-            np.ones((num_samples, timesteps)), np.ones((num_samples, units)))
+            np.ones((num_samples, timesteps)), np.ones((num_samples, units))
+        )
         out2 = model.predict(np.ones((num_samples, timesteps)))
 
         # if the state is not reset, output should be different
@@ -451,5 +459,5 @@ class LSTMLayerTest(keras_parameterized.TestCase):
         self.assertAllClose(out7, out6, atol=1e-5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

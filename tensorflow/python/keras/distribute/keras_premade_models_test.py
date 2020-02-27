@@ -38,15 +38,16 @@ def strategy_combinations_eager_data_fn():
             strategy_combinations.one_device_strategy,
             strategy_combinations.one_device_strategy_gpu,
             strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
-            strategy_combinations.mirrored_strategy_with_two_gpus
+            strategy_combinations.mirrored_strategy_with_two_gpus,
         ],
-        mode=['eager'],
-        data_fn=[get_numpy, get_dataset])
+        mode=["eager"],
+        data_fn=[get_numpy, get_dataset],
+    )
 
 
 def get_numpy():
     inputs = np.random.uniform(low=-5, high=5, size=(64, 2)).astype(np.float32)
-    output = .3 * inputs[:, 0] + .2 * inputs[:, 1]
+    output = 0.3 * inputs[:, 0] + 0.2 * inputs[:, 1]
     return inputs, output
 
 
@@ -58,19 +59,18 @@ def get_dataset():
 
 
 class KerasPremadeModelsTest(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(strategy_combinations_eager_data_fn())
     def test_linear_model(self, distribution, data_fn):
         with distribution.scope():
             model = linear.LinearModel()
             opt = gradient_descent.SGD(learning_rate=0.1)
-            model.compile(opt, 'mse')
+            model.compile(opt, "mse")
             if data_fn == get_numpy:
                 inputs, output = get_numpy()
                 hist = model.fit(inputs, output, epochs=5)
             else:
                 hist = model.fit(get_dataset(), epochs=5)
-            self.assertLess(hist.history['loss'][4], 0.2)
+            self.assertLess(hist.history["loss"][4], 0.2)
 
     @combinations.generate(strategy_combinations_eager_data_fn())
     def test_wide_deep_model(self, distribution, data_fn):
@@ -80,16 +80,14 @@ class KerasPremadeModelsTest(test.TestCase, parameterized.TestCase):
             wide_deep_model = wide_deep.WideDeepModel(linear_model, dnn_model)
             linear_opt = gradient_descent.SGD(learning_rate=0.05)
             dnn_opt = adagrad.Adagrad(learning_rate=0.1)
-            wide_deep_model.compile(
-                optimizer=[linear_opt, dnn_opt],
-                loss='mse')
+            wide_deep_model.compile(optimizer=[linear_opt, dnn_opt], loss="mse")
             if data_fn == get_numpy:
                 inputs, output = get_numpy()
                 hist = wide_deep_model.fit(inputs, output, epochs=5)
             else:
                 hist = wide_deep_model.fit(get_dataset(), epochs=5)
-            self.assertLess(hist.history['loss'][4], 0.2)
+            self.assertLess(hist.history["loss"][4], 0.2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

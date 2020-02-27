@@ -53,34 +53,35 @@ def multi_input_functional():
 @keras_parameterized.run_with_all_model_types
 @keras_parameterized.run_all_keras_modes
 class SimpleBiasTest(keras_parameterized.TestCase):
-
     def _get_simple_bias_model(self):
-        model = testing_utils.get_model_from_layers([testing_utils.Bias()],
-                                                    input_shape=(1,))
+        model = testing_utils.get_model_from_layers(
+            [testing_utils.Bias()], input_shape=(1,)
+        )
         model.compile(
             keras.optimizer_v2.gradient_descent.SGD(0.1),
-            'mae',
-            run_eagerly=testing_utils.should_run_eagerly())
+            "mae",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         return model
 
     def test_simple_bias_fit(self):
-        x = np.array([[0.], [1.], [2.]])
-        y = np.array([[0.5], [2.], [3.5]])
+        x = np.array([[0.0], [1.0], [2.0]])
+        y = np.array([[0.5], [2.0], [3.5]])
         model = self._get_simple_bias_model()
 
         history = model.fit(x, y, batch_size=3, epochs=5)
-        self.assertAllClose(history.history['loss'], [1., 0.9, 0.8, 0.7, 0.6])
+        self.assertAllClose(history.history["loss"], [1.0, 0.9, 0.8, 0.7, 0.6])
 
     def test_simple_bias_evaluate(self):
-        x = np.array([[0.], [1.], [2.]])
-        y = np.array([[1.], [3.], [5.]])
+        x = np.array([[0.0], [1.0], [2.0]])
+        y = np.array([[1.0], [3.0], [5.0]])
         model = self._get_simple_bias_model()
 
         loss = model.evaluate(x, y, batch_size=1)
-        self.assertAlmostEqual(loss, 2.)
+        self.assertAlmostEqual(loss, 2.0)
 
     def test_simple_bias_predict(self):
-        x = np.array([[0.], [1.], [2.]])
+        x = np.array([[0.0], [1.0], [2.0]])
         model = self._get_simple_bias_model()
 
         pred = model.predict(x, batch_size=1)
@@ -89,7 +90,6 @@ class SimpleBiasTest(keras_parameterized.TestCase):
 
 @keras_parameterized.run_all_keras_modes
 class MultipleInputTest(keras_parameterized.TestCase):
-
     def _get_multiple_input_model(self, subclassed=True):
         if subclassed:
             model = MultiInputSubclassed()
@@ -97,48 +97,49 @@ class MultipleInputTest(keras_parameterized.TestCase):
             model = multi_input_functional()
         model.compile(
             keras.optimizer_v2.gradient_descent.SGD(0.1),
-            'mae',
-            run_eagerly=testing_utils.should_run_eagerly())
+            "mae",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         return model
 
-    @parameterized.named_parameters(('subclassed', True), ('functional', False))
+    @parameterized.named_parameters(("subclassed", True), ("functional", False))
     def test_multiple_input_fit(self, subclassed):
         x = [
-            np.array([[1.], [2.], [3.]]),
-            np.array([[4.], [5.], [6.]]),
-            np.array([[7.], [8.], [9.]])
+            np.array([[1.0], [2.0], [3.0]]),
+            np.array([[4.0], [5.0], [6.0]]),
+            np.array([[7.0], [8.0], [9.0]]),
         ]
-        y = np.array([[12.5], [16.], [19.5]])
+        y = np.array([[12.5], [16.0], [19.5]])
 
         model = self._get_multiple_input_model(subclassed)
         history = model.fit(x, y, batch_size=3, epochs=5)
-        self.assertAllClose(history.history['loss'], [1., 0.9, 0.8, 0.7, 0.6])
+        self.assertAllClose(history.history["loss"], [1.0, 0.9, 0.8, 0.7, 0.6])
 
-    @parameterized.named_parameters(('subclassed', True), ('functional', False))
+    @parameterized.named_parameters(("subclassed", True), ("functional", False))
     def test_multiple_input_evaluate(self, subclassed):
         x = [
-            np.array([[1.], [2.], [3.]]),
-            np.array([[4.], [5.], [6.]]),
-            np.array([[7.], [8.], [9.]])
+            np.array([[1.0], [2.0], [3.0]]),
+            np.array([[4.0], [5.0], [6.0]]),
+            np.array([[7.0], [8.0], [9.0]]),
         ]
-        y = np.array([[13.], [17.], [21.]])
+        y = np.array([[13.0], [17.0], [21.0]])
 
         model = self._get_multiple_input_model(subclassed)
         loss = model.evaluate(x, y, batch_size=3)
-        self.assertAlmostEqual(loss, 2.)
+        self.assertAlmostEqual(loss, 2.0)
 
-    @parameterized.named_parameters(('subclassed', True), ('functional', False))
+    @parameterized.named_parameters(("subclassed", True), ("functional", False))
     def test_multiple_input_predict(self, subclassed):
         x = [
-            np.array([[1.], [2.], [3.]]),
-            np.array([[4.], [5.], [6.]]),
-            np.array([[7.], [8.], [9.]])
+            np.array([[1.0], [2.0], [3.0]]),
+            np.array([[4.0], [5.0], [6.0]]),
+            np.array([[7.0], [8.0], [9.0]]),
         ]
 
         model = self._get_multiple_input_model(subclassed)
         pred = model.predict(x, batch_size=1)
-        self.assertAllClose(pred, [[12.], [15.], [18.]])
+        self.assertAllClose(pred, [[12.0], [15.0], [18.0]])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

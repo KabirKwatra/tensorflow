@@ -33,7 +33,6 @@ from tensorflow.python.platform import test
 
 @keras_parameterized.run_all_keras_modes
 class MergeLayersTest(keras_parameterized.TestCase):
-
     def test_merge_add(self):
         i1 = keras.layers.Input(shape=(4, 5))
         i2 = keras.layers.Input(shape=(4, 5))
@@ -52,19 +51,20 @@ class MergeLayersTest(keras_parameterized.TestCase):
         self.assertEqual(out.shape, (2, 4, 5))
         self.assertAllClose(out, x1 + x2 + x3, atol=1e-4)
 
-        self.assertEqual(
-            add_layer.compute_mask([i1, i2, i3], [None, None, None]), None)
+        self.assertEqual(add_layer.compute_mask([i1, i2, i3], [None, None, None]), None)
         self.assertTrue(
             np.all(
                 K.eval(
-                    add_layer.compute_mask(
-                        [i1, i2], [K.variable(x1), K.variable(x2)]))))
+                    add_layer.compute_mask([i1, i2], [K.variable(x1), K.variable(x2)])
+                )
+            )
+        )
 
-        with self.assertRaisesRegexp(ValueError, '`mask` should be a list.'):
+        with self.assertRaisesRegexp(ValueError, "`mask` should be a list."):
             add_layer.compute_mask([i1, i2, i3], x1)
-        with self.assertRaisesRegexp(ValueError, '`inputs` should be a list.'):
+        with self.assertRaisesRegexp(ValueError, "`inputs` should be a list."):
             add_layer.compute_mask(i1, [None, None, None])
-        with self.assertRaisesRegexp(ValueError, ' should have the same length.'):
+        with self.assertRaisesRegexp(ValueError, " should have the same length."):
             add_layer.compute_mask([i1, i2, i3], [None, None])
 
     def test_merge_subtract(self):
@@ -84,23 +84,28 @@ class MergeLayersTest(keras_parameterized.TestCase):
         self.assertEqual(out.shape, (2, 4, 5))
         self.assertAllClose(out, x1 - x2, atol=1e-4)
 
-        self.assertEqual(subtract_layer.compute_mask(
-            [i1, i2], [None, None]), None)
+        self.assertEqual(subtract_layer.compute_mask([i1, i2], [None, None]), None)
         self.assertTrue(
             np.all(
                 K.eval(
                     subtract_layer.compute_mask(
-                        [i1, i2], [K.variable(x1), K.variable(x2)]))))
+                        [i1, i2], [K.variable(x1), K.variable(x2)]
+                    )
+                )
+            )
+        )
 
-        with self.assertRaisesRegexp(ValueError, '`mask` should be a list.'):
+        with self.assertRaisesRegexp(ValueError, "`mask` should be a list."):
             subtract_layer.compute_mask([i1, i2], x1)
-        with self.assertRaisesRegexp(ValueError, '`inputs` should be a list.'):
+        with self.assertRaisesRegexp(ValueError, "`inputs` should be a list."):
             subtract_layer.compute_mask(i1, [None, None])
-        with self.assertRaisesRegexp(ValueError,
-                                     'layer should be called on exactly 2 inputs'):
+        with self.assertRaisesRegexp(
+            ValueError, "layer should be called on exactly 2 inputs"
+        ):
             subtract_layer([i1, i2, i3])
-        with self.assertRaisesRegexp(ValueError,
-                                     'layer should be called on exactly 2 inputs'):
+        with self.assertRaisesRegexp(
+            ValueError, "layer should be called on exactly 2 inputs"
+        ):
             subtract_layer([i1])
 
     def test_merge_multiply(self):
@@ -176,22 +181,26 @@ class MergeLayersTest(keras_parameterized.TestCase):
         self.assertEqual(out.shape, (2, 8, 5))
         self.assertAllClose(out, np.concatenate([x1, x2], axis=1), atol=1e-4)
 
-        self.assertEqual(concat_layer.compute_mask(
-            [i1, i2], [None, None]), None)
+        self.assertEqual(concat_layer.compute_mask([i1, i2], [None, None]), None)
         self.assertTrue(
             np.all(
                 K.eval(
                     concat_layer.compute_mask(
-                        [i1, i2], [K.variable(x1), K.variable(x2)]))))
+                        [i1, i2], [K.variable(x1), K.variable(x2)]
+                    )
+                )
+            )
+        )
 
-        with self.assertRaisesRegexp(ValueError, '`mask` should be a list.'):
+        with self.assertRaisesRegexp(ValueError, "`mask` should be a list."):
             concat_layer.compute_mask([i1, i2], x1)
-        with self.assertRaisesRegexp(ValueError, '`inputs` should be a list.'):
+        with self.assertRaisesRegexp(ValueError, "`inputs` should be a list."):
             concat_layer.compute_mask(i1, [None, None])
-        with self.assertRaisesRegexp(ValueError, 'should have the same length'):
+        with self.assertRaisesRegexp(ValueError, "should have the same length"):
             concat_layer.compute_mask([i1, i2], [None])
-        with self.assertRaisesRegexp(ValueError,
-                                     'layer should be called on a list of inputs'):
+        with self.assertRaisesRegexp(
+            ValueError, "layer should be called on a list of inputs"
+        ):
             concat_layer(i1)
 
     def test_merge_dot(self):
@@ -227,13 +236,21 @@ class MergeLayersTest(keras_parameterized.TestCase):
 
     @parameterized.named_parameters(
         *tf_test_util.generate_combinations_with_testcase_name(
-            layer=[keras.layers.Add, keras.layers.Subtract,
-                   keras.layers.Multiply, keras.layers.Minimum,
-                   keras.layers.Maximum, keras.layers.Average,
-                   keras.layers.Concatenate]))
+            layer=[
+                keras.layers.Add,
+                keras.layers.Subtract,
+                keras.layers.Multiply,
+                keras.layers.Minimum,
+                keras.layers.Maximum,
+                keras.layers.Average,
+                keras.layers.Concatenate,
+            ]
+        )
+    )
     def test_merge_with_ragged_input(self, layer):
         ragged_data = ragged_factory_ops.constant(
-            [[1., 1., 1.], [1., 1.], [1., 1., 1., 1.]], ragged_rank=1)
+            [[1.0, 1.0, 1.0], [1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], ragged_rank=1
+        )
         dense_data = ragged_data.to_tensor()
         input1 = keras.Input(shape=(None,), ragged=True)
         input2 = keras.Input(shape=(None,), ragged=True)
@@ -241,7 +258,8 @@ class MergeLayersTest(keras_parameterized.TestCase):
         model = keras.models.Model(inputs=[input1, input2], outputs=out)
         out_ragged = model.predict([ragged_data, ragged_data], steps=1)
         out_ragged = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-            out_ragged).to_tensor()
+            out_ragged
+        ).to_tensor()
 
         input1 = keras.Input(shape=(None,))
         input2 = keras.Input(shape=(None,))
@@ -254,7 +272,6 @@ class MergeLayersTest(keras_parameterized.TestCase):
 
 @tf_test_util.run_all_in_graph_and_eager_modes
 class MergeLayersTestNoExecution(test.TestCase):
-
     def test_merge_elementwise_errors(self):
         i1 = keras.layers.Input(shape=(4, 5))
         i2 = keras.layers.Input(shape=(4, 6))
@@ -270,11 +287,11 @@ class MergeLayersTestNoExecution(test.TestCase):
     def test_concatenate_errors(self):
         i1 = keras.layers.Input(shape=(4, 5))
         i2 = keras.layers.Input(shape=(3, 5))
-        with self.assertRaisesRegexp(ValueError, 'inputs with matching shapes'):
+        with self.assertRaisesRegexp(ValueError, "inputs with matching shapes"):
             keras.layers.concatenate([i1, i2], axis=-1)
-        with self.assertRaisesRegexp(ValueError, 'called on a list'):
+        with self.assertRaisesRegexp(ValueError, "called on a list"):
             keras.layers.concatenate(i1, axis=-1)
-        with self.assertRaisesRegexp(ValueError, 'called on a list'):
+        with self.assertRaisesRegexp(ValueError, "called on a list"):
             keras.layers.concatenate([i1], axis=-1)
 
     def test_concatenate_with_partial_shape(self):
@@ -288,7 +305,7 @@ class MergeLayersTestNoExecution(test.TestCase):
         keras.layers.concatenate([i1, i2], axis=-1)
 
         # Different rank
-        with self.assertRaisesRegexp(ValueError, 'inputs with matching shapes'):
+        with self.assertRaisesRegexp(ValueError, "inputs with matching shapes"):
             keras.layers.concatenate([i1, i3], axis=-1)
 
         # Valid case with partial dimension information
@@ -299,10 +316,10 @@ class MergeLayersTestNoExecution(test.TestCase):
         keras.layers.concatenate([i1, i5], axis=1)
 
         # Mismatch in batch dimension.
-        with self.assertRaisesRegexp(ValueError, 'inputs with matching shapes'):
+        with self.assertRaisesRegexp(ValueError, "inputs with matching shapes"):
             keras.layers.concatenate([i1, i4], axis=-1)
 
-        with self.assertRaisesRegexp(ValueError, 'inputs with matching shapes'):
+        with self.assertRaisesRegexp(ValueError, "inputs with matching shapes"):
             keras.layers.concatenate([i1, i2, i4], axis=-1)
 
     def test_dot_errors(self):
@@ -346,8 +363,8 @@ class MergeLayersTestNoExecution(test.TestCase):
         self.assertListEqual(mask.shape.as_list(), [None, 4])
 
     def test_merge_add_dynamic_shape(self):
-        i1 = keras.Input(batch_shape=(4, None), dtype='float32')
-        i2 = keras.Input(batch_shape=(4, 5), dtype='float32')
+        i1 = keras.Input(batch_shape=(4, None), dtype="float32")
+        i2 = keras.Input(batch_shape=(4, 5), dtype="float32")
         layer = keras.layers.Add()
         o = layer([i1, i2])
         self.assertListEqual(o.shape.as_list(), [4, 5])
@@ -363,5 +380,5 @@ class MergeLayersTestNoExecution(test.TestCase):
         self.assertListEqual(mask.shape.as_list(), [None, 4])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
