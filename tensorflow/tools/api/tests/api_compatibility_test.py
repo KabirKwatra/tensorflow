@@ -23,7 +23,6 @@ incompatible changes are not allowed. You can run the test with
 "--update_goldens" flag set to "True" to update goldens when making changes to
 the public TF python API.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -34,12 +33,11 @@ import re
 import sys
 
 import six
-from six.moves import range
-import tensorflow as tf
-
 from google.protobuf import message
 from google.protobuf import text_format
+from six.moves import range
 
+import tensorflow as tf
 from tensorflow.python.lib.io import file_io
 from tensorflow.python.platform import resource_loader
 from tensorflow.python.platform import test
