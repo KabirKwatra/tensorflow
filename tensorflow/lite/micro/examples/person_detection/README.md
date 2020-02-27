@@ -1,22 +1,23 @@
 # Person detection example
 
 This example shows how you can use Tensorflow Lite to run a 250 kilobyte neural
-network to recognize people in images captured by a camera.  It is designed to
+network to recognize people in images captured by a camera. It is designed to
 run on systems with small amounts of memory such as microcontrollers and DSPs.
 
 ## Table of contents
--   [Getting started](#getting-started)
--   [Running on Arduino](#running-on-arduino)
--   [Running on ESP32](#running-on-esp32)
--   [Running on SparkFun Edge](#running-on-sparkfun-edge)
--   [Run the tests on a development machine](#run-the-tests-on-a-development-machine)
--   [Debugging image capture](#debugging-image-capture)
--   [Training your own model](#training-your-own-model)
+
+- [Getting started](#getting-started)
+- [Running on Arduino](#running-on-arduino)
+- [Running on ESP32](#running-on-esp32)
+- [Running on SparkFun Edge](#running-on-sparkfun-edge)
+- [Run the tests on a development machine](#run-the-tests-on-a-development-machine)
+- [Debugging image capture](#debugging-image-capture)
+- [Training your own model](#training-your-own-model)
 
 ## Running on Arduino
 
-The following instructions will help you build and deploy this sample
-to [Arduino](https://www.arduino.cc/) devices.
+The following instructions will help you build and deploy this sample to
+[Arduino](https://www.arduino.cc/) devices.
 
 The sample has been tested with the following device:
 
@@ -30,16 +31,16 @@ You will also need the following camera module:
 
 Connect the Arducam pins as follows:
 
-|Arducam pin name|Arduino pin name|
-|----------------|----------------|
-|CS|D7 (unlabelled, immediately to the right of D6)|
-|MOSI|D11|
-|MISO|D12|
-|SCK|D13|
-|GND|GND (either pin marked GND is fine)|
-|VCC|3.3 V|
-|SDA|A4|
-|SCL|A5|
+| Arducam pin name | Arduino pin name                                |
+| ---------------- | ----------------------------------------------- |
+| CS               | D7 (unlabelled, immediately to the right of D6) |
+| MOSI             | D11                                             |
+| MISO             | D12                                             |
+| SCK              | D13                                             |
+| GND              | GND (either pin marked GND is fine)             |
+| VCC              | 3.3 V                                           |
+| SDA              | A4                                              |
+| SCL              | A5                                              |
 
 ### Install the Arduino_TensorFlowLite library
 
@@ -55,15 +56,15 @@ Arduino library. To install it, open the Arduino library manager in
 In addition to the TensorFlow library, you'll also need to install two
 libraries:
 
-* The Arducam library, so our code can interface with the hardware
-* The JPEGDecoder library, so we can decode JPEG-encoded images
+- The Arducam library, so our code can interface with the hardware
+- The JPEGDecoder library, so we can decode JPEG-encoded images
 
 The Arducam Arduino library is available from GitHub at
-[https://github.com/ArduCAM/Arduino](https://github.com/ArduCAM/Arduino).
-To install it, download or clone the repository. Next, copy its `ArduCAM`
+[https://github.com/ArduCAM/Arduino](https://github.com/ArduCAM/Arduino). To
+install it, download or clone the repository. Next, copy its `ArduCAM`
 subdirectory into your `Arduino/libraries` directory. To find this directory on
-your machine, check the *Sketchbook location* in the Arduino IDE's
-*Preferences* window.
+your machine, check the _Sketchbook location_ in the Arduino IDE's _Preferences_
+window.
 
 After downloading the library, you'll need to edit one of its files to make sure
 it is configured for the Arducam Mini 2MP Plus. To do so, open the following
@@ -90,7 +91,7 @@ commented out, except for `#define OV2640_MINI_2MP_PLUS`, as so:
 Once you save the file, we're done configuring the Arducam library.
 
 Our next step is to install the JPEGDecoder library. We can do this from within
-the Arduino IDE. First, go to the *Manage Libraries...* option in the *Tools*
+the Arduino IDE. First, go to the _Manage Libraries..._ option in the _Tools_
 menu and search for `JPEGDecoder`. You should install version _1.8.0_ of the
 library.
 
@@ -118,10 +119,9 @@ Once you've saved the file, you are done installing libraries.
 
 ### Load and run the example
 
-Go to `File -> Examples`. You should see an
-example near the bottom of the list named `TensorFlowLite`. Select
-it and click `person_detection` to load the example. Connect your device, then
-build and upload the example.
+Go to `File -> Examples`. You should see an example near the bottom of the list
+named `TensorFlowLite`. Select it and click `person_detection` to load the
+example. Connect your device, then build and upload the example.
 
 To test the camera, start by pointing the device's camera at something that is
 definitely not a person, or just covering it up. The next time the blue LED
@@ -153,9 +153,9 @@ trades accuracy for small size. It works very well, but it isn't accurate 100%
 of the time.
 
 We can also see the results of inference via the Arduino Serial Monitor. To do
-this, open the *Serial Monitor* from the *Tools* menu. You'll see a detailed
-log of what is happening while our application runs. It's also interesting to
-check the *Show timestamp* box, so you can see how long each part of the process
+this, open the _Serial Monitor_ from the _Tools_ menu. You'll see a detailed log
+of what is happening while our application runs. It's also interesting to check
+the _Show timestamp_ box, so you can see how long each part of the process
 takes:
 
 ```
@@ -198,49 +198,49 @@ Follow the instructions of the
 to setup the toolchain and the ESP-IDF itself.
 
 The next steps assume that the
-[IDF environment variables are set](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-4-set-up-the-environment-variables) :
+[IDF environment variables are set](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-4-set-up-the-environment-variables)
+:
 
-*   The `IDF_PATH` environment variable is set
-*   `idf.py` and Xtensa-esp32 tools (e.g. `xtensa-esp32-elf-gcc`) are in `$PATH`
-*   `esp32-camera` should be downloaded in `comopnents/` dir of example as
-    explained in `Building the example`(below)
+- The `IDF_PATH` environment variable is set
+- `idf.py` and Xtensa-esp32 tools (e.g. `xtensa-esp32-elf-gcc`) are in `$PATH`
+- `esp32-camera` should be downloaded in `comopnents/` dir of example as
+  explained in `Building the example`(below)
 
 ### Generate the examples
 
-The example project can be generated with the following command: `make -f
-tensorflow/lite/micro/tools/make/Makefile TARGET=esp
-generate_person_detection_esp_project`
+The example project can be generated with the following command:
+`make -f tensorflow/lite/micro/tools/make/Makefile TARGET=esp generate_person_detection_esp_project`
 
 ### Building the example
 
-Go the the example project directory `cd
-tensorflow/lite/micro/tools/make/gen/esp_xtensa-esp32/prj/person_detection/esp-idf`
+Go the the example project directory
+`cd tensorflow/lite/micro/tools/make/gen/esp_xtensa-esp32/prj/person_detection/esp-idf`
 
 As the `person_detection` example requires an external component `esp32-camera`
 for functioning hence we will have to manually clone it in `components/`
-directory of the example with following command. `git clone
-https://github.com/espressif/esp32-camera.git components/esp32-camera`
+directory of the example with following command.
+`git clone https://github.com/espressif/esp32-camera.git components/esp32-camera`
 
 Then build with `idf.py` `idf.py build`
 
 ### Load and run the example
 
-To flash (replace `/dev/ttyUSB0` with the device serial port): `idf.py --port
-/dev/ttyUSB0 flash`
+To flash (replace `/dev/ttyUSB0` with the device serial port):
+`idf.py --port /dev/ttyUSB0 flash`
 
 Monitor the serial output: `idf.py --port /dev/ttyUSB0 monitor`
 
 Use `Ctrl+]` to exit.
 
-The previous two commands can be combined: `idf.py --port /dev/ttyUSB0 flash
-monitor`
+The previous two commands can be combined:
+`idf.py --port /dev/ttyUSB0 flash monitor`
 
 ## Running on SparkFun Edge
 
 The following instructions will help you build and deploy this sample on the
-[SparkFun Edge development board](https://sparkfun.com/products/15170).  This
-sample requires the Sparkfun Himax camera for the Sparkfun Edge board.  It is
-not available for purchase yet.
+[SparkFun Edge development board](https://sparkfun.com/products/15170). This
+sample requires the Sparkfun Himax camera for the Sparkfun Edge board. It is not
+available for purchase yet.
 
 If you're new to using this board, we recommend walking through the
 [AI on a microcontroller with TensorFlow Lite and SparkFun Edge](https://codelabs.developers.google.com/codelabs/sparkfun-tensorflow)
@@ -307,8 +307,10 @@ where you ran the commands. This is the file we'll be flashing to the device.
 
 Next, attach the board to your computer via a USB-to-serial adapter.
 
-**Note:** If you're using the [SparkFun Serial Basic Breakout](https://www.sparkfun.com/products/15096),
-you should [install the latest drivers](https://learn.sparkfun.com/tutorials/sparkfun-serial-basic-ch340c-hookup-guide#drivers-if-you-need-them)
+**Note:** If you're using the
+[SparkFun Serial Basic Breakout](https://www.sparkfun.com/products/15096), you
+should
+[install the latest drivers](https://learn.sparkfun.com/tutorials/sparkfun-serial-basic-ch340c-hookup-guide#drivers-if-you-need-them)
 before you continue.
 
 Once connected, assign the USB device name to an environment variable:
@@ -354,8 +356,8 @@ The binary should now be deployed to the device. Hit the button marked `RST` to
 reboot the board. You should see the device's four LEDs flashing in sequence.
 
 Debug information is logged by the board while the program is running. To view
-it, establish a serial connection to the board using a baud rate of `115200`.
-On OSX and Linux, the following command should work:
+it, establish a serial connection to the board using a baud rate of `115200`. On
+OSX and Linux, the following command should work:
 
 ```
 screen ${DEVICENAME} 115200
@@ -398,10 +400,11 @@ a model that's been compiled into the program, and then invoking the interpreter
 with the model and sample inputs.
 
 ## Debugging image capture
+
 When the sample is running, check the LEDs to determine whether the inference is
-running correctly.  If the red light is stuck on, it means there was an error
-communicating with the camera.  This is likely due to an incorrectly connected
-or broken camera.
+running correctly. If the red light is stuck on, it means there was an error
+communicating with the camera. This is likely due to an incorrectly connected or
+broken camera.
 
 During inference, the blue LED will toggle every time inference is complete. The
 orange LED indicates that no person was found, and the green LED indicates a
@@ -410,7 +413,6 @@ person was found. The red LED should never turn on, since it indicates an error.
 In order to view the captured image, set the DUMP_IMAGE define in main.cc.  This
 causes the board to log raw image info to the console. After the board has been
 flashed and reset, dump the log to a text file:
-
 
 ```
 screen -L -Logfile <dump file> ${DEVICENAME} 115200
