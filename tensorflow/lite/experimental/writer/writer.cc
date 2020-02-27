@@ -25,17 +25,17 @@ limitations under the License.
 #include "tensorflow/lite/model.h"
 
 int main(int argc, char* argv[]) {
-  if (argc != 3) {
-    fprintf(stderr, "Usage: %s input_file output_file\n", argv[0]);
-    return 1;
-  }
-  std::unique_ptr<tflite::FlatBufferModel> model =
-      tflite::FlatBufferModel::BuildFromFile(argv[1]);
-  std::unique_ptr<tflite::Interpreter> interpreter;
-  tflite::ops::builtin::BuiltinOpResolver builtin_op_resolver;
-  tflite::InterpreterBuilder(*model, builtin_op_resolver)(&interpreter);
-  tflite::SubgraphWriter writer(&interpreter->primary_subgraph());
-  writer.Write(argv[2]);
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s input_file output_file\n", argv[0]);
+        return 1;
+    }
+    std::unique_ptr<tflite::FlatBufferModel> model =
+        tflite::FlatBufferModel::BuildFromFile(argv[1]);
+    std::unique_ptr<tflite::Interpreter> interpreter;
+    tflite::ops::builtin::BuiltinOpResolver builtin_op_resolver;
+    tflite::InterpreterBuilder(*model, builtin_op_resolver)(&interpreter);
+    tflite::SubgraphWriter writer(&interpreter->primary_subgraph());
+    writer.Write(argv[2]);
 
-  return 0;
+    return 0;
 }
