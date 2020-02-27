@@ -40,9 +40,9 @@ class NodeDef;
 //             attribute.
 // The padded area is zero-filled.
 enum Padding {
-    VALID = 1,     // No padding.
-    SAME = 2,      // Input and output layers have the same size.
-    EXPLICIT = 3,  // Padding is explicitly specified
+  VALID = 1,     // No padding.
+  SAME = 2,      // Input and output layers have the same size.
+  EXPLICIT = 3,  // Padding is explicitly specified
 };
 
 // Returns an error if the padding attributes are invalid.
