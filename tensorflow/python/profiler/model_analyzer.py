@@ -23,8 +23,8 @@ from __future__ import print_function
 import sys
 
 import six
-
 from google.protobuf import message
+
 from tensorflow.core.profiler import tfprof_options_pb2
 from tensorflow.core.profiler import tfprof_output_pb2
 from tensorflow.python import _pywrap_tfprof as print_mdl

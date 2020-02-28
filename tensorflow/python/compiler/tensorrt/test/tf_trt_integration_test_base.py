@@ -13,12 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Utilities to test TF-TensorRT integration."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from collections import namedtuple
 import errno
 import gc
 import itertools
@@ -27,6 +25,7 @@ import re
 import shutil
 import tempfile
 import warnings
+from collections import namedtuple
 
 import numpy as np
 import six
