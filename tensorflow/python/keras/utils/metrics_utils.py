@@ -55,9 +55,10 @@ class Reduction(Enum):
           number of elements.
     * `WEIGHTED_MEAN`: Scalar sum of weighted values divided by sum of weights.
     """
-    SUM = 'sum'
-    SUM_OVER_BATCH_SIZE = 'sum_over_batch_size'
-    WEIGHTED_MEAN = 'weighted_mean'
+
+    SUM = "sum"
+    SUM_OVER_BATCH_SIZE = "sum_over_batch_size"
+    WEIGHTED_MEAN = "weighted_mean"
 
 
 def update_state_wrapper(update_state_fn):
@@ -78,13 +79,16 @@ def update_state_wrapper(update_state_fn):
         # replica.
 
         for weight in metric_obj.weights:
-            if (tpu.is_tpu_strategy(strategy) and
-                not strategy.extended.variable_created_in_scope(weight)
-                    and not distribution_strategy_context.in_cross_replica_context()):
+            if (
+                tpu.is_tpu_strategy(strategy)
+                and not strategy.extended.variable_created_in_scope(weight)
+                and not distribution_strategy_context.in_cross_replica_context()
+            ):
                 raise ValueError(
-                    'Trying to run metric.update_state in replica context when '
-                    'the metric was not created in TPUStrategy scope. '
-                    'Make sure the keras Metric is created in TPUstrategy scope. ')
+                    "Trying to run metric.update_state in replica context when "
+                    "the metric was not created in TPUStrategy scope. "
+                    "Make sure the keras Metric is created in TPUstrategy scope. "
+                )
 
         with tf_utils.graph_context_for_symbolic_tensors(*args, **kwargs):
             update_op = update_state_fn(*args, **kwargs)
@@ -130,8 +134,7 @@ def result_wrapper(result_fn):
             def merge_fn_wrapper(distribution, merge_fn, *args):
                 # We will get `PerReplica` merge function. Taking the first one as all
                 # are identical copies of the function that we had passed below.
-                result = distribution.experimental_local_results(merge_fn)[
-                    0](*args)
+                result = distribution.experimental_local_results(merge_fn)[0](*args)
 
                 # Wrapping result in identity so that control dependency between
                 # update_op from `update_state` and result works in case result returns
@@ -141,7 +144,8 @@ def result_wrapper(result_fn):
             # Wrapping result in merge_call. merge_call is used when we want to leave
             # replica mode and compute a value in cross replica mode.
             result_t = replica_context.merge_call(
-                merge_fn_wrapper, args=(result_fn,) + args)
+                merge_fn_wrapper, args=(result_fn,) + args
+            )
 
         # We are saving the result op here to be used in train/test execution
         # functions. This basically gives the result op that was generated with a
@@ -169,39 +173,40 @@ def weakmethod(method):
 
 def assert_thresholds_range(thresholds):
     if thresholds is not None:
-        invalid_thresholds = [
-            t for t in thresholds if t is None or t < 0 or t > 1]
+        invalid_thresholds = [t for t in thresholds if t is None or t < 0 or t > 1]
         if invalid_thresholds:
             raise ValueError(
-                'Threshold values must be in [0, 1]. Invalid values: {}'.format(
-                    invalid_thresholds))
+                "Threshold values must be in [0, 1]. Invalid values: {}".format(
+                    invalid_thresholds
+                )
+            )
 
 
 def parse_init_thresholds(thresholds, default_threshold=0.5):
     if thresholds is not None:
         assert_thresholds_range(to_list(thresholds))
-    thresholds = to_list(
-        default_threshold if thresholds is None else thresholds)
+    thresholds = to_list(default_threshold if thresholds is None else thresholds)
     return thresholds
 
 
 class ConfusionMatrix(Enum):
-    TRUE_POSITIVES = 'tp'
-    FALSE_POSITIVES = 'fp'
-    TRUE_NEGATIVES = 'tn'
-    FALSE_NEGATIVES = 'fn'
+    TRUE_POSITIVES = "tp"
+    FALSE_POSITIVES = "fp"
+    TRUE_NEGATIVES = "tn"
+    FALSE_NEGATIVES = "fn"
 
 
 class AUCCurve(Enum):
     """Type of AUC Curve (ROC or PR)."""
-    ROC = 'ROC'
-    PR = 'PR'
+
+    ROC = "ROC"
+    PR = "PR"
 
     @staticmethod
     def from_str(key):
-        if key in ('pr', 'PR'):
+        if key in ("pr", "PR"):
             return AUCCurve.PR
-        elif key in ('roc', 'ROC'):
+        elif key in ("roc", "ROC"):
             return AUCCurve.ROC
         else:
             raise ValueError('Invalid AUC curve value "%s".' % key)
@@ -221,31 +226,34 @@ class AUCSummationMethod(Enum):
     * 'majoring': Applies right summation for increasing intervals and left
       summation for decreasing intervals.
     """
-    INTERPOLATION = 'interpolation'
-    MAJORING = 'majoring'
-    MINORING = 'minoring'
+
+    INTERPOLATION = "interpolation"
+    MAJORING = "majoring"
+    MINORING = "minoring"
 
     @staticmethod
     def from_str(key):
-        if key in ('interpolation', 'Interpolation'):
+        if key in ("interpolation", "Interpolation"):
             return AUCSummationMethod.INTERPOLATION
-        elif key in ('majoring', 'Majoring'):
+        elif key in ("majoring", "Majoring"):
             return AUCSummationMethod.MAJORING
-        elif key in ('minoring', 'Minoring'):
+        elif key in ("minoring", "Minoring"):
             return AUCSummationMethod.MINORING
         else:
             raise ValueError('Invalid AUC summation method value "%s".' % key)
 
 
-def update_confusion_matrix_variables(variables_to_update,
-                                      y_true,
-                                      y_pred,
-                                      thresholds,
-                                      top_k=None,
-                                      class_id=None,
-                                      sample_weight=None,
-                                      multi_label=False,
-                                      label_weights=None):
+def update_confusion_matrix_variables(
+    variables_to_update,
+    y_true,
+    y_pred,
+    thresholds,
+    top_k=None,
+    class_id=None,
+    sample_weight=None,
+    multi_label=False,
+    label_weights=None,
+):
     """Returns op to update the given confusion matrix variables.
 
     For every pair of values in y_true and y_pred:
@@ -297,9 +305,11 @@ def update_confusion_matrix_variables(variables_to_update,
         `variables_to_update` contains invalid keys.
     """
     if multi_label and label_weights is not None:
-        raise ValueError('`label_weights` for multilabel data should be handled '
-                         'outside of `update_confusion_matrix_variables` when '
-                         '`multi_label` is True.')
+        raise ValueError(
+            "`label_weights` for multilabel data should be handled "
+            "outside of `update_confusion_matrix_variables` when "
+            "`multi_label` is True."
+        )
     if variables_to_update is None:
         return
     y_true = math_ops.cast(y_true, dtype=dtypes.float32)
@@ -310,21 +320,21 @@ def update_confusion_matrix_variables(variables_to_update,
         one_thresh = math_ops.equal(
             math_ops.cast(1, dtype=dtypes.int32),
             array_ops.rank(thresholds),
-            name='one_set_of_thresholds_cond')
+            name="one_set_of_thresholds_cond",
+        )
     else:
-        [y_pred,
-         y_true], _ = ragged_assert_compatible_and_get_flat_values([y_pred, y_true],
-                                                                   sample_weight)
+        [y_pred, y_true], _ = ragged_assert_compatible_and_get_flat_values(
+            [y_pred, y_true], sample_weight
+        )
         num_thresholds = len(to_list(thresholds))
         one_thresh = math_ops.cast(True, dtype=dtypes.bool)
 
-    if not any(
-            key for key in variables_to_update if key in list(ConfusionMatrix)):
+    if not any(key for key in variables_to_update if key in list(ConfusionMatrix)):
         raise ValueError(
-            'Please provide at least one valid confusion matrix '
+            "Please provide at least one valid confusion matrix "
             'variable to update. Valid variable key options are: "{}". '
-            'Received: "{}"'.format(
-                list(ConfusionMatrix), variables_to_update.keys()))
+            'Received: "{}"'.format(list(ConfusionMatrix), variables_to_update.keys())
+        )
 
     invalid_keys = [
         key for key in variables_to_update if key not in list(ConfusionMatrix)
@@ -332,25 +342,36 @@ def update_confusion_matrix_variables(variables_to_update,
     if invalid_keys:
         raise ValueError(
             'Invalid keys: {}. Valid variable key options are: "{}"'.format(
-                invalid_keys, list(ConfusionMatrix)))
+                invalid_keys, list(ConfusionMatrix)
+            )
+        )
 
-    with ops.control_dependencies([
-        check_ops.assert_greater_equal(
-            y_pred,
-            math_ops.cast(0.0, dtype=y_pred.dtype),
-            message='predictions must be >= 0'),
-        check_ops.assert_less_equal(
-            y_pred,
-            math_ops.cast(1.0, dtype=y_pred.dtype),
-            message='predictions must be <= 1')
-    ]):
+    with ops.control_dependencies(
+        [
+            check_ops.assert_greater_equal(
+                y_pred,
+                math_ops.cast(0.0, dtype=y_pred.dtype),
+                message="predictions must be >= 0",
+            ),
+            check_ops.assert_less_equal(
+                y_pred,
+                math_ops.cast(1.0, dtype=y_pred.dtype),
+                message="predictions must be <= 1",
+            ),
+        ]
+    ):
         if sample_weight is None:
             y_pred, y_true = tf_losses_utils.squeeze_or_expand_dimensions(
-                y_pred, y_true)
+                y_pred, y_true
+            )
         else:
-            y_pred, y_true, sample_weight = (
-                tf_losses_utils.squeeze_or_expand_dimensions(
-                    y_pred, y_true, sample_weight=sample_weight))
+            (
+                y_pred,
+                y_true,
+                sample_weight,
+            ) = tf_losses_utils.squeeze_or_expand_dimensions(
+                y_pred, y_true, sample_weight=sample_weight
+            )
     y_pred.shape.assert_is_compatible_with(y_true.shape)
 
     if top_k is not None:
@@ -366,19 +387,21 @@ def update_confusion_matrix_variables(variables_to_update,
     else:
         num_labels = gen_math_ops.Prod(input=pred_shape[1:], axis=0)
     thresh_label_tile = control_flow_ops.cond(
-        one_thresh, lambda: num_labels,
-        lambda: math_ops.cast(1, dtype=dtypes.int32))
+        one_thresh, lambda: num_labels, lambda: math_ops.cast(1, dtype=dtypes.int32)
+    )
 
     # Reshape predictions and labels, adding a dim for thresholding.
     if multi_label:
         predictions_extra_dim = array_ops.expand_dims(y_pred, 0)
         labels_extra_dim = array_ops.expand_dims(
-            math_ops.cast(y_true, dtype=dtypes.bool), 0)
+            math_ops.cast(y_true, dtype=dtypes.bool), 0
+        )
     else:
         # Flatten predictions and labels when not multilabel.
         predictions_extra_dim = array_ops.reshape(y_pred, [1, -1])
         labels_extra_dim = array_ops.reshape(
-            math_ops.cast(y_true, dtype=dtypes.bool), [1, -1])
+            math_ops.cast(y_true, dtype=dtypes.bool), [1, -1]
+        )
 
     # Tile the thresholds for every prediction.
     if multi_label:
@@ -392,8 +415,10 @@ def update_confusion_matrix_variables(variables_to_update,
 
     thresh_tiled = array_ops.tile(
         array_ops.reshape(
-            array_ops.constant(thresholds, dtype=dtypes.float32),
-            thresh_pretile_shape), array_ops.stack(thresh_tiles))
+            array_ops.constant(thresholds, dtype=dtypes.float32), thresh_pretile_shape
+        ),
+        array_ops.stack(thresh_tiles),
+    )
 
     # Tile the predictions for every threshold.
     preds_tiled = array_ops.tile(predictions_extra_dim, data_tiles)
@@ -406,29 +431,31 @@ def update_confusion_matrix_variables(variables_to_update,
 
     if sample_weight is not None:
         sample_weight = weights_broadcast_ops.broadcast_weights(
-            math_ops.cast(sample_weight, dtype=dtypes.float32), y_pred)
+            math_ops.cast(sample_weight, dtype=dtypes.float32), y_pred
+        )
         weights_tiled = array_ops.tile(
-            array_ops.reshape(sample_weight, thresh_tiles), data_tiles)
+            array_ops.reshape(sample_weight, thresh_tiles), data_tiles
+        )
     else:
         weights_tiled = None
 
     if label_weights is not None and not multi_label:
         label_weights = array_ops.expand_dims(label_weights, 0)
-        label_weights = weights_broadcast_ops.broadcast_weights(label_weights,
-                                                                y_pred)
+        label_weights = weights_broadcast_ops.broadcast_weights(label_weights, y_pred)
         label_weights_tiled = array_ops.tile(
-            array_ops.reshape(label_weights, thresh_tiles), data_tiles)
+            array_ops.reshape(label_weights, thresh_tiles), data_tiles
+        )
         if weights_tiled is None:
             weights_tiled = label_weights_tiled
         else:
-            weights_tiled = math_ops.multiply(
-                weights_tiled, label_weights_tiled)
+            weights_tiled = math_ops.multiply(weights_tiled, label_weights_tiled)
 
     update_ops = []
 
     def weighted_assign_add(label, pred, weights, var):
         label_and_pred = math_ops.cast(
-            math_ops.logical_and(label, pred), dtype=dtypes.float32)
+            math_ops.logical_and(label, pred), dtype=dtypes.float32
+        )
         if weights is not None:
             label_and_pred *= weights
         return var.assign_add(math_ops.reduce_sum(label_and_pred, 1))
@@ -442,23 +469,22 @@ def update_confusion_matrix_variables(variables_to_update,
 
     if update_fn or update_tn:
         pred_is_neg = math_ops.logical_not(pred_is_pos)
-        loop_vars[ConfusionMatrix.FALSE_NEGATIVES] = (
-            label_is_pos, pred_is_neg)
+        loop_vars[ConfusionMatrix.FALSE_NEGATIVES] = (label_is_pos, pred_is_neg)
 
     if update_fp or update_tn:
         label_is_neg = math_ops.logical_not(label_is_pos)
-        loop_vars[ConfusionMatrix.FALSE_POSITIVES] = (
-            label_is_neg, pred_is_pos)
+        loop_vars[ConfusionMatrix.FALSE_POSITIVES] = (label_is_neg, pred_is_pos)
         if update_tn:
-            loop_vars[ConfusionMatrix.TRUE_NEGATIVES] = (
-                label_is_neg, pred_is_neg)
+            loop_vars[ConfusionMatrix.TRUE_NEGATIVES] = (label_is_neg, pred_is_neg)
 
     for matrix_cond, (label, pred) in loop_vars.items():
 
         if matrix_cond in variables_to_update:
             update_ops.append(
-                weighted_assign_add(label, pred, weights_tiled,
-                                    variables_to_update[matrix_cond]))
+                weighted_assign_add(
+                    label, pred, weights_tiled, variables_to_update[matrix_cond]
+                )
+            )
 
     return control_flow_ops.group(update_ops)
 
@@ -478,7 +504,8 @@ def _filter_top_k(x, k):
     """
     _, top_k_idx = nn_ops.top_k(x, k, sorted=False)
     top_k_mask = math_ops.reduce_sum(
-        array_ops.one_hot(top_k_idx, array_ops.shape(x)[-1], axis=-1), axis=-2)
+        array_ops.one_hot(top_k_idx, array_ops.shape(x)[-1], axis=-1), axis=-2
+    )
     return x * top_k_mask + NEG_INF * (1 - top_k_mask)
 
 
@@ -500,15 +527,14 @@ def ragged_assert_compatible_and_get_flat_values(values, mask=None):
        are equal to the flat_values of the input arguments (if they were ragged).
     """
     if isinstance(values, list):
-        is_all_ragged = \
-            all(isinstance(rt, ragged_tensor.RaggedTensor) for rt in values)
-        is_any_ragged = \
-            any(isinstance(rt, ragged_tensor.RaggedTensor) for rt in values)
+        is_all_ragged = all(isinstance(rt, ragged_tensor.RaggedTensor) for rt in values)
+        is_any_ragged = any(isinstance(rt, ragged_tensor.RaggedTensor) for rt in values)
     else:
         is_all_ragged = isinstance(values, ragged_tensor.RaggedTensor)
         is_any_ragged = is_all_ragged
-    if (is_all_ragged and
-            ((mask is None) or isinstance(mask, ragged_tensor.RaggedTensor))):
+    if is_all_ragged and (
+        (mask is None) or isinstance(mask, ragged_tensor.RaggedTensor)
+    ):
         to_be_stripped = False
         if not isinstance(values, list):
             values = [values]
@@ -523,24 +549,25 @@ def ragged_assert_compatible_and_get_flat_values(values, mask=None):
         # if both are ragged sample_weights also should be ragged with same dims.
         if isinstance(mask, ragged_tensor.RaggedTensor):
             assertion_list_for_mask = ragged_util.assert_splits_match(
-                [nested_row_split_list[0], mask.nested_row_splits])
-            tmp = control_flow_ops.with_dependencies(assertion_list_for_mask,
-                                                     mask.flat_values)
+                [nested_row_split_list[0], mask.nested_row_splits]
+            )
+            tmp = control_flow_ops.with_dependencies(
+                assertion_list_for_mask, mask.flat_values
+            )
             mask = array_ops.expand_dims(tmp, -1)
 
         # values has at least 1 element.
         flat_values = []
         for value in values:
-            tmp = control_flow_ops.with_dependencies(assertion_list,
-                                                     value.flat_values)
+            tmp = control_flow_ops.with_dependencies(assertion_list, value.flat_values)
             flat_values.append(array_ops.expand_dims(tmp, -1))
 
         values = flat_values[0] if to_be_stripped else flat_values
 
     elif is_any_ragged:
-        raise TypeError('One of the inputs does not have acceptable types.')
+        raise TypeError("One of the inputs does not have acceptable types.")
     # values are empty or value are not ragged and mask is ragged.
     elif isinstance(mask, ragged_tensor.RaggedTensor):
-        raise TypeError('Ragged mask is not allowed with non-ragged inputs.')
+        raise TypeError("Ragged mask is not allowed with non-ragged inputs.")
 
     return values, mask
