@@ -32,23 +32,25 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.util.tf_export import keras_export
 
 
-WHITELIST_FORMATS = ('.bmp', '.gif', '.jpeg', '.jpg', '.png')
+WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
 
 
-@keras_export('keras.preprocessing.image.dataset_from_directory', v1=[])
-def dataset_from_directory(directory,
-                           labels='inferred',
-                           label_mode='int',
-                           class_names=None,
-                           color_mode='rgb',
-                           batch_size=32,
-                           image_size=(256, 256),
-                           shuffle=True,
-                           seed=None,
-                           validation_split=None,
-                           subset=None,
-                           interpolation='bilinear',
-                           follow_links=False):
+@keras_export("keras.preprocessing.image.dataset_from_directory", v1=[])
+def dataset_from_directory(
+    directory,
+    labels="inferred",
+    label_mode="int",
+    class_names=None,
+    color_mode="rgb",
+    batch_size=32,
+    image_size=(256, 256),
+    shuffle=True,
+    seed=None,
+    validation_split=None,
+    subset=None,
+    interpolation="bilinear",
+    follow_links=False,
+):
     """Generates a Dataset from image files in a directory.
 
     If your directory structure is:
@@ -143,33 +145,38 @@ def dataset_from_directory(directory,
         - if `color_mode` is `rgba`,
           there are 4 channel in the image tensors.
     """
-    if labels != 'inferred':
+    if labels != "inferred":
         if not isinstance(labels, (list, tuple)):
             raise ValueError(
-                '`labels` argument should be a list/tuple of integer labels, of '
-                'the same size as the number of image files in the target '
-                'directory. If you wish to infer the labels from the subdirectory '
+                "`labels` argument should be a list/tuple of integer labels, of "
+                "the same size as the number of image files in the target "
+                "directory. If you wish to infer the labels from the subdirectory "
                 'names in the target directory, pass `labels="inferred"`. '
-                'If you wish to get a dataset that only contains images '
-                '(no labels), pass `labels=None`.')
+                "If you wish to get a dataset that only contains images "
+                "(no labels), pass `labels=None`."
+            )
         if class_names:
-            raise ValueError('You can only pass `class_names` if the labels are '
-                             'inferred from the subdirectory names in the target '
-                             'directory (`labels="inferred"`).')
-    if label_mode not in {'int', 'categorical', 'binary', None}:
+            raise ValueError(
+                "You can only pass `class_names` if the labels are "
+                "inferred from the subdirectory names in the target "
+                'directory (`labels="inferred"`).'
+            )
+    if label_mode not in {"int", "categorical", "binary", None}:
         raise ValueError(
             '`label_mode` argument must be one of "int", "categorical", "binary", '
-            'or None. Received: %s' % (label_mode,))
-    if color_mode == 'rgb':
+            "or None. Received: %s" % (label_mode,)
+        )
+    if color_mode == "rgb":
         num_channels = 3
-    elif color_mode == 'rgba':
+    elif color_mode == "rgba":
         num_channels = 4
-    elif color_mode == 'grayscale':
+    elif color_mode == "grayscale":
         num_channels = 1
     else:
         raise ValueError(
             '`color_mode` must be one of {"rbg", "rgba", "grayscale"}. '
-            'Received: %s' % (color_mode,))
+            "Received: %s" % (color_mode,)
+        )
     interpolation = image_preprocessing.get_interpolation(interpolation)
 
     inferred_class_names = []
@@ -181,16 +188,17 @@ def dataset_from_directory(directory,
     else:
         if set(class_names) != set(inferred_class_names):
             raise ValueError(
-                'The `class_names` passed did not match the '
-                'names of the subdirectories of the target directory. '
-                'Expected: %s, but received: %s' %
-                (inferred_class_names, class_names))
+                "The `class_names` passed did not match the "
+                "names of the subdirectories of the target directory. "
+                "Expected: %s, but received: %s" % (inferred_class_names, class_names)
+            )
     class_indices = dict(zip(class_names, range(len(class_names))))
 
-    if label_mode == 'binary' and len(class_names) != 2:
+    if label_mode == "binary" and len(class_names) != 2:
         raise ValueError(
             'When passing `label_mode="binary", there must exactly 2 classes. '
-            'Found the following classes: %s' % (class_names,))
+            "Found the following classes: %s" % (class_names,)
+        )
 
     # Build an index of the images
     # in the different class subfolders.
@@ -199,28 +207,33 @@ def dataset_from_directory(directory,
     filenames = []
     for dirpath in (os.path.join(directory, subdir) for subdir in class_names):
         results.append(
-            pool.apply_async(list_labeled_images_in_directory,
-                             (dirpath, class_indices, follow_links)))
+            pool.apply_async(
+                list_labeled_images_in_directory, (dirpath, class_indices, follow_links)
+            )
+        )
     labels_list = []
     for res in results:
         partial_labels, partial_filenames = res.get()
         labels_list.append(partial_labels)
         filenames += partial_filenames
-    if labels != 'inferred':
+    if labels != "inferred":
         if len(labels) != len(filenames):
-            raise ValueError('Expected the lengths of `labels` to match the number '
-                             'of images in the target directory. len(labels) is %s '
-                             'while we found %s images in %s.' % (
-                                 len(labels), len(filenames), directory))
+            raise ValueError(
+                "Expected the lengths of `labels` to match the number "
+                "of images in the target directory. len(labels) is %s "
+                "while we found %s images in %s."
+                % (len(labels), len(filenames), directory)
+            )
     else:
         i = 0
-        labels = np.zeros((len(filenames),), dtype='int32')
+        labels = np.zeros((len(filenames),), dtype="int32")
         for partial_labels in labels_list:
-            labels[i:i + len(partial_labels)] = partial_labels
+            labels[i : i + len(partial_labels)] = partial_labels
             i += len(partial_labels)
 
-    print('Found %d images belonging to %d classes.' %
-          (len(filenames), len(class_names)))
+    print(
+        "Found %d images belonging to %d classes." % (len(filenames), len(class_names))
+    )
     pool.close()
     pool.join()
     image_paths = [os.path.join(directory, fname) for fname in filenames]
@@ -239,18 +252,21 @@ def dataset_from_directory(directory,
     if validation_split:
         if not 0 < validation_split < 1:
             raise ValueError(
-                '`validation_split` must be between 0 and 1, received: %s' %
-                (validation_split,))
+                "`validation_split` must be between 0 and 1, received: %s"
+                % (validation_split,)
+            )
         num_val_samples = int(validation_split * len(image_paths))
-        if subset == 'training':
+        if subset == "training":
             image_paths = image_paths[:-num_val_samples]
             labels = labels[:-num_val_samples]
-        elif subset == 'validation':
+        elif subset == "validation":
             image_paths = image_paths[-num_val_samples:]
             labels = labels[-num_val_samples:]
         else:
-            raise ValueError('`subset` must be either "training" '
-                             'or "validation", received: %s' % (subset,))
+            raise ValueError(
+                '`subset` must be either "training" '
+                'or "validation", received: %s' % (subset,)
+            )
     dataset = paths_and_labels_to_dataset(
         image_paths=image_paths,
         image_size=image_size,
@@ -258,7 +274,8 @@ def dataset_from_directory(directory,
         labels=labels,
         label_mode=label_mode,
         num_classes=len(class_names),
-        interpolation=interpolation)
+        interpolation=interpolation,
+    )
     if shuffle:
         # Shuffle locally at each iteration
         dataset = dataset.shuffle(buffer_size=batch_size * 8, seed=seed)
@@ -266,26 +283,29 @@ def dataset_from_directory(directory,
     return dataset
 
 
-def paths_and_labels_to_dataset(image_paths,
-                                image_size,
-                                num_channels,
-                                labels,
-                                label_mode,
-                                num_classes,
-                                interpolation):
+def paths_and_labels_to_dataset(
+    image_paths,
+    image_size,
+    num_channels,
+    labels,
+    label_mode,
+    num_classes,
+    interpolation,
+):
     """Constructs a dataset of images and labels."""
     # TODO(fchollet): consider making num_parallel_calls settable
     path_ds = dataset_ops.Dataset.from_tensor_slices(image_paths)
     img_ds = path_ds.map(
-        lambda x: path_to_image(x, image_size, num_channels, interpolation))
+        lambda x: path_to_image(x, image_size, num_channels, interpolation)
+    )
     if label_mode:
         label_ds = dataset_ops.Dataset.from_tensor_slices(labels)
-        if label_mode == 'binary':
+        if label_mode == "binary":
             label_ds = label_ds.map(
-                lambda x: array_ops.expand_dims(math_ops.cast(x, 'float32'), axis=-1))
-        elif label_mode == 'categorical':
-            label_ds = label_ds.map(
-                lambda x: array_ops.one_hot(x, num_classes))
+                lambda x: array_ops.expand_dims(math_ops.cast(x, "float32"), axis=-1)
+            )
+        elif label_mode == "categorical":
+            label_ds = label_ds.map(lambda x: array_ops.one_hot(x, num_classes))
         img_ds = dataset_ops.Dataset.zip((img_ds, label_ds))
     return img_ds
 
@@ -319,14 +339,12 @@ def list_labeled_images_in_directory(directory, class_indices, follow_links):
     for root, fname in valid_files:
         labels.append(class_indices[dirname])
         absolute_path = os.path.join(root, fname)
-        relative_path = os.path.join(
-            dirname, os.path.relpath(absolute_path, directory))
+        relative_path = os.path.join(dirname, os.path.relpath(absolute_path, directory))
         filenames.append(relative_path)
     return labels, filenames
 
 
 def path_to_image(path, image_size, num_channels, interpolation):
     img = io_ops.read_file(path)
-    img = image_ops.decode_image(
-        img, channels=num_channels, expand_animations=False)
+    img = image_ops.decode_image(img, channels=num_channels, expand_animations=False)
     return image_ops.resize_images_v2(img, image_size, method=interpolation)
