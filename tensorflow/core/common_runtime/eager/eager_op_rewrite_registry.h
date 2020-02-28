@@ -25,67 +25,65 @@ namespace tensorflow {
 // Eager op rewrites should inherit from this class and
 // implement the Run method.
 class EagerOpRewrite {
-public:
-    EagerOpRewrite(string name, string file, string line) {
-        debug_info_.name = name;
-        debug_info_.file = file;
-        debug_info_.line = line;
-    }
+ public:
+  EagerOpRewrite(string name, string file, string line) {
+    debug_info_.name = name;
+    debug_info_.file = file;
+    debug_info_.line = line;
+  }
 
-    virtual ~EagerOpRewrite() {}
+  virtual ~EagerOpRewrite() {}
 
-    // To be implemented by an Eager op rewrite pass.
-    virtual Status Run(EagerOperation* orig_op,
-                       std::unique_ptr<tensorflow::EagerOperation>* out_op) = 0;
+  // To be implemented by an Eager op rewrite pass.
+  virtual Status Run(EagerOperation* orig_op,
+                     std::unique_ptr<tensorflow::EagerOperation>* out_op) = 0;
 
-    // Holds information about the rewrite registration.
-    struct DebugInfo {
-        string name, file, line;
-    };
+  // Holds information about the rewrite registration.
+  struct DebugInfo {
+    string name, file, line;
+  };
 
-    // Returns information about the registered Eager op rewrite.
-    DebugInfo GetDebugInfo() const {
-        return debug_info_;
-    }
+  // Returns information about the registered Eager op rewrite.
+  DebugInfo GetDebugInfo() const { return debug_info_; }
 
-private:
-    DebugInfo debug_info_;
+ private:
+  DebugInfo debug_info_;
 };
 
 class EagerOpRewriteRegistry {
-public:
-    // Phases at which the Eager op rewrite pass should run.
-    // For now we only added PRE_EXECUTION. Expand as needed.
-    enum Phase {
-        PRE_EXECUTION = 0  // right before executing an eager op
-    };
+ public:
+  // Phases at which the Eager op rewrite pass should run.
+  // For now we only added PRE_EXECUTION. Expand as needed.
+  enum Phase {
+    PRE_EXECUTION = 0  // right before executing an eager op
+  };
 
-    // Add a rewrite pass to the registry.
-    // Only one rewrite pass is allowed per phase.
-    void Register(Phase phase, std::unique_ptr<EagerOpRewrite> pass);
+  // Add a rewrite pass to the registry.
+  // Only one rewrite pass is allowed per phase.
+  void Register(Phase phase, std::unique_ptr<EagerOpRewrite> pass);
 
-    // Run the rewrite pass registered for a given phase.
-    Status RunRewrite(Phase phase, EagerOperation* orig_op,
-                      std::unique_ptr<tensorflow::EagerOperation>* out_op);
+  // Run the rewrite pass registered for a given phase.
+  Status RunRewrite(Phase phase, EagerOperation* orig_op,
+                    std::unique_ptr<tensorflow::EagerOperation>* out_op);
 
-    // Returns the global registry of rewrite passes.
-    static EagerOpRewriteRegistry* Global();
+  // Returns the global registry of rewrite passes.
+  static EagerOpRewriteRegistry* Global();
 
-private:
-    static constexpr int32 kNumPhases = 1;
-    // Holds all the registered Eager op rewrites.
-    std::array<std::unique_ptr<EagerOpRewrite>, kNumPhases> rewrites_;
+ private:
+  static constexpr int32 kNumPhases = 1;
+  // Holds all the registered Eager op rewrites.
+  std::array<std::unique_ptr<EagerOpRewrite>, kNumPhases> rewrites_;
 };
 
 namespace eager_rewrite_registration {
 
 // This class is used to register a new Eager Op rewrite.
 class EagerRewriteRegistration {
-public:
-    EagerRewriteRegistration(EagerOpRewriteRegistry::Phase phase,
-                             std::unique_ptr<EagerOpRewrite> pass) {
-        EagerOpRewriteRegistry::Global()->Register(phase, std::move(pass));
-    }
+ public:
+  EagerRewriteRegistration(EagerOpRewriteRegistry::Phase phase,
+                           std::unique_ptr<EagerOpRewrite> pass) {
+    EagerOpRewriteRegistry::Global()->Register(phase, std::move(pass));
+  }
 };
 
 }  // namespace eager_rewrite_registration

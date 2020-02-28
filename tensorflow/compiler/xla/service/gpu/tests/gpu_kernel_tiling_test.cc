@@ -26,27 +26,27 @@ namespace gpu {
 namespace {
 
 class GpuKernelTilingTest : public GpuCodegenTest {
-protected:
-    GpuKernelTilingTest() {}
+ protected:
+  GpuKernelTilingTest() {}
 
-    // Most tests in this file want to skip layout assignment, but a few need it
-    // enabled.
-    HloModuleConfig ConfigWithLayoutAssignment() {
-        return GetModuleConfigForTest();
-    }
+  // Most tests in this file want to skip layout assignment, but a few need it
+  // enabled.
+  HloModuleConfig ConfigWithLayoutAssignment() {
+    return GetModuleConfigForTest();
+  }
 
-    HloModuleConfig ConfigWithoutLayoutAssignment() {
-        HloModuleConfig config;
-        auto debug_options = HloTestBase::GetDebugOptionsForTest();
-        // Disable layout_assignment to use the preassigned layouts.
-        debug_options.add_xla_disable_hlo_passes("layout-assignment");
-        config.set_debug_options(debug_options);
-        return config;
-    }
+  HloModuleConfig ConfigWithoutLayoutAssignment() {
+    HloModuleConfig config;
+    auto debug_options = HloTestBase::GetDebugOptionsForTest();
+    // Disable layout_assignment to use the preassigned layouts.
+    debug_options.add_xla_disable_hlo_passes("layout-assignment");
+    config.set_debug_options(debug_options);
+    return config;
+  }
 };
 
 TEST_F(GpuKernelTilingTest, UnnestedTransposeWithProperDimensionsTiled) {
-    const char *const kHloString = R"(
+  const char *const kHloString = R"(
     HloModule unnested_transpose_1
 
     ENTRY unnested_transpose_1 {
@@ -54,17 +54,17 @@ TEST_F(GpuKernelTilingTest, UnnestedTransposeWithProperDimensionsTiled) {
       ROOT copy1 = f16[32,3,64]{1,0,2} copy(para0)
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is generated.
-    //
-    // We must enable layout assignment in order for this test to work correctly.
-    // AlgebraicSimplifier removes copy1; it's added back by layout assignment,
-    // which respects the module's entry computation layout.  But if we don't run
-    // layout assignment...well, nobody else adds the copy back.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithLayoutAssignment())
-        .ValueOrDie();
+  // Check that a call to llvm.nvvm.barrier0 is generated.
+  //
+  // We must enable layout assignment in order for this test to work correctly.
+  // AlgebraicSimplifier removes copy1; it's added back by layout assignment,
+  // which respects the module's entry computation layout.  But if we don't run
+  // layout assignment...well, nobody else adds the copy back.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithLayoutAssignment())
+          .ValueOrDie();
 
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @copy
 ; CHECK: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -91,13 +91,13 @@ TEST_F(GpuKernelTilingTest, UnnestedTransposeWithSmallDimensionsNotTiled) {
       ROOT copy1 = f16[2,3,64]{1,0,2} copy(para0)
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is not generated.  As in
-    // UnnestedTransposeWithProperDimensionsTiled, we must run layout assignment
-    // here.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is not generated.  As in
+  // UnnestedTransposeWithProperDimensionsTiled, we must run layout assignment
+  // here.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @copy
 ; CHECK-NOT: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -120,15 +120,15 @@ TEST_F(GpuKernelTilingTest, UnnestedTransposeC128TypeRun) {
       ROOT copy1 = c128[65,65]{0,1} copy(para0)
     })";
 
-    // With the current implementation for the available hardwares, we bail out
-    // from the tiled transpose implementation at the last minute. Instead of
-    // checking the transpose is not tiled, we only check the module compiled and
-    // run in this test.
-    EXPECT_TRUE(RunAndCompareNoHloPasses(kHloString, ErrorSpec{0.0}));
+  // With the current implementation for the available hardwares, we bail out
+  // from the tiled transpose implementation at the last minute. Instead of
+  // checking the transpose is not tiled, we only check the module compiled and
+  // run in this test.
+  EXPECT_TRUE(RunAndCompareNoHloPasses(kHloString, ErrorSpec{0.0}));
 }
 
 TEST_F(GpuKernelTilingTest, SimpleFusionWithTransposeTiled) {
-    const char *const kHloString = R"(
+  const char *const kHloString = R"(
     HloModule multiple_output_fusion_1
     fused_computation.1 {
       param0 = f32[4,5,6,7,8]{4,3,2,1,0} parameter(0)
@@ -142,11 +142,11 @@ TEST_F(GpuKernelTilingTest, SimpleFusionWithTransposeTiled) {
         calls=fused_computation.1
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -182,11 +182,11 @@ TEST_F(GpuKernelTilingTest, MultipleOutputFusionWithOnePossibleTransposeTiled) {
         fusion(para0,para1), kind=kLoop, calls=fused_computation.1
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -223,11 +223,11 @@ TEST_F(GpuKernelTilingTest,
         fusion(para0,para1), kind=kLoop, calls=fused_computation.1
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is not generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is not generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK-NOT: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -256,11 +256,11 @@ TEST_F(GpuKernelTilingTest, TransposedInputWithUserReverseNotTiled) {
         calls=fused_computation.1
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is not generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is not generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK-NOT: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -289,11 +289,11 @@ TEST_F(GpuKernelTilingTest, TransposedInputWithUserBitcastNotTiled) {
         kind=kLoop, calls=fused_computation
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is not generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is not generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK-NOT: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -330,11 +330,11 @@ TEST_F(GpuKernelTilingTest, TransposedInputWithoutUnsafeUseTiled) {
         kind=kLoop, calls=fused_computation
     })";
 
-    // Check that a call to llvm.nvvm.barrier0 is generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that a call to llvm.nvvm.barrier0 is generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK: call void @llvm.amdgcn.s.barrier()
 ; CHECK: }
@@ -367,11 +367,11 @@ TEST_F(GpuKernelTilingTest, ColumnReductionWithPowerOf2OutputElementsUnrolled) {
     ROOT reduce = f32[512]{0} reduce(arg1_conv, constant0), dimensions={0}, to_apply=reduction
   })";
 
-    // Check that two calls to llvm.nvvm.atomic are generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that two calls to llvm.nvvm.atomic are generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ;
 ; CHECK-LABEL: atomic_op_loop_body{{[0-9]*}}.atomic_op_loop_body{{[0-9]*}}_crit_edge:
@@ -431,11 +431,11 @@ TEST_F(GpuKernelTilingTest,
       calls=fused_computation
   })";
 
-    // Check that one call to llvm.nvvm.atomic is generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that one call to llvm.nvvm.atomic is generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ;
 ; CHECK-LABEL: atomic_op_loop_body{{.*}}:
@@ -491,11 +491,11 @@ TEST_F(GpuKernelTilingTest, ColumnReductionMOFUnrolled) {
       fusion(arg1, arg2), kind=kInput, calls=fused_computation
   })";
 
-    // Check that four calls to llvm.nvvm.atomic are generated.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that four calls to llvm.nvvm.atomic are generated.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ;
 ; CHECK-LABEL: atomic_op_loop_body{{[0-9]*}}.atomic_op_loop_body{{[0-9]*}}_crit_edge:
@@ -553,11 +553,11 @@ TEST_F(GpuKernelTilingTest, ColumnReductionWithLayoutChangeTiled) {
         dimensions={1,6,7}, to_apply=reduction0
     })";
 
-    // Check that the kernel is tiled by looking for llvm.nvvm.atomic.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that the kernel is tiled by looking for llvm.nvvm.atomic.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @
 ; CHECK-LABEL: atomic_op_loop_body{{.*}}:
 ; CHECK: %[[fadd:.*]] = fadd float %{{.*}}, %{{.*}}
@@ -593,11 +593,11 @@ TEST_F(GpuKernelTilingTest, RowReductionWithLayoutChangeTiled) {
         to_apply=reduction0
     })";
 
-    // Check that the kernel is tiled by looking for llvm.nvvm.shfl.sync.down.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that the kernel is tiled by looking for llvm.nvvm.shfl.sync.down.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @reduce
 ; CHECK: call i32 @llvm.amdgcn.ds.bpermute
 ; CHECK: }
@@ -631,11 +631,11 @@ TEST_F(GpuKernelTilingTest,
         to_apply=reduction0
     })";
 
-    // Check that the kernel is tiled by looking for llvm.nvvm.atomic.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that the kernel is tiled by looking for llvm.nvvm.atomic.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @reduce
 ; CHECK-LABEL: atomic_op_loop_body{{.*}}:
 ; CHECK: %[[fadd:.*]] = fadd float %{{.*}}, %{{.*}}
@@ -685,11 +685,11 @@ TEST_F(GpuKernelTilingTest, ColumnReductionSmallTileSizeX) {
     ROOT tuple.102 = (f32[2]{0}, f32[2]{0}) tuple(reduce.139, reduce.140.clone.1)
   })";
 
-    // Check that no loop is generated for reduction.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that no loop is generated for reduction.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @fusion
 ; CHECK-NOT: reduce.0.loop_header
 ; CHECK: }
@@ -721,11 +721,11 @@ TEST_F(GpuKernelTilingTest, RowReductionWithSmallDimensionNotTiled) {
         to_apply=reduction0
     })";
 
-    // Check that the kernel is not tiled by looking for llvm.nvvm.shfl.sync.down.
-    auto hlo_module =
-        ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
-        .ValueOrDie();
-    auto expected_ir = is_built_with_rocm_ ? R"(
+  // Check that the kernel is not tiled by looking for llvm.nvvm.shfl.sync.down.
+  auto hlo_module =
+      ParseAndReturnVerifiedModule(kHloString, ConfigWithoutLayoutAssignment())
+          .ValueOrDie();
+  auto expected_ir = is_built_with_rocm_ ? R"(
 ; CHECK-LABEL: define amdgpu_kernel void @reduce
 ; CHECK-NOT: call i32 @llvm.amdgcn.ds.bpermute
 ; CHECK: }
@@ -758,16 +758,16 @@ TEST_F(GpuKernelTilingTest, RowReductionRequiring64BitIndex) {
     ROOT out = f32[] reduce(parameter, init_value), dimensions={0}, to_apply=Sum
   }
   )";
-    auto hlo_module = ParseAndReturnVerifiedModule(kHloString).ValueOrDie();
-    auto expected_ir = R"(
+  auto hlo_module = ParseAndReturnVerifiedModule(kHloString).ValueOrDie();
+  auto expected_ir = R"(
 ; CHECK: i64
   )";
-    CompileAndVerifyIr(std::move(hlo_module), expected_ir,
-                       /*match_optimized_ir=*/true);
+  CompileAndVerifyIr(std::move(hlo_module), expected_ir,
+                     /*match_optimized_ir=*/true);
 }
 
 TEST_F(GpuKernelTilingTest, ColumnReductionVectorization) {
-    const char *const kHloString = R"(
+  const char *const kHloString = R"(
 HloModule column_reduce_powerof2
 
 reduction {
@@ -782,16 +782,16 @@ ENTRY kernel_entry {
     ROOT reduce = f32[512]{0} reduce(arg1, constant0), dimensions={0}, to_apply=reduction
 }
   )";
-    auto expected_ir = R"(
+  auto expected_ir = R"(
 ; CHECK: load <2 x float>, <2 x float>
   )";
-    auto hlo_module = ParseAndReturnVerifiedModule(kHloString).ValueOrDie();
-    CompileAndVerifyIr(std::move(hlo_module), expected_ir,
-                       /*match_optimized_ir=*/true);
+  auto hlo_module = ParseAndReturnVerifiedModule(kHloString).ValueOrDie();
+  CompileAndVerifyIr(std::move(hlo_module), expected_ir,
+                     /*match_optimized_ir=*/true);
 }
 
 TEST_F(GpuKernelTilingTest, Hlo021CopyNoOobAccess) {
-    const char *const kHloString = R"(
+  const char *const kHloString = R"(
 HloModule primitive_computation_svd.38
 
 %fused_computation (param_0.7: f32[3,29,29], param_1.10: pred[3]) -> f32[3,29,29] {
@@ -811,12 +811,12 @@ ENTRY %primitive_computation_svd.38 (constant_5: f32[3,29,29], fusion.3: pred[3]
 }
   )";
 
-    // Test against the OOB read due to a ptxas bug.
-    EXPECT_TRUE(RunAndCompareNoHloPasses(kHloString, ErrorSpec{0.001}));
+  // Test against the OOB read due to a ptxas bug.
+  EXPECT_TRUE(RunAndCompareNoHloPasses(kHloString, ErrorSpec{0.001}));
 }
 
 TEST_F(GpuKernelTilingTest, RowReductionCorrectShmemUsage) {
-    const char *const kHloString = R"(
+  const char *const kHloString = R"(
   HloModule RowReduce
 
   Sum {
@@ -831,12 +831,12 @@ TEST_F(GpuKernelTilingTest, RowReductionCorrectShmemUsage) {
     ROOT reduce = f32[] reduce(parameter, init_value), dimensions={0}, to_apply=Sum
   }
   )";
-    auto hlo_module = ParseAndReturnVerifiedModule(kHloString).ValueOrDie();
-    auto expected_ir = R"(
+  auto hlo_module = ParseAndReturnVerifiedModule(kHloString).ValueOrDie();
+  auto expected_ir = R"(
 ; CHECK: shared_cache_{{[0-9]*}} = private addrspace({{[0-9]*}}) global [1 x [32 x float]]
   )";
-    CompileAndVerifyIr(std::move(hlo_module), expected_ir,
-                       /*match_optimized_ir=*/true);
+  CompileAndVerifyIr(std::move(hlo_module), expected_ir,
+                     /*match_optimized_ir=*/true);
 }
 
 }  // namespace

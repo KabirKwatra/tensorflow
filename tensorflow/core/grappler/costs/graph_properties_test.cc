@@ -41,9 +41,9 @@ namespace {
 const char kTestDataPath[] = "core/grappler/costs/graph_properties_testdata";
 
 REGISTER_OP("TestOpWithNoInferenceFn")
-.Input("x: float")
-.Output("y: float")
-.Doc(R"doc(
+    .Input("x: float")
+    .Output("y: float")
+    .Doc(R"doc(
 Test op with no Inference Function registered.
 x: input
 y: output

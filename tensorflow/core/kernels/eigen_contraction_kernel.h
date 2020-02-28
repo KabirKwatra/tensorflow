@@ -79,43 +79,43 @@ struct gemm_pack_colmajor_block;
 // gemm_pack_colmajor_block for ColMajor storage order.
 template <typename Scalar, typename IndexType, typename DataMapper>
 struct gemm_pack_colmajor_block<Scalar, IndexType, DataMapper,
-/*DataMapperStorageOrder*/ ColMajor> {
-    typedef typename internal::packet_traits<Scalar>::type Packet;
-    typedef typename DataMapper::LinearMapper LinearMapper;
+                                /*DataMapperStorageOrder*/ ColMajor> {
+  typedef typename internal::packet_traits<Scalar>::type Packet;
+  typedef typename DataMapper::LinearMapper LinearMapper;
 
-    enum { PacketSize = internal::packet_traits<Scalar>::size };
+  enum { PacketSize = internal::packet_traits<Scalar>::size };
 
-    EIGEN_DONT_INLINE
-    void operator()(Scalar* block, const DataMapper& data_mapper, IndexType rows,
-                    IndexType cols) {
-        const IndexType unrolled_rows = rows - 4 * PacketSize;
-        const IndexType vectorized_rows = rows - PacketSize;
+  EIGEN_DONT_INLINE
+  void operator()(Scalar* block, const DataMapper& data_mapper, IndexType rows,
+                  IndexType cols) {
+    const IndexType unrolled_rows = rows - 4 * PacketSize;
+    const IndexType vectorized_rows = rows - PacketSize;
 
-        for (IndexType col = 0; col < cols; ++col) {
-            LinearMapper lm = data_mapper.getLinearMapper(0, col);
+    for (IndexType col = 0; col < cols; ++col) {
+      LinearMapper lm = data_mapper.getLinearMapper(0, col);
 
-            IndexType row = 0;
-            // Give compiler a strong possibility to unroll the loop.
-            for (; row <= unrolled_rows; row += 4 * PacketSize) {
-                for (IndexType j = 0; j < 4; ++j) {
-                    const Packet p = lm.template loadPacket<Packet>(row + j * PacketSize);
-                    internal::pstoreu(block + j * PacketSize, p);
-                }
-                block += 4 * PacketSize;
-            }
-            // Process remaining rows with packets.
-            for (; row <= vectorized_rows; row += PacketSize) {
-                const Packet p = lm.template loadPacket<Packet>(row);
-                internal::pstoreu(block, p);
-                block += PacketSize;
-            }
-            // Finalize with coefficients.
-            for (; row < rows; ++row) {
-                *block = lm(row);
-                ++block;
-            }
+      IndexType row = 0;
+      // Give compiler a strong possibility to unroll the loop.
+      for (; row <= unrolled_rows; row += 4 * PacketSize) {
+        for (IndexType j = 0; j < 4; ++j) {
+          const Packet p = lm.template loadPacket<Packet>(row + j * PacketSize);
+          internal::pstoreu(block + j * PacketSize, p);
         }
+        block += 4 * PacketSize;
+      }
+      // Process remaining rows with packets.
+      for (; row <= vectorized_rows; row += PacketSize) {
+        const Packet p = lm.template loadPacket<Packet>(row);
+        internal::pstoreu(block, p);
+        block += PacketSize;
+      }
+      // Finalize with coefficients.
+      for (; row < rows; ++row) {
+        *block = lm(row);
+        ++block;
+      }
     }
+  }
 };
 
 #endif  // TENSORFLOW_USE_CUSTOM_CONTRACTION_KERNEL
@@ -131,125 +131,125 @@ struct mkldnn_gemm_kernel;
 template <typename IndexType, typename OutputMapper, bool ConjugateLhs,
           bool ConjugateRhs>
 struct mkldnn_gemm_kernel</*Scalar*/ float, IndexType, OutputMapper,
-           ConjugateLhs, ConjugateRhs> {
-    static_assert(!ConjugateLhs, "MKL-DNN kernel doesn't support ConjugateLhs");
-    static_assert(!ConjugateRhs, "MKL-DNN kernel doesn't support ConjugateRhs");
+                          ConjugateLhs, ConjugateRhs> {
+  static_assert(!ConjugateLhs, "MKL-DNN kernel doesn't support ConjugateLhs");
+  static_assert(!ConjugateRhs, "MKL-DNN kernel doesn't support ConjugateRhs");
 
-    static constexpr int kComputeStrideFromBlockDimensions = -1;
+  static constexpr int kComputeStrideFromBlockDimensions = -1;
 
-    using LhsScalar = float;
-    using RhsScalar = float;
-    using ResScalar = float;
+  using LhsScalar = float;
+  using RhsScalar = float;
+  using ResScalar = float;
 
-    EIGEN_DONT_INLINE
-    void operator()(const OutputMapper& output, const LhsScalar* blockA,
-                    const RhsScalar* blockB, const IndexType rows,
-                    const IndexType depth, const IndexType cols, float alpha,
-                    float beta, int ldA = kComputeStrideFromBlockDimensions,
-                    int ldB = kComputeStrideFromBlockDimensions,
-                    char transposeA = 'N', char transposeB = 'N') {
-        static const int max_index = (std::numeric_limits<int>::max)();
+  EIGEN_DONT_INLINE
+  void operator()(const OutputMapper& output, const LhsScalar* blockA,
+                  const RhsScalar* blockB, const IndexType rows,
+                  const IndexType depth, const IndexType cols, float alpha,
+                  float beta, int ldA = kComputeStrideFromBlockDimensions,
+                  int ldB = kComputeStrideFromBlockDimensions,
+                  char transposeA = 'N', char transposeB = 'N') {
+    static const int max_index = (std::numeric_limits<int>::max)();
 
-        eigen_assert(max_index >= rows);
-        eigen_assert(max_index >= cols);
-        eigen_assert(max_index >= depth);
-        eigen_assert(max_index >= output.stride());
+    eigen_assert(max_index >= rows);
+    eigen_assert(max_index >= cols);
+    eigen_assert(max_index >= depth);
+    eigen_assert(max_index >= output.stride());
 
-        const int m = static_cast<int>(rows);
-        const int n = static_cast<int>(cols);
-        const int k = static_cast<int>(depth);
+    const int m = static_cast<int>(rows);
+    const int n = static_cast<int>(cols);
+    const int k = static_cast<int>(depth);
 
-        ldA = ldA == kComputeStrideFromBlockDimensions ? m : ldA;
-        ldB = ldB == kComputeStrideFromBlockDimensions ? k : ldB;
-        const int ldC = static_cast<int>(output.stride());
+    ldA = ldA == kComputeStrideFromBlockDimensions ? m : ldA;
+    ldB = ldB == kComputeStrideFromBlockDimensions ? k : ldB;
+    const int ldC = static_cast<int>(output.stride());
 
-        mkldnn_status_t st = mkldnn_sgemm(
-                                 &transposeA, &transposeB, &m, &n, &k, &alpha, blockA, &ldA, blockB,
-                                 &ldB, &beta, const_cast<ResScalar*>(output.data()), &ldC);
-        eigen_assert(st == 0);
+    mkldnn_status_t st = mkldnn_sgemm(
+        &transposeA, &transposeB, &m, &n, &k, &alpha, blockA, &ldA, blockB,
+        &ldB, &beta, const_cast<ResScalar*>(output.data()), &ldC);
+    eigen_assert(st == 0);
 
 #if DYNAMIC_ANNOTATIONS_ENABLED == 1 || defined(MEMORY_SANITIZER)
-        for (IndexType col = 0; col < cols; ++col) {
-            ResScalar* row_base = &output(0, col);
-            TF_ANNOTATE_MEMORY_IS_INITIALIZED(row_base, sizeof(ResScalar) * rows);
-        }
+    for (IndexType col = 0; col < cols; ++col) {
+      ResScalar* row_base = &output(0, col);
+      TF_ANNOTATE_MEMORY_IS_INITIALIZED(row_base, sizeof(ResScalar) * rows);
+    }
 #endif
 
-        // eigen_assert is a no-op in optimized mode so we add these to avoid
-        // compiler's unused-variable errors.
-        EIGEN_UNUSED_VARIABLE(max_index);
-        EIGEN_UNUSED_VARIABLE(st);
-    }
+    // eigen_assert is a no-op in optimized mode so we add these to avoid
+    // compiler's unused-variable errors.
+    EIGEN_UNUSED_VARIABLE(max_index);
+    EIGEN_UNUSED_VARIABLE(st);
+  }
 };
 
 template <typename IndexType, typename OutputMapper, bool ConjugateLhs = false,
           bool ConjugateRhs = false>
 struct mkldnn_gemm_s8u8s32_kernel {
-    static_assert(!ConjugateLhs, "MKL-DNN kernel doesn't support ConjugateLhs");
-    static_assert(!ConjugateRhs, "MKL-DNN kernel doesn't support ConjugateRhs");
+  static_assert(!ConjugateLhs, "MKL-DNN kernel doesn't support ConjugateLhs");
+  static_assert(!ConjugateRhs, "MKL-DNN kernel doesn't support ConjugateRhs");
 
-    static constexpr int kComputeStrideFromBlockDimensions = -1;
+  static constexpr int kComputeStrideFromBlockDimensions = -1;
 
-    using LhsScalar = Eigen::QInt8;
-    using RhsScalar = Eigen::QUInt8;
-    using ResScalar = Eigen::QInt32;
+  using LhsScalar = Eigen::QInt8;
+  using RhsScalar = Eigen::QUInt8;
+  using ResScalar = Eigen::QInt32;
 
-    EIGEN_DONT_INLINE
-    void operator()(const OutputMapper& output, const LhsScalar* blockA,
-                    const RhsScalar* blockB, const IndexType rows,
-                    const IndexType depth, const IndexType cols, float alpha,
-                    float beta, int ldA = kComputeStrideFromBlockDimensions,
-                    int ldB = kComputeStrideFromBlockDimensions,
-                    char transposeA = 'N', char transposeB = 'N') {
-        static const int max_index = (std::numeric_limits<int>::max)();
+  EIGEN_DONT_INLINE
+  void operator()(const OutputMapper& output, const LhsScalar* blockA,
+                  const RhsScalar* blockB, const IndexType rows,
+                  const IndexType depth, const IndexType cols, float alpha,
+                  float beta, int ldA = kComputeStrideFromBlockDimensions,
+                  int ldB = kComputeStrideFromBlockDimensions,
+                  char transposeA = 'N', char transposeB = 'N') {
+    static const int max_index = (std::numeric_limits<int>::max)();
 
-        eigen_assert(max_index >= rows);
-        eigen_assert(max_index >= cols);
-        eigen_assert(max_index >= depth);
-        eigen_assert(max_index >= output.stride());
+    eigen_assert(max_index >= rows);
+    eigen_assert(max_index >= cols);
+    eigen_assert(max_index >= depth);
+    eigen_assert(max_index >= output.stride());
 
-        const int m = static_cast<int>(rows);
-        const int n = static_cast<int>(cols);
-        const int k = static_cast<int>(depth);
+    const int m = static_cast<int>(rows);
+    const int n = static_cast<int>(cols);
+    const int k = static_cast<int>(depth);
 
-        ldA = ldA == kComputeStrideFromBlockDimensions ? m : ldA;
-        ldB = ldB == kComputeStrideFromBlockDimensions ? k : ldB;
-        const int ldC = static_cast<int>(output.stride());
+    ldA = ldA == kComputeStrideFromBlockDimensions ? m : ldA;
+    ldB = ldB == kComputeStrideFromBlockDimensions ? k : ldB;
+    const int ldC = static_cast<int>(output.stride());
 
-        // Currently we support only symmetric quantization with zero point at 0.
-        const int8_t ao = 0;
-        const int8_t bo = 0;
+    // Currently we support only symmetric quantization with zero point at 0.
+    const int8_t ao = 0;
+    const int8_t bo = 0;
 
-        // Don't add any offset to the result C.
-        const char offsetc = 'F';
-        const int32_t co = 0;
+    // Don't add any offset to the result C.
+    const char offsetc = 'F';
+    const int32_t co = 0;
 
-        const auto* A = reinterpret_cast<const int8_t*>(blockA);
-        const auto* B = reinterpret_cast<const uint8_t*>(blockB);
-        auto* C = reinterpret_cast<int32_t*>(const_cast<ResScalar*>(output.data()));
+    const auto* A = reinterpret_cast<const int8_t*>(blockA);
+    const auto* B = reinterpret_cast<const uint8_t*>(blockB);
+    auto* C = reinterpret_cast<int32_t*>(const_cast<ResScalar*>(output.data()));
 
-        mkldnn_status_t st =
-            mkldnn_gemm_s8u8s32(&transposeA, &transposeB, &offsetc,  //
-                                &m, &n, &k,                          //
-                                &alpha,                              //
-                                A, &ldA, &ao,                        //
-                                B, &ldB, &bo,                        //
-                                &beta,                               //
-                                C, &ldC, &co);
-        eigen_assert(st == 0);
+    mkldnn_status_t st =
+        mkldnn_gemm_s8u8s32(&transposeA, &transposeB, &offsetc,  //
+                            &m, &n, &k,                          //
+                            &alpha,                              //
+                            A, &ldA, &ao,                        //
+                            B, &ldB, &bo,                        //
+                            &beta,                               //
+                            C, &ldC, &co);
+    eigen_assert(st == 0);
 
 #if DYNAMIC_ANNOTATIONS_ENABLED == 1 || defined(MEMORY_SANITIZER)
-        for (IndexType col = 0; col < cols; ++col) {
-            ResScalar* row_base = &output(0, col);
-            TF_ANNOTATE_MEMORY_IS_INITIALIZED(row_base, sizeof(ResScalar) * rows);
-        }
+    for (IndexType col = 0; col < cols; ++col) {
+      ResScalar* row_base = &output(0, col);
+      TF_ANNOTATE_MEMORY_IS_INITIALIZED(row_base, sizeof(ResScalar) * rows);
+    }
 #endif
 
-        // eigen_assert is a no-op in optimized mode so we add these to avoid
-        // compiler's unused-variable errors.
-        EIGEN_UNUSED_VARIABLE(max_index);
-        EIGEN_UNUSED_VARIABLE(st);
-    }
+    // eigen_assert is a no-op in optimized mode so we add these to avoid
+    // compiler's unused-variable errors.
+    EIGEN_UNUSED_VARIABLE(max_index);
+    EIGEN_UNUSED_VARIABLE(st);
+  }
 };
 
 // For mkldnn_sgemm having the right dimensions (especially for small matrices)
@@ -257,120 +257,108 @@ struct mkldnn_gemm_s8u8s32_kernel {
 // TODO(ezhulenev): Do better heuristics.
 template <typename StorageIndex, int sharding_type>
 class TensorContractionBlocking<float, float, float, StorageIndex,
-          sharding_type> {
-    // For now mkldnn has only mkldnn_sgemm (gemm for floats).
-    using Scalar = float;
+                                sharding_type> {
+  // For now mkldnn has only mkldnn_sgemm (gemm for floats).
+  using Scalar = float;
 
-    // Adjust the block sizes to work well with mkldnn kernels.
+  // Adjust the block sizes to work well with mkldnn kernels.
 
-    // Multiply default choice of block size along M and N dimensions.
-    // TODO(ezhulenev): Explore if this can work in general (kScaleM=2.0 worked
-    // well in some of models).
-    static constexpr float kScaleM = 1.5;
-    static constexpr float kScaleN = 1.0;
+  // Multiply default choice of block size along M and N dimensions.
+  // TODO(ezhulenev): Explore if this can work in general (kScaleM=2.0 worked
+  // well in some of models).
+  static constexpr float kScaleM = 1.5;
+  static constexpr float kScaleN = 1.0;
 
-    // Mkldnn Avx/Avx2/Avx512 unroll factors are: 8/16/48.
-    static const StorageIndex kUnrollM = 48;
+  // Mkldnn Avx/Avx2/Avx512 unroll factors are: 8/16/48.
+  static const StorageIndex kUnrollM = 48;
 
-    // Mkldnn Avx/Avx2/Avx512 unroll factors are: 6/6/8.
-    static const StorageIndex kUnrollN = 24;
+  // Mkldnn Avx/Avx2/Avx512 unroll factors are: 6/6/8.
+  static const StorageIndex kUnrollN = 24;
 
-public:
-    TensorContractionBlocking(StorageIndex k, StorageIndex m, StorageIndex n,
-                              StorageIndex num_threads = 1)
-        : kc_(k), mc_(m), nc_(n) {
-        // 1. Compute block sizes using default Eigen heuristics.
-        if (sharding_type == ShardByCol) {
-            computeProductBlockingSizes<Scalar, Scalar, 1>(kc_, mc_, nc_,
-                    num_threads);
-        } else {
-            computeProductBlockingSizes<Scalar, Scalar, 1>(kc_, nc_, mc_,
-                    num_threads);
-        }
-
-        // If dimensions do not pass basic sanity checks return immediately.
-        if (kc_ <= 0 || mc_ <= 0 || nc_ <= 0) return;
-
-        // If we are using default Eigen gebp kernel there is no need to adjust the
-        // block sizes for MKL-DNN.
-        if (!UseCustomContractionKernels()) return;
-
-        // 2. And refine them to work well with mkldnn sgemm.
-        mc_ = (std::min)(
-                  m, Eigen::divup(static_cast<StorageIndex>(mc_ * kScaleM), kUnrollM) *
-                  kUnrollM);
-        nc_ = (std::min)(
-                  n, Eigen::divup(static_cast<StorageIndex>(nc_ * kScaleN), kUnrollN) *
-                  kUnrollN);
-
-        // We split Kth dimensions in roughly equal slices.
-        StorageIndex target_k_slices =
-            (std::max)(StorageIndex(1), Eigen::divup(k, kc_));
-        StorageIndex packet_size = internal::packet_traits<Scalar>::size;
-        if (packet_size < 8) packet_size = 8;
-        StorageIndex target_bk =
-            Eigen::divup(k / target_k_slices, packet_size) * packet_size;
-        kc_ = (std::min)(k, target_bk);
+ public:
+  TensorContractionBlocking(StorageIndex k, StorageIndex m, StorageIndex n,
+                            StorageIndex num_threads = 1)
+      : kc_(k), mc_(m), nc_(n) {
+    // 1. Compute block sizes using default Eigen heuristics.
+    if (sharding_type == ShardByCol) {
+      computeProductBlockingSizes<Scalar, Scalar, 1>(kc_, mc_, nc_,
+                                                     num_threads);
+    } else {
+      computeProductBlockingSizes<Scalar, Scalar, 1>(kc_, nc_, mc_,
+                                                     num_threads);
     }
 
-    EIGEN_ALWAYS_INLINE StorageIndex kc() const {
-        return kc_;
-    }
-    EIGEN_ALWAYS_INLINE StorageIndex mc() const {
-        return mc_;
-    }
-    EIGEN_ALWAYS_INLINE StorageIndex nc() const {
-        return nc_;
-    }
+    // If dimensions do not pass basic sanity checks return immediately.
+    if (kc_ <= 0 || mc_ <= 0 || nc_ <= 0) return;
 
-private:
-    StorageIndex kc_;
-    StorageIndex mc_;
-    StorageIndex nc_;
+    // If we are using default Eigen gebp kernel there is no need to adjust the
+    // block sizes for MKL-DNN.
+    if (!UseCustomContractionKernels()) return;
+
+    // 2. And refine them to work well with mkldnn sgemm.
+    mc_ = (std::min)(
+        m, Eigen::divup(static_cast<StorageIndex>(mc_ * kScaleM), kUnrollM) *
+               kUnrollM);
+    nc_ = (std::min)(
+        n, Eigen::divup(static_cast<StorageIndex>(nc_ * kScaleN), kUnrollN) *
+               kUnrollN);
+
+    // We split Kth dimensions in roughly equal slices.
+    StorageIndex target_k_slices =
+        (std::max)(StorageIndex(1), Eigen::divup(k, kc_));
+    StorageIndex packet_size = internal::packet_traits<Scalar>::size;
+    if (packet_size < 8) packet_size = 8;
+    StorageIndex target_bk =
+        Eigen::divup(k / target_k_slices, packet_size) * packet_size;
+    kc_ = (std::min)(k, target_bk);
+  }
+
+  EIGEN_ALWAYS_INLINE StorageIndex kc() const { return kc_; }
+  EIGEN_ALWAYS_INLINE StorageIndex mc() const { return mc_; }
+  EIGEN_ALWAYS_INLINE StorageIndex nc() const { return nc_; }
+
+ private:
+  StorageIndex kc_;
+  StorageIndex mc_;
+  StorageIndex nc_;
 };
 
 template <typename StorageIndex, int sharding_type>
 class TensorContractionBlocking<Eigen::QInt32, Eigen::QInt8, Eigen::QUInt8,
-          StorageIndex, sharding_type> {
-    // TODO(ezhulenev): Define proper gebp_traits in Eigen for quantized types?
+                                StorageIndex, sharding_type> {
+  // TODO(ezhulenev): Define proper gebp_traits in Eigen for quantized types?
 
-    // Default Eigen block heuristics for `QInt8xQUInt8 -> QInt32` are wrong.
-    // Mostly because gebp_traits are not correctly defined. But we know that we
-    // are going to use s8u8s32_gemm from MKL-DNN, so we use float heuristics, and
-    // adjust them to work well with MKL-DNN.
-    using LhsScalar = Eigen::QInt8;
-    using RhsScalar = Eigen::QUInt8;
-    using ResScalar = Eigen::QInt32;
+  // Default Eigen block heuristics for `QInt8xQUInt8 -> QInt32` are wrong.
+  // Mostly because gebp_traits are not correctly defined. But we know that we
+  // are going to use s8u8s32_gemm from MKL-DNN, so we use float heuristics, and
+  // adjust them to work well with MKL-DNN.
+  using LhsScalar = Eigen::QInt8;
+  using RhsScalar = Eigen::QUInt8;
+  using ResScalar = Eigen::QInt32;
 
-    // Multiply default choice of block size along M, N and K dimensions.
-    static constexpr float kScaleM = 1.5;
-    static constexpr float kScaleN = 1.5;
-    static constexpr float kScaleK = 1.5;
+  // Multiply default choice of block size along M, N and K dimensions.
+  static constexpr float kScaleM = 1.5;
+  static constexpr float kScaleN = 1.5;
+  static constexpr float kScaleK = 1.5;
 
-public:
-    TensorContractionBlocking(StorageIndex k, StorageIndex m, StorageIndex n,
-                              StorageIndex num_threads = 1)
-        : kc_(k), mc_(m), nc_(n) {
-        // Each dimension is a multiple of 32 (fits into _m256i).
-        mc_ = (std::min)(m, static_cast<StorageIndex>(192));
-        nc_ = (std::min)(n, static_cast<StorageIndex>(288));
-        kc_ = (std::min)(k, static_cast<StorageIndex>(320));
-    }
+ public:
+  TensorContractionBlocking(StorageIndex k, StorageIndex m, StorageIndex n,
+                            StorageIndex num_threads = 1)
+      : kc_(k), mc_(m), nc_(n) {
+    // Each dimension is a multiple of 32 (fits into _m256i).
+    mc_ = (std::min)(m, static_cast<StorageIndex>(192));
+    nc_ = (std::min)(n, static_cast<StorageIndex>(288));
+    kc_ = (std::min)(k, static_cast<StorageIndex>(320));
+  }
 
-    EIGEN_ALWAYS_INLINE StorageIndex kc() const {
-        return kc_;
-    }
-    EIGEN_ALWAYS_INLINE StorageIndex mc() const {
-        return mc_;
-    }
-    EIGEN_ALWAYS_INLINE StorageIndex nc() const {
-        return nc_;
-    }
+  EIGEN_ALWAYS_INLINE StorageIndex kc() const { return kc_; }
+  EIGEN_ALWAYS_INLINE StorageIndex mc() const { return mc_; }
+  EIGEN_ALWAYS_INLINE StorageIndex nc() const { return nc_; }
 
-private:
-    StorageIndex kc_;
-    StorageIndex mc_;
-    StorageIndex nc_;
+ private:
+  StorageIndex kc_;
+  StorageIndex mc_;
+  StorageIndex nc_;
 };
 
 // If the Lhs or Rhs Tensor expressions are already evaluated and have access to
@@ -378,29 +366,29 @@ private:
 // underlying memory buffer and pass them directly to Gemm.
 template <typename Scalar, typename StorageIndex>
 struct ColMajorBlock {
-    bool is_direct_access;
+  bool is_direct_access;
 
-    // Valid iff `is_direct_access == false`
-    Scalar* packed_data;
+  // Valid iff `is_direct_access == false`
+  Scalar* packed_data;
 
-    // Valid iff `is_direct_access == true`
-    Scalar* raw_data;
-    StorageIndex stride;
-    char transpose;
+  // Valid iff `is_direct_access == true`
+  Scalar* raw_data;
+  StorageIndex stride;
+  char transpose;
 };
 
 template <typename DataMapper>
 struct DirectColMajorAccess {
-    enum { value = false };
+  enum { value = false };
 
-    template <typename Scalar, typename StorageIndex>
-    static bool block(const typename DataMapper::SubMapper& data_mapper,
-                      const StorageIndex rows, const StorageIndex cols,
-                      const StorageIndex num_kernels,
-                      ColMajorBlock<Scalar, StorageIndex>* block) {
-        eigen_assert(false && "Not implemented");
-        return false;
-    }
+  template <typename Scalar, typename StorageIndex>
+  static bool block(const typename DataMapper::SubMapper& data_mapper,
+                    const StorageIndex rows, const StorageIndex cols,
+                    const StorageIndex num_kernels,
+                    ColMajorBlock<Scalar, StorageIndex>* block) {
+    eigen_assert(false && "Not implemented");
+    return false;
+  }
 };
 
 // If we have an access to raw memory of the contraction input, we can safely
@@ -503,21 +491,21 @@ REGISTER_DIRECT_COL_MAJOR_ACCESS(TENSOR_RESHAPE);
 template <typename ResScalar, typename LhsScalar, typename RhsScalar,
           typename StorageIndex, typename OutputMapper>
 struct GemmKernelProvider {
-    enum { Defined = 0 };
-    using GemmKernel = void;
+  enum { Defined = 0 };
+  using GemmKernel = void;
 };
 
 template <typename StorageIndex, typename OutputMapper>
 struct GemmKernelProvider<float, float, float, StorageIndex, OutputMapper> {
-    enum { Defined = 1 };
-    using GemmKernel = mkldnn_gemm_kernel<float, StorageIndex, OutputMapper>;
+  enum { Defined = 1 };
+  using GemmKernel = mkldnn_gemm_kernel<float, StorageIndex, OutputMapper>;
 };
 
 template <typename StorageIndex, typename OutputMapper>
 struct GemmKernelProvider<Eigen::QInt32, Eigen::QInt8, Eigen::QUInt8,
-           StorageIndex, OutputMapper> {
-    enum { Defined = 1 };
-    using GemmKernel = mkldnn_gemm_s8u8s32_kernel<StorageIndex, OutputMapper>;
+                          StorageIndex, OutputMapper> {
+  enum { Defined = 1 };
+  using GemmKernel = mkldnn_gemm_s8u8s32_kernel<StorageIndex, OutputMapper>;
 };
 
 // NOTE: 'std::enable_if' doesn't work for template specializations. See
@@ -907,7 +895,7 @@ struct GemmKernelProvider<Eigen::QInt32, Eigen::QInt8, Eigen::QUInt8,
 
 REGISTER_TENSOR_CONTRACTION_KERNEL_WITH_FALLBACK(float, float, float);
 REGISTER_TENSOR_CONTRACTION_KERNEL_NO_FALLBACK(Eigen::QInt32, Eigen::QInt8,
-        Eigen::QUInt8);
+                                               Eigen::QUInt8);
 
 #undef REGISTER_TENSOR_CONTRACTION_KERNEL
 

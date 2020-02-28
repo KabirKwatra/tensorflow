@@ -19,16 +19,16 @@ limitations under the License.
 namespace tensorflow {
 
 REGISTER_OP("_ScopedAllocator")
-.Output("output: T")
-.Attr("shapes: list(shape)")
-.Attr("shape: shape")
-.Attr("T: type")
-.Attr("sa_name: string")
-.Attr("id: int")
-.Attr("expected_call_count: int")
-.SetIsStateful()
-.SetShapeFn(shape_inference::ExplicitShape)
-.Doc(R"doc(
+    .Output("output: T")
+    .Attr("shapes: list(shape)")
+    .Attr("shape: shape")
+    .Attr("T: type")
+    .Attr("sa_name: string")
+    .Attr("id: int")
+    .Attr("expected_call_count: int")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::ExplicitShape)
+    .Doc(R"doc(
 Allocates a mutable tensor that becomes available to appropriately annotated
 downstream Ops as backing store for their output tensor allocations via the
 ScopedAllocatorMgr.

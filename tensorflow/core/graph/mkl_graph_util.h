@@ -47,41 +47,41 @@ static const MklTfTensorOrdering kTensorOrdering = TENSORS_CONTIGUOUS;
 
 // Get index of MetaData tensor from index 'n' of Data tensor.
 inline int DataIndexToMetaDataIndex(int n, int total_tensors) {
-    if (kTensorOrdering == MklTfTensorOrdering::TENSORS_INTERLEAVED) {
-        // For interleaved ordering, Mkl tensor follows immediately after
-        // Tensorflow tensor.
-        return n + 1;
-    } else {
-        CHECK_EQ(kTensorOrdering, MklTfTensorOrdering::TENSORS_CONTIGUOUS);
-        // For contiguous ordering, Mkl tensor is n+total_tensors / 2 away.
-        return n + total_tensors / 2;
-    }
+  if (kTensorOrdering == MklTfTensorOrdering::TENSORS_INTERLEAVED) {
+    // For interleaved ordering, Mkl tensor follows immediately after
+    // Tensorflow tensor.
+    return n + 1;
+  } else {
+    CHECK_EQ(kTensorOrdering, MklTfTensorOrdering::TENSORS_CONTIGUOUS);
+    // For contiguous ordering, Mkl tensor is n+total_tensors / 2 away.
+    return n + total_tensors / 2;
+  }
 }
 
 int inline GetTensorDataIndex(int n, int total_tensors) {
-    if (kTensorOrdering == MklTfTensorOrdering::TENSORS_INTERLEAVED) {
-        return 2 * n;  // index corresponding to nth input/output tensor
-    } else {
-        CHECK_EQ(kTensorOrdering, MklTfTensorOrdering::TENSORS_CONTIGUOUS);
-        return n;
-    }
+  if (kTensorOrdering == MklTfTensorOrdering::TENSORS_INTERLEAVED) {
+    return 2 * n;  // index corresponding to nth input/output tensor
+  } else {
+    CHECK_EQ(kTensorOrdering, MklTfTensorOrdering::TENSORS_CONTIGUOUS);
+    return n;
+  }
 }
 
 int inline GetTensorMetaDataIndex(int n, int total_tensors) {
-    // Get index for TensorData first and then use mapping function
-    // to get TensorMetaData index from TensorData index.
-    int tidx = GetTensorDataIndex(n, total_tensors);
-    return DataIndexToMetaDataIndex(tidx, total_tensors);
+  // Get index for TensorData first and then use mapping function
+  // to get TensorMetaData index from TensorData index.
+  int tidx = GetTensorDataIndex(n, total_tensors);
+  return DataIndexToMetaDataIndex(tidx, total_tensors);
 }
 
 // check if the control between src and dst nodes already exists
 bool inline DoesControlEdgeExist(const Node* src, const Node* dst) {
-    for (const Edge* edge : src->out_edges()) {
-        if (edge->IsControlEdge() && edge->dst() == dst) {
-            return true;
-        }
+  for (const Edge* edge : src->out_edges()) {
+    if (edge->IsControlEdge() && edge->dst() == dst) {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 namespace mkl_op_registry {
@@ -113,13 +113,13 @@ static const char* const kMklEagerOpPrefix = "_MklEager";
 // Get the name of Mkl op from original TensorFlow op
 // We prefix 'Mkl' to the original op to get Mkl op.
 inline string GetMklOpName(const string& name) {
-    return string(kMklOpPrefix) + name;
+  return string(kMklOpPrefix) + name;
 }
 
 // Get the name of Mkl Eager op from original TensorFlow op
 // We prefix 'MklEager' to the original op to get Mkl Eager op.
 inline string GetMklEagerOpName(const string& name) {
-    return string(kMklEagerOpPrefix) + name;
+  return string(kMklEagerOpPrefix) + name;
 }
 
 // Check whether opname with type T is registered as MKL operator
@@ -130,38 +130,38 @@ inline string GetMklEagerOpName(const string& name) {
 // @return: true if opname is registered as Mkl-layout dependent op;
 // false otherwise
 static inline bool IsMklLayoutDependentOp(const string& op_name, DataType T) {
-    string kernel = KernelsRegisteredForOp(op_name);
+  string kernel = KernelsRegisteredForOp(op_name);
 
-    // Restrict quantized ops to QUINT8 and QINT8 for now
-    if (kernel.find(kMklQuantizedOpLabelPattern) != string::npos) {
-        return (T == DT_QUINT8 || T == DT_QINT8 || T == DT_QINT32);
-    }
+  // Restrict quantized ops to QUINT8 and QINT8 for now
+  if (kernel.find(kMklQuantizedOpLabelPattern) != string::npos) {
+    return (T == DT_QUINT8 || T == DT_QINT8 || T == DT_QINT32);
+  }
 #ifdef ENABLE_INTEL_MKL_BFLOAT16
-    // Restrict regular ops to FLOAT and BFLOAT16
-    if (kernel.find(kMklLayoutDependentOpLabelPattern) != string::npos) {
-        return (T == DT_FLOAT || T == DT_BFLOAT16);
-    }
+  // Restrict regular ops to FLOAT and BFLOAT16
+  if (kernel.find(kMklLayoutDependentOpLabelPattern) != string::npos) {
+    return (T == DT_FLOAT || T == DT_BFLOAT16);
+  }
 #else
-    // Restrict regular ops to FLOAT
-    if (kernel.find(kMklLayoutDependentOpLabelPattern) != string::npos) {
-        return (T == DT_FLOAT);
-    }
+  // Restrict regular ops to FLOAT
+  if (kernel.find(kMklLayoutDependentOpLabelPattern) != string::npos) {
+    return (T == DT_FLOAT);
+  }
 #endif  // ENABLE_INTEL_MKL_BFLOAT16
-    return false;
+  return false;
 }
 
 // TODO(mdfaijul): QuantizedConv2D is registered with input: QUINT8
 // filter:QINT8 for mkldnn integration. First a dummy kernel is created
 // and then it is replaced by an actual kernel.
 static inline bool IsMklLayoutDependentOp(const string& op_name,
-        DataType Tinput, DataType Tfilter) {
-    string kernel = KernelsRegisteredForOp(op_name);
+                                          DataType Tinput, DataType Tfilter) {
+  string kernel = KernelsRegisteredForOp(op_name);
 
-    // Restrict quantized ops to QUINT8 and QINT8 for now
-    if (kernel.find(kMklQuantizedOpLabelPattern) != string::npos) {
-        return (Tfilter == DT_QINT8);
-    }
-    return false;
+  // Restrict quantized ops to QUINT8 and QINT8 for now
+  if (kernel.find(kMklQuantizedOpLabelPattern) != string::npos) {
+    return (Tfilter == DT_QINT8);
+  }
+  return false;
 }
 
 // Check whether opname with type T is registered as an MKL operator that
@@ -172,48 +172,48 @@ static inline bool IsMklLayoutDependentOp(const string& op_name,
 // @return: true if opname is registered as MKL op that will go through name
 // change; false otherwise
 static inline bool IsMklNameChangeOp(const string& op_name, DataType T) {
-    string kernel = KernelsRegisteredForOp(op_name);
-    // String returned by KernelsRegisteredForOp looks like below:
-    //
-    // Op = _MklMatMul, kernels =
-    // device='CPU'; label='MklNameChangeOp'; T in [DT_COMPLEX128]
-    // device='CPU'; label='MklNameChangeOp'; T in [DT_COMPLEX64]
-    // device='CPU'; label='MklNameChangeOp'; T in [DT_DOUBLE]
-    // device='CPU'; label='MklNameChangeOp'; T in [DT_FLOAT]
+  string kernel = KernelsRegisteredForOp(op_name);
+  // String returned by KernelsRegisteredForOp looks like below:
+  //
+  // Op = _MklMatMul, kernels =
+  // device='CPU'; label='MklNameChangeOp'; T in [DT_COMPLEX128]
+  // device='CPU'; label='MklNameChangeOp'; T in [DT_COMPLEX64]
+  // device='CPU'; label='MklNameChangeOp'; T in [DT_DOUBLE]
+  // device='CPU'; label='MklNameChangeOp'; T in [DT_FLOAT]
 
-    // Now we just construct a search string to match what we are looking for.
-    string search_string = kMklNameChangeOpLabelPattern;
-    search_string += string(";") + string(" T in [");
-    search_string += DataType_Name(T) + string("]");
+  // Now we just construct a search string to match what we are looking for.
+  string search_string = kMklNameChangeOpLabelPattern;
+  search_string += string(";") + string(" T in [");
+  search_string += DataType_Name(T) + string("]");
 
-    // Temporarily replacing earlier check by adding a type-specific check so
-    // that we can selectively decide which type is supported by MKL operators.
-    // That way kernel registration does not decide which operators we support.
-    // We are using this change to temporarily disable BFLOAT16 support. Once
-    // we want to enable it, we will go back to earlier check.
-    bool isTypeAllowed = false;
-    if (kernel.find(search_string) != string::npos) {
-        isTypeAllowed = (T == DT_COMPLEX128 || T == DT_COMPLEX64 ||
-                         T == DT_DOUBLE || T == DT_FLOAT);
+  // Temporarily replacing earlier check by adding a type-specific check so
+  // that we can selectively decide which type is supported by MKL operators.
+  // That way kernel registration does not decide which operators we support.
+  // We are using this change to temporarily disable BFLOAT16 support. Once
+  // we want to enable it, we will go back to earlier check.
+  bool isTypeAllowed = false;
+  if (kernel.find(search_string) != string::npos) {
+    isTypeAllowed = (T == DT_COMPLEX128 || T == DT_COMPLEX64 ||
+                     T == DT_DOUBLE || T == DT_FLOAT);
 #ifdef ENABLE_INTEL_MKL_BFLOAT16
-        isTypeAllowed = isTypeAllowed || (T == DT_BFLOAT16);
+    isTypeAllowed = isTypeAllowed || (T == DT_BFLOAT16);
 #endif
-        return isTypeAllowed;
-    }
+    return isTypeAllowed;
+  }
 
-    return false;
+  return false;
 }
 
 // Check if the operator with 'op_name' and type 'T' is an MKL operator that
 // will either understand input tensors in MKL layout or will go through name
 // rewrite that some operators go through.
 static inline bool IsMklOp(const string& op_name, DataType T) {
-    return IsMklLayoutDependentOp(op_name, T) || IsMklNameChangeOp(op_name, T);
+  return IsMklLayoutDependentOp(op_name, T) || IsMklNameChangeOp(op_name, T);
 }
 
 static inline bool IsMklOp(const Node* n) {
-    DataType T;
-    return GetNodeAttr(n->def(), "T", &T).ok() && IsMklOp(n->type_string(), T);
+  DataType T;
+  return GetNodeAttr(n->def(), "T", &T).ok() && IsMklOp(n->type_string(), T);
 }
 
 // Check whether opname with type T is registered as MKL-compliant and
@@ -224,17 +224,17 @@ static inline bool IsMklOp(const Node* n) {
 // @return: true if opname is registered as element-wise Mkl op;
 // false otherwise
 static inline bool IsMklElementWiseOp(const string& op_name, DataType T) {
-    if (!IsMklOp(op_name, T)) {
-        return false;
-    }
-    bool result = (0 == op_name.compare(GetMklOpName("Add")) ||
-                   0 == op_name.compare(GetMklOpName("AddV2")) ||
-                   0 == op_name.compare(GetMklOpName("Sub")) ||
-                   0 == op_name.compare(GetMklOpName("Mul")) ||
-                   0 == op_name.compare(GetMklOpName("Maximum")) ||
-                   0 == op_name.compare(GetMklOpName("SquaredDifference")));
+  if (!IsMklOp(op_name, T)) {
+    return false;
+  }
+  bool result = (0 == op_name.compare(GetMklOpName("Add")) ||
+                 0 == op_name.compare(GetMklOpName("AddV2")) ||
+                 0 == op_name.compare(GetMklOpName("Sub")) ||
+                 0 == op_name.compare(GetMklOpName("Mul")) ||
+                 0 == op_name.compare(GetMklOpName("Maximum")) ||
+                 0 == op_name.compare(GetMklOpName("SquaredDifference")));
 
-    return result;
+  return result;
 }
 }  // namespace mkl_op_registry
 }  // namespace tensorflow

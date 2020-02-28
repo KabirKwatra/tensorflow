@@ -17,6 +17,7 @@ limitations under the License.
 #define TENSORFLOW_CORE_FRAMEWORK_DATASET_STATEFUL_OP_WHITELIST_H_
 
 #include <unordered_set>
+
 #include "tensorflow/core/lib/core/status.h"
 
 namespace tensorflow {
@@ -24,34 +25,32 @@ namespace data {
 // Registry for stateful ops that need to be used in dataset functions.
 // See below macro for usage details.
 class WhitelistedStatefulOpRegistry {
-public:
-    Status Add(string op_name) {
-        op_names_.insert(std::move(op_name));
-        return Status::OK();
-    }
+ public:
+  Status Add(string op_name) {
+    op_names_.insert(std::move(op_name));
+    return Status::OK();
+  }
 
-    Status Remove(string op_name) {
-        op_names_.erase(op_name);
-        return Status::OK();
-    }
+  Status Remove(string op_name) {
+    op_names_.erase(op_name);
+    return Status::OK();
+  }
 
-    bool Contains(const string& op_name) {
-        return op_names_.count(op_name);
-    }
+  bool Contains(const string& op_name) { return op_names_.count(op_name); }
 
-    static WhitelistedStatefulOpRegistry* Global() {
-        static auto* reg = new WhitelistedStatefulOpRegistry;
-        return reg;
-    }
+  static WhitelistedStatefulOpRegistry* Global() {
+    static auto* reg = new WhitelistedStatefulOpRegistry;
+    return reg;
+  }
 
-private:
-    WhitelistedStatefulOpRegistry() = default;
-    WhitelistedStatefulOpRegistry(WhitelistedStatefulOpRegistry const& copy) =
-        delete;
-    WhitelistedStatefulOpRegistry operator=(
-        WhitelistedStatefulOpRegistry const& copy) = delete;
+ private:
+  WhitelistedStatefulOpRegistry() = default;
+  WhitelistedStatefulOpRegistry(WhitelistedStatefulOpRegistry const& copy) =
+      delete;
+  WhitelistedStatefulOpRegistry operator=(
+      WhitelistedStatefulOpRegistry const& copy) = delete;
 
-    std::unordered_set<string> op_names_;
+  std::unordered_set<string> op_names_;
 };
 
 }  // namespace data

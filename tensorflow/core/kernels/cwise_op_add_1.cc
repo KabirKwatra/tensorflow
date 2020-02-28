@@ -29,18 +29,18 @@ REGISTER3(BinaryOp, GPU, "AddV2", functor::add, float, Eigen::half, double);
 // TODO(b/25387198): Also enable int32 in device memory. This kernel
 // registration requires all int32 inputs and outputs to be in host memory.
 REGISTER_KERNEL_BUILDER(Name("Add")
-                        .Device(DEVICE_GPU)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_GPU)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::add<int32>>);
 REGISTER_KERNEL_BUILDER(Name("AddV2")
-                        .Device(DEVICE_GPU)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_GPU)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::add<int32>>);
 #endif
 
@@ -52,18 +52,18 @@ REGISTER_KERNEL_BUILDER(Name("AddV2")
 TF_CALL_SYCL_NUMBER_TYPES(REGISTER_KERNEL);
 
 REGISTER_KERNEL_BUILDER(Name("Add")
-                        .Device(DEVICE_SYCL)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_SYCL)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::add<int32>>);
 REGISTER_KERNEL_BUILDER(Name("AddV2")
-                        .Device(DEVICE_SYCL)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_SYCL)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::add<int32>>);
 #endif  // TENSORFLOW_USE_SYCL
 }  // namespace tensorflow

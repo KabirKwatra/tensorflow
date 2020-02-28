@@ -27,9 +27,8 @@ limitations under the License.
 #include "tensorflow/core/framework/tensor_types.h"
 #include "tensorflow/core/kernels/cwise_ops.h"
 #include "tensorflow/core/kernels/cwise_ops_gradients.h"
-#include "tensorflow/core/platform/types.h"
-
 #include "tensorflow/core/platform/logging.h"
+#include "tensorflow/core/platform/types.h"
 namespace tensorflow {
 namespace functor {
 
@@ -40,12 +39,12 @@ typedef std::complex<double> complex128;
 // Partial specialization of SimpleBinaryFunctor<Device=GPUDevice, Functor>.
 template <typename Functor>
 struct SimpleBinaryFunctor<GPUDevice, Functor> {
-    void operator()(const GPUDevice& d, typename Functor::tout_type out,
-                    typename Functor::tin_type in1,
-                    typename Functor::tin_type in2) {
-        To32Bit(out).device(d) =
-            To32Bit(in1).binaryExpr(in2, typename Functor::func());
-    }
+  void operator()(const GPUDevice& d, typename Functor::tout_type out,
+                  typename Functor::tin_type in1,
+                  typename Functor::tin_type in2) {
+    To32Bit(out).device(d) =
+        To32Bit(in1).binaryExpr(in2, typename Functor::func());
+  }
 };
 
 // Macros to explicitly instantiate kernels on GPU for multiple types
