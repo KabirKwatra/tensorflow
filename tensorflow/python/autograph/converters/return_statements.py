@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Canonicalizes functions with multiple returns to use just one."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
