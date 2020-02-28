@@ -40,7 +40,7 @@ from tensorflow.python.util.tf_export import keras_export
 from tensorflow.tools.docs import doc_controls
 
 
-@keras_export('keras.losses.Loss')
+@keras_export("keras.losses.Loss")
 class Loss(object):
     """Loss base class.
 
@@ -103,11 +103,11 @@ class Loss(object):
         """Creates a valid `name_scope` name."""
         if self.name is None:
             self._name_scope = self.__class__.__name__
-        elif self.name == '<lambda>':
-            self._name_scope = 'lambda'
+        elif self.name == "<lambda>":
+            self._name_scope = "lambda"
         else:
             # E.g. '_my_loss' => 'my_loss'
-            self._name_scope = self.name.strip('_')
+            self._name_scope = self.name.strip("_")
 
     def __call__(self, y_true, y_pred, sample_weight=None):
         """Invokes the `Loss` instance.
@@ -138,11 +138,13 @@ class Loss(object):
         # If we are wrapping a lambda function strip '<>' from the name as it is not
         # accepted in scope name.
         graph_ctx = tf_utils.graph_context_for_symbolic_tensors(
-            y_true, y_pred, sample_weight)
+            y_true, y_pred, sample_weight
+        )
         with K.name_scope(self._name_scope), graph_ctx:
             losses = self.call(y_true, y_pred)
             return losses_utils.compute_weighted_loss(
-                losses, sample_weight, reduction=self._get_reduction())
+                losses, sample_weight, reduction=self._get_reduction()
+            )
 
     @classmethod
     def from_config(cls, config):
@@ -158,7 +160,7 @@ class Loss(object):
 
     def get_config(self):
         """Returns the config dictionary for a `Loss` instance."""
-        return {'reduction': self.reduction, 'name': self.name}
+        return {"reduction": self.reduction, "name": self.name}
 
     @abc.abstractmethod
     @doc_controls.for_subclass_implementers
@@ -174,27 +176,32 @@ class Loss(object):
         Returns:
           Loss values with the shape `[batch_size, d0, .. dN-1]`.
         """
-        NotImplementedError('Must be implemented in subclasses.')
+        NotImplementedError("Must be implemented in subclasses.")
 
     def _get_reduction(self):
         """Handles `AUTO` reduction cases and returns the reduction value."""
-        if (not self._allow_sum_over_batch_size and
-            distribution_strategy_context.has_strategy() and
-            (self.reduction == losses_utils.ReductionV2.AUTO or
-             self.reduction == losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE)):
+        if (
+            not self._allow_sum_over_batch_size
+            and distribution_strategy_context.has_strategy()
+            and (
+                self.reduction == losses_utils.ReductionV2.AUTO
+                or self.reduction == losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE
+            )
+        ):
             raise ValueError(
-                'Please use `tf.keras.losses.Reduction.SUM` or '
-                '`tf.keras.losses.Reduction.NONE` for loss reduction when losses are '
-                'used with `tf.distribute.Strategy` outside of the built-in training '
-                'loops. You can implement '
-                '`tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE` using global batch '
-                'size like:\n```\nwith strategy.scope():\n'
-                '    loss_obj = tf.keras.losses.CategoricalCrossentropy('
-                'reduction=tf.keras.losses.Reduction.NONE)\n....\n'
-                '    loss = tf.reduce_sum(loss_obj(labels, predictions)) * '
-                '(1. / global_batch_size)\n```\nPlease see '
-                'https://www.tensorflow.org/tutorials/distribute/custom_training'
-                ' for more details.')
+                "Please use `tf.keras.losses.Reduction.SUM` or "
+                "`tf.keras.losses.Reduction.NONE` for loss reduction when losses are "
+                "used with `tf.distribute.Strategy` outside of the built-in training "
+                "loops. You can implement "
+                "`tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE` using global batch "
+                "size like:\n```\nwith strategy.scope():\n"
+                "    loss_obj = tf.keras.losses.CategoricalCrossentropy("
+                "reduction=tf.keras.losses.Reduction.NONE)\n....\n"
+                "    loss = tf.reduce_sum(loss_obj(labels, predictions)) * "
+                "(1. / global_batch_size)\n```\nPlease see "
+                "https://www.tensorflow.org/tutorials/distribute/custom_training"
+                " for more details."
+            )
 
         if self.reduction == losses_utils.ReductionV2.AUTO:
             return losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE
@@ -204,11 +211,9 @@ class Loss(object):
 class LossFunctionWrapper(Loss):
     """Wraps a loss function in the `Loss` class."""
 
-    def __init__(self,
-                 fn,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self, fn, reduction=losses_utils.ReductionV2.AUTO, name=None, **kwargs
+    ):
         """Initializes `LossFunctionWrapper` class.
 
         Args:
@@ -226,8 +231,7 @@ class LossFunctionWrapper(Loss):
           name: (Optional) name for the loss.
           **kwargs: The keyword arguments that are passed on to `fn`.
         """
-        super(LossFunctionWrapper, self).__init__(
-            reduction=reduction, name=name)
+        super(LossFunctionWrapper, self).__init__(reduction=reduction, name=name)
         self.fn = fn
         self._fn_kwargs = kwargs
 
@@ -242,8 +246,7 @@ class LossFunctionWrapper(Loss):
           Loss values per sample.
         """
         if tensor_util.is_tensor(y_pred) and tensor_util.is_tensor(y_true):
-            y_pred, y_true = tf_losses_util.squeeze_or_expand_dimensions(
-                y_pred, y_true)
+            y_pred, y_true = tf_losses_util.squeeze_or_expand_dimensions(y_pred, y_true)
         return self.fn(y_true, y_pred, **self._fn_kwargs)
 
     def get_config(self):
@@ -254,7 +257,7 @@ class LossFunctionWrapper(Loss):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.losses.MeanSquaredError')
+@keras_export("keras.losses.MeanSquaredError")
 class MeanSquaredError(LossFunctionWrapper):
     """Computes the mean of squares of errors between labels and predictions.
 
@@ -293,9 +296,9 @@ class MeanSquaredError(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='mean_squared_error'):
+    def __init__(
+        self, reduction=losses_utils.ReductionV2.AUTO, name="mean_squared_error"
+    ):
         """Initializes `MeanSquaredError` instance.
 
         Args:
@@ -311,10 +314,11 @@ class MeanSquaredError(LossFunctionWrapper):
           name: Optional name for the op. Defaults to 'mean_squared_error'.
         """
         super(MeanSquaredError, self).__init__(
-            mean_squared_error, name=name, reduction=reduction)
+            mean_squared_error, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.MeanAbsoluteError')
+@keras_export("keras.losses.MeanAbsoluteError")
 class MeanAbsoluteError(LossFunctionWrapper):
     """Computes the mean of absolute difference between labels and predictions.
 
@@ -353,9 +357,9 @@ class MeanAbsoluteError(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='mean_absolute_error'):
+    def __init__(
+        self, reduction=losses_utils.ReductionV2.AUTO, name="mean_absolute_error"
+    ):
         """Initializes `MeanAbsoluteError` instance.
 
         Args:
@@ -371,10 +375,11 @@ class MeanAbsoluteError(LossFunctionWrapper):
           name: Optional name for the op. Defaults to 'mean_absolute_error'.
         """
         super(MeanAbsoluteError, self).__init__(
-            mean_absolute_error, name=name, reduction=reduction)
+            mean_absolute_error, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.MeanAbsolutePercentageError')
+@keras_export("keras.losses.MeanAbsolutePercentageError")
 class MeanAbsolutePercentageError(LossFunctionWrapper):
     """Computes the mean absolute percentage error between `y_true` and `y_pred`.
 
@@ -413,9 +418,11 @@ class MeanAbsolutePercentageError(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='mean_absolute_percentage_error'):
+    def __init__(
+        self,
+        reduction=losses_utils.ReductionV2.AUTO,
+        name="mean_absolute_percentage_error",
+    ):
         """Initializes `MeanAbsolutePercentageError` instance.
 
         Args:
@@ -432,10 +439,11 @@ class MeanAbsolutePercentageError(LossFunctionWrapper):
             'mean_absolute_percentage_error'.
         """
         super(MeanAbsolutePercentageError, self).__init__(
-            mean_absolute_percentage_error, name=name, reduction=reduction)
+            mean_absolute_percentage_error, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.MeanSquaredLogarithmicError')
+@keras_export("keras.losses.MeanSquaredLogarithmicError")
 class MeanSquaredLogarithmicError(LossFunctionWrapper):
     """Computes the mean squared logarithmic error between `y_true` and `y_pred`.
 
@@ -474,9 +482,11 @@ class MeanSquaredLogarithmicError(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='mean_squared_logarithmic_error'):
+    def __init__(
+        self,
+        reduction=losses_utils.ReductionV2.AUTO,
+        name="mean_squared_logarithmic_error",
+    ):
         """Initializes `MeanSquaredLogarithmicError` instance.
 
         Args:
@@ -493,10 +503,11 @@ class MeanSquaredLogarithmicError(LossFunctionWrapper):
             'mean_squared_logarithmic_error'.
         """
         super(MeanSquaredLogarithmicError, self).__init__(
-            mean_squared_logarithmic_error, name=name, reduction=reduction)
+            mean_squared_logarithmic_error, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.BinaryCrossentropy')
+@keras_export("keras.losses.BinaryCrossentropy")
 class BinaryCrossentropy(LossFunctionWrapper):
     """Computes the cross-entropy loss between true labels and predicted labels.
 
@@ -541,11 +552,13 @@ class BinaryCrossentropy(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 from_logits=False,
-                 label_smoothing=0,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='binary_crossentropy'):
+    def __init__(
+        self,
+        from_logits=False,
+        label_smoothing=0,
+        reduction=losses_utils.ReductionV2.AUTO,
+        name="binary_crossentropy",
+    ):
         """Initializes `BinaryCrossentropy` instance.
 
         Args:
@@ -573,11 +586,12 @@ class BinaryCrossentropy(LossFunctionWrapper):
             name=name,
             reduction=reduction,
             from_logits=from_logits,
-            label_smoothing=label_smoothing)
+            label_smoothing=label_smoothing,
+        )
         self.from_logits = from_logits
 
 
-@keras_export('keras.losses.CategoricalCrossentropy')
+@keras_export("keras.losses.CategoricalCrossentropy")
 class CategoricalCrossentropy(LossFunctionWrapper):
     """Computes the crossentropy loss between the labels and predictions.
 
@@ -623,11 +637,13 @@ class CategoricalCrossentropy(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 from_logits=False,
-                 label_smoothing=0,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='categorical_crossentropy'):
+    def __init__(
+        self,
+        from_logits=False,
+        label_smoothing=0,
+        reduction=losses_utils.ReductionV2.AUTO,
+        name="categorical_crossentropy",
+    ):
         """Initializes `CategoricalCrossentropy` instance.
 
         Args:
@@ -654,10 +670,11 @@ class CategoricalCrossentropy(LossFunctionWrapper):
             name=name,
             reduction=reduction,
             from_logits=from_logits,
-            label_smoothing=label_smoothing)
+            label_smoothing=label_smoothing,
+        )
 
 
-@keras_export('keras.losses.SparseCategoricalCrossentropy')
+@keras_export("keras.losses.SparseCategoricalCrossentropy")
 class SparseCategoricalCrossentropy(LossFunctionWrapper):
     """Computes the crossentropy loss between the labels and predictions.
 
@@ -705,10 +722,12 @@ class SparseCategoricalCrossentropy(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 from_logits=False,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='sparse_categorical_crossentropy'):
+    def __init__(
+        self,
+        from_logits=False,
+        reduction=losses_utils.ReductionV2.AUTO,
+        name="sparse_categorical_crossentropy",
+    ):
         """Initializes `SparseCategoricalCrossentropy` instance.
 
         Args:
@@ -731,10 +750,11 @@ class SparseCategoricalCrossentropy(LossFunctionWrapper):
             sparse_categorical_crossentropy,
             name=name,
             reduction=reduction,
-            from_logits=from_logits)
+            from_logits=from_logits,
+        )
 
 
-@keras_export('keras.losses.Hinge')
+@keras_export("keras.losses.Hinge")
 class Hinge(LossFunctionWrapper):
     """Computes the hinge loss between `y_true` and `y_pred`.
 
@@ -776,7 +796,7 @@ class Hinge(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name='hinge'):
+    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name="hinge"):
         """Initializes `Hinge` instance.
 
         Args:
@@ -794,7 +814,7 @@ class Hinge(LossFunctionWrapper):
         super(Hinge, self).__init__(hinge, name=name, reduction=reduction)
 
 
-@keras_export('keras.losses.SquaredHinge')
+@keras_export("keras.losses.SquaredHinge")
 class SquaredHinge(LossFunctionWrapper):
     """Computes the squared hinge loss between `y_true` and `y_pred`.
 
@@ -836,9 +856,7 @@ class SquaredHinge(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='squared_hinge'):
+    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name="squared_hinge"):
         """Initializes `SquaredHinge` instance.
 
         Args:
@@ -854,10 +872,11 @@ class SquaredHinge(LossFunctionWrapper):
           name: Optional name for the op. Defaults to 'squared_hinge'.
         """
         super(SquaredHinge, self).__init__(
-            squared_hinge, name=name, reduction=reduction)
+            squared_hinge, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.CategoricalHinge')
+@keras_export("keras.losses.CategoricalHinge")
 class CategoricalHinge(LossFunctionWrapper):
     """Computes the categorical hinge loss between `y_true` and `y_pred`.
 
@@ -897,9 +916,9 @@ class CategoricalHinge(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='categorical_hinge'):
+    def __init__(
+        self, reduction=losses_utils.ReductionV2.AUTO, name="categorical_hinge"
+    ):
         """Initializes `CategoricalHinge` instance.
 
         Args:
@@ -915,10 +934,11 @@ class CategoricalHinge(LossFunctionWrapper):
           name: Optional name for the op. Defaults to 'categorical_hinge'.
         """
         super(CategoricalHinge, self).__init__(
-            categorical_hinge, name=name, reduction=reduction)
+            categorical_hinge, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.Poisson')
+@keras_export("keras.losses.Poisson")
 class Poisson(LossFunctionWrapper):
     """Computes the Poisson loss between `y_true` and `y_pred`.
 
@@ -957,7 +977,7 @@ class Poisson(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name='poisson'):
+    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name="poisson"):
         """Initializes `Poisson` instance.
 
         Args:
@@ -975,7 +995,7 @@ class Poisson(LossFunctionWrapper):
         super(Poisson, self).__init__(poisson, name=name, reduction=reduction)
 
 
-@keras_export('keras.losses.LogCosh')
+@keras_export("keras.losses.LogCosh")
 class LogCosh(LossFunctionWrapper):
     """Computes the logarithm of the hyperbolic cosine of the prediction error.
 
@@ -1015,7 +1035,7 @@ class LogCosh(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name='logcosh'):
+    def __init__(self, reduction=losses_utils.ReductionV2.AUTO, name="logcosh"):
         """Initializes `LogCosh` instance.
 
         Args:
@@ -1033,7 +1053,7 @@ class LogCosh(LossFunctionWrapper):
         super(LogCosh, self).__init__(logcosh, name=name, reduction=reduction)
 
 
-@keras_export('keras.losses.KLDivergence')
+@keras_export("keras.losses.KLDivergence")
 class KLDivergence(LossFunctionWrapper):
     """Computes Kullback-Leibler divergence loss between `y_true` and `y_pred`.
 
@@ -1074,9 +1094,11 @@ class KLDivergence(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='kullback_leibler_divergence'):
+    def __init__(
+        self,
+        reduction=losses_utils.ReductionV2.AUTO,
+        name="kullback_leibler_divergence",
+    ):
         """Initializes `KLDivergence` instance.
 
         Args:
@@ -1092,10 +1114,11 @@ class KLDivergence(LossFunctionWrapper):
           name: Optional name for the op. Defaults to 'kullback_leibler_divergence'.
         """
         super(KLDivergence, self).__init__(
-            kullback_leibler_divergence, name=name, reduction=reduction)
+            kullback_leibler_divergence, name=name, reduction=reduction
+        )
 
 
-@keras_export('keras.losses.Huber')
+@keras_export("keras.losses.Huber")
 class Huber(LossFunctionWrapper):
     """Computes the Huber loss between `y_true` and `y_pred`.
 
@@ -1140,10 +1163,9 @@ class Huber(LossFunctionWrapper):
     ```
     """
 
-    def __init__(self,
-                 delta=1.0,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='huber_loss'):
+    def __init__(
+        self, delta=1.0, reduction=losses_utils.ReductionV2.AUTO, name="huber_loss"
+    ):
         """Initializes `Huber` instance.
 
         Args:
@@ -1161,15 +1183,18 @@ class Huber(LossFunctionWrapper):
           name: Optional name for the op. Defaults to 'huber_loss'.
         """
         super(Huber, self).__init__(
-            huber_loss, name=name, reduction=reduction, delta=delta)
+            huber_loss, name=name, reduction=reduction, delta=delta
+        )
 
 
-@keras_export('keras.metrics.mean_squared_error',
-              'keras.metrics.mse',
-              'keras.metrics.MSE',
-              'keras.losses.mean_squared_error',
-              'keras.losses.mse',
-              'keras.losses.MSE')
+@keras_export(
+    "keras.metrics.mean_squared_error",
+    "keras.metrics.mse",
+    "keras.metrics.MSE",
+    "keras.losses.mean_squared_error",
+    "keras.losses.mse",
+    "keras.losses.MSE",
+)
 def mean_squared_error(y_true, y_pred):
     """Computes the mean squared error between labels and predictions.
 
@@ -1199,12 +1224,14 @@ def mean_squared_error(y_true, y_pred):
     return K.mean(math_ops.squared_difference(y_pred, y_true), axis=-1)
 
 
-@keras_export('keras.metrics.mean_absolute_error',
-              'keras.metrics.mae',
-              'keras.metrics.MAE',
-              'keras.losses.mean_absolute_error',
-              'keras.losses.mae',
-              'keras.losses.MAE')
+@keras_export(
+    "keras.metrics.mean_absolute_error",
+    "keras.metrics.mae",
+    "keras.metrics.MAE",
+    "keras.losses.mean_absolute_error",
+    "keras.losses.mae",
+    "keras.losses.MAE",
+)
 def mean_absolute_error(y_true, y_pred):
     """Computes the mean absolute error between labels and predictions.
 
@@ -1231,12 +1258,14 @@ def mean_absolute_error(y_true, y_pred):
     return K.mean(math_ops.abs(y_pred - y_true), axis=-1)
 
 
-@keras_export('keras.metrics.mean_absolute_percentage_error',
-              'keras.metrics.mape',
-              'keras.metrics.MAPE',
-              'keras.losses.mean_absolute_percentage_error',
-              'keras.losses.mape',
-              'keras.losses.MAPE')
+@keras_export(
+    "keras.metrics.mean_absolute_percentage_error",
+    "keras.metrics.mape",
+    "keras.metrics.MAPE",
+    "keras.losses.mean_absolute_percentage_error",
+    "keras.losses.mape",
+    "keras.losses.MAPE",
+)
 def mean_absolute_percentage_error(y_true, y_pred):
     """Computes the mean absolute percentage error between `y_true` and `y_pred`.
 
@@ -1263,16 +1292,19 @@ def mean_absolute_percentage_error(y_true, y_pred):
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
     diff = math_ops.abs(
-        (y_true - y_pred) / K.maximum(math_ops.abs(y_true), K.epsilon()))
-    return 100. * K.mean(diff, axis=-1)
+        (y_true - y_pred) / K.maximum(math_ops.abs(y_true), K.epsilon())
+    )
+    return 100.0 * K.mean(diff, axis=-1)
 
 
-@keras_export('keras.metrics.mean_squared_logarithmic_error',
-              'keras.metrics.msle',
-              'keras.metrics.MSLE',
-              'keras.losses.mean_squared_logarithmic_error',
-              'keras.losses.msle',
-              'keras.losses.MSLE')
+@keras_export(
+    "keras.metrics.mean_squared_logarithmic_error",
+    "keras.metrics.msle",
+    "keras.metrics.MSLE",
+    "keras.losses.mean_squared_logarithmic_error",
+    "keras.losses.msle",
+    "keras.losses.MSLE",
+)
 def mean_squared_logarithmic_error(y_true, y_pred):
     """Computes the mean squared logarithmic error between `y_true` and `y_pred`.
 
@@ -1300,8 +1332,8 @@ def mean_squared_logarithmic_error(y_true, y_pred):
     """
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
-    first_log = math_ops.log(K.maximum(y_pred, K.epsilon()) + 1.)
-    second_log = math_ops.log(K.maximum(y_true, K.epsilon()) + 1.)
+    first_log = math_ops.log(K.maximum(y_pred, K.epsilon()) + 1.0)
+    second_log = math_ops.log(K.maximum(y_true, K.epsilon()) + 1.0)
     return K.mean(math_ops.squared_difference(first_log, second_log), axis=-1)
 
 
@@ -1313,14 +1345,15 @@ def _maybe_convert_labels(y_true):
 
     def _convert_binary_labels():
         # Convert the binary labels to -1 or 1.
-        return 2. * y_true - 1.
+        return 2.0 * y_true - 1.0
 
-    updated_y_true = smart_cond.smart_cond(is_binary,
-                                           _convert_binary_labels, lambda: y_true)
+    updated_y_true = smart_cond.smart_cond(
+        is_binary, _convert_binary_labels, lambda: y_true
+    )
     return updated_y_true
 
 
-@keras_export('keras.metrics.squared_hinge', 'keras.losses.squared_hinge')
+@keras_export("keras.metrics.squared_hinge", "keras.losses.squared_hinge")
 def squared_hinge(y_true, y_pred):
     """Computes the squared hinge loss between `y_true` and `y_pred`.
 
@@ -1349,10 +1382,11 @@ def squared_hinge(y_true, y_pred):
     y_true = math_ops.cast(y_true, y_pred.dtype)
     y_true = _maybe_convert_labels(y_true)
     return K.mean(
-        math_ops.square(math_ops.maximum(1. - y_true * y_pred, 0.)), axis=-1)
+        math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1
+    )
 
 
-@keras_export('keras.metrics.hinge', 'keras.losses.hinge')
+@keras_export("keras.metrics.hinge", "keras.losses.hinge")
 def hinge(y_true, y_pred):
     """Computes the hinge loss between `y_true` and `y_pred`.
 
@@ -1380,10 +1414,10 @@ def hinge(y_true, y_pred):
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
     y_true = _maybe_convert_labels(y_true)
-    return K.mean(math_ops.maximum(1. - y_true * y_pred, 0.), axis=-1)
+    return K.mean(math_ops.maximum(1.0 - y_true * y_pred, 0.0), axis=-1)
 
 
-@keras_export('keras.losses.categorical_hinge')
+@keras_export("keras.losses.categorical_hinge")
 def categorical_hinge(y_true, y_pred):
     """Computes the categorical hinge loss between `y_true` and `y_pred`.
 
@@ -1412,8 +1446,8 @@ def categorical_hinge(y_true, y_pred):
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
     pos = math_ops.reduce_sum(y_true * y_pred, axis=-1)
-    neg = math_ops.reduce_max((1. - y_true) * y_pred, axis=-1)
-    return math_ops.maximum(0., neg - pos + 1.)
+    neg = math_ops.reduce_max((1.0 - y_true) * y_pred, axis=-1)
+    return math_ops.maximum(0.0, neg - pos + 1.0)
 
 
 def huber_loss(y_true, y_pred, delta=1.0):
@@ -1446,12 +1480,15 @@ def huber_loss(y_true, y_pred, delta=1.0):
         math_ops.add(
             math_ops.multiply(
                 ops.convert_to_tensor_v2(0.5, dtype=quadratic.dtype),
-                math_ops.multiply(quadratic, quadratic)),
-            math_ops.multiply(delta, linear)),
-        axis=-1)
+                math_ops.multiply(quadratic, quadratic),
+            ),
+            math_ops.multiply(delta, linear),
+        ),
+        axis=-1,
+    )
 
 
-@keras_export('keras.losses.logcosh')
+@keras_export("keras.losses.logcosh")
 def logcosh(y_true, y_pred):
     """Logarithm of the hyperbolic cosine of the prediction error.
 
@@ -1483,17 +1520,15 @@ def logcosh(y_true, y_pred):
     y_true = math_ops.cast(y_true, y_pred.dtype)
 
     def _logcosh(x):
-        return x + nn.softplus(-2. * x) - math_ops.cast(math_ops.log(2.), x.dtype)
+        return x + nn.softplus(-2.0 * x) - math_ops.cast(math_ops.log(2.0), x.dtype)
 
     return K.mean(_logcosh(y_pred - y_true), axis=-1)
 
 
-@keras_export('keras.metrics.categorical_crossentropy',
-              'keras.losses.categorical_crossentropy')
-def categorical_crossentropy(y_true,
-                             y_pred,
-                             from_logits=False,
-                             label_smoothing=0):
+@keras_export(
+    "keras.metrics.categorical_crossentropy", "keras.losses.categorical_crossentropy"
+)
+def categorical_crossentropy(y_true, y_pred, from_logits=False, label_smoothing=0):
     """Computes the categorical crossentropy loss.
 
     Usage:
@@ -1517,20 +1552,20 @@ def categorical_crossentropy(y_true,
     """
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
-    label_smoothing = ops.convert_to_tensor_v2(
-        label_smoothing, dtype=K.floatx())
+    label_smoothing = ops.convert_to_tensor_v2(label_smoothing, dtype=K.floatx())
 
     def _smooth_labels():
         num_classes = math_ops.cast(array_ops.shape(y_true)[1], y_pred.dtype)
         return y_true * (1.0 - label_smoothing) + (label_smoothing / num_classes)
 
-    y_true = smart_cond.smart_cond(label_smoothing,
-                                   _smooth_labels, lambda: y_true)
+    y_true = smart_cond.smart_cond(label_smoothing, _smooth_labels, lambda: y_true)
     return K.categorical_crossentropy(y_true, y_pred, from_logits=from_logits)
 
 
-@keras_export('keras.metrics.sparse_categorical_crossentropy',
-              'keras.losses.sparse_categorical_crossentropy')
+@keras_export(
+    "keras.metrics.sparse_categorical_crossentropy",
+    "keras.losses.sparse_categorical_crossentropy",
+)
 def sparse_categorical_crossentropy(y_true, y_pred, from_logits=False, axis=-1):
     """Computes the sparse categorical crossentropy loss.
 
@@ -1557,11 +1592,11 @@ def sparse_categorical_crossentropy(y_true, y_pred, from_logits=False, axis=-1):
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
     return K.sparse_categorical_crossentropy(
-        y_true, y_pred, from_logits=from_logits, axis=axis)
+        y_true, y_pred, from_logits=from_logits, axis=axis
+    )
 
 
-@keras_export('keras.metrics.binary_crossentropy',
-              'keras.losses.binary_crossentropy')
+@keras_export("keras.metrics.binary_crossentropy", "keras.losses.binary_crossentropy")
 def binary_crossentropy(y_true, y_pred, from_logits=False, label_smoothing=0):
     """Computes the binary crossentropy loss.
 
@@ -1586,24 +1621,25 @@ def binary_crossentropy(y_true, y_pred, from_logits=False, label_smoothing=0):
     """
     y_pred = ops.convert_to_tensor_v2(y_pred)
     y_true = math_ops.cast(y_true, y_pred.dtype)
-    label_smoothing = ops.convert_to_tensor_v2(
-        label_smoothing, dtype=K.floatx())
+    label_smoothing = ops.convert_to_tensor_v2(label_smoothing, dtype=K.floatx())
 
     def _smooth_labels():
         return y_true * (1.0 - label_smoothing) + 0.5 * label_smoothing
 
-    y_true = smart_cond.smart_cond(label_smoothing,
-                                   _smooth_labels, lambda: y_true)
+    y_true = smart_cond.smart_cond(label_smoothing, _smooth_labels, lambda: y_true)
     return K.mean(
-        K.binary_crossentropy(y_true, y_pred, from_logits=from_logits), axis=-1)
+        K.binary_crossentropy(y_true, y_pred, from_logits=from_logits), axis=-1
+    )
 
 
-@keras_export('keras.metrics.kullback_leibler_divergence',
-              'keras.metrics.kld',
-              'keras.metrics.KLD',
-              'keras.losses.kullback_leibler_divergence',
-              'keras.losses.kld',
-              'keras.losses.KLD')
+@keras_export(
+    "keras.metrics.kullback_leibler_divergence",
+    "keras.metrics.kld",
+    "keras.metrics.KLD",
+    "keras.losses.kullback_leibler_divergence",
+    "keras.losses.kld",
+    "keras.losses.KLD",
+)
 def kullback_leibler_divergence(y_true, y_pred):
     """Computes Kullback-Leibler divergence loss between `y_true` and `y_pred`.
 
@@ -1639,7 +1675,7 @@ def kullback_leibler_divergence(y_true, y_pred):
     return math_ops.reduce_sum(y_true * math_ops.log(y_true / y_pred), axis=-1)
 
 
-@keras_export('keras.metrics.poisson', 'keras.losses.poisson')
+@keras_export("keras.metrics.poisson", "keras.losses.poisson")
 def poisson(y_true, y_pred):
     """Computes the Poisson loss between y_true and y_pred.
 
@@ -1673,14 +1709,15 @@ def poisson(y_true, y_pred):
 
 
 @keras_export(
-    'keras.losses.cosine_similarity',
+    "keras.losses.cosine_similarity",
     v1=[
-        'keras.metrics.cosine_proximity',
-        'keras.metrics.cosine',
-        'keras.losses.cosine_proximity',
-        'keras.losses.cosine',
-        'keras.losses.cosine_similarity',
-    ])
+        "keras.metrics.cosine_proximity",
+        "keras.metrics.cosine",
+        "keras.losses.cosine_proximity",
+        "keras.losses.cosine",
+        "keras.losses.cosine_similarity",
+    ],
+)
 def cosine_similarity(y_true, y_pred, axis=-1):
     """Computes the cosine similarity between labels and predictions.
 
@@ -1719,7 +1756,7 @@ def cosine_similarity(y_true, y_pred, axis=-1):
     return -math_ops.reduce_sum(y_true * y_pred, axis=axis)
 
 
-@keras_export('keras.losses.CosineSimilarity')
+@keras_export("keras.losses.CosineSimilarity")
 class CosineSimilarity(LossFunctionWrapper):
     """Computes the cosine similarity between `y_true` and `y_pred`.
 
@@ -1778,12 +1815,12 @@ class CosineSimilarity(LossFunctionWrapper):
       name: Optional name for the op.
     """
 
-    def __init__(self,
-                 axis=-1,
-                 reduction=losses_utils.ReductionV2.AUTO,
-                 name='cosine_similarity'):
+    def __init__(
+        self, axis=-1, reduction=losses_utils.ReductionV2.AUTO, name="cosine_similarity"
+    ):
         super(CosineSimilarity, self).__init__(
-            cosine_similarity, reduction=reduction, name=name, axis=axis)
+            cosine_similarity, reduction=reduction, name=name, axis=axis
+        )
 
 
 # Aliases.
@@ -1797,16 +1834,19 @@ kld = KLD = kullback_leibler_divergence
 
 
 def is_categorical_crossentropy(loss):
-    result = ((isinstance(loss, CategoricalCrossentropy) or
-               (isinstance(loss, LossFunctionWrapper) and
-                loss.fn == categorical_crossentropy) or
-               (hasattr(loss, '__name__') and
-                loss.__name__ == 'categorical_crossentropy') or
-               (loss == 'categorical_crossentropy')))
+    result = (
+        isinstance(loss, CategoricalCrossentropy)
+        or (
+            isinstance(loss, LossFunctionWrapper)
+            and loss.fn == categorical_crossentropy
+        )
+        or (hasattr(loss, "__name__") and loss.__name__ == "categorical_crossentropy")
+        or (loss == "categorical_crossentropy")
+    )
     return result
 
 
-@keras_export('keras.losses.serialize')
+@keras_export("keras.losses.serialize")
 def serialize(loss):
     """Serializes loss function or `Loss` instance.
 
@@ -1819,7 +1859,7 @@ def serialize(loss):
     return serialize_keras_object(loss)
 
 
-@keras_export('keras.losses.deserialize')
+@keras_export("keras.losses.deserialize")
 def deserialize(name, custom_objects=None):
     """Deserializes a serialized loss class/function instance.
 
@@ -1835,10 +1875,11 @@ def deserialize(name, custom_objects=None):
         name,
         module_objects=globals(),
         custom_objects=custom_objects,
-        printable_module_name='loss function')
+        printable_module_name="loss function",
+    )
 
 
-@keras_export('keras.losses.get')
+@keras_export("keras.losses.get")
 def get(identifier):
     """Retrieves a Keras loss function.
 
@@ -1863,11 +1904,10 @@ def get(identifier):
     elif callable(identifier):
         return identifier
     else:
-        raise ValueError('Could not interpret '
-                         'loss function identifier:', identifier)
+        raise ValueError("Could not interpret " "loss function identifier:", identifier)
 
 
 LABEL_DTYPES_FOR_LOSSES = {
-    losses_impl.sparse_softmax_cross_entropy: 'int32',
-    sparse_categorical_crossentropy: 'int32'
+    losses_impl.sparse_softmax_cross_entropy: "int32",
+    sparse_categorical_crossentropy: "int32",
 }

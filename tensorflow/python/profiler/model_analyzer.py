@@ -41,10 +41,10 @@ _DEFAULT_ADVISE_OPTIONS = 0
 # The following options are for 'advise' cmd.
 # Show all advice.
 ALL_ADVICE = {
-    'ExpensiveOperationChecker': {},
-    'AcceleratorUtilizationChecker': {},
-    'JobChecker': {},  # Only available internally.
-    'OperationChecker': {},
+    "ExpensiveOperationChecker": {},
+    "AcceleratorUtilizationChecker": {},
+    "JobChecker": {},  # Only available internally.
+    "OperationChecker": {},
 }
 
 
@@ -53,7 +53,7 @@ def _graph_string(graph):
     if graph:
         return graph.as_graph_def(add_shapes=True).SerializeToString()
     else:
-        return b''
+        return b""
 
 
 def _build_options(options):
@@ -65,40 +65,39 @@ def _build_options(options):
       tfprof.OptionsProto.
     """
     opts = tfprof_options_pb2.OptionsProto()
-    opts.max_depth = options.get('max_depth', 10)
-    opts.min_bytes = options.get('min_bytes', 0)
-    opts.min_peak_bytes = options.get('min_peak_bytes', 0)
-    opts.min_residual_bytes = options.get('min_residual_bytes', 0)
-    opts.min_output_bytes = options.get('min_output_bytes', 0)
-    opts.min_micros = options.get('min_micros', 0)
-    opts.min_accelerator_micros = options.get('min_accelerator_micros', 0)
-    opts.min_cpu_micros = options.get('min_cpu_micros', 0)
-    opts.min_params = options.get('min_params', 0)
-    opts.min_float_ops = options.get('min_float_ops', 0)
-    opts.min_occurrence = options.get('min_occurrence', 0)
+    opts.max_depth = options.get("max_depth", 10)
+    opts.min_bytes = options.get("min_bytes", 0)
+    opts.min_peak_bytes = options.get("min_peak_bytes", 0)
+    opts.min_residual_bytes = options.get("min_residual_bytes", 0)
+    opts.min_output_bytes = options.get("min_output_bytes", 0)
+    opts.min_micros = options.get("min_micros", 0)
+    opts.min_accelerator_micros = options.get("min_accelerator_micros", 0)
+    opts.min_cpu_micros = options.get("min_cpu_micros", 0)
+    opts.min_params = options.get("min_params", 0)
+    opts.min_float_ops = options.get("min_float_ops", 0)
+    opts.min_occurrence = options.get("min_occurrence", 0)
 
-    opts.step = options.get('step', -1)
+    opts.step = options.get("step", -1)
 
-    opts.order_by = options.get('order_by', 'name')
+    opts.order_by = options.get("order_by", "name")
 
-    for p in options.get('account_type_regexes', []):
+    for p in options.get("account_type_regexes", []):
         opts.account_type_regexes.append(p)
-    for p in options.get('start_name_regexes', []):
+    for p in options.get("start_name_regexes", []):
         opts.start_name_regexes.append(p)
-    for p in options.get('trim_name_regexes', []):
+    for p in options.get("trim_name_regexes", []):
         opts.trim_name_regexes.append(p)
-    for p in options.get('show_name_regexes', []):
+    for p in options.get("show_name_regexes", []):
         opts.show_name_regexes.append(p)
-    for p in options.get('hide_name_regexes', []):
+    for p in options.get("hide_name_regexes", []):
         opts.hide_name_regexes.append(p)
-    opts.account_displayed_op_only = options.get('account_displayed_op_only',
-                                                 False)
+    opts.account_displayed_op_only = options.get("account_displayed_op_only", False)
 
-    for p in options.get('select', []):
+    for p in options.get("select", []):
         opts.select.append(p)
 
-    opts.output = options.get('output', 'stdout')
-    opts.dump_to_file = options.get('dump_to_file', '')
+    opts.output = options.get("output", "stdout")
+    opts.dump_to_file = options.get("dump_to_file", "")
 
     return opts
 
@@ -122,7 +121,7 @@ def _build_advisor_options(options):
     return opts
 
 
-@tf_export(v1=['profiler.Profiler'])
+@tf_export(v1=["profiler.Profiler"])
 class Profiler(object):
     """TensorFlow multi-step profiler.
 
@@ -177,11 +176,9 @@ class Profiler(object):
         self._coverage = 0.0
         self._graph = graph
         # pylint: disable=protected-access
-        op_log = tfprof_logger.merge_default_with_oplog(
-            self._graph, op_log=op_log)
+        op_log = tfprof_logger.merge_default_with_oplog(self._graph, op_log=op_log)
         # pylint: enable=protected-access
-        print_mdl.NewProfiler(
-            _graph_string(self._graph), op_log.SerializeToString())
+        print_mdl.NewProfiler(_graph_string(self._graph), op_log.SerializeToString())
 
     def __del__(self):
         print_mdl.DeleteProfiler()
@@ -196,13 +193,15 @@ class Profiler(object):
           run_meta: RunMetadata proto that contains statistics of a session run.
         """
         # pylint: disable=protected-access
-        op_log = tfprof_logger.merge_default_with_oplog(
-            self._graph, run_meta=run_meta)
+        op_log = tfprof_logger.merge_default_with_oplog(self._graph, run_meta=run_meta)
         # pylint: enable=protected-access
         # TODO(xpan): P1: Better to find the current graph.
-        self._coverage = print_mdl.AddStep(step, _graph_string(self._graph),
-                                           run_meta.SerializeToString(),
-                                           op_log.SerializeToString())
+        self._coverage = print_mdl.AddStep(
+            step,
+            _graph_string(self._graph),
+            run_meta.SerializeToString(),
+            op_log.SerializeToString(),
+        )
 
     def profile_python(self, options):
         """Profile the statistics of the Python codes.
@@ -220,9 +219,10 @@ class Profiler(object):
         tfprof_node = tfprof_output_pb2.MultiGraphNodeProto()
         try:
             tfprof_node.ParseFromString(
-                print_mdl.Profile('code'.encode('utf-8'), opts.SerializeToString()))
+                print_mdl.Profile("code".encode("utf-8"), opts.SerializeToString())
+            )
         except message.DecodeError as e:
-            sys.stderr.write('Cannot parse returned proto: %s.\n' % e)
+            sys.stderr.write("Cannot parse returned proto: %s.\n" % e)
         return tfprof_node
 
     def profile_operations(self, options):
@@ -237,9 +237,10 @@ class Profiler(object):
         tfprof_node = tfprof_output_pb2.MultiGraphNodeProto()
         try:
             tfprof_node.ParseFromString(
-                print_mdl.Profile('op'.encode('utf-8'), opts.SerializeToString()))
+                print_mdl.Profile("op".encode("utf-8"), opts.SerializeToString())
+            )
         except message.DecodeError as e:
-            sys.stderr.write('Cannot parse returned proto: %s.\n' % e)
+            sys.stderr.write("Cannot parse returned proto: %s.\n" % e)
         return tfprof_node
 
     def profile_name_scope(self, options):
@@ -254,9 +255,10 @@ class Profiler(object):
         tfprof_node = tfprof_output_pb2.GraphNodeProto()
         try:
             tfprof_node.ParseFromString(
-                print_mdl.Profile('scope'.encode('utf-8'), opts.SerializeToString()))
+                print_mdl.Profile("scope".encode("utf-8"), opts.SerializeToString())
+            )
         except message.DecodeError as e:
-            sys.stderr.write('Cannot parse returned proto: %s.\n' % e)
+            sys.stderr.write("Cannot parse returned proto: %s.\n" % e)
         return tfprof_node
 
     def profile_graph(self, options):
@@ -271,9 +273,10 @@ class Profiler(object):
         tfprof_node = tfprof_output_pb2.GraphNodeProto()
         try:
             tfprof_node.ParseFromString(
-                print_mdl.Profile('graph'.encode('utf-8'), opts.SerializeToString()))
+                print_mdl.Profile("graph".encode("utf-8"), opts.SerializeToString())
+            )
         except message.DecodeError as e:
-            sys.stderr.write('Cannot parse returned proto: %s.\n' % e)
+            sys.stderr.write("Cannot parse returned proto: %s.\n" % e)
         return tfprof_node
 
     def advise(self, options):
@@ -287,7 +290,8 @@ class Profiler(object):
         advise_pb = tfprof_output_pb2.AdviceProto()
         opts = _build_advisor_options(options)
         advise_pb.ParseFromString(
-            print_mdl.Profile('advise'.encode('utf-8'), opts.SerializeToString()))
+            print_mdl.Profile("advise".encode("utf-8"), opts.SerializeToString())
+        )
         return advise_pb
 
     def serialize_to_string(self):
@@ -306,12 +310,14 @@ class Profiler(object):
         print_mdl.WriteProfile(filename)
 
 
-@tf_export(v1=['profiler.profile'])
-def profile(graph=None,
-            run_meta=None,
-            op_log=None,
-            cmd='scope',
-            options=_DEFAULT_PROFILE_OPTIONS):
+@tf_export(v1=["profiler.profile"])
+def profile(
+    graph=None,
+    run_meta=None,
+    op_log=None,
+    cmd="scope",
+    options=_DEFAULT_PROFILE_OPTIONS,
+):
     """Profile model.
 
       Tutorials and examples can be found in:
@@ -340,48 +346,53 @@ def profile(graph=None,
         graph = ops.get_default_graph()
 
     if options == _DEFAULT_PROFILE_OPTIONS:
-        options = (option_builder.ProfileOptionBuilder
-                   .trainable_variables_parameter())
+        options = option_builder.ProfileOptionBuilder.trainable_variables_parameter()
     # pylint: disable=protected-access
     op_log = tfprof_logger.merge_default_with_oplog(
-        graph, op_log, run_meta, add_trace=cmd == 'code')
+        graph, op_log, run_meta, add_trace=cmd == "code"
+    )
     # pylint: enable=protected-access
 
     opts = _build_options(options)
 
-    run_meta_str = run_meta.SerializeToString() if run_meta else b''
+    run_meta_str = run_meta.SerializeToString() if run_meta else b""
 
     graph_str = _graph_string(graph)
 
-    if cmd == 'code' or cmd == 'op':
+    if cmd == "code" or cmd == "op":
         tfprof_node = tfprof_output_pb2.MultiGraphNodeProto()
-        ret = print_mdl.PrintModelAnalysis(graph_str, run_meta_str,
-                                           op_log.SerializeToString(),
-                                           cmd.encode('utf-8'),
-                                           opts.SerializeToString())
+        ret = print_mdl.PrintModelAnalysis(
+            graph_str,
+            run_meta_str,
+            op_log.SerializeToString(),
+            cmd.encode("utf-8"),
+            opts.SerializeToString(),
+        )
         try:
             tfprof_node.ParseFromString(ret)
         except message.DecodeError as e:
-            sys.stderr.write('Cannot parse returned proto: %s.\n' % e)
+            sys.stderr.write("Cannot parse returned proto: %s.\n" % e)
 
-    elif cmd == 'graph' or cmd == 'scope':
+    elif cmd == "graph" or cmd == "scope":
         tfprof_node = tfprof_output_pb2.GraphNodeProto()
-        ret = print_mdl.PrintModelAnalysis(graph_str, run_meta_str,
-                                           op_log.SerializeToString(),
-                                           cmd.encode('utf-8'),
-                                           opts.SerializeToString())
+        ret = print_mdl.PrintModelAnalysis(
+            graph_str,
+            run_meta_str,
+            op_log.SerializeToString(),
+            cmd.encode("utf-8"),
+            opts.SerializeToString(),
+        )
         try:
             tfprof_node.ParseFromString(ret)
         except message.DecodeError as e:
-            sys.stderr.write('Cannot parse returned proto: %s.\n' % e)
+            sys.stderr.write("Cannot parse returned proto: %s.\n" % e)
     else:
-        raise errors.InvalidArgumentError(
-            None, None, 'unknown cmd: %s\n' % cmd)
+        raise errors.InvalidArgumentError(None, None, "unknown cmd: %s\n" % cmd)
 
     return tfprof_node
 
 
-@tf_export(v1=['profiler.advise'])
+@tf_export(v1=["profiler.advise"])
 def advise(graph=None, run_meta=None, options=_DEFAULT_ADVISE_OPTIONS):
     """Auto profile and advise.
 
@@ -406,15 +417,21 @@ def advise(graph=None, run_meta=None, options=_DEFAULT_ADVISE_OPTIONS):
 
     # pylint: disable=protected-access
     op_log = tfprof_logger.merge_default_with_oplog(
-        graph, None, run_meta, add_trace=True)
+        graph, None, run_meta, add_trace=True
+    )
     # pylint: enable=protected-access
 
-    run_meta_str = run_meta.SerializeToString() if run_meta else b''
+    run_meta_str = run_meta.SerializeToString() if run_meta else b""
 
     opts = _build_advisor_options(options)
     ret = tfprof_output_pb2.AdviceProto()
     ret.ParseFromString(
         print_mdl.PrintModelAnalysis(
-            _graph_string(graph), run_meta_str, op_log.SerializeToString(),
-            'advise'.encode('utf-8'), opts.SerializeToString()))
+            _graph_string(graph),
+            run_meta_str,
+            op_log.SerializeToString(),
+            "advise".encode("utf-8"),
+            opts.SerializeToString(),
+        )
+    )
     return ret
