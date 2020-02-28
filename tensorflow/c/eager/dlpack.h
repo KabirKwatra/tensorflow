@@ -26,11 +26,11 @@ const char* const kDlTensorCapsuleName = "dltensor";
 // Converts eager tensor handle to DLPack (DLManagedTensor*), and return the
 // void* for further PyCapsule construction.
 TF_CAPI_EXPORT extern void* TFE_HandleToDLPack(TFE_TensorHandle* h,
-        TF_Status* status);
+                                               TF_Status* status);
 
 // Converts DLPack (DLManagedTensor*) to eager tensor handle.
 TF_CAPI_EXPORT extern TFE_TensorHandle* TFE_HandleFromDLPack(void* dlm,
-        TF_Status* status);
+                                                             TF_Status* status);
 
 // Calls the destructor of DLManagedTensor, used in the destructor of PyCapsule.
 TF_CAPI_EXPORT extern void TFE_CallDLManagedTensorDeleter(void* dlm_ptr);

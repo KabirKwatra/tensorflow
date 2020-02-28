@@ -29,12 +29,8 @@ import org.tensorflow.lite.support.image.TensorImage;
  * @see ResizeWithCropOrPadOp for resizing without content distortion.
  */
 public class ResizeOp implements ImageOperator {
-
   /** Algorithms for resizing. */
-  public enum ResizeMethod {
-    BILINEAR,
-    NEAREST_NEIGHBOR
-  }
+  public enum ResizeMethod { BILINEAR, NEAREST_NEIGHBOR }
 
   private final int targetHeight;
   private final int targetWidth;

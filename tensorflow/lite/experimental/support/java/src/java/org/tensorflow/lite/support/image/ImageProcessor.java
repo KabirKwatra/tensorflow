@@ -162,7 +162,7 @@ public class ImageProcessor extends SequentialProcessor<TensorImage> {
    *     ImageProcessor}
    */
   public void updateNumberOfRotations(int k) {
-    updateNumberOfRotations(k, /*occurrence=*/ 0);
+    updateNumberOfRotations(k, /*occurrence=*/0);
   }
 
   /**
@@ -183,8 +183,7 @@ public class ImageProcessor extends SequentialProcessor<TensorImage> {
    *     ImageProcessor}
    */
   public synchronized void updateNumberOfRotations(int k, int occurrence) {
-    SupportPreconditions.checkState(
-        operatorIndex.containsKey(Rot90Op.class.getName()),
+    SupportPreconditions.checkState(operatorIndex.containsKey(Rot90Op.class.getName()),
         "The Rot90Op has not been added to the ImageProcessor.");
 
     List<Integer> indexes = operatorIndex.get(Rot90Op.class.getName());

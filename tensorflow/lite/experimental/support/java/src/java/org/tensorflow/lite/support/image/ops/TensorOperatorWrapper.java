@@ -29,7 +29,6 @@ import org.tensorflow.lite.support.image.TensorImage;
  * @see org.tensorflow.lite.support.image.TensorImage
  */
 public class TensorOperatorWrapper implements ImageOperator {
-
   private final TensorOperator tensorOp;
 
   /**

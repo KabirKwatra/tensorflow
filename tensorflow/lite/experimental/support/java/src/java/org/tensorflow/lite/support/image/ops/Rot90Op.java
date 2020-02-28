@@ -24,7 +24,6 @@ import org.tensorflow.lite.support.image.TensorImage;
 
 /** Rotates image counter-clockwise. */
 public class Rot90Op implements ImageOperator {
-
   private final int numRotation;
 
   /** Creates a Rot90 Op which will rotate image by 90 degree counter-clockwise. */

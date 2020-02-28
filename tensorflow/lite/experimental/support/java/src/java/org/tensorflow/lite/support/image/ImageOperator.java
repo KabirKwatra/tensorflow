@@ -21,8 +21,7 @@ import org.tensorflow.lite.support.common.Operator;
 /** Operates a TensorImage object. Used in ImageProcessor. */
 public interface ImageOperator extends Operator<TensorImage> {
   /** @see org.tensorflow.lite.support.common.Operator#apply(java.lang.Object) */
-  @Override
-  TensorImage apply(TensorImage image);
+  @Override TensorImage apply(TensorImage image);
 
   /** Computes the width of the expected output image when input image size is given. */
   int getOutputImageWidth(int inputImageHeight, int inputImageWidth);
