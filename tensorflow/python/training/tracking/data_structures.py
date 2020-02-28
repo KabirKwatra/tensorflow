@@ -23,6 +23,7 @@ import operator
 import sys
 
 import six
+
 try:
     import wrapt
 except ImportError:
@@ -128,23 +129,26 @@ def sticky_attribute_assignment(trackable, name, value):
         return value
     if isinstance(value, base.Trackable):
         trackable._track_trackable(  # pylint: disable=protected-access
-            value, name=name,
+            value,
+            name=name,
             # Allow the user to switch the Trackable which is tracked by this
             # name, since assigning a new variable to an attribute has
             # historically been fine (e.g. Adam did this).
-            overwrite=True)
+            overwrite=True,
+        )
     return value
 
 
 class _UntrackableError(ValueError):
-
     def __init__(self, value):  # pylint: disable=super-init-not-called
         self._value = value
 
     def __str__(self):
-        return (("Only trackable objects (such as Layers or Optimizers) may be "
-                 "stored in a List object. Got %s, which does not inherit from "
-                 "Trackable.") % (self._value,))
+        return (
+            "Only trackable objects (such as Layers or Optimizers) may be "
+            "stored in a List object. Got %s, which does not inherit from "
+            "Trackable."
+        ) % (self._value,)
 
 
 class TrackableDataStructure(base.Trackable):
@@ -173,8 +177,7 @@ class TrackableDataStructure(base.Trackable):
 
     def _track_value(self, value, name):
         """Add a dependency on `value`."""
-        value = sticky_attribute_assignment(
-            trackable=self, value=value, name=name)
+        value = sticky_attribute_assignment(trackable=self, value=value, name=name)
         if isinstance(value, variables.Variable):
             self._self_extra_variables.append(value)
         if not isinstance(value, base.Trackable):
@@ -200,9 +203,11 @@ class TrackableDataStructure(base.Trackable):
         # they're wrapping if out of sync.
         collected = []
         for obj in self._values:
-            if (isinstance(obj, TrackableDataStructure)
+            if (
+                isinstance(obj, TrackableDataStructure)
                 or layer_utils.is_layer(obj)
-                    or layer_utils.has_weights(obj)):
+                or layer_utils.has_weights(obj)
+            ):
                 collected.append(obj)
         return collected
 
@@ -215,14 +220,16 @@ class TrackableDataStructure(base.Trackable):
         return layer_utils.gather_trainable_weights(
             trainable=self.trainable,
             sub_layers=self._layers,
-            extra_variables=self._self_extra_variables)
+            extra_variables=self._self_extra_variables,
+        )
 
     @property
     def non_trainable_weights(self):
         return layer_utils.gather_non_trainable_weights(
             trainable=self.trainable,
             sub_layers=self._layers,
-            extra_variables=self._self_extra_variables)
+            extra_variables=self._self_extra_variables,
+        )
 
     @property
     def weights(self):
@@ -313,7 +320,8 @@ class List(TrackableDataStructure, collections_abc.Sequence):
         self._storage = self._make_storage(*args, **kwargs)
         for index, element in enumerate(self._storage):
             self._storage[index] = self._track_value(
-                element, name=self._name_element(index))
+                element, name=self._name_element(index)
+            )
 
     def copy(self):
         return type(self)(copy.copy(self._storage))
@@ -338,8 +346,7 @@ class List(TrackableDataStructure, collections_abc.Sequence):
 
     def append(self, value):
         """Add a new trackable value."""
-        value = self._track_value(
-            value, self._name_element(len(self._storage)))
+        value = self._track_value(value, self._name_element(len(self._storage)))
         self._storage.append(value)
 
     def extend(self, values):
@@ -358,7 +365,8 @@ class List(TrackableDataStructure, collections_abc.Sequence):
         if y <= 0:
             raise ValueError(
                 "List only supports append, multiplying in place by %d removes "
-                "elements." % y)
+                "elements." % y
+            )
 
         n = len(self._storage)
         for _ in range(y - 1):
@@ -399,7 +407,8 @@ class ListWrapper(
     List,
     collections_abc.MutableSequence,
     # Shadowed, but there for isinstance checks.
-        list):
+    list,
+):
     """Wraps the built-in `list` to support restore-on-create for variables.
 
     Unlike `List`, this sequence type is mutable in the same ways built-in lists
@@ -468,11 +477,11 @@ class ListWrapper(
         copied._non_append_mutation = self._non_append_mutation
         copied._external_modification = self._external_modification
         return copied
+
     # pylint: enable=protected-access
 
     def __reduce_ex__(self, protocol):
-        return (self.__class__,
-                (self._storage,))
+        return (self.__class__, (self._storage,))
 
     def _make_storage(self, wrapped_list):
         """Use the user's original list for storage."""
@@ -501,23 +510,29 @@ class ListWrapper(
         self._check_external_modification()
         if self._non_append_mutation:
             raise ValueError(
-                ("Unable to save the object %s (a list wrapper constructed to track "
-                 "trackable TensorFlow objects). A list element was replaced "
-                 "(__setitem__, __setslice__), deleted (__delitem__, __delslice__), "
-                 "or moved (sort). In order to support restoration on object "
-                 "creation, tracking is exclusively for append-only data structures."
-                 "\n\nIf you don't need this list checkpointed, wrap it in a "
-                 "non-trackable object; it will be subsequently ignored." % (self,)))
+                (
+                    "Unable to save the object %s (a list wrapper constructed to track "
+                    "trackable TensorFlow objects). A list element was replaced "
+                    "(__setitem__, __setslice__), deleted (__delitem__, __delslice__), "
+                    "or moved (sort). In order to support restoration on object "
+                    "creation, tracking is exclusively for append-only data structures."
+                    "\n\nIf you don't need this list checkpointed, wrap it in a "
+                    "non-trackable object; it will be subsequently ignored." % (self,)
+                )
+            )
         if self._external_modification:
             raise ValueError(
-                ("Unable to save the object %s (a list wrapper constructed to track "
-                 "trackable TensorFlow objects). The wrapped list was modified "
-                 "outside the wrapper (its final value was %s, its value when a "
-                 "checkpoint dependency was added was %s), which breaks restoration "
-                 "on object creation.\n\nIf you don't need this list checkpointed, "
-                 "wrap it in a NoDependency object; it will be "
-                 "subsequently ignored." % (
-                     self, self._storage, self._last_wrapped_list_snapshot)))
+                (
+                    "Unable to save the object %s (a list wrapper constructed to track "
+                    "trackable TensorFlow objects). The wrapped list was modified "
+                    "outside the wrapper (its final value was %s, its value when a "
+                    "checkpoint dependency was added was %s), which breaks restoration "
+                    "on object creation.\n\nIf you don't need this list checkpointed, "
+                    "wrap it in a NoDependency object; it will be "
+                    "subsequently ignored."
+                    % (self, self._storage, self._last_wrapped_list_snapshot)
+                )
+            )
         return super(ListWrapper, self)._checkpoint_dependencies
 
     def __delitem__(self, key):
@@ -544,14 +559,14 @@ class ListWrapper(
                     self._non_append_mutation = True
 
                 if value_now is not None and value_now != value_before:
-                    self._storage[i] = self._track_value(self._storage[i],
-                                                         self._name_element(i))
+                    self._storage[i] = self._track_value(
+                        self._storage[i], self._name_element(i)
+                    )
 
         else:
             if isinstance(self._storage[key], base.Trackable):
                 self._non_append_mutation = True
-            self._storage[key] = self._track_value(
-                value, self._name_element(key))
+            self._storage[key] = self._track_value(value, self._name_element(key))
 
         self._update_snapshot()
 
@@ -617,13 +632,11 @@ class ListWrapper(
     def _track_value(self, value, name):
         """Allows storage of non-trackable objects."""
         try:
-            value = super(ListWrapper, self)._track_value(
-                value=value, name=name)
+            value = super(ListWrapper, self)._track_value(value=value, name=name)
         except ValueError:
             # Even if this value isn't trackable, we need to make sure
             # NoDependency objects get unwrapped.
-            value = sticky_attribute_assignment(
-                trackable=self, value=value, name=name)
+            value = sticky_attribute_assignment(trackable=self, value=value, name=name)
         return value
 
     def __repr__(self):
@@ -631,8 +644,7 @@ class ListWrapper(
 
     def _list_functions_for_serialization(self, unused_functions):
         return {
-            str(key): value for key, value in enumerate(self)
-            if _is_function(value)
+            str(key): value for key, value in enumerate(self) if _is_function(value)
         }
 
 
@@ -650,9 +662,11 @@ class Mapping(TrackableDataStructure, collections_abc.Mapping):
         super(Mapping, self).__init__()
         self._storage = self._make_storage(*args, **kwargs)
         self._storage.update(
-            {key: self._track_value(
-                value, name=self._name_element(key))
-             for key, value in self._storage.items()})
+            {
+                key: self._track_value(value, name=self._name_element(key))
+                for key, value in self._storage.items()
+            }
+        )
 
     def __copy__(self):
         return type(self)(copy.copy(self._storage))
@@ -675,8 +689,8 @@ class Mapping(TrackableDataStructure, collections_abc.Mapping):
     def _name_element(self, key):
         if not isinstance(key, six.string_types):
             raise TypeError(
-                "Mapping accepts only string keys, but got a key %s."
-                % repr(key))
+                "Mapping accepts only string keys, but got a key %s." % repr(key)
+            )
         return str(key)
 
     def __setitem__(self, key, value):
@@ -685,9 +699,12 @@ class Mapping(TrackableDataStructure, collections_abc.Mapping):
         current_value = self._storage.setdefault(key, value)
         if current_value is not value:
             raise ValueError(
-                ("Mappings are an append-only data structure. Tried to overwrite the "
-                 "key '%s' with value %s, but it already contains %s")
-                % (key, value, current_value))
+                (
+                    "Mappings are an append-only data structure. Tried to overwrite the "
+                    "key '%s' with value %s, but it already contains %s"
+                )
+                % (key, value, current_value)
+            )
 
     def update(self, *args, **kwargs):
         for key, value in dict(*args, **kwargs).items():
@@ -727,18 +744,20 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
         self._self_non_string_key = False
         self._self_external_modification = False
         self.__wrapped__.update(
-            {key: self._track_value(
-                value, name=self._name_element(key))
-             for key, value in self.__wrapped__.items()})
+            {
+                key: self._track_value(value, name=self._name_element(key))
+                for key, value in self.__wrapped__.items()
+            }
+        )
         self._update_snapshot()
 
     def __reduce_ex__(self, protocol):
-        return (self.__class__,
-                (self.__wrapped__,))
+        return (self.__class__, (self.__wrapped__,))
 
     def __getattribute__(self, name):
-        if (hasattr(type(self), name)
-                and isinstance(getattr(type(self), name), property)):
+        if hasattr(type(self), name) and isinstance(
+            getattr(type(self), name), property
+        ):
             # Bypass ObjectProxy for properties. Whether this workaround is necessary
             # appears to depend on the Python version but not the wrapt version: 3.4
             # in particular seems to look up properties on the wrapped object instead
@@ -762,6 +781,7 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
         copied._self_external_modification = self._self_external_modification
         copied._self_non_string_key = self._self_non_string_key
         return copied
+
     # pylint: enable=protected-access
 
     @property
@@ -784,7 +804,8 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
                 "contains a non-string key which maps to a trackable object or "
                 "mutable data structure.\n\nIf you don't need this dictionary "
                 "checkpointed, wrap it in a non-trackable "
-                "object; it will be subsequently ignored." % (self,))
+                "object; it will be subsequently ignored." % (self,)
+            )
         if self._self_external_modification:
             raise ValueError(
                 "Unable to save the object %s (a dictionary wrapper constructed "
@@ -793,8 +814,9 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
                 "when a checkpoint dependency was added was %s), which breaks "
                 "restoration on object creation.\n\nIf you don't need this "
                 "dictionary checkpointed, wrap it in a "
-                "non-trackable object; it will be subsequently ignored." % (
-                    self, self, self._self_last_wrapped_dict_snapshot))
+                "non-trackable object; it will be subsequently ignored."
+                % (self, self, self._self_last_wrapped_dict_snapshot)
+            )
         # Any reason for dirtiness should have an exception.
         assert not self._dirty
         return super(_DictWrapper, self)._checkpoint_dependencies
@@ -802,8 +824,7 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
     @property
     def _dirty(self):
         """Check if there has already been a mutation which prevents saving."""
-        return (self._self_external_modification
-                or self._self_non_string_key)
+        return self._self_external_modification or self._self_non_string_key
 
     def _check_self_external_modification(self):
         """Checks for any changes to the wrapped dict not through the wrapper."""
@@ -829,8 +850,7 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
             string_key = False
         try:
             no_dependency = isinstance(value, NoDependency)
-            value = super(_DictWrapper, self)._track_value(
-                value=value, name=name)
+            value = super(_DictWrapper, self)._track_value(value=value, name=name)
             if not (string_key or no_dependency):
                 # A non-string key maps to a trackable value. This data structure
                 # is not saveable.
@@ -839,8 +859,7 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
         except ValueError:
             # Even if this value isn't trackable, we need to make sure
             # NoDependency objects get unwrapped.
-            return sticky_attribute_assignment(
-                trackable=self, value=value, name=name)
+            return sticky_attribute_assignment(trackable=self, value=value, name=name)
 
     def _name_element(self, key):
         """Tells TrackableDataStructure to use keys as names as-is."""
@@ -885,10 +904,7 @@ class _DictWrapper(TrackableDataStructure, wrapt.ObjectProxy):
             self[key] = value
 
     def _list_functions_for_serialization(self, unused_serialization_cache):
-        return {
-            key: value for key, value in self.items()
-            if _is_function(value)
-        }
+        return {key: value for key, value in self.items() if _is_function(value)}
 
 
 class _TupleWrapper(TrackableDataStructure, wrapt.ObjectProxy):
@@ -918,15 +934,15 @@ class _TupleWrapper(TrackableDataStructure, wrapt.ObjectProxy):
             try:
                 # NamedTuples take N arguments, unlike tuple which takes a sequence.
                 substituted_wrapped_tuple = original_type(
-                    **dict(zip(fields, substituted_wrapped_tuple)))
+                    **dict(zip(fields, substituted_wrapped_tuple))
+                )
             except TypeError:
                 wrapt.ObjectProxy.__init__(self, original_wrapped_tuple)
                 TrackableDataStructure.__init__(self)
                 self._self_tuple_is_constructable = False
                 return
         else:
-            substituted_wrapped_tuple = original_type(
-                substituted_wrapped_tuple)
+            substituted_wrapped_tuple = original_type(substituted_wrapped_tuple)
         wrapt.ObjectProxy.__init__(self, substituted_wrapped_tuple)
         TrackableDataStructure.__init__(self)
 
@@ -934,13 +950,15 @@ class _TupleWrapper(TrackableDataStructure, wrapt.ObjectProxy):
             # For namedtuples, also track by names for compatibility with
             # dictionaries.
             for name, should_depend, element in zip(
-                    fields, add_dependency, substituted_wrapped_tuple):
+                fields, add_dependency, substituted_wrapped_tuple
+            ):
                 if should_depend:
                     self._track_value(element, name=name)
 
         # Track by index as well, for compatibility with lists.
         for index, (should_depend, element) in enumerate(
-                zip(add_dependency, substituted_wrapped_tuple)):
+            zip(add_dependency, substituted_wrapped_tuple)
+        ):
             if should_depend:
                 self._track_value(element, name="%d" % (index,))
 
@@ -952,13 +970,11 @@ class _TupleWrapper(TrackableDataStructure, wrapt.ObjectProxy):
     def _track_value(self, value, name):
         """Allows storage of non-trackable objects."""
         try:
-            value = super(_TupleWrapper, self)._track_value(
-                value=value, name=name)
+            value = super(_TupleWrapper, self)._track_value(value=value, name=name)
         except ValueError:
             # Even if this value isn't trackable, we need to make sure
             # NoDependency objects get unwrapped.
-            value = sticky_attribute_assignment(
-                trackable=self, value=value, name=name)
+            value = sticky_attribute_assignment(trackable=self, value=value, name=name)
         return value
 
     def __repr__(self):
@@ -981,8 +997,7 @@ class _TupleWrapper(TrackableDataStructure, wrapt.ObjectProxy):
         return _TupleWrapper(copy.deepcopy(self.__wrapped__, memo))
 
     def __reduce_ex__(self, protocol):
-        return (self.__class__,
-                (self.__wrapped__,))
+        return (self.__class__, (self.__wrapped__,))
 
     # imul and iadd are the only tuple-relevant in-place operators. They need to
     # be special-cased to avoid mutating the original proxy object.
@@ -998,16 +1013,19 @@ class _TupleWrapper(TrackableDataStructure, wrapt.ObjectProxy):
     def _checkpoint_dependencies(self):
         if not self._self_tuple_is_constructable:
             raise ValueError(
-                ("Unable to save because the namedtuple {} is not constructable from "
-                 "its _fields (i.e. __new__ is overridden). Expected keyword "
-                 "arguments {}. If you do not need to save this object, consider "
-                 "wrapping it in a custom object that does not inherit from tuple.")
-                .format(self.__wrapped__, self.__wrapped__._fields))
+                (
+                    "Unable to save because the namedtuple {} is not constructable from "
+                    "its _fields (i.e. __new__ is overridden). Expected keyword "
+                    "arguments {}. If you do not need to save this object, consider "
+                    "wrapping it in a custom object that does not inherit from tuple."
+                ).format(self.__wrapped__, self.__wrapped__._fields)
+            )
         return super(_TupleWrapper, self)._checkpoint_dependencies
 
     def __getattribute__(self, name):
-        if (hasattr(type(self), name)
-                and isinstance(getattr(type(self), name), property)):
+        if hasattr(type(self), name) and isinstance(
+            getattr(type(self), name), property
+        ):
             # Bypass ObjectProxy for properties. Whether this workaround is necessary
             # appears to depend on the Python version but not the wrapt version: 3.4
             # in particular seems to look up properties on the wrapped object instead
@@ -1024,14 +1042,18 @@ def _is_function(x):
 revived_types.register_revived_type(
     "trackable_dict_wrapper",
     lambda obj: isinstance(obj, _DictWrapper),
-    versions=[revived_types.VersionedTypeRegistration(
-        # Standard dependencies are enough to reconstruct the trackable
-        # items in dictionaries, so we don't need to save any extra information.
-        object_factory=lambda proto: _DictWrapper({}),
-        version=1,
-        min_producer_version=1,
-        min_consumer_version=1,
-        setter=operator.setitem)])
+    versions=[
+        revived_types.VersionedTypeRegistration(
+            # Standard dependencies are enough to reconstruct the trackable
+            # items in dictionaries, so we don't need to save any extra information.
+            object_factory=lambda proto: _DictWrapper({}),
+            version=1,
+            min_producer_version=1,
+            min_consumer_version=1,
+            setter=operator.setitem,
+        )
+    ],
+)
 
 
 def _set_list_item(list_object, index_string, value):
@@ -1044,12 +1066,16 @@ def _set_list_item(list_object, index_string, value):
 revived_types.register_revived_type(
     "trackable_list_wrapper",
     lambda obj: isinstance(obj, ListWrapper),
-    versions=[revived_types.VersionedTypeRegistration(
-        object_factory=lambda proto: ListWrapper([]),
-        version=1,
-        min_producer_version=1,
-        min_consumer_version=1,
-        setter=_set_list_item)])
+    versions=[
+        revived_types.VersionedTypeRegistration(
+            object_factory=lambda proto: ListWrapper([]),
+            version=1,
+            min_producer_version=1,
+            min_consumer_version=1,
+            setter=_set_list_item,
+        )
+    ],
+)
 
 
 def _set_tuple_item(list_object, index_string, value):
@@ -1067,9 +1093,13 @@ def _set_tuple_item(list_object, index_string, value):
 revived_types.register_revived_type(
     "trackable_tuple_wrapper",
     lambda obj: isinstance(obj, _TupleWrapper),
-    versions=[revived_types.VersionedTypeRegistration(
-        object_factory=lambda proto: ListWrapper([]),
-        version=1,
-        min_producer_version=1,
-        min_consumer_version=1,
-        setter=_set_tuple_item)])
+    versions=[
+        revived_types.VersionedTypeRegistration(
+            object_factory=lambda proto: ListWrapper([]),
+            version=1,
+            min_producer_version=1,
+            min_consumer_version=1,
+            setter=_set_tuple_item,
+        )
+    ],
+)
