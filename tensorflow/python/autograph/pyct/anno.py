@@ -27,7 +27,6 @@ import gast
 
 # pylint:enable=g-bad-import-order
 
-
 # TODO(mdan): Shorten the names.
 # These names are heavily used, and anno.blaa
 # TODO(mdan): Replace the attr-dict mechanism with a more typed solution.
@@ -46,27 +45,22 @@ class Basic(NoValue):
 
     QN = "Qualified name, as it appeared in the code. See qual_names.py."
     SKIP_PROCESSING = (
-        "This node should be preserved as is and not processed any further."
-    )
+        "This node should be preserved as is and not processed any further.")
     INDENT_BLOCK_REMAINDER = (
         "When a node is annotated with this, the remainder of the block should"
         " be indented below it. The annotation contains a tuple"
         " (new_body, name_map), where `new_body` is the new indented block and"
-        " `name_map` allows renaming symbols."
-    )
+        " `name_map` allows renaming symbols.")
     ORIGIN = (
         "Information about the source code that converted code originated"
-        " from. See origin_information.py."
-    )
+        " from. See origin_information.py.")
     DIRECTIVES = (
         "User directives associated with a statement or a variable."
-        " Typically, they affect the immediately-enclosing statement."
-    )
+        " Typically, they affect the immediately-enclosing statement.")
 
     EXTRA_LOOP_TEST = (
         "A special annotation containing additional test code to be executed in"
-        " for loops."
-    )
+        " for loops.")
 
 
 class Static(NoValue):
@@ -87,22 +81,18 @@ class Static(NoValue):
     COND_SCOPE = "The scope for the test node of a conditional statement."
     BODY_SCOPE = (
         "The scope for the main body of a statement (True branch for if "
-        "statements, main body for loops)."
-    )
+        "statements, main body for loops).")
     ORELSE_SCOPE = (
         "The scope for the orelse body of a statement (False branch for if "
-        "statements, orelse body for loops)."
-    )
+        "statements, orelse body for loops).")
 
     # Static analysis annotations.
     DEFINITIONS = "Reaching definition information. See reaching_definitions.py."
     ORIG_DEFINITIONS = (
         "The value of DEFINITIONS that applied to the original code before any"
-        " conversion."
-    )
+        " conversion.")
     DEFINED_VARS_IN = (
-        "Symbols defined when entering the node. See reaching_definitions.py."
-    )
+        "Symbols defined when entering the node. See reaching_definitions.py.")
     LIVE_VARS_OUT = "Symbols live when exiting the node. See liveness.py."
     LIVE_VARS_IN = "Symbols live when entering the node. See liveness.py."
 
@@ -117,9 +107,8 @@ def keys(node, field_name="___pyct_anno"):
 
 
 def getanno(node, key, default=FAIL, field_name="___pyct_anno"):
-    if default is FAIL or (
-        hasattr(node, field_name) and (key in getattr(node, field_name))
-    ):
+    if default is FAIL or (hasattr(node, field_name) and
+                           (key in getattr(node, field_name))):
         return getattr(node, field_name)[key]
     else:
         return default
@@ -136,7 +125,7 @@ def setanno(node, key, value, field_name="___pyct_anno"):
 
     # So that the annotations survive gast_to_ast() and ast_to_gast()
     if field_name not in node._fields:
-        node._fields += (field_name,)
+        node._fields += (field_name, )
 
 
 def delanno(node, key, field_name="___pyct_anno"):
