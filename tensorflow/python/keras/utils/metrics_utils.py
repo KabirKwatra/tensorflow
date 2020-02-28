@@ -21,7 +21,6 @@ from __future__ import print_function
 
 import functools
 import weakref
-
 from enum import Enum
 
 from tensorflow.python.distribute import distribution_strategy_context
