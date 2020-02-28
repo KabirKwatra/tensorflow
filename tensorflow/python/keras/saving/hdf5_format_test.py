@@ -13,7 +13,6 @@
 # limitations under the License.
 # ,============================================================================
 """Tests for model saving in the HDF5 format."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,8 +21,8 @@ import os
 import shutil
 import tempfile
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python import keras
 from tensorflow.python.eager import context

@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Classes and functions implementing Metrics SavedModel serialization."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

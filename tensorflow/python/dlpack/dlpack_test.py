@@ -17,8 +17,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python.dlpack import dlpack
 from tensorflow.python.framework import constant_op

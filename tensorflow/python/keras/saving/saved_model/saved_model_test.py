@@ -27,8 +27,8 @@ from __future__ import print_function
 import os
 import shutil
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.core.example import example_pb2
 from tensorflow.core.example import feature_pb2
