@@ -49,73 +49,77 @@ TF_EXPORT extern std::atomic<int> g_trace_level;
 // records end events. The profiler then stops the recorder and finds start/end
 // pairs. (Unpaired start/end events are discarded at that point).
 class TraceMeRecorder {
- public:
-  // An Event is either the start of a TraceMe, the end of a TraceMe, or both.
-  // Times are in ns since the Unix epoch.
-  struct Event {
-    uint64 activity_id;
-    string name;
-    uint64 start_time;  // 0 = missing
-    uint64 end_time;    // 0 = missing
-  };
-  struct ThreadInfo {
-    uint32 tid;
-    string name;
-  };
-  struct ThreadEvents {
-    ThreadInfo thread;
-    std::vector<Event> events;
-  };
-  using Events = std::vector<ThreadEvents>;
+public:
+    // An Event is either the start of a TraceMe, the end of a TraceMe, or both.
+    // Times are in ns since the Unix epoch.
+    struct Event {
+        uint64 activity_id;
+        string name;
+        uint64 start_time;  // 0 = missing
+        uint64 end_time;    // 0 = missing
+    };
+    struct ThreadInfo {
+        uint32 tid;
+        string name;
+    };
+    struct ThreadEvents {
+        ThreadInfo thread;
+        std::vector<Event> events;
+    };
+    using Events = std::vector<ThreadEvents>;
 
-  // Starts recording of TraceMe().
-  // Only traces <= level will be recorded.
-  // Level must be >= 0. If level is 0, no traces will be recorded.
-  static bool Start(int level) { return Get()->StartRecording(level); }
+    // Starts recording of TraceMe().
+    // Only traces <= level will be recorded.
+    // Level must be >= 0. If level is 0, no traces will be recorded.
+    static bool Start(int level) {
+        return Get()->StartRecording(level);
+    }
 
-  // Stops recording and returns events recorded since Start().
-  // Events passed to Record after Stop has started will be dropped.
-  static Events Stop() { return Get()->StopRecording(); }
+    // Stops recording and returns events recorded since Start().
+    // Events passed to Record after Stop has started will be dropped.
+    static Events Stop() {
+        return Get()->StopRecording();
+    }
 
-  // Returns whether we're currently recording. Racy, but cheap!
-  static inline bool Active(int level = 1) {
-    return internal::g_trace_level.load(std::memory_order_acquire) >= level;
-  }
+    // Returns whether we're currently recording. Racy, but cheap!
+    static inline bool Active(int level = 1) {
+        return internal::g_trace_level.load(std::memory_order_acquire) >= level;
+    }
 
-  // Default value for trace_level_ when tracing is disabled
-  static constexpr int kTracingDisabled = -1;
+    // Default value for trace_level_ when tracing is disabled
+    static constexpr int kTracingDisabled = -1;
 
-  // Records an event. Non-blocking.
-  static void Record(Event event);
+    // Records an event. Non-blocking.
+    static void Record(Event event);
 
-  // Returns an activity_id for TraceMe::ActivityStart.
-  static uint64 NewActivityId();
+    // Returns an activity_id for TraceMe::ActivityStart.
+    static uint64 NewActivityId();
 
- private:
-  class ThreadLocalRecorder;
+private:
+    class ThreadLocalRecorder;
 
-  // Returns singleton.
-  static TraceMeRecorder* Get();
+    // Returns singleton.
+    static TraceMeRecorder* Get();
 
-  TraceMeRecorder() = default;
+    TraceMeRecorder() = default;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(TraceMeRecorder);
+    TF_DISALLOW_COPY_AND_ASSIGN(TraceMeRecorder);
 
-  void RegisterThread(uint32 tid, ThreadLocalRecorder* thread);
-  void UnregisterThread(uint32 tid);
+    void RegisterThread(uint32 tid, ThreadLocalRecorder* thread);
+    void UnregisterThread(uint32 tid);
 
-  bool StartRecording(int level);
-  Events StopRecording();
+    bool StartRecording(int level);
+    Events StopRecording();
 
-  // Gathers events from all active threads, and clears their buffers.
-  Events Clear() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+    // Gathers events from all active threads, and clears their buffers.
+    Events Clear() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  mutex mutex_;
-  // Map of the static container instances (thread_local storage) for each
-  // thread. While active, a ThreadLocalRecorder stores trace events.
-  absl::flat_hash_map<uint32, ThreadLocalRecorder*> threads_ GUARDED_BY(mutex_);
-  // Events from threads that died during recording.
-  TraceMeRecorder::Events orphaned_events_ GUARDED_BY(mutex_);
+    mutex mutex_;
+    // Map of the static container instances (thread_local storage) for each
+    // thread. While active, a ThreadLocalRecorder stores trace events.
+    absl::flat_hash_map<uint32, ThreadLocalRecorder*> threads_ GUARDED_BY(mutex_);
+    // Events from threads that died during recording.
+    TraceMeRecorder::Events orphaned_events_ GUARDED_BY(mutex_);
 };
 
 }  // namespace profiler
