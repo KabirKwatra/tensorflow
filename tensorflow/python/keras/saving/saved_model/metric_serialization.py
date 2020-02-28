@@ -23,23 +23,23 @@ from tensorflow.python.training.tracking import data_structures
 
 
 class MetricSavedModelSaver(layer_serialization.LayerSavedModelSaver):
-  """Metric serialization."""
+    """Metric serialization."""
 
-  @property
-  def object_identifier(self):
-    return '_tf_keras_metric'
+    @property
+    def object_identifier(self):
+        return '_tf_keras_metric'
 
-  def _python_properties_internal(self):
-    metadata = dict(
-        class_name=type(self.obj).__name__,
-        name=self.obj.name,
-        dtype=self.obj.dtype)
-    metadata.update(layer_serialization.get_config(self.obj))
-    if self.obj._build_input_shape is not None:  # pylint: disable=protected-access
-      metadata['build_input_shape'] = self.obj._build_input_shape  # pylint: disable=protected-access
-    return metadata
+    def _python_properties_internal(self):
+        metadata = dict(
+            class_name=type(self.obj).__name__,
+            name=self.obj.name,
+            dtype=self.obj.dtype)
+        metadata.update(layer_serialization.get_config(self.obj))
+        if self.obj._build_input_shape is not None:  # pylint: disable=protected-access
+            metadata['build_input_shape'] = self.obj._build_input_shape  # pylint: disable=protected-access
+        return metadata
 
-  def _get_serialized_attributes_internal(self, unused_serialization_cache):
-    return (dict(variables=data_structures.ListWrapper(self.obj.variables)),
-            dict())  # TODO(b/135550038): save functions to enable saving
-                     # custom metrics.
+    def _get_serialized_attributes_internal(self, unused_serialization_cache):
+        return (dict(variables=data_structures.ListWrapper(self.obj.variables)),
+                dict())  # TODO(b/135550038): save functions to enable saving
+        # custom metrics.

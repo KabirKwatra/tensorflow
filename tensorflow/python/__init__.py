@@ -25,6 +25,16 @@ from __future__ import print_function
 import tensorflow as tf
 """
 
+from tensorflow.python.compiler.mlir import mlir
+from tensorflow.python.compiler.xla import xla
+from tensorflow.python.compiler.xla import jit
+from tensorflow.python.dlpack.dlpack import to_dlpack
+from tensorflow.python.dlpack.dlpack import from_dlpack
+from tensorflow.python.ops import gen_debug_ops
+from tensorflow.python.debug.lib import dumping_callback
+from tensorflow.python.debug.lib import check_numerics_callback
+from tensorflow.python.ops import rnn_cell
+from tensorflow.python.ops import rnn
 import ctypes
 import importlib
 import sys
@@ -151,24 +161,14 @@ _tf2_gauge.get_cell().set(_tf2.enabled())
 
 # Necessary for the symbols in this module to be taken into account by
 # the namespace management system (API decorators).
-from tensorflow.python.ops import rnn
-from tensorflow.python.ops import rnn_cell
 
 # TensorFlow Debugger (tfdbg).
-from tensorflow.python.debug.lib import check_numerics_callback
-from tensorflow.python.debug.lib import dumping_callback
-from tensorflow.python.ops import gen_debug_ops
 
 # DLPack
-from tensorflow.python.dlpack.dlpack import from_dlpack
-from tensorflow.python.dlpack.dlpack import to_dlpack
 
 # XLA JIT compiler APIs.
-from tensorflow.python.compiler.xla import jit
-from tensorflow.python.compiler.xla import xla
 
 # MLIR APIs.
-from tensorflow.python.compiler.mlir import mlir
 
 # Required due to `rnn` and `rnn_cell` not being imported in `nn` directly
 # (due to a circular dependency issue: rnn depends on layers).
