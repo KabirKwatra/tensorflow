@@ -26,11 +26,11 @@ constexpr int kMaxLogLen = 256;
 }  // namespace
 
 int MicroErrorReporter::Report(const char* format, va_list args) {
-    char log_buffer[kMaxLogLen];
-    MicroVsnprintf(log_buffer, kMaxLogLen, format, args);
-    DebugLog(log_buffer);
-    DebugLog("\r\n");
-    return 0;
+  char log_buffer[kMaxLogLen];
+  MicroVsnprintf(log_buffer, kMaxLogLen, format, args);
+  DebugLog(log_buffer);
+  DebugLog("\r\n");
+  return 0;
 }
 
 }  // namespace tflite

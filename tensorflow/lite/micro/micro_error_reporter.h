@@ -22,12 +22,12 @@ limitations under the License.
 namespace tflite {
 
 class MicroErrorReporter : public ErrorReporter {
-public:
-    ~MicroErrorReporter() {}
-    int Report(const char* format, va_list args) override;
+ public:
+  ~MicroErrorReporter() {}
+  int Report(const char* format, va_list args) override;
 
-private:
-    TF_LITE_REMOVE_VIRTUAL_DELETE
+ private:
+  TF_LITE_REMOVE_VIRTUAL_DELETE
 };
 
 }  // namespace tflite
