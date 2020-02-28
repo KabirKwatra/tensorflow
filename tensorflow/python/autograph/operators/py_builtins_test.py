@@ -38,13 +38,11 @@ from tensorflow.python.platform import test
 
 
 class TestBase(object):
-
     def plus_twenty(self, x):
         return x + 20
 
 
 class PyBuiltinsTest(test.TestCase):
-
     def test_abs(self):
         self.assertEqual(py_builtins.abs_(-1), 1)
         with self.cached_session() as sess:
@@ -89,22 +87,22 @@ class PyBuiltinsTest(test.TestCase):
 
     def test_float(self):
         self.assertEqual(py_builtins.float_(10), 10.0)
-        self.assertEqual(py_builtins.float_('10.0'), 10.0)
+        self.assertEqual(py_builtins.float_("10.0"), 10.0)
         with self.cached_session() as sess:
             t = py_builtins.float_(constant_op.constant(1, dtype=dtypes.int64))
             self.assertEqual(self.evaluate(t), 1.0)
-            st = py_builtins.float_(constant_op.constant('1.0'))
+            st = py_builtins.float_(constant_op.constant("1.0"))
             self.assertEqual(self.evaluate(st), 1.0)
 
     def test_int(self):
         self.assertEqual(py_builtins.int_(10.0), 10)
-        self.assertEqual(py_builtins.int_('11', 2), 3)
+        self.assertEqual(py_builtins.int_("11", 2), 3)
         with self.cached_session() as sess:
             t = py_builtins.int_(constant_op.constant(1, dtype=dtypes.float64))
             self.assertEqual(self.evaluate(t), 1)
-            st = py_builtins.int_(constant_op.constant('1'))
+            st = py_builtins.int_(constant_op.constant("1"))
             self.assertEqual(self.evaluate(st), 1)
-            st = py_builtins.int_(constant_op.constant('1'), 10)
+            st = py_builtins.int_(constant_op.constant("1"), 10)
             self.assertEqual(self.evaluate(st), 1)
 
     def test_int_unsupported_base(self):
@@ -117,11 +115,9 @@ class PyBuiltinsTest(test.TestCase):
         with self.cached_session() as sess:
             t = py_builtins.len_(constant_op.constant([[1], [2], [3]]))
             self.assertEqual(t, 3)
-            ta = py_builtins.len_(
-                tensor_array_ops.TensorArray(dtypes.int32, size=5))
+            ta = py_builtins.len_(tensor_array_ops.TensorArray(dtypes.int32, size=5))
             self.assertEqual(self.evaluate(ta), 5)
-            tl = py_builtins.len_(
-                data_structures.tf_tensor_list_new([3, 4, 5]))
+            tl = py_builtins.len_(data_structures.tf_tensor_list_new([3, 4, 5]))
             self.assertEqual(self.evaluate(tl), 3)
 
     def test_len_scalar(self):
@@ -145,9 +141,8 @@ class PyBuiltinsTest(test.TestCase):
             out_capturer = six.StringIO()
             sys.stdout = out_capturer
             with self.cached_session() as sess:
-                sess.run(py_builtins.print_(
-                    constant_op.constant('test message'), 1))
-                self.assertEqual(out_capturer.getvalue(), 'test message 1\n')
+                sess.run(py_builtins.print_(constant_op.constant("test message"), 1))
+                self.assertEqual(out_capturer.getvalue(), "test message 1\n")
         finally:
             sys.stdout = sys.__stdout__
 
@@ -158,9 +153,9 @@ class PyBuiltinsTest(test.TestCase):
             sys.stdout = out_capturer
             with self.cached_session() as sess:
                 sess.run(
-                    py_builtins.print_(constant_op.constant('test message'), [1, 2]))
-                self.assertEqual(out_capturer.getvalue(),
-                                 'test message [1, 2]\n')
+                    py_builtins.print_(constant_op.constant("test message"), [1, 2])
+                )
+                self.assertEqual(out_capturer.getvalue(), "test message [1, 2]\n")
         finally:
             sys.stdout = sys.__stdout__
 
@@ -187,26 +182,29 @@ class PyBuiltinsTest(test.TestCase):
 
     def test_enumerate(self):
         self.assertListEqual(
-            list(py_builtins.enumerate_([3, 2, 1])), [(0, 3), (1, 2), (2, 1)])
+            list(py_builtins.enumerate_([3, 2, 1])), [(0, 3), (1, 2), (2, 1)]
+        )
         self.assertListEqual(
-            list(py_builtins.enumerate_([3, 2, 1], 5)), [(5, 3), (6, 2), (7, 1)])
-        self.assertListEqual(
-            list(py_builtins.enumerate_([-8], -3)), [(-3, -8)])
+            list(py_builtins.enumerate_([3, 2, 1], 5)), [(5, 3), (6, 2), (7, 1)]
+        )
+        self.assertListEqual(list(py_builtins.enumerate_([-8], -3)), [(-3, -8)])
 
     def test_enumerate_dataset(self):
-        dataset = dataset_ops.DatasetV2.from_tensor_slices(['a', 'c'])
+        dataset = dataset_ops.DatasetV2.from_tensor_slices(["a", "c"])
         start = constant_op.constant(20, dtype=dtypes.int64)
         dataset = py_builtins.enumerate_(dataset, start)
         iterator = dataset_ops.make_one_shot_iterator(dataset)
         with self.cached_session() as sess:
-            self.assertAllEqual(self.evaluate(iterator.get_next()), (20, b'a'))
-            self.assertAllEqual(self.evaluate(iterator.get_next()), (21, b'c'))
+            self.assertAllEqual(self.evaluate(iterator.get_next()), (20, b"a"))
+            self.assertAllEqual(self.evaluate(iterator.get_next()), (21, b"c"))
 
     def test_zip(self):
         self.assertListEqual(
-            list(py_builtins.zip_([3, 2, 1], [1, 2, 3])), [(3, 1), (2, 2), (1, 3)])
+            list(py_builtins.zip_([3, 2, 1], [1, 2, 3])), [(3, 1), (2, 2), (1, 3)]
+        )
         self.assertListEqual(
-            list(py_builtins.zip_([4, 5, 6], [-1, -2])), [(4, -1), (5, -2)])
+            list(py_builtins.zip_([4, 5, 6], [-1, -2])), [(4, -1), (5, -2)]
+        )
 
     def test_zip_dataset(self):
         ds1 = dataset_ops.DatasetV2.from_tensor_slices([-11, -12, 4])
@@ -219,18 +217,18 @@ class PyBuiltinsTest(test.TestCase):
             self.assertAllEqual(self.evaluate(iterator.get_next()), (4, 5))
 
     def test_map(self):
-
         def increment(x):
             return x + 1
 
-        def add_list(x, y): return x + y
+        def add_list(x, y):
+            return x + y
+
+        self.assertListEqual(list(py_builtins.map_(increment, [4, 5, 6])), [5, 6, 7])
         self.assertListEqual(
-            list(py_builtins.map_(increment, [4, 5, 6])), [5, 6, 7])
-        self.assertListEqual(
-            list(py_builtins.map_(add_list, [3, 2, 1], [-1, -2, -3])), [2, 0, -2])
+            list(py_builtins.map_(add_list, [3, 2, 1], [-1, -2, -3])), [2, 0, -2]
+        )
 
     def test_map_dataset(self):
-
         def increment(x):
             return x + 1
 
@@ -243,7 +241,9 @@ class PyBuiltinsTest(test.TestCase):
             self.assertAllEqual(self.evaluate(iterator.get_next()), 7)
 
     def test_map_multiple_datasets(self):
-        def add_list(x, y): return x + y
+        def add_list(x, y):
+            return x + y
+
         ds1 = dataset_ops.DatasetV2.from_tensor_slices([-11, -12, 4])
         ds2 = dataset_ops.DatasetV2.from_tensor_slices([-21, -22, 5])
         ds3 = py_builtins.map_(add_list, ds1, ds2)
@@ -255,22 +255,21 @@ class PyBuiltinsTest(test.TestCase):
 
     def _basic_function_scope(self):
         return function_wrappers.FunctionScope(
-            'test_function_name',
+            "test_function_name",
             # Note: this must match the name in the `with` statement.
-            'test_scope',
-            converter.ConversionOptions())
+            "test_scope",
+            converter.ConversionOptions(),
+        )
 
     def test_eval_in_original_context(self):
-
         def test_fn():
             l = 1  # pylint:disable=unused-variable
             with self._basic_function_scope() as test_scope:
-                return py_builtins.eval_in_original_context(eval, ('l',), test_scope)
+                return py_builtins.eval_in_original_context(eval, ("l",), test_scope)
 
         self.assertEqual(test_fn(), 1)
 
     def test_eval_in_original_context_inner_function(self):
-
         def test_fn():
             l = 1  # pylint:disable=unused-variable
             with self._basic_function_scope() as test_scope:
@@ -279,7 +278,9 @@ class PyBuiltinsTest(test.TestCase):
                     # Note: a user function without a top-level function scope should
                     # never be found in user code; it's only possible in generated code.
                     l = 2  # pylint:disable=unused-variable
-                    return py_builtins.eval_in_original_context(eval, ('l',), test_scope)
+                    return py_builtins.eval_in_original_context(
+                        eval, ("l",), test_scope
+                    )
 
                 return inner_fn()
 
@@ -289,14 +290,14 @@ class PyBuiltinsTest(test.TestCase):
         test_case_self = self
 
         class TestSubclass(TestBase):
-
             def plus_twenty(self, x):
-                test_case_self.fail('This should never be called.')
+                test_case_self.fail("This should never be called.")
 
             def test_method(self):
                 with test_case_self._basic_function_scope() as test_scope:
                     test_base_unbound = py_builtins.super_in_original_context(
-                        super, (TestSubclass,), test_scope)
+                        super, (TestSubclass,), test_scope
+                    )
                     test_base = test_base_unbound.__get__(self, TestSubclass)
                     return test_base.plus_twenty(1)
 
@@ -307,14 +308,14 @@ class PyBuiltinsTest(test.TestCase):
         test_case_self = self
 
         class TestSubclass(TestBase):
-
             def plus_twenty(self, x):
-                test_case_self.fail('This should never be called.')
+                test_case_self.fail("This should never be called.")
 
             def test_method(self):
                 with test_case_self._basic_function_scope() as test_scope:
                     test_base = py_builtins.super_in_original_context(
-                        super, (TestSubclass, self), test_scope)
+                        super, (TestSubclass, self), test_scope
+                    )
                     return test_base.plus_twenty(1)
 
         tc = TestSubclass()
@@ -322,9 +323,11 @@ class PyBuiltinsTest(test.TestCase):
 
     def test_filter(self):
         self.assertListEqual(
-            list(py_builtins.filter_(lambda x: x == 'b', ['a', 'b', 'c'])), ['b'])
+            list(py_builtins.filter_(lambda x: x == "b", ["a", "b", "c"])), ["b"]
+        )
         self.assertListEqual(
-            list(py_builtins.filter_(lambda x: x < 3, [3, 2, 1])), [2, 1])
+            list(py_builtins.filter_(lambda x: x < 3, [3, 2, 1])), [2, 1]
+        )
 
     def test_filter_dataset(self):
         dataset = dataset_ops.DatasetV2.from_tensor_slices([3, 2, 1])
@@ -339,10 +342,8 @@ class PyBuiltinsTest(test.TestCase):
         self.assertEqual(py_builtins.any_([False, False, False]), False)
 
     def test_any_dataset(self):
-        dataset_1 = dataset_ops.DatasetV2.from_tensor_slices(
-            [False, True, False])
-        dataset_2 = dataset_ops.DatasetV2.from_tensor_slices(
-            [False, False, False])
+        dataset_1 = dataset_ops.DatasetV2.from_tensor_slices([False, True, False])
+        dataset_2 = dataset_ops.DatasetV2.from_tensor_slices([False, False, False])
         self.assertEqual(self.evaluate(py_builtins.any_(dataset_1)), True)
         self.assertEqual(self.evaluate(py_builtins.any_(dataset_2)), False)
 
@@ -350,8 +351,7 @@ class PyBuiltinsTest(test.TestCase):
         with self.assertRaises(ValueError):
             py_builtins.any_(dataset_3)
 
-        dataset_4 = dataset_ops.DatasetV2.from_tensor_slices(
-            [False, True, False])
+        dataset_4 = dataset_ops.DatasetV2.from_tensor_slices([False, True, False])
         dataset_zipped = dataset_ops.DatasetV2.zip((dataset_4, dataset_4))
         with self.assertRaises(ValueError):
             py_builtins.any_(dataset_zipped)
@@ -365,10 +365,8 @@ class PyBuiltinsTest(test.TestCase):
         self.assertEqual(py_builtins.all_([True, True, True]), True)
 
     def test_all_dataset(self):
-        dataset_1 = dataset_ops.DatasetV2.from_tensor_slices(
-            [False, True, False])
-        dataset_2 = dataset_ops.DatasetV2.from_tensor_slices(
-            [True, True, True])
+        dataset_1 = dataset_ops.DatasetV2.from_tensor_slices([False, True, False])
+        dataset_2 = dataset_ops.DatasetV2.from_tensor_slices([True, True, True])
         self.assertEqual(self.evaluate(py_builtins.all_(dataset_1)), False)
         self.assertEqual(self.evaluate(py_builtins.all_(dataset_2)), True)
 
@@ -376,8 +374,7 @@ class PyBuiltinsTest(test.TestCase):
         with self.assertRaises(ValueError):
             py_builtins.all_(dataset_3)
 
-        dataset_4 = dataset_ops.DatasetV2.from_tensor_slices(
-            [False, True, False])
+        dataset_4 = dataset_ops.DatasetV2.from_tensor_slices([False, True, False])
         dataset_zipped = dataset_ops.DatasetV2.zip((dataset_4, dataset_4))
         with self.assertRaises(ValueError):
             py_builtins.all_(dataset_zipped)
@@ -389,31 +386,38 @@ class PyBuiltinsTest(test.TestCase):
     def test_sorted(self):
         self.assertListEqual(py_builtins.sorted_([2, 3, 1]), [1, 2, 3])
         self.assertListEqual(
-            py_builtins.sorted_([2, 3, 1], key=lambda x: -x), [3, 2, 1])
+            py_builtins.sorted_([2, 3, 1], key=lambda x: -x), [3, 2, 1]
+        )
+        self.assertListEqual(py_builtins.sorted_([2, 3, 1], reverse=True), [3, 2, 1])
         self.assertListEqual(
-            py_builtins.sorted_([2, 3, 1], reverse=True), [3, 2, 1])
-        self.assertListEqual(
-            py_builtins.sorted_([2, 3, 1], key=lambda x: -x, reverse=True),
-            [1, 2, 3])
+            py_builtins.sorted_([2, 3, 1], key=lambda x: -x, reverse=True), [1, 2, 3]
+        )
         self.assertAllEqual(
             py_builtins.sorted_([[4, 3], [2, 1]], key=lambda x: sum(x)),
-            [[2, 1], [4, 3]])
+            [[2, 1], [4, 3]],
+        )
 
     def test_sorted_tensor(self):
         iterable_1 = constant_op.constant([2, 3, 1])
         self.assertListEqual(
-            list(self.evaluate(py_builtins.sorted_(iterable_1))), [1, 2, 3])
+            list(self.evaluate(py_builtins.sorted_(iterable_1))), [1, 2, 3]
+        )
         self.assertListEqual(
             list(self.evaluate(py_builtins.sorted_(iterable_1, key=lambda x: -x))),
-            [3, 2, 1])
+            [3, 2, 1],
+        )
         self.assertListEqual(
             list(self.evaluate(py_builtins.sorted_(iterable_1, reverse=True))),
-            [3, 2, 1])
+            [3, 2, 1],
+        )
         self.assertListEqual(
             list(
                 self.evaluate(
-                    py_builtins.sorted_(iterable_1, key=lambda x: -x,
-                                        reverse=True))), [1, 2, 3])
+                    py_builtins.sorted_(iterable_1, key=lambda x: -x, reverse=True)
+                )
+            ),
+            [1, 2, 3],
+        )
 
         iterable_2 = constant_op.constant([[4, 3], [2, 1]])
         with self.assertRaises(ValueError):
@@ -424,9 +428,13 @@ class PyBuiltinsTest(test.TestCase):
             list(
                 self.evaluate(
                     py_builtins.sorted_(
-                        iterable_2, key=lambda x: math_ops.reduce_sum(x)))),
-            [[2, 1], [4, 3]])
+                        iterable_2, key=lambda x: math_ops.reduce_sum(x)
+                    )
+                )
+            ),
+            [[2, 1], [4, 3]],
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

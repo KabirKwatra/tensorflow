@@ -47,11 +47,11 @@ from tensorflow.python.util import nest
 # TODO(b/145618471): Remove this dependency.
 # Lazy import to work around circular dependencies
 input_lib = lazy_loader.LazyLoader(
-    'input_lib', globals(),
-    'tensorflow.python.distribute.input_lib')
+    "input_lib", globals(), "tensorflow.python.distribute.input_lib"
+)
 parallel_ops = lazy_loader.LazyLoader(
-    'parallel_ops', globals(),
-    'tensorflow.python.ops.parallel_for.control_flow_ops')
+    "parallel_ops", globals(), "tensorflow.python.ops.parallel_for.control_flow_ops"
+)
 
 
 UNSPECIFIED = object()
@@ -78,8 +78,9 @@ def _find_originating_frame(caller_fn_scope, innermost=True):
         ctx_frame = ctx_frame.f_back
 
     assert result is not None, (
-        'the conversion process should ensure the caller_fn_scope is always'
-        ' found somewhere on the call stack')
+        "the conversion process should ensure the caller_fn_scope is always"
+        " found somewhere on the call stack"
+    )
 
     return result
 
@@ -155,7 +156,7 @@ def super_in_original_context(f, args, caller_fn_scope):
     # For example, the error might be cryptic compared to what super() regularly
     # raises.
 
-    type_arg = ctx_frame.f_locals['__class__']
+    type_arg = ctx_frame.f_locals["__class__"]
     self_arg_name = ctx_frame.f_code.co_varnames[0]
     self_arg = ctx_frame.f_locals[self_arg_name]
     return f(type_arg, self_arg)
@@ -209,7 +210,7 @@ def int_(x=0, base=UNSPECIFIED):
 
 def _tf_int(x, base):
     if base not in (10, UNSPECIFIED):
-        raise NotImplementedError('base {} not supported for int'.format(base))
+        raise NotImplementedError("base {} not supported for int".format(base))
 
     # TODO(mdan): We shouldn't assume int32.
     if x.dtype == dtypes.string:
@@ -251,11 +252,12 @@ def _tf_tensor_len(s):
     # check that it's a scalar.
     shape = array_ops.shape(s)
 
-    assert shape.shape, 'shape tensor of zero size? {}'.format(shape)
+    assert shape.shape, "shape tensor of zero size? {}".format(shape)
 
     if shape.shape[0] == 0:
         raise ValueError(
-            'len requires a non-scalar tensor, got one of shape {}'.format(shape))
+            "len requires a non-scalar tensor, got one of shape {}".format(shape)
+        )
 
     if shape.shape.dims[0].value is not None:
         return array_ops.shape(s)[0]
@@ -265,13 +267,14 @@ def _tf_tensor_len(s):
 
     def raise_zero_rank_error():
         msg = gen_string_ops.string_join(
-            ['len requires non-zero rank, got ',
-             gen_string_ops.as_string(rank)])
+            ["len requires non-zero rank, got ", gen_string_ops.as_string(rank)]
+        )
         with ops.control_dependencies([control_flow_ops.Assert(False, [msg])]):
             return constant_op.constant(0, dtype=dtypes.int32)
 
-    return control_flow_ops.cond(rank > 0, lambda: array_ops.shape(s)[0],
-                                 raise_zero_rank_error)
+    return control_flow_ops.cond(
+        rank > 0, lambda: array_ops.shape(s)[0], raise_zero_rank_error
+    )
 
 
 def _py_len(s):
@@ -281,11 +284,9 @@ def _py_len(s):
 def print_(*objects, **kwargs):
     """Overload of the print builtin."""
     # Note: Python 2.6 doesn't support explicit keywords after starargs.
-    unknown_kwargs = tuple(
-        set(kwargs.keys()) - set(('sep', 'end', 'file', 'flush')))
+    unknown_kwargs = tuple(set(kwargs.keys()) - set(("sep", "end", "file", "flush")))
     if unknown_kwargs:
-        raise ValueError(
-            'invalid keyword arguments: {}'.format(unknown_kwargs))
+        raise ValueError("invalid keyword arguments: {}".format(unknown_kwargs))
 
     # TODO(mdan): Use next.flatten(objects) instead?
     if any(tensor_util.is_tensor(o) for o in objects):
@@ -302,24 +303,21 @@ def _py_print(*objects, **kwargs):
 def _tf_py_func_print(objects, kwargs):
     """Overload of print_ as a py_func implementation."""
     override_kwargs = {k: v for k, v in kwargs.items() if v is not UNSPECIFIED}
-    if 'flush' not in override_kwargs:
+    if "flush" not in override_kwargs:
         # Defaulting to flushing the console in graph mode, which helps reduce
         # garbled output in IPython.
-        override_kwargs['flush'] = True
+        override_kwargs["flush"] = True
 
     def print_wrapper(*vals):
-        vals = tuple(v.numpy() if tensor_util.is_tensor(v)
-                     else v for v in vals)
+        vals = tuple(v.numpy() if tensor_util.is_tensor(v) else v for v in vals)
         if not six.PY2:
             # TensorFlow doesn't seem to generate Unicode when passing strings to
             # py_func. This causes the print to add a "b'" wrapper to the output,
             # which is probably never what you want.
-            vals = tuple(
-                v.decode('utf-8') if isinstance(v, bytes) else v for v in vals)
+            vals = tuple(v.decode("utf-8") if isinstance(v, bytes) else v for v in vals)
         six.print_(*vals, **override_kwargs)
 
-    return py_func.wrap_py_func(
-        print_wrapper, None, objects, use_dummy_return=True)
+    return py_func.wrap_py_func(print_wrapper, None, objects, use_dummy_return=True)
 
 
 def range_(start_or_stop, stop=UNSPECIFIED, step=UNSPECIFIED):
@@ -356,10 +354,10 @@ def _py_range(start_or_stop, stop, step):
 def enumerate_(s, start=0):
     if isinstance(s, dataset_ops.DatasetV2):
         return _tf_dataset_enumerate(s, start)
-    if isinstance(
-            s, (input_lib.DistributedIterator, input_lib.DistributedDataset)):
+    if isinstance(s, (input_lib.DistributedIterator, input_lib.DistributedDataset)):
         raise NotImplementedError(
-            'use a for loop over the dataset and keep a separate counter')
+            "use a for loop over the dataset and keep a separate counter"
+        )
     return _py_enumerate(s, start)
 
 
@@ -429,13 +427,13 @@ def _tf_dataset_any(iterable):
     # element of tf.bool.
     specs = nest.flatten(iterable.element_spec)
     if len(specs) != 1 or specs[0].dtype != dtypes.bool:
-        raise ValueError('in graph mode, the "any" builtin only supports datasets '
-                         'that return bool scalars; got: {}'.format(
-                             iterable.element_spec))
+        raise ValueError(
+            'in graph mode, the "any" builtin only supports datasets '
+            "that return bool scalars; got: {}".format(iterable.element_spec)
+        )
     ds = iterable.filter(lambda x: x)
     ds = ds.take(1)
-    ds = ds.reduce(constant_op.constant(
-        False, dtype=dtypes.bool), lambda _, y: y)
+    ds = ds.reduce(constant_op.constant(False, dtype=dtypes.bool), lambda _, y: y)
     return ds
 
 
@@ -456,13 +454,13 @@ def _tf_dataset_all(iterable):
     # element of tf.bool.
     specs = nest.flatten(iterable.element_spec)
     if len(specs) != 1 or specs[0].dtype != dtypes.bool:
-        raise ValueError('in graph mode, the "all" builtin only supports datasets '
-                         'that return bool scalars; got: {}'.format(
-                             iterable.element_spec))
+        raise ValueError(
+            'in graph mode, the "all" builtin only supports datasets '
+            "that return bool scalars; got: {}".format(iterable.element_spec)
+        )
     ds = iterable.filter(lambda x: math_ops.logical_not(x))
     ds = ds.take(1)
-    ds = ds.reduce(constant_op.constant(
-        True, dtype=dtypes.bool), lambda _, y: y)
+    ds = ds.reduce(constant_op.constant(True, dtype=dtypes.bool), lambda _, y: y)
     return ds
 
 
@@ -479,25 +477,23 @@ def sorted_(iterable, key=UNSPECIFIED, reverse=UNSPECIFIED):
 def _tf_sorted(iterable, key, reverse):
     """Overload of sorted_ for Tensor iterable."""
     if reverse is UNSPECIFIED:
-        direction = 'ASCENDING'
+        direction = "ASCENDING"
     else:
-        direction = 'DESCENDING'
+        direction = "DESCENDING"
     if key is not UNSPECIFIED:
         mapped = parallel_ops.vectorized_map(key, iterable)
         if mapped.shape.rank is not None and mapped.shape.rank != 1:
-            raise ValueError('sort only supports only 1D tensors')
-        with ops.control_dependencies([
-            check_ops.assert_rank_v2(mapped, 1,
-                                     'sort only supports only 1D tensors')
-        ]):
+            raise ValueError("sort only supports only 1D tensors")
+        with ops.control_dependencies(
+            [check_ops.assert_rank_v2(mapped, 1, "sort only supports only 1D tensors")]
+        ):
             order = sort_ops.argsort(mapped, direction=direction)
             return array_ops.gather_v2(iterable, order)
     if iterable.shape.rank is not None and iterable.shape.rank != 1:
-        raise ValueError('sort only supports only 1D tensors')
-    with ops.control_dependencies([
-        check_ops.assert_rank_v2(iterable, 1,
-                                 'sort only supports only 1D tensors')
-    ]):
+        raise ValueError("sort only supports only 1D tensors")
+    with ops.control_dependencies(
+        [check_ops.assert_rank_v2(iterable, 1, "sort only supports only 1D tensors")]
+    ):
         return sort_ops.sort(iterable, direction=direction)
 
 
@@ -511,26 +507,39 @@ def _py_sorted(iterable, key, reverse):
     return sorted(iterable)
 
 
-SUPPORTED_BUILTINS = (abs, float, int, len, print, range, enumerate, zip, map,
-                      filter, any, all, sorted)
+SUPPORTED_BUILTINS = (
+    abs,
+    float,
+    int,
+    len,
+    print,
+    range,
+    enumerate,
+    zip,
+    map,
+    filter,
+    any,
+    all,
+    sorted,
+)
 
 if six.PY2:
     SUPPORTED_BUILTINS += (xrange,)
 
 BUILTIN_FUNCTIONS_MAP = {
-    'abs': abs_,
-    'float': float_,
-    'int': int_,
-    'len': len_,
-    'print': print_,
-    'range': range_,
+    "abs": abs_,
+    "float": float_,
+    "int": int_,
+    "len": len_,
+    "print": print_,
+    "range": range_,
     # TODO(mdan): This might make more sense as tf.data.range.
-    'xrange': range_,
-    'enumerate': enumerate_,
-    'zip': zip_,
-    'map': map_,
-    'filter': filter_,
-    'any': any_,
-    'all': all_,
-    'sorted': sorted_,
+    "xrange": range_,
+    "enumerate": enumerate_,
+    "zip": zip_,
+    "map": map_,
+    "filter": filter_,
+    "any": any_,
+    "all": all_,
+    "sorted": sorted_,
 }
