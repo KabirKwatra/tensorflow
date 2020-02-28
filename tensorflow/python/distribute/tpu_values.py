@@ -37,11 +37,8 @@ from tensorflow.python.tpu import tpu
 def _maybe_enter_graph(tensor):
     # Note: might have an eager tensor but not be executing eagerly when
     # building functions.
-    if (
-        context.executing_eagerly()
-        or isinstance(tensor, ops.EagerTensor)
-        or ops.has_default_graph()
-    ):
+    if (context.executing_eagerly() or isinstance(tensor, ops.EagerTensor)
+            or ops.has_default_graph()):
         yield
     else:
         with tensor.graph.as_default():
@@ -49,20 +46,16 @@ def _maybe_enter_graph(tensor):
 
 
 def _make_raw_assign_fn(raw_assign_fn):  # pylint: disable=missing-docstring
-    def assign_fn(
-        var, value, use_locking=False, name=None, read_value=True
-    ):  # pylint: disable=missing-docstring
+    def assign_fn(var, value, use_locking=False, name=None, read_value=True):  # pylint: disable=missing-docstring
         del use_locking  # Unused.
 
         with _maybe_enter_graph(var.handle):
-            op = raw_assign_fn(
-                var.handle, ops.convert_to_tensor(value, dtype=var.dtype), name=name
-            )
+            op = raw_assign_fn(var.handle,
+                               ops.convert_to_tensor(value, dtype=var.dtype),
+                               name=name)
 
             with ops.control_dependencies([op]):
-                return (
-                    var._read_variable_op() if read_value else op
-                )  # pylint: disable=protected-access
+                return (var._read_variable_op() if read_value else op)  # pylint: disable=protected-access
 
     return assign_fn
 
@@ -85,8 +78,7 @@ class TPUVariableMixin(object):
             return super(TPUVariableMixin, self).__getattr__(name)
         else:
             raise AttributeError(
-                "'{}' not accessible within a TPU context.".format(name)
-            )
+                "'{}' not accessible within a TPU context.".format(name))
 
     def get(self):
         if enclosing_tpu_context() is None:
@@ -110,8 +102,7 @@ class TPUVariableMixin(object):
             return self.read_value().numpy()
         else:
             raise NotImplementedError(
-                "numpy() is only available when eager execution is enabled."
-            )
+                "numpy() is only available when eager execution is enabled.")
 
     def _is_mirrored(self):
         raise NotImplementedError(
@@ -126,8 +117,7 @@ class TPUVariableMixin(object):
             return self._get_closest().handle
         else:
             return tpu_context.get_replicated_var_handle(
-                self._handle_id, self._values, self._is_mirrored()
-            )
+                self._handle_id, self._values, self._is_mirrored())
 
     @property
     def device(self):
@@ -136,7 +126,8 @@ class TPUVariableMixin(object):
     def _read_variable_op(self):
         if self.trainable:
             tape.variable_accessed(self)
-        return gen_resource_variable_ops.read_variable_op(self.handle, self.dtype)
+        return gen_resource_variable_ops.read_variable_op(
+            self.handle, self.dtype)
 
     def read_value(self):
         if enclosing_tpu_context() is None:
@@ -152,9 +143,7 @@ class TPUVariableMixin(object):
 
     def _as_graph_element(self):
         if enclosing_tpu_context() is None:
-            return super(
-                TPUVariableMixin, self
-            )._as_graph_element()  # pylint: disable=protected-access
+            return super(TPUVariableMixin, self)._as_graph_element()  # pylint: disable=protected-access
         else:
             return None
 
@@ -171,9 +160,10 @@ class TPUVariableMixin(object):
         """Converts a variable to a tensor."""
         # pylint: disable=protected-access
         if enclosing_tpu_context() is None:
-            return super(TPUVariableMixin, self)._dense_var_to_tensor(
-                dtype=dtype, name=name, as_ref=as_ref
-            )
+            return super(TPUVariableMixin,
+                         self)._dense_var_to_tensor(dtype=dtype,
+                                                    name=name,
+                                                    as_ref=as_ref)
         # pylint: enable=protected-access
         elif dtype is not None and dtype != self.dtype:
             return math_ops.cast(self.read_value(), dtype)
@@ -204,30 +194,28 @@ class TPUMirroredVariable(TPUVariableMixin, values.MirroredVariable):
     def _mirrored_update(self, update_fn, *args, **kwargs):
         with ds_context.enter_or_assert_strategy(self._distribute_strategy):
             if ds_context.in_cross_replica_context() and (
-                enclosing_tpu_context() is not None
-            ):
-                return self._distribute_strategy.extended.update(
-                    self, update_fn, args=args, kwargs=kwargs
-                )
+                    enclosing_tpu_context() is not None):
+                return self._distribute_strategy.extended.update(self,
+                                                                 update_fn,
+                                                                 args=args,
+                                                                 kwargs=kwargs)
             else:
                 return values.MirroredVariable._mirrored_update(
-                    self, update_fn, *args, **kwargs
-                )
+                    self, update_fn, *args, **kwargs)
 
     def assign_sub(self, *args, **kwargs):
         assign_sub_fn = _make_raw_assign_fn(
-            gen_resource_variable_ops.assign_sub_variable_op
-        )
+            gen_resource_variable_ops.assign_sub_variable_op)
         return self._mirrored_update(assign_sub_fn, *args, **kwargs)
 
     def assign_add(self, *args, **kwargs):
         assign_add_fn = _make_raw_assign_fn(
-            gen_resource_variable_ops.assign_add_variable_op
-        )
+            gen_resource_variable_ops.assign_add_variable_op)
         return self._mirrored_update(assign_add_fn, *args, **kwargs)
 
     def assign(self, *args, **kwargs):
-        assign_fn = _make_raw_assign_fn(gen_resource_variable_ops.assign_variable_op)
+        assign_fn = _make_raw_assign_fn(
+            gen_resource_variable_ops.assign_variable_op)
         return self._mirrored_update(assign_fn, *args, **kwargs)
 
     def scatter_sub(self, *args, **kwargs):
@@ -263,24 +251,24 @@ class TPUSyncOnReadVariable(TPUVariableMixin, values.SyncOnReadVariable):
             return values.SyncOnReadVariable.assign_sub(self, *args, **kwargs)
         else:
             return _make_raw_assign_fn(
-                gen_resource_variable_ops.assign_sub_variable_op
-            )(self, *args, **kwargs)
+                gen_resource_variable_ops.assign_sub_variable_op)(self, *args,
+                                                                  **kwargs)
 
     def assign_add(self, *args, **kwargs):
         if enclosing_tpu_context() is None:
             return values.SyncOnReadVariable.assign_add(self, *args, **kwargs)
         else:
             return _make_raw_assign_fn(
-                gen_resource_variable_ops.assign_add_variable_op
-            )(self, *args, **kwargs)
+                gen_resource_variable_ops.assign_add_variable_op)(self, *args,
+                                                                  **kwargs)
 
     def assign(self, *args, **kwargs):
         if enclosing_tpu_context() is None:
             return values.SyncOnReadVariable.assign(self, *args, **kwargs)
         else:
-            return _make_raw_assign_fn(gen_resource_variable_ops.assign_variable_op)(
-                self, *args, **kwargs
-            )
+            return _make_raw_assign_fn(
+                gen_resource_variable_ops.assign_variable_op)(self, *args,
+                                                              **kwargs)
 
     def _is_mirrored(self):
         return False
