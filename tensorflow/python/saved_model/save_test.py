@@ -64,15 +64,13 @@ class _ModelWithOptimizer(util.Checkpoint):
         self.dense = core.Dense(1)
         self.optimizer = adam.Adam(0.01)
 
-    @def_function.function(
-        input_signature=(
-            tensor_spec.TensorSpec([None, 2], dtypes.float32),
-            tensor_spec.TensorSpec([None], dtypes.float32),
-        )
-    )
+    @def_function.function(input_signature=(
+        tensor_spec.TensorSpec([None, 2], dtypes.float32),
+        tensor_spec.TensorSpec([None], dtypes.float32),
+    ))
     def call(self, x, y):
         with backprop.GradientTape() as tape:
-            loss = math_ops.reduce_mean((self.dense(x) - y) ** 2.0)
+            loss = math_ops.reduce_mean((self.dense(x) - y)**2.0)
         trainable_variables = self.dense.trainable_variables
         gradients = tape.gradient(loss, trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, trainable_variables))
@@ -84,20 +82,20 @@ def _run_signature(session, meta_graph_def, inputs, signature_key):
     assert set(inputs.keys()) == set(signature.inputs.keys())
     feed_dict = {}
     for arg_name in inputs.keys():
-        input_tensor = session.graph.get_tensor_by_name(signature.inputs[arg_name].name)
+        input_tensor = session.graph.get_tensor_by_name(
+            signature.inputs[arg_name].name)
         feed_dict[input_tensor] = inputs[arg_name]
     output_dict = {}
     for output_name, output_tensor_info in signature.outputs.items():
         output_dict[output_name] = session.graph.get_tensor_by_name(
-            output_tensor_info.name
-        )
+            output_tensor_info.name)
     return session.run(output_dict, feed_dict=feed_dict)
 
 
 def _import_and_infer(
-    save_dir,
-    inputs,
-    signature_key=signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+        save_dir,
+        inputs,
+        signature_key=signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
 ):
     """Import a SavedModel into a TF 1.x-style graph and run `signature_key`."""
     graph = ops.Graph()
@@ -116,7 +114,8 @@ class SaveTest(test.TestCase):
         root.f(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(root, save_dir, root.f)
-        self.assertEqual({"output_0": 2.0}, _import_and_infer(save_dir, {"x": 1.0}))
+        self.assertEqual({"output_0": 2.0},
+                         _import_and_infer(save_dir, {"x": 1.0}))
 
     def test_method_save_concrete(self):
         root = tracking.AutoTrackable()
@@ -127,14 +126,15 @@ class SaveTest(test.TestCase):
             root,
             save_dir,
             {
-                "non_default_key": root.f.get_concrete_function(
-                    tensor_spec.TensorSpec(None, dtypes.float32)
-                )
+                "non_default_key":
+                root.f.get_concrete_function(
+                    tensor_spec.TensorSpec(None, dtypes.float32))
             },
         )
         self.assertEqual(
             {"out": 2.0},
-            _import_and_infer(save_dir, {"z": 1.0}, signature_key="non_default_key"),
+            _import_and_infer(save_dir, {"z": 1.0},
+                              signature_key="non_default_key"),
         )
 
     def test_method_save_annotated_function(self):
@@ -153,7 +153,10 @@ class SaveTest(test.TestCase):
         # def annotated_function("z": UnknownType) -> UnknownType:
         # This is a workaround since Python 2 does not support annotations and
         # our presubmit linter catches it.
-        annotated_function.__annotations__ = {"z": UnknownType, "return": UnknownType}
+        annotated_function.__annotations__ = {
+            "z": UnknownType,
+            "return": UnknownType
+        }
 
         root.f = def_function.function(annotated_function)
         root.f(constant_op.constant(1.0))
@@ -162,14 +165,15 @@ class SaveTest(test.TestCase):
             root,
             save_dir,
             {
-                "non_default_key": root.f.get_concrete_function(
-                    tensor_spec.TensorSpec(None, dtypes.float32)
-                )
+                "non_default_key":
+                root.f.get_concrete_function(
+                    tensor_spec.TensorSpec(None, dtypes.float32))
             },
         )
         self.assertEqual(
             {"out": 2.0},
-            _import_and_infer(save_dir, {"z": 1.0}, signature_key="non_default_key"),
+            _import_and_infer(save_dir, {"z": 1.0},
+                              signature_key="non_default_key"),
         )
 
     def test_unbuilt_model_does_not_prevent_saving(self):
@@ -203,7 +207,8 @@ class SaveTest(test.TestCase):
         )
         self.assertEqual(
             versions.__git_version__,
-            saved_model_proto.meta_graphs[0].meta_info_def.tensorflow_git_version,
+            saved_model_proto.meta_graphs[0].meta_info_def.
+            tensorflow_git_version,
         )
 
     def test_non_concrete_error(self):
@@ -211,7 +216,8 @@ class SaveTest(test.TestCase):
         root.f = def_function.function(lambda x: 2.0 * x)
         root.f(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
-        with self.assertRaisesRegexp(ValueError, "Expected a TensorFlow function"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "Expected a TensorFlow function"):
             save.save(root, save_dir, root.f)
 
     def test_captures_unreachable_variable(self):
@@ -225,9 +231,8 @@ class SaveTest(test.TestCase):
 
         root.f = increase_variable
 
-        self.assertAllEqual(
-            [101.0, 83.0], root.f(constant_op.constant([10.0, 20.0])).numpy()
-        )
+        self.assertAllEqual([101.0, 83.0],
+                            root.f(constant_op.constant([10.0, 20.0])).numpy())
 
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
 
@@ -238,12 +243,10 @@ class SaveTest(test.TestCase):
         root = tracking.AutoTrackable()
         root.f = def_function.function(
             lambda x: 2.0 * x[0],
-            input_signature=(
-                [
-                    tensor_spec.TensorSpec(None, dtypes.float32),
-                    tensor_spec.TensorSpec(None, dtypes.float32),
-                ],
-            ),
+            input_signature=([
+                tensor_spec.TensorSpec(None, dtypes.float32),
+                tensor_spec.TensorSpec(None, dtypes.float32),
+            ], ),
         )
         root.f([constant_op.constant(1.0), constant_op.constant(1.0)])
 
@@ -257,15 +260,15 @@ class SaveTest(test.TestCase):
             save.save(root, save_dir, to_save)
 
     def test_nested_dict_outputs(self):
-        root = util.Checkpoint(
-            f=def_function.function(lambda x: {"a": 2.0 * x, "b": (3.0 * x, 4.0 * x)})
-        )
+        root = util.Checkpoint(f=def_function.function(lambda x: {
+            "a": 2.0 * x,
+            "b": (3.0 * x, 4.0 * x)
+        }))
         root.f(constant_op.constant(1.0))
         to_save = root.f.get_concrete_function(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
-        with self.assertRaisesRegexp(
-            ValueError, "dictionary containing non-Tensor value"
-        ):
+        with self.assertRaisesRegexp(ValueError,
+                                     "dictionary containing non-Tensor value"):
             save.save(root, save_dir, to_save)
 
     def test_variable(self):
@@ -277,7 +280,8 @@ class SaveTest(test.TestCase):
         to_save = root.f.get_concrete_function(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(root, save_dir, to_save)
-        self.assertAllEqual({"output_0": 12.0}, _import_and_infer(save_dir, {"x": 2.0}))
+        self.assertAllEqual({"output_0": 12.0},
+                            _import_and_infer(save_dir, {"x": 2.0}))
 
     def test_optimizer(self):
         x = constant_op.constant([[3.0, 4.0]])
@@ -289,8 +293,11 @@ class SaveTest(test.TestCase):
         second_loss = model.call(x, y)
         self.assertNotEqual(first_loss, second_loss)
         self.assertAllClose(
-            second_loss, _import_and_infer(save_dir, {"x": [[3.0, 4.0]], "y": [2.0]})
-        )
+            second_loss,
+            _import_and_infer(save_dir, {
+                "x": [[3.0, 4.0]],
+                "y": [2.0]
+            }))
 
     def test_single_method_default_signature(self):
         model = _ModelWithOptimizer()
@@ -300,8 +307,10 @@ class SaveTest(test.TestCase):
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(model, save_dir)
         self.assertIn(
-            "loss", _import_and_infer(save_dir, {"x": [[3.0, 4.0]], "y": [2.0]})
-        )
+            "loss", _import_and_infer(save_dir, {
+                "x": [[3.0, 4.0]],
+                "y": [2.0]
+            }))
 
     def test_single_function_default_signature(self):
         model = tracking.AutoTrackable()
@@ -319,26 +328,23 @@ class SaveTest(test.TestCase):
 
     def test_find_default_save_function(self):
         class ObjWithDefaultSignature(util.Checkpoint):
-            @def_function.function(
-                input_signature=[
-                    tensor_spec.TensorSpec(shape=None, dtype=dtypes.float32)
-                ]
-            )
+            @def_function.function(input_signature=[
+                tensor_spec.TensorSpec(shape=None, dtype=dtypes.float32)
+            ])
             def _default_save_signature(self, x):
                 return x + x + 1
 
         obj = ObjWithDefaultSignature()
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(obj, save_dir)
-        self.assertAllClose({"output_0": 7.0}, _import_and_infer(save_dir, {"x": 3.0}))
+        self.assertAllClose({"output_0": 7.0},
+                            _import_and_infer(save_dir, {"x": 3.0}))
 
     def test_docstring(self):
         class Adder(module.Module):
-            @def_function.function(
-                input_signature=[
-                    tensor_spec.TensorSpec(shape=None, dtype=dtypes.float32)
-                ]
-            )
+            @def_function.function(input_signature=[
+                tensor_spec.TensorSpec(shape=None, dtype=dtypes.float32)
+            ])
             def add(self, x):
                 return x + x + 1.0
 
@@ -346,7 +352,8 @@ class SaveTest(test.TestCase):
         to_save.add(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(to_save, save_dir)
-        self.assertAllClose({"output_0": 7.0}, _import_and_infer(save_dir, {"x": 3.0}))
+        self.assertAllClose({"output_0": 7.0},
+                            _import_and_infer(save_dir, {"x": 3.0}))
 
     def test_datastructures(self):
         class HasDatastructures(util.Checkpoint):
@@ -355,11 +362,9 @@ class SaveTest(test.TestCase):
                 self.a.append(variables.Variable(2.0))
                 self.b = {"a": variables.Variable(3.0)}
 
-            @def_function.function(
-                input_signature=[
-                    tensor_spec.TensorSpec(shape=None, dtype=dtypes.float32)
-                ]
-            )
+            @def_function.function(input_signature=[
+                tensor_spec.TensorSpec(shape=None, dtype=dtypes.float32)
+            ])
             def add(self, x):
                 return x + math_ops.add_n(self.a) + self.b["a"]
 
@@ -367,15 +372,16 @@ class SaveTest(test.TestCase):
         to_save.add(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(to_save, save_dir)
-        self.assertAllClose({"output_0": 10.0}, _import_and_infer(save_dir, {"x": 4.0}))
+        self.assertAllClose({"output_0": 10.0},
+                            _import_and_infer(save_dir, {"x": 4.0}))
 
     def test_default_attr_stripping(self):
         class Complex(util.Checkpoint):
             @def_function.function(input_signature=[])
             def __call__(self):
-                return math_ops.complex(
-                    constant_op.constant(1.0), constant_op.constant(2.0), name="complex"
-                )
+                return math_ops.complex(constant_op.constant(1.0),
+                                        constant_op.constant(2.0),
+                                        name="complex")
 
         to_save = Complex()
         to_save()
@@ -384,9 +390,12 @@ class SaveTest(test.TestCase):
         graph = ops.Graph()
         with graph.as_default(), self.session(graph) as session:
             loader.load(session, [tag_constants.SERVING], save_dir)
-            (func,) = [f for name, f in graph._functions.items() if "call" in name]
-            (complex_node,) = [
-                node for node in func.definition.node_def if node.op == "Complex"
+            (func, ) = [
+                f for name, f in graph._functions.items() if "call" in name
+            ]
+            (complex_node, ) = [
+                node for node in func.definition.node_def
+                if node.op == "Complex"
             ]
             self.assertNotIn("T", complex_node.attr)
             self.assertNotIn("Tout", complex_node.attr)
@@ -406,7 +415,7 @@ class SaveTest(test.TestCase):
         class HasDataset(module.Module):
             def __init__(self):
                 super(HasDataset, self).__init__()
-                self.dataset = dataset_ops.Dataset.range(5).map(lambda x: x ** 2)
+                self.dataset = dataset_ops.Dataset.range(5).map(lambda x: x**2)
 
             @def_function.function
             def __call__(self, x):
@@ -421,27 +430,22 @@ class SaveTest(test.TestCase):
             root,
             save_dir,
             signatures=root.__call__.get_concrete_function(
-                tensor_spec.TensorSpec(None, dtypes.int64)
-            ),
+                tensor_spec.TensorSpec(None, dtypes.int64)),
         )
-        self.assertAllClose(
-            {"output_0": 3 * (1 + 4 + 9 + 16)}, _import_and_infer(save_dir, {"x": 3})
-        )
+        self.assertAllClose({"output_0": 3 * (1 + 4 + 9 + 16)},
+                            _import_and_infer(save_dir, {"x": 3}))
 
     def test_variable_args_cannot_be_used_as_signature(self):
-        @def_function.function(
-            input_signature=[
-                resource_variable_ops.VariableSpec(shape=[], dtype=dtypes.int32)
-            ]
-        )
+        @def_function.function(input_signature=[
+            resource_variable_ops.VariableSpec(shape=[], dtype=dtypes.int32)
+        ])
         def f(unused_v):
             return 1
 
         root = tracking.AutoTrackable()
         root.f = f.get_concrete_function()
-        with self.assertRaisesRegexp(
-            ValueError, "tf.Variable inputs cannot be exported"
-        ):
+        with self.assertRaisesRegexp(ValueError,
+                                     "tf.Variable inputs cannot be exported"):
             save.save(
                 root,
                 os.path.join(self.get_temp_dir(), "saved_model"),
@@ -459,8 +463,7 @@ class SaveTest(test.TestCase):
         obj.v = variables.Variable(2.0)
 
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)]
-        )
+            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)])
         def f(x):
             return (
                 math_ops.multiply(obj.v, x),
@@ -471,8 +474,7 @@ class SaveTest(test.TestCase):
         obj.f = f
 
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)]
-        )
+            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)])
         def g(x):
             return obj.f(x)[1]
 
@@ -485,7 +487,8 @@ class SaveTest(test.TestCase):
 
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(obj, save_dir, signatures={"g": obj.g})
-        graph_def = loader_impl.parse_saved_model(save_dir).meta_graphs[0].graph_def
+        graph_def = loader_impl.parse_saved_model(
+            save_dir).meta_graphs[0].graph_def
 
         def assert_correct_number_of_output_shapes(node):
             if node.op == "StatefulPartitionedCall":
@@ -497,15 +500,16 @@ class SaveTest(test.TestCase):
 
         for f in graph_def.library.function:
             if f.signature.name.startswith(
-                "__inference_f"
-            ) or f.signature.name.startswith("__inference_g"):
+                    "__inference_f") or f.signature.name.startswith(
+                        "__inference_g"):
                 for node in f.node_def:
                     assert_correct_number_of_output_shapes(node)
 
     def test_save_cached_variable(self):
         with ops.Graph().as_default(), session_lib.Session() as session:
             obj = tracking.AutoTrackable()
-            obj.v = variables.Variable(2.0, caching_device=lambda op: op.device)
+            obj.v = variables.Variable(2.0,
+                                       caching_device=lambda op: op.device)
             obj.w = variables.Variable(3.0)
             session.run([obj.v.initializer, obj.w.initializer])
 
@@ -516,7 +520,8 @@ class SaveTest(test.TestCase):
             obj.f = f
             save_dir = os.path.join(self.get_temp_dir(), "saved_model")
             save.save(obj, save_dir, signatures=obj.f)
-            self.assertAllClose({"output_0": 5}, _import_and_infer(save_dir, {}))
+            self.assertAllClose({"output_0": 5},
+                                _import_and_infer(save_dir, {}))
 
 
 class SavingOptionsTest(test.TestCase):
@@ -526,16 +531,17 @@ class SavingOptionsTest(test.TestCase):
         graph_def = graph_pb2.GraphDef()
         text_format.Merge("node { name: 'A' op: 'Test>CustomOp' }", graph_def)
         with self.assertRaisesRegexp(
-            ValueError, "Attempted to save ops from non-whitelisted namespaces"
-        ):
+                ValueError,
+                "Attempted to save ops from non-whitelisted namespaces"):
             save._verify_ops(graph_def, [])
         save._verify_ops(graph_def, ["Test"])
 
         # Test with multiple carrots in op name.
-        text_format.Merge("node { name: 'A' op: 'Test>>A>CustomOp' }", graph_def)
+        text_format.Merge("node { name: 'A' op: 'Test>>A>CustomOp' }",
+                          graph_def)
         with self.assertRaisesRegexp(
-            ValueError, "Attempted to save ops from non-whitelisted namespaces"
-        ):
+                ValueError,
+                "Attempted to save ops from non-whitelisted namespaces"):
             save._verify_ops(graph_def, [])
         save._verify_ops(graph_def, ["Test"])
 
@@ -552,9 +558,8 @@ class SavingOptionsTest(test.TestCase):
             root.f,
             options=save_options.SaveOptions(save_debug_info=True),
         )
-        debug_info_file_name = os.path.join(
-            save_dir, "debug", "saved_model_debug_info.pb"
-        )
+        debug_info_file_name = os.path.join(save_dir, "debug",
+                                            "saved_model_debug_info.pb")
         self.assertTrue(os.path.exists(debug_info_file_name))
         debug_info = graph_debug_info_pb2.GraphDebugInfo()
         with open(debug_info_file_name, "rb") as f:
@@ -582,9 +587,8 @@ class SavingOptionsTest(test.TestCase):
             root.f,
             options=save_options.SaveOptions(save_debug_info=False),
         )
-        debug_info_file_name = os.path.join(
-            save_dir, "debug", "saved_model_debug_info.pb"
-        )
+        debug_info_file_name = os.path.join(save_dir, "debug",
+                                            "saved_model_debug_info.pb")
         self.assertFalse(os.path.exists(debug_info_file_name))
 
     def test_function_aliases(self):
@@ -595,18 +599,16 @@ class SavingOptionsTest(test.TestCase):
         )
         root.f(constant_op.constant(1.0))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
-        options = save_options.SaveOptions(function_aliases={"my_func": root.f,})
+        options = save_options.SaveOptions(function_aliases={
+            "my_func": root.f,
+        })
         save.save(root, save_dir, root.f, options=options)
         function_cache = list(root.f._stateful_fn._function_cache.all_values())
-        function_aliases = (
-            loader_impl.parse_saved_model(save_dir)
-            .meta_graphs[0]
-            .meta_info_def.function_aliases
-        )
+        function_aliases = (loader_impl.parse_saved_model(
+            save_dir).meta_graphs[0].meta_info_def.function_aliases)
         self.assertLen(function_cache, 1)
-        self.assertEqual(
-            function_cache[0].name.decode("utf-8"), list(function_aliases.keys())[0]
-        )
+        self.assertEqual(function_cache[0].name.decode("utf-8"),
+                         list(function_aliases.keys())[0])
 
 
 class AssetTests(test.TestCase):
@@ -621,11 +623,14 @@ class AssetTests(test.TestCase):
         root.path = tracking.Asset(self._vocab_path)
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         root.get_asset = def_function.function(lambda: root.path.asset_path)
-        save.save(root, save_dir, signatures=root.get_asset.get_concrete_function())
+        save.save(root,
+                  save_dir,
+                  signatures=root.get_asset.get_concrete_function())
         second_dir = os.path.join(self.get_temp_dir(), "second_dir")
         file_io.rename(save_dir, second_dir)
         imported_path = _import_and_infer(second_dir, {})["output_0"]
-        self.assertIn(compat.as_str_any(second_dir), compat.as_str_any(imported_path))
+        self.assertIn(compat.as_str_any(second_dir),
+                      compat.as_str_any(imported_path))
 
     def test_table(self):
         initializer = lookup_ops.TextFileInitializer(
@@ -636,15 +641,13 @@ class AssetTests(test.TestCase):
             value_index=lookup_ops.TextFileIndex.LINE_NUMBER,
         )
         root = util.Checkpoint(
-            table=lookup_ops.HashTable(initializer, default_value=-1)
-        )
+            table=lookup_ops.HashTable(initializer, default_value=-1))
         root.table_user = def_function.function(
             root.table.lookup,
             input_signature=[tensor_spec.TensorSpec(None, dtypes.string)],
         )
         self.assertEqual(
-            2, self.evaluate(root.table_user(constant_op.constant("gamma")))
-        )
+            2, self.evaluate(root.table_user(constant_op.constant("gamma"))))
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(root, save_dir)
         file_io.delete_file(self._vocab_path)
@@ -670,9 +673,8 @@ class AssetTests(test.TestCase):
 
         export_dir = os.path.join(self.get_temp_dir(), "save_dir")
         save.save(root, export_dir)
-        self.assertAllClose(
-            {"output_0": [0.2]}, _import_and_infer(export_dir, {"x": [0.1]})
-        )
+        self.assertAllClose({"output_0": [0.2]},
+                            _import_and_infer(export_dir, {"x": [0.1]}))
 
     def test_sensible_function_building_exception(self):
         root = util.Checkpoint(v=variables.Variable(2.0))
@@ -702,11 +704,10 @@ class _ModelWithOptimizerUsingDefun(util.Checkpoint):
         input_signature=(
             tensor_spec.TensorSpec([None, 2], dtypes.float32),
             tensor_spec.TensorSpec([None], dtypes.float32),
-        ),
-    )
+        ), )
     def call(self, x, y):
         with backprop.GradientTape() as tape:
-            loss = math_ops.reduce_mean((self.dense(x) - y) ** 2.0)
+            loss = math_ops.reduce_mean((self.dense(x) - y)**2.0)
         trainable_variables = self.dense.trainable_variables
         gradients = tape.gradient(loss, trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, trainable_variables))
@@ -726,8 +727,7 @@ class MemoryTests(test.TestCase):
             # TODO(allenl): debug reference cycles in Python 2.x
             self.skipTest(
                 "This test only works in Python 3+. Reference cycles are "
-                "created in older Python versions."
-            )
+                "created in older Python versions.")
         save_dir = os.path.join(self.get_temp_dir(), "saved_model")
         save.save(self._model, save_dir, self._model.call)
 
@@ -736,8 +736,7 @@ class ExportMetaGraphTests(test.TestCase):
     def test_export_meta_graph(self):
         root = tracking.AutoTrackable()
         root.variable = resource_variable_ops.UninitializedVariable(
-            name="some_variable", dtype=dtypes.float32
-        )
+            name="some_variable", dtype=dtypes.float32)
 
         @def_function.function(input_signature=[tensor_spec.TensorSpec(None)])
         def multiply_var(x):
@@ -774,12 +773,14 @@ class ExportMetaGraphTests(test.TestCase):
 
             # Initialize variable to 1
             _run_signature(session, meta_graph_def, {}, "initialize")
-            out = _run_signature(session, meta_graph_def, {"x": 3}, "multiply_var")
+            out = _run_signature(session, meta_graph_def, {"x": 3},
+                                 "multiply_var")
             self.assertAllEqual(out, {"output_0": 3})
 
             # Adds 2 to the variable. Variable is now 3
             _run_signature(session, meta_graph_def, {"y": 2}, "update")
-            out = _run_signature(session, meta_graph_def, {"x": 4}, "multiply_var")
+            out = _run_signature(session, meta_graph_def, {"x": 4},
+                                 "multiply_var")
             self.assertAllEqual(out, {"output_0": 12})
 
 
