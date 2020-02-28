@@ -16,7 +16,6 @@
 
 List of built-in functions: https://docs.python.org/3/library/functions.html
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -33,13 +32,13 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_util
 from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import check_ops
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import gen_parsing_ops
 from tensorflow.python.ops import gen_string_ops
 from tensorflow.python.ops import list_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import sort_ops
-from tensorflow.python.ops import check_ops
 from tensorflow.python.util import lazy_loader
 from tensorflow.python.util import nest
 
