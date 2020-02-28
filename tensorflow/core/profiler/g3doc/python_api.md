@@ -1,14 +1,15 @@
 ## Python API Tutorials
 
-* [Parameters and Shapes](#parameters-and-shapes)
-* [Float Operations](#float-operations)
-* [Time and Memory](#time-and-memory)
-* [Visualize](#visualize)
-* [Multi-step Profiling](#multi-step-profiling)
+- [Parameters and Shapes](#parameters-and-shapes)
+- [Float Operations](#float-operations)
+- [Time and Memory](#time-and-memory)
+- [Visualize](#visualize)
+- [Multi-step Profiling](#multi-step-profiling)
 
-```import tensorflow as tf```.
+`import tensorflow as tf`.
 
 ### Parameters and Shapes.
+
 ```python
 # Print trainable variable parameter statistics to stdout.
 ProfileOptionBuilder = tf.profiler.ProfileOptionBuilder
@@ -36,7 +37,8 @@ sys.stdout.write('total_params: %d\n' % param_stats.total_parameters)
 ### Float Operations
 
 #### Note: See [Caveats](profile_model_architecture.md#caveats) in "Profile Model Architecture" Tutorial
-``` python
+
+```python
 # Print to stdout an analysis of the number of floating point operations in the
 # model broken down by individual operations.
 tf.profiler.profile(
@@ -45,6 +47,7 @@ tf.profiler.profile(
 ```
 
 ### Time and Memory
+
 You will first need to run the following set up in your model in order to
 compute the memory and timing statistics.
 
@@ -67,7 +70,7 @@ with tf.Session() as sess:
 Finally, you may run `tf.profiler.profile` to explore the timing and memory
 information of the model.
 
-``` python
+```python
 # Print to stdout an analysis of the memory usage and the timing information
 # broken down by python codes.
 ProfileOptionBuilder = tf.profiler.ProfileOptionBuilder
