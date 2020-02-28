@@ -48,7 +48,8 @@ def get_read_only_resource_input_indices_graph(func_graph):
             else:
                 indices = _get_read_only_resource_input_indices_op(op)
                 op_read_only_resource_inputs[op] = object_identity.ObjectIdentitySet(
-                    [op.inputs[i] for i in indices])
+                    [op.inputs[i] for i in indices]
+                )
                 if t not in op_read_only_resource_inputs[op]:
                     read_only = False
                     break
@@ -75,8 +76,10 @@ def _get_read_only_resource_input_indices_op(op):
             break
         if op.inputs[i].dtype != dtypes.resource:
             continue
-        if (read_only_index < len(read_only_input_indices) and
-                i == read_only_input_indices[read_only_index]):
+        if (
+            read_only_index < len(read_only_input_indices)
+            and i == read_only_input_indices[read_only_index]
+        ):
             result.append(i)
             read_only_index += 1
 
@@ -113,8 +116,10 @@ def get_read_write_resource_inputs(op):
     for i, t in enumerate(op.inputs):
         if op.inputs[i].dtype != dtypes.resource:
             continue
-        if (read_only_index < len(read_only_input_indices) and
-                i == read_only_input_indices[read_only_index]):
+        if (
+            read_only_index < len(read_only_input_indices)
+            and i == read_only_input_indices[read_only_index]
+        ):
             reads.add(op.inputs[i])
             read_only_index += 1
         else:
