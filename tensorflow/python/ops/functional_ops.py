@@ -45,13 +45,13 @@ from tensorflow.python.util.tf_export import tf_export
 # TODO(yuanbyu, mrry): Handle stride to support sliding windows.
 @tf_export(v1=["foldl"])
 def foldl(
-    fn,
-    elems,
-    initializer=None,
-    parallel_iterations=10,
-    back_prop=True,
-    swap_memory=False,
-    name=None,
+        fn,
+        elems,
+        initializer=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        name=None,
 ):
     """foldl on the list of tensors unpacked from `elems` on dimension 0.
 
@@ -105,9 +105,10 @@ def foldl(
         raise TypeError("fn must be callable.")
 
     def create_ta(elem):
-        return tensor_array_ops.TensorArray(
-            dtype=elem.dtype, size=n, dynamic_size=False, infer_shape=True
-        ).unstack(elem)
+        return tensor_array_ops.TensorArray(dtype=elem.dtype,
+                                            size=n,
+                                            dynamic_size=False,
+                                            infer_shape=True).unstack(elem)
 
     in_graph_mode = not context.executing_eagerly()
     with ops.name_scope(name, "foldl", [elems]):
@@ -126,12 +127,11 @@ def foldl(
 
         # Convert elems to tensor array. n may be known statically.
         elems_flat = [
-            ops.convert_to_tensor(elem, name="elem") for elem in nest.flatten(elems)
+            ops.convert_to_tensor(elem, name="elem")
+            for elem in nest.flatten(elems)
         ]
-        n = (
-            tensor_shape.dimension_value(elems_flat[0].shape[0])
-            or array_ops.shape(elems_flat[0])[0]
-        )
+        n = (tensor_shape.dimension_value(elems_flat[0].shape[0])
+             or array_ops.shape(elems_flat[0])[0])
 
         elems_ta = nest.map_structure(create_ta, elems)
 
@@ -177,13 +177,13 @@ results = tf.nest.map_structure(tf.stop_gradient, tf.foldl(fn, elems))""",
     back_prop=False,
 )
 def foldl_v2(
-    fn,
-    elems,
-    initializer=None,
-    parallel_iterations=10,
-    back_prop=True,
-    swap_memory=False,
-    name=None,
+        fn,
+        elems,
+        initializer=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        name=None,
 ):
     """foldl on the list of tensors unpacked from `elems` on dimension 0.
 
@@ -247,13 +247,13 @@ def foldl_v2(
 
 @tf_export(v1=["foldr"])
 def foldr(
-    fn,
-    elems,
-    initializer=None,
-    parallel_iterations=10,
-    back_prop=True,
-    swap_memory=False,
-    name=None,
+        fn,
+        elems,
+        initializer=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        name=None,
 ):
     """foldr on the list of tensors unpacked from `elems` on dimension 0.
 
@@ -307,9 +307,10 @@ def foldr(
         raise TypeError("fn must be callable.")
 
     def create_ta(elem):
-        return tensor_array_ops.TensorArray(
-            dtype=elem.dtype, size=n, dynamic_size=False, infer_shape=True
-        ).unstack(elem)
+        return tensor_array_ops.TensorArray(dtype=elem.dtype,
+                                            size=n,
+                                            dynamic_size=False,
+                                            infer_shape=True).unstack(elem)
 
     in_graph_mode = not context.executing_eagerly()
     with ops.name_scope(name, "foldr", [elems]):
@@ -328,12 +329,11 @@ def foldr(
 
         # Convert elems to tensor array. n may be known statically.
         elems_flat = [
-            ops.convert_to_tensor(elem, name="elem") for elem in nest.flatten(elems)
+            ops.convert_to_tensor(elem, name="elem")
+            for elem in nest.flatten(elems)
         ]
-        n = (
-            tensor_shape.dimension_value(elems_flat[0].shape[0])
-            or array_ops.shape(elems_flat[0])[0]
-        )
+        n = (tensor_shape.dimension_value(elems_flat[0].shape[0])
+             or array_ops.shape(elems_flat[0])[0])
 
         elems_ta = nest.map_structure(create_ta, elems)
 
@@ -380,13 +380,13 @@ results = tf.nest.map_structure(tf.stop_gradient, tf.foldr(fn, elems))""",
     back_prop=False,
 )
 def foldr_v2(
-    fn,
-    elems,
-    initializer=None,
-    parallel_iterations=10,
-    back_prop=True,
-    swap_memory=False,
-    name=None,
+        fn,
+        elems,
+        initializer=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        name=None,
 ):
     """foldr on the list of tensors unpacked from `elems` on dimension 0.
 
@@ -450,15 +450,15 @@ def foldr_v2(
 
 @tf_export(v1=["scan"])
 def scan(
-    fn,
-    elems,
-    initializer=None,
-    parallel_iterations=10,
-    back_prop=True,
-    swap_memory=False,
-    infer_shape=True,
-    reverse=False,
-    name=None,
+        fn,
+        elems,
+        initializer=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        infer_shape=True,
+        reverse=False,
+        name=None,
 ):
     """scan on the list of tensors unpacked from `elems` on dimension 0.
 
@@ -573,7 +573,8 @@ def scan(
             return nest.flatten(x) if output_is_sequence else [x]
 
         def output_pack(x):
-            return nest.pack_sequence_as(initializer, x) if output_is_sequence else x[0]
+            return nest.pack_sequence_as(initializer,
+                                         x) if output_is_sequence else x[0]
 
     elems_flat = input_flatten(elems)
 
@@ -593,7 +594,9 @@ def scan(
                 varscope_caching_device_was_none = True
 
         # Convert elems to tensor array.
-        elems_flat = [ops.convert_to_tensor(elem, name="elem") for elem in elems_flat]
+        elems_flat = [
+            ops.convert_to_tensor(elem, name="elem") for elem in elems_flat
+        ]
 
         # Convert elems to tensor array. n may be known statically.
         n = tensor_shape.dimension_value(elems_flat[0].shape[0])
@@ -608,12 +611,12 @@ def scan(
                 dynamic_size=False,
                 element_shape=elem.shape[1:],
                 infer_shape=True,
-            )
-            for elem in elems_flat
+            ) for elem in elems_flat
         ]
         # Unpack elements
         elems_ta = [
-            elem_ta.unstack(elem) for elem_ta, elem in zip(elems_ta, elems_flat)
+            elem_ta.unstack(elem)
+            for elem_ta, elem in zip(elems_ta, elems_flat)
         ]
 
         if initializer is None:
@@ -632,8 +635,7 @@ def scan(
                 element_shape=init.shape if infer_shape else None,
                 dynamic_size=False,
                 infer_shape=infer_shape,
-            )
-            for init in a_flat
+            ) for init in a_flat
         ]
 
         if initializer is None:
@@ -658,12 +660,12 @@ def scan(
               TypeError: if initializer and fn() output structure do not match
               ValueType: if initializer and fn() output lengths do not match
             """
-            packed_elems = input_pack([elem_ta.read(i) for elem_ta in elems_ta])
+            packed_elems = input_pack(
+                [elem_ta.read(i) for elem_ta in elems_ta])
             packed_a = output_pack(a_flat)
             a_out = fn(packed_a, packed_elems)
             nest.assert_same_structure(
-                elems if initializer is None else initializer, a_out
-            )
+                elems if initializer is None else initializer, a_out)
             flat_a_out = output_flatten(a_out)
             tas = [ta.write(i, value) for (ta, value) in zip(tas, flat_a_out)]
             if reverse:
@@ -698,21 +700,16 @@ def scan(
 
         n_static = tensor_shape.Dimension(
             tensor_shape.dimension_value(
-                elems_flat[0].get_shape().with_rank_at_least(1)[0]
-            )
-        )
+                elems_flat[0].get_shape().with_rank_at_least(1)[0]))
         for elem in elems_flat[1:]:
             n_static.merge_with(
                 tensor_shape.Dimension(
                     tensor_shape.dimension_value(
-                        elem.get_shape().with_rank_at_least(1)[0]
-                    )
-                )
-            )
+                        elem.get_shape().with_rank_at_least(1)[0])))
         for r in results_flat:
             r.set_shape(
-                tensor_shape.TensorShape(n_static).concatenate(r.get_shape()[1:])
-            )
+                tensor_shape.TensorShape(n_static).concatenate(
+                    r.get_shape()[1:]))
 
         # TODO(akshayka): Remove the in_graph_mode check once caching devices are
         # supported in Eager
@@ -734,15 +731,15 @@ results = tf.nest.map_structure(tf.stop_gradient, tf.scan(fn, elems))""",
     back_prop=False,
 )
 def scan_v2(
-    fn,
-    elems,
-    initializer=None,
-    parallel_iterations=10,
-    back_prop=True,
-    swap_memory=False,
-    infer_shape=True,
-    reverse=False,
-    name=None,
+        fn,
+        elems,
+        initializer=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        infer_shape=True,
+        reverse=False,
+        name=None,
 ):
     """scan on the list of tensors unpacked from `elems` on dimension 0.
 
@@ -909,7 +906,8 @@ def Gradient(inputs, f, name=None):
 def _LoopBodyCaptureWrapper(func):
     """Returns a wrapper for `func` that handles loop-carried captured inputs."""
 
-    @function.Defun(*func.declared_input_types, func_name="%s_Wrapper" % func.name)
+    @function.Defun(*func.declared_input_types,
+                    func_name="%s_Wrapper" % func.name)
     def Wrapper(*args):
         """A wrapper that handles loop-carried captured inputs."""
         result = func(*args)
@@ -920,7 +918,7 @@ def _LoopBodyCaptureWrapper(func):
             return extra_args
         # Unary functions return a single Tensor value.
         elif not isinstance(result, tuple):
-            return (result,) + extra_args
+            return (result, ) + extra_args
         # N-ary functions return a tuple of Tensors.
         else:
             return result + extra_args
@@ -956,16 +954,13 @@ def While(input_, cond, body, name=None, hostmem=None):
       A list of output tensors whose types are T.
     """
     if cond.captured_inputs:
-        raise ValueError(
-            "While op 'cond' argument must be a function "
-            "without implicitly captured inputs."
-        )
+        raise ValueError("While op 'cond' argument must be a function "
+                         "without implicitly captured inputs.")
 
     if cond.declared_input_types != body.declared_input_types:
         raise ValueError(
-            "While op 'cond' and 'body' signatures do not match. %r vs %r"
-            % (cond.declared_input_types, body.declared_input_types)
-        )
+            "While op 'cond' and 'body' signatures do not match. %r vs %r" %
+            (cond.declared_input_types, body.declared_input_types))
 
     if body.captured_inputs:
         cond_dtypes = list(body.declared_input_types) + [
@@ -975,7 +970,7 @@ def While(input_, cond, body, name=None, hostmem=None):
         @function.Defun(*cond_dtypes, func_name="%s_Wrapper" % cond.name)
         def CondWrapper(*args):
             """A wrapper that handles loop-carried captured inputs."""
-            return cond(*args[: len(body.declared_input_types)])
+            return cond(*args[:len(body.declared_input_types)])
 
         ret = gen_functional_ops._while(
             input_ + body.captured_inputs,
@@ -984,21 +979,17 @@ def While(input_, cond, body, name=None, hostmem=None):
             name=name,
         )
         # Slice off the loop-carried captured inputs.
-        ret = ret[: -len(body.captured_inputs)]
+        ret = ret[:-len(body.captured_inputs)]
     else:
         ret = gen_functional_ops._while(input_, cond, body, name=name)
     if hostmem:
         input_attr = attr_value_pb2.AttrValue()
         input_attr.list.i.extend(hostmem)
-        ret[0].op._set_attr(
-            "_input_hostmem", input_attr
-        )  # pylint: disable=protected-access
+        ret[0].op._set_attr("_input_hostmem", input_attr)  # pylint: disable=protected-access
 
         output_attr = attr_value_pb2.AttrValue()
         output_attr.list.i.extend(hostmem)
-        ret[0].op._set_attr(
-            "_output_hostmem", output_attr
-        )  # pylint: disable=protected-access
+        ret[0].op._set_attr("_output_hostmem", output_attr)  # pylint: disable=protected-access
     return ret
 
 
@@ -1015,7 +1006,13 @@ def While(input_, cond, body, name=None, hostmem=None):
 #
 # It should be possible and probably better to write a XLA C++ kernel
 # implementing the logic in _ForUsingWhile.
-def _ForUsingWhile(start, limit, delta, inputs, forbody, name=None, hostmem=None):
+def _ForUsingWhile(start,
+                   limit,
+                   delta,
+                   inputs,
+                   forbody,
+                   name=None,
+                   hostmem=None):
     """Helper to implement a For loop using a While."""
     # To support negative delta (e.g., range(100, 0, -3)), we iterate
     # over the range(n) and use iter * delta + start as the real
@@ -1024,8 +1021,8 @@ def _ForUsingWhile(start, limit, delta, inputs, forbody, name=None, hostmem=None
     d = math_ops.abs(delta)
     # XLA on TPUs doesn't support integer division
     n = math_ops.cast(
-        math_ops.cast((math_ops.abs(limit - start) + d - 1), dtypes.float32)
-        / math_ops.cast(d, dtypes.float32),
+        math_ops.cast((math_ops.abs(limit - start) + d - 1), dtypes.float32) /
+        math_ops.cast(d, dtypes.float32),
         dtypes.int32,
     )
 
@@ -1055,7 +1052,7 @@ def _ForUsingWhile(start, limit, delta, inputs, forbody, name=None, hostmem=None
             for_result = ()
         # Unary functions return a single Tensor value.
         elif isinstance(for_result, ops.Tensor):
-            for_result = (for_result,)
+            for_result = (for_result, )
         return (i + 1, n, start, delta) + tuple(for_result)
 
     if hostmem is not None:
@@ -1071,12 +1068,17 @@ def _ForUsingWhile(start, limit, delta, inputs, forbody, name=None, hostmem=None
         hostmem=hostmem,
     )
     # Slice off the loop-carried captured inputs.
-    return list(results[4 : len(results)])
+    return list(results[4:len(results)])
 
 
-def For(
-    start, limit, delta, inputs, body, name=None, hostmem=None, rewrite_with_while=None
-):
+def For(start,
+        limit,
+        delta,
+        inputs,
+        body,
+        name=None,
+        hostmem=None,
+        rewrite_with_while=None):
     r"""out = input; for i in range(start, limit, delta) out = body(i, out).
 
     Args:
@@ -1109,32 +1111,36 @@ def For(
             name=name,
         )
         # Slice off the loop-carried captured inputs.
-        ret = ret[: -len(body.captured_inputs)]
+        ret = ret[:-len(body.captured_inputs)]
     else:
-        ret = gen_functional_ops._for(start, limit, delta, inputs, body, name=name)
+        ret = gen_functional_ops._for(start,
+                                      limit,
+                                      delta,
+                                      inputs,
+                                      body,
+                                      name=name)
     if hostmem:
         num_for_params = 3  # start/limit/delta
 
         input_attr = attr_value_pb2.AttrValue()
         input_attr.list.i.extend([num_for_params + i for i in hostmem])
-        ret[0].op._set_attr(
-            "_input_hostmem", input_attr
-        )  # pylint: disable=protected-access
+        ret[0].op._set_attr("_input_hostmem", input_attr)  # pylint: disable=protected-access
 
         output_attr = attr_value_pb2.AttrValue()
         output_attr.list.i.extend(hostmem)
-        ret[0].op._set_attr(
-            "_output_hostmem", output_attr
-        )  # pylint: disable=protected-access
+        ret[0].op._set_attr("_output_hostmem", output_attr)  # pylint: disable=protected-access
     return ret
 
 
 # pylint: enable=invalid-name,protected-access
 
 
-def partitioned_call(
-    args, f, tout=None, executing_eagerly=None, config=None, executor_type=None
-):
+def partitioned_call(args,
+                     f,
+                     tout=None,
+                     executing_eagerly=None,
+                     config=None,
+                     executor_type=None):
     """Executes a function while respecting device annotations.
 
     Currently, only those functions that execute within the same address space
@@ -1197,14 +1203,13 @@ def partitioned_call(
     args = [ops.convert_to_tensor(x) for x in args]
     tin_attr = attr_value_pb2.AttrValue(
         list=attr_value_pb2.AttrValue.ListValue(
-            type=[x.dtype.as_datatype_enum for x in args]
-        )
-    )
+            type=[x.dtype.as_datatype_enum for x in args]))
     tout_attr = attr_value_pb2.AttrValue(
-        list=attr_value_pb2.AttrValue.ListValue(type=tout)
-    )
-    func_attr = attr_value_pb2.AttrValue(func=attr_value_pb2.NameAttrList(name=f.name))
-    executor_type_attr = attr_value_pb2.AttrValue(s=compat.as_bytes(executor_type))
+        list=attr_value_pb2.AttrValue.ListValue(type=tout))
+    func_attr = attr_value_pb2.AttrValue(func=attr_value_pb2.NameAttrList(
+        name=f.name))
+    executor_type_attr = attr_value_pb2.AttrValue(
+        s=compat.as_bytes(executor_type))
 
     # When running in graph mode, the graph and function graphs are optimized
     # (i.e. run through grappler) per the session options, so we can disable any
@@ -1243,5 +1248,7 @@ def _set_read_only_resource_inputs_attr(op, func_graph):
       op: PartitionedCall Operation.
       func_graph: FuncGraph.
     """
-    read_only_indices = acd.get_read_only_resource_input_indices_graph(func_graph)
-    ops.set_int_list_attr(op, acd.READ_ONLY_RESOURCE_INPUTS_ATTR, read_only_indices)
+    read_only_indices = acd.get_read_only_resource_input_indices_graph(
+        func_graph)
+    ops.set_int_list_attr(op, acd.READ_ONLY_RESOURCE_INPUTS_ATTR,
+                          read_only_indices)

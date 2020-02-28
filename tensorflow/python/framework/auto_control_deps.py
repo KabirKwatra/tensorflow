@@ -103,11 +103,9 @@ _ORDER_INSENSITIVE_STATEFUL_OPS = [
 ]
 # LINT.ThenChange(//tensorflow/core/grappler/optimizers/function_optimizer.cc)
 
-_ALL_BLACKLISTED_OPS = (
-    set(ASYNC_STATEFUL_OPS)
-    | set(LEGACY_RANDOM_OPS)
-    | set(_ORDER_INSENSITIVE_STATEFUL_OPS)
-)
+_ALL_BLACKLISTED_OPS = (set(ASYNC_STATEFUL_OPS)
+                        | set(LEGACY_RANDOM_OPS)
+                        | set(_ORDER_INSENSITIVE_STATEFUL_OPS))
 
 # Op types that are marked as stateless, but should be whitelisted to add auto
 # control dependencies.
@@ -126,8 +124,7 @@ _WHITELIST_STATELESS_OPS = [
 def op_is_stateful(op):
     # pylint: disable=protected-access
     return (op._is_stateful and op.type not in _ALL_BLACKLISTED_OPS) or (
-        op.type in _WHITELIST_STATELESS_OPS
-    )
+        op.type in _WHITELIST_STATELESS_OPS)
 
 
 class ResourceType(enum.Enum):
@@ -178,15 +175,17 @@ class AutomaticControlDependencies(object):
             indices = array_ops.identity(tensor.indices)
             self._returned_tensors.add(indices)
             self._returned_tensors.add(values)
-            return ops.IndexedSlices(values, indices, dense_shape=tensor.dense_shape)
+            return ops.IndexedSlices(values,
+                                     indices,
+                                     dense_shape=tensor.dense_shape)
         elif isinstance(tensor, sparse_tensor.SparseTensor):
             values = array_ops.identity(tensor.values)
             indices = array_ops.identity(tensor.indices)
             self._returned_tensors.add(indices)
             self._returned_tensors.add(values)
-            return sparse_tensor.SparseTensor(
-                indices, values, dense_shape=tensor.dense_shape
-            )
+            return sparse_tensor.SparseTensor(indices,
+                                              values,
+                                              dense_shape=tensor.dense_shape)
         elif isinstance(tensor, tensor_array_ops.TensorArray):
             flow = array_ops.identity(tensor.flow)
             self._returned_tensors.add(flow)
@@ -212,9 +211,8 @@ class AutomaticControlDependencies(object):
         self._n_operations = len(self._graph.get_operations())
         return self
 
-    def _process_switch(
-        self, switch_op, ops_which_must_run, last_write_to_resource, merge_for_resource
-    ):
+    def _process_switch(self, switch_op, ops_which_must_run,
+                        last_write_to_resource, merge_for_resource):
         """Processes a switch node for a resource input.
 
         When tensorflow creates a cond, it creates a control flow context for each
@@ -252,32 +250,25 @@ class AutomaticControlDependencies(object):
         inp = switch_op.inputs[0]
         input_id = ops.tensor_id(inp)
         if inp.dtype == dtypes_module.resource and inp.op.type == "Switch":
-            self._process_switch(
-                inp.op, ops_which_must_run, last_write_to_resource, merge_for_resource
-            )
+            self._process_switch(inp.op, ops_which_must_run,
+                                 last_write_to_resource, merge_for_resource)
         output = switch_op.outputs[0]
         output_id = ops.tensor_id(output)
         if output_id in merge_for_resource:
             return
-        new_merge = control_flow_ops.merge(switch_op.outputs, name="artificial_merge")
-        new_merge[
-            0
-        ].op._control_flow_context = (  # pylint: disable=protected-access
-            switch_op._control_flow_context.outer_context
-        )  # pylint: disable=protected-access
+        new_merge = control_flow_ops.merge(switch_op.outputs,
+                                           name="artificial_merge")
+        new_merge[0].op._control_flow_context = (  # pylint: disable=protected-access
+            switch_op._control_flow_context.outer_context)  # pylint: disable=protected-access
         # Ensures the merge always runs
         ops_which_must_run.add(new_merge[0].op)
         if input_id in last_write_to_resource:
             # Ensures the switch executes after the previous op using the resource.
-            switch_op._add_control_input(
-                last_write_to_resource[input_id]
-            )  # pylint: disable=protected-access
+            switch_op._add_control_input(last_write_to_resource[input_id])  # pylint: disable=protected-access
         # Ensure the next op outside the cond happens after the merge.
         last_write_to_resource[input_id] = new_merge[0].op
         if input_id in merge_for_resource:
-            merge_for_resource[input_id]._add_control_input(
-                new_merge[0].op
-            )  # pylint: disable=protected-access
+            merge_for_resource[input_id]._add_control_input(new_merge[0].op)  # pylint: disable=protected-access
         for o in switch_op.outputs:
             # Ensures the merge will execute after all ops inside the cond
             merge_for_resource[ops.tensor_id(o)] = new_merge[0].op
@@ -288,8 +279,7 @@ class AutomaticControlDependencies(object):
 
         if self._graph is not ops.get_default_graph():
             raise RuntimeError(
-                "Graph changed while trying to add control dependencies."
-            )
+                "Graph changed while trying to add control dependencies.")
 
         # pylint: disable=protected-access
         if hasattr(self._graph, "outer_graph"):
@@ -309,7 +299,7 @@ class AutomaticControlDependencies(object):
         # merge which must depend on ops which use this resource
         merge_for_resource = {}
 
-        new_operations = self._graph.get_operations()[self._n_operations :]
+        new_operations = self._graph.get_operations()[self._n_operations:]
 
         # Ensures that uses of resource tensors get serialized properly and all
         # execute. This is done by keeping a map from resource tensor to the last op
@@ -346,13 +336,14 @@ class AutomaticControlDependencies(object):
             control_inputs = set()
             # Ensure stateful ops run
             if op_def_registry.get(op.type) is None or (
-                op_is_stateful(op) and op.type not in utils.RESOURCE_READ_OPS
-            ):
+                    op_is_stateful(op)
+                    and op.type not in utils.RESOURCE_READ_OPS):
                 # TODO(srbs): Do not add functional ops to `ops_which_must_run` if
                 # they only have variable reads and are otherwise stateless.
                 ops_which_must_run.add(op)
             # Ignore switches (they're handled separately)
-            if op.type == "Switch" and op.inputs[0].dtype == dtypes_module.resource:
+            if op.type == "Switch" and op.inputs[
+                    0].dtype == dtypes_module.resource:
                 continue
             # Make merges trigger all other computation which must run
             if op.type == "Merge":
@@ -390,56 +381,43 @@ class AutomaticControlDependencies(object):
                 # Ensure uses of resources are serialized
                 if input_id in last_write_to_resource:
                     if is_building_function or (
-                        last_write_to_resource[
-                            input_id
-                        ]._control_flow_context  # pylint: disable=protected-access
-                        is op._control_flow_context
-                    ):  # pylint: disable=protected-access
+                            last_write_to_resource[input_id].
+                            _control_flow_context  # pylint: disable=protected-access
+                            is op._control_flow_context):  # pylint: disable=protected-access
                         control_inputs.add(last_write_to_resource[input_id])
                 # Ensure merges happen after the closing of a cond block
                 if input_id in merge_for_resource:
-                    merge_for_resource[input_id]._add_control_input(
-                        op
-                    )  # pylint: disable=protected-access
+                    merge_for_resource[input_id]._add_control_input(op)  # pylint: disable=protected-access
                 if is_read:
                     reads_since_last_write_to_resource[input_id].append(op)
                 else:
-                    control_inputs.update(reads_since_last_write_to_resource[input_id])
+                    control_inputs.update(
+                        reads_since_last_write_to_resource[input_id])
                     reads_since_last_write_to_resource[input_id] = []
                     last_write_to_resource[input_id] = op
 
-            if (
-                op_is_stateful(op)
-                and not resource_inputs
-                and op._control_flow_context is None
-            ):  # pylint: disable=protected-access
+            if (op_is_stateful(op) and not resource_inputs
+                    and op._control_flow_context is None):  # pylint: disable=protected-access
                 if None in last_write_to_resource:
-                    op._add_control_input(
-                        last_write_to_resource[None]
-                    )  # pylint: disable=protected-access
+                    op._add_control_input(last_write_to_resource[None])  # pylint: disable=protected-access
                 last_write_to_resource[None] = op
             control_inputs = [
-                c
-                for c in control_inputs
-                if is_building_function
-                or (c._control_flow_context is op._control_flow_context)
+                c for c in control_inputs if is_building_function or (
+                    c._control_flow_context is op._control_flow_context)
             ]  # pylint: disable=protected-access
             op._add_control_inputs(control_inputs)  # pylint: disable=protected-access
 
         # Ensure all ops which must run do run
         self.ops_which_must_run.update(ops_which_must_run)
-        for r in nest.flatten(list(self._returned_tensors), expand_composites=True):
+        for r in nest.flatten(list(self._returned_tensors),
+                              expand_composites=True):
             if self.ops_which_must_run:
                 r.op._add_control_inputs(  # pylint: disable=protected-access
                     [
-                        o
-                        for o in self.ops_which_must_run
-                        if r.graph.building_function
-                        or (
-                            o._control_flow_context is r.op._control_flow_context
-                        )  # pylint: disable=protected-access
-                    ]
-                )
+                        o for o in self.ops_which_must_run
+                        if r.graph.building_function or
+                        (o._control_flow_context is r.op._control_flow_context)  # pylint: disable=protected-access
+                    ])
 
 
 _acd_resource_resolvers_registry = registry.Registry("acd_resource_resolvers")
@@ -498,7 +476,8 @@ def _get_resource_inputs(op):
             # resource_inputs.
             # TODO(srbs): An alternate would be to just compare the old and new set
             # but that may not be as fast.
-            updated = _acd_resource_resolvers_registry.lookup(key)(op, reads, writes)
+            updated = _acd_resource_resolvers_registry.lookup(key)(op, reads,
+                                                                   writes)
             if updated:
                 # Conservatively remove any resources from `reads` that are also writes.
                 reads = reads.difference(writes)
@@ -506,9 +485,8 @@ def _get_resource_inputs(op):
 
     # Note: A resource handle that is not written to is treated as read-only. We
     # don't have a special way of denoting an unused resource.
-    return [(t, ResourceType.READ_ONLY) for t in reads] + [
-        (t, ResourceType.READ_WRITE) for t in writes
-    ]
+    return [(t, ResourceType.READ_ONLY)
+            for t in reads] + [(t, ResourceType.READ_WRITE) for t in writes]
 
 
 def automatic_control_dependencies(f):
