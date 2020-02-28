@@ -27,8 +27,14 @@ from tensorflow.python.framework import ops
 from tensorflow.python.platform import test
 
 int_dtypes = [
-    np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32,
-    np.uint64
+    np.int8,
+    np.int16,
+    np.int32,
+    np.int64,
+    np.uint8,
+    np.uint16,
+    np.uint32,
+    np.uint64,
 ]
 float_dtypes = [np.float16, np.float32, np.float64]
 complex_dtypes = [np.complex64, np.complex128]
@@ -45,16 +51,17 @@ def GetNamedTestParameters():
     result = []
     for dtype in dlpack_dtypes:
         for shape in testcase_shapes:
-            result.append({
-                "testcase_name": FormatShapeAndDtype(shape, dtype),
-                "dtype": dtype,
-                "shape": shape
-            })
+            result.append(
+                {
+                    "testcase_name": FormatShapeAndDtype(shape, dtype),
+                    "dtype": dtype,
+                    "shape": shape,
+                }
+            )
     return result
 
 
 class DLPackTest(parameterized.TestCase, test.TestCase):
-
     @parameterized.named_parameters(GetNamedTestParameters())
     def testRoundTrip(self, dtype, shape):
         np.random.seed(42)
@@ -76,26 +83,27 @@ class DLPackTest(parameterized.TestCase, test.TestCase):
         def ConsumeDLPackTensor():
             dlpack.from_dlpack(dlcapsule)  # Should can be consumed only once
 
-        self.assertRaisesRegex(Exception,
-                               ".*a DLPack tensor may be consumed at most once.*",
-                               ConsumeDLPackTensor)
+        self.assertRaisesRegex(
+            Exception,
+            ".*a DLPack tensor may be consumed at most once.*",
+            ConsumeDLPackTensor,
+        )
 
     def testUnsupportedTypeToDLPack(self):
-
         def UnsupportedQint16():
-            tf_tensor = constant_op.constant(
-                [[1, 4], [5, 2]], dtype=dtypes.qint16)
+            tf_tensor = constant_op.constant([[1, 4], [5, 2]], dtype=dtypes.qint16)
             _ = dlpack.to_dlpack(tf_tensor)
 
         def UnsupportedComplex64():
-            tf_tensor = constant_op.constant(
-                [[1, 4], [5, 2]], dtype=dtypes.complex64)
+            tf_tensor = constant_op.constant([[1, 4], [5, 2]], dtype=dtypes.complex64)
             _ = dlpack.to_dlpack(tf_tensor)
 
-        self.assertRaisesRegex(Exception, ".* is not supported by dlpack",
-                               UnsupportedQint16)
-        self.assertRaisesRegex(Exception, ".* is not supported by dlpack",
-                               UnsupportedComplex64)
+        self.assertRaisesRegex(
+            Exception, ".* is not supported by dlpack", UnsupportedQint16
+        )
+        self.assertRaisesRegex(
+            Exception, ".* is not supported by dlpack", UnsupportedComplex64
+        )
 
 
 if __name__ == "__main__":

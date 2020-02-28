@@ -43,7 +43,6 @@ from tensorflow.python.platform import test
 
 
 class SubclassedModelNoConfig(keras.Model):
-
     def __init__(self, a, b):
         super(SubclassedModelNoConfig, self).__init__()
 
@@ -53,14 +52,20 @@ class SubclassedModelNoConfig(keras.Model):
         self.all_layers = []
 
     def build(self, input_shape):
-        self.all_layers.extend([
-            self.shared,
-            CustomLayerWithConfig(self.a + 1, self.b + 2),
-            CustomLayerNoConfig(self.a + 3, self.b + 4),
-            keras.Sequential([
-                # TODO(b/145029112): Bug with losses when there are shared layers.
-                # self.shared,  <-- Enable when bug is fixed.
-                CustomLayerNoConfig(self.a + 5, self.b + 6)])])
+        self.all_layers.extend(
+            [
+                self.shared,
+                CustomLayerWithConfig(self.a + 1, self.b + 2),
+                CustomLayerNoConfig(self.a + 3, self.b + 4),
+                keras.Sequential(
+                    [
+                        # TODO(b/145029112): Bug with losses when there are shared layers.
+                        # self.shared,  <-- Enable when bug is fixed.
+                        CustomLayerNoConfig(self.a + 5, self.b + 6)
+                    ]
+                ),
+            ]
+        )
         super(SubclassedModelNoConfig, self).build(input_shape)
 
     def call(self, inputs):
@@ -71,10 +76,8 @@ class SubclassedModelNoConfig(keras.Model):
 
 
 class SubclassedModelWithConfig(SubclassedModelNoConfig):
-
     def get_config(self):
-        return {'a': self.a,
-                'b': self.b}
+        return {"a": self.a, "b": self.b}
 
     @classmethod
     def from_config(cls, config):
@@ -82,46 +85,43 @@ class SubclassedModelWithConfig(SubclassedModelNoConfig):
 
 
 class CustomLayerNoConfig(keras.layers.Layer):
-
     def __init__(self, a, b, name=None):
         super(CustomLayerNoConfig, self).__init__(name=name)
-        self.a = variables.Variable(a, name='a')
+        self.a = variables.Variable(a, name="a")
         self.b = b
 
         def a_regularizer():
             return self.a * 2
+
         self.add_loss(a_regularizer)
-        self.sum_metric = keras.metrics.Sum(name='inputs_sum')
-        self.unused_metric = keras.metrics.Sum(name='not_added_to_metrics')
+        self.sum_metric = keras.metrics.Sum(name="inputs_sum")
+        self.unused_metric = keras.metrics.Sum(name="not_added_to_metrics")
 
     def build(self, input_shape):
         self.c = variables.Variable(
-            constant_op.constant(1.0, shape=input_shape[1:]), name=self.name+'_c')
+            constant_op.constant(1.0, shape=input_shape[1:]), name=self.name + "_c"
+        )
 
     def call(self, inputs):
         self.add_loss(math_ops.reduce_sum(inputs), inputs)
         self.add_metric(self.sum_metric(inputs))
-        self.add_metric(inputs, aggregation='mean', name='mean')
+        self.add_metric(inputs, aggregation="mean", name="mean")
 
         return inputs + self.c
 
 
 class CustomLayerWithConfig(CustomLayerNoConfig):
-
     def get_config(self):
-        return {'a': backend.get_value(self.a),
-                'b': self.b,
-                'name': self.name}
+        return {"a": backend.get_value(self.a), "b": self.b, "name": self.name}
 
 
 class TestModelRevive(keras_parameterized.TestCase):
-
     def setUp(self):
         super(TestModelRevive, self).setUp()
         self.path = self.get_temp_dir()
         self.addCleanup(shutil.rmtree, self.path, ignore_errors=True)
 
-    def _save_model_dir(self, dirname='saved_model'):
+    def _save_model_dir(self, dirname="saved_model"):
         temp_dir = self.get_temp_dir()
         self.addCleanup(shutil.rmtree, temp_dir, ignore_errors=True)
         return os.path.join(temp_dir, dirname)
@@ -131,20 +131,26 @@ class TestModelRevive(keras_parameterized.TestCase):
         self.assertAllEqual(model.output_names, revived.output_names)
         if model.inputs is not None:
             self.assertTrue(
-                all([
-                    i.shape.as_list() == r.shape.as_list() and i.dtype == r.dtype
-                    for (i, r) in zip(model.inputs, revived.inputs)
-                ]))
+                all(
+                    [
+                        i.shape.as_list() == r.shape.as_list() and i.dtype == r.dtype
+                        for (i, r) in zip(model.inputs, revived.inputs)
+                    ]
+                )
+            )
             self.assertTrue(
-                all([
-                    i.shape.as_list() == r.shape.as_list() and i.dtype == r.dtype
-                    for (i, r) in zip(model.outputs, revived.outputs)
-                ]))
+                all(
+                    [
+                        i.shape.as_list() == r.shape.as_list() and i.dtype == r.dtype
+                        for (i, r) in zip(model.outputs, revived.outputs)
+                    ]
+                )
+            )
 
-        self.assertAllClose(self.evaluate(model.weights),
-                            self.evaluate(revived.weights))
-        input_arr = constant_op.constant(
-            np.random.random((2, 2, 3)).astype(np.float32))
+        self.assertAllClose(
+            self.evaluate(model.weights), self.evaluate(revived.weights)
+        )
+        input_arr = constant_op.constant(np.random.random((2, 2, 3)).astype(np.float32))
 
         self.assertAllClose(model(input_arr), revived(input_arr))
         self.assertAllClose(sum(model.losses), sum(revived.losses))
@@ -152,8 +158,10 @@ class TestModelRevive(keras_parameterized.TestCase):
         self.assertEqual(len(model.metrics), len(revived.metrics))
         # TODO(b/150403085): Investigate why the metric order changes when running
         # this test in tf-nightly.
-        self.assertAllClose(sorted([m.result() for m in model.metrics]),
-                            sorted([m.result() for m in revived.metrics]))
+        self.assertAllClose(
+            sorted([m.result() for m in model.metrics]),
+            sorted([m.result() for m in revived.metrics]),
+        )
         model_layers = {layer.name: layer for layer in model.layers}
         revived_layers = {layer.name: layer for layer in revived.layers}
         self.assertAllEqual(model_layers.keys(), revived_layers.keys())
@@ -164,46 +172,51 @@ class TestModelRevive(keras_parameterized.TestCase):
             self.assertEqual(model_layer.name, revived_layer.name)
             self.assertEqual(model_layer.dtype, revived_layer.dtype)
             self.assertEqual(model_layer.trainable, revived_layer.trainable)
-            if 'WithConfig' in type(model_layer).__name__:
+            if "WithConfig" in type(model_layer).__name__:
                 self.assertEqual(type(model_layer), type(revived_layer))
             else:
                 # When loading layers from SavedModel, a new class is dynamically
                 # created with the same name.
-                self.assertEqual(type(model_layer).__name__,
-                                 type(revived_layer).__name__)
+                self.assertEqual(
+                    type(model_layer).__name__, type(revived_layer).__name__
+                )
 
     @keras_parameterized.run_with_all_model_types
     def test_revive(self):
         input_shape = None
-        if testing_utils.get_model_type() == 'functional':
+        if testing_utils.get_model_type() == "functional":
             input_shape = (2, 3)
 
-        layer_with_config = CustomLayerWithConfig(1., 2)
-        layer_without_config = CustomLayerNoConfig(3., 4)
-        subclassed_with_config = SubclassedModelWithConfig(4., 6.)
-        subclassed_without_config = SubclassedModelNoConfig(7., 8.)
+        layer_with_config = CustomLayerWithConfig(1.0, 2)
+        layer_without_config = CustomLayerNoConfig(3.0, 4)
+        subclassed_with_config = SubclassedModelWithConfig(4.0, 6.0)
+        subclassed_without_config = SubclassedModelNoConfig(7.0, 8.0)
 
         inputs = keras.Input((2, 3))
-        x = CustomLayerWithConfig(1., 2)(inputs)
-        x = CustomLayerNoConfig(3., 4)(x)
-        x = SubclassedModelWithConfig(4., 6.)(x)
-        x = SubclassedModelNoConfig(7., 8.)(x)
+        x = CustomLayerWithConfig(1.0, 2)(inputs)
+        x = CustomLayerNoConfig(3.0, 4)(x)
+        x = SubclassedModelWithConfig(4.0, 6.0)(x)
+        x = SubclassedModelNoConfig(7.0, 8.0)(x)
         inner_model_functional = keras.Model(inputs, x)
 
         inner_model_sequential = keras.Sequential(
-            [CustomLayerWithConfig(1., 2),
-             CustomLayerNoConfig(3., 4),
-             SubclassedModelWithConfig(4., 6.),
-             SubclassedModelNoConfig(7., 8.)])
+            [
+                CustomLayerWithConfig(1.0, 2),
+                CustomLayerNoConfig(3.0, 4),
+                SubclassedModelWithConfig(4.0, 6.0),
+                SubclassedModelNoConfig(7.0, 8.0),
+            ]
+        )
 
         class SubclassedModel(keras.Model):
-
             def __init__(self):
                 super(SubclassedModel, self).__init__()
-                self.all_layers = [CustomLayerWithConfig(1., 2),
-                                   CustomLayerNoConfig(3., 4),
-                                   SubclassedModelWithConfig(4., 6.),
-                                   SubclassedModelNoConfig(7., 8.)]
+                self.all_layers = [
+                    CustomLayerWithConfig(1.0, 2),
+                    CustomLayerNoConfig(3.0, 4),
+                    SubclassedModelWithConfig(4.0, 6.0),
+                    SubclassedModelNoConfig(7.0, 8.0),
+                ]
 
             def call(self, inputs):
                 x = inputs
@@ -213,15 +226,16 @@ class TestModelRevive(keras_parameterized.TestCase):
 
         inner_model_subclassed = SubclassedModel()
 
-        layers = [layer_with_config,
-                  layer_without_config,
-                  subclassed_with_config,
-                  subclassed_without_config,
-                  inner_model_functional,
-                  inner_model_sequential,
-                  inner_model_subclassed]
-        model = testing_utils.get_model_from_layers(
-            layers, input_shape=input_shape)
+        layers = [
+            layer_with_config,
+            layer_without_config,
+            subclassed_with_config,
+            subclassed_without_config,
+            inner_model_functional,
+            inner_model_sequential,
+            inner_model_subclassed,
+        ]
+        model = testing_utils.get_model_from_layers(layers, input_shape=input_shape)
 
         # Run data through the Model to create save spec and weights.
         model.predict(np.ones((10, 2, 3)), batch_size=10)
@@ -231,22 +245,25 @@ class TestModelRevive(keras_parameterized.TestCase):
         layer_with_config.c.assign(2 * layer_with_config.c)
         layer_without_config.c.assign(3 * layer_without_config.c)
 
-        model.save(self.path, save_format='tf')
+        model.save(self.path, save_format="tf")
         revived = keras_load.load(self.path)
         self._assert_revived_correctness(model, revived)
 
     def test_revive_subclassed_with_nested_model(self):
-        model = SubclassedModelNoConfig(1., 2.)
+        model = SubclassedModelNoConfig(1.0, 2.0)
         # Run data through the Model to create save spec and weights.
         model.predict(np.ones((10, 2, 3)), batch_size=10)
-        model.save(self.path, save_format='tf')
+        model.save(self.path, save_format="tf")
         revived = keras_load.load(self.path)
         self._assert_revived_correctness(model, revived)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ops.enable_eager_execution()
-    with generic_utils.CustomObjectScope({
-        'CustomLayerWithConfig': CustomLayerWithConfig,
-            'SubclassedModelWithConfig': SubclassedModelWithConfig}):
+    with generic_utils.CustomObjectScope(
+        {
+            "CustomLayerWithConfig": CustomLayerWithConfig,
+            "SubclassedModelWithConfig": SubclassedModelWithConfig,
+        }
+    ):
         test.main()
