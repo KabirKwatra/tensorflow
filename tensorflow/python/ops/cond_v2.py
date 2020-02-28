@@ -18,7 +18,6 @@ This is a version of cond that emits a single If op, as well as the gradient
 function for If ops produced by cond_v2. This will eventually replace the
 current tf.cond implementation once it reaches feature and performance parity.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
