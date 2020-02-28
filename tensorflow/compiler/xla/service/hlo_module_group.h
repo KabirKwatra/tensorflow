@@ -30,80 +30,70 @@ namespace xla {
 // An abstraction representing a ordered set of HLO module built to run
 // concurrently across different devices.
 class HloModuleGroup {
-public:
-    // Construct an empty module group.
-    explicit HloModuleGroup(absl::string_view name) : name_(name) {}
+ public:
+  // Construct an empty module group.
+  explicit HloModuleGroup(absl::string_view name) : name_(name) {}
 
-    // Construct a module group containing a single module.
-    explicit HloModuleGroup(std::unique_ptr<HloModule> module);
+  // Construct a module group containing a single module.
+  explicit HloModuleGroup(std::unique_ptr<HloModule> module);
 
-    // Construct a module group containing any number of modules.
-    HloModuleGroup(absl::string_view name,
-                   absl::Span<std::unique_ptr<HloModule>> modules);
-    HloModuleGroup(absl::string_view name,
-                   std::vector<std::unique_ptr<HloModule>>&& modules);
+  // Construct a module group containing any number of modules.
+  HloModuleGroup(absl::string_view name,
+                 absl::Span<std::unique_ptr<HloModule>> modules);
+  HloModuleGroup(absl::string_view name,
+                 std::vector<std::unique_ptr<HloModule>>&& modules);
 
-    // Returns the modules contained in the group.
-    const std::vector<HloModule*>& modules() const {
-        return module_ptrs_;
+  // Returns the modules contained in the group.
+  const std::vector<HloModule*>& modules() const { return module_ptrs_; }
+
+  // Returns a module at a particular index.
+  HloModule& module(int index) const { return *module_ptrs_.at(index); }
+
+  // Add a module to the back of vector of modules in the group.
+  void push_back(std::unique_ptr<HloModule> module);
+
+  // Replaces the existing module at the given index with the given module. The
+  // existing module is discarded.
+  void ReplaceModule(int index, std::unique_ptr<HloModule> module);
+
+  // Moves all modules from the group into the returned vector. After this
+  // method runs, the module group will be empty.
+  std::vector<std::unique_ptr<HloModule>> ConsumeModules();
+
+  string name() const { return name_; }
+
+  string ToString() const;
+
+  // Deallocate removed instructions in each module.
+  void Cleanup() {
+    for (auto& module : modules_) {
+      module->Cleanup();
     }
+  }
 
-    // Returns a module at a particular index.
-    HloModule& module(int index) const {
-        return *module_ptrs_.at(index);
-    }
+  uint64 Hash() const;
 
-    // Add a module to the back of vector of modules in the group.
-    void push_back(std::unique_ptr<HloModule> module);
+  // Serialize the module group to/from a proto.
+  HloModuleGroupProto ToProto() const;
+  static StatusOr<HloModuleGroup> CreateFromProto(
+      const HloModuleGroupProto& proto,
+      absl::Span<const HloModuleConfig> module_configs);
 
-    // Replaces the existing module at the given index with the given module. The
-    // existing module is discarded.
-    void ReplaceModule(int index, std::unique_ptr<HloModule> module);
+  // Returns the number of modules in the module group.
+  int size() const { return modules_.size(); }
 
-    // Moves all modules from the group into the returned vector. After this
-    // method runs, the module group will be empty.
-    std::vector<std::unique_ptr<HloModule>> ConsumeModules();
+  // Returns true if there are no modules in the module group.
+  bool empty() const { return modules_.empty(); }
 
-    string name() const {
-        return name_;
-    }
+ private:
+  string name_;
 
-    string ToString() const;
+  // Vector of modules as std::unique_ptrs.
+  std::vector<std::unique_ptr<HloModule>> modules_;
 
-    // Deallocate removed instructions in each module.
-    void Cleanup() {
-        for (auto& module : modules_) {
-            module->Cleanup();
-        }
-    }
-
-    uint64 Hash() const;
-
-    // Serialize the module group to/from a proto.
-    HloModuleGroupProto ToProto() const;
-    static StatusOr<HloModuleGroup> CreateFromProto(
-        const HloModuleGroupProto& proto,
-        absl::Span<const HloModuleConfig> module_configs);
-
-    // Returns the number of modules in the module group.
-    int size() const {
-        return modules_.size();
-    }
-
-    // Returns true if there are no modules in the module group.
-    bool empty() const {
-        return modules_.empty();
-    }
-
-private:
-    string name_;
-
-    // Vector of modules as std::unique_ptrs.
-    std::vector<std::unique_ptr<HloModule>> modules_;
-
-    // Vector of modules as normal pointers. This vector is kept in sync with
-    // modules_ as modules are added to the group with push_back.
-    std::vector<HloModule*> module_ptrs_;
+  // Vector of modules as normal pointers. This vector is kept in sync with
+  // modules_ as modules are added to the group with push_back.
+  std::vector<HloModule*> module_ptrs_;
 };
 
 std::ostream& operator<<(std::ostream& out, const HloModuleGroup& group);
