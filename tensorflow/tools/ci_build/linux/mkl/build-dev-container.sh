@@ -21,21 +21,19 @@ DOCKER_BINARY="docker"
 TMP_DIR=$PWD
 
 # Helper function to traverse directories up until given file is found.
-function upsearch () {
-  test / == "$PWD" && return || \
-      test -e "$1" && echo "$PWD" && return || \
-      cd .. && upsearch "$1"
+function upsearch() {
+  test / == "$PWD" && return ||
+    test -e "$1" && echo "$PWD" && return ||
+    cd .. && upsearch "$1"
 }
 
-function debug()
-{
-  if [[ ${DEBUG} == 1 ]] ; then
+function debug() {
+  if [[ ${DEBUG} == 1 ]]; then
     echo "$1"
   fi
 }
 
-function die()
-{
+function die() {
   echo "$1"
   exit 1
 }
@@ -83,8 +81,7 @@ debug "BAZEL_VERSION=$BAZEL_VERSION"
 debug "BUILD_PY2_CONTAINERS=$BUILD_PY2_CONTAINERS"
 debug "ENABLE_DNNL1=$ENABLE_DNNL1"
 
-function build_container()
-{
+function build_container() {
   if [[ $# -lt 2 ]]; then
     die "Usage: build_container <TEMP_IMAGE_NAME> <TF_DOCKER_BUILD_ARGS>."
   fi
@@ -144,8 +141,7 @@ function build_container()
   fi
 }
 
-function test_container()
-{
+function test_container() {
   if [[ "$#" != "1" ]]; then
     die "Usage: $FUNCNAME <TEMP_IMAGE_NAME>"
   fi
@@ -154,8 +150,8 @@ function test_container()
 
   # Make sure that there is no other containers of the same image running
   if "$DOCKER_BINARY" ps | grep -q "$TEMP_IMAGE_NAME"; then
-    die "ERROR: It appears that there are docker containers of the image "\
-  "$TEMP_IMAGE_NAME running. Please stop them before proceeding"
+    die "ERROR: It appears that there are docker containers of the image " \
+      "$TEMP_IMAGE_NAME running. Please stop them before proceeding"
   fi
 
   # Start a docker container from the newly-built docker image
@@ -182,10 +178,10 @@ function test_container()
   # Make TEST_CMD backward compatible with older code
   TEST_CMD_2=$("$DOCKER_BINARY" exec "$CONTAINER_ID" bash -c "$PYTHON -c 'from tensorflow.python import pywrap_tensorflow; print(pywrap_tensorflow.IsMklEnabled())'")
 
-  if [ "$TEST_CMD_1" = "True" -o "$TEST_CMD_2" = "True" ] ; then
-      echo "PASS: MKL enabled test in $TEMP_IMAGE_NAME"
+  if [ "$TEST_CMD_1" = "True" -o "$TEST_CMD_2" = "True" ]; then
+    echo "PASS: MKL enabled test in $TEMP_IMAGE_NAME"
   else
-      die "FAIL: MKL enabled test in $TEMP_IMAGE_NAME"
+    die "FAIL: MKL enabled test in $TEMP_IMAGE_NAME"
   fi
 
   # Stop the running docker container
@@ -193,8 +189,7 @@ function test_container()
   "$DOCKER_BINARY" stop --time=0 "$CONTAINER_ID"
 }
 
-function checkout_tensorflow()
-{
+function checkout_tensorflow() {
   if [[ "$#" != "3" ]]; then
     die "Usage: $FUNCNAME <REPO_URL> <BRANCH/TAG/COMMIT-ID/PR-ID> <TF_BUILD_VERSION_IS_PR>"
   fi
@@ -224,8 +219,7 @@ function checkout_tensorflow()
   cd ..
 }
 
-function tag_container()
-{
+function tag_container() {
   # Apply the final image name and tag
   TEMP_IMAGE_NAME="${1}"
   FINAL_IMG="${2}"
@@ -238,13 +232,13 @@ function tag_container()
   DOCKER_MINOR_VER=$(echo "$DOCKER_VER" | cut -d. -f 2)
 
   FORCE_TAG=""
-  if [[ "${DOCKER_MAJOR_VER}" -le 1 ]] && \
+  if [[ "${DOCKER_MAJOR_VER}" -le 1 ]] &&
     [[ "$DOCKER_MINOR_VER" -le 9 ]]; then
     FORCE_TAG="--force"
   fi
 
-  "$DOCKER_BINARY" tag "$FORCE_TAG" "$TEMP_IMAGE_NAME" "$FINAL_IMG" || \
-      die "Failed to tag intermediate docker image $TEMP_IMAGE_NAME as $FINAL_IMG"
+  "$DOCKER_BINARY" tag "$FORCE_TAG" "$TEMP_IMAGE_NAME" "$FINAL_IMG" ||
+    die "Failed to tag intermediate docker image $TEMP_IMAGE_NAME as $FINAL_IMG"
 
   debug "Successfully tagged docker image: $FINAL_IMG"
 }
@@ -274,44 +268,42 @@ fi
 # Checking out sources needs to be done only once
 checkout_tensorflow "$TF_REPO" "$TF_BUILD_VERSION" "$TF_BUILD_VERSION_IS_PR"
 
-for PLATFORM in "${PLATFORMS[@]}"
-do
-  for PYTHON in "${PYTHON_VERSIONS[@]}"
-  do
+for PLATFORM in "${PLATFORMS[@]}"; do
+  for PYTHON in "${PYTHON_VERSIONS[@]}"; do
     # Clear the build args array
     TF_DOCKER_BUILD_ARGS=("--build-arg TARGET_PLATFORM=$PLATFORM")
     TF_DOCKER_BUILD_ARGS+=("--build-arg ROOT_CONTAINER=$ROOT_CONTAINER")
     FINAL_TAG="$TF_DOCKER_BUILD_VERSION"
     ROOT_CONTAINER_TAG="$TF_ROOT_CONTAINER_TAG"
 
-      if [[ ${PLATFORM} == "haswell" ]]; then
-        FINAL_TAG="$FINAL_TAG-avx2"
-      fi
+    if [[ ${PLATFORM} == "haswell" ]]; then
+      FINAL_TAG="$FINAL_TAG-avx2"
+    fi
 
-      if [[ ${PLATFORM} == "skylake" ]]; then
-        FINAL_TAG="$FINAL_TAG-avx512"
-      fi
+    if [[ ${PLATFORM} == "skylake" ]]; then
+      FINAL_TAG="$FINAL_TAG-avx512"
+    fi
 
-      if [[ ${PLATFORM} == "icelake" ]]; then
-        FINAL_TAG="$FINAL_TAG-avx512-VNNI"
-      fi
+    if [[ ${PLATFORM} == "icelake" ]]; then
+      FINAL_TAG="$FINAL_TAG-avx512-VNNI"
+    fi
 
-      # Add -devel-mkl to the image tag
-      FINAL_TAG="$FINAL_TAG-devel-mkl"
-      if [[ "${PYTHON}" == "python3" ]]; then
-        TF_DOCKER_BUILD_ARGS+=("--build-arg WHL_DIR=/tmp/pip3")
-        TF_DOCKER_BUILD_ARGS+=("--build-arg PIP=pip3")
-        FINAL_TAG="$FINAL_TAG-py3"
-        ROOT_CONTAINER_TAG="$ROOT_CONTAINER_TAG-py3"
-      fi
+    # Add -devel-mkl to the image tag
+    FINAL_TAG="$FINAL_TAG-devel-mkl"
+    if [[ "${PYTHON}" == "python3" ]]; then
+      TF_DOCKER_BUILD_ARGS+=("--build-arg WHL_DIR=/tmp/pip3")
+      TF_DOCKER_BUILD_ARGS+=("--build-arg PIP=pip3")
+      FINAL_TAG="$FINAL_TAG-py3"
+      ROOT_CONTAINER_TAG="$ROOT_CONTAINER_TAG-py3"
+    fi
 
-      TF_DOCKER_BUILD_ARGS+=("--build-arg PYTHON=$PYTHON")
-      TF_DOCKER_BUILD_ARGS+=("--build-arg ROOT_CONTAINER_TAG=$ROOT_CONTAINER_TAG")
+    TF_DOCKER_BUILD_ARGS+=("--build-arg PYTHON=$PYTHON")
+    TF_DOCKER_BUILD_ARGS+=("--build-arg ROOT_CONTAINER_TAG=$ROOT_CONTAINER_TAG")
 
-      # Intermediate image name with tag
-      TEMP_IMAGE_NAME="$USER/tensorflow:$FINAL_TAG"
-      build_container "$TEMP_IMAGE_NAME" "${TF_DOCKER_BUILD_ARGS[@]}"
-      test_container "$TEMP_IMAGE_NAME"
-      tag_container "$TEMP_IMAGE_NAME" "$FINAL_IMAGE_NAME:$FINAL_TAG"
+    # Intermediate image name with tag
+    TEMP_IMAGE_NAME="$USER/tensorflow:$FINAL_TAG"
+    build_container "$TEMP_IMAGE_NAME" "${TF_DOCKER_BUILD_ARGS[@]}"
+    test_container "$TEMP_IMAGE_NAME"
+    tag_container "$TEMP_IMAGE_NAME" "$FINAL_IMAGE_NAME:$FINAL_TAG"
   done
 done
