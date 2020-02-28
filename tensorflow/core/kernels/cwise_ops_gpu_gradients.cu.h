@@ -40,12 +40,12 @@ typedef std::complex<double> complex128;
 // Partial specialization of SimpleBinaryFunctor<Device=GPUDevice, Functor>.
 template <typename Functor>
 struct SimpleBinaryFunctor<GPUDevice, Functor> {
-  void operator()(const GPUDevice& d, typename Functor::tout_type out,
-                  typename Functor::tin_type in1,
-                  typename Functor::tin_type in2) {
-    To32Bit(out).device(d) =
-        To32Bit(in1).binaryExpr(in2, typename Functor::func());
-  }
+    void operator()(const GPUDevice& d, typename Functor::tout_type out,
+                    typename Functor::tin_type in1,
+                    typename Functor::tin_type in2) {
+        To32Bit(out).device(d) =
+            To32Bit(in1).binaryExpr(in2, typename Functor::func());
+    }
 };
 
 // Macros to explicitly instantiate kernels on GPU for multiple types

@@ -38,20 +38,20 @@ typedef Eigen::GpuDevice GPUDevice;
 template <typename T>
 __global__ void CheckNumericsKernel(const T* __restrict__ data, int size,
                                     int abnormal_detected[2]) {
-  const int32 thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-  const int32 total_thread_count = gridDim.x * blockDim.x;
+    const int32 thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    const int32 total_thread_count = gridDim.x * blockDim.x;
 
-  int32 offset = thread_id;
+    int32 offset = thread_id;
 
-  while (offset < size) {
-    if (isnan(data[offset])) {
-      abnormal_detected[0] = 1;
+    while (offset < size) {
+        if (isnan(data[offset])) {
+            abnormal_detected[0] = 1;
+        }
+        if (isinf(data[offset])) {
+            abnormal_detected[1] = 1;
+        }
+        offset += total_thread_count;
     }
-    if (isinf(data[offset])) {
-      abnormal_detected[1] = 1;
-    }
-    offset += total_thread_count;
-  }
 }
 
 // V2 of CheckNumericsKernel for GPU.
@@ -61,20 +61,20 @@ __global__ void CheckNumericsKernel(const T* __restrict__ data, int size,
 template <typename T>
 __global__ void CheckNumericsKernelV2(const T* __restrict__ data, int size,
                                       int abnormal_detected[3]) {
-  const int32 thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-  const int32 total_thread_count = gridDim.x * blockDim.x;
+    const int32 thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    const int32 total_thread_count = gridDim.x * blockDim.x;
 
-  int32 offset = thread_id;
+    int32 offset = thread_id;
 
-  while (offset < size) {
-    if (isnan(data[offset])) {
-      abnormal_detected[0] = 1;
+    while (offset < size) {
+        if (isnan(data[offset])) {
+            abnormal_detected[0] = 1;
+        }
+        if (isinf(data[offset])) {
+            abnormal_detected[data[offset] < static_cast<T>(0.f) ? 1 : 2] = 1;
+        }
+        offset += total_thread_count;
     }
-    if (isinf(data[offset])) {
-      abnormal_detected[data[offset] < static_cast<T>(0.f) ? 1 : 2] = 1;
-    }
-    offset += total_thread_count;
-  }
 }
 
 }  // namespace
@@ -83,16 +83,16 @@ __global__ void CheckNumericsKernelV2(const T* __restrict__ data, int size,
 // abnormality in the given array
 template <typename T>
 struct CheckNumericsLaunch {
-  void Run(const GPUDevice& d, const T* data, int size,
-           int abnormal_detected[2]) {
-    const int32 block_size = d.maxGpuThreadsPerBlock();
-    const int32 num_blocks =
-        (d.getNumGpuMultiProcessors() * d.maxGpuThreadsPerMultiProcessor()) /
-        block_size;
+    void Run(const GPUDevice& d, const T* data, int size,
+             int abnormal_detected[2]) {
+        const int32 block_size = d.maxGpuThreadsPerBlock();
+        const int32 num_blocks =
+            (d.getNumGpuMultiProcessors() * d.maxGpuThreadsPerMultiProcessor()) /
+            block_size;
 
-    TF_CHECK_OK(GpuLaunchKernel(CheckNumericsKernel<T>, num_blocks, block_size,
-                                0, d.stream(), data, size, abnormal_detected));
-  }
+        TF_CHECK_OK(GpuLaunchKernel(CheckNumericsKernel<T>, num_blocks, block_size,
+                                    0, d.stream(), data, size, abnormal_detected));
+    }
 };
 
 template struct CheckNumericsLaunch<Eigen::half>;
@@ -101,17 +101,17 @@ template struct CheckNumericsLaunch<double>;
 
 template <typename T>
 struct CheckNumericsLaunchV2 {
-  void Run(const GPUDevice& d, const T* data, int size,
-           int abnormal_detected[3]) {
-    const int32 block_size = d.maxGpuThreadsPerBlock();
-    const int32 num_blocks =
-        (d.getNumGpuMultiProcessors() * d.maxGpuThreadsPerMultiProcessor()) /
-        block_size;
+    void Run(const GPUDevice& d, const T* data, int size,
+             int abnormal_detected[3]) {
+        const int32 block_size = d.maxGpuThreadsPerBlock();
+        const int32 num_blocks =
+            (d.getNumGpuMultiProcessors() * d.maxGpuThreadsPerMultiProcessor()) /
+            block_size;
 
-    TF_CHECK_OK(GpuLaunchKernel(CheckNumericsKernelV2<T>, num_blocks,
-                                block_size, 0, d.stream(), data, size,
-                                abnormal_detected));
-  }
+        TF_CHECK_OK(GpuLaunchKernel(CheckNumericsKernelV2<T>, num_blocks,
+                                    block_size, 0, d.stream(), data, size,
+                                    abnormal_detected));
+    }
 };
 
 template struct CheckNumericsLaunchV2<Eigen::half>;

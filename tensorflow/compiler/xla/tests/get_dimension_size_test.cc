@@ -25,7 +25,7 @@ class GetDimensionSizeTest : public HloTestBase {};
 
 // Test that the interpreter can correctly compute get_dimension_size.
 TEST_F(GetDimensionSizeTest, DoIt) {
-  const char* const kModuleStr = R"(
+    const char* const kModuleStr = R"(
 HloModule a_inference_call_110__.55
 
 ENTRY %a_inference_call_110__.55 (arg0.1: f32[1,8], arg1.2: f32[8], arg2.3: f32[8]) -> s32[] {

@@ -124,7 +124,7 @@ void AddNodeAttr(StringPiece name, gtl::ArraySlice<NameAttrList> value,
 template <class T>
 void AddNodeAttr(StringPiece name, std::initializer_list<T> value,
                  NodeDef* node_def) {
-  AddNodeAttr(name, gtl::ArraySlice<T>(value), node_def);
+    AddNodeAttr(name, gtl::ArraySlice<T>(value), node_def);
 }
 
 // Adds an attr to an attr value map.
@@ -132,54 +132,60 @@ void AddAttr(StringPiece name, const AttrValue& value, AttrValueMap* map);
 void AddAttr(StringPiece name, bool value, AttrValueMap* map);
 
 class AttrSlice {
- public:
-  AttrSlice(const NodeDef& node_def);  // NOLINT(runtime/explicit)
+public:
+    AttrSlice(const NodeDef& node_def);  // NOLINT(runtime/explicit)
 
-  AttrSlice();  // Empty
-  explicit AttrSlice(const AttrValueMap* a);
+    AttrSlice();  // Empty
+    explicit AttrSlice(const AttrValueMap* a);
 
-  int size() const { return attrs_->size(); }
+    int size() const {
+        return attrs_->size();
+    }
 
-  // Returns the attr with attr_name if found.  Otherwise, returns
-  // nullptr.
-  const AttrValue* Find(StringPiece attr_name) const;
+    // Returns the attr with attr_name if found.  Otherwise, returns
+    // nullptr.
+    const AttrValue* Find(StringPiece attr_name) const;
 
-  // Returns the attr_value for attr_name if found. Otherwise, returns a
-  // NotFound status.
-  Status Find(StringPiece attr_name, const AttrValue** attr_value) const;
+    // Returns the attr_value for attr_name if found. Otherwise, returns a
+    // NotFound status.
+    Status Find(StringPiece attr_name, const AttrValue** attr_value) const;
 
-  // Helper class to avoid allocations in EqualAttrs.
-  // TODO(irving): Will go away once NodeInfo is used.
-  struct Scratch {
-    string a;
-    string b;
-  };
+    // Helper class to avoid allocations in EqualAttrs.
+    // TODO(irving): Will go away once NodeInfo is used.
+    struct Scratch {
+        string a;
+        string b;
+    };
 
-  // Check if all attrs and attr values match.  Does not take defaults into
-  // account.
-  //
-  // TODO(irving): There is a bug in this routine inherited from its
-  // OptimizerCSE::EqualAttrs predecessor.  The same tensor attr can be
-  // represented in more than one way as an AttrValue, since TensorProto is
-  // not 1-1.  This bug will go away once I replace everything with NodeInfo,
-  // which stores a Tensor object directly.  The Scratch object will also go
-  // away.
-  bool EqualAttrs(AttrSlice other, Scratch* scratch) const;
+    // Check if all attrs and attr values match.  Does not take defaults into
+    // account.
+    //
+    // TODO(irving): There is a bug in this routine inherited from its
+    // OptimizerCSE::EqualAttrs predecessor.  The same tensor attr can be
+    // represented in more than one way as an AttrValue, since TensorProto is
+    // not 1-1.  This bug will go away once I replace everything with NodeInfo,
+    // which stores a Tensor object directly.  The Scratch object will also go
+    // away.
+    bool EqualAttrs(AttrSlice other, Scratch* scratch) const;
 
-  // If this AttrSlice has an attached NodeDef, summarize it.  This is for
-  // error messages only: we intentionally do not provide direct access to the
-  // NodeDef, since it is not always there.
-  string SummarizeNode() const;
+    // If this AttrSlice has an attached NodeDef, summarize it.  This is for
+    // error messages only: we intentionally do not provide direct access to the
+    // NodeDef, since it is not always there.
+    string SummarizeNode() const;
 
-  // Iteration over all attrs
-  AttrValueMap::const_iterator begin() const { return attrs_->begin(); }
-  AttrValueMap::const_iterator end() const { return attrs_->end(); }
+    // Iteration over all attrs
+    AttrValueMap::const_iterator begin() const {
+        return attrs_->begin();
+    }
+    AttrValueMap::const_iterator end() const {
+        return attrs_->end();
+    }
 
-  string DebugString() const;
+    string DebugString() const;
 
- private:
-  const NodeDef* ndef_;
-  const AttrValueMap* attrs_;
+private:
+    const NodeDef* ndef_;
+    const AttrValueMap* attrs_;
 };
 
 // Return true if the attr with the name attr_name is defined in node_def.
@@ -353,7 +359,7 @@ Status ValidateNodeDef(const NodeDef& node_def, const OpDef& op_def);
 // argument names from `op_def`. The `op_def` must outlive the
 // returned `NameRangeMap` objects.
 typedef gtl::FlatMap<StringPiece, std::pair<int, int>, hash<StringPiece>>
-    NameRangeMap;
+        NameRangeMap;
 Status NameRangesForNode(const AttrSlice& attrs, const OpDef& op_def,
                          NameRangeMap* inputs, NameRangeMap* outputs);
 // Adds default values to *node_def for unspecified attrs from op_def.

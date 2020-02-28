@@ -25,50 +25,52 @@ namespace tensorflow {
 // interface, not a concrete logging mechanism. This is useful when we want to
 // log anything to a non-local place, e.g. a database.
 class Logger {
- public:
-  // The singleton is supposed to be used in the following steps:
-  // * At program start time, REGISTER_MODULE_INITIALIZER calls
-  //   SetSingletonFactory.
-  // * At some point in the program execution, Singleton() is called for the
-  //   first time, initializing the logger.
-  // * Succeeding calls to Singleton() return the initialized logger.
-  using FactoryFunc = Logger* (*)();
+public:
+    // The singleton is supposed to be used in the following steps:
+    // * At program start time, REGISTER_MODULE_INITIALIZER calls
+    //   SetSingletonFactory.
+    // * At some point in the program execution, Singleton() is called for the
+    //   first time, initializing the logger.
+    // * Succeeding calls to Singleton() return the initialized logger.
+    using FactoryFunc = Logger* (*)();
 
-  static void SetSingletonFactory(FactoryFunc factory) {
-    singleton_factory_ = factory;
-  }
+    static void SetSingletonFactory(FactoryFunc factory) {
+        singleton_factory_ = factory;
+    }
 
-  // Returns the per-process Logger instance, constructing synchronously it if
-  // necessary.
-  static Logger* GetSingleton();
+    // Returns the per-process Logger instance, constructing synchronously it if
+    // necessary.
+    static Logger* GetSingleton();
 
-  // Like GetSingleton, except that this does not wait for the construction of
-  // Logger to finish before returning.
-  //
-  // Returns the constructed instance of Logger if it has been constructed,
-  // otherwise returns nullptr (if the logger is not ready yet).
-  static Logger* GetSingletonAsync();
+    // Like GetSingleton, except that this does not wait for the construction of
+    // Logger to finish before returning.
+    //
+    // Returns the constructed instance of Logger if it has been constructed,
+    // otherwise returns nullptr (if the logger is not ready yet).
+    static Logger* GetSingletonAsync();
 
-  virtual ~Logger() = default;
+    virtual ~Logger() = default;
 
-  // Logs a typed proto.
-  template <typename ProtoType>
-  void LogProto(const ProtoType& proto) {
-    google::protobuf::Any any;
-    any.PackFrom(proto);
-    DoLogProto(&any);
-  }
+    // Logs a typed proto.
+    template <typename ProtoType>
+    void LogProto(const ProtoType& proto) {
+        google::protobuf::Any any;
+        any.PackFrom(proto);
+        DoLogProto(&any);
+    }
 
-  // Flushes any pending log. Blocks until everything is flushed.
-  void Flush() { DoFlush(); }
+    // Flushes any pending log. Blocks until everything is flushed.
+    void Flush() {
+        DoFlush();
+    }
 
- private:
-  virtual void DoLogProto(google::protobuf::Any* proto) = 0;
-  virtual void DoFlush() = 0;
+private:
+    virtual void DoLogProto(google::protobuf::Any* proto) = 0;
+    virtual void DoFlush() = 0;
 
-  static FactoryFunc singleton_factory_;
+    static FactoryFunc singleton_factory_;
 
-  friend struct AsyncSingletonImpl;
+    friend struct AsyncSingletonImpl;
 };
 
 }  // namespace tensorflow

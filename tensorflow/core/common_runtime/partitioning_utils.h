@@ -69,20 +69,20 @@ std::vector<Tensor> GetArgsForIndices(const std::vector<int>& indices,
 // Utility for generating function names not present in `flib_def`, using
 // given `name` as the base for the name.
 class FunctionNameGenerator {
- public:
-  // `flib_def` must outlive this.
-  FunctionNameGenerator(const FunctionLibraryDefinition* flib_def,
-                        const string& name)
-      : flib_def_(flib_def), name_(name), counter_(0) {}
+public:
+    // `flib_def` must outlive this.
+    FunctionNameGenerator(const FunctionLibraryDefinition* flib_def,
+                          const string& name)
+        : flib_def_(flib_def), name_(name), counter_(0) {}
 
-  // Returns a function name not present in `flib_def` using `name` as
-  // the base and appending a numeric suffix.
-  string GetName();
+    // Returns a function name not present in `flib_def` using `name` as
+    // the base and appending a numeric suffix.
+    string GetName();
 
- private:
-  const FunctionLibraryDefinition* flib_def_;
-  const string name_;
-  uint32 counter_;
+private:
+    const FunctionLibraryDefinition* flib_def_;
+    const string name_;
+    uint32 counter_;
 };
 
 }  // namespace tensorflow

@@ -32,57 +32,57 @@ namespace tensorflow {
 
 template <typename Device, typename T>
 class AssignOpT : public AssignOp {
- public:
-  using AssignOp::AssignOp;
+public:
+    using AssignOp::AssignOp;
 
-  void Copy(OpKernelContext* context, Tensor* lhs, const Tensor& rhs) override {
-    functor::DenseUpdate<Device, T, ASSIGN> copy;
-    copy(context->eigen_device<Device>(), lhs->flat<T>(), rhs.flat<T>());
-  }
+    void Copy(OpKernelContext* context, Tensor* lhs, const Tensor& rhs) override {
+        functor::DenseUpdate<Device, T, ASSIGN> copy;
+        copy(context->eigen_device<Device>(), lhs->flat<T>(), rhs.flat<T>());
+    }
 };
 
 // TODO(jeff): Get rid of use_exclusive_lock_ option
 template <typename Device, typename T, DenseUpdateType OP>
 class DenseUpdateOp : public OpKernel {
- public:
-  explicit DenseUpdateOp(OpKernelConstruction* context) : OpKernel(context) {
-    OP_REQUIRES_OK(context,
-                   context->GetAttr("use_locking", &use_exclusive_lock_));
-    const DataType dt = DataTypeToEnum<T>::v();
-    OP_REQUIRES_OK(context, context->MatchSignature({MakeRefType(dt), dt},
-                                                    {MakeRefType(dt)}));
-  }
-
-  void Compute(OpKernelContext* context) override {
-    // We always return the input ref.
-    context->forward_ref_input_to_ref_output(0, 0);
-
-    if (use_exclusive_lock_) {
-      mutex_lock l(*context->input_ref_mutex(0));
-      DoUpdate(context);
-    } else {
-      DoUpdate(context);
+public:
+    explicit DenseUpdateOp(OpKernelConstruction* context) : OpKernel(context) {
+        OP_REQUIRES_OK(context,
+                       context->GetAttr("use_locking", &use_exclusive_lock_));
+        const DataType dt = DataTypeToEnum<T>::v();
+        OP_REQUIRES_OK(context, context->MatchSignature({MakeRefType(dt), dt},
+        {MakeRefType(dt)}));
     }
-  }
 
- private:
-  void DoUpdate(OpKernelContext* context) {
-    Tensor Tparams = context->mutable_input(0, use_exclusive_lock_);
-    const Tensor& Tupdate = context->input(1);
-    OP_REQUIRES(context, Tparams.IsInitialized(),
-                errors::FailedPrecondition("Attempting to use uninitialized "
-                                           "parameters: ",
-                                           requested_input(0)));
-    OP_REQUIRES(
-        context, Tparams.IsSameSize(Tupdate),
-        errors::InvalidArgument("Parameters and update must be the same size"));
+    void Compute(OpKernelContext* context) override {
+        // We always return the input ref.
+        context->forward_ref_input_to_ref_output(0, 0);
 
-    functor::DenseUpdate<Device, T, OP> update_functor;
-    update_functor(context->template eigen_device<Device>(), Tparams.flat<T>(),
-                   Tupdate.flat<T>());
-  }
+        if (use_exclusive_lock_) {
+            mutex_lock l(*context->input_ref_mutex(0));
+            DoUpdate(context);
+        } else {
+            DoUpdate(context);
+        }
+    }
 
-  bool use_exclusive_lock_;
+private:
+    void DoUpdate(OpKernelContext* context) {
+        Tensor Tparams = context->mutable_input(0, use_exclusive_lock_);
+        const Tensor& Tupdate = context->input(1);
+        OP_REQUIRES(context, Tparams.IsInitialized(),
+                    errors::FailedPrecondition("Attempting to use uninitialized "
+                                               "parameters: ",
+                                               requested_input(0)));
+        OP_REQUIRES(
+            context, Tparams.IsSameSize(Tupdate),
+            errors::InvalidArgument("Parameters and update must be the same size"));
+
+        functor::DenseUpdate<Device, T, OP> update_functor;
+        update_functor(context->template eigen_device<Device>(), Tparams.flat<T>(),
+                       Tupdate.flat<T>());
+    }
+
+    bool use_exclusive_lock_;
 };
 
 typedef Eigen::ThreadPoolDevice CPUDevice;

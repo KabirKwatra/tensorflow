@@ -48,15 +48,15 @@ Status EncodeAudioAsS16LEWav(const float* audio, size_t sample_rate,
 
 // Explicit instantiations defined in wav_io.cc.
 extern template Status EncodeAudioAsS16LEWav<string>(const float* audio,
-                                                     size_t sample_rate,
-                                                     size_t num_channels,
-                                                     size_t num_frames,
-                                                     string* wav_string);
+        size_t sample_rate,
+        size_t num_channels,
+        size_t num_frames,
+        string* wav_string);
 extern template Status EncodeAudioAsS16LEWav<tstring>(const float* audio,
-                                                      size_t sample_rate,
-                                                      size_t num_channels,
-                                                      size_t num_frames,
-                                                      tstring* wav_string);
+        size_t sample_rate,
+        size_t num_channels,
+        size_t num_frames,
+        tstring* wav_string);
 
 // Decodes the little-endian signed 16-bit PCM WAV file data (aka LIN16
 // encoding) into a float Tensor. The channels are encoded as the lowest
@@ -82,22 +82,22 @@ Status IncrementOffset(int old_offset, size_t increment, size_t max_size,
 // stream of data.
 template <class T>
 Status ReadValue(const string& data, T* value, int* offset) {
-  int new_offset;
-  TF_RETURN_IF_ERROR(
-      IncrementOffset(*offset, sizeof(T), data.size(), &new_offset));
-  if (port::kLittleEndian) {
-    memcpy(value, data.data() + *offset, sizeof(T));
-  } else {
-    *value = 0;
-    const uint8* data_buf =
-        reinterpret_cast<const uint8*>(data.data() + *offset);
-    int shift = 0;
-    for (int i = 0; i < sizeof(T); ++i, shift += 8) {
-      *value = *value | (data_buf[i] << shift);
+    int new_offset;
+    TF_RETURN_IF_ERROR(
+        IncrementOffset(*offset, sizeof(T), data.size(), &new_offset));
+    if (port::kLittleEndian) {
+        memcpy(value, data.data() + *offset, sizeof(T));
+    } else {
+        *value = 0;
+        const uint8* data_buf =
+            reinterpret_cast<const uint8*>(data.data() + *offset);
+        int shift = 0;
+        for (int i = 0; i < sizeof(T); ++i, shift += 8) {
+            *value = *value | (data_buf[i] << shift);
+        }
     }
-  }
-  *offset = new_offset;
-  return Status::OK();
+    *offset = new_offset;
+    return Status::OK();
 }
 
 }  // namespace wav

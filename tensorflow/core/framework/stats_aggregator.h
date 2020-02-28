@@ -41,30 +41,30 @@ namespace data {
 // API, and for the push-based `SummaryWriterInterface`, and we may add
 // implementations that work well with other custom monitoring services.
 class StatsAggregator {
- public:
-  virtual ~StatsAggregator() {}
+public:
+    virtual ~StatsAggregator() {}
 
-  // Add the given `values` to the histogram with the given `name`. Each
-  // element of `values` will be treated as a separate sample in the histogram.
-  virtual void AddToHistogram(const string& name,
-                              gtl::ArraySlice<double> values,
-                              int64 global_step) = 0;
+    // Add the given `values` to the histogram with the given `name`. Each
+    // element of `values` will be treated as a separate sample in the histogram.
+    virtual void AddToHistogram(const string& name,
+                                gtl::ArraySlice<double> values,
+                                int64 global_step) = 0;
 
-  // TODO(shivaniagrawal): consistency in double and float usage.
-  // Add the given `value` as Scalar with the given `name`.
-  virtual void AddScalar(const string& name, float value,
-                         int64 global_step) = 0;
+    // TODO(shivaniagrawal): consistency in double and float usage.
+    // Add the given `value` as Scalar with the given `name`.
+    virtual void AddScalar(const string& name, float value,
+                           int64 global_step) = 0;
 
-  // Stores a protocol buffer representation of the aggregator state in the
-  // given `out_summary`.
-  virtual void EncodeToProto(Summary* out_summary) = 0;
+    // Stores a protocol buffer representation of the aggregator state in the
+    // given `out_summary`.
+    virtual void EncodeToProto(Summary* out_summary) = 0;
 
-  // Sets a `summary_writer` with this stats_aggregator.
-  virtual Status SetSummaryWriter(SummaryWriterInterface* summary_writer) = 0;
+    // Sets a `summary_writer` with this stats_aggregator.
+    virtual Status SetSummaryWriter(SummaryWriterInterface* summary_writer) = 0;
 
-  // Increment the `label` cell of metrics mapped with `name` by given `value`.
-  virtual void IncrementCounter(const string& name, const string& label,
-                                int64 val) = 0;
+    // Increment the `label` cell of metrics mapped with `name` by given `value`.
+    virtual void IncrementCounter(const string& name, const string& label,
+                                  int64 val) = 0;
 };
 
 // A `StatsAggregatorResource` wraps a sharable `StatsAggregator` as a resource
@@ -75,20 +75,22 @@ class StatsAggregator {
 // `StatsAggregator` interact with a `std::shared_ptr<StatsAggregator>` whereas
 // the `ResourceBase` API requires explicit reference counting.
 class StatsAggregatorResource : public ResourceBase {
- public:
-  // Creates a new resource from the given `stats_aggregator`.
-  StatsAggregatorResource(std::unique_ptr<StatsAggregator> stats_aggregator)
-      : stats_aggregator_(stats_aggregator.release()) {}
+public:
+    // Creates a new resource from the given `stats_aggregator`.
+    StatsAggregatorResource(std::unique_ptr<StatsAggregator> stats_aggregator)
+        : stats_aggregator_(stats_aggregator.release()) {}
 
-  // Returns the wrapped `StatsAggregator`.
-  std::shared_ptr<StatsAggregator> stats_aggregator() const {
-    return stats_aggregator_;
-  }
+    // Returns the wrapped `StatsAggregator`.
+    std::shared_ptr<StatsAggregator> stats_aggregator() const {
+        return stats_aggregator_;
+    }
 
-  string DebugString() const override { return "StatsAggregatorResource"; }
+    string DebugString() const override {
+        return "StatsAggregatorResource";
+    }
 
- private:
-  const std::shared_ptr<StatsAggregator> stats_aggregator_;
+private:
+    const std::shared_ptr<StatsAggregator> stats_aggregator_;
 };
 
 }  // namespace data
