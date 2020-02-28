@@ -40,7 +40,7 @@ float_dtypes = [np.float16, np.float32, np.float64]
 complex_dtypes = [np.complex64, np.complex128]
 dlpack_dtypes = int_dtypes + float_dtypes + [dtypes.bfloat16]
 
-testcase_shapes = [(), (1,), (2, 3), (2, 0), (0, 7), (4, 1, 2)]
+testcase_shapes = [(), (1, ), (2, 3), (2, 0), (0, 7), (4, 1, 2)]
 
 
 def FormatShapeAndDtype(shape, dtype):
@@ -51,13 +51,11 @@ def GetNamedTestParameters():
     result = []
     for dtype in dlpack_dtypes:
         for shape in testcase_shapes:
-            result.append(
-                {
-                    "testcase_name": FormatShapeAndDtype(shape, dtype),
-                    "dtype": dtype,
-                    "shape": shape,
-                }
-            )
+            result.append({
+                "testcase_name": FormatShapeAndDtype(shape, dtype),
+                "dtype": dtype,
+                "shape": shape,
+            })
     return result
 
 
@@ -91,19 +89,19 @@ class DLPackTest(parameterized.TestCase, test.TestCase):
 
     def testUnsupportedTypeToDLPack(self):
         def UnsupportedQint16():
-            tf_tensor = constant_op.constant([[1, 4], [5, 2]], dtype=dtypes.qint16)
+            tf_tensor = constant_op.constant([[1, 4], [5, 2]],
+                                             dtype=dtypes.qint16)
             _ = dlpack.to_dlpack(tf_tensor)
 
         def UnsupportedComplex64():
-            tf_tensor = constant_op.constant([[1, 4], [5, 2]], dtype=dtypes.complex64)
+            tf_tensor = constant_op.constant([[1, 4], [5, 2]],
+                                             dtype=dtypes.complex64)
             _ = dlpack.to_dlpack(tf_tensor)
 
-        self.assertRaisesRegex(
-            Exception, ".* is not supported by dlpack", UnsupportedQint16
-        )
-        self.assertRaisesRegex(
-            Exception, ".* is not supported by dlpack", UnsupportedComplex64
-        )
+        self.assertRaisesRegex(Exception, ".* is not supported by dlpack",
+                               UnsupportedQint16)
+        self.assertRaisesRegex(Exception, ".* is not supported by dlpack",
+                               UnsupportedComplex64)
 
 
 if __name__ == "__main__":

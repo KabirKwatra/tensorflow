@@ -46,7 +46,8 @@ except ImportError:
 # pylint: enable=g-import-not-at-top
 
 
-def save_model_to_hdf5(model, filepath, overwrite=True, include_optimizer=True):
+def save_model_to_hdf5(model, filepath, overwrite=True,
+                       include_optimizer=True):
     """Saves a model to a HDF5 file.
 
     The saved model contains:
@@ -84,8 +85,7 @@ def save_model_to_hdf5(model, filepath, overwrite=True, include_optimizer=True):
             "This is usually caused by `Variable`s being shared by "
             "Layers in the Model. These `Variable`s will be treated "
             "as separate `Variable`s when the Model is restored. To "
-            'avoid this, please save with `save_format="tf"`.'
-        )
+            'avoid this, please save with `save_format="tf"`.')
 
     if not isinstance(filepath, h5py.File):
         # If file exists and should not be overwritten.
@@ -104,9 +104,8 @@ def save_model_to_hdf5(model, filepath, overwrite=True, include_optimizer=True):
         model_metadata = saving_utils.model_metadata(model, include_optimizer)
         for k, v in model_metadata.items():
             if isinstance(v, (dict, list, tuple)):
-                f.attrs[k] = json.dumps(v, default=serialization.get_json_type).encode(
-                    "utf8"
-                )
+                f.attrs[k] = json.dumps(
+                    v, default=serialization.get_json_type).encode("utf8")
             else:
                 f.attrs[k] = v
 
@@ -116,11 +115,8 @@ def save_model_to_hdf5(model, filepath, overwrite=True, include_optimizer=True):
 
         # TODO(b/128683857): Add integration tests between tf.keras and external
         # Keras, to avoid breaking TF.js users.
-        if (
-            include_optimizer
-            and model.optimizer
-            and not isinstance(model.optimizer, optimizers.TFOptimizer)
-        ):
+        if (include_optimizer and model.optimizer
+                and not isinstance(model.optimizer, optimizers.TFOptimizer)):
             save_optimizer_weights_to_hdf5_group(f, model.optimizer)
 
         f.flush()
@@ -129,9 +125,7 @@ def save_model_to_hdf5(model, filepath, overwrite=True, include_optimizer=True):
             f.close()
 
 
-def load_model_from_hdf5(
-    filepath, custom_objects=None, compile=True
-):  # pylint: disable=redefined-builtin
+def load_model_from_hdf5(filepath, custom_objects=None, compile=True):  # pylint: disable=redefined-builtin
     """Loads a model saved via `save_model_to_hdf5`.
 
     Arguments:
@@ -176,8 +170,7 @@ def load_model_from_hdf5(
             raise ValueError("No model found in config file.")
         model_config = json.loads(model_config.decode("utf-8"))
         model = model_config_lib.model_from_config(
-            model_config, custom_objects=custom_objects
-        )
+            model_config, custom_objects=custom_objects)
 
         # set weights
         load_weights_from_hdf5_group(f["model_weights"], model.layers)
@@ -188,17 +181,13 @@ def load_model_from_hdf5(
             if training_config is None:
                 logging.warning(
                     "No training configuration found in the save file, so "
-                    "the model was *not* compiled. Compile it manually."
-                )
+                    "the model was *not* compiled. Compile it manually.")
                 return model
             training_config = json.loads(training_config.decode("utf-8"))
 
             # Compile model.
-            model.compile(
-                **saving_utils.compile_args_from_training_config(
-                    training_config, custom_objects
-                )
-            )
+            model.compile(**saving_utils.compile_args_from_training_config(
+                training_config, custom_objects))
 
             # Set optimizer weights.
             if "optimizer_weights" in f:
@@ -209,23 +198,21 @@ def load_model_from_hdf5(
                 if model._is_graph_network:  # pylint: disable=protected-access
                     if not ops.executing_eagerly_outside_functions():
                         model._make_train_function()
-                    optimizer_weight_values = load_optimizer_weights_from_hdf5_group(f)
+                    optimizer_weight_values = load_optimizer_weights_from_hdf5_group(
+                        f)
                     try:
                         model.optimizer.set_weights(optimizer_weight_values)
                     except ValueError:
-                        logging.warning(
-                            "Error in loading the saved optimizer "
-                            "state. As a result, your model is "
-                            "starting with a freshly initialized "
-                            "optimizer."
-                        )
+                        logging.warning("Error in loading the saved optimizer "
+                                        "state. As a result, your model is "
+                                        "starting with a freshly initialized "
+                                        "optimizer.")
                 else:
                     logging.warning(
                         "Sequential models without an `input_shape` "
                         "passed to the first layer cannot reload their "
                         "optimizer state. As a result, your model is"
-                        "starting with a freshly initialized optimizer."
-                    )
+                        "starting with a freshly initialized optimizer.")
 
     finally:
         if opened_new_file:
@@ -233,9 +220,10 @@ def load_model_from_hdf5(
     return model
 
 
-def preprocess_weights_for_loading(
-    layer, weights, original_keras_version=None, original_backend=None
-):
+def preprocess_weights_for_loading(layer,
+                                   weights,
+                                   original_keras_version=None,
+                                   original_backend=None):
     """Preprocess layer weights between different Keras formats.
 
     Converts layers weights from Keras 1 format to Keras 2 and also weights of
@@ -291,9 +279,9 @@ def preprocess_weights_for_loading(
         Returns:
             A list of weights values (Numpy arrays).
         """
-        return preprocess_weights_for_loading(
-            layer.layer, weights, original_keras_version, original_backend
-        )
+        return preprocess_weights_for_loading(layer.layer, weights,
+                                              original_keras_version,
+                                              original_backend)
 
     def convert_nested_model(weights):
         """Converts layers nested in `Model` or `Sequential`.
@@ -307,8 +295,8 @@ def preprocess_weights_for_loading(
         Returns:
             A list of weights values (Numpy arrays).
         """
-        trainable_weights = weights[: len(layer.trainable_weights)]
-        non_trainable_weights = weights[len(layer.trainable_weights) :]
+        trainable_weights = weights[:len(layer.trainable_weights)]
+        non_trainable_weights = weights[len(layer.trainable_weights):]
 
         new_trainable_weights = []
         new_non_trainable_weights = []
@@ -320,19 +308,19 @@ def preprocess_weights_for_loading(
                 preprocessed = preprocess_weights_for_loading(
                     layer=sublayer,
                     weights=(
-                        trainable_weights[:num_trainable_weights]
-                        + non_trainable_weights[:num_non_trainable_weights]
-                    ),
+                        trainable_weights[:num_trainable_weights] +
+                        non_trainable_weights[:num_non_trainable_weights]),
                     original_keras_version=original_keras_version,
                     original_backend=original_backend,
                 )
-                new_trainable_weights.extend(preprocessed[:num_trainable_weights])
-                new_non_trainable_weights.extend(preprocessed[num_trainable_weights:])
+                new_trainable_weights.extend(
+                    preprocessed[:num_trainable_weights])
+                new_non_trainable_weights.extend(
+                    preprocessed[num_trainable_weights:])
 
                 trainable_weights = trainable_weights[num_trainable_weights:]
                 non_trainable_weights = non_trainable_weights[
-                    num_non_trainable_weights:
-                ]
+                    num_non_trainable_weights:]
 
         return new_trainable_weights + new_non_trainable_weights
 
@@ -348,14 +336,15 @@ def preprocess_weights_for_loading(
 
     if original_keras_version == "1":
         if layer.__class__.__name__ == "TimeDistributed":
-            weights = preprocess_weights_for_loading(
-                layer.layer, weights, original_keras_version, original_backend
-            )
+            weights = preprocess_weights_for_loading(layer.layer, weights,
+                                                     original_keras_version,
+                                                     original_backend)
 
         if layer.__class__.__name__ == "Conv1D":
             shape = weights[0].shape
             # Handle Keras 1.1 format
-            if shape[:2] != (layer.kernel_size[0], 1) or shape[3] != layer.filters:
+            if shape[:2] != (layer.kernel_size[0],
+                             1) or shape[3] != layer.filters:
                 # Legacy shape:
                 # (filters, input_dim, filter_length, 1)
                 assert shape[0] == layer.filters and shape[2:] == (
@@ -389,11 +378,12 @@ def preprocess_weights_for_loading(
 
         if layer.__class__.__name__ == "GRU":
             if len(weights) == 9:
-                kernel = np.concatenate([weights[0], weights[3], weights[6]], axis=-1)
+                kernel = np.concatenate([weights[0], weights[3], weights[6]],
+                                        axis=-1)
                 recurrent_kernel = np.concatenate(
-                    [weights[1], weights[4], weights[7]], axis=-1
-                )
-                bias = np.concatenate([weights[2], weights[5], weights[8]], axis=-1)
+                    [weights[1], weights[4], weights[7]], axis=-1)
+                bias = np.concatenate([weights[2], weights[5], weights[8]],
+                                      axis=-1)
                 weights = [kernel, recurrent_kernel, bias]
 
         if layer.__class__.__name__ == "LSTM":
@@ -401,35 +391,32 @@ def preprocess_weights_for_loading(
                 # old: i, c, f, o
                 # new: i, f, c, o
                 kernel = np.concatenate(
-                    [weights[0], weights[6], weights[3], weights[9]], axis=-1
-                )
+                    [weights[0], weights[6], weights[3], weights[9]], axis=-1)
                 recurrent_kernel = np.concatenate(
-                    [weights[1], weights[7], weights[4], weights[10]], axis=-1
-                )
+                    [weights[1], weights[7], weights[4], weights[10]], axis=-1)
                 bias = np.concatenate(
-                    [weights[2], weights[8], weights[5], weights[11]], axis=-1
-                )
+                    [weights[2], weights[8], weights[5], weights[11]], axis=-1)
                 weights = [kernel, recurrent_kernel, bias]
 
         if layer.__class__.__name__ == "ConvLSTM2D":
             if len(weights) == 12:
                 kernel = np.concatenate(
-                    [weights[0], weights[6], weights[3], weights[9]], axis=-1
-                )
+                    [weights[0], weights[6], weights[3], weights[9]], axis=-1)
                 recurrent_kernel = np.concatenate(
-                    [weights[1], weights[7], weights[4], weights[10]], axis=-1
-                )
+                    [weights[1], weights[7], weights[4], weights[10]], axis=-1)
                 bias = np.concatenate(
-                    [weights[2], weights[8], weights[5], weights[11]], axis=-1
-                )
+                    [weights[2], weights[8], weights[5], weights[11]], axis=-1)
                 if layer.data_format == "channels_first":
                     # old: (filters, stack_size, kernel_rows, kernel_cols)
                     # new: (kernel_rows, kernel_cols, stack_size, filters)
                     kernel = np.transpose(kernel, (2, 3, 1, 0))
-                    recurrent_kernel = np.transpose(recurrent_kernel, (2, 3, 1, 0))
+                    recurrent_kernel = np.transpose(recurrent_kernel,
+                                                    (2, 3, 1, 0))
                 weights = [kernel, recurrent_kernel, bias]
 
-    conv_layers = ["Conv1D", "Conv2D", "Conv3D", "Conv2DTranspose", "ConvLSTM2D"]
+    conv_layers = [
+        "Conv1D", "Conv2D", "Conv3D", "Conv2DTranspose", "ConvLSTM2D"
+    ]
     if layer.__class__.__name__ in conv_layers:
         if original_backend == "theano":
             weights[0] = conv_utils.convert_kernel(weights[0])
@@ -521,9 +508,9 @@ def _convert_rnn_weights(layer, weights):
         bias_shape = weights[2].shape
         n_gates = 4
 
-        if bias_shape == (2 * units * n_gates,):
+        if bias_shape == (2 * units * n_gates, ):
             source = "CuDNNLSTM"
-        elif bias_shape == (units * n_gates,):
+        elif bias_shape == (units * n_gates, ):
             source = "LSTM"
         else:
             raise ValueError("Invalid bias shape: " + str(bias_shape))
@@ -540,10 +527,10 @@ def _convert_rnn_weights(layer, weights):
             """
 
             # Transpose (and reshape) input and recurrent kernels
-            kernels = transform_kernels(
-                weights[0], transpose_input(from_cudnn), n_gates
-            )
-            recurrent_kernels = transform_kernels(weights[1], lambda k: k.T, n_gates)
+            kernels = transform_kernels(weights[0],
+                                        transpose_input(from_cudnn), n_gates)
+            recurrent_kernels = transform_kernels(weights[1], lambda k: k.T,
+                                                  n_gates)
             if from_cudnn:
                 # merge input and recurrent biases into a single set
                 biases = np.sum(np.split(weights[2], 2, axis=0), axis=0)
@@ -554,7 +541,8 @@ def _convert_rnn_weights(layer, weights):
             return [kernels, recurrent_kernels, biases]
 
         if source != target_class:
-            weights = convert_lstm_weights(weights, from_cudnn=source == "CuDNNLSTM")
+            weights = convert_lstm_weights(weights,
+                                           from_cudnn=source == "CuDNNLSTM")
 
     # convert the weights between CuDNNGRU and GRU(reset_after=True)
     if target_class in ["GRU", "CuDNNGRU"] and len(weights) == 3:
@@ -577,18 +565,19 @@ def _convert_rnn_weights(layer, weights):
               Updated weights compatible with GRU.
             """
 
-            kernels = transform_kernels(
-                weights[0], transpose_input(from_cudnn), n_gates
-            )
-            recurrent_kernels = transform_kernels(weights[1], lambda k: k.T, n_gates)
-            biases = np.array(weights[2]).reshape((2, -1) if from_cudnn else -1)
+            kernels = transform_kernels(weights[0],
+                                        transpose_input(from_cudnn), n_gates)
+            recurrent_kernels = transform_kernels(weights[1], lambda k: k.T,
+                                                  n_gates)
+            biases = np.array(weights[2]).reshape((2,
+                                                   -1) if from_cudnn else -1)
             return [kernels, recurrent_kernels, biases]
 
-        if bias_shape == (2 * units * n_gates,):
+        if bias_shape == (2 * units * n_gates, ):
             source = "CuDNNGRU"
         elif bias_shape == (2, units * n_gates):
             source = "GRU(reset_after=True)"
-        elif bias_shape == (units * n_gates,):
+        elif bias_shape == (units * n_gates, ):
             source = "GRU(reset_after=False)"
         else:
             raise ValueError("Invalid bias shape: " + str(bias_shape))
@@ -625,10 +614,13 @@ def save_optimizer_weights_to_hdf5_group(hdf5_group, optimizer):
     if symbolic_weights:
         weights_group = hdf5_group.create_group("optimizer_weights")
         weight_names = [str(w.name).encode("utf8") for w in symbolic_weights]
-        save_attributes_to_hdf5_group(weights_group, "weight_names", weight_names)
+        save_attributes_to_hdf5_group(weights_group, "weight_names",
+                                      weight_names)
         weight_values = K.batch_get_value(symbolic_weights)
         for name, val in zip(weight_names, weight_values):
-            param_dset = weights_group.create_dataset(name, val.shape, dtype=val.dtype)
+            param_dset = weights_group.create_dataset(name,
+                                                      val.shape,
+                                                      dtype=val.dtype)
             if not val.shape:
                 # scalar
                 param_dset[()] = val
@@ -647,9 +639,10 @@ def load_optimizer_weights_from_hdf5_group(hdf5_group):
     """
     weights_group = hdf5_group["optimizer_weights"]
     optimizer_weight_names = load_attributes_from_hdf5_group(
-        weights_group, "weight_names"
-    )
-    return [weights_group[weight_name] for weight_name in optimizer_weight_names]
+        weights_group, "weight_names")
+    return [
+        weights_group[weight_name] for weight_name in optimizer_weight_names
+    ]
 
 
 def save_weights_to_hdf5_group(f, layers):
@@ -660,12 +653,10 @@ def save_weights_to_hdf5_group(f, layers):
         layers: List of layer instances.
     """
     from tensorflow.python.keras import (
-        __version__ as keras_version,
-    )  # pylint: disable=g-import-not-at-top
+        __version__ as keras_version, )  # pylint: disable=g-import-not-at-top
 
     save_attributes_to_hdf5_group(
-        f, "layer_names", [layer.name.encode("utf8") for layer in layers]
-    )
+        f, "layer_names", [layer.name.encode("utf8") for layer in layers])
     f.attrs["backend"] = K.backend().encode("utf8")
     f.attrs["keras_version"] = str(keras_version).encode("utf8")
 
@@ -721,14 +712,10 @@ def load_weights_from_hdf5_group(f, layers):
             filtered_layer_names.append(name)
     layer_names = filtered_layer_names
     if len(layer_names) != len(filtered_layers):
-        raise ValueError(
-            "You are trying to load a weight file "
-            "containing "
-            + str(len(layer_names))
-            + " layers into a model with "
-            + str(len(filtered_layers))
-            + " layers."
-        )
+        raise ValueError("You are trying to load a weight file "
+                         "containing " + str(len(layer_names)) +
+                         " layers into a model with " +
+                         str(len(filtered_layers)) + " layers.")
 
     # We batch weight value assignments in a single backend call
     # which provides a speedup in TensorFlow.
@@ -736,28 +723,23 @@ def load_weights_from_hdf5_group(f, layers):
     for k, name in enumerate(layer_names):
         g = f[name]
         weight_names = load_attributes_from_hdf5_group(g, "weight_names")
-        weight_values = [np.asarray(g[weight_name]) for weight_name in weight_names]
+        weight_values = [
+            np.asarray(g[weight_name]) for weight_name in weight_names
+        ]
         layer = filtered_layers[k]
         symbolic_weights = _legacy_weights(layer)
-        weight_values = preprocess_weights_for_loading(
-            layer, weight_values, original_keras_version, original_backend
-        )
+        weight_values = preprocess_weights_for_loading(layer, weight_values,
+                                                       original_keras_version,
+                                                       original_backend)
         if len(weight_values) != len(symbolic_weights):
-            raise ValueError(
-                "Layer #"
-                + str(k)
-                + ' (named "'
-                + layer.name
-                + '" in the current model) was found to '
-                "correspond to layer " + name + " in the save file. "
-                "However the new layer "
-                + layer.name
-                + " expects "
-                + str(len(symbolic_weights))
-                + " weights, but the saved weights have "
-                + str(len(weight_values))
-                + " elements."
-            )
+            raise ValueError("Layer #" + str(k) + ' (named "' + layer.name +
+                             '" in the current model) was found to '
+                             "correspond to layer " + name +
+                             " in the save file. "
+                             "However the new layer " + layer.name +
+                             " expects " + str(len(symbolic_weights)) +
+                             " weights, but the saved weights have " +
+                             str(len(weight_values)) + " elements.")
         weight_value_tuples += zip(symbolic_weights, weight_values)
     K.batch_set_value(weight_value_tuples)
 
@@ -804,62 +786,50 @@ def load_weights_from_hdf5_group_by_name(f, layers, skip_mismatch=False):
     for k, name in enumerate(layer_names):
         g = f[name]
         weight_names = load_attributes_from_hdf5_group(g, "weight_names")
-        weight_values = [np.asarray(g[weight_name]) for weight_name in weight_names]
+        weight_values = [
+            np.asarray(g[weight_name]) for weight_name in weight_names
+        ]
 
         for layer in index.get(name, []):
             symbolic_weights = _legacy_weights(layer)
             weight_values = preprocess_weights_for_loading(
-                layer, weight_values, original_keras_version, original_backend
-            )
+                layer, weight_values, original_keras_version, original_backend)
             if len(weight_values) != len(symbolic_weights):
                 if skip_mismatch:
                     logging.warning(
                         "Skipping loading of weights for "
                         "layer {}".format(layer.name) + " due to mismatch "
                         "in number of weights ({} vs {}).".format(
-                            len(symbolic_weights), len(weight_values)
-                        )
-                    )
+                            len(symbolic_weights), len(weight_values)))
                     continue
-                raise ValueError(
-                    "Layer #"
-                    + str(k)
-                    + ' (named "'
-                    + layer.name
-                    + '") expects '
-                    + str(len(symbolic_weights))
-                    + " weight(s), but the saved weights"
-                    + " have "
-                    + str(len(weight_values))
-                    + " element(s)."
-                )
+                raise ValueError("Layer #" + str(k) + ' (named "' +
+                                 layer.name + '") expects ' +
+                                 str(len(symbolic_weights)) +
+                                 " weight(s), but the saved weights" +
+                                 " have " + str(len(weight_values)) +
+                                 " element(s).")
             # Set values.
             for i in range(len(weight_values)):
                 if K.int_shape(symbolic_weights[i]) != weight_values[i].shape:
                     if skip_mismatch:
-                        logging.warning(
-                            "Skipping loading of weights for "
-                            "layer {}".format(layer.name) + " due to "
-                            "mismatch in shape ({} vs {}).".format(
-                                symbolic_weights[i].shape, weight_values[i].shape
-                            )
-                        )
+                        logging.warning("Skipping loading of weights for "
+                                        "layer {}".format(layer.name) +
+                                        " due to "
+                                        "mismatch in shape ({} vs {}).".format(
+                                            symbolic_weights[i].shape,
+                                            weight_values[i].shape))
                         continue
-                    raise ValueError(
-                        "Layer #"
-                        + str(k)
-                        + ' (named "'
-                        + layer.name
-                        + '"), weight '
-                        + str(symbolic_weights[i])
-                        + " has shape {}".format(K.int_shape(symbolic_weights[i]))
-                        + ", but the saved weight has shape "
-                        + str(weight_values[i].shape)
-                        + "."
-                    )
+                    raise ValueError("Layer #" + str(k) + ' (named "' +
+                                     layer.name + '"), weight ' +
+                                     str(symbolic_weights[i]) +
+                                     " has shape {}".format(
+                                         K.int_shape(symbolic_weights[i])) +
+                                     ", but the saved weight has shape " +
+                                     str(weight_values[i].shape) + ".")
 
                 else:
-                    weight_value_tuples.append((symbolic_weights[i], weight_values[i]))
+                    weight_value_tuples.append(
+                        (symbolic_weights[i], weight_values[i]))
     K.batch_set_value(weight_value_tuples)
 
 
@@ -886,9 +856,8 @@ def save_attributes_to_hdf5_group(group, name, data):
     if bad_attributes:
         raise RuntimeError(
             "The following attributes cannot be saved to HDF5 "
-            "file because they are larger than %d bytes: %s"
-            % (HDF5_OBJECT_HEADER_LIMIT, ", ".join(bad_attributes))
-        )
+            "file because they are larger than %d bytes: %s" %
+            (HDF5_OBJECT_HEADER_LIMIT, ", ".join(bad_attributes)))
 
     data_npy = np.asarray(data)
 
@@ -927,9 +896,10 @@ def load_attributes_from_hdf5_group(group, name):
         data = []
         chunk_id = 0
         while "%s%d" % (name, chunk_id) in group.attrs:
-            data.extend(
-                [n.decode("utf8") for n in group.attrs["%s%d" % (name, chunk_id)]]
-            )
+            data.extend([
+                n.decode("utf8")
+                for n in group.attrs["%s%d" % (name, chunk_id)]
+            ])
             chunk_id += 1
     return data
 
@@ -957,6 +927,6 @@ def _legacy_weights(layer):
         raise NotImplementedError(
             "Save or restore weights that is not an instance of `tf.Variable` is "
             "not supported in h5, use `save_format='tf'` instead. Got a model "
-            "or layer {} with weights {}".format(layer.__class__.__name__, weights)
-        )
+            "or layer {} with weights {}".format(layer.__class__.__name__,
+                                                 weights))
     return weights

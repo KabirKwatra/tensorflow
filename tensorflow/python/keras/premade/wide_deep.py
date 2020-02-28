@@ -84,9 +84,7 @@ class WideDeepModel(keras_training.Model):
             Allowed keyword arguments include `name`.
         """
         super(WideDeepModel, self).__init__(**kwargs)
-        base_layer._keras_model_gauge.get_cell("WideDeep").set(
-            True
-        )  # pylint: disable=protected-access
+        base_layer._keras_model_gauge.get_cell("WideDeep").set(True)  # pylint: disable=protected-access
         self.linear_model = linear_model
         self.dnn_model = dnn_model
         self.activation = activations.get(activation)
@@ -104,7 +102,8 @@ class WideDeepModel(keras_training.Model):
             dnn_output = self.dnn_model(dnn_inputs, training=training)
         else:
             dnn_output = self.dnn_model(dnn_inputs)
-        output = nest.map_structure(lambda x, y: (x + y), linear_output, dnn_output)
+        output = nest.map_structure(lambda x, y: (x + y), linear_output,
+                                    dnn_output)
         if self.activation:
             return nest.map_structure(self.activation, output)
         return output
@@ -116,15 +115,17 @@ class WideDeepModel(keras_training.Model):
 
         with backprop.GradientTape() as tape:
             y_pred = self(x, training=True)
-            loss = self.compiled_loss(
-                y, y_pred, sample_weight, regularization_losses=self.losses
-            )
+            loss = self.compiled_loss(y,
+                                      y_pred,
+                                      sample_weight,
+                                      regularization_losses=self.losses)
         self.compiled_metrics.update_state(y, y_pred, sample_weight)
 
         if isinstance(self.optimizer, (list, tuple)):
             linear_vars = self.linear_model.trainable_variables
             dnn_vars = self.dnn_model.trainable_variables
-            linear_grads, dnn_grads = tape.gradient(loss, (linear_vars, dnn_vars))
+            linear_grads, dnn_grads = tape.gradient(loss,
+                                                    (linear_vars, dnn_vars))
 
             linear_optimizer = self.optimizer[0]
             dnn_optimizer = self.optimizer[1]
@@ -181,20 +182,16 @@ class WideDeepModel(keras_training.Model):
 
                 metrics = self._get_training_eval_metrics()
                 metrics_tensors = [
-                    m._call_result
-                    for m in metrics
+                    m._call_result for m in metrics
                     if hasattr(m, "_call_result")  # pylint: disable=protected-access
                 ]
 
             with K.name_scope("training"):
                 # Gets loss and metrics. Updates weights at each call.
-                fn = K.function(
-                    inputs,
-                    [self.total_loss] + metrics_tensors,
-                    updates=updates,
-                    name="train_function",
-                    **self._function_kwargs
-                )
+                fn = K.function(inputs, [self.total_loss] + metrics_tensors,
+                                updates=updates,
+                                name="train_function",
+                                **self._function_kwargs)
                 setattr(self, "train_function", fn)
 
             # Restore the current trainable state
@@ -217,12 +214,9 @@ class WideDeepModel(keras_training.Model):
         linear_model = layer_module.deserialize(linear_config, custom_objects)
         dnn_config = config.pop("dnn_model")
         dnn_model = layer_module.deserialize(dnn_config, custom_objects)
-        activation = activations.deserialize(
-            config.pop("activation", None), custom_objects=custom_objects
-        )
-        return cls(
-            linear_model=linear_model,
-            dnn_model=dnn_model,
-            activation=activation,
-            **config
-        )
+        activation = activations.deserialize(config.pop("activation", None),
+                                             custom_objects=custom_objects)
+        return cls(linear_model=linear_model,
+                   dnn_model=dnn_model,
+                   activation=activation,
+                   **config)

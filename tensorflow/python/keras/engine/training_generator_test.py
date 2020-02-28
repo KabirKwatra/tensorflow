@@ -42,7 +42,7 @@ def custom_generator(mode=2):
     num_samples = 50
     arr_data = np.random.random((num_samples, 2))
     arr_labels = np.random.random((num_samples, 4))
-    arr_weights = np.random.random((num_samples,))
+    arr_weights = np.random.random((num_samples, ))
     i = 0
     while True:
         batch_index = i * batch_size % num_samples
@@ -66,7 +66,7 @@ def custom_generator_changing_batch_size(mode=2):
     num_samples = 50
     arr_data = np.random.random((num_samples, 2))
     arr_labels = np.random.random((num_samples, 4))
-    arr_weights = np.random.random((num_samples,))
+    arr_weights = np.random.random((num_samples, ))
     i = 0
     while True:
         if cur_batch_size > 1:
@@ -94,7 +94,9 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
     @data_utils.dont_use_multiprocessing_pool
     def test_fit_generator_method(self):
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.compile(
             loss="mse",
             optimizer=rmsprop.RMSprop(1e-3),
@@ -140,7 +142,9 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
     @data_utils.dont_use_multiprocessing_pool
     def test_evaluate_generator_method(self):
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.compile(
             loss="mse",
             optimizer=rmsprop.RMSprop(1e-3),
@@ -156,9 +160,10 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
             verbose=1,
             use_multiprocessing=True,
         )
-        model.evaluate_generator(
-            custom_generator(), steps=5, max_queue_size=10, use_multiprocessing=False
-        )
+        model.evaluate_generator(custom_generator(),
+                                 steps=5,
+                                 max_queue_size=10,
+                                 use_multiprocessing=False)
         model.evaluate_generator(
             custom_generator(),
             steps=5,
@@ -171,7 +176,9 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
     @keras_parameterized.run_all_keras_modes
     @data_utils.dont_use_multiprocessing_pool
     def test_predict_generator_method(self):
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.run_eagerly = testing_utils.should_run_eagerly()
 
         model.predict_generator(
@@ -181,12 +188,14 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
             workers=2,
             use_multiprocessing=True,
         )
-        model.predict_generator(
-            custom_generator(), steps=5, max_queue_size=10, use_multiprocessing=False
-        )
-        model.predict_generator(
-            custom_generator(), steps=5, max_queue_size=10, workers=0
-        )
+        model.predict_generator(custom_generator(),
+                                steps=5,
+                                max_queue_size=10,
+                                use_multiprocessing=False)
+        model.predict_generator(custom_generator(),
+                                steps=5,
+                                max_queue_size=10,
+                                workers=0)
         # Test generator with just inputs (no targets)
         model.predict_generator(
             custom_generator_threads(mode=1),
@@ -201,14 +210,17 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
             max_queue_size=10,
             use_multiprocessing=False,
         )
-        model.predict_generator(
-            custom_generator(mode=1), steps=5, max_queue_size=10, workers=0
-        )
+        model.predict_generator(custom_generator(mode=1),
+                                steps=5,
+                                max_queue_size=10,
+                                workers=0)
 
     @keras_parameterized.run_with_all_model_types
     @keras_parameterized.run_all_keras_modes
     def test_generator_methods_with_sample_weights(self):
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.compile(
             loss="mse",
             optimizer=rmsprop.RMSprop(1e-3),
@@ -254,7 +266,9 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
             while 1:
                 yield (0, 0, 0, 0)
 
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.compile(
             loss="mse",
             optimizer=rmsprop.RMSprop(1e-3),
@@ -303,23 +317,29 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
 
         def ones_generator():
             while True:
-                yield np.ones([10, 10], np.float32), np.ones([10, 1], np.float32)
+                yield np.ones([10, 10], np.float32), np.ones([10, 1],
+                                                             np.float32)
 
-        model = testing_utils.get_small_mlp(num_hidden=10, num_classes=1, input_dim=10)
+        model = testing_utils.get_small_mlp(num_hidden=10,
+                                            num_classes=1,
+                                            input_dim=10)
 
         model.compile(
             rmsprop.RMSprop(0.001),
             "binary_crossentropy",
             run_eagerly=testing_utils.should_run_eagerly(),
         )
-        model.fit(
-            ones_generator(), steps_per_epoch=2, validation_data=val_data, epochs=2
-        )
+        model.fit(ones_generator(),
+                  steps_per_epoch=2,
+                  validation_data=val_data,
+                  epochs=2)
         model.evaluate(ones_generator(), steps=2)
         model.predict(ones_generator(), steps=2)
 
         # Test with a changing batch size
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.compile(
             loss="mse",
             optimizer=rmsprop.RMSprop(1e-3),
@@ -363,15 +383,15 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
             "I think juice is great",
             "unknown is the best language since slicedbread",
             "a a a a a a a",
-            "matmul" "Yaks are also quite nice",
+            "matmul"
+            "Yaks are also quite nice",
         ]
         y = [1, 0, 0, 1, 1]
 
         vocab = {
             word: i + 1
             for i, word in enumerate(
-                sorted(set(itertools.chain(*[i.split() for i in x])))
-            )
+                sorted(set(itertools.chain(*[i.split() for i in x]))))
         }
 
         def data_gen(batch_size=2):
@@ -403,7 +423,7 @@ class TestGeneratorMethods(keras_parameterized.TestCase):
                 keras.layers.SimpleRNN(units=1),
                 keras.layers.Activation("sigmoid"),
             ],
-            input_shape=(None,),
+            input_shape=(None, ),
         )
 
         model.compile(loss=keras.losses.binary_crossentropy, optimizer="sgd")
@@ -422,7 +442,9 @@ class TestGeneratorMethodsWithSequences(keras_parameterized.TestCase):
             def __len__(self):
                 return 10
 
-        model = testing_utils.get_small_mlp(num_hidden=3, num_classes=4, input_dim=2)
+        model = testing_utils.get_small_mlp(num_hidden=3,
+                                            num_classes=4,
+                                            input_dim=2)
         model.compile(loss="mse", optimizer=rmsprop.RMSprop(1e-3))
 
         model.fit_generator(
@@ -452,7 +474,8 @@ class TestGeneratorMethodsWithSequences(keras_parameterized.TestCase):
 
         class CustomSequence(data_utils.Sequence):
             def __getitem__(self, idx):
-                return np.ones([10, 10], np.float32), np.ones([10, 1], np.float32)
+                return np.ones([10, 10], np.float32), np.ones([10, 1],
+                                                              np.float32)
 
             def __len__(self):
                 return 2
@@ -468,23 +491,27 @@ class TestGeneratorMethodsWithSequences(keras_parameterized.TestCase):
             def __len__(self):
                 return 2
 
-        model = testing_utils.get_small_mlp(num_hidden=10, num_classes=1, input_dim=10)
+        model = testing_utils.get_small_mlp(num_hidden=10,
+                                            num_classes=1,
+                                            input_dim=10)
 
         model.compile(rmsprop.RMSprop(0.001), "binary_crossentropy")
         model.fit(CustomSequence(), validation_data=val_data, epochs=2)
         model.evaluate(CustomSequence())
         model.predict(CustomSequence())
 
-        with self.assertRaisesRegexp(ValueError, "`y` argument is not supported"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "`y` argument is not supported"):
             model.fit(CustomSequence(), y=np.ones([10, 1]))
 
         with self.assertRaisesRegexp(
-            ValueError, "`sample_weight` argument is not supported"
-        ):
+                ValueError, "`sample_weight` argument is not supported"):
             model.fit(CustomSequence(), sample_weight=np.ones([10, 1]))
 
         model.compile(rmsprop.RMSprop(0.001), "binary_crossentropy")
-        model.fit(CustomSequenceChangingBatchSize(), validation_data=val_data, epochs=2)
+        model.fit(CustomSequenceChangingBatchSize(),
+                  validation_data=val_data,
+                  epochs=2)
         model.evaluate(CustomSequenceChangingBatchSize())
         model.predict(CustomSequenceChangingBatchSize())
 
@@ -495,7 +522,8 @@ class TestGeneratorMethodsWithSequences(keras_parameterized.TestCase):
                 self.epochs = 0
 
             def __getitem__(self, idx):
-                return np.ones([10, 10], np.float32), np.ones([10, 1], np.float32)
+                return np.ones([10, 10], np.float32), np.ones([10, 1],
+                                                              np.float32)
 
             def __len__(self):
                 return 2
@@ -524,7 +552,8 @@ class TestConvertToGeneratorLike(test.TestCase, parameterized.TestCase):
         return dataset_ops.DatasetV2.from_tensors(inputs).repeat(batches)
 
     def _make_iterator(self, inputs, batches):
-        return dataset_ops.make_one_shot_iterator(self._make_dataset(inputs, batches))
+        return dataset_ops.make_one_shot_iterator(
+            self._make_dataset(inputs, batches))
 
     def _make_generator(self, inputs, batches):
         def _gen():
@@ -552,13 +581,11 @@ class TestConvertToGeneratorLike(test.TestCase, parameterized.TestCase):
 
         # Dataset and Iterator not supported in Legacy Graph mode.
         if not context.executing_eagerly() and isinstance(
-            data, (dataset_ops.DatasetV2, iterator_ops.Iterator)
-        ):
+                data, (dataset_ops.DatasetV2, iterator_ops.Iterator)):
             return
 
         generator, steps = training_generator.convert_to_generator_like(
-            data, batch_size=2, steps_per_epoch=expected_batches
-        )
+            data, batch_size=2, steps_per_epoch=expected_batches)
         self.assertEqual(steps, expected_batches)
 
         for _ in range(expected_batches):
