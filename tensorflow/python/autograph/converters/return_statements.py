@@ -27,13 +27,12 @@ from tensorflow.python.autograph.pyct import templates
 from tensorflow.python.autograph.pyct.static_analysis.annos import NodeAnno
 
 
-BODY_DEFINITELY_RETURNS = 'BODY_DEFINITELY_RETURNS'
-ORELSE_DEFINITELY_RETURNS = 'ORELSE_DEFINITELY_RETURNS'
-STMT_DEFINITELY_RETURNS = 'STMT_DEFINITELY_RETURNS'
+BODY_DEFINITELY_RETURNS = "BODY_DEFINITELY_RETURNS"
+ORELSE_DEFINITELY_RETURNS = "ORELSE_DEFINITELY_RETURNS"
+STMT_DEFINITELY_RETURNS = "STMT_DEFINITELY_RETURNS"
 
 
 class _RewriteBlock(object):
-
     def __init__(self):
         self.definitely_returns = False
 
@@ -79,19 +78,20 @@ class ConditionalReturnRewriter(converter.Base):
         # a single conditional with possibly returns on both branches. This
         # reduces the use of None return values, which don't work with TF
         # conditionals.
-        if (isinstance(node, gast.If)
-                and anno.getanno(node, BODY_DEFINITELY_RETURNS, default=False)):
+        if isinstance(node, gast.If) and anno.getanno(
+            node, BODY_DEFINITELY_RETURNS, default=False
+        ):
             return node, node.orelse
-        elif (isinstance(node, gast.If)
-              and anno.getanno(node, ORELSE_DEFINITELY_RETURNS, default=False)):
+        elif isinstance(node, gast.If) and anno.getanno(
+            node, ORELSE_DEFINITELY_RETURNS, default=False
+        ):
             return node, node.body
 
         return node, None
 
     def _visit_statement_block(self, node, nodes):
         self.state[_RewriteBlock].enter()
-        new_nodes = self.visit_block(
-            nodes, after_visit=self._postprocess_statement)
+        new_nodes = self.visit_block(nodes, after_visit=self._postprocess_statement)
         block_definitely_returns = self.state[_RewriteBlock].definitely_returns
         self.state[_RewriteBlock].exit()
         return new_nodes, block_definitely_returns
@@ -111,8 +111,7 @@ class ConditionalReturnRewriter(converter.Base):
 
     def visit_With(self, node):
         node.items = self.visit_block(node.items)
-        node.body, definitely_returns = self._visit_statement_block(
-            node, node.body)
+        node.body, definitely_returns = self._visit_statement_block(node, node.body)
         if definitely_returns:
             anno.setanno(node, STMT_DEFINITELY_RETURNS, True)
         return node
@@ -136,12 +135,14 @@ class ConditionalReturnRewriter(converter.Base):
         node.test = self.visit(node.test)
 
         node.body, body_definitely_returns = self._visit_statement_block(
-            node, node.body)
+            node, node.body
+        )
         if body_definitely_returns:
             anno.setanno(node, BODY_DEFINITELY_RETURNS, True)
 
         node.orelse, orelse_definitely_returns = self._visit_statement_block(
-            node, node.orelse)
+            node, node.orelse
+        )
         if orelse_definitely_returns:
             anno.setanno(node, ORELSE_DEFINITELY_RETURNS, True)
 
@@ -157,7 +158,6 @@ class ConditionalReturnRewriter(converter.Base):
 
 
 class _Block(object):
-
     def __init__(self):
         self.is_function = False
         self.return_used = False
@@ -165,19 +165,18 @@ class _Block(object):
         self.create_guard_now = False
 
     def __repr__(self):
-        return 'used: {}'.format(
-            self.return_used)
+        return "used: {}".format(self.return_used)
 
 
 class _Function(object):
-
     def __init__(self):
         self.do_return_var_name = None
         self.retval_var_name = None
 
     def __repr__(self):
-        return 'return control: {}, return value: {}'.format(
-            self.do_return_var_name, self.retval_var_name)
+        return "return control: {}, return value: {}".format(
+            self.do_return_var_name, self.retval_var_name
+        )
 
 
 class ReturnStatementsTransformer(converter.Base):
@@ -231,7 +230,7 @@ class ReturnStatementsTransformer(converter.Base):
             if block.is_function:
                 break
 
-        retval = node.value if node.value else parser.parse_expression('None')
+        retval = node.value if node.value else parser.parse_expression("None")
 
         template = """
       do_return_var_name = True
@@ -241,7 +240,8 @@ class ReturnStatementsTransformer(converter.Base):
             template,
             do_return_var_name=self.state[_Function].do_return_var_name,
             retval_var_name=self.state[_Function].retval_var_name,
-            retval=retval)
+            retval=retval,
+        )
 
         return node
 
@@ -255,10 +255,11 @@ class ReturnStatementsTransformer(converter.Base):
         if ag__.not_(do_return_var_name):
           original_node
       """
-            cond, = templates.replace(
+            (cond,) = templates.replace(
                 template,
                 do_return_var_name=self.state[_Function].do_return_var_name,
-                original_node=node)
+                original_node=node,
+            )
             node, block = cond, cond.body
         else:
             node, block = node, None
@@ -270,8 +271,7 @@ class ReturnStatementsTransformer(converter.Base):
 
     def _visit_statement_block(self, node, nodes):
         self.state[_Block].enter()
-        nodes = self.visit_block(
-            nodes, after_visit=self._postprocess_statement)
+        nodes = self.visit_block(nodes, after_visit=self._postprocess_statement)
         self.state[_Block].exit()
         return nodes
 
@@ -282,9 +282,10 @@ class ReturnStatementsTransformer(converter.Base):
         node.body = self._visit_statement_block(node, node.body)
         if self.state[_Block].return_used:
             node.test = templates.replace_as_expression(
-                'ag__.and_(lambda: ag__.not_(control_var), lambda: test)',
+                "ag__.and_(lambda: ag__.not_(control_var), lambda: test)",
                 test=node.test,
-                control_var=self.state[_Function].do_return_var_name)
+                control_var=self.state[_Function].do_return_var_name,
+            )
 
         node.orelse = self._visit_statement_block(node, node.orelse)
         return node
@@ -296,17 +297,18 @@ class ReturnStatementsTransformer(converter.Base):
         # Add the check for return to the loop condition.
         node.body = self._visit_statement_block(node, node.body)
         if self.state[_Block].return_used:
-            extra_test = anno.getanno(
-                node, anno.Basic.EXTRA_LOOP_TEST, default=None)
+            extra_test = anno.getanno(node, anno.Basic.EXTRA_LOOP_TEST, default=None)
             if extra_test is not None:
                 extra_test = templates.replace_as_expression(
-                    'ag__.and_(lambda: ag__.not_(control_var), lambda: extra_test)',
+                    "ag__.and_(lambda: ag__.not_(control_var), lambda: extra_test)",
                     extra_test=extra_test,
-                    control_var=self.state[_Function].do_return_var_name)
+                    control_var=self.state[_Function].do_return_var_name,
+                )
             else:
                 extra_test = templates.replace_as_expression(
-                    'ag__.not_(control_var)',
-                    control_var=self.state[_Function].do_return_var_name)
+                    "ag__.not_(control_var)",
+                    control_var=self.state[_Function].do_return_var_name,
+                )
             anno.setanno(node, anno.Basic.EXTRA_LOOP_TEST, extra_test)
 
         node.orelse = self._visit_statement_block(node, node.orelse)
@@ -340,10 +342,8 @@ class ReturnStatementsTransformer(converter.Base):
         self.state[_Block].is_function = True
 
         scope = anno.getanno(node, NodeAnno.BODY_SCOPE)
-        do_return_var_name = self.ctx.namer.new_symbol(
-            'do_return', scope.referenced)
-        retval_var_name = self.ctx.namer.new_symbol(
-            'retval_', scope.referenced)
+        do_return_var_name = self.ctx.namer.new_symbol("do_return", scope.referenced)
+        retval_var_name = self.ctx.namer.new_symbol("retval_", scope.referenced)
         self.state[_Function].do_return_var_name = do_return_var_name
         self.state[_Function].retval_var_name = retval_var_name
 
@@ -353,8 +353,9 @@ class ReturnStatementsTransformer(converter.Base):
         # TODO(mdan): Should a docstring even be included in the output?
         docstring = None
         if converted_body:
-            if (isinstance(converted_body[0], gast.Expr) and
-                    isinstance(converted_body[0].value, gast.Constant)):
+            if isinstance(converted_body[0], gast.Expr) and isinstance(
+                converted_body[0].value, gast.Constant
+            ):
                 docstring = converted_body[0]
                 converted_body = converted_body[1:]
 
@@ -380,7 +381,8 @@ class ReturnStatementsTransformer(converter.Base):
                 template,
                 body=converted_body,
                 do_return_var_name=do_return_var_name,
-                retval_var_name=retval_var_name)
+                retval_var_name=retval_var_name,
+            )
 
             if docstring:
                 node.body.insert(0, docstring)
@@ -398,7 +400,8 @@ def transform(node, ctx, default_to_null_return=True):
     node = ConditionalReturnRewriter(ctx).visit(node)
 
     transformer = ReturnStatementsTransformer(
-        ctx, default_to_null_return=default_to_null_return)
+        ctx, default_to_null_return=default_to_null_return
+    )
     node = transformer.visit(node)
 
     return node

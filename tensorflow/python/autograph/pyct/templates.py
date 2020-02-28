@@ -46,8 +46,8 @@ class ContextAdjuster(gast.NodeTransformer):
     def visit(self, node):
         original_override = self._ctx_override
         node = super(ContextAdjuster, self).visit(node)
-        if hasattr(node, 'ctx'):
-            assert node.ctx is not None, 'node {} has ctx unset'.format(node)
+        if hasattr(node, "ctx"):
+            assert node.ctx is not None, "node {} has ctx unset".format(node)
         self._ctx_override = original_override
         return node
 
@@ -123,7 +123,7 @@ class ReplaceTransformer(gast.NodeTransformer):
             anno.Basic.ORIGIN,
             anno.Basic.SKIP_PROCESSING,
             anno.Static.ORIG_DEFINITIONS,
-            'function_context_name',
+            "function_context_name",
         }
 
     def _prepare_replacement(self, replaced, key):
@@ -137,8 +137,7 @@ class ReplaceTransformer(gast.NodeTransformer):
         """
         repl = self.replacements[key]
 
-        new_nodes = ast_util.copy_clean(
-            repl, preserve_annos=self.preserved_annos)
+        new_nodes = ast_util.copy_clean(repl, preserve_annos=self.preserved_annos)
         if isinstance(new_nodes, gast.AST):
             new_nodes = [new_nodes]
 
@@ -159,16 +158,21 @@ class ReplaceTransformer(gast.NodeTransformer):
         repl = self._prepare_replacement(node, node.arg)
         if isinstance(repl, gast.keyword):
             return repl
-        elif (repl and isinstance(repl, (list, tuple)) and
-              all(isinstance(r, gast.keyword) for r in repl)):
+        elif (
+            repl
+            and isinstance(repl, (list, tuple))
+            and all(isinstance(r, gast.keyword) for r in repl)
+        ):
             return repl
         # TODO(mdan): We may allow replacing with a string as well.
         # For example, if one wanted to replace foo with bar in foo=baz, then
         # we could allow changing just node arg, so that we end up with bar=baz.
         raise ValueError(
-            'a keyword argument may only be replaced by another keyword or a '
-            'non-empty list of keywords. Found: {} for keyword {}'.format(
-                repl, node.arg))
+            "a keyword argument may only be replaced by another keyword or a "
+            "non-empty list of keywords. Found: {} for keyword {}".format(
+                repl, node.arg
+            )
+        )
 
     def visit_FunctionDef(self, node):
         node = self.generic_visit(node)
@@ -178,8 +182,8 @@ class ReplaceTransformer(gast.NodeTransformer):
         repl = self.replacements[node.name]
         if not isinstance(repl, (gast.Name, ast.Name)):
             raise ValueError(
-                'a function name can only be replaced by a Name node. Found: %s' %
-                repl)
+                "a function name can only be replaced by a Name node. Found: %s" % repl
+            )
         node.name = repl.id
         return node
 
@@ -191,7 +195,8 @@ class ReplaceTransformer(gast.NodeTransformer):
         repl = self.replacements[node.attr]
         if not isinstance(repl, gast.Name):
             raise ValueError(
-                'An attribute can only be replaced by a Name node. Found: %s' % repl)
+                "An attribute can only be replaced by a Name node. Found: %s" % repl
+            )
         node.attr = repl.id
         return node
 
@@ -207,11 +212,11 @@ class ReplaceTransformer(gast.NodeTransformer):
         # Preserve the target context.
         adjuster = ContextAdjuster(type(node.ctx))
         for n in new_nodes:
-            if hasattr(n, 'ctx'):
+            if hasattr(n, "ctx"):
                 adjuster.visit(n)
 
         if len(new_nodes) == 1:
-            new_nodes, = new_nodes
+            (new_nodes,) = new_nodes
 
         return new_nodes
 
@@ -258,14 +263,13 @@ def replace(template, **replacements):
       ValueError: if the arguments are incorrect.
     """
     if not isinstance(template, str):
-        raise ValueError('Expected string template, got %s' % type(template))
+        raise ValueError("Expected string template, got %s" % type(template))
     for k in replacements:
         replacements[k] = _convert_to_ast(replacements[k])
     template_str = parser.STANDARD_PREAMBLE + textwrap.dedent(template)
     nodes = parser.parse(
-        template_str,
-        preamble_len=parser.STANDARD_PREAMBLE_LEN,
-        single_node=False)
+        template_str, preamble_len=parser.STANDARD_PREAMBLE_LEN, single_node=False
+    )
     results = []
     for node in nodes:
         node = ReplaceTransformer(replacements).visit(node)
@@ -282,8 +286,9 @@ def replace_as_expression(template, **replacements):
     replacement = replace(template, **replacements)
     if len(replacement) != 1:
         raise ValueError(
-            'single expression expected; for more general templates use replace')
-    node, = replacement
+            "single expression expected; for more general templates use replace"
+        )
+    (node,) = replacement
 
     if isinstance(node, gast.Expr):
         return node.value
@@ -291,5 +296,6 @@ def replace_as_expression(template, **replacements):
         return node
 
     raise ValueError(
-        'the template is expected to generate an expression or a name node;'
-        ' instead found %s' % node)
+        "the template is expected to generate an expression or a name node;"
+        " instead found %s" % node
+    )

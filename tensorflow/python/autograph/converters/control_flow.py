@@ -51,8 +51,9 @@ class ControlFlowTransformer(converter.Base):
             fn.scope = anno.getanno(node, annos.NodeAnno.BODY_SCOPE)
             return self.generic_visit(node)
 
-    def _create_cond_branch(self, body_name, aliased_orig_names,
-                            aliased_new_names, body, returns):
+    def _create_cond_branch(
+        self, body_name, aliased_orig_names, aliased_new_names, body, returns
+    ):
         if len(returns) == 1:
             template = """
         return retval
@@ -77,7 +78,8 @@ class ControlFlowTransformer(converter.Base):
                 body=body,
                 aliased_orig_names=aliased_orig_names,
                 aliased_new_names=aliased_new_names,
-                return_stmt=return_stmt)
+                return_stmt=return_stmt,
+            )
         else:
             template = """
         def body_name():
@@ -85,11 +87,20 @@ class ControlFlowTransformer(converter.Base):
           return_stmt
       """
             return templates.replace(
-                template, body_name=body_name, body=body, return_stmt=return_stmt)
+                template, body_name=body_name, body=body, return_stmt=return_stmt
+            )
 
-    def _create_cond_expr(self, results, test, body_name, orelse_name,
-                          state_getter_name, state_setter_name,
-                          basic_symbol_names, composite_symbol_names):
+    def _create_cond_expr(
+        self,
+        results,
+        test,
+        body_name,
+        orelse_name,
+        state_getter_name,
+        state_setter_name,
+        basic_symbol_names,
+        composite_symbol_names,
+    ):
         if results is not None:
             template = """
         results = ag__.if_stmt(test, body_name, orelse_name,
@@ -106,7 +117,8 @@ class ControlFlowTransformer(converter.Base):
                 state_getter_name=state_getter_name,
                 state_setter_name=state_setter_name,
                 basic_symbol_names=basic_symbol_names,
-                composite_symbol_names=composite_symbol_names)
+                composite_symbol_names=composite_symbol_names,
+            )
         else:
             template = """
         ag__.if_stmt(test, body_name, orelse_name, getter_name, setter_name,
@@ -120,24 +132,25 @@ class ControlFlowTransformer(converter.Base):
                 getter_name=state_getter_name,
                 setter_name=state_setter_name,
                 basic_symbol_names=basic_symbol_names,
-                composite_symbol_names=composite_symbol_names)
+                composite_symbol_names=composite_symbol_names,
+            )
 
     def _fmt_symbols(self, symbol_set):
         if not symbol_set:
-            return 'no variables'
-        return ', '.join(map(str, symbol_set))
+            return "no variables"
+        return ", ".join(map(str, symbol_set))
 
     def _determine_aliased_symbols(self, scope, node_defined_in, block):
         if block:
-            block_live_in = set(anno.getanno(
-                block[0], anno.Static.LIVE_VARS_IN))
+            block_live_in = set(anno.getanno(block[0], anno.Static.LIVE_VARS_IN))
         else:
             block_live_in = set()
 
         modified_live = scope.modified & node_defined_in & block_live_in
         # Composite symbols are handled elsewhere, see _create_state_functions
         return {
-            s for s in modified_live
+            s
+            for s in modified_live
             if not s.is_composite() and s not in self.state[_Function].scope.globals
         }
 
@@ -149,14 +162,16 @@ class ControlFlowTransformer(converter.Base):
             results.append(gast.Global([str(v) for v in global_vars]))
 
         nonlocal_vars = [
-            v for v in loop_vars if not v.is_composite() and v not in global_vars]
+            v for v in loop_vars if not v.is_composite() and v not in global_vars
+        ]
         if nonlocal_vars:
             results.append(gast.Nonlocal([str(v) for v in nonlocal_vars]))
 
         return results
 
     def _create_state_functions(
-            self, loop_vars, nonlocal_declarations, getter_name, setter_name):
+        self, loop_vars, nonlocal_declarations, getter_name, setter_name
+    ):
         if loop_vars:
             template = """
         def getter_name():
@@ -170,7 +185,8 @@ class ControlFlowTransformer(converter.Base):
                 nonlocal_declarations=nonlocal_declarations,
                 getter_name=getter_name,
                 setter_name=setter_name,
-                state_vars=tuple(loop_vars))
+                state_vars=tuple(loop_vars),
+            )
         else:
             template = """
         def getter_name():
@@ -179,7 +195,8 @@ class ControlFlowTransformer(converter.Base):
           pass
       """
             return templates.replace(
-                template, getter_name=getter_name, setter_name=setter_name)
+                template, getter_name=getter_name, setter_name=setter_name
+            )
 
     def _create_loop_options(self, node):
         if not anno.hasanno(node, anno.Basic.DIRECTIVES):
@@ -198,13 +215,12 @@ class ControlFlowTransformer(converter.Base):
     def _create_undefined_assigns(self, undefined_symbols):
         assignments = []
         for s in undefined_symbols:
-            template = '''
+            template = """
         var = ag__.Undefined(symbol_name)
-      '''
+      """
             assignments += templates.replace(
-                template,
-                var=s,
-                symbol_name=gast.Constant(s.ssf(), kind=None))
+                template, var=s, symbol_name=gast.Constant(s.ssf(), kind=None)
+            )
         return assignments
 
     def visit_If(self, node):
@@ -217,9 +233,11 @@ class ControlFlowTransformer(converter.Base):
         # that happens in the call to generic_visit below, because the conversion
         # generates nodes that lack static analysis annotations.
         need_alias_in_body = self._determine_aliased_symbols(
-            body_scope, defined_in, node.body)
+            body_scope, defined_in, node.body
+        )
         need_alias_in_orelse = self._determine_aliased_symbols(
-            orelse_scope, defined_in, node.orelse)
+            orelse_scope, defined_in, node.orelse
+        )
 
         node = self.generic_visit(node)
 
@@ -240,15 +258,16 @@ class ControlFlowTransformer(converter.Base):
         created_in_orelse = orelse_scope.modified & returned_from_cond - defined_in
 
         basic_created_in_body = tuple(
-            s for s in created_in_body if not s.is_composite())
+            s for s in created_in_body if not s.is_composite()
+        )
         basic_created_in_orelse = tuple(
-            s for s in created_in_orelse if not s.is_composite())
+            s for s in created_in_orelse if not s.is_composite()
+        )
 
         # These variables are defined only in a single branch. This is fine in
         # Python so we pass them through. Another backend, e.g. Tensorflow, may need
         # to handle these cases specially or throw an Error.
-        possibly_undefined = (set(basic_created_in_body) ^
-                              set(basic_created_in_orelse))
+        possibly_undefined = set(basic_created_in_body) ^ set(basic_created_in_orelse)
 
         # Alias the closure variables inside the conditional functions, to allow
         # the functions access to the respective variables.
@@ -258,29 +277,27 @@ class ControlFlowTransformer(converter.Base):
         aliased_orelse_orig_names = tuple(need_alias_in_orelse)
         aliased_body_new_names = tuple(
             self.ctx.namer.new_symbol(s.ssf(), body_scope.referenced)
-            for s in aliased_body_orig_names)
+            for s in aliased_body_orig_names
+        )
         aliased_orelse_new_names = tuple(
             self.ctx.namer.new_symbol(s.ssf(), orelse_scope.referenced)
-            for s in aliased_orelse_orig_names)
+            for s in aliased_orelse_orig_names
+        )
 
-        alias_body_map = dict(
-            zip(aliased_body_orig_names, aliased_body_new_names))
+        alias_body_map = dict(zip(aliased_body_orig_names, aliased_body_new_names))
         alias_orelse_map = dict(
-            zip(aliased_orelse_orig_names, aliased_orelse_new_names))
+            zip(aliased_orelse_orig_names, aliased_orelse_new_names)
+        )
 
         node_body = ast_util.rename_symbols(node.body, alias_body_map)
         node_orelse = ast_util.rename_symbols(node.orelse, alias_orelse_map)
 
-        cond_var_name = self.ctx.namer.new_symbol(
-            'cond', body_scope.referenced)
-        body_name = self.ctx.namer.new_symbol('if_true', body_scope.referenced)
-        orelse_name = self.ctx.namer.new_symbol(
-            'if_false', orelse_scope.referenced)
+        cond_var_name = self.ctx.namer.new_symbol("cond", body_scope.referenced)
+        body_name = self.ctx.namer.new_symbol("if_true", body_scope.referenced)
+        orelse_name = self.ctx.namer.new_symbol("if_false", orelse_scope.referenced)
         all_referenced = body_scope.referenced | orelse_scope.referenced
-        state_getter_name = self.ctx.namer.new_symbol(
-            'get_state', all_referenced)
-        state_setter_name = self.ctx.namer.new_symbol(
-            'set_state', all_referenced)
+        state_getter_name = self.ctx.namer.new_symbol("get_state", all_referenced)
+        state_setter_name = self.ctx.namer.new_symbol("set_state", all_referenced)
 
         returned_from_cond = tuple(returned_from_cond)
         composites = tuple(composites)
@@ -289,15 +306,16 @@ class ControlFlowTransformer(converter.Base):
             if len(returned_from_cond) == 1:
                 cond_results = returned_from_cond[0]
             else:
-                cond_results = gast.Tuple([s.ast()
-                                           for s in returned_from_cond], None)
+                cond_results = gast.Tuple([s.ast() for s in returned_from_cond], None)
 
             returned_from_body = tuple(
                 alias_body_map[s] if s in need_alias_in_body else s
-                for s in returned_from_cond)
+                for s in returned_from_cond
+            )
             returned_from_orelse = tuple(
                 alias_orelse_map[s] if s in need_alias_in_orelse else s
-                for s in returned_from_cond)
+                for s in returned_from_cond
+            )
 
         else:
             # When the cond would return no value, we leave the cond called without
@@ -306,12 +324,18 @@ class ControlFlowTransformer(converter.Base):
             # actually has some return value as well.
             cond_results = None
             # TODO(mdan): Replace with None once side_effect_guards is retired.
-            returned_from_body = (templates.replace_as_expression(
-                'ag__.match_staging_level(1, cond_var_name)',
-                cond_var_name=cond_var_name),)
-            returned_from_orelse = (templates.replace_as_expression(
-                'ag__.match_staging_level(1, cond_var_name)',
-                cond_var_name=cond_var_name),)
+            returned_from_body = (
+                templates.replace_as_expression(
+                    "ag__.match_staging_level(1, cond_var_name)",
+                    cond_var_name=cond_var_name,
+                ),
+            )
+            returned_from_orelse = (
+                templates.replace_as_expression(
+                    "ag__.match_staging_level(1, cond_var_name)",
+                    cond_var_name=cond_var_name,
+                ),
+            )
 
         cond_assign = self.create_assignment(cond_var_name, node.test)
         body_def = self._create_cond_branch(
@@ -319,30 +343,46 @@ class ControlFlowTransformer(converter.Base):
             aliased_orig_names=aliased_body_orig_names,
             aliased_new_names=aliased_body_new_names,
             body=node_body,
-            returns=returned_from_body)
+            returns=returned_from_body,
+        )
         orelse_def = self._create_cond_branch(
             orelse_name,
             aliased_orig_names=aliased_orelse_orig_names,
             aliased_new_names=aliased_orelse_new_names,
             body=node_orelse,
-            returns=returned_from_orelse)
+            returns=returned_from_orelse,
+        )
         undefined_assigns = self._create_undefined_assigns(possibly_undefined)
         composite_defs = self._create_state_functions(
-            composites, [], state_getter_name, state_setter_name)
+            composites, [], state_getter_name, state_setter_name
+        )
 
         basic_symbol_names = tuple(
-            gast.Constant(str(symbol), kind=None) for symbol in returned_from_cond)
+            gast.Constant(str(symbol), kind=None) for symbol in returned_from_cond
+        )
         composite_symbol_names = tuple(
-            gast.Constant(str(symbol), kind=None) for symbol in composites)
+            gast.Constant(str(symbol), kind=None) for symbol in composites
+        )
 
-        cond_expr = self._create_cond_expr(cond_results, cond_var_name, body_name,
-                                           orelse_name, state_getter_name,
-                                           state_setter_name, basic_symbol_names,
-                                           composite_symbol_names)
+        cond_expr = self._create_cond_expr(
+            cond_results,
+            cond_var_name,
+            body_name,
+            orelse_name,
+            state_getter_name,
+            state_setter_name,
+            basic_symbol_names,
+            composite_symbol_names,
+        )
 
         if_ast = (
-            undefined_assigns + composite_defs + body_def + orelse_def +
-            cond_assign + cond_expr)
+            undefined_assigns
+            + composite_defs
+            + body_def
+            + orelse_def
+            + cond_assign
+            + cond_expr
+        )
         return if_ast
 
     def _get_basic_loop_vars(self, modified, live_in, live_out):
@@ -377,8 +417,7 @@ class ControlFlowTransformer(converter.Base):
             # Note that some parents might not be symbols - for example, in x['foo'],
             # 'foo' is a parent, but it's a literal, not a symbol. We don't check the
             # liveness of literals.
-            support_set_symbols = tuple(
-                sss for sss in s.support_set if sss.is_symbol())
+            support_set_symbols = tuple(sss for sss in s.support_set if sss.is_symbol())
             if not all(sss in live_in for sss in support_set_symbols):
                 continue
             composite_loop_vars.append(s)
@@ -391,8 +430,7 @@ class ControlFlowTransformer(converter.Base):
         live_out = anno.getanno(node, anno.Static.LIVE_VARS_OUT)
         reserved_symbols = body_scope.referenced
 
-        basic_loop_vars = self._get_basic_loop_vars(
-            modified, live_in, live_out)
+        basic_loop_vars = self._get_basic_loop_vars(modified, live_in, live_out)
         composite_loop_vars = self._get_composite_loop_vars(modified, live_in)
         loop_vars = tuple(basic_loop_vars | composite_loop_vars)
 
@@ -408,18 +446,18 @@ class ControlFlowTransformer(converter.Base):
         body_scope = anno.getanno(node, annos.NodeAnno.BODY_SCOPE)
 
         loop_vars, reserved_symbols, possibly_undefs = self._get_loop_vars(
-            node, body_scope.modified)
+            node, body_scope.modified
+        )
 
         undefined_assigns = self._create_undefined_assigns(possibly_undefs)
 
         nonlocal_declarations = self._create_nonlocal_declarations(loop_vars)
 
-        state_getter_name = self.ctx.namer.new_symbol(
-            'get_state', reserved_symbols)
-        state_setter_name = self.ctx.namer.new_symbol(
-            'set_state', reserved_symbols)
+        state_getter_name = self.ctx.namer.new_symbol("get_state", reserved_symbols)
+        state_setter_name = self.ctx.namer.new_symbol("set_state", reserved_symbols)
         state_functions = self._create_state_functions(
-            loop_vars, nonlocal_declarations, state_getter_name, state_setter_name)
+            loop_vars, nonlocal_declarations, state_getter_name, state_setter_name
+        )
 
         opts = self._create_loop_options(node)
 
@@ -442,17 +480,17 @@ class ControlFlowTransformer(converter.Base):
         return templates.replace(
             template,
             body=node.body,
-            body_name=self.ctx.namer.new_symbol('loop_body', reserved_symbols),
+            body_name=self.ctx.namer.new_symbol("loop_body", reserved_symbols),
             nonlocal_declarations=nonlocal_declarations,
             opts=opts,
             state_functions=state_functions,
             state_getter_name=state_getter_name,
             state_setter_name=state_setter_name,
-            symbol_names=tuple(gast.Constant(str(s), kind=None)
-                               for s in loop_vars),
+            symbol_names=tuple(gast.Constant(str(s), kind=None) for s in loop_vars),
             test=node.test,
-            test_name=self.ctx.namer.new_symbol('loop_test', reserved_symbols),
-            undefined_assigns=undefined_assigns)
+            test_name=self.ctx.namer.new_symbol("loop_test", reserved_symbols),
+            undefined_assigns=undefined_assigns,
+        )
 
     def visit_For(self, node):
         node = self.generic_visit(node)
@@ -460,25 +498,24 @@ class ControlFlowTransformer(converter.Base):
         iter_scope = anno.getanno(node, annos.NodeAnno.ITERATE_SCOPE)
 
         loop_vars, reserved_symbols, possibly_undefs = self._get_loop_vars(
-            node, body_scope.modified | iter_scope.modified)
+            node, body_scope.modified | iter_scope.modified
+        )
 
         undefined_assigns = self._create_undefined_assigns(possibly_undefs)
 
         nonlocal_declarations = self._create_nonlocal_declarations(loop_vars)
 
-        state_getter_name = self.ctx.namer.new_symbol(
-            'get_state', reserved_symbols)
-        state_setter_name = self.ctx.namer.new_symbol(
-            'set_state', reserved_symbols)
+        state_getter_name = self.ctx.namer.new_symbol("get_state", reserved_symbols)
+        state_setter_name = self.ctx.namer.new_symbol("set_state", reserved_symbols)
         state_functions = self._create_state_functions(
-            loop_vars, nonlocal_declarations, state_getter_name, state_setter_name)
+            loop_vars, nonlocal_declarations, state_getter_name, state_setter_name
+        )
 
         opts = self._create_loop_options(node)
 
         if anno.hasanno(node, anno.Basic.EXTRA_LOOP_TEST):
             extra_test = anno.getanno(node, anno.Basic.EXTRA_LOOP_TEST)
-            extra_test_name = self.ctx.namer.new_symbol(
-                'extra_test', reserved_symbols)
+            extra_test_name = self.ctx.namer.new_symbol("extra_test", reserved_symbols)
             template = """
         def extra_test_name():
           nonlocal_declarations
@@ -489,19 +526,21 @@ class ControlFlowTransformer(converter.Base):
                 extra_test_expr=extra_test,
                 extra_test_name=extra_test_name,
                 loop_vars=loop_vars,
-                nonlocal_declarations=nonlocal_declarations)
+                nonlocal_declarations=nonlocal_declarations,
+            )
         else:
-            extra_test_name = parser.parse_expression('None')
+            extra_test_name = parser.parse_expression("None")
             extra_test_function = []
 
         # iterate_arg_name holds a single arg with the iterates, which may be a
         # tuple.
-        iterate_arg_name = self.ctx.namer.new_symbol('itr', reserved_symbols)
+        iterate_arg_name = self.ctx.namer.new_symbol("itr", reserved_symbols)
         template = """
       iterates = iterate_arg_name
     """
         iterate_expansion = templates.replace(
-            template, iterate_arg_name=iterate_arg_name, iterates=node.target)
+            template, iterate_arg_name=iterate_arg_name, iterates=node.target
+        )
 
         template = """
       state_functions
@@ -523,7 +562,7 @@ class ControlFlowTransformer(converter.Base):
         return templates.replace(
             template,
             body=node.body,
-            body_name=self.ctx.namer.new_symbol('loop_body', reserved_symbols),
+            body_name=self.ctx.namer.new_symbol("loop_body", reserved_symbols),
             extra_test_function=extra_test_function,
             extra_test_name=extra_test_name,
             iterate_arg_name=iterate_arg_name,
@@ -531,12 +570,12 @@ class ControlFlowTransformer(converter.Base):
             iterated=node.iter,
             nonlocal_declarations=nonlocal_declarations,
             opts=opts,
-            symbol_names=tuple(gast.Constant(str(s), kind=None)
-                               for s in loop_vars),
+            symbol_names=tuple(gast.Constant(str(s), kind=None) for s in loop_vars),
             state_functions=state_functions,
             state_getter_name=state_getter_name,
             state_setter_name=state_setter_name,
-            undefined_assigns=undefined_assigns)
+            undefined_assigns=undefined_assigns,
+        )
 
 
 def transform(node, ctx):
