@@ -23,56 +23,56 @@ namespace profiler {
 
 namespace {
 Device BuildDeviceAndResource(const XPlaneVisitor& plane) {
-  Device device;
-  device.set_name(std::string(plane.Name()));
-  device.set_device_id(plane.Id());
-  plane.ForEachLine([&](const XLineVisitor& line) {
-    Resource resource;
-    resource.set_resource_id(line.Id());
-    resource.set_name(std::string(line.Name()));
-    (*device.mutable_resources())[line.Id()] = resource;
-  });
-  return device;
+    Device device;
+    device.set_name(std::string(plane.Name()));
+    device.set_device_id(plane.Id());
+    plane.ForEachLine([&](const XLineVisitor& line) {
+        Resource resource;
+        resource.set_resource_id(line.Id());
+        resource.set_name(std::string(line.Name()));
+        (*device.mutable_resources())[line.Id()] = resource;
+    });
+    return device;
 }
 }  // namespace
 
 void ConvertXSpaceToTraceEvents(const XSpace& xspace, Trace* trace) {
-  VLOG(1) << "ConvertXSpaceToTraceEvents";
-  auto* trace_devices = trace->mutable_devices();
+    VLOG(1) << "ConvertXSpaceToTraceEvents";
+    auto* trace_devices = trace->mutable_devices();
 
-  for (const auto& raw_plane : xspace.planes()) {
-    XPlaneVisitor xplane(&raw_plane);
-    VLOG(1) << "  XPlane id=" << xplane.Id() << " name=" << xplane.Name();
-    // Convert devices and resources.
-    int64 device_id = xplane.Id();
-    (*trace_devices)[device_id] = BuildDeviceAndResource(xplane);
+    for (const auto& raw_plane : xspace.planes()) {
+        XPlaneVisitor xplane(&raw_plane);
+        VLOG(1) << "  XPlane id=" << xplane.Id() << " name=" << xplane.Name();
+        // Convert devices and resources.
+        int64 device_id = xplane.Id();
+        (*trace_devices)[device_id] = BuildDeviceAndResource(xplane);
 
-    // Convert events.
-    xplane.ForEachLine([&](const XLineVisitor& xline) {
-      VLOG(1) << "    XLine id=" << xline.Id() << " name=" << xline.Name()
-              << " display_id=" << xline.DisplayId();
-      int64 resource_id = xline.Id();  // Either thread id or CUDA stream id.
-      xline.ForEachEvent([&](const XEventVisitor& xevent) {
-        auto* event = trace->add_trace_events();
-        auto& args = *event->mutable_args();
-        event->set_device_id(device_id);
-        event->set_resource_id(resource_id);
-        if (xevent.HasDisplayName()) {
-          event->set_name(string(xevent.DisplayName()));
-          args["long_name"] = string(xevent.Name());
-        } else {
-          event->set_name(string(xevent.Name()));
-        }
-        event->set_timestamp_ps(xevent.TimestampPs());
-        event->set_duration_ps(xevent.DurationPs());
+        // Convert events.
+        xplane.ForEachLine([&](const XLineVisitor& xline) {
+            VLOG(1) << "    XLine id=" << xline.Id() << " name=" << xline.Name()
+                    << " display_id=" << xline.DisplayId();
+            int64 resource_id = xline.Id();  // Either thread id or CUDA stream id.
+            xline.ForEachEvent([&](const XEventVisitor& xevent) {
+                auto* event = trace->add_trace_events();
+                auto& args = *event->mutable_args();
+                event->set_device_id(device_id);
+                event->set_resource_id(resource_id);
+                if (xevent.HasDisplayName()) {
+                    event->set_name(string(xevent.DisplayName()));
+                    args["long_name"] = string(xevent.Name());
+                } else {
+                    event->set_name(string(xevent.Name()));
+                }
+                event->set_timestamp_ps(xevent.TimestampPs());
+                event->set_duration_ps(xevent.DurationPs());
 
-        xevent.ForEachStat([&](const XStatVisitor& stat) {
-          if (stat.ValueCase() == XStat::VALUE_NOT_SET) return;
-          args[string(stat.Name())] = stat.ToString();
+                xevent.ForEachStat([&](const XStatVisitor& stat) {
+                    if (stat.ValueCase() == XStat::VALUE_NOT_SET) return;
+                    args[string(stat.Name())] = stat.ToString();
+                });
+            });
         });
-      });
-    });
-  }
+    }
 }
 
 }  // namespace profiler
