@@ -320,4 +320,3 @@ func @inference_standard_lstm_non_time_major_go_backwards(%arg0: tensor<8x8x8xf3
 // CHECK:         }
 
 }
-
