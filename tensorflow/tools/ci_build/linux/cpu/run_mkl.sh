@@ -30,13 +30,13 @@ DEFAULT_CONFIG="--config=mkl"
 N_JOBS=$(grep -c ^processor /proc/cpuinfo)
 
 echo ""
-echo "Bazel will use ${N_JOBS} concurrent job(s)."
+echo "Bazel will use $N_JOBS concurrent job(s)."
 echo ""
 
 # Run configure.
 export TF_NEED_CUDA=0
-export PYTHON_BIN_PATH=`which python3`
-yes "" | $PYTHON_BIN_PATH configure.py
+export PYTHON_BIN_PATH="$(which python3)"
+yes "" | "$PYTHON_BIN_PATH" configure.py
 
 # Get parameters from command-line rather than from env.
 # Setting OMP_THREADS for low performing benchmarks.
@@ -49,7 +49,7 @@ if [[ $# -ge 1 ]]; then
     CONFIG=""
     OMPTHREADS=""
   elif [[ "$1" =~ ${RE_DIGITS_ONLY} && $1 -ge ${MIN_OMP_THREADS} ]]; then
-    CONFIG="${DEFAULT_CONFIG}"
+    CONFIG="$DEFAULT_CONFIG"
     OMPTHREADS="--action_env=OMP_NUM_THREADS=${1}"
   else
     echo "${1} isn't a valid configuration or"
@@ -57,12 +57,12 @@ if [[ $# -ge 1 ]]; then
     exit 1
   fi
 else  # No parameters were passed in so set default values.
-  CONFIG="${DEFAULT_CONFIG}"
-  OMPTHREADS="--action_env=OMP_NUM_THREADS=${DEFAULT_OMP_NUM_THREADS}"
+  CONFIG="$DEFAULT_CONFIG"
+  OMPTHREADS="--action_env=OMP_NUM_THREADS=$DEFAULT_OMP_NUM_THREADS"
 fi
 
 echo ""
-echo "Bazel will test with CONFIG=${CONFIG} and OMPTHREADS=${OMPTHREADS}"
+echo "Bazel will test with CONFIG=$CONFIG and OMPTHREADS=$OMPTHREADS"
 echo ""
 
 # Run bazel test command. Double test timeouts to avoid flakes.
@@ -73,12 +73,12 @@ bazel test \
     --test_tag_filters=-no_oss,-no_oss_py2,-oss_serial,-gpu,-tpu,-benchmark-test,-v1only \
     --test_lang_filters=cc,py \
     -k \
-    --jobs=${N_JOBS} \
+    --jobs="$N_JOBS" \
     --test_timeout 300,450,1200,3600 \
     --build_tests_only \
-    ${CONFIG} \
+    "$CONFIG" \
     --test_env=KMP_BLOCKTIME=0 \
-    ${OMPTHREADS} \
+    "$OMPTHREADS" \
     --config=opt \
     --test_output=errors \
     -- \
