@@ -63,15 +63,19 @@ class RGBToHSVTest(xla_test.XLATestCase):
                 join1 = array_ops.stack(split1)
                 join2 = array_ops.stack(split2)
                 batch1, batch2, join1, join2 = sess.run(
-                    [batch1, batch2, join1, join2], {batch0: inp}
-                )
+                    [batch1, batch2, join1, join2], {batch0: inp})
 
             # Verify that processing batch elements together is the same as separate
-            self.assertAllCloseAccordingToType(batch1, join1, half_rtol=0.000002)
-            self.assertAllCloseAccordingToType(batch2, join2, half_rtol=0.000002)
-            self.assertAllCloseAccordingToType(
-                batch2, inp, bfloat16_atol=0.03, half_rtol=0.02
-            )
+            self.assertAllCloseAccordingToType(batch1,
+                                               join1,
+                                               half_rtol=0.000002)
+            self.assertAllCloseAccordingToType(batch2,
+                                               join2,
+                                               half_rtol=0.000002)
+            self.assertAllCloseAccordingToType(batch2,
+                                               inp,
+                                               bfloat16_atol=0.03,
+                                               half_rtol=0.02)
 
     def testRGBToHSVRoundTrip(self):
         data = [0, 5, 13, 54, 135, 226, 37, 8, 234, 90, 255, 1]
@@ -83,21 +87,20 @@ class RGBToHSVTest(xla_test.XLATestCase):
                     hsv = image_ops.rgb_to_hsv(placeholder)
                     rgb = image_ops.hsv_to_rgb(hsv)
                 rgb_tf = rgb.eval(feed_dict={placeholder: rgb_np})
-            self.assertAllCloseAccordingToType(rgb_tf, rgb_np, bfloat16_atol=0.03)
+            self.assertAllCloseAccordingToType(rgb_tf,
+                                               rgb_np,
+                                               bfloat16_atol=0.03)
 
     def testRGBToHSVNumpy(self):
         """Tests the RGB to HSV conversion matches a reference implementation."""
         for nptype in self.float_types:
             rgb_flat = _generate_numpy_random_rgb((64, 3)).astype(nptype)
             rgb_np = rgb_flat.reshape(4, 4, 4, 3)
-            hsv_np = np.array(
-                [
-                    colorsys.rgb_to_hsv(
-                        r.astype(np.float64), g.astype(np.float64), b.astype(np.float64)
-                    )
-                    for r, g, b in rgb_flat
-                ]
-            )
+            hsv_np = np.array([
+                colorsys.rgb_to_hsv(r.astype(np.float64), g.astype(np.float64),
+                                    b.astype(np.float64))
+                for r, g, b in rgb_flat
+            ])
             hsv_np = hsv_np.reshape(4, 4, 4, 3)
             with self.session():
                 placeholder = array_ops.placeholder(nptype)
@@ -292,7 +295,8 @@ class AdjustHueTest(xla_test.XLATestCase):
                     x_np[..., 1] = x_np[..., 0]
                     x_np[..., 2] = x_np[..., 0]
                 else:
-                    raise AssertionError("Invalid test style: %s" % (test_style))
+                    raise AssertionError("Invalid test style: %s" %
+                                         (test_style))
                 y_np = self._adjustHueNp(x_np, delta_h)
                 y_tf = self._adjustHueTf(x_np, delta_h)
                 self.assertAllClose(y_tf, y_np, rtol=2e-5, atol=1e-4)
@@ -306,7 +310,8 @@ class AdjustHueTest(xla_test.XLATestCase):
         x_np = np.random.rand(2, 3) * 255.0
         delta_h = np.random.rand() * 2.0 - 1.0
         fused = False
-        with self.assertRaisesRegexp(ValueError, "Shape must be at least rank 3"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "Shape must be at least rank 3"):
             self._adjustHueTf(x_np, delta_h)
         x_np = np.random.rand(4, 2, 4) * 255.0
         delta_h = np.random.rand() * 2.0 - 1.0
@@ -321,9 +326,9 @@ class AdjustSaturationTest(xla_test.XLATestCase):
         flt_image = image_ops.convert_image_dtype(image, dtypes.float32)
         with self.test_scope():
             saturation_adjusted_image = gen_image_ops.adjust_saturation(
-                flt_image, saturation_factor
-            )
-        return image_ops.convert_image_dtype(saturation_adjusted_image, orig_dtype)
+                flt_image, saturation_factor)
+        return image_ops.convert_image_dtype(saturation_adjusted_image,
+                                             orig_dtype)
 
     def testHalfSaturation(self):
         x_shape = [2, 2, 3]
@@ -405,14 +410,17 @@ class AdjustSaturationTest(xla_test.XLATestCase):
                         x_np[..., 1] = x_np[..., 0]
                         x_np[..., 2] = x_np[..., 0]
                     else:
-                        raise AssertionError("Invalid test style: %s" % (test_style))
+                        raise AssertionError("Invalid test style: %s" %
+                                             (test_style))
                     y_baseline = self._adjustSaturationNp(x_np, scale)
                     x = array_ops.placeholder(dtypes.float32, shape=x_shape)
                     with self.test_scope():
-                        y_fused = self._adjust_saturation(x, scale).eval(
-                            feed_dict={x: x_np}
-                        )
-                    self.assertAllClose(y_fused, y_baseline, rtol=2e-5, atol=1e-5)
+                        y_fused = self._adjust_saturation(
+                            x, scale).eval(feed_dict={x: x_np})
+                    self.assertAllClose(y_fused,
+                                        y_baseline,
+                                        rtol=2e-5,
+                                        atol=1e-5)
 
 
 class ResizeNearestNeighborTest(xla_test.XLATestCase):
@@ -421,27 +429,29 @@ class ResizeNearestNeighborTest(xla_test.XLATestCase):
     # cl/227850213
 
     def _assertForwardOpMatchesExpected(
-        self,
-        image_np,
-        target_shape,
-        expected=None,
-        large_tolerance=False,
-        align_corners=True,
+            self,
+            image_np,
+            target_shape,
+            expected=None,
+            large_tolerance=False,
+            align_corners=True,
     ):
         if expected is None:
             self.fail("expected must be specified")
         with self.session() as sess, self.test_scope():
             image = array_ops.placeholder(image_np.dtype)
             resized = gen_image_ops.resize_nearest_neighbor(
-                image, target_shape, align_corners=align_corners
-            )
-            out = sess.run(resized, {image: image_np[np.newaxis, :, :, np.newaxis]})
+                image, target_shape, align_corners=align_corners)
+            out = sess.run(resized,
+                           {image: image_np[np.newaxis, :, :, np.newaxis]})
             if large_tolerance:
-                self.assertAllClose(
-                    expected[np.newaxis, :, :, np.newaxis], out, rtol=2e-4, atol=2e-4
-                )
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out,
+                                    rtol=2e-4,
+                                    atol=2e-4)
             else:
-                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis], out)
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out)
 
     def testAlignCorners2x2To1x1(self):
         self._assertForwardOpMatchesExpected(
@@ -461,14 +471,16 @@ class ResizeNearestNeighborTest(xla_test.XLATestCase):
         self._assertForwardOpMatchesExpected(
             np.array([[1]], dtype=np.float32),
             [3, 3],
-            expected=np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.float32),
+            expected=np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+                              dtype=np.float32),
         )
 
     def testAlignCorners2x2To3x3(self):
         self._assertForwardOpMatchesExpected(
             np.array([[1, 2], [3, 4]], dtype=np.float32),
             [3, 3],
-            expected=np.array([[1, 2, 2], [3, 4, 4], [3, 4, 4]], dtype=np.float32),
+            expected=np.array([[1, 2, 2], [3, 4, 4], [3, 4, 4]],
+                              dtype=np.float32),
         )
 
     def testAlignCorners2x2To4x4(self):
@@ -492,11 +504,13 @@ class ResizeNearestNeighborTest(xla_test.XLATestCase):
     def testAlignCorners4x4To3x3(self):
         self._assertForwardOpMatchesExpected(
             np.array(
-                [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
+                [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]
+                 ],
                 dtype=np.float32,
             ),
             [3, 3],
-            expected=np.array([[1, 3, 4], [9, 11, 12], [13, 15, 16]], dtype=np.float32),
+            expected=np.array([[1, 3, 4], [9, 11, 12], [13, 15, 16]],
+                              dtype=np.float32),
         )
 
     def testAlignCorners3x3To4x4(self):
@@ -602,27 +616,29 @@ class ResizeNearestNeighborTest(xla_test.XLATestCase):
 
 class ResizeBilinearTest(parameterized.TestCase, xla_test.XLATestCase):
     def _assertForwardOpMatchesExpected(
-        self,
-        image_np,
-        target_shape,
-        expected=None,
-        large_tolerance=False,
-        align_corners=True,
+            self,
+            image_np,
+            target_shape,
+            expected=None,
+            large_tolerance=False,
+            align_corners=True,
     ):
         if expected is None:
             self.fail("expected must be specified")
         with self.session() as sess, self.test_scope():
             image = array_ops.placeholder(image_np.dtype)
             resized = gen_image_ops.resize_bilinear(
-                image, target_shape, align_corners=align_corners
-            )
-            out = sess.run(resized, {image: image_np[np.newaxis, :, :, np.newaxis]})
+                image, target_shape, align_corners=align_corners)
+            out = sess.run(resized,
+                           {image: image_np[np.newaxis, :, :, np.newaxis]})
             if large_tolerance:
-                self.assertAllClose(
-                    expected[np.newaxis, :, :, np.newaxis], out, rtol=0.1, atol=0.01
-                )
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out,
+                                    rtol=0.1,
+                                    atol=0.01)
             else:
-                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis], out)
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out)
 
     @parameterized.named_parameters(
         ("1x2To3x3", 1, 2, 3, 3),
@@ -688,12 +704,12 @@ class ResizeBilinearTest(parameterized.TestCase, xla_test.XLATestCase):
 
 class ResizeBilinearGradTest(parameterized.TestCase, xla_test.XLATestCase):
     def _assertBackwardOpMatchesExpected(
-        self,
-        grads_np,
-        input_shape=None,
-        dtype=None,
-        expected=None,
-        large_tolerance=False,
+            self,
+            grads_np,
+            input_shape=None,
+            dtype=None,
+            expected=None,
+            large_tolerance=False,
     ):
         if input_shape is None:
             self.fail("input_shape must be specified")
@@ -707,15 +723,16 @@ class ResizeBilinearGradTest(parameterized.TestCase, xla_test.XLATestCase):
                 np.zeros([1, input_shape[0], input_shape[1], 1], dtype=dtype),
                 align_corners=True,
             )
-            out = sess.run(resized, {grads: grads_np[np.newaxis, :, :, np.newaxis]})
+            out = sess.run(resized,
+                           {grads: grads_np[np.newaxis, :, :, np.newaxis]})
             if large_tolerance:
-                self.assertAllClose(
-                    expected[np.newaxis, :, :, np.newaxis], out, rtol=0.1, atol=0.01
-                )
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out,
+                                    rtol=0.1,
+                                    atol=0.01)
             else:
                 self.assertAllCloseAccordingToType(
-                    expected[np.newaxis, :, :, np.newaxis], out
-                )
+                    expected[np.newaxis, :, :, np.newaxis], out)
 
     @parameterized.named_parameters(
         ("1x3To1x3", 1, 2, 1, 3),
@@ -753,7 +770,7 @@ class ResizeBilinearGradTest(parameterized.TestCase, xla_test.XLATestCase):
     def test(self, src_y, src_x, dst_y, dst_x):
         def GetRow(src, dst):
             if src == 1:
-                return np.array([[max(dst ** 2 - dst, 1)]])
+                return np.array([[max(dst**2 - dst, 1)]])
             row = [0] * src
             for i in range(0, (dst - 1) * max(src - 1, 1) + 1, src - 1):
                 prev = int(math.floor(i / max(dst - 1, 1)))
@@ -775,27 +792,29 @@ class ResizeBilinearGradTest(parameterized.TestCase, xla_test.XLATestCase):
 
 class ResizeBilinearNonAlignCornersTest(xla_test.XLATestCase):
     def _assertForwardOpMatchesExpected(
-        self,
-        image_np,
-        target_shape,
-        expected=None,
-        large_tolerance=False,
-        align_corners=True,
+            self,
+            image_np,
+            target_shape,
+            expected=None,
+            large_tolerance=False,
+            align_corners=True,
     ):
         if expected is None:
             self.fail("expected must be specified")
         with self.session() as sess, self.test_scope():
             image = array_ops.placeholder(image_np.dtype)
             resized = gen_image_ops.resize_bilinear(
-                image, target_shape, align_corners=align_corners
-            )
-            out = sess.run(resized, {image: image_np[np.newaxis, :, :, np.newaxis]})
+                image, target_shape, align_corners=align_corners)
+            out = sess.run(resized,
+                           {image: image_np[np.newaxis, :, :, np.newaxis]})
             if large_tolerance:
-                self.assertAllClose(
-                    expected[np.newaxis, :, :, np.newaxis], out, rtol=0.1, atol=0.01
-                )
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out,
+                                    rtol=0.1,
+                                    atol=0.01)
             else:
-                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis], out)
+                self.assertAllClose(expected[np.newaxis, :, :, np.newaxis],
+                                    out)
 
     def testNonAlignCorners3x2To6x4(self):
         input_data = [[64, 32], [32, 64], [50, 100]]
@@ -834,7 +853,8 @@ class ResizeBilinearNonAlignCornersTest(xla_test.XLATestCase):
             )
 
     def testNonAlignCorners3x2To6x4Batch2(self):
-        input_data = [[[64, 32], [32, 64], [50, 100]], [[32, 16], [16, 32], [25, 50]]]
+        input_data = [[[64, 32], [32, 64], [50, 100]],
+                      [[32, 16], [16, 32], [25, 50]]]
         expected_data = [
             [
                 [64.0, 48.0, 32.0, 32.0],
@@ -859,10 +879,10 @@ class ResizeBilinearNonAlignCornersTest(xla_test.XLATestCase):
             expected = np.array(expected_data, dtype=dtype)
             with self.session() as sess, self.test_scope():
                 image = array_ops.placeholder(input_image.dtype)
-                resized = gen_image_ops.resize_bilinear(
-                    image, [6, 4], align_corners=False
-                )
-                out = sess.run(resized, {image: input_image[:, :, :, np.newaxis]})
+                resized = gen_image_ops.resize_bilinear(image, [6, 4],
+                                                        align_corners=False)
+                out = sess.run(resized,
+                               {image: input_image[:, :, :, np.newaxis]})
                 self.assertAllClose(expected[:, :, :, np.newaxis], out)
 
 
@@ -870,7 +890,7 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
     def testNMS128From1024(self):
         num_boxes = 1024
         boxes_np = np.random.normal(50, 10, (num_boxes, 4)).astype("f4")
-        scores_np = np.random.normal(0.5, 0.1, (num_boxes,)).astype("f4")
+        scores_np = np.random.normal(0.5, 0.1, (num_boxes, )).astype("f4")
 
         max_output_size = 128
         iou_threshold_np = np.array(0.5, dtype=np.float32)
@@ -878,13 +898,12 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
 
         with self.session() as sess:
             boxes = array_ops.placeholder(boxes_np.dtype, shape=boxes_np.shape)
-            scores = array_ops.placeholder(scores_np.dtype, shape=scores_np.shape)
-            iou_threshold = array_ops.placeholder(
-                iou_threshold_np.dtype, iou_threshold_np.shape
-            )
-            score_threshold = array_ops.placeholder(
-                score_threshold_np.dtype, score_threshold_np.shape
-            )
+            scores = array_ops.placeholder(scores_np.dtype,
+                                           shape=scores_np.shape)
+            iou_threshold = array_ops.placeholder(iou_threshold_np.dtype,
+                                                  iou_threshold_np.shape)
+            score_threshold = array_ops.placeholder(score_threshold_np.dtype,
+                                                    score_threshold_np.shape)
             with self.test_scope():
                 selected_indices = image_ops.non_max_suppression_padded(
                     boxes=boxes,
@@ -925,13 +944,12 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
 
         with self.session() as sess:
             boxes = array_ops.placeholder(boxes_np.dtype, shape=boxes_np.shape)
-            scores = array_ops.placeholder(scores_np.dtype, shape=scores_np.shape)
-            iou_threshold = array_ops.placeholder(
-                iou_threshold_np.dtype, iou_threshold_np.shape
-            )
-            score_threshold = array_ops.placeholder(
-                score_threshold_np.dtype, score_threshold_np.shape
-            )
+            scores = array_ops.placeholder(scores_np.dtype,
+                                           shape=scores_np.shape)
+            iou_threshold = array_ops.placeholder(iou_threshold_np.dtype,
+                                                  iou_threshold_np.shape)
+            score_threshold = array_ops.placeholder(score_threshold_np.dtype,
+                                                    score_threshold_np.shape)
             with self.test_scope():
                 selected_indices = image_ops.non_max_suppression_padded(
                     boxes=boxes,
@@ -947,7 +965,8 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
                 score_threshold: score_threshold_np,
                 iou_threshold: iou_threshold_np,
             }
-            (indices_tf, num_valid) = sess.run(selected_indices, feed_dict=inputs_feed)
+            (indices_tf, num_valid) = sess.run(selected_indices,
+                                               feed_dict=inputs_feed)
 
             self.assertEqual(indices_tf.size, max_output_size)
             self.assertEqual(num_valid, 3)
@@ -975,13 +994,12 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
 
         with self.session() as sess:
             boxes = array_ops.placeholder(boxes_np.dtype, shape=boxes_np.shape)
-            scores = array_ops.placeholder(scores_np.dtype, shape=scores_np.shape)
-            iou_threshold = array_ops.placeholder(
-                iou_threshold_np.dtype, iou_threshold_np.shape
-            )
-            score_threshold = array_ops.placeholder(
-                score_threshold_np.dtype, score_threshold_np.shape
-            )
+            scores = array_ops.placeholder(scores_np.dtype,
+                                           shape=scores_np.shape)
+            iou_threshold = array_ops.placeholder(iou_threshold_np.dtype,
+                                                  iou_threshold_np.shape)
+            score_threshold = array_ops.placeholder(score_threshold_np.dtype,
+                                                    score_threshold_np.shape)
             with self.test_scope():
                 selected_indices = image_ops.non_max_suppression_padded(
                     boxes=boxes,
@@ -997,7 +1015,8 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
                 iou_threshold: iou_threshold_np,
                 score_threshold: score_threshold_np,
             }
-            (indices_tf, num_valid) = sess.run(selected_indices, feed_dict=inputs_feed)
+            (indices_tf, num_valid) = sess.run(selected_indices,
+                                               feed_dict=inputs_feed)
 
             self.assertEqual(indices_tf.size, max_output_size)
             self.assertEqual(num_valid, 2)
@@ -1026,13 +1045,12 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
 
         with self.session() as sess:
             boxes = array_ops.placeholder(boxes_np.dtype, shape=boxes_np.shape)
-            scores = array_ops.placeholder(scores_np.dtype, shape=scores_np.shape)
-            iou_threshold = array_ops.placeholder(
-                iou_threshold_np.dtype, iou_threshold_np.shape
-            )
-            score_threshold = array_ops.placeholder(
-                score_threshold_np.dtype, score_threshold_np.shape
-            )
+            scores = array_ops.placeholder(scores_np.dtype,
+                                           shape=scores_np.shape)
+            iou_threshold = array_ops.placeholder(iou_threshold_np.dtype,
+                                                  iou_threshold_np.shape)
+            score_threshold = array_ops.placeholder(score_threshold_np.dtype,
+                                                    score_threshold_np.shape)
             with self.test_scope():
                 selected_indices = image_ops.non_max_suppression_padded(
                     boxes=boxes,
@@ -1048,7 +1066,8 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
                 iou_threshold: iou_threshold_np,
                 score_threshold: score_threshold_np,
             }
-            (indices_tf, num_valid) = sess.run(selected_indices, feed_dict=inputs_feed)
+            (indices_tf, num_valid) = sess.run(selected_indices,
+                                               feed_dict=inputs_feed)
 
             self.assertEqual(indices_tf.size, max_output_size)
             self.assertEqual(num_valid, 1)
@@ -1075,13 +1094,12 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
 
         with self.session() as sess:
             boxes = array_ops.placeholder(boxes_np.dtype, shape=boxes_np.shape)
-            scores = array_ops.placeholder(scores_np.dtype, shape=scores_np.shape)
-            iou_threshold = array_ops.placeholder(
-                iou_threshold_np.dtype, iou_threshold_np.shape
-            )
-            score_threshold = array_ops.placeholder(
-                score_threshold_np.dtype, score_threshold_np.shape
-            )
+            scores = array_ops.placeholder(scores_np.dtype,
+                                           shape=scores_np.shape)
+            iou_threshold = array_ops.placeholder(iou_threshold_np.dtype,
+                                                  iou_threshold_np.shape)
+            score_threshold = array_ops.placeholder(score_threshold_np.dtype,
+                                                    score_threshold_np.shape)
             with self.test_scope():
                 selected_indices = image_ops.non_max_suppression_padded(
                     boxes=boxes,
@@ -1097,7 +1115,8 @@ class NonMaxSuppressionTest(xla_test.XLATestCase):
                 iou_threshold: iou_threshold_np,
                 score_threshold: score_threshold_np,
             }
-            (indices_tf, num_valid) = sess.run(selected_indices, feed_dict=inputs_feed)
+            (indices_tf, num_valid) = sess.run(selected_indices,
+                                               feed_dict=inputs_feed)
 
             self.assertEqual(indices_tf.size, max_output_size)
             self.assertEqual(num_valid, 3)
