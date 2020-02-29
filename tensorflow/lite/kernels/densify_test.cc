@@ -43,58 +43,65 @@ using ::testing::ElementsAreArray;
 
 template <typename T>
 class DensifyOpModel : public SingleOpModel {
- public:
-  DensifyOpModel(TensorType type, std::initializer_list<int> shape,
-                 std::initializer_list<T> input_data, int version = 1) {
-    const TensorData io_tensor_data = {type, shape};
-    input_ = AddConstSparseInput(type, shape, input_data);
-    output_ = AddOutput(io_tensor_data);
+public:
+    DensifyOpModel(TensorType type, std::initializer_list<int> shape,
+                   std::initializer_list<T> input_data, int version = 1) {
+        const TensorData io_tensor_data = {type, shape};
+        input_ = AddConstSparseInput(type, shape, input_data);
+        output_ = AddOutput(io_tensor_data);
 
-    SetBuiltinOp(BuiltinOperator_DENSIFY, BuiltinOptions_DensifyOptions,
-                 CreateDensifyOptions(builder_).Union());
+        SetBuiltinOp(BuiltinOperator_DENSIFY, BuiltinOptions_DensifyOptions,
+                     CreateDensifyOptions(builder_).Union());
 
-    resolver_ = absl::make_unique<SingleOpResolver>(
-        BuiltinOperator_DENSIFY, ops::builtin::Register_DENSIFY(), version);
+        resolver_ = absl::make_unique<SingleOpResolver>(
+                        BuiltinOperator_DENSIFY, ops::builtin::Register_DENSIFY(), version);
 
-    BuildInterpreter({shape});
-  }
+        BuildInterpreter({shape});
+    }
 
-  std::vector<T> GetInput() { return ExtractVector<T>(input_); }
-  std::vector<T> GetOutput() { return ExtractVector<T>(output_); }
+    std::vector<T> GetInput() {
+        return ExtractVector<T>(input_);
+    }
+    std::vector<T> GetOutput() {
+        return ExtractVector<T>(output_);
+    }
 
- private:
-  int input_;
-  int output_;
+private:
+    int input_;
+    int output_;
 };
 
 TEST(DensifyOpTest, Float) {
-  std::initializer_list<float> dense_values = {6, 0, 9, 8, 0, 0,
-                                               0, 0, 5, 0, 0, 7};
-  std::initializer_list<float> sparse_values = {6, 9, 8, 5, 7};
-  DensifyOpModel<float> m(TensorType_FLOAT32, {3, 4}, dense_values);
-  m.Invoke();
-  EXPECT_THAT(m.GetInput(), ElementsAreArray(sparse_values));
-  EXPECT_THAT(m.GetOutput(), ElementsAreArray(dense_values));
+    std::initializer_list<float> dense_values = {6, 0, 9, 8, 0, 0,
+                                                 0, 0, 5, 0, 0, 7
+                                                };
+    std::initializer_list<float> sparse_values = {6, 9, 8, 5, 7};
+    DensifyOpModel<float> m(TensorType_FLOAT32, {3, 4}, dense_values);
+    m.Invoke();
+    EXPECT_THAT(m.GetInput(), ElementsAreArray(sparse_values));
+    EXPECT_THAT(m.GetOutput(), ElementsAreArray(dense_values));
 }
 
 TEST(DensifyOpTest, Float3D) {
-  std::initializer_list<float> dense_values = {6, 0, 9, 8, 0, 0,
-                                               0, 0, 5, 0, 0, 7};
-  std::initializer_list<float> sparse_values = {6, 9, 8, 5, 7};
-  DensifyOpModel<float> m(TensorType_FLOAT32, {3, 2, 2}, dense_values);
-  m.Invoke();
-  EXPECT_THAT(m.GetInput(), ElementsAreArray(sparse_values));
-  EXPECT_THAT(m.GetOutput(), ElementsAreArray(dense_values));
+    std::initializer_list<float> dense_values = {6, 0, 9, 8, 0, 0,
+                                                 0, 0, 5, 0, 0, 7
+                                                };
+    std::initializer_list<float> sparse_values = {6, 9, 8, 5, 7};
+    DensifyOpModel<float> m(TensorType_FLOAT32, {3, 2, 2}, dense_values);
+    m.Invoke();
+    EXPECT_THAT(m.GetInput(), ElementsAreArray(sparse_values));
+    EXPECT_THAT(m.GetOutput(), ElementsAreArray(dense_values));
 }
 
 TEST(DensifyOpTest, Int8) {
-  std::initializer_list<int8_t> dense_values = {6, 0, 9, 8, 0, 0,
-                                                0, 0, 5, 0, 0, 7};
-  std::initializer_list<int8_t> sparse_values = {6, 9, 8, 5, 7};
-  DensifyOpModel<int8_t> m(TensorType_INT8, {3, 4}, dense_values);
-  m.Invoke();
-  EXPECT_THAT(m.GetInput(), ElementsAreArray(sparse_values));
-  EXPECT_THAT(m.GetOutput(), ElementsAreArray(dense_values));
+    std::initializer_list<int8_t> dense_values = {6, 0, 9, 8, 0, 0,
+                                                  0, 0, 5, 0, 0, 7
+                                                 };
+    std::initializer_list<int8_t> sparse_values = {6, 9, 8, 5, 7};
+    DensifyOpModel<int8_t> m(TensorType_INT8, {3, 4}, dense_values);
+    m.Invoke();
+    EXPECT_THAT(m.GetInput(), ElementsAreArray(sparse_values));
+    EXPECT_THAT(m.GetOutput(), ElementsAreArray(dense_values));
 }
 
 }  // namespace
