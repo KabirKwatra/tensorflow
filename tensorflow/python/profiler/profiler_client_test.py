@@ -28,14 +28,14 @@ from tensorflow.python.profiler import profiler_client
 
 class ProfilerClientTest(test_util.TensorFlowTestCase):
 
-  def testStartTracing_ProcessInvalidAddress(self):
-    with self.assertRaises(errors.UnavailableError):
-      profiler_client.trace('localhost:6006', tempfile.mkdtemp(), 2000)
+    def testStartTracing_ProcessInvalidAddress(self):
+        with self.assertRaises(errors.UnavailableError):
+            profiler_client.trace('localhost:6006', tempfile.mkdtemp(), 2000)
 
-  def testMonitor_ProcessInvalidAddress(self):
-    with self.assertRaises(errors.UnavailableError):
-      profiler_client.monitor('localhost:6006', 2000)
+    def testMonitor_ProcessInvalidAddress(self):
+        with self.assertRaises(errors.UnavailableError):
+            profiler_client.monitor('localhost:6006', 2000)
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()
