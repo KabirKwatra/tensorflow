@@ -63,13 +63,14 @@ class ProfilerTest(test_util.TensorFlowTestCase):
         profile_dir = os.path.join(logdir, "plugins", "profile")
         run = gfile.ListDirectory(profile_dir)[0]
         hostname = socket.gethostname()
-        overview_page = os.path.join(profile_dir, run, hostname + ".overview_page.pb")
+        overview_page = os.path.join(profile_dir, run,
+                                     hostname + ".overview_page.pb")
         self.assertTrue(gfile.Exists(overview_page))
-        input_pipeline = os.path.join(profile_dir, run, hostname + ".input_pipeline.pb")
+        input_pipeline = os.path.join(profile_dir, run,
+                                      hostname + ".input_pipeline.pb")
         self.assertTrue(gfile.Exists(input_pipeline))
-        tensorflow_stats = os.path.join(
-            profile_dir, run, hostname + ".tensorflow_stats.pb"
-        )
+        tensorflow_stats = os.path.join(profile_dir, run,
+                                        hostname + ".tensorflow_stats.pb")
         self.assertTrue(gfile.Exists(tensorflow_stats))
 
         trace_file = os.path.join(profile_dir, run, hostname + ".trace")
@@ -77,7 +78,8 @@ class ProfilerTest(test_util.TensorFlowTestCase):
         with gfile.Open(trace_file, "rb") as f:
             profile_pb = trace_events_pb2.Trace()
             profile_pb.ParseFromString(f.read())
-        devices = frozenset(device.name for device in profile_pb.devices.values())
+        devices = frozenset(device.name
+                            for device in profile_pb.devices.values())
         self.assertIn("/host:CPU", devices)
         if config.list_physical_devices("GPU"):
             self.assertIn("/device:GPU:0", devices)
