@@ -58,9 +58,8 @@ def _input(shape):
 def _weight(shape):
     """Generates a weight of a given shape."""
     # Note that the lambda is needed to allow construction inside loops.
-    return variables.Variable(
-        lambda: init_ops.glorot_uniform_initializer(seed=0)(shape)
-    )
+    return variables.Variable(lambda: init_ops.glorot_uniform_initializer(
+        seed=0)(shape))
 
 
 def _bias(shape):
@@ -80,12 +79,18 @@ def _conv3d(x, w):
 
 def _max_pool_2x2(x):
     """Downsamples a feature map by 2X."""
-    return nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
+    return nn.max_pool(x,
+                       ksize=[1, 2, 2, 1],
+                       strides=[1, 2, 2, 1],
+                       padding="SAME")
 
 
 def _fused_batchnorm(x, scale, offset):
     """Batchnorm."""
-    return nn_impl.fused_batch_norm(x, scale=scale, offset=offset, is_training=True)
+    return nn_impl.fused_batch_norm(x,
+                                    scale=scale,
+                                    offset=offset,
+                                    is_training=True)
 
 
 def _conv_bn(x):
@@ -200,8 +205,7 @@ def _recurrent_lstm(c, h):
     ta_x = tensor_array_ops.TensorArray(dtype=dtypes.float32, size=4)
     for i in range(0, 4):
         ta_x = ta_x.write(
-            i, constant_op.constant(0.1, shape=[8, 4], dtype=dtypes.float32)
-        )
+            i, constant_op.constant(0.1, shape=[8, 4], dtype=dtypes.float32))
     init = (constant_op.constant(0), c, h, ta_x)
     r = control_flow_ops.while_loop(cond, body, init)
     return r
@@ -255,9 +259,8 @@ def _get_config(auto_mixed_precision=True):
             arithmetic_optimization=rewriter_config_pb2.RewriterConfig.OFF,
         )
     rewrite_config.min_graph_nodes = -1
-    graph_options = config_pb2.GraphOptions(
-        rewrite_options=rewrite_config, build_cost_model=1
-    )
+    graph_options = config_pb2.GraphOptions(rewrite_options=rewrite_config,
+                                            build_cost_model=1)
     config = config_pb2.ConfigProto(graph_options=graph_options)
     config.graph_options.optimizer_options.opt_level = -1
     return config
@@ -301,7 +304,8 @@ def _example_noninlined_funcdef_shape(op):
 def _example_noninlined_funcdef_grad(features, grad):
     """Gradient of Swish function defined below."""
     sigmoid_features = math_ops.sigmoid(features)
-    activation_grad = sigmoid_features * (1.0 + features * (1.0 - sigmoid_features))
+    activation_grad = sigmoid_features * (1.0 + features *
+                                          (1.0 - sigmoid_features))
     return grad * activation_grad
 
 
@@ -338,9 +342,8 @@ class AutoMixedPrecisionTest(test.TestCase):
         super(AutoMixedPrecisionTest, self).tearDown()
 
     def _assert_output_fp16(self, node_map, node_name, output_port=0):
-        self.assertEqual(
-            node_map[node_name].output_info[output_port].dtype, types_pb2.DT_HALF
-        )
+        self.assertEqual(node_map[node_name].output_info[output_port].dtype,
+                         types_pb2.DT_HALF)
 
     def _run(self, fetches):
         """Runs the graph and returns the evaluation of the fetches."""
@@ -393,19 +396,23 @@ class AutoMixedPrecisionTest(test.TestCase):
 
             section_names = ["input", "while/body", "output"]
             all_types_correct = True
-            for section_name, expected_types in zip(section_names, expected_types):
+            for section_name, expected_types in zip(section_names,
+                                                    expected_types):
                 for i, expected_type in enumerate(expected_types):
                     node_name = section_name + "_%i" % i
                     output_port = 0
-                    optimized_type = node_map[node_name].output_info[output_port].dtype
+                    optimized_type = node_map[node_name].output_info[
+                        output_port].dtype
                     if optimized_type != expected_type:
                         print(
                             "Expected node %s to have type %s but got type %s"
-                            % (node_name, expected_type, optimized_type)
-                        )
+                            % (node_name, expected_type, optimized_type))
                         all_types_correct = False
             self.assertTrue(all_types_correct)
-            self.assertAllClose(output_val_ref, output_val, atol=2e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=2e-3,
+                                rtol=1e-3)
 
     @test_util.run_deprecated_v1
     @test_util.disable_xla("This test does not pass with XLA")
@@ -424,9 +431,13 @@ class AutoMixedPrecisionTest(test.TestCase):
             self._assert_output_fp16(node_map, "Conv2D")
             self._assert_output_fp16(node_map, "FusedBatchNormV3")
             self._assert_output_fp16(node_map, "Conv2D_1")
-            self.assertEqual(num_to_fp16, 3)  # Before Conv2D:0, Conv2D:1, Conv2D_1:1
+            self.assertEqual(num_to_fp16,
+                             3)  # Before Conv2D:0, Conv2D:1, Conv2D_1:1
             self.assertEqual(num_to_fp32, 1)  # After FusedBatchNormV3:0
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     # TODO: enable these tests when cuDNN is upgraded to >= 7.6.2. Same with the
     # test_conv3d() below.
@@ -451,7 +462,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             # Before Conv3D:0, Conv3D:1, Conv3D_1:1
             self.assertEqual(num_to_fp16, 3)
             self.assertEqual(num_to_fp32, 1)  # After FusedBatchNormV3:0
-            self.assertAllClose(output_val_ref, output_val, atol=1e-2, rtol=1e-2)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-2,
+                                rtol=1e-2)
 
     @unittest.skip("Test case should be skipped when cuDNN < 7.6.2")
     @test_util.run_deprecated_v1
@@ -464,7 +478,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             f = _weight([3, 3, 3, 1, 6])
             y = _conv3d(x, f)
             y = array_ops.identity(y)
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(y, [x, f])
             output = (y, g)
 
@@ -472,14 +487,15 @@ class AutoMixedPrecisionTest(test.TestCase):
             node_map = _build_node_map(cost_graph.node)
             self._assert_output_fp16(node_map, "Conv3D")
             self._assert_output_fp16(
-                node_map, "gradients/Conv3D_grad/Conv3DBackpropInputV2"
-            )
+                node_map, "gradients/Conv3D_grad/Conv3DBackpropInputV2")
             self._assert_output_fp16(
-                node_map, "gradients/Conv3D_grad/Conv3DBackpropFilterV2"
-            )
+                node_map, "gradients/Conv3D_grad/Conv3DBackpropFilterV2")
 
             output_val_ref, output_val, cost_graph = self._run(output)
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_deprecated_v1
     @test_util.disable_xla("This test does not pass with XLA")
@@ -493,7 +509,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             y = math_ops.add(y, 1, name="addition")
             y = _conv_bn(y)
             y = array_ops.identity(y)
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(y, [x])
             output = (y, g)
 
@@ -507,7 +524,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             self._assert_output_fp16(node_map, "Conv2D_1")
 
             output_val_ref, output_val, cost_graph = self._run(output)
-            self.assertAllClose(output_val_ref, output_val, atol=2e-3, rtol=2e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=2e-3,
+                                rtol=2e-3)
 
     @test_util.run_deprecated_v1
     @test_util.disable_xla("This test does not pass with XLA")
@@ -528,7 +548,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             self._assert_output_fp16(node_map, "Conv2D_1")
             self.assertEqual(num_to_fp16, 4)
             self.assertEqual(num_to_fp32, 1)
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_v1_only("b/138749235")
     @test_util.disable_xla("This test does not pass with XLA")
@@ -538,7 +561,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             random_seed.set_random_seed(0)
             x = _input([8, 8])
             y = _simple_loop(x, _matmul_act)[1]
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(y, [x])
             output = (y, g)
 
@@ -547,7 +571,10 @@ class AutoMixedPrecisionTest(test.TestCase):
 
             self._assert_output_fp16(node_map, "while/MatMul")
             self._assert_output_fp16(node_map, "while/Relu")
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_v1_only("b/138749235")
     @test_util.disable_xla("This test does not pass with XLA")
@@ -557,9 +584,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             random_seed.set_random_seed(0)
             x = _input([8, 8])
             _, _, k, l = _loop_vars_intertwined(
-                array_ops.ones(array_ops.shape(x)), x, _matmul_act, _matmul_act
-            )
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+                array_ops.ones(array_ops.shape(x)), x, _matmul_act,
+                _matmul_act)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(k, [x])
             output = (k, l, g)
 
@@ -570,7 +598,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             self._assert_output_fp16(node_map, "while/Relu")
             self._assert_output_fp16(node_map, "while/MatMul_1")
             self._assert_output_fp16(node_map, "while/Relu_1")
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_deprecated_v1
     @test_util.disable_xla("This test does not pass with XLA")
@@ -585,7 +616,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             y3 = _conv_pool(x3)
             y = array_ops.concat([y1, y2, y3], axis=3)
             y = array_ops.identity(y)
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(y, [x])
             output = (y, g)
 
@@ -598,7 +630,10 @@ class AutoMixedPrecisionTest(test.TestCase):
                 self._assert_output_fp16(node_map, "Relu" + suffix)
                 self._assert_output_fp16(node_map, "MaxPool" + suffix)
             self._assert_output_fp16(node_map, "concat")
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_deprecated_v1
     @test_util.disable_xla("This test does not pass with XLA")
@@ -610,7 +645,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             y1 = _matmul_act(x)
             y2 = _matmul_act(x)
             y = y1 + y2 + x
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(y, [x])
             output = (g, y)
 
@@ -621,7 +657,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             self._assert_output_fp16(node_map, "Relu")
             self._assert_output_fp16(node_map, "MatMul_1")
             self._assert_output_fp16(node_map, "Relu_1")
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_v1_only("b/138749235")
     @test_util.disable_xla("This test does not pass with XLA")
@@ -632,7 +671,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             init_c = _input([8, 4])
             init_h = _input([8, 4])
             _, _, h, _ = _recurrent_lstm(init_c, init_h)
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(h, [init_c, init_h])
             output = (h, g)
 
@@ -647,7 +687,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             self._assert_output_fp16(node_map, "while/Sigmoid_2")
             self._assert_output_fp16(node_map, "while/Tanh")
             self._assert_output_fp16(node_map, "while/Tanh_1")
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_v1_only("v1 loop test")
     @test_util.disable_xla("This test does not pass with XLA")
@@ -702,7 +745,8 @@ class AutoMixedPrecisionTest(test.TestCase):
             x = _input([8, 8])
             y = _matmul_act(x)
             y = _example_noninlined_funcdef(y)
-            optimizer = gradient_descent.GradientDescentOptimizer(learning_rate=0.01)
+            optimizer = gradient_descent.GradientDescentOptimizer(
+                learning_rate=0.01)
             g = optimizer.compute_gradients(y, [x])
             output = (g, y)
 
@@ -710,7 +754,10 @@ class AutoMixedPrecisionTest(test.TestCase):
             node_map = _build_node_map(cost_graph.node)
 
             self._assert_output_fp16(node_map, "MatMul")
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     @test_util.run_deprecated_v1
     @test_util.disable_xla("This test does not pass with XLA")
@@ -729,8 +776,9 @@ class AutoMixedPrecisionTest(test.TestCase):
             np.random.seed(1234)
             num_iter, bs, nchan, nclass = 100, 64, 32, 100
 
-            data = np.random.normal(size=(bs * num_iter, nchan)).astype(np.float32)
-            labels = np.random.randint(nclass, size=(bs * num_iter,))
+            data = np.random.normal(size=(bs * num_iter,
+                                          nchan)).astype(np.float32)
+            labels = np.random.randint(nclass, size=(bs * num_iter, ))
             ds = dataset_ops.Dataset.from_tensor_slices((data, labels))
             ds = ds.batch(bs).prefetch(3)
             it = ds.make_one_shot_iterator()
@@ -747,19 +795,21 @@ class AutoMixedPrecisionTest(test.TestCase):
                     loss = array_ops.identity(loss)
                 return loss, i
 
-            begin, end = constant_op.constant(0), constant_op.constant(num_iter)
+            begin, end = constant_op.constant(0), constant_op.constant(
+                num_iter)
             loss, _ = control_flow_ops.while_loop(
-                lambda loss, i: math_ops.less(i, end), body, [0.0, begin]
-            )
+                lambda loss, i: math_ops.less(i, end), body, [0.0, begin])
 
             output_val_ref, output_val, cost_graph = self._run(loss)
             node_map = _build_node_map(cost_graph.node)
 
             self._assert_output_fp16(node_map, "while/dense/MatMul")
             self._assert_output_fp16(
-                node_map, "while/gradients/while/dense/MatMul_grad/MatMul_1"
-            )
-            self.assertAllClose(output_val_ref, output_val, atol=1e-3, rtol=1e-3)
+                node_map, "while/gradients/while/dense/MatMul_grad/MatMul_1")
+            self.assertAllClose(output_val_ref,
+                                output_val,
+                                atol=1e-3,
+                                rtol=1e-3)
 
     # TODO(benbarsdell): Add tests for list ops (TensorList*) that pass through
     # graph source/sink nodes, similar to the TensorListThroughFunction C++ test.
