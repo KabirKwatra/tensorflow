@@ -56,7 +56,7 @@ if [[ $# -ge 1 ]]; then
     echo "number of OM_NUM_THREADS. Exiting..."
     exit 1
   fi
-else  # No parameters were passed in so set default values.
+else # No parameters were passed in so set default values.
   CONFIG="$DEFAULT_CONFIG"
   OMPTHREADS="--action_env=OMP_NUM_THREADS=$DEFAULT_OMP_NUM_THREADS"
 fi
@@ -70,18 +70,18 @@ echo ""
 # execution in an MKL primitive. This reduces the effects of an oversubscription
 # of OpenMP threads caused by executing multiple tests concurrently.
 bazel test \
-    --test_tag_filters=-no_oss,-no_oss_py2,-oss_serial,-gpu,-tpu,-benchmark-test,-v1only \
-    --test_lang_filters=cc,py \
-    -k \
-    --jobs="$N_JOBS" \
-    --test_timeout 300,450,1200,3600 \
-    --build_tests_only \
-    "$CONFIG" \
-    --test_env=KMP_BLOCKTIME=0 \
-    "$OMPTHREADS" \
-    --config=opt \
-    --test_output=errors \
-    -- \
-    //tensorflow/... \
-    -//tensorflow/compiler/... \
-    -//tensorflow/lite/...
+  --test_tag_filters=-no_oss,-no_oss_py2,-oss_serial,-gpu,-tpu,-benchmark-test,-v1only \
+  --test_lang_filters=cc,py \
+  -k \
+  --jobs="$N_JOBS" \
+  --test_timeout 300,450,1200,3600 \
+  --build_tests_only \
+  "$CONFIG" \
+  --test_env=KMP_BLOCKTIME=0 \
+  "$OMPTHREADS" \
+  --config=opt \
+  --test_output=errors \
+  -- \
+  //tensorflow/... \
+  -//tensorflow/compiler/... \
+  -//tensorflow/lite/...
