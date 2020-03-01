@@ -59,9 +59,12 @@ class Adadelta(optimizer_v2.OptimizerV2):
 
     _HAS_ALL_REDUCE_SUM_GRAD = True
 
-    def __init__(
-        self, learning_rate=0.001, rho=0.95, epsilon=1e-7, name="Adadelta", **kwargs
-    ):
+    def __init__(self,
+                 learning_rate=0.001,
+                 rho=0.95,
+                 epsilon=1e-7,
+                 name="Adadelta",
+                 **kwargs):
         """Construct a new Adadelta optimizer.
 
         Adadelta is a more robust extension of Adagrad that adapts learning rates
@@ -107,13 +110,13 @@ class Adadelta(optimizer_v2.OptimizerV2):
             self.add_slot(v, "accum_var")
 
     def _prepare_local(self, var_device, var_dtype, apply_state):
-        super(Adadelta, self)._prepare_local(var_device, var_dtype, apply_state)
+        super(Adadelta, self)._prepare_local(var_device, var_dtype,
+                                             apply_state)
         apply_state[(var_device, var_dtype)].update(
             dict(
                 epsilon=ops.convert_to_tensor_v2(self.epsilon, var_dtype),
                 rho=array_ops.identity(self._get_hyper("rho", var_dtype)),
-            )
-        )
+            ))
 
     def set_weights(self, weights):
         params = self.weights
@@ -127,8 +130,8 @@ class Adadelta(optimizer_v2.OptimizerV2):
     def _resource_apply_dense(self, grad, var, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         accum_grad = self.get_slot(var, "accum_grad")
         accum_var = self.get_slot(var, "accum_var")
@@ -146,8 +149,8 @@ class Adadelta(optimizer_v2.OptimizerV2):
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         accum_grad = self.get_slot(var, "accum_grad")
         accum_var = self.get_slot(var, "accum_var")
@@ -165,12 +168,14 @@ class Adadelta(optimizer_v2.OptimizerV2):
 
     def get_config(self):
         config = super(Adadelta, self).get_config()
-        config.update(
-            {
-                "learning_rate": self._serialize_hyperparameter("learning_rate"),
-                "decay": self._serialize_hyperparameter("decay"),
-                "rho": self._serialize_hyperparameter("rho"),
-                "epsilon": self.epsilon,
-            }
-        )
+        config.update({
+            "learning_rate":
+            self._serialize_hyperparameter("learning_rate"),
+            "decay":
+            self._serialize_hyperparameter("decay"),
+            "rho":
+            self._serialize_hyperparameter("rho"),
+            "epsilon":
+            self.epsilon,
+        })
         return config

@@ -47,16 +47,14 @@ class Adam(optimizer_v2.OptimizerV2):
 
     _HAS_ALL_REDUCE_SUM_GRAD = True
 
-    def __init__(
-        self,
-        learning_rate=0.001,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-7,
-        amsgrad=False,
-        name="Adam",
-        **kwargs
-    ):
+    def __init__(self,
+                 learning_rate=0.001,
+                 beta_1=0.9,
+                 beta_2=0.999,
+                 epsilon=1e-7,
+                 amsgrad=False,
+                 name="Adam",
+                 **kwargs):
         r"""Construct a new Adam optimizer.
 
         If amsgrad = False:
@@ -171,8 +169,7 @@ class Adam(optimizer_v2.OptimizerV2):
         beta_1_power = math_ops.pow(beta_1_t, local_step)
         beta_2_power = math_ops.pow(beta_2_t, local_step)
         lr = apply_state[(var_device, var_dtype)]["lr_t"] * (
-            math_ops.sqrt(1 - beta_2_power) / (1 - beta_1_power)
-        )
+            math_ops.sqrt(1 - beta_2_power) / (1 - beta_1_power))
         apply_state[(var_device, var_dtype)].update(
             dict(
                 lr=lr,
@@ -183,8 +180,7 @@ class Adam(optimizer_v2.OptimizerV2):
                 beta_2_t=beta_2_t,
                 beta_2_power=beta_2_power,
                 one_minus_beta_2_t=1 - beta_2_t,
-            )
-        )
+            ))
 
     def set_weights(self, weights):
         params = self.weights
@@ -193,14 +189,14 @@ class Adam(optimizer_v2.OptimizerV2):
         # optimizer has 2x + 1 variables. Filter vhats out for compatibility.
         num_vars = int((len(params) - 1) / 2)
         if len(weights) == 3 * num_vars + 1:
-            weights = weights[: len(params)]
+            weights = weights[:len(params)]
         super(Adam, self).set_weights(weights)
 
     def _resource_apply_dense(self, grad, var, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         m = self.get_slot(var, "m")
         v = self.get_slot(var, "v")
@@ -239,24 +235,24 @@ class Adam(optimizer_v2.OptimizerV2):
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         # m_t = beta1 * m + (1 - beta1) * g_t
         m = self.get_slot(var, "m")
         m_scaled_g_values = grad * coefficients["one_minus_beta_1_t"]
-        m_t = state_ops.assign(
-            m, m * coefficients["beta_1_t"], use_locking=self._use_locking
-        )
+        m_t = state_ops.assign(m,
+                               m * coefficients["beta_1_t"],
+                               use_locking=self._use_locking)
         with ops.control_dependencies([m_t]):
             m_t = self._resource_scatter_add(m, indices, m_scaled_g_values)
 
         # v_t = beta2 * v + (1 - beta2) * (g_t * g_t)
         v = self.get_slot(var, "v")
         v_scaled_g_values = (grad * grad) * coefficients["one_minus_beta_2_t"]
-        v_t = state_ops.assign(
-            v, v * coefficients["beta_2_t"], use_locking=self._use_locking
-        )
+        v_t = state_ops.assign(v,
+                               v * coefficients["beta_2_t"],
+                               use_locking=self._use_locking)
         with ops.control_dependencies([v_t]):
             v_t = self._resource_scatter_add(v, indices, v_scaled_g_values)
 
@@ -272,27 +268,32 @@ class Adam(optimizer_v2.OptimizerV2):
             v_hat = self.get_slot(var, "vhat")
             v_hat_t = math_ops.maximum(v_hat, v_t)
             with ops.control_dependencies([v_hat_t]):
-                v_hat_t = state_ops.assign(
-                    v_hat, v_hat_t, use_locking=self._use_locking
-                )
+                v_hat_t = state_ops.assign(v_hat,
+                                           v_hat_t,
+                                           use_locking=self._use_locking)
             v_hat_sqrt = math_ops.sqrt(v_hat_t)
             var_update = state_ops.assign_sub(
                 var,
-                coefficients["lr"] * m_t / (v_hat_sqrt + coefficients["epsilon"]),
+                coefficients["lr"] * m_t /
+                (v_hat_sqrt + coefficients["epsilon"]),
                 use_locking=self._use_locking,
             )
             return control_flow_ops.group(*[var_update, m_t, v_t, v_hat_t])
 
     def get_config(self):
         config = super(Adam, self).get_config()
-        config.update(
-            {
-                "learning_rate": self._serialize_hyperparameter("learning_rate"),
-                "decay": self._serialize_hyperparameter("decay"),
-                "beta_1": self._serialize_hyperparameter("beta_1"),
-                "beta_2": self._serialize_hyperparameter("beta_2"),
-                "epsilon": self.epsilon,
-                "amsgrad": self.amsgrad,
-            }
-        )
+        config.update({
+            "learning_rate":
+            self._serialize_hyperparameter("learning_rate"),
+            "decay":
+            self._serialize_hyperparameter("decay"),
+            "beta_1":
+            self._serialize_hyperparameter("beta_1"),
+            "beta_2":
+            self._serialize_hyperparameter("beta_2"),
+            "epsilon":
+            self.epsilon,
+            "amsgrad":
+            self.amsgrad,
+        })
         return config

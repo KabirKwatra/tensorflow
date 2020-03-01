@@ -81,16 +81,14 @@ class RMSprop(optimizer_v2.OptimizerV2):
 
     _HAS_ALL_REDUCE_SUM_GRAD = True
 
-    def __init__(
-        self,
-        learning_rate=0.001,
-        rho=0.9,
-        momentum=0.0,
-        epsilon=1e-7,
-        centered=False,
-        name="RMSprop",
-        **kwargs
-    ):
+    def __init__(self,
+                 learning_rate=0.001,
+                 rho=0.9,
+                 momentum=0.0,
+                 epsilon=1e-7,
+                 centered=False,
+                 name="RMSprop",
+                 **kwargs):
         """Construct a new RMSprop optimizer.
 
         Note that in the dense implementation of this algorithm, variables and their
@@ -138,9 +136,11 @@ class RMSprop(optimizer_v2.OptimizerV2):
         self._set_hyper("rho", rho)
 
         self._momentum = False
-        if isinstance(momentum, ops.Tensor) or callable(momentum) or momentum > 0:
+        if isinstance(momentum,
+                      ops.Tensor) or callable(momentum) or momentum > 0:
             self._momentum = True
-        if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
+        if isinstance(momentum,
+                      (int, float)) and (momentum < 0 or momentum > 1):
             raise ValueError("`momentum` must be between [0, 1].")
         self._set_hyper("momentum", momentum)
 
@@ -166,16 +166,16 @@ class RMSprop(optimizer_v2.OptimizerV2):
                 neg_lr_t=-apply_state[(var_device, var_dtype)]["lr_t"],
                 epsilon=ops.convert_to_tensor_v2(self.epsilon, var_dtype),
                 rho=rho,
-                momentum=array_ops.identity(self._get_hyper("momentum", var_dtype)),
+                momentum=array_ops.identity(
+                    self._get_hyper("momentum", var_dtype)),
                 one_minus_rho=1.0 - rho,
-            )
-        )
+            ))
 
     def _resource_apply_dense(self, grad, var, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         rms = self.get_slot(var, "rms")
         if self._momentum:
@@ -208,25 +208,27 @@ class RMSprop(optimizer_v2.OptimizerV2):
                 )
         else:
             rms_t = coefficients["rho"] * rms + coefficients[
-                "one_minus_rho"
-            ] * math_ops.square(grad)
+                "one_minus_rho"] * math_ops.square(grad)
             rms_t = state_ops.assign(rms, rms_t, use_locking=self._use_locking)
             denom_t = rms_t
             if self.centered:
                 mg = self.get_slot(var, "mg")
-                mg_t = coefficients["rho"] * mg + coefficients["one_minus_rho"] * grad
-                mg_t = state_ops.assign(mg, mg_t, use_locking=self._use_locking)
+                mg_t = coefficients["rho"] * mg + coefficients[
+                    "one_minus_rho"] * grad
+                mg_t = state_ops.assign(mg,
+                                        mg_t,
+                                        use_locking=self._use_locking)
                 denom_t = rms_t - math_ops.square(mg_t)
             var_t = var - coefficients["lr_t"] * grad / (
-                math_ops.sqrt(denom_t) + coefficients["epsilon"]
-            )
-            return state_ops.assign(var, var_t, use_locking=self._use_locking).op
+                math_ops.sqrt(denom_t) + coefficients["epsilon"])
+            return state_ops.assign(var, var_t,
+                                    use_locking=self._use_locking).op
 
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         rms = self.get_slot(var, "rms")
         if self._momentum:
@@ -261,29 +263,30 @@ class RMSprop(optimizer_v2.OptimizerV2):
                 )
         else:
             rms_scaled_g_values = (grad * grad) * coefficients["one_minus_rho"]
-            rms_t = state_ops.assign(
-                rms, rms * coefficients["rho"], use_locking=self._use_locking
-            )
+            rms_t = state_ops.assign(rms,
+                                     rms * coefficients["rho"],
+                                     use_locking=self._use_locking)
             with ops.control_dependencies([rms_t]):
-                rms_t = self._resource_scatter_add(rms, indices, rms_scaled_g_values)
+                rms_t = self._resource_scatter_add(rms, indices,
+                                                   rms_scaled_g_values)
                 rms_slice = array_ops.gather(rms_t, indices)
             denom_slice = rms_slice
             if self.centered:
                 mg = self.get_slot(var, "mg")
                 mg_scaled_g_values = grad * coefficients["one_minus_rho"]
-                mg_t = state_ops.assign(
-                    mg, mg * coefficients["rho"], use_locking=self._use_locking
-                )
+                mg_t = state_ops.assign(mg,
+                                        mg * coefficients["rho"],
+                                        use_locking=self._use_locking)
                 with ops.control_dependencies([mg_t]):
-                    mg_t = self._resource_scatter_add(mg, indices, mg_scaled_g_values)
+                    mg_t = self._resource_scatter_add(mg, indices,
+                                                      mg_scaled_g_values)
                     mg_slice = array_ops.gather(mg_t, indices)
                     denom_slice = rms_slice - math_ops.square(mg_slice)
             var_update = self._resource_scatter_add(
                 var,
                 indices,
-                coefficients["neg_lr_t"]
-                * grad
-                / (math_ops.sqrt(denom_slice) + coefficients["epsilon"]),
+                coefficients["neg_lr_t"] * grad /
+                (math_ops.sqrt(denom_slice) + coefficients["epsilon"]),
             )
             if self.centered:
                 return control_flow_ops.group(*[var_update, rms_t, mg_t])
@@ -300,16 +303,20 @@ class RMSprop(optimizer_v2.OptimizerV2):
 
     def get_config(self):
         config = super(RMSprop, self).get_config()
-        config.update(
-            {
-                "learning_rate": self._serialize_hyperparameter("learning_rate"),
-                "decay": self._serialize_hyperparameter("decay"),
-                "rho": self._serialize_hyperparameter("rho"),
-                "momentum": self._serialize_hyperparameter("momentum"),
-                "epsilon": self.epsilon,
-                "centered": self.centered,
-            }
-        )
+        config.update({
+            "learning_rate":
+            self._serialize_hyperparameter("learning_rate"),
+            "decay":
+            self._serialize_hyperparameter("decay"),
+            "rho":
+            self._serialize_hyperparameter("rho"),
+            "momentum":
+            self._serialize_hyperparameter("momentum"),
+            "epsilon":
+            self.epsilon,
+            "centered":
+            self.centered,
+        })
         return config
 
 
