@@ -51,7 +51,10 @@ class SimpleClass(object):
 
 def function_with_multiline_call(x):
     """Docstring."""
-    return range(x, x + 1,)
+    return range(
+        x,
+        x + 1,
+    )
 
 
 def basic_decorator(f):

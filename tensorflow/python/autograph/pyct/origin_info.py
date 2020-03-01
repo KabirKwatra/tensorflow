@@ -32,7 +32,8 @@ from tensorflow.python.autograph.pyct import pretty_printer
 from tensorflow.python.util import tf_inspect
 
 
-class LineLocation(collections.namedtuple("LineLocation", ("filename", "lineno"))):
+class LineLocation(
+        collections.namedtuple("LineLocation", ("filename", "lineno"))):
     """Similar to Location, but without column information.
 
     Attributes:
@@ -44,8 +45,8 @@ class LineLocation(collections.namedtuple("LineLocation", ("filename", "lineno")
 
 
 class Location(
-    collections.namedtuple("Location", ("filename", "lineno", "col_offset"))
-):
+        collections.namedtuple("Location",
+                               ("filename", "lineno", "col_offset"))):
     """Encodes code location information.
 
     Attributes:
@@ -61,10 +62,9 @@ class Location(
 
 
 class OriginInfo(
-    collections.namedtuple(
-        "OriginInfo", ("loc", "function_name", "source_code_line", "comment")
-    )
-):
+        collections.namedtuple(
+            "OriginInfo",
+            ("loc", "function_name", "source_code_line", "comment"))):
     """Container for information about the source code before conversion.
 
     Attributes:
@@ -125,7 +125,8 @@ def create_source_map(nodes, code, filepath):
                 continue
 
             # Note: the keys are by line only, excluding the column offset.
-            line_loc = LineLocation(final_info.loc.filename, final_info.loc.lineno)
+            line_loc = LineLocation(final_info.loc.filename,
+                                    final_info.loc.lineno)
 
             existing_origin = source_map.get(line_loc)
             if existing_origin is not None:
@@ -151,7 +152,9 @@ def create_source_map(nodes, code, filepath):
 
         for n, rn in zip(nodes, reparsed_nodes):
             nodes_str = pretty_printer.fmt(n, color=False, noanno=True)
-            reparsed_nodes_str = pretty_printer.fmt(rn, color=False, noanno=True)
+            reparsed_nodes_str = pretty_printer.fmt(rn,
+                                                    color=False,
+                                                    noanno=True)
             diff = difflib.context_diff(
                 nodes_str.split("\n"),
                 reparsed_nodes_str.split("\n"),
@@ -175,26 +178,24 @@ class OriginResolver(gast.NodeVisitor):
     """Annotates an AST with additional source information like file name."""
 
     def __init__(
-        self,
-        root_node,
-        source_lines,
-        comments_map,
-        context_lineno,
-        context_col_offset,
-        filepath,
+            self,
+            root_node,
+            source_lines,
+            comments_map,
+            context_lineno,
+            context_col_offset,
+            filepath,
     ):
         self._source_lines = source_lines
         self._comments_map = comments_map
 
-        if (
-            hasattr(root_node, "decorator_list")
-            and root_node.decorator_list
-            and hasattr(root_node.decorator_list[0], "lineno")
-        ):
+        if (hasattr(root_node, "decorator_list") and root_node.decorator_list
+                and hasattr(root_node.decorator_list[0], "lineno")):
             # Typical case: functions. The line number of the first decorator
             # is more accurate than the line number of the function itself in
             # 3.8+. In earier versions they coincide.
-            self._lineno_offset = context_lineno - root_node.decorator_list[0].lineno
+            self._lineno_offset = context_lineno - root_node.decorator_list[
+                0].lineno
         else:
             # Fall back to the line number of the root node.
             self._lineno_offset = context_lineno - root_node.lineno
@@ -220,9 +221,8 @@ class OriginResolver(gast.NodeVisitor):
         source_code_line = self._source_lines[node.lineno - 1]
         comment = self._comments_map.get(node.lineno)
 
-        loc = Location(
-            self._filepath, self._absolute_lineno(node), self._absolute_col_offset(node)
-        )
+        loc = Location(self._filepath, self._absolute_lineno(node),
+                       self._absolute_col_offset(node))
         origin = OriginInfo(loc, function_name, source_code_line, comment)
         anno.setanno(node, "lineno", node.lineno)
         anno.setanno(node, anno.Basic.ORIGIN, origin)
@@ -241,7 +241,8 @@ class OriginResolver(gast.NodeVisitor):
             self._function_stack.pop()
 
 
-def resolve(node, source, context_filepath, context_lineno, context_col_offset):
+def resolve(node, source, context_filepath, context_lineno,
+            context_col_offset):
     """Adds origin information to an AST, based on the source it was loaded from.
 
     This allows us to map the original source code line numbers to generated
