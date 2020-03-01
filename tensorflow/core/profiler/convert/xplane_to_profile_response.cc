@@ -42,23 +42,23 @@ const absl::string_view kOverviewPage = "overview_page";
 const absl::string_view kKernelStats = "kernel_stats";
 
 HardwareType HardwareTypeFromRunEnvironment(const RunEnvironment& run_env) {
-  if (run_env.device_type() == "GPU") return HardwareType::GPU;
-  if (run_env.device_type() == "CPU") return HardwareType::CPU_ONLY;
-  return HardwareType::UNKNOWN_HARDWARE;
+    if (run_env.device_type() == "GPU") return HardwareType::GPU;
+    if (run_env.device_type() == "CPU") return HardwareType::CPU_ONLY;
+    return HardwareType::UNKNOWN_HARDWARE;
 }
 
 template <typename Proto>
 void AddToolData(absl::string_view tool_name, const Proto& tool_output,
                  ProfileResponse* response) {
-  auto* tool_data = response->add_tool_data();
-  tool_data->set_name(string(tool_name));
-  tool_output.SerializeToString(tool_data->mutable_data());
+    auto* tool_data = response->add_tool_data();
+    tool_data->set_name(string(tool_name));
+    tool_output.SerializeToString(tool_data->mutable_data());
 }
 
 // Returns the tool name with extension.
 string ToolName(absl::string_view tool) {
-  if (tool == kTraceViewer) return "trace";
-  return absl::StrCat(tool, ".pb");
+    if (tool == kTraceViewer) return "trace";
+    return absl::StrCat(tool, ".pb");
 }
 
 }  // namespace
@@ -66,39 +66,39 @@ string ToolName(absl::string_view tool) {
 void ConvertXSpaceToProfileResponse(const XSpace& xspace,
                                     const ProfileRequest& req,
                                     ProfileResponse* response) {
-  absl::flat_hash_set<absl::string_view> tools(req.tools().begin(),
-                                               req.tools().end());
-  if (tools.empty()) return;
-  if (tools.contains(kTraceViewer)) {
-    Trace trace;
-    ConvertXSpaceToTraceEvents(xspace, &trace);
-    AddToolData(ToolName(kTraceViewer), trace, response);
-    // Trace viewer is the only tool, skip OpStats conversion.
-    if (tools.size() == 1) return;
-  }
-  OpStats op_stats = ConvertXSpaceToOpStats(xspace);
-  HardwareType hw_type =
-      HardwareTypeFromRunEnvironment(op_stats.run_environment());
-  if (tools.contains(kOverviewPage)) {
-    OverviewPage overview_page_db =
-        ConvertOpStatsToOverviewPage(op_stats, hw_type);
-    AddToolData(ToolName(kOverviewPage), overview_page_db, response);
-    if (tools.contains(kInputPipeline)) {
-      AddToolData(ToolName(kInputPipeline), overview_page_db.input_analysis(),
-                  response);
+    absl::flat_hash_set<absl::string_view> tools(req.tools().begin(),
+            req.tools().end());
+    if (tools.empty()) return;
+    if (tools.contains(kTraceViewer)) {
+        Trace trace;
+        ConvertXSpaceToTraceEvents(xspace, &trace);
+        AddToolData(ToolName(kTraceViewer), trace, response);
+        // Trace viewer is the only tool, skip OpStats conversion.
+        if (tools.size() == 1) return;
     }
-  } else if (tools.contains(kInputPipeline)) {
-    InputPipelineAnalysisResult input_pipeline_analysis =
-        ConvertOpStatsToInputPipelineAnalysis(op_stats, hw_type);
-    AddToolData(ToolName(kInputPipeline), input_pipeline_analysis, response);
-  }
-  if (tools.contains(kTensorflowStats)) {
-    TfStatsDatabase tf_stats_db = ConvertOpStatsToTfStats(op_stats);
-    AddToolData(ToolName(kTensorflowStats), tf_stats_db, response);
-  }
-  if (tools.contains(kKernelStats)) {
-    AddToolData(ToolName(kKernelStats), op_stats.kernel_stats_db(), response);
-  }
+    OpStats op_stats = ConvertXSpaceToOpStats(xspace);
+    HardwareType hw_type =
+        HardwareTypeFromRunEnvironment(op_stats.run_environment());
+    if (tools.contains(kOverviewPage)) {
+        OverviewPage overview_page_db =
+            ConvertOpStatsToOverviewPage(op_stats, hw_type);
+        AddToolData(ToolName(kOverviewPage), overview_page_db, response);
+        if (tools.contains(kInputPipeline)) {
+            AddToolData(ToolName(kInputPipeline), overview_page_db.input_analysis(),
+                        response);
+        }
+    } else if (tools.contains(kInputPipeline)) {
+        InputPipelineAnalysisResult input_pipeline_analysis =
+            ConvertOpStatsToInputPipelineAnalysis(op_stats, hw_type);
+        AddToolData(ToolName(kInputPipeline), input_pipeline_analysis, response);
+    }
+    if (tools.contains(kTensorflowStats)) {
+        TfStatsDatabase tf_stats_db = ConvertOpStatsToTfStats(op_stats);
+        AddToolData(ToolName(kTensorflowStats), tf_stats_db, response);
+    }
+    if (tools.contains(kKernelStats)) {
+        AddToolData(ToolName(kKernelStats), op_stats.kernel_stats_db(), response);
+    }
 }
 
 }  // namespace profiler
