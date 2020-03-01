@@ -59,15 +59,15 @@ class Optimizer(object):
     """
 
     def __init__(self, **kwargs):
-        allowed_kwargs = {'clipnorm', 'clipvalue'}
+        allowed_kwargs = {"clipnorm", "clipvalue"}
         for k in kwargs:
             if k not in allowed_kwargs:
-                raise TypeError('Unexpected keyword argument '
-                                'passed to optimizer: ' + str(k))
+                raise TypeError(
+                    "Unexpected keyword argument " "passed to optimizer: " + str(k)
+                )
             # checks that clipnorm >= 0 and clipvalue >= 0
             if kwargs[k] < 0:
-                raise ValueError(
-                    'Expected {} >= 0, received: {}'.format(k, kwargs[k]))
+                raise ValueError("Expected {} >= 0, received: {}".format(k, kwargs[k]))
         self.__dict__.update(kwargs)
         self.updates = []
         self.weights = []
@@ -95,14 +95,16 @@ class Optimizer(object):
         """
         grads = K.gradients(loss, params)
         if any(g is None for g in grads):
-            raise ValueError('An operation has `None` for gradient. '
-                             'Please make sure that all of your ops have a '
-                             'gradient defined (i.e. are differentiable). '
-                             'Common ops without gradient: '
-                             'K.argmax, K.round, K.eval.')
-        if hasattr(self, 'clipnorm'):
+            raise ValueError(
+                "An operation has `None` for gradient. "
+                "Please make sure that all of your ops have a "
+                "gradient defined (i.e. are differentiable). "
+                "Common ops without gradient: "
+                "K.argmax, K.round, K.eval."
+            )
+        if hasattr(self, "clipnorm"):
             grads = [clip_ops.clip_by_norm(g, self.clipnorm) for g in grads]
-        if hasattr(self, 'clipvalue'):
+        if hasattr(self, "clipvalue"):
             grads = [
                 clip_ops.clip_by_value(g, -self.clipvalue, self.clipvalue)
                 for g in grads
@@ -125,17 +127,20 @@ class Optimizer(object):
         """
         params = self.weights
         if len(params) != len(weights):
-            raise ValueError('Length of the specified weight list (' +
-                             str(len(weights)) +
-                             ') does not match the number of weights '
-                             'of the optimizer (' + str(len(params)) + ')')
+            raise ValueError(
+                "Length of the specified weight list ("
+                + str(len(weights))
+                + ") does not match the number of weights "
+                "of the optimizer (" + str(len(params)) + ")"
+            )
         weight_value_tuples = []
         param_values = K.batch_get_value(params)
         for pv, p, w in zip(param_values, params, weights):
             if pv.shape != w.shape:
-                raise ValueError('Optimizer weight shape ' + str(pv.shape) +
-                                 ' not compatible with '
-                                 'provided weight shape ' + str(w.shape))
+                raise ValueError(
+                    "Optimizer weight shape " + str(pv.shape) + " not compatible with "
+                    "provided weight shape " + str(w.shape)
+                )
             weight_value_tuples.append((p, w))
         K.batch_set_value(weight_value_tuples)
 
@@ -149,10 +154,10 @@ class Optimizer(object):
 
     def get_config(self):
         config = {}
-        if hasattr(self, 'clipnorm'):
-            config['clipnorm'] = self.clipnorm
-        if hasattr(self, 'clipvalue'):
-            config['clipvalue'] = self.clipvalue
+        if hasattr(self, "clipnorm"):
+            config["clipnorm"] = self.clipnorm
+        if hasattr(self, "clipvalue"):
+            config["clipvalue"] = self.clipvalue
         return config
 
     @classmethod
@@ -174,13 +179,13 @@ class SGD(Optimizer):
         nesterov: boolean. Whether to apply Nesterov momentum.
     """
 
-    def __init__(self, lr=0.01, momentum=0., decay=0., nesterov=False, **kwargs):
+    def __init__(self, lr=0.01, momentum=0.0, decay=0.0, nesterov=False, **kwargs):
         super(SGD, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
-            self.lr = K.variable(lr, name='lr')
-            self.momentum = K.variable(momentum, name='momentum')
-            self.decay = K.variable(decay, name='decay')
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
+            self.lr = K.variable(lr, name="lr")
+            self.momentum = K.variable(momentum, name="momentum")
+            self.decay = K.variable(decay, name="decay")
         self.initial_decay = decay
         self.nesterov = nesterov
 
@@ -191,9 +196,12 @@ class SGD(Optimizer):
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (  # pylint: disable=g-no-augmented-assignment
-                1. /
-                (1. +
-                 self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))))
+                1.0
+                / (
+                    1.0
+                    + self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))
+                )
+            )
         # momentum
         shapes = [K.int_shape(p) for p in params]
         moments = [K.zeros(shape) for shape in shapes]
@@ -208,7 +216,7 @@ class SGD(Optimizer):
                 new_p = p + v
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -216,10 +224,10 @@ class SGD(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'momentum': float(K.get_value(self.momentum)),
-            'decay': float(K.get_value(self.decay)),
-            'nesterov': self.nesterov
+            "lr": float(K.get_value(self.lr)),
+            "momentum": float(K.get_value(self.momentum)),
+            "decay": float(K.get_value(self.decay)),
+            "nesterov": self.nesterov,
         }
         base_config = super(SGD, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -239,13 +247,13 @@ class RMSprop(Optimizer):
         decay: float >= 0. Learning rate decay over each update.
     """
 
-    def __init__(self, lr=0.001, rho=0.9, epsilon=None, decay=0., **kwargs):
+    def __init__(self, lr=0.001, rho=0.9, epsilon=None, decay=0.0, **kwargs):
         super(RMSprop, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.lr = K.variable(lr, name='lr')
-            self.rho = K.variable(rho, name='rho')
-            self.decay = K.variable(decay, name='decay')
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
+            self.lr = K.variable(lr, name="lr")
+            self.rho = K.variable(rho, name="rho")
+            self.decay = K.variable(decay, name="decay")
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
         if epsilon is None:
             epsilon = K.epsilon()
         self.epsilon = epsilon
@@ -253,26 +261,28 @@ class RMSprop(Optimizer):
 
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
-        accumulators = [K.zeros(K.int_shape(p), dtype=K.dtype(p))
-                        for p in params]
+        accumulators = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
         self.weights = accumulators
         self.updates = [state_ops.assign_add(self.iterations, 1)]
 
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (  # pylint: disable=g-no-augmented-assignment
-                1. /
-                (1. +
-                 self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))))
+                1.0
+                / (
+                    1.0
+                    + self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))
+                )
+            )
 
         for p, g, a in zip(params, grads, accumulators):
             # update accumulator
-            new_a = self.rho * a + (1. - self.rho) * math_ops.square(g)
+            new_a = self.rho * a + (1.0 - self.rho) * math_ops.square(g)
             self.updates.append(state_ops.assign(a, new_a))
             new_p = p - lr * g / (K.sqrt(new_a) + self.epsilon)
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -280,10 +290,10 @@ class RMSprop(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'rho': float(K.get_value(self.rho)),
-            'decay': float(K.get_value(self.decay)),
-            'epsilon': self.epsilon
+            "lr": float(K.get_value(self.lr)),
+            "rho": float(K.get_value(self.rho)),
+            "decay": float(K.get_value(self.decay)),
+            "epsilon": self.epsilon,
         }
         base_config = super(RMSprop, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -310,12 +320,12 @@ class Adagrad(Optimizer):
         Optimization](http://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf)
     """
 
-    def __init__(self, lr=0.01, epsilon=None, decay=0., **kwargs):
+    def __init__(self, lr=0.01, epsilon=None, decay=0.0, **kwargs):
         super(Adagrad, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.lr = K.variable(lr, name='lr')
-            self.decay = K.variable(decay, name='decay')
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
+            self.lr = K.variable(lr, name="lr")
+            self.decay = K.variable(decay, name="decay")
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
         if epsilon is None:
             epsilon = K.epsilon()
         self.epsilon = epsilon
@@ -331,9 +341,12 @@ class Adagrad(Optimizer):
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (  # pylint: disable=g-no-augmented-assignment
-                1. /
-                (1. +
-                 self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))))
+                1.0
+                / (
+                    1.0
+                    + self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))
+                )
+            )
 
         for p, g, a in zip(params, grads, accumulators):
             new_a = a + math_ops.square(g)  # update accumulator
@@ -341,7 +354,7 @@ class Adagrad(Optimizer):
             new_p = p - lr * g / (K.sqrt(new_a) + self.epsilon)
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -349,9 +362,9 @@ class Adagrad(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'decay': float(K.get_value(self.decay)),
-            'epsilon': self.epsilon
+            "lr": float(K.get_value(self.lr)),
+            "decay": float(K.get_value(self.decay)),
+            "epsilon": self.epsilon,
         }
         base_config = super(Adagrad, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -384,12 +397,12 @@ class Adadelta(Optimizer):
         method](http://arxiv.org/abs/1212.5701)
     """
 
-    def __init__(self, lr=1.0, rho=0.95, epsilon=None, decay=0., **kwargs):
+    def __init__(self, lr=1.0, rho=0.95, epsilon=None, decay=0.0, **kwargs):
         super(Adadelta, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.lr = K.variable(lr, name='lr')
-            self.decay = K.variable(decay, name='decay')
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
+            self.lr = K.variable(lr, name="lr")
+            self.decay = K.variable(decay, name="decay")
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
         if epsilon is None:
             epsilon = K.epsilon()
         self.rho = rho
@@ -407,22 +420,24 @@ class Adadelta(Optimizer):
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (  # pylint: disable=g-no-augmented-assignment
-                1. /
-                (1. +
-                 self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))))
+                1.0
+                / (
+                    1.0
+                    + self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))
+                )
+            )
 
         for p, g, a, d_a in zip(params, grads, accumulators, delta_accumulators):
             # update accumulator
-            new_a = self.rho * a + (1. - self.rho) * math_ops.square(g)
+            new_a = self.rho * a + (1.0 - self.rho) * math_ops.square(g)
             self.updates.append(state_ops.assign(a, new_a))
 
             # use the new accumulator and the *old* delta_accumulator
-            update = g * K.sqrt(d_a + self.epsilon) / \
-                K.sqrt(new_a + self.epsilon)
+            update = g * K.sqrt(d_a + self.epsilon) / K.sqrt(new_a + self.epsilon)
             new_p = p - lr * update
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -434,10 +449,10 @@ class Adadelta(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'rho': self.rho,
-            'decay': float(K.get_value(self.decay)),
-            'epsilon': self.epsilon
+            "lr": float(K.get_value(self.lr)),
+            "rho": self.rho,
+            "decay": float(K.get_value(self.decay)),
+            "epsilon": self.epsilon,
         }
         base_config = super(Adadelta, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -458,21 +473,23 @@ class Adam(Optimizer):
           from the paper "On the Convergence of Adam and Beyond".
     """
 
-    def __init__(self,
-                 lr=0.001,
-                 beta_1=0.9,
-                 beta_2=0.999,
-                 epsilon=None,
-                 decay=0.,
-                 amsgrad=False,
-                 **kwargs):
+    def __init__(
+        self,
+        lr=0.001,
+        beta_1=0.9,
+        beta_2=0.999,
+        epsilon=None,
+        decay=0.0,
+        amsgrad=False,
+        **kwargs
+    ):
         super(Adam, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
-            self.lr = K.variable(lr, name='lr')
-            self.beta_1 = K.variable(beta_1, name='beta_1')
-            self.beta_2 = K.variable(beta_2, name='beta_2')
-            self.decay = K.variable(decay, name='decay')
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
+            self.lr = K.variable(lr, name="lr")
+            self.beta_1 = K.variable(beta_1, name="beta_1")
+            self.beta_2 = K.variable(beta_2, name="beta_2")
+            self.decay = K.variable(decay, name="decay")
         if epsilon is None:
             epsilon = K.epsilon()
         self.epsilon = epsilon
@@ -486,15 +503,19 @@ class Adam(Optimizer):
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (  # pylint: disable=g-no-augmented-assignment
-                1. /
-                (1. +
-                 self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))))
+                1.0
+                / (
+                    1.0
+                    + self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))
+                )
+            )
 
         with ops.control_dependencies([state_ops.assign_add(self.iterations, 1)]):
             t = math_ops.cast(self.iterations, K.floatx())
         lr_t = lr * (
-            K.sqrt(1. - math_ops.pow(self.beta_2, t)) /
-            (1. - math_ops.pow(self.beta_1, t)))
+            K.sqrt(1.0 - math_ops.pow(self.beta_2, t))
+            / (1.0 - math_ops.pow(self.beta_1, t))
+        )
 
         ms = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
         vs = [K.zeros(K.int_shape(p), dtype=K.dtype(p)) for p in params]
@@ -505,8 +526,8 @@ class Adam(Optimizer):
         self.weights = [self.iterations] + ms + vs + vhats
 
         for p, g, m, v, vhat in zip(params, grads, ms, vs, vhats):
-            m_t = (self.beta_1 * m) + (1. - self.beta_1) * g
-            v_t = (self.beta_2 * v) + (1. - self.beta_2) * math_ops.square(g)
+            m_t = (self.beta_1 * m) + (1.0 - self.beta_1) * g
+            v_t = (self.beta_2 * v) + (1.0 - self.beta_2) * math_ops.square(g)
             if self.amsgrad:
                 vhat_t = math_ops.maximum(vhat, v_t)
                 p_t = p - lr_t * m_t / (K.sqrt(vhat_t) + self.epsilon)
@@ -519,7 +540,7 @@ class Adam(Optimizer):
             new_p = p_t
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -527,12 +548,12 @@ class Adam(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'beta_1': float(K.get_value(self.beta_1)),
-            'beta_2': float(K.get_value(self.beta_2)),
-            'decay': float(K.get_value(self.decay)),
-            'epsilon': self.epsilon,
-            'amsgrad': self.amsgrad
+            "lr": float(K.get_value(self.lr)),
+            "beta_1": float(K.get_value(self.beta_1)),
+            "beta_2": float(K.get_value(self.beta_2)),
+            "decay": float(K.get_value(self.decay)),
+            "epsilon": self.epsilon,
+            "amsgrad": self.amsgrad,
         }
         base_config = super(Adam, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -551,20 +572,16 @@ class Adamax(Optimizer):
         decay: float >= 0. Learning rate decay over each update.
     """
 
-    def __init__(self,
-                 lr=0.002,
-                 beta_1=0.9,
-                 beta_2=0.999,
-                 epsilon=None,
-                 decay=0.,
-                 **kwargs):
+    def __init__(
+        self, lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, **kwargs
+    ):
         super(Adamax, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
-            self.lr = K.variable(lr, name='lr')
-            self.beta_1 = K.variable(beta_1, name='beta_1')
-            self.beta_2 = K.variable(beta_2, name='beta_2')
-            self.decay = K.variable(decay, name='decay')
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
+            self.lr = K.variable(lr, name="lr")
+            self.beta_1 = K.variable(beta_1, name="beta_1")
+            self.beta_2 = K.variable(beta_2, name="beta_2")
+            self.decay = K.variable(decay, name="decay")
         if epsilon is None:
             epsilon = K.epsilon()
         self.epsilon = epsilon
@@ -577,13 +594,16 @@ class Adamax(Optimizer):
         lr = self.lr
         if self.initial_decay > 0:
             lr = lr * (  # pylint: disable=g-no-augmented-assignment
-                1. /
-                (1. +
-                 self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))))
+                1.0
+                / (
+                    1.0
+                    + self.decay * math_ops.cast(self.iterations, K.dtype(self.decay))
+                )
+            )
 
         with ops.control_dependencies([state_ops.assign_add(self.iterations, 1)]):
             t = math_ops.cast(self.iterations, K.floatx())
-        lr_t = lr / (1. - math_ops.pow(self.beta_1, t))
+        lr_t = lr / (1.0 - math_ops.pow(self.beta_1, t))
 
         shapes = [K.int_shape(p) for p in params]
         # zero init of 1st moment
@@ -594,7 +614,7 @@ class Adamax(Optimizer):
 
         for p, g, m, u in zip(params, grads, ms, us):
 
-            m_t = (self.beta_1 * m) + (1. - self.beta_1) * g
+            m_t = (self.beta_1 * m) + (1.0 - self.beta_1) * g
             u_t = math_ops.maximum(self.beta_2 * u, math_ops.abs(g))
             p_t = p - lr_t * m_t / (u_t + self.epsilon)
 
@@ -603,7 +623,7 @@ class Adamax(Optimizer):
             new_p = p_t
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -611,11 +631,11 @@ class Adamax(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'beta_1': float(K.get_value(self.beta_1)),
-            'beta_2': float(K.get_value(self.beta_2)),
-            'decay': float(K.get_value(self.decay)),
-            'epsilon': self.epsilon
+            "lr": float(K.get_value(self.lr)),
+            "beta_1": float(K.get_value(self.beta_1)),
+            "beta_2": float(K.get_value(self.beta_2)),
+            "decay": float(K.get_value(self.decay)),
+            "epsilon": self.epsilon,
         }
         base_config = super(Adamax, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -637,20 +657,22 @@ class Nadam(Optimizer):
         epsilon: float >= 0. Fuzz factor. If `None`, defaults to `K.epsilon()`.
     """
 
-    def __init__(self,
-                 lr=0.002,
-                 beta_1=0.9,
-                 beta_2=0.999,
-                 epsilon=None,
-                 schedule_decay=0.004,
-                 **kwargs):
+    def __init__(
+        self,
+        lr=0.002,
+        beta_1=0.9,
+        beta_2=0.999,
+        epsilon=None,
+        schedule_decay=0.004,
+        **kwargs
+    ):
         super(Nadam, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
-            self.m_schedule = K.variable(1., name='m_schedule')
-            self.lr = K.variable(lr, name='lr')
-            self.beta_1 = K.variable(beta_1, name='beta_1')
-            self.beta_2 = K.variable(beta_2, name='beta_2')
+            self.iterations = K.variable(0, dtype="int64", name="iterations")
+            self.m_schedule = K.variable(1.0, name="m_schedule")
+            self.lr = K.variable(lr, name="lr")
+            self.beta_1 = K.variable(beta_1, name="beta_1")
+            self.beta_2 = K.variable(beta_2, name="beta_2")
         if epsilon is None:
             epsilon = K.epsilon()
         self.epsilon = epsilon
@@ -665,11 +687,13 @@ class Nadam(Optimizer):
 
         # Due to the recommendations in [2], i.e. warming momentum schedule
         momentum_cache_t = self.beta_1 * (
-            1. - 0.5 *
-            (math_ops.pow(K.cast_to_floatx(0.96), t * self.schedule_decay)))
+            1.0 - 0.5 * (math_ops.pow(K.cast_to_floatx(0.96), t * self.schedule_decay))
+        )
         momentum_cache_t_1 = self.beta_1 * (
-            1. - 0.5 *
-            (math_ops.pow(K.cast_to_floatx(0.96), (t + 1) * self.schedule_decay)))
+            1.0
+            - 0.5
+            * (math_ops.pow(K.cast_to_floatx(0.96), (t + 1) * self.schedule_decay))
+        )
         m_schedule_new = self.m_schedule * momentum_cache_t
         m_schedule_next = self.m_schedule * momentum_cache_t * momentum_cache_t_1
         self.updates.append((self.m_schedule, m_schedule_new))
@@ -682,13 +706,14 @@ class Nadam(Optimizer):
 
         for p, g, m, v in zip(params, grads, ms, vs):
             # the following equations given in [1]
-            g_prime = g / (1. - m_schedule_new)
-            m_t = self.beta_1 * m + (1. - self.beta_1) * g
-            m_t_prime = m_t / (1. - m_schedule_next)
-            v_t = self.beta_2 * v + (1. - self.beta_2) * math_ops.square(g)
-            v_t_prime = v_t / (1. - math_ops.pow(self.beta_2, t))
-            m_t_bar = (1. -
-                       momentum_cache_t) * g_prime + momentum_cache_t_1 * m_t_prime
+            g_prime = g / (1.0 - m_schedule_new)
+            m_t = self.beta_1 * m + (1.0 - self.beta_1) * g
+            m_t_prime = m_t / (1.0 - m_schedule_next)
+            v_t = self.beta_2 * v + (1.0 - self.beta_2) * math_ops.square(g)
+            v_t_prime = v_t / (1.0 - math_ops.pow(self.beta_2, t))
+            m_t_bar = (
+                1.0 - momentum_cache_t
+            ) * g_prime + momentum_cache_t_1 * m_t_prime
 
             self.updates.append(state_ops.assign(m, m_t))
             self.updates.append(state_ops.assign(v, v_t))
@@ -697,7 +722,7 @@ class Nadam(Optimizer):
             new_p = p_t
 
             # Apply constraints.
-            if getattr(p, 'constraint', None) is not None:
+            if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
             self.updates.append(state_ops.assign(p, new_p))
@@ -705,11 +730,11 @@ class Nadam(Optimizer):
 
     def get_config(self):
         config = {
-            'lr': float(K.get_value(self.lr)),
-            'beta_1': float(K.get_value(self.beta_1)),
-            'beta_2': float(K.get_value(self.beta_2)),
-            'epsilon': self.epsilon,
-            'schedule_decay': self.schedule_decay
+            "lr": float(K.get_value(self.lr)),
+            "beta_1": float(K.get_value(self.beta_1)),
+            "beta_2": float(K.get_value(self.beta_2)),
+            "epsilon": self.epsilon,
+            "schedule_decay": self.schedule_decay,
         }
         base_config = super(Nadam, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -718,16 +743,17 @@ class Nadam(Optimizer):
 class TFOptimizer(Optimizer, trackable.Trackable):
     """Wrapper class for native TensorFlow optimizers."""
 
-    def __init__(self, optimizer, iterations=None):  # pylint: disable=super-init-not-called
+    def __init__(
+        self, optimizer, iterations=None
+    ):  # pylint: disable=super-init-not-called
         self.optimizer = optimizer
-        self._track_trackable(optimizer, name='optimizer')
+        self._track_trackable(optimizer, name="optimizer")
         if iterations is None:
             with K.name_scope(self.__class__.__name__):
-                self.iterations = K.variable(
-                    0, dtype='int64', name='iterations')
+                self.iterations = K.variable(0, dtype="int64", name="iterations")
         else:
             self.iterations = iterations
-        self._track_trackable(self.iterations, name='global_step')
+        self._track_trackable(self.iterations, name="global_step")
 
     def _clip_gradients(self, grads):
         """Clip gradients according to the clipnorm and clipvalue attributes."""
@@ -763,7 +789,8 @@ class TFOptimizer(Optimizer, trackable.Trackable):
             self.updates = []
             grads = self.optimizer.compute_gradients(loss, params)
             opt_update = self.optimizer.apply_gradients(
-                grads, global_step=self.iterations)
+                grads, global_step=self.iterations
+            )
 
         self.updates.append(opt_update)
         return self.updates
@@ -790,12 +817,12 @@ adamax = Adamax
 nadam = Nadam
 
 
-@keras_export('keras.optimizers.serialize')
+@keras_export("keras.optimizers.serialize")
 def serialize(optimizer):
     return serialize_keras_object(optimizer)
 
 
-@keras_export('keras.optimizers.deserialize')
+@keras_export("keras.optimizers.deserialize")
 def deserialize(config, custom_objects=None):
     """Inverse of the `serialize` function.
 
@@ -809,30 +836,34 @@ def deserialize(config, custom_objects=None):
     """
     # loss_scale_optimizer has a direct dependency of optimizer, import here
     # rather than top to avoid the cyclic dependency.
-    from tensorflow.python.keras.mixed_precision.experimental import loss_scale_optimizer  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.mixed_precision.experimental import (
+        loss_scale_optimizer,
+    )  # pylint: disable=g-import-not-at-top
+
     all_classes = {
-        'adadelta': adadelta_v2.Adadelta,
-        'adagrad': adagrad_v2.Adagrad,
-        'adam': adam_v2.Adam,
-        'adamax': adamax_v2.Adamax,
-        'nadam': nadam_v2.Nadam,
-        'rmsprop': rmsprop_v2.RMSprop,
-        'sgd': gradient_descent_v2.SGD,
-        'ftrl': ftrl.Ftrl,
-        'lossscaleoptimizer': loss_scale_optimizer.LossScaleOptimizer,
+        "adadelta": adadelta_v2.Adadelta,
+        "adagrad": adagrad_v2.Adagrad,
+        "adam": adam_v2.Adam,
+        "adamax": adamax_v2.Adamax,
+        "nadam": nadam_v2.Nadam,
+        "rmsprop": rmsprop_v2.RMSprop,
+        "sgd": gradient_descent_v2.SGD,
+        "ftrl": ftrl.Ftrl,
+        "lossscaleoptimizer": loss_scale_optimizer.LossScaleOptimizer,
     }
 
     # Make deserialization case-insensitive for built-in optimizers.
-    if config['class_name'].lower() in all_classes:
-        config['class_name'] = config['class_name'].lower()
+    if config["class_name"].lower() in all_classes:
+        config["class_name"] = config["class_name"].lower()
     return deserialize_keras_object(
         config,
         module_objects=all_classes,
         custom_objects=custom_objects,
-        printable_module_name='optimizer')
+        printable_module_name="optimizer",
+    )
 
 
-@keras_export('keras.optimizers.get')
+@keras_export("keras.optimizers.get")
 def get(identifier):
     """Retrieves a Keras Optimizer instance.
 
@@ -859,8 +890,7 @@ def get(identifier):
     elif isinstance(identifier, dict):
         return deserialize(identifier)
     elif isinstance(identifier, six.string_types):
-        config = {'class_name': str(identifier), 'config': {}}
+        config = {"class_name": str(identifier), "config": {}}
         return deserialize(config)
     else:
-        raise ValueError(
-            'Could not interpret optimizer identifier:', identifier)
+        raise ValueError("Could not interpret optimizer identifier:", identifier)

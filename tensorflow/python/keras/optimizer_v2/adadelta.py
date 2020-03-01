@@ -28,7 +28,7 @@ from tensorflow.python.training import training_ops
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export('keras.optimizers.Adadelta')
+@keras_export("keras.optimizers.Adadelta")
 class Adadelta(optimizer_v2.OptimizerV2):
     r"""Optimizer that implements the Adadelta algorithm.
 
@@ -60,12 +60,9 @@ class Adadelta(optimizer_v2.OptimizerV2):
 
     _HAS_ALL_REDUCE_SUM_GRAD = True
 
-    def __init__(self,
-                 learning_rate=0.001,
-                 rho=0.95,
-                 epsilon=1e-7,
-                 name='Adadelta',
-                 **kwargs):
+    def __init__(
+        self, learning_rate=0.001, rho=0.95, epsilon=1e-7, name="Adadelta", **kwargs
+    ):
         """Construct a new Adadelta optimizer.
 
         Adadelta is a more robust extension of Adagrad that adapts learning rates
@@ -98,25 +95,26 @@ class Adadelta(optimizer_v2.OptimizerV2):
         @end_compatibility
         """
         super(Adadelta, self).__init__(name, **kwargs)
-        self._set_hyper('learning_rate', kwargs.get('lr', learning_rate))
-        self._set_hyper('decay', self._initial_decay)
-        self._set_hyper('rho', rho)
+        self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
+        self._set_hyper("decay", self._initial_decay)
+        self._set_hyper("rho", rho)
         self.epsilon = epsilon or backend_config.epsilon()
 
     def _create_slots(self, var_list):
         # Separate for-loops to respect the ordering of slot variables from v1.
         for v in var_list:
-            self.add_slot(v, 'accum_grad')
+            self.add_slot(v, "accum_grad")
         for v in var_list:
-            self.add_slot(v, 'accum_var')
+            self.add_slot(v, "accum_var")
 
     def _prepare_local(self, var_device, var_dtype, apply_state):
-        super(Adadelta, self)._prepare_local(
-            var_device, var_dtype, apply_state)
+        super(Adadelta, self)._prepare_local(var_device, var_dtype, apply_state)
         apply_state[(var_device, var_dtype)].update(
             dict(
                 epsilon=ops.convert_to_tensor_v2(self.epsilon, var_dtype),
-                rho=array_ops.identity(self._get_hyper('rho', var_dtype))))
+                rho=array_ops.identity(self._get_hyper("rho", var_dtype)),
+            )
+        )
 
     def set_weights(self, weights):
         params = self.weights
@@ -129,45 +127,51 @@ class Adadelta(optimizer_v2.OptimizerV2):
 
     def _resource_apply_dense(self, grad, var, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
-        coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                        or self._fallback_apply_state(var_device, var_dtype))
+        coefficients = (apply_state or {}).get(
+            (var_device, var_dtype)
+        ) or self._fallback_apply_state(var_device, var_dtype)
 
-        accum_grad = self.get_slot(var, 'accum_grad')
-        accum_var = self.get_slot(var, 'accum_var')
+        accum_grad = self.get_slot(var, "accum_grad")
+        accum_var = self.get_slot(var, "accum_var")
         return training_ops.resource_apply_adadelta(
             var.handle,
             accum_grad.handle,
             accum_var.handle,
-            coefficients['lr_t'],
-            coefficients['rho'],
-            coefficients['epsilon'],
+            coefficients["lr_t"],
+            coefficients["rho"],
+            coefficients["epsilon"],
             grad,
-            use_locking=self._use_locking)
+            use_locking=self._use_locking,
+        )
 
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
-        coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                        or self._fallback_apply_state(var_device, var_dtype))
+        coefficients = (apply_state or {}).get(
+            (var_device, var_dtype)
+        ) or self._fallback_apply_state(var_device, var_dtype)
 
-        accum_grad = self.get_slot(var, 'accum_grad')
-        accum_var = self.get_slot(var, 'accum_var')
+        accum_grad = self.get_slot(var, "accum_grad")
+        accum_var = self.get_slot(var, "accum_var")
         return training_ops.resource_sparse_apply_adadelta(
             var.handle,
             accum_grad.handle,
             accum_var.handle,
-            coefficients['lr_t'],
-            coefficients['rho'],
-            coefficients['epsilon'],
+            coefficients["lr_t"],
+            coefficients["rho"],
+            coefficients["epsilon"],
             grad,
             indices,
-            use_locking=self._use_locking)
+            use_locking=self._use_locking,
+        )
 
     def get_config(self):
         config = super(Adadelta, self).get_config()
-        config.update({
-            'learning_rate': self._serialize_hyperparameter('learning_rate'),
-            'decay': self._serialize_hyperparameter('decay'),
-            'rho': self._serialize_hyperparameter('rho'),
-            'epsilon': self.epsilon,
-        })
+        config.update(
+            {
+                "learning_rate": self._serialize_hyperparameter("learning_rate"),
+                "decay": self._serialize_hyperparameter("decay"),
+                "rho": self._serialize_hyperparameter("rho"),
+                "epsilon": self.epsilon,
+            }
+        )
         return config
