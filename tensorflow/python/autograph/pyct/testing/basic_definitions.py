@@ -35,27 +35,24 @@ def nested_functions(x):
 
 
 def function_with_print():
-    print('foo')
+    print("foo")
 
 
-def simple_lambda(): return None
+def simple_lambda():
+    return None
 
 
 class SimpleClass(object):
-
     def simple_method(self):
         return self
 
     def method_with_print(self):
-        print('foo')
+        print("foo")
 
 
 def function_with_multiline_call(x):
     """Docstring."""
-    return range(
-        x,
-        x + 1,
-    )
+    return range(x, x + 1,)
 
 
 def basic_decorator(f):

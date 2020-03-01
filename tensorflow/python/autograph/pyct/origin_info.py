@@ -32,19 +32,20 @@ from tensorflow.python.autograph.pyct import pretty_printer
 from tensorflow.python.util import tf_inspect
 
 
-class LineLocation(
-        collections.namedtuple('LineLocation', ('filename', 'lineno'))):
+class LineLocation(collections.namedtuple("LineLocation", ("filename", "lineno"))):
     """Similar to Location, but without column information.
 
     Attributes:
       filename: Text
       lineno: int, 1-based
     """
+
     pass
 
 
 class Location(
-        collections.namedtuple('Location', ('filename', 'lineno', 'col_offset'))):
+    collections.namedtuple("Location", ("filename", "lineno", "col_offset"))
+):
     """Encodes code location information.
 
     Attributes:
@@ -61,8 +62,9 @@ class Location(
 
 class OriginInfo(
     collections.namedtuple(
-        'OriginInfo',
-        ('loc', 'function_name', 'source_code_line', 'comment'))):
+        "OriginInfo", ("loc", "function_name", "source_code_line", "comment")
+    )
+):
     """Container for information about the source code before conversion.
 
     Attributes:
@@ -74,15 +76,21 @@ class OriginInfo(
 
     def as_frame(self):
         """Returns a 4-tuple consistent with the return of traceback.extract_tb."""
-        return (self.loc.filename, self.loc.lineno, self.function_name,
-                self.source_code_line)
+        return (
+            self.loc.filename,
+            self.loc.lineno,
+            self.function_name,
+            self.source_code_line,
+        )
 
     def __repr__(self):
         if self.loc.filename:
-            return '{}:{}:{}'.format(
-                os.path.split(self.loc.filename)[1], self.loc.lineno,
-                self.loc.col_offset)
-        return '<no file>:{}:{}'.format(self.loc.lineno, self.loc.col_offset)
+            return "{}:{}:{}".format(
+                os.path.split(self.loc.filename)[1],
+                self.loc.lineno,
+                self.loc.col_offset,
+            )
+        return "<no file>:{}:{}".format(self.loc.lineno, self.loc.col_offset)
 
 
 # TODO(mdan): This source map should be a class - easier to refer to.
@@ -117,8 +125,7 @@ def create_source_map(nodes, code, filepath):
                 continue
 
             # Note: the keys are by line only, excluding the column offset.
-            line_loc = LineLocation(
-                final_info.loc.filename, final_info.loc.lineno)
+            line_loc = LineLocation(final_info.loc.filename, final_info.loc.lineno)
 
             existing_origin = source_map.get(line_loc)
             if existing_origin is not None:
@@ -138,29 +145,28 @@ def create_source_map(nodes, code, filepath):
             source_map[line_loc] = origin_info
 
     except ValueError as err:
-        new_msg = 'Inconsistent ASTs detected. This is a bug. Cause: \n'
+        new_msg = "Inconsistent ASTs detected. This is a bug. Cause: \n"
         new_msg += str(err)
-        new_msg += 'Diff:\n'
+        new_msg += "Diff:\n"
 
         for n, rn in zip(nodes, reparsed_nodes):
             nodes_str = pretty_printer.fmt(n, color=False, noanno=True)
-            reparsed_nodes_str = pretty_printer.fmt(
-                rn, color=False, noanno=True)
+            reparsed_nodes_str = pretty_printer.fmt(rn, color=False, noanno=True)
             diff = difflib.context_diff(
-                nodes_str.split('\n'),
-                reparsed_nodes_str.split('\n'),
-                fromfile='Original nodes',
-                tofile='Reparsed nodes',
-                n=7)
-            diff = '\n'.join(diff)
-            new_msg += diff + '\n'
+                nodes_str.split("\n"),
+                reparsed_nodes_str.split("\n"),
+                fromfile="Original nodes",
+                tofile="Reparsed nodes",
+                n=7,
+            )
+            diff = "\n".join(diff)
+            new_msg += diff + "\n"
         raise ValueError(new_msg)
 
     return source_map
 
 
 class _Function(object):
-
     def __init__(self, name):
         self.name = name
 
@@ -168,19 +174,27 @@ class _Function(object):
 class OriginResolver(gast.NodeVisitor):
     """Annotates an AST with additional source information like file name."""
 
-    def __init__(self, root_node, source_lines, comments_map,
-                 context_lineno, context_col_offset,
-                 filepath):
+    def __init__(
+        self,
+        root_node,
+        source_lines,
+        comments_map,
+        context_lineno,
+        context_col_offset,
+        filepath,
+    ):
         self._source_lines = source_lines
         self._comments_map = comments_map
 
-        if (hasattr(root_node, 'decorator_list') and root_node.decorator_list and
-                hasattr(root_node.decorator_list[0], 'lineno')):
+        if (
+            hasattr(root_node, "decorator_list")
+            and root_node.decorator_list
+            and hasattr(root_node.decorator_list[0], "lineno")
+        ):
             # Typical case: functions. The line number of the first decorator
             # is more accurate than the line number of the function itself in
             # 3.8+. In earier versions they coincide.
-            self._lineno_offset = context_lineno - \
-                root_node.decorator_list[0].lineno
+            self._lineno_offset = context_lineno - root_node.decorator_list[0].lineno
         else:
             # Fall back to the line number of the root node.
             self._lineno_offset = context_lineno - root_node.lineno
@@ -206,10 +220,11 @@ class OriginResolver(gast.NodeVisitor):
         source_code_line = self._source_lines[node.lineno - 1]
         comment = self._comments_map.get(node.lineno)
 
-        loc = Location(self._filepath, self._absolute_lineno(node),
-                       self._absolute_col_offset(node))
+        loc = Location(
+            self._filepath, self._absolute_lineno(node), self._absolute_col_offset(node)
+        )
         origin = OriginInfo(loc, function_name, source_code_line, comment)
-        anno.setanno(node, 'lineno', node.lineno)
+        anno.setanno(node, "lineno", node.lineno)
         anno.setanno(node, anno.Basic.ORIGIN, origin)
 
     def visit(self, node):
@@ -218,7 +233,7 @@ class OriginResolver(gast.NodeVisitor):
             entered_function = True
             self._function_stack.append(_Function(node.name))
 
-        if hasattr(node, 'lineno'):
+        if hasattr(node, "lineno"):
             self._attach_origin_info(node)
         self.generic_visit(node)
 
@@ -256,10 +271,15 @@ def resolve(node, source, context_filepath, context_lineno, context_col_offset):
         if tok_type == tokenize.COMMENT:
             comments_map[srow] = tok_string.strip()[1:].strip()
 
-    source_lines = source.split('\n')
-    visitor = OriginResolver(node, source_lines, comments_map,
-                             context_lineno, context_col_offset,
-                             context_filepath)
+    source_lines = source.split("\n")
+    visitor = OriginResolver(
+        node,
+        source_lines,
+        comments_map,
+        context_lineno,
+        context_col_offset,
+        context_filepath,
+    )
     visitor.visit(node)
 
 
