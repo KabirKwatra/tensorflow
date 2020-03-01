@@ -44,61 +44,61 @@ Status DumpToolDataToLogDirectory(StringPiece run_dir,
                                   const string& host_prefix,
                                   const ProfileToolData& tool,
                                   std::ostream* os) {
-    // Don't save the intermediate results for combining the per host tool data.
-    if (absl::EndsWith(tool.name(), kTfStatsHelperSuffix)) return Status::OK();
-    string path = JoinPath(run_dir, absl::StrCat(host_prefix, tool.name()));
-    TF_RETURN_IF_ERROR(WriteStringToFile(Env::Default(), path, tool.data()));
-    if (os) {
-        *os << "Dumped tool data for " << tool.name() << " to " << path
-            << std::endl;
-    }
-    return Status::OK();
+  // Don't save the intermediate results for combining the per host tool data.
+  if (absl::EndsWith(tool.name(), kTfStatsHelperSuffix)) return Status::OK();
+  string path = JoinPath(run_dir, absl::StrCat(host_prefix, tool.name()));
+  TF_RETURN_IF_ERROR(WriteStringToFile(Env::Default(), path, tool.data()));
+  if (os) {
+    *os << "Dumped tool data for " << tool.name() << " to " << path
+        << std::endl;
+  }
+  return Status::OK();
 }
 
 // Creates an empty event file if not already exists, which indicates that we
 // have a plugins/profile/ directory in the current logdir.
 Status MaybeCreateEmptyEventFile(const string& logdir) {
-    // Suffix for an empty event file.  it should be kept in sync with
-    // _EVENT_FILE_SUFFIX in tensorflow/python/eager/profiler.py.
-    constexpr char kProfileEmptySuffix[] = ".profile-empty";
-    std::vector<string> children;
-    TF_RETURN_IF_ERROR(Env::Default()->GetChildren(logdir, &children));
-    for (const string& child : children) {
-        if (absl::EndsWith(child, kProfileEmptySuffix)) {
-            return Status::OK();
-        }
+  // Suffix for an empty event file.  it should be kept in sync with
+  // _EVENT_FILE_SUFFIX in tensorflow/python/eager/profiler.py.
+  constexpr char kProfileEmptySuffix[] = ".profile-empty";
+  std::vector<string> children;
+  TF_RETURN_IF_ERROR(Env::Default()->GetChildren(logdir, &children));
+  for (const string& child : children) {
+    if (absl::EndsWith(child, kProfileEmptySuffix)) {
+      return Status::OK();
     }
-    EventsWriter event_writer(JoinPath(logdir, "events"));
-    return event_writer.InitWithSuffix(kProfileEmptySuffix);
+  }
+  EventsWriter event_writer(JoinPath(logdir, "events"));
+  return event_writer.InitWithSuffix(kProfileEmptySuffix);
 }
 
 }  // namespace
 
 string GetTensorBoardProfilePluginDir(const string& logdir) {
-    constexpr char kPluginName[] = "plugins";
-    constexpr char kProfileName[] = "profile";
-    return JoinPath(logdir, kPluginName, kProfileName);
+  constexpr char kPluginName[] = "plugins";
+  constexpr char kProfileName[] = "profile";
+  return JoinPath(logdir, kPluginName, kProfileName);
 }
 
 Status SaveTensorboardProfile(const string& logdir, const string& run,
                               const string& host,
                               const ProfileResponse& response,
                               std::ostream* os) {
-    // Dumps profile data to <logdir>/plugins/profile/<run>/.
-    string host_prefix = host.empty() ? "" : absl::StrCat(host, ".");
-    string profile_run_dir =
-        JoinPath(GetTensorBoardProfilePluginDir(logdir), run);
-    *os << "Creating directory: " << profile_run_dir;
-    TF_RETURN_IF_ERROR(Env::Default()->RecursivelyCreateDir(profile_run_dir));
+  // Dumps profile data to <logdir>/plugins/profile/<run>/.
+  string host_prefix = host.empty() ? "" : absl::StrCat(host, ".");
+  string profile_run_dir =
+      JoinPath(GetTensorBoardProfilePluginDir(logdir), run);
+  *os << "Creating directory: " << profile_run_dir;
+  TF_RETURN_IF_ERROR(Env::Default()->RecursivelyCreateDir(profile_run_dir));
 
-    // Creates an empty event file so that TensorBoard plugin logic can find
-    // the logdir.
-    TF_RETURN_IF_ERROR(MaybeCreateEmptyEventFile(logdir));
-    for (const auto& tool_data : response.tool_data()) {
-        TF_RETURN_IF_ERROR(DumpToolDataToLogDirectory(profile_run_dir, host_prefix,
-                           tool_data, os));
-    }
-    return Status::OK();
+  // Creates an empty event file so that TensorBoard plugin logic can find
+  // the logdir.
+  TF_RETURN_IF_ERROR(MaybeCreateEmptyEventFile(logdir));
+  for (const auto& tool_data : response.tool_data()) {
+    TF_RETURN_IF_ERROR(DumpToolDataToLogDirectory(profile_run_dir, host_prefix,
+                                                  tool_data, os));
+  }
+  return Status::OK();
 }
 
 }  // namespace profiler
