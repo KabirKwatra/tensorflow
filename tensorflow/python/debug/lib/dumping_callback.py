@@ -69,12 +69,12 @@ class _DumpingCallback(object):
     """An object holding the states surrounding the dumping callback."""
 
     def __init__(
-        self,
-        dump_root,
-        tensor_debug_mode,
-        circular_buffer_size,
-        op_regex,
-        tensor_dtypes,
+            self,
+            dump_root,
+            tensor_debug_mode,
+            circular_buffer_size,
+            op_regex,
+            tensor_dtypes,
     ):
         self._dump_root = dump_root
         self._tensor_debug_mode = tensor_debug_mode
@@ -151,8 +151,8 @@ class _DumpingCallback(object):
         """Get the debug events writer for the currently configured dump root."""
         if not self._writer:
             self._writer = debug_events_writer.DebugEventsWriter(
-                self._dump_root, circular_buffer_size=self._circular_buffer_size
-            )
+                self._dump_root,
+                circular_buffer_size=self._circular_buffer_size)
         return self._writer
 
     def _get_context_id(self, context):
@@ -184,8 +184,7 @@ class _DumpingCallback(object):
                     graph_id=context_id,
                     graph_name=getattr(context, "name", None),
                     outer_context_id=self._get_outer_context_id(context),
-                )
-            )
+                ))
         return self._context_to_id[context]
 
     def _get_outer_context_id(self, graph):
@@ -218,7 +217,8 @@ class _DumpingCallback(object):
         with self._source_file_paths_lock:
             if file_path not in self._source_file_paths:
                 lines = None
-                if source_utils.is_extension_uncompiled_python_source(file_path):
+                if source_utils.is_extension_uncompiled_python_source(
+                        file_path):
                     try:
                         lines, _ = source_utils.load_source(file_path)
                     except IOError as e:
@@ -229,10 +229,9 @@ class _DumpingCallback(object):
                         )
                 writer = self.get_writer()
                 writer.WriteSourceFile(
-                    debug_event_pb2.SourceFile(
-                        file_path=file_path, host_name=self._hostname, lines=lines
-                    )
-                )
+                    debug_event_pb2.SourceFile(file_path=file_path,
+                                               host_name=self._hostname,
+                                               lines=lines))
                 self._source_file_paths.append(file_path)
             return self._source_file_paths.index(file_path)
 
@@ -250,35 +249,30 @@ class _DumpingCallback(object):
         for file_path, lineno, func, _ in stack_frames:
             abs_path = os.path.abspath(file_path)
             if (abs_path, lineno, func) in self._stack_frame_to_id:
-                stack_frame_ids.append(
-                    self._stack_frame_to_id[(abs_path, lineno, func)]
-                )
+                stack_frame_ids.append(self._stack_frame_to_id[(abs_path,
+                                                                lineno, func)])
                 continue
             with self._stack_frame_to_id_lock:
                 if (abs_path, lineno, func) not in self._stack_frame_to_id:
                     stack_frame_id = _get_id()
-                    self._stack_frame_to_id[(abs_path, lineno, func)] = stack_frame_id
+                    self._stack_frame_to_id[(abs_path, lineno,
+                                             func)] = stack_frame_id
                     file_index = self._write_source_file_content(abs_path)
                     file_line_col = graph_debug_info_pb2.GraphDebugInfo.FileLineCol(
-                        file_index=file_index, line=lineno, func=func
-                    )
+                        file_index=file_index, line=lineno, func=func)
                     stack_frame_with_id = debug_event_pb2.StackFrameWithId(
-                        id=stack_frame_id, file_line_col=file_line_col
-                    )
+                        id=stack_frame_id, file_line_col=file_line_col)
                     writer = self.get_writer()
                     writer.WriteStackFrameWithId(stack_frame_with_id)
-                stack_frame_ids.append(
-                    self._stack_frame_to_id[(abs_path, lineno, func)]
-                )
+                stack_frame_ids.append(self._stack_frame_to_id[(abs_path,
+                                                                lineno, func)])
 
         code_location = debug_event_pb2.CodeLocation(
-            host_name=self._hostname, stack_frame_ids=stack_frame_ids
-        )
+            host_name=self._hostname, stack_frame_ids=stack_frame_ids)
         return code_location
 
-    def _process_v1_graph_mode_tensor(
-        self, op_type, tensor, debug_tensor, tensor_debug_mode
-    ):
+    def _process_v1_graph_mode_tensor(self, op_type, tensor, debug_tensor,
+                                      tensor_debug_mode):
         """For V1 graph mode, determine what tensor to output from callback.
 
         Args:
@@ -305,13 +299,11 @@ class _DumpingCallback(object):
             else:
                 identity = array_ops.identity(tensor)
                 identity.op._add_control_input(  # pylint: disable=protected-access
-                    debug_tensor.op
-                )
+                    debug_tensor.op)
                 return identity
 
-    def _instrument_symbolic_tensors(
-        self, tensors, op_type, op_name, tfdbg_context_id, tensor_ids
-    ):
+    def _instrument_symbolic_tensors(self, tensors, op_type, op_name,
+                                     tfdbg_context_id, tensor_ids):
         """Add debugging instrumentation for symbolic (i.e., non-eager) tensors.
 
         The detailed fashion in which the tensors are instrumented is determined
@@ -343,10 +335,8 @@ class _DumpingCallback(object):
         instrumented_tensors = [] if is_v1_graph_mode else None
         if tensor_debug_mode == debug_event_pb2.TensorDebugMode.NO_TENSOR:
             for output_slot, tensor in enumerate(tensors):
-                if (
-                    not self._should_dump_tensor(op_type, tensor.dtype)
-                    or not tensor.dtype.is_numpy_compatible
-                ):
+                if (not self._should_dump_tensor(op_type, tensor.dtype)
+                        or not tensor.dtype.is_numpy_compatible):
                     if is_v1_graph_mode:
                         instrumented_tensors.append(tensor)
                     continue
@@ -371,33 +361,27 @@ class _DumpingCallback(object):
                 if is_v1_graph_mode:
                     instrumented_tensors.append(
                         self._process_v1_graph_mode_tensor(
-                            op_type, tensor, debug_tensor, tensor_debug_mode
-                        )
-                    )
+                            op_type, tensor, debug_tensor, tensor_debug_mode))
             return instrumented_tensors
         elif tensor_debug_mode in (
-            debug_event_pb2.TensorDebugMode.CURT_HEALTH,
-            debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
-            debug_event_pb2.TensorDebugMode.FULL_HEALTH,
-            debug_event_pb2.TensorDebugMode.SHAPE,
+                debug_event_pb2.TensorDebugMode.CURT_HEALTH,
+                debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
+                debug_event_pb2.TensorDebugMode.FULL_HEALTH,
+                debug_event_pb2.TensorDebugMode.SHAPE,
         ):
             for output_slot, tensor in enumerate(tensors):
                 dtype = tensor.dtype
                 dtype_is_dumpable = (
-                    tensor_debug_mode
-                    in (
+                    tensor_debug_mode in (
                         debug_event_pb2.TensorDebugMode.CURT_HEALTH,
                         debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
                         debug_event_pb2.TensorDebugMode.FULL_HEALTH,
-                    )
-                    and dtype.is_floating
-                    or tensor_debug_mode == debug_event_pb2.TensorDebugMode.SHAPE
-                    and (dtype.is_floating or dtype.is_integer or dtype.is_bool)
-                )
-                if (
-                    not self._should_dump_tensor(op_type, tensor.dtype)
-                    or not dtype_is_dumpable
-                ):
+                    ) and dtype.is_floating or
+                    tensor_debug_mode == debug_event_pb2.TensorDebugMode.SHAPE
+                    and
+                    (dtype.is_floating or dtype.is_integer or dtype.is_bool))
+                if (not self._should_dump_tensor(op_type, tensor.dtype)
+                        or not dtype_is_dumpable):
                     if is_v1_graph_mode:
                         instrumented_tensors.append(tensor)
                     continue
@@ -417,16 +401,12 @@ class _DumpingCallback(object):
                 if is_v1_graph_mode:
                     instrumented_tensors.append(
                         self._process_v1_graph_mode_tensor(
-                            op_type, tensor, debug_tensor, tensor_debug_mode
-                        )
-                    )
+                            op_type, tensor, debug_tensor, tensor_debug_mode))
             return instrumented_tensors
         elif tensor_debug_mode == debug_event_pb2.TensorDebugMode.FULL_TENSOR:
             for output_slot, tensor in enumerate(tensors):
-                if (
-                    not self._should_dump_tensor(op_type, tensor.dtype)
-                    or not tensor.dtype.is_numpy_compatible
-                ):
+                if (not self._should_dump_tensor(op_type, tensor.dtype)
+                        or not tensor.dtype.is_numpy_compatible):
                     # Instrumenting DT_VARIANT and DT_RESOURCE type tensors under
                     # V1 graph mode is known to have issues. TODO(cais): Investigate.
                     if is_v1_graph_mode:
@@ -443,23 +423,20 @@ class _DumpingCallback(object):
                 if is_v1_graph_mode:
                     instrumented_tensors.append(
                         self._process_v1_graph_mode_tensor(
-                            op_type, tensor, debug_tensor, tensor_debug_mode
-                        )
-                    )
+                            op_type, tensor, debug_tensor, tensor_debug_mode))
             return instrumented_tensors
         else:
             raise NotImplementedError(
                 "Symbolic tensor instrumentation is not implemented for debug mode "
-                "%s" % self._tensor_debug_mode
-            )
+                "%s" % self._tensor_debug_mode)
 
     def _dump_eager_tensors(
-        self,
-        tensors,
-        op_type,
-        input_tensor_ids,
-        output_tensor_device_ids,
-        graph_id=None,
+            self,
+            tensors,
+            op_type,
+            input_tensor_ids,
+            output_tensor_device_ids,
+            graph_id=None,
     ):
         """Dump the value of eager tensors.
 
@@ -498,11 +475,11 @@ class _DumpingCallback(object):
                 code_location=self._process_stack_frames(),
             )
         elif tensor_debug_mode in (
-            debug_event_pb2.TensorDebugMode.CURT_HEALTH,
-            debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
-            debug_event_pb2.TensorDebugMode.FULL_HEALTH,
-            debug_event_pb2.TensorDebugMode.SHAPE,
-            debug_event_pb2.TensorDebugMode.FULL_TENSOR,
+                debug_event_pb2.TensorDebugMode.CURT_HEALTH,
+                debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
+                debug_event_pb2.TensorDebugMode.FULL_HEALTH,
+                debug_event_pb2.TensorDebugMode.SHAPE,
+                debug_event_pb2.TensorDebugMode.FULL_TENSOR,
         ):
             execution_proto = debug_event_pb2.Execution(
                 op_type=op_type,
@@ -515,14 +492,12 @@ class _DumpingCallback(object):
                 code_location=self._process_stack_frames(),
             )
             for tensor in tensors:
-                if (
-                    self._should_dump_tensor(op_type, tensor.dtype)
-                    and tensor.dtype.is_numpy_compatible
-                ):
+                if (self._should_dump_tensor(op_type, tensor.dtype)
+                        and tensor.dtype.is_numpy_compatible):
                     if tensor_debug_mode in (
-                        debug_event_pb2.TensorDebugMode.CURT_HEALTH,
-                        debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
-                        debug_event_pb2.TensorDebugMode.FULL_HEALTH,
+                            debug_event_pb2.TensorDebugMode.CURT_HEALTH,
+                            debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
+                            debug_event_pb2.TensorDebugMode.FULL_HEALTH,
                     ):
                         if tensor.dtype.is_floating:
                             tensor_proto = _concrete_tensor_to_proto(
@@ -530,30 +505,24 @@ class _DumpingCallback(object):
                                     tensor,
                                     tensor_debug_mode=tensor_debug_mode,
                                     output_dtype=dtypes.float64,
-                                )
-                            )
+                                ))
                         else:
                             # A placeholder for non-floating-type output tensors.
                             tensor_proto = tensor_pb2.TensorProto()
                     elif tensor_debug_mode == debug_event_pb2.TensorDebugMode.SHAPE:
-                        if (
-                            tensor.dtype.is_floating
-                            or tensor.dtype.is_integer
-                            or tensor.dtype.is_bool
-                        ):
+                        if (tensor.dtype.is_floating or tensor.dtype.is_integer
+                                or tensor.dtype.is_bool):
                             tensor_proto = _concrete_tensor_to_proto(
                                 gen_debug_ops.debug_numeric_summary_v2(
                                     tensor,
                                     tensor_debug_mode=tensor_debug_mode,
                                     output_dtype=dtypes.float64,
-                                )
-                            )
+                                ))
                         else:
                             # A placeholder for non-floating-type output tensors.
                             tensor_proto = tensor_pb2.TensorProto()
-                    elif (
-                        tensor_debug_mode == debug_event_pb2.TensorDebugMode.FULL_TENSOR
-                    ):
+                    elif (tensor_debug_mode ==
+                          debug_event_pb2.TensorDebugMode.FULL_TENSOR):
                         tensor_proto = _concrete_tensor_to_proto(tensor)
                     if tensor_proto:
                         execution_proto.tensor_protos.append(tensor_proto)
@@ -561,10 +530,15 @@ class _DumpingCallback(object):
         else:
             raise NotImplementedError(
                 "Tensor instrumentation is not implemented for debug mode %s yet "
-                % self._tensor_debug_mode
-            )
+                % self._tensor_debug_mode)
 
-    def callback(self, op_type, inputs, attrs, outputs, op_name=None, graph=None):
+    def callback(self,
+                 op_type,
+                 inputs,
+                 attrs,
+                 outputs,
+                 op_name=None,
+                 graph=None):
         """Op callback for tracing (dumping) a TF program's execution."""
         del attrs  # Unused
 
@@ -583,11 +557,8 @@ class _DumpingCallback(object):
                 for input_tensor in inputs:
                     # TODO(cais):
                     if input_tensor in self._placeholder_to_debug_tensor and outputs:
-                        outputs[
-                            0
-                        ].op._add_control_input(  # pylint: disable=protected-access
-                            self._placeholder_to_debug_tensor[input_tensor].op
-                        )
+                        outputs[0].op._add_control_input(  # pylint: disable=protected-access
+                            self._placeholder_to_debug_tensor[input_tensor].op)
             graph_op_creation = debug_event_pb2.GraphOpCreation(
                 op_type=op_type,
                 op_name=op_name,
@@ -599,14 +570,10 @@ class _DumpingCallback(object):
                 code_location=self._process_stack_frames(),
             )
             writer.WriteGraphOpCreation(graph_op_creation)
-            if (
-                outputs
-                and compat.as_bytes(op_type)
-                not in op_callbacks_common.OP_CALLBACK_SKIP_OPS
-            ):
+            if (outputs and compat.as_bytes(op_type) not in
+                    op_callbacks_common.OP_CALLBACK_SKIP_OPS):
                 return self._instrument_symbolic_tensors(
-                    outputs, op_type, op_name, context_id, output_tensor_ids
-                )
+                    outputs, op_type, op_name, context_id, output_tensor_ids)
         else:
             op_type_bytes = compat.as_bytes(op_type)
             if op_type_bytes == b"DebugNumericSummaryV2":
@@ -617,11 +584,10 @@ class _DumpingCallback(object):
                 return None
             context_id = self._func_graph_id_from_func_name(op_type)
             input_ids = [t._id for t in inputs]  # pylint:disable=protected-access
-            output_tensor_device_ids = (
-                [writer.RegisterDeviceAndGetId(output.device) for output in outputs]
-                if outputs
-                else []
-            )
+            output_tensor_device_ids = ([
+                writer.RegisterDeviceAndGetId(output.device)
+                for output in outputs
+            ] if outputs else [])
             writer.WriteExecution(
                 self._dump_eager_tensors(
                     outputs,
@@ -629,8 +595,7 @@ class _DumpingCallback(object):
                     input_ids,
                     output_tensor_device_ids,
                     graph_id=context_id,
-                )
-            )
+                ))
 
     def _func_graph_id_from_func_name(self, op_type):
         """Attempt to get the ID of a FuncGraph based on an op type name.
@@ -695,8 +660,7 @@ class _DumpingCallback(object):
         if self._tensor_dtypes:
             if isinstance(self._tensor_dtypes, (list, tuple)):
                 should_dump = should_dump and any(
-                    dtype == dtype_item for dtype_item in self._tensor_dtypes
-                )
+                    dtype == dtype_item for dtype_item in self._tensor_dtypes)
             else:  # A callable that takes a DType argument and return a boolean.
                 should_dump = should_dump and self._tensor_dtypes(dtype)
         return should_dump
@@ -704,11 +668,11 @@ class _DumpingCallback(object):
 
 @tf_export("debugging.experimental.enable_dump_debug_info")
 def enable_dump_debug_info(
-    dump_root,
-    tensor_debug_mode=DEFAULT_TENSOR_DEBUG_MODE,
-    circular_buffer_size=1000,
-    op_regex=None,
-    tensor_dtypes=None,
+        dump_root,
+        tensor_debug_mode=DEFAULT_TENSOR_DEBUG_MODE,
+        circular_buffer_size=1000,
+        op_regex=None,
+        tensor_dtypes=None,
 ):
     """Enable dumping debugging information from a TensorFlow program.
 
@@ -802,31 +766,31 @@ def enable_dump_debug_info(
     if tensor_debug_mode not in tensor_debug_mode_keys:
         raise ValueError(
             "Invalid value in tensor_debug_mode ('%s'). Valid options are: %s"
-            % (tensor_debug_mode, tensor_debug_mode_keys)
-        )
+            % (tensor_debug_mode, tensor_debug_mode_keys))
 
-    tensor_debug_mode = debug_event_pb2.TensorDebugMode.Value(tensor_debug_mode)
+    tensor_debug_mode = debug_event_pb2.TensorDebugMode.Value(
+        tensor_debug_mode)
     if tensor_debug_mode not in (
-        debug_event_pb2.TensorDebugMode.NO_TENSOR,
-        debug_event_pb2.TensorDebugMode.CURT_HEALTH,
-        debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
-        debug_event_pb2.TensorDebugMode.FULL_HEALTH,
-        debug_event_pb2.TensorDebugMode.SHAPE,
-        debug_event_pb2.TensorDebugMode.FULL_TENSOR,
+            debug_event_pb2.TensorDebugMode.NO_TENSOR,
+            debug_event_pb2.TensorDebugMode.CURT_HEALTH,
+            debug_event_pb2.TensorDebugMode.CONCISE_HEALTH,
+            debug_event_pb2.TensorDebugMode.FULL_HEALTH,
+            debug_event_pb2.TensorDebugMode.SHAPE,
+            debug_event_pb2.TensorDebugMode.FULL_TENSOR,
     ):
         raise NotImplementedError(
             "tfdbg dumping: support for tensor debug mode %s is not "
-            "implemented yet" % debug_event_pb2.TensorDebugMode.Name(tensor_debug_mode)
-        )
+            "implemented yet" %
+            debug_event_pb2.TensorDebugMode.Name(tensor_debug_mode))
 
     # Validate the types of tensor_dtypes.
     if tensor_dtypes is not None:
-        if not isinstance(tensor_dtypes, (list, tuple)) and not callable(tensor_dtypes):
+        if not isinstance(tensor_dtypes,
+                          (list, tuple)) and not callable(tensor_dtypes):
             raise ValueError(
                 "If specified, tensor_dtypes is expected to be a list, a tuple, or "
                 "a callable that takes a DType argument and returns a boolean, "
-                "but received %s" % (tensor_dtypes,)
-            )
+                "but received %s" % (tensor_dtypes, ))
         if isinstance(tensor_dtypes, (list, tuple)):
             tensor_dtypes = [
                 dtypes.as_dtype(dtype_item) for dtype_item in tensor_dtypes
@@ -837,27 +801,28 @@ def enable_dump_debug_info(
             raise ValueError(
                 "There is already a dumping callback configured with a different "
                 "circular-buffer size (%d). Therefore the newly request "
-                "circular-buffer size (%d) will not be honored."
-                % (_state.dumping_callback.circular_buffer_size, circular_buffer_size)
-            )
+                "circular-buffer size (%d) will not be honored." %
+                (_state.dumping_callback.circular_buffer_size,
+                 circular_buffer_size))
         if _state.dumping_callback.tensor_debug_mode != tensor_debug_mode:
             raise ValueError(
                 "There is already a dumping callback configured for dump root "
                 "%s with a different "
                 "tensor-debug mode (%s). Therefore the newly request "
-                "tensor-debug mode (%s) size will not be honored."
-                % (
+                "tensor-debug mode (%s) size will not be honored." % (
                     _state.dumping_callback.dump_root,
-                    tensor_debug_mode_keys[_state.dumping_callback.tensor_debug_mode],
+                    tensor_debug_mode_keys[
+                        _state.dumping_callback.tensor_debug_mode],
                     tensor_debug_mode_keys[tensor_debug_mode],
-                )
-            )
+                ))
     else:
-        _state.dumping_callback = _DumpingCallback(
-            dump_root, tensor_debug_mode, circular_buffer_size, op_regex, tensor_dtypes
-        )
+        _state.dumping_callback = _DumpingCallback(dump_root,
+                                                   tensor_debug_mode,
+                                                   circular_buffer_size,
+                                                   op_regex, tensor_dtypes)
         op_callbacks.add_op_callback(_state.dumping_callback.callback)
-        function_lib.add_function_callback(_state.dumping_callback.function_callback)
+        function_lib.add_function_callback(
+            _state.dumping_callback.function_callback)
 
     if _state.dumping_callback.dump_root != dump_root:
         _state.dumping_callback.dump_root = dump_root
@@ -887,7 +852,8 @@ def disable_dump_debug_info():
         dump_root = _state.dumping_callback.dump_root
         debug_events_writer.DebugEventsWriter(dump_root).Close()
         op_callbacks.remove_op_callback(_state.dumping_callback.callback)
-        function_lib.remove_function_callback(_state.dumping_callback.function_callback)
+        function_lib.remove_function_callback(
+            _state.dumping_callback.function_callback)
         delattr(_state, "dumping_callback")
         logging.info(
             "Disabled dumping callback in thread %s (dump root: %s)",
