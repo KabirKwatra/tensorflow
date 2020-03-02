@@ -29,7 +29,7 @@ std::unique_ptr<OpPassBase<FuncOp>> CreateBreakUpIslandsPass();
 // Creates a pass that converts mlir functions consisting of mlir ops into a
 // tf_executor dialect as a single island.
 std::unique_ptr<OpPassBase<FuncOp>>
-CreateFunctionalToExecutorDialectConversionPass();
+                                 CreateFunctionalToExecutorDialectConversionPass();
 
 namespace TF {
 // Transforms functional control flow operations in the standard TensorFlow
@@ -51,9 +51,9 @@ std::unique_ptr<OpPassBase<FuncOp>> CreateTFOptimizePass();
 
 struct LayoutOptimizationPipelineOptions
     : public PassPipelineOptions<LayoutOptimizationPipelineOptions> {
-  Option<std::string> force_data_format{
-      *this, "force-data-format",
-      llvm::cl::desc("Force data format for all layout sensitive ops")};
+    Option<std::string> force_data_format{
+        *this, "force-data-format",
+        llvm::cl::desc("Force data format for all layout sensitive ops")};
 };
 
 // Layout optimization assigns optimal data layout for layout sensitive
@@ -64,9 +64,9 @@ void CreateLayoutOptimizationPipeline(
 
 struct StandardPipelineOptions
     : public PassPipelineOptions<StandardPipelineOptions> {
-  Option<bool> enable_inliner{*this, "enable-inliner",
-                              llvm::cl::desc("Enable inliner."),
-                              llvm::cl::init(false)};
+    Option<bool> enable_inliner{*this, "enable-inliner",
+        llvm::cl::desc("Enable inliner."),
+        llvm::cl::init(false)};
 };
 
 // Propagates the pass manager with the passes involved in transforming or
@@ -93,11 +93,11 @@ LogicalResult MarkFunctionVisibilityUsingEntryFunctionSpecification(
 // Creates a pass that uses tf.entry_function specification to mark function
 // visibility.
 std::unique_ptr<OpPassBase<ModuleOp>>
-CreateMarkFunctionVisibilityUsingEntryFunctionSpecificationPass();
+                                   CreateMarkFunctionVisibilityUsingEntryFunctionSpecificationPass();
 
 // Creates a simple device assignment pass on TF dialect for CoreRT use case.
 std::unique_ptr<OpPassBase<FuncOp>> CreateSimpleTFDeviceAssignmentPass(
-    llvm::StringRef default_device);
+                                     llvm::StringRef default_device);
 
 // Performs resource lifting on the function body to hoist resource variable
 // accesses outside all control flow statements.
@@ -128,13 +128,13 @@ std::unique_ptr<OpPassBase<FuncOp>> CreateTFExecutorIslandCoarseningPass();
 // Creates a pass to merge IslandOps for operation marked for execution on TPU.
 // This is a V1 backward compatibility.
 std::unique_ptr<OpPassBase<ModuleOp>>
-CreateTFExecutorTPUV1IslandCoarseningPass();
+                                   CreateTFExecutorTPUV1IslandCoarseningPass();
 
 // Creates a pass to outlining TPU clusters from single IslandOp into a nested
 // module suitable for being processed as-if it was a V2 module.
 // This is a V1 backward compatibility.
 std::unique_ptr<OpPassBase<ModuleOp>>
-CreateTFExecutorTPUV1IslandOutliningPass();
+                                   CreateTFExecutorTPUV1IslandOutliningPass();
 
 // Creates a pass to inline calls to the nested TPU module, this reverses the
 // effect of the `TFExecutorTPUV1IslandOutlining` pass above.
@@ -245,7 +245,7 @@ std::unique_ptr<OpPassBase<ModuleOp>> CreateOptimizeGlobalTensorsPass();
 // public visibility while the other functions are marked with private
 // visibility.
 std::unique_ptr<OpPassBase<ModuleOp>>
-CreateMarkFunctionVisibilityUsingSavedModelLinkagePass();
+                                   CreateMarkFunctionVisibilityUsingSavedModelLinkagePass();
 
 }  // namespace tf_saved_model
 
