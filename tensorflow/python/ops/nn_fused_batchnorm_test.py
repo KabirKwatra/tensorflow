@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for fused_batch_norm related functionality in tensorflow.ops.nn."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

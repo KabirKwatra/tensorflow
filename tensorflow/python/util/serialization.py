@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Utilities for serializing Python objects."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,8 +21,8 @@ import numpy as np
 import wrapt
 
 from tensorflow.python.framework import tensor_shape
-from tensorflow.python.util.compat import collections_abc
 from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.util.compat import collections_abc
 
 
 def get_json_type(obj):

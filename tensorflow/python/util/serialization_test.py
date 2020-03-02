@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for serialization functions."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -28,7 +27,8 @@ from tensorflow.python.keras.engine import input_layer
 from tensorflow.python.keras.engine import sequential
 from tensorflow.python.keras.engine import training
 from tensorflow.python.keras.layers import core
-from tensorflow.python.keras.utils import losses_utils, generic_utils
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import losses_utils
 from tensorflow.python.platform import test
 from tensorflow.python.util import serialization
 
