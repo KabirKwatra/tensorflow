@@ -27,37 +27,37 @@ limitations under the License.
 namespace tensorflow {
 namespace {
 inline llvm::StringRef StringViewToRef(absl::string_view view) {
-  return {view.data(), view.size()};
+    return {view.data(), view.size()};
 }
 }  // namespace
 
 Status LoadProtoFromBuffer(absl::string_view input,
                            protobuf::MessageLite* proto) {
-  // Attempt to parse as text.
-  if (ParseTextProto(input, "", proto).ok()) return Status::OK();
+    // Attempt to parse as text.
+    if (ParseTextProto(input, "", proto).ok()) return Status::OK();
 
-  // Else attempt to parse as binary.
-  protobuf::io::ArrayInputStream binary_stream(input.data(), input.size());
-  if (proto->ParseFromZeroCopyStream(&binary_stream)) return Status::OK();
+    // Else attempt to parse as binary.
+    protobuf::io::ArrayInputStream binary_stream(input.data(), input.size());
+    if (proto->ParseFromZeroCopyStream(&binary_stream)) return Status::OK();
 
-  LOG(ERROR) << "Error parsing Protobuf";
-  return errors::InvalidArgument("Could not parse input proto");
+    LOG(ERROR) << "Error parsing Protobuf";
+    return errors::InvalidArgument("Could not parse input proto");
 }
 
 Status LoadProtoFromFile(absl::string_view input_filename,
                          protobuf::MessageLite* proto) {
-  const auto file_or_err =
-      llvm::MemoryBuffer::getFileOrSTDIN(StringViewToRef(input_filename));
-  if (std::error_code error = file_or_err.getError()) {
-    return errors::InvalidArgument(
-        "Could not open input file ",
-        string(input_filename.data(), input_filename.size()).c_str());
-  }
+    const auto file_or_err =
+        llvm::MemoryBuffer::getFileOrSTDIN(StringViewToRef(input_filename));
+    if (std::error_code error = file_or_err.getError()) {
+        return errors::InvalidArgument(
+                   "Could not open input file ",
+                   string(input_filename.data(), input_filename.size()).c_str());
+    }
 
-  const auto& input_file = *file_or_err;
-  absl::string_view content(input_file->getBufferStart(),
-                            input_file->getBufferSize());
-  return LoadProtoFromBuffer(content, proto);
+    const auto& input_file = *file_or_err;
+    absl::string_view content(input_file->getBufferStart(),
+                              input_file->getBufferSize());
+    return LoadProtoFromBuffer(content, proto);
 }
 
 }  // namespace tensorflow
