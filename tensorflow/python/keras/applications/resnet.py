@@ -630,7 +630,7 @@ DOC = """
   Optionally loads weights pre-trained on ImageNet.
   Note that the data format convention used by the model is
   the one specified in your Keras config at `~/.keras/keras.json`.
-  
+
   Arguments:
     include_top: whether to include the fully-connected
       layer at the top of the network.
