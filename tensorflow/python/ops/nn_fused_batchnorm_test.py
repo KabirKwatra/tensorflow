@@ -34,7 +34,6 @@ from tensorflow.python.platform import test
 
 
 class BatchNormalizationTest(test.TestCase):
-
     def _batch_norm(self, x, mean, var, offset, scale, epsilon):
         # We compute the batch norm manually in this function because
         # nn_impl.batch_normalization does not support float16 yet.
@@ -44,24 +43,27 @@ class BatchNormalizationTest(test.TestCase):
         return math_ops.cast(y, x.dtype)
 
     def _inference_ref(self, x, scale, offset, mean, var, epsilon, data_format):
-        if data_format not in ['NHWC', 'NCHW']:
-            raise ValueError('data_format must be NCHW or NHWC, '
-                             'got %s.' % data_format)
-        if data_format == 'NCHW':
+        if data_format not in ["NHWC", "NCHW"]:
+            raise ValueError(
+                "data_format must be NCHW or NHWC, " "got %s." % data_format
+            )
+        if data_format == "NCHW":
             x = array_ops.transpose(x, [0, 2, 3, 1])
         y = self._batch_norm(x, mean, var, offset, scale, epsilon)
-        if data_format == 'NCHW':
+        if data_format == "NCHW":
             y = array_ops.transpose(y, [0, 3, 1, 2])
         return self.evaluate(y)
 
-    def _test_inference(self,
-                        x_shape,
-                        x_dtype,
-                        scale_shape,
-                        scale_dtype,
-                        use_gpu=True,
-                        exponential_avg_factor=1.0,
-                        data_format='NHWC'):
+    def _test_inference(
+        self,
+        x_shape,
+        x_dtype,
+        scale_shape,
+        scale_dtype,
+        use_gpu=True,
+        exponential_avg_factor=1.0,
+        data_format="NHWC",
+    ):
         np.random.seed(1)
         x_val = np.random.random_sample(x_shape).astype(x_dtype)
         scale_val = np.random.random_sample(scale_shape).astype(scale_dtype)
@@ -70,11 +72,11 @@ class BatchNormalizationTest(test.TestCase):
         var_val = np.random.random_sample(scale_shape).astype(scale_dtype)
 
         with self.cached_session(use_gpu=use_gpu) as sess:
-            x = constant_op.constant(x_val, name='x')
-            scale = constant_op.constant(scale_val, name='scale')
-            offset = constant_op.constant(offset_val, name='offset')
-            mean = constant_op.constant(mean_val, name='mean')
-            var = constant_op.constant(var_val, name='variance')
+            x = constant_op.constant(x_val, name="x")
+            scale = constant_op.constant(scale_val, name="scale")
+            offset = constant_op.constant(offset_val, name="offset")
+            mean = constant_op.constant(mean_val, name="mean")
+            var = constant_op.constant(var_val, name="variance")
             epsilon = 0.001
             y, _, _ = nn_impl.fused_batch_norm(
                 x,
@@ -85,10 +87,12 @@ class BatchNormalizationTest(test.TestCase):
                 epsilon=epsilon,
                 exponential_avg_factor=exponential_avg_factor,
                 data_format=data_format,
-                is_training=False)
+                is_training=False,
+            )
             y_val = self.evaluate(y)
-            y_ref = self._inference_ref(x, scale, offset, mean, var, epsilon,
-                                        data_format)
+            y_ref = self._inference_ref(
+                x, scale, offset, mean, var, epsilon, data_format
+            )
         # An atol value of 1e-3 is too small for float16's, because some adjacent
         # float16 values that y_val can take are greater than 1e-3 apart, e.g.
         # 2.16602 and 2.16797.
@@ -101,41 +105,55 @@ class BatchNormalizationTest(test.TestCase):
         else:
             return (1.0 - factor) * old_mean + factor * new_val
 
-    def _training_ref(self, x, scale, offset, old_mean, old_var,
-                      exponential_avg_factor, epsilon, data_format):
-        if data_format not in ['NHWC', 'NCHW']:
-            raise ValueError('data_format must be NCHW or NHWC, '
-                             'got %s.' % data_format)
-        if data_format == 'NCHW':
+    def _training_ref(
+        self,
+        x,
+        scale,
+        offset,
+        old_mean,
+        old_var,
+        exponential_avg_factor,
+        epsilon,
+        data_format,
+    ):
+        if data_format not in ["NHWC", "NCHW"]:
+            raise ValueError(
+                "data_format must be NCHW or NHWC, " "got %s." % data_format
+            )
+        if data_format == "NCHW":
             x = array_ops.transpose(x, [0, 2, 3, 1])
         batch_mean, batch_var = nn_impl.moments(
-            math_ops.cast(x, scale.dtype), [0, 1, 2], keep_dims=False)
+            math_ops.cast(x, scale.dtype), [0, 1, 2], keep_dims=False
+        )
 
         y = self._batch_norm(x, batch_mean, batch_var, offset, scale, epsilon)
-        if data_format == 'NCHW':
+        if data_format == "NCHW":
             y = array_ops.transpose(y, [0, 3, 1, 2])
 
         # This is for Bessel's correction. tf.nn.moments uses n, instead of n-1, as
         # the denominator in the formula to calculate variance, while
         # tf.compat.v1.nn.fused_batch_norm has Bessel's correction built in.
         sample_size = math_ops.cast(
-            array_ops.size(x) / array_ops.size(scale), scale.dtype)
-        batch_var_corrected = batch_var * sample_size / (
-            math_ops.maximum(sample_size - 1.0, 1.0))
+            array_ops.size(x) / array_ops.size(scale), scale.dtype
+        )
+        batch_var_corrected = (
+            batch_var * sample_size / (math_ops.maximum(sample_size - 1.0, 1.0))
+        )
 
         mean = self._running_mean(old_mean, batch_mean, exponential_avg_factor)
-        var = self._running_mean(old_var, batch_var_corrected,
-                                 exponential_avg_factor)
+        var = self._running_mean(old_var, batch_var_corrected, exponential_avg_factor)
         return self.evaluate(y), self.evaluate(mean), self.evaluate(var)
 
-    def _test_training(self,
-                       x_shape,
-                       x_dtype,
-                       scale_shape,
-                       scale_dtype,
-                       use_gpu=True,
-                       exponential_avg_factor=1.0,
-                       data_format='NHWC'):
+    def _test_training(
+        self,
+        x_shape,
+        x_dtype,
+        scale_shape,
+        scale_dtype,
+        use_gpu=True,
+        exponential_avg_factor=1.0,
+        data_format="NHWC",
+    ):
         np.random.seed(1)
         x_val = np.random.random_sample(x_shape).astype(x_dtype)
         scale_val = np.random.random_sample(scale_shape).astype(scale_dtype)
@@ -144,15 +162,13 @@ class BatchNormalizationTest(test.TestCase):
             old_mean_val = None
             old_var_val = None
         else:
-            old_mean_val = np.random.random_sample(
-                scale_shape).astype(scale_dtype)
-            old_var_val = np.random.random_sample(
-                scale_shape).astype(scale_dtype)
+            old_mean_val = np.random.random_sample(scale_shape).astype(scale_dtype)
+            old_var_val = np.random.random_sample(scale_shape).astype(scale_dtype)
 
         with self.cached_session(use_gpu=use_gpu) as sess:
-            x = constant_op.constant(x_val, name='x')
-            scale = constant_op.constant(scale_val, name='scale')
-            offset = constant_op.constant(offset_val, name='offset')
+            x = constant_op.constant(x_val, name="x")
+            scale = constant_op.constant(scale_val, name="scale")
+            offset = constant_op.constant(offset_val, name="offset")
             epsilon = 0.001
             y, mean, var = nn_impl.fused_batch_norm(
                 x,
@@ -163,12 +179,19 @@ class BatchNormalizationTest(test.TestCase):
                 epsilon=epsilon,
                 exponential_avg_factor=exponential_avg_factor,
                 data_format=data_format,
-                is_training=True)
+                is_training=True,
+            )
             y_val, mean_val, var_val = self.evaluate([y, mean, var])
-            y_ref, mean_ref, var_ref = self._training_ref(x, scale, offset,
-                                                          old_mean_val, old_var_val,
-                                                          exponential_avg_factor,
-                                                          epsilon, data_format)
+            y_ref, mean_ref, var_ref = self._training_ref(
+                x,
+                scale,
+                offset,
+                old_mean_val,
+                old_var_val,
+                exponential_avg_factor,
+                epsilon,
+                data_format,
+            )
         y_atol = 2e-3 if x_dtype == np.float16 else 1e-3
         self.assertAllClose(y_ref, y_val, atol=y_atol)
         self.assertAllClose(mean_ref, mean_val, atol=1e-3)
@@ -202,41 +225,43 @@ class BatchNormalizationTest(test.TestCase):
         # TODO(reedwm): Do not perform the unnecessary computations in
         # compute_gradient, since they double the computation time of this function.
         theoretical_grad, _ = gradient_checker.compute_gradient(
-            x, x_shape, y, y_shape, delta=1e-3, x_init_value=x_init_val)
+            x, x_shape, y, y_shape, delta=1e-3, x_init_value=x_init_val
+        )
         _, numerical_grad = gradient_checker.compute_gradient(
-            x32, x_shape, y32, y_shape, delta=1e-3, x_init_value=x32_init_val)
+            x32, x_shape, y32, y_shape, delta=1e-3, x_init_value=x32_init_val
+        )
 
         # If grad is empty, no error.
         if theoretical_grad.size == 0 and numerical_grad.size == 0:
             return 0
         return np.fabs(theoretical_grad - numerical_grad).max()
 
-    def _test_gradient(self,
-                       x_shape,
-                       x_dtype,
-                       scale_shape,
-                       scale_dtype,
-                       use_gpu=True,
-                       exponential_avg_factor=1.0,
-                       data_format='NHWC',
-                       is_training=True):
+    def _test_gradient(
+        self,
+        x_shape,
+        x_dtype,
+        scale_shape,
+        scale_dtype,
+        use_gpu=True,
+        exponential_avg_factor=1.0,
+        data_format="NHWC",
+        is_training=True,
+    ):
         np.random.seed(1)
         x_val = np.random.random_sample(x_shape).astype(x_dtype)
         scale_val = np.random.random_sample(scale_shape).astype(scale_dtype)
         offset_val = np.random.random_sample(scale_shape).astype(scale_dtype)
 
         with self.cached_session(use_gpu=use_gpu):
-            x = constant_op.constant(x_val, name='x')
-            scale = constant_op.constant(scale_val, name='scale')
-            offset = constant_op.constant(offset_val, name='offset')
+            x = constant_op.constant(x_val, name="x")
+            scale = constant_op.constant(scale_val, name="scale")
+            offset = constant_op.constant(offset_val, name="offset")
             if is_training and exponential_avg_factor == 1.0:
                 pop_mean = None
                 pop_var = None
             else:
-                pop_mean = np.random.random_sample(
-                    scale_shape).astype(scale_dtype)
-                pop_var = np.random.random_sample(
-                    scale_shape).astype(scale_dtype)
+                pop_mean = np.random.random_sample(scale_shape).astype(scale_dtype)
+                pop_var = np.random.random_sample(scale_shape).astype(scale_dtype)
             y, _, _ = nn_impl.fused_batch_norm(
                 x,
                 scale,
@@ -245,17 +270,18 @@ class BatchNormalizationTest(test.TestCase):
                 variance=pop_var,
                 exponential_avg_factor=exponential_avg_factor,
                 data_format=data_format,
-                is_training=is_training)
+                is_training=is_training,
+            )
             if x_dtype != np.float16:
-                err_x = gradient_checker.compute_gradient_error(
-                    x, x_shape, y, x_shape)
+                err_x = gradient_checker.compute_gradient_error(x, x_shape, y, x_shape)
                 err_scale = gradient_checker.compute_gradient_error(
-                    scale, scale_shape, y, x_shape)
+                    scale, scale_shape, y, x_shape
+                )
                 err_offset = gradient_checker.compute_gradient_error(
-                    offset, scale_shape, y, x_shape)
+                    offset, scale_shape, y, x_shape
+                )
             else:
-                x32 = constant_op.constant(
-                    x_val, name='x32', dtype=dtypes.float32)
+                x32 = constant_op.constant(x_val, name="x32", dtype=dtypes.float32)
                 y32, _, _ = nn_impl.fused_batch_norm(
                     x32,
                     scale,
@@ -264,13 +290,17 @@ class BatchNormalizationTest(test.TestCase):
                     variance=pop_var,
                     data_format=data_format,
                     exponential_avg_factor=exponential_avg_factor,
-                    is_training=is_training)
-                err_x = self._compute_gradient_error_float16(x, x32, x_shape, y, y32,
-                                                             x_shape)
+                    is_training=is_training,
+                )
+                err_x = self._compute_gradient_error_float16(
+                    x, x32, x_shape, y, y32, x_shape
+                )
                 err_scale = self._compute_gradient_error_float16(
-                    scale, scale, scale_shape, y, y32, x_shape)
+                    scale, scale, scale_shape, y, y32, x_shape
+                )
                 err_offset = self._compute_gradient_error_float16(
-                    offset, offset, scale_shape, y, y32, x_shape)
+                    offset, offset, scale_shape, y, y32, x_shape
+                )
 
         x_err_tolerance = 2e-3 if x_dtype == np.float16 else 1e-3
         scale_err_tolerance = 1e-3
@@ -278,16 +308,18 @@ class BatchNormalizationTest(test.TestCase):
         self.assertLess(err_scale, scale_err_tolerance)
         self.assertLess(err_offset, scale_err_tolerance)
 
-    def _test_grad_grad(self,
-                        x_shape,
-                        x_dtype,
-                        scale_shape,
-                        scale_dtype,
-                        use_gpu=True,
-                        exponential_avg_factor=1.0,
-                        data_format='NHWC',
-                        is_training=True,
-                        err_tolerance=1e-3):
+    def _test_grad_grad(
+        self,
+        x_shape,
+        x_dtype,
+        scale_shape,
+        scale_dtype,
+        use_gpu=True,
+        exponential_avg_factor=1.0,
+        data_format="NHWC",
+        is_training=True,
+        err_tolerance=1e-3,
+    ):
         np.random.seed(1)
         x_val = np.random.random_sample(x_shape).astype(x_dtype)
         grad_y_val = np.random.random_sample(x_shape).astype(x_dtype)
@@ -295,18 +327,16 @@ class BatchNormalizationTest(test.TestCase):
         offset_val = np.random.random_sample(scale_shape).astype(scale_dtype)
 
         with self.cached_session(use_gpu=use_gpu) as sess:
-            x = constant_op.constant(x_val, name='x')
-            grad_y = constant_op.constant(grad_y_val, name='grad_y')
-            scale = constant_op.constant(scale_val, name='scale')
-            offset = constant_op.constant(offset_val, name='offset')
+            x = constant_op.constant(x_val, name="x")
+            grad_y = constant_op.constant(grad_y_val, name="grad_y")
+            scale = constant_op.constant(scale_val, name="scale")
+            offset = constant_op.constant(offset_val, name="offset")
             if is_training and exponential_avg_factor == 1.0:
                 pop_mean = None
                 pop_var = None
             else:
-                pop_mean = np.random.random_sample(
-                    scale_shape).astype(scale_dtype)
-                pop_var = np.random.random_sample(
-                    scale_shape).astype(scale_dtype)
+                pop_mean = np.random.random_sample(scale_shape).astype(scale_dtype)
+                pop_var = np.random.random_sample(scale_shape).astype(scale_dtype)
             y, _, _ = nn_impl.fused_batch_norm(
                 x,
                 scale,
@@ -315,42 +345,50 @@ class BatchNormalizationTest(test.TestCase):
                 variance=pop_var,
                 exponential_avg_factor=exponential_avg_factor,
                 data_format=data_format,
-                is_training=is_training)
+                is_training=is_training,
+            )
             grad_x, grad_scale, grad_offset = gradients_impl.gradients(
-                y, [x, scale, offset], grad_y)
+                y, [x, scale, offset], grad_y
+            )
 
             if is_training:
-                epsilon = y.op.get_attr('epsilon')
-                data_format = y.op.get_attr('data_format')
+                epsilon = y.op.get_attr("epsilon")
+                data_format = y.op.get_attr("data_format")
                 grad_vals = self.evaluate([grad_x, grad_scale, grad_offset])
-                grad_internal = nn_grad._BatchNormGrad(grad_y, x, scale, pop_mean,
-                                                       pop_var, epsilon, data_format)
+                grad_internal = nn_grad._BatchNormGrad(
+                    grad_y, x, scale, pop_mean, pop_var, epsilon, data_format
+                )
                 grad_internal_vals = self.evaluate(list(grad_internal))
                 for grad_val, grad_internal_val in zip(grad_vals, grad_internal_vals):
-                    self.assertAllClose(
-                        grad_val, grad_internal_val, atol=err_tolerance)
+                    self.assertAllClose(grad_val, grad_internal_val, atol=err_tolerance)
 
             if x_dtype != np.float16:
                 err_grad_grad_y_1 = gradient_checker.compute_gradient_error(
-                    grad_y, x_shape, grad_x, x_shape)
+                    grad_y, x_shape, grad_x, x_shape
+                )
                 err_grad_grad_y_2 = gradient_checker.compute_gradient_error(
-                    grad_y, x_shape, grad_scale, scale_shape)
+                    grad_y, x_shape, grad_scale, scale_shape
+                )
                 err_grad_grad_y_3 = gradient_checker.compute_gradient_error(
-                    grad_y, x_shape, grad_offset, scale_shape)
+                    grad_y, x_shape, grad_offset, scale_shape
+                )
                 # In freeze mode, grad_x is not a function of x.
                 if is_training:
                     err_grad_x_1 = gradient_checker.compute_gradient_error(
-                        x, x_shape, grad_x, x_shape)
+                        x, x_shape, grad_x, x_shape
+                    )
                 err_grad_x_2 = gradient_checker.compute_gradient_error(
-                    x, x_shape, grad_scale, scale_shape)
+                    x, x_shape, grad_scale, scale_shape
+                )
 
                 err_grad_scale = gradient_checker.compute_gradient_error(
-                    scale, scale_shape, grad_x, x_shape)
+                    scale, scale_shape, grad_x, x_shape
+                )
             else:
-                x32 = constant_op.constant(
-                    x_val, dtype=dtypes.float32, name='x32')
+                x32 = constant_op.constant(x_val, dtype=dtypes.float32, name="x32")
                 grad_y32 = constant_op.constant(
-                    grad_y_val, dtype=dtypes.float32, name='grad_y32')
+                    grad_y_val, dtype=dtypes.float32, name="grad_y32"
+                )
                 y32, _, _ = nn_impl.fused_batch_norm(
                     x32,
                     scale,
@@ -359,24 +397,32 @@ class BatchNormalizationTest(test.TestCase):
                     variance=pop_var,
                     exponential_avg_factor=exponential_avg_factor,
                     data_format=data_format,
-                    is_training=is_training)
+                    is_training=is_training,
+                )
                 grad_x32, grad_scale32, grad_offset32 = gradients_impl.gradients(
-                    y32, [x32, scale, offset], grad_y32)
+                    y32, [x32, scale, offset], grad_y32
+                )
                 err_grad_grad_y_1 = self._compute_gradient_error_float16(
-                    grad_y, grad_y32, x_shape, grad_x, grad_x32, x_shape)
+                    grad_y, grad_y32, x_shape, grad_x, grad_x32, x_shape
+                )
                 err_grad_grad_y_2 = self._compute_gradient_error_float16(
-                    grad_y, grad_y32, x_shape, grad_scale, grad_scale32, scale_shape)
+                    grad_y, grad_y32, x_shape, grad_scale, grad_scale32, scale_shape
+                )
                 err_grad_grad_y_3 = self._compute_gradient_error_float16(
-                    grad_y, grad_y32, x_shape, grad_offset, grad_offset32, scale_shape)
+                    grad_y, grad_y32, x_shape, grad_offset, grad_offset32, scale_shape
+                )
                 # In freeze mode, grad_x is not a function of x.
                 if is_training:
                     err_grad_x_1 = self._compute_gradient_error_float16(
-                        x, x32, x_shape, grad_x, grad_x32, x_shape)
+                        x, x32, x_shape, grad_x, grad_x32, x_shape
+                    )
                 err_grad_x_2 = self._compute_gradient_error_float16(
-                    x, x32, x_shape, grad_scale, grad_scale32, scale_shape)
+                    x, x32, x_shape, grad_scale, grad_scale32, scale_shape
+                )
 
                 err_grad_scale = self._compute_gradient_error_float16(
-                    scale, scale, scale_shape, grad_x, grad_x32, x_shape)
+                    scale, scale, scale_shape, grad_x, grad_x32, x_shape
+                )
 
         self.assertLess(err_grad_grad_y_1, err_tolerance)
         self.assertLess(err_grad_grad_y_2, err_tolerance)
@@ -399,8 +445,8 @@ class BatchNormalizationTest(test.TestCase):
             ]
         for dtype in [np.float16, np.float32]:
             for use_gpu in use_gpu_vals:
-                for data_format in ['NHWC', 'NCHW']:
-                    if data_format == 'NHWC':
+                for data_format in ["NHWC", "NCHW"]:
+                    if data_format == "NHWC":
                         scale_shape = x_shape[-1:]
                     else:
                         scale_shape = x_shape[1:2]
@@ -414,7 +460,8 @@ class BatchNormalizationTest(test.TestCase):
                                 use_gpu=use_gpu,
                                 data_format=data_format,
                                 is_training=is_training,
-                                exponential_avg_factor=exponential_avg_factor)
+                                exponential_avg_factor=exponential_avg_factor,
+                            )
                         else:
                             if is_training:
                                 self._test_training(
@@ -424,7 +471,8 @@ class BatchNormalizationTest(test.TestCase):
                                     np.float32,
                                     use_gpu=use_gpu,
                                     data_format=data_format,
-                                    exponential_avg_factor=exponential_avg_factor)
+                                    exponential_avg_factor=exponential_avg_factor,
+                                )
                             else:
                                 self._test_inference(
                                     x_shape,
@@ -433,7 +481,8 @@ class BatchNormalizationTest(test.TestCase):
                                     np.float32,
                                     use_gpu=use_gpu,
                                     data_format=data_format,
-                                    exponential_avg_factor=exponential_avg_factor)
+                                    exponential_avg_factor=exponential_avg_factor,
+                                )
 
     def testInferenceShape1(self):
         x_shape = [1, 1, 6, 1]
@@ -471,7 +520,7 @@ class BatchNormalizationTest(test.TestCase):
         x_shape = [27, 131, 127, 6]
         self._runtests(x_shape, True)
 
-    @test_util.disable_xla('b/141236973: Empty inputs wrong on CPU.')
+    @test_util.disable_xla("b/141236973: Empty inputs wrong on CPU.")
     def testTrainingShape5(self):
         x_shape = [0, 131, 127, 6]
         self._runtests(x_shape, True)
@@ -497,7 +546,7 @@ class BatchNormalizationTest(test.TestCase):
         self._runtests(x_shape, is_training=False, gradient_test=True)
 
     @test_util.run_deprecated_v1
-    @test_util.disable_xla('This test never passed for XLA')
+    @test_util.disable_xla("This test never passed for XLA")
     def testBatchNormGradInferenceShape5(self):
         x_shape = [0, 7, 11, 4]
         self._runtests(x_shape, is_training=False, gradient_test=True)
@@ -523,86 +572,94 @@ class BatchNormalizationTest(test.TestCase):
         self._runtests(x_shape, is_training=True, gradient_test=True)
 
     @test_util.run_deprecated_v1
-    @test_util.disable_xla('This test never passed for XLA')
+    @test_util.disable_xla("This test never passed for XLA")
     def testBatchNormGradTrainingShape5(self):
         x_shape = [0, 7, 11, 4]
         self._runtests(x_shape, is_training=True, gradient_test=True)
 
     def _testBatchNormGradGrad(self, config):
-        shape = config['shape']
-        err_tolerance = config['err_tolerance']
-        dtype = config['dtype']
+        shape = config["shape"]
+        err_tolerance = config["err_tolerance"]
+        dtype = config["dtype"]
         for is_training in [True, False]:
             if test.is_gpu_available(cuda_only=True):
                 self._test_grad_grad(
                     shape,
-                    dtype, [shape[3]],
+                    dtype,
+                    [shape[3]],
                     np.float32,
                     use_gpu=True,
-                    data_format='NHWC',
+                    data_format="NHWC",
                     is_training=is_training,
-                    err_tolerance=err_tolerance)
+                    err_tolerance=err_tolerance,
+                )
                 self._test_grad_grad(
                     shape,
-                    dtype, [shape[1]],
+                    dtype,
+                    [shape[1]],
                     np.float32,
                     use_gpu=True,
-                    data_format='NCHW',
+                    data_format="NCHW",
                     is_training=is_training,
-                    err_tolerance=err_tolerance)
+                    err_tolerance=err_tolerance,
+                )
             self._test_grad_grad(
                 shape,
-                dtype, [shape[3]],
+                dtype,
+                [shape[3]],
                 np.float32,
                 use_gpu=False,
-                data_format='NHWC',
+                data_format="NHWC",
                 is_training=is_training,
-                err_tolerance=err_tolerance)
+                err_tolerance=err_tolerance,
+            )
             self._test_grad_grad(
                 shape,
-                dtype, [shape[1]],
+                dtype,
+                [shape[1]],
                 np.float32,
                 use_gpu=False,
-                data_format='NCHW',
+                data_format="NCHW",
                 is_training=is_training,
-                err_tolerance=err_tolerance)
+                err_tolerance=err_tolerance,
+            )
 
     @test_util.run_deprecated_v1
     def testBatchNormGradGradConfig1(self):
         config = {
-            'shape': [2, 3, 4, 5],
-            'err_tolerance': 1e-2,
-            'dtype': np.float32,
+            "shape": [2, 3, 4, 5],
+            "err_tolerance": 1e-2,
+            "dtype": np.float32,
         }
         self._testBatchNormGradGrad(config)
 
     @test_util.run_deprecated_v1
     def testBatchNormGradGradConfig2(self):
         config = {
-            'shape': [2, 3, 2, 2],
-            'err_tolerance': 1e-3,
-            'dtype': np.float32,
+            "shape": [2, 3, 2, 2],
+            "err_tolerance": 1e-3,
+            "dtype": np.float32,
         }
         self._testBatchNormGradGrad(config)
 
     @test_util.run_deprecated_v1
     def testBatchNormGradGradConfig3(self):
         config = {
-            'shape': [2, 3, 4, 5],
-            'err_tolerance': 2e-2,
-            'dtype': np.float16,
+            "shape": [2, 3, 4, 5],
+            "err_tolerance": 2e-2,
+            "dtype": np.float16,
         }
         self._testBatchNormGradGrad(config)
 
     @test_util.run_deprecated_v1
     def testBatchNormGradGradConfig4(self):
         config = {
-            'shape': [2, 3, 2, 2],
-            'err_tolerance': 2e-3,
-            'dtype': np.float16,
+            "shape": [2, 3, 2, 2],
+            "err_tolerance": 2e-3,
+            "dtype": np.float16,
         }
         self._testBatchNormGradGrad(config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

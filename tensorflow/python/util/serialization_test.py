@@ -34,18 +34,19 @@ from tensorflow.python.util import serialization
 
 
 class SerializationTests(test.TestCase):
-
     def test_serialize_dense(self):
         dense = core.Dense(3)
-        dense(constant_op.constant([[4.]]))
-        round_trip = json.loads(json.dumps(
-            dense, default=serialization.get_json_type))
+        dense(constant_op.constant([[4.0]]))
+        round_trip = json.loads(json.dumps(dense, default=serialization.get_json_type))
         self.assertEqual(3, round_trip["config"]["units"])
 
     def test_serialize_shape(self):
-        round_trip = json.loads(json.dumps(
-            tensor_shape.TensorShape([None, 2, 3]),
-            default=serialization.get_json_type))
+        round_trip = json.loads(
+            json.dumps(
+                tensor_shape.TensorShape([None, 2, 3]),
+                default=serialization.get_json_type,
+            )
+        )
         self.assertIs(round_trip[0], None)
         self.assertEqual(round_trip[1], 2)
 
@@ -54,22 +55,24 @@ class SerializationTests(test.TestCase):
         model = sequential.Sequential()
         model.add(core.Dense(4))
         model.add(core.Dense(5))
-        model(constant_op.constant([[1.]]))
+        model(constant_op.constant([[1.0]]))
         sequential_round_trip = json.loads(
-            json.dumps(model, default=serialization.get_json_type))
+            json.dumps(model, default=serialization.get_json_type)
+        )
         self.assertEqual(
-            5, sequential_round_trip["config"]["layers"][1]["config"]["units"])
+            5, sequential_round_trip["config"]["layers"][1]["config"]["units"]
+        )
 
     @test_util.run_in_graph_and_eager_modes
     def test_serialize_model(self):
         x = input_layer.Input(shape=[3])
         y = core.Dense(10)(x)
         model = training.Model(x, y)
-        model(constant_op.constant([[1., 1., 1.]]))
+        model(constant_op.constant([[1.0, 1.0, 1.0]]))
         model_round_trip = json.loads(
-            json.dumps(model, default=serialization.get_json_type))
-        self.assertEqual(
-            10, model_round_trip["config"]["layers"][1]["config"]["units"])
+            json.dumps(model, default=serialization.get_json_type)
+        )
+        self.assertEqual(10, model_round_trip["config"]["layers"][1]["config"]["units"])
 
     @test_util.run_in_graph_and_eager_modes
     def test_serialize_custom_model_compile(self):
@@ -94,14 +97,16 @@ class SerializationTests(test.TestCase):
             x = input_layer.Input(shape=[3])
             y = core.Dense(10)(x)
             model = training.Model(x, y)
-            model.compile(
-                loss=DummySparseCategoricalCrossentropyLoss(from_logits=True))
+            model.compile(loss=DummySparseCategoricalCrossentropyLoss(from_logits=True))
             model_round_trip = json.loads(
-                json.dumps(model.loss, default=serialization.get_json_type))
+                json.dumps(model.loss, default=serialization.get_json_type)
+            )
 
             # check if class name with package scope
-            self.assertEqual("dummy-package>DummySparseCategoricalCrossentropyLoss",
-                             model_round_trip["class_name"])
+            self.assertEqual(
+                "dummy-package>DummySparseCategoricalCrossentropyLoss",
+                model_round_trip["class_name"],
+            )
 
             # check if configure is correctly
             self.assertEqual(True, model_round_trip["config"]["from_logits"])
