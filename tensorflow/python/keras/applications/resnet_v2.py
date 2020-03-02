@@ -23,17 +23,16 @@ from tensorflow.python.keras.applications import resnet
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export(
-    "keras.applications.resnet_v2.ResNet50V2", "keras.applications.ResNet50V2"
-)
+@keras_export("keras.applications.resnet_v2.ResNet50V2",
+              "keras.applications.ResNet50V2")
 def ResNet50V2(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    classifier_activation="softmax",
+        include_top=True,
+        weights="imagenet",
+        input_tensor=None,
+        input_shape=None,
+        pooling=None,
+        classes=1000,
+        classifier_activation="softmax",
 ):
     """Instantiates the ResNet50V2 architecture."""
 
@@ -58,17 +57,16 @@ def ResNet50V2(
     )
 
 
-@keras_export(
-    "keras.applications.resnet_v2.ResNet101V2", "keras.applications.ResNet101V2"
-)
+@keras_export("keras.applications.resnet_v2.ResNet101V2",
+              "keras.applications.ResNet101V2")
 def ResNet101V2(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    classifier_activation="softmax",
+        include_top=True,
+        weights="imagenet",
+        input_tensor=None,
+        input_shape=None,
+        pooling=None,
+        classes=1000,
+        classifier_activation="softmax",
 ):
     """Instantiates the ResNet101V2 architecture."""
 
@@ -93,17 +91,16 @@ def ResNet101V2(
     )
 
 
-@keras_export(
-    "keras.applications.resnet_v2.ResNet152V2", "keras.applications.ResNet152V2"
-)
+@keras_export("keras.applications.resnet_v2.ResNet152V2",
+              "keras.applications.ResNet152V2")
 def ResNet152V2(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    classifier_activation="softmax",
+        include_top=True,
+        weights="imagenet",
+        input_tensor=None,
+        input_shape=None,
+        pooling=None,
+        classes=1000,
+        classifier_activation="softmax",
 ):
     """Instantiates the ResNet152V2 architecture."""
 
@@ -141,7 +138,9 @@ def preprocess_input(x, data_format=None):
     Raises
       ValueError: In case of unknown `data_format` argument.
     """
-    return imagenet_utils.preprocess_input(x, data_format=data_format, mode="tf")
+    return imagenet_utils.preprocess_input(x,
+                                           data_format=data_format,
+                                           mode="tf")
 
 
 @keras_export("keras.applications.resnet_v2.decode_predictions")
@@ -164,8 +163,7 @@ def decode_predictions(preds, top=5):
 
 
 preprocess_input.__doc__ = imagenet_utils.PREPROCESS_INPUT_DOC.format(
-    mode="", ret=imagenet_utils.PREPROCESS_INPUT_RET_DOC_CAFFE
-)
+    mode="", ret=imagenet_utils.PREPROCESS_INPUT_RET_DOC_CAFFE)
 decode_predictions.__doc__ = imagenet_utils.decode_predictions.__doc__
 
 DOC = """

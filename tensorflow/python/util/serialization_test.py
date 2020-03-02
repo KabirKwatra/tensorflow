@@ -37,7 +37,8 @@ class SerializationTests(test.TestCase):
     def test_serialize_dense(self):
         dense = core.Dense(3)
         dense(constant_op.constant([[4.0]]))
-        round_trip = json.loads(json.dumps(dense, default=serialization.get_json_type))
+        round_trip = json.loads(
+            json.dumps(dense, default=serialization.get_json_type))
         self.assertEqual(3, round_trip["config"]["units"])
 
     def test_serialize_shape(self):
@@ -45,8 +46,7 @@ class SerializationTests(test.TestCase):
             json.dumps(
                 tensor_shape.TensorShape([None, 2, 3]),
                 default=serialization.get_json_type,
-            )
-        )
+            ))
         self.assertIs(round_trip[0], None)
         self.assertEqual(round_trip[1], 2)
 
@@ -57,11 +57,9 @@ class SerializationTests(test.TestCase):
         model.add(core.Dense(5))
         model(constant_op.constant([[1.0]]))
         sequential_round_trip = json.loads(
-            json.dumps(model, default=serialization.get_json_type)
-        )
+            json.dumps(model, default=serialization.get_json_type))
         self.assertEqual(
-            5, sequential_round_trip["config"]["layers"][1]["config"]["units"]
-        )
+            5, sequential_round_trip["config"]["layers"][1]["config"]["units"])
 
     @test_util.run_in_graph_and_eager_modes
     def test_serialize_model(self):
@@ -70,37 +68,39 @@ class SerializationTests(test.TestCase):
         model = training.Model(x, y)
         model(constant_op.constant([[1.0, 1.0, 1.0]]))
         model_round_trip = json.loads(
-            json.dumps(model, default=serialization.get_json_type)
-        )
-        self.assertEqual(10, model_round_trip["config"]["layers"][1]["config"]["units"])
+            json.dumps(model, default=serialization.get_json_type))
+        self.assertEqual(
+            10, model_round_trip["config"]["layers"][1]["config"]["units"])
 
     @test_util.run_in_graph_and_eager_modes
     def test_serialize_custom_model_compile(self):
         with generic_utils.custom_object_scope():
 
             @generic_utils.register_keras_serializable(package="dummy-package")
-            class DummySparseCategoricalCrossentropyLoss(losses.LossFunctionWrapper):
+            class DummySparseCategoricalCrossentropyLoss(
+                    losses.LossFunctionWrapper):
                 # This loss is identical equal to tf.keras.losses.SparseCategoricalCrossentropy
                 def __init__(
-                    self,
-                    from_logits=False,
-                    reduction=losses_utils.ReductionV2.AUTO,
-                    name="dummy_sparse_categorical_crossentropy_loss",
+                        self,
+                        from_logits=False,
+                        reduction=losses_utils.ReductionV2.AUTO,
+                        name="dummy_sparse_categorical_crossentropy_loss",
                 ):
-                    super(DummySparseCategoricalCrossentropyLoss, self).__init__(
-                        losses.sparse_categorical_crossentropy,
-                        name=name,
-                        reduction=reduction,
-                        from_logits=from_logits,
-                    )
+                    super(DummySparseCategoricalCrossentropyLoss,
+                          self).__init__(
+                              losses.sparse_categorical_crossentropy,
+                              name=name,
+                              reduction=reduction,
+                              from_logits=from_logits,
+                          )
 
             x = input_layer.Input(shape=[3])
             y = core.Dense(10)(x)
             model = training.Model(x, y)
-            model.compile(loss=DummySparseCategoricalCrossentropyLoss(from_logits=True))
+            model.compile(loss=DummySparseCategoricalCrossentropyLoss(
+                from_logits=True))
             model_round_trip = json.loads(
-                json.dumps(model.loss, default=serialization.get_json_type)
-            )
+                json.dumps(model.loss, default=serialization.get_json_type))
 
             # check if class name with package scope
             self.assertEqual(
