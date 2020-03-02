@@ -34,26 +34,26 @@ def ResNet50V2(
     classes=1000,
     classifier_activation='softmax',
 ):
-  """Instantiates the ResNet50V2 architecture."""
-  def stack_fn(x):
-    x = resnet.stack2(x, 64, 3, name='conv2')
-    x = resnet.stack2(x, 128, 4, name='conv3')
-    x = resnet.stack2(x, 256, 6, name='conv4')
-    return resnet.stack2(x, 512, 3, stride1=1, name='conv5')
+    """Instantiates the ResNet50V2 architecture."""
+    def stack_fn(x):
+        x = resnet.stack2(x, 64, 3, name='conv2')
+        x = resnet.stack2(x, 128, 4, name='conv3')
+        x = resnet.stack2(x, 256, 6, name='conv4')
+        return resnet.stack2(x, 512, 3, stride1=1, name='conv5')
 
-  return resnet.ResNet(
-      stack_fn,
-      True,
-      True,
-      'resnet50v2',
-      include_top,
-      weights,
-      input_tensor,
-      input_shape,
-      pooling,
-      classes,
-      classifier_activation=classifier_activation,
-  )
+    return resnet.ResNet(
+        stack_fn,
+        True,
+        True,
+        'resnet50v2',
+        include_top,
+        weights,
+        input_tensor,
+        input_shape,
+        pooling,
+        classes,
+        classifier_activation=classifier_activation,
+    )
 
 
 @keras_export('keras.applications.resnet_v2.ResNet101V2',
@@ -67,26 +67,26 @@ def ResNet101V2(
     classes=1000,
     classifier_activation='softmax',
 ):
-  """Instantiates the ResNet101V2 architecture."""
-  def stack_fn(x):
-    x = resnet.stack2(x, 64, 3, name='conv2')
-    x = resnet.stack2(x, 128, 4, name='conv3')
-    x = resnet.stack2(x, 256, 23, name='conv4')
-    return resnet.stack2(x, 512, 3, stride1=1, name='conv5')
+    """Instantiates the ResNet101V2 architecture."""
+    def stack_fn(x):
+        x = resnet.stack2(x, 64, 3, name='conv2')
+        x = resnet.stack2(x, 128, 4, name='conv3')
+        x = resnet.stack2(x, 256, 23, name='conv4')
+        return resnet.stack2(x, 512, 3, stride1=1, name='conv5')
 
-  return resnet.ResNet(
-      stack_fn,
-      True,
-      True,
-      'resnet101v2',
-      include_top,
-      weights,
-      input_tensor,
-      input_shape,
-      pooling,
-      classes,
-      classifier_activation=classifier_activation,
-  )
+    return resnet.ResNet(
+        stack_fn,
+        True,
+        True,
+        'resnet101v2',
+        include_top,
+        weights,
+        input_tensor,
+        input_shape,
+        pooling,
+        classes,
+        classifier_activation=classifier_activation,
+    )
 
 
 @keras_export('keras.applications.resnet_v2.ResNet152V2',
@@ -100,62 +100,62 @@ def ResNet152V2(
     classes=1000,
     classifier_activation='softmax',
 ):
-  """Instantiates the ResNet152V2 architecture."""
-  def stack_fn(x):
-    x = resnet.stack2(x, 64, 3, name='conv2')
-    x = resnet.stack2(x, 128, 8, name='conv3')
-    x = resnet.stack2(x, 256, 36, name='conv4')
-    return resnet.stack2(x, 512, 3, stride1=1, name='conv5')
+    """Instantiates the ResNet152V2 architecture."""
+    def stack_fn(x):
+        x = resnet.stack2(x, 64, 3, name='conv2')
+        x = resnet.stack2(x, 128, 8, name='conv3')
+        x = resnet.stack2(x, 256, 36, name='conv4')
+        return resnet.stack2(x, 512, 3, stride1=1, name='conv5')
 
-  return resnet.ResNet(
-      stack_fn,
-      True,
-      True,
-      'resnet152v2',
-      include_top,
-      weights,
-      input_tensor,
-      input_shape,
-      pooling,
-      classes,
-      classifier_activation=classifier_activation,
-  )
+    return resnet.ResNet(
+        stack_fn,
+        True,
+        True,
+        'resnet152v2',
+        include_top,
+        weights,
+        input_tensor,
+        input_shape,
+        pooling,
+        classes,
+        classifier_activation=classifier_activation,
+    )
 
 
 @keras_export('keras.applications.resnet_v2.preprocess_input')
 def preprocess_input(x, data_format=None):
-  """Preprocesses a numpy array encoding a batch of images.
+    """Preprocesses a numpy array encoding a batch of images.
 
-  Arguments
-    x: A 4D numpy array consists of RGB values within [0, 255].
+    Arguments
+      x: A 4D numpy array consists of RGB values within [0, 255].
 
-  Returns
-    Preprocessed array.
+    Returns
+      Preprocessed array.
 
-  Raises
-    ValueError: In case of unknown `data_format` argument.
-  """
-  return imagenet_utils.preprocess_input(
-      x, data_format=data_format, mode='tf')
+    Raises
+      ValueError: In case of unknown `data_format` argument.
+    """
+    return imagenet_utils.preprocess_input(
+        x, data_format=data_format, mode='tf')
 
 
 @keras_export('keras.applications.resnet_v2.decode_predictions')
 def decode_predictions(preds, top=5):
-  """Decodes the prediction result from the model.
+    """Decodes the prediction result from the model.
 
-  Arguments
-    preds: Numpy tensor encoding a batch of predictions.
-    top: Integer, how many top-guesses to return.
+    Arguments
+      preds: Numpy tensor encoding a batch of predictions.
+      top: Integer, how many top-guesses to return.
 
-  Returns
-    A list of lists of top class prediction tuples
-    `(class_name, class_description, score)`.
-    One list of tuples per sample in batch input.
+    Returns
+      A list of lists of top class prediction tuples
+      `(class_name, class_description, score)`.
+      One list of tuples per sample in batch input.
 
-  Raises
-    ValueError: In case of invalid shape of the `preds` array (must be 2D).
-  """
-  return imagenet_utils.decode_predictions(preds, top=top)
+    Raises
+      ValueError: In case of invalid shape of the `preds` array (must be 2D).
+    """
+    return imagenet_utils.decode_predictions(preds, top=top)
 
 
 preprocess_input.__doc__ = imagenet_utils.PREPROCESS_INPUT_DOC.format(
