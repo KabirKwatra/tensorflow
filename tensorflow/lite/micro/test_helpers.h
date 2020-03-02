@@ -49,7 +49,7 @@ const Tensor* CreateMissingQuantizationFlatbufferTensor(int size);
 
 // Creates a vector of flatbuffer buffers.
 const flatbuffers::Vector<flatbuffers::Offset<Buffer>>*
-        CreateFlatbufferBuffers();
+CreateFlatbufferBuffers();
 
 // Performs a simple string comparison without requiring standard C library.
 int TestStrcmp(const char* a, const char* b);
