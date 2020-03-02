@@ -31,135 +31,151 @@ namespace internal {
 // context->impl_ points to an instance of this class.
 // Check tensorflow/lite/c/common.h for detailed descriptions.
 class ContextHelper {
- public:
-  explicit ContextHelper(ErrorReporter* error_reporter,
-                         MicroAllocator* allocator)
-      : allocator_(allocator), error_reporter_(error_reporter) {}
+public:
+    explicit ContextHelper(ErrorReporter* error_reporter,
+                           MicroAllocator* allocator)
+        : allocator_(allocator), error_reporter_(error_reporter) {}
 
-  static TfLiteStatus AllocatePersistentBuffer(TfLiteContext* ctx, size_t bytes,
-                                               void** ptr);
+    static TfLiteStatus AllocatePersistentBuffer(TfLiteContext* ctx, size_t bytes,
+            void** ptr);
 
-  static TfLiteStatus RequestScratchBufferInArena(TfLiteContext* ctx,
-                                                  size_t bytes,
-                                                  int* buffer_idx);
+    static TfLiteStatus RequestScratchBufferInArena(TfLiteContext* ctx,
+            size_t bytes,
+            int* buffer_idx);
 
-  static void* GetScratchBuffer(TfLiteContext* ctx, int buffer_idx);
+    static void* GetScratchBuffer(TfLiteContext* ctx, int buffer_idx);
 
-  static void ReportOpError(struct TfLiteContext* context, const char* format,
-                            ...);
+    static void ReportOpError(struct TfLiteContext* context, const char* format,
+                              ...);
 
-  void SetNodeIndex(int idx) { current_node_idx_ = idx; }
+    void SetNodeIndex(int idx) {
+        current_node_idx_ = idx;
+    }
 
- private:
-  MicroAllocator* allocator_;
-  ErrorReporter* error_reporter_;
-  int current_node_idx_ = -1;
+private:
+    MicroAllocator* allocator_;
+    ErrorReporter* error_reporter_;
+    int current_node_idx_ = -1;
 };
 
 }  // namespace internal
 
 class MicroInterpreter {
- public:
-  // The lifetime of the model, op resolver, tensor arena, and error reporter
-  // must be at least as long as that of the interpreter object, since the
-  // interpreter may need to access them at any time. This means that you should
-  // usually create them with the same scope as each other, for example having
-  // them all allocated on the stack as local variables through a top-level
-  // function.
-  // The interpreter doesn't do any deallocation of any of the pointed-to
-  // objects, ownership remains with the caller.
-  MicroInterpreter(const Model* model, const OpResolver& op_resolver,
-                   uint8_t* tensor_arena, size_t tensor_arena_size,
-                   ErrorReporter* error_reporter);
+public:
+    // The lifetime of the model, op resolver, tensor arena, and error reporter
+    // must be at least as long as that of the interpreter object, since the
+    // interpreter may need to access them at any time. This means that you should
+    // usually create them with the same scope as each other, for example having
+    // them all allocated on the stack as local variables through a top-level
+    // function.
+    // The interpreter doesn't do any deallocation of any of the pointed-to
+    // objects, ownership remains with the caller.
+    MicroInterpreter(const Model* model, const OpResolver& op_resolver,
+                     uint8_t* tensor_arena, size_t tensor_arena_size,
+                     ErrorReporter* error_reporter);
 
-  ~MicroInterpreter();
+    ~MicroInterpreter();
 
-  // Runs through the model and allocates all necessary input, output and
-  // intermediate tensors.
-  TfLiteStatus AllocateTensors();
+    // Runs through the model and allocates all necessary input, output and
+    // intermediate tensors.
+    TfLiteStatus AllocateTensors();
 
-  // In order to support partial graph runs for strided models, this can return
-  // values other than kTfLiteOk and kTfLiteError.
-  // TODO(b/149795762): Add this to the TfLiteStatus enum.
-  TfLiteStatus Invoke();
+    // In order to support partial graph runs for strided models, this can return
+    // values other than kTfLiteOk and kTfLiteError.
+    // TODO(b/149795762): Add this to the TfLiteStatus enum.
+    TfLiteStatus Invoke();
 
-  size_t tensors_size() const { return context_.tensors_size; }
-  TfLiteTensor* tensor(size_t tensor_index);
-  template <class T>
-  T* typed_tensor(int tensor_index) {
-    if (TfLiteTensor* tensor_ptr = tensor(tensor_index)) {
-      if (tensor_ptr->type == typeToTfLiteType<T>()) {
-        return GetTensorData<T>(tensor_ptr);
-      }
+    size_t tensors_size() const {
+        return context_.tensors_size;
     }
-    return nullptr;
-  }
-
-  TfLiteTensor* input(size_t index);
-  size_t inputs_size() const { return subgraph_->inputs()->Length(); }
-  const flatbuffers::Vector<int32_t>& inputs() const {
-    return *subgraph_->inputs();
-  }
-  TfLiteTensor* input_tensor(size_t index) { return input(index); }
-  template <class T>
-  T* typed_input_tensor(int tensor_index) {
-    if (TfLiteTensor* tensor_ptr = input_tensor(tensor_index)) {
-      if (tensor_ptr->type == typeToTfLiteType<T>()) {
-        return GetTensorData<T>(tensor_ptr);
-      }
+    TfLiteTensor* tensor(size_t tensor_index);
+    template <class T>
+    T* typed_tensor(int tensor_index) {
+        if (TfLiteTensor* tensor_ptr = tensor(tensor_index)) {
+            if (tensor_ptr->type == typeToTfLiteType<T>()) {
+                return GetTensorData<T>(tensor_ptr);
+            }
+        }
+        return nullptr;
     }
-    return nullptr;
-  }
 
-  TfLiteTensor* output(size_t index);
-  size_t outputs_size() const { return subgraph_->outputs()->Length(); }
-  const flatbuffers::Vector<int32_t>& outputs() const {
-    return *subgraph_->outputs();
-  }
-  TfLiteTensor* output_tensor(size_t index) { return output(index); }
-  template <class T>
-  T* typed_output_tensor(int tensor_index) {
-    if (TfLiteTensor* tensor_ptr = output_tensor(tensor_index)) {
-      if (tensor_ptr->type == typeToTfLiteType<T>()) {
-        return GetTensorData<T>(tensor_ptr);
-      }
+    TfLiteTensor* input(size_t index);
+    size_t inputs_size() const {
+        return subgraph_->inputs()->Length();
     }
-    return nullptr;
-  }
+    const flatbuffers::Vector<int32_t>& inputs() const {
+        return *subgraph_->inputs();
+    }
+    TfLiteTensor* input_tensor(size_t index) {
+        return input(index);
+    }
+    template <class T>
+    T* typed_input_tensor(int tensor_index) {
+        if (TfLiteTensor* tensor_ptr = input_tensor(tensor_index)) {
+            if (tensor_ptr->type == typeToTfLiteType<T>()) {
+                return GetTensorData<T>(tensor_ptr);
+            }
+        }
+        return nullptr;
+    }
 
-  // Reset all variable tensors to the default value.
-  TfLiteStatus ResetVariableTensors();
+    TfLiteTensor* output(size_t index);
+    size_t outputs_size() const {
+        return subgraph_->outputs()->Length();
+    }
+    const flatbuffers::Vector<int32_t>& outputs() const {
+        return *subgraph_->outputs();
+    }
+    TfLiteTensor* output_tensor(size_t index) {
+        return output(index);
+    }
+    template <class T>
+    T* typed_output_tensor(int tensor_index) {
+        if (TfLiteTensor* tensor_ptr = output_tensor(tensor_index)) {
+            if (tensor_ptr->type == typeToTfLiteType<T>()) {
+                return GetTensorData<T>(tensor_ptr);
+            }
+        }
+        return nullptr;
+    }
 
-  TfLiteStatus initialization_status() const { return initialization_status_; }
+    // Reset all variable tensors to the default value.
+    TfLiteStatus ResetVariableTensors();
 
-  size_t operators_size() const { return operators_->size(); }
+    TfLiteStatus initialization_status() const {
+        return initialization_status_;
+    }
 
-  // For debugging only.
-  const NodeAndRegistration node_and_registration(int node_index) const {
-    return node_and_registrations_[node_index];
-  }
+    size_t operators_size() const {
+        return operators_->size();
+    }
 
- private:
-  void CorrectTensorEndianness(TfLiteTensor* tensorCorr);
+    // For debugging only.
+    const NodeAndRegistration node_and_registration(int node_index) const {
+        return node_and_registrations_[node_index];
+    }
 
-  template <class T>
-  void CorrectTensorDataEndianness(T* data, int32_t size);
+private:
+    void CorrectTensorEndianness(TfLiteTensor* tensorCorr);
 
-  NodeAndRegistration* node_and_registrations_ = nullptr;
+    template <class T>
+    void CorrectTensorDataEndianness(T* data, int32_t size);
 
-  const Model* model_;
-  const OpResolver& op_resolver_;
-  ErrorReporter* error_reporter_;
-  TfLiteContext context_ = {};
-  MicroAllocator allocator_;
-  bool tensors_allocated_;
+    NodeAndRegistration* node_and_registrations_ = nullptr;
 
-  TfLiteStatus initialization_status_;
-  const flatbuffers::Vector<flatbuffers::Offset<Tensor>>* tensors_;
-  const flatbuffers::Vector<flatbuffers::Offset<Operator>>* operators_;
+    const Model* model_;
+    const OpResolver& op_resolver_;
+    ErrorReporter* error_reporter_;
+    TfLiteContext context_ = {};
+    MicroAllocator allocator_;
+    bool tensors_allocated_;
 
-  const SubGraph* subgraph_;
-  internal::ContextHelper context_helper_;
+    TfLiteStatus initialization_status_;
+    const flatbuffers::Vector<flatbuffers::Offset<Tensor>>* tensors_;
+    const flatbuffers::Vector<flatbuffers::Offset<Operator>>* operators_;
+
+    const SubGraph* subgraph_;
+    internal::ContextHelper context_helper_;
 };
 
 }  // namespace tflite
