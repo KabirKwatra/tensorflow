@@ -21,8 +21,7 @@ import numpy as np
 
 from tensorflow.compiler.tf2tensorrt._pywrap_py_utils import get_linked_tensorrt_version
 from tensorflow.python.compiler.tensorrt.test import (
-    tf_trt_integration_test_base as trt_test,
-)
+    tf_trt_integration_test_base as trt_test, )
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import array_ops
@@ -67,11 +66,9 @@ class QuantizationMissingAllRangesTest(trt_test.TfTrtIntegrationTestBase):
         if get_linked_tensorrt_version()[0] < 5:
             return False
         # Only test static engine mode, with or without calibration.
-        return (
-            trt_test.IsQuantizationMode(run_params.precision_mode)
-            and not run_params.convert_online
-            and not run_params.dynamic_engine
-        )
+        return (trt_test.IsQuantizationMode(run_params.precision_mode)
+                and not run_params.convert_online
+                and not run_params.dynamic_engine)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -95,10 +92,8 @@ class QuantizationWithRangesTest(trt_test.TfTrtIntegrationTestBase):
         if get_linked_tensorrt_version()[0] < 5:
             return False
         # Test static/dynamic engine with/without calibration.
-        return (
-            trt_test.IsQuantizationMode(run_params.precision_mode)
-            and not run_params.convert_online
-        )
+        return (trt_test.IsQuantizationMode(run_params.precision_mode)
+                and not run_params.convert_online)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -130,7 +125,9 @@ class NonQuantizedPrecisionsWithRangesTest(trt_test.TfTrtIntegrationTestBase):
         """Return the expected engines to build."""
         # The fake quant ops are not supported in FP32/FP16 mode, and will split the
         # graph into three TRT segments.
-        return ["TRTEngineOp_0", "TRTEngineOp_1", "TRTEngineOp_2", "TRTEngineOp_3"]
+        return [
+            "TRTEngineOp_0", "TRTEngineOp_1", "TRTEngineOp_2", "TRTEngineOp_3"
+        ]
 
     def ExpectedAbsoluteTolerance(self, run_params):
         """The absolute tolerance to compare floating point results."""

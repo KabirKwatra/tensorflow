@@ -91,13 +91,13 @@ def boolean_mask(data, mask, name=None):
     """
     with ops.name_scope(name, "RaggedMask", [data, mask]):
         # Convert inputs to tensors.
-        data = ragged_tensor.convert_to_tensor_or_ragged_tensor(data, name="data")
-        mask = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-            mask, dtypes.bool, name="mask"
-        )
+        data = ragged_tensor.convert_to_tensor_or_ragged_tensor(data,
+                                                                name="data")
+        mask = ragged_tensor.convert_to_tensor_or_ragged_tensor(mask,
+                                                                dtypes.bool,
+                                                                name="mask")
         row_splits_dtype, (data, mask) = ragged_tensor.match_row_splits_dtypes(
-            data, mask, return_dtype=True
-        )
+            data, mask, return_dtype=True)
 
         # Get static rank of mask.
         if mask.shape.ndims is None:
@@ -117,9 +117,10 @@ def boolean_mask(data, mask, name=None):
             # data.nested_row_splits.
             splits_list = [
                 mask.nested_row_splits,
-                data.nested_row_splits[: mask.ragged_rank],
+                data.nested_row_splits[:mask.ragged_rank],
             ]
-            with ops.control_dependencies(ragged_util.assert_splits_match(splits_list)):
+            with ops.control_dependencies(
+                    ragged_util.assert_splits_match(splits_list)):
                 # Strip off ragged `splits` until `mask` is non-ragged.  Keep the splits
                 # that we strip off in `splits`, so we can add them back on after
                 # we recursively mask the non-ragged data.
@@ -131,12 +132,11 @@ def boolean_mask(data, mask, name=None):
                         # Count the number of True mask values in each row to find the
                         # lengths of the filtered rows; then convert to splits.
                         int_mask = ragged_functional_ops.map_flat_values(
-                            math_ops.cast, mask, dtype=row_splits_dtype
-                        )
+                            math_ops.cast, mask, dtype=row_splits_dtype)
                         masked_row_lengths = ragged_math_ops.reduce_sum(
-                            int_mask, axis=1
-                        )
-                        splits.append(ragged_util.lengths_to_splits(masked_row_lengths))
+                            int_mask, axis=1)
+                        splits.append(
+                            ragged_util.lengths_to_splits(masked_row_lengths))
                     mask = mask.values
                     data = data.values
 
@@ -145,8 +145,7 @@ def boolean_mask(data, mask, name=None):
 
                 # Add the ragged `splits` back to the result.
                 masked_values = ragged_tensor.RaggedTensor.from_nested_row_splits(
-                    masked_values, splits, validate=False
-                )
+                    masked_values, splits, validate=False)
 
                 return masked_values
 
@@ -164,13 +163,14 @@ def boolean_mask(data, mask, name=None):
             # value, then use tf.gather to build a boolean mask that's false for
             # values that come from rows that we are deleting, and use that mask to
             # construct the masked values tensor.
-            segment_ids = segment_id_ops.row_splits_to_segment_ids(data.row_splits)
+            segment_ids = segment_id_ops.row_splits_to_segment_ids(
+                data.row_splits)
             segment_mask = array_ops.gather(mask, segment_ids)
             masked_values = boolean_mask(data.values, segment_mask)
 
-            return ragged_tensor.RaggedTensor.from_row_splits(
-                masked_values, masked_splits, validate=False
-            )
+            return ragged_tensor.RaggedTensor.from_row_splits(masked_values,
+                                                              masked_splits,
+                                                              validate=False)
 
         # If mask is non-ragged and has rank>1, then convert it to be ragged,
         # with a ragged rank matching data.
@@ -192,24 +192,25 @@ def boolean_mask(data, mask, name=None):
                 # number of values it contains.  Then flatten that to get a list of
                 # cell lengths, and convert it to splits.  Finally, combine the splits
                 # and values to get the innermost ragged tensor.
-                masked_lengths = math_ops.count_nonzero(
-                    mask, axis=-1, dtype=row_splits_dtype
-                )
-                flattened_masked_lengths = array_ops.reshape(masked_lengths, [-1])
+                masked_lengths = math_ops.count_nonzero(mask,
+                                                        axis=-1,
+                                                        dtype=row_splits_dtype)
+                flattened_masked_lengths = array_ops.reshape(
+                    masked_lengths, [-1])
                 masked_values = ragged_tensor.RaggedTensor.from_row_lengths(
-                    masked_values, flattened_masked_lengths, validate=False
-                )
+                    masked_values, flattened_masked_lengths, validate=False)
 
                 # Wrap remaining ragged dimensions.
                 if mask.shape.ndims > 2:
-                    mask_shape = array_ops.shape(mask, out_type=row_splits_dtype)
+                    mask_shape = array_ops.shape(mask,
+                                                 out_type=row_splits_dtype)
                     split_size = math_ops.cumprod(mask_shape) + 1
                     for dim in range(mask.shape.ndims - 3, -1, -1):
                         elt_size = mask_shape[dim + 1]
-                        masked_splits = math_ops.range(split_size[dim]) * elt_size
+                        masked_splits = math_ops.range(
+                            split_size[dim]) * elt_size
                         masked_values = ragged_tensor.RaggedTensor.from_row_splits(
-                            masked_values, masked_splits, validate=False
-                        )
+                            masked_values, masked_splits, validate=False)
 
             return masked_values
 
@@ -241,12 +242,12 @@ def tile(input, multiples, name=None):  # pylint: disable=redefined-builtin
     [[1, 2, 1, 2], [3, 3], [1, 2, 1, 2], [3, 3], [1, 2, 1, 2], [3, 3]]
     """
     with ops.name_scope(name, "RaggedTile", [input, multiples]):
-        input = ragged_tensor.convert_to_tensor_or_ragged_tensor(input, name="input")
+        input = ragged_tensor.convert_to_tensor_or_ragged_tensor(input,
+                                                                 name="input")
         if not ragged_tensor.is_ragged(input):
             return array_ops.tile(input, multiples, name)
         multiples = ragged_util.convert_to_int_tensor(
-            multiples, name="multiples", dtype=input.row_splits.dtype
-        )
+            multiples, name="multiples", dtype=input.row_splits.dtype)
         multiples.shape.assert_has_rank(1)
 
         # If the constant value of `multiples` is available, then we can use it
@@ -300,24 +301,24 @@ def _tile_ragged_values(rt_input, multiples, const_multiples=None):
         # Adjust splits so they point into `inner_value_ids` (instead of just
         # pointing into the next dimension's values).
         if prev_splits is not None:  # Not the first pass through the loop.
-            splits = array_ops.gather(prev_splits * multiples[axis + 1], splits)
+            splits = array_ops.gather(prev_splits * multiples[axis + 1],
+                                      splits)
 
         # Repeat each element in this ragged dimension `multiples[axis]` times.
         if const_multiples is None or const_multiples[axis] != 1:
             inner_value_ids = ragged_util.repeat_ranges(
-                inner_value_ids, splits, multiples[axis]
-            )
+                inner_value_ids, splits, multiples[axis])
 
         prev_splits = splits
 
     # Gather the tiled inner values.
-    ragged_tiled_values = array_ops.gather(rt_input.flat_values, inner_value_ids)
+    ragged_tiled_values = array_ops.gather(rt_input.flat_values,
+                                           inner_value_ids)
 
     # Tile the flat_values for the uniform dimensions (i.e., for `axis=0` plus
     # `axis=range(ragged_rank, rank)`).
     inner_repeats = array_ops.concat(
-        [multiples[:1], multiples[ragged_rank + 1 :]], axis=0
-    )
+        [multiples[:1], multiples[ragged_rank + 1:]], axis=0)
     return array_ops.tile(ragged_tiled_values, inner_repeats)
 
 
@@ -356,8 +357,8 @@ def _tile_ragged_splits(rt_input, multiples, const_multiples=None):
     for src_axis in range(ragged_rank):
         for dst_axis in range(src_axis + 1, ragged_rank - 1):
             projected_splits[src_axis][dst_axis] = array_ops.gather(
-                nested_splits[dst_axis], projected_splits[src_axis][dst_axis - 1]
-            )
+                nested_splits[dst_axis],
+                projected_splits[src_axis][dst_axis - 1])
 
     # For each ragged dimension: nested_splits[axis] -> result_splits[axis].
     result_splits = []
@@ -377,8 +378,7 @@ def _tile_ragged_splits(rt_input, multiples, const_multiples=None):
             if const_multiples is None or const_multiples[d + 1] != 1:
                 splits = projected_splits[d][axis - 1] * repeats
                 output_lengths = ragged_util.repeat_ranges(
-                    output_lengths, splits, multiples[d + 1]
-                )
+                    output_lengths, splits, multiples[d + 1])
             repeats *= multiples[d + 1]
 
         # Tile splits for the outermost (uniform) dimension.
@@ -445,22 +445,29 @@ def expand_dims(input, axis, name=None):  # pylint: disable=redefined-builtin
     (2, None, 1) <tf.RaggedTensor [[[1], [2]], [[3]]]>
     """
     with ops.name_scope(name, "RaggedExpandDims", [input]):
-        input = ragged_tensor.convert_to_tensor_or_ragged_tensor(input, name="input")
+        input = ragged_tensor.convert_to_tensor_or_ragged_tensor(input,
+                                                                 name="input")
 
         if not ragged_tensor.is_ragged(input):
             return array_ops.expand_dims(input, axis)
 
         ndims = None if input.shape.ndims is None else input.shape.ndims + 1
-        axis = array_ops.get_positive_axis(axis, ndims, ndims_name="rank(input)")
+        axis = array_ops.get_positive_axis(axis,
+                                           ndims,
+                                           ndims_name="rank(input)")
 
         if axis == 0:
             return ragged_tensor.RaggedTensor.from_uniform_row_length(
-                input, uniform_row_length=input.nrows(), nrows=1, validate=False
-            )
+                input,
+                uniform_row_length=input.nrows(),
+                nrows=1,
+                validate=False)
         elif axis == 1:
             return ragged_tensor.RaggedTensor.from_uniform_row_length(
-                input, uniform_row_length=1, nrows=input.nrows(), validate=False
-            )
+                input,
+                uniform_row_length=1,
+                nrows=input.nrows(),
+                validate=False)
         else:
             return input.with_values(expand_dims(input.values, axis - 1))
 
@@ -526,9 +533,13 @@ def rank(input, name=None):  # pylint: disable=redefined-builtin
 # ===============================================================================
 # ragged.one_hot
 # ===============================================================================
-def ragged_one_hot(
-    indices, depth, on_value=None, off_value=None, axis=None, dtype=None, name=None
-):
+def ragged_one_hot(indices,
+                   depth,
+                   on_value=None,
+                   off_value=None,
+                   axis=None,
+                   dtype=None,
+                   name=None):
     """Applies tf.one_hot along the values of a RaggedTensor."""
     # Get the adjusted axis value for the call to array_ops.one_hot.
     # Note: the only negative `axis` value supported by array_ops.one_hot is -1.
@@ -536,21 +547,16 @@ def ragged_one_hot(
         if axis <= indices.ragged_rank:
             raise ValueError(
                 "axis (%d) must be greater than indices.ragged_rank "
-                "(%d)." % (axis, indices.ragged_rank)
-            )
+                "(%d)." % (axis, indices.ragged_rank))
         axis -= indices.ragged_rank
 
-    with ops.name_scope(
-        name, "RaggedOneHot", [indices, depth, on_value, off_value, axis]
-    ):
+    with ops.name_scope(name, "RaggedOneHot",
+                        [indices, depth, on_value, off_value, axis]):
         indices = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-            indices, name="indices"
-        )
+            indices, name="indices")
         return indices.with_flat_values(
-            array_ops.one_hot(
-                indices.flat_values, depth, on_value, off_value, axis, dtype, name
-            )
-        )
+            array_ops.one_hot(indices.flat_values, depth, on_value, off_value,
+                              axis, dtype, name))
 
 
 # ===============================================================================
@@ -594,20 +600,19 @@ def stack_dynamic_partitions(data, partitions, num_partitions, name=None):
       ragged dimension whose length is the number of data slices stacked for
       each `partition`.
     """
-    with ops.name_scope(name, "SegmentStack", [data, partitions, num_partitions]):
+    with ops.name_scope(name, "SegmentStack",
+                        [data, partitions, num_partitions]):
         # Convert inputs to tensors.
-        data = ragged_tensor.convert_to_tensor_or_ragged_tensor(data, name="data")
-        row_splits_dtype = (
-            data.row_splits.dtype
-            if isinstance(data, ragged_tensor.RaggedTensor)
-            else None
-        )
+        data = ragged_tensor.convert_to_tensor_or_ragged_tensor(data,
+                                                                name="data")
+        row_splits_dtype = (data.row_splits.dtype if isinstance(
+            data, ragged_tensor.RaggedTensor) else None)
         partitions = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-            partitions, name="partitions", preferred_dtype=row_splits_dtype
-        )
+            partitions, name="partitions", preferred_dtype=row_splits_dtype)
         num_partitions = ops.convert_to_tensor(
-            num_partitions, name="num_partitions", preferred_dtype=partitions.dtype
-        )
+            num_partitions,
+            name="num_partitions",
+            preferred_dtype=partitions.dtype)
         if row_splits_dtype is not None:
             partitions = math_ops.cast(partitions, row_splits_dtype)
         num_partitions = math_ops.cast(num_partitions, partitions.dtype)
@@ -617,7 +622,8 @@ def stack_dynamic_partitions(data, partitions, num_partitions, name=None):
         if partitions_rank is None:
             raise ValueError("partitions must have known rank.")
         num_partitions.shape.assert_has_rank(0)
-        partitions.shape.assert_is_compatible_with(data.shape[:partitions_rank])
+        partitions.shape.assert_is_compatible_with(
+            data.shape[:partitions_rank])
 
         if partitions_rank == 0:
             # If partitions is a scalar, then just create a RaggedTensor containing
@@ -643,15 +649,13 @@ def stack_dynamic_partitions(data, partitions, num_partitions, name=None):
             )
             with ops.control_dependencies([check]):
                 return ragged_tensor.RaggedTensor.from_value_rowids(
-                    values, value_rowids, nrows=num_partitions, validate=False
-                )
+                    values, value_rowids, nrows=num_partitions, validate=False)
 
         else:
             # Handle higher-dimensional partitions via recursion.
             if not isinstance(data, ragged_tensor.RaggedTensor):
                 data = ragged_tensor.RaggedTensor.from_tensor(
-                    data, row_splits_dtype=partitions.dtype, ragged_rank=1
-                )
+                    data, row_splits_dtype=partitions.dtype, ragged_rank=1)
             if not isinstance(partitions, ragged_tensor.RaggedTensor):
                 partitions = ragged_tensor.RaggedTensor.from_tensor(
                     partitions,
@@ -664,9 +668,8 @@ def stack_dynamic_partitions(data, partitions, num_partitions, name=None):
                 message="data and partitions have incompatible ragged shapes",
             )
             with ops.control_dependencies([check]):
-                return stack_dynamic_partitions(
-                    data.values, partitions.values, num_partitions
-                )
+                return stack_dynamic_partitions(data.values, partitions.values,
+                                                num_partitions)
 
 
 # ===============================================================================
@@ -691,29 +694,25 @@ def reverse(tensor, axis, name=None):
     Returns:
       A 'RaggedTensor'.
     """
-    type_error_msg = (
-        "`axis` must be a list of int or a constant tensor"
-        "when reversing axes in a ragged tensor"
-    )
+    type_error_msg = ("`axis` must be a list of int or a constant tensor"
+                      "when reversing axes in a ragged tensor")
 
     with ops.name_scope(name, "Reverse", [tensor, axis]):
         if isinstance(axis, ops.Tensor):
             axis = tensor_util.constant_value(axis)
             if axis is None:
                 raise TypeError(type_error_msg)
-        elif not (
-            isinstance(axis, (list, tuple))
-            and all(isinstance(dim, int) for dim in axis)
-        ):
+        elif not (isinstance(axis, (list, tuple))
+                  and all(isinstance(dim, int) for dim in axis)):
             raise TypeError(type_error_msg)
 
-        tensor = ragged_tensor.convert_to_tensor_or_ragged_tensor(tensor, name="tensor")
+        tensor = ragged_tensor.convert_to_tensor_or_ragged_tensor(
+            tensor, name="tensor")
 
         # Allow usage of negative values to specify innermost axes.
         axis = [
-            array_ops.get_positive_axis(
-                dim, tensor.shape.rank, "axis[%d]" % i, "rank(tensor)"
-            )
+            array_ops.get_positive_axis(dim, tensor.shape.rank, "axis[%d]" % i,
+                                        "rank(tensor)")
             for i, dim in enumerate(axis)
         ]
 
@@ -798,9 +797,11 @@ def cross_hashed(inputs, num_buckets=0, hash_key=None, name=None):
 _DEFAULT_CROSS_HASH_KEY = 0xDECAFCAFFE
 
 
-def _cross_internal(
-    inputs, hashed_output=False, num_buckets=0, hash_key=None, name=None
-):
+def _cross_internal(inputs,
+                    hashed_output=False,
+                    num_buckets=0,
+                    hash_key=None,
+                    name=None):
     """Generates feature cross from a list of ragged and dense tensors."""
     if not isinstance(inputs, (tuple, list)):
         raise TypeError("Inputs must be a list")
@@ -821,10 +822,12 @@ def _cross_internal(
             if t.dtype.is_integer:
                 t = math_ops.cast(t, dtypes.int64)
             elif t.dtype != dtypes.string:
-                raise ValueError("Unexpected dtype for inputs[%d]: %s" % (i, t.dtype))
+                raise ValueError("Unexpected dtype for inputs[%d]: %s" %
+                                 (i, t.dtype))
             if isinstance(t, ragged_tensor.RaggedTensor):
                 if t.ragged_rank != 1:
-                    raise ValueError("tf.ragged.cross only supports inputs with rank=2")
+                    raise ValueError(
+                        "tf.ragged.cross only supports inputs with rank=2")
                 ragged_inputs.append(t)
                 input_order.append("R")
             elif isinstance(t, sparse_tensor.SparseTensor):
@@ -835,17 +838,16 @@ def _cross_internal(
                 input_order.append("D")
 
         out_values_type = dtypes.int64 if hashed_output else dtypes.string
-        if ragged_inputs and all(
-            t.row_splits.dtype == dtypes.int32 for t in ragged_inputs
-        ):
+        if ragged_inputs and all(t.row_splits.dtype == dtypes.int32
+                                 for t in ragged_inputs):
             out_row_splits_type = dtypes.int32
         else:
             out_row_splits_type = dtypes.int64
 
         # Convert hash_key from uint64 -> int64, since we need to pass it via
         # an int64 attr.
-        if hash_key > 2 ** 63:
-            hash_key -= 2 ** 64
+        if hash_key > 2**63:
+            hash_key -= 2**64
 
         values_out, splits_out = gen_ragged_array_ops.ragged_cross(
             ragged_values=[rt.values for rt in ragged_inputs],
@@ -863,6 +865,6 @@ def _cross_internal(
             name=name,
         )
 
-        return ragged_tensor.RaggedTensor.from_row_splits(
-            values_out, splits_out, validate=False
-        )
+        return ragged_tensor.RaggedTensor.from_row_splits(values_out,
+                                                          splits_out,
+                                                          validate=False)

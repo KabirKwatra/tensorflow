@@ -125,28 +125,25 @@ class QuantizationAwareTrainingMNISTTest(test_util.TensorFlowTestCase):
         graph = ops.Graph()
         with self.session(graph=graph) as sess:
             with graph.device("/GPU:0"):
-                x = array_ops.placeholder(
-                    shape=(None, 28, 28, 1), dtype=dtypes.float32, name=INPUT_NODE_NAME
-                )
+                x = array_ops.placeholder(shape=(None, 28, 28, 1),
+                                          dtype=dtypes.float32,
+                                          name=INPUT_NODE_NAME)
                 self._BuildGraph(x)
             # Load weights
             mnist_saver = saver.Saver()
             checkpoint_file = latest_checkpoint(model_dir)
             if checkpoint_file is None:
                 raise ValueError(
-                    "latest_checkpoint returned None. check if"
-                    + "model_dir={} is the right directory".format(model_dir)
-                )
+                    "latest_checkpoint returned None. check if" +
+                    "model_dir={} is the right directory".format(model_dir))
             mnist_saver.restore(sess, checkpoint_file)
             # Freeze
             graph_def = graph_util.convert_variables_to_constants(
-                sess, sess.graph_def, output_node_names=[OUTPUT_NODE_NAME]
-            )
+                sess, sess.graph_def, output_node_names=[OUTPUT_NODE_NAME])
         # Convert with TF-TRT
         if use_trt:
-            logging.info(
-                "Number of nodes before TF-TRT conversion: %d", len(graph_def.node)
-            )
+            logging.info("Number of nodes before TF-TRT conversion: %d",
+                         len(graph_def.node))
             converter = trt_convert.TrtGraphConverter(
                 input_graph_def=graph_def,
                 nodes_blacklist=[OUTPUT_NODE_NAME],
@@ -160,10 +157,10 @@ class QuantizationAwareTrainingMNISTTest(test_util.TensorFlowTestCase):
                 use_calibration=False,
             )
             graph_def = converter.convert()
-            logging.info(
-                "Number of nodes after TF-TRT conversion: %d", len(graph_def.node)
-            )
-            num_engines = len([1 for n in graph_def.node if str(n.op) == "TRTEngineOp"])
+            logging.info("Number of nodes after TF-TRT conversion: %d",
+                         len(graph_def.node))
+            num_engines = len(
+                [1 for n in graph_def.node if str(n.op) == "TRTEngineOp"])
             self.assertEqual(1, num_engines)
         return graph_def
 
@@ -196,10 +193,11 @@ class QuantizationAwareTrainingMNISTTest(test_util.TensorFlowTestCase):
 
         def _EvalInputFn():
             mnist_x, mnist_y = test_data
-            dataset = dataset_ops.Dataset.from_tensor_slices((mnist_x, mnist_y))
-            dataset = dataset.map(map_func=_PreprocessFn, num_parallel_calls=8).batch(
-                batch_size=batch_size
-            )
+            dataset = dataset_ops.Dataset.from_tensor_slices(
+                (mnist_x, mnist_y))
+            dataset = dataset.map(
+                map_func=_PreprocessFn,
+                num_parallel_calls=8).batch(batch_size=batch_size)
             dataset = dataset.repeat(count=1)
             iterator = dataset_ops.make_one_shot_iterator(dataset)
             features, labels = iterator.get_next()
@@ -207,11 +205,12 @@ class QuantizationAwareTrainingMNISTTest(test_util.TensorFlowTestCase):
 
         def _TrainInputFn():
             mnist_x, mnist_y = train_data
-            dataset = dataset_ops.Dataset.from_tensor_slices((mnist_x, mnist_y))
+            dataset = dataset_ops.Dataset.from_tensor_slices(
+                (mnist_x, mnist_y))
             dataset = dataset.shuffle(2 * len(mnist_x))
-            dataset = dataset.map(map_func=_PreprocessFn, num_parallel_calls=8).batch(
-                batch_size=batch_size
-            )
+            dataset = dataset.map(
+                map_func=_PreprocessFn,
+                num_parallel_calls=8).batch(batch_size=batch_size)
             dataset = dataset.repeat(count=num_epochs)
             iterator = dataset_ops.make_one_shot_iterator(dataset)
             features, labels = iterator.get_next()
@@ -229,22 +228,26 @@ class QuantizationAwareTrainingMNISTTest(test_util.TensorFlowTestCase):
                     name="",
                 )[0]
 
-            loss = losses.sparse_softmax_cross_entropy(labels=labels, logits=logits_out)
+            loss = losses.sparse_softmax_cross_entropy(labels=labels,
+                                                       logits=logits_out)
             summary.scalar("loss", loss)
 
-            classes_out = math_ops.argmax(logits_out, axis=1, name="classes_out")
-            accuracy = metrics.accuracy(
-                labels=labels, predictions=classes_out, name="acc_op"
-            )
+            classes_out = math_ops.argmax(logits_out,
+                                          axis=1,
+                                          name="classes_out")
+            accuracy = metrics.accuracy(labels=labels,
+                                        predictions=classes_out,
+                                        name="acc_op")
             summary.scalar("accuracy", accuracy[1])
 
             if mode == ModeKeys.EVAL:
-                return EstimatorSpec(
-                    mode, loss=loss, eval_metric_ops={"accuracy": accuracy}
-                )
+                return EstimatorSpec(mode,
+                                     loss=loss,
+                                     eval_metric_ops={"accuracy": accuracy})
             if mode == ModeKeys.TRAIN:
                 optimizer = AdamOptimizer(learning_rate=1e-2)
-                train_op = optimizer.minimize(loss, global_step=get_global_step())
+                train_op = optimizer.minimize(loss,
+                                              global_step=get_global_step())
                 return EstimatorSpec(mode, loss=loss, train_op=train_op)
 
         config_proto = config_pb2.ConfigProto()
@@ -274,8 +277,7 @@ class QuantizationAwareTrainingMNISTTest(test_util.TensorFlowTestCase):
         if not is_tensorrt_enabled():
             return
         model_dir = test.test_src_dir_path(
-            "python/compiler/tensorrt/test/testdata/mnist"
-        )
+            "python/compiler/tensorrt/test/testdata/mnist")
 
         accuracy_tf_native = self._Run(
             is_training=False,
