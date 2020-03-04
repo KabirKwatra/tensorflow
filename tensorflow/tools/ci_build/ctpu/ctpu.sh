@@ -18,7 +18,7 @@
 
 # Installs the Cloud TPU CLI to the current directory.
 # Pass pip command as first arg, ex: install_ctpu pip3.7
-function install_ctpu {
+function install_ctpu() {
   PIP_CMD="${1:-pip}"
 
   # TPUClusterResolver has a runtime dependency cloud-tpu-client when
@@ -40,15 +40,15 @@ function install_ctpu {
 # Usage:
 #   ctpu_up -n [tpu name] -z [zone] -s [tpu size] -v [tf-version] \
 #     -p [cloud project] -g [gcp-network]
-function ctpu_up {
-  local OPTIND o  # Used for flag parsing
+function ctpu_up() {
+  local OPTIND o # Used for flag parsing
   # Generate a unique random name for TPU, as we might be running multiple builds in parallel.
   local name="kokoro-tpu-$RANDOM"
   local zone="us-central1-c"
   local size="v2-8"
   local version="nightly"
-  local project  # Project automatically detected from environment.
-  local gcp_network  # Network needed only if project default is Legacy.
+  local project     # Project automatically detected from environment.
+  local gcp_network # Network needed only if project default is Legacy.
 
   # Override any of the above params from flags.
   while getopts ":n:z:p:s:v:g:" o; do
@@ -74,16 +74,17 @@ function ctpu_up {
       *)
         echo "Unexpected parameter for ctpu_up: $o"
         exit 1
-    ;; esac
+        ;;
+    esac
   done
-  shift $((OPTIND-1))
+  shift $((OPTIND - 1))
 
   export TPU_NAME="$name"
   export TPU_ZONE="$zone"
 
   # Store name and zone into artifacts dir so cleanup job has access.
-  echo "$TPU_NAME" > "$TF_ARTIFACTS_DIR/tpu_name"
-  echo "$TPU_ZONE" > "$TF_ARTIFACTS_DIR/tpu_zone"
+  echo "$TPU_NAME" >"$TF_ARTIFACTS_DIR/tpu_name"
+  echo "$TPU_ZONE" >"$TF_ARTIFACTS_DIR/tpu_zone"
 
   local args=(
     "--zone=$zone"
@@ -102,14 +103,14 @@ function ctpu_up {
   if [[ -v project ]]; then
     args+=("--project=$project")
     export TPU_PROJECT="$project"
-    echo "$project" > "$TF_ARTIFACTS_DIR/tpu_project"
+    echo "$project" >"$TF_ARTIFACTS_DIR/tpu_project"
   fi
 
   ./ctpu up "${args[@]}"
 }
 
 # Delete the Cloud TPU specified by the metadata in the gfile directory.
-function ctpu_delete {
+function ctpu_delete() {
   export TPU_NAME="$(cat "$TF_GFILE_DIR/tpu_name")"
   export TPU_ZONE="$(cat "$TF_GFILE_DIR/tpu_zone")"
   TPU_PROJECT_FILE="$TF_GFILE_DIR/tpu_project"
