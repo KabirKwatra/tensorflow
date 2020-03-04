@@ -27,14 +27,14 @@ from tensorflow.python.platform import test
 
 
 class RandomDatasetTest(test_base.DatasetTestBase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(global_seed=[None, 10], local_seed=[None, 20])))
+            combinations.combine(global_seed=[None, 10], local_seed=[None, 20]),
+        )
+    )
     def testDeterminism(self, global_seed, local_seed):
-        expect_determinism = (global_seed is not None) or (
-            local_seed is not None)
+        expect_determinism = (global_seed is not None) or (local_seed is not None)
 
         random_seed.set_random_seed(global_seed)
         ds = random_ops.RandomDataset(seed=local_seed).take(10)
