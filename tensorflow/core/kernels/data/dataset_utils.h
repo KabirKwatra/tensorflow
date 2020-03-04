@@ -28,92 +28,90 @@ namespace data {
 template <typename T>
 Status CreateHandle(OpKernelContext* ctx, T* resource,
                     const string& container_name, ResourceHandle* handle) {
-    static std::atomic<int64> resource_id_counter(0);
-    string unique_name =
-        strings::StrCat(container_name, resource_id_counter.fetch_add(1));
-    ResourceMgr* mgr = ctx->resource_manager();
-    TF_RETURN_IF_ERROR(mgr->Create<T>(container_name, unique_name, resource));
+  static std::atomic<int64> resource_id_counter(0);
+  string unique_name =
+      strings::StrCat(container_name, resource_id_counter.fetch_add(1));
+  ResourceMgr* mgr = ctx->resource_manager();
+  TF_RETURN_IF_ERROR(mgr->Create<T>(container_name, unique_name, resource));
 
-    *handle = MakeResourceHandle(container_name, unique_name, *ctx->device(),
-                                 MakeTypeIndex<T>());
-    return Status::OK();
+  *handle = MakeResourceHandle(container_name, unique_name, *ctx->device(),
+                               MakeTypeIndex<T>());
+  return Status::OK();
 }
 
 // A wrapper class that manages the lifetime of a resource handle from its
 // creation to its deletion from the resource manager.
 class OwnedResourceHandle {
-public:
-    template <typename T>
-    static Status Create(OpKernelContext* ctx, T* resource, const string& name,
-                         std::unique_ptr<OwnedResourceHandle>* result) {
-        ResourceHandle handle;
-        TF_RETURN_IF_ERROR(CreateHandle<T>(ctx, resource, name, &handle));
-        // We need to increase the refcount to match the decrease that occurs when
-        // the resource associate.
-        resource->Ref();
-        *result = absl::make_unique<OwnedResourceHandle>(ctx, std::move(handle));
-        return Status::OK();
+ public:
+  template <typename T>
+  static Status Create(OpKernelContext* ctx, T* resource, const string& name,
+                       std::unique_ptr<OwnedResourceHandle>* result) {
+    ResourceHandle handle;
+    TF_RETURN_IF_ERROR(CreateHandle<T>(ctx, resource, name, &handle));
+    // We need to increase the refcount to match the decrease that occurs when
+    // the resource associate.
+    resource->Ref();
+    *result = absl::make_unique<OwnedResourceHandle>(ctx, std::move(handle));
+    return Status::OK();
+  }
+
+  OwnedResourceHandle(OpKernelContext* ctx, ResourceHandle&& handle)
+      : mgr_(ctx->resource_manager()), handle_(handle) {}
+
+  ~OwnedResourceHandle() {
+    Status s = mgr_->Delete(handle_);
+    if (!s.ok()) {
+      VLOG(2) << s.ToString();
     }
+  }
 
-    OwnedResourceHandle(OpKernelContext* ctx, ResourceHandle&& handle)
-        : mgr_(ctx->resource_manager()), handle_(handle) {}
+  // Returns the wrapped `ResourceHandle` object.
+  const ResourceHandle& handle() const { return handle_; }
 
-    ~OwnedResourceHandle() {
-        Status s = mgr_->Delete(handle_);
-        if (!s.ok()) {
-            VLOG(2) << s.ToString();
-        }
-    }
-
-    // Returns the wrapped `ResourceHandle` object.
-    const ResourceHandle& handle() const {
-        return handle_;
-    }
-
-private:
-    ResourceMgr* mgr_;  // not owned
-    const ResourceHandle handle_;
+ private:
+  ResourceMgr* mgr_;  // not owned
+  const ResourceHandle handle_;
 };
 
 template <typename T>
 class AnonymousResourceOp : public OpKernel {
-public:
-    explicit AnonymousResourceOp(OpKernelConstruction* context)
-        : OpKernel(context) {}
+ public:
+  explicit AnonymousResourceOp(OpKernelConstruction* context)
+      : OpKernel(context) {}
 
-    void Compute(OpKernelContext* ctx) override {
-        FunctionLibraryRuntime* lib;
-        std::unique_ptr<FunctionLibraryDefinition> flib_def(nullptr);
-        std::unique_ptr<ProcessFunctionLibraryRuntime> pflr(nullptr);
-        OP_REQUIRES_OK(
-            ctx, ctx->function_library()->Clone(&flib_def, &pflr, &lib, true));
-        T* resource;
-        OP_REQUIRES_OK(ctx, CreateResource(ctx, std::move(flib_def),
-                                           std::move(pflr), lib, &resource));
+  void Compute(OpKernelContext* ctx) override {
+    FunctionLibraryRuntime* lib;
+    std::unique_ptr<FunctionLibraryDefinition> flib_def(nullptr);
+    std::unique_ptr<ProcessFunctionLibraryRuntime> pflr(nullptr);
+    OP_REQUIRES_OK(
+        ctx, ctx->function_library()->Clone(&flib_def, &pflr, &lib, true));
+    T* resource;
+    OP_REQUIRES_OK(ctx, CreateResource(ctx, std::move(flib_def),
+                                       std::move(pflr), lib, &resource));
 
-        ResourceHandle handle;
-        OP_REQUIRES_OK(ctx, CreateHandle(ctx, resource, name(), &handle));
-        Tensor* handle_t;
-        OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({}), &handle_t));
-        handle_t->scalar<ResourceHandle>()() = handle;
+    ResourceHandle handle;
+    OP_REQUIRES_OK(ctx, CreateHandle(ctx, resource, name(), &handle));
+    Tensor* handle_t;
+    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({}), &handle_t));
+    handle_t->scalar<ResourceHandle>()() = handle;
 
-        if (create_deleter_) {
-            Tensor* deleter_t;
-            OP_REQUIRES_OK(ctx, ctx->allocate_output(1, TensorShape({}), &deleter_t));
-            deleter_t->scalar<Variant>()() =
-                ResourceDeleter(handle, ctx->resource_manager());
-        }
+    if (create_deleter_) {
+      Tensor* deleter_t;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(1, TensorShape({}), &deleter_t));
+      deleter_t->scalar<Variant>()() =
+          ResourceDeleter(handle, ctx->resource_manager());
     }
+  }
 
-protected:
-    virtual string name() = 0;
+ protected:
+  virtual string name() = 0;
 
-    virtual Status CreateResource(
-        OpKernelContext* ctx, std::unique_ptr<FunctionLibraryDefinition> flib_def,
-        std::unique_ptr<ProcessFunctionLibraryRuntime> pflr,
-        FunctionLibraryRuntime* lib, T** resource) = 0;
+  virtual Status CreateResource(
+      OpKernelContext* ctx, std::unique_ptr<FunctionLibraryDefinition> flib_def,
+      std::unique_ptr<ProcessFunctionLibraryRuntime> pflr,
+      FunctionLibraryRuntime* lib, T** resource) = 0;
 
-    bool create_deleter_ = true;
+  bool create_deleter_ = true;
 };
 
 // Registers the given cancellation callback, returning a function that can be
@@ -152,46 +150,42 @@ Status HashGraph(const GraphDef& graph, uint64* hash);
 
 // Dataset op level determinism policy.
 class DeterminismPolicy {
-public:
-    enum class Type : int {
-        // The op must produce elements deterministically.
-        kDeterministic,
-        // The op may relax determinism to improve performance.
-        kNondeterministic,
-        // The determinism policy is not specified at the op level. In this case we
-        // use the experimental_deterministic dataset option to determine the
-        // determinism policy.
-        kDefault,
-    };
-    static constexpr const char* const kDeterministic = "true";
-    static constexpr const char* const kNondeterministic = "false";
-    static constexpr const char* const kDefault = "default";
+ public:
+  enum class Type : int {
+    // The op must produce elements deterministically.
+    kDeterministic,
+    // The op may relax determinism to improve performance.
+    kNondeterministic,
+    // The determinism policy is not specified at the op level. In this case we
+    // use the experimental_deterministic dataset option to determine the
+    // determinism policy.
+    kDefault,
+  };
+  static constexpr const char* const kDeterministic = "true";
+  static constexpr const char* const kNondeterministic = "false";
+  static constexpr const char* const kDefault = "default";
 
-    DeterminismPolicy() : determinism_(Type::kDefault) {}
-    explicit DeterminismPolicy(Type determinism) : determinism_(determinism) {}
-    // Creates a DeterminismPolicy with Type kDeterministic or
-    // kNondeterministic, depending on the values of `is_deterministic`.
-    explicit DeterminismPolicy(bool is_deterministic);
+  DeterminismPolicy() : determinism_(Type::kDefault) {}
+  explicit DeterminismPolicy(Type determinism) : determinism_(determinism) {}
+  // Creates a DeterminismPolicy with Type kDeterministic or
+  // kNondeterministic, depending on the values of `is_deterministic`.
+  explicit DeterminismPolicy(bool is_deterministic);
 
-    static Status FromString(const std::string& s, DeterminismPolicy* out);
+  static Status FromString(const std::string& s, DeterminismPolicy* out);
 
-    // Returns the string representing the determinism policy. This will be one of
-    // the string constants defined above.
-    std::string String() const;
+  // Returns the string representing the determinism policy. This will be one of
+  // the string constants defined above.
+  std::string String() const;
 
-    /// Convenience methods for checking the DeterminismPolicy::Type.
-    bool IsDeterministic() const {
-        return determinism_ == Type::kDeterministic;
-    }
-    bool IsNondeterministic() const {
-        return determinism_ == Type::kNondeterministic;
-    }
-    bool IsDefault() const {
-        return determinism_ == Type::kDefault;
-    }
+  /// Convenience methods for checking the DeterminismPolicy::Type.
+  bool IsDeterministic() const { return determinism_ == Type::kDeterministic; }
+  bool IsNondeterministic() const {
+    return determinism_ == Type::kNondeterministic;
+  }
+  bool IsDefault() const { return determinism_ == Type::kDefault; }
 
-private:
-    Type determinism_;
+ private:
+  Type determinism_;
 };
 
 // Resolves non-deterministic seeds if necessary, returning either the original
@@ -203,31 +197,31 @@ std::pair<int64, int64> MaybeOverrideSeeds(std::pair<int64, int64> seeds);
 
 // Helper class for reading data from a vector of VariantTensorData objects.
 class VariantTensorDataReader : public IteratorStateReader {
-public:
-    explicit VariantTensorDataReader(
-        const std::vector<const VariantTensorData*>& data);
+ public:
+  explicit VariantTensorDataReader(
+      const std::vector<const VariantTensorData*>& data);
 
-    Status ReadScalar(StringPiece key, int64* val) override;
-    Status ReadScalar(StringPiece key, tstring* val) override;
-    Status ReadTensor(StringPiece key, Tensor* val) override;
-    bool Contains(StringPiece key) override;
+  Status ReadScalar(StringPiece key, int64* val) override;
+  Status ReadScalar(StringPiece key, tstring* val) override;
+  Status ReadTensor(StringPiece key, Tensor* val) override;
+  bool Contains(StringPiece key) override;
 
-    Status ReadScalar(StringPiece name, StringPiece key, int64* val) override;
-    Status ReadScalar(StringPiece name, StringPiece key, tstring* val) override;
-    Status ReadTensor(StringPiece name, StringPiece key, Tensor* val) override;
-    bool Contains(StringPiece name, StringPiece key) override;
+  Status ReadScalar(StringPiece name, StringPiece key, int64* val) override;
+  Status ReadScalar(StringPiece name, StringPiece key, tstring* val) override;
+  Status ReadTensor(StringPiece name, StringPiece key, Tensor* val) override;
+  bool Contains(StringPiece name, StringPiece key) override;
 
-private:
-    template <typename T>
-    Status ReadScalarInternal(StringPiece key, T* val);
-    Status ReadTensorInternal(StringPiece key, Tensor* val);
+ private:
+  template <typename T>
+  Status ReadScalarInternal(StringPiece key, T* val);
+  Status ReadTensorInternal(StringPiece key, Tensor* val);
 
-    template <typename T>
-    Status ReadScalarInternal(StringPiece name, StringPiece key, T* val);
-    Status ReadTensorInternal(StringPiece name, StringPiece key, Tensor* val);
+  template <typename T>
+  Status ReadScalarInternal(StringPiece name, StringPiece key, T* val);
+  Status ReadTensorInternal(StringPiece name, StringPiece key, Tensor* val);
 
-    std::map<string, std::map<string, size_t>> map_;
-    std::map<string, const VariantTensorData*> data_;  // Not owned.
+  std::map<string, std::map<string, size_t>> map_;
+  std::map<string, const VariantTensorData*> data_;  // Not owned.
 };
 
 // Helper class used to build a list of VariantTensorData objects, one for each
@@ -241,41 +235,41 @@ private:
 // writer.ReleaseData(&variants);
 // Now the VariantTensorData objects can be used to serialize.
 class VariantTensorDataWriter : public IteratorStateWriter {
-public:
-    Status WriteScalar(StringPiece key, const int64 val) override;
-    Status WriteScalar(StringPiece key, const tstring& val) override;
-    Status WriteTensor(StringPiece key, const Tensor& val) override;
+ public:
+  Status WriteScalar(StringPiece key, const int64 val) override;
+  Status WriteScalar(StringPiece key, const tstring& val) override;
+  Status WriteTensor(StringPiece key, const Tensor& val) override;
 
-    Status WriteScalar(StringPiece name, StringPiece key,
-                       const int64 val) override;
-    Status WriteScalar(StringPiece name, StringPiece key,
-                       const tstring& val) override;
-    Status WriteTensor(StringPiece name, StringPiece key,
-                       const Tensor& val) override;
+  Status WriteScalar(StringPiece name, StringPiece key,
+                     const int64 val) override;
+  Status WriteScalar(StringPiece name, StringPiece key,
+                     const tstring& val) override;
+  Status WriteTensor(StringPiece name, StringPiece key,
+                     const Tensor& val) override;
 
-    // Releases the built VariantTensorData's to `variants`. Clears out all
-    // class state.
-    void ReleaseData(std::vector<std::unique_ptr<VariantTensorData>>* variants);
+  // Releases the built VariantTensorData's to `variants`. Clears out all
+  // class state.
+  void ReleaseData(std::vector<std::unique_ptr<VariantTensorData>>* variants);
 
-    // Obtains a read-only version of the VariantTensorData's built.
-    void GetData(std::vector<const VariantTensorData*>* variants);
+  // Obtains a read-only version of the VariantTensorData's built.
+  void GetData(std::vector<const VariantTensorData*>* variants);
 
-private:
-    void MaybeFlush();
-    void Reset();
+ private:
+  void MaybeFlush();
+  void Reset();
 
-    template <typename T>
-    Status WriteScalarInternal(StringPiece key, const T& val);
-    Status WriteTensorInternal(StringPiece key, const Tensor& val);
+  template <typename T>
+  Status WriteScalarInternal(StringPiece key, const T& val);
+  Status WriteTensorInternal(StringPiece key, const Tensor& val);
 
-    template <typename T>
-    Status WriteScalarInternal(StringPiece name, StringPiece key, const T& val);
-    Status WriteTensorInternal(StringPiece name, StringPiece key,
-                               const Tensor& val);
+  template <typename T>
+  Status WriteScalarInternal(StringPiece name, StringPiece key, const T& val);
+  Status WriteTensorInternal(StringPiece name, StringPiece key,
+                             const Tensor& val);
 
-    bool is_flushed_ = false;
-    std::map<string, std::unique_ptr<VariantTensorData>> data_;
-    std::map<string, std::vector<string>> keys_;
+  bool is_flushed_ = false;
+  std::map<string, std::unique_ptr<VariantTensorData>> data_;
+  std::map<string, std::vector<string>> keys_;
 };
 
 // Adds the functions in `to_add` to `base`. If a function with a matching
