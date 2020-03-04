@@ -28,7 +28,6 @@ from tensorflow.python.platform import flags
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.tpu import tpu_strategy_util
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string("tpu", "", "Name of TPU to connect to.")
 flags.DEFINE_string("project", None, "Name of GCP project with TPU.")
@@ -37,7 +36,9 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 def get_tpu_strategy():
     resolver = tpu_cluster_resolver.TPUClusterResolver(
-        tpu=FLAGS.tpu, zone=FLAGS.zone, project=FLAGS.project,
+        tpu=FLAGS.tpu,
+        zone=FLAGS.zone,
+        project=FLAGS.project,
     )
     remote.connect_to_cluster(resolver)
     tpu_strategy_util.initialize_tpu_system(resolver)
@@ -47,14 +48,17 @@ def get_tpu_strategy():
 class TpuStrategyTest(test.TestCase):
     def test_multiple_initialize_system(self):
         resolver = tpu_cluster_resolver.TPUClusterResolver(
-            tpu=FLAGS.tpu, zone=FLAGS.zone, project=FLAGS.project,
+            tpu=FLAGS.tpu,
+            zone=FLAGS.zone,
+            project=FLAGS.project,
         )
         remote.connect_to_cluster(resolver)
         tpu_strategy_util.initialize_tpu_system(resolver)
 
         with test.mock.patch.object(logging, "warning") as mock_log:
             tpu_strategy_util.initialize_tpu_system(resolver)
-            self.assertRegex(str(mock_log.call_args), "already been initialized")
+            self.assertRegex(str(mock_log.call_args),
+                             "already been initialized")
 
     def test_recover_from_compilation_failures(self):
         strategy = get_tpu_strategy()
@@ -67,9 +71,8 @@ class TpuStrategyTest(test.TestCase):
 
             return strategy.experimental_run_v2(computation)
 
-        with self.assertRaisesRegexp(
-            errors.InvalidArgumentError, "TPU compilation failed"
-        ):
+        with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                     "TPU compilation failed"):
             compilation_failure_run()
 
         @def_function.function
