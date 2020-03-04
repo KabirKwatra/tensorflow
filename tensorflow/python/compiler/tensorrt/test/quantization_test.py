@@ -21,7 +21,9 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.compiler.tf2tensorrt._pywrap_py_utils import get_linked_tensorrt_version
-from tensorflow.python.compiler.tensorrt.test import tf_trt_integration_test_base as trt_test
+from tensorflow.python.compiler.tensorrt.test import (
+    tf_trt_integration_test_base as trt_test,
+)
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import array_ops
@@ -31,7 +33,6 @@ from tensorflow.python.platform import test
 
 
 def _GraphFn(x, add_quantization_nodes):
-
     def _Quantize(x, r):
         if add_quantization_nodes:
             x = gen_array_ops.fake_quant_with_min_max_vars(x, -r, r)
@@ -67,8 +68,11 @@ class QuantizationMissingAllRangesTest(trt_test.TfTrtIntegrationTestBase):
         if get_linked_tensorrt_version()[0] < 5:
             return False
         # Only test static engine mode, with or without calibration.
-        return (trt_test.IsQuantizationMode(run_params.precision_mode) and
-                not run_params.convert_online and not run_params.dynamic_engine)
+        return (
+            trt_test.IsQuantizationMode(run_params.precision_mode)
+            and not run_params.convert_online
+            and not run_params.dynamic_engine
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -92,8 +96,10 @@ class QuantizationWithRangesTest(trt_test.TfTrtIntegrationTestBase):
         if get_linked_tensorrt_version()[0] < 5:
             return False
         # Test static/dynamic engine with/without calibration.
-        return (trt_test.IsQuantizationMode(run_params.precision_mode) and
-                not run_params.convert_online)
+        return (
+            trt_test.IsQuantizationMode(run_params.precision_mode)
+            and not run_params.convert_online
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -101,11 +107,11 @@ class QuantizationWithRangesTest(trt_test.TfTrtIntegrationTestBase):
 
     def ExpectedAbsoluteTolerance(self, run_params):
         """The absolute tolerance to compare floating point results."""
-        return 1.e-05 if run_params.precision_mode == "FP32" else 1.e-01
+        return 1.0e-05 if run_params.precision_mode == "FP32" else 1.0e-01
 
     def ExpectedRelativeTolerance(self, run_params):
         """The relative tolerance to compare floating point results."""
-        return 1.e-05 if run_params.precision_mode == "FP32" else 1.e-01
+        return 1.0e-05 if run_params.precision_mode == "FP32" else 1.0e-01
 
 
 class NonQuantizedPrecisionsWithRangesTest(trt_test.TfTrtIntegrationTestBase):
@@ -129,11 +135,11 @@ class NonQuantizedPrecisionsWithRangesTest(trt_test.TfTrtIntegrationTestBase):
 
     def ExpectedAbsoluteTolerance(self, run_params):
         """The absolute tolerance to compare floating point results."""
-        return 1.e-05 if run_params.precision_mode == "FP32" else 1.e-01
+        return 1.0e-05 if run_params.precision_mode == "FP32" else 1.0e-01
 
     def ExpectedRelativeTolerance(self, run_params):
         """The relative tolerance to compare floating point results."""
-        return 1.e-05 if run_params.precision_mode == "FP32" else 1.e-01
+        return 1.0e-05 if run_params.precision_mode == "FP32" else 1.0e-01
 
 
 if __name__ == "__main__":
