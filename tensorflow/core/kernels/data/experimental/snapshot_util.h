@@ -44,87 +44,87 @@ enum SnapshotMode { READER = 0, WRITER = 1, PASSTHROUGH = 2 };
 class SnapshotTensorMetadata;
 
 class SnapshotWriter {
- public:
-  static constexpr const size_t kHeaderSize = sizeof(uint64);
+public:
+    static constexpr const size_t kHeaderSize = sizeof(uint64);
 
-  static constexpr const char* const kClassName = "SnapshotWriter";
-  static constexpr const char* const kWriteStringPiece = "WriteStringPiece";
-  static constexpr const char* const kWriteCord = "WriteCord";
-  static constexpr const char* const kSeparator = "::";
+    static constexpr const char* const kClassName = "SnapshotWriter";
+    static constexpr const char* const kWriteStringPiece = "WriteStringPiece";
+    static constexpr const char* const kWriteCord = "WriteCord";
+    static constexpr const char* const kSeparator = "::";
 
-  explicit SnapshotWriter(WritableFile* dest, const string& compression_type,
-                          int version, const DataTypeVector& dtypes);
+    explicit SnapshotWriter(WritableFile* dest, const string& compression_type,
+                            int version, const DataTypeVector& dtypes);
 
-  Status WriteTensors(const std::vector<Tensor>& tensors);
+    Status WriteTensors(const std::vector<Tensor>& tensors);
 
-  Status Sync();
+    Status Sync();
 
-  Status Close();
+    Status Close();
 
-  ~SnapshotWriter();
+    ~SnapshotWriter();
 
- private:
-  Status WriteRecord(const StringPiece& data);
+private:
+    Status WriteRecord(const StringPiece& data);
 
 #if defined(PLATFORM_GOOGLE)
-  Status WriteRecord(const absl::Cord& data);
+    Status WriteRecord(const absl::Cord& data);
 #endif  // PLATFORM_GOOGLE
 
-  WritableFile* dest_;
-  bool dest_is_owned_ = false;
-  const string compression_type_;
-  const int version_;
-  std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
-  int num_simple_ = 0;
-  int num_complex_ = 0;
+    WritableFile* dest_;
+    bool dest_is_owned_ = false;
+    const string compression_type_;
+    const int version_;
+    std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
+    int num_simple_ = 0;
+    int num_complex_ = 0;
 };
 
 class SnapshotReader {
- public:
-  // The reader input buffer size is deliberately large because the input reader
-  // will throw an error if the compressed block length cannot fit in the input
-  // buffer.
-  static constexpr const int64 kSnappyReaderInputBufferSizeBytes =
-      1 << 30;  // 1 GiB
-  // TODO(b/148804377): Set this in a smarter fashion.
-  static constexpr const int64 kSnappyReaderOutputBufferSizeBytes =
-      32 << 20;  // 32 MiB
-  static constexpr const size_t kHeaderSize = sizeof(uint64);
+public:
+    // The reader input buffer size is deliberately large because the input reader
+    // will throw an error if the compressed block length cannot fit in the input
+    // buffer.
+    static constexpr const int64 kSnappyReaderInputBufferSizeBytes =
+        1 << 30;  // 1 GiB
+    // TODO(b/148804377): Set this in a smarter fashion.
+    static constexpr const int64 kSnappyReaderOutputBufferSizeBytes =
+        32 << 20;  // 32 MiB
+    static constexpr const size_t kHeaderSize = sizeof(uint64);
 
-  static constexpr const char* const kClassName = "SnapshotReader";
-  static constexpr const char* const kReadString = "ReadString";
-  static constexpr const char* const kReadCord = "ReadCord";
-  static constexpr const char* const kSeparator = "::";
+    static constexpr const char* const kClassName = "SnapshotReader";
+    static constexpr const char* const kReadString = "ReadString";
+    static constexpr const char* const kReadCord = "ReadCord";
+    static constexpr const char* const kSeparator = "::";
 
-  explicit SnapshotReader(RandomAccessFile* file,
-                          const string& compression_type, int version,
-                          const DataTypeVector& dtypes);
+    explicit SnapshotReader(RandomAccessFile* file,
+                            const string& compression_type, int version,
+                            const DataTypeVector& dtypes);
 
-  Status ReadTensors(std::vector<Tensor>* read_tensors);
+    Status ReadTensors(std::vector<Tensor>* read_tensors);
 
- private:
-  Status ReadTensorsV0(std::vector<Tensor>* read_tensors);
+private:
+    Status ReadTensorsV0(std::vector<Tensor>* read_tensors);
 
-  Status SnappyUncompress(
-      const SnapshotTensorMetadata* metadata,
-      std::vector<Tensor>* simple_tensors,
-      std::vector<std::pair<std::unique_ptr<char[]>, size_t>>*
-          tensor_proto_strs);
+    Status SnappyUncompress(
+        const SnapshotTensorMetadata* metadata,
+        std::vector<Tensor>* simple_tensors,
+        std::vector<std::pair<std::unique_ptr<char[]>, size_t>>*
+        tensor_proto_strs);
 
-  Status ReadRecord(tstring* record);
+    Status ReadRecord(tstring* record);
 
 #if defined(PLATFORM_GOOGLE)
-  Status ReadRecord(absl::Cord* record);
+    Status ReadRecord(absl::Cord* record);
 #endif
 
-  RandomAccessFile* file_;
-  std::unique_ptr<io::InputStreamInterface> input_stream_;
-  const string compression_type_;
-  const int version_;
-  const DataTypeVector dtypes_;
-  int num_simple_ = 0;
-  int num_complex_ = 0;
-  std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
+    RandomAccessFile* file_;
+    std::unique_ptr<io::InputStreamInterface> input_stream_;
+    const string compression_type_;
+    const int version_;
+    const DataTypeVector dtypes_;
+    int num_simple_ = 0;
+    int num_complex_ = 0;
+    std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
 };
 
 Status SnapshotWriteMetadataFile(

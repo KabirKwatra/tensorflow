@@ -19,25 +19,25 @@ limitations under the License.
 #include "tensorflow/compiler/tf2tensorrt/utils/py_utils.h"
 
 std::tuple<int, int, int> get_linked_tensorrt_version() {
-  int major, minor, patch;
-  tensorflow::tensorrt::GetLinkedTensorRTVersion(&major, &minor, &patch);
-  return std::tuple<int, int, int>{major, minor, patch};
+    int major, minor, patch;
+    tensorflow::tensorrt::GetLinkedTensorRTVersion(&major, &minor, &patch);
+    return std::tuple<int, int, int> {major, minor, patch};
 }
 
 std::tuple<int, int, int> get_loaded_tensorrt_version() {
-  int major, minor, patch;
-  tensorflow::tensorrt::GetLoadedTensorRTVersion(&major, &minor, &patch);
-  return std::tuple<int, int, int>{major, minor, patch};
+    int major, minor, patch;
+    tensorflow::tensorrt::GetLoadedTensorRTVersion(&major, &minor, &patch);
+    return std::tuple<int, int, int> {major, minor, patch};
 }
 
 PYBIND11_MODULE(_pywrap_py_utils, m) {
-  m.doc() = "_pywrap_py_utils: Various TensorRT utilities";
-  m.def("get_linked_tensorrt_version", get_linked_tensorrt_version,
-        "Return the compile time TensorRT library version as the tuple "
-        "(Major, Minor, Patch).");
-  m.def("get_loaded_tensorrt_version", get_loaded_tensorrt_version,
-        "Return the runtime time TensorRT library version as the tuple "
-        "(Major, Minor, Patch).");
-  m.def("is_tensorrt_enabled", tensorflow::tensorrt::IsGoogleTensorRTEnabled,
-        "Returns True if TensorRT is enabled.");
+    m.doc() = "_pywrap_py_utils: Various TensorRT utilities";
+    m.def("get_linked_tensorrt_version", get_linked_tensorrt_version,
+          "Return the compile time TensorRT library version as the tuple "
+          "(Major, Minor, Patch).");
+    m.def("get_loaded_tensorrt_version", get_loaded_tensorrt_version,
+          "Return the runtime time TensorRT library version as the tuple "
+          "(Major, Minor, Patch).");
+    m.def("is_tensorrt_enabled", tensorflow::tensorrt::IsGoogleTensorRTEnabled,
+          "Returns True if TensorRT is enabled.");
 }
