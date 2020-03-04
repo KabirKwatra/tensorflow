@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Script to test TF-TRT INT8 conversion without calibration on Mnist model."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
