@@ -26,7 +26,7 @@ function install_ctpu {
   # using CTPU.
   # Replace cloud-tpu-client with google-api-python-client oauth2client to test
   # the client at head.
-  "${PIP_CMD}" install --user --upgrade cloud-tpu-client
+  "$PIP_CMD" install --user --upgrade cloud-tpu-client
 
   wget -nv "https://dl.google.com/cloud_tpu/ctpu/latest/linux/ctpu"
   chmod a+x ctpu
@@ -43,7 +43,7 @@ function install_ctpu {
 function ctpu_up {
   local OPTIND o  # Used for flag parsing
   # Generate a unique random name for TPU, as we might be running multiple builds in parallel.
-  local name="kokoro-tpu-${RANDOM}"
+  local name="kokoro-tpu-$RANDOM"
   local zone="us-central1-c"
   local size="v2-8"
   local version="nightly"
@@ -52,57 +52,57 @@ function ctpu_up {
 
   # Override any of the above params from flags.
   while getopts ":n:z:p:s:v:g:" o; do
-    case "${o}" in
+    case "$o" in
       n)
-        name="${OPTARG}"
+        name="$OPTARG"
         ;;
       z)
-        zone="${OPTARG}"
+        zone="$OPTARG"
         ;;
       p)
-        project="${OPTARG}"
+        project="$OPTARG"
         ;;
       s)
-        size="${OPTARG}"
+        size="$OPTARG"
         ;;
       v)
-        version="${OPTARG}"
+        version="$OPTARG"
         ;;
       g)
-        gcp_network="${OPTARG}"
+        gcp_network="$OPTARG"
         ;;
       *)
-        echo "Unexpected parameter for ctpu_up: ${o}"
+        echo "Unexpected parameter for ctpu_up: $o"
         exit 1
-    esac
+    ;; esac
   done
   shift $((OPTIND-1))
 
-  export TPU_NAME="${name}"
-  export TPU_ZONE="${zone}"
+  export TPU_NAME="$name"
+  export TPU_ZONE="$zone"
 
   # Store name and zone into artifacts dir so cleanup job has access.
-  echo "${TPU_NAME}" > "${TF_ARTIFACTS_DIR}/tpu_name"
-  echo "${TPU_ZONE}" > "${TF_ARTIFACTS_DIR}/tpu_zone"
+  echo "$TPU_NAME" > "$TF_ARTIFACTS_DIR/tpu_name"
+  echo "$TPU_ZONE" > "$TF_ARTIFACTS_DIR/tpu_zone"
 
   local args=(
-    "--zone=${zone}"
-    "--tf-version=${version}"
-    "--name=${name}"
-    "--tpu-size=${size}"
+    "--zone=$zone"
+    "--tf-version=$version"
+    "--name=$name"
+    "--tpu-size=$size"
     "--tpu-only"
     "-noconf"
   )
 
   # "-v" is a bash 4.2 builtin for checking that a variable is set.
   if [[ -v gcp_network ]]; then
-    args+=("--gcp-network=${gcp_network}")
+    args+=("--gcp-network=$gcp_network")
   fi
 
   if [[ -v project ]]; then
-    args+=("--project=${project}")
-    export TPU_PROJECT="${project}"
-    echo "${project}" > "${TF_ARTIFACTS_DIR}/tpu_project"
+    args+=("--project=$project")
+    export TPU_PROJECT="$project"
+    echo "$project" > "$TF_ARTIFACTS_DIR/tpu_project"
   fi
 
   ./ctpu up "${args[@]}"
@@ -110,11 +110,11 @@ function ctpu_up {
 
 # Delete the Cloud TPU specified by the metadata in the gfile directory.
 function ctpu_delete {
-  export TPU_NAME="$(cat "${TF_GFILE_DIR}/tpu_name")"
-  export TPU_ZONE="$(cat "${TF_GFILE_DIR}/tpu_zone")"
-  TPU_PROJECT_FILE="${TF_GFILE_DIR}/tpu_project"
-  if [ -f "${TPU_PROJECT_FILE}" ]; then
-    export TPU_PROJECT="$(cat ${TPU_PROJECT_FILE})"
+  export TPU_NAME="$(cat "$TF_GFILE_DIR/tpu_name")"
+  export TPU_ZONE="$(cat "$TF_GFILE_DIR/tpu_zone")"
+  TPU_PROJECT_FILE="$TF_GFILE_DIR/tpu_project"
+  if [ -f "$TPU_PROJECT_FILE" ]; then
+    export TPU_PROJECT="$(cat "$TPU_PROJECT_FILE")"
   else
     export TPU_PROJECT="tensorflow-testing"
   fi
@@ -123,9 +123,9 @@ function ctpu_delete {
   # the time we try to delete it.
   for i in 1 2 3; do
     ./ctpu delete \
-      --project=${TPU_PROJECT} \
-      --zone="${TPU_ZONE}" \
-      --name="${TPU_NAME}" \
+      --project="$TPU_PROJECT" \
+      --zone="$TPU_ZONE" \
+      --name="$TPU_NAME" \
       --tpu-only \
       -noconf && return 0 || sleep 60
   done
