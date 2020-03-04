@@ -29,143 +29,144 @@ from tensorflow.python.platform import test
 
 
 class TrtModeTestBase(trt_test.TfTrtIntegrationTestBase):
-  """Test squeeze on batch dim and some unary operations in TF-TRT."""
+    """Test squeeze on batch dim and some unary operations in TF-TRT."""
 
-  def GraphFn(self, x1):
-    q = math_ops.abs(x1)
-    q = q + 1.0
-    q = q * 3.0
-    q = array_ops.squeeze(q, 0)
-    q = math_ops.abs(q)
-    q = q + 5.0
-    return array_ops.identity(q, name="output_0")
+    def GraphFn(self, x1):
+        q = math_ops.abs(x1)
+        q = q + 1.0
+        q = q * 3.0
+        q = array_ops.squeeze(q, 0)
+        q = math_ops.abs(q)
+        q = q + 5.0
+        return array_ops.identity(q, name="output_0")
 
-  def GetParams(self):
-    """The input has 1 as a first dimension, which is removed by the squeeze.
+    def GetParams(self):
+        """The input has 1 as a first dimension, which is removed by the squeeze.
 
-    op in the graph.
+        op in the graph.
 
-    In explicit batch mode, TensorRT can convert the whole graph. In this mode
-    it is possible to manipulate the batch dimension using the squeeze op.
+        In explicit batch mode, TensorRT can convert the whole graph. In this mode
+        it is possible to manipulate the batch dimension using the squeeze op.
 
-    In implicit batch mode TensorRT cannot convert the whole graph. We are not
-    allowed to manipulate (squeeze) the first dimension in implicit batch mode.
-    Therefore the graph will be converted using multiple segments.
-    """
-    return self.BuildParams(self.GraphFn, dtypes.float32, [[1, 12, 5]],
-                            [[12, 5]])
+        In implicit batch mode TensorRT cannot convert the whole graph. We are not
+        allowed to manipulate (squeeze) the first dimension in implicit batch mode.
+        Therefore the graph will be converted using multiple segments.
+        """
+        return self.BuildParams(self.GraphFn, dtypes.float32, [[1, 12, 5]],
+                                [[12, 5]])
 
-  def GetConversionParams(self, run_params, implicit_batch=False):
-    """Return a TrtConversionParams for test."""
+    def GetConversionParams(self, run_params, implicit_batch=False):
+        """Return a TrtConversionParams for test."""
 
-    conversion_params = super(TrtModeTestBase,
-                              self).GetConversionParams(run_params)
-    rewriter_config = self.GetTrtRewriterConfig(
-        run_params=run_params,
-        conversion_params=conversion_params,
-        use_implicit_batch=implicit_batch)
-    return conversion_params._replace(rewriter_config_template=rewriter_config)
+        conversion_params = super(TrtModeTestBase,
+                                  self).GetConversionParams(run_params)
+        rewriter_config = self.GetTrtRewriterConfig(
+            run_params=run_params,
+            conversion_params=conversion_params,
+            use_implicit_batch=implicit_batch)
+        return conversion_params._replace(rewriter_config_template=rewriter_config)
 
-  @classmethod
-  def setUpClass(cls):
-    if cls is TrtModeTestBase:
-      raise SkipTest("TrtModeTestBase defines base class for other test.")
-    super(TrtModeTestBase, cls).setUpClass()
+    @classmethod
+    def setUpClass(cls):
+        if cls is TrtModeTestBase:
+            raise SkipTest(
+                "TrtModeTestBase defines base class for other test.")
+        super(TrtModeTestBase, cls).setUpClass()
 
 
 class ImplicitBatchTest(TrtModeTestBase):
 
-  def GetConversionParams(self, run_params):
-    """Return a TrtConversionParams for test using implicit batch mdoe."""
-    return super(ImplicitBatchTest, self).GetConversionParams(run_params, True)
+    def GetConversionParams(self, run_params):
+        """Return a TrtConversionParams for test using implicit batch mdoe."""
+        return super(ImplicitBatchTest, self).GetConversionParams(run_params, True)
 
-  def ExpectedEnginesToBuild(self, run_params):
-    """Check that the expected engine is built.
+    def ExpectedEnginesToBuild(self, run_params):
+        """Check that the expected engine is built.
 
-    Args:
-      run_params: the run parameters.
+        Args:
+          run_params: the run parameters.
 
-    Returns:
-      the expected engines to build.
+        Returns:
+          the expected engines to build.
 
-    The squeeze op is not converted by TensorRT in implicit batch mode.
-    Because of this we have two TRTEngineOp in the graphs: one for the
-    subgraph before 'squeeze(q,0)', and another one for the rest of the ops
-    after the 'squeeze(q,0)'.
-    """
-    return ["TRTEngineOp_0", "TRTEngineOp_1"]
+        The squeeze op is not converted by TensorRT in implicit batch mode.
+        Because of this we have two TRTEngineOp in the graphs: one for the
+        subgraph before 'squeeze(q,0)', and another one for the rest of the ops
+        after the 'squeeze(q,0)'.
+        """
+        return ["TRTEngineOp_0", "TRTEngineOp_1"]
 
 
 class ExplicitBatchTest(TrtModeTestBase):
 
-  def GetParams(self):
-    """We specify input/output masks with static (known) shapes."""
-    return self.BuildParamsWithMask(
-        self.GraphFn,
-        dtypes.float32, [[1, 12, 5]], [[12, 5]],
-        input_mask=[[True, True, True]],
-        output_mask=[[True, True]],
-        extra_inputs=[],
-        extra_outputs=[])
+    def GetParams(self):
+        """We specify input/output masks with static (known) shapes."""
+        return self.BuildParamsWithMask(
+            self.GraphFn,
+            dtypes.float32, [[1, 12, 5]], [[12, 5]],
+            input_mask=[[True, True, True]],
+            output_mask=[[True, True]],
+            extra_inputs=[],
+            extra_outputs=[])
 
-  def GetConversionParams(self, run_params):
-    """Return a TrtConversionParams for test that enables explicit batch."""
-    return super(ExplicitBatchTest, self).GetConversionParams(run_params, False)
+    def GetConversionParams(self, run_params):
+        """Return a TrtConversionParams for test that enables explicit batch."""
+        return super(ExplicitBatchTest, self).GetConversionParams(run_params, False)
 
-  def ExpectedEnginesToBuild(self, run_params):
-    """Check that the expected engine is built.
+    def ExpectedEnginesToBuild(self, run_params):
+        """Check that the expected engine is built.
 
-    Args:
-      run_params: the run parameters.
+        Args:
+          run_params: the run parameters.
 
-    Returns:
-      the expected engines to build.
+        Returns:
+          the expected engines to build.
 
-    In explicit batch mode the whole graph is converted using a single engine.
-    """
-    return ["TRTEngineOp_0"]
+        In explicit batch mode the whole graph is converted using a single engine.
+        """
+        return ["TRTEngineOp_0"]
 
-  def ShouldRunTest(self, run_params):
-    # Only run for TRT 6 and above.
-    ver = get_linked_tensorrt_version()
-    return ver[0] >= 6 and (not run_params.use_calibration)
+    def ShouldRunTest(self, run_params):
+        # Only run for TRT 6 and above.
+        ver = get_linked_tensorrt_version()
+        return ver[0] >= 6 and (not run_params.use_calibration)
 
 
 class DynamicShapesTest(TrtModeTestBase):
-  """Test with dynamic input shapes.
+    """Test with dynamic input shapes.
 
-  DynamicShapesTest is different from ExplicitBatchTest in that it uses input
-  and output masks to change the input and output shapes to unknown shapes.
-  """
-
-  def GetParams(self):
-    """We specify input/output mask with dynamic (unknown) shapes.
-
-    A single
-    engine with three optimization profiles can handle the three different
-    input shapes.
+    DynamicShapesTest is different from ExplicitBatchTest in that it uses input
+    and output masks to change the input and output shapes to unknown shapes.
     """
-    return self.BuildParamsWithMask(
-        self.GraphFn,
-        dtypes.float32, [[1, 12, 5]], [[12, 5]],
-        extra_inputs=[[[1, 2, 3]], [[1, 4, 6]]],
-        extra_outputs=[[[2, 3]], [[4, 6]]],
-        input_mask=[[False, False, False]],
-        output_mask=[[False, False]])
 
-  def GetConversionParams(self, run_params):
-    """Return a TrtConversionParams for test that enables explicit batch."""
-    return super(DynamicShapesTest, self).GetConversionParams(run_params, False)
+    def GetParams(self):
+        """We specify input/output mask with dynamic (unknown) shapes.
 
-  def ExpectedEnginesToBuild(self, run_params):
-    """Return the expected engines to build."""
-    return ["TRTEngineOp_0"]
+        A single
+        engine with three optimization profiles can handle the three different
+        input shapes.
+        """
+        return self.BuildParamsWithMask(
+            self.GraphFn,
+            dtypes.float32, [[1, 12, 5]], [[12, 5]],
+            extra_inputs=[[[1, 2, 3]], [[1, 4, 6]]],
+            extra_outputs=[[[2, 3]], [[4, 6]]],
+            input_mask=[[False, False, False]],
+            output_mask=[[False, False]])
 
-  def ShouldRunTest(self, run_params):
-    # Only run for TRT 6 and above.
-    ver = get_linked_tensorrt_version()
-    return ver[0] >= 6 and (not run_params.use_calibration)
+    def GetConversionParams(self, run_params):
+        """Return a TrtConversionParams for test that enables explicit batch."""
+        return super(DynamicShapesTest, self).GetConversionParams(run_params, False)
+
+    def ExpectedEnginesToBuild(self, run_params):
+        """Return the expected engines to build."""
+        return ["TRTEngineOp_0"]
+
+    def ShouldRunTest(self, run_params):
+        # Only run for TRT 6 and above.
+        ver = get_linked_tensorrt_version()
+        return ver[0] >= 6 and (not run_params.use_calibration)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
