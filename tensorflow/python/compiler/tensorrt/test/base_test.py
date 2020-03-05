@@ -20,8 +20,7 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.python.compiler.tensorrt.test import (
-    tf_trt_integration_test_base as trt_test,
-)
+    tf_trt_integration_test_base as trt_test, )
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
@@ -37,7 +36,8 @@ class SimpleSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
         """Create a graph containing single segment."""
         dtype = inp.dtype
         conv_filter = constant_op.constant(
-            [[[[1.0, 0.5, 4.0, 6.0, 0.5, 1.0], [1.0, 0.5, 1.0, 1.0, 0.5, 1.0]]]],
+            [[[[1.0, 0.5, 4.0, 6.0, 0.5, 1.0], [1.0, 0.5, 1.0, 1.0, 0.5, 1.0]]]
+             ],
             name="weights",
             dtype=dtype,
         )
@@ -48,22 +48,21 @@ class SimpleSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
             padding="SAME",
             name="conv",
         )
-        bias = constant_op.constant(
-            [4.0, 1.5, 2.0, 3.0, 5.0, 7.0], name="bias", dtype=dtype
-        )
+        bias = constant_op.constant([4.0, 1.5, 2.0, 3.0, 5.0, 7.0],
+                                    name="bias",
+                                    dtype=dtype)
         added = nn.bias_add(conv, bias, name="bias_add")
         relu = nn.relu(added, "relu")
         identity = array_ops.identity(relu, "identity")
-        pool = nn_ops.max_pool(
-            identity, [1, 2, 2, 1], [1, 2, 2, 1], "VALID", name="max_pool"
-        )
+        pool = nn_ops.max_pool(identity, [1, 2, 2, 1], [1, 2, 2, 1],
+                               "VALID",
+                               name="max_pool")
         return array_ops.squeeze(pool, name="output_0")
 
     def GetParams(self):
         # TODO(aaroey): test graph with different dtypes.
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, [[100, 24, 24, 2]], [[100, 6, 6, 6]]
-        )
+        return self.BuildParams(self.GraphFn, dtypes.float32,
+                                [[100, 24, 24, 2]], [[100, 6, 6, 6]])
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -85,7 +84,8 @@ class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
         """Create a graph containing multiple segment."""
         dtype = inp.dtype
         conv_filter = constant_op.constant(
-            [[[[1.0, 0.5, 4.0, 6.0, 0.5, 1.0], [1.0, 0.5, 1.0, 1.0, 0.5, 1.0]]]],
+            [[[[1.0, 0.5, 4.0, 6.0, 0.5, 1.0], [1.0, 0.5, 1.0, 1.0, 0.5, 1.0]]]
+             ],
             name="weights",
             dtype=dtype,
         )
@@ -96,9 +96,13 @@ class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
             padding="SAME",
             name="conv",
         )
-        c1 = constant_op.constant(np.random.randn(12, 12, 6), dtype=dtype, name="c1")
+        c1 = constant_op.constant(np.random.randn(12, 12, 6),
+                                  dtype=dtype,
+                                  name="c1")
         p = math_ops.mul(conv, c1, name="mul")
-        c2 = constant_op.constant(np.random.randn(12, 12, 6), dtype=dtype, name="c2")
+        c2 = constant_op.constant(np.random.randn(12, 12, 6),
+                                  dtype=dtype,
+                                  name="c2")
         q = math_ops.div(conv, c2, name="div")
 
         edge = self.trt_incompatible_op(q, name="incompatible")
@@ -113,9 +117,8 @@ class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         # TODO(aaroey): test graph with different dtypes.
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, [[100, 24, 24, 2]], [[100, 12, 12, 6]]
-        )
+        return self.BuildParams(self.GraphFn, dtypes.float32,
+                                [[100, 24, 24, 2]], [[100, 12, 12, 6]])
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -135,9 +138,8 @@ class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetConversionParams(self, run_params):
         """Return a ConversionParams for test."""
-        conversion_params = super(SimpleMultiEnginesTest, self).GetConversionParams(
-            run_params
-        )
+        conversion_params = super(SimpleMultiEnginesTest,
+                                  self).GetConversionParams(run_params)
         rewrite_config_with_trt = self.GetTrtRewriterConfig(
             run_params=run_params,
             conversion_params=conversion_params,
@@ -146,8 +148,7 @@ class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
             disable_non_trt_optimizers=True,
         )
         return conversion_params._replace(
-            rewriter_config_template=rewrite_config_with_trt
-        )
+            rewriter_config_template=rewrite_config_with_trt)
 
 
 class SimpleMultiEnginesTest2(trt_test.TfTrtIntegrationTestBase):
@@ -170,9 +171,10 @@ class SimpleMultiEnginesTest2(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
-        )
+        return self.BuildParams(self.GraphFn,
+                                dtypes.float32,
+                                input_shapes=shapes,
+                                output_shapes=shapes)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -186,13 +188,9 @@ class SimpleMultiEnginesTest2(trt_test.TfTrtIntegrationTestBase):
         # Disable the test in fp16 mode since multiple matmul and add ops together
         # can cause overflow.
         return (
-            (
-                (run_params.precision_mode != "FP16")
-                and not (
-                    trt_test.IsQuantizationMode(run_params.precision_mode)
-                    and not run_params.use_calibration
-                )
-            ),
+            ((run_params.precision_mode != "FP16")
+             and not (trt_test.IsQuantizationMode(run_params.precision_mode)
+                      and not run_params.use_calibration)),
             "test FP32 and non-calibration",
         )
 
@@ -221,9 +219,10 @@ class ConstInputTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
-        )
+        return self.BuildParams(self.GraphFn,
+                                dtypes.float32,
+                                input_shapes=shapes,
+                                output_shapes=shapes)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -245,9 +244,10 @@ class ConstDataInputSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
-        )
+        return self.BuildParams(self.GraphFn,
+                                dtypes.float32,
+                                input_shapes=shapes,
+                                output_shapes=shapes)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -270,9 +270,10 @@ class ConstDataInputMultipleEnginesTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
-        )
+        return self.BuildParams(self.GraphFn,
+                                dtypes.float32,
+                                input_shapes=shapes,
+                                output_shapes=shapes)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -310,9 +311,10 @@ class ControlDependencyTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(
-            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
-        )
+        return self.BuildParams(self.GraphFn,
+                                dtypes.float32,
+                                input_shapes=shapes,
+                                output_shapes=shapes)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""

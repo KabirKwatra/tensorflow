@@ -20,8 +20,7 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.python.compiler.tensorrt.test import (
-    tf_trt_integration_test_base as trt_test,
-)
+    tf_trt_integration_test_base as trt_test, )
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import tensor_spec
@@ -32,9 +31,9 @@ from tensorflow.python.platform import test
 
 class DynamicInputShapesTest(trt_test.TfTrtIntegrationTestBase):
     def GraphFn(self, x):
-        conv_filter1 = constant_op.constant(
-            np.ones([3, 3, 1, 8]), name="weights1", dtype=dtypes.float32
-        )
+        conv_filter1 = constant_op.constant(np.ones([3, 3, 1, 8]),
+                                            name="weights1",
+                                            dtype=dtypes.float32)
         bias1 = constant_op.constant(np.random.randn(8), dtype=dtypes.float32)
         x = nn.conv2d(
             input=x,
@@ -45,9 +44,9 @@ class DynamicInputShapesTest(trt_test.TfTrtIntegrationTestBase):
         )
         x = nn.bias_add(x, bias1)
         x = nn.relu(x)
-        conv_filter2 = constant_op.constant(
-            np.ones([3, 3, 8, 1]), name="weights2", dtype=dtypes.float32
-        )
+        conv_filter2 = constant_op.constant(np.ones([3, 3, 8, 1]),
+                                            name="weights2",
+                                            dtype=dtypes.float32)
         bias2 = constant_op.constant(np.random.randn(1), dtype=dtypes.float32)
         x = nn.conv2d(
             input=x,
@@ -81,10 +80,12 @@ class DynamicInputShapesTest(trt_test.TfTrtIntegrationTestBase):
         return trt_test.TfTrtIntegrationTestParams(
             graph_fn=self.GraphFn,
             input_specs=[
-                tensor_spec.TensorSpec([None, None, None, 1], dtypes.float32, "input")
+                tensor_spec.TensorSpec([None, None, None, 1], dtypes.float32,
+                                       "input")
             ],
             output_specs=[
-                tensor_spec.TensorSpec([None, None, None, 1], dtypes.float32, "output")
+                tensor_spec.TensorSpec([None, None, None, 1], dtypes.float32,
+                                       "output")
             ],
             input_dims=input_dims,
             expected_output_dims=expected_output_dims,
@@ -92,9 +93,8 @@ class DynamicInputShapesTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetConversionParams(self, run_params):
         """Return a ConversionParams for test."""
-        conversion_params = super(DynamicInputShapesTest, self).GetConversionParams(
-            run_params
-        )
+        conversion_params = super(DynamicInputShapesTest,
+                                  self).GetConversionParams(run_params)
         conversion_params._replace(maximum_cached_engines=10)
         rewrite_config_with_trt = self.GetTrtRewriterConfig(
             run_params=run_params,
@@ -104,18 +104,15 @@ class DynamicInputShapesTest(trt_test.TfTrtIntegrationTestBase):
             disable_non_trt_optimizers=True,
         )
         return conversion_params._replace(
-            rewriter_config_template=rewrite_config_with_trt
-        )
+            rewriter_config_template=rewrite_config_with_trt)
 
     def ExpectedEnginesToBuild(self, run_params):
         return ["TRTEngineOp_0"]
 
     def ShouldRunTest(self, run_params):
         return (
-            (
-                run_params.dynamic_engine
-                and not trt_test.IsQuantizationMode(run_params.precision_mode)
-            ),
+            (run_params.dynamic_engine
+             and not trt_test.IsQuantizationMode(run_params.precision_mode)),
             "test dynamic engine and non-INT8",
         )
 

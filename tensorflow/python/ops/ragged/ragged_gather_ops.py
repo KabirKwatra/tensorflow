@@ -32,7 +32,12 @@ from tensorflow.python.ops.ragged import ragged_tensor
 # ===============================================================================
 # ragged_gather
 # ===============================================================================
-def gather(params, indices, validate_indices=None, axis=None, batch_dims=0, name=None):
+def gather(params,
+           indices,
+           validate_indices=None,
+           axis=None,
+           batch_dims=0,
+           name=None):
     """Gathers ragged slices from `params` axis `0` according to `indices`.
 
     See `tf.gather` for full documentation.  (This version has the same API
@@ -76,11 +81,12 @@ def gather(params, indices, validate_indices=None, axis=None, batch_dims=0, name
     del validate_indices
 
     with ops.name_scope(name, "RaggedGather", [params, indices]):
-        params = ragged_tensor.convert_to_tensor_or_ragged_tensor(params, name="params")
+        params = ragged_tensor.convert_to_tensor_or_ragged_tensor(
+            params, name="params")
         indices = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-            indices, name="indices"
-        )
-        params, indices = ragged_tensor.match_row_splits_dtypes(params, indices)
+            indices, name="indices")
+        params, indices = ragged_tensor.match_row_splits_dtypes(
+            params, indices)
 
         if batch_dims != indices.shape.rank:
             batch_dims = array_ops.get_positive_axis(
@@ -93,17 +99,17 @@ def gather(params, indices, validate_indices=None, axis=None, batch_dims=0, name
             raise ValueError("batch_dims must be less than rank(params)")
         if axis is None:
             axis = batch_dims
-        axis = array_ops.get_positive_axis(
-            axis, params.shape.rank, ndims_name="rank(params)"
-        )
+        axis = array_ops.get_positive_axis(axis,
+                                           params.shape.rank,
+                                           ndims_name="rank(params)")
         if axis < batch_dims:
-            raise ValueError("axis must be greater than or equal to batch_dims")
+            raise ValueError(
+                "axis must be greater than or equal to batch_dims")
         if indices.shape.rank is not None:
             if not 0 <= batch_dims <= indices.shape.rank:
                 raise ValueError(
-                    "batch_dims=%s must be between 0 and rank(indices)=%s"
-                    % (batch_dims, indices.shape.rank)
-                )
+                    "batch_dims=%s must be between 0 and rank(indices)=%s" %
+                    (batch_dims, indices.shape.rank))
 
         return _gather(params, indices, axis, batch_dims)
 
@@ -129,7 +135,10 @@ def _gather(params, indices, axis, batch_dims):
     indices_is_ragged = ragged_tensor.is_ragged(indices)
 
     if not (params_is_ragged or indices_is_ragged):
-        return array_ops.gather(params, indices, axis=axis, batch_dims=batch_dims)
+        return array_ops.gather(params,
+                                indices,
+                                axis=axis,
+                                batch_dims=batch_dims)
 
     if batch_dims > 0:
         return _batch_gather(params, indices, axis, batch_dims)
@@ -152,8 +161,9 @@ def _gather(params, indices, axis, batch_dims):
     )
 
     result = ragged_tensor.RaggedTensor.from_nested_row_splits(
-        result.output_dense_values, result.output_nested_splits, validate=False
-    )
+        result.output_dense_values,
+        result.output_nested_splits,
+        validate=False)
 
     # Inject uniform_row_lengths into the result RaggedTensors for dimensions
     # corresponding to dense outer dimensions of `indices`.
@@ -161,7 +171,8 @@ def _gather(params, indices, axis, batch_dims):
     # objects instead, so we don't need to modify private variables.
     if indices.shape.ndims > 1:
         target = result
-        indices_shape = array_ops.shape(indices, out_type=params.row_splits.dtype)
+        indices_shape = array_ops.shape(indices,
+                                        out_type=params.row_splits.dtype)
         shape_cumprod = math_ops.cumprod(indices_shape)
         for dim in range(indices.shape.ndims - 1):
             # pylint: disable=protected-access
@@ -189,11 +200,11 @@ def _batch_gather(params, indices, axis, batch_dims):
     # `indices` actually have the same row-splits (because we wish to avoid the
     # runtime cost of those checks).  If `params` and `indices` are
     # incompatible, the resulting `RaggedTensor` may be nonsensical.
-    if not params.shape[:batch_dims].is_compatible_with(indices.shape[:batch_dims]):
-        raise ValueError(
-            "batch shape from indices %s does not match params "
-            "shape %s" % (indices.shape[:batch_dims], params.shape)
-        )
+    if not params.shape[:batch_dims].is_compatible_with(
+            indices.shape[:batch_dims]):
+        raise ValueError("batch shape from indices %s does not match params "
+                         "shape %s" %
+                         (indices.shape[:batch_dims], params.shape))
 
     if batch_dims > 1:
         # Convert params & indices to ragged tensors.
@@ -204,8 +215,9 @@ def _batch_gather(params, indices, axis, batch_dims):
                     "indices dimension corresponds to uniform params dimension"
                 )
             params = ragged_tensor.RaggedTensor.from_tensor(
-                params, ragged_rank=1, row_splits_dtype=indices.row_splits.dtype
-            )
+                params,
+                ragged_rank=1,
+                row_splits_dtype=indices.row_splits.dtype)
         if not isinstance(indices, ragged_tensor.RaggedTensor):
             if params.uniform_row_length is None:
                 raise ValueError(
@@ -213,13 +225,13 @@ def _batch_gather(params, indices, axis, batch_dims):
                     "params dimension corresponds to uniform indices dimension"
                 )
             indices = ragged_tensor.RaggedTensor.from_tensor(
-                indices, ragged_rank=1, row_splits_dtype=params.row_splits.dtype
-            )
+                indices,
+                ragged_rank=1,
+                row_splits_dtype=params.row_splits.dtype)
         # Flatten the two outer batch dimensions into a single batch dimension,
         # and recurse.
         return params.with_values(
-            _gather(params.values, indices.values, axis - 1, batch_dims - 1)
-        )
+            _gather(params.values, indices.values, axis - 1, batch_dims - 1))
 
     if axis > 1:
         # Convert an axis dimension into a batch dimension, by adding a dimension
@@ -229,20 +241,18 @@ def _batch_gather(params, indices, axis, batch_dims):
         # the `P1` dimension as a batch dimension.
         if not isinstance(indices, ragged_tensor.RaggedTensor):
             adjusted_indices = params.with_values(
-                array_ops.repeat(indices, params.row_lengths(), 0)
-            )
+                array_ops.repeat(indices, params.row_lengths(), 0))
         else:
             if not isinstance(params, ragged_tensor.RaggedTensor):
                 params = ragged_tensor.RaggedTensor.from_tensor(
-                    params, ragged_rank=1, row_splits_dtype=indices.row_splits.dtype
-                )
+                    params,
+                    ragged_rank=1,
+                    row_splits_dtype=indices.row_splits.dtype)
             adjusted_indices = _gather(
                 indices,
                 params.with_values(
-                    array_ops.repeat(
-                        math_ops.range(params.nrows()), params.row_lengths()
-                    )
-                ),
+                    array_ops.repeat(math_ops.range(params.nrows()),
+                                     params.row_lengths())),
                 0,
                 0,
             )
@@ -281,17 +291,16 @@ def _axis_gather(params, indices, axis):
     if axis > 1:
         if not isinstance(params, ragged_tensor.RaggedTensor):
             params = ragged_tensor.RaggedTensor.from_tensor(
-                params, ragged_rank=1, row_splits_dtype=indices.row_splits.dtype
-            )
+                params,
+                ragged_rank=1,
+                row_splits_dtype=indices.row_splits.dtype)
         # Recurse, using the flattened params (but do not flatten indices).
         return params.with_values(_gather(params.values, indices, axis - 1, 0))
 
     if indices.shape.rank is None:
         raise ValueError("rank(indices) must be known statically")
-    if (
-        isinstance(params, ragged_tensor.RaggedTensor)
-        and params.uniform_row_length is None
-    ):
+    if (isinstance(params, ragged_tensor.RaggedTensor)
+            and params.uniform_row_length is None):
         raise ValueError("axis may not be a ragged dimension")
 
     assert axis == 1
@@ -316,7 +325,8 @@ def _flatten_dims_0_and_1(t):
         return t.values
     else:
         t_shape = array_ops.shape(t)
-        return array_ops.reshape(t, array_ops.concat([[-1], t_shape[2:]], axis=0))
+        return array_ops.reshape(t,
+                                 array_ops.concat([[-1], t_shape[2:]], axis=0))
 
 
 def _row_starts(t, dtype):
@@ -385,28 +395,30 @@ def gather_nd(params, indices, batch_dims=0, name=None):
     array([b'001', b'112'], dtype=object)
     """
     if not isinstance(batch_dims, int) or batch_dims != 0:
-        raise ValueError("batch_dims != 0 is not supported for ragged gather yet.")
-    if not (ragged_tensor.is_ragged(params) or ragged_tensor.is_ragged(indices)):
+        raise ValueError(
+            "batch_dims != 0 is not supported for ragged gather yet.")
+    if not (ragged_tensor.is_ragged(params)
+            or ragged_tensor.is_ragged(indices)):
         return array_ops.gather_nd(params, indices, name)
 
     with ops.name_scope(name, "RaggedGatherNd", [params, indices]):
 
-        params = ragged_tensor.convert_to_tensor_or_ragged_tensor(params, name="params")
+        params = ragged_tensor.convert_to_tensor_or_ragged_tensor(
+            params, name="params")
         indices = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-            indices, name="indices"
-        )
-        params, indices = ragged_tensor.match_row_splits_dtypes(params, indices)
+            indices, name="indices")
+        params, indices = ragged_tensor.match_row_splits_dtypes(
+            params, indices)
         indices_shape = indices.shape
         indices_ndims = indices_shape.ndims
         if indices_ndims is None:
             raise ValueError("indices.rank be statically known.")
         if indices_ndims == 0:
             raise ValueError("indices.rank must be at least 1.")
-        if (
-            ragged_tensor.is_ragged(indices)
-            and indices_ndims == indices.ragged_rank + 1
-        ):
-            raise ValueError("The innermost dimension of indices may not be ragged")
+        if (ragged_tensor.is_ragged(indices)
+                and indices_ndims == indices.ragged_rank + 1):
+            raise ValueError(
+                "The innermost dimension of indices may not be ragged")
 
         # `index_size` is the "n" in "gather_nd" -- i.e., the number of dimensions
         # that each index slices into.
@@ -425,12 +437,10 @@ def gather_nd(params, indices, batch_dims=0, name=None):
                     ragged_rank=indices_ndims - 2,
                     row_splits_dtype=params.row_splits.dtype,
                 )
-            result = indices.with_flat_values(gather_nd(params, indices.flat_values))
-            if (
-                indices_is_dense
-                and ragged_tensor.is_ragged(result)
-                and result.ragged_rank == indices_ndims - 2
-            ):
+            result = indices.with_flat_values(
+                gather_nd(params, indices.flat_values))
+            if (indices_is_dense and ragged_tensor.is_ragged(result)
+                    and result.ragged_rank == indices_ndims - 2):
                 result = ragged_tensor.RaggedTensor.to_tensor(result)
             return result
 
@@ -442,7 +452,8 @@ def gather_nd(params, indices, batch_dims=0, name=None):
         # Handle corner case: An empty index tuple selects the entire `params`
         # value.  So if `index_size` is zero, then tile `params`.
         if index_size == 0:
-            params_ndims = params.ragged_rank + array_ops.rank(params.flat_values)
+            params_ndims = params.ragged_rank + array_ops.rank(
+                params.flat_values)
             for dim in range(indices_ndims - 1):
                 params = ragged_array_ops.expand_dims(params, axis=0)
             multiples = array_ops.concat(
@@ -467,9 +478,8 @@ def gather_nd(params, indices, batch_dims=0, name=None):
             indices = math_ops.cast(indices, params.row_splits.dtype)
 
             # Flatten the outermost 2 dimensions of the index tuples & params.
-            flattened_index_tuples = array_ops.gather(
-                params.row_splits, indices[..., 0]
-            )
+            flattened_index_tuples = array_ops.gather(params.row_splits,
+                                                      indices[..., 0])
             flattened_index_tuples += indices[..., 1]
             flattened_params = params.values
 
@@ -477,16 +487,14 @@ def gather_nd(params, indices, batch_dims=0, name=None):
             for dim in range(2, index_size):
                 if not ragged_tensor.is_ragged(flattened_params):
                     flattened_index_tuples = array_ops.expand_dims(
-                        flattened_index_tuples, axis=1
-                    )
+                        flattened_index_tuples, axis=1)
                     flattened_index_tuples = array_ops.concat(
-                        [flattened_index_tuples, indices[..., dim:]], axis=1
-                    )
-                    return array_ops.gather_nd(flattened_params, flattened_index_tuples)
+                        [flattened_index_tuples, indices[..., dim:]], axis=1)
+                    return array_ops.gather_nd(flattened_params,
+                                               flattened_index_tuples)
 
                 flattened_index_tuples = array_ops.gather(
-                    flattened_params.row_starts(), flattened_index_tuples
-                )
+                    flattened_params.row_starts(), flattened_index_tuples)
                 flattened_index_tuples += indices[..., dim]
                 flattened_params = flattened_params.values
 
@@ -528,4 +536,5 @@ def _ragged_gather_grad(op, *grads):
         indices=grad_indices,
         dense_shape=array_ops.shape(param_inner_values),
     )
-    return [None for _ in param_nested_splits] + [param_inner_values_grad, None]
+    return [None
+            for _ in param_nested_splits] + [param_inner_values_grad, None]

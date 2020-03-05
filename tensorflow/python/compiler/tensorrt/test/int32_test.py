@@ -20,8 +20,7 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.python.compiler.tensorrt.test import (
-    tf_trt_integration_test_base as trt_test,
-)
+    tf_trt_integration_test_base as trt_test, )
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import array_ops
@@ -40,19 +39,20 @@ class ExcludeUnsupportedInt32Test(trt_test.TfTrtIntegrationTestBase):
         dtype = x.dtype
         b = self._ConstOp((4, 10), dtype)
         x = math_ops.matmul(x, b)
-        b = self._ConstOp((10,), dtype)
+        b = self._ConstOp((10, ), dtype)
         x = nn.bias_add(x, b)
         return array_ops.identity(x, name="output_0")
 
     def GetParams(self):
-        return self.BuildParams(self.GraphFn, dtypes.int32, [[100, 4]], [[100, 10]])
+        return self.BuildParams(self.GraphFn, dtypes.int32, [[100, 4]],
+                                [[100, 10]])
 
     def GetConversionParams(self, run_params):
         """Return a ConversionParams for test."""
-        conversion_params = super(
-            ExcludeUnsupportedInt32Test, self
-        ).GetConversionParams(run_params)
-        conversion_params._replace(max_batch_size=100, maximum_cached_engines=1)
+        conversion_params = super(ExcludeUnsupportedInt32Test,
+                                  self).GetConversionParams(run_params)
+        conversion_params._replace(max_batch_size=100,
+                                   maximum_cached_engines=1)
         rewrite_config_with_trt = self.GetTrtRewriterConfig(
             run_params=run_params,
             conversion_params=conversion_params,
@@ -61,8 +61,7 @@ class ExcludeUnsupportedInt32Test(trt_test.TfTrtIntegrationTestBase):
             disable_non_trt_optimizers=True,
         )
         return conversion_params._replace(
-            rewriter_config_template=rewrite_config_with_trt
-        )
+            rewriter_config_template=rewrite_config_with_trt)
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -74,13 +73,13 @@ class CalibrationInt32Support(trt_test.TfTrtIntegrationTestBase):
 
     def GraphFn(self, inp):
         # Can use any op that is converted to TRT with int32 inputs
-        inp_transposed = array_ops.transpose(inp, [0, 3, 2, 1], name="transpose_0")
+        inp_transposed = array_ops.transpose(inp, [0, 3, 2, 1],
+                                             name="transpose_0")
         return array_ops.identity(inp_transposed, name="output_0")
 
     def GetParams(self):
-        return self.BuildParams(
-            self.GraphFn, dtypes.int32, [[3, 4, 5, 6]], [[3, 6, 5, 4]]
-        )
+        return self.BuildParams(self.GraphFn, dtypes.int32, [[3, 4, 5, 6]],
+                                [[3, 6, 5, 4]])
 
     def ShouldRunTest(self, run_params):
         # Although test passes with all configurations but only

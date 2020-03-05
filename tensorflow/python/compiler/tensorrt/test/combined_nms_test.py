@@ -19,8 +19,7 @@ from __future__ import print_function
 
 from tensorflow.compiler.tf2tensorrt._pywrap_py_utils import get_linked_tensorrt_version
 from tensorflow.python.compiler.tensorrt.test import (
-    tf_trt_integration_test_base as trt_test,
-)
+    tf_trt_integration_test_base as trt_test, )
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import array_ops
@@ -42,15 +41,15 @@ class CombinedNmsTest(trt_test.TfTrtIntegrationTestBase):
             dtype=dtypes.int32,
             name="max_output_size_per_class",
         )
-        max_total_size_tensor = constant_op.constant(
-            max_total_size, dtype=dtypes.int32, name="max_total_size"
-        )
-        iou_threshold_tensor = constant_op.constant(
-            iou_threshold, dtype=dtypes.float32, name="iou_threshold"
-        )
-        score_threshold_tensor = constant_op.constant(
-            score_threshold, dtype=dtypes.float32, name="score_threshold"
-        )
+        max_total_size_tensor = constant_op.constant(max_total_size,
+                                                     dtype=dtypes.int32,
+                                                     name="max_total_size")
+        iou_threshold_tensor = constant_op.constant(iou_threshold,
+                                                    dtype=dtypes.float32,
+                                                    name="iou_threshold")
+        score_threshold_tensor = constant_op.constant(score_threshold,
+                                                      dtype=dtypes.float32,
+                                                      name="score_threshold")
         nms_output = image_ops_impl.combined_non_max_suppression(
             boxes,
             scores,
