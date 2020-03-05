@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Switching v2 features on and off."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -30,7 +29,6 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import control_flow_v2_toggles
 from tensorflow.python.ops import variable_scope
-
 from tensorflow.python.util.tf_export import tf_export
 
 # Metrics to track the status of v2_behavior

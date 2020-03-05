@@ -13,14 +13,13 @@
 # limitations under the License.
 # ======================================
 """Operations for handling session logging and shutdown notifications."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import threading
-
 import time
+
 from google.protobuf import text_format
 
 from tensorflow.core.protobuf import config_pb2

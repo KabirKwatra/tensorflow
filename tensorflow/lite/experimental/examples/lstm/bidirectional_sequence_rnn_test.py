@@ -16,12 +16,13 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import tempfile
 
 import numpy as np
 from six.moves import range
-import tensorflow.compat.v1 as tf
 
+import tensorflow.compat.v1 as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.lite.experimental.examples.lstm.rnn import bidirectional_dynamic_rnn
 from tensorflow.python.framework import test_util
