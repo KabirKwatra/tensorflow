@@ -43,14 +43,16 @@ class CoordinatorResetError(errors.AbortedError):
 
     def __init__(self):
         errors.AbortedError.__init__(
-            self, None, None, 'Resetting session loop due to worker shutdown.')
+            self, None, None, "Resetting session loop due to worker shutdown."
+        )
 
 
 def _clone_session(session, graph=None):
     return session_lib.Session(
         target=session.sess_str,
         config=session._config,  # pylint: disable=protected-access
-        graph=graph if graph else session.graph)
+        graph=graph if graph else session.graph,
+    )
 
 
 class WorkerHeartbeatManager(object):
@@ -77,21 +79,21 @@ class WorkerHeartbeatManager(object):
     def from_devices(session, devices):
         """Construct a heartbeat manager for the given devices."""
         if not devices:
-            logging.error(
-                'Trying to create heartbeat manager with no devices?')
+            logging.error("Trying to create heartbeat manager with no devices?")
 
-        logging.info('Creating heartbeat manager for %s', devices)
+        logging.info("Creating heartbeat manager for %s", devices)
         request_placeholder = array_ops.placeholder(
-            name='worker_heartbeat_request', dtype=dtypes.string)
+            name="worker_heartbeat_request", dtype=dtypes.string
+        )
 
         heartbeat_ops = []
         for device in devices:
             with ops.device(device):
-                heartbeat_ops.append(
-                    tpu_ops.worker_heartbeat(request_placeholder))
+                heartbeat_ops.append(tpu_ops.worker_heartbeat(request_placeholder))
 
-        return WorkerHeartbeatManager(session, devices, heartbeat_ops,
-                                      request_placeholder)
+        return WorkerHeartbeatManager(
+            session, devices, heartbeat_ops, request_placeholder
+        )
 
     def num_workers(self):
         return len(self._devices)
@@ -103,10 +105,12 @@ class WorkerHeartbeatManager(object):
           message: `event_pb2.WorkerHeartbeatRequest`
         Returns: `None`
         """
-        logging.info('Configuring worker heartbeat: %s',
-                     text_format.MessageToString(message))
-        self._session.run(self._ops,
-                          {self._request_placeholder: message.SerializeToString()})
+        logging.info(
+            "Configuring worker heartbeat: %s", text_format.MessageToString(message)
+        )
+        self._session.run(
+            self._ops, {self._request_placeholder: message.SerializeToString()}
+        )
 
     def ping(self, request=None, timeout_in_ms=5000):
         """Ping all workers, returning the parsed status results."""
@@ -117,12 +121,12 @@ class WorkerHeartbeatManager(object):
         results = self._session.run(
             self._ops,
             feed_dict={self._request_placeholder: request.SerializeToString()},
-            options=options)
+            options=options,
+        )
         parsed_results = [
-            event_pb2.WorkerHeartbeatResponse.FromString(res_pb)
-            for res_pb in results
+            event_pb2.WorkerHeartbeatResponse.FromString(res_pb) for res_pb in results
         ]
-        logging.debug('Ping results: %s', parsed_results)
+        logging.debug("Ping results: %s", parsed_results)
         return parsed_results
 
     def lame_workers(self):
@@ -130,8 +134,7 @@ class WorkerHeartbeatManager(object):
         ping_results = self.ping()
         lame_workers = []
 
-        for ping_response, device, op in zip(ping_results, self._devices,
-                                             self._ops):
+        for ping_response, device, op in zip(ping_results, self._devices, self._ops):
             if ping_response.health_status != event_pb2.OK:
                 lame_workers.append((device, op))
 
@@ -139,27 +142,28 @@ class WorkerHeartbeatManager(object):
             return None
 
         bad_devices, bad_ops = zip(*lame_workers)
-        return WorkerHeartbeatManager(self._session, bad_devices, bad_ops,
-                                      self._request_placeholder)
+        return WorkerHeartbeatManager(
+            self._session, bad_devices, bad_ops, self._request_placeholder
+        )
 
     def __repr__(self):
-        return 'HeartbeatManager(%s)' % ','.join(self._devices)
+        return "HeartbeatManager(%s)" % ",".join(self._devices)
 
     # Default timeout is set to allow other shutdown triggered operations (log
     # flushing etc) to finish before terminating the worker.
     def shutdown(self, wait_time_in_ms=60000, exit_code=0):
         """Shutdown all workers after `shutdown_timeout_secs`."""
-        logging.info('Shutting down %s.', self)
+        logging.info("Shutting down %s.", self)
         req = event_pb2.WorkerHeartbeatRequest(
-            watchdog_config=event_pb2.WatchdogConfig(
-                timeout_ms=wait_time_in_ms),
+            watchdog_config=event_pb2.WatchdogConfig(timeout_ms=wait_time_in_ms),
             shutdown_mode=event_pb2.SHUTDOWN_AFTER_TIMEOUT,
-            exit_code=event_pb2.RequestedExitCode(exit_code=exit_code))
+            exit_code=event_pb2.RequestedExitCode(exit_code=exit_code),
+        )
         self.configure(req)
 
         # Wait for workers to shutdown.
         sleep_sec = 10.0 + wait_time_in_ms / 1000
-        logging.info('Waiting %.2f seconds for worker shutdown.', sleep_sec)
+        logging.info("Waiting %.2f seconds for worker shutdown.", sleep_sec)
         time.sleep(sleep_sec)
 
 
@@ -172,8 +176,8 @@ def all_worker_devices(session):
     for device in devices:
         name = device.name
         # Pick devices that have a TPU but target the attached CPU
-        if ':TPU:0' in name and 'coordinator' not in name:
-            devices_that_support_heartbeats.append(name.replace('TPU', 'CPU'))
+        if ":TPU:0" in name and "coordinator" not in name:
+            devices_that_support_heartbeats.append(name.replace("TPU", "CPU"))
 
     return devices_that_support_heartbeats
 
@@ -196,11 +200,9 @@ class WatchdogManager(threading.Thread):
       watchdog_manager.configure_and_run()
     """
 
-    def __init__(self,
-                 session,
-                 devices=None,
-                 ping_interval=60,
-                 shutdown_timeout=2 * 3600):
+    def __init__(
+        self, session, devices=None, ping_interval=60, shutdown_timeout=2 * 3600
+    ):
         """Initialize a watchdog manager.
 
         Args:
@@ -228,9 +230,7 @@ class WatchdogManager(threading.Thread):
         """Reset the graph, session and worker manager."""
         self._graph = ops.Graph()
         self._session = session_lib.Session(
-            target=self._target,
-            graph=self._graph,
-            config=self._config,
+            target=self._target, graph=self._graph, config=self._config,
         )
 
         if self._devices is None:
@@ -238,7 +238,8 @@ class WatchdogManager(threading.Thread):
 
         with self._graph.as_default():
             self._worker_manager = WorkerHeartbeatManager.from_devices(
-                self._session, self._devices)
+                self._session, self._devices
+            )
 
         if stopping:
             timeout_ms = -1
@@ -249,21 +250,24 @@ class WatchdogManager(threading.Thread):
 
         self._worker_manager.configure(
             event_pb2.WorkerHeartbeatRequest(
-                watchdog_config=event_pb2.WatchdogConfig(
-                    timeout_ms=timeout_ms),
-                shutdown_mode=shutdown_mode))
+                watchdog_config=event_pb2.WatchdogConfig(timeout_ms=timeout_ms),
+                shutdown_mode=shutdown_mode,
+            )
+        )
 
     def configure_and_run(self):
         logging.info(
-            'Enabling watchdog timer with %d second timeout '
-            'and %d second ping interval.', self.shutdown_timeout,
-            self.ping_interval)
+            "Enabling watchdog timer with %d second timeout "
+            "and %d second ping interval.",
+            self.shutdown_timeout,
+            self.ping_interval,
+        )
         self._reset_manager()
         self._running = True
         self.start()
 
     def stop(self):
-        logging.info('Stopping worker watchdog.')
+        logging.info("Stopping worker watchdog.")
         self._reset_manager(stopping=True)
         self._running = False
         self.join()
@@ -284,21 +288,19 @@ class WatchdogManager(threading.Thread):
                 time.sleep(self.ping_interval)
             except errors.OpError as e:
                 # Catch any TF errors that occur so we don't stop sending heartbeats
-                logging.debug('Caught error while sending heartbeat: %s', e)
+                logging.debug("Caught error while sending heartbeat: %s", e)
                 self._reset_manager()
 
 
-def start_worker_watchdog(session,
-                          devices=None,
-                          ping_interval=60,
-                          shutdown_timeout=3600):
+def start_worker_watchdog(
+    session, devices=None, ping_interval=60, shutdown_timeout=3600
+):
     """Start global worker watchdog to shutdown workers on coordinator exit."""
     global _WATCHDOG
     if _WATCHDOG is None:
         # Ensure we can send a few pings before we timeout!
-        ping_interval = min(shutdown_timeout / 10., ping_interval)
-        _WATCHDOG = WatchdogManager(session, devices, ping_interval,
-                                    shutdown_timeout)
+        ping_interval = min(shutdown_timeout / 10.0, ping_interval)
+        _WATCHDOG = WatchdogManager(session, devices, ping_interval, shutdown_timeout)
         _WATCHDOG.configure_and_run()
 
 
@@ -336,33 +338,41 @@ class GracefulShutdownHook(session_run_hook.SessionRunHook):
         self._session = None
         self._heartbeat_supported = False
 
-    def after_create_session(self, training_session, coord):  # pylint: disable=unused-argument
+    def after_create_session(
+        self, training_session, coord
+    ):  # pylint: disable=unused-argument
         # N.B. We have to pull the global step here to avoid it being unavailable
         # at checkpoint time; the graph has been frozen at that point.
         if training_util.get_global_step() is None and self.saver() is not None:
             raise ValueError(
-                'Saver defined but no global step.  Run `get_or_create_global_step()`'
-                ' in your model definition to allow checkpointing.')
+                "Saver defined but no global step.  Run `get_or_create_global_step()`"
+                " in your model definition to allow checkpointing."
+            )
 
         with self._graph.as_default():
-            logging.info('Installing graceful shutdown hook.')
+            logging.info("Installing graceful shutdown hook.")
             self._session = _clone_session(training_session, self._graph)
             self._workers = WorkerHeartbeatManager.from_devices(
-                self._session, all_worker_devices(self._session))
+                self._session, all_worker_devices(self._session)
+            )
             self._heartbeat_supported = self._workers.num_workers() > 0
             if self._heartbeat_supported:
                 try:
                     self._workers.configure(
                         event_pb2.WorkerHeartbeatRequest(
-                            shutdown_mode=event_pb2.WAIT_FOR_COORDINATOR))
+                            shutdown_mode=event_pb2.WAIT_FOR_COORDINATOR
+                        )
+                    )
                 except errors.InvalidArgumentError:
                     logging.warn(
-                        'TPU device does not support heartbeats. Failure '
-                        'handling will be disabled.')
+                        "TPU device does not support heartbeats. Failure "
+                        "handling will be disabled."
+                    )
                     self._heartbeat_supported = False
             else:
                 logging.warn(
-                    'No workers support heartbeats. Failure handling will be disabled.')
+                    "No workers support heartbeats. Failure handling will be disabled."
+                )
 
     def saver(self):
         if self._saver:
@@ -377,9 +387,10 @@ class GracefulShutdownHook(session_run_hook.SessionRunHook):
 
         if len(savers) > 1:
             logging.error(
-                'Multiple savers in the SAVERS collection.  On-demand checkpointing '
-                'will be disabled. Pass an explicit `saver` to the constructor to '
-                'override this behavior.')
+                "Multiple savers in the SAVERS collection.  On-demand checkpointing "
+                "will be disabled. Pass an explicit `saver` to the constructor to "
+                "override this behavior."
+            )
             return None
 
         return savers[0]
@@ -392,11 +403,12 @@ class GracefulShutdownHook(session_run_hook.SessionRunHook):
         lame_workers = self._workers.lame_workers()
 
         if lame_workers:
-            logging.info('ShutdownHook: lame workers found: %s', lame_workers)
+            logging.info("ShutdownHook: lame workers found: %s", lame_workers)
 
             if self.saver():
-                logging.info('ShutdownHook: saving checkpoint to %s',
-                             self._checkpoint_prefix)
+                logging.info(
+                    "ShutdownHook: saving checkpoint to %s", self._checkpoint_prefix
+                )
                 self.saver().save(
                     run_context.session,
                     self._checkpoint_prefix,
@@ -404,7 +416,7 @@ class GracefulShutdownHook(session_run_hook.SessionRunHook):
                     write_state=True,
                 )
             else:
-                logging.info('ShutdownHook: no Saver defined.')
+                logging.info("ShutdownHook: no Saver defined.")
 
             for fn in self._on_shutdown_hooks:
                 fn(run_context, self._workers, lame_workers)
@@ -424,7 +436,7 @@ class ResetComputation(object):
         del run_context, lame_workers
         all_workers.shutdown(exit_code=42)
 
-        logging.info('Resetting coordinator.')
+        logging.info("Resetting coordinator.")
         raise CoordinatorResetError()
 
 

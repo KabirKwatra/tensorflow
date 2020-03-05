@@ -36,7 +36,9 @@ from tensorflow.python.util.tf_export import tf_export
 # Metrics to track the status of v2_behavior
 _v2_behavior_usage_gauge = monitoring.BoolGauge(
     "/tensorflow/version/v2_behavior",
-    "whether v2_behavior is enabled or disabled", "status")
+    "whether v2_behavior is enabled or disabled",
+    "status",
+)
 
 
 @tf_export(v1=["enable_v2_behavior"])
@@ -74,7 +76,8 @@ def enable_v2_behavior():
     exp_readers.CsvDataset = exp_readers.CsvDatasetV2
     exp_readers.SqlDataset = exp_readers.SqlDatasetV2
     exp_readers.make_batched_features_dataset = (
-        exp_readers.make_batched_features_dataset_v2)
+        exp_readers.make_batched_features_dataset_v2
+    )
     exp_readers.make_csv_dataset = exp_readers.make_csv_dataset_v2
 
 
@@ -109,5 +112,6 @@ def disable_v2_behavior():
     exp_readers.CsvDataset = exp_readers.CsvDatasetV1
     exp_readers.SqlDataset = exp_readers.SqlDatasetV1
     exp_readers.make_batched_features_dataset = (
-        exp_readers.make_batched_features_dataset_v1)
+        exp_readers.make_batched_features_dataset_v1
+    )
     exp_readers.make_csv_dataset = exp_readers.make_csv_dataset_v1
