@@ -33,26 +33,26 @@ namespace tensor_utils {
 // Multiply a matrix by a batch vector, and store results in a batch-size
 // vector.
 void NeonMatrixBatchVectorMultiplyAccumulate(const float* matrix, int m_rows,
-        int m_cols, const float* vector,
-        int n_batch, float* result);
+                                             int m_cols, const float* vector,
+                                             int n_batch, float* result);
 
 // Matrix multiplication for quantized values using symmetric quantization.
 void NeonMatrixBatchVectorMultiplyAccumulate(const int8_t* __restrict__ matrix,
-        const int m_rows, const int m_cols,
-        const int8_t* __restrict__ vectors,
-        const float* scaling_factors,
-        int n_batch,
-        float* __restrict__ result);
+                                             const int m_rows, const int m_cols,
+                                             const int8_t* __restrict__ vectors,
+                                             const float* scaling_factors,
+                                             int n_batch,
+                                             float* __restrict__ result);
 
 // Same as above but with a scratch buffer and CpuBackendContext for the
 // int8 x int8 -> int32 accumulation computation
 void NeonMatrixBatchVectorMultiplyAccumulate(const int8_t* __restrict__ matrix,
-        const int m_rows, const int m_cols,
-        const int8_t* __restrict__ vectors,
-        const float* scaling_factors,
-        int n_batch, int32_t* scratch,
-        float* __restrict__ result,
-        CpuBackendContext* context);
+                                             const int m_rows, const int m_cols,
+                                             const int8_t* __restrict__ vectors,
+                                             const float* scaling_factors,
+                                             int n_batch, int32_t* scratch,
+                                             float* __restrict__ result,
+                                             CpuBackendContext* context);
 
 // Matrix multiplication for quantized values using asymmetric quantization.
 void NeonMatrixBatchVectorMultiplyAccumulate(

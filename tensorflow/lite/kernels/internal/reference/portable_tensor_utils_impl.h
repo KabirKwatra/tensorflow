@@ -34,12 +34,12 @@ float PortableClip(float f, float abs_limit);
 
 template <typename T>
 bool PortableIsZeroVector(const T* vector, int v_size) {
-    for (int i = 0; i < v_size; ++i) {
-        if (vector[i] != 0) {
-            return false;
-        }
+  for (int i = 0; i < v_size; ++i) {
+    if (vector[i] != 0) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 void PortableSymmetricQuantizeFloats(const float* values, const int size,
@@ -57,9 +57,9 @@ void PortableAsymmetricQuantizeFloats(const float* values, const int size,
 // Multiply a matrix by a batch vector, and store results in a batch-size
 // vector.
 void PortableMatrixBatchVectorMultiplyAccumulate(const float* matrix,
-        int m_rows, int m_cols,
-        const float* vector,
-        int n_batch, float* result);
+                                                 int m_rows, int m_cols,
+                                                 const float* vector,
+                                                 int n_batch, float* result);
 
 void PortableMatrixBatchVectorMultiplyAccumulate(
     const int8_t* __restrict__ matrix, const int m_rows, const int m_cols,
@@ -100,9 +100,9 @@ float PortableVectorVectorDotProduct(const float* vector1, const float* vector2,
                                      int v_size);
 
 void PortableBatchVectorBatchVectorDotProduct(const int16_t* vector1,
-        const int16_t* vector2,
-        int v_size, int n_batch,
-        int32_t* result);
+                                              const int16_t* vector2,
+                                              int v_size, int n_batch,
+                                              int32_t* result);
 
 void PortableVectorBatchVectorCwiseProductAccumulate(
     const int16_t* vector, int v_size, const int16_t* batch_vector, int n_batch,
@@ -136,8 +136,8 @@ void PortableMatrixBatchVectorMultiply(
     int32_t n_output, int32_t output_zp, int8_t* proj_output);
 
 void PortableMatrixScalarMultiplyAccumulate(const int8_t* matrix,
-        int32_t scalar, int32_t n_row,
-        int32_t n_col, int32_t* output);
+                                            int32_t scalar, int32_t n_row,
+                                            int32_t n_col, int32_t* output);
 
 void PortableApplyLayerNorm(const int16_t* input,
                             const int16_t* layer_norm_weights,
