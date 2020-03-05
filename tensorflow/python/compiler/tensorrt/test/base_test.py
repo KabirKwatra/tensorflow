@@ -20,7 +20,9 @@ from __future__ import print_function
 
 import numpy as np
 
-from tensorflow.python.compiler.tensorrt.test import tf_trt_integration_test_base as trt_test
+from tensorflow.python.compiler.tensorrt.test import (
+    tf_trt_integration_test_base as trt_test,
+)
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
@@ -32,65 +34,72 @@ from tensorflow.python.platform import test
 
 
 class SimpleSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing single segment."""
         dtype = inp.dtype
         conv_filter = constant_op.constant(
-            [[[[1., 0.5, 4., 6., 0.5, 1.], [1., 0.5, 1., 1., 0.5, 1.]]]],
+            [[[[1.0, 0.5, 4.0, 6.0, 0.5, 1.0], [1.0, 0.5, 1.0, 1.0, 0.5, 1.0]]]],
             name="weights",
-            dtype=dtype)
+            dtype=dtype,
+        )
         conv = nn.conv2d(
             input=inp,
             filter=conv_filter,
             strides=[1, 2, 2, 1],
             padding="SAME",
-            name="conv")
-        bias = constant_op.constant([4., 1.5, 2., 3., 5., 7.],
-                                    name="bias",
-                                    dtype=dtype)
+            name="conv",
+        )
+        bias = constant_op.constant(
+            [4.0, 1.5, 2.0, 3.0, 5.0, 7.0], name="bias", dtype=dtype
+        )
         added = nn.bias_add(conv, bias, name="bias_add")
         relu = nn.relu(added, "relu")
         identity = array_ops.identity(relu, "identity")
         pool = nn_ops.max_pool(
-            identity, [1, 2, 2, 1], [1, 2, 2, 1], "VALID", name="max_pool")
+            identity, [1, 2, 2, 1], [1, 2, 2, 1], "VALID", name="max_pool"
+        )
         return array_ops.squeeze(pool, name="output_0")
 
     def GetParams(self):
         # TODO(aaroey): test graph with different dtypes.
-        return self.BuildParams(self.GraphFn, dtypes.float32, [[100, 24, 24, 2]],
-                                [[100, 6, 6, 6]])
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, [[100, 24, 24, 2]], [[100, 6, 6, 6]]
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
         return {
             "TRTEngineOp_0": [
-                "weights", "conv", "bias", "bias_add", "relu", "identity",
-                "max_pool"
+                "weights",
+                "conv",
+                "bias",
+                "bias_add",
+                "relu",
+                "identity",
+                "max_pool",
             ]
         }
 
 
 class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing multiple segment."""
         dtype = inp.dtype
         conv_filter = constant_op.constant(
-            [[[[1., 0.5, 4., 6., 0.5, 1.], [1., 0.5, 1., 1., 0.5, 1.]]]],
+            [[[[1.0, 0.5, 4.0, 6.0, 0.5, 1.0], [1.0, 0.5, 1.0, 1.0, 0.5, 1.0]]]],
             name="weights",
-            dtype=dtype)
+            dtype=dtype,
+        )
         conv = nn.conv2d(
             input=inp,
             filter=conv_filter,
             strides=[1, 2, 2, 1],
             padding="SAME",
-            name="conv")
-        c1 = constant_op.constant(
-            np.random.randn(12, 12, 6), dtype=dtype, name="c1")
+            name="conv",
+        )
+        c1 = constant_op.constant(np.random.randn(12, 12, 6), dtype=dtype, name="c1")
         p = math_ops.mul(conv, c1, name="mul")
-        c2 = constant_op.constant(
-            np.random.randn(12, 12, 6), dtype=dtype, name="c2")
+        c2 = constant_op.constant(np.random.randn(12, 12, 6), dtype=dtype, name="c2")
         q = math_ops.div(conv, c2, name="div")
 
         edge = self.trt_incompatible_op(q, name="incompatible")
@@ -105,34 +114,44 @@ class SimpleMultiEnginesTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         # TODO(aaroey): test graph with different dtypes.
-        return self.BuildParams(self.GraphFn, dtypes.float32, [[100, 24, 24, 2]],
-                                [[100, 12, 12, 6]])
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, [[100, 24, 24, 2]], [[100, 12, 12, 6]]
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
         return {
             "TRTEngineOp_0": [
-                "add", "add1", "c1", "div1", "mul", "mul1", "sub", "sub1"
+                "add",
+                "add1",
+                "c1",
+                "div1",
+                "mul",
+                "mul1",
+                "sub",
+                "sub1",
             ],
-            "TRTEngineOp_1": ["c2", "conv", "div", "weights"]
+            "TRTEngineOp_1": ["c2", "conv", "div", "weights"],
         }
 
     def GetConversionParams(self, run_params):
         """Return a ConversionParams for test."""
-        conversion_params = super(SimpleMultiEnginesTest,
-                                  self).GetConversionParams(run_params)
+        conversion_params = super(SimpleMultiEnginesTest, self).GetConversionParams(
+            run_params
+        )
         rewrite_config_with_trt = self.GetTrtRewriterConfig(
             run_params=run_params,
             conversion_params=conversion_params,
             # Disable layout optimizer, since it will convert BiasAdd with NHWC
             # format to NCHW format under four dimentional input.
-            disable_non_trt_optimizers=True)
+            disable_non_trt_optimizers=True,
+        )
         return conversion_params._replace(
-            rewriter_config_template=rewrite_config_with_trt)
+            rewriter_config_template=rewrite_config_with_trt
+        )
 
 
 class SimpleMultiEnginesTest2(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing two segment."""
         n = inp
@@ -152,14 +171,15 @@ class SimpleMultiEnginesTest2(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(self.GraphFn, dtypes.float32, input_shapes=shapes,
-                                output_shapes=shapes)
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
         return {
             "TRTEngineOp_0": ["c0", "c1", "add0", "add1", "mul0", "mul1"],
-            "TRTEngineOp_1": ["c2", "c3", "add2", "add3", "mul2", "mul3"]
+            "TRTEngineOp_1": ["c2", "c3", "add2", "add3", "mul2", "mul3"],
         }
 
     def ShouldRunTest(self, run_params):
@@ -167,13 +187,18 @@ class SimpleMultiEnginesTest2(trt_test.TfTrtIntegrationTestBase):
         # Disable the test in fp16 mode since multiple matmul and add ops together
         # can cause overflow.
         return (
-            (run_params.precision_mode != "FP16") and
-            not (trt_test.IsQuantizationMode(run_params.precision_mode) and
-                 not run_params.use_calibration)), "test FP32 and non-calibration"
+            (
+                (run_params.precision_mode != "FP16")
+                and not (
+                    trt_test.IsQuantizationMode(run_params.precision_mode)
+                    and not run_params.use_calibration
+                )
+            ),
+            "test FP32 and non-calibration",
+        )
 
 
 class ConstInputTest(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing multiple segment."""
         n = inp
@@ -197,19 +222,19 @@ class ConstInputTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(self.GraphFn, dtypes.float32, input_shapes=shapes,
-                                output_shapes=shapes)
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
         return {
             "TRTEngineOp_0": ["add", "add1", "mul"],
-            "TRTEngineOp_1": ["add2", "add3", "mul1"]
+            "TRTEngineOp_1": ["add2", "add3", "mul1"],
         }
 
 
 class ConstDataInputSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing single segment."""
         n = inp
@@ -221,8 +246,9 @@ class ConstDataInputSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(self.GraphFn, dtypes.float32, input_shapes=shapes,
-                                output_shapes=shapes)
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -230,7 +256,6 @@ class ConstDataInputSingleEngineTest(trt_test.TfTrtIntegrationTestBase):
 
 
 class ConstDataInputMultipleEnginesTest(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing multiple segment."""
         n = inp
@@ -246,8 +271,9 @@ class ConstDataInputMultipleEnginesTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(self.GraphFn, dtypes.float32, input_shapes=shapes,
-                                output_shapes=shapes)
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
@@ -257,12 +283,11 @@ class ConstDataInputMultipleEnginesTest(trt_test.TfTrtIntegrationTestBase):
             # instead of 0: the parent node of this segment is actually const
             # node 'c', but it's removed later since it's const output of the
             # segment which is not allowed.
-            "TRTEngineOp_1": ["add", "add1", "mul"]
+            "TRTEngineOp_1": ["add", "add1", "mul"],
         }
 
 
 class ControlDependencyTest(trt_test.TfTrtIntegrationTestBase):
-
     def GraphFn(self, inp):
         """Create a graph containing multiple segment."""
         c1 = constant_op.constant(1.0, name="c1")
@@ -286,14 +311,15 @@ class ControlDependencyTest(trt_test.TfTrtIntegrationTestBase):
 
     def GetParams(self):
         shapes = [[2, 32, 32, 3]]
-        return self.BuildParams(self.GraphFn, dtypes.float32, input_shapes=shapes,
-                                output_shapes=shapes)
+        return self.BuildParams(
+            self.GraphFn, dtypes.float32, input_shapes=shapes, output_shapes=shapes
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
         return {
             "TRTEngineOp_0": ["c1", "add", "add1", "mul"],
-            "TRTEngineOp_1": ["c2", "add2", "add3", "mul1"]
+            "TRTEngineOp_1": ["c2", "add2", "add3", "mul1"],
         }
 
 

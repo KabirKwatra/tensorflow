@@ -19,7 +19,9 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow.compiler.tf2tensorrt._pywrap_py_utils import get_linked_tensorrt_version
-from tensorflow.python.compiler.tensorrt.test import tf_trt_integration_test_base as trt_test
+from tensorflow.python.compiler.tensorrt.test import (
+    tf_trt_integration_test_base as trt_test,
+)
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import array_ops
@@ -39,13 +41,17 @@ class CombinedNmsTest(trt_test.TfTrtIntegrationTestBase):
         max_output_size_per_class_tensor = constant_op.constant(
             max_output_size_per_class,
             dtype=dtypes.int32,
-            name='max_output_size_per_class')
+            name="max_output_size_per_class",
+        )
         max_total_size_tensor = constant_op.constant(
-            max_total_size, dtype=dtypes.int32, name='max_total_size')
+            max_total_size, dtype=dtypes.int32, name="max_total_size"
+        )
         iou_threshold_tensor = constant_op.constant(
-            iou_threshold, dtype=dtypes.float32, name='iou_threshold')
+            iou_threshold, dtype=dtypes.float32, name="iou_threshold"
+        )
         score_threshold_tensor = constant_op.constant(
-            score_threshold, dtype=dtypes.float32, name='score_threshold')
+            score_threshold, dtype=dtypes.float32, name="score_threshold"
+        )
         nms_output = image_ops_impl.combined_non_max_suppression(
             boxes,
             scores,
@@ -53,9 +59,10 @@ class CombinedNmsTest(trt_test.TfTrtIntegrationTestBase):
             max_total_size_tensor,
             iou_threshold_tensor,
             score_threshold_tensor,
-            name='combined_nms')
+            name="combined_nms",
+        )
         return [
-            array_ops.identity(output, name=('output_%d' % i))
+            array_ops.identity(output, name=("output_%d" % i))
             for i, output in enumerate(nms_output)
         ]
 
@@ -73,19 +80,27 @@ class CombinedNmsTest(trt_test.TfTrtIntegrationTestBase):
         nmsed_scores_shape = [batch_size, max_total_size]
         nmsed_classes_shape = [batch_size, max_total_size]
         valid_detections_shape = [batch_size]
-        return self.BuildParams(self.GraphFn, dtypes.float32,
-                                [boxes_shape, scores_shape], [
-                                    nmsed_boxes_shape, nmsed_scores_shape,
-                                    nmsed_classes_shape, valid_detections_shape
-                                ])
+        return self.BuildParams(
+            self.GraphFn,
+            dtypes.float32,
+            [boxes_shape, scores_shape],
+            [
+                nmsed_boxes_shape,
+                nmsed_scores_shape,
+                nmsed_classes_shape,
+                valid_detections_shape,
+            ],
+        )
 
     def ExpectedEnginesToBuild(self, run_params):
         """Return the expected engines to build."""
         return {
-            'TRTEngineOp_0': [
-                'combined_nms/CombinedNonMaxSuppression',
-                'max_output_size_per_class', 'max_total_size', 'iou_threshold',
-                'score_threshold'
+            "TRTEngineOp_0": [
+                "combined_nms/CombinedNonMaxSuppression",
+                "max_output_size_per_class",
+                "max_total_size",
+                "iou_threshold",
+                "score_threshold",
             ]
         }
 
@@ -95,10 +110,12 @@ class CombinedNmsTest(trt_test.TfTrtIntegrationTestBase):
         # TODO(laigd): fix this.
         # Only run for TRT 5.1 and above.
         ver = get_linked_tensorrt_version()
-        return (ver[0] > 5 or
-                (ver[0] == 5 and ver[1] >= 1)) and not trt_test.IsQuantizationMode(
-                    run_params.precision_mode), 'test >=TRT5.1 and non-INT8'
+        return (
+            (ver[0] > 5 or (ver[0] == 5 and ver[1] >= 1))
+            and not trt_test.IsQuantizationMode(run_params.precision_mode),
+            "test >=TRT5.1 and non-INT8",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
