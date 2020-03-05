@@ -23,7 +23,6 @@ import android.util.Log;
 
 /** Main {@code Activity} class for the benchmark app. */
 public class BenchmarkModelActivity extends Activity {
-
   private static final String TAG = "tflite_BenchmarkModelActivity";
 
   private static final String ARGS_INTENT_KEY_0 = "args";
