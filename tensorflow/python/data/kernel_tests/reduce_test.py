@@ -40,7 +40,6 @@ from tensorflow.python.platform import test
 
 
 class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
-
     @combinations.generate(test_base.default_test_combinations())
     def testSum(self):
         for i in range(10):
@@ -50,7 +49,6 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     @combinations.generate(test_base.default_test_combinations())
     def testSumTuple(self):
-
         def reduce_fn(state, value):
             v1, v2 = value
             return state + v1 + v2
@@ -58,22 +56,24 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
         for i in range(10):
             ds = dataset_ops.Dataset.range(1, i + 1)
             ds = dataset_ops.Dataset.zip((ds, ds))
-            result = ds.reduce(constant_op.constant(
-                0, dtype=dtypes.int64), reduce_fn)
+            result = ds.reduce(constant_op.constant(0, dtype=dtypes.int64), reduce_fn)
             self.assertEqual(((i + 1) * i), self.evaluate(result))
 
     @combinations.generate(test_base.default_test_combinations())
     def testSumAndCount(self):
-
         def reduce_fn(state, value):
             s, c = state
             return s + value, c + 1
 
         for i in range(10):
             ds = dataset_ops.Dataset.range(1, i + 1)
-            result = ds.reduce((constant_op.constant(0, dtype=dtypes.int64),
-                                constant_op.constant(0, dtype=dtypes.int64)),
-                               reduce_fn)
+            result = ds.reduce(
+                (
+                    constant_op.constant(0, dtype=dtypes.int64),
+                    constant_op.constant(0, dtype=dtypes.int64),
+                ),
+                reduce_fn,
+            )
             s, c = self.evaluate(result)
             self.assertEqual(((i + 1) * i) // 2, s)
             self.assertEqual(i, c)
@@ -94,7 +94,6 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     @combinations.generate(test_base.default_test_combinations())
     def testSparse(self):
-
         def reduce_fn(_, value):
             return value
 
@@ -102,17 +101,16 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
             return sparse_tensor.SparseTensorValue(
                 indices=np.array([[0, 0]]),
                 values=(i * np.array([1])),
-                dense_shape=np.array([1, 1]))
+                dense_shape=np.array([1, 1]),
+            )
 
         for i in range(10):
-            ds = dataset_ops.Dataset.from_tensors(make_sparse_fn(i+1))
+            ds = dataset_ops.Dataset.from_tensors(make_sparse_fn(i + 1))
             result = ds.reduce(make_sparse_fn(0), reduce_fn)
-            self.assertValuesEqual(make_sparse_fn(
-                i + 1), self.evaluate(result))
+            self.assertValuesEqual(make_sparse_fn(i + 1), self.evaluate(result))
 
     @combinations.generate(test_base.default_test_combinations())
     def testNested(self):
-
         def reduce_fn(state, value):
             state["dense"] += value["dense"]
             state["sparse"] = value["sparse"]
@@ -122,11 +120,14 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
             return sparse_tensor.SparseTensorValue(
                 indices=np.array([[0, 0]]),
                 values=(i * np.array([1])),
-                dense_shape=np.array([1, 1]))
+                dense_shape=np.array([1, 1]),
+            )
 
         def map_fn(i):
-            return {"dense": math_ops.cast(i, dtype=dtypes.int64),
-                    "sparse": make_sparse_fn(math_ops.cast(i, dtype=dtypes.int64))}
+            return {
+                "dense": math_ops.cast(i, dtype=dtypes.int64),
+                "sparse": make_sparse_fn(math_ops.cast(i, dtype=dtypes.int64)),
+            }
 
         for i in range(10):
             ds = dataset_ops.Dataset.range(1, i + 1).map(map_fn)
@@ -246,8 +247,7 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
         with self.cached_session() as sess:
             # The `result` op is guaranteed to not complete before cancelled because
             # the dataset that is being reduced is infinite.
-            thread = self.checkedThread(
-                self.assert_op_cancelled, args=(result,))
+            thread = self.checkedThread(self.assert_op_cancelled, args=(result,))
             thread.start()
             time.sleep(0.2)
             sess.close()

@@ -33,7 +33,6 @@ from tensorflow.python.platform import test
 
 
 def _test_combinations():
-
     def make_range():
         return dataset_ops.Dataset.range(10)
 
@@ -51,8 +50,9 @@ def _test_combinations():
         ds = ds.map(lambda x: (x, x), num_parallel_calls=2)  # Not eliminated
         return ds.map(lambda x, y: (x, y))  # Eliminated
 
-    parallel_map_name = "ParallelMapV2" if compat.forward_compatible(
-        2020, 3, 6) else "ParallelMap"
+    parallel_map_name = (
+        "ParallelMapV2" if compat.forward_compatible(2020, 3, 6) else "ParallelMap"
+    )
 
     cases = [
         ("Skip0", lambda ds: ds.skip(0), None),
@@ -67,14 +67,18 @@ def _test_combinations():
         ("MapNonIdentity", lambda ds: ds.map(lambda x: x * 2), "Map"),
         ("MapWithSideEffect", lambda ds: ds.map(fn_with_side_effect), "Map"),
         ("MapWithCapture", apply_map_with_capture, "Map"),
-        ("MapWithMultipleComponents", apply_map_with_multiple_components,
-         parallel_map_name),
+        (
+            "MapWithMultipleComponents",
+            apply_map_with_multiple_components,
+            parallel_map_name,
+        ),
         ("MapRestructure", lambda ds: ds.map(lambda x: {"value": x}), ""),
-        ("PMapIdentity", lambda ds: ds.map(lambda x: x, num_parallel_calls=2),
-         None),
-        ("PMapNonIdentity",
-         lambda ds: ds.map(lambda x: x * 2, num_parallel_calls=2),
-         parallel_map_name),
+        ("PMapIdentity", lambda ds: ds.map(lambda x: x, num_parallel_calls=2), None),
+        (
+            "PMapNonIdentity",
+            lambda ds: ds.map(lambda x: x * 2, num_parallel_calls=2),
+            parallel_map_name,
+        ),
     ]
 
     def reduce_fn(result, case):
@@ -82,7 +86,8 @@ def _test_combinations():
         return result + combinations.combine(
             init_dataset_fn=make_range,
             transformation=combinations.NamedObject(name, transformation),
-            expected_name=expected)
+            expected_name=expected,
+        )
 
     test_combinations = functools.reduce(reduce_fn, cases, [])
 
@@ -90,10 +95,9 @@ def _test_combinations():
 
 
 class NoopEliminationTest(test_base.DatasetTestBase, parameterized.TestCase):
-
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _test_combinations()))
+        combinations.times(test_base.default_test_combinations(), _test_combinations())
+    )
     def testNoopElimination(self, init_dataset_fn, transformation, expected_name):
         """Runs a noop elimination test case.
 
@@ -105,8 +109,7 @@ class NoopEliminationTest(test_base.DatasetTestBase, parameterized.TestCase):
         dataset = init_dataset_fn()
 
         if expected_name:
-            dataset = dataset.apply(
-                testing.assert_next([expected_name, "FiniteTake"]))
+            dataset = dataset.apply(testing.assert_next([expected_name, "FiniteTake"]))
         else:
             dataset = dataset.apply(testing.assert_next(["FiniteTake"]))
 
