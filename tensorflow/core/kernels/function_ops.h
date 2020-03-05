@@ -27,56 +27,60 @@ static const char* const kRetOp = FunctionLibraryDefinition::kRetOp;
 static const char* const kDeviceRetOp = FunctionLibraryDefinition::kDeviceRetOp;
 
 class ArgOp : public OpKernel {
- public:
-  explicit ArgOp(OpKernelConstruction* ctx);
+public:
+    explicit ArgOp(OpKernelConstruction* ctx);
 
-  void Compute(OpKernelContext* ctx) override;
+    void Compute(OpKernelContext* ctx) override;
 
-  bool IsExpensive() override { return false; }
+    bool IsExpensive() override {
+        return false;
+    }
 
- private:
-  int index_;
-  DataType dtype_;
+private:
+    int index_;
+    DataType dtype_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(ArgOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(ArgOp);
 };
 
 class RetvalOp : public OpKernel {
- public:
-  explicit RetvalOp(OpKernelConstruction* ctx);
+public:
+    explicit RetvalOp(OpKernelConstruction* ctx);
 
-  void Compute(OpKernelContext* ctx) override;
+    void Compute(OpKernelContext* ctx) override;
 
-  bool IsExpensive() override { return false; }
+    bool IsExpensive() override {
+        return false;
+    }
 
- private:
-  int index_;
-  DataType dtype_;
+private:
+    int index_;
+    DataType dtype_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(RetvalOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(RetvalOp);
 };
 
 class RemoteCallOp : public AsyncOpKernel {
- public:
-  explicit RemoteCallOp(OpKernelConstruction* ctx);
+public:
+    explicit RemoteCallOp(OpKernelConstruction* ctx);
 
-  ~RemoteCallOp() override {}
+    ~RemoteCallOp() override {}
 
-  void ComputeAsync(OpKernelContext* ctx, DoneCallback done) override;
+    void ComputeAsync(OpKernelContext* ctx, DoneCallback done) override;
 
-  string TraceString(OpKernelContext* ctx, bool verbose) override;
+    string TraceString(OpKernelContext* ctx, bool verbose) override;
 
- private:
-  NameAttrList func_;
-  DataTypeVector input_dtypes_;
-  DataTypeVector output_dtypes_;
+private:
+    NameAttrList func_;
+    DataTypeVector input_dtypes_;
+    DataTypeVector output_dtypes_;
 
-  mutex mu_;
-  typedef std::pair<string, FunctionLibraryRuntime*> FunctionTarget;
-  std::map<FunctionTarget, FunctionLibraryRuntime::Handle> handle_cache_
-      TF_GUARDED_BY(mu_);
+    mutex mu_;
+    typedef std::pair<string, FunctionLibraryRuntime*> FunctionTarget;
+    std::map<FunctionTarget, FunctionLibraryRuntime::Handle> handle_cache_
+    TF_GUARDED_BY(mu_);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(RemoteCallOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(RemoteCallOp);
 };
 
 }  // namespace tensorflow

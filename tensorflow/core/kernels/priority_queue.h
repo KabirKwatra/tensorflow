@@ -34,58 +34,58 @@ namespace tensorflow {
 using PriorityTensorPair = std::pair<int64, PersistentTensor>;
 
 struct ComparePriorityTensorPair {
-  // 0 is a higher priority than 1, -MAX_LONG is a higher priority
-  // than MAX_LONG, etc.  Values coming in with a smaller
-  // priority number will bubble to the front of the queue.
-  bool operator()(const PriorityTensorPair& lhs,
-                  const PriorityTensorPair& rhs) const {
-    return lhs.first > rhs.first;
-  }
+    // 0 is a higher priority than 1, -MAX_LONG is a higher priority
+    // than MAX_LONG, etc.  Values coming in with a smaller
+    // priority number will bubble to the front of the queue.
+    bool operator()(const PriorityTensorPair& lhs,
+                    const PriorityTensorPair& rhs) const {
+        return lhs.first > rhs.first;
+    }
 };
 
 class PriorityQueue
     : public TypedQueue<std::priority_queue<PriorityTensorPair,
-                                            std::vector<PriorityTensorPair>,
-                                            ComparePriorityTensorPair> > {
- public:
-  PriorityQueue(int32 capacity, const DataTypeVector& component_dtypes,
-                const std::vector<TensorShape>& component_shapes,
-                const string& name);
+      std::vector<PriorityTensorPair>,
+      ComparePriorityTensorPair> > {
+public:
+    PriorityQueue(int32 capacity, const DataTypeVector& component_dtypes,
+                  const std::vector<TensorShape>& component_shapes,
+                  const string& name);
 
-  Status Initialize() override;  // Must be called before any other method.
+    Status Initialize() override;  // Must be called before any other method.
 
-  // Implementations of QueueInterface methods --------------------------------
+    // Implementations of QueueInterface methods --------------------------------
 
-  void TryEnqueue(const Tuple& tuple, OpKernelContext* ctx,
-                  DoneCallback callback) override;
-  void TryEnqueueMany(const Tuple& tuple, OpKernelContext* ctx,
-                      DoneCallback callback) override;
-  void TryDequeue(OpKernelContext* ctx, CallbackWithTuple callback) override;
-  void TryDequeueMany(int num_elements, OpKernelContext* ctx,
-                      bool allow_small_batch,
-                      CallbackWithTuple callback) override;
-  Status MatchesNodeDef(const NodeDef& node_def) override;
-  Status MatchesPriorityNodeDefTypes(const NodeDef& node_def) const;
-  Status MatchesPriorityNodeDefShapes(const NodeDef& node_def) const;
+    void TryEnqueue(const Tuple& tuple, OpKernelContext* ctx,
+                    DoneCallback callback) override;
+    void TryEnqueueMany(const Tuple& tuple, OpKernelContext* ctx,
+                        DoneCallback callback) override;
+    void TryDequeue(OpKernelContext* ctx, CallbackWithTuple callback) override;
+    void TryDequeueMany(int num_elements, OpKernelContext* ctx,
+                        bool allow_small_batch,
+                        CallbackWithTuple callback) override;
+    Status MatchesNodeDef(const NodeDef& node_def) override;
+    Status MatchesPriorityNodeDefTypes(const NodeDef& node_def) const;
+    Status MatchesPriorityNodeDefShapes(const NodeDef& node_def) const;
 
-  int32 size() const override {
-    mutex_lock lock(mu_);
-    return queues_[0].size();
-  }
+    int32 size() const override {
+        mutex_lock lock(mu_);
+        return queues_[0].size();
+    }
 
- private:
-  ~PriorityQueue() override {}
+private:
+    ~PriorityQueue() override {}
 
-  // Helper for dequeuing a single element from queues_.
-  void DequeueLocked(OpKernelContext* ctx, Tuple* tuple)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+    // Helper for dequeuing a single element from queues_.
+    void DequeueLocked(OpKernelContext* ctx, Tuple* tuple)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 
-  static Status GetElementComponentFromBatch(const Tuple& tuple, int index,
-                                             int component,
-                                             OpKernelContext* ctx,
-                                             PersistentTensor* out_element);
+    static Status GetElementComponentFromBatch(const Tuple& tuple, int index,
+            int component,
+            OpKernelContext* ctx,
+            PersistentTensor* out_element);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(PriorityQueue);
+    TF_DISALLOW_COPY_AND_ASSIGN(PriorityQueue);
 };
 
 }  // namespace tensorflow

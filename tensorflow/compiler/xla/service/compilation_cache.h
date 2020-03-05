@@ -35,26 +35,26 @@ namespace xla {
 // TODO(b/119042872): Provide mechanism for removing computations from the
 // compilation cache.
 class CompilationCache {
- public:
-  CompilationCache() {}
+public:
+    CompilationCache() {}
 
-  ExecutionHandle Insert(std::unique_ptr<Executable> executable);
+    ExecutionHandle Insert(std::unique_ptr<Executable> executable);
 
-  // Lookup the Executable for the specified handle in the cache. Return a
-  // shared_ptr to the Executable if it exists in the cache.
-  StatusOr<std::shared_ptr<Executable>> LookUp(
-      const ExecutionHandle& handle) const;
+    // Lookup the Executable for the specified handle in the cache. Return a
+    // shared_ptr to the Executable if it exists in the cache.
+    StatusOr<std::shared_ptr<Executable>> LookUp(
+                                           const ExecutionHandle& handle) const;
 
- protected:
-  mutable tensorflow::mutex mutex_;
+protected:
+    mutable tensorflow::mutex mutex_;
 
-  using CacheKey = int64;
+    using CacheKey = int64;
 
-  absl::flat_hash_map<CacheKey, std::shared_ptr<Executable>> cache_
-      TF_GUARDED_BY(mutex_);
+    absl::flat_hash_map<CacheKey, std::shared_ptr<Executable>> cache_
+            TF_GUARDED_BY(mutex_);
 
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(CompilationCache);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(CompilationCache);
 };
 
 }  // namespace xla

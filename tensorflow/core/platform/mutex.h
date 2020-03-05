@@ -49,60 +49,60 @@ class Condition;
 // lock, and provides conditional critical sections (via Await()), as an
 // alternative to condition variables.
 class TF_LOCKABLE mutex {
- public:
-  mutex();
-  // The default implementation of the underlying mutex is safe to use after
-  // the linker initialization to zero.
-  explicit mutex(LinkerInitialized x);
+public:
+    mutex();
+    // The default implementation of the underlying mutex is safe to use after
+    // the linker initialization to zero.
+    explicit mutex(LinkerInitialized x);
 
-  void lock() TF_EXCLUSIVE_LOCK_FUNCTION();
-  bool try_lock() TF_EXCLUSIVE_TRYLOCK_FUNCTION(true);
-  void unlock() TF_UNLOCK_FUNCTION();
+    void lock() TF_EXCLUSIVE_LOCK_FUNCTION();
+    bool try_lock() TF_EXCLUSIVE_TRYLOCK_FUNCTION(true);
+    void unlock() TF_UNLOCK_FUNCTION();
 
-  void lock_shared() TF_SHARED_LOCK_FUNCTION();
-  bool try_lock_shared() TF_SHARED_TRYLOCK_FUNCTION(true);
-  void unlock_shared() TF_UNLOCK_FUNCTION();
+    void lock_shared() TF_SHARED_LOCK_FUNCTION();
+    bool try_lock_shared() TF_SHARED_TRYLOCK_FUNCTION(true);
+    void unlock_shared() TF_UNLOCK_FUNCTION();
 
-  // -------
-  // Conditional critical sections.
-  // These represent an alternative to condition variables that is easier to
-  // use.  The predicate must be encapsulated in a function (via Condition),
-  // but there is no need to use a while-loop, and no need to signal the
-  // condition.  Example:  suppose "mu" protects "counter"; we wish one thread
-  // to wait until counter is decremented to zero by another thread.
-  //   // Predicate expressed as a function:
-  //   static bool IntIsZero(int* pi) { return *pi == 0; }
-  //
-  //   // Waiter:
-  //   mu.lock();
-  //   mu.Await(Condition(&IntIsZero, &counter));   // no loop needed
-  //   // lock is held and counter==0...
-  //   mu.unlock();
-  //
-  //   // Decrementer:
-  //   mu.lock();
-  //   counter--;
-  //   mu.unlock();    // no need to signal; mutex will check condition
-  //
-  // A mutex may be used with condition variables and conditional critical
-  // sections at the same time.  Conditional critical sections are easier to
-  // use, but if there are multiple conditions that are simultaneously false,
-  // condition variables may be faster.
+    // -------
+    // Conditional critical sections.
+    // These represent an alternative to condition variables that is easier to
+    // use.  The predicate must be encapsulated in a function (via Condition),
+    // but there is no need to use a while-loop, and no need to signal the
+    // condition.  Example:  suppose "mu" protects "counter"; we wish one thread
+    // to wait until counter is decremented to zero by another thread.
+    //   // Predicate expressed as a function:
+    //   static bool IntIsZero(int* pi) { return *pi == 0; }
+    //
+    //   // Waiter:
+    //   mu.lock();
+    //   mu.Await(Condition(&IntIsZero, &counter));   // no loop needed
+    //   // lock is held and counter==0...
+    //   mu.unlock();
+    //
+    //   // Decrementer:
+    //   mu.lock();
+    //   counter--;
+    //   mu.unlock();    // no need to signal; mutex will check condition
+    //
+    // A mutex may be used with condition variables and conditional critical
+    // sections at the same time.  Conditional critical sections are easier to
+    // use, but if there are multiple conditions that are simultaneously false,
+    // condition variables may be faster.
 
-  // Unlock *this and wait until cond.Eval() is true, then atomically reacquire
-  // *this in the same mode in which it was previously held and return.
-  void Await(const Condition& cond);
+    // Unlock *this and wait until cond.Eval() is true, then atomically reacquire
+    // *this in the same mode in which it was previously held and return.
+    void Await(const Condition& cond);
 
-  // Unlock *this and wait until either cond.Eval is true, or abs_deadline_ns
-  // has been reached, then atomically reacquire *this in the same mode in
-  // which it was previously held, and return whether cond.Eval() is true.
-  // See tensorflow/core/platform/env_time.h for the time interface.
-  bool AwaitWithDeadline(const Condition& cond, uint64 abs_deadline_ns);
-  // -------
+    // Unlock *this and wait until either cond.Eval is true, or abs_deadline_ns
+    // has been reached, then atomically reacquire *this in the same mode in
+    // which it was previously held, and return whether cond.Eval() is true.
+    // See tensorflow/core/platform/env_time.h for the time interface.
+    bool AwaitWithDeadline(const Condition& cond, uint64 abs_deadline_ns);
+    // -------
 
- private:
-  friend class condition_variable;
-  internal::MuData mu_;
+private:
+    friend class condition_variable;
+    internal::MuData mu_;
 };
 
 // A Condition represents a predicate on state protected by a mutex.  The
@@ -115,66 +115,72 @@ class TF_LOCKABLE mutex {
 // If you must use a lambda, prefix the lambda with +, and capture no variables.
 // For example:  Condition(+[](int *pi)->bool { return *pi == 0; }, &i)
 class Condition {
- public:
-  template <typename T>
-  Condition(bool (*func)(T* arg), T* arg);  // Value is (*func)(arg)
-  template <typename T>
-  Condition(T* obj, bool (T::*method)());  // Value is obj->*method()
-  template <typename T>
-  Condition(T* obj, bool (T::*method)() const);  // Value is obj->*method()
-  explicit Condition(const bool* flag);          // Value is *flag
+public:
+    template <typename T>
+    Condition(bool (*func)(T* arg), T* arg);  // Value is (*func)(arg)
+    template <typename T>
+    Condition(T* obj, bool (T::*method)());  // Value is obj->*method()
+    template <typename T>
+    Condition(T* obj, bool (T::*method)() const);  // Value is obj->*method()
+    explicit Condition(const bool* flag);          // Value is *flag
 
-  // Return the value of the predicate represented by this Condition.
-  bool Eval() const { return (*this->eval_)(this); }
+    // Return the value of the predicate represented by this Condition.
+    bool Eval() const {
+        return (*this->eval_)(this);
+    }
 
- private:
-  bool (*eval_)(const Condition*);  // CallFunction, CallMethod, or, ReturnBool
-  bool (*function_)(void*);         // predicate of form (*function_)(arg_)
-  bool (Condition::*method_)();     // predicate of form arg_->method_()
-  void* arg_;
-  Condition();
-  // The following functions can be pointed to by the eval_ field.
-  template <typename T>
-  static bool CallFunction(const Condition* cond);  // call function_
-  template <typename T>
-  static bool CallMethod(const Condition* cond);  // call method_
-  static bool ReturnBool(const Condition* cond);  // access *(bool *)arg_
+private:
+    bool (*eval_)(const Condition*);  // CallFunction, CallMethod, or, ReturnBool
+    bool (*function_)(void*);         // predicate of form (*function_)(arg_)
+    bool (Condition::*method_)();     // predicate of form arg_->method_()
+    void* arg_;
+    Condition();
+    // The following functions can be pointed to by the eval_ field.
+    template <typename T>
+    static bool CallFunction(const Condition* cond);  // call function_
+    template <typename T>
+    static bool CallMethod(const Condition* cond);  // call method_
+    static bool ReturnBool(const Condition* cond);  // access *(bool *)arg_
 };
 
 // Mimic a subset of the std::unique_lock<tensorflow::mutex> functionality.
 class TF_SCOPED_LOCKABLE mutex_lock {
- public:
-  typedef ::tensorflow::mutex mutex_type;
+public:
+    typedef ::tensorflow::mutex mutex_type;
 
-  explicit mutex_lock(mutex_type& mu) TF_EXCLUSIVE_LOCK_FUNCTION(mu)
-      : mu_(&mu) {
-    mu_->lock();
-  }
-
-  mutex_lock(mutex_type& mu, std::try_to_lock_t) TF_EXCLUSIVE_LOCK_FUNCTION(mu)
-      : mu_(&mu) {
-    if (!mu.try_lock()) {
-      mu_ = nullptr;
+    explicit mutex_lock(mutex_type& mu) TF_EXCLUSIVE_LOCK_FUNCTION(mu)
+        : mu_(&mu) {
+        mu_->lock();
     }
-  }
 
-  // Manually nulls out the source to prevent double-free.
-  // (std::move does not null the source pointer by default.)
-  mutex_lock(mutex_lock&& ml) noexcept TF_EXCLUSIVE_LOCK_FUNCTION(ml.mu_)
-      : mu_(ml.mu_) {
-    ml.mu_ = nullptr;
-  }
-  ~mutex_lock() TF_UNLOCK_FUNCTION() {
-    if (mu_ != nullptr) {
-      mu_->unlock();
+    mutex_lock(mutex_type& mu, std::try_to_lock_t) TF_EXCLUSIVE_LOCK_FUNCTION(mu)
+        : mu_(&mu) {
+        if (!mu.try_lock()) {
+            mu_ = nullptr;
+        }
     }
-  }
-  mutex_type* mutex() { return mu_; }
 
-  explicit operator bool() const { return mu_ != nullptr; }
+    // Manually nulls out the source to prevent double-free.
+    // (std::move does not null the source pointer by default.)
+    mutex_lock(mutex_lock&& ml) noexcept TF_EXCLUSIVE_LOCK_FUNCTION(ml.mu_)
+        : mu_(ml.mu_) {
+        ml.mu_ = nullptr;
+    }
+    ~mutex_lock() TF_UNLOCK_FUNCTION() {
+        if (mu_ != nullptr) {
+            mu_->unlock();
+        }
+    }
+    mutex_type* mutex() {
+        return mu_;
+    }
 
- private:
-  mutex_type* mu_;
+    explicit operator bool() const {
+        return mu_ != nullptr;
+    }
+
+private:
+    mutex_type* mu_;
 };
 
 // Catch bug where variable name is omitted, e.g. mutex_lock (mu);
@@ -183,38 +189,42 @@ class TF_SCOPED_LOCKABLE mutex_lock {
 // Mimic a subset of the std::shared_lock<tensorflow::mutex> functionality.
 // Name chosen to minimize conflicts with the tf_shared_lock macro, below.
 class TF_SCOPED_LOCKABLE tf_shared_lock {
- public:
-  typedef ::tensorflow::mutex mutex_type;
+public:
+    typedef ::tensorflow::mutex mutex_type;
 
-  explicit tf_shared_lock(mutex_type& mu) TF_SHARED_LOCK_FUNCTION(mu)
-      : mu_(&mu) {
-    mu_->lock_shared();
-  }
-
-  tf_shared_lock(mutex_type& mu, std::try_to_lock_t) TF_SHARED_LOCK_FUNCTION(mu)
-      : mu_(&mu) {
-    if (!mu.try_lock_shared()) {
-      mu_ = nullptr;
+    explicit tf_shared_lock(mutex_type& mu) TF_SHARED_LOCK_FUNCTION(mu)
+        : mu_(&mu) {
+        mu_->lock_shared();
     }
-  }
 
-  // Manually nulls out the source to prevent double-free.
-  // (std::move does not null the source pointer by default.)
-  tf_shared_lock(tf_shared_lock&& ml) noexcept TF_SHARED_LOCK_FUNCTION(ml.mu_)
-      : mu_(ml.mu_) {
-    ml.mu_ = nullptr;
-  }
-  ~tf_shared_lock() TF_UNLOCK_FUNCTION() {
-    if (mu_ != nullptr) {
-      mu_->unlock_shared();
+    tf_shared_lock(mutex_type& mu, std::try_to_lock_t) TF_SHARED_LOCK_FUNCTION(mu)
+        : mu_(&mu) {
+        if (!mu.try_lock_shared()) {
+            mu_ = nullptr;
+        }
     }
-  }
-  mutex_type* mutex() { return mu_; }
 
-  explicit operator bool() const { return mu_ != nullptr; }
+    // Manually nulls out the source to prevent double-free.
+    // (std::move does not null the source pointer by default.)
+    tf_shared_lock(tf_shared_lock&& ml) noexcept TF_SHARED_LOCK_FUNCTION(ml.mu_)
+        : mu_(ml.mu_) {
+        ml.mu_ = nullptr;
+    }
+    ~tf_shared_lock() TF_UNLOCK_FUNCTION() {
+        if (mu_ != nullptr) {
+            mu_->unlock_shared();
+        }
+    }
+    mutex_type* mutex() {
+        return mu_;
+    }
 
- private:
-  mutex_type* mu_;
+    explicit operator bool() const {
+        return mu_ != nullptr;
+    }
+
+private:
+    mutex_type* mu_;
 };
 
 // Catch bug where variable name is omitted, e.g. tf_shared_lock (mu);
@@ -223,20 +233,20 @@ class TF_SCOPED_LOCKABLE tf_shared_lock {
 
 // Mimic std::condition_variable.
 class condition_variable {
- public:
-  condition_variable();
+public:
+    condition_variable();
 
-  void wait(mutex_lock& lock);
-  template <class Rep, class Period>
-  std::cv_status wait_for(mutex_lock& lock,
-                          std::chrono::duration<Rep, Period> dur);
-  void notify_one();
-  void notify_all();
+    void wait(mutex_lock& lock);
+    template <class Rep, class Period>
+    std::cv_status wait_for(mutex_lock& lock,
+                            std::chrono::duration<Rep, Period> dur);
+    void notify_one();
+    void notify_all();
 
- private:
-  friend ConditionResult WaitForMilliseconds(mutex_lock* mu,
-                                             condition_variable* cv, int64 ms);
-  internal::CVData cv_;
+private:
+    friend ConditionResult WaitForMilliseconds(mutex_lock* mu,
+            condition_variable* cv, int64 ms);
+    internal::CVData cv_;
 };
 
 // Like "cv->wait(*mu)", except that it only waits for up to "ms" milliseconds.
@@ -245,9 +255,9 @@ class condition_variable {
 // thread noticing a signal on the condition variable.  Otherwise may
 // return either kCond_Timeout or kCond_MaybeNotified
 inline ConditionResult WaitForMilliseconds(mutex_lock* mu,
-                                           condition_variable* cv, int64 ms) {
-  std::cv_status s = cv->wait_for(*mu, std::chrono::milliseconds(ms));
-  return (s == std::cv_status::timeout) ? kCond_Timeout : kCond_MaybeNotified;
+        condition_variable* cv, int64 ms) {
+    std::cv_status s = cv->wait_for(*mu, std::chrono::milliseconds(ms));
+    return (s == std::cv_status::timeout) ? kCond_Timeout : kCond_MaybeNotified;
 }
 
 // ------------------------------------------------------------
@@ -256,8 +266,8 @@ inline ConditionResult WaitForMilliseconds(mutex_lock* mu,
 // private static
 template <typename T>
 inline bool Condition::CallFunction(const Condition* cond) {
-  bool (*fn)(T*) = reinterpret_cast<bool (*)(T*)>(cond->function_);
-  return (*fn)(static_cast<T*>(cond->arg_));
+    bool (*fn)(T*) = reinterpret_cast<bool (*)(T*)>(cond->function_);
+    return (*fn)(static_cast<T*>(cond->arg_));
 }
 
 template <typename T>
@@ -270,8 +280,8 @@ inline Condition::Condition(bool (*func)(T*), T* arg)
 // private static
 template <typename T>
 inline bool Condition::CallMethod(const Condition* cond) {
-  bool (T::*m)() = reinterpret_cast<bool (T::*)()>(cond->method_);
-  return (static_cast<T*>(cond->arg_)->*m)();
+    bool (T::*m)() = reinterpret_cast<bool (T::*)()>(cond->method_);
+    return (static_cast<T*>(cond->arg_)->*m)();
 }
 
 template <typename T>
@@ -290,7 +300,7 @@ inline Condition::Condition(T* obj, bool (T::*method)() const)
 
 // private static
 inline bool Condition::ReturnBool(const Condition* cond) {
-  return *static_cast<bool*>(cond->arg_);
+    return *static_cast<bool*>(cond->arg_);
 }
 
 inline Condition::Condition(const bool* flag)

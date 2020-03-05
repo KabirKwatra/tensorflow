@@ -42,207 +42,207 @@ namespace tensorrt {
 using ::nvinfer1::IRuntime;
 
 class CreateTRTResourceHandle : public OpKernel {
- public:
-  explicit CreateTRTResourceHandle(OpKernelConstruction* ctx) : OpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("resource_name", &resource_name_));
-  }
-
-  void Compute(OpKernelContext* ctx) override {
-    {
-      mutex_lock l(mutex_);
-      if (!initialized_) {
-        AllocatorAttributes attr;
-        attr.set_on_host(true);
-        OP_REQUIRES_OK(ctx, ctx->allocate_temp(DT_RESOURCE, TensorShape({}),
-                                               &handle_, attr));
-
-        VLOG(1) << "Creating TRT engine cache resource handle for op "
-                << resource_name_ << " on device " << ctx->device()->name();
-        handle_.scalar<ResourceHandle>()() =
-            MakeResourceHandle<TRTEngineCacheResource>(
-                ctx, std::string(kTfTrtContainerName), resource_name_);
-        initialized_ = true;
-      }
+public:
+    explicit CreateTRTResourceHandle(OpKernelConstruction* ctx) : OpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("resource_name", &resource_name_));
     }
-    ctx->set_output(0, handle_);
-  }
 
- private:
-  string resource_name_;
-  Tensor handle_;
-  mutex mutex_;
-  bool initialized_ TF_GUARDED_BY(mutex_) = false;
+    void Compute(OpKernelContext* ctx) override {
+        {
+            mutex_lock l(mutex_);
+            if (!initialized_) {
+                AllocatorAttributes attr;
+                attr.set_on_host(true);
+                OP_REQUIRES_OK(ctx, ctx->allocate_temp(DT_RESOURCE, TensorShape({}),
+                                                       &handle_, attr));
 
-  TF_DISALLOW_COPY_AND_ASSIGN(CreateTRTResourceHandle);
+                VLOG(1) << "Creating TRT engine cache resource handle for op "
+                        << resource_name_ << " on device " << ctx->device()->name();
+                handle_.scalar<ResourceHandle>()() =
+                    MakeResourceHandle<TRTEngineCacheResource>(
+                        ctx, std::string(kTfTrtContainerName), resource_name_);
+                initialized_ = true;
+            }
+        }
+        ctx->set_output(0, handle_);
+    }
+
+private:
+    string resource_name_;
+    Tensor handle_;
+    mutex mutex_;
+    bool initialized_ TF_GUARDED_BY(mutex_) = false;
+
+    TF_DISALLOW_COPY_AND_ASSIGN(CreateTRTResourceHandle);
 };
 
 REGISTER_KERNEL_BUILDER(Name("CreateTRTResourceHandle")
-                            .Device(DEVICE_GPU)
-                            .HostMemory("resource_handle"),
+                        .Device(DEVICE_GPU)
+                        .HostMemory("resource_handle"),
                         CreateTRTResourceHandle);
 
 class InitializeTRTResource : public OpKernel {
- public:
-  explicit InitializeTRTResource(OpKernelConstruction* ctx) : OpKernel(ctx) {
-    OP_REQUIRES_OK(
-        ctx, ctx->GetAttr("max_cached_engines_count", &max_cached_engines_));
-  }
+public:
+    explicit InitializeTRTResource(OpKernelConstruction* ctx) : OpKernel(ctx) {
+        OP_REQUIRES_OK(
+            ctx, ctx->GetAttr("max_cached_engines_count", &max_cached_engines_));
+    }
 
-  void Compute(OpKernelContext* ctx) override {
-    ResourceHandle handle = HandleFromInput(ctx, 0);
-    core::RefCountPtr<TRTEngineCacheResource> resource;
-    OP_REQUIRES_OK(
-        ctx, LookupOrCreateResource<TRTEngineCacheResource>(
-                 ctx, handle, &resource,
-                 [this, ctx](TRTEngineCacheResource** resource) -> Status {
-                   *resource = new TRTEngineCacheResource(
-                       ctx, this->max_cached_engines_);
-                   return Status::OK();
-                 }));
+    void Compute(OpKernelContext* ctx) override {
+        ResourceHandle handle = HandleFromInput(ctx, 0);
+        core::RefCountPtr<TRTEngineCacheResource> resource;
+        OP_REQUIRES_OK(
+            ctx, LookupOrCreateResource<TRTEngineCacheResource>(
+                ctx, handle, &resource,
+        [this, ctx](TRTEngineCacheResource** resource) -> Status {
+            *resource = new TRTEngineCacheResource(
+                ctx, this->max_cached_engines_);
+            return Status::OK();
+        }));
 
-    auto allocator = resource->allocator_.get();
-    OP_REQUIRES(ctx, allocator != nullptr,
-                errors::Internal("Not able to initialize TRT engine cache when "
-                                 "GPU allocator is empty."));
-    OP_REQUIRES(ctx, resource->cache_.size() == 0,
-                errors::Internal("Expect engine cache to be empty, but got ",
-                                 resource->cache_.size(), " entries."));
+        auto allocator = resource->allocator_.get();
+        OP_REQUIRES(ctx, allocator != nullptr,
+                    errors::Internal("Not able to initialize TRT engine cache when "
+                                     "GPU allocator is empty."));
+        OP_REQUIRES(ctx, resource->cache_.size() == 0,
+                    errors::Internal("Expect engine cache to be empty, but got ",
+                                     resource->cache_.size(), " entries."));
 
-    // Get the file name.
-    const string& filename = ctx->input(1).scalar<tstring>()();
-    OP_REQUIRES(ctx, !filename.empty(),
-                errors::InvalidArgument("filename cannot be empty."));
+        // Get the file name.
+        const string& filename = ctx->input(1).scalar<tstring>()();
+        OP_REQUIRES(ctx, !filename.empty(),
+                    errors::InvalidArgument("filename cannot be empty."));
 
-    // Parse the serialized engines and add them to the cache.
-    std::unique_ptr<RandomAccessFile> file;
-    OP_REQUIRES_OK(ctx, ctx->env()->NewRandomAccessFile(filename, &file));
-    auto reader = absl::make_unique<io::RecordReader>(file.get());
+        // Parse the serialized engines and add them to the cache.
+        std::unique_ptr<RandomAccessFile> file;
+        OP_REQUIRES_OK(ctx, ctx->env()->NewRandomAccessFile(filename, &file));
+        auto reader = absl::make_unique<io::RecordReader>(file.get());
 
-    uint64 offset = 0;
-    int num_loaded_engine = 0;
-    do {
-      tstring record;
-      Status status = reader->ReadRecord(&offset, &record);
-      if (errors::IsOutOfRange(status)) break;
+        uint64 offset = 0;
+        int num_loaded_engine = 0;
+        do {
+            tstring record;
+            Status status = reader->ReadRecord(&offset, &record);
+            if (errors::IsOutOfRange(status)) break;
 
-      TRTEngineInstance engine_instance;
-      engine_instance.ParseFromString(record);
-      std::vector<TensorShape> engine_input_shapes;
-      for (const TensorShapeProto& shape : engine_instance.input_shapes()) {
-        engine_input_shapes.emplace_back(shape);
-      }
+            TRTEngineInstance engine_instance;
+            engine_instance.ParseFromString(record);
+            std::vector<TensorShape> engine_input_shapes;
+            for (const TensorShapeProto& shape : engine_instance.input_shapes()) {
+                engine_input_shapes.emplace_back(shape);
+            }
 
-      TrtUniquePtrType<IRuntime> infer(
-          nvinfer1::createInferRuntime(TRTEngineCacheResource::GetLogger()));
-      infer->setGpuAllocator(allocator);
-      TrtUniquePtrType<nvinfer1::ICudaEngine> engine(
-          infer->deserializeCudaEngine(
-              engine_instance.serialized_engine().c_str(),
-              engine_instance.serialized_engine().size(), nullptr));
-      auto raw_engine = engine.get();
-      std::vector<TrtUniquePtrType<nvinfer1::IExecutionContext>> ctx_vec;
-      if (num_loaded_engine == 0) {
-        // Restore profiles if there are any. Currently only 1 engine is allowed
-        // in dynamic mode therefore we call this only for the 0th engine.
-        // it is a no-op in implicit batch mode.
-        OP_REQUIRES_OK(ctx, resource->profiles_.RestoreProfiles(raw_engine));
-        OP_REQUIRES_OK(ctx, resource->profiles_.CreateExecutionContexts(
-                                raw_engine, ctx_vec));
-      } else {
-        // Multiple engines are only available in static mode. For each engine
-        // we have only a single execution context.
-        TrtUniquePtrType<nvinfer1::IExecutionContext> exec_ctx(
-            raw_engine->createExecutionContext());
-        ctx_vec.push_back(std::move(exec_ctx));
-      }
-      resource->cache_.emplace(engine_input_shapes,
-                               absl::make_unique<EngineContext>(
-                                   std::move(engine), std::move(ctx_vec)));
-      ++num_loaded_engine;
-    } while (1);
-    VLOG(1) << "Loaded " << num_loaded_engine << " TRT engines for op "
-            << handle.name() << " on device " << ctx->device()->name()
-            << " from file " << filename;
-  }
+            TrtUniquePtrType<IRuntime> infer(
+                nvinfer1::createInferRuntime(TRTEngineCacheResource::GetLogger()));
+            infer->setGpuAllocator(allocator);
+            TrtUniquePtrType<nvinfer1::ICudaEngine> engine(
+                infer->deserializeCudaEngine(
+                    engine_instance.serialized_engine().c_str(),
+                    engine_instance.serialized_engine().size(), nullptr));
+            auto raw_engine = engine.get();
+            std::vector<TrtUniquePtrType<nvinfer1::IExecutionContext>> ctx_vec;
+            if (num_loaded_engine == 0) {
+                // Restore profiles if there are any. Currently only 1 engine is allowed
+                // in dynamic mode therefore we call this only for the 0th engine.
+                // it is a no-op in implicit batch mode.
+                OP_REQUIRES_OK(ctx, resource->profiles_.RestoreProfiles(raw_engine));
+                OP_REQUIRES_OK(ctx, resource->profiles_.CreateExecutionContexts(
+                                   raw_engine, ctx_vec));
+            } else {
+                // Multiple engines are only available in static mode. For each engine
+                // we have only a single execution context.
+                TrtUniquePtrType<nvinfer1::IExecutionContext> exec_ctx(
+                    raw_engine->createExecutionContext());
+                ctx_vec.push_back(std::move(exec_ctx));
+            }
+            resource->cache_.emplace(engine_input_shapes,
+                                     absl::make_unique<EngineContext>(
+                                         std::move(engine), std::move(ctx_vec)));
+            ++num_loaded_engine;
+        } while (1);
+        VLOG(1) << "Loaded " << num_loaded_engine << " TRT engines for op "
+                << handle.name() << " on device " << ctx->device()->name()
+                << " from file " << filename;
+    }
 
- private:
-  // Maximum number of cached engines
-  int max_cached_engines_;
+private:
+    // Maximum number of cached engines
+    int max_cached_engines_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(InitializeTRTResource);
+    TF_DISALLOW_COPY_AND_ASSIGN(InitializeTRTResource);
 };
 
 REGISTER_KERNEL_BUILDER(Name("InitializeTRTResource")
-                            .Device(DEVICE_GPU)
-                            .HostMemory("resource_handle"),
+                        .Device(DEVICE_GPU)
+                        .HostMemory("resource_handle"),
                         InitializeTRTResource);
 
 class SerializeTRTResource : public OpKernel {
- public:
-  explicit SerializeTRTResource(OpKernelConstruction* ctx) : OpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("delete_resource", &delete_resource_));
-  }
-
-  void Compute(OpKernelContext* ctx) override {
-    const string& resource_name = ctx->input(0).scalar<tstring>()();
-    const string& filename = ctx->input(1).scalar<tstring>()();
-    OP_REQUIRES(ctx, !filename.empty(),
-                errors::InvalidArgument("filename cannot be empty."));
-
-    // Lookup engine cache resource.
-    TRTEngineCacheResource* resource = nullptr;
-    OP_REQUIRES_OK(
-        ctx, ctx->resource_manager()->Lookup(std::string(kTfTrtContainerName),
-                                             resource_name, &resource));
-    core::ScopedUnref unref_me(resource);
-
-    // Terminate the calibration if any.
-    if (resource->calib_ctx_) resource->calib_ctx_->TerminateCalibration();
-
-    // Serialize the engines and write them to file.
-    std::unique_ptr<WritableFile> file;
-    OP_REQUIRES_OK(ctx, ctx->env()->NewWritableFile(filename, &file));
-    auto writer = absl::make_unique<io::RecordWriter>(file.get());
-
-    int num_serialized_engines = 0;
-    for (const auto& pair : resource->cache_) {
-      // Ignore engines that failed to build.
-      const std::unique_ptr<EngineContext>& engine = pair.second;
-      if (!engine || !engine->cuda_engine) continue;
-
-      TRTEngineInstance engine_instance;
-      // Add input shapes.
-      const std::vector<TensorShape>& engine_input_shapes = pair.first;
-      for (const TensorShape& shape : engine_input_shapes) {
-        shape.AsProto(engine_instance.add_input_shapes());
-      }
-      // Add the serialized engine.
-      TrtUniquePtrType<nvinfer1::IHostMemory> engine_data(
-          engine->cuda_engine->serialize());
-      engine_instance.set_serialized_engine(engine_data->data(),
-                                            engine_data->size());
-
-      OP_REQUIRES_OK(ctx,
-                     writer->WriteRecord(engine_instance.SerializeAsString()));
-      ++num_serialized_engines;
+public:
+    explicit SerializeTRTResource(OpKernelConstruction* ctx) : OpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("delete_resource", &delete_resource_));
     }
-    VLOG(1) << "Serialized " << num_serialized_engines << " TRT engines for op "
-            << resource_name << " on device " << ctx->device()->name()
-            << " to file " << filename;
 
-    if (delete_resource_) {
-      VLOG(1) << "Destroying TRT engine cache resource for op " << resource_name
-              << " on device " << ctx->device()->name();
-      OP_REQUIRES_OK(ctx,
-                     ctx->resource_manager()->Delete<TRTEngineCacheResource>(
-                         std::string(kTfTrtContainerName), resource_name));
+    void Compute(OpKernelContext* ctx) override {
+        const string& resource_name = ctx->input(0).scalar<tstring>()();
+        const string& filename = ctx->input(1).scalar<tstring>()();
+        OP_REQUIRES(ctx, !filename.empty(),
+                    errors::InvalidArgument("filename cannot be empty."));
+
+        // Lookup engine cache resource.
+        TRTEngineCacheResource* resource = nullptr;
+        OP_REQUIRES_OK(
+            ctx, ctx->resource_manager()->Lookup(std::string(kTfTrtContainerName),
+                    resource_name, &resource));
+        core::ScopedUnref unref_me(resource);
+
+        // Terminate the calibration if any.
+        if (resource->calib_ctx_) resource->calib_ctx_->TerminateCalibration();
+
+        // Serialize the engines and write them to file.
+        std::unique_ptr<WritableFile> file;
+        OP_REQUIRES_OK(ctx, ctx->env()->NewWritableFile(filename, &file));
+        auto writer = absl::make_unique<io::RecordWriter>(file.get());
+
+        int num_serialized_engines = 0;
+        for (const auto& pair : resource->cache_) {
+            // Ignore engines that failed to build.
+            const std::unique_ptr<EngineContext>& engine = pair.second;
+            if (!engine || !engine->cuda_engine) continue;
+
+            TRTEngineInstance engine_instance;
+            // Add input shapes.
+            const std::vector<TensorShape>& engine_input_shapes = pair.first;
+            for (const TensorShape& shape : engine_input_shapes) {
+                shape.AsProto(engine_instance.add_input_shapes());
+            }
+            // Add the serialized engine.
+            TrtUniquePtrType<nvinfer1::IHostMemory> engine_data(
+                engine->cuda_engine->serialize());
+            engine_instance.set_serialized_engine(engine_data->data(),
+                                                  engine_data->size());
+
+            OP_REQUIRES_OK(ctx,
+                           writer->WriteRecord(engine_instance.SerializeAsString()));
+            ++num_serialized_engines;
+        }
+        VLOG(1) << "Serialized " << num_serialized_engines << " TRT engines for op "
+                << resource_name << " on device " << ctx->device()->name()
+                << " to file " << filename;
+
+        if (delete_resource_) {
+            VLOG(1) << "Destroying TRT engine cache resource for op " << resource_name
+                    << " on device " << ctx->device()->name();
+            OP_REQUIRES_OK(ctx,
+                           ctx->resource_manager()->Delete<TRTEngineCacheResource>(
+                               std::string(kTfTrtContainerName), resource_name));
+        }
     }
-  }
 
- private:
-  bool delete_resource_ = false;
+private:
+    bool delete_resource_ = false;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(SerializeTRTResource);
+    TF_DISALLOW_COPY_AND_ASSIGN(SerializeTRTResource);
 };
 
 REGISTER_KERNEL_BUILDER(Name("SerializeTRTResource").Device(DEVICE_GPU),

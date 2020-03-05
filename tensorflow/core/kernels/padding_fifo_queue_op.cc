@@ -41,28 +41,28 @@ namespace tensorflow {
 // executions, and sessions. Running this op produces a single-element
 // tensor of handles to Queues in the corresponding device.
 class PaddingFIFOQueueOp : public TypedQueueOp {
- public:
-  explicit PaddingFIFOQueueOp(OpKernelConstruction* context)
-      : TypedQueueOp(context) {
-    OP_REQUIRES_OK(context, context->GetAttr("shapes", &component_shapes_));
-    for (const auto& shape : component_shapes_) {
-      OP_REQUIRES(context, shape.dims() >= 0,
-                  errors::InvalidArgument("shape ", shape.DebugString(),
-                                          " must have known rank."));
+public:
+    explicit PaddingFIFOQueueOp(OpKernelConstruction* context)
+        : TypedQueueOp(context) {
+        OP_REQUIRES_OK(context, context->GetAttr("shapes", &component_shapes_));
+        for (const auto& shape : component_shapes_) {
+            OP_REQUIRES(context, shape.dims() >= 0,
+                        errors::InvalidArgument("shape ", shape.DebugString(),
+                                                " must have known rank."));
+        }
     }
-  }
 
- private:
-  Status CreateResource(QueueInterface** ret) override
-      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
-    PaddingFIFOQueue* queue = new PaddingFIFOQueue(
-        capacity_, component_types_, component_shapes_, cinfo_.name());
-    return CreateTypedQueue(queue, ret);
-  }
+private:
+    Status CreateResource(QueueInterface** ret) override
+    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
+        PaddingFIFOQueue* queue = new PaddingFIFOQueue(
+            capacity_, component_types_, component_shapes_, cinfo_.name());
+        return CreateTypedQueue(queue, ret);
+    }
 
-  std::vector<PartialTensorShape> component_shapes_;
+    std::vector<PartialTensorShape> component_shapes_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(PaddingFIFOQueueOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(PaddingFIFOQueueOp);
 };
 
 REGISTER_KERNEL_BUILDER(Name("PaddingFIFOQueue").Device(DEVICE_CPU),

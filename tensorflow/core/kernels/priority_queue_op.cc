@@ -39,27 +39,27 @@ namespace tensorflow {
 // executions, and sessions. Running this op produces a single-element
 // tensor of handles to Queues in the corresponding device.
 class PriorityQueueOp : public TypedQueueOp {
- public:
-  explicit PriorityQueueOp(OpKernelConstruction* context)
-      : TypedQueueOp(context) {
-    OP_REQUIRES_OK(context, context->GetAttr("shapes", &component_shapes_));
-    component_types_.insert(component_types_.begin(), DT_INT64);
-    if (!component_shapes_.empty()) {
-      component_shapes_.insert(component_shapes_.begin(), TensorShape({}));
+public:
+    explicit PriorityQueueOp(OpKernelConstruction* context)
+        : TypedQueueOp(context) {
+        OP_REQUIRES_OK(context, context->GetAttr("shapes", &component_shapes_));
+        component_types_.insert(component_types_.begin(), DT_INT64);
+        if (!component_shapes_.empty()) {
+            component_shapes_.insert(component_shapes_.begin(), TensorShape({}));
+        }
     }
-  }
 
- private:
-  Status CreateResource(QueueInterface** ret) override
-      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
-    PriorityQueue* queue = new PriorityQueue(capacity_, component_types_,
-                                             component_shapes_, cinfo_.name());
-    return CreateTypedQueue(queue, ret);
-  }
+private:
+    Status CreateResource(QueueInterface** ret) override
+    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
+        PriorityQueue* queue = new PriorityQueue(capacity_, component_types_,
+                component_shapes_, cinfo_.name());
+        return CreateTypedQueue(queue, ret);
+    }
 
-  std::vector<TensorShape> component_shapes_;
+    std::vector<TensorShape> component_shapes_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(PriorityQueueOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(PriorityQueueOp);
 };
 
 REGISTER_KERNEL_BUILDER(Name("PriorityQueue").Device(DEVICE_CPU),

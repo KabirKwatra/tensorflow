@@ -22,126 +22,130 @@ namespace experimental {
 namespace {
 
 class IgnoreErrorsDatasetOp : public UnaryDatasetOpKernel {
- public:
-  explicit IgnoreErrorsDatasetOp(OpKernelConstruction* ctx)
-      : UnaryDatasetOpKernel(ctx) {}
+public:
+    explicit IgnoreErrorsDatasetOp(OpKernelConstruction* ctx)
+        : UnaryDatasetOpKernel(ctx) {}
 
-  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                   DatasetBase** output) override {
-    *output = new Dataset(ctx, input);
-  }
-
- private:
-  class Dataset : public DatasetBase {
-   public:
-    explicit Dataset(OpKernelContext* ctx, const DatasetBase* input)
-        : DatasetBase(DatasetContext(ctx)), input_(input) {
-      input_->Ref();
+    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                     DatasetBase** output) override {
+        *output = new Dataset(ctx, input);
     }
 
-    ~Dataset() override { input_->Unref(); }
+private:
+    class Dataset : public DatasetBase {
+    public:
+        explicit Dataset(OpKernelContext* ctx, const DatasetBase* input)
+            : DatasetBase(DatasetContext(ctx)), input_(input) {
+            input_->Ref();
+        }
 
-    std::unique_ptr<IteratorBase> MakeIteratorInternal(
-        const string& prefix) const override {
-      return absl::make_unique<Iterator>(
-          Iterator::Params{this, strings::StrCat(prefix, "::IgnoreErrors")});
-    }
+        ~Dataset() override {
+            input_->Unref();
+        }
 
-    const DataTypeVector& output_dtypes() const override {
-      return input_->output_dtypes();
-    }
-    const std::vector<PartialTensorShape>& output_shapes() const override {
-      return input_->output_shapes();
-    }
+        std::unique_ptr<IteratorBase> MakeIteratorInternal(
+            const string& prefix) const override {
+            return absl::make_unique<Iterator>(
+                       Iterator::Params{this, strings::StrCat(prefix, "::IgnoreErrors")});
+        }
 
-    string DebugString() const override {
-      return "IgnoreErrorsDatasetOp::Dataset";
-    }
+        const DataTypeVector& output_dtypes() const override {
+            return input_->output_dtypes();
+        }
+        const std::vector<PartialTensorShape>& output_shapes() const override {
+            return input_->output_shapes();
+        }
 
-    int64 Cardinality() const override { return input_->Cardinality(); }
+        string DebugString() const override {
+            return "IgnoreErrorsDatasetOp::Dataset";
+        }
 
-    Status CheckExternalState() const override {
-      return input_->CheckExternalState();
-    }
+        int64 Cardinality() const override {
+            return input_->Cardinality();
+        }
 
-   protected:
-    Status AsGraphDefInternal(SerializationContext* ctx,
-                              DatasetGraphDefBuilder* b,
-                              Node** output) const override {
-      Node* input_graph_node = nullptr;
-      TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
-      TF_RETURN_IF_ERROR(b->AddDataset(this, {input_graph_node}, output));
-      return Status::OK();
-    }
+        Status CheckExternalState() const override {
+            return input_->CheckExternalState();
+        }
 
-   private:
-    class Iterator : public DatasetIterator<Dataset> {
-     public:
-      explicit Iterator(const Params& params)
-          : DatasetIterator<Dataset>(params) {}
-
-      Status Initialize(IteratorContext* ctx) override {
-        return dataset()->input_->MakeIterator(ctx, this, prefix(),
-                                               &input_impl_);
-      }
-
-      Status GetNextInternal(IteratorContext* ctx,
-                             std::vector<Tensor>* out_tensors,
-                             bool* end_of_sequence) override {
-        Status s;
-        {
-          tf_shared_lock l(mu_);
-          if (!input_impl_) {
-            *end_of_sequence = true;
+    protected:
+        Status AsGraphDefInternal(SerializationContext* ctx,
+                                  DatasetGraphDefBuilder* b,
+                                  Node** output) const override {
+            Node* input_graph_node = nullptr;
+            TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
+            TF_RETURN_IF_ERROR(b->AddDataset(this, {input_graph_node}, output));
             return Status::OK();
-          }
-          s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-          while (!s.ok() && !errors::IsCancelled(s)) {
-            out_tensors->clear();
-            s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-          }
         }
-        if (*end_of_sequence) {
-          mutex_lock l(mu_);
-          input_impl_.reset();
-        }
-        return s;
-      }
 
-     protected:
-      std::shared_ptr<model::Node> CreateNode(
-          IteratorContext* ctx, model::Node::Args args) const override {
-        return model::MakeKnownRatioNode(std::move(args),
-                                         /*ratio=*/1);
-      }
+    private:
+        class Iterator : public DatasetIterator<Dataset> {
+        public:
+            explicit Iterator(const Params& params)
+                : DatasetIterator<Dataset>(params) {}
 
-      Status SaveInternal(IteratorStateWriter* writer) override {
-        mutex_lock l(mu_);
-        if (input_impl_)
-          TF_RETURN_IF_ERROR(SaveInput(writer, input_impl_));
-        else
-          TF_RETURN_IF_ERROR(
-              writer->WriteScalar(full_name("input_impls_empty"), ""));
-        return Status::OK();
-      }
+            Status Initialize(IteratorContext* ctx) override {
+                return dataset()->input_->MakeIterator(ctx, this, prefix(),
+                                                       &input_impl_);
+            }
 
-      Status RestoreInternal(IteratorContext* ctx,
-                             IteratorStateReader* reader) override {
-        mutex_lock l(mu_);
-        if (reader->Contains(full_name("input_impls_empty")))
-          input_impl_.reset();
-        else
-          TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-        return Status::OK();
-      }
+            Status GetNextInternal(IteratorContext* ctx,
+                                   std::vector<Tensor>* out_tensors,
+                                   bool* end_of_sequence) override {
+                Status s;
+                {
+                    tf_shared_lock l(mu_);
+                    if (!input_impl_) {
+                        *end_of_sequence = true;
+                        return Status::OK();
+                    }
+                    s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+                    while (!s.ok() && !errors::IsCancelled(s)) {
+                        out_tensors->clear();
+                        s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+                    }
+                }
+                if (*end_of_sequence) {
+                    mutex_lock l(mu_);
+                    input_impl_.reset();
+                }
+                return s;
+            }
 
-     private:
-      mutex mu_;
-      std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
+        protected:
+            std::shared_ptr<model::Node> CreateNode(
+                IteratorContext* ctx, model::Node::Args args) const override {
+                return model::MakeKnownRatioNode(std::move(args),
+                                                 /*ratio=*/1);
+            }
+
+            Status SaveInternal(IteratorStateWriter* writer) override {
+                mutex_lock l(mu_);
+                if (input_impl_)
+                    TF_RETURN_IF_ERROR(SaveInput(writer, input_impl_));
+                else
+                    TF_RETURN_IF_ERROR(
+                        writer->WriteScalar(full_name("input_impls_empty"), ""));
+                return Status::OK();
+            }
+
+            Status RestoreInternal(IteratorContext* ctx,
+                                   IteratorStateReader* reader) override {
+                mutex_lock l(mu_);
+                if (reader->Contains(full_name("input_impls_empty")))
+                    input_impl_.reset();
+                else
+                    TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+                return Status::OK();
+            }
+
+        private:
+            mutex mu_;
+            std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
+        };
+
+        const DatasetBase* const input_;
     };
-
-    const DatasetBase* const input_;
-  };
 };
 
 REGISTER_KERNEL_BUILDER(Name("IgnoreErrorsDataset").Device(DEVICE_CPU),

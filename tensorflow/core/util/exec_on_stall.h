@@ -29,60 +29,60 @@ namespace tensorflow {
 // This can be useful in diagnosing deadlocks, stalls and memory leaks
 // without logging too aggressively.
 class ExecuteOnStall {
- public:
-  // delay_secs: If the object still exists after this many seconds,
-  //     execute f.
-  // f: The function to be executed, for example a detailed log of the
-  //    the state of an object to which this is attached.
-  // poll_microseconds: The spawned thread will wake and test whether
-  //    the destructor has been invoked this frequently.
-  ExecuteOnStall(int delay_secs, std::function<void()> f,
-                 int32 poll_microseconds = 100)
-      : disabled_(false),
-        joined_(false),
-        env_(Env::Default()),
-        f_(f),
-        poll_microseconds_(poll_microseconds) {
-    deadline_ = env_->NowMicros() + 1000000 * delay_secs;
-    env_->SchedClosure([this]() {
-      while (env_->NowMicros() < deadline_) {
-        {
-          mutex_lock l(mu_);
-          if (disabled_) {
-            break;
-          }
-        }
-        env_->SleepForMicroseconds(poll_microseconds_);
-      }
-      {
-        mutex_lock l(mu_);
-        if (!disabled_) {
-          f_();
-        }
-        joined_ = true;
-        cond_var_.notify_all();
-      }
-    });
-  }
-
-  ~ExecuteOnStall() {
-    // Wait for spawned thread to terminate.
-    mutex_lock l(mu_);
-    disabled_ = true;
-    if (!joined_) {
-      cond_var_.wait(l);
+public:
+    // delay_secs: If the object still exists after this many seconds,
+    //     execute f.
+    // f: The function to be executed, for example a detailed log of the
+    //    the state of an object to which this is attached.
+    // poll_microseconds: The spawned thread will wake and test whether
+    //    the destructor has been invoked this frequently.
+    ExecuteOnStall(int delay_secs, std::function<void()> f,
+                   int32 poll_microseconds = 100)
+        : disabled_(false),
+          joined_(false),
+          env_(Env::Default()),
+          f_(f),
+          poll_microseconds_(poll_microseconds) {
+        deadline_ = env_->NowMicros() + 1000000 * delay_secs;
+        env_->SchedClosure([this]() {
+            while (env_->NowMicros() < deadline_) {
+                {
+                    mutex_lock l(mu_);
+                    if (disabled_) {
+                        break;
+                    }
+                }
+                env_->SleepForMicroseconds(poll_microseconds_);
+            }
+            {
+                mutex_lock l(mu_);
+                if (!disabled_) {
+                    f_();
+                }
+                joined_ = true;
+                cond_var_.notify_all();
+            }
+        });
     }
-  }
 
- private:
-  mutex mu_;
-  condition_variable cond_var_;
-  bool disabled_ TF_GUARDED_BY(mu_);
-  bool joined_ TF_GUARDED_BY(mu_);
-  Env* env_;
-  std::function<void()> f_;
-  int64 deadline_;
-  int32 poll_microseconds_;
+    ~ExecuteOnStall() {
+        // Wait for spawned thread to terminate.
+        mutex_lock l(mu_);
+        disabled_ = true;
+        if (!joined_) {
+            cond_var_.wait(l);
+        }
+    }
+
+private:
+    mutex mu_;
+    condition_variable cond_var_;
+    bool disabled_ TF_GUARDED_BY(mu_);
+    bool joined_ TF_GUARDED_BY(mu_);
+    Env* env_;
+    std::function<void()> f_;
+    int64 deadline_;
+    int32 poll_microseconds_;
 };
 
 }  // namespace tensorflow

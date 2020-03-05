@@ -39,55 +39,55 @@ namespace tensorflow {
 // * FINISHED: the worker has finished processing the method
 
 class GrpcResponseCache {
- public:
-  using FinishResponseCB = std::function<void(
-      const Tensor& tensor, bool is_dead, const Status& status)>;
+public:
+    using FinishResponseCB = std::function<void(
+                                 const Tensor& tensor, bool is_dead, const Status& status)>;
 
-  // Add the given request to the cache.
-  // If the request is in the cache,
-  //    If it is finished, invoke `cb` immediately
-  //    If active, cb will be invoked when the current call completes.
-  //    In either case, return true.
-  // Otherwise, store the request and cb in the cache, and return false.
-  // Note FinishResponseCB is assumed to be thread-safe.
-  bool QueueRequest(int64 request_id, int64 step_id,
-                    const FinishResponseCB& cb);
+    // Add the given request to the cache.
+    // If the request is in the cache,
+    //    If it is finished, invoke `cb` immediately
+    //    If active, cb will be invoked when the current call completes.
+    //    In either case, return true.
+    // Otherwise, store the request and cb in the cache, and return false.
+    // Note FinishResponseCB is assumed to be thread-safe.
+    bool QueueRequest(int64 request_id, int64 step_id,
+                      const FinishResponseCB& cb);
 
-  // Fill the response cache for the given request_id and respond to all
-  // pending request.
-  void OnRequestFinished(int64 request_id, const Tensor& tensor, bool is_dead,
-                         const Status& status);
+    // Fill the response cache for the given request_id and respond to all
+    // pending request.
+    void OnRequestFinished(int64 request_id, const Tensor& tensor, bool is_dead,
+                           const Status& status);
 
-  // Erase the cache entry with the given request_id
-  void EraseRequestId(int64 request_id);
+    // Erase the cache entry with the given request_id
+    void EraseRequestId(int64 request_id);
 
-  // Erase cache entries with the given step_id
-  void CleanEntriesForStep(int64 step_id);
+    // Erase cache entries with the given step_id
+    void CleanEntriesForStep(int64 step_id);
 
- private:
-  struct ResponseCacheEntry {
-    enum class State {
-      PENDING = 0,
-      ACTIVE = 1,
-      FINISHED = 2,
+private:
+    struct ResponseCacheEntry {
+        enum class State {
+            PENDING = 0,
+            ACTIVE = 1,
+            FINISHED = 2,
+        };
+
+        State state = State::PENDING;
+        int64 step_id = -1;
+        Tensor tensor;
+        bool is_dead = false;
+        Status response_status;
+
+        void FinishResponse(const FinishResponseCB& cb) const {
+            cb(tensor, is_dead, response_status);
+        }
+        std::vector<FinishResponseCB> callbacks;
     };
 
-    State state = State::PENDING;
-    int64 step_id = -1;
-    Tensor tensor;
-    bool is_dead = false;
-    Status response_status;
-
-    void FinishResponse(const FinishResponseCB& cb) const {
-      cb(tensor, is_dead, response_status);
-    }
-    std::vector<FinishResponseCB> callbacks;
-  };
-
-  mutex mu_;
-  // response_cache_ is expected to be small, as entries are cleared immediately
-  // on ack from the receiver.
-  gtl::FlatMap<int64, ResponseCacheEntry> response_cache_ TF_GUARDED_BY(mu_);
+    mutex mu_;
+    // response_cache_ is expected to be small, as entries are cleared immediately
+    // on ack from the receiver.
+    gtl::FlatMap<int64, ResponseCacheEntry> response_cache_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

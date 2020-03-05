@@ -35,76 +35,76 @@ struct WorkerEnv;
 //
 // SessionMgr is threadsafe.
 class SessionMgr {
- public:
-  typedef std::function<Status(const ServerDef&, WorkerCacheInterface**)>
-      WorkerCacheFactory;
+public:
+    typedef std::function<Status(const ServerDef&, WorkerCacheInterface**)>
+    WorkerCacheFactory;
 
-  explicit SessionMgr(
-      WorkerEnv* worker_env, const string& default_worker_name,
-      std::unique_ptr<WorkerCacheInterface> default_worker_cache,
-      WorkerCacheFactory worker_cache_factory);
-  ~SessionMgr() {}
+    explicit SessionMgr(
+        WorkerEnv* worker_env, const string& default_worker_name,
+        std::unique_ptr<WorkerCacheInterface> default_worker_cache,
+        WorkerCacheFactory worker_cache_factory);
+    ~SessionMgr() {}
 
-  // Allocates state for a new session.
-  Status CreateSession(const string& session, const ServerDef& server_def,
-                       bool isolate_session_state);
-  Status CreateSession(
-      const string& session, const ServerDef& server_def,
-      const protobuf::RepeatedPtrField<DeviceAttributes>& device_attributes,
-      bool isolate_session_state);
+    // Allocates state for a new session.
+    Status CreateSession(const string& session, const ServerDef& server_def,
+                         bool isolate_session_state);
+    Status CreateSession(
+        const string& session, const ServerDef& server_def,
+        const protobuf::RepeatedPtrField<DeviceAttributes>& device_attributes,
+        bool isolate_session_state);
 
-  // Updates state (worker cache, devices) of worker session identified by
-  // session name (`session`) based on a new server_def and set of devices.
-  Status UpdateSession(const string& session, const ServerDef& server_def,
-                       const protobuf::RepeatedPtrField<DeviceAttributes>&
-                           cluster_device_attributes,
-                       bool isolate_session_state);
+    // Updates state (worker cache, devices) of worker session identified by
+    // session name (`session`) based on a new server_def and set of devices.
+    Status UpdateSession(const string& session, const ServerDef& server_def,
+                         const protobuf::RepeatedPtrField<DeviceAttributes>&
+                         cluster_device_attributes,
+                         bool isolate_session_state);
 
-  // Locates the worker session for a given session handle
-  Status WorkerSessionForSession(const string& session_handle,
-                                 std::shared_ptr<WorkerSession>* out_session);
-  std::shared_ptr<WorkerSession> LegacySession();
+    // Locates the worker session for a given session handle
+    Status WorkerSessionForSession(const string& session_handle,
+                                   std::shared_ptr<WorkerSession>* out_session);
+    std::shared_ptr<WorkerSession> LegacySession();
 
-  Status DeleteSession(const string& session);
+    Status DeleteSession(const string& session);
 
-  static string WorkerNameFromServerDef(const ServerDef& server_def);
+    static string WorkerNameFromServerDef(const ServerDef& server_def);
 
-  void SetLogging(bool active);
+    void SetLogging(bool active);
 
-  void RetrieveLogs(tensorflow::int64 step_id, LoggingResponse* response);
+    void RetrieveLogs(tensorflow::int64 step_id, LoggingResponse* response);
 
-  void ClearLogs();
+    void ClearLogs();
 
- private:
-  WorkerEnv* const worker_env_;  // Not owned.
+private:
+    WorkerEnv* const worker_env_;  // Not owned.
 
-  // A note about destruction:
-  // We must delete graph_mgr before device_mgr, due to shared
-  // ownership of OpKernels in the executors. (The graph_mgr will
-  // free all stateless OpKernels, and pass over borrowed stateful
-  // OpKernels, which are also held in their respective devices'
-  // OpSegments.)
-  //
-  // legacy_session_ owns the worker_env_.device_mgr, and so we must ensure
-  // that sessions_'s WorkerSessions are deleted (which do not own the
-  // underlying devices, but instead own RenamedDevices) before
-  // legacy_session_ is deleted. Further, we must ensure that WorkerSession's
-  // device_mgr is deleted after WorkerSession's graph_mgr.
+    // A note about destruction:
+    // We must delete graph_mgr before device_mgr, due to shared
+    // ownership of OpKernels in the executors. (The graph_mgr will
+    // free all stateless OpKernels, and pass over borrowed stateful
+    // OpKernels, which are also held in their respective devices'
+    // OpSegments.)
+    //
+    // legacy_session_ owns the worker_env_.device_mgr, and so we must ensure
+    // that sessions_'s WorkerSessions are deleted (which do not own the
+    // underlying devices, but instead own RenamedDevices) before
+    // legacy_session_ is deleted. Further, we must ensure that WorkerSession's
+    // device_mgr is deleted after WorkerSession's graph_mgr.
 
-  std::unique_ptr<WorkerCacheInterface> default_worker_cache_;
-  std::shared_ptr<WorkerSession> legacy_session_;
+    std::unique_ptr<WorkerCacheInterface> default_worker_cache_;
+    std::shared_ptr<WorkerSession> legacy_session_;
 
-  bool is_logging_active_ = false;
+    bool is_logging_active_ = false;
 
-  const WorkerCacheFactory worker_cache_factory_;
+    const WorkerCacheFactory worker_cache_factory_;
 
-  Status WorkerSessionForSessionLocked(
-      const string& session_handle, std::shared_ptr<WorkerSession>* out_session)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+    Status WorkerSessionForSessionLocked(
+        const string& session_handle, std::shared_ptr<WorkerSession>* out_session)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 
-  mutex mu_;
-  // A map from session identifier to internal session structure.
-  std::map<string, std::shared_ptr<WorkerSession>> sessions_ TF_GUARDED_BY(mu_);
+    mutex mu_;
+    // A map from session identifier to internal session structure.
+    std::map<string, std::shared_ptr<WorkerSession>> sessions_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

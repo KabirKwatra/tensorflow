@@ -37,36 +37,36 @@ namespace test_util {
 // an explicit Advance() method.
 // All other Env virtual methods pass through to a wrapped Env.
 class FakeClockEnv : public EnvWrapper {
- public:
-  explicit FakeClockEnv(Env* wrapped);
-  ~FakeClockEnv() override = default;
+public:
+    explicit FakeClockEnv(Env* wrapped);
+    ~FakeClockEnv() override = default;
 
-  // Advance the clock by a certain number of microseconds.
-  void AdvanceByMicroseconds(int micros);
+    // Advance the clock by a certain number of microseconds.
+    void AdvanceByMicroseconds(int micros);
 
-  // Blocks until there is a sleeping thread that is scheduled to wake up at
-  // the given (absolute) time.
-  void BlockUntilSleepingThread(uint64 wake_time);
+    // Blocks until there is a sleeping thread that is scheduled to wake up at
+    // the given (absolute) time.
+    void BlockUntilSleepingThread(uint64 wake_time);
 
-  // Blocks until there are at least num_threads sleeping.
-  void BlockUntilThreadsAsleep(int num_threads);
+    // Blocks until there are at least num_threads sleeping.
+    void BlockUntilThreadsAsleep(int num_threads);
 
-  // Methods that this class implements.
-  uint64 NowMicros() const override;
-  void SleepForMicroseconds(int64 micros) override;
+    // Methods that this class implements.
+    uint64 NowMicros() const override;
+    void SleepForMicroseconds(int64 micros) override;
 
- private:
-  mutable mutex mu_;
+private:
+    mutable mutex mu_;
 
-  uint64 current_time_ TF_GUARDED_BY(mu_) = 0;
+    uint64 current_time_ TF_GUARDED_BY(mu_) = 0;
 
-  struct SleepingThread {
-    uint64 wake_time;
-    Notification* wake_notification;
-  };
-  std::vector<SleepingThread> sleeping_threads_ TF_GUARDED_BY(mu_);
+    struct SleepingThread {
+        uint64 wake_time;
+        Notification* wake_notification;
+    };
+    std::vector<SleepingThread> sleeping_threads_ TF_GUARDED_BY(mu_);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(FakeClockEnv);
+    TF_DISALLOW_COPY_AND_ASSIGN(FakeClockEnv);
 };
 
 }  // namespace test_util

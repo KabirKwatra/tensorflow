@@ -53,22 +53,22 @@ namespace monitoring {
 //
 // This class is thread-safe.
 class SamplerCell {
- public:
-  SamplerCell(const std::vector<double>& bucket_limits)
-      : histogram_(bucket_limits) {}
+public:
+    SamplerCell(const std::vector<double>& bucket_limits)
+        : histogram_(bucket_limits) {}
 
-  ~SamplerCell() {}
+    ~SamplerCell() {}
 
-  // Atomically adds a sample.
-  void Add(double sample);
+    // Atomically adds a sample.
+    void Add(double sample);
 
-  // Returns the current histogram value as a proto.
-  HistogramProto value() const;
+    // Returns the current histogram value as a proto.
+    HistogramProto value() const;
 
- private:
-  histogram::ThreadSafeHistogram histogram_;
+private:
+    histogram::ThreadSafeHistogram histogram_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(SamplerCell);
+    TF_DISALLOW_COPY_AND_ASSIGN(SamplerCell);
 };
 
 // Bucketing strategies for the samplers.
@@ -79,29 +79,29 @@ class SamplerCell {
 // WARNING: If you are changing the interface here, please do change the same in
 // mobile_sampler.h.
 class Buckets {
- public:
-  virtual ~Buckets() = default;
+public:
+    virtual ~Buckets() = default;
 
-  // Sets up buckets of the form:
-  // [-DBL_MAX, ..., scale * growth^i,
-  //   scale * growth_factor^(i + 1), ..., DBL_MAX].
-  //
-  // So for powers of 2 with a bucket count of 10, you would say (1, 2, 10)
-  static std::unique_ptr<Buckets> Exponential(double scale,
-                                              double growth_factor,
-                                              int bucket_count);
+    // Sets up buckets of the form:
+    // [-DBL_MAX, ..., scale * growth^i,
+    //   scale * growth_factor^(i + 1), ..., DBL_MAX].
+    //
+    // So for powers of 2 with a bucket count of 10, you would say (1, 2, 10)
+    static std::unique_ptr<Buckets> Exponential(double scale,
+            double growth_factor,
+            int bucket_count);
 
-  // Sets up buckets of the form:
-  // [-DBL_MAX, ..., bucket_limits[i], bucket_limits[i + 1], ..., DBL_MAX].
-  static std::unique_ptr<Buckets> Explicit(
-      std::initializer_list<double> bucket_limits);
+    // Sets up buckets of the form:
+    // [-DBL_MAX, ..., bucket_limits[i], bucket_limits[i + 1], ..., DBL_MAX].
+    static std::unique_ptr<Buckets> Explicit(
+        std::initializer_list<double> bucket_limits);
 
-  // This alternative Explicit Buckets factory method is primarily meant to be
-  // used by the CLIF layer code paths that are incompatible with
-  // initialize_lists.
-  static std::unique_ptr<Buckets> Explicit(std::vector<double> bucket_limits);
+    // This alternative Explicit Buckets factory method is primarily meant to be
+    // used by the CLIF layer code paths that are incompatible with
+    // initialize_lists.
+    static std::unique_ptr<Buckets> Explicit(std::vector<double> bucket_limits);
 
-  virtual const std::vector<double>& explicit_bounds() const = 0;
+    virtual const std::vector<double>& explicit_bounds() const = 0;
 };
 
 // A stateful class for updating a cumulative histogram metric.
@@ -119,118 +119,122 @@ class Buckets {
 // This class is thread-safe.
 template <int NumLabels>
 class Sampler {
- public:
-  ~Sampler() {
-    // Deleted here, before the metric_def is destroyed.
-    registration_handle_.reset();
-  }
-
-  // Creates the metric based on the metric-definition arguments and buckets.
-  //
-  // Example;
-  // auto* sampler_with_label = Sampler<1>::New({"/tensorflow/sampler",
-  //   "Tensorflow sampler", "MyLabelName"}, {10.0, 20.0, 30.0});
-  static Sampler* New(const MetricDef<MetricKind::kCumulative, HistogramProto,
-                                      NumLabels>& metric_def,
-                      std::unique_ptr<Buckets> buckets);
-
-  // Retrieves the cell for the specified labels, creating it on demand if
-  // not already present.
-  template <typename... Labels>
-  SamplerCell* GetCell(const Labels&... labels) TF_LOCKS_EXCLUDED(mu_);
-
-  Status GetStatus() { return status_; }
-
- private:
-  friend class SamplerCell;
-
-  Sampler(const MetricDef<MetricKind::kCumulative, HistogramProto, NumLabels>&
-              metric_def,
-          std::unique_ptr<Buckets> buckets)
-      : metric_def_(metric_def),
-        buckets_(std::move(buckets)),
-        registration_handle_(CollectionRegistry::Default()->Register(
-            &metric_def_, [&](MetricCollectorGetter getter) {
-              auto metric_collector = getter.Get(&metric_def_);
-
-              mutex_lock l(mu_);
-              for (const auto& cell : cells_) {
-                metric_collector.CollectValue(cell.first, cell.second.value());
-              }
-            })) {
-    if (registration_handle_) {
-      status_ = Status::OK();
-    } else {
-      status_ = Status(tensorflow::error::Code::ALREADY_EXISTS,
-                       "Another metric with the same name already exists.");
+public:
+    ~Sampler() {
+        // Deleted here, before the metric_def is destroyed.
+        registration_handle_.reset();
     }
-  }
 
-  mutable mutex mu_;
+    // Creates the metric based on the metric-definition arguments and buckets.
+    //
+    // Example;
+    // auto* sampler_with_label = Sampler<1>::New({"/tensorflow/sampler",
+    //   "Tensorflow sampler", "MyLabelName"}, {10.0, 20.0, 30.0});
+    static Sampler* New(const MetricDef<MetricKind::kCumulative, HistogramProto,
+                        NumLabels>& metric_def,
+                        std::unique_ptr<Buckets> buckets);
 
-  Status status_;
+    // Retrieves the cell for the specified labels, creating it on demand if
+    // not already present.
+    template <typename... Labels>
+    SamplerCell* GetCell(const Labels&... labels) TF_LOCKS_EXCLUDED(mu_);
 
-  // The metric definition. This will be used to identify the metric when we
-  // register it for collection.
-  const MetricDef<MetricKind::kCumulative, HistogramProto, NumLabels>
-      metric_def_;
+    Status GetStatus() {
+        return status_;
+    }
 
-  // Bucket limits for the histograms in the cells.
-  std::unique_ptr<Buckets> buckets_;
+private:
+    friend class SamplerCell;
 
-  // Registration handle with the CollectionRegistry.
-  std::unique_ptr<CollectionRegistry::RegistrationHandle> registration_handle_;
+    Sampler(const MetricDef<MetricKind::kCumulative, HistogramProto, NumLabels>&
+            metric_def,
+            std::unique_ptr<Buckets> buckets)
+        : metric_def_(metric_def),
+          buckets_(std::move(buckets)),
+          registration_handle_(CollectionRegistry::Default()->Register(
+                                   &metric_def_, [&](MetricCollectorGetter getter) {
+        auto metric_collector = getter.Get(&metric_def_);
 
-  using LabelArray = std::array<string, NumLabels>;
-  // we need a container here that guarantees pointer stability of the value,
-  // namely, the pointer of the value should remain valid even after more cells
-  // are inserted.
-  std::map<LabelArray, SamplerCell> cells_ TF_GUARDED_BY(mu_);
+        mutex_lock l(mu_);
+        for (const auto& cell : cells_) {
+            metric_collector.CollectValue(cell.first, cell.second.value());
+        }
+    })) {
+        if (registration_handle_) {
+            status_ = Status::OK();
+        } else {
+            status_ = Status(tensorflow::error::Code::ALREADY_EXISTS,
+                             "Another metric with the same name already exists.");
+        }
+    }
 
-  TF_DISALLOW_COPY_AND_ASSIGN(Sampler);
+    mutable mutex mu_;
+
+    Status status_;
+
+    // The metric definition. This will be used to identify the metric when we
+    // register it for collection.
+    const MetricDef<MetricKind::kCumulative, HistogramProto, NumLabels>
+    metric_def_;
+
+    // Bucket limits for the histograms in the cells.
+    std::unique_ptr<Buckets> buckets_;
+
+    // Registration handle with the CollectionRegistry.
+    std::unique_ptr<CollectionRegistry::RegistrationHandle> registration_handle_;
+
+    using LabelArray = std::array<string, NumLabels>;
+    // we need a container here that guarantees pointer stability of the value,
+    // namely, the pointer of the value should remain valid even after more cells
+    // are inserted.
+    std::map<LabelArray, SamplerCell> cells_ TF_GUARDED_BY(mu_);
+
+    TF_DISALLOW_COPY_AND_ASSIGN(Sampler);
 };
 
 ////
 //  Implementation details follow. API readers may skip.
 ////
 
-inline void SamplerCell::Add(const double sample) { histogram_.Add(sample); }
+inline void SamplerCell::Add(const double sample) {
+    histogram_.Add(sample);
+}
 
 inline HistogramProto SamplerCell::value() const {
-  HistogramProto pb;
-  histogram_.EncodeToProto(&pb, true /* preserve_zero_buckets */);
-  return pb;
+    HistogramProto pb;
+    histogram_.EncodeToProto(&pb, true /* preserve_zero_buckets */);
+    return pb;
 }
 
 template <int NumLabels>
 Sampler<NumLabels>* Sampler<NumLabels>::New(
     const MetricDef<MetricKind::kCumulative, HistogramProto, NumLabels>&
-        metric_def,
+    metric_def,
     std::unique_ptr<Buckets> buckets) {
-  return new Sampler<NumLabels>(metric_def, std::move(buckets));
+    return new Sampler<NumLabels>(metric_def, std::move(buckets));
 }
 
 template <int NumLabels>
 template <typename... Labels>
 SamplerCell* Sampler<NumLabels>::GetCell(const Labels&... labels)
-    TF_LOCKS_EXCLUDED(mu_) {
-  // Provides a more informative error message than the one during array
-  // construction below.
-  static_assert(sizeof...(Labels) == NumLabels,
-                "Mismatch between Sampler<NumLabels> and number of labels "
-                "provided in GetCell(...).");
+TF_LOCKS_EXCLUDED(mu_) {
+    // Provides a more informative error message than the one during array
+    // construction below.
+    static_assert(sizeof...(Labels) == NumLabels,
+                  "Mismatch between Sampler<NumLabels> and number of labels "
+                  "provided in GetCell(...).");
 
-  const LabelArray& label_array = {{labels...}};
-  mutex_lock l(mu_);
-  const auto found_it = cells_.find(label_array);
-  if (found_it != cells_.end()) {
-    return &(found_it->second);
-  }
-  return &(cells_
-               .emplace(std::piecewise_construct,
-                        std::forward_as_tuple(label_array),
-                        std::forward_as_tuple(buckets_->explicit_bounds()))
-               .first->second);
+    const LabelArray& label_array = {{labels...}};
+    mutex_lock l(mu_);
+    const auto found_it = cells_.find(label_array);
+    if (found_it != cells_.end()) {
+        return &(found_it->second);
+    }
+    return &(cells_
+             .emplace(std::piecewise_construct,
+                      std::forward_as_tuple(label_array),
+                      std::forward_as_tuple(buckets_->explicit_bounds()))
+             .first->second);
 }
 
 }  // namespace monitoring

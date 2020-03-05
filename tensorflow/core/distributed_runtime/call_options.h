@@ -32,48 +32,48 @@ namespace tensorflow {
 //
 // TODO(zhifengc): Maybe change all RPC methods to take CallOptions.
 class CallOptions {
- public:
-  CallOptions();
+public:
+    CallOptions();
 
-  // Cancellation.
-  //
-  // The caller may call StartCancel() anytime as long as this
-  // CallOptions object is alive. The callee may or may not receive
-  // the cancellation notification depending on the rpc layer
-  // implementation.
-  void StartCancel();
+    // Cancellation.
+    //
+    // The caller may call StartCancel() anytime as long as this
+    // CallOptions object is alive. The callee may or may not receive
+    // the cancellation notification depending on the rpc layer
+    // implementation.
+    void StartCancel();
 
-  // The callee (the rpc layer implementation) must set a cancellation
-  // notifier before its blocking operation and clear the notifier
-  // before the call returns.
-  //
-  // "cancel_func" may be called zero, once or more time. Therefore, it
-  // should _not_ be responsible for memory management of any objects.
-  //
-  // "cancel_func" must be very light-weight. It should not block on
-  // IO or locking. Typically, it just calls the rpc implementation
-  // layer's specific cancellation mechanism and does nothing else.
-  //
-  // NOTE: "cancel_func" itself is pass-by-value. Therefore, we do not
-  // worry about its ownership here.
-  typedef std::function<void()> CancelFunction;
-  void SetCancelCallback(CancelFunction cancel_func);
-  void ClearCancelCallback();
+    // The callee (the rpc layer implementation) must set a cancellation
+    // notifier before its blocking operation and clear the notifier
+    // before the call returns.
+    //
+    // "cancel_func" may be called zero, once or more time. Therefore, it
+    // should _not_ be responsible for memory management of any objects.
+    //
+    // "cancel_func" must be very light-weight. It should not block on
+    // IO or locking. Typically, it just calls the rpc implementation
+    // layer's specific cancellation mechanism and does nothing else.
+    //
+    // NOTE: "cancel_func" itself is pass-by-value. Therefore, we do not
+    // worry about its ownership here.
+    typedef std::function<void()> CancelFunction;
+    void SetCancelCallback(CancelFunction cancel_func);
+    void ClearCancelCallback();
 
-  // Get and set operation timeout. Timeout value is in milliseconds.
-  //
-  // Default: 0. indicating there is no timeout for this call.
-  int64 GetTimeout();
-  void SetTimeout(int64 ms);
+    // Get and set operation timeout. Timeout value is in milliseconds.
+    //
+    // Default: 0. indicating there is no timeout for this call.
+    int64 GetTimeout();
+    void SetTimeout(int64 ms);
 
- private:
-  mutex mu_;
-  CancelFunction cancel_func_ TF_GUARDED_BY(mu_);
+private:
+    mutex mu_;
+    CancelFunction cancel_func_ TF_GUARDED_BY(mu_);
 
-  // RPC operation timeout in milliseconds.
-  int64 timeout_in_ms_ TF_GUARDED_BY(mu_) = 0;
+    // RPC operation timeout in milliseconds.
+    int64 timeout_in_ms_ TF_GUARDED_BY(mu_) = 0;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(CallOptions);
+    TF_DISALLOW_COPY_AND_ASSIGN(CallOptions);
 };
 
 }  // namespace tensorflow

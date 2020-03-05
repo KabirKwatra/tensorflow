@@ -31,45 +31,45 @@ class GrpcCall;
 }  // namespace internal
 
 class GrpcRPCFactory : public RPCFactory {
- public:
-  explicit GrpcRPCFactory(OpKernelConstruction* ctx, bool fail_fast,
-                          int64 timeout_in_ms);
+public:
+    explicit GrpcRPCFactory(OpKernelConstruction* ctx, bool fail_fast,
+                            int64 timeout_in_ms);
 
-  // Explicit destructor to control destruction order.
-  ~GrpcRPCFactory() override;
+    // Explicit destructor to control destruction order.
+    ~GrpcRPCFactory() override;
 
-  void Call(OpKernelContext* ctx, int64 num_elements, const Tensor& address_t,
-            const Tensor& method_t, const Tensor& request_t, const bool try_rpc,
-            Tensor* response_t, Tensor* status_code_t, Tensor* status_message_t,
-            AsyncOpKernel::DoneCallback done) override;
+    void Call(OpKernelContext* ctx, int64 num_elements, const Tensor& address_t,
+              const Tensor& method_t, const Tensor& request_t, const bool try_rpc,
+              Tensor* response_t, Tensor* status_code_t, Tensor* status_message_t,
+              AsyncOpKernel::DoneCallback done) override;
 
- protected:
-  typedef std::shared_ptr<::grpc::Channel> ChannelPtr;
-  virtual ChannelPtr CreateChannelForAddress(const string& address);
+protected:
+    typedef std::shared_ptr<::grpc::Channel> ChannelPtr;
+    virtual ChannelPtr CreateChannelForAddress(const string& address);
 
- private:
-  // Creates a call and registers it with given `container`. The `index` is used
-  // to index into the tensor arguments.
-  void CreateCall(const Tensor& request_t, const bool try_rpc, int index,
-                  CallContainer<internal::GrpcCall>* container,
-                  Tensor* response_t, Tensor* status_code_t,
-                  Tensor* status_message_t);
+private:
+    // Creates a call and registers it with given `container`. The `index` is used
+    // to index into the tensor arguments.
+    void CreateCall(const Tensor& request_t, const bool try_rpc, int index,
+                    CallContainer<internal::GrpcCall>* container,
+                    Tensor* response_t, Tensor* status_code_t,
+                    Tensor* status_message_t);
 
-  // Asynchronously invokes the given `call`. The call completion is handled
-  // by the call container the call was previously registered with.
-  void StartCall(const Tensor& address_t, const Tensor& method_t,
-                 internal::GrpcCall* call);
+    // Asynchronously invokes the given `call`. The call completion is handled
+    // by the call container the call was previously registered with.
+    void StartCall(const Tensor& address_t, const Tensor& method_t,
+                   internal::GrpcCall* call);
 
-  ::grpc::GenericStub* GetOrCreateStubForAddress(const string& address);
+    ::grpc::GenericStub* GetOrCreateStubForAddress(const string& address);
 
-  bool fail_fast_;
-  int64 timeout_in_ms_;
-  ::grpc::CompletionQueue completion_queue_;
-  Thread* polling_thread_;  // Owned.
+    bool fail_fast_;
+    int64 timeout_in_ms_;
+    ::grpc::CompletionQueue completion_queue_;
+    Thread* polling_thread_;  // Owned.
 
-  mutex mu_;
-  typedef std::unique_ptr<::grpc::GenericStub> StubPtr;
-  std::unordered_map<string, StubPtr> stubs_ TF_GUARDED_BY(mu_);
+    mutex mu_;
+    typedef std::unique_ptr<::grpc::GenericStub> StubPtr;
+    std::unordered_map<string, StubPtr> stubs_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

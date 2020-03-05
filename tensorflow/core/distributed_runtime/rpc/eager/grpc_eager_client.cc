@@ -56,10 +56,10 @@ namespace {
  * on by default.
  */
 bool EnableStreaming() {
-  bool result;
-  TF_CHECK_OK(ReadBoolFromEnvVar("TF_ENABLE_EAGER_CLIENT_STREAMING_ENQUEUE",
-                                 true, &result));
-  return result;
+    bool result;
+    TF_CHECK_OK(ReadBoolFromEnvVar("TF_ENABLE_EAGER_CLIENT_STREAMING_ENQUEUE",
+                                   true, &result));
+    return result;
 }
 
 // Ref-counted thread to handle callbacks for completed requests a GRPC
@@ -69,55 +69,61 @@ bool EnableStreaming() {
 // To ensure that every tag in completion queue is processed, this thread also
 // holds a reference to itself and always wait until ref count is one to exit.
 class GrpcEagerClientThread : public core::RefCounted {
- public:
-  GrpcEagerClientThread() {
-    // Hold a reference to ensure every completion tag gets processed.
-    Ref();
-    thread_.reset(Env::Default()->StartThread(
+public:
+    GrpcEagerClientThread() {
+        // Hold a reference to ensure every completion tag gets processed.
+        Ref();
+        thread_.reset(Env::Default()->StartThread(
         ThreadOptions(), "eager_client_thread", [this]() {
-          void* tag;
-          bool ok;
-          while (completion_queue_.Next(&tag, &ok)) {
-            VLOG(4) << "GrpcEagerClientThread got next tag";
-            GrpcClientCQTag* callback_tag = static_cast<GrpcClientCQTag*>(tag);
-            callback_tag->OnCompleted(ok);
-            VLOG(4) << "GrpcEagerClientThread blocking for next tag";
-            if (RefCountIsOne()) {
-              break;
+            void* tag;
+            bool ok;
+            while (completion_queue_.Next(&tag, &ok)) {
+                VLOG(4) << "GrpcEagerClientThread got next tag";
+                GrpcClientCQTag* callback_tag = static_cast<GrpcClientCQTag*>(tag);
+                callback_tag->OnCompleted(ok);
+                VLOG(4) << "GrpcEagerClientThread blocking for next tag";
+                if (RefCountIsOne()) {
+                    break;
+                }
             }
-          }
-          VLOG(4) << "GrpcEagerClientThread exiting";
-          completion_queue_.Shutdown();
-          // `this` holds the final reference so cannot directly Unref here.
-          // Instead, schedule a separate thread to clean it up.
-          Env::Default()->SchedClosure([this]() { this->Unref(); });
+            VLOG(4) << "GrpcEagerClientThread exiting";
+            completion_queue_.Shutdown();
+            // `this` holds the final reference so cannot directly Unref here.
+            // Instead, schedule a separate thread to clean it up.
+            Env::Default()->SchedClosure([this]() {
+                this->Unref();
+            });
         }));
-  }
+    }
 
-  ~GrpcEagerClientThread() override {}
+    ~GrpcEagerClientThread() override {}
 
-  ::grpc::CompletionQueue* completion_queue() { return &completion_queue_; }
+    ::grpc::CompletionQueue* completion_queue() {
+        return &completion_queue_;
+    }
 
- private:
-  ::grpc::CompletionQueue completion_queue_;
-  std::unique_ptr<Thread> thread_;
+private:
+    ::grpc::CompletionQueue completion_queue_;
+    std::unique_ptr<Thread> thread_;
 };
 
 class GrpcEagerClient : public EagerClient {
- public:
-  GrpcEagerClient(const tensorflow::SharedGrpcChannelPtr& channel,
-                  GrpcEagerClientThread* thread)
-      : stub_(channel), thread_(thread) {
-    // Hold a reference to make sure the corresponding EagerClientThread
-    // outlives the client.
-    thread_->Ref();
-    cq_ = thread->completion_queue();
-  }
-  ~GrpcEagerClient() override { thread_->Unref(); }
+public:
+    GrpcEagerClient(const tensorflow::SharedGrpcChannelPtr& channel,
+                    GrpcEagerClientThread* thread)
+        : stub_(channel), thread_(thread) {
+        // Hold a reference to make sure the corresponding EagerClientThread
+        // outlives the client.
+        thread_->Ref();
+        cq_ = thread->completion_queue();
+    }
+    ~GrpcEagerClient() override {
+        thread_->Unref();
+    }
 
-  bool allow_multiple_pending_requests() const override {
-    return EnableStreaming();
-  }
+    bool allow_multiple_pending_requests() const override {
+        return EnableStreaming();
+    }
 
 #define CLIENT_METHOD(method)                                             \
   void method##Async(const method##Request* request,                      \
@@ -130,150 +136,152 @@ class GrpcEagerClient : public EagerClient {
         /*threadpool=*/nullptr, /*max_retries=*/0, /*fail_fast=*/true);   \
   }
 
-  CLIENT_METHOD(CreateContext);
-  CLIENT_METHOD(UpdateContext);
-  CLIENT_METHOD(Enqueue);
-  CLIENT_METHOD(WaitQueueDone);
-  CLIENT_METHOD(KeepAlive);
+    CLIENT_METHOD(CreateContext);
+    CLIENT_METHOD(UpdateContext);
+    CLIENT_METHOD(Enqueue);
+    CLIENT_METHOD(WaitQueueDone);
+    CLIENT_METHOD(KeepAlive);
 
 #undef CLIENT_METHOD
 
-  void CloseContextAsync(const CloseContextRequest* request,
-                         CloseContextResponse* response,
-                         StatusCallback done) override {
-    StatusCallback done_wrapped = callback_wrapper(std::move(done));
-    new RPCState<protobuf::Message>(
-        &stub_, cq_, "/tensorflow.eager.EagerService/CloseContext", *request,
-        response, std::move(done_wrapped), /*call_opts=*/nullptr,
-        /*threadpool=*/nullptr);
+    void CloseContextAsync(const CloseContextRequest* request,
+                           CloseContextResponse* response,
+                           StatusCallback done) override {
+        StatusCallback done_wrapped = callback_wrapper(std::move(done));
+        new RPCState<protobuf::Message>(
+            &stub_, cq_, "/tensorflow.eager.EagerService/CloseContext", *request,
+            response, std::move(done_wrapped), /*call_opts=*/nullptr,
+            /*threadpool=*/nullptr);
 
-    VLOG(1) << "Sending RPC to close remote eager context "
-            << request->DebugString();
+        VLOG(1) << "Sending RPC to close remote eager context "
+                << request->DebugString();
 
-    mutex_lock l(mu_);
-    const auto& it = enqueue_dispatchers_.find(request->context_id());
-    if (it != enqueue_dispatchers_.end()) {
-      it->second.CancelCall();
-      enqueue_dispatchers_.erase(it);
-    } else if (EnableStreaming()) {
-      LOG(ERROR) << "Remote EagerContext with id " << request->context_id()
-                 << " does not seem to exist.";
+        mutex_lock l(mu_);
+        const auto& it = enqueue_dispatchers_.find(request->context_id());
+        if (it != enqueue_dispatchers_.end()) {
+            it->second.CancelCall();
+            enqueue_dispatchers_.erase(it);
+        } else if (EnableStreaming()) {
+            LOG(ERROR) << "Remote EagerContext with id " << request->context_id()
+                       << " does not seem to exist.";
+        }
     }
-  }
 
-  void StreamingEnqueueAsync(const EnqueueRequest* request,
-                             EnqueueResponse* response,
-                             StatusCallback done) override {
-    StatusCallback done_wrapped = callback_wrapper(std::move(done));
-    if (EnableStreaming()) {
-      tf_shared_lock l(mu_);
-      auto it = enqueue_dispatchers_.find(request->context_id());
-      if (it == enqueue_dispatchers_.end()) {
-        auto it_and_bool = enqueue_dispatchers_.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(request->context_id()),
-            std::forward_as_tuple(
-                &stub_, cq_,
-                "/tensorflow.eager.EagerService/StreamingEnqueue"));
-        it = it_and_bool.first;
-      }
-      it->second.SendNextRequest(*request, response, std::move(done_wrapped));
-    } else {
-      Notification n;
-      Status status;
-      EnqueueAsync(request, response, [&n, &status](const Status& s) {
-        status.Update(s);
-        n.Notify();
-      });
-      n.WaitForNotification();
-      done_wrapped(status);
+    void StreamingEnqueueAsync(const EnqueueRequest* request,
+                               EnqueueResponse* response,
+                               StatusCallback done) override {
+        StatusCallback done_wrapped = callback_wrapper(std::move(done));
+        if (EnableStreaming()) {
+            tf_shared_lock l(mu_);
+            auto it = enqueue_dispatchers_.find(request->context_id());
+            if (it == enqueue_dispatchers_.end()) {
+                auto it_and_bool = enqueue_dispatchers_.emplace(
+                                       std::piecewise_construct,
+                                       std::forward_as_tuple(request->context_id()),
+                                       std::forward_as_tuple(
+                                           &stub_, cq_,
+                                           "/tensorflow.eager.EagerService/StreamingEnqueue"));
+                it = it_and_bool.first;
+            }
+            it->second.SendNextRequest(*request, response, std::move(done_wrapped));
+        } else {
+            Notification n;
+            Status status;
+            EnqueueAsync(request, response, [&n, &status](const Status& s) {
+                status.Update(s);
+                n.Notify();
+            });
+            n.WaitForNotification();
+            done_wrapped(status);
+        }
     }
-  }
 
- private:
-  ::grpc::GenericStub stub_;
-  const GrpcEagerClientThread* thread_;
+private:
+    ::grpc::GenericStub stub_;
+    const GrpcEagerClientThread* thread_;
 
-  ::grpc::CompletionQueue* cq_;
+    ::grpc::CompletionQueue* cq_;
 
-  mutable mutex mu_;
+    mutable mutex mu_;
 
-  std::unordered_map<uint64, StreamingRPCDispatcher<EnqueueResponse>>
-      enqueue_dispatchers_ TF_GUARDED_BY(mu_);
+    std::unordered_map<uint64, StreamingRPCDispatcher<EnqueueResponse>>
+            enqueue_dispatchers_ TF_GUARDED_BY(mu_);
 
-  StatusCallback callback_wrapper(StatusCallback done) {
-    Ref();
-    return [this, done = std::move(done)](const Status& status) {
-      done(status);
-      this->Unref();
-    };
-  }
+    StatusCallback callback_wrapper(StatusCallback done) {
+        Ref();
+        return [this, done = std::move(done)](const Status& status) {
+            done(status);
+            this->Unref();
+        };
+    }
 };
 
 class GrpcEagerClientCache : public EagerClientCache {
- public:
-  explicit GrpcEagerClientCache(
-      std::shared_ptr<tensorflow::GrpcChannelCache> cache)
-      : next_round_robin_assignment_(0), cache_(cache), threads_(4) {
-    for (int i = 0; i < threads_.size(); i++) {
-      threads_[i].reset(new GrpcEagerClientThread());
-    }
-  }
-
-  ~GrpcEagerClientCache() override { threads_.clear(); }
-
-  Status GetClient(const string& target,
-                   core::RefCountPtr<EagerClient>* client) override {
-    auto it = clients_.find(target);
-    if (it == clients_.end()) {
-      tensorflow::SharedGrpcChannelPtr shared =
-          cache_->FindWorkerChannel(target);
-      if (shared == nullptr) {
-        return errors::InvalidArgument("Client for target ", target,
-                                       " not found.");
-      }
-      int assigned_index = AssignClientToThread(target);
-      GrpcEagerClientThread* thread = threads_[assigned_index].get();
-      core::RefCountPtr<EagerClient> worker(
-          new GrpcEagerClient(shared, thread));
-      it = clients_.emplace(target, std::move(worker)).first;
+public:
+    explicit GrpcEagerClientCache(
+        std::shared_ptr<tensorflow::GrpcChannelCache> cache)
+        : next_round_robin_assignment_(0), cache_(cache), threads_(4) {
+        for (int i = 0; i < threads_.size(); i++) {
+            threads_[i].reset(new GrpcEagerClientThread());
+        }
     }
 
-    it->second->Ref();
-    client->reset(it->second.get());
-    return Status::OK();
-  }
-
- private:
-  mutex assignment_mu_;
-  std::unordered_map<std::string, size_t> target_assignments_
-      TF_GUARDED_BY(assignment_mu_);
-  size_t next_round_robin_assignment_ TF_GUARDED_BY(assignment_mu_);
-
-  size_t AssignClientToThread(const string& target) {
-    // Round-robin target assignment, but keeps the same target on the same
-    // polling thread always, as this is important for gRPC performance
-    mutex_lock lock(assignment_mu_);
-    auto it = target_assignments_.find(target);
-    if (it == target_assignments_.end()) {
-      it = target_assignments_
-               .insert(std::make_pair(
-                   target, (next_round_robin_assignment_++) % threads_.size()))
-               .first;
+    ~GrpcEagerClientCache() override {
+        threads_.clear();
     }
-    return it->second;
-  }
 
-  std::shared_ptr<tensorflow::GrpcChannelCache> cache_;
-  std::unordered_map<string, core::RefCountPtr<EagerClient>> clients_;
-  std::vector<core::RefCountPtr<GrpcEagerClientThread>> threads_;
+    Status GetClient(const string& target,
+                     core::RefCountPtr<EagerClient>* client) override {
+        auto it = clients_.find(target);
+        if (it == clients_.end()) {
+            tensorflow::SharedGrpcChannelPtr shared =
+                cache_->FindWorkerChannel(target);
+            if (shared == nullptr) {
+                return errors::InvalidArgument("Client for target ", target,
+                                               " not found.");
+            }
+            int assigned_index = AssignClientToThread(target);
+            GrpcEagerClientThread* thread = threads_[assigned_index].get();
+            core::RefCountPtr<EagerClient> worker(
+                new GrpcEagerClient(shared, thread));
+            it = clients_.emplace(target, std::move(worker)).first;
+        }
+
+        it->second->Ref();
+        client->reset(it->second.get());
+        return Status::OK();
+    }
+
+private:
+    mutex assignment_mu_;
+    std::unordered_map<std::string, size_t> target_assignments_
+    TF_GUARDED_BY(assignment_mu_);
+    size_t next_round_robin_assignment_ TF_GUARDED_BY(assignment_mu_);
+
+    size_t AssignClientToThread(const string& target) {
+        // Round-robin target assignment, but keeps the same target on the same
+        // polling thread always, as this is important for gRPC performance
+        mutex_lock lock(assignment_mu_);
+        auto it = target_assignments_.find(target);
+        if (it == target_assignments_.end()) {
+            it = target_assignments_
+                 .insert(std::make_pair(
+                             target, (next_round_robin_assignment_++) % threads_.size()))
+                 .first;
+        }
+        return it->second;
+    }
+
+    std::shared_ptr<tensorflow::GrpcChannelCache> cache_;
+    std::unordered_map<string, core::RefCountPtr<EagerClient>> clients_;
+    std::vector<core::RefCountPtr<GrpcEagerClientThread>> threads_;
 };
 
 }  // namespace
 
 EagerClientCache* NewGrpcEagerClientCache(
     std::shared_ptr<tensorflow::GrpcChannelCache> channel) {
-  return new GrpcEagerClientCache(channel);
+    return new GrpcEagerClientCache(channel);
 }
 
 }  // namespace eager

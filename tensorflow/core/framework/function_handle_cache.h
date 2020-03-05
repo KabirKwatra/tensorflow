@@ -23,28 +23,28 @@ namespace tensorflow {
 namespace data {
 
 class FunctionHandleCache {
- public:
-  explicit FunctionHandleCache(FunctionLibraryRuntime* lib);
+public:
+    explicit FunctionHandleCache(FunctionLibraryRuntime* lib);
 
-  ~FunctionHandleCache();
+    ~FunctionHandleCache();
 
-  // Looks up the function to be instantiated in the cache first. If present,
-  // returns handle from there. Otherwise, instantiates a new function
-  // and stores handle in the cache.
-  Status Instantiate(const string& function_name, AttrSlice attrs,
-                     FunctionLibraryRuntime::InstantiateOptions options,
-                     FunctionLibraryRuntime::Handle* handle);
+    // Looks up the function to be instantiated in the cache first. If present,
+    // returns handle from there. Otherwise, instantiates a new function
+    // and stores handle in the cache.
+    Status Instantiate(const string& function_name, AttrSlice attrs,
+                       FunctionLibraryRuntime::InstantiateOptions options,
+                       FunctionLibraryRuntime::Handle* handle);
 
-  // Releases all the handles in the cache, clearing out the state for all
-  // functions involved.
-  Status Clear();
+    // Releases all the handles in the cache, clearing out the state for all
+    // functions involved.
+    Status Clear();
 
- private:
-  mutex mu_;
-  FunctionLibraryRuntime* lib_ = nullptr;  // not owned
-  const string state_handle_;
-  std::unordered_map<string, FunctionLibraryRuntime::Handle> handles_
-      TF_GUARDED_BY(mu_);
+private:
+    mutex mu_;
+    FunctionLibraryRuntime* lib_ = nullptr;  // not owned
+    const string state_handle_;
+    std::unordered_map<string, FunctionLibraryRuntime::Handle> handles_
+    TF_GUARDED_BY(mu_);
 };
 
 }  // namespace data

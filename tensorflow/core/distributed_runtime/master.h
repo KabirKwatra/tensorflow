@@ -34,82 +34,82 @@ limitations under the License.
 namespace tensorflow {
 
 class Master {
- public:
-  explicit Master(MasterEnv* env, double session_gc_seconds);
-  virtual ~Master();
+public:
+    explicit Master(MasterEnv* env, double session_gc_seconds);
+    virtual ~Master();
 
-  // Convenient typedef for a closure passing a Status.
-  typedef std::function<void(const Status&)> MyClosure;
+    // Convenient typedef for a closure passing a Status.
+    typedef std::function<void(const Status&)> MyClosure;
 
-  void CreateSession(const CreateSessionRequest* req,
-                     CreateSessionResponse* resp, MyClosure done);
+    void CreateSession(const CreateSessionRequest* req,
+                       CreateSessionResponse* resp, MyClosure done);
 
-  void ExtendSession(const ExtendSessionRequest* req,
-                     ExtendSessionResponse* resp, MyClosure done);
+    void ExtendSession(const ExtendSessionRequest* req,
+                       ExtendSessionResponse* resp, MyClosure done);
 
-  void PartialRunSetup(const PartialRunSetupRequest* req,
-                       PartialRunSetupResponse* resp, MyClosure done);
+    void PartialRunSetup(const PartialRunSetupRequest* req,
+                         PartialRunSetupResponse* resp, MyClosure done);
 
-  void RunStep(CallOptions* opts, const RunStepRequestWrapper* req,
-               MutableRunStepResponseWrapper* resp, MyClosure done);
+    void RunStep(CallOptions* opts, const RunStepRequestWrapper* req,
+                 MutableRunStepResponseWrapper* resp, MyClosure done);
 
-  void CloseSession(const CloseSessionRequest* req, CloseSessionResponse* resp,
-                    MyClosure done);
+    void CloseSession(const CloseSessionRequest* req, CloseSessionResponse* resp,
+                      MyClosure done);
 
-  void ListDevices(const ListDevicesRequest* req, ListDevicesResponse* resp,
-                   MyClosure done);
+    void ListDevices(const ListDevicesRequest* req, ListDevicesResponse* resp,
+                     MyClosure done);
 
-  // See tensorflow::Reset() and the comment on ResetRequest.
-  void Reset(const ResetRequest* req, ResetResponse* resp, MyClosure done);
+    // See tensorflow::Reset() and the comment on ResetRequest.
+    void Reset(const ResetRequest* req, ResetResponse* resp, MyClosure done);
 
-  void MakeCallable(const MakeCallableRequest* req, MakeCallableResponse* resp,
-                    MyClosure done);
-  void RunCallable(CallOptions* opts, const RunCallableRequest* req,
-                   RunCallableResponse* resp, MyClosure done);
-  void ReleaseCallable(const ReleaseCallableRequest* req,
-                       ReleaseCallableResponse* resp, MyClosure done);
+    void MakeCallable(const MakeCallableRequest* req, MakeCallableResponse* resp,
+                      MyClosure done);
+    void RunCallable(CallOptions* opts, const RunCallableRequest* req,
+                     RunCallableResponse* resp, MyClosure done);
+    void ReleaseCallable(const ReleaseCallableRequest* req,
+                         ReleaseCallableResponse* resp, MyClosure done);
 
- private:
-  typedef Master ME;
+private:
+    typedef Master ME;
 
-  // Not owned.
-  MasterEnv* env_ = nullptr;
+    // Not owned.
+    MasterEnv* env_ = nullptr;
 
-  // Owned.
-  mutex mu_;
+    // Owned.
+    mutex mu_;
 
-  // shutdown_ is set to true by the dtor.
-  condition_variable shutdown_cv_;
-  bool shutdown_ TF_GUARDED_BY(mu_) = false;
-  Thread* gc_thread_;
+    // shutdown_ is set to true by the dtor.
+    condition_variable shutdown_cv_;
+    bool shutdown_ TF_GUARDED_BY(mu_) = false;
+    Thread* gc_thread_;
 
-  // Maps session handles to sessions.
-  std::unordered_map<string, MasterSession*> sessions_ TF_GUARDED_BY(mu_);
+    // Maps session handles to sessions.
+    std::unordered_map<string, MasterSession*> sessions_ TF_GUARDED_BY(mu_);
 
-  // Moving average of step times.
-  MovingAverage last_1000_steps_ TF_GUARDED_BY(mu_);
+    // Moving average of step times.
+    MovingAverage last_1000_steps_ TF_GUARDED_BY(mu_);
 
-  // Cumulative number of steps executed.
-  int64 step_count_ TF_GUARDED_BY(mu_);
+    // Cumulative number of steps executed.
+    int64 step_count_ TF_GUARDED_BY(mu_);
 
-  // If a session is not active for this many seconds, it will be
-  // closed automatically.
-  const double session_gc_seconds_;
+    // If a session is not active for this many seconds, it will be
+    // closed automatically.
+    const double session_gc_seconds_;
 
-  // Used to track ids for incoming requests so we can detect duplicates.
-  RecentRequestIds recent_request_ids_;
+    // Used to track ids for incoming requests so we can detect duplicates.
+    RecentRequestIds recent_request_ids_;
 
-  // Call CleanupAll on all workers.
-  void CleanupWorkers(const ResetRequest& reset);
+    // Call CleanupAll on all workers.
+    void CleanupWorkers(const ResetRequest& reset);
 
-  // Cleanup unused session.
-  void GC();
+    // Cleanup unused session.
+    void GC();
 
-  // Find master session by session handle, and increments the reference count
-  // on the returned MasterSession if not null.
-  MasterSession* FindMasterSession(const string& handle);
+    // Find master session by session handle, and increments the reference count
+    // on the returned MasterSession if not null.
+    MasterSession* FindMasterSession(const string& handle);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(Master);
+    TF_DISALLOW_COPY_AND_ASSIGN(Master);
 };
 
 }  // namespace tensorflow

@@ -58,69 +58,75 @@ namespace tensorflow {
 // directly or via `MaybeLockVariableInputMutexesInOrder` on all variables being
 // modified and then call `PrepareToUpdateVariable` on them in any order.
 class Var : public ResourceBase {
- public:
-  explicit Var(DataType dtype) : tensor_(dtype) {}
+public:
+    explicit Var(DataType dtype) : tensor_(dtype) {}
 
-  // When locking multiple variables, the locks must be acquired in order of
-  // increasing mu() address.
-  // TODO(ebrevdo): Use LockSet instead of exposing mu.
-  mutex* mu() { return &mu_; }
-  Tensor* tensor() { return &tensor_; }
+    // When locking multiple variables, the locks must be acquired in order of
+    // increasing mu() address.
+    // TODO(ebrevdo): Use LockSet instead of exposing mu.
+    mutex* mu() {
+        return &mu_;
+    }
+    Tensor* tensor() {
+        return &tensor_;
+    }
 
-  string DebugString() const override {
-    return strings::StrCat(DataTypeString(tensor_.dtype()), "/",
-                           tensor_.shape().DebugString());
-  }
+    string DebugString() const override {
+        return strings::StrCat(DataTypeString(tensor_.dtype()), "/",
+                               tensor_.shape().DebugString());
+    }
 
-  // Only used in the resource variable path. In resource variables,
-  // tensor.IsInitialized() can be true (i.e. have memory allocated to it) while
-  // there is not a good value there due to a race condition, and it's possible
-  // to stumble upon this during variable.initialized_value(). So it's best to
-  // just store directly whether the variable is initialized.
-  bool is_initialized = false;  // TF_GUARDED_BY(mu_) but annotalysis doesn't
-                                // like it.
+    // Only used in the resource variable path. In resource variables,
+    // tensor.IsInitialized() can be true (i.e. have memory allocated to it) while
+    // there is not a good value there due to a race condition, and it's possible
+    // to stumble upon this during variable.initialized_value(). So it's best to
+    // just store directly whether the variable is initialized.
+    bool is_initialized = false;  // TF_GUARDED_BY(mu_) but annotalysis doesn't
+    // like it.
 
-  // Also fake-guarded by mu_. Should be set to True whenever any sparse
-  // operation uses the variable. Once this is true no tensor is allowed to
-  // alias the memory of the variable, and we always copy the variable on
-  // reads. This allows sparse operations to happen with only a shared lock if
-  // so desired.
-  std::atomic<bool> copy_on_read_mode{false};
+    // Also fake-guarded by mu_. Should be set to True whenever any sparse
+    // operation uses the variable. Once this is true no tensor is allowed to
+    // alias the memory of the variable, and we always copy the variable on
+    // reads. This allows sparse operations to happen with only a shared lock if
+    // so desired.
+    std::atomic<bool> copy_on_read_mode{false};
 
- private:
-  mutex mu_;
-  Tensor tensor_;
+private:
+    mutex mu_;
+    Tensor tensor_;
 
-  ~Var() override {}
-  TF_DISALLOW_COPY_AND_ASSIGN(Var);
+    ~Var() override {}
+    TF_DISALLOW_COPY_AND_ASSIGN(Var);
 };
 
 // Does unlock and unref automatically when going out of scope, and also
 // supports early manual release.
 class TF_SCOPED_LOCKABLE ScopedUnlockUnrefVar {
- public:
-  explicit ScopedUnlockUnrefVar(Var* var) TF_EXCLUSIVE_LOCK_FUNCTION(var_->mu())
-      : var_(var) {
-    if (var_) {
-      var_->mu()->lock();
+public:
+    explicit ScopedUnlockUnrefVar(Var* var) TF_EXCLUSIVE_LOCK_FUNCTION(var_->mu())
+        : var_(var) {
+        if (var_) {
+            var_->mu()->lock();
+        }
     }
-  }
-  void Release() TF_UNLOCK_FUNCTION() {
-    if (var_) {
-      var_->mu()->unlock();
-      var_->Unref();
-      var_ = nullptr;
+    void Release() TF_UNLOCK_FUNCTION() {
+        if (var_) {
+            var_->mu()->unlock();
+            var_->Unref();
+            var_ = nullptr;
+        }
     }
-  }
-  ~ScopedUnlockUnrefVar() TF_UNLOCK_FUNCTION() { Release(); }
+    ~ScopedUnlockUnrefVar() TF_UNLOCK_FUNCTION() {
+        Release();
+    }
 
- private:
-  Var* var_;
+private:
+    Var* var_;
 
-  ScopedUnlockUnrefVar(const ScopedUnlockUnrefVar&) = delete;
-  ScopedUnlockUnrefVar(ScopedUnlockUnrefVar&&) = delete;
-  ScopedUnlockUnrefVar& operator=(const ScopedUnlockUnrefVar&) = delete;
-  ScopedUnlockUnrefVar& operator=(ScopedUnlockUnrefVar&&) = delete;
+    ScopedUnlockUnrefVar(const ScopedUnlockUnrefVar&) = delete;
+    ScopedUnlockUnrefVar(ScopedUnlockUnrefVar&&) = delete;
+    ScopedUnlockUnrefVar& operator=(const ScopedUnlockUnrefVar&) = delete;
+    ScopedUnlockUnrefVar& operator=(ScopedUnlockUnrefVar&&) = delete;
 };
 
 }  //  end namespace tensorflow

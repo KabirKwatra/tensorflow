@@ -31,17 +31,17 @@ namespace tensorflow {
 // to the backed data sit in this class.
 template <typename SubQueue>
 class TypedQueue : public QueueBase {
- public:
-  TypedQueue(const int32 capacity, const DataTypeVector& component_dtypes,
-             const std::vector<TensorShape>& component_shapes,
-             const string& name);
+public:
+    TypedQueue(const int32 capacity, const DataTypeVector& component_dtypes,
+               const std::vector<TensorShape>& component_shapes,
+               const string& name);
 
-  virtual Status Initialize();  // Must be called before any other method.
+    virtual Status Initialize();  // Must be called before any other method.
 
-  int64 MemoryUsed() const override;
+    int64 MemoryUsed() const override;
 
- protected:
-  std::vector<SubQueue> queues_ TF_GUARDED_BY(mu_);
+protected:
+    std::vector<SubQueue> queues_ TF_GUARDED_BY(mu_);
 };  // class TypedQueue
 
 template <typename SubQueue>
@@ -52,69 +52,69 @@ TypedQueue<SubQueue>::TypedQueue(
 
 template <typename SubQueue>
 Status TypedQueue<SubQueue>::Initialize() {
-  if (component_dtypes_.empty()) {
-    return errors::InvalidArgument("Empty component types for queue ", name_);
-  }
-  if (!component_shapes_.empty() &&
-      component_dtypes_.size() != component_shapes_.size()) {
-    return errors::InvalidArgument(
-        "Different number of component types.  ",
-        "Types: ", DataTypeSliceString(component_dtypes_),
-        ", Shapes: ", ShapeListString(component_shapes_));
-  }
+    if (component_dtypes_.empty()) {
+        return errors::InvalidArgument("Empty component types for queue ", name_);
+    }
+    if (!component_shapes_.empty() &&
+            component_dtypes_.size() != component_shapes_.size()) {
+        return errors::InvalidArgument(
+                   "Different number of component types.  ",
+                   "Types: ", DataTypeSliceString(component_dtypes_),
+                   ", Shapes: ", ShapeListString(component_shapes_));
+    }
 
-  mutex_lock lock(mu_);
-  queues_.reserve(num_components());
-  for (int i = 0; i < num_components(); ++i) {
-    queues_.push_back(SubQueue());
-  }
-  return Status::OK();
+    mutex_lock lock(mu_);
+    queues_.reserve(num_components());
+    for (int i = 0; i < num_components(); ++i) {
+        queues_.push_back(SubQueue());
+    }
+    return Status::OK();
 }
 
 namespace {
 
 template <typename SubQueue>
 int64 SizeOf(const SubQueue& sq) {
-  static_assert(sizeof(SubQueue) != sizeof(SubQueue), "SubQueue size unknown.");
-  return 0;
+    static_assert(sizeof(SubQueue) != sizeof(SubQueue), "SubQueue size unknown.");
+    return 0;
 }
 
 template <>
 int64 SizeOf(const std::deque<PersistentTensor>& sq) {
-  if (sq.empty()) {
-    return 0;
-  }
-  return sq.size() * sq.front().AllocatedBytes();
+    if (sq.empty()) {
+        return 0;
+    }
+    return sq.size() * sq.front().AllocatedBytes();
 }
 
 template <>
 int64 SizeOf(const std::vector<PersistentTensor>& sq) {
-  if (sq.empty()) {
-    return 0;
-  }
-  return sq.size() * sq.front().AllocatedBytes();
+    if (sq.empty()) {
+        return 0;
+    }
+    return sq.size() * sq.front().AllocatedBytes();
 }
 
 using TensorPair = std::pair<int64, PersistentTensor>;
 
 template <typename U, typename V>
 int64 SizeOf(const std::priority_queue<TensorPair, U, V>& sq) {
-  if (sq.empty()) {
-    return 0;
-  }
-  return sq.size() * (sizeof(TensorPair) + sq.top().second.AllocatedBytes());
+    if (sq.empty()) {
+        return 0;
+    }
+    return sq.size() * (sizeof(TensorPair) + sq.top().second.AllocatedBytes());
 }
 
 }  // namespace
 
 template <typename SubQueue>
 int64 TypedQueue<SubQueue>::MemoryUsed() const {
-  int memory_size = 0;
-  mutex_lock l(mu_);
-  for (const auto& sq : queues_) {
-    memory_size += SizeOf(sq);
-  }
-  return memory_size;
+    int memory_size = 0;
+    mutex_lock l(mu_);
+    for (const auto& sq : queues_) {
+        memory_size += SizeOf(sq);
+    }
+    return memory_size;
 }
 
 }  // namespace tensorflow

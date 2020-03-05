@@ -39,63 +39,67 @@ namespace xla {
 // passed run_options->stream()) on which the execution is launched and releases
 // the stream when destructed.
 class AsyncExecution {
- public:
-  AsyncExecution(Backend* backend, std::vector<StreamPool::Ptr> streams,
-                 const ExecutionProfile& profile, GlobalDataHandle result);
+public:
+    AsyncExecution(Backend* backend, std::vector<StreamPool::Ptr> streams,
+                   const ExecutionProfile& profile, GlobalDataHandle result);
 
-  Status BlockUntilDone() const;
+    Status BlockUntilDone() const;
 
-  const GlobalDataHandle& result() const { return result_; }
+    const GlobalDataHandle& result() const {
+        return result_;
+    }
 
-  const ExecutionProfile& profile() const { return profile_; }
+    const ExecutionProfile& profile() const {
+        return profile_;
+    }
 
- private:
-  // Backend to execute the computation on.
-  Backend* backend_;
+private:
+    // Backend to execute the computation on.
+    Backend* backend_;
 
-  // Stream on which the execution is launched.
-  std::vector<StreamPool::Ptr> streams_;
+    // Stream on which the execution is launched.
+    std::vector<StreamPool::Ptr> streams_;
 
-  // Profile object of the execution to be returned to the user.
-  ExecutionProfile profile_;
+    // Profile object of the execution to be returned to the user.
+    ExecutionProfile profile_;
 
-  // Data handle to the result of the execution. Data represented by this handle
-  // is valid only after BlockUntilDone() is called.
-  GlobalDataHandle result_;
+    // Data handle to the result of the execution. Data represented by this handle
+    // is valid only after BlockUntilDone() is called.
+    GlobalDataHandle result_;
 };
 
 // Tracks asynchronously launched executions for the XLA service.
 class ExecutionTracker {
- public:
-  ExecutionTracker();
+public:
+    ExecutionTracker();
 
-  // Registers an execution with its backend, streams, and data handle to the
-  // execution result. Returns a handle for the registered execution.
-  ExecutionHandle Register(Backend* backend,
-                           std::vector<StreamPool::Ptr> stream,
-                           const ExecutionProfile& profile,
-                           GlobalDataHandle data);
+    // Registers an execution with its backend, streams, and data handle to the
+    // execution result. Returns a handle for the registered execution.
+    ExecutionHandle Register(Backend* backend,
+                             std::vector<StreamPool::Ptr> stream,
+                             const ExecutionProfile& profile,
+                             GlobalDataHandle data);
 
-  // Unregisters the execution for the given handle.
-  Status Unregister(const ExecutionHandle& handle);
+    // Unregisters the execution for the given handle.
+    Status Unregister(const ExecutionHandle& handle);
 
-  // Resolves the given ExecutionHandle to an AsyncExecution. Returns an
-  // error status if the given handle is not found, which means that the
-  // execution is not yet registered or already unregistered.
-  StatusOr<const AsyncExecution*> Resolve(const ExecutionHandle& handle);
+    // Resolves the given ExecutionHandle to an AsyncExecution. Returns an
+    // error status if the given handle is not found, which means that the
+    // execution is not yet registered or already unregistered.
+    StatusOr<const AsyncExecution*> Resolve(const ExecutionHandle& handle);
 
- private:
-  // The next handle to assign to an execution.
-  int64 next_handle_ TF_GUARDED_BY(execution_mutex_);
+private:
+    // The next handle to assign to an execution.
+    int64 next_handle_ TF_GUARDED_BY(execution_mutex_);
 
-  // Mapping from ExecutionHandle handle to the corresponding registered
-  // AsyncExecution object.
-  std::map<int64, std::unique_ptr<AsyncExecution>> handle_to_execution_
-      TF_GUARDED_BY(execution_mutex_);
+    // Mapping from ExecutionHandle handle to the corresponding registered
+    // AsyncExecution object.
+    std::map<int64, std::unique_ptr<AsyncExecution>> handle_to_execution_
+            TF_GUARDED_BY(execution_mutex_);
 
-  tensorflow::mutex execution_mutex_;  // Guards the execution mapping.
+    tensorflow::mutex execution_mutex_;  // Guards the execution mapping.
 
-  TF_DISALLOW_COPY_AND_ASSIGN(ExecutionTracker);
+    TF_DISALLOW_COPY_AND_ASSIGN(ExecutionTracker);
 };
 
 }  // namespace xla

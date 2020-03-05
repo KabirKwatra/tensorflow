@@ -39,55 +39,55 @@ namespace xla {
 // TODO(b/34027823): Destruct channels when all the associated computations that
 // communicate via each channel are destructed.
 class ChannelTracker {
- public:
-  ChannelTracker();
+public:
+    ChannelTracker();
 
-  // A struct that keeps the current status of each channel. has_sender and
-  // receiver_count fields are initialized with false and 0 respectively when
-  // the struct is created and are updated by RegisterSend() and RegisterRecev()
-  // as Send or Recv instructions using the channel are requested.
-  struct Channel {
-    bool has_sender;
-    int64 receiver_count;
-    ChannelHandle::ChannelType type;
-  };
+    // A struct that keeps the current status of each channel. has_sender and
+    // receiver_count fields are initialized with false and 0 respectively when
+    // the struct is created and are updated by RegisterSend() and RegisterRecev()
+    // as Send or Recv instructions using the channel are requested.
+    struct Channel {
+        bool has_sender;
+        int64 receiver_count;
+        ChannelHandle::ChannelType type;
+    };
 
-  // Creates a new Channel object and returns the corresponding
-  // ChannelHandle for it.
-  StatusOr<ChannelHandle> NewChannel(ChannelHandle::ChannelType type);
+    // Creates a new Channel object and returns the corresponding
+    // ChannelHandle for it.
+    StatusOr<ChannelHandle> NewChannel(ChannelHandle::ChannelType type);
 
-  // Informs that the given channel handle is used for a Send operation.
-  // Returns an error status if the handle is already used by another Send.
-  Status RegisterSend(const ChannelHandle& handle);
+    // Informs that the given channel handle is used for a Send operation.
+    // Returns an error status if the handle is already used by another Send.
+    Status RegisterSend(const ChannelHandle& handle);
 
-  // Informs that the given channel handle is used for a Recv operation.
-  // Returns an error status if the handle is already used by another Recv.
-  Status RegisterRecv(const ChannelHandle& handle);
+    // Informs that the given channel handle is used for a Recv operation.
+    // Returns an error status if the handle is already used by another Recv.
+    Status RegisterRecv(const ChannelHandle& handle);
 
- private:
-  // Bumps the next_channel_ number and returns the allocated number
-  // wrapped in a ChannelHandle.
-  ChannelHandle AllocateHandle(ChannelHandle::ChannelType type)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(channel_mutex_);
+private:
+    // Bumps the next_channel_ number and returns the allocated number
+    // wrapped in a ChannelHandle.
+    ChannelHandle AllocateHandle(ChannelHandle::ChannelType type)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(channel_mutex_);
 
-  Status RegisterSendInternal(const ChannelHandle& handle)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(channel_mutex_);
+    Status RegisterSendInternal(const ChannelHandle& handle)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(channel_mutex_);
 
-  Status RegisterRecvInternal(const ChannelHandle& handle)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(channel_mutex_);
+    Status RegisterRecvInternal(const ChannelHandle& handle)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(channel_mutex_);
 
-  // Guards the channel mapping.
-  tensorflow::mutex channel_mutex_;
+    // Guards the channel mapping.
+    tensorflow::mutex channel_mutex_;
 
-  // The next sequence number to assign to a channel.
-  int64 next_channel_ TF_GUARDED_BY(channel_mutex_);
+    // The next sequence number to assign to a channel.
+    int64 next_channel_ TF_GUARDED_BY(channel_mutex_);
 
-  // Mapping from ChannelHandle value to the corresponding registered
-  // Channel object.
-  absl::flat_hash_map<int64, Channel> opaque_to_channel_
-      TF_GUARDED_BY(channel_mutex_);
+    // Mapping from ChannelHandle value to the corresponding registered
+    // Channel object.
+    absl::flat_hash_map<int64, Channel> opaque_to_channel_
+    TF_GUARDED_BY(channel_mutex_);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(ChannelTracker);
+    TF_DISALLOW_COPY_AND_ASSIGN(ChannelTracker);
 };
 
 }  // namespace xla

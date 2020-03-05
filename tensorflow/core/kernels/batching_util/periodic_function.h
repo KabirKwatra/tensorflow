@@ -73,59 +73,59 @@ class PeriodicFunctionTestAccess;
 }
 
 class PeriodicFunction {
- public:
-  // Provides the ability to customize several aspects of the PeriodicFunction.
-  // Passed to constructor of PeriodicFunction.
-  struct Options {
-    Options() {}
+public:
+    // Provides the ability to customize several aspects of the PeriodicFunction.
+    // Passed to constructor of PeriodicFunction.
+    struct Options {
+        Options() {}
 
-    // Any standard thread options, such as stack size, should
-    // be passed via "thread_options".
-    ThreadOptions thread_options;
+        // Any standard thread options, such as stack size, should
+        // be passed via "thread_options".
+        ThreadOptions thread_options;
 
-    // Specifies the thread name prefix (see the description in class
-    // Thread).
-    string thread_name_prefix = "periodic_function";
+        // Specifies the thread name prefix (see the description in class
+        // Thread).
+        string thread_name_prefix = "periodic_function";
 
-    // The environment to use. Does not take ownership, but must remain alive
-    // for as long as the PeriodicFunction exists.
-    Env* env = Env::Default();
+        // The environment to use. Does not take ownership, but must remain alive
+        // for as long as the PeriodicFunction exists.
+        Env* env = Env::Default();
 
-    // Specifies the length of sleep before the first invocation of the
-    // function.
-    // This can be used for adding a random jitter to avoid synchronous behavior
-    // across multiple periodic functions.
-    int64 startup_delay_micros = 0;
-  };
+        // Specifies the length of sleep before the first invocation of the
+        // function.
+        // This can be used for adding a random jitter to avoid synchronous behavior
+        // across multiple periodic functions.
+        int64 startup_delay_micros = 0;
+    };
 
-  // Also starts the background thread which will be calling the function.
-  PeriodicFunction(const std::function<void()>& function, int64 interval_micros,
-                   const Options& options = Options());
+    // Also starts the background thread which will be calling the function.
+    PeriodicFunction(const std::function<void()>& function, int64 interval_micros,
+                     const Options& options = Options());
 
-  ~PeriodicFunction();
+    ~PeriodicFunction();
 
- private:
-  friend class internal::PeriodicFunctionTestAccess;
+private:
+    friend class internal::PeriodicFunctionTestAccess;
 
-  // Notifies the background thread to stop.
-  void NotifyStop();
+    // Notifies the background thread to stop.
+    void NotifyStop();
 
-  // (Blocking.) Loops forever calling "function_" every "interval_micros_".
-  void RunLoop(int64 start) TF_LOCKS_EXCLUDED(mutex_);
+    // (Blocking.) Loops forever calling "function_" every "interval_micros_".
+    void RunLoop(int64 start) TF_LOCKS_EXCLUDED(mutex_);
 
-  const std::function<void()> function_;  // Actual client function
-  const int64 interval_micros_;           // Interval between calls.
-  const Options options_;
+    const std::function<void()> function_;  // Actual client function
+    const int64 interval_micros_;           // Interval between calls.
+    const Options options_;
 
-  // Protects state below.
-  mutable mutex mutex_;
-  // Used to notify the thread to stop.
-  Notification stop_thread_;
+    // Protects state below.
+    mutable mutex mutex_;
+    // Used to notify the thread to stop.
+    Notification stop_thread_;
 
-  // Thread for running "function_"
-  std::unique_ptr<Thread> thread_ TF_GUARDED_BY(mutex_) = nullptr;
+    // Thread for running "function_"
+    std::unique_ptr<Thread> thread_ TF_GUARDED_BY(mutex_) = nullptr;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(PeriodicFunction);
+    TF_DISALLOW_COPY_AND_ASSIGN(PeriodicFunction);
 };
 
 }  // namespace serving

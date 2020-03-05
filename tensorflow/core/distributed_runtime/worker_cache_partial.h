@@ -30,27 +30,27 @@ namespace tensorflow {
 // Implements the part of the interface that caches and returns remote
 // device status attributes.
 class WorkerCachePartial : public WorkerCacheInterface {
- public:
-  bool GetDeviceLocalityNonBlocking(const string& device,
-                                    DeviceLocality* locality) override;
+public:
+    bool GetDeviceLocalityNonBlocking(const string& device,
+                                      DeviceLocality* locality) override;
 
-  void GetDeviceLocalityAsync(const string& device, DeviceLocality* locality,
-                              StatusCallback) override;
+    void GetDeviceLocalityAsync(const string& device, DeviceLocality* locality,
+                                StatusCallback) override;
 
-  ~WorkerCachePartial() override {}
+    ~WorkerCachePartial() override {}
 
-  // Clear all entries from the DeviceStatus cache.
-  void FlushStatusCache();
+    // Clear all entries from the DeviceStatus cache.
+    void FlushStatusCache();
 
- private:
-  mutex mu_;
+private:
+    mutex mu_;
 
-  // Initiate a GetStatusAsync to the remote task named by "task", and
-  // update the cache with all the DeviceAttributes reported.
-  Status RefreshDeviceStatus(const string& device_name);
+    // Initiate a GetStatusAsync to the remote task named by "task", and
+    // update the cache with all the DeviceAttributes reported.
+    Status RefreshDeviceStatus(const string& device_name);
 
-  typedef std::unordered_map<string, DeviceAttributes> StatusMap;
-  StatusMap device_status_cache_ TF_GUARDED_BY(mu_);
+    typedef std::unordered_map<string, DeviceAttributes> StatusMap;
+    StatusMap device_status_cache_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

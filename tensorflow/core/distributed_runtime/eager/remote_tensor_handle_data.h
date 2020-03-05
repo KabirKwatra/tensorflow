@@ -24,47 +24,53 @@ namespace tensorflow {
 // Remote Tensor Handle: A handle to a Tensor on a remote host. Note that only
 // the shape is known.
 class RemoteTensorHandleData {
- public:
-  // Constructor for lazy remote handles
-  RemoteTensorHandleData(int64 op_id, int output_num, uint64 context_view_id);
-  // Constructor for unshaped remote handles
-  RemoteTensorHandleData(int64 op_id, int output_num, const string& remote_task,
-                         EagerContext* ctx);
-  ~RemoteTensorHandleData();
+public:
+    // Constructor for lazy remote handles
+    RemoteTensorHandleData(int64 op_id, int output_num, uint64 context_view_id);
+    // Constructor for unshaped remote handles
+    RemoteTensorHandleData(int64 op_id, int output_num, const string& remote_task,
+                           EagerContext* ctx);
+    ~RemoteTensorHandleData();
 
-  // A remote tensor handle does not have a Tensor object, hence it can only
-  // support the shape requests.
-  Status Shape(TensorShape* shape) const;
-  Status NumDims(int* num_dims) const;
-  Status Dim(int dim_index, int64* dim) const;
-  Status NumElements(int64* num_elements) const;
+    // A remote tensor handle does not have a Tensor object, hence it can only
+    // support the shape requests.
+    Status Shape(TensorShape* shape) const;
+    Status NumDims(int* num_dims) const;
+    Status Dim(int dim_index, int64* dim) const;
+    Status NumElements(int64* num_elements) const;
 
-  bool IsReady() const;
-  Status SetShape(const TensorShape& shape);
-  void Poison(Status status);
-  Status IsPoisoned() const;
+    bool IsReady() const;
+    Status SetShape(const TensorShape& shape);
+    void Poison(Status status);
+    Status IsPoisoned() const;
 
-  string DebugString() const;
+    string DebugString() const;
 
-  int64 op_id() const { return op_id_; }
-  int32 output_num() const { return output_num_; }
-  uint64 context_view_id() const { return context_view_id_; }
+    int64 op_id() const {
+        return op_id_;
+    }
+    int32 output_num() const {
+        return output_num_;
+    }
+    uint64 context_view_id() const {
+        return context_view_id_;
+    }
 
- private:
-  Status WaitReady(const char* caller) const;
+private:
+    Status WaitReady(const char* caller) const;
 
-  mutable mutex mu_;
-  bool is_ready_ TF_GUARDED_BY(mu_);
-  Status is_poisoned_ TF_GUARDED_BY(mu_);
-  TensorShape shape_ TF_GUARDED_BY(mu_);
+    mutable mutex mu_;
+    bool is_ready_ TF_GUARDED_BY(mu_);
+    Status is_poisoned_ TF_GUARDED_BY(mu_);
+    TensorShape shape_ TF_GUARDED_BY(mu_);
 
-  // IDs required when this class is representing a remote tensor handle.
-  const int64 op_id_;
-  const int32 output_num_;
-  string remote_task_;
-  uint64 context_id_;
-  uint64 context_view_id_;
-  EagerContext* ctx_;
+    // IDs required when this class is representing a remote tensor handle.
+    const int64 op_id_;
+    const int32 output_num_;
+    string remote_task_;
+    uint64 context_id_;
+    uint64 context_view_id_;
+    EagerContext* ctx_;
 };
 
 }  // namespace tensorflow

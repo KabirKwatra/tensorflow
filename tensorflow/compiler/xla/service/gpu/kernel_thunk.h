@@ -43,48 +43,52 @@ class GpuExecutable;
 //
 // This is thread-compatible.
 class KernelThunk : public Thunk {
- public:
-  // Constructs a thunk for the given kernel.
-  //
-  // `hlo_instruction` is as in Thunk. Other arguments are as the class members.
-  KernelThunk(absl::Span<const BufferAllocation* const> args,
-              const string& kernel_name, const HloInstruction* hlo_instruction,
-              int unroll_factor);
-  KernelThunk(const KernelThunk&) = delete;
-  KernelThunk& operator=(const KernelThunk&) = delete;
-  ~KernelThunk() override = default;
+public:
+    // Constructs a thunk for the given kernel.
+    //
+    // `hlo_instruction` is as in Thunk. Other arguments are as the class members.
+    KernelThunk(absl::Span<const BufferAllocation* const> args,
+                const string& kernel_name, const HloInstruction* hlo_instruction,
+                int unroll_factor);
+    KernelThunk(const KernelThunk&) = delete;
+    KernelThunk& operator=(const KernelThunk&) = delete;
+    ~KernelThunk() override = default;
 
-  const string& kernel_name() const { return kernel_name_; }
-  int unroll_factor() const { return unroll_factor_; }
-  void SetLaunchDimensions(const LaunchDimensions& launch_dims);
+    const string& kernel_name() const {
+        return kernel_name_;
+    }
+    int unroll_factor() const {
+        return unroll_factor_;
+    }
+    void SetLaunchDimensions(const LaunchDimensions& launch_dims);
 
-  Status Initialize(const GpuExecutable& executable,
-                    se::StreamExecutor* executor) override;
-  Status ExecuteOnStream(const ExecuteParams& params) override;
+    Status Initialize(const GpuExecutable& executable,
+                      se::StreamExecutor* executor) override;
+    Status ExecuteOnStream(const ExecuteParams& params) override;
 
- private:
-  // Buffers passed to the kernel as arguments.
-  const std::vector<const BufferAllocation*> args_;
+private:
+    // Buffers passed to the kernel as arguments.
+    const std::vector<const BufferAllocation*> args_;
 
-  // Entry kernel name for the computation.
-  const string kernel_name_;
+    // Entry kernel name for the computation.
+    const string kernel_name_;
 
-  // The number of times this kernel should be unrolled. This works as a
-  // multiplier on the number of elements produced by a GPU thread.
-  const int unroll_factor_;
+    // The number of times this kernel should be unrolled. This works as a
+    // multiplier on the number of elements produced by a GPU thread.
+    const int unroll_factor_;
 
-  // The thread and block dimension used to launch the kernel.
-  // Will be set by IrEmitterUnnested.
-  LaunchDimensions launch_dimensions_;
+    // The thread and block dimension used to launch the kernel.
+    // Will be set by IrEmitterUnnested.
+    LaunchDimensions launch_dimensions_;
 
-  // Describes how to load this kernel. ExecuteOnStream reuses this loader
-  // specification for all executions.
-  mutable tensorflow::mutex mutex_;
+    // Describes how to load this kernel. ExecuteOnStream reuses this loader
+    // specification for all executions.
+    mutable tensorflow::mutex mutex_;
 
-  // Loaded kernels for each `StreamExecutor`.  Requires pointer stability of
-  // values.
-  std::unordered_map<se::StreamExecutor*, std::unique_ptr<se::KernelBase>>
-      kernel_cache_ TF_GUARDED_BY(mutex_);
+    // Loaded kernels for each `StreamExecutor`.  Requires pointer stability of
+    // values.
+    std::unordered_map<se::StreamExecutor*, std::unique_ptr<se::KernelBase>>
+            kernel_cache_ TF_GUARDED_BY(mutex_);
 };
 
 }  // namespace gpu

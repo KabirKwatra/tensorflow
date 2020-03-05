@@ -43,82 +43,82 @@ namespace tensorflow {
  * ConditionalAccumulatorBase (via sub-class's Creator) and returns its handle.
  */
 class ConditionalAccumulatorBaseOp : public OpKernel {
- public:
-  explicit ConditionalAccumulatorBaseOp(OpKernelConstruction* context)
-      : OpKernel(context), accumulator_handle_set_(false) {
-    OP_REQUIRES_OK(context,
-                   context->allocate_persistent(DT_STRING, TensorShape({2}),
-                                                &accumulator_handle_, nullptr));
-    OP_REQUIRES_OK(context, context->GetAttr("shape", &shape_));
-    OP_REQUIRES_OK(context, context->GetAttr("dtype", &dtype_));
-    OP_REQUIRES_OK(context,
-                   context->GetAttr("reduction_type", &reduction_type_));
-  }
-
-  void Compute(OpKernelContext* ctx) override {
-    mutex_lock l(mu_);
-    if (!accumulator_handle_set_) {
-      OP_REQUIRES_OK(ctx, SetAccumulatorHandle(ctx));
+public:
+    explicit ConditionalAccumulatorBaseOp(OpKernelConstruction* context)
+        : OpKernel(context), accumulator_handle_set_(false) {
+        OP_REQUIRES_OK(context,
+                       context->allocate_persistent(DT_STRING, TensorShape({2}),
+                               &accumulator_handle_, nullptr));
+        OP_REQUIRES_OK(context, context->GetAttr("shape", &shape_));
+        OP_REQUIRES_OK(context, context->GetAttr("dtype", &dtype_));
+        OP_REQUIRES_OK(context,
+                       context->GetAttr("reduction_type", &reduction_type_));
     }
-    SetHandleToOutput(ctx);
-  }
 
- protected:
-  ~ConditionalAccumulatorBaseOp() override {
-    // If the accumulator object was not shared, delete it.
-    if (accumulator_handle_set_ && cinfo_.resource_is_private_to_kernel()) {
-      TF_CHECK_OK((cinfo_.resource_manager()
-                       ->template Delete<ConditionalAccumulatorBase>(
-                           cinfo_.container(), cinfo_.name())));
+    void Compute(OpKernelContext* ctx) override {
+        mutex_lock l(mu_);
+        if (!accumulator_handle_set_) {
+            OP_REQUIRES_OK(ctx, SetAccumulatorHandle(ctx));
+        }
+        SetHandleToOutput(ctx);
     }
-  }
 
- protected:
-  virtual void SetHandleToOutput(OpKernelContext* ctx)
-      TF_SHARED_LOCKS_REQUIRED(mu_) = 0;
+protected:
+    ~ConditionalAccumulatorBaseOp() override {
+        // If the accumulator object was not shared, delete it.
+        if (accumulator_handle_set_ && cinfo_.resource_is_private_to_kernel()) {
+            TF_CHECK_OK((cinfo_.resource_manager()
+                         ->template Delete<ConditionalAccumulatorBase>(
+                             cinfo_.container(), cinfo_.name())));
+        }
+    }
 
-  virtual Status CheckSignature(OpKernelContext* ctx) = 0;
+protected:
+    virtual void SetHandleToOutput(OpKernelContext* ctx)
+    TF_SHARED_LOCKS_REQUIRED(mu_) = 0;
 
- protected:
-  typedef std::function<Status(ConditionalAccumulatorBase**)> Creator;
+    virtual Status CheckSignature(OpKernelContext* ctx) = 0;
 
-  // Subclasses must override this
-  virtual Creator GetCreator() const = 0;
+protected:
+    typedef std::function<Status(ConditionalAccumulatorBase**)> Creator;
 
-  // Variables required to construct ConditionalAccumulator
-  DataType dtype_;
-  PartialTensorShape shape_;
-  ContainerInfo cinfo_;
-  string reduction_type_;
-  mutex mu_;
-  PersistentTensor accumulator_handle_ TF_GUARDED_BY(mu_);
-  bool accumulator_handle_set_ TF_GUARDED_BY(mu_);
+    // Subclasses must override this
+    virtual Creator GetCreator() const = 0;
 
- private:
-  Status SetAccumulatorHandle(OpKernelContext* ctx)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
-    TF_RETURN_IF_ERROR(cinfo_.Init(ctx->resource_manager(), def()));
+    // Variables required to construct ConditionalAccumulator
+    DataType dtype_;
+    PartialTensorShape shape_;
+    ContainerInfo cinfo_;
+    string reduction_type_;
+    mutex mu_;
+    PersistentTensor accumulator_handle_ TF_GUARDED_BY(mu_);
+    bool accumulator_handle_set_ TF_GUARDED_BY(mu_);
 
-    // Check input signature
-    TF_RETURN_IF_ERROR(CheckSignature(ctx));
+private:
+    Status SetAccumulatorHandle(OpKernelContext* ctx)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
+        TF_RETURN_IF_ERROR(cinfo_.Init(ctx->resource_manager(), def()));
 
-    Creator creator = GetCreator();
-    ConditionalAccumulatorBase* accumulator;
-    TF_RETURN_IF_ERROR(
-        (cinfo_.resource_manager()
+        // Check input signature
+        TF_RETURN_IF_ERROR(CheckSignature(ctx));
+
+        Creator creator = GetCreator();
+        ConditionalAccumulatorBase* accumulator;
+        TF_RETURN_IF_ERROR(
+            (cinfo_.resource_manager()
              ->template LookupOrCreate<ConditionalAccumulatorBase>(
                  cinfo_.container(), cinfo_.name(), &accumulator, creator)));
-    core::ScopedUnref unref_me(accumulator);
+        core::ScopedUnref unref_me(accumulator);
 
-    // Verify that the shared accumulator is compatible
-    // with the requested arguments.
-    TF_RETURN_IF_ERROR(accumulator->MatchesNodeDef(def()));
-    auto h = accumulator_handle_.AccessTensor(ctx)->template flat<tstring>();
-    h(0) = cinfo_.container();
-    h(1) = cinfo_.name();
-    accumulator_handle_set_ = true;
-    return Status::OK();
-  }
+        // Verify that the shared accumulator is compatible
+        // with the requested arguments.
+        TF_RETURN_IF_ERROR(accumulator->MatchesNodeDef(def()));
+        auto h = accumulator_handle_.AccessTensor(ctx)->template flat<tstring>();
+        h(0) = cinfo_.container();
+        h(1) = cinfo_.name();
+        accumulator_handle_set_ = true;
+        return Status::OK();
+    }
 };
 
 // ------------------Sync kernels ------------------------------------------
@@ -127,30 +127,30 @@ class ConditionalAccumulatorBaseOp : public OpKernel {
  * General OpKernel for ConditionalAccumulatorBase-related ops.
  */
 class ConditionalAccumulatorBaseSyncOpKernel : public OpKernel {
- public:
-  explicit ConditionalAccumulatorBaseSyncOpKernel(OpKernelConstruction* context)
-      : OpKernel(context) {}
+public:
+    explicit ConditionalAccumulatorBaseSyncOpKernel(OpKernelConstruction* context)
+        : OpKernel(context) {}
 
-  void Compute(OpKernelContext* ctx) final {
-    ConditionalAccumulatorBase* accumulator;
-    OP_REQUIRES_OK(ctx, GetResourceFromContext(ctx, "handle", &accumulator));
-    Compute(ctx, accumulator);
-    accumulator->Unref();
-  }
+    void Compute(OpKernelContext* ctx) final {
+        ConditionalAccumulatorBase* accumulator;
+        OP_REQUIRES_OK(ctx, GetResourceFromContext(ctx, "handle", &accumulator));
+        Compute(ctx, accumulator);
+        accumulator->Unref();
+    }
 
- protected:
-  virtual void Compute(OpKernelContext* ctx,
-                       ConditionalAccumulatorBase* accumulator) = 0;
+protected:
+    virtual void Compute(OpKernelContext* ctx,
+                         ConditionalAccumulatorBase* accumulator) = 0;
 
-  virtual DataTypeVector GetExpectedInputs(
-      ConditionalAccumulatorBase* accumulator) = 0;
+    virtual DataTypeVector GetExpectedInputs(
+        ConditionalAccumulatorBase* accumulator) = 0;
 
-  virtual void CheckSignature(OpKernelContext* ctx,
-                              ConditionalAccumulatorBase* accumulator) {
-    // Check input signature
-    DataTypeVector expected_inputs = GetExpectedInputs(accumulator);
-    OP_REQUIRES_OK(ctx, ctx->MatchSignature(expected_inputs, {}));
-  }
+    virtual void CheckSignature(OpKernelContext* ctx,
+                                ConditionalAccumulatorBase* accumulator) {
+        // Check input signature
+        DataTypeVector expected_inputs = GetExpectedInputs(accumulator);
+        OP_REQUIRES_OK(ctx, ctx->MatchSignature(expected_inputs, {}));
+    }
 };
 
 /**
@@ -159,29 +159,29 @@ class ConditionalAccumulatorBaseSyncOpKernel : public OpKernel {
  */
 class ConditionalAccumulatorBaseApplyGradientOp
     : public ConditionalAccumulatorBaseSyncOpKernel {
- public:
-  explicit ConditionalAccumulatorBaseApplyGradientOp(
-      OpKernelConstruction* context)
-      : ConditionalAccumulatorBaseSyncOpKernel(context) {}
+public:
+    explicit ConditionalAccumulatorBaseApplyGradientOp(
+        OpKernelConstruction* context)
+        : ConditionalAccumulatorBaseSyncOpKernel(context) {}
 
- protected:
-  void Compute(OpKernelContext* ctx,
-               ConditionalAccumulatorBase* accumulator) override {
-    // Check input signature
-    CheckSignature(ctx, accumulator);
+protected:
+    void Compute(OpKernelContext* ctx,
+                 ConditionalAccumulatorBase* accumulator) override {
+        // Check input signature
+        CheckSignature(ctx, accumulator);
 
-    // Get input local_step
-    const Tensor* local_step_tensor;
-    OP_REQUIRES_OK(ctx, ctx->input("local_step", &local_step_tensor));
-    if (!TensorShapeUtils::IsScalar(local_step_tensor->shape())) {
-      ctx->CtxFailureWithWarning(errors::InvalidArgument(
-          "Argument local_step must be scalar, but had bad shape ",
-          local_step_tensor->shape().DebugString()));
+        // Get input local_step
+        const Tensor* local_step_tensor;
+        OP_REQUIRES_OK(ctx, ctx->input("local_step", &local_step_tensor));
+        if (!TensorShapeUtils::IsScalar(local_step_tensor->shape())) {
+            ctx->CtxFailureWithWarning(errors::InvalidArgument(
+                                           "Argument local_step must be scalar, but had bad shape ",
+                                           local_step_tensor->shape().DebugString()));
+        }
+
+        // Actually try to apply gradient now
+        accumulator->TryApplyGrad(local_step_tensor->scalar<int64>()(), ctx);
     }
-
-    // Actually try to apply gradient now
-    accumulator->TryApplyGrad(local_step_tensor->scalar<int64>()(), ctx);
-  }
 };
 
 // -------------------- Async kernels --------------------------------------
@@ -189,38 +189,38 @@ class ConditionalAccumulatorBaseApplyGradientOp
  * General OpKernel for ConditionalAccumulatorBase-related ops.
  */
 class ConditionalAccumulatorBaseAsyncOpKernel : public AsyncOpKernel {
- public:
-  explicit ConditionalAccumulatorBaseAsyncOpKernel(
-      OpKernelConstruction* context)
-      : AsyncOpKernel(context) {}
+public:
+    explicit ConditionalAccumulatorBaseAsyncOpKernel(
+        OpKernelConstruction* context)
+        : AsyncOpKernel(context) {}
 
-  void ComputeAsync(OpKernelContext* ctx, DoneCallback callback) final {
-    ConditionalAccumulatorBase* accumulator;
-    OP_REQUIRES_OK_ASYNC(
-        ctx, GetResourceFromContext(ctx, "handle", &accumulator), callback);
-    ComputeAsync(ctx, accumulator, [callback, accumulator]() {
-      accumulator->Unref();
-      callback();
-    });
-  }
+    void ComputeAsync(OpKernelContext* ctx, DoneCallback callback) final {
+        ConditionalAccumulatorBase* accumulator;
+        OP_REQUIRES_OK_ASYNC(
+            ctx, GetResourceFromContext(ctx, "handle", &accumulator), callback);
+        ComputeAsync(ctx, accumulator, [callback, accumulator]() {
+            accumulator->Unref();
+            callback();
+        });
+    }
 
- protected:
-  virtual void ComputeAsync(OpKernelContext* ctx,
-                            ConditionalAccumulatorBase* accumulator,
-                            DoneCallback callback) = 0;
-
-  virtual DataTypeVector GetExpectedInputs(
-      ConditionalAccumulatorBase* accumulator) = 0;
-
-  virtual void CheckSignature(OpKernelContext* ctx,
+protected:
+    virtual void ComputeAsync(OpKernelContext* ctx,
                               ConditionalAccumulatorBase* accumulator,
-                              DoneCallback callback) {
-    // Check input signature
-    OP_REQUIRES_OK_ASYNC(ctx,
-                         ctx->MatchSignature(GetExpectedInputs(accumulator),
-                                             {accumulator->dtype()}),
-                         callback);
-  }
+                              DoneCallback callback) = 0;
+
+    virtual DataTypeVector GetExpectedInputs(
+        ConditionalAccumulatorBase* accumulator) = 0;
+
+    virtual void CheckSignature(OpKernelContext* ctx,
+                                ConditionalAccumulatorBase* accumulator,
+                                DoneCallback callback) {
+        // Check input signature
+        OP_REQUIRES_OK_ASYNC(ctx,
+                             ctx->MatchSignature(GetExpectedInputs(accumulator),
+        {accumulator->dtype()}),
+        callback);
+    }
 };
 
 /**
@@ -229,33 +229,33 @@ class ConditionalAccumulatorBaseAsyncOpKernel : public AsyncOpKernel {
  */
 class ConditionalAccumulatorBaseTakeGradientOp
     : public ConditionalAccumulatorBaseAsyncOpKernel {
- public:
-  explicit ConditionalAccumulatorBaseTakeGradientOp(
-      OpKernelConstruction* context)
-      : ConditionalAccumulatorBaseAsyncOpKernel(context) {}
+public:
+    explicit ConditionalAccumulatorBaseTakeGradientOp(
+        OpKernelConstruction* context)
+        : ConditionalAccumulatorBaseAsyncOpKernel(context) {}
 
- protected:
-  void ComputeAsync(OpKernelContext* ctx,
-                    ConditionalAccumulatorBase* accumulator,
-                    DoneCallback callback) override {
-    // Check signature
-    CheckSignature(ctx, accumulator, callback);
+protected:
+    void ComputeAsync(OpKernelContext* ctx,
+                      ConditionalAccumulatorBase* accumulator,
+                      DoneCallback callback) override {
+        // Check signature
+        CheckSignature(ctx, accumulator, callback);
 
-    // Get input num_required
-    const Tensor* num_required_tensor;
-    OP_REQUIRES_OK_ASYNC(ctx, ctx->input("num_required", &num_required_tensor),
-                         callback);
-    if (!TensorShapeUtils::IsScalar(num_required_tensor->shape())) {
-      ctx->CtxFailureWithWarning(errors::InvalidArgument(
-          "Argument num_required must be scalar, but had bad shape ",
-          num_required_tensor->shape().DebugString()));
-      callback();
-    }
-
-    // Actually try to take gradient now
-    accumulator->TryTakeGrad(num_required_tensor->scalar<int32>()(), ctx,
+        // Get input num_required
+        const Tensor* num_required_tensor;
+        OP_REQUIRES_OK_ASYNC(ctx, ctx->input("num_required", &num_required_tensor),
                              callback);
-  }
+        if (!TensorShapeUtils::IsScalar(num_required_tensor->shape())) {
+            ctx->CtxFailureWithWarning(errors::InvalidArgument(
+                                           "Argument num_required must be scalar, but had bad shape ",
+                                           num_required_tensor->shape().DebugString()));
+            callback();
+        }
+
+        // Actually try to take gradient now
+        accumulator->TryTakeGrad(num_required_tensor->scalar<int32>()(), ctx,
+                                 callback);
+    }
 };
 
 }  // namespace tensorflow

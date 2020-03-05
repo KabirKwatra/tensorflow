@@ -46,91 +46,91 @@ namespace tensorflow {
 template <typename Device, typename T>
 class ConditionalAccumulator
     : public TypedConditionalAccumulatorBase<const Tensor> {
- public:
-  // Args:
-  //   dtype: The datatype of the gradients to be accumulated.
-  //   shape: The shape of the accumulated gradients.
-  //   name:  A name to use for the ConditionalAccumulator.
-  //   reduction_type: The reduction type, i.e., MEAN or SUM
-  ConditionalAccumulator(const DataType& dtype, const PartialTensorShape& shape,
-                         const string& name, const string& reduction_type)
-      : TypedConditionalAccumulatorBase<const Tensor>(dtype, shape, name,
-                                                      reduction_type) {}
-  ~ConditionalAccumulator() override{};
+public:
+    // Args:
+    //   dtype: The datatype of the gradients to be accumulated.
+    //   shape: The shape of the accumulated gradients.
+    //   name:  A name to use for the ConditionalAccumulator.
+    //   reduction_type: The reduction type, i.e., MEAN or SUM
+    ConditionalAccumulator(const DataType& dtype, const PartialTensorShape& shape,
+                           const string& name, const string& reduction_type)
+        : TypedConditionalAccumulatorBase<const Tensor>(dtype, shape, name,
+                reduction_type) {}
+    ~ConditionalAccumulator() override {};
 
- protected:
-  // accum_grad is the tensor that holds the aggregate gradient.
-  // It is initialized the first time ApplyGrad is called.
-  Tensor* accum_grad_ = nullptr;
-  PersistentTensor accum_grad_persistent_;
+protected:
+    // accum_grad is the tensor that holds the aggregate gradient.
+    // It is initialized the first time ApplyGrad is called.
+    Tensor* accum_grad_ = nullptr;
+    PersistentTensor accum_grad_persistent_;
 
-  functor::SetZeroFunctor<Device, T> set_zero_functor_;
+    functor::SetZeroFunctor<Device, T> set_zero_functor_;
 
-  Status ValidateShape(const Tensor* tensor)
-      TF_EXCLUSIVE_LOCKS_REQUIRED(this->mu_) {
-    // Must be compatible with accumulated gradient if available
-    if (counter_ > 0) {
-      if (!accum_grad_->shape().IsSameSize(tensor->shape())) {
-        return errors::InvalidArgument("Shape mismatch: expected ",
-                                       accum_grad_->shape().DebugString(),
-                                       ", got ", tensor->shape().DebugString());
-      }
+    Status ValidateShape(const Tensor* tensor)
+    TF_EXCLUSIVE_LOCKS_REQUIRED(this->mu_) {
+        // Must be compatible with accumulated gradient if available
+        if (counter_ > 0) {
+            if (!accum_grad_->shape().IsSameSize(tensor->shape())) {
+                return errors::InvalidArgument("Shape mismatch: expected ",
+                                               accum_grad_->shape().DebugString(),
+                                               ", got ", tensor->shape().DebugString());
+            }
+        }
+        // Must also be compatible with given shape
+        if (!shape_.IsCompatibleWith(tensor->shape())) {
+            return errors::InvalidArgument("Shape mismatch: expected ",
+                                           shape_.DebugString(), ", got ",
+                                           tensor->shape().DebugString());
+        }
+        return Status::OK();
     }
-    // Must also be compatible with given shape
-    if (!shape_.IsCompatibleWith(tensor->shape())) {
-      return errors::InvalidArgument("Shape mismatch: expected ",
-                                     shape_.DebugString(), ", got ",
-                                     tensor->shape().DebugString());
-    }
-    return Status::OK();
-  }
 
-  void AllocateAndAssignToAccumGradFunction(OpKernelContext* ctx,
-                                            const Tensor* grad) override {
-    // TODO(b/32704451): Don't just ignore the ::tensorflow::Status object!
-    ctx->allocate_persistent(dtype_, grad->shape(), &accum_grad_persistent_,
-                             &accum_grad_)
+    void AllocateAndAssignToAccumGradFunction(OpKernelContext* ctx,
+            const Tensor* grad) override {
+        // TODO(b/32704451): Don't just ignore the ::tensorflow::Status object!
+        ctx->allocate_persistent(dtype_, grad->shape(), &accum_grad_persistent_,
+                                 &accum_grad_)
         .IgnoreError();
-    accum_grad_->flat<T>().device(ctx->template eigen_device<Device>()) =
-        grad->flat<T>();
-  }
+        accum_grad_->flat<T>().device(ctx->template eigen_device<Device>()) =
+            grad->flat<T>();
+    }
 
-  void AddToAccumGradFunction(OpKernelContext* ctx,
-                              const Tensor* grad) override {
-    accum_grad_->flat<T>().device(ctx->template eigen_device<Device>()) +=
-        grad->flat<T>();
-  }
+    void AddToAccumGradFunction(OpKernelContext* ctx,
+                                const Tensor* grad) override {
+        accum_grad_->flat<T>().device(ctx->template eigen_device<Device>()) +=
+            grad->flat<T>();
+    }
 
-  void DivideAccumGradByCounter(OpKernelContext* ctx) override
-      TF_EXCLUSIVE_LOCKS_REQUIRED(this->mu_) {
-    Tensor c(DataTypeToEnum<T>::value, {});
-    c.scalar<T>()() = TypeConverter<T, int>::ConvertUToT(this->counter_);
-    this->accum_grad_->template flat<T>().device(
-        ctx->template eigen_device<Device>()) =
-        this->accum_grad_->template flat<T>() / c.scalar<T>()();
-  }
+    void DivideAccumGradByCounter(OpKernelContext* ctx) override
+    TF_EXCLUSIVE_LOCKS_REQUIRED(this->mu_) {
+        Tensor c(DataTypeToEnum<T>::value, {});
+        c.scalar<T>()() = TypeConverter<T, int>::ConvertUToT(this->counter_);
+        this->accum_grad_->template flat<T>().device(
+            ctx->template eigen_device<Device>()) =
+                this->accum_grad_->template flat<T>() / c.scalar<T>()();
+    }
 
-  bool SetOutput(OpKernelContext* ctx) override {
-    ctx->set_output(0, *accum_grad_);
-    return true;
-  }
+    bool SetOutput(OpKernelContext* ctx) override {
+        ctx->set_output(0, *accum_grad_);
+        return true;
+    }
 
-  bool GetAndValidateTensorInputForApplyGrad(OpKernelContext* ctx,
-                                             const Tensor** tensor) override
-      TF_EXCLUSIVE_LOCKS_REQUIRED(this->mu_) {
-    // Get input gradient tensor
-    const Tensor* grad_tensor;
-    OP_REQUIRES_OK_BOOLEAN(ctx, ctx->input("gradient", &grad_tensor));
-    *tensor = grad_tensor;
-    OP_REQUIRES_OK_BOOLEAN(ctx, this->ValidateShape(*tensor));
-    return true;
-  }
+    bool GetAndValidateTensorInputForApplyGrad(OpKernelContext* ctx,
+            const Tensor** tensor) override
+    TF_EXCLUSIVE_LOCKS_REQUIRED(this->mu_) {
+        // Get input gradient tensor
+        const Tensor* grad_tensor;
+        OP_REQUIRES_OK_BOOLEAN(ctx, ctx->input("gradient", &grad_tensor));
+        *tensor = grad_tensor;
+        OP_REQUIRES_OK_BOOLEAN(ctx, this->ValidateShape(*tensor));
+        return true;
+    }
 
-  void CleanUpGradTensor(const Tensor* tensor) override {
-    // do nothing
-  }
+    void CleanUpGradTensor(const Tensor* tensor) override {
+        // do nothing
+    }
 
-  TF_DISALLOW_COPY_AND_ASSIGN(ConditionalAccumulator);
+    TF_DISALLOW_COPY_AND_ASSIGN(ConditionalAccumulator);
 };
 
 }  // namespace tensorflow

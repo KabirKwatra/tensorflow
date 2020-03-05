@@ -24,80 +24,82 @@ namespace tensorflow {
 namespace {
 
 class UnboundedWorkQueueTest : public ::testing::Test {
- protected:
-  UnboundedWorkQueueTest()
-      : work_queue_(
-            absl::make_unique<UnboundedWorkQueue>(Env::Default(), "test")) {}
-  ~UnboundedWorkQueueTest() override = default;
+protected:
+    UnboundedWorkQueueTest()
+        : work_queue_(
+              absl::make_unique<UnboundedWorkQueue>(Env::Default(), "test")) {}
+    ~UnboundedWorkQueueTest() override = default;
 
-  void RunMultipleCopiesOfClosure(const int num_closures,
-                                  std::function<void()> fn) {
-    for (int i = 0; i < num_closures; ++i) {
-      work_queue_->Schedule([this, fn]() {
-        fn();
+    void RunMultipleCopiesOfClosure(const int num_closures,
+                                    std::function<void()> fn) {
+        for (int i = 0; i < num_closures; ++i) {
+            work_queue_->Schedule([this, fn]() {
+                fn();
+                mutex_lock l(mu_);
+                ++closure_count_;
+                cond_var_.notify_all();
+            });
+        }
+    }
+
+    void BlockUntilClosuresDone(const int num_closures) {
         mutex_lock l(mu_);
-        ++closure_count_;
-        cond_var_.notify_all();
-      });
+        while (closure_count_ < num_closures) {
+            cond_var_.wait(l);
+        }
     }
-  }
 
-  void BlockUntilClosuresDone(const int num_closures) {
-    mutex_lock l(mu_);
-    while (closure_count_ < num_closures) {
-      cond_var_.wait(l);
+    void ResetQueue() {
+        work_queue_.reset();
     }
-  }
 
-  void ResetQueue() { work_queue_.reset(); }
+    int NumClosuresExecuted() {
+        mutex_lock l(mu_);
+        return closure_count_;
+    }
 
-  int NumClosuresExecuted() {
-    mutex_lock l(mu_);
-    return closure_count_;
-  }
-
- private:
-  mutex mu_;
-  int closure_count_ TF_GUARDED_BY(mu_) = 0;
-  condition_variable cond_var_;
-  std::unique_ptr<UnboundedWorkQueue> work_queue_;
+private:
+    mutex mu_;
+    int closure_count_ TF_GUARDED_BY(mu_) = 0;
+    condition_variable cond_var_;
+    std::unique_ptr<UnboundedWorkQueue> work_queue_;
 };
 
 TEST_F(UnboundedWorkQueueTest, SingleClosure) {
-  constexpr int num_closures = 1;
-  RunMultipleCopiesOfClosure(num_closures, []() {});
-  BlockUntilClosuresDone(num_closures);
+    constexpr int num_closures = 1;
+    RunMultipleCopiesOfClosure(num_closures, []() {});
+    BlockUntilClosuresDone(num_closures);
 }
 
 TEST_F(UnboundedWorkQueueTest, MultipleClosures) {
-  constexpr int num_closures = 10;
-  RunMultipleCopiesOfClosure(num_closures, []() {});
-  BlockUntilClosuresDone(num_closures);
+    constexpr int num_closures = 10;
+    RunMultipleCopiesOfClosure(num_closures, []() {});
+    BlockUntilClosuresDone(num_closures);
 }
 
 TEST_F(UnboundedWorkQueueTest, MultipleClosuresSleepingRandomly) {
-  constexpr int num_closures = 1000;
-  RunMultipleCopiesOfClosure(num_closures, []() {
-    Env::Default()->SleepForMicroseconds(random::New64() % 10);
-  });
-  BlockUntilClosuresDone(num_closures);
+    constexpr int num_closures = 1000;
+    RunMultipleCopiesOfClosure(num_closures, []() {
+        Env::Default()->SleepForMicroseconds(random::New64() % 10);
+    });
+    BlockUntilClosuresDone(num_closures);
 }
 
 TEST_F(UnboundedWorkQueueTest, NestedClosures) {
-  constexpr int num_closures = 10;
-  // Run `num_closures` closures, each of which runs `num_closures` closures.
-  RunMultipleCopiesOfClosure(num_closures, [=]() {
-    RunMultipleCopiesOfClosure(num_closures, []() {});
-  });
-  BlockUntilClosuresDone(num_closures * num_closures + num_closures);
+    constexpr int num_closures = 10;
+    // Run `num_closures` closures, each of which runs `num_closures` closures.
+    RunMultipleCopiesOfClosure(num_closures, [=]() {
+        RunMultipleCopiesOfClosure(num_closures, []() {});
+    });
+    BlockUntilClosuresDone(num_closures * num_closures + num_closures);
 }
 
 TEST_F(UnboundedWorkQueueTest, RacyDestructor) {
-  constexpr int num_closures = 100;
-  // Run `num_closures` closures, then delete `work_queue_`.
-  RunMultipleCopiesOfClosure(num_closures, []() {});
-  ResetQueue();
-  EXPECT_LE(NumClosuresExecuted(), num_closures);
+    constexpr int num_closures = 100;
+    // Run `num_closures` closures, then delete `work_queue_`.
+    RunMultipleCopiesOfClosure(num_closures, []() {});
+    ResetQueue();
+    EXPECT_LE(NumClosuresExecuted(), num_closures);
 }
 
 }  // namespace

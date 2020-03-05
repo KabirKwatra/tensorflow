@@ -28,28 +28,30 @@ limitations under the License.
 namespace tensorflow {
 
 class AllocatorFactory {
- public:
-  virtual ~AllocatorFactory() {}
+public:
+    virtual ~AllocatorFactory() {}
 
-  // Returns true if the factory will create a functionally different
-  // SubAllocator for different (legal) values of numa_node.
-  virtual bool NumaEnabled() { return false; }
+    // Returns true if the factory will create a functionally different
+    // SubAllocator for different (legal) values of numa_node.
+    virtual bool NumaEnabled() {
+        return false;
+    }
 
-  // Create an Allocator.
-  virtual Allocator* CreateAllocator() = 0;
+    // Create an Allocator.
+    virtual Allocator* CreateAllocator() = 0;
 
-  // Create a SubAllocator. If NumaEnabled() is true, then returned SubAllocator
-  // will allocate memory local to numa_node.  If numa_node == kNUMANoAffinity
-  // then allocated memory is not specific to any NUMA node.
-  virtual SubAllocator* CreateSubAllocator(int numa_node) = 0;
+    // Create a SubAllocator. If NumaEnabled() is true, then returned SubAllocator
+    // will allocate memory local to numa_node.  If numa_node == kNUMANoAffinity
+    // then allocated memory is not specific to any NUMA node.
+    virtual SubAllocator* CreateSubAllocator(int numa_node) = 0;
 };
 
 // ProcessState is defined in a package that cannot be a dependency of
 // framework.  This definition allows us to access the one method we need.
 class ProcessStateInterface {
- public:
-  virtual ~ProcessStateInterface() {}
-  virtual Allocator* GetCPUAllocator(int numa_node) = 0;
+public:
+    virtual ~ProcessStateInterface() {}
+    virtual Allocator* GetCPUAllocator(int numa_node) = 0;
 };
 
 // A singleton registry of AllocatorFactories.
@@ -59,65 +61,67 @@ class ProcessStateInterface {
 // registry is to allow link-time discovery of multiple AllocatorFactories among
 // which ProcessState will obtain the best fit at startup.
 class AllocatorFactoryRegistry {
- public:
-  AllocatorFactoryRegistry() {}
-  ~AllocatorFactoryRegistry() {}
+public:
+    AllocatorFactoryRegistry() {}
+    ~AllocatorFactoryRegistry() {}
 
-  void Register(const char* source_file, int source_line, const string& name,
-                int priority, AllocatorFactory* factory);
+    void Register(const char* source_file, int source_line, const string& name,
+                  int priority, AllocatorFactory* factory);
 
-  // Returns 'best fit' Allocator.  Find the factory with the highest priority
-  // and return an allocator constructed by it.  If multiple factories have
-  // been registered with the same priority, picks one by unspecified criteria.
-  Allocator* GetAllocator();
+    // Returns 'best fit' Allocator.  Find the factory with the highest priority
+    // and return an allocator constructed by it.  If multiple factories have
+    // been registered with the same priority, picks one by unspecified criteria.
+    Allocator* GetAllocator();
 
-  // Returns 'best fit' SubAllocator.  First look for the highest priority
-  // factory that is NUMA-enabled.  If none is registered, fall back to the
-  // highest priority non-NUMA-enabled factory.  If NUMA-enabled, return a
-  // SubAllocator specific to numa_node, otherwise return a NUMA-insensitive
-  // SubAllocator.
-  SubAllocator* GetSubAllocator(int numa_node);
+    // Returns 'best fit' SubAllocator.  First look for the highest priority
+    // factory that is NUMA-enabled.  If none is registered, fall back to the
+    // highest priority non-NUMA-enabled factory.  If NUMA-enabled, return a
+    // SubAllocator specific to numa_node, otherwise return a NUMA-insensitive
+    // SubAllocator.
+    SubAllocator* GetSubAllocator(int numa_node);
 
-  // Returns the singleton value.
-  static AllocatorFactoryRegistry* singleton();
+    // Returns the singleton value.
+    static AllocatorFactoryRegistry* singleton();
 
-  ProcessStateInterface* process_state() const { return process_state_; }
+    ProcessStateInterface* process_state() const {
+        return process_state_;
+    }
 
- protected:
-  friend class ProcessState;
-  ProcessStateInterface* process_state_ = nullptr;
+protected:
+    friend class ProcessState;
+    ProcessStateInterface* process_state_ = nullptr;
 
- private:
-  mutex mu_;
-  bool first_alloc_made_ = false;
-  struct FactoryEntry {
-    const char* source_file;
-    int source_line;
-    string name;
-    int priority;
-    std::unique_ptr<AllocatorFactory> factory;
-    std::unique_ptr<Allocator> allocator;
-    // Index 0 corresponds to kNUMANoAffinity, other indices are (numa_node +
-    // 1).
-    std::vector<std::unique_ptr<SubAllocator>> sub_allocators;
-  };
-  std::vector<FactoryEntry> factories_ TF_GUARDED_BY(mu_);
+private:
+    mutex mu_;
+    bool first_alloc_made_ = false;
+    struct FactoryEntry {
+        const char* source_file;
+        int source_line;
+        string name;
+        int priority;
+        std::unique_ptr<AllocatorFactory> factory;
+        std::unique_ptr<Allocator> allocator;
+        // Index 0 corresponds to kNUMANoAffinity, other indices are (numa_node +
+        // 1).
+        std::vector<std::unique_ptr<SubAllocator>> sub_allocators;
+    };
+    std::vector<FactoryEntry> factories_ TF_GUARDED_BY(mu_);
 
-  // Returns any FactoryEntry registered under 'name' and 'priority',
-  // or 'nullptr' if none found.
-  const FactoryEntry* FindEntry(const string& name, int priority) const
-      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+    // Returns any FactoryEntry registered under 'name' and 'priority',
+    // or 'nullptr' if none found.
+    const FactoryEntry* FindEntry(const string& name, int priority) const
+    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(AllocatorFactoryRegistry);
+    TF_DISALLOW_COPY_AND_ASSIGN(AllocatorFactoryRegistry);
 };
 
 class AllocatorFactoryRegistration {
- public:
-  AllocatorFactoryRegistration(const char* file, int line, const string& name,
-                               int priority, AllocatorFactory* factory) {
-    AllocatorFactoryRegistry::singleton()->Register(file, line, name, priority,
-                                                    factory);
-  }
+public:
+    AllocatorFactoryRegistration(const char* file, int line, const string& name,
+                                 int priority, AllocatorFactory* factory) {
+        AllocatorFactoryRegistry::singleton()->Register(file, line, name, priority,
+                factory);
+    }
 };
 
 #define REGISTER_MEM_ALLOCATOR(name, priority, factory)                     \

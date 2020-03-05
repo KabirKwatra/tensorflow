@@ -46,34 +46,34 @@ namespace tensorflow {
 // request_id replaces the oldest request_id in the circular buffer, and the
 // oldest request_id is removed from the set.
 class RecentRequestIds {
- public:
-  // num_tracked_request_ids should be much larger than the number of RPCs that
-  // can be received in a small time window. For example, we observed a peak RPC
-  // rate of ~700 RecvTensor RPC/s when training inception v3 on TPUs, so we
-  // currently set num_tracked_request_ids to 100,000 for RecvTensor.
-  RecentRequestIds(int num_tracked_request_ids);
+public:
+    // num_tracked_request_ids should be much larger than the number of RPCs that
+    // can be received in a small time window. For example, we observed a peak RPC
+    // rate of ~700 RecvTensor RPC/s when training inception v3 on TPUs, so we
+    // currently set num_tracked_request_ids to 100,000 for RecvTensor.
+    RecentRequestIds(int num_tracked_request_ids);
 
-  // Returns OK iff request_id has not been seen in the last
-  // num_tracked_request_ids insertions. For backwards compatibility, this
-  // always returns OK for request_id 0. The method_name and the request's
-  // ShortDebugString are added to returned errors.
-  Status TrackUnique(int64 request_id, const string& method_name,
-                     const protobuf::Message& request);
-  // Overloaded version of the above function for wrapped protos.
-  template <typename RequestWrapper>
-  Status TrackUnique(int64 request_id, const string& method_name,
-                     const RequestWrapper* wrapper);
+    // Returns OK iff request_id has not been seen in the last
+    // num_tracked_request_ids insertions. For backwards compatibility, this
+    // always returns OK for request_id 0. The method_name and the request's
+    // ShortDebugString are added to returned errors.
+    Status TrackUnique(int64 request_id, const string& method_name,
+                       const protobuf::Message& request);
+    // Overloaded version of the above function for wrapped protos.
+    template <typename RequestWrapper>
+    Status TrackUnique(int64 request_id, const string& method_name,
+                       const RequestWrapper* wrapper);
 
- private:
-  bool Insert(int64 request_id);
+private:
+    bool Insert(int64 request_id);
 
-  mutex mu_;
-  // next_index_ indexes into circular_buffer_, and points to the next storage
-  // space to use. When the buffer is full, next_index_ points at the oldest
-  // request_id.
-  int next_index_ TF_GUARDED_BY(mu_) = 0;
-  std::vector<int64> circular_buffer_ TF_GUARDED_BY(mu_);
-  std::unordered_set<int64> set_ TF_GUARDED_BY(mu_);
+    mutex mu_;
+    // next_index_ indexes into circular_buffer_, and points to the next storage
+    // space to use. When the buffer is full, next_index_ points at the oldest
+    // request_id.
+    int next_index_ TF_GUARDED_BY(mu_) = 0;
+    std::vector<int64> circular_buffer_ TF_GUARDED_BY(mu_);
+    std::unordered_set<int64> set_ TF_GUARDED_BY(mu_);
 };
 
 // Implementation details
@@ -82,13 +82,13 @@ template <typename RequestWrapper>
 Status RecentRequestIds::TrackUnique(int64 request_id,
                                      const string& method_name,
                                      const RequestWrapper* wrapper) {
-  if (Insert(request_id)) {
-    return Status::OK();
-  } else {
-    return errors::Aborted("The same ", method_name,
-                           " request was received twice. ",
-                           wrapper->ToProto().ShortDebugString());
-  }
+    if (Insert(request_id)) {
+        return Status::OK();
+    } else {
+        return errors::Aborted("The same ", method_name,
+                               " request was received twice. ",
+                               wrapper->ToProto().ShortDebugString());
+    }
 }
 
 }  // namespace tensorflow

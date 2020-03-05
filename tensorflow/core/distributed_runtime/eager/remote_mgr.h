@@ -29,98 +29,100 @@ namespace eager {
 // This class manages the states required to setup an eager cluster.
 // TODO(fishx): Move remote state from context to this class.
 class RemoteMgr {
- public:
-  RemoteMgr(bool is_master, EagerContext* ctx)
-      : is_master_(is_master), parent_(ctx) {}
+public:
+    RemoteMgr(bool is_master, EagerContext* ctx)
+        : is_master_(is_master), parent_(ctx) {}
 
-  ~RemoteMgr() {
-    for (const auto& entry : remote_tensor_handle_map_) {
-      entry.second->Unref();
+    ~RemoteMgr() {
+        for (const auto& entry : remote_tensor_handle_map_) {
+            entry.second->Unref();
+        }
     }
-  }
 
-  bool IsMaster() { return is_master_; }
+    bool IsMaster() {
+        return is_master_;
+    }
 
-  void AddOperationOutputs(
-      const gtl::ArraySlice<tensorflow::TensorHandle*> handles,
-      int64 operation_id);
+    void AddOperationOutputs(
+        const gtl::ArraySlice<tensorflow::TensorHandle*> handles,
+        int64 operation_id);
 
-  Status GetTensorHandle(const RemoteTensorHandleInternal& remote_handle,
-                         tensorflow::TensorHandle** handle);
+    Status GetTensorHandle(const RemoteTensorHandleInternal& remote_handle,
+                           tensorflow::TensorHandle** handle);
 
-  Status DeleteTensorHandle(const RemoteTensorHandleInternal& remote_handle);
+    Status DeleteTensorHandle(const RemoteTensorHandleInternal& remote_handle);
 
-  // Helper function to create monotonically increasing ids unique to this
-  // context.
-  uint64 NextOpId() {
-    DCHECK(is_master_);
-    mutex_lock l(next_id_mutex_);
-    return next_op_id_++;
-  }
+    // Helper function to create monotonically increasing ids unique to this
+    // context.
+    uint64 NextOpId() {
+        DCHECK(is_master_);
+        mutex_lock l(next_id_mutex_);
+        return next_op_id_++;
+    }
 
-  // Serialize a remote TensorHandle to a RemoteTensorHandle.
-  Status SerializeRemoteTensorHandle(
-      TensorHandle* in, RemoteTensorHandle* out, Device* device,
-      const string& device_name,
-      const bool serialize_resource_dtype_and_shape = false);
+    // Serialize a remote TensorHandle to a RemoteTensorHandle.
+    Status SerializeRemoteTensorHandle(
+        TensorHandle* in, RemoteTensorHandle* out, Device* device,
+        const string& device_name,
+        const bool serialize_resource_dtype_and_shape = false);
 
-  // Deserialize a RemoteTensorHandle to a TensorHandle(local/remote).
-  // The output holds a reference to the TensorHandle.
-  Status DeserializeRemoteTensorHandle(const RemoteTensorHandle& in,
-                                       TensorHandle** out);
+    // Deserialize a RemoteTensorHandle to a TensorHandle(local/remote).
+    // The output holds a reference to the TensorHandle.
+    Status DeserializeRemoteTensorHandle(const RemoteTensorHandle& in,
+                                         TensorHandle** out);
 
-  EagerExecutor& GetOrCreateExecutorForStream(uint64 stream_id);
+    EagerExecutor& GetOrCreateExecutorForStream(uint64 stream_id);
 
-  void DeleteExecutorForStream(uint64 stream_id);
+    void DeleteExecutorForStream(uint64 stream_id);
 
- protected:
-  mutex next_id_mutex_;
-  uint64 next_op_id_ TF_GUARDED_BY(next_id_mutex_) = 1;
+protected:
+    mutex next_id_mutex_;
+    uint64 next_op_id_ TF_GUARDED_BY(next_id_mutex_) = 1;
 
- private:
-  // Returns the op_id and output_num if the given local TensorHandle exists in
-  // remote_tensor_handle_map_.
-  Status GetRemoteTensorHandle(const tensorflow::TensorHandle* handle,
-                               int64* op_id, int32* output_num)
-      TF_SHARED_LOCKS_REQUIRED(remote_tensor_handle_mu_);
+private:
+    // Returns the op_id and output_num if the given local TensorHandle exists in
+    // remote_tensor_handle_map_.
+    Status GetRemoteTensorHandle(const tensorflow::TensorHandle* handle,
+                                 int64* op_id, int32* output_num)
+    TF_SHARED_LOCKS_REQUIRED(remote_tensor_handle_mu_);
 
-  Status GetTensorHandleImpl(const RemoteTensorHandleInternal& remote_handle,
-                             tensorflow::TensorHandle** handle)
-      TF_SHARED_LOCKS_REQUIRED(remote_tensor_handle_mu_);
+    Status GetTensorHandleImpl(const RemoteTensorHandleInternal& remote_handle,
+                               tensorflow::TensorHandle** handle)
+    TF_SHARED_LOCKS_REQUIRED(remote_tensor_handle_mu_);
 
-  Status GetMirroredResourceShape(
-      const RemoteTensorHandleInternal& remote_handle,
-      std::vector<DtypeAndPartialTensorShape>* handle);
+    Status GetMirroredResourceShape(
+        const RemoteTensorHandleInternal& remote_handle,
+        std::vector<DtypeAndPartialTensorShape>* handle);
 
-  bool is_master_;
+    bool is_master_;
 
-  using RemoteTensorHandleMap =
-      gtl::FlatMap<RemoteTensorHandleInternal, tensorflow::TensorHandle*,
-                   RemoteTensorHandleInternalHash,
-                   RemoteTensorHandleInternalEquals>;
-  using MirroredResourceShapeMap = gtl::FlatMap<
-      RemoteTensorHandleInternal, std::vector<DtypeAndPartialTensorShape>,
-      RemoteTensorHandleInternalHash, RemoteTensorHandleInternalEquals>;
+    using RemoteTensorHandleMap =
+        gtl::FlatMap<RemoteTensorHandleInternal, tensorflow::TensorHandle*,
+        RemoteTensorHandleInternalHash,
+        RemoteTensorHandleInternalEquals>;
+    using MirroredResourceShapeMap = gtl::FlatMap<
+                                     RemoteTensorHandleInternal, std::vector<DtypeAndPartialTensorShape>,
+                                     RemoteTensorHandleInternalHash, RemoteTensorHandleInternalEquals>;
 
-  mutex remote_tensor_handle_mu_;
-  // This map maintains the TensorHandles that are required by remote workers
-  // in the cluster. Each map key is generated by the master, so it should be
-  // globally unique. This map owns references on the handles it contains.
-  RemoteTensorHandleMap remote_tensor_handle_map_
-      TF_GUARDED_BY(remote_tensor_handle_mu_);
+    mutex remote_tensor_handle_mu_;
+    // This map maintains the TensorHandles that are required by remote workers
+    // in the cluster. Each map key is generated by the master, so it should be
+    // globally unique. This map owns references on the handles it contains.
+    RemoteTensorHandleMap remote_tensor_handle_map_
+    TF_GUARDED_BY(remote_tensor_handle_mu_);
 
-  mutex mirrored_resource_shape_mu_;
-  // This map maintains the data types and shapes of resource variables required
-  // by remote workers in the cluster. Each map key is generated by the master,
-  // so it should be globally unique.
-  MirroredResourceShapeMap mirrored_resource_shape_map_
-      TF_GUARDED_BY(mirrored_resource_shape_mu_);
+    mutex mirrored_resource_shape_mu_;
+    // This map maintains the data types and shapes of resource variables required
+    // by remote workers in the cluster. Each map key is generated by the master,
+    // so it should be globally unique.
+    MirroredResourceShapeMap mirrored_resource_shape_map_
+    TF_GUARDED_BY(mirrored_resource_shape_mu_);
 
-  EagerContext* parent_;  // not owned.
+    EagerContext* parent_;  // not owned.
 
-  mutex executor_map_mu_;
-  std::unordered_map<uint64, EagerExecutor> executor_map_
-      TF_GUARDED_BY(executor_map_mu_);
+    mutex executor_map_mu_;
+    std::unordered_map<uint64, EagerExecutor> executor_map_
+    TF_GUARDED_BY(executor_map_mu_);
 };
 
 }  // namespace eager
