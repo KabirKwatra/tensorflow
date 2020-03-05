@@ -14,7 +14,6 @@
 # ==============================================================================
 # pylint: disable=unidiomatic-typecheck
 """Prototype decorator for defining graph functions with eager semantics."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -36,8 +35,6 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training.tracking import base as trackable
-
-
 from tensorflow.python.util import nest
 from tensorflow.python.util import object_identity
 from tensorflow.python.util import tf_decorator
