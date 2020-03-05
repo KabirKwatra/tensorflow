@@ -64,9 +64,8 @@ class BaseMonitor(object):
             execution event.
         """
 
-    def on_graph_execution_trace(
-        self, graph_execution_trace_index, graph_execution_trace
-    ):
+    def on_graph_execution_trace(self, graph_execution_trace_index,
+                                 graph_execution_trace):
         """Monitor method for intra-graph execution events.
 
         Return values (if any) are ignored by the associated DebugDataReader.
@@ -85,16 +84,16 @@ class InfNanAlert(object):
     """Alert for Infinity and NaN values."""
 
     def __init__(
-        self,
-        wall_time,
-        op_type,
-        output_slot,
-        size=None,
-        num_neg_inf=None,
-        num_pos_inf=None,
-        num_nan=None,
-        execution_index=None,
-        graph_execution_trace_index=None,
+            self,
+            wall_time,
+            op_type,
+            output_slot,
+            size=None,
+            num_neg_inf=None,
+            num_pos_inf=None,
+            num_nan=None,
+            execution_index=None,
+            graph_execution_trace_index=None,
     ):
         self._wall_time = wall_time
         self._op_type = op_type
@@ -153,13 +152,13 @@ class InfNanMonitor(BaseMonitor):
         self._alerts = []
 
     def _check_full_tensor_value(
-        self,
-        tensor_value,
-        wall_time,
-        op_type,
-        output_slot,
-        execution_index=None,
-        graph_execution_trace_index=None,
+            self,
+            tensor_value,
+            wall_time,
+            op_type,
+            output_slot,
+            execution_index=None,
+            graph_execution_trace_index=None,
     ):
         """Check a full tensor value.
 
@@ -181,11 +180,9 @@ class InfNanMonitor(BaseMonitor):
             return
         is_inf = np.isinf(tensor_value)
         num_neg_inf = np.count_nonzero(
-            np.logical_and(is_inf, np.less(tensor_value, 0.0))
-        )
+            np.logical_and(is_inf, np.less(tensor_value, 0.0)))
         num_pos_inf = np.count_nonzero(
-            np.logical_and(is_inf, np.greater(tensor_value, 0.0))
-        )
+            np.logical_and(is_inf, np.greater(tensor_value, 0.0)))
         num_nan = np.count_nonzero(np.isnan(tensor_value))
         if num_neg_inf or num_pos_inf or num_nan:
             self._alerts.append(
@@ -199,18 +196,17 @@ class InfNanMonitor(BaseMonitor):
                     num_nan=num_nan,
                     execution_index=execution_index,
                     graph_execution_trace_index=graph_execution_trace_index,
-                )
-            )
+                ))
 
     def _check_debug_tensor_value(
-        self,
-        tensor_debug_mode,
-        debug_tensor_value,
-        wall_time,
-        op_type,
-        output_slot,
-        execution_index=None,
-        graph_execution_trace_index=None,
+            self,
+            tensor_debug_mode,
+            debug_tensor_value,
+            wall_time,
+            op_type,
+            output_slot,
+            execution_index=None,
+            graph_execution_trace_index=None,
     ):
         """Check for bad numerical values based on debug summary of tensor value."""
         # FULL_TENSOR mode is handled by a separate code path.
@@ -227,8 +223,7 @@ class InfNanMonitor(BaseMonitor):
                         output_slot,
                         execution_index=execution_index,
                         graph_execution_trace_index=graph_execution_trace_index,
-                    )
-                )
+                    ))
         elif tensor_debug_mode == debug_event_pb2.TensorDebugMode.CONCISE_HEALTH:
             _, size, num_neg_inf, num_pos_inf, num_nan = debug_tensor_value
             if num_neg_inf or num_pos_inf or num_nan:
@@ -243,8 +238,7 @@ class InfNanMonitor(BaseMonitor):
                         num_nan=num_nan,
                         execution_index=execution_index,
                         graph_execution_trace_index=graph_execution_trace_index,
-                    )
-                )
+                    ))
         elif tensor_debug_mode == debug_event_pb2.TensorDebugMode.FULL_HEALTH:
             (
                 _,
@@ -271,21 +265,18 @@ class InfNanMonitor(BaseMonitor):
                         num_nan=num_nan,
                         execution_index=execution_index,
                         graph_execution_trace_index=graph_execution_trace_index,
-                    )
-                )
+                    ))
         else:
             raise ValueError(
-                "Unsupported tensor debug mode: %s"
-                % debug_event_pb2.TensorDebugMode.Name(tensor_debug_mode)
-            )
+                "Unsupported tensor debug mode: %s" %
+                debug_event_pb2.TensorDebugMode.Name(tensor_debug_mode))
 
     def on_execution(self, execution_index, execution):
         if self._limit > 0 and len(self._alerts) >= self._limit:
             return
         if execution.tensor_debug_mode == debug_event_pb2.TensorDebugMode.FULL_TENSOR:
             tensor_values = self._debug_data_reader.execution_to_tensor_values(
-                execution
-            )
+                execution)
             for output_slot, tensor_value in enumerate(tensor_values):
                 self._check_full_tensor_value(
                     tensor_value,
@@ -296,8 +287,7 @@ class InfNanMonitor(BaseMonitor):
                 )
         elif execution.debug_tensor_values:
             for output_slot, debug_tensor_value in enumerate(
-                execution.debug_tensor_values
-            ):
+                    execution.debug_tensor_values):
                 self._check_debug_tensor_value(
                     execution.tensor_debug_mode,
                     debug_tensor_value,
@@ -307,19 +297,15 @@ class InfNanMonitor(BaseMonitor):
                     execution_index=execution_index,
                 )
 
-    def on_graph_execution_trace(
-        self, graph_execution_trace_index, graph_execution_trace
-    ):
+    def on_graph_execution_trace(self, graph_execution_trace_index,
+                                 graph_execution_trace):
         """Monitor method for GraphExecutionTrace data object."""
         if self._limit > 0 and len(self._alerts) >= self._limit:
             return
-        if (
-            graph_execution_trace.tensor_debug_mode
-            == debug_event_pb2.TensorDebugMode.FULL_TENSOR
-        ):
+        if (graph_execution_trace.tensor_debug_mode ==
+                debug_event_pb2.TensorDebugMode.FULL_TENSOR):
             tensor_value = self._debug_data_reader.graph_execution_trace_to_tensor_value(
-                graph_execution_trace
-            )
+                graph_execution_trace)
             self._check_full_tensor_value(
                 tensor_value,
                 graph_execution_trace.wall_time,
