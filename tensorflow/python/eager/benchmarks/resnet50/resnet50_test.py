@@ -35,9 +35,8 @@ from tensorflow.python.eager.benchmarks.resnet50 import resnet50_test_util
 def compute_gradients(model, images, labels, num_replicas=1):
     with tf.GradientTape() as grad_tape:
         logits = model(images, training=True)
-        loss = tf.compat.v1.losses.softmax_cross_entropy(
-            logits=logits, onehot_labels=labels
-        )
+        loss = tf.compat.v1.losses.softmax_cross_entropy(logits=logits,
+                                                         onehot_labels=labels)
         tf.compat.v2.summary.write("loss", loss)
         if num_replicas != 1:
             loss /= num_replicas
@@ -120,14 +119,15 @@ class ResNet50Test(tf.test.TestCase):
         with tf.device(device):
             images, _ = resnet50_test_util.random_batch(2, data_format)
             output = model(images, training=False)
-        output_shape = (
-            (2, 2048, 1, 1) if data_format == "channels_first" else (2, 1, 1, 2048)
-        )
+        output_shape = ((2, 2048, 1, 1) if data_format == "channels_first" else
+                        (2, 1, 1, 2048))
         self.assertEqual(output_shape, output.shape)
 
     def test_apply_with_pooling(self):
         device, data_format = resnet50_test_util.device_and_data_format()
-        model = resnet50.ResNet50(data_format, include_top=False, pooling="avg")
+        model = resnet50.ResNet50(data_format,
+                                  include_top=False,
+                                  pooling="avg")
         with tf.device(device):
             images, _ = resnet50_test_util.random_batch(2, data_format)
             output = model(images, training=False)
@@ -135,38 +135,41 @@ class ResNet50Test(tf.test.TestCase):
 
     def test_apply_no_average_pooling(self):
         device, data_format = resnet50_test_util.device_and_data_format()
-        model = resnet50.ResNet50(data_format, average_pooling=False, include_top=False)
+        model = resnet50.ResNet50(data_format,
+                                  average_pooling=False,
+                                  include_top=False)
         with tf.device(device):
             images, _ = resnet50_test_util.random_batch(2, data_format)
             output = model(images, training=False)
-        output_shape = (
-            (2, 2048, 7, 7) if data_format == "channels_first" else (2, 7, 7, 2048)
-        )
+        output_shape = ((2, 2048, 7, 7) if data_format == "channels_first" else
+                        (2, 7, 7, 2048))
         self.assertEqual(output_shape, output.shape)
 
     def test_apply_block3_strides(self):
         device, data_format = resnet50_test_util.device_and_data_format()
-        model = resnet50.ResNet50(data_format, block3_strides=True, include_top=False)
+        model = resnet50.ResNet50(data_format,
+                                  block3_strides=True,
+                                  include_top=False)
         with tf.device(device):
             images, _ = resnet50_test_util.random_batch(2, data_format)
             output = model(images, training=False)
-        output_shape = (
-            (2, 2048, 1, 1) if data_format == "channels_first" else (2, 1, 1, 2048)
-        )
+        output_shape = ((2, 2048, 1, 1) if data_format == "channels_first" else
+                        (2, 1, 1, 2048))
         self.assertEqual(output_shape, output.shape)
 
     def test_apply_retrieve_intermediates(self):
         device, data_format = resnet50_test_util.device_and_data_format()
-        model = resnet50.ResNet50(data_format, block3_strides=True, include_top=False)
+        model = resnet50.ResNet50(data_format,
+                                  block3_strides=True,
+                                  include_top=False)
         intermediates_dict = {}
         with tf.device(device):
             images, _ = resnet50_test_util.random_batch(2, data_format)
-            output = model(
-                images, training=False, intermediates_dict=intermediates_dict
-            )
-        output_shape = (
-            (2, 2048, 1, 1) if data_format == "channels_first" else (2, 1, 1, 2048)
-        )
+            output = model(images,
+                           training=False,
+                           intermediates_dict=intermediates_dict)
+        output_shape = ((2, 2048, 1, 1) if data_format == "channels_first" else
+                        (2, 1, 1, 2048))
         self.assertEqual(output_shape, output.shape)
 
         if data_format == "channels_first":
@@ -194,18 +197,17 @@ class ResNet50Test(tf.test.TestCase):
         device, data_format = resnet50_test_util.device_and_data_format()
         model = resnet50.ResNet50(data_format)
         tf.compat.v2.summary.experimental.set_step(
-            tf.compat.v1.train.get_or_create_global_step()
-        )
+            tf.compat.v1.train.get_or_create_global_step())
         logdir = tempfile.mkdtemp()
         with tf.compat.v2.summary.create_file_writer(
-            logdir, max_queue=0, name="t0"
-        ).as_default(), tf.compat.v2.summary.record_if(True):
+                logdir, max_queue=0,
+                name="t0").as_default(), tf.compat.v2.summary.record_if(True):
             with tf.device(device), context.execution_mode(execution_mode):
                 optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.1)
-                images, labels = resnet50_test_util.random_batch(2, data_format)
-                apply_gradients(
-                    model, optimizer, compute_gradients(model, images, labels)
-                )
+                images, labels = resnet50_test_util.random_batch(
+                    2, data_format)
+                apply_gradients(model, optimizer,
+                                compute_gradients(model, images, labels))
                 self.assertEqual(320, len(model.variables))
                 context.async_wait()
         events = events_from_logdir(logdir)
@@ -229,16 +231,16 @@ class ResNet50Test(tf.test.TestCase):
             # garbage to be collected. The hope is that this is a build-only effect,
             # and a subsequent training loop will create nothing which needs to be
             # collected.
-            apply_gradients(model, optimizer, compute_gradients(model, images, labels))
+            apply_gradients(model, optimizer,
+                            compute_gradients(model, images, labels))
             gc.collect()
             previous_gc_debug_flags = gc.get_debug()
             gc.set_debug(gc.DEBUG_SAVEALL)
             for _ in range(2):
                 # Run twice to ensure that garbage that is created on the first
                 # iteration is no longer accessible.
-                apply_gradients(
-                    model, optimizer, compute_gradients(model, images, labels)
-                )
+                apply_gradients(model, optimizer,
+                                compute_gradients(model, images, labels))
             gc.collect()
             # There should be no garbage requiring collection.
             self.assertEqual(0, len(gc.garbage))
@@ -255,9 +257,14 @@ class MockIterator(object):
 
 
 class ResNet50Benchmarks(tf.test.Benchmark):
-    def _report(
-        self, label, start, num_iters, device, batch_size, data_format, num_replicas=1
-    ):
+    def _report(self,
+                label,
+                start,
+                num_iters,
+                device,
+                batch_size,
+                data_format,
+                num_replicas=1):
         resnet50_test_util.report(
             self,
             label,
@@ -282,12 +289,12 @@ class ResNet50Benchmarks(tf.test.Benchmark):
                 # during the test seems to exclude the amount TensorFlow has allocated,
                 # which isn't useful.
                 if "K20" in device.physical_device_desc:
-                    return (16,)
+                    return (16, )
                 if "P100" in device.physical_device_desc:
                     return (16, 32, 64)
 
             if tf.DeviceSpec.from_string(device.name).device_type == "TPU":
-                return (32,)
+                return (32, )
         return (16, 32)
 
     def _force_device_sync(self):
@@ -297,9 +304,11 @@ class ResNet50Benchmarks(tf.test.Benchmark):
         # which forces a sync. This is a roundabout way, yes.
         tf.constant(1.0).cpu()
 
-    def _benchmark_eager_apply(
-        self, label, device_and_format, defun=False, execution_mode=None
-    ):
+    def _benchmark_eager_apply(self,
+                               label,
+                               device_and_format,
+                               defun=False,
+                               execution_mode=None):
         with context.execution_mode(execution_mode):
             device, data_format = device_and_format
             model = resnet50.ResNet50(data_format)
@@ -309,7 +318,8 @@ class ResNet50Benchmarks(tf.test.Benchmark):
             num_burn = 5
             num_iters = 30
             with tf.device(device):
-                images, _ = resnet50_test_util.random_batch(batch_size, data_format)
+                images, _ = resnet50_test_util.random_batch(
+                    batch_size, data_format)
                 for _ in xrange(num_burn):
                     model(images, training=False).cpu()
                 if execution_mode:
@@ -320,12 +330,14 @@ class ResNet50Benchmarks(tf.test.Benchmark):
                     model(images, training=False).cpu()
                 if execution_mode:
                     context.async_wait()
-                self._report(label, start, num_iters, device, batch_size, data_format)
+                self._report(label, start, num_iters, device, batch_size,
+                             data_format)
 
     def benchmark_eager_apply_sync(self):
         self._benchmark_eager_apply(
-            "eager_apply", resnet50_test_util.device_and_data_format(), defun=False
-        )
+            "eager_apply",
+            resnet50_test_util.device_and_data_format(),
+            defun=False)
 
     def benchmark_eager_apply_async(self):
         self._benchmark_eager_apply(
@@ -342,15 +354,17 @@ class ResNet50Benchmarks(tf.test.Benchmark):
             defun=True,
         )
 
-    def _benchmark_eager_train(
-        self, label, make_iterator, device_and_format, defun=False, execution_mode=None
-    ):
+    def _benchmark_eager_train(self,
+                               label,
+                               make_iterator,
+                               device_and_format,
+                               defun=False,
+                               execution_mode=None):
         with context.execution_mode(execution_mode):
             device, data_format = device_and_format
             for batch_size in self._train_batch_sizes():
                 (images, labels) = resnet50_test_util.random_batch(
-                    batch_size, data_format
-                )
+                    batch_size, data_format)
                 model = resnet50.ResNet50(data_format)
                 optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.1)
                 apply_grads = apply_gradients
@@ -364,9 +378,8 @@ class ResNet50Benchmarks(tf.test.Benchmark):
                     iterator = make_iterator((images, labels))
                     for _ in xrange(num_burn):
                         (images, labels) = iterator.next()
-                        apply_grads(
-                            model, optimizer, compute_gradients(model, images, labels)
-                        )
+                        apply_grads(model, optimizer,
+                                    compute_gradients(model, images, labels))
                     if execution_mode:
                         context.async_wait()
                     self._force_device_sync()
@@ -375,15 +388,13 @@ class ResNet50Benchmarks(tf.test.Benchmark):
                     start = time.time()
                     for _ in xrange(num_iters):
                         (images, labels) = iterator.next()
-                        apply_grads(
-                            model, optimizer, compute_gradients(model, images, labels)
-                        )
+                        apply_grads(model, optimizer,
+                                    compute_gradients(model, images, labels))
                     if execution_mode:
                         context.async_wait()
                     self._force_device_sync()
-                    self._report(
-                        label, start, num_iters, device, batch_size, data_format
-                    )
+                    self._report(label, start, num_iters, device, batch_size,
+                                 data_format)
 
     def benchmark_eager_train_sync(self):
         self._benchmark_eager_train(

@@ -50,9 +50,8 @@ def _test_combinations():
         ds = ds.map(lambda x: (x, x), num_parallel_calls=2)  # Not eliminated
         return ds.map(lambda x, y: (x, y))  # Eliminated
 
-    parallel_map_name = (
-        "ParallelMapV2" if compat.forward_compatible(2020, 3, 6) else "ParallelMap"
-    )
+    parallel_map_name = ("ParallelMapV2" if compat.forward_compatible(
+        2020, 3, 6) else "ParallelMap")
 
     cases = [
         ("Skip0", lambda ds: ds.skip(0), None),
@@ -73,7 +72,8 @@ def _test_combinations():
             parallel_map_name,
         ),
         ("MapRestructure", lambda ds: ds.map(lambda x: {"value": x}), ""),
-        ("PMapIdentity", lambda ds: ds.map(lambda x: x, num_parallel_calls=2), None),
+        ("PMapIdentity", lambda ds: ds.map(lambda x: x, num_parallel_calls=2),
+         None),
         (
             "PMapNonIdentity",
             lambda ds: ds.map(lambda x: x * 2, num_parallel_calls=2),
@@ -96,9 +96,10 @@ def _test_combinations():
 
 class NoopEliminationTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(), _test_combinations())
-    )
-    def testNoopElimination(self, init_dataset_fn, transformation, expected_name):
+        combinations.times(test_base.default_test_combinations(),
+                           _test_combinations()))
+    def testNoopElimination(self, init_dataset_fn, transformation,
+                            expected_name):
         """Runs a noop elimination test case.
 
         Args:
@@ -109,7 +110,8 @@ class NoopEliminationTest(test_base.DatasetTestBase, parameterized.TestCase):
         dataset = init_dataset_fn()
 
         if expected_name:
-            dataset = dataset.apply(testing.assert_next([expected_name, "FiniteTake"]))
+            dataset = dataset.apply(
+                testing.assert_next([expected_name, "FiniteTake"]))
         else:
             dataset = dataset.apply(testing.assert_next(["FiniteTake"]))
 

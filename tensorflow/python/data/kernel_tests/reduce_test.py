@@ -56,7 +56,8 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
         for i in range(10):
             ds = dataset_ops.Dataset.range(1, i + 1)
             ds = dataset_ops.Dataset.zip((ds, ds))
-            result = ds.reduce(constant_op.constant(0, dtype=dtypes.int64), reduce_fn)
+            result = ds.reduce(constant_op.constant(0, dtype=dtypes.int64),
+                               reduce_fn)
             self.assertEqual(((i + 1) * i), self.evaluate(result))
 
     @combinations.generate(test_base.default_test_combinations())
@@ -78,7 +79,8 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
             self.assertEqual(((i + 1) * i) // 2, s)
             self.assertEqual(i, c)
 
-    @combinations.generate(combinations.combine(tf_api_version=1, mode="graph"))
+    @combinations.generate(combinations.combine(tf_api_version=1,
+                                                mode="graph"))
     def testSquareUsingPlaceholder(self):
         delta = array_ops.placeholder(dtype=dtypes.int64)
 
@@ -107,7 +109,8 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
         for i in range(10):
             ds = dataset_ops.Dataset.from_tensors(make_sparse_fn(i + 1))
             result = ds.reduce(make_sparse_fn(0), reduce_fn)
-            self.assertValuesEqual(make_sparse_fn(i + 1), self.evaluate(result))
+            self.assertValuesEqual(make_sparse_fn(i + 1),
+                                   self.evaluate(result))
 
     @combinations.generate(test_base.default_test_combinations())
     def testNested(self):
@@ -240,14 +243,16 @@ class ReduceTest(test_base.DatasetTestBase, parameterized.TestCase):
             result = ds.reduce(state, reduce_fn)
             self.assertEqual(((i + 1) * i) // 2, self.evaluate(result))
 
-    @combinations.generate(combinations.combine(tf_api_version=1, mode="graph"))
+    @combinations.generate(combinations.combine(tf_api_version=1,
+                                                mode="graph"))
     def testCancellation(self):
         ds = dataset_ops.Dataset.from_tensors(1).repeat()
         result = ds.reduce(0, lambda x, y: x + y)
         with self.cached_session() as sess:
             # The `result` op is guaranteed to not complete before cancelled because
             # the dataset that is being reduced is infinite.
-            thread = self.checkedThread(self.assert_op_cancelled, args=(result,))
+            thread = self.checkedThread(self.assert_op_cancelled,
+                                        args=(result, ))
             thread.start()
             time.sleep(0.2)
             sess.close()

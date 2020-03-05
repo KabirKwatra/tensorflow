@@ -102,7 +102,8 @@ class KerasModelTypeCombination(test_combinations.TestCombination):
 _defaults = combinations.generate.keywords["test_combinations"]
 generate = functools.partial(
     combinations.generate,
-    test_combinations=_defaults + (KerasModeCombination(), KerasModelTypeCombination()),
+    test_combinations=_defaults +
+    (KerasModeCombination(), KerasModelTypeCombination()),
 )
 combine = test_combinations.combine
 times = test_combinations.times

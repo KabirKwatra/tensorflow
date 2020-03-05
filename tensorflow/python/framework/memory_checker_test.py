@@ -115,9 +115,10 @@ class MemoryCheckerTest(test.TestCase):
             memory_checker.record_snapshot()
 
         # TODO(kkb): All the builtins below are unexpected, locate and fix it.
-        memory_checker.assert_no_new_python_objects(
-            threshold={"builtins.weakref": 1, "builtins.function": 1}
-        )
+        memory_checker.assert_no_new_python_objects(threshold={
+            "builtins.weakref": 1,
+            "builtins.function": 1
+        })
 
     def testNewPythonObjects(self):
         with MemoryChecker() as memory_checker:
@@ -139,20 +140,16 @@ class MemoryCheckerTest(test.TestCase):
 
         # TODO(kkb): `{'builtins.weakref': 1, 'builtins.function': 1}` is
         # unexpected, locate and fix it.
-        memory_checker.assert_no_new_python_objects(
-            threshold={
-                "__main__.Foo": 1,
-                "builtins.weakref": 1,
-                "builtins.function": 1,
-            }
-        )
-        memory_checker.assert_no_new_python_objects(
-            threshold={
-                "__main__.Foo": 2,
-                "builtins.weakref": 1,
-                "builtins.function": 1,
-            }
-        )
+        memory_checker.assert_no_new_python_objects(threshold={
+            "__main__.Foo": 1,
+            "builtins.weakref": 1,
+            "builtins.function": 1,
+        })
+        memory_checker.assert_no_new_python_objects(threshold={
+            "__main__.Foo": 2,
+            "builtins.weakref": 1,
+            "builtins.function": 1,
+        })
 
     def testKerasBasic(self):
         # TODO(kkb): Fix the the slowness on Forge.
@@ -184,12 +181,10 @@ class MemoryCheckerTest(test.TestCase):
         with MemoryChecker() as memory_checker:
             rows = 6
             columns = 7
-            model = keras.Sequential(
-                [
-                    keras.layers.Flatten(input_shape=[rows * columns, 3]),
-                    keras.layers.Dense(7, input_shape=[rows * columns * 3]),
-                ]
-            )
+            model = keras.Sequential([
+                keras.layers.Flatten(input_shape=[rows * columns, 3]),
+                keras.layers.Dense(7, input_shape=[rows * columns * 3]),
+            ])
 
             model.compile(
                 optimizer=keras.optimizer_v2.gradient_descent.SGD(lr=0.01),

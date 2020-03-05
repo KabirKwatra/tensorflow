@@ -51,9 +51,11 @@ class CombinationsTest(test.TestCase):
 
         if not tf2.enabled():
             self.assertLen(test_params, 3)
-            self.assertAllEqual(
-                test_params, [("graph", False), ("eager", True), ("eager", False),]
-            )
+            self.assertAllEqual(test_params, [
+                ("graph", False),
+                ("eager", True),
+                ("eager", False),
+            ])
 
             ts = unittest.makeSuite(ExampleTest)
             res = unittest.TestResult()
@@ -61,7 +63,10 @@ class CombinationsTest(test.TestCase):
             self.assertLen(test_params, 6)
         else:
             self.assertLen(test_params, 2)
-            self.assertAllEqual(test_params, [("eager", True), ("eager", False),])
+            self.assertAllEqual(test_params, [
+                ("eager", True),
+                ("eager", False),
+            ])
 
             ts = unittest.makeSuite(ExampleTest)
             res = unittest.TestResult()
@@ -78,11 +83,20 @@ class CombinationsTest(test.TestCase):
         result = combinations.keras_mode_combinations(run_eagerly=[False])
         if tf2.enabled():
             self.assertLen(result, 1)
-            self.assertEqual(result[0], {"mode": "eager", "run_eagerly": False})
+            self.assertEqual(result[0], {
+                "mode": "eager",
+                "run_eagerly": False
+            })
         else:
             self.assertLen(result, 2)
-            self.assertEqual(result[0], {"mode": "eager", "run_eagerly": False})
-            self.assertEqual(result[1], {"mode": "graph", "run_eagerly": False})
+            self.assertEqual(result[0], {
+                "mode": "eager",
+                "run_eagerly": False
+            })
+            self.assertEqual(result[1], {
+                "mode": "graph",
+                "run_eagerly": False
+            })
 
     def test_run_all_keras_model_types(self):
         model_types = []
@@ -92,7 +106,8 @@ class CombinationsTest(test.TestCase):
             def runTest(self):
                 pass
 
-            @combinations.generate(combinations.keras_model_type_combinations())
+            @combinations.generate(
+                combinations.keras_model_type_combinations())
             def testBody(self):
                 model_types.append(testing_utils.get_model_type())
                 models.append(testing_utils.get_small_mlp(1, 4, input_dim=3))
@@ -103,7 +118,8 @@ class CombinationsTest(test.TestCase):
         e.testBody_test_modeltype_sequential()
 
         self.assertLen(model_types, 3)
-        self.assertAllEqual(model_types, ["functional", "subclass", "sequential"])
+        self.assertAllEqual(model_types,
+                            ["functional", "subclass", "sequential"])
 
         # Validate that the models are what they should be
         self.assertTrue(models[0]._is_graph_network)
@@ -125,20 +141,19 @@ class CombinationsTest(test.TestCase):
             combinations.times(
                 combinations.keras_mode_combinations(),
                 combinations.keras_model_type_combinations(),
-            )
-        )
+            ))
         class ExampleTest(parameterized.TestCase):
             def runTest(self):
                 pass
 
-            @parameterized.named_parameters(dict(testcase_name="_arg", arg=True))
+            @parameterized.named_parameters(
+                dict(testcase_name="_arg", arg=True))
             def testBody(self, arg):
                 del arg
                 mode = "eager" if context.executing_eagerly() else "graph"
                 should_run_eagerly = testing_utils.should_run_eagerly()
                 test_cases.append(
-                    (mode, should_run_eagerly, testing_utils.get_model_type())
-                )
+                    (mode, should_run_eagerly, testing_utils.get_model_type()))
 
         ts = unittest.makeSuite(ExampleTest)
         res = unittest.TestResult()
@@ -154,13 +169,11 @@ class CombinationsTest(test.TestCase):
         ]
 
         if not tf2.enabled():
-            expected_combinations.extend(
-                [
-                    ("graph", False, "functional"),
-                    ("graph", False, "sequential"),
-                    ("graph", False, "subclass"),
-                ]
-            )
+            expected_combinations.extend([
+                ("graph", False, "functional"),
+                ("graph", False, "sequential"),
+                ("graph", False, "subclass"),
+            ])
 
         self.assertAllEqual(sorted(test_cases), expected_combinations)
 
