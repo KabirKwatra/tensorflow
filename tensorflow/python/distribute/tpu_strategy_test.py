@@ -43,9 +43,7 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 def get_tpu_cluster_resolver():
     resolver = tpu_cluster_resolver.TPUClusterResolver(
-        tpu=FLAGS.tpu,
-        zone=FLAGS.zone,
-        project=FLAGS.project,
+        tpu=FLAGS.tpu, zone=FLAGS.zone, project=FLAGS.project,
     )
     return resolver
 
@@ -58,7 +56,6 @@ def get_tpu_strategy():
 
 
 class TpuStrategyTest(test.TestCase):
-
     def test_multiple_initialize_system(self):
         resolver = get_tpu_cluster_resolver()
         remote.connect_to_cluster(resolver)
@@ -66,28 +63,26 @@ class TpuStrategyTest(test.TestCase):
 
         with test.mock.patch.object(logging, "warning") as mock_log:
             tpu_strategy_util.initialize_tpu_system(resolver)
-            self.assertRegex(str(mock_log.call_args),
-                             "already been initialized")
+            self.assertRegex(str(mock_log.call_args), "already been initialized")
 
     def test_recover_from_compilation_failures(self):
         strategy = get_tpu_strategy()
 
         @def_function.function
         def compilation_failure_run():
-
             def computation():
                 samples = random_ops.random_gamma([10], [0.5, 1.5])
                 return samples
 
             return strategy.experimental_run_v2(computation)
 
-        with self.assertRaisesRegexp(errors.InvalidArgumentError,
-                                     "TPU compilation failed"):
+        with self.assertRaisesRegexp(
+            errors.InvalidArgumentError, "TPU compilation failed"
+        ):
             compilation_failure_run()
 
         @def_function.function
         def good_run():
-
             def computation():
                 samples = random_ops.random_normal([10])
                 return samples
@@ -102,15 +97,15 @@ class TpuStrategyTest(test.TestCase):
         topology = tpu_strategy_util.initialize_tpu_system(resolver)
         # Computation replicated to all cores.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=2)
-        strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment)
+            topology, num_replicas=2
+        )
+        strategy = tpu_lib.TPUStrategy(resolver, device_assignment=device_assignment)
 
         # Computation on the 1st core.
         device_assignment2 = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1)
-        strategy2 = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment2)
+            topology, num_replicas=1
+        )
+        strategy2 = tpu_lib.TPUStrategy(resolver, device_assignment=device_assignment2)
 
         def computation(x):
             return math_ops.square(x)
@@ -118,12 +113,12 @@ class TpuStrategyTest(test.TestCase):
         @def_function.function
         def train_step():
             outputs = strategy.experimental_local_results(
-                strategy.experimental_run_v2(computation, args=([2., 2.],)))
-            outputs2 = strategy2.experimental_run_v2(
-                computation, args=([outputs[0]],))
+                strategy.experimental_run_v2(computation, args=([2.0, 2.0],))
+            )
+            outputs2 = strategy2.experimental_run_v2(computation, args=([outputs[0]],))
             return outputs2
 
-        self.assertAllEqual([[16., 16.]], train_step())
+        self.assertAllEqual([[16.0, 16.0]], train_step())
 
     def test_device_switch_case(self):
         strategy = get_tpu_strategy()
@@ -137,7 +132,6 @@ class TpuStrategyTest(test.TestCase):
 
         @def_function.function
         def run_inference(x):
-
             def do_inference(device, inference_fn, i):
                 with ops.device(device):
                     return inference_fn(x, i)
@@ -146,12 +140,11 @@ class TpuStrategyTest(test.TestCase):
                 0: (lambda: do_inference("/device:TPU:0", inference_fn, 0)),
                 1: (lambda: do_inference("/device:TPU:1", inference_fn, 1)),
             }
-            branch_index = inference_iteration.assign_add(
-                1, use_locking=True) % 2
+            branch_index = inference_iteration.assign_add(1, use_locking=True) % 2
             return control_flow_ops.switch_case(branch_index, branch_fns)
 
-        self.assertAllEqual(2., run_inference(1))  # Use TPU core 0.
-        self.assertAllEqual(3., run_inference(1))  # Use TPU core 1.
+        self.assertAllEqual(2.0, run_inference(1))  # Use TPU core 0.
+        self.assertAllEqual(3.0, run_inference(1))  # Use TPU core 1.
 
 
 if __name__ == "__main__":
