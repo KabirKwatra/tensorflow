@@ -37,19 +37,6 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 
 def get_tpu_strategy():
-  resolver = tpu_cluster_resolver.TPUClusterResolver(
-      tpu=FLAGS.tpu,
-      zone=FLAGS.zone,
-      project=FLAGS.project,
-  )
-  remote.connect_to_cluster(resolver)
-  tpu_strategy_util.initialize_tpu_system(resolver)
-  return tpu_lib.TPUStrategy(resolver)
-
-
-class TpuStrategyTest(test.TestCase):
-
-  def test_multiple_initialize_system(self):
     resolver = tpu_cluster_resolver.TPUClusterResolver(
         tpu=FLAGS.tpu,
         zone=FLAGS.zone,
@@ -57,38 +44,52 @@ class TpuStrategyTest(test.TestCase):
     )
     remote.connect_to_cluster(resolver)
     tpu_strategy_util.initialize_tpu_system(resolver)
+    return tpu_lib.TPUStrategy(resolver)
 
-    with test.mock.patch.object(logging, "warning") as mock_log:
-      tpu_strategy_util.initialize_tpu_system(resolver)
-      self.assertRegex(str(mock_log.call_args), "already been initialized")
 
-  def test_recover_from_compilation_failures(self):
-    strategy = get_tpu_strategy()
+class TpuStrategyTest(test.TestCase):
 
-    @def_function.function
-    def compilation_failure_run():
+    def test_multiple_initialize_system(self):
+        resolver = tpu_cluster_resolver.TPUClusterResolver(
+            tpu=FLAGS.tpu,
+            zone=FLAGS.zone,
+            project=FLAGS.project,
+        )
+        remote.connect_to_cluster(resolver)
+        tpu_strategy_util.initialize_tpu_system(resolver)
 
-      def computation():
-        samples = random_ops.random_gamma([10], [0.5, 1.5])
-        return samples
+        with test.mock.patch.object(logging, "warning") as mock_log:
+            tpu_strategy_util.initialize_tpu_system(resolver)
+            self.assertRegex(str(mock_log.call_args),
+                             "already been initialized")
 
-      return strategy.experimental_run_v2(computation)
+    def test_recover_from_compilation_failures(self):
+        strategy = get_tpu_strategy()
 
-    with self.assertRaisesRegexp(errors.InvalidArgumentError,
-                                 "TPU compilation failed"):
-      compilation_failure_run()
+        @def_function.function
+        def compilation_failure_run():
 
-    @def_function.function
-    def good_run():
+            def computation():
+                samples = random_ops.random_gamma([10], [0.5, 1.5])
+                return samples
 
-      def computation():
-        samples = random_ops.random_normal([10])
-        return samples
+            return strategy.experimental_run_v2(computation)
 
-      return strategy.experimental_run_v2(computation)
+        with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                     "TPU compilation failed"):
+            compilation_failure_run()
 
-    good_run()
+        @def_function.function
+        def good_run():
+
+            def computation():
+                samples = random_ops.random_normal([10])
+                return samples
+
+            return strategy.experimental_run_v2(computation)
+
+        good_run()
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
