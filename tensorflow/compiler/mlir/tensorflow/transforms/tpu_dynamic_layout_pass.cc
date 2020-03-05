@@ -74,35 +74,37 @@ constexpr char kDeviceAttr[] = "device";
 // because tf.TPUCopyWithLayout accepts a host input and produces a device
 // output.
 struct TPUDynamicLayoutPass : public FunctionPass<TPUDynamicLayoutPass> {
-  void runOnFunction() override;
+    void runOnFunction() override;
 };
 
 // Checks if the input producer op is supported in this transform. Right now, we
 // only check if it is a host tf.IteratorGetNext.
 bool IsSupportedInputOp(Operation* op) {
-  if (!llvm::isa<TF::IteratorGetNextOp>(op)) return false;
-  auto device = op->getAttrOfType<StringAttr>(kDeviceAttr);
-  if (!device) return false;
-  tensorflow::DeviceNameUtils::ParsedName parsed_device;
-  if (!tensorflow::DeviceNameUtils::ParseFullName(device.getValue().str(),
-                                                  &parsed_device)) {
-    return false;
-  }
-  return parsed_device.type == "CPU";
+    if (!llvm::isa<TF::IteratorGetNextOp>(op)) return false;
+    auto device = op->getAttrOfType<StringAttr>(kDeviceAttr);
+    if (!device) return false;
+    tensorflow::DeviceNameUtils::ParsedName parsed_device;
+    if (!tensorflow::DeviceNameUtils::ParseFullName(device.getValue().str(),
+            &parsed_device)) {
+        return false;
+    }
+    return parsed_device.type == "CPU";
 }
 
 // Builds a TPUGetLayoutOp with the given compile op and input index.
 TF::TPUGetLayoutOp BuildGetLayout(tf_device::LaunchOp compile_launch,
                                   int64_t index, OpBuilder* builder) {
-  builder->setInsertionPointAfter(compile_launch);
-  return builder->create<TF::TPUGetLayoutOp>(
-      compile_launch.getLoc(),
-      llvm::ArrayRef<Type>{
-          RankedTensorType::get({-1}, builder->getIntegerType(64))},
-      llvm::ArrayRef<Value>{compile_launch.getResult(1)},
-      llvm::ArrayRef<NamedAttribute>{
-          builder->getNamedAttr("index", builder->getI64IntegerAttr(index)),
-          builder->getNamedAttr("is_output", builder->getBoolAttr(false))});
+    builder->setInsertionPointAfter(compile_launch);
+    return builder->create<TF::TPUGetLayoutOp>(
+               compile_launch.getLoc(),
+    llvm::ArrayRef<Type> {
+        RankedTensorType::get({-1}, builder->getIntegerType(64))
+    },
+    llvm::ArrayRef<Value> {compile_launch.getResult(1)},
+    llvm::ArrayRef<NamedAttribute> {
+        builder->getNamedAttr("index", builder->getI64IntegerAttr(index)),
+        builder->getNamedAttr("is_output", builder->getBoolAttr(false))
+    });
 }
 
 // Builds a TPUCopyWithLayoutOp with the given get_layout op and input.
@@ -114,32 +116,32 @@ TF::TPUCopyWithLayoutOp BuildCopyWithLayout(
     TF::TPUGetLayoutOp get_layout, Value input,
     const llvm::SmallDenseMap<Operation*, int64_t>& walk_order,
     OpBuilder* builder) {
-  auto input_op = input.getDefiningOp();
-  int64_t compile_walk_order = walk_order.find(compile_launch)->getSecond();
-  int64_t input_walk_order = walk_order.find(input_op)->getSecond();
-  if (compile_walk_order > input_walk_order) {
-    builder->setInsertionPointAfter(get_layout);
-  } else {
-    builder->setInsertionPointAfter(input_op);
-  }
-  return builder->create<TF::TPUCopyWithLayoutOp>(
-      execute.getLoc(), llvm::ArrayRef<Type>{input.getType()},
-      llvm::ArrayRef<Value>{input, get_layout.layout()},
-      llvm::ArrayRef<NamedAttribute>{});
+    auto input_op = input.getDefiningOp();
+    int64_t compile_walk_order = walk_order.find(compile_launch)->getSecond();
+    int64_t input_walk_order = walk_order.find(input_op)->getSecond();
+    if (compile_walk_order > input_walk_order) {
+        builder->setInsertionPointAfter(get_layout);
+    } else {
+        builder->setInsertionPointAfter(input_op);
+    }
+    return builder->create<TF::TPUCopyWithLayoutOp>(
+               execute.getLoc(), llvm::ArrayRef<Type> {input.getType()},
+               llvm::ArrayRef<Value> {input, get_layout.layout()},
+               llvm::ArrayRef<NamedAttribute> {});
 }
 
 // Performs transformation for a non-replicated input.
 void HandleInput(Value input, int64_t index, TF::TPUExecuteOp execute,
                  tf_device::LaunchOp compile_launch,
                  const llvm::SmallDenseMap<Operation*, int64_t>& walk_order) {
-  OpBuilder builder(compile_launch.getContext());
-  auto get_layout = BuildGetLayout(compile_launch, index, &builder);
-  auto copy_with_layout = BuildCopyWithLayout(
-      execute, compile_launch, get_layout, input, walk_order, &builder);
-  copy_with_layout.setAttr(
-      kDeviceAttr,
-      llvm::cast<tf_device::LaunchOp>(execute.getParentOp()).deviceAttr());
-  execute.setOperand(index, copy_with_layout);
+    OpBuilder builder(compile_launch.getContext());
+    auto get_layout = BuildGetLayout(compile_launch, index, &builder);
+    auto copy_with_layout = BuildCopyWithLayout(
+                                execute, compile_launch, get_layout, input, walk_order, &builder);
+    copy_with_layout.setAttr(
+        kDeviceAttr,
+        llvm::cast<tf_device::LaunchOp>(execute.getParentOp()).deviceAttr());
+    execute.setOperand(index, copy_with_layout);
 }
 
 // Performs transformation for replicated inputs. Returns true if this is a
@@ -148,116 +150,116 @@ bool HandleReplicatedInputs(
     int64_t index, TF::TPUExecuteOp execute, tf_device::LaunchOp compile_launch,
     int64_t replicate_arg_index, tf_device::ReplicateOp replicate,
     const llvm::SmallDenseMap<Operation*, int64_t>& walk_order) {
-  // We need to know the devices to copy to.
-  if (!replicate.devices()) return false;
-  int64_t num_replicas = replicate.n().getZExtValue();
-  auto inputs = replicate.getOperands()
-                    .drop_front(replicate_arg_index * num_replicas)
-                    .take_front(num_replicas);
-  for (auto entry : llvm::enumerate(inputs)) {
-    auto input_op = entry.value().getDefiningOp();
-    if (!input_op || !IsSupportedInputOp(input_op)) return false;
-  }
-  OpBuilder builder(execute.getContext());
-  auto get_layout = BuildGetLayout(compile_launch, index, &builder);
-  for (auto entry : llvm::enumerate(inputs)) {
-    auto copy_with_layout =
-        BuildCopyWithLayout(execute, compile_launch, get_layout, entry.value(),
-                            walk_order, &builder);
+    // We need to know the devices to copy to.
+    if (!replicate.devices()) return false;
+    int64_t num_replicas = replicate.n().getZExtValue();
+    auto inputs = replicate.getOperands()
+                  .drop_front(replicate_arg_index * num_replicas)
+                  .take_front(num_replicas);
+    for (auto entry : llvm::enumerate(inputs)) {
+        auto input_op = entry.value().getDefiningOp();
+        if (!input_op || !IsSupportedInputOp(input_op)) return false;
+    }
+    OpBuilder builder(execute.getContext());
+    auto get_layout = BuildGetLayout(compile_launch, index, &builder);
+    for (auto entry : llvm::enumerate(inputs)) {
+        auto copy_with_layout =
+            BuildCopyWithLayout(execute, compile_launch, get_layout, entry.value(),
+                                walk_order, &builder);
 
-    // As model parallelism is not supported yet, assume that all ops are
-    // placed at logical core 0.
-    auto device_list = replicate.devices()
+        // As model parallelism is not supported yet, assume that all ops are
+        // placed at logical core 0.
+        auto device_list = replicate.devices()
                            .getValue()
                            .get(tensorflow::GetDeviceAliasForLogicalCore(0))
                            .cast<ArrayAttr>();
-    copy_with_layout.setAttr(kDeviceAttr,
-                             device_list.getValue()[entry.index()]);
+        copy_with_layout.setAttr(kDeviceAttr,
+                                 device_list.getValue()[entry.index()]);
 
-    replicate.setOperand(num_replicas * replicate_arg_index + entry.index(),
-                         copy_with_layout);
-  }
-  return true;
+        replicate.setOperand(num_replicas * replicate_arg_index + entry.index(),
+                             copy_with_layout);
+    }
+    return true;
 }
 
 // Performs transformation on a pair of execute and compile ops. The compile
 // should not have other uses.
 void HandleExecute(TF::TPUExecuteOp execute, tf_device::LaunchOp compile_launch,
                    const llvm::SmallDenseMap<Operation*, int64_t>& walk_order) {
-  auto maybe_replicate = execute.getParentOfType<tf_device::ReplicateOp>();
-  llvm::SmallVector<int64_t, 8> unrestricted_input_indices;
-  for (auto input : llvm::enumerate(execute.args())) {
-    if (auto block_arg = input.value().dyn_cast<BlockArgument>()) {
-      // For a block argument, consider transforms only when it is a replicated
-      // input (defining ops will be outside the replicate node).
-      if (maybe_replicate != block_arg.getParentRegion()->getParentOp() ||
-          !HandleReplicatedInputs(input.index(), execute, compile_launch,
-                                  block_arg.getArgNumber(), maybe_replicate,
-                                  walk_order)) {
-        continue;
-      }
-    } else {
-      // For an op output, consider transforms only when 1) there is no
-      // replicateion or 2) it is outside the replicate node that encloses the
-      // execute node. (Because if the op is inside replicate, it is probably
-      // not on the host.)
-      auto input_op = input.value().getDefiningOp();
-      if (maybe_replicate &&
-          maybe_replicate.body().isAncestor(input_op->getParentRegion())) {
-        continue;
-      }
-      if (!IsSupportedInputOp(input_op)) continue;
-      HandleInput(input.value(), input.index(), execute, compile_launch,
-                  walk_order);
+    auto maybe_replicate = execute.getParentOfType<tf_device::ReplicateOp>();
+    llvm::SmallVector<int64_t, 8> unrestricted_input_indices;
+    for (auto input : llvm::enumerate(execute.args())) {
+        if (auto block_arg = input.value().dyn_cast<BlockArgument>()) {
+            // For a block argument, consider transforms only when it is a replicated
+            // input (defining ops will be outside the replicate node).
+            if (maybe_replicate != block_arg.getParentRegion()->getParentOp() ||
+                    !HandleReplicatedInputs(input.index(), execute, compile_launch,
+                                            block_arg.getArgNumber(), maybe_replicate,
+                                            walk_order)) {
+                continue;
+            }
+        } else {
+            // For an op output, consider transforms only when 1) there is no
+            // replicateion or 2) it is outside the replicate node that encloses the
+            // execute node. (Because if the op is inside replicate, it is probably
+            // not on the host.)
+            auto input_op = input.value().getDefiningOp();
+            if (maybe_replicate &&
+                    maybe_replicate.body().isAncestor(input_op->getParentRegion())) {
+                continue;
+            }
+            if (!IsSupportedInputOp(input_op)) continue;
+            HandleInput(input.value(), input.index(), execute, compile_launch,
+                        walk_order);
+        }
+        unrestricted_input_indices.push_back(input.index());
     }
-    unrestricted_input_indices.push_back(input.index());
-  }
-  if (unrestricted_input_indices.empty()) return;
+    if (unrestricted_input_indices.empty()) return;
 
-  // Update the compilation metadata if we changed anything.
-  Operation& compile = compile_launch.GetBody().front();
-  auto metadata_attr = compile.getAttrOfType<StringAttr>("metadata");
-  assert(metadata_attr && "Missing compilation metadata");
-  tensorflow::tpu::TPUCompileMetadataProto metadata;
-  metadata.ParseFromString(std::string(metadata_attr.getValue()));
-  for (int64_t input_index : unrestricted_input_indices) {
-    metadata.mutable_args(input_index)->set_unrestricted_layout(true);
-  }
-  compile.setAttr("metadata", StringAttr::get(metadata.SerializeAsString(),
-                                              compile.getContext()));
+    // Update the compilation metadata if we changed anything.
+    Operation& compile = compile_launch.GetBody().front();
+    auto metadata_attr = compile.getAttrOfType<StringAttr>("metadata");
+    assert(metadata_attr && "Missing compilation metadata");
+    tensorflow::tpu::TPUCompileMetadataProto metadata;
+    metadata.ParseFromString(std::string(metadata_attr.getValue()));
+    for (int64_t input_index : unrestricted_input_indices) {
+        metadata.mutable_args(input_index)->set_unrestricted_layout(true);
+    }
+    compile.setAttr("metadata", StringAttr::get(metadata.SerializeAsString(),
+                    compile.getContext()));
 }
 
 void TPUDynamicLayoutPass::runOnFunction() {
-  llvm::SmallVector<std::pair<TF::TPUExecuteOp, tf_device::LaunchOp>, 4>
-      executes_and_compiles;
-  llvm::SmallDenseMap<Operation*, int64_t> walk_order;
-  int64_t next_walk_order = 0;
-  getFunction().walk([&](Operation* op) {
-    walk_order[op] = next_walk_order++;
-    // Detect tf._TPUCompileMlir -> tf.TPUExecute
-    auto execute = llvm::dyn_cast<TF::TPUExecuteOp>(op);
-    if (!execute) return;
-    auto execute_launch =
-        llvm::dyn_cast_or_null<tf_device::LaunchOp>(execute.getParentOp());
-    if (!execute_launch || !execute_launch.WrapsSingleOp()) return;
-    auto compile = execute.key().getDefiningOp();
-    if (!compile || !compile->getResult(1).hasOneUse()) return;
-    auto compile_launch = llvm::dyn_cast<tf_device::LaunchOp>(compile);
-    if (!compile_launch || !compile_launch.WrapsSingleOp() ||
-        !llvm::isa<TF::_TPUCompileMlirOp>(compile_launch.GetBody().front()))
-      return;
-    executes_and_compiles.emplace_back(execute, compile_launch);
-  });
-  for (auto execute_and_compile : executes_and_compiles) {
-    HandleExecute(execute_and_compile.first, execute_and_compile.second,
-                  walk_order);
-  }
+    llvm::SmallVector<std::pair<TF::TPUExecuteOp, tf_device::LaunchOp>, 4>
+    executes_and_compiles;
+    llvm::SmallDenseMap<Operation*, int64_t> walk_order;
+    int64_t next_walk_order = 0;
+    getFunction().walk([&](Operation* op) {
+        walk_order[op] = next_walk_order++;
+        // Detect tf._TPUCompileMlir -> tf.TPUExecute
+        auto execute = llvm::dyn_cast<TF::TPUExecuteOp>(op);
+        if (!execute) return;
+        auto execute_launch =
+            llvm::dyn_cast_or_null<tf_device::LaunchOp>(execute.getParentOp());
+        if (!execute_launch || !execute_launch.WrapsSingleOp()) return;
+        auto compile = execute.key().getDefiningOp();
+        if (!compile || !compile->getResult(1).hasOneUse()) return;
+        auto compile_launch = llvm::dyn_cast<tf_device::LaunchOp>(compile);
+        if (!compile_launch || !compile_launch.WrapsSingleOp() ||
+                !llvm::isa<TF::_TPUCompileMlirOp>(compile_launch.GetBody().front()))
+            return;
+        executes_and_compiles.emplace_back(execute, compile_launch);
+    });
+    for (auto execute_and_compile : executes_and_compiles) {
+        HandleExecute(execute_and_compile.first, execute_and_compile.second,
+                      walk_order);
+    }
 }
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateTPUDynamicLayoutPass() {
-  return std::make_unique<TPUDynamicLayoutPass>();
+    return std::make_unique<TPUDynamicLayoutPass>();
 }
 
 static PassRegistration<TPUDynamicLayoutPass> pass(
