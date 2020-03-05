@@ -40,15 +40,12 @@ except ImportError:
 
 
 class TestCase(test.TestCase, parameterized.TestCase):
-
     def tearDown(self):
         keras.backend.clear_session()
         super(TestCase, self).tearDown()
 
 
-def run_with_all_saved_model_formats(
-        test_or_class=None,
-        exclude_formats=None):
+def run_with_all_saved_model_formats(test_or_class=None, exclude_formats=None):
     """Execute the decorated test with all Keras saved model formats).
 
     This decorator is intended to be applied either to individual test methods in
@@ -133,11 +130,13 @@ def run_with_all_saved_model_formats(
     """
     # Exclude h5 save format if H5py isn't available.
     if h5py is None:
-        exclude_formats.append(['h5'])
-    saved_model_formats = ['h5', 'tf']
-    params = [('_%s' % saved_format, saved_format)
-              for saved_format in saved_model_formats
-              if saved_format not in nest.flatten(exclude_formats)]
+        exclude_formats.append(["h5"])
+    saved_model_formats = ["h5", "tf"]
+    params = [
+        ("_%s" % saved_format, saved_format)
+        for saved_format in saved_model_formats
+        if saved_format not in nest.flatten(exclude_formats)
+    ]
 
     def single_method_decorator(f):
         """Decorator that constructs the test cases."""
@@ -146,32 +145,31 @@ def run_with_all_saved_model_formats(
         @functools.wraps(f)
         def decorated(self, saved_format, *args, **kwargs):
             """A run of a single test case w/ the specified model type."""
-            if saved_format == 'h5':
+            if saved_format == "h5":
                 _test_h5_saved_model_format(f, self, *args, **kwargs)
-            elif saved_format == 'tf':
+            elif saved_format == "tf":
                 _test_tf_saved_model_format(f, self, *args, **kwargs)
             else:
-                raise ValueError('Unknown model type: %s' % (saved_format,))
+                raise ValueError("Unknown model type: %s" % (saved_format,))
+
         return decorated
 
     return _test_or_class_decorator(test_or_class, single_method_decorator)
 
 
 def _test_h5_saved_model_format(f, test_or_class, *args, **kwargs):
-    with testing_utils.saved_model_format_scope('h5'):
+    with testing_utils.saved_model_format_scope("h5"):
         f(test_or_class, *args, **kwargs)
 
 
 def _test_tf_saved_model_format(f, test_or_class, *args, **kwargs):
-    with testing_utils.saved_model_format_scope('tf'):
+    with testing_utils.saved_model_format_scope("tf"):
         f(test_or_class, *args, **kwargs)
 
 
 # TODO(kaftan): Possibly enable 'subclass_custom_build' when tests begin to pass
 # it. Or perhaps make 'subclass' always use a custom build method.
-def run_with_all_model_types(
-        test_or_class=None,
-        exclude_models=None):
+def run_with_all_model_types(test_or_class=None, exclude_models=None):
     """Execute the decorated test with all Keras model types.
 
     This decorator is intended to be applied either to individual test methods in
@@ -261,9 +259,12 @@ def run_with_all_model_types(
       ImportError: If abseil parameterized is not installed or not included as
         a target dependency.
     """
-    model_types = ['functional', 'subclass', 'sequential']
-    params = [('_%s' % model, model) for model in model_types
-              if model not in nest.flatten(exclude_models)]
+    model_types = ["functional", "subclass", "sequential"]
+    params = [
+        ("_%s" % model, model)
+        for model in model_types
+        if model not in nest.flatten(exclude_models)
+    ]
 
     def single_method_decorator(f):
         """Decorator that constructs the test cases."""
@@ -272,38 +273,38 @@ def run_with_all_model_types(
         @functools.wraps(f)
         def decorated(self, model_type, *args, **kwargs):
             """A run of a single test case w/ the specified model type."""
-            if model_type == 'functional':
+            if model_type == "functional":
                 _test_functional_model_type(f, self, *args, **kwargs)
-            elif model_type == 'subclass':
+            elif model_type == "subclass":
                 _test_subclass_model_type(f, self, *args, **kwargs)
-            elif model_type == 'sequential':
+            elif model_type == "sequential":
                 _test_sequential_model_type(f, self, *args, **kwargs)
             else:
-                raise ValueError('Unknown model type: %s' % (model_type,))
+                raise ValueError("Unknown model type: %s" % (model_type,))
+
         return decorated
 
     return _test_or_class_decorator(test_or_class, single_method_decorator)
 
 
 def _test_functional_model_type(f, test_or_class, *args, **kwargs):
-    with testing_utils.model_type_scope('functional'):
+    with testing_utils.model_type_scope("functional"):
         f(test_or_class, *args, **kwargs)
 
 
 def _test_subclass_model_type(f, test_or_class, *args, **kwargs):
-    with testing_utils.model_type_scope('subclass'):
+    with testing_utils.model_type_scope("subclass"):
         f(test_or_class, *args, **kwargs)
 
 
 def _test_sequential_model_type(f, test_or_class, *args, **kwargs):
-    with testing_utils.model_type_scope('sequential'):
+    with testing_utils.model_type_scope("sequential"):
         f(test_or_class, *args, **kwargs)
 
 
-def run_all_keras_modes(test_or_class=None,
-                        config=None,
-                        always_skip_v1=False,
-                        always_skip_eager=False):
+def run_all_keras_modes(
+    test_or_class=None, config=None, always_skip_v1=False, always_skip_eager=False
+):
     """Execute the decorated test with all keras execution modes.
 
     This decorator is intended to be applied either to individual test methods in
@@ -370,11 +371,11 @@ def run_all_keras_modes(test_or_class=None,
         a target dependency.
     """
 
-    params = [('_v2_function', 'v2_function')]
+    params = [("_v2_function", "v2_function")]
     if not always_skip_eager:
-        params.append(('_v2_eager', 'v2_eager'))
+        params.append(("_v2_eager", "v2_eager"))
     if not (always_skip_v1 or tf2.enabled()):
-        params.append(('_v1_session', 'v1_session'))
+        params.append(("_v1_session", "v1_session"))
 
     def single_method_decorator(f):
         """Decorator that constructs the test cases."""
@@ -384,14 +385,14 @@ def run_all_keras_modes(test_or_class=None,
         @functools.wraps(f)
         def decorated(self, run_mode, *args, **kwargs):
             """A run of a single test case w/ specified run mode."""
-            if run_mode == 'v1_session':
+            if run_mode == "v1_session":
                 _v1_session_test(f, self, config, *args, **kwargs)
-            elif run_mode == 'v2_eager':
+            elif run_mode == "v2_eager":
                 _v2_eager_test(f, self, *args, **kwargs)
-            elif run_mode == 'v2_function':
+            elif run_mode == "v2_function":
                 _v2_function_test(f, self, *args, **kwargs)
             else:
-                return ValueError('Unknown run mode %s' % run_mode)
+                return ValueError("Unknown run mode %s" % run_mode)
 
         return decorated
 
@@ -440,19 +441,23 @@ def _test_or_class_decorator(test_or_class, single_method_decorator):
     Returns:
       The decorated result.
     """
+
     def _decorate_test_or_class(obj):
         if isinstance(obj, collections_abc.Iterable):
             return itertools.chain.from_iterable(
-                single_method_decorator(method) for method in obj)
+                single_method_decorator(method) for method in obj
+            )
         if isinstance(obj, type):
             cls = obj
             for name, value in cls.__dict__.copy().items():
                 if callable(value) and name.startswith(
-                        unittest.TestLoader.testMethodPrefix):
+                    unittest.TestLoader.testMethodPrefix
+                ):
                     setattr(cls, name, single_method_decorator(value))
 
-            cls = type(cls).__new__(type(cls), cls.__name__, cls.__bases__,
-                                    cls.__dict__.copy())
+            cls = type(cls).__new__(
+                type(cls), cls.__name__, cls.__bases__, cls.__dict__.copy()
+            )
             return cls
 
         return single_method_decorator(obj)

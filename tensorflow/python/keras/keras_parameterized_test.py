@@ -31,13 +31,11 @@ from tensorflow.python.platform import googletest
 
 
 class KerasParameterizedTest(keras_parameterized.TestCase):
-
     def test_run_with_all_model_types(self):
         model_types = []
         models = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
@@ -52,11 +50,7 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         e.testBody_sequential()
 
         self.assertLen(model_types, 3)
-        self.assertAllEqual(model_types, [
-            "functional",
-            "subclass",
-            "sequential"
-        ])
+        self.assertAllEqual(model_types, ["functional", "subclass", "sequential"])
 
         # Validate that the models are what they should be
         self.assertTrue(models[0]._is_graph_network)
@@ -76,18 +70,19 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         models = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
             @keras_parameterized.run_with_all_model_types
             @parameterized.named_parameters(
-                [dict(testcase_name="_0", with_brackets=True),
-                 dict(testcase_name="_1", with_brackets=False)])
+                [
+                    dict(testcase_name="_0", with_brackets=True),
+                    dict(testcase_name="_1", with_brackets=False),
+                ]
+            )
             def testBody(self, with_brackets):
                 with_brackets = "with_brackets" if with_brackets else "without_brackets"
-                model_types.append(
-                    (with_brackets, testing_utils.get_model_type()))
+                model_types.append((with_brackets, testing_utils.get_model_type()))
                 models.append(testing_utils.get_small_mlp(1, 4, input_dim=3))
 
         e = ExampleTest()
@@ -99,14 +94,17 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         e.testBody_1_sequential()
 
         self.assertLen(model_types, 6)
-        self.assertAllEqual(model_types, [
-            ("with_brackets", "functional"),
-            ("with_brackets", "subclass"),
-            ("with_brackets", "sequential"),
-            ("without_brackets", "functional"),
-            ("without_brackets", "subclass"),
-            ("without_brackets", "sequential"),
-        ])
+        self.assertAllEqual(
+            model_types,
+            [
+                ("with_brackets", "functional"),
+                ("with_brackets", "subclass"),
+                ("with_brackets", "sequential"),
+                ("without_brackets", "functional"),
+                ("without_brackets", "subclass"),
+                ("without_brackets", "sequential"),
+            ],
+        )
 
         # Validate that the models are what they should be
         self.assertTrue(models[0]._is_graph_network)
@@ -126,7 +124,6 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         models = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
@@ -144,10 +141,7 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
             e.testBody_sequential()
 
         self.assertLen(model_types, 2)
-        self.assertAllEqual(model_types, [
-            "functional",
-            "subclass"
-        ])
+        self.assertAllEqual(model_types, ["functional", "subclass"])
 
         # Validate that the models are what they should be
         self.assertTrue(models[0]._is_graph_network)
@@ -166,12 +160,12 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         models = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
             @keras_parameterized.run_with_all_model_types(
-                exclude_models=["sequential", "functional"])
+                exclude_models=["sequential", "functional"]
+            )
             def testBody(self):
                 model_types.append(testing_utils.get_model_type())
                 models.append(testing_utils.get_small_mlp(1, 4, input_dim=3))
@@ -185,9 +179,7 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
             e.testBody_sequential()
 
         self.assertLen(model_types, 1)
-        self.assertAllEqual(model_types, [
-            "subclass"
-        ])
+        self.assertAllEqual(model_types, ["subclass"])
 
         # Validate that the models are what they should be
         self.assertFalse(models[0]._is_graph_network)
@@ -203,7 +195,6 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         l = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
@@ -221,11 +212,9 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
 
         if not tf2.enabled():
             self.assertLen(l, 3)
-            self.assertAllEqual(l, [
-                ("graph", False),
-                ("eager", True),
-                ("eager", False),
-            ])
+            self.assertAllEqual(
+                l, [("graph", False), ("eager", True), ("eager", False),]
+            )
 
             ts = unittest.makeSuite(ExampleTest)
             res = unittest.TestResult()
@@ -233,10 +222,7 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
             self.assertLen(l, 6)
         else:
             self.assertLen(l, 2)
-            self.assertAllEqual(l, [
-                ("eager", True),
-                ("eager", False),
-            ])
+            self.assertAllEqual(l, [("eager", True), ("eager", False),])
 
             ts = unittest.makeSuite(ExampleTest)
             res = unittest.TestResult()
@@ -247,14 +233,16 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         l = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
             @keras_parameterized.run_all_keras_modes
             @parameterized.named_parameters(
-                [dict(testcase_name="_0", with_brackets=True),
-                 dict(testcase_name="_1", with_brackets=False)])
+                [
+                    dict(testcase_name="_0", with_brackets=True),
+                    dict(testcase_name="_1", with_brackets=False),
+                ]
+            )
             def testBody(self, with_brackets):
                 mode = "eager" if context.executing_eagerly() else "graph"
                 with_brackets = "with_brackets" if with_brackets else "without_brackets"
@@ -279,10 +267,12 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         }
 
         if not tf2.enabled():
-            expected_combinations = expected_combinations.union({
-                ("with_brackets", "graph", False),
-                ("without_brackets", "graph", False),
-            })
+            expected_combinations = expected_combinations.union(
+                {
+                    ("with_brackets", "graph", False),
+                    ("without_brackets", "graph", False),
+                }
+            )
 
         self.assertLen(l, len(expected_combinations))
         self.assertEqual(set(l), expected_combinations)
@@ -297,7 +287,6 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         l = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
@@ -316,17 +305,12 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
             e.testBody_v2_function()
 
         self.assertLen(l, 2)
-        self.assertEqual(
-            set(l), {
-                ("eager", True),
-                ("eager", False),
-            })
+        self.assertEqual(set(l), {("eager", True), ("eager", False),})
 
     def test_run_all_keras_modes_with_all_model_types(self):
         l = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
@@ -335,8 +319,7 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
             def testBody(self):
                 mode = "eager" if context.executing_eagerly() else "graph"
                 should_run_eagerly = testing_utils.should_run_eagerly()
-                l.append((mode, should_run_eagerly,
-                          testing_utils.get_model_type()))
+                l.append((mode, should_run_eagerly, testing_utils.get_model_type()))
 
         e = ExampleTest()
         e.testBody_v2_eager_functional()
@@ -361,11 +344,13 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         }
 
         if not tf2.enabled():
-            expected_combinations = expected_combinations.union({
-                ("graph", False, "functional"),
-                ("graph", False, "sequential"),
-                ("graph", False, "subclass"),
-            })
+            expected_combinations = expected_combinations.union(
+                {
+                    ("graph", False, "functional"),
+                    ("graph", False, "sequential"),
+                    ("graph", False, "subclass"),
+                }
+            )
 
         self.assertLen(l, len(expected_combinations))
         self.assertEqual(set(l), expected_combinations)
@@ -380,7 +365,6 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         l = []
 
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
@@ -389,8 +373,7 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
             def testBody(self):
                 mode = "eager" if context.executing_eagerly() else "graph"
                 should_run_eagerly = testing_utils.should_run_eagerly()
-                l.append((mode, should_run_eagerly,
-                          testing_utils.get_model_type()))
+                l.append((mode, should_run_eagerly, testing_utils.get_model_type()))
 
         e = ExampleTest()
         e.testBody_functional_v2_eager()
@@ -415,11 +398,13 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         }
 
         if not tf2.enabled():
-            expected_combinations = expected_combinations.union({
-                ("graph", False, "functional"),
-                ("graph", False, "sequential"),
-                ("graph", False, "subclass"),
-            })
+            expected_combinations = expected_combinations.union(
+                {
+                    ("graph", False, "functional"),
+                    ("graph", False, "sequential"),
+                    ("graph", False, "subclass"),
+                }
+            )
 
         self.assertLen(l, len(expected_combinations))
         self.assertEqual(set(l), expected_combinations)
@@ -436,17 +421,14 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         @keras_parameterized.run_with_all_model_types
         @keras_parameterized.run_all_keras_modes
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
-            @parameterized.named_parameters(dict(testcase_name="_arg",
-                                                 arg=True))
+            @parameterized.named_parameters(dict(testcase_name="_arg", arg=True))
             def testBody(self, arg):
                 mode = "eager" if context.executing_eagerly() else "graph"
                 should_run_eagerly = testing_utils.should_run_eagerly()
-                l.append((mode, should_run_eagerly,
-                          testing_utils.get_model_type()))
+                l.append((mode, should_run_eagerly, testing_utils.get_model_type()))
 
         e = ExampleTest()
         e.testBody_arg_v2_eager_functional()
@@ -471,11 +453,13 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         }
 
         if not tf2.enabled():
-            expected_combinations = expected_combinations.union({
-                ("graph", False, "functional"),
-                ("graph", False, "sequential"),
-                ("graph", False, "subclass"),
-            })
+            expected_combinations = expected_combinations.union(
+                {
+                    ("graph", False, "functional"),
+                    ("graph", False, "sequential"),
+                    ("graph", False, "subclass"),
+                }
+            )
 
         self.assertLen(l, len(expected_combinations))
         self.assertEqual(set(l), expected_combinations)
@@ -491,18 +475,15 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
 
         @keras_parameterized.run_with_all_model_types
         class ExampleTest(keras_parameterized.TestCase):
-
             def runTest(self):
                 pass
 
             @keras_parameterized.run_all_keras_modes
-            @parameterized.named_parameters(dict(testcase_name="_arg",
-                                                 arg=True))
+            @parameterized.named_parameters(dict(testcase_name="_arg", arg=True))
             def testBody(self, arg):
                 mode = "eager" if context.executing_eagerly() else "graph"
                 should_run_eagerly = testing_utils.should_run_eagerly()
-                l.append((mode, should_run_eagerly,
-                          testing_utils.get_model_type()))
+                l.append((mode, should_run_eagerly, testing_utils.get_model_type()))
 
         e = ExampleTest()
         e.testBody_arg_v2_eager_functional()
@@ -527,11 +508,13 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         }
 
         if not tf2.enabled():
-            expected_combinations = expected_combinations.union({
-                ("graph", False, "functional"),
-                ("graph", False, "sequential"),
-                ("graph", False, "subclass"),
-            })
+            expected_combinations = expected_combinations.union(
+                {
+                    ("graph", False, "functional"),
+                    ("graph", False, "sequential"),
+                    ("graph", False, "subclass"),
+                }
+            )
 
         self.assertLen(l, len(expected_combinations))
         self.assertEqual(set(l), expected_combinations)
@@ -543,14 +526,12 @@ class KerasParameterizedTest(keras_parameterized.TestCase):
         self.assertLen(l, len(expected_combinations) * 2)
 
     @keras_parameterized.run_all_keras_modes
-    @parameterized.named_parameters(dict(testcase_name="argument",
-                                         arg=True))
+    @parameterized.named_parameters(dict(testcase_name="argument", arg=True))
     def test_run_all_keras_modes_extra_params_2(self, arg):
         self.assertEqual(arg, True)
 
     @keras_parameterized.run_with_all_model_types
-    @parameterized.named_parameters(dict(testcase_name="argument",
-                                         arg=True))
+    @parameterized.named_parameters(dict(testcase_name="argument", arg=True))
     def test_run_with_all_model_types_extra_params_2(self, arg):
         self.assertEqual(arg, True)
 

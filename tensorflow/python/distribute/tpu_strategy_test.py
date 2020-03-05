@@ -33,20 +33,16 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 
 class TpuStrategyTest(test.TestCase):
-
     def test_multiple_initialize_system(self):
         resolver = tpu_cluster_resolver.TPUClusterResolver(
-            tpu=FLAGS.tpu,
-            zone=FLAGS.zone,
-            project=FLAGS.project,
+            tpu=FLAGS.tpu, zone=FLAGS.zone, project=FLAGS.project,
         )
         remote.connect_to_cluster(resolver)
         tpu_strategy_util.initialize_tpu_system(resolver)
 
         with test.mock.patch.object(logging, "warning") as mock_log:
             tpu_strategy_util.initialize_tpu_system(resolver)
-            self.assertRegex(str(mock_log.call_args),
-                             "already been initialized")
+            self.assertRegex(str(mock_log.call_args), "already been initialized")
 
 
 if __name__ == "__main__":
