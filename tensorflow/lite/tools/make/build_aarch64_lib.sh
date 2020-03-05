@@ -29,4 +29,3 @@ else
 fi
 
 make -j "$NO_JOB" TARGET=aarch64 -C "$TENSORFLOW_DIR" -f tensorflow/lite/tools/make/Makefile "$@"
-

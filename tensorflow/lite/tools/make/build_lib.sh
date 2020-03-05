@@ -21,4 +21,3 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TENSORFLOW_DIR="$SCRIPT_DIR/../../../.."
 
 make -j 4 -C "$TENSORFLOW_DIR" -f tensorflow/lite/tools/make/Makefile "$@"
-
