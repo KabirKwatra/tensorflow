@@ -62,8 +62,8 @@ void AsymmetricQuantizeFloats(const float* values, const int size,
 // of shape [i, batch] it will first compute the product of shape [n, batch].
 // This product will be accumulated to the result buffer.
 void MatrixBatchVectorMultiplyAccumulate(const float* matrix, int m_rows,
-                                         int m_cols, const float* vector,
-                                         int n_batch, float* result);
+        int m_cols, const float* vector,
+        int n_batch, float* result);
 
 // Same as the function above, but the matrix is stored in block compressed
 // sparse row format with block pattern 1x16 which consists of two arrays:
@@ -367,21 +367,21 @@ template <typename T>
 inline void VectorVectorCwiseProduct(const T* __restrict__ vector1,
                                      const T* __restrict__ vector2, int v_size,
                                      T* __restrict__ result) {
-  for (int v = 0; v < v_size; v++) {
-    *result++ = *vector1++ * *vector2++;
-  }
+    for (int v = 0; v < v_size; v++) {
+        *result++ = *vector1++ * *vector2++;
+    }
 }
 
 // Cwise product and accumulate of two vectors. Since it's a MAC opertation, the
 // assumption here is that result array is initialized to valid values.
 template <typename T>
 inline void VectorVectorCwiseProductAccumulate(const T* __restrict__ vector1,
-                                               const T* __restrict__ vector2,
-                                               int v_size,
-                                               T* __restrict__ result) {
-  for (int v = 0; v < v_size; v++) {
-    *result++ += *vector1++ * *vector2++;
-  }
+        const T* __restrict__ vector2,
+        int v_size,
+        T* __restrict__ result) {
+    for (int v = 0; v < v_size; v++) {
+        *result++ += *vector1++ * *vector2++;
+    }
 }
 
 // Dot product of two vectors.
@@ -404,13 +404,13 @@ float VectorVectorDotProduct(const float* vector1, const float* vector2,
 //  x_nbatch_1 * y_nbatch_1 + ... + x_nbatch_vsize * y_nbatch_vsize]
 template <typename T>
 inline void BatchVectorBatchVectorDotProduct(const T* vector1, const T* vector2,
-                                             int v_size, int n_batch,
-                                             T* result) {
-  for (int b = 0; b < n_batch; b++) {
-    result[b] = VectorVectorDotProduct(vector1, vector2, v_size);
-    vector1 += v_size;
-    vector2 += v_size;
-  }
+        int v_size, int n_batch,
+        T* result) {
+    for (int b = 0; b < n_batch; b++) {
+        result[b] = VectorVectorDotProduct(vector1, vector2, v_size);
+        vector1 += v_size;
+        vector2 += v_size;
+    }
 }
 
 // Same as above but input is 16bit and output is 32bit.
@@ -421,14 +421,14 @@ void BatchVectorBatchVectorDotProduct(const int16_t* vector1,
 // Cwise product of a vector and a batch-vector.
 template <typename T>
 inline void VectorBatchVectorCwiseProduct(const T* vector, int v_size,
-                                          const T* batch_vector, int n_batch,
-                                          T* result) {
-  for (int b = 0; b < n_batch; b++) {
-    VectorVectorCwiseProduct(vector, batch_vector, v_size, result);
-    // Update the pointers.
-    result += v_size;
-    batch_vector += v_size;
-  }
+        const T* batch_vector, int n_batch,
+        T* result) {
+    for (int b = 0; b < n_batch; b++) {
+        VectorVectorCwiseProduct(vector, batch_vector, v_size, result);
+        // Update the pointers.
+        result += v_size;
+        batch_vector += v_size;
+    }
 }
 
 // Cwise product and accumulate of a vector and a batch-vector. Since it's a MAC
@@ -436,21 +436,21 @@ inline void VectorBatchVectorCwiseProduct(const T* vector, int v_size,
 // values.
 template <typename T>
 inline void VectorBatchVectorCwiseProductAccumulate(const T* vector, int v_size,
-                                                    const T* batch_vector,
-                                                    int n_batch, T* result) {
-  for (int b = 0; b < n_batch; b++) {
-    VectorVectorCwiseProductAccumulate(vector, batch_vector, v_size, result);
-    // Update the pointers.
-    result += v_size;
-    batch_vector += v_size;
-  }
+        const T* batch_vector,
+        int n_batch, T* result) {
+    for (int b = 0; b < n_batch; b++) {
+        VectorVectorCwiseProductAccumulate(vector, batch_vector, v_size, result);
+        // Update the pointers.
+        result += v_size;
+        batch_vector += v_size;
+    }
 }
 
 // Same as above, but inputs are 16bit integer and output is 16bit integer.
 void VectorBatchVectorCwiseProductAccumulate(const int16_t* vector, int v_size,
-                                             const int16_t* batch_vector,
-                                             int n_batch, int32_t multiplier,
-                                             int shift, int16_t* result);
+        const int16_t* batch_vector,
+        int n_batch, int32_t multiplier,
+        int shift, int16_t* result);
 
 // Add another vector for each batch in the batch vector.
 void VectorBatchVectorAdd(const float* vector, int v_size, int n_batch,
@@ -460,59 +460,59 @@ void VectorBatchVectorAdd(const float* vector, int v_size, int n_batch,
 template <typename T>
 void VectorBatchVectorAssign(const T* vector, int v_size, int n_batch,
                              T* batch_vector) {
-  for (int b = 0; b < n_batch; b++) {
-    std::copy_n(vector, v_size, batch_vector + b * v_size);
-  }
+    for (int b = 0; b < n_batch; b++) {
+        std::copy_n(vector, v_size, batch_vector + b * v_size);
+    }
 }
 
 // Apply Rectified Linear to elements of a vector.
 inline void ApplyReluToVector(const float* __restrict__ vector, int v_size,
                               float* __restrict__ result) {
-  for (int v = 0; v < v_size; v++) {
-    result[v] = std::max(0.0f, vector[v]);
-  }
+    for (int v = 0; v < v_size; v++) {
+        result[v] = std::max(0.0f, vector[v]);
+    }
 }
 
 // Apply Rectified Linear 1 (cap to [-1;1]) to elements of a vector
 inline void ApplyRelu1ToVector(const float* __restrict__ vector, int v_size,
                                float* __restrict__ result) {
-  for (int v = 0; v < v_size; v++) {
-    result[v] = std::max(-1.0f, std::min(vector[v], 1.0f));
-  }
+    for (int v = 0; v < v_size; v++) {
+        result[v] = std::max(-1.0f, std::min(vector[v], 1.0f));
+    }
 }
 
 // Apply Rectified Linear 6 (cap to [0;6]) to elements of a vector
 inline void ApplyRelu6ToVector(const float* __restrict__ vector, int v_size,
                                float* __restrict__ result) {
-  for (int v = 0; v < v_size; v++) {
-    result[v] = std::max(0.0f, std::min(vector[v], 6.0f));
-  }
+    for (int v = 0; v < v_size; v++) {
+        result[v] = std::max(0.0f, std::min(vector[v], 6.0f));
+    }
 }
 
 // Apply tanh to elements of a vector
 inline void ApplyTanhToVector(const float* __restrict__ vector, int v_size,
                               float* __restrict__ result) {
-  using VectorMap = Eigen::Map<Eigen::Vector<float, Eigen::Dynamic>>;
-  VectorMap input_map(const_cast<float* __restrict__>(vector), v_size);
-  VectorMap output_map(result, v_size);
-  output_map.array() = input_map.array().tanh();
+    using VectorMap = Eigen::Map<Eigen::Vector<float, Eigen::Dynamic>>;
+    VectorMap input_map(const_cast<float* __restrict__>(vector), v_size);
+    VectorMap output_map(result, v_size);
+    output_map.array() = input_map.array().tanh();
 }
 
 // Apply signbit to elements of a vector
 inline void ApplySignbitToVector(const float* __restrict__ vector, int v_size,
                                  float* __restrict__ result) {
-  for (int v = 0; v < v_size; v++) {
-    result[v] = std::signbit(vector[v]);
-  }
+    for (int v = 0; v < v_size; v++) {
+        result[v] = std::signbit(vector[v]);
+    }
 }
 
 // Apply sigmoid to elements of a vector.
 inline void ApplySigmoidToVector(const float* __restrict__ vector, int v_size,
                                  float* __restrict__ result) {
-  using VectorMap = Eigen::Map<Eigen::Vector<float, Eigen::Dynamic>>;
-  VectorMap input_map(const_cast<float* __restrict__>(vector), v_size);
-  VectorMap output_map(result, v_size);
-  output_map.array() = input_map.array().logistic();
+    using VectorMap = Eigen::Map<Eigen::Vector<float, Eigen::Dynamic>>;
+    VectorMap input_map(const_cast<float* __restrict__>(vector), v_size);
+    VectorMap output_map(result, v_size);
+    output_map.array() = input_map.array().logistic();
 }
 
 // Apply appropriate activation function to elements of a vector.
@@ -520,22 +520,22 @@ inline void ApplyActivationToVector(const float* __restrict__ vector,
                                     int v_size,
                                     TfLiteFusedActivation activation,
                                     float* __restrict__ result) {
-  switch (activation) {
+    switch (activation) {
     case kTfLiteActNone:
-      return;
+        return;
     case kTfLiteActRelu:
-      return ApplyReluToVector(vector, v_size, result);
+        return ApplyReluToVector(vector, v_size, result);
     case kTfLiteActRelu1:
-      return ApplyRelu1ToVector(vector, v_size, result);
+        return ApplyRelu1ToVector(vector, v_size, result);
     case kTfLiteActRelu6:
-      return ApplyRelu6ToVector(vector, v_size, result);
+        return ApplyRelu6ToVector(vector, v_size, result);
     case kTfLiteActTanh:
-      return ApplyTanhToVector(vector, v_size, result);
+        return ApplyTanhToVector(vector, v_size, result);
     case kTfLiteActSignBit:
-      return ApplySignbitToVector(vector, v_size, result);
+        return ApplySignbitToVector(vector, v_size, result);
     case kTfLiteActSigmoid:
-      return ApplySigmoidToVector(vector, v_size, result);
-  }
+        return ApplySigmoidToVector(vector, v_size, result);
+    }
 }
 
 // Compute "1.0f - elements of vector" (used in CIFG).

@@ -44,29 +44,31 @@ constexpr int kClocksPerSecond = 12e6;
 
 }  // namespace
 
-int32_t ticks_per_second() { return kClocksPerSecond; }
+int32_t ticks_per_second() {
+    return kClocksPerSecond;
+}
 
 // Calling this method enables a timer that runs for eternity. The user is
 // responsible for avoiding trampling on this timer's config, otherwise timing
 // measurements may no longer be valid.
 int32_t GetCurrentTimeTicks() {
-  // TODO(b/150808076): Split out initialization, intialize in interpreter.
-  static bool is_initialized = false;
-  if (!is_initialized) {
-    am_hal_ctimer_config_t timer_config;
-    // Operate as a 32-bit timer.
-    timer_config.ui32Link = 1;
-    // Set timer A to continuous mode at 12MHz.
-    timer_config.ui32TimerAConfig =
-        AM_HAL_CTIMER_FN_CONTINUOUS | AM_HAL_CTIMER_HFRC_12MHZ;
+    // TODO(b/150808076): Split out initialization, intialize in interpreter.
+    static bool is_initialized = false;
+    if (!is_initialized) {
+        am_hal_ctimer_config_t timer_config;
+        // Operate as a 32-bit timer.
+        timer_config.ui32Link = 1;
+        // Set timer A to continuous mode at 12MHz.
+        timer_config.ui32TimerAConfig =
+            AM_HAL_CTIMER_FN_CONTINUOUS | AM_HAL_CTIMER_HFRC_12MHZ;
 
-    am_hal_ctimer_stop(kTimerNum, AM_HAL_CTIMER_BOTH);
-    am_hal_ctimer_clear(kTimerNum, AM_HAL_CTIMER_BOTH);
-    am_hal_ctimer_config(kTimerNum, &timer_config);
-    am_hal_ctimer_start(kTimerNum, AM_HAL_CTIMER_TIMERA);
-    is_initialized = true;
-  }
-  return CTIMERn(kTimerNum)->TMR0;
+        am_hal_ctimer_stop(kTimerNum, AM_HAL_CTIMER_BOTH);
+        am_hal_ctimer_clear(kTimerNum, AM_HAL_CTIMER_BOTH);
+        am_hal_ctimer_config(kTimerNum, &timer_config);
+        am_hal_ctimer_start(kTimerNum, AM_HAL_CTIMER_TIMERA);
+        is_initialized = true;
+    }
+    return CTIMERn(kTimerNum)->TMR0;
 }
 
 }  // namespace tflite
