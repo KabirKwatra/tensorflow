@@ -74,8 +74,7 @@ def enable_v2_behavior():
     exp_readers.CsvDataset = exp_readers.CsvDatasetV2
     exp_readers.SqlDataset = exp_readers.SqlDatasetV2
     exp_readers.make_batched_features_dataset = (
-        exp_readers.make_batched_features_dataset_v2
-    )
+        exp_readers.make_batched_features_dataset_v2)
     exp_readers.make_csv_dataset = exp_readers.make_csv_dataset_v2
 
 
@@ -110,6 +109,5 @@ def disable_v2_behavior():
     exp_readers.CsvDataset = exp_readers.CsvDatasetV1
     exp_readers.SqlDataset = exp_readers.SqlDatasetV1
     exp_readers.make_batched_features_dataset = (
-        exp_readers.make_batched_features_dataset_v1
-    )
+        exp_readers.make_batched_features_dataset_v1)
     exp_readers.make_csv_dataset = exp_readers.make_csv_dataset_v1

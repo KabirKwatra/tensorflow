@@ -56,7 +56,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         return os.path.join(self.get_temp_dir(), "iterator")
 
     def _save_op(self, iterator_resource):
-        iterator_state_variant = gen_dataset_ops.serialize_iterator(iterator_resource)
+        iterator_state_variant = gen_dataset_ops.serialize_iterator(
+            iterator_resource)
         save_op = io_ops.write_file(
             self._iterator_checkpoint_prefix(),
             parsing_ops.serialize_tensor(iterator_state_variant),
@@ -65,19 +66,17 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     def _restore_op(self, iterator_resource):
         iterator_state_variant = parsing_ops.parse_tensor(
-            io_ops.read_file(self._iterator_checkpoint_prefix()), dtypes.variant
-        )
+            io_ops.read_file(self._iterator_checkpoint_prefix()),
+            dtypes.variant)
         restore_op = gen_dataset_ops.deserialize_iterator(
-            iterator_resource, iterator_state_variant
-        )
+            iterator_resource, iterator_state_variant)
         return restore_op
 
     @combinations.generate(test_base.graph_only_combinations())
     def testSaveRestore(self):
         def _build_graph(start, stop):
             iterator = dataset_ops.make_initializable_iterator(
-                dataset_ops.Dataset.range(start, stop)
-            )
+                dataset_ops.Dataset.range(start, stop))
             init_op = iterator.initializer
             get_next = iterator.get_next()
             save_op = self._save_op(iterator._iterator_resource)
@@ -165,8 +164,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testMultipleSaves(self):
         def _build_graph(start, stop):
             iterator = dataset_ops.make_initializable_iterator(
-                dataset_ops.Dataset.range(start, stop)
-            )
+                dataset_ops.Dataset.range(start, stop))
             init_op = iterator.initializer
             get_next = iterator.get_next()
             save_op = self._save_op(iterator._iterator_resource)
@@ -211,8 +209,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testSaveRestoreWithRepeat(self):
         def _build_graph(start, stop, num_epochs):
             iterator = dataset_ops.make_initializable_iterator(
-                dataset_ops.Dataset.range(start, stop).repeat(num_epochs)
-            )
+                dataset_ops.Dataset.range(start, stop).repeat(num_epochs))
             init_op = iterator.initializer
             get_next = iterator.get_next()
             save_op = self._save_op(iterator._iterator_resource)
@@ -226,8 +223,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         break_epoch = 3
         with ops.Graph().as_default() as g:
             init_op, get_next, save_op, restore_op = _build_graph(
-                start, stop, num_epochs
-            )
+                start, stop, num_epochs)
             with self.session(graph=g) as sess:
                 sess.run(variables.global_variables_initializer())
                 sess.run(init_op)
@@ -244,7 +240,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
                 sess.run(save_op)
 
         with ops.Graph().as_default() as g:
-            init_op, get_next, _, restore_op = _build_graph(start, stop, num_epochs)
+            init_op, get_next, _, restore_op = _build_graph(
+                start, stop, num_epochs)
             with self.session(graph=g) as sess:
                 sess.run(init_op)
                 sess.run(restore_op)
@@ -260,8 +257,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testSaveRestoreExhaustedIterator(self):
         def _build_graph(start, stop, num_epochs):
             iterator = dataset_ops.make_initializable_iterator(
-                dataset_ops.Dataset.range(start, stop).repeat(num_epochs)
-            )
+                dataset_ops.Dataset.range(start, stop).repeat(num_epochs))
             init_op = iterator.initializer
             get_next = iterator.get_next()
             save_op = self._save_op(iterator._iterator_resource)
@@ -273,8 +269,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         num_epochs = 5
         with ops.Graph().as_default() as g:
             init_op, get_next, save_op, restore_op = _build_graph(
-                start, stop, num_epochs
-            )
+                start, stop, num_epochs)
             with self.session(graph=g) as sess:
                 sess.run(variables.global_variables_initializer())
                 sess.run(init_op)
@@ -291,7 +286,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
                 sess.run(save_op)
 
         with ops.Graph().as_default() as g:
-            init_op, get_next, _, restore_op = _build_graph(start, stop, num_epochs)
+            init_op, get_next, _, restore_op = _build_graph(
+                start, stop, num_epochs)
             with self.session(graph=g) as sess:
                 sess.run(init_op)
                 sess.run(restore_op)
@@ -302,11 +298,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testSaveRestoreOneShotIterator(self):
         checkpoint_directory = self.get_temp_dir()
         checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
-        dataset = (
-            dataset_ops.Dataset.from_tensor_slices([1, 2, 3, 4, 5, 6])
-            .map(math_ops.square)
-            .batch(2)
-        )
+        dataset = (dataset_ops.Dataset.from_tensor_slices(
+            [1, 2, 3, 4, 5, 6]).map(math_ops.square).batch(2))
         iterator = iter(dataset)
         get_next = iterator.get_next
         checkpoint = trackable_utils.Checkpoint(iterator=iterator)
@@ -325,8 +318,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         checkpoint_directory = self.get_temp_dir()
         checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
         dataset = dataset_ops.Dataset.from_tensor_slices(
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        )
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
         dataset = dataset.map(math_ops.square).batch(2)
         iterator_1 = iter(dataset)
         get_next_1 = iterator_1.get_next
@@ -335,9 +327,9 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         dataset_2 = dataset_ops.Dataset.range(10)
         iterator_3 = iter(dataset_2)
         get_next_3 = iterator_3.get_next
-        checkpoint = trackable_utils.Checkpoint(
-            iterator_1=iterator_1, iterator_2=iterator_2, iterator_3=iterator_3
-        )
+        checkpoint = trackable_utils.Checkpoint(iterator_1=iterator_1,
+                                                iterator_2=iterator_2,
+                                                iterator_3=iterator_3)
         self.assertAllEqual([1, 4], get_next_1())
         self.assertAllEqual(0, get_next_3())
         self.assertAllEqual(1, get_next_3())
@@ -380,8 +372,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         checkpoint = trackable_utils.Checkpoint(iterator=iterator)
         for i in range(5):
             checkpoint.restore(
-                checkpoint_management.latest_checkpoint(checkpoint_directory)
-            ).initialize_or_restore()
+                checkpoint_management.latest_checkpoint(
+                    checkpoint_directory)).initialize_or_restore()
             for j in range(2):
                 self.assertEqual(i * 2 + j, self.evaluate(get_next()))
             checkpoint.save(file_prefix=checkpoint_prefix)
@@ -391,10 +383,11 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         dataset = dataset_ops.Dataset.range(10)
         dataset = dataset.shuffle(10, reshuffle_each_iteration=True)
         iterator = iter(dataset)
-        ckpt = trackable_utils.Checkpoint(step=variables.Variable(0), iterator=iterator)
-        manager = checkpoint_management.CheckpointManager(
-            ckpt, self.get_temp_dir(), max_to_keep=3
-        )
+        ckpt = trackable_utils.Checkpoint(step=variables.Variable(0),
+                                          iterator=iterator)
+        manager = checkpoint_management.CheckpointManager(ckpt,
+                                                          self.get_temp_dir(),
+                                                          max_to_keep=3)
 
         iter1 = [next(iterator).numpy() for _ in range(5)]
 
@@ -409,10 +402,11 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     def _assertNotCheckpointable(self, dataset):
         iterator = iter(dataset)
-        ckpt = trackable_utils.Checkpoint(step=variables.Variable(0), iterator=iterator)
-        manager = checkpoint_management.CheckpointManager(
-            ckpt, self.get_temp_dir(), max_to_keep=3
-        )
+        ckpt = trackable_utils.Checkpoint(step=variables.Variable(0),
+                                          iterator=iterator)
+        manager = checkpoint_management.CheckpointManager(ckpt,
+                                                          self.get_temp_dir(),
+                                                          max_to_keep=3)
         with self.assertRaises(errors.FailedPreconditionError):
             manager.save()
 
@@ -456,7 +450,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.eager_only_combinations())
     def testStatefulParallelInterleaveNotCheckpointable(self):
         dataset = dataset_ops.Dataset.range(10)
-        dataset = dataset.interleave(self._statefulDatasetFunc, num_parallel_calls=2)
+        dataset = dataset.interleave(self._statefulDatasetFunc,
+                                     num_parallel_calls=2)
         self._assertNotCheckpointable(dataset)
 
     @combinations.generate(test_base.eager_only_combinations())
@@ -497,7 +492,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         for key_func, init_func, reduce_func, finalize_func in test_cases:
             dataset = dataset_ops.Dataset.range(10)
             reducer = grouping.Reducer(init_func, reduce_func, finalize_func)
-            dataset = dataset.apply(grouping.group_by_reducer(key_func, reducer))
+            dataset = dataset.apply(
+                grouping.group_by_reducer(key_func, reducer))
             self._assertNotCheckpointable(dataset)
 
     @combinations.generate(test_base.eager_only_combinations())
@@ -526,10 +522,9 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
         for key_func_fn, reduce_func_fn, window_func in test_cases:
             dataset = dataset_ops.Dataset.range(10)
             dataset = dataset.apply(
-                grouping.group_by_window(
-                    key_func_fn, reduce_func_fn, window_size_func=window_func
-                )
-            )
+                grouping.group_by_window(key_func_fn,
+                                         reduce_func_fn,
+                                         window_size_func=window_func))
             self._assertNotCheckpointable(dataset)
 
     @combinations.generate(test_base.eager_only_combinations())
@@ -543,8 +538,7 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testStatefulExperimentalParallelInterleaveNotCheckpointable(self):
         dataset = dataset_ops.Dataset.range(10)
         dataset = dataset.apply(
-            interleave_ops.parallel_interleave(self._statefulDatasetFunc, 2)
-        )
+            interleave_ops.parallel_interleave(self._statefulDatasetFunc, 2))
         self._assertNotCheckpointable(dataset)
 
     @combinations.generate(test_base.eager_only_combinations())
@@ -560,7 +554,8 @@ class CheckpointTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.eager_only_combinations())
     def testStatefulTakeWhileNotCheckpointable(self):
         dataset = dataset_ops.Dataset.range(10)
-        dataset = dataset.apply(take_while_ops.take_while(self._statefulBoolFunc))
+        dataset = dataset.apply(
+            take_while_ops.take_while(self._statefulBoolFunc))
         self._assertNotCheckpointable(dataset)
 
 
