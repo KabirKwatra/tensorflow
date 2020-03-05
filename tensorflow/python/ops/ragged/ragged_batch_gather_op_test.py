@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for ragged_batch_gather_ops.batch_gather."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

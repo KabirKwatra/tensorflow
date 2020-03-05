@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Test conversion of graphs involving INT32 tensors and operations."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
