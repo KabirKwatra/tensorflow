@@ -18,7 +18,7 @@ set -x
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TENSORFLOW_DIR="${SCRIPT_DIR}/../../../.."
+TENSORFLOW_DIR="$SCRIPT_DIR/../../../.."
 
 FREE_MEM="$(free -m | awk '/^Mem/ {print $2}')"
 # Use "-j 4" only memory is larger than 2GB
@@ -28,4 +28,4 @@ else
   NO_JOB=1
 fi
 
-make -j ${NO_JOB} TARGET=rpi -C "${TENSORFLOW_DIR}" -f tensorflow/lite/tools/make/Makefile $@
+make -j "$NO_JOB" TARGET=rpi -C "$TENSORFLOW_DIR" -f tensorflow/lite/tools/make/Makefile "$@"
