@@ -131,11 +131,9 @@ def run_with_all_saved_model_formats(test_or_class=None, exclude_formats=None):
     if h5py is None:
         exclude_formats.append(["h5"])
     saved_model_formats = ["h5", "tf"]
-    params = [
-        ("_%s" % saved_format, saved_format)
-        for saved_format in saved_model_formats
-        if saved_format not in nest.flatten(exclude_formats)
-    ]
+    params = [("_%s" % saved_format, saved_format)
+              for saved_format in saved_model_formats
+              if saved_format not in nest.flatten(exclude_formats)]
 
     def single_method_decorator(f):
         """Decorator that constructs the test cases."""
@@ -149,7 +147,7 @@ def run_with_all_saved_model_formats(test_or_class=None, exclude_formats=None):
             elif saved_format == "tf":
                 _test_tf_saved_model_format(f, self, *args, **kwargs)
             else:
-                raise ValueError("Unknown model type: %s" % (saved_format,))
+                raise ValueError("Unknown model type: %s" % (saved_format, ))
 
         return decorated
 
@@ -259,11 +257,8 @@ def run_with_all_model_types(test_or_class=None, exclude_models=None):
         a target dependency.
     """
     model_types = ["functional", "subclass", "sequential"]
-    params = [
-        ("_%s" % model, model)
-        for model in model_types
-        if model not in nest.flatten(exclude_models)
-    ]
+    params = [("_%s" % model, model) for model in model_types
+              if model not in nest.flatten(exclude_models)]
 
     def single_method_decorator(f):
         """Decorator that constructs the test cases."""
@@ -279,7 +274,7 @@ def run_with_all_model_types(test_or_class=None, exclude_models=None):
             elif model_type == "sequential":
                 _test_sequential_model_type(f, self, *args, **kwargs)
             else:
-                raise ValueError("Unknown model type: %s" % (model_type,))
+                raise ValueError("Unknown model type: %s" % (model_type, ))
 
         return decorated
 
@@ -301,9 +296,10 @@ def _test_sequential_model_type(f, test_or_class, *args, **kwargs):
         f(test_or_class, *args, **kwargs)
 
 
-def run_all_keras_modes(
-    test_or_class=None, config=None, always_skip_v1=False, always_skip_eager=False
-):
+def run_all_keras_modes(test_or_class=None,
+                        config=None,
+                        always_skip_v1=False,
+                        always_skip_eager=False):
     """Execute the decorated test with all keras execution modes.
 
     This decorator is intended to be applied either to individual test methods in
@@ -444,19 +440,16 @@ def _test_or_class_decorator(test_or_class, single_method_decorator):
     def _decorate_test_or_class(obj):
         if isinstance(obj, collections_abc.Iterable):
             return itertools.chain.from_iterable(
-                single_method_decorator(method) for method in obj
-            )
+                single_method_decorator(method) for method in obj)
         if isinstance(obj, type):
             cls = obj
             for name, value in cls.__dict__.copy().items():
                 if callable(value) and name.startswith(
-                    unittest.TestLoader.testMethodPrefix
-                ):
+                        unittest.TestLoader.testMethodPrefix):
                     setattr(cls, name, single_method_decorator(value))
 
-            cls = type(cls).__new__(
-                type(cls), cls.__name__, cls.__bases__, cls.__dict__.copy()
-            )
+            cls = type(cls).__new__(type(cls), cls.__name__, cls.__bases__,
+                                    cls.__dict__.copy())
             return cls
 
         return single_method_decorator(obj)

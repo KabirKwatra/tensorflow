@@ -78,11 +78,10 @@ def _get_arg_infos(func, arg_names):
         if is_list:
             argname = argname[1:-1]
         if argname not in arg_spec.args:
-            raise ValueError(
-                "Argument %r not found function in %s.  Args=%s"
-                % (argname, func, arg_spec.args)
-            )
-        arg_infos.append(_ArgInfo(argname, arg_spec.args.index(argname), is_list))
+            raise ValueError("Argument %r not found function in %s.  Args=%s" %
+                             (argname, func, arg_spec.args))
+        arg_infos.append(
+            _ArgInfo(argname, arg_spec.args.index(argname), is_list))
     return arg_infos
 
 
@@ -90,9 +89,11 @@ def _is_convertible_to_tensor(value):
     """Returns true if `value` is convertible to a `Tensor`."""
     if value is None:
         return True
-    if isinstance(value, (ops.Tensor, variables.Variable, np.ndarray, int, float, str)):
+    if isinstance(
+            value,
+        (ops.Tensor, variables.Variable, np.ndarray, int, float, str)):
         return True
-    elif isinstance(value, (sparse_tensor.SparseTensor,)):
+    elif isinstance(value, (sparse_tensor.SparseTensor, )):
         return False
     else:
         try:
@@ -112,10 +113,8 @@ class UnaryRaggedElementwiseDispatcher(dispatch.OpDispatcher):
         self._x = arg_names[0]
         if _UPDATE_DOCSTRINGS:
             original_op.__doc__ = (
-                original_op.__doc__.rstrip()
-                + "\n\n"
-                + "    `{x}` may be a `tf.RaggedTensor`.\n".format(x=self._x)
-            )
+                original_op.__doc__.rstrip() + "\n\n" +
+                "    `{x}` may be a `tf.RaggedTensor`.\n".format(x=self._x))
 
     def handle(self, args, kwargs):
         if args:
@@ -135,30 +134,32 @@ class UnaryRaggedElementwiseDispatcher(dispatch.OpDispatcher):
             if found_ragged:
                 x = [
                     ragged_tensor.convert_to_tensor_or_ragged_tensor(elt)
-                    if ragged_tensor.is_ragged(elt)
-                    else elt
-                    for elt in x
+                    if ragged_tensor.is_ragged(elt) else elt for elt in x
                 ]
                 x = ragged_tensor.match_row_splits_dtypes(*x)
-                ragged_elts = [elt for elt in x if ragged_tensor.is_ragged(elt)]
-                nested_splits_lists = [elt.nested_row_splits for elt in ragged_elts]
+                ragged_elts = [
+                    elt for elt in x if ragged_tensor.is_ragged(elt)
+                ]
+                nested_splits_lists = [
+                    elt.nested_row_splits for elt in ragged_elts
+                ]
                 flat_values = [
                     elt.flat_values if ragged_tensor.is_ragged(elt) else elt
                     for elt in x
                 ]
                 with ops.control_dependencies(
-                    ragged_util.assert_splits_match(nested_splits_lists)
-                ):
+                        ragged_util.assert_splits_match(nested_splits_lists)):
                     return ragged_elts[0].with_flat_values(
-                        self._original_op(flat_values, *args, **kwargs)
-                    )
+                        self._original_op(flat_values, *args, **kwargs))
             else:
                 return self.NOT_SUPPORTED
         else:
             found_ragged = ragged_tensor.is_ragged(x)
             if found_ragged:
-                x = ragged_tensor.convert_to_tensor_or_ragged_tensor(x, name=self._x)
-                mapped_values = self._original_op(x.flat_values, *args, **kwargs)
+                x = ragged_tensor.convert_to_tensor_or_ragged_tensor(
+                    x, name=self._x)
+                mapped_values = self._original_op(x.flat_values, *args,
+                                                  **kwargs)
                 return x.with_flat_values(mapped_values)
             else:
                 return self.NOT_SUPPORTED
@@ -177,12 +178,9 @@ class BinaryRaggedElementwiseDispatcher(dispatch.OpDispatcher):
         self._y = arg_names[1]
         if _UPDATE_DOCSTRINGS:
             original_op.__doc__ = (
-                original_op.__doc__.rstrip()
-                + "\n\n"
-                + "    `{x}` and `{y}` may be a `tf.RaggedTensor`.\n".format(
-                    x=self._x, y=self._y
-                )
-            )
+                original_op.__doc__.rstrip() + "\n\n" +
+                "    `{x}` and `{y}` may be a `tf.RaggedTensor`.\n".format(
+                    x=self._x, y=self._y))
 
     def handle(self, args, kwargs):
         # Extract the binary args.
@@ -209,32 +207,31 @@ class BinaryRaggedElementwiseDispatcher(dispatch.OpDispatcher):
         # Convert args to tensors.  Bail if conversion fails.
         try:
             x = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-                x, name=self._x, preferred_dtype=(y.dtype if y_is_ragged else None)
-            )
+                x,
+                name=self._x,
+                preferred_dtype=(y.dtype if y_is_ragged else None))
             y = ragged_tensor.convert_to_tensor_or_ragged_tensor(
-                y, name=self._y, preferred_dtype=(x.dtype if x_is_ragged else None)
-            )
+                y,
+                name=self._y,
+                preferred_dtype=(x.dtype if x_is_ragged else None))
         except (TypeError, ValueError):
             return self.NOT_SUPPORTED
 
         if x_is_ragged and y_is_ragged:
             x, y = ragged_tensor.match_row_splits_dtypes(x, y)
 
-        if (
-            (x_is_ragged and y_is_ragged)
-            or (x_is_ragged and x.flat_values.shape.ndims <= y.shape.ndims)
-            or (y_is_ragged and y.flat_values.shape.ndims <= x.shape.ndims)
-        ):
+        if ((x_is_ragged and y_is_ragged)
+                or (x_is_ragged and x.flat_values.shape.ndims <= y.shape.ndims)
+                or
+            (y_is_ragged and y.flat_values.shape.ndims <= x.shape.ndims)):
             bcast_shape = ragged_tensor_shape.broadcast_dynamic_shape(
                 ragged_tensor_shape.RaggedTensorDynamicShape.from_tensor(x),
                 ragged_tensor_shape.RaggedTensorDynamicShape.from_tensor(y),
             )
             x = ragged_tensor_shape.broadcast_to(
-                x, bcast_shape, broadcast_inner_dimensions=False
-            )
+                x, bcast_shape, broadcast_inner_dimensions=False)
             y = ragged_tensor_shape.broadcast_to(
-                y, bcast_shape, broadcast_inner_dimensions=False
-            )
+                y, bcast_shape, broadcast_inner_dimensions=False)
 
         x_values = x.flat_values if ragged_tensor.is_ragged(x) else x
         y_values = y.flat_values if ragged_tensor.is_ragged(y) else y
@@ -259,17 +256,14 @@ class RaggedDispatcher(dispatch.OpDispatcher):
         if op_arg_names != ragged_arg_names:
             raise AssertionError(
                 "Signature must exactly match when overriding %s with %s: %s vs %s"
-                % (original_op, ragged_op, op_arg_names, ragged_arg_names)
-            )
+                % (original_op, ragged_op, op_arg_names, ragged_arg_names))
         self._ragged_op = ragged_op
         self._ragged_args = _get_arg_infos(ragged_op, ragged_args)
         if _UPDATE_DOCSTRINGS:
             arg_list = " and ".join("`%s`" % arg for arg in ragged_args)
             original_op.__doc__ = (
-                original_op.__doc__.rstrip()
-                + "\n\n"
-                + "    {0} may be a `tf.RaggedTensor`.\n".format(arg_list)
-            )
+                original_op.__doc__.rstrip() + "\n\n" +
+                "    {0} may be a `tf.RaggedTensor`.\n".format(arg_list))
 
     def handle(self, args, kwargs):
         if self.is_supported(args, kwargs):
@@ -411,7 +405,6 @@ _BINARY_ELEMENTWISE_OPS = [
     math_ops.truncatemod,
 ]
 
-
 # We don't need to register a separate delegation handler for these v1 ops,
 # since they delegate to the v2 ops (which already have a handler).  But we
 # still want to include them in the ragged_op_list() output.
@@ -429,9 +422,12 @@ _V2_OPS_THAT_ARE_DELEGATED_TO_FROM_V1_OPS = [
 ]
 
 
-def _ragged_gather_v1(
-    params, indices, validate_indices=None, name=None, axis=0, batch_dims=0
-):
+def _ragged_gather_v1(params,
+                      indices,
+                      validate_indices=None,
+                      name=None,
+                      axis=0,
+                      batch_dims=0):
     return ragged_gather_ops.gather(
         params=params,
         indices=indices,
@@ -443,31 +439,25 @@ def _ragged_gather_v1(
 
 
 def _ragged_gather_nd_v1(params, indices, name=None, batch_dims=0):
-    return ragged_gather_ops.gather_nd(
-        params=params, indices=indices, batch_dims=batch_dims, name=name
-    )
+    return ragged_gather_ops.gather_nd(params=params,
+                                       indices=indices,
+                                       batch_dims=batch_dims,
+                                       name=name)
 
 
-def _ragged_expand_dims_v1(
-    input, axis=None, name=None, dim=None
-):  # pylint: disable=redefined-builtin
+def _ragged_expand_dims_v1(input, axis=None, name=None, dim=None):  # pylint: disable=redefined-builtin
     if dim is not None:
         axis = dim
     return ragged_array_ops.expand_dims(input=input, axis=axis, name=name)
 
 
-def _ragged_size_v1(
-    input, name=None, out_type=dtypes.int32
-):  # pylint: disable=redefined-builtin
+def _ragged_size_v1(input, name=None, out_type=dtypes.int32):  # pylint: disable=redefined-builtin
     return ragged_array_ops.size(input=input, out_type=out_type, name=name)
 
 
-def _ragged_squeeze_v1(
-    input, axis=None, name=None, squeeze_dims=None
-):  # pylint: disable=redefined-builtin
-    axis = deprecation.deprecated_argument_lookup(
-        "axis", axis, "squeeze_dims", squeeze_dims
-    )
+def _ragged_squeeze_v1(input, axis=None, name=None, squeeze_dims=None):  # pylint: disable=redefined-builtin
+    axis = deprecation.deprecated_argument_lookup("axis", axis, "squeeze_dims",
+                                                  squeeze_dims)
     return ragged_squeeze_op.squeeze(input, axis, name)
 
 
@@ -475,9 +465,8 @@ def _ragged_dynamic_partition(data, partitions, num_partitions, name=None):
     """RaggedTensor Dispatch override for tf.dynamic_partition."""
     if not isinstance(num_partitions, int) or num_partitions < 0:
         raise TypeError("num_partitions must be a non-negative integer")
-    result = ragged_array_ops.stack_dynamic_partitions(
-        data, partitions, num_partitions, name
-    )
+    result = ragged_array_ops.stack_dynamic_partitions(data, partitions,
+                                                       num_partitions, name)
     return [result[i] for i in range(num_partitions)]
 
 
@@ -494,7 +483,8 @@ _RAGGED_DISPATCH_OPS = [
     (array_ops.gather, _ragged_gather_v1, ["params", "indices"]),
     (array_ops.gather_v2, ragged_gather_ops.gather, ["params", "indices"]),
     (array_ops.gather_nd, _ragged_gather_nd_v1, ["params", "indices"]),
-    (array_ops.gather_nd_v2, ragged_gather_ops.gather_nd, ["params", "indices"]),
+    (array_ops.gather_nd_v2, ragged_gather_ops.gather_nd,
+     ["params", "indices"]),
     (array_ops.one_hot, ragged_array_ops.ragged_one_hot, ["indices"]),
     (array_ops.rank, ragged_array_ops.rank, ["input"]),
     (array_ops.reverse, ragged_array_ops.reverse, ["tensor"]),
@@ -554,21 +544,15 @@ _RAGGED_DISPATCH_OPS = [
 def register_dispatchers():
     """Constructs & registers OpDispatchers for ragged ops."""
 
-    op_list = (
-        _UNARY_ELEMENTWISE_OPS
-        + _UNARY_LIST_ELEMENTWISE_OPS
-        + _BINARY_ELEMENTWISE_OPS
-        + [x[0] for x in _RAGGED_DISPATCH_OPS]
-    )
+    op_list = (_UNARY_ELEMENTWISE_OPS + _UNARY_LIST_ELEMENTWISE_OPS +
+               _BINARY_ELEMENTWISE_OPS + [x[0] for x in _RAGGED_DISPATCH_OPS])
     for op in op_list:
         _, undecorated_op = tf_decorator.unwrap(op)
         if not hasattr(
-            undecorated_op, tf_export.API_ATTRS[tf_export.TENSORFLOW_API_NAME].names
-        ):
-            raise AssertionError(
-                "Expected %s to be an exported symbol "
-                "(while adding a RaggedTensor dispatcher)"
-            )
+                undecorated_op,
+                tf_export.API_ATTRS[tf_export.TENSORFLOW_API_NAME].names):
+            raise AssertionError("Expected %s to be an exported symbol "
+                                 "(while adding a RaggedTensor dispatcher)")
 
     for op in _UNARY_ELEMENTWISE_OPS:
         UnaryRaggedElementwiseDispatcher(op).register(op)
@@ -609,10 +593,8 @@ def _ragged_op_signature(op, ragged_args):
 
 def _op_is_in_tf_version(op, version):
     if version == 1:
-        return (
-            tf_export.get_v1_names(tf_decorator.unwrap(op)[1])
-            or op in _V2_OPS_THAT_ARE_DELEGATED_TO_FROM_V1_OPS
-        )
+        return (tf_export.get_v1_names(tf_decorator.unwrap(op)[1])
+                or op in _V2_OPS_THAT_ARE_DELEGATED_TO_FROM_V1_OPS)
     elif version == 2:
         return tf_export.get_v2_names(tf_decorator.unwrap(op)[1])
     else:
@@ -635,10 +617,8 @@ def ragged_op_list(tf_version=1):
             lines.append(_ragged_op_signature(op, ragged_args))
     return (
         "\n\n### Additional ops that support `RaggedTensor`\n\n"
-        "Arguments that accept `RaggedTensor`s are marked in **bold**.\n\n"
-        + "\n".join(sorted(lines))
-        + "n"
-    )
+        "Arguments that accept `RaggedTensor`s are marked in **bold**.\n\n" +
+        "\n".join(sorted(lines)) + "n")
 
 
 register_dispatchers()

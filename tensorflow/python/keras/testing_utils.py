@@ -43,9 +43,11 @@ from tensorflow.python.util import tf_decorator
 from tensorflow.python.util import tf_inspect
 
 
-def get_test_data(
-    train_samples, test_samples, input_shape, num_classes, random_seed=None
-):
+def get_test_data(train_samples,
+                  test_samples,
+                  input_shape,
+                  num_classes,
+                  random_seed=None):
     """Generates test data to train a model on.
 
     Arguments:
@@ -61,11 +63,13 @@ def get_test_data(
     if random_seed is not None:
         np.random.seed(random_seed)
     num_sample = train_samples + test_samples
-    templates = 2 * num_classes * np.random.random((num_classes,) + input_shape)
-    y = np.random.randint(0, num_classes, size=(num_sample,))
-    x = np.zeros((num_sample,) + input_shape, dtype=np.float32)
+    templates = 2 * num_classes * np.random.random((num_classes, ) +
+                                                   input_shape)
+    y = np.random.randint(0, num_classes, size=(num_sample, ))
+    x = np.zeros((num_sample, ) + input_shape, dtype=np.float32)
     for i in range(num_sample):
-        x[i] = templates[y[i]] + np.random.normal(loc=0, scale=1.0, size=input_shape)
+        x[i] = templates[y[i]] + np.random.normal(
+            loc=0, scale=1.0, size=input_shape)
     return (
         (x[:train_samples], y[:train_samples]),
         (x[train_samples:], y[train_samples:]),
@@ -74,16 +78,16 @@ def get_test_data(
 
 @test_util.disable_cudnn_autotune
 def layer_test(
-    layer_cls,
-    kwargs=None,
-    input_shape=None,
-    input_dtype=None,
-    input_data=None,
-    expected_output=None,
-    expected_output_dtype=None,
-    expected_output_shape=None,
-    validate_training=True,
-    adapt_data=None,
+        layer_cls,
+        kwargs=None,
+        input_shape=None,
+        input_dtype=None,
+        input_data=None,
+        expected_output=None,
+        expected_output_dtype=None,
+        expected_output_shape=None,
+        validate_training=True,
+        adapt_data=None,
 ):
     """Test routine for a layer with a single input and single output.
 
@@ -153,18 +157,17 @@ def layer_test(
     if backend.dtype(y) != expected_output_dtype:
         raise AssertionError(
             "When testing layer %s, for input %s, found output "
-            "dtype=%s but expected to find %s.\nFull kwargs: %s"
-            % (layer_cls.__name__, x, backend.dtype(y), expected_output_dtype, kwargs)
-        )
+            "dtype=%s but expected to find %s.\nFull kwargs: %s" %
+            (layer_cls.__name__, x, backend.dtype(y), expected_output_dtype,
+             kwargs))
 
     def assert_shapes_equal(expected, actual):
         """Asserts that the output shape from the layer matches the actual shape."""
         if len(expected) != len(actual):
             raise AssertionError(
                 "When testing layer %s, for input %s, found output_shape="
-                "%s but expected to find %s.\nFull kwargs: %s"
-                % (layer_cls.__name__, x, actual, expected, kwargs)
-            )
+                "%s but expected to find %s.\nFull kwargs: %s" %
+                (layer_cls.__name__, x, actual, expected, kwargs))
 
         for expected_dim, actual_dim in zip(expected, actual):
             if isinstance(expected_dim, tensor_shape.Dimension):
@@ -174,21 +177,20 @@ def layer_test(
             if expected_dim is not None and expected_dim != actual_dim:
                 raise AssertionError(
                     "When testing layer %s, for input %s, found output_shape="
-                    "%s but expected to find %s.\nFull kwargs: %s"
-                    % (layer_cls.__name__, x, actual, expected, kwargs)
-                )
+                    "%s but expected to find %s.\nFull kwargs: %s" %
+                    (layer_cls.__name__, x, actual, expected, kwargs))
 
     if expected_output_shape is not None:
-        assert_shapes_equal(tensor_shape.TensorShape(expected_output_shape), y.shape)
+        assert_shapes_equal(tensor_shape.TensorShape(expected_output_shape),
+                            y.shape)
 
     # check shape inference
     model = models.Model(x, y)
     computed_output_shape = tuple(
-        layer.compute_output_shape(tensor_shape.TensorShape(input_shape)).as_list()
-    )
+        layer.compute_output_shape(
+            tensor_shape.TensorShape(input_shape)).as_list())
     computed_output_signature = layer.compute_output_signature(
-        tensor_spec.TensorSpec(shape=input_shape, dtype=input_dtype)
-    )
+        tensor_spec.TensorSpec(shape=input_shape, dtype=input_dtype))
     actual_output = model.predict(input_data)
     actual_output_shape = actual_output.shape
     assert_shapes_equal(computed_output_shape, actual_output_shape)
@@ -196,17 +198,18 @@ def layer_test(
     if computed_output_signature.dtype != actual_output.dtype:
         raise AssertionError(
             "When testing layer %s, for input %s, found output_dtype="
-            "%s but expected to find %s.\nFull kwargs: %s"
-            % (
+            "%s but expected to find %s.\nFull kwargs: %s" % (
                 layer_cls.__name__,
                 x,
                 actual_output.dtype,
                 computed_output_signature.dtype,
                 kwargs,
-            )
-        )
+            ))
     if expected_output is not None:
-        np.testing.assert_allclose(actual_output, expected_output, rtol=1e-3, atol=1e-6)
+        np.testing.assert_allclose(actual_output,
+                                   expected_output,
+                                   rtol=1e-3,
+                                   atol=1e-6)
 
     # test serialization, weight setting at model level
     model_config = model.get_config()
@@ -247,7 +250,8 @@ def layer_test(
     model.add(layer)
     actual_output = model.predict(input_data)
     actual_output_shape = actual_output.shape
-    for expected_dim, actual_dim in zip(computed_output_shape, actual_output_shape):
+    for expected_dim, actual_dim in zip(computed_output_shape,
+                                        actual_output_shape):
         if expected_dim is not None:
             if expected_dim != actual_dim:
                 raise AssertionError(
@@ -260,10 +264,12 @@ def layer_test(
                         actual_output_shape,
                         computed_output_shape,
                         kwargs,
-                    )
-                )
+                    ))
     if expected_output is not None:
-        np.testing.assert_allclose(actual_output, expected_output, rtol=1e-3, atol=1e-6)
+        np.testing.assert_allclose(actual_output,
+                                   expected_output,
+                                   rtol=1e-3,
+                                   atol=1e-6)
 
     # test serialization, weight setting at model level
     model_config = model.get_config()
@@ -330,11 +336,9 @@ def run_eagerly_scope(value):
 def should_run_eagerly():
     """Returns whether the models we are testing should be run eagerly."""
     if _thread_local_data.run_eagerly is None:
-        raise ValueError(
-            "Cannot call `should_run_eagerly()` outside of a "
-            "`run_eagerly_scope()` or `run_all_keras_modes` "
-            "decorator."
-        )
+        raise ValueError("Cannot call `should_run_eagerly()` outside of a "
+                         "`run_eagerly_scope()` or `run_all_keras_modes` "
+                         "decorator.")
 
     return _thread_local_data.run_eagerly and context.executing_eagerly()
 
@@ -366,19 +370,16 @@ def get_save_format():
         raise ValueError(
             "Cannot call `get_save_format()` outside of a "
             "`saved_model_format_scope()` or `run_with_all_saved_model_formats` "
-            "decorator."
-        )
+            "decorator.")
     return _thread_local_data.saved_model_format
 
 
 def get_model_type():
     """Gets the model type that should be tested."""
     if _thread_local_data.model_type is None:
-        raise ValueError(
-            "Cannot call `get_model_type()` outside of a "
-            "`model_type_scope()` or `run_with_all_model_types` "
-            "decorator."
-        )
+        raise ValueError("Cannot call `get_model_type()` outside of a "
+                         "`model_type_scope()` or `run_with_all_model_types` "
+                         "decorator.")
 
     return _thread_local_data.model_type
 
@@ -386,7 +387,8 @@ def get_model_type():
 def get_small_sequential_mlp(num_hidden, num_classes, input_dim=None):
     model = models.Sequential()
     if input_dim:
-        model.add(layers.Dense(num_hidden, activation="relu", input_dim=input_dim))
+        model.add(
+            layers.Dense(num_hidden, activation="relu", input_dim=input_dim))
     else:
         model.add(layers.Dense(num_hidden, activation="relu"))
     activation = "sigmoid" if num_classes == 1 else "softmax"
@@ -395,7 +397,7 @@ def get_small_sequential_mlp(num_hidden, num_classes, input_dim=None):
 
 
 def get_small_functional_mlp(num_hidden, num_classes, input_dim):
-    inputs = layers.Input(shape=(input_dim,))
+    inputs = layers.Input(shape=(input_dim, ))
     outputs = layers.Dense(num_hidden, activation="relu")(inputs)
     activation = "sigmoid" if num_classes == 1 else "softmax"
     outputs = layers.Dense(num_classes, activation=activation)(outputs)
@@ -461,7 +463,8 @@ def get_small_mlp(num_hidden, num_classes, input_dim):
     if model_type == "subclass":
         return get_small_subclass_mlp(num_hidden, num_classes)
     if model_type == "subclass_custom_build":
-        return get_small_subclass_mlp_with_custom_build(num_hidden, num_classes)
+        return get_small_subclass_mlp_with_custom_build(
+            num_hidden, num_classes)
     if model_type == "sequential":
         return get_small_sequential_mlp(num_hidden, num_classes, input_dim)
     if model_type == "functional":
@@ -527,12 +530,12 @@ class _SubclassModelCustomBuild(models.Model):
 
 
 def get_model_from_layers(
-    model_layers,
-    input_shape=None,
-    input_dtype=None,
-    name=None,
-    input_ragged=None,
-    input_sparse=None,
+        model_layers,
+        input_shape=None,
+        input_dtype=None,
+        name=None,
+        input_ragged=None,
+        input_sparse=None,
 ):
     """Builds a model from a sequence of layers.
 
@@ -576,8 +579,7 @@ def get_model_from_layers(
                     dtype=input_dtype,
                     ragged=input_ragged,
                     sparse=input_sparse,
-                )
-            )
+                ))
         for layer in model_layers:
             model.add(layer)
         return model
@@ -585,8 +587,8 @@ def get_model_from_layers(
     if model_type == "functional":
         if not input_shape:
             raise ValueError(
-                "Cannot create a functional model from layers with no " "input shape."
-            )
+                "Cannot create a functional model from layers with no "
+                "input shape.")
         inputs = layers.Input(
             shape=input_shape,
             dtype=input_dtype,
@@ -603,7 +605,7 @@ def get_model_from_layers(
 
 class Bias(layers.Layer):
     def build(self, input_shape):
-        self.bias = self.add_variable("bias", (1,), initializer="zeros")
+        self.bias = self.add_variable("bias", (1, ), initializer="zeros")
 
     def call(self, inputs):
         return inputs + self.bias
@@ -613,12 +615,12 @@ class _MultiIOSubclassModel(models.Model):
     """Multi IO Keras subclass model."""
 
     def __init__(
-        self,
-        branch_a,
-        branch_b,
-        shared_input_branch=None,
-        shared_output_branch=None,
-        name=None,
+            self,
+            branch_a,
+            branch_b,
+            shared_input_branch=None,
+            shared_output_branch=None,
+            name=None,
     ):
         super(_MultiIOSubclassModel, self).__init__(name=name)
         self._shared_input_branch = shared_input_branch
@@ -655,11 +657,11 @@ class _MultiIOSubclassModelCustomBuild(models.Model):
     """Multi IO Keras subclass model that uses a custom build method."""
 
     def __init__(
-        self,
-        branch_a_func,
-        branch_b_func,
-        shared_input_branch_func=None,
-        shared_output_branch_func=None,
+            self,
+            branch_a_func,
+            branch_b_func,
+            shared_input_branch_func=None,
+            shared_output_branch_func=None,
     ):
         super(_MultiIOSubclassModelCustomBuild, self).__init__()
         self._shared_input_branch_func = shared_input_branch_func
@@ -703,9 +705,10 @@ class _MultiIOSubclassModelCustomBuild(models.Model):
         return outs
 
 
-def get_multi_io_model(
-    branch_a, branch_b, shared_input_branch=None, shared_output_branch=None
-):
+def get_multi_io_model(branch_a,
+                       branch_b,
+                       shared_input_branch=None,
+                       shared_output_branch=None):
     """Builds a multi-io model that contains two branches.
 
     The produced model will be of the type specified by `get_model_type`.
@@ -794,9 +797,8 @@ def get_multi_io_model(
 
     model_type = get_model_type()
     if model_type == "subclass":
-        return _MultiIOSubclassModel(
-            branch_a, branch_b, shared_input_branch, shared_output_branch
-        )
+        return _MultiIOSubclassModel(branch_a, branch_b, shared_input_branch,
+                                     shared_output_branch)
 
     if model_type == "subclass_custom_build":
         return _MultiIOSubclassModelCustomBuild(
@@ -807,9 +809,8 @@ def get_multi_io_model(
         )
 
     if model_type == "sequential":
-        raise ValueError(
-            "Cannot use `get_multi_io_model` to construct " "sequential models"
-        )
+        raise ValueError("Cannot use `get_multi_io_model` to construct "
+                         "sequential models")
 
     if model_type == "functional":
         if shared_input_branch:
@@ -868,10 +869,8 @@ def get_v2_optimizer(name, **kwargs):
         return _V2_OPTIMIZER_MAP[name](**kwargs)
     except KeyError:
         raise ValueError(
-            "Could not find requested v2 optimizer: {}\nValid choices: {}".format(
-                name, list(_V2_OPTIMIZER_MAP.keys())
-            )
-        )
+            "Could not find requested v2 optimizer: {}\nValid choices: {}".
+            format(name, list(_V2_OPTIMIZER_MAP.keys())))
 
 
 def get_expected_metric_variable_names(var_names, name_suffix=""):
