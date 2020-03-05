@@ -39,75 +39,75 @@ class Tensor;
 // other actions that depend on knowing the consumer has passed a certain
 // execution point.
 class BufRendezvous {
-public:
-    explicit BufRendezvous(uint64 step_id, const DeviceMgr* dev_mgr)
-        : step_id_(step_id), dev_mgr_(dev_mgr) {}
+ public:
+  explicit BufRendezvous(uint64 step_id, const DeviceMgr* dev_mgr)
+      : step_id_(step_id), dev_mgr_(dev_mgr) {}
 
-    ~BufRendezvous();
+  ~BufRendezvous();
 
-    // Inform all all waiting parties that this BufRendezvous is defunct
-    // because of an error Status interrupting the Step.
-    void StartAbort(const Status& s);
+  // Inform all all waiting parties that this BufRendezvous is defunct
+  // because of an error Status interrupting the Step.
+  void StartAbort(const Status& s);
 
-    struct Hook;
-    // Provided by the consumer to be called when access to the buffer
-    // is available.  If the Status arg is not OK, then hook will not
-    // be populated.  Ownership of Hook passes to consumer with the
-    // callback.
-    typedef std::function<void(const Status&, Hook*)> ConsumerCallback;
-    // Provided by the producer to be called when the consumer has finished
-    // reading the buffer and will no longer access it.
-    typedef std::function<void(const Status&)> ProducerCallback;
+  struct Hook;
+  // Provided by the consumer to be called when access to the buffer
+  // is available.  If the Status arg is not OK, then hook will not
+  // be populated.  Ownership of Hook passes to consumer with the
+  // callback.
+  typedef std::function<void(const Status&, Hook*)> ConsumerCallback;
+  // Provided by the producer to be called when the consumer has finished
+  // reading the buffer and will no longer access it.
+  typedef std::function<void(const Status&)> ProducerCallback;
 
-    struct Hook {
-        Device* prod_dev;
-        DeviceContext* prod_ctx;
-        const Tensor* prod_value;
-        AllocatorAttributes prod_attr;
-        ProducerCallback prod_cb;
-        ConsumerCallback cons_cb;
-        Hook()
-            : prod_dev(nullptr),
-              prod_ctx(nullptr),
-              prod_value(nullptr),
-              prod_cb(nullptr),
-              cons_cb(nullptr) {}
-        string DebugString() const;
-    };
+  struct Hook {
+    Device* prod_dev;
+    DeviceContext* prod_ctx;
+    const Tensor* prod_value;
+    AllocatorAttributes prod_attr;
+    ProducerCallback prod_cb;
+    ConsumerCallback cons_cb;
+    Hook()
+        : prod_dev(nullptr),
+          prod_ctx(nullptr),
+          prod_value(nullptr),
+          prod_cb(nullptr),
+          cons_cb(nullptr) {}
+    string DebugString() const;
+  };
 
-    // Called to advertise availability of a Tensor value corresponding
-    // to key.  That value must stay valid until done is called.
-    void ProvideBuf(const string& key, Device* dev, DeviceContext* dev_ctx,
-                    const Tensor* v, const AllocatorAttributes& attr,
-                    const ProducerCallback& done);
+  // Called to advertise availability of a Tensor value corresponding
+  // to key.  That value must stay valid until done is called.
+  void ProvideBuf(const string& key, Device* dev, DeviceContext* dev_ctx,
+                  const Tensor* v, const AllocatorAttributes& attr,
+                  const ProducerCallback& done);
 
-    // Called to request access to a Tensor value corresponding to key.
-    // Consumer is provided with a Hook as soon as available.
-    //
-    // This function also checks that the current incarnation number of the
-    // `device` that produced this value matches the `incarnation` expected by the
-    // consumer, and invokes `done` with `FailedPrecondition` status and
-    // `nullptr` hook if it does not match.
-    void ConsumeBuf(const string& key, const string& device,
-                    const uint64 incarnation, const ConsumerCallback& done);
+  // Called to request access to a Tensor value corresponding to key.
+  // Consumer is provided with a Hook as soon as available.
+  //
+  // This function also checks that the current incarnation number of the
+  // `device` that produced this value matches the `incarnation` expected by the
+  // consumer, and invokes `done` with `FailedPrecondition` status and
+  // `nullptr` hook if it does not match.
+  void ConsumeBuf(const string& key, const string& device,
+                  const uint64 incarnation, const ConsumerCallback& done);
 
-    // Consumer must call this function when it's done reading the Hook provided
-    // by the ConsumerCallback.  This function will invoke the producer callback
-    // and then delete h.
-    static void DoneWithHook(Hook* h);
+  // Consumer must call this function when it's done reading the Hook provided
+  // by the ConsumerCallback.  This function will invoke the producer callback
+  // and then delete h.
+  static void DoneWithHook(Hook* h);
 
-    // Write the current contents of the table to the INFO log.
-    void LogContents();
+  // Write the current contents of the table to the INFO log.
+  void LogContents();
 
-protected:
-    const uint64 step_id_;
-    const DeviceMgr* const dev_mgr_;  // Not owned.
-    mutex mu_;
-    Status status_ TF_GUARDED_BY(mu_);
-    typedef absl::flat_hash_map<string, Hook*> HookTable;
-    HookTable hook_table_ TF_GUARDED_BY(mu_);
+ protected:
+  const uint64 step_id_;
+  const DeviceMgr* const dev_mgr_;  // Not owned.
+  mutex mu_;
+  Status status_ TF_GUARDED_BY(mu_);
+  typedef absl::flat_hash_map<string, Hook*> HookTable;
+  HookTable hook_table_ TF_GUARDED_BY(mu_);
 
-    void PurgeTable(const Status& s, HookTable* table);
+  void PurgeTable(const Status& s, HookTable* table);
 };
 }  // namespace tensorflow
 #endif  // TENSORFLOW_CORE_COMMON_RUNTIME_BUF_RENDEZVOUS_H_

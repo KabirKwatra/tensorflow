@@ -56,105 +56,103 @@ namespace tensorflow {
 //
 // RecordYielder can be accessed by multiple threads concurrently.
 class RecordYielder {
-public:
-    struct Options {
-        // Glob pattern for tfrecords.
-        string file_pattern;
+ public:
+  struct Options {
+    // Glob pattern for tfrecords.
+    string file_pattern;
 
-        // Random seed. It determines how data files are shuffled and how
-        // records are shuffled.
-        int64 seed = 0;
+    // Random seed. It determines how data files are shuffled and how
+    // records are shuffled.
+    int64 seed = 0;
 
-        // Each epoch, all files are first shuffled according to the
-        // random seed and the epoch number, and then all files are
-        // left-shifted by file_shuffle_shift_ratio * num_files slots.  If
-        // file_shuffle_shift_ratio is not within [0, 1), the
-        // implementation clip it to [0, 1).
-        float file_shuffle_shift_ratio = 0;
+    // Each epoch, all files are first shuffled according to the
+    // random seed and the epoch number, and then all files are
+    // left-shifted by file_shuffle_shift_ratio * num_files slots.  If
+    // file_shuffle_shift_ratio is not within [0, 1), the
+    // implementation clip it to [0, 1).
+    float file_shuffle_shift_ratio = 0;
 
-        // Randomization buffer keeps these many records.
-        uint64 bufsize = 1;
+    // Randomization buffer keeps these many records.
+    uint64 bufsize = 1;
 
-        // Uses these many concurrent tfrecord iterators to iterate through
-        // tfrecords.
-        int32 parallelism = 1;
+    // Uses these many concurrent tfrecord iterators to iterate through
+    // tfrecords.
+    int32 parallelism = 1;
 
-        string compression_type;
-    };
+    string compression_type;
+  };
 
-    explicit RecordYielder(OpKernelConstruction* context,
-                           const RecordYielder::Options& opts);
-    ~RecordYielder();
+  explicit RecordYielder(OpKernelConstruction* context,
+                         const RecordYielder::Options& opts);
+  ~RecordYielder();
 
-    RecordYielder(const RecordYielder&) = delete;
-    RecordYielder& operator=(const RecordYielder&) = delete;
+  RecordYielder(const RecordYielder&) = delete;
+  RecordYielder& operator=(const RecordYielder&) = delete;
 
-    // Yields one 'value'.
-    Status YieldOne(tstring* value);
+  // Yields one 'value'.
+  Status YieldOne(tstring* value);
 
-    // Returns the current epoch number.
-    int64 current_epoch() const {
-        return epoch_;
-    }
+  // Returns the current epoch number.
+  int64 current_epoch() const { return epoch_; }
 
-private:
-    typedef RecordYielder ME;
+ private:
+  typedef RecordYielder ME;
 
-    Options opts_;
+  Options opts_;
 
-    // Backgrounds threads. Owned.
-    thread::ThreadPool* thread_;
+  // Backgrounds threads. Owned.
+  thread::ThreadPool* thread_;
 
-    // Epoch number.
-    std::atomic<int64> epoch_;
+  // Epoch number.
+  std::atomic<int64> epoch_;
 
-    mutex mu_;
+  mutex mu_;
 
-    // Turned to true when this is deleted.
-    bool stop_ TF_GUARDED_BY(mu_) = false;
-    Status status_ TF_GUARDED_BY(mu_);
+  // Turned to true when this is deleted.
+  bool stop_ TF_GUARDED_BY(mu_) = false;
+  Status status_ TF_GUARDED_BY(mu_);
 
-    // PRG used for randomization.
-    std::mt19937_64 rnd_ TF_GUARDED_BY(mu_);
+  // PRG used for randomization.
+  std::mt19937_64 rnd_ TF_GUARDED_BY(mu_);
 
-    // Randomization buffer.
-    std::vector<string> buf_ TF_GUARDED_BY(mu_);
+  // Randomization buffer.
+  std::vector<string> buf_ TF_GUARDED_BY(mu_);
 
-    // True iff we are draining an epoch.
-    bool epoch_end_ = false;
+  // True iff we are draining an epoch.
+  bool epoch_end_ = false;
 
-    int64 num_records_added_in_epoch_ = 0;
-    int64 num_records_yielded_in_epoch_ = 0;
+  int64 num_records_added_in_epoch_ = 0;
+  int64 num_records_yielded_in_epoch_ = 0;
 
-    // Trigger when the main loop has exited.
-    Notification main_loop_done_;
+  // Trigger when the main loop has exited.
+  Notification main_loop_done_;
 
-    // condition_variables.
-    condition_variable buf_empty_;
-    bool BufEmpty() const TF_SHARED_LOCKS_REQUIRED(mu_) {
-        return stop_ || buf_.empty();
-    }
+  // condition_variables.
+  condition_variable buf_empty_;
+  bool BufEmpty() const TF_SHARED_LOCKS_REQUIRED(mu_) {
+    return stop_ || buf_.empty();
+  }
 
-    condition_variable buf_not_full_;
-    bool BufNotFull() const TF_SHARED_LOCKS_REQUIRED(mu_) {
-        return stop_ || buf_.size() < opts_.bufsize;
-    }
+  condition_variable buf_not_full_;
+  bool BufNotFull() const TF_SHARED_LOCKS_REQUIRED(mu_) {
+    return stop_ || buf_.size() < opts_.bufsize;
+  }
 
-    condition_variable buf_enough_;
-    bool BufEnough() const TF_SHARED_LOCKS_REQUIRED(mu_) {
-        // NOTE: Unless we are finishing an epoch, we want to make sure
-        // the buf_ contains enough randomized elements before yielding
-        // any.
-        return stop_ || !status_.ok() || (epoch_end_ && !buf_.empty()) ||
-               (!epoch_end_ &&
-                buf_.size() >= std::max<uint64>(1, opts_.bufsize / 2));
-    }
+  condition_variable buf_enough_;
+  bool BufEnough() const TF_SHARED_LOCKS_REQUIRED(mu_) {
+    // NOTE: Unless we are finishing an epoch, we want to make sure
+    // the buf_ contains enough randomized elements before yielding
+    // any.
+    return stop_ || !status_.ok() || (epoch_end_ && !buf_.empty()) ||
+           (!epoch_end_ &&
+            buf_.size() >= std::max<uint64>(1, opts_.bufsize / 2));
+  }
 
-    void MainLoop();
-    struct Shard;
-    void ShardLoop(Shard* shard);
-    bool ShouldFinish(const Status& s);
-    bool Add(std::vector<string>* values);
+  void MainLoop();
+  struct Shard;
+  void ShardLoop(Shard* shard);
+  bool ShouldFinish(const Status& s);
+  bool Add(std::vector<string>* values);
 };
 
 }  // namespace tensorflow

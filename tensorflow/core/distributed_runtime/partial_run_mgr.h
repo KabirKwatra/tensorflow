@@ -45,41 +45,41 @@ namespace tensorflow {
 //
 // PartialRunMgr is thread-safe.
 class PartialRunMgr {
-public:
-    // Find or create the CancellationManager associated with step_id.
-    // The PartialRunMgr owns the cancellation_manager.
-    // Returns true if a new CancellationManager was created
-    // (i.e this is a new partial run).
-    bool FindOrCreate(int step_id, CancellationManager** cancellation_manager);
+ public:
+  // Find or create the CancellationManager associated with step_id.
+  // The PartialRunMgr owns the cancellation_manager.
+  // Returns true if a new CancellationManager was created
+  // (i.e this is a new partial run).
+  bool FindOrCreate(int step_id, CancellationManager** cancellation_manager);
 
-    // Calls the final callback if the PartialRunRequest has already completed.
-    // Otherwise stores the executor_status to be propagated when the
-    // PartialRunRequest completes (PartialRunDone has been called).
-    void ExecutorDone(int step_id, const Status& executor_status);
+  // Calls the final callback if the PartialRunRequest has already completed.
+  // Otherwise stores the executor_status to be propagated when the
+  // PartialRunRequest completes (PartialRunDone has been called).
+  void ExecutorDone(int step_id, const Status& executor_status);
 
-    // Calls done if the executor has already completed (ExecutorDone has been
-    // called). Otherwise, stores the status and done callback, calling them when
-    // ExecutorDone is called. The callback will either be called by the calling
-    // thread of either PartialRunDone or ExecutorDone.
-    // If executor_status in ExecutorDone is not OK, it takes precedence over
-    // status and is passed to the done callback.
-    void PartialRunDone(int step_id, StatusCallback done, const Status& status);
+  // Calls done if the executor has already completed (ExecutorDone has been
+  // called). Otherwise, stores the status and done callback, calling them when
+  // ExecutorDone is called. The callback will either be called by the calling
+  // thread of either PartialRunDone or ExecutorDone.
+  // If executor_status in ExecutorDone is not OK, it takes precedence over
+  // status and is passed to the done callback.
+  void PartialRunDone(int step_id, StatusCallback done, const Status& status);
 
-private:
-    // PartialRunState stores state associated with a pending partial run request.
-    // This is protected by the mutex in PartialRunMgr.
-    struct PartialRunState {
-        std::unique_ptr<CancellationManager> cancellation_manager;
+ private:
+  // PartialRunState stores state associated with a pending partial run request.
+  // This is protected by the mutex in PartialRunMgr.
+  struct PartialRunState {
+    std::unique_ptr<CancellationManager> cancellation_manager;
 
-        bool executor_done = false;
-        StatusCallback final_callback = nullptr;
-        Status final_status;
-    };
+    bool executor_done = false;
+    StatusCallback final_callback = nullptr;
+    Status final_status;
+  };
 
-    mutex mu_;
+  mutex mu_;
 
-    std::unordered_map<int, std::unique_ptr<PartialRunState>>
-            step_id_to_partial_run_ TF_GUARDED_BY(mu_);
+  std::unordered_map<int, std::unique_ptr<PartialRunState>>
+      step_id_to_partial_run_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

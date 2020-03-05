@@ -39,35 +39,34 @@ namespace gpu {
 //
 // Thread-compatible.
 class CholeskyThunk : public Thunk {
-public:
-    static StatusOr<int64> ScratchBufferSize(int64 n);
-    CholeskyThunk(const CholeskyOptions& options,
-                  BufferAllocation::Slice a_buffer,
-                  BufferAllocation::Slice workspace_buffer,
-                  BufferAllocation::Slice info_buffer,
-                  PrimitiveType type,
-                  int64 batch_size, int64 n, const HloInstruction* hlo);
+ public:
+  static StatusOr<int64> ScratchBufferSize(int64 n);
+  CholeskyThunk(const CholeskyOptions& options,
+                BufferAllocation::Slice a_buffer,
+                BufferAllocation::Slice workspace_buffer,
+                BufferAllocation::Slice info_buffer, PrimitiveType type,
+                int64 batch_size, int64 n, const HloInstruction* hlo);
 
-    CholeskyThunk(const CholeskyThunk&) = delete;
-    CholeskyThunk& operator=(const CholeskyThunk&) = delete;
+  CholeskyThunk(const CholeskyThunk&) = delete;
+  CholeskyThunk& operator=(const CholeskyThunk&) = delete;
 
-    Status ExecuteOnStream(const ExecuteParams& params) override;
+  Status ExecuteOnStream(const ExecuteParams& params) override;
 
-private:
-    se::blas::UpperLower uplo_;
+ private:
+  se::blas::UpperLower uplo_;
 
-    const BufferAllocation::Slice a_buffer_;
-    const BufferAllocation::Slice workspace_buffer_;
-    const BufferAllocation::Slice info_buffer_;
+  const BufferAllocation::Slice a_buffer_;
+  const BufferAllocation::Slice workspace_buffer_;
+  const BufferAllocation::Slice info_buffer_;
 
-    const PrimitiveType type_;
-    const int64 batch_size_;
-    const int64 a_batch_stride_;
-    const int64 n_;
+  const PrimitiveType type_;
+  const int64 batch_size_;
+  const int64 a_batch_stride_;
+  const int64 n_;
 
-    tensorflow::mutex mu_;
-    absl::flat_hash_map<se::Stream*, CusolverContext> contexts_
-    TF_GUARDED_BY(mu_);
+  tensorflow::mutex mu_;
+  absl::flat_hash_map<se::Stream*, CusolverContext> contexts_
+      TF_GUARDED_BY(mu_);
 };
 
 }  // namespace gpu

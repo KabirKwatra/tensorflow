@@ -27,58 +27,58 @@ namespace data {
 
 // A random seed generator resource.
 class RandomSeedGenerator : public ResourceBase {
-public:
-    RandomSeedGenerator(int64 seed, int64 seed2)
-        : seed_(seed),
-          seed2_(seed2),
-          parent_generator_(seed, seed2),
-          generator_(&parent_generator_) {}
+ public:
+  RandomSeedGenerator(int64 seed, int64 seed2)
+      : seed_(seed),
+        seed2_(seed2),
+        parent_generator_(seed, seed2),
+        generator_(&parent_generator_) {}
 
-    int64 num_random_samples();
-    void set_num_random_samples(int64 num_random_samples);
+  int64 num_random_samples();
+  void set_num_random_samples(int64 num_random_samples);
 
-    string DebugString() const override;
-    void GenerateRandomSeeds(int64* seed1, int64* seed2);
-    void Reset();
-    void Serialize(OpKernelContext* ctx);
+  string DebugString() const override;
+  void GenerateRandomSeeds(int64* seed1, int64* seed2);
+  void Reset();
+  void Serialize(OpKernelContext* ctx);
 
-private:
-    const int64 seed_;
-    const int64 seed2_;
-    mutex mu_;
-    random::PhiloxRandom parent_generator_ TF_GUARDED_BY(mu_);
-    random::SingleSampleAdapter<random::PhiloxRandom> generator_
-    TF_GUARDED_BY(mu_);
-    int64 num_random_samples_ TF_GUARDED_BY(mu_) = 0;
+ private:
+  const int64 seed_;
+  const int64 seed2_;
+  mutex mu_;
+  random::PhiloxRandom parent_generator_ TF_GUARDED_BY(mu_);
+  random::SingleSampleAdapter<random::PhiloxRandom> generator_
+      TF_GUARDED_BY(mu_);
+  int64 num_random_samples_ TF_GUARDED_BY(mu_) = 0;
 };
 
 // Creates an instance of random seed generator resource and transfers ownership
 // to the caller.
 class AnonymousRandomSeedGeneratorHandleOp
     : public AnonymousResourceOp<RandomSeedGenerator> {
-public:
-    explicit AnonymousRandomSeedGeneratorHandleOp(OpKernelConstruction* ctx);
-    void Compute(OpKernelContext* ctx) override;
+ public:
+  explicit AnonymousRandomSeedGeneratorHandleOp(OpKernelConstruction* ctx);
+  void Compute(OpKernelContext* ctx) override;
 
-private:
-    string name() override;
-    Status CreateResource(OpKernelContext* ctx,
-                          std::unique_ptr<FunctionLibraryDefinition> flib_def,
-                          std::unique_ptr<ProcessFunctionLibraryRuntime> pflr,
-                          FunctionLibraryRuntime* lib,
-                          RandomSeedGenerator** resource) override;
+ private:
+  string name() override;
+  Status CreateResource(OpKernelContext* ctx,
+                        std::unique_ptr<FunctionLibraryDefinition> flib_def,
+                        std::unique_ptr<ProcessFunctionLibraryRuntime> pflr,
+                        FunctionLibraryRuntime* lib,
+                        RandomSeedGenerator** resource) override;
 
-    int64 seed_;
-    int64 seed2_;
+  int64 seed_;
+  int64 seed2_;
 };
 
 // Deletes an instance of random seed generator resource.
 class DeleteRandomSeedGeneratorOp : public OpKernel {
-public:
-    explicit DeleteRandomSeedGeneratorOp(OpKernelConstruction* ctx)
-        : OpKernel(ctx) {}
+ public:
+  explicit DeleteRandomSeedGeneratorOp(OpKernelConstruction* ctx)
+      : OpKernel(ctx) {}
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 };
 
 }  // namespace data

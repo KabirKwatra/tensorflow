@@ -36,9 +36,9 @@ namespace tensorflow {
 
 // Struct that represents a possibly-absent Tensor.
 struct OptionalTensor {
-    string name;           // A descriptive name
-    bool present = false;  // Is the tensor present?
-    Tensor value;          // If present, what is the Tensor's value?
+  string name;           // A descriptive name
+  bool present = false;  // Is the tensor present?
+  Tensor value;          // If present, what is the Tensor's value?
 };
 
 // Takes a snapshot of the values of resource variable arguments, whose indices
@@ -62,46 +62,38 @@ Status SnapshotResourceVariables(OpKernelContext* ctx,
 // and _XlaRun operators.  Unlocks the resource variable and decrements its
 // refcount on destruction.
 class VariableInfo {
-public:
-    explicit VariableInfo(int index, Var* var);
-    VariableInfo(VariableInfo&& other);
+ public:
+  explicit VariableInfo(int index, Var* var);
+  VariableInfo(VariableInfo&& other);
 
-    VariableInfo& operator=(VariableInfo&& other);
+  VariableInfo& operator=(VariableInfo&& other);
 
-    VariableInfo(const VariableInfo&) = delete;
-    VariableInfo& operator=(const VariableInfo&) = delete;
+  VariableInfo(const VariableInfo&) = delete;
+  VariableInfo& operator=(const VariableInfo&) = delete;
 
-    // The index of the DT_RESOURCE input to the _XlaCompile/_XlaRun operator.
-    // Note that the indices can be different between _XlaCompile and _XlaRun.
-    int index() const {
-        return index_;
-    }
+  // The index of the DT_RESOURCE input to the _XlaCompile/_XlaRun operator.
+  // Note that the indices can be different between _XlaCompile and _XlaRun.
+  int index() const { return index_; }
 
-    // A pointer to the resource variable.  May be null if this VariableInfo is
-    // "empty", i.e. it does not track a resource variable.
-    Var* var() const {
-        return var_;
-    }
+  // A pointer to the resource variable.  May be null if this VariableInfo is
+  // "empty", i.e. it does not track a resource variable.
+  Var* var() const { return var_; }
 
-    // Returns true if the resource variable lock was successfully acquired by
-    // this thread.
-    bool lock_held() const {
-        return lock_held_;
-    }
-    void set_lock_held() {
-        lock_held_ = true;
-    }
+  // Returns true if the resource variable lock was successfully acquired by
+  // this thread.
+  bool lock_held() const { return lock_held_; }
+  void set_lock_held() { lock_held_ = true; }
 
-    ~VariableInfo();
+  ~VariableInfo();
 
-private:
-    int index_;
-    Var* var_;
+ private:
+  int index_;
+  Var* var_;
 
-    // We can't use a optional<mutex_lock> here because it confuses the compiler's
-    // thread safety analysis. Instead we use a boolean flag and release the lock
-    // in the VariableInfo destructor.
-    bool lock_held_ = false;
+  // We can't use a optional<mutex_lock> here because it confuses the compiler's
+  // thread safety analysis. Instead we use a boolean flag and release the lock
+  // in the VariableInfo destructor.
+  bool lock_held_ = false;
 };
 
 // Acquires the mutexes for all the variables in `variables` using a
@@ -110,108 +102,102 @@ private:
 // `variables` is allowed to contain instances that don't track a resource
 // variable (i.e. variables[i].var() can be null for some i).
 Status LockVariables(absl::Span<VariableInfo> variables)
-TF_EXCLUSIVE_LOCK_FUNCTION();
+    TF_EXCLUSIVE_LOCK_FUNCTION();
 
 // Helper class to perform the marshalling of TensorFlow inputs and outputs to
 // ShapedBuffers suitable for passing to an XLA computation.
 class XlaComputationLaunchContext {
-public:
-    // Create a new launch context. 'allocate_xla_tensors' is true if allocated
-    // output tensors and variables are always XlaTensors. If false they are
-    // assumed to be "normal" device pointers.
-    // If 'use_multiple_streams' is true, tensors may be defined and used on
-    // multiple streams and so se::Events must be defined and waited for. If
-    // 'use_multiple_streams' is true, 'allocate_xla_tensors' must also be true
-    // because we track inter-stream dependencies through events inside XlaTensor
-    // objects.
-    XlaComputationLaunchContext(xla::LocalClient* client,
-                                se::DeviceMemoryAllocator* xla_allocator,
-                                bool allocate_xla_tensors,
-                                bool use_multiple_streams);
+ public:
+  // Create a new launch context. 'allocate_xla_tensors' is true if allocated
+  // output tensors and variables are always XlaTensors. If false they are
+  // assumed to be "normal" device pointers.
+  // If 'use_multiple_streams' is true, tensors may be defined and used on
+  // multiple streams and so se::Events must be defined and waited for. If
+  // 'use_multiple_streams' is true, 'allocate_xla_tensors' must also be true
+  // because we track inter-stream dependencies through events inside XlaTensor
+  // objects.
+  XlaComputationLaunchContext(xla::LocalClient* client,
+                              se::DeviceMemoryAllocator* xla_allocator,
+                              bool allocate_xla_tensors,
+                              bool use_multiple_streams);
 
-    // Builds a XlaCompiler::Argument vector from the arguments to an XlaLaunch
-    // op.
-    static Status BuildXlaCompilerArguments(
-        const std::map<int, Tensor>& constant_args,
-        const std::map<int, OptionalTensor>& variable_args, OpKernelContext* ctx,
-        std::vector<XlaCompiler::Argument>* args);
+  // Builds a XlaCompiler::Argument vector from the arguments to an XlaLaunch
+  // op.
+  static Status BuildXlaCompilerArguments(
+      const std::map<int, Tensor>& constant_args,
+      const std::map<int, OptionalTensor>& variable_args, OpKernelContext* ctx,
+      std::vector<XlaCompiler::Argument>* args);
 
-    // Add all inputs within `ctx` as XLA arguments (returned by arguments()).
-    // `variables` is a map from TensorFlow argument number to resource variable.
-    //
-    // Assumes that the first `missing_ctx_input_prefix` inputs to the kernel are
-    // missing and adjusts input indices accordingly.  All elements in kernel's
-    // input_mapping must be greater than or equal to `missing_ctx_input_prefix`
-    // (in other words, no inputs actually required by the kernel can be missing).
-    void PopulateInputs(OpKernelContext* ctx,
-                        const XlaCompiler::CompilationResult* kernel,
-                        const std::map<int, OptionalTensor>& variables,
-                        int missing_ctx_input_prefix);
+  // Add all inputs within `ctx` as XLA arguments (returned by arguments()).
+  // `variables` is a map from TensorFlow argument number to resource variable.
+  //
+  // Assumes that the first `missing_ctx_input_prefix` inputs to the kernel are
+  // missing and adjusts input indices accordingly.  All elements in kernel's
+  // input_mapping must be greater than or equal to `missing_ctx_input_prefix`
+  // (in other words, no inputs actually required by the kernel can be missing).
+  void PopulateInputs(OpKernelContext* ctx,
+                      const XlaCompiler::CompilationResult* kernel,
+                      const std::map<int, OptionalTensor>& variables,
+                      int missing_ctx_input_prefix);
 
-    // Given the XLA output in `output`, populate all outputs of `ctx`.  Also
-    // writes out the resource variable updates.
-    //
-    // Updates to all resource variables are written in a single atomic operation.
-    // This models *->Write dependencies between resource variable operations.
-    // See jit/resource_operation_safety_analysis for details.
-    //
-    //
-    // Assumes that the first `missing_ctx_input_prefix` inputs to the kernel are
-    // missing and adjusts input indices accordingly.
-    Status PopulateOutputs(
-        OpKernelContext* ctx, const XlaCompiler::CompilationResult* kernel,
-        xla::ScopedShapedBuffer output, int missing_ctx_input_prefix,
-        const xla::HloInputOutputAliasConfig& input_output_alias,
-        const std::map<int, OptionalTensor>& resource_var_snapshots);
+  // Given the XLA output in `output`, populate all outputs of `ctx`.  Also
+  // writes out the resource variable updates.
+  //
+  // Updates to all resource variables are written in a single atomic operation.
+  // This models *->Write dependencies between resource variable operations.
+  // See jit/resource_operation_safety_analysis for details.
+  //
+  //
+  // Assumes that the first `missing_ctx_input_prefix` inputs to the kernel are
+  // missing and adjusts input indices accordingly.
+  Status PopulateOutputs(
+      OpKernelContext* ctx, const XlaCompiler::CompilationResult* kernel,
+      xla::ScopedShapedBuffer output, int missing_ctx_input_prefix,
+      const xla::HloInputOutputAliasConfig& input_output_alias,
+      const std::map<int, OptionalTensor>& resource_var_snapshots);
 
-    // Return the argument list. Only valid after PopulateInputs() has been
-    // called.
-    const std::vector<xla::ShapedBuffer*>& arguments() const {
-        return arg_ptrs_;
-    }
+  // Return the argument list. Only valid after PopulateInputs() has been
+  // called.
+  const std::vector<xla::ShapedBuffer*>& arguments() const { return arg_ptrs_; }
 
-private:
-    xla::LocalClient* client_;
-    se::DeviceMemoryAllocator* xla_allocator_;
-    bool allocate_xla_tensors_;
-    bool use_multiple_streams_;
-    std::vector<std::unique_ptr<xla::ShapedBuffer>> arg_buffers_;
-    std::vector<xla::ShapedBuffer*> arg_ptrs_;
+ private:
+  xla::LocalClient* client_;
+  se::DeviceMemoryAllocator* xla_allocator_;
+  bool allocate_xla_tensors_;
+  bool use_multiple_streams_;
+  std::vector<std::unique_ptr<xla::ShapedBuffer>> arg_buffers_;
+  std::vector<xla::ShapedBuffer*> arg_ptrs_;
 };
 
 // A simple TensorBuffer implementation that allows us to create Tensors that
 // take ownership of pre-allocated memory.
 class XlaTensorBuffer : public TensorBuffer {
-public:
-    XlaTensorBuffer(const void* ptr, size_t expected_size, size_t actual_size,
-                    Allocator* allocator)
-        : TensorBuffer(const_cast<void*>(ptr)),
-          expected_size_(expected_size),
-          actual_size_(actual_size),
-          allocator_(allocator) {}
+ public:
+  XlaTensorBuffer(const void* ptr, size_t expected_size, size_t actual_size,
+                  Allocator* allocator)
+      : TensorBuffer(const_cast<void*>(ptr)),
+        expected_size_(expected_size),
+        actual_size_(actual_size),
+        allocator_(allocator) {}
 
-    ~XlaTensorBuffer() override {
-        if (data()) {
-            allocator_->DeallocateRaw(data());
-        }
+  ~XlaTensorBuffer() override {
+    if (data()) {
+      allocator_->DeallocateRaw(data());
     }
+  }
 
-    size_t size() const override {
-        return expected_size_;
-    }
+  size_t size() const override { return expected_size_; }
 
-    TensorBuffer* root_buffer() override {
-        return this;
-    }
+  TensorBuffer* root_buffer() override { return this; }
 
-    void FillAllocationDescription(AllocationDescription* proto) const override {
-        proto->set_allocated_bytes(actual_size_);
-    }
+  void FillAllocationDescription(AllocationDescription* proto) const override {
+    proto->set_allocated_bytes(actual_size_);
+  }
 
-private:
-    size_t expected_size_;
-    size_t actual_size_;
-    Allocator* allocator_;
+ private:
+  size_t expected_size_;
+  size_t actual_size_;
+  Allocator* allocator_;
 };
 
 }  // namespace tensorflow

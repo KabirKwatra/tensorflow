@@ -26,32 +26,32 @@ namespace tensorflow {
  */
 template <typename Device, typename T>
 class ConditionalAccumulatorOp : public ConditionalAccumulatorBaseOp {
-public:
-    explicit ConditionalAccumulatorOp(OpKernelConstruction* context)
-        : ConditionalAccumulatorBaseOp(context) {}
+ public:
+  explicit ConditionalAccumulatorOp(OpKernelConstruction* context)
+      : ConditionalAccumulatorBaseOp(context) {}
 
-protected:
-    Creator GetCreator() const override {
-        return [this](ConditionalAccumulatorBase** ret) {
-            ConditionalAccumulator<Device, T>* accumulator =
-                new ConditionalAccumulator<Device, T>(dtype_, shape_, cinfo_.name(),
-                        reduction_type_);
-            *ret = accumulator;
-            return Status::OK();
-        };
-    }
+ protected:
+  Creator GetCreator() const override {
+    return [this](ConditionalAccumulatorBase** ret) {
+      ConditionalAccumulator<Device, T>* accumulator =
+          new ConditionalAccumulator<Device, T>(dtype_, shape_, cinfo_.name(),
+                                                reduction_type_);
+      *ret = accumulator;
+      return Status::OK();
+    };
+  }
 
-    Status CheckSignature(OpKernelContext* ctx) override {
-        TF_RETURN_IF_ERROR(ctx->MatchSignature({}, {DT_STRING_REF}));
-        return Status::OK();
-    }
+  Status CheckSignature(OpKernelContext* ctx) override {
+    TF_RETURN_IF_ERROR(ctx->MatchSignature({}, {DT_STRING_REF}));
+    return Status::OK();
+  }
 
-    void SetHandleToOutput(OpKernelContext* ctx)
-    TF_SHARED_LOCKS_REQUIRED(mu_) override {
-        ctx->set_output_ref(0, &mu_, accumulator_handle_.AccessTensor(ctx));
-    }
+  void SetHandleToOutput(OpKernelContext* ctx)
+      TF_SHARED_LOCKS_REQUIRED(mu_) override {
+    ctx->set_output_ref(0, &mu_, accumulator_handle_.AccessTensor(ctx));
+  }
 
-    TF_DISALLOW_COPY_AND_ASSIGN(ConditionalAccumulatorOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(ConditionalAccumulatorOp);
 };
 
 #define REGISTER_KERNELS(type, dev)                           \
@@ -63,37 +63,37 @@ protected:
 // Resource conditional accumulator
 template <typename Device, typename T>
 class ResourceConditionalAccumulatorOp : public ConditionalAccumulatorBaseOp {
-public:
-    explicit ResourceConditionalAccumulatorOp(OpKernelConstruction* context)
-        : ConditionalAccumulatorBaseOp(context) {}
+ public:
+  explicit ResourceConditionalAccumulatorOp(OpKernelConstruction* context)
+      : ConditionalAccumulatorBaseOp(context) {}
 
-protected:
-    Creator GetCreator() const override {
-        return [this](ConditionalAccumulatorBase** ret) {
-            ConditionalAccumulator<Device, T>* accumulator =
-                new ConditionalAccumulator<Device, T>(dtype_, shape_, cinfo_.name(),
-                        reduction_type_);
-            *ret = accumulator;
-            return Status::OK();
-        };
-    }
+ protected:
+  Creator GetCreator() const override {
+    return [this](ConditionalAccumulatorBase** ret) {
+      ConditionalAccumulator<Device, T>* accumulator =
+          new ConditionalAccumulator<Device, T>(dtype_, shape_, cinfo_.name(),
+                                                reduction_type_);
+      *ret = accumulator;
+      return Status::OK();
+    };
+  }
 
-    Status CheckSignature(OpKernelContext* ctx) override {
-        TF_RETURN_IF_ERROR(ctx->MatchSignature({}, {DT_RESOURCE}));
-        return Status::OK();
-    }
+  Status CheckSignature(OpKernelContext* ctx) override {
+    TF_RETURN_IF_ERROR(ctx->MatchSignature({}, {DT_RESOURCE}));
+    return Status::OK();
+  }
 
-    void SetHandleToOutput(OpKernelContext* ctx)
-    TF_SHARED_LOCKS_REQUIRED(mu_) override {
-        auto h = accumulator_handle_.AccessTensor(ctx)->template flat<tstring>();
-        h(0) = cinfo_.container();
-        h(1) = cinfo_.name();
-        OP_REQUIRES_OK(ctx, MakeResourceHandleToOutput(
-                           ctx, 0, cinfo_.container(), cinfo_.name(),
-                           MakeTypeIndex<ConditionalAccumulatorBase>()));
-    }
+  void SetHandleToOutput(OpKernelContext* ctx)
+      TF_SHARED_LOCKS_REQUIRED(mu_) override {
+    auto h = accumulator_handle_.AccessTensor(ctx)->template flat<tstring>();
+    h(0) = cinfo_.container();
+    h(1) = cinfo_.name();
+    OP_REQUIRES_OK(ctx, MakeResourceHandleToOutput(
+                            ctx, 0, cinfo_.container(), cinfo_.name(),
+                            MakeTypeIndex<ConditionalAccumulatorBase>()));
+  }
 
-    TF_DISALLOW_COPY_AND_ASSIGN(ResourceConditionalAccumulatorOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(ResourceConditionalAccumulatorOp);
 };
 
 #define REGISTER_RESOURCE_KERNELS(type, dev)                     \
@@ -128,20 +128,20 @@ TF_CALL_double(REGISTER_RESOURCE_KERNELS_CPU);
  */
 class AccumulatorApplyGradientOp
     : public ConditionalAccumulatorBaseApplyGradientOp {
-public:
-    explicit AccumulatorApplyGradientOp(OpKernelConstruction* context)
-        : ConditionalAccumulatorBaseApplyGradientOp(context) {}
+ public:
+  explicit AccumulatorApplyGradientOp(OpKernelConstruction* context)
+      : ConditionalAccumulatorBaseApplyGradientOp(context) {}
 
-    DataTypeVector GetExpectedInputs(
-        ConditionalAccumulatorBase* accumulator) override {
-        DataTypeVector expected_inputs;
-        expected_inputs = {DT_STRING_REF, DT_INT64};
-        expected_inputs.push_back(accumulator->dtype());
-        return expected_inputs;
-    }
+  DataTypeVector GetExpectedInputs(
+      ConditionalAccumulatorBase* accumulator) override {
+    DataTypeVector expected_inputs;
+    expected_inputs = {DT_STRING_REF, DT_INT64};
+    expected_inputs.push_back(accumulator->dtype());
+    return expected_inputs;
+  }
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(AccumulatorApplyGradientOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(AccumulatorApplyGradientOp);
 };
 
 REGISTER_KERNEL_BUILDER(Name("AccumulatorApplyGradient").Device(DEVICE_CPU),
@@ -149,20 +149,20 @@ REGISTER_KERNEL_BUILDER(Name("AccumulatorApplyGradient").Device(DEVICE_CPU),
 
 class ResourceAccumulatorApplyGradientOp
     : public ConditionalAccumulatorBaseApplyGradientOp {
-public:
-    explicit ResourceAccumulatorApplyGradientOp(OpKernelConstruction* context)
-        : ConditionalAccumulatorBaseApplyGradientOp(context) {}
+ public:
+  explicit ResourceAccumulatorApplyGradientOp(OpKernelConstruction* context)
+      : ConditionalAccumulatorBaseApplyGradientOp(context) {}
 
-    DataTypeVector GetExpectedInputs(
-        ConditionalAccumulatorBase* accumulator) override {
-        DataTypeVector expected_inputs;
-        expected_inputs = {DT_RESOURCE, DT_INT64};
-        expected_inputs.push_back(accumulator->dtype());
-        return expected_inputs;
-    }
+  DataTypeVector GetExpectedInputs(
+      ConditionalAccumulatorBase* accumulator) override {
+    DataTypeVector expected_inputs;
+    expected_inputs = {DT_RESOURCE, DT_INT64};
+    expected_inputs.push_back(accumulator->dtype());
+    return expected_inputs;
+  }
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(ResourceAccumulatorApplyGradientOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(ResourceAccumulatorApplyGradientOp);
 };
 
 REGISTER_KERNEL_BUILDER(
@@ -175,34 +175,34 @@ REGISTER_KERNEL_BUILDER(
  */
 class AccumulatorTakeGradientOp
     : public ConditionalAccumulatorBaseTakeGradientOp {
-public:
-    explicit AccumulatorTakeGradientOp(OpKernelConstruction* context)
-        : ConditionalAccumulatorBaseTakeGradientOp(context) {}
+ public:
+  explicit AccumulatorTakeGradientOp(OpKernelConstruction* context)
+      : ConditionalAccumulatorBaseTakeGradientOp(context) {}
 
-    DataTypeVector GetExpectedInputs(
-        ConditionalAccumulatorBase* accumulator) override {
-        return {DT_STRING_REF, DT_INT32};
-    }
+  DataTypeVector GetExpectedInputs(
+      ConditionalAccumulatorBase* accumulator) override {
+    return {DT_STRING_REF, DT_INT32};
+  }
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(AccumulatorTakeGradientOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(AccumulatorTakeGradientOp);
 };
 REGISTER_KERNEL_BUILDER(Name("AccumulatorTakeGradient").Device(DEVICE_CPU),
                         AccumulatorTakeGradientOp);
 
 class ResourceAccumulatorTakeGradientOp
     : public ConditionalAccumulatorBaseTakeGradientOp {
-public:
-    explicit ResourceAccumulatorTakeGradientOp(OpKernelConstruction* context)
-        : ConditionalAccumulatorBaseTakeGradientOp(context) {}
+ public:
+  explicit ResourceAccumulatorTakeGradientOp(OpKernelConstruction* context)
+      : ConditionalAccumulatorBaseTakeGradientOp(context) {}
 
-    DataTypeVector GetExpectedInputs(
-        ConditionalAccumulatorBase* accumulator) override {
-        return {DT_RESOURCE, DT_INT32};
-    }
+  DataTypeVector GetExpectedInputs(
+      ConditionalAccumulatorBase* accumulator) override {
+    return {DT_RESOURCE, DT_INT32};
+  }
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(ResourceAccumulatorTakeGradientOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(ResourceAccumulatorTakeGradientOp);
 };
 
 REGISTER_KERNEL_BUILDER(

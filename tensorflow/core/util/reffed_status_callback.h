@@ -28,33 +28,31 @@ namespace tensorflow {
 // StatusCallback is called with the first non-OK status passed to
 // UpdateStatus(), or Status::OK() if no non-OK status was set.
 class ReffedStatusCallback : public core::RefCounted {
-public:
-    explicit ReffedStatusCallback(StatusCallback done) : done_(std::move(done)) {}
+ public:
+  explicit ReffedStatusCallback(StatusCallback done) : done_(std::move(done)) {}
 
-    void UpdateStatus(const Status& s) {
-        mutex_lock lock(mu_);
-        status_group_.Update(s);
-    }
+  void UpdateStatus(const Status& s) {
+    mutex_lock lock(mu_);
+    status_group_.Update(s);
+  }
 
-    bool ok() {
-        tf_shared_lock lock(mu_);
-        return status_group_.ok();
-    }
+  bool ok() {
+    tf_shared_lock lock(mu_);
+    return status_group_.ok();
+  }
 
-    // Returns a copy of the current status.
-    Status status() {
-        tf_shared_lock lock(mu_);
-        return status_group_.as_summary_status();
-    }
+  // Returns a copy of the current status.
+  Status status() {
+    tf_shared_lock lock(mu_);
+    return status_group_.as_summary_status();
+  }
 
-    ~ReffedStatusCallback() {
-        done_(status_group_.as_summary_status());
-    }
+  ~ReffedStatusCallback() { done_(status_group_.as_summary_status()); }
 
-private:
-    StatusCallback done_;
-    mutex mu_;
-    StatusGroup status_group_ TF_GUARDED_BY(mu_);
+ private:
+  StatusCallback done_;
+  mutex mu_;
+  StatusGroup status_group_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

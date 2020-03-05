@@ -29,21 +29,19 @@ limitations under the License.
 namespace tensorflow {
 
 class VariableOp : public OpKernel {
-public:
-    explicit VariableOp(OpKernelConstruction* context);
-    void Compute(OpKernelContext* ctx) override;
+ public:
+  explicit VariableOp(OpKernelConstruction* context);
+  void Compute(OpKernelContext* ctx) override;
 
-private:
-    DataType dtype_;
-    TensorShape shape_;
+ private:
+  DataType dtype_;
+  TensorShape shape_;
 
-    mutex init_mu_;
-    ContainerInfo cinfo_ TF_GUARDED_BY(init_mu_);
-    bool initialized_ TF_GUARDED_BY(init_mu_) {
-        false
-    };
+  mutex init_mu_;
+  ContainerInfo cinfo_ TF_GUARDED_BY(init_mu_);
+  bool initialized_ TF_GUARDED_BY(init_mu_){false};
 
-    TF_DISALLOW_COPY_AND_ASSIGN(VariableOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(VariableOp);
 };
 
 }  // namespace tensorflow

@@ -44,145 +44,135 @@ class Master;
 
 // function that creates a RendezvousMgr.
 typedef std::function<RendezvousMgrInterface*(const WorkerEnv*)>
-RendezvousMgrCreationFunction;
+    RendezvousMgrCreationFunction;
 
 // function that creates a CollectiveExecutorMgr.
 typedef std::function<CollectiveExecutorMgrInterface*(
     const ConfigProto&, const WorkerEnv*, WorkerCacheInterface*)>
-CollectiveMgrCreationFunction;
+    CollectiveMgrCreationFunction;
 
 // function that registers a service to the server. The service needs to
 // be registered before builder.BuildAndStart().
 typedef std::function<void(const WorkerEnv*, ::grpc::ServerBuilder*)>
-ServiceInitFunction;
+    ServiceInitFunction;
 
 // function that creates a grpc based worker implementation.
 typedef std::function<std::unique_ptr<GrpcWorker>(WorkerEnv*,
-        const ConfigProto& config)>
-WorkerCreationFunction;
+                                                  const ConfigProto& config)>
+    WorkerCreationFunction;
 
 struct GrpcServerOptions {
-    ServiceInitFunction service_func = nullptr;
-    RendezvousMgrCreationFunction rendezvous_mgr_func = nullptr;
-    CollectiveMgrCreationFunction collective_mgr_func = nullptr;
-    WorkerCreationFunction worker_func = nullptr;
-    StatsPublisherFactory stats_factory = CreateNoOpStatsPublisher;
-    GrpcWorkerServiceOptions worker_service_options;
+  ServiceInitFunction service_func = nullptr;
+  RendezvousMgrCreationFunction rendezvous_mgr_func = nullptr;
+  CollectiveMgrCreationFunction collective_mgr_func = nullptr;
+  WorkerCreationFunction worker_func = nullptr;
+  StatsPublisherFactory stats_factory = CreateNoOpStatsPublisher;
+  GrpcWorkerServiceOptions worker_service_options;
 };
 
 class GrpcServer : public ServerInterface {
-protected:
-    GrpcServer(const ServerDef& server_def, Env* env);
-    // Allow children classes to override this and provide custom args to the
-    // server before it is constructed. Default behavior is to do nothing.
-    virtual void MaybeMutateBuilder(::grpc::ServerBuilder* builder);
+ protected:
+  GrpcServer(const ServerDef& server_def, Env* env);
+  // Allow children classes to override this and provide custom args to the
+  // server before it is constructed. Default behavior is to do nothing.
+  virtual void MaybeMutateBuilder(::grpc::ServerBuilder* builder);
 
-public:
-    static Status Create(const ServerDef& server_def, Env* env,
-                         std::unique_ptr<ServerInterface>* out_server);
-    static Status Create(const ServerDef& server_def, Env* env,
-                         std::unique_ptr<GrpcServer>* out_server);
+ public:
+  static Status Create(const ServerDef& server_def, Env* env,
+                       std::unique_ptr<ServerInterface>* out_server);
+  static Status Create(const ServerDef& server_def, Env* env,
+                       std::unique_ptr<GrpcServer>* out_server);
 
-    // Destruction is only supported in the factory method. Clean
-    // shutdown is not currently implemented for this server type.
-    virtual ~GrpcServer();
+  // Destruction is only supported in the factory method. Clean
+  // shutdown is not currently implemented for this server type.
+  virtual ~GrpcServer();
 
-    // Implementations of ServerInterface methods.
-    Status Start() override;
-    Status Stop() override;
-    Status Join() override;
-    const string target() const override;
+  // Implementations of ServerInterface methods.
+  Status Start() override;
+  Status Stop() override;
+  Status Join() override;
+  const string target() const override;
 
-    WorkerEnv* worker_env() {
-        return &worker_env_;
-    }
-    MasterEnv* master_env() {
-        return &master_env_;
-    }
+  WorkerEnv* worker_env() { return &worker_env_; }
+  MasterEnv* master_env() { return &master_env_; }
 
-    // Add master eager context to local eager service in order to handle enqueue
-    // requests from remote workers.
-    Status AddMasterEagerContextToEagerService(
-        const tensorflow::uint64 context_id, tensorflow::EagerContext* context);
-    // Update the set of workers that can be reached by the GRPC server
-    Status UpdateServerDef(const ServerDef& server_def);
+  // Add master eager context to local eager service in order to handle enqueue
+  // requests from remote workers.
+  Status AddMasterEagerContextToEagerService(
+      const tensorflow::uint64 context_id, tensorflow::EagerContext* context);
+  // Update the set of workers that can be reached by the GRPC server
+  Status UpdateServerDef(const ServerDef& server_def);
 
-protected:
-    virtual Status GetPort(const ServerDef& server_def, int* port) const;
-    Status Init(const GrpcServerOptions& opts = GrpcServerOptions());
+ protected:
+  virtual Status GetPort(const ServerDef& server_def, int* port) const;
+  Status Init(const GrpcServerOptions& opts = GrpcServerOptions());
 
-    // A subclass can override this method to support secure credentials.
-    virtual std::shared_ptr<::grpc::ServerCredentials> GetServerCredentials(
-        const ServerDef& server_def) const;
+  // A subclass can override this method to support secure credentials.
+  virtual std::shared_ptr<::grpc::ServerCredentials> GetServerCredentials(
+      const ServerDef& server_def) const;
 
-    virtual ChannelCreationFunction GetChannelCreationFunction() const;
+  virtual ChannelCreationFunction GetChannelCreationFunction() const;
 
-    virtual std::unique_ptr<Master> CreateMaster(MasterEnv* master_env);
+  virtual std::unique_ptr<Master> CreateMaster(MasterEnv* master_env);
 
-    // Creates a WorkerCacheInterface for a session.
-    virtual Status WorkerCacheFactory(const WorkerCacheFactoryOptions& options,
-                                      WorkerCacheInterface** worker_cache);
+  // Creates a WorkerCacheInterface for a session.
+  virtual Status WorkerCacheFactory(const WorkerCacheFactoryOptions& options,
+                                    WorkerCacheInterface** worker_cache);
 
-    // Parses a WorkerCacheFactoryOptions into a GrpcChannelSpec.
-    Status ParseChannelSpec(const WorkerCacheFactoryOptions& options,
-                            GrpcChannelSpec* channel_spec);
+  // Parses a WorkerCacheFactoryOptions into a GrpcChannelSpec.
+  Status ParseChannelSpec(const WorkerCacheFactoryOptions& options,
+                          GrpcChannelSpec* channel_spec);
 
-    // Returns the port to which this server is bound.
-    // This method may only be called after `this->Init()` returns successfully.
-    int bound_port() const {
-        return bound_port_;
-    }
+  // Returns the port to which this server is bound.
+  // This method may only be called after `this->Init()` returns successfully.
+  int bound_port() const { return bound_port_; }
 
-    const ServerDef& server_def() const {
-        return server_def_;
-    }
-    GrpcWorker* worker_impl() const {
-        return worker_impl_.get();
-    }
+  const ServerDef& server_def() const { return server_def_; }
+  GrpcWorker* worker_impl() const { return worker_impl_.get(); }
 
-private:
-    Env* env_;
+ private:
+  Env* env_;
 
-    // The port to which this server is bound.
-    int bound_port_ = 0;
+  // The port to which this server is bound.
+  int bound_port_ = 0;
 
-    // Guards server configuration, server, and state.
-    mutex mu_;
+  // Guards server configuration, server, and state.
+  mutex mu_;
 
-    // Represents the current state of the server, which changes as follows:
-    //
-    //                 Join()            Join()
-    //                  ___               ___
-    //      Start()     \ /    Stop()     \ /
-    // NEW ---------> STARTED --------> STOPPED
-    //   \                          /
-    //    \________________________/
-    //            Stop(), Join()
-    enum State { NEW, STARTED, STOPPED };
-    State state_ TF_GUARDED_BY(mu_);
+  // Represents the current state of the server, which changes as follows:
+  //
+  //                 Join()            Join()
+  //                  ___               ___
+  //      Start()     \ /    Stop()     \ /
+  // NEW ---------> STARTED --------> STOPPED
+  //   \                          /
+  //    \________________________/
+  //            Stop(), Join()
+  enum State { NEW, STARTED, STOPPED };
+  State state_ TF_GUARDED_BY(mu_);
 
-    // Implementation of a TensorFlow master, and RPC polling thread.
-    MasterEnv master_env_;
-    std::unique_ptr<Master> master_impl_;
-    AsyncServiceInterface* master_service_ = nullptr;
-    std::unique_ptr<Thread> master_thread_ TF_GUARDED_BY(mu_);
+  // Implementation of a TensorFlow master, and RPC polling thread.
+  MasterEnv master_env_;
+  std::unique_ptr<Master> master_impl_;
+  AsyncServiceInterface* master_service_ = nullptr;
+  std::unique_ptr<Thread> master_thread_ TF_GUARDED_BY(mu_);
 
-    // Implementation of a TensorFlow worker, and RPC polling thread.
-    WorkerEnv worker_env_;
-    std::unique_ptr<GrpcWorker> worker_impl_;
-    AsyncServiceInterface* worker_service_ = nullptr;
-    std::unique_ptr<Thread> worker_thread_ TF_GUARDED_BY(mu_);
-    std::unique_ptr<GrpcWorkerEnv> grpc_worker_env_;
+  // Implementation of a TensorFlow worker, and RPC polling thread.
+  WorkerEnv worker_env_;
+  std::unique_ptr<GrpcWorker> worker_impl_;
+  AsyncServiceInterface* worker_service_ = nullptr;
+  std::unique_ptr<Thread> worker_thread_ TF_GUARDED_BY(mu_);
+  std::unique_ptr<GrpcWorkerEnv> grpc_worker_env_;
 
-    // TensorFlow Eager implementation, and RPC polling thread.
-    AsyncServiceInterface* eager_service_ = nullptr;
-    std::unique_ptr<Thread> eager_thread_ TF_GUARDED_BY(mu_);
-    std::shared_ptr<WorkerSession> worker_session_;
+  // TensorFlow Eager implementation, and RPC polling thread.
+  AsyncServiceInterface* eager_service_ = nullptr;
+  std::unique_ptr<Thread> eager_thread_ TF_GUARDED_BY(mu_);
+  std::shared_ptr<WorkerSession> worker_session_;
 
-    // The overall server configuration.
-    ServerDef server_def_ TF_GUARDED_BY(mu_);
+  // The overall server configuration.
+  ServerDef server_def_ TF_GUARDED_BY(mu_);
 
-    std::unique_ptr<::grpc::Server> server_ TF_GUARDED_BY(mu_);
+  std::unique_ptr<::grpc::Server> server_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

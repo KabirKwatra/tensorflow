@@ -32,42 +32,42 @@ limitations under the License.
 namespace tensorflow {
 
 class FIFOQueue : public TypedQueue<std::deque<PersistentTensor> > {
-public:
-    FIFOQueue(int32 capacity, const DataTypeVector& component_dtypes,
-              const std::vector<TensorShape>& component_shapes,
-              const string& name);
+ public:
+  FIFOQueue(int32 capacity, const DataTypeVector& component_dtypes,
+            const std::vector<TensorShape>& component_shapes,
+            const string& name);
 
-    // Implementations of QueueInterface methods --------------------------------
+  // Implementations of QueueInterface methods --------------------------------
 
-    void TryEnqueue(const Tuple& tuple, OpKernelContext* ctx,
-                    DoneCallback callback) override;
-    void TryEnqueueMany(const Tuple& tuple, OpKernelContext* ctx,
-                        DoneCallback callback) override;
-    void TryDequeue(OpKernelContext* ctx, CallbackWithTuple callback) override;
-    void TryDequeueMany(int num_elements, OpKernelContext* ctx,
-                        bool allow_small_batch,
-                        CallbackWithTuple callback) override;
-    Status MatchesNodeDef(const NodeDef& node_def) override;
+  void TryEnqueue(const Tuple& tuple, OpKernelContext* ctx,
+                  DoneCallback callback) override;
+  void TryEnqueueMany(const Tuple& tuple, OpKernelContext* ctx,
+                      DoneCallback callback) override;
+  void TryDequeue(OpKernelContext* ctx, CallbackWithTuple callback) override;
+  void TryDequeueMany(int num_elements, OpKernelContext* ctx,
+                      bool allow_small_batch,
+                      CallbackWithTuple callback) override;
+  Status MatchesNodeDef(const NodeDef& node_def) override;
 
-    int32 size() const override {
-        mutex_lock lock(mu_);
-        return queues_[0].size();
-    }
+  int32 size() const override {
+    mutex_lock lock(mu_);
+    return queues_[0].size();
+  }
 
-protected:
-    ~FIFOQueue() override {}
+ protected:
+  ~FIFOQueue() override {}
 
-    // Helper for dequeuing a single element from queues_.
-    void DequeueLocked(OpKernelContext* ctx, Tuple* tuple)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+  // Helper for dequeuing a single element from queues_.
+  void DequeueLocked(OpKernelContext* ctx, Tuple* tuple)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 
-    static Status GetElementComponentFromBatch(const Tuple& tuple, int64 index,
-            int component,
-            OpKernelContext* ctx,
-            PersistentTensor* out_element);
+  static Status GetElementComponentFromBatch(const Tuple& tuple, int64 index,
+                                             int component,
+                                             OpKernelContext* ctx,
+                                             PersistentTensor* out_element);
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(FIFOQueue);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(FIFOQueue);
 };
 
 // Defines a FIFOQueueOp, which produces a Queue (specifically, one
@@ -75,15 +75,15 @@ private:
 // executions, and sessions. Running this op produces a single-element
 // tensor of handles to Queues in the corresponding device.
 class FIFOQueueOp : public TypedQueueOp {
-public:
-    explicit FIFOQueueOp(OpKernelConstruction* context);
+ public:
+  explicit FIFOQueueOp(OpKernelConstruction* context);
 
-private:
-    Status CreateResource(QueueInterface** ret) override
-    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+ private:
+  Status CreateResource(QueueInterface** ret) override
+      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 
-    std::vector<TensorShape> component_shapes_;
-    TF_DISALLOW_COPY_AND_ASSIGN(FIFOQueueOp);
+  std::vector<TensorShape> component_shapes_;
+  TF_DISALLOW_COPY_AND_ASSIGN(FIFOQueueOp);
 };
 
 }  // namespace tensorflow

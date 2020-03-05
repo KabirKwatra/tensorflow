@@ -32,31 +32,31 @@ struct SessionOptions;
 // should eventually be removed once we refactor ThreadPoolDevice and
 // GPUDevice into more 'process-wide' abstractions.
 class LocalDevice : public Device {
-public:
-    LocalDevice(const SessionOptions& options,
-                const DeviceAttributes& attributes);
-    ~LocalDevice() override;
+ public:
+  LocalDevice(const SessionOptions& options,
+              const DeviceAttributes& attributes);
+  ~LocalDevice() override;
 
-private:
-    static bool use_global_threadpool_;
+ private:
+  static bool use_global_threadpool_;
 
-    static void set_use_global_threadpool(bool use_global_threadpool) {
-        use_global_threadpool_ = use_global_threadpool;
-    }
+  static void set_use_global_threadpool(bool use_global_threadpool) {
+    use_global_threadpool_ = use_global_threadpool;
+  }
 
-    struct EigenThreadPoolInfo;
-    std::unique_ptr<EigenThreadPoolInfo> owned_tp_info_;
+  struct EigenThreadPoolInfo;
+  std::unique_ptr<EigenThreadPoolInfo> owned_tp_info_;
 
-    // All ThreadPoolDevices in the process associated with the same
-    // NUMA node will share a single fixed sized threadpool for numerical
-    // computations.
-    static mutex global_tp_mu_;
-    static gtl::InlinedVector<EigenThreadPoolInfo*, 4> global_tp_info_
-    TF_GUARDED_BY(global_tp_mu_);
+  // All ThreadPoolDevices in the process associated with the same
+  // NUMA node will share a single fixed sized threadpool for numerical
+  // computations.
+  static mutex global_tp_mu_;
+  static gtl::InlinedVector<EigenThreadPoolInfo*, 4> global_tp_info_
+      TF_GUARDED_BY(global_tp_mu_);
 
-    friend class test::Benchmark;
+  friend class test::Benchmark;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(LocalDevice);
+  TF_DISALLOW_COPY_AND_ASSIGN(LocalDevice);
 };
 
 }  // namespace tensorflow

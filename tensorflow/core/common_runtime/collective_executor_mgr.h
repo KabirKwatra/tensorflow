@@ -24,56 +24,56 @@ class ConfigProto;
 class DeviceMgr;
 
 class CollectiveExecutorMgr : public CollectiveExecutorMgrInterface {
-public:
-    CollectiveExecutorMgr(const ConfigProto& config, const DeviceMgr* dev_mgr,
-                          std::unique_ptr<DeviceResolverInterface> dev_resolver,
-                          std::unique_ptr<ParamResolverInterface> param_resolver);
+ public:
+  CollectiveExecutorMgr(const ConfigProto& config, const DeviceMgr* dev_mgr,
+                        std::unique_ptr<DeviceResolverInterface> dev_resolver,
+                        std::unique_ptr<ParamResolverInterface> param_resolver);
 
-    virtual ~CollectiveExecutorMgr();
+  virtual ~CollectiveExecutorMgr();
 
-    CollectiveExecutor* FindOrCreate(int64 step_id) override;
+  CollectiveExecutor* FindOrCreate(int64 step_id) override;
 
-    void Cleanup(int64 step_id) override;
+  void Cleanup(int64 step_id) override;
 
-    ParamResolverInterface* GetParamResolver() const override {
-        return param_resolver_.get();
-    }
+  ParamResolverInterface* GetParamResolver() const override {
+    return param_resolver_.get();
+  }
 
-    DeviceResolverInterface* GetDeviceResolver() const override {
-        return dev_resolver_.get();
-    }
+  DeviceResolverInterface* GetDeviceResolver() const override {
+    return dev_resolver_.get();
+  }
 
-    void GetStepSequenceAsync(const GetStepSequenceRequest* request,
-                              GetStepSequenceResponse* response,
-                              const StatusCallback& done) override;
+  void GetStepSequenceAsync(const GetStepSequenceRequest* request,
+                            GetStepSequenceResponse* response,
+                            const StatusCallback& done) override;
 
-    void RefreshStepIdSequenceAsync(int64 graph_key,
-                                    const StatusCallback& done) override;
+  void RefreshStepIdSequenceAsync(int64 graph_key,
+                                  const StatusCallback& done) override;
 
-    int64 NextStepId(int64 graph_key) override {
-        return CollectiveExecutor::kInvalidId;
-    }
+  int64 NextStepId(int64 graph_key) override {
+    return CollectiveExecutor::kInvalidId;
+  }
 
-    void RetireStepId(int64 graph_key, int64 step_id) override {}
+  void RetireStepId(int64 graph_key, int64 step_id) override {}
 
-protected:
-    // Called by FindOrCreate when table entry does not yet exist.
-    virtual CollectiveExecutor* Create(int64 step_id);
+ protected:
+  // Called by FindOrCreate when table entry does not yet exist.
+  virtual CollectiveExecutor* Create(int64 step_id);
 
-    const DeviceMgr* dev_mgr_;
-    std::unique_ptr<DeviceResolverInterface> dev_resolver_;
-    std::unique_ptr<ParamResolverInterface> param_resolver_;
-    string gpu_ring_order_;
-    // Unbounded work queue for scheduling potentially-blocking work during
-    // collective op execution.  Ownership is shared between `this` and
-    // `CollectiveRemoteAccessLocal`.
-    std::shared_ptr<UnboundedWorkQueue> work_queue_;
+  const DeviceMgr* dev_mgr_;
+  std::unique_ptr<DeviceResolverInterface> dev_resolver_;
+  std::unique_ptr<ParamResolverInterface> param_resolver_;
+  string gpu_ring_order_;
+  // Unbounded work queue for scheduling potentially-blocking work during
+  // collective op execution.  Ownership is shared between `this` and
+  // `CollectiveRemoteAccessLocal`.
+  std::shared_ptr<UnboundedWorkQueue> work_queue_;
 
-private:
-    mutex exec_mu_;
-    // Map from step_id to CollectiveExecutor
-    gtl::FlatMap<int64, CollectiveExecutor*> executor_table_
-    TF_GUARDED_BY(exec_mu_);
+ private:
+  mutex exec_mu_;
+  // Map from step_id to CollectiveExecutor
+  gtl::FlatMap<int64, CollectiveExecutor*> executor_table_
+      TF_GUARDED_BY(exec_mu_);
 };
 
 }  // namespace tensorflow

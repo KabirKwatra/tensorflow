@@ -34,40 +34,40 @@ namespace tensorflow {
 // RendezvousInterface because virtual dispatch to LocalRendezvous methods
 // is not expected to be needed.
 class LocalRendezvous {
-public:
-    LocalRendezvous() = default;
-    ~LocalRendezvous();
+ public:
+  LocalRendezvous() = default;
+  ~LocalRendezvous();
 
-    Status Send(const Rendezvous::ParsedKey& key,
-                const Rendezvous::Args& send_args, const Tensor& val,
-                const bool is_dead);
-    void RecvAsync(const Rendezvous::ParsedKey& key,
-                   const Rendezvous::Args& recv_args,
-                   Rendezvous::DoneCallback done);
-    void StartAbort(const Status& status);
+  Status Send(const Rendezvous::ParsedKey& key,
+              const Rendezvous::Args& send_args, const Tensor& val,
+              const bool is_dead);
+  void RecvAsync(const Rendezvous::ParsedKey& key,
+                 const Rendezvous::Args& recv_args,
+                 Rendezvous::DoneCallback done);
+  void StartAbort(const Status& status);
 
-private:
-    struct Item;
+ private:
+  struct Item;
 
-    // By invariant, the item queue under each key is of the form
-    //   [item.type == kSend]* meaning each item is a sent message.
-    // or
-    //   [item.type == kRecv]* meaning each item is a waiter.
-    struct ItemQueue {
-        void push_back(Item* item);
+  // By invariant, the item queue under each key is of the form
+  //   [item.type == kSend]* meaning each item is a sent message.
+  // or
+  //   [item.type == kRecv]* meaning each item is a waiter.
+  struct ItemQueue {
+    void push_back(Item* item);
 
-        Item* head = nullptr;
-        Item* tail = nullptr;
-    };
+    Item* head = nullptr;
+    Item* tail = nullptr;
+  };
 
-    typedef gtl::FlatMap<uint64, ItemQueue> Table;
+  typedef gtl::FlatMap<uint64, ItemQueue> Table;
 
-    // TODO(zhifengc): shard table_.
-    mutex mu_;
-    Table table_ TF_GUARDED_BY(mu_);
-    Status status_ TF_GUARDED_BY(mu_);
+  // TODO(zhifengc): shard table_.
+  mutex mu_;
+  Table table_ TF_GUARDED_BY(mu_);
+  Status status_ TF_GUARDED_BY(mu_);
 
-    TF_DISALLOW_COPY_AND_ASSIGN(LocalRendezvous);
+  TF_DISALLOW_COPY_AND_ASSIGN(LocalRendezvous);
 };
 
 }  // namespace tensorflow

@@ -30,28 +30,24 @@ namespace stream_executor {
 namespace host {
 
 class HostStream : public internal::StreamInterface {
-public:
-    HostStream();
-    ~HostStream() override;
+ public:
+  HostStream();
+  ~HostStream() override;
 
-    bool EnqueueTask(std::function<void()> task);
+  bool EnqueueTask(std::function<void()> task);
 
-    void *GpuStreamHack() override {
-        return nullptr;
-    }
-    void **GpuStreamMemberHack() override {
-        return nullptr;
-    }
+  void* GpuStreamHack() override { return nullptr; }
+  void** GpuStreamMemberHack() override { return nullptr; }
 
-    void BlockUntilDone();
+  void BlockUntilDone();
 
-private:
-    bool WorkAvailable() TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
-    void WorkLoop();
+ private:
+  bool WorkAvailable() TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+  void WorkLoop();
 
-    absl::Mutex mu_;
-    std::queue<std::function<void()>> work_queue_ TF_GUARDED_BY(mu_);
-    std::unique_ptr<port::Thread> thread_;
+  absl::Mutex mu_;
+  std::queue<std::function<void()>> work_queue_ TF_GUARDED_BY(mu_);
+  std::unique_ptr<port::Thread> thread_;
 };
 
 }  // namespace host

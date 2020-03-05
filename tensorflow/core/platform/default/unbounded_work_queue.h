@@ -35,32 +35,32 @@ namespace tensorflow {
 // threads are created repeatedly, to avoid the overhead and memory
 // fragmentation that can result from excessive thread creation.
 class UnboundedWorkQueue {
-public:
-    UnboundedWorkQueue(Env* env, const string& thread_name,
-                       const ThreadOptions& thread_options = {});
-    ~UnboundedWorkQueue();
+ public:
+  UnboundedWorkQueue(Env* env, const string& thread_name,
+                     const ThreadOptions& thread_options = {});
+  ~UnboundedWorkQueue();
 
-    using WorkFunction = std::function<void()>;
+  using WorkFunction = std::function<void()>;
 
-    // Schedule `fn` on a thread.  `fn` may perform blocking work, so if all the
-    // existing threads are blocked or busy, this may spawn a new thread which
-    // will be added to the thread pool managed by this work queue.
-    void Schedule(WorkFunction fn);
+  // Schedule `fn` on a thread.  `fn` may perform blocking work, so if all the
+  // existing threads are blocked or busy, this may spawn a new thread which
+  // will be added to the thread pool managed by this work queue.
+  void Schedule(WorkFunction fn);
 
-private:
-    void PooledThreadFunc();
+ private:
+  void PooledThreadFunc();
 
-    Env* const env_;  // Not owned.
-    const string thread_name_;
-    const ThreadOptions thread_options_;
-    mutex work_queue_mu_;
-    condition_variable work_queue_cv_ TF_GUARDED_BY(work_queue_mu_);
-    size_t num_idle_threads_ TF_GUARDED_BY(work_queue_mu_) = 0;
-    bool cancelled_ TF_GUARDED_BY(work_queue_mu_) = false;
-    std::deque<WorkFunction> work_queue_ TF_GUARDED_BY(work_queue_mu_);
-    mutex thread_pool_mu_;
-    std::vector<std::unique_ptr<Thread>> thread_pool_
-                                      TF_GUARDED_BY(thread_pool_mu_);
+  Env* const env_;  // Not owned.
+  const string thread_name_;
+  const ThreadOptions thread_options_;
+  mutex work_queue_mu_;
+  condition_variable work_queue_cv_ TF_GUARDED_BY(work_queue_mu_);
+  size_t num_idle_threads_ TF_GUARDED_BY(work_queue_mu_) = 0;
+  bool cancelled_ TF_GUARDED_BY(work_queue_mu_) = false;
+  std::deque<WorkFunction> work_queue_ TF_GUARDED_BY(work_queue_mu_);
+  mutex thread_pool_mu_;
+  std::vector<std::unique_ptr<Thread>> thread_pool_
+      TF_GUARDED_BY(thread_pool_mu_);
 };
 
 }  // namespace tensorflow

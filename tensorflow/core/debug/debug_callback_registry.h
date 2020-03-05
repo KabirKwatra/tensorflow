@@ -38,32 +38,32 @@ namespace tensorflow {
 // This callback router should not be used in production or training steps.  It
 // is optimized for deep inspection of graph state rather than performance.
 class DebugCallbackRegistry {
-public:
-    using EventCallback = std::function<void(const DebugNodeKey&, const Tensor&)>;
+ public:
+  using EventCallback = std::function<void(const DebugNodeKey&, const Tensor&)>;
 
-    // Provides singleton access to the in memory event store.
-    static DebugCallbackRegistry* singleton();
+  // Provides singleton access to the in memory event store.
+  static DebugCallbackRegistry* singleton();
 
-    // Returns the registered callback, or nullptr, for key.
-    EventCallback* GetCallback(const string& key);
+  // Returns the registered callback, or nullptr, for key.
+  EventCallback* GetCallback(const string& key);
 
-    // Associates callback with key.  This must be called by clients observing
-    // nodes to be exported by this callback router before running a session.
-    void RegisterCallback(const string& key, EventCallback callback);
+  // Associates callback with key.  This must be called by clients observing
+  // nodes to be exported by this callback router before running a session.
+  void RegisterCallback(const string& key, EventCallback callback);
 
-    // Removes the callback associated with key.
-    void UnregisterCallback(const string& key);
+  // Removes the callback associated with key.
+  void UnregisterCallback(const string& key);
 
-private:
-    DebugCallbackRegistry();
+ private:
+  DebugCallbackRegistry();
 
-    // Mutex to ensure that keyed events are never updated in parallel.
-    mutex mu_;
+  // Mutex to ensure that keyed events are never updated in parallel.
+  mutex mu_;
 
-    // Maps debug_url keys to callbacks for routing observed tensors.
-    std::map<string, EventCallback> keyed_callback_ TF_GUARDED_BY(mu_);
+  // Maps debug_url keys to callbacks for routing observed tensors.
+  std::map<string, EventCallback> keyed_callback_ TF_GUARDED_BY(mu_);
 
-    static DebugCallbackRegistry* instance_;
+  static DebugCallbackRegistry* instance_;
 };
 
 }  // namespace tensorflow

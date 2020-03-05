@@ -30,43 +30,43 @@ namespace tensorflow {
 namespace test {
 
 class TestEventListenerImpl final : public EventListener::Service {
-public:
-    TestEventListenerImpl() : stop_requested_(false), stopped_(false) {}
+ public:
+  TestEventListenerImpl() : stop_requested_(false), stopped_(false) {}
 
-    void RunServer(const int server_port);
-    void StopServer();
+  void RunServer(const int server_port);
+  void StopServer();
 
-    ::grpc::Status SendEvents(
-        ::grpc::ServerContext* context,
-        ::grpc::ServerReaderWriter< ::tensorflow::EventReply,
-        ::tensorflow::Event>* stream);
+  ::grpc::Status SendEvents(
+      ::grpc::ServerContext* context,
+      ::grpc::ServerReaderWriter< ::tensorflow::EventReply,
+                                  ::tensorflow::Event>* stream);
 
-    // Clear debug data (e.g., Tensors) received so far.
-    void ClearReceivedDebugData();
+  // Clear debug data (e.g., Tensors) received so far.
+  void ClearReceivedDebugData();
 
-    void RequestDebugOpStateChangeAtNextStream(
-        const EventReply::DebugOpStateChange::State new_state,
-        const DebugNodeKey& debug_node_key);
+  void RequestDebugOpStateChangeAtNextStream(
+      const EventReply::DebugOpStateChange::State new_state,
+      const DebugNodeKey& debug_node_key);
 
-    std::vector<string> debug_metadata_strings;
-    std::vector<string> encoded_graph_defs;
-    std::vector<string> device_names;
-    std::vector<string> node_names;
-    std::vector<int32> output_slots;
-    std::vector<string> debug_ops;
-    std::vector<Tensor> debug_tensors;
+  std::vector<string> debug_metadata_strings;
+  std::vector<string> encoded_graph_defs;
+  std::vector<string> device_names;
+  std::vector<string> node_names;
+  std::vector<int32> output_slots;
+  std::vector<string> debug_ops;
+  std::vector<Tensor> debug_tensors;
 
-private:
-    std::atomic_bool stop_requested_;
-    std::atomic_bool stopped_;
+ private:
+  std::atomic_bool stop_requested_;
+  std::atomic_bool stopped_;
 
-    std::vector<DebugNodeKey> debug_node_keys_ TF_GUARDED_BY(states_mu_);
-    std::vector<EventReply::DebugOpStateChange::State> new_states_
-    TF_GUARDED_BY(states_mu_);
+  std::vector<DebugNodeKey> debug_node_keys_ TF_GUARDED_BY(states_mu_);
+  std::vector<EventReply::DebugOpStateChange::State> new_states_
+      TF_GUARDED_BY(states_mu_);
 
-    std::unordered_set<DebugNodeKey> write_enabled_debug_node_keys_;
+  std::unordered_set<DebugNodeKey> write_enabled_debug_node_keys_;
 
-    mutex states_mu_;
+  mutex states_mu_;
 };
 
 // Poll a gRPC debug server by sending a small tensor repeatedly till success.

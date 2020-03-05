@@ -42,308 +42,306 @@ namespace gpu {
 // CUDA-platform implementation of the platform-agnostic
 // StreamExecutorInterface.
 class GpuExecutor : public internal::StreamExecutorInterface {
-public:
-    // sub_platform indicates the subplatform used in this executor; it must
-    // be a CUDA type.
-    explicit GpuExecutor(const PluginConfig& plugin_config)
-        : device_(0),
-          context_(nullptr),
-          device_ordinal_(0),
-          cc_major_(0),
-          cc_minor_(0),
-          version_(0),
-          plugin_config_(plugin_config) {}
+ public:
+  // sub_platform indicates the subplatform used in this executor; it must
+  // be a CUDA type.
+  explicit GpuExecutor(const PluginConfig& plugin_config)
+      : device_(0),
+        context_(nullptr),
+        device_ordinal_(0),
+        cc_major_(0),
+        cc_minor_(0),
+        version_(0),
+        plugin_config_(plugin_config) {}
 
-    // See the corresponding StreamExecutor methods for method comments on the
-    // following overrides.
+  // See the corresponding StreamExecutor methods for method comments on the
+  // following overrides.
 
-    ~GpuExecutor() override;
+  ~GpuExecutor() override;
 
-    port::Status Init(int device_ordinal, DeviceOptions device_options) override;
+  port::Status Init(int device_ordinal, DeviceOptions device_options) override;
 
-    port::Status GetKernel(const MultiKernelLoaderSpec& spec,
-                           KernelBase* kernel) override;
-    // (supported on CUDA only)
-    void UnloadKernel(const KernelBase* kernel) override;
-    port::Status LoadModule(const MultiModuleLoaderSpec& spec,
-                            ModuleHandle* module_handle) override;
-    bool UnloadModule(ModuleHandle module_handle) override;
+  port::Status GetKernel(const MultiKernelLoaderSpec& spec,
+                         KernelBase* kernel) override;
+  // (supported on CUDA only)
+  void UnloadKernel(const KernelBase* kernel) override;
+  port::Status LoadModule(const MultiModuleLoaderSpec& spec,
+                          ModuleHandle* module_handle) override;
+  bool UnloadModule(ModuleHandle module_handle) override;
 
-    port::Status Launch(Stream* stream, const ThreadDim& thread_dims,
-                        const BlockDim& block_dims, const KernelBase& k,
-                        const KernelArgsArrayBase& args) override;
+  port::Status Launch(Stream* stream, const ThreadDim& thread_dims,
+                      const BlockDim& block_dims, const KernelBase& k,
+                      const KernelArgsArrayBase& args) override;
 
-    // (supported on CUDA only)
-    int CalculateOccupancy(const DeviceDescription& device_description,
-                           uint64 registers_per_thread,
-                           uint64 shared_memory_per_block,
-                           const ThreadDim& thread_dims, GpuFunctionHandle func);
-
-    // (supported on CUDA only)
-    int CompareOccupancy(int* initial_blocks,
-                         const DeviceDescription& device_description,
+  // (supported on CUDA only)
+  int CalculateOccupancy(const DeviceDescription& device_description,
                          uint64 registers_per_thread,
                          uint64 shared_memory_per_block,
                          const ThreadDim& thread_dims, GpuFunctionHandle func);
 
-    DeviceMemoryBase Allocate(uint64 size, int64 memory_space) override;
+  // (supported on CUDA only)
+  int CompareOccupancy(int* initial_blocks,
+                       const DeviceDescription& device_description,
+                       uint64 registers_per_thread,
+                       uint64 shared_memory_per_block,
+                       const ThreadDim& thread_dims, GpuFunctionHandle func);
 
-    void* GetSubBuffer(DeviceMemoryBase* mem, uint64 offset_bytes,
-                       uint64 size_bytes) override;
+  DeviceMemoryBase Allocate(uint64 size, int64 memory_space) override;
 
-    void Deallocate(DeviceMemoryBase* mem) override;
+  void* GetSubBuffer(DeviceMemoryBase* mem, uint64 offset_bytes,
+                     uint64 size_bytes) override;
 
-    void* UnifiedMemoryAllocate(uint64 size) override {
-        return GpuDriver::UnifiedMemoryAllocate(context_, size);
-    }
+  void Deallocate(DeviceMemoryBase* mem) override;
 
-    void UnifiedMemoryDeallocate(void* location) override {
-        return GpuDriver::UnifiedMemoryDeallocate(context_, location);
-    }
+  void* UnifiedMemoryAllocate(uint64 size) override {
+    return GpuDriver::UnifiedMemoryAllocate(context_, size);
+  }
 
-    // CUDA allocation/registration functions are necessary because the driver
-    // internally sets up buffers for DMA operations (and page locks them).
-    // There's no external interface for us to otherwise control these DMA
-    // settings.
-    void* HostMemoryAllocate(uint64 size) override {
-        return GpuDriver::HostAllocate(context_, size);
-    }
+  void UnifiedMemoryDeallocate(void* location) override {
+    return GpuDriver::UnifiedMemoryDeallocate(context_, location);
+  }
 
-    void HostMemoryDeallocate(void* location) override {
-        return GpuDriver::HostDeallocate(context_, location);
-    }
+  // CUDA allocation/registration functions are necessary because the driver
+  // internally sets up buffers for DMA operations (and page locks them).
+  // There's no external interface for us to otherwise control these DMA
+  // settings.
+  void* HostMemoryAllocate(uint64 size) override {
+    return GpuDriver::HostAllocate(context_, size);
+  }
 
-    bool HostMemoryRegister(void* location, uint64 size) override;
+  void HostMemoryDeallocate(void* location) override {
+    return GpuDriver::HostDeallocate(context_, location);
+  }
 
-    bool HostMemoryUnregister(void* location) override;
+  bool HostMemoryRegister(void* location, uint64 size) override;
 
-    bool SynchronizeAllActivity() override;
+  bool HostMemoryUnregister(void* location) override;
 
-    port::Status SynchronousMemZero(DeviceMemoryBase* location,
-                                    uint64 size) override;
+  bool SynchronizeAllActivity() override;
 
-    port::Status SynchronousMemSet(DeviceMemoryBase* location, int value,
-                                   uint64 size) override;
+  port::Status SynchronousMemZero(DeviceMemoryBase* location,
+                                  uint64 size) override;
 
-    port::Status SynchronousMemcpy(DeviceMemoryBase* gpu_dst,
-                                   const void* host_src, uint64 size) override;
+  port::Status SynchronousMemSet(DeviceMemoryBase* location, int value,
+                                 uint64 size) override;
 
-    port::Status SynchronousMemcpy(void* host_dst,
-                                   const DeviceMemoryBase& gpu_src,
-                                   uint64 size) override;
+  port::Status SynchronousMemcpy(DeviceMemoryBase* gpu_dst,
+                                 const void* host_src, uint64 size) override;
 
-    port::Status SynchronousMemcpyDeviceToDevice(DeviceMemoryBase* gpu_dst,
-            const DeviceMemoryBase& gpu_src,
-            uint64 size) override;
+  port::Status SynchronousMemcpy(void* host_dst,
+                                 const DeviceMemoryBase& gpu_src,
+                                 uint64 size) override;
 
-    port::Status MemZero(Stream* stream, DeviceMemoryBase* location,
-                         uint64 size) override;
-    port::Status Memset(Stream* stream, DeviceMemoryBase* location, uint8 pattern,
-                        uint64 size) override;
-    port::Status Memset32(Stream* stream, DeviceMemoryBase* location,
-                          uint32 pattern, uint64 size) override;
+  port::Status SynchronousMemcpyDeviceToDevice(DeviceMemoryBase* gpu_dst,
+                                               const DeviceMemoryBase& gpu_src,
+                                               uint64 size) override;
 
-    bool Memcpy(Stream* stream, void* host_dst, const DeviceMemoryBase& gpu_src,
-                uint64 size) override;
+  port::Status MemZero(Stream* stream, DeviceMemoryBase* location,
+                       uint64 size) override;
+  port::Status Memset(Stream* stream, DeviceMemoryBase* location, uint8 pattern,
+                      uint64 size) override;
+  port::Status Memset32(Stream* stream, DeviceMemoryBase* location,
+                        uint32 pattern, uint64 size) override;
 
-    bool Memcpy(Stream* stream, DeviceMemoryBase* gpu_dst, const void* host_src,
-                uint64 size) override;
+  bool Memcpy(Stream* stream, void* host_dst, const DeviceMemoryBase& gpu_src,
+              uint64 size) override;
 
-    bool MemcpyDeviceToDevice(Stream* stream, DeviceMemoryBase* gpu_dst,
-                              const DeviceMemoryBase& gpu_src,
-                              uint64 size) override;
+  bool Memcpy(Stream* stream, DeviceMemoryBase* gpu_dst, const void* host_src,
+              uint64 size) override;
 
-    bool HostCallback(Stream* stream,
-                      std::function<port::Status()> callback) override;
+  bool MemcpyDeviceToDevice(Stream* stream, DeviceMemoryBase* gpu_dst,
+                            const DeviceMemoryBase& gpu_src,
+                            uint64 size) override;
 
-    bool AllocateStream(Stream* stream) override;
+  bool HostCallback(Stream* stream,
+                    std::function<port::Status()> callback) override;
 
-    void DeallocateStream(Stream* stream) override;
+  bool AllocateStream(Stream* stream) override;
 
-    bool CreateStreamDependency(Stream* dependent, Stream* other) override;
+  void DeallocateStream(Stream* stream) override;
 
-    bool AllocateTimer(Timer* timer) override;
+  bool CreateStreamDependency(Stream* dependent, Stream* other) override;
 
-    void DeallocateTimer(Timer* timer) override;
+  bool AllocateTimer(Timer* timer) override;
 
-    bool StartTimer(Stream* stream, Timer* timer) override;
+  void DeallocateTimer(Timer* timer) override;
 
-    bool StopTimer(Stream* stream, Timer* timer) override;
+  bool StartTimer(Stream* stream, Timer* timer) override;
 
-    port::Status AllocateEvent(Event* event) override;
+  bool StopTimer(Stream* stream, Timer* timer) override;
 
-    port::Status DeallocateEvent(Event* event) override;
+  port::Status AllocateEvent(Event* event) override;
 
-    port::Status RecordEvent(Stream* stream, Event* event) override;
+  port::Status DeallocateEvent(Event* event) override;
 
-    port::Status WaitForEvent(Stream* stream, Event* event) override;
+  port::Status RecordEvent(Stream* stream, Event* event) override;
 
-    Event::Status PollForEventStatus(Event* event) override;
+  port::Status WaitForEvent(Stream* stream, Event* event) override;
 
-    port::Status BlockHostUntilDone(Stream* stream) override;
+  Event::Status PollForEventStatus(Event* event) override;
 
-    int PlatformDeviceCount() override {
-        return GpuDriver::GetDeviceCount();
-    }
+  port::Status BlockHostUntilDone(Stream* stream) override;
 
-    port::Status EnablePeerAccessTo(StreamExecutorInterface* other) override;
+  int PlatformDeviceCount() override { return GpuDriver::GetDeviceCount(); }
 
-    bool CanEnablePeerAccessTo(StreamExecutorInterface* other) override;
+  port::Status EnablePeerAccessTo(StreamExecutorInterface* other) override;
 
-    SharedMemoryConfig GetDeviceSharedMemoryConfig() override;
+  bool CanEnablePeerAccessTo(StreamExecutorInterface* other) override;
 
-    port::Status SetDeviceSharedMemoryConfig(SharedMemoryConfig config) override;
+  SharedMemoryConfig GetDeviceSharedMemoryConfig() override;
 
-    bool DeviceMemoryUsage(int64* free, int64* total) const override;
+  port::Status SetDeviceSharedMemoryConfig(SharedMemoryConfig config) override;
 
-    // Search for the symbol and returns a device pointer and size.
-    // Returns false if symbol does not exist.
-    bool GetSymbol(const string& symbol_name, ModuleHandle module_handle,
-                   void** mem, size_t* bytes) override;
+  bool DeviceMemoryUsage(int64* free, int64* total) const override;
 
-    port::StatusOr<std::unique_ptr<DeviceDescription>> CreateDeviceDescription()
-    const override {
-        return CreateDeviceDescription(device_ordinal_);
-    }
+  // Search for the symbol and returns a device pointer and size.
+  // Returns false if symbol does not exist.
+  bool GetSymbol(const string& symbol_name, ModuleHandle module_handle,
+                 void** mem, size_t* bytes) override;
 
-    static port::StatusOr<std::unique_ptr<DeviceDescription>>
-            CreateDeviceDescription(int device_ordinal);
+  port::StatusOr<std::unique_ptr<DeviceDescription>> CreateDeviceDescription()
+      const override {
+    return CreateDeviceDescription(device_ordinal_);
+  }
 
-    bool SupportsBlas() const override;
+  static port::StatusOr<std::unique_ptr<DeviceDescription>>
+  CreateDeviceDescription(int device_ordinal);
 
-    blas::BlasSupport* CreateBlas() override;
+  bool SupportsBlas() const override;
 
-    bool SupportsFft() const override;
+  blas::BlasSupport* CreateBlas() override;
 
-    fft::FftSupport* CreateFft() override;
+  bool SupportsFft() const override;
 
-    bool SupportsRng() const override;
+  fft::FftSupport* CreateFft() override;
 
-    rng::RngSupport* CreateRng() override;
+  bool SupportsRng() const override;
 
-    bool SupportsDnn() const override;
+  rng::RngSupport* CreateRng() override;
 
-    dnn::DnnSupport* CreateDnn() override;
+  bool SupportsDnn() const override;
 
-    std::unique_ptr<internal::EventInterface> CreateEventImplementation()
-    override;
+  dnn::DnnSupport* CreateDnn() override;
 
-    std::unique_ptr<internal::KernelInterface> CreateKernelImplementation()
-    override;
+  std::unique_ptr<internal::EventInterface> CreateEventImplementation()
+      override;
 
-    std::unique_ptr<internal::StreamInterface> GetStreamImplementation() override;
+  std::unique_ptr<internal::KernelInterface> CreateKernelImplementation()
+      override;
 
-    std::unique_ptr<internal::TimerInterface> GetTimerImplementation() override;
+  std::unique_ptr<internal::StreamInterface> GetStreamImplementation() override;
 
-    void* GpuContextHack() override;
+  std::unique_ptr<internal::TimerInterface> GetTimerImplementation() override;
 
-    GpuContext* gpu_context();
+  void* GpuContextHack() override;
 
-private:
-    // Attempts to find a more specific version of the file indicated by
-    // filename by looking for compute-capability-specific suffixed versions; i.e.
-    // looking for "foo.ptx" will check to see if "foo.ptx.cc30.ptx" is present if
-    // we're on a compute capability 3.0 machine.
-    // (supported on CUDA only)
-    bool FindOnDiskForComputeCapability(absl::string_view filename,
-                                        absl::string_view canonical_suffix,
-                                        string* found_filename) const;
+  GpuContext* gpu_context();
 
-    // Attempts to find a more specific version of the file indicated by
-    // filename by looking for AMDGPU ISA-specific suffixed versions.
-    // (supported on ROCm only)
+ private:
+  // Attempts to find a more specific version of the file indicated by
+  // filename by looking for compute-capability-specific suffixed versions; i.e.
+  // looking for "foo.ptx" will check to see if "foo.ptx.cc30.ptx" is present if
+  // we're on a compute capability 3.0 machine.
+  // (supported on CUDA only)
+  bool FindOnDiskForComputeCapability(absl::string_view filename,
+                                      absl::string_view canonical_suffix,
+                                      string* found_filename) const;
 
-    bool FindOnDiskForISAVersion(absl::string_view filename,
-                                 absl::string_view canonical_suffix,
-                                 string* found_filename) const;
+  // Attempts to find a more specific version of the file indicated by
+  // filename by looking for AMDGPU ISA-specific suffixed versions.
+  // (supported on ROCm only)
 
-    // Host callback landing routine invoked by CUDA.
-    // data: User-provided callback provided to HostCallback() above, captured
-    //       as a std::function<void()>. Allocated/initialized inside
-    //       HostCallback() and owned and deleted by this call.
-    static void InternalHostCallback(GpuStreamHandle stream, GpuStatus status,
-                                     void* data);
+  bool FindOnDiskForISAVersion(absl::string_view filename,
+                               absl::string_view canonical_suffix,
+                               string* found_filename) const;
 
-    // Collects metadata for the specified kernel.
-    port::Status GetKernelMetadata(GpuKernel* cuda_kernel,
-                                   KernelMetadata* kernel_metadata);
+  // Host callback landing routine invoked by CUDA.
+  // data: User-provided callback provided to HostCallback() above, captured
+  //       as a std::function<void()>. Allocated/initialized inside
+  //       HostCallback() and owned and deleted by this call.
+  static void InternalHostCallback(GpuStreamHandle stream, GpuStatus status,
+                                   void* data);
 
-    // Prints to VLOG(2) information about the kernel's occupancy and how it might
-    // be improved.
-    void VlogOccupancyInfo(const KernelBase& kernel, const ThreadDim& thread_dims,
-                           const BlockDim& block_dims);
+  // Collects metadata for the specified kernel.
+  port::Status GetKernelMetadata(GpuKernel* cuda_kernel,
+                                 KernelMetadata* kernel_metadata);
 
-    // (supported on CUDA only)
-    port::Status LoadModuleFromCuBin(const char* cubin, GpuModuleHandle* module)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
+  // Prints to VLOG(2) information about the kernel's occupancy and how it might
+  // be improved.
+  void VlogOccupancyInfo(const KernelBase& kernel, const ThreadDim& thread_dims,
+                         const BlockDim& block_dims);
 
-    // Loads the PTX text `ptx` as a CUDA module.  `ptx` must be null terminated.
-    // (supported on CUDA only)
-    port::Status LoadModuleFromPtx(const char* ptx, GpuModuleHandle* module)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
+  // (supported on CUDA only)
+  port::Status LoadModuleFromCuBin(const char* cubin, GpuModuleHandle* module)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
 
-    // (supported on ROCm only)
-    port::Status LoadModuleFromHsaco(const char* hsaco, GpuModuleHandle* module)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
+  // Loads the PTX text `ptx` as a CUDA module.  `ptx` must be null terminated.
+  // (supported on CUDA only)
+  port::Status LoadModuleFromPtx(const char* ptx, GpuModuleHandle* module)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
 
-    bool UnloadGpuBinary(const void* gpu_binary)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
+  // (supported on ROCm only)
+  port::Status LoadModuleFromHsaco(const char* hsaco, GpuModuleHandle* module)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
 
-    // Guards the on-disk-module mapping.
-    absl::Mutex disk_modules_mu_;
+  bool UnloadGpuBinary(const void* gpu_binary)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(in_memory_modules_mu_);
 
-    // Mapping from filename to GPUModuleHandle, if it was already retrieved.
-    // Multiple GPUFunctionHandle are usually obtained from a single
-    // GPUModuleHandle so we attempt to hit in this mapping first, before
-    // retrieving it.
-    std::map<string, GpuModuleHandle> disk_modules_
-    TF_GUARDED_BY(disk_modules_mu_);
+  // Guards the on-disk-module mapping.
+  absl::Mutex disk_modules_mu_;
 
-    // Guards the in-memory-module mapping.
-    absl::Mutex in_memory_modules_mu_;
+  // Mapping from filename to GPUModuleHandle, if it was already retrieved.
+  // Multiple GPUFunctionHandle are usually obtained from a single
+  // GPUModuleHandle so we attempt to hit in this mapping first, before
+  // retrieving it.
+  std::map<string, GpuModuleHandle> disk_modules_
+      TF_GUARDED_BY(disk_modules_mu_);
 
-    std::map<const char*, GpuModuleHandle> in_memory_modules_
-    TF_GUARDED_BY(in_memory_modules_mu_);
+  // Guards the in-memory-module mapping.
+  absl::Mutex in_memory_modules_mu_;
 
-    // Kernel -> loaded GPU binary. Many kernels may load the same binary.
-    std::unordered_map<const KernelBase*, const void*> kernel_to_gpu_binary_
-    TF_GUARDED_BY(in_memory_modules_mu_);
-    // GPU binary (PTX or CUBIN or HSACO) -> {CUDA module, reference count}.
-    std::unordered_map<const void*, std::pair<GpuModuleHandle, uint64>>
-            gpu_binary_to_module_ TF_GUARDED_BY(in_memory_modules_mu_);
+  std::map<const char*, GpuModuleHandle> in_memory_modules_
+      TF_GUARDED_BY(in_memory_modules_mu_);
 
-    // Guards the launched kernel set.
-    absl::Mutex launched_kernels_mu_;
+  // Kernel -> loaded GPU binary. Many kernels may load the same binary.
+  std::unordered_map<const KernelBase*, const void*> kernel_to_gpu_binary_
+      TF_GUARDED_BY(in_memory_modules_mu_);
+  // GPU binary (PTX or CUBIN or HSACO) -> {CUDA module, reference count}.
+  std::unordered_map<const void*, std::pair<GpuModuleHandle, uint64>>
+      gpu_binary_to_module_ TF_GUARDED_BY(in_memory_modules_mu_);
 
-    // Keeps track of the set of launched kernels. Currently used to suppress the
-    // occupancy check on subsequent launches.
-    std::set<GpuFunctionHandle> launched_kernels_
-    TF_GUARDED_BY(launched_kernels_mu_);
+  // Guards the launched kernel set.
+  absl::Mutex launched_kernels_mu_;
 
-    // Handle for the CUDA device being operated on. Immutable
-    // post-initialization.
-    GpuDeviceHandle device_;
+  // Keeps track of the set of launched kernels. Currently used to suppress the
+  // occupancy check on subsequent launches.
+  std::set<GpuFunctionHandle> launched_kernels_
+      TF_GUARDED_BY(launched_kernels_mu_);
 
-    // Handle for session with the library/driver. Immutable post-initialization.
-    GpuContext* context_;
+  // Handle for the CUDA device being operated on. Immutable
+  // post-initialization.
+  GpuDeviceHandle device_;
 
-    // The device ordinal value that this executor was initialized with; recorded
-    // for use in getting device metadata. Immutable post-initialization.
-    int device_ordinal_;
+  // Handle for session with the library/driver. Immutable post-initialization.
+  GpuContext* context_;
 
-    // The major version of the compute capability for device_.
-    int cc_major_;
+  // The device ordinal value that this executor was initialized with; recorded
+  // for use in getting device metadata. Immutable post-initialization.
+  int device_ordinal_;
 
-    // The minor version of the compute capability for device_.
-    int cc_minor_;
+  // The major version of the compute capability for device_.
+  int cc_major_;
 
-    // GPU ISA version for device_.
-    int version_;
+  // The minor version of the compute capability for device_.
+  int cc_minor_;
 
-    // The plugin configuration associated with this instance.
-    PluginConfig plugin_config_;
+  // GPU ISA version for device_.
+  int version_;
 
-    SE_DISALLOW_COPY_AND_ASSIGN(GpuExecutor);
+  // The plugin configuration associated with this instance.
+  PluginConfig plugin_config_;
+
+  SE_DISALLOW_COPY_AND_ASSIGN(GpuExecutor);
 };
 
 }  // namespace gpu

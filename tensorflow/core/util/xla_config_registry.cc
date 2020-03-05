@@ -23,31 +23,31 @@ namespace xla_config_registry {
 
 namespace {
 struct GlobalJitLevelState {
-    mutex mu;
-    GlobalJitLevelGetterTy getter TF_GUARDED_BY(mu);
+  mutex mu;
+  GlobalJitLevelGetterTy getter TF_GUARDED_BY(mu);
 };
 
 GlobalJitLevelState* GetSingletonState() {
-    static GlobalJitLevelState* state = new GlobalJitLevelState;
-    return state;
+  static GlobalJitLevelState* state = new GlobalJitLevelState;
+  return state;
 }
 }  // namespace
 
 void RegisterGlobalJitLevelGetter(GlobalJitLevelGetterTy getter) {
-    GlobalJitLevelState* state = GetSingletonState();
-    mutex_lock l(state->mu);
-    CHECK(!state->getter);
-    state->getter = std::move(getter);
+  GlobalJitLevelState* state = GetSingletonState();
+  mutex_lock l(state->mu);
+  CHECK(!state->getter);
+  state->getter = std::move(getter);
 }
 
 XlaGlobalJitLevel GetGlobalJitLevel(
     OptimizerOptions::GlobalJitLevel jit_level_in_session_opts) {
-    GlobalJitLevelState* state = GetSingletonState();
-    mutex_lock l(state->mu);
-    if (!state->getter) {
-        return {jit_level_in_session_opts, jit_level_in_session_opts};
-    }
-    return state->getter(jit_level_in_session_opts);
+  GlobalJitLevelState* state = GetSingletonState();
+  mutex_lock l(state->mu);
+  if (!state->getter) {
+    return {jit_level_in_session_opts, jit_level_in_session_opts};
+  }
+  return state->getter(jit_level_in_session_opts);
 }
 
 }  // namespace xla_config_registry

@@ -56,35 +56,35 @@ class Collector;
 // This class is NOT thread-safe.
 template <MetricKind metric_kind, typename Value, int NumLabels>
 class MetricCollector {
-public:
-    ~MetricCollector() = default;
+ public:
+  ~MetricCollector() = default;
 
-    // Collects the value with these labels.
-    void CollectValue(const std::array<string, NumLabels>& labels, Value value);
+  // Collects the value with these labels.
+  void CollectValue(const std::array<string, NumLabels>& labels, Value value);
 
-private:
-    friend class internal::Collector;
+ private:
+  friend class internal::Collector;
 
-    MetricCollector(
-        const MetricDef<metric_kind, Value, NumLabels>* const metric_def,
-        const uint64 registration_time_millis,
-        internal::Collector* const collector, PointSet* const point_set)
-        : metric_def_(metric_def),
-          registration_time_millis_(registration_time_millis),
-          collector_(collector),
-          point_set_(point_set) {
-        point_set_->metric_name = string(metric_def->name());
-    }
+  MetricCollector(
+      const MetricDef<metric_kind, Value, NumLabels>* const metric_def,
+      const uint64 registration_time_millis,
+      internal::Collector* const collector, PointSet* const point_set)
+      : metric_def_(metric_def),
+        registration_time_millis_(registration_time_millis),
+        collector_(collector),
+        point_set_(point_set) {
+    point_set_->metric_name = string(metric_def->name());
+  }
 
-    const MetricDef<metric_kind, Value, NumLabels>* const metric_def_;
-    const uint64 registration_time_millis_;
-    internal::Collector* const collector_;
-    PointSet* const point_set_;
+  const MetricDef<metric_kind, Value, NumLabels>* const metric_def_;
+  const uint64 registration_time_millis_;
+  internal::Collector* const collector_;
+  PointSet* const point_set_;
 
-    // This is made copyable because we can't hand out references of this class
-    // from MetricCollectorGetter because this class is templatized, and we need
-    // MetricCollectorGetter not to be templatized and hence MetricCollectorGetter
-    // can't own an instance of this class.
+  // This is made copyable because we can't hand out references of this class
+  // from MetricCollectorGetter because this class is templatized, and we need
+  // MetricCollectorGetter not to be templatized and hence MetricCollectorGetter
+  // can't own an instance of this class.
 };
 
 // Returns a MetricCollector with the same template parameters as the
@@ -94,26 +94,26 @@ private:
 //
 // Read the documentation on CollectionRegistry::Register() for more details.
 class MetricCollectorGetter {
-public:
-    // Returns the MetricCollector with the same template parameters as the
-    // metric_def.
-    template <MetricKind metric_kind, typename Value, int NumLabels>
-    MetricCollector<metric_kind, Value, NumLabels> Get(
-        const MetricDef<metric_kind, Value, NumLabels>* const metric_def);
+ public:
+  // Returns the MetricCollector with the same template parameters as the
+  // metric_def.
+  template <MetricKind metric_kind, typename Value, int NumLabels>
+  MetricCollector<metric_kind, Value, NumLabels> Get(
+      const MetricDef<metric_kind, Value, NumLabels>* const metric_def);
 
-private:
-    friend class internal::Collector;
+ private:
+  friend class internal::Collector;
 
-    MetricCollectorGetter(internal::Collector* const collector,
-                          const AbstractMetricDef* const allowed_metric_def,
-                          const uint64 registration_time_millis)
-        : collector_(collector),
-          allowed_metric_def_(allowed_metric_def),
-          registration_time_millis_(registration_time_millis) {}
+  MetricCollectorGetter(internal::Collector* const collector,
+                        const AbstractMetricDef* const allowed_metric_def,
+                        const uint64 registration_time_millis)
+      : collector_(collector),
+        allowed_metric_def_(allowed_metric_def),
+        registration_time_millis_(registration_time_millis) {}
 
-    internal::Collector* const collector_;
-    const AbstractMetricDef* const allowed_metric_def_;
-    const uint64 registration_time_millis_;
+  internal::Collector* const collector_;
+  const AbstractMetricDef* const allowed_metric_def_;
+  const uint64 registration_time_millis_;
 };
 
 // A collection registry for metrics.
@@ -123,72 +123,72 @@ private:
 //
 // This class is thread-safe.
 class CollectionRegistry {
-public:
-    ~CollectionRegistry() = default;
+ public:
+  ~CollectionRegistry() = default;
 
-    // Returns the default registry for the process.
-    //
-    // This registry belongs to this library and should never be deleted.
-    static CollectionRegistry* Default();
+  // Returns the default registry for the process.
+  //
+  // This registry belongs to this library and should never be deleted.
+  static CollectionRegistry* Default();
 
-    using CollectionFunction = std::function<void(MetricCollectorGetter getter)>;
+  using CollectionFunction = std::function<void(MetricCollectorGetter getter)>;
 
-    // Registers the metric and the collection-function which can be used to
-    // collect its values. Returns a Registration object, which when upon
-    // destruction would cause the metric to be unregistered from this registry.
-    //
-    // IMPORTANT: Delete the handle before the metric-def is deleted.
-    //
-    // Example usage;
-    // CollectionRegistry::Default()->Register(
-    //   &metric_def,
-    //   [&](MetricCollectorGetter getter) {
-    //     auto metric_collector = getter.Get(&metric_def);
-    //     for (const auto& cell : cells) {
-    //       metric_collector.CollectValue(cell.labels(), cell.value());
-    //     }
-    //   });
-    class RegistrationHandle;
-    std::unique_ptr<RegistrationHandle> Register(
-        const AbstractMetricDef* metric_def,
-        const CollectionFunction& collection_function)
-    TF_LOCKS_EXCLUDED(mu_) TF_MUST_USE_RESULT;
+  // Registers the metric and the collection-function which can be used to
+  // collect its values. Returns a Registration object, which when upon
+  // destruction would cause the metric to be unregistered from this registry.
+  //
+  // IMPORTANT: Delete the handle before the metric-def is deleted.
+  //
+  // Example usage;
+  // CollectionRegistry::Default()->Register(
+  //   &metric_def,
+  //   [&](MetricCollectorGetter getter) {
+  //     auto metric_collector = getter.Get(&metric_def);
+  //     for (const auto& cell : cells) {
+  //       metric_collector.CollectValue(cell.labels(), cell.value());
+  //     }
+  //   });
+  class RegistrationHandle;
+  std::unique_ptr<RegistrationHandle> Register(
+      const AbstractMetricDef* metric_def,
+      const CollectionFunction& collection_function)
+      TF_LOCKS_EXCLUDED(mu_) TF_MUST_USE_RESULT;
 
-    // Options for collecting metrics.
-    struct CollectMetricsOptions {
-        CollectMetricsOptions() {}
-        bool collect_metric_descriptors = true;
-    };
-    // Goes through all the registered metrics, collects their definitions
-    // (optionally) and current values and returns them in a standard format.
-    std::unique_ptr<CollectedMetrics> CollectMetrics(
-        const CollectMetricsOptions& options) const;
+  // Options for collecting metrics.
+  struct CollectMetricsOptions {
+    CollectMetricsOptions() {}
+    bool collect_metric_descriptors = true;
+  };
+  // Goes through all the registered metrics, collects their definitions
+  // (optionally) and current values and returns them in a standard format.
+  std::unique_ptr<CollectedMetrics> CollectMetrics(
+      const CollectMetricsOptions& options) const;
 
-private:
-    friend class test_util::CollectionRegistryTestAccess;
-    friend class internal::Collector;
+ private:
+  friend class test_util::CollectionRegistryTestAccess;
+  friend class internal::Collector;
 
-    CollectionRegistry(Env* env);
+  CollectionRegistry(Env* env);
 
-    // Unregisters the metric from this registry. This is private because the
-    // public interface provides a Registration handle which automatically calls
-    // this upon destruction.
-    void Unregister(const AbstractMetricDef* metric_def) TF_LOCKS_EXCLUDED(mu_);
+  // Unregisters the metric from this registry. This is private because the
+  // public interface provides a Registration handle which automatically calls
+  // this upon destruction.
+  void Unregister(const AbstractMetricDef* metric_def) TF_LOCKS_EXCLUDED(mu_);
 
-    // TF environment, mainly used for timestamping.
-    Env* const env_;
+  // TF environment, mainly used for timestamping.
+  Env* const env_;
 
-    mutable mutex mu_;
+  mutable mutex mu_;
 
-    // Information required for collection.
-    struct CollectionInfo {
-        const AbstractMetricDef* const metric_def;
-        CollectionFunction collection_function;
-        uint64 registration_time_millis;
-    };
-    std::map<StringPiece, CollectionInfo> registry_ TF_GUARDED_BY(mu_);
+  // Information required for collection.
+  struct CollectionInfo {
+    const AbstractMetricDef* const metric_def;
+    CollectionFunction collection_function;
+    uint64 registration_time_millis;
+  };
+  std::map<StringPiece, CollectionInfo> registry_ TF_GUARDED_BY(mu_);
 
-    TF_DISALLOW_COPY_AND_ASSIGN(CollectionRegistry);
+  TF_DISALLOW_COPY_AND_ASSIGN(CollectionRegistry);
 };
 
 ////
@@ -196,18 +196,16 @@ private:
 ////
 
 class CollectionRegistry::RegistrationHandle {
-public:
-    RegistrationHandle(CollectionRegistry* const export_registry,
-                       const AbstractMetricDef* const metric_def)
-        : export_registry_(export_registry), metric_def_(metric_def) {}
+ public:
+  RegistrationHandle(CollectionRegistry* const export_registry,
+                     const AbstractMetricDef* const metric_def)
+      : export_registry_(export_registry), metric_def_(metric_def) {}
 
-    ~RegistrationHandle() {
-        export_registry_->Unregister(metric_def_);
-    }
+  ~RegistrationHandle() { export_registry_->Unregister(metric_def_); }
 
-private:
-    CollectionRegistry* const export_registry_;
-    const AbstractMetricDef* const metric_def_;
+ private:
+  CollectionRegistry* const export_registry_;
+  const AbstractMetricDef* const metric_def_;
 };
 
 namespace internal {
@@ -217,34 +215,34 @@ void CollectValue(Value value, Point* point);
 
 template <>
 inline void CollectValue(int64 value, Point* const point) {
-    point->value_type = ValueType::kInt64;
-    point->int64_value = value;
+  point->value_type = ValueType::kInt64;
+  point->int64_value = value;
 }
 
 template <>
 inline void CollectValue(string value, Point* const point) {
-    point->value_type = ValueType::kString;
-    point->string_value = std::move(value);
+  point->value_type = ValueType::kString;
+  point->string_value = std::move(value);
 }
 
 template <>
 inline void CollectValue(bool value, Point* const point) {
-    point->value_type = ValueType::kBool;
-    point->bool_value = value;
+  point->value_type = ValueType::kBool;
+  point->bool_value = value;
 }
 
 template <>
 inline void CollectValue(HistogramProto value, Point* const point) {
-    point->value_type = ValueType::kHistogram;
-    // This is inefficient. If and when we hit snags, we can change the API to do
-    // this more efficiently.
-    point->histogram_value = std::move(value);
+  point->value_type = ValueType::kHistogram;
+  // This is inefficient. If and when we hit snags, we can change the API to do
+  // this more efficiently.
+  point->histogram_value = std::move(value);
 }
 
 template <>
 inline void CollectValue(Percentiles value, Point* const point) {
-    point->value_type = ValueType::kPercentiles;
-    point->percentiles_value = std::move(value);
+  point->value_type = ValueType::kPercentiles;
+  point->percentiles_value = std::move(value);
 }
 
 // Used by the CollectionRegistry class to collect all the values of all the
@@ -257,47 +255,44 @@ inline void CollectValue(Percentiles value, Point* const point) {
 //
 // This class is thread-safe.
 class Collector {
-public:
-    Collector(const uint64 collection_time_millis)
-        : collected_metrics_(new CollectedMetrics()),
-          collection_time_millis_(collection_time_millis) {}
+ public:
+  Collector(const uint64 collection_time_millis)
+      : collected_metrics_(new CollectedMetrics()),
+        collection_time_millis_(collection_time_millis) {}
 
-    template <MetricKind metric_kind, typename Value, int NumLabels>
-    MetricCollector<metric_kind, Value, NumLabels> GetMetricCollector(
-        const MetricDef<metric_kind, Value, NumLabels>* const metric_def,
-        const uint64 registration_time_millis,
-        internal::Collector* const collector) TF_LOCKS_EXCLUDED(mu_) {
-        auto* const point_set = [&]() {
-            mutex_lock l(mu_);
-            return collected_metrics_->point_set_map
-                   .insert(std::make_pair(string(metric_def->name()),
-                                          std::unique_ptr<PointSet>(new PointSet())))
-                   .first->second.get();
-        }
-        ();
-        return MetricCollector<metric_kind, Value, NumLabels>(
-                   metric_def, registration_time_millis, collector, point_set);
-    }
+  template <MetricKind metric_kind, typename Value, int NumLabels>
+  MetricCollector<metric_kind, Value, NumLabels> GetMetricCollector(
+      const MetricDef<metric_kind, Value, NumLabels>* const metric_def,
+      const uint64 registration_time_millis,
+      internal::Collector* const collector) TF_LOCKS_EXCLUDED(mu_) {
+    auto* const point_set = [&]() {
+      mutex_lock l(mu_);
+      return collected_metrics_->point_set_map
+          .insert(std::make_pair(string(metric_def->name()),
+                                 std::unique_ptr<PointSet>(new PointSet())))
+          .first->second.get();
+    }();
+    return MetricCollector<metric_kind, Value, NumLabels>(
+        metric_def, registration_time_millis, collector, point_set);
+  }
 
-    uint64 collection_time_millis() const {
-        return collection_time_millis_;
-    }
+  uint64 collection_time_millis() const { return collection_time_millis_; }
 
-    void CollectMetricDescriptor(const AbstractMetricDef* const metric_def)
-    TF_LOCKS_EXCLUDED(mu_);
+  void CollectMetricDescriptor(const AbstractMetricDef* const metric_def)
+      TF_LOCKS_EXCLUDED(mu_);
 
-    void CollectMetricValues(
-        const CollectionRegistry::CollectionInfo& collection_info);
+  void CollectMetricValues(
+      const CollectionRegistry::CollectionInfo& collection_info);
 
-    std::unique_ptr<CollectedMetrics> ConsumeCollectedMetrics()
-    TF_LOCKS_EXCLUDED(mu_);
+  std::unique_ptr<CollectedMetrics> ConsumeCollectedMetrics()
+      TF_LOCKS_EXCLUDED(mu_);
 
-private:
-    mutable mutex mu_;
-    std::unique_ptr<CollectedMetrics> collected_metrics_ TF_GUARDED_BY(mu_);
-    const uint64 collection_time_millis_;
+ private:
+  mutable mutex mu_;
+  std::unique_ptr<CollectedMetrics> collected_metrics_ TF_GUARDED_BY(mu_);
+  const uint64 collection_time_millis_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(Collector);
+  TF_DISALLOW_COPY_AND_ASSIGN(Collector);
 };
 
 // Write the timestamps for the point based on the MetricKind.
@@ -315,21 +310,21 @@ template <>
 inline void WriteTimestamps<MetricKind::kGauge>(
     const uint64 registration_time_millis, const uint64 collection_time_millis,
     Point* const point) {
-    point->start_timestamp_millis = collection_time_millis;
-    point->end_timestamp_millis = collection_time_millis;
+  point->start_timestamp_millis = collection_time_millis;
+  point->end_timestamp_millis = collection_time_millis;
 }
 
 template <>
 inline void WriteTimestamps<MetricKind::kCumulative>(
     const uint64 registration_time_millis, const uint64 collection_time_millis,
     Point* const point) {
-    point->start_timestamp_millis = registration_time_millis;
-    // There's a chance that the clock goes backwards on the same machine, so we
-    // protect ourselves against that.
-    point->end_timestamp_millis =
-        registration_time_millis < collection_time_millis
-        ? collection_time_millis
-        : registration_time_millis;
+  point->start_timestamp_millis = registration_time_millis;
+  // There's a chance that the clock goes backwards on the same machine, so we
+  // protect ourselves against that.
+  point->end_timestamp_millis =
+      registration_time_millis < collection_time_millis
+          ? collection_time_millis
+          : registration_time_millis;
 }
 
 }  // namespace internal
@@ -337,51 +332,51 @@ inline void WriteTimestamps<MetricKind::kCumulative>(
 template <MetricKind metric_kind, typename Value, int NumLabels>
 void MetricCollector<metric_kind, Value, NumLabels>::CollectValue(
     const std::array<string, NumLabels>& labels, Value value) {
-    point_set_->points.emplace_back(new Point());
-    auto* const point = point_set_->points.back().get();
-    const std::vector<string> label_descriptions =
-        metric_def_->label_descriptions();
-    point->labels.reserve(NumLabels);
-    for (int i = 0; i < NumLabels; ++i) {
-        point->labels.push_back({});
-        auto* const label = &point->labels.back();
-        label->name = label_descriptions[i];
-        label->value = labels[i];
-    }
-    internal::CollectValue(std::move(value), point);
-    internal::WriteTimestamps<metric_kind>(
-        registration_time_millis_, collector_->collection_time_millis(), point);
+  point_set_->points.emplace_back(new Point());
+  auto* const point = point_set_->points.back().get();
+  const std::vector<string> label_descriptions =
+      metric_def_->label_descriptions();
+  point->labels.reserve(NumLabels);
+  for (int i = 0; i < NumLabels; ++i) {
+    point->labels.push_back({});
+    auto* const label = &point->labels.back();
+    label->name = label_descriptions[i];
+    label->value = labels[i];
+  }
+  internal::CollectValue(std::move(value), point);
+  internal::WriteTimestamps<metric_kind>(
+      registration_time_millis_, collector_->collection_time_millis(), point);
 }
 
 template <MetricKind metric_kind, typename Value, int NumLabels>
 MetricCollector<metric_kind, Value, NumLabels> MetricCollectorGetter::Get(
     const MetricDef<metric_kind, Value, NumLabels>* const metric_def) {
-    if (allowed_metric_def_ != metric_def) {
-        LOG(FATAL) << "Expected collection for: " << allowed_metric_def_->name()
-                   << " but instead got: " << metric_def->name();
-    }
+  if (allowed_metric_def_ != metric_def) {
+    LOG(FATAL) << "Expected collection for: " << allowed_metric_def_->name()
+               << " but instead got: " << metric_def->name();
+  }
 
-    return collector_->GetMetricCollector(metric_def, registration_time_millis_,
-                                          collector_);
+  return collector_->GetMetricCollector(metric_def, registration_time_millis_,
+                                        collector_);
 }
 
 class Exporter {
-public:
-    virtual ~Exporter() {}
-    virtual void PeriodicallyExportMetrics() = 0;
-    virtual void ExportMetrics() = 0;
+ public:
+  virtual ~Exporter() {}
+  virtual void PeriodicallyExportMetrics() = 0;
+  virtual void ExportMetrics() = 0;
 };
 
 namespace exporter_registration {
 
 class ExporterRegistration {
-public:
-    explicit ExporterRegistration(Exporter* exporter) : exporter_(exporter) {
-        exporter_->PeriodicallyExportMetrics();
-    }
+ public:
+  explicit ExporterRegistration(Exporter* exporter) : exporter_(exporter) {
+    exporter_->PeriodicallyExportMetrics();
+  }
 
-private:
-    Exporter* exporter_;
+ private:
+  Exporter* exporter_;
 };
 
 }  // namespace exporter_registration

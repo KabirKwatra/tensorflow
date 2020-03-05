@@ -34,63 +34,57 @@ namespace tensorflow {
 // Holds some information about the platform on which an
 // XlaLaunch/_XlaCompile/_XlaRun op must run on.
 class XlaPlatformInfo {
-public:
-    XlaPlatformInfo() : device_type_("") {}
-    XlaPlatformInfo(XlaPlatformInfo&&) = default;
-    explicit XlaPlatformInfo(const DeviceType device_type,
-                             se::Platform::Id platform_id,
-                             const XlaDevice::Metadata* xla_device_metadata,
-                             se::DeviceMemoryAllocator* device_allocator)
-        : device_type_(device_type),
-          platform_id_(platform_id),
-          xla_device_metadata_(xla_device_metadata),
-          device_allocator_(device_allocator) {}
+ public:
+  XlaPlatformInfo() : device_type_("") {}
+  XlaPlatformInfo(XlaPlatformInfo&&) = default;
+  explicit XlaPlatformInfo(const DeviceType device_type,
+                           se::Platform::Id platform_id,
+                           const XlaDevice::Metadata* xla_device_metadata,
+                           se::DeviceMemoryAllocator* device_allocator)
+      : device_type_(device_type),
+        platform_id_(platform_id),
+        xla_device_metadata_(xla_device_metadata),
+        device_allocator_(device_allocator) {}
 
-    XlaPlatformInfo& operator=(XlaPlatformInfo&& other) = default;
+  XlaPlatformInfo& operator=(XlaPlatformInfo&& other) = default;
 
-    bool UseMultipleStreams() const {
-        return xla_device_metadata_ && xla_device_metadata_->UseMultipleStreams();
-    }
+  bool UseMultipleStreams() const {
+    return xla_device_metadata_ && xla_device_metadata_->UseMultipleStreams();
+  }
 
-    // Non-null only when run on an XLA device.
-    se::DeviceMemoryAllocator* custom_allocator() const {
-        return device_allocator_;
-    }
+  // Non-null only when run on an XLA device.
+  se::DeviceMemoryAllocator* custom_allocator() const {
+    return device_allocator_;
+  }
 
-    DeviceType device_type() const {
-        return device_type_;
-    }
+  DeviceType device_type() const { return device_type_; }
 
-    // This is equal to xla_device_metadata()->platform()->id() if
-    // xla_device_metadata() is not nullptr.
-    se::Platform::Id platform_id() const {
-        return platform_id_;
-    }
+  // This is equal to xla_device_metadata()->platform()->id() if
+  // xla_device_metadata() is not nullptr.
+  se::Platform::Id platform_id() const { return platform_id_; }
 
-    // This may be null if the op this XlaPlatformInfo is for was not placed on an
-    // XLA device.
-    const XlaDevice::Metadata* xla_device_metadata() const {
-        return xla_device_metadata_;
-    }
-    bool is_on_xla_device() const {
-        return xla_device_metadata() != nullptr;
-    }
+  // This may be null if the op this XlaPlatformInfo is for was not placed on an
+  // XLA device.
+  const XlaDevice::Metadata* xla_device_metadata() const {
+    return xla_device_metadata_;
+  }
+  bool is_on_xla_device() const { return xla_device_metadata() != nullptr; }
 
-private:
-    DeviceType device_type_;
-    se::Platform::Id platform_id_;
+ private:
+  DeviceType device_type_;
+  se::Platform::Id platform_id_;
 
-    // xla_device_metadata_ lives in the tensorflow::DeviceBase in which the
-    // XlaLaunch/_XlaCompile/_XlaRun op is placed and thus does not die before the
-    // XlaLaunch/_XlaCompile/_XlaRun OpKernel.
-    const XlaDevice::Metadata* xla_device_metadata_;
+  // xla_device_metadata_ lives in the tensorflow::DeviceBase in which the
+  // XlaLaunch/_XlaCompile/_XlaRun op is placed and thus does not die before the
+  // XlaLaunch/_XlaCompile/_XlaRun OpKernel.
+  const XlaDevice::Metadata* xla_device_metadata_;
 
-    // If the op associated with this XlaPlatformInfo is placed on an XLA device
-    // then device_allocator_ is the xla::Backend's memory allocator.  If the op
-    // is placed on a regular CPU or GPU device then device_allocator_ is null.
-    se::DeviceMemoryAllocator* device_allocator_;
+  // If the op associated with this XlaPlatformInfo is placed on an XLA device
+  // then device_allocator_ is the xla::Backend's memory allocator.  If the op
+  // is placed on a regular CPU or GPU device then device_allocator_ is null.
+  se::DeviceMemoryAllocator* device_allocator_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(XlaPlatformInfo);
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaPlatformInfo);
 };
 
 // XlaLocalLaunchBase is almost the same as XlaLocalLaunchOp.
@@ -105,27 +99,27 @@ private:
 // `has_ref_vars`: whether the input computation can have reference variables.
 // TODO(cheshire): instead derive this information from the input graph.
 class XlaLocalLaunchBase : public OpKernel {
-public:
-    XlaLocalLaunchBase(OpKernelConstruction* ctx,
-                       const std::vector<int>& constants,
-                       const std::vector<int>& resources,
-                       const NameAttrList& function, bool has_ref_vars);
-    XlaLocalLaunchBase(const XlaLocalLaunchBase&) = delete;
-    XlaLocalLaunchBase& operator=(const XlaLocalLaunchBase&) = delete;
-    ~XlaLocalLaunchBase() override = default;
+ public:
+  XlaLocalLaunchBase(OpKernelConstruction* ctx,
+                     const std::vector<int>& constants,
+                     const std::vector<int>& resources,
+                     const NameAttrList& function, bool has_ref_vars);
+  XlaLocalLaunchBase(const XlaLocalLaunchBase&) = delete;
+  XlaLocalLaunchBase& operator=(const XlaLocalLaunchBase&) = delete;
+  ~XlaLocalLaunchBase() override = default;
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 
-protected:
-    // Indexes of compile-time constant inputs
-    const std::vector<int> constants_;
-    // Indexes of resource inputs
-    const std::vector<int> resources_;
+ protected:
+  // Indexes of compile-time constant inputs
+  const std::vector<int> constants_;
+  // Indexes of resource inputs
+  const std::vector<int> resources_;
 
-    const NameAttrList function_;
-    const XlaPlatformInfo platform_info_;
+  const NameAttrList function_;
+  const XlaPlatformInfo platform_info_;
 
-    bool has_ref_vars_;
+  bool has_ref_vars_;
 };
 
 // XlaLocalLaunchOp is used to replace a region of the TensorFlow graph
@@ -138,60 +132,60 @@ protected:
 // xla::LocalExecutable::Run(), and passes arguments into/out of XLA in device
 // memory.
 class XlaLocalLaunchOp : public XlaLocalLaunchBase {
-public:
-    explicit XlaLocalLaunchOp(OpKernelConstruction* ctx);
-    ~XlaLocalLaunchOp() override;
+ public:
+  explicit XlaLocalLaunchOp(OpKernelConstruction* ctx);
+  ~XlaLocalLaunchOp() override;
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(XlaLocalLaunchOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaLocalLaunchOp);
 };
 
 class XlaCompileOp : public OpKernel {
-public:
-    explicit XlaCompileOp(OpKernelConstruction* ctx);
+ public:
+  explicit XlaCompileOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 
-private:
-    // Indexes of compile-time constant inputs
-    const std::vector<int> constants_;
-    // Indexes of resource inputs
-    const std::vector<int> resources_;
+ private:
+  // Indexes of compile-time constant inputs
+  const std::vector<int> constants_;
+  // Indexes of resource inputs
+  const std::vector<int> resources_;
 
-    const NameAttrList function_;
+  const NameAttrList function_;
 
-    XlaPlatformInfo platform_info_;
+  XlaPlatformInfo platform_info_;
 
-    const bool must_compile_;
+  const bool must_compile_;
 
-    // Whether the graph has TF reference variables.
-    const bool has_ref_vars_;
+  // Whether the graph has TF reference variables.
+  const bool has_ref_vars_;
 
-    // cannot_compile_cluster_ is set to true if XLA returns an Unimplemented
-    // error when compiling the cluster this _XlaCompile is supposed to compile.
-    // If `cannot_compile_cluster_` is true then we avoid compiling this cluster
-    // on any future calls to _XlaCompile.
-    bool cannot_compile_cluster_ TF_GUARDED_BY(cannot_compile_cluster_mu_) =
-        false;
+  // cannot_compile_cluster_ is set to true if XLA returns an Unimplemented
+  // error when compiling the cluster this _XlaCompile is supposed to compile.
+  // If `cannot_compile_cluster_` is true then we avoid compiling this cluster
+  // on any future calls to _XlaCompile.
+  bool cannot_compile_cluster_ TF_GUARDED_BY(cannot_compile_cluster_mu_) =
+      false;
 
-    mutex cannot_compile_cluster_mu_;
+  mutex cannot_compile_cluster_mu_;
 };
 
 class XlaRunOp : public OpKernel {
-public:
-    explicit XlaRunOp(OpKernelConstruction* ctx);
+ public:
+  explicit XlaRunOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 
-private:
-    const XlaPlatformInfo platform_info_;
+ private:
+  const XlaPlatformInfo platform_info_;
 };
 
 class XlaMergeOp : public OpKernel {
-public:
-    explicit XlaMergeOp(OpKernelConstruction* ctx);
+ public:
+  explicit XlaMergeOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 };
 
 }  // namespace tensorflow

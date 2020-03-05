@@ -33,57 +33,57 @@ class StepStatsCollector;
 // instances.
 
 class WorkerCacheLogger {
-public:
-    // Start/Stop logging activity.  This function increments/decrements
-    // a counter so that if two separate steps turn logging on/off,
-    // logging should be on for the union of the durations of both,
-    // regardless of relative timing.
-    void SetLogging(bool v);
+ public:
+  // Start/Stop logging activity.  This function increments/decrements
+  // a counter so that if two separate steps turn logging on/off,
+  // logging should be on for the union of the durations of both,
+  // regardless of relative timing.
+  void SetLogging(bool v);
 
-    // Discard any saved log data.
-    void ClearLogs();
+  // Discard any saved log data.
+  void ClearLogs();
 
-    // Return logs for the identified step in *ss.  Any returned data will no
-    // longer be stored.  Returns true iff *ss was modified.
-    bool RetrieveLogs(int64 step_id, StepStats* ss);
+  // Return logs for the identified step in *ss.  Any returned data will no
+  // longer be stored.  Returns true iff *ss was modified.
+  bool RetrieveLogs(int64 step_id, StepStats* ss);
 
-    // Return true if there is any outstanding request for logging on
-    // the RPC channels.
-    bool LoggingActive() {
-        mutex_lock l(count_mu_);
-        return want_logging_count_ > 0;
-    }
+  // Return true if there is any outstanding request for logging on
+  // the RPC channels.
+  bool LoggingActive() {
+    mutex_lock l(count_mu_);
+    return want_logging_count_ > 0;
+  }
 
-    // Generates a NodeExecStats record with the given data, and saves for
-    // later retrieval by RetrieveLogs().
-    void RecordRecvTensor(int64 step_id, int64 start_usecs, int64 end_usecs,
+  // Generates a NodeExecStats record with the given data, and saves for
+  // later retrieval by RetrieveLogs().
+  void RecordRecvTensor(int64 step_id, int64 start_usecs, int64 end_usecs,
+                        const string& tensor_name, const string& src_device,
+                        const string& dst_device, int64 bytes);
+
+  // Generates a NodeExecStats record with the given data, and saves for
+  // later retrieval by RetrieveLogs().
+  void RecordDataTransfer(int64 step_id, int64 start_usecs, int64 end_usecs,
                           const string& tensor_name, const string& src_device,
-                          const string& dst_device, int64 bytes);
+                          const string& dst_device, int64 bytes,
+                          const string& details,
+                          const string& transfer_method_name);
 
-    // Generates a NodeExecStats record with the given data, and saves for
-    // later retrieval by RetrieveLogs().
-    void RecordDataTransfer(int64 step_id, int64 start_usecs, int64 end_usecs,
-                            const string& tensor_name, const string& src_device,
-                            const string& dst_device, int64 bytes,
-                            const string& details,
-                            const string& transfer_method_name);
+ private:
+  mutex count_mu_;
+  int32 want_logging_count_ TF_GUARDED_BY(count_mu_) = 0;
 
-private:
-    mutex count_mu_;
-    int32 want_logging_count_ TF_GUARDED_BY(count_mu_) = 0;
+  struct StepLog {
+    StepStats step_stats;
+    StepStatsCollector* collector;
+  };
+  typedef std::unordered_map<int64, StepLog> LogMap;
+  mutex mu_;
+  LogMap log_map_ TF_GUARDED_BY(mu_);
 
-    struct StepLog {
-        StepStats step_stats;
-        StepStatsCollector* collector;
-    };
-    typedef std::unordered_map<int64, StepLog> LogMap;
-    mutex mu_;
-    LogMap log_map_ TF_GUARDED_BY(mu_);
+  // Records "ns" in log_map_ under the given device and step.
+  void Save(const string& device, int64 step_id, NodeExecStats* ns);
 
-    // Records "ns" in log_map_ under the given device and step.
-    void Save(const string& device, int64 step_id, NodeExecStats* ns);
-
-    void ClearLogsWithLock() TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+  void ClearLogsWithLock() TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 };
 }  // namespace tensorflow
 #endif  // TENSORFLOW_CORE_DISTRIBUTED_RUNTIME_WORKER_CACHE_LOGGER_H_

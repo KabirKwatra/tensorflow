@@ -32,62 +32,62 @@ namespace tensorflow {
  */
 template <typename GradientTensorType>
 class TypedConditionalAccumulatorBase : public ConditionalAccumulatorBase {
-public:
-    TypedConditionalAccumulatorBase(const DataType& dtype,
-                                    const PartialTensorShape& shape,
-                                    const string& name,
-                                    const string& reduction_type)
-        : ConditionalAccumulatorBase(dtype, shape, name, reduction_type) {}
+ public:
+  TypedConditionalAccumulatorBase(const DataType& dtype,
+                                  const PartialTensorShape& shape,
+                                  const string& name,
+                                  const string& reduction_type)
+      : ConditionalAccumulatorBase(dtype, shape, name, reduction_type) {}
 
-    /**
-     * Attempts to add a gradient to the accumulator. An ApplyGrad attempt is
-     * successful (i.e., has its gradient applied) if its local_step >=
-     * current_global_step_ at the time the attempt is processed. Otherwise, if
-     * local_step < current_global_step_, the stale gradient is silently dropped.
-     *
-     * local_step: Time-step at which the gradient was computed.
-     * grad:       Gradient tensor to be added to the accumulator.
-     * ctx:        Context in which the op is executed.
-     */
-    void TryApplyGrad(int64 local_step, OpKernelContext* ctx) override {
-        {
-            mutex_lock l(mu_);
-            if (local_step >= current_global_step_) {
-                GradientTensorType* grad = nullptr;
-                bool is_valid = GetAndValidateTensorInputForApplyGrad(ctx, &grad);
-                if (is_valid) {
-                    if (counter_ > 0) {
-                        AddToAccumGradFunction(ctx, grad);
-                    } else {
-                        AllocateAndAssignToAccumGradFunction(ctx, grad);
-                    }
-                    counter_++;
-                }
-                CleanUpGradTensor(grad);
-            }
+  /**
+   * Attempts to add a gradient to the accumulator. An ApplyGrad attempt is
+   * successful (i.e., has its gradient applied) if its local_step >=
+   * current_global_step_ at the time the attempt is processed. Otherwise, if
+   * local_step < current_global_step_, the stale gradient is silently dropped.
+   *
+   * local_step: Time-step at which the gradient was computed.
+   * grad:       Gradient tensor to be added to the accumulator.
+   * ctx:        Context in which the op is executed.
+   */
+  void TryApplyGrad(int64 local_step, OpKernelContext* ctx) override {
+    {
+      mutex_lock l(mu_);
+      if (local_step >= current_global_step_) {
+        GradientTensorType* grad = nullptr;
+        bool is_valid = GetAndValidateTensorInputForApplyGrad(ctx, &grad);
+        if (is_valid) {
+          if (counter_ > 0) {
+            AddToAccumGradFunction(ctx, grad);
+          } else {
+            AllocateAndAssignToAccumGradFunction(ctx, grad);
+          }
+          counter_++;
         }
-        FlushUnlocked();
+        CleanUpGradTensor(grad);
+      }
     }
+    FlushUnlocked();
+  }
 
-protected:
-    // Virtual methods to be implemented by sub-classes for different datatypes.
-    // Implements arithmetic operations specific to datatype.
-    virtual void AllocateAndAssignToAccumGradFunction(
-        OpKernelContext* ctx, GradientTensorType* grad) = 0;
+ protected:
+  // Virtual methods to be implemented by sub-classes for different datatypes.
+  // Implements arithmetic operations specific to datatype.
+  virtual void AllocateAndAssignToAccumGradFunction(
+      OpKernelContext* ctx, GradientTensorType* grad) = 0;
 
-    virtual void AddToAccumGradFunction(OpKernelContext* ctx,
-                                        GradientTensorType* grad) = 0;
+  virtual void AddToAccumGradFunction(OpKernelContext* ctx,
+                                      GradientTensorType* grad) = 0;
 
-    // Method for extracting and validating input provided in an OpKernelContext.
-    // Returns true if input was successfully retrieved and is valid.
-    // Gradient is returned via the GradientTensorType** tensor.
-    virtual bool GetAndValidateTensorInputForApplyGrad(
-        OpKernelContext* ctx, GradientTensorType** tensor)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) = 0;
+  // Method for extracting and validating input provided in an OpKernelContext.
+  // Returns true if input was successfully retrieved and is valid.
+  // Gradient is returned via the GradientTensorType** tensor.
+  virtual bool GetAndValidateTensorInputForApplyGrad(
+      OpKernelContext* ctx, GradientTensorType** tensor)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) = 0;
 
-    // Method for cleaning up any memory allocated in
-    // GetAndValidateTensorInputForApplyGrad
-    virtual void CleanUpGradTensor(GradientTensorType* tensor) = 0;
+  // Method for cleaning up any memory allocated in
+  // GetAndValidateTensorInputForApplyGrad
+  virtual void CleanUpGradTensor(GradientTensorType* tensor) = 0;
 };
 
 }  // namespace tensorflow

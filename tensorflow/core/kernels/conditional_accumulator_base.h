@@ -18,11 +18,10 @@ limitations under the License.
 
 #include <deque>
 
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/framework/numeric_op.h"
-
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/resource_mgr.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
 
@@ -45,120 +44,116 @@ namespace tensorflow {
  * (3) the internal global_step value (current_global_step_) is incremented by 1
  */
 class ConditionalAccumulatorBase : public ResourceBase {
-public:
-    // Args:
-    //   dtype: The datatype of the gradients to be accumulated.
-    //   shape: The shape of the accumulated gradients.
-    //   name:  A name to use for the ConditionalAccumulator.
-    ConditionalAccumulatorBase(const DataType& dtype,
-                               const PartialTensorShape& shape,
-                               const string& name, const string& reduction_type);
+ public:
+  // Args:
+  //   dtype: The datatype of the gradients to be accumulated.
+  //   shape: The shape of the accumulated gradients.
+  //   name:  A name to use for the ConditionalAccumulator.
+  ConditionalAccumulatorBase(const DataType& dtype,
+                             const PartialTensorShape& shape,
+                             const string& name, const string& reduction_type);
 
-    typedef AsyncOpKernel::DoneCallback DoneCallback;
+  typedef AsyncOpKernel::DoneCallback DoneCallback;
 
-    virtual void TryApplyGrad(int64 local_step, OpKernelContext* ctx) = 0;
-    void TryTakeGrad(int num_required, OpKernelContext* ctx,
-                     DoneCallback callback);
+  virtual void TryApplyGrad(int64 local_step, OpKernelContext* ctx) = 0;
+  void TryTakeGrad(int num_required, OpKernelContext* ctx,
+                   DoneCallback callback);
 
-    // Accessor methods
-    uint32 num_accumulated() {
-        mutex_lock lock(mu_);
-        return counter_;
-    }
+  // Accessor methods
+  uint32 num_accumulated() {
+    mutex_lock lock(mu_);
+    return counter_;
+  }
 
-    const DataType& dtype() const {
-        return dtype_;
-    }
+  const DataType& dtype() const { return dtype_; }
 
-    string DebugString() const override {
-        return "A conditional accumulator";
-    }
+  string DebugString() const override { return "A conditional accumulator"; }
 
-    // SetGlobalStep is a modifier method for current_global_step.
-    // It returns an InvalidArgument error if the new_global_step is less than
-    // current_global_step.
-    Status SetGlobalStep(int64 new_global_step);
+  // SetGlobalStep is a modifier method for current_global_step.
+  // It returns an InvalidArgument error if the new_global_step is less than
+  // current_global_step.
+  Status SetGlobalStep(int64 new_global_step);
 
-    Status MatchesNodeDef(const NodeDef& node_def);
+  Status MatchesNodeDef(const NodeDef& node_def);
 
-protected:
-    // Virtual methods to be implemented by sub-classes for different datatypes.
-    // Implements arithmetic operations specific to datatype.
-    virtual void DivideAccumGradByCounter(OpKernelContext* ctx)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) = 0;
-    virtual bool SetOutput(OpKernelContext* ctx) = 0;
+ protected:
+  // Virtual methods to be implemented by sub-classes for different datatypes.
+  // Implements arithmetic operations specific to datatype.
+  virtual void DivideAccumGradByCounter(OpKernelContext* ctx)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_) = 0;
+  virtual bool SetOutput(OpKernelContext* ctx) = 0;
 
-    enum RunResult { kNoProgress, kComplete };
+  enum RunResult { kNoProgress, kComplete };
 
-    // Helper struct holding information about a TakeGrad attempt
-    struct Attempt;
-    typedef std::function<RunResult(Attempt*)> RunCallback;
-    struct Attempt {
-        int elements_requested;
-        DoneCallback done_callback;  // must be run outside mu_
-        OpKernelContext* context;
-        CancellationManager* cancellation_manager;  // not owned
-        CancellationToken cancellation_token;
-        RunCallback run_callback;  // must be run while holding mu_
-        bool is_cancelled;
+  // Helper struct holding information about a TakeGrad attempt
+  struct Attempt;
+  typedef std::function<RunResult(Attempt*)> RunCallback;
+  struct Attempt {
+    int elements_requested;
+    DoneCallback done_callback;  // must be run outside mu_
+    OpKernelContext* context;
+    CancellationManager* cancellation_manager;  // not owned
+    CancellationToken cancellation_token;
+    RunCallback run_callback;  // must be run while holding mu_
+    bool is_cancelled;
 
-        Attempt(int elements_requested, DoneCallback done_callback,
-                OpKernelContext* context, CancellationManager* cancellation_manager,
-                CancellationToken cancellation_token, RunCallback run_callback)
-            : elements_requested(elements_requested),
-              done_callback(std::move(done_callback)),
-              context(context),
-              cancellation_manager(cancellation_manager),
-              cancellation_token(cancellation_token),
-              run_callback(std::move(run_callback)),
-              is_cancelled(false) {}
-    };
+    Attempt(int elements_requested, DoneCallback done_callback,
+            OpKernelContext* context, CancellationManager* cancellation_manager,
+            CancellationToken cancellation_token, RunCallback run_callback)
+        : elements_requested(elements_requested),
+          done_callback(std::move(done_callback)),
+          context(context),
+          cancellation_manager(cancellation_manager),
+          cancellation_token(cancellation_token),
+          run_callback(std::move(run_callback)),
+          is_cancelled(false) {}
+  };
 
-    // Helper struct for deregistration of a cancellation token and executing a
-    // DoneCallback after a TakeGrad attempt is complete.
-    struct CleanUp {
-        CleanUp(DoneCallback&& f, CancellationToken ct, CancellationManager* cm)
-            : finished(f), to_deregister(ct), cm(cm) {}
-        DoneCallback finished;
-        CancellationToken to_deregister;
-        CancellationManager* cm;
-    };
+  // Helper struct for deregistration of a cancellation token and executing a
+  // DoneCallback after a TakeGrad attempt is complete.
+  struct CleanUp {
+    CleanUp(DoneCallback&& f, CancellationToken ct, CancellationManager* cm)
+        : finished(f), to_deregister(ct), cm(cm) {}
+    DoneCallback finished;
+    CancellationToken to_deregister;
+    CancellationManager* cm;
+  };
 
-    // Fields
+  // Fields
 
-    const DataType dtype_;
-    const PartialTensorShape shape_;
-    const string name_;
-    const string reduction_type_;
-    mutex mu_;
-    int counter_ TF_GUARDED_BY(mu_);
-    int64 current_global_step_ TF_GUARDED_BY(mu_);
+  const DataType dtype_;
+  const PartialTensorShape shape_;
+  const string name_;
+  const string reduction_type_;
+  mutex mu_;
+  int counter_ TF_GUARDED_BY(mu_);
+  int64 current_global_step_ TF_GUARDED_BY(mu_);
 
-    std::deque<Attempt> takegrad_attempts_ TF_GUARDED_BY(mu_);
+  std::deque<Attempt> takegrad_attempts_ TF_GUARDED_BY(mu_);
 
-    // Methods
+  // Methods
 
-    // Helper function for creating cancellation callback
-    void Cancel(CancellationManager* cancellation_manager,
-                CancellationToken token);
+  // Helper function for creating cancellation callback
+  void Cancel(CancellationManager* cancellation_manager,
+              CancellationToken token);
 
-    // Helper functions to process TakeGrad attempts.
-    // FlushUnlocked is called at the end of each TryApplyGrad and TryTakeGrad
-    // calls to try to clear the TakeGrad attempts. This in turn calls
-    // TryAttemptLocked, which then executes the RunCallback of the logged
-    // attempts.
-    // Both functions are modeled after core/kernels/queue_base.
-    // Note: ApplyGrad attempts never block -- unlike in a queue with limited
-    //       capacity, we can always add the newest gradient to our accumulator
-    //       (if it is not stale) or drop it silently (if it is stale).
-    void FlushUnlocked();
-    bool TryAttemptLocked(std::vector<CleanUp>* clean_up)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+  // Helper functions to process TakeGrad attempts.
+  // FlushUnlocked is called at the end of each TryApplyGrad and TryTakeGrad
+  // calls to try to clear the TakeGrad attempts. This in turn calls
+  // TryAttemptLocked, which then executes the RunCallback of the logged
+  // attempts.
+  // Both functions are modeled after core/kernels/queue_base.
+  // Note: ApplyGrad attempts never block -- unlike in a queue with limited
+  //       capacity, we can always add the newest gradient to our accumulator
+  //       (if it is not stale) or drop it silently (if it is stale).
+  void FlushUnlocked();
+  bool TryAttemptLocked(std::vector<CleanUp>* clean_up)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 
-    // Helper methods
-    //  void DeepCopy(Tensor* dst);
-    bool TakeGradLockedHelper(OpKernelContext* ctx, DoneCallback callback)
-    TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+  // Helper methods
+  //  void DeepCopy(Tensor* dst);
+  bool TakeGradLockedHelper(OpKernelContext* ctx, DoneCallback callback)
+      TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
 };
 
 /*
@@ -190,18 +185,16 @@ protected:
  */
 template <typename T, typename U>
 class TypeConverter {
-public:
-    static T ConvertUToT(U c) {
-        return c; /* implicit conversion */
-    }
+ public:
+  static T ConvertUToT(U c) { return c; /* implicit conversion */ }
 };
 
 template <typename U>
 class TypeConverter<Eigen::half, U> {
-public:
-    static Eigen::half ConvertUToT(U c) {
-        return Eigen::half_impl::float_to_half_rtne(c);
-    }
+ public:
+  static Eigen::half ConvertUToT(U c) {
+    return Eigen::half_impl::float_to_half_rtne(c);
+  }
 };
 
 }  // namespace tensorflow

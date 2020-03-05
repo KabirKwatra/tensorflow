@@ -30,60 +30,60 @@ class SessionLogger;
 // been completed or cancelled and underlying session has been freed.  Any
 // subsequent operations on the SessionRef object will return errors::Cancelled.
 class SessionRef : public Session {
-public:
-    explicit SessionRef(Session* session);
-    ~SessionRef() override;
+ public:
+  explicit SessionRef(Session* session);
+  ~SessionRef() override;
 
-    Status Create(const GraphDef& graph) override;
-    Status Extend(const GraphDef& graph) override;
-    Status Create(const RunOptions& run_options, const GraphDef& graph) override;
-    Status Extend(const RunOptions& run_options, const GraphDef& graph) override;
-    Status Run(const std::vector<std::pair<string, Tensor> >& inputs,
-               const std::vector<string>& output_tensor_names,
-               const std::vector<string>& target_node_names,
-               std::vector<Tensor>* outputs) override;
+  Status Create(const GraphDef& graph) override;
+  Status Extend(const GraphDef& graph) override;
+  Status Create(const RunOptions& run_options, const GraphDef& graph) override;
+  Status Extend(const RunOptions& run_options, const GraphDef& graph) override;
+  Status Run(const std::vector<std::pair<string, Tensor> >& inputs,
+             const std::vector<string>& output_tensor_names,
+             const std::vector<string>& target_node_names,
+             std::vector<Tensor>* outputs) override;
 
-    Status ListDevices(std::vector<DeviceAttributes>* response) override;
+  Status ListDevices(std::vector<DeviceAttributes>* response) override;
 
-    Status Close() override;
-    Status Close(const RunOptions& run_options) override;
+  Status Close() override;
+  Status Close(const RunOptions& run_options) override;
 
-    Status Run(const RunOptions& run_options,
-               const std::vector<std::pair<string, Tensor> >& inputs,
-               const std::vector<string>& output_tensor_names,
-               const std::vector<string>& target_node_names,
-               std::vector<Tensor>* outputs, RunMetadata* run_metadata) override;
+  Status Run(const RunOptions& run_options,
+             const std::vector<std::pair<string, Tensor> >& inputs,
+             const std::vector<string>& output_tensor_names,
+             const std::vector<string>& target_node_names,
+             std::vector<Tensor>* outputs, RunMetadata* run_metadata) override;
 
-    Status PRunSetup(const std::vector<string>& input_names,
-                     const std::vector<string>& output_names,
-                     const std::vector<string>& target_nodes,
-                     string* handle) override;
+  Status PRunSetup(const std::vector<string>& input_names,
+                   const std::vector<string>& output_names,
+                   const std::vector<string>& target_nodes,
+                   string* handle) override;
 
-    Status PRun(const string& handle,
-                const std::vector<std::pair<string, Tensor> >& inputs,
-                const std::vector<string>& output_names,
-                std::vector<Tensor>* outputs) override;
+  Status PRun(const string& handle,
+              const std::vector<std::pair<string, Tensor> >& inputs,
+              const std::vector<string>& output_names,
+              std::vector<Tensor>* outputs) override;
 
-    Status MakeCallable(const CallableOptions& callable_options,
-                        CallableHandle* out_handle) override;
+  Status MakeCallable(const CallableOptions& callable_options,
+                      CallableHandle* out_handle) override;
 
-    Status RunCallable(CallableHandle handle,
-                       const std::vector<Tensor>& feed_tensors,
-                       std::vector<Tensor>* fetch_tensors,
-                       RunMetadata* run_metadata) override;
+  Status RunCallable(CallableHandle handle,
+                     const std::vector<Tensor>& feed_tensors,
+                     std::vector<Tensor>* fetch_tensors,
+                     RunMetadata* run_metadata) override;
 
-    Status ReleaseCallable(CallableHandle handle) override;
+  Status ReleaseCallable(CallableHandle handle) override;
 
-private:
-    mutex run_lock_;
-    condition_variable run_finished_;
-    uint64 run_count_ TF_GUARDED_BY(run_lock_) = {0};
-    std::shared_ptr<Session> session_;
+ private:
+  mutex run_lock_;
+  condition_variable run_finished_;
+  uint64 run_count_ TF_GUARDED_BY(run_lock_) = {0};
+  std::shared_ptr<Session> session_;
 
-    // Borrowed reference to global session logger.
-    SessionLogger* logger_;
+  // Borrowed reference to global session logger.
+  SessionLogger* logger_;
 
-    Status CheckNotClosed();
+  Status CheckNotClosed();
 };
 
 }  // namespace tensorflow

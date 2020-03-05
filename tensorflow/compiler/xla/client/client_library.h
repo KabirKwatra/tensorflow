@@ -44,102 +44,102 @@ namespace xla {
 
 // Options to configure the local client when it is created.
 class LocalClientOptions {
-public:
-    LocalClientOptions(
-        se::Platform* platform = nullptr, int number_of_replicas = 1,
-        int intra_op_parallelism_threads = -1,
-        const absl::optional<std::set<int>>& allowed_devices = absl::nullopt);
+ public:
+  LocalClientOptions(
+      se::Platform* platform = nullptr, int number_of_replicas = 1,
+      int intra_op_parallelism_threads = -1,
+      const absl::optional<std::set<int>>& allowed_devices = absl::nullopt);
 
-    // Set the platform backing the service, or nullptr for the default platform.
-    LocalClientOptions& set_platform(se::Platform* platform);
-    se::Platform* platform() const;
+  // Set the platform backing the service, or nullptr for the default platform.
+  LocalClientOptions& set_platform(se::Platform* platform);
+  se::Platform* platform() const;
 
-    // Set the number of replicas to use when compiling replicated
-    // programs.
-    LocalClientOptions& set_number_of_replicas(int number_of_replicas);
-    int number_of_replicas() const;
+  // Set the number of replicas to use when compiling replicated
+  // programs.
+  LocalClientOptions& set_number_of_replicas(int number_of_replicas);
+  int number_of_replicas() const;
 
-    // Sets the thread pool size for parallel execution of an individual operator.
-    LocalClientOptions& set_intra_op_parallelism_threads(int num_threads);
-    int intra_op_parallelism_threads() const;
+  // Sets the thread pool size for parallel execution of an individual operator.
+  LocalClientOptions& set_intra_op_parallelism_threads(int num_threads);
+  int intra_op_parallelism_threads() const;
 
-    // Sets the allowed_devices set for selectively constructing stream executors
-    // on the platform.
-    LocalClientOptions& set_allowed_devices(
-        const absl::optional<std::set<int>>& allowed_devices);
-    const absl::optional<std::set<int>>& allowed_devices() const;
+  // Sets the allowed_devices set for selectively constructing stream executors
+  // on the platform.
+  LocalClientOptions& set_allowed_devices(
+      const absl::optional<std::set<int>>& allowed_devices);
+  const absl::optional<std::set<int>>& allowed_devices() const;
 
-private:
-    se::Platform* platform_;
-    int number_of_replicas_;
-    int intra_op_parallelism_threads_;
-    absl::optional<std::set<int>> allowed_devices_;
+ private:
+  se::Platform* platform_;
+  int number_of_replicas_;
+  int intra_op_parallelism_threads_;
+  absl::optional<std::set<int>> allowed_devices_;
 };
 
 class ClientLibrary {
-public:
-    // Singleton constructor-or-accessor -- returns a client for the application
-    // to issue XLA commands on. Arguments:
-    //
-    //   platform : The platform the underlying XLA service should target. If
-    //     null then default platform is used.
-    //   device_set: Set of device IDs for which the stream executor will be
-    //   created, for the given platform.
-    static StatusOr<LocalClient*> GetOrCreateLocalClient(
-        se::Platform* platform = nullptr,
-        const absl::optional<std::set<int>>& allowed_devices = absl::nullopt);
-    static StatusOr<LocalClient*> GetOrCreateLocalClient(
-        const LocalClientOptions& options);
+ public:
+  // Singleton constructor-or-accessor -- returns a client for the application
+  // to issue XLA commands on. Arguments:
+  //
+  //   platform : The platform the underlying XLA service should target. If
+  //     null then default platform is used.
+  //   device_set: Set of device IDs for which the stream executor will be
+  //   created, for the given platform.
+  static StatusOr<LocalClient*> GetOrCreateLocalClient(
+      se::Platform* platform = nullptr,
+      const absl::optional<std::set<int>>& allowed_devices = absl::nullopt);
+  static StatusOr<LocalClient*> GetOrCreateLocalClient(
+      const LocalClientOptions& options);
 
-    // Convenience "or-die" wrapper around the above which returns the existing
-    // client library or creates one with default platform and allocator.
-    static LocalClient* LocalClientOrDie();
+  // Convenience "or-die" wrapper around the above which returns the existing
+  // client library or creates one with default platform and allocator.
+  static LocalClient* LocalClientOrDie();
 
-    // Returns the service from the service thread. Only used in unit tests to
-    // access user computations from client.
-    static LocalService* GetXlaService(se::Platform* platform);
+  // Returns the service from the service thread. Only used in unit tests to
+  // access user computations from client.
+  static LocalService* GetXlaService(se::Platform* platform);
 
-    // Singleton constructor-or-accessor for compile-only clients. Arguments:
-    //
-    //   platform : The platform the underlying XLA service should target. If
-    //     null then default platform is used.
-    static StatusOr<CompileOnlyClient*> GetOrCreateCompileOnlyClient(
-        se::Platform* platform = nullptr);
+  // Singleton constructor-or-accessor for compile-only clients. Arguments:
+  //
+  //   platform : The platform the underlying XLA service should target. If
+  //     null then default platform is used.
+  static StatusOr<CompileOnlyClient*> GetOrCreateCompileOnlyClient(
+      se::Platform* platform = nullptr);
 
-    // Clears the local instance and compile only instance caches. The client
-    // pointers returned by the previous GetOrCreateLocalClient() or
-    // GetOrCreateCompileOnlyClient() invocations are not valid anymore.
-    static void DestroyLocalInstances();
+  // Clears the local instance and compile only instance caches. The client
+  // pointers returned by the previous GetOrCreateLocalClient() or
+  // GetOrCreateCompileOnlyClient() invocations are not valid anymore.
+  static void DestroyLocalInstances();
 
-private:
-    // Returns the singleton instance of ClientLibrary.
-    static ClientLibrary& Singleton();
+ private:
+  // Returns the singleton instance of ClientLibrary.
+  static ClientLibrary& Singleton();
 
-    ClientLibrary();
-    ~ClientLibrary();
+  ClientLibrary();
+  ~ClientLibrary();
 
-    struct LocalInstance {
-        // Service that is wrapped by the singleton client object.
-        std::unique_ptr<LocalService> service;
-        // Singleton client object.
-        std::unique_ptr<LocalClient> client;
-    };
+  struct LocalInstance {
+    // Service that is wrapped by the singleton client object.
+    std::unique_ptr<LocalService> service;
+    // Singleton client object.
+    std::unique_ptr<LocalClient> client;
+  };
 
-    struct CompileOnlyInstance {
-        // Service that is wrapped by the singleton client object.
-        std::unique_ptr<CompileOnlyService> service;
-        // Singleton client object.
-        std::unique_ptr<CompileOnlyClient> client;
-    };
+  struct CompileOnlyInstance {
+    // Service that is wrapped by the singleton client object.
+    std::unique_ptr<CompileOnlyService> service;
+    // Singleton client object.
+    std::unique_ptr<CompileOnlyClient> client;
+  };
 
-    tensorflow::mutex service_mutex_;  // Guards the singleton creation state.
-    std::unordered_map<se::Platform::Id, std::unique_ptr<LocalInstance>>
-            local_instances_ TF_GUARDED_BY(service_mutex_);
+  tensorflow::mutex service_mutex_;  // Guards the singleton creation state.
+  std::unordered_map<se::Platform::Id, std::unique_ptr<LocalInstance>>
+      local_instances_ TF_GUARDED_BY(service_mutex_);
 
-    std::unordered_map<se::Platform::Id, std::unique_ptr<CompileOnlyInstance>>
-            compile_only_instances_ TF_GUARDED_BY(service_mutex_);
+  std::unordered_map<se::Platform::Id, std::unique_ptr<CompileOnlyInstance>>
+      compile_only_instances_ TF_GUARDED_BY(service_mutex_);
 
-    TF_DISALLOW_COPY_AND_ASSIGN(ClientLibrary);
+  TF_DISALLOW_COPY_AND_ASSIGN(ClientLibrary);
 };
 
 }  // namespace xla

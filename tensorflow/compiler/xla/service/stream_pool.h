@@ -28,37 +28,35 @@ namespace xla {
 // Pool of stream_executor::Streams, which are created as needed and
 // destroyed when the pool is destroyed.
 class StreamPool {
-public:
-    struct PtrDeleter {
-        void operator()(se::Stream* stream) {
-            pool->ReturnStream(stream);
-        }
-        StreamPool* pool;
-    };
+ public:
+  struct PtrDeleter {
+    void operator()(se::Stream* stream) { pool->ReturnStream(stream); }
+    StreamPool* pool;
+  };
 
-    // Stream pointer type returned by BorrowStream, which returns the
-    // stream to the pool on destruction.
-    using Ptr = std::unique_ptr<se::Stream, PtrDeleter>;
+  // Stream pointer type returned by BorrowStream, which returns the
+  // stream to the pool on destruction.
+  using Ptr = std::unique_ptr<se::Stream, PtrDeleter>;
 
-    StreamPool() {}
+  StreamPool() {}
 
-    // Returns a pointer to a stream in the pool, creating a new stream
-    // if none are available in the pool. The returned smart pointer
-    // returns the stream to the pool on destruction.
-    //
-    // This method is thread-safe.
-    Ptr BorrowStream(se::StreamExecutor* executor);
+  // Returns a pointer to a stream in the pool, creating a new stream
+  // if none are available in the pool. The returned smart pointer
+  // returns the stream to the pool on destruction.
+  //
+  // This method is thread-safe.
+  Ptr BorrowStream(se::StreamExecutor* executor);
 
-private:
-    // Puts a pointer to a stream back into the pool, leaving it free
-    // for future use. Streams that have previously encountered errors
-    // are deleted, and not returned to the pool.
-    //
-    // This method is thread-safe.
-    void ReturnStream(se::Stream* stream);
+ private:
+  // Puts a pointer to a stream back into the pool, leaving it free
+  // for future use. Streams that have previously encountered errors
+  // are deleted, and not returned to the pool.
+  //
+  // This method is thread-safe.
+  void ReturnStream(se::Stream* stream);
 
-    tensorflow::mutex mu_;
-    std::vector<std::unique_ptr<se::Stream>> streams_ TF_GUARDED_BY(mu_);
+  tensorflow::mutex mu_;
+  std::vector<std::unique_ptr<se::Stream>> streams_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace xla

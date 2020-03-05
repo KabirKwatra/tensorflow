@@ -28,26 +28,26 @@ namespace tensorflow {
 
 // Used to manage all the cost models for a session.
 class CostModelManager {
-public:
-    ~CostModelManager();
+ public:
+  ~CostModelManager();
 
-    typedef std::unordered_map<const Graph*, CostModel*> CostModelMap;
-    typedef CostModelMap::iterator CostModelMapIter;
+  typedef std::unordered_map<const Graph*, CostModel*> CostModelMap;
+  typedef CostModelMap::iterator CostModelMapIter;
 
-    void ExportCostModels(CostModelMap* cost_models) {
-        mutex_lock l(mu_);
-        *cost_models = cost_models_;
-    }
+  void ExportCostModels(CostModelMap* cost_models) {
+    mutex_lock l(mu_);
+    *cost_models = cost_models_;
+  }
 
-    CostModel* FindOrCreateCostModel(const Graph* graph);
+  CostModel* FindOrCreateCostModel(const Graph* graph);
 
-    bool RemoveCostModelForGraph(const Graph* graph);
+  bool RemoveCostModelForGraph(const Graph* graph);
 
-    Status AddToCostGraphDef(const Graph* graph, CostGraphDef* cost_graph);
+  Status AddToCostGraphDef(const Graph* graph, CostGraphDef* cost_graph);
 
-private:
-    mutex mu_;
-    CostModelMap cost_models_ TF_GUARDED_BY(mu_);
+ private:
+  mutex mu_;
+  CostModelMap cost_models_ TF_GUARDED_BY(mu_);
 };
 
 }  // namespace tensorflow

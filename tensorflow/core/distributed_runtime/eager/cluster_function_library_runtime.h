@@ -33,59 +33,57 @@ namespace eager {
 // functions across processes by making RPCs through eager service.
 class EagerClusterFunctionLibraryRuntime
     : public DistributedFunctionLibraryRuntime {
-public:
-    EagerClusterFunctionLibraryRuntime(const uint64 context_id, EagerContext* ctx,
-                                       DeviceMgr* remote_device_mgr)
-        : context_id_(context_id),
-          ctx_(ctx),
-          remote_device_mgr_(remote_device_mgr) {}
+ public:
+  EagerClusterFunctionLibraryRuntime(const uint64 context_id, EagerContext* ctx,
+                                     DeviceMgr* remote_device_mgr)
+      : context_id_(context_id),
+        ctx_(ctx),
+        remote_device_mgr_(remote_device_mgr) {}
 
-    ~EagerClusterFunctionLibraryRuntime() override {};
+  ~EagerClusterFunctionLibraryRuntime() override{};
 
-    void Instantiate(const string& function_name,
-                     const FunctionLibraryDefinition& lib_def, AttrSlice attrs,
-                     const FunctionLibraryRuntime::InstantiateOptions& options,
-                     FunctionLibraryRuntime::LocalHandle* handle,
-                     FunctionLibraryRuntime::DoneCallback done) override;
+  void Instantiate(const string& function_name,
+                   const FunctionLibraryDefinition& lib_def, AttrSlice attrs,
+                   const FunctionLibraryRuntime::InstantiateOptions& options,
+                   FunctionLibraryRuntime::LocalHandle* handle,
+                   FunctionLibraryRuntime::DoneCallback done) override;
 
-    void Run(const FunctionLibraryRuntime::Options& opts,
-             FunctionLibraryRuntime::LocalHandle handle,
-             gtl::ArraySlice<Tensor> args, std::vector<Tensor>* rets,
-             FunctionLibraryRuntime::DoneCallback done) override;
+  void Run(const FunctionLibraryRuntime::Options& opts,
+           FunctionLibraryRuntime::LocalHandle handle,
+           gtl::ArraySlice<Tensor> args, std::vector<Tensor>* rets,
+           FunctionLibraryRuntime::DoneCallback done) override;
 
-    void Run(const FunctionLibraryRuntime::Options& opts,
-             FunctionLibraryRuntime::LocalHandle handle,
-             std::vector<eager::RemoteTensorHandle>* args,
-             FunctionLibraryRuntime::DoneCallback done) override;
+  void Run(const FunctionLibraryRuntime::Options& opts,
+           FunctionLibraryRuntime::LocalHandle handle,
+           std::vector<eager::RemoteTensorHandle>* args,
+           FunctionLibraryRuntime::DoneCallback done) override;
 
-    void CleanUp(uint64 step_id, FunctionLibraryRuntime::LocalHandle handle,
-                 FunctionLibraryRuntime::DoneCallback done) override;
+  void CleanUp(uint64 step_id, FunctionLibraryRuntime::LocalHandle handle,
+               FunctionLibraryRuntime::DoneCallback done) override;
 
-    DeviceMgr* remote_device_mgr() const override {
-        return remote_device_mgr_;
+  DeviceMgr* remote_device_mgr() const override { return remote_device_mgr_; }
+
+ private:
+  const uint64 context_id_;
+  EagerContext* ctx_;
+  DeviceMgr* remote_device_mgr_;  // not owned.
+
+  struct FunctionData {
+    const string target;
+    core::RefCountPtr<EagerClient> eager_client;
+    std::unique_ptr<EagerOperation> op;
+
+    FunctionData(const string& target, EagerClient* eager_client,
+                 std::unique_ptr<EagerOperation> op)
+        : target(target),
+          eager_client(core::RefCountPtr<EagerClient>(eager_client)),
+          op(std::move(op)) {
+      eager_client->Ref();
     }
+  };
 
-private:
-    const uint64 context_id_;
-    EagerContext* ctx_;
-    DeviceMgr* remote_device_mgr_;  // not owned.
-
-    struct FunctionData {
-        const string target;
-        core::RefCountPtr<EagerClient> eager_client;
-        std::unique_ptr<EagerOperation> op;
-
-        FunctionData(const string& target, EagerClient* eager_client,
-                     std::unique_ptr<EagerOperation> op)
-            : target(target),
-              eager_client(core::RefCountPtr<EagerClient>(eager_client)),
-              op(std::move(op)) {
-            eager_client->Ref();
-        }
-    };
-
-    mutable mutex mu_;
-    std::vector<FunctionData> function_data_ TF_GUARDED_BY(mu_);
+  mutable mutex mu_;
+  std::vector<FunctionData> function_data_ TF_GUARDED_BY(mu_);
 };
 
 DistributedFunctionLibraryRuntime* CreateClusterFLR(
