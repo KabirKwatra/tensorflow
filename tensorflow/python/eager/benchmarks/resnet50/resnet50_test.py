@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests and benchmarks for the ResNet50 model, executed eagerly."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -24,8 +23,8 @@ import tempfile
 import time
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
-import tensorflow as tf
 
+import tensorflow as tf
 from tensorflow.python.client import device_lib
 from tensorflow.python.eager import context
 from tensorflow.python.eager import tape

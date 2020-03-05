@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """This module customizes `test_combinations` for `tf.keras` related tests."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
