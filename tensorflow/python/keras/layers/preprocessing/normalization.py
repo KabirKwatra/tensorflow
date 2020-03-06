@@ -26,8 +26,7 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine.base_preprocessing_layer import Combiner
 from tensorflow.python.keras.engine.base_preprocessing_layer import (
-    CombinerPreprocessingLayer,
-)
+    CombinerPreprocessingLayer, )
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
@@ -65,9 +64,10 @@ class Normalization(CombinerPreprocessingLayer):
         # time, the dtype value will change to reflect it.
         dtype = dtype or K.floatx()
 
-        super(Normalization, self).__init__(
-            combiner=_NormalizingCombiner(axis), dtype=dtype, **kwargs
-        )
+        super(Normalization,
+              self).__init__(combiner=_NormalizingCombiner(axis),
+                             dtype=dtype,
+                             **kwargs)
 
         if axis == 0:
             raise ValueError("The argument 'axis' may not be 0.")
@@ -139,8 +139,8 @@ class Normalization(CombinerPreprocessingLayer):
 
 
 class _NormalizingAccumulator(
-    collections.namedtuple("_NormalizingAccumulator", ["count", "mean", "variance"])
-):
+        collections.namedtuple("_NormalizingAccumulator",
+                               ["count", "mean", "variance"])):
     pass
 
 
@@ -191,35 +191,30 @@ class _NormalizingCombiner(Combiner):
     def merge(self, accumulators):
         """Merge several accumulators to a single accumulator."""
         # Combine accumulators and return the result.
-        combined_count = np.sum([accumulator.count for accumulator in accumulators])
+        combined_count = np.sum(
+            [accumulator.count for accumulator in accumulators])
 
         # To combine accumulator means, we weight each accumulator's mean by the
         # number of elements that were accumulated, and then divide by the
         # total number of elements.
-        combined_mean = (
-            np.add.reduce(
-                [accumulator.mean * accumulator.count for accumulator in accumulators]
-            )
-            / combined_count
-        )
+        combined_mean = (np.add.reduce([
+            accumulator.mean * accumulator.count
+            for accumulator in accumulators
+        ]) / combined_count)
 
         # The variance is computed using the lack-of-fit sum of squares
         # formula (see https://en.wikipedia.org/wiki/Lack-of-fit_sum_of_squares).
         def variance_contribution(accumulator):
             return accumulator.count * (
-                accumulator.variance + np.square(accumulator.mean - combined_mean)
-            )
+                accumulator.variance +
+                np.square(accumulator.mean - combined_mean))
 
-        combined_variance = (
-            np.add.reduce(
-                [variance_contribution(accumulator) for accumulator in accumulators]
-            )
-            / combined_count
-        )
+        combined_variance = (np.add.reduce([
+            variance_contribution(accumulator) for accumulator in accumulators
+        ]) / combined_count)
 
-        return self._create_accumulator(
-            combined_count, combined_mean, combined_variance
-        )
+        return self._create_accumulator(combined_count, combined_mean,
+                                        combined_variance)
 
     def extract(self, accumulator):
         """Convert an accumulator into a dict of output values."""
@@ -242,9 +237,9 @@ class _NormalizingCombiner(Combiner):
                 "were set without also setting 'count'. If 'count' is not also set,"
                 " 'adapt' cannot be called unless the 'reset_state' arg is True."
             )
-        return self._create_accumulator(
-            output[_COUNT_NAME], output[_MEAN_NAME], output[_VARIANCE_NAME]
-        )
+        return self._create_accumulator(output[_COUNT_NAME],
+                                        output[_MEAN_NAME],
+                                        output[_VARIANCE_NAME])
 
     def serialize(self, accumulator):
         """Serialize an accumulator for a remote call."""
@@ -266,6 +261,5 @@ class _NormalizingCombiner(Combiner):
 
     def _create_accumulator(self, count, mean, variance):
         """Convert any 'nan' values in the given accumulator to numeric values."""
-        return _NormalizingAccumulator(
-            np.array(count), np.nan_to_num(mean), np.nan_to_num(variance)
-        )
+        return _NormalizingAccumulator(np.array(count), np.nan_to_num(mean),
+                                       np.nan_to_num(variance))

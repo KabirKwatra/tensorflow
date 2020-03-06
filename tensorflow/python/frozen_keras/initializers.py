@@ -34,16 +34,14 @@ from tensorflow.python.ops.init_ops import Identity
 from tensorflow.python.ops.init_ops import Initializer  # pylint: disable=unused-import
 from tensorflow.python.ops.init_ops import lecun_normal  # pylint: disable=unused-import
 from tensorflow.python.ops.init_ops import (
-    lecun_uniform,
-)  # pylint: disable=unused-import
+    lecun_uniform, )  # pylint: disable=unused-import
 from tensorflow.python.ops.init_ops import Ones
 from tensorflow.python.ops.init_ops import Orthogonal
 from tensorflow.python.ops.init_ops import RandomNormal as TFRandomNormal
 from tensorflow.python.ops.init_ops import RandomUniform as TFRandomUniform
 from tensorflow.python.ops.init_ops import TruncatedNormal as TFTruncatedNormal
 from tensorflow.python.ops.init_ops import (
-    VarianceScaling,
-)  # pylint: disable=unused-import
+    VarianceScaling, )  # pylint: disable=unused-import
 from tensorflow.python.ops.init_ops import Zeros
 from tensorflow.python.ops.init_ops_v2 import Constant as ConstantV2
 from tensorflow.python.ops.init_ops_v2 import GlorotNormal as GlorotNormalV2
@@ -90,9 +88,10 @@ class TruncatedNormal(TFTruncatedNormal):
     """
 
     def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
-        super(TruncatedNormal, self).__init__(
-            mean=mean, stddev=stddev, seed=seed, dtype=dtype
-        )
+        super(TruncatedNormal, self).__init__(mean=mean,
+                                              stddev=stddev,
+                                              seed=seed,
+                                              dtype=dtype)
 
 
 class RandomUniform(TFRandomUniform):
@@ -111,10 +110,15 @@ class RandomUniform(TFRandomUniform):
       A RandomUniform instance.
     """
 
-    def __init__(self, minval=-0.05, maxval=0.05, seed=None, dtype=dtypes.float32):
-        super(RandomUniform, self).__init__(
-            minval=minval, maxval=maxval, seed=seed, dtype=dtype
-        )
+    def __init__(self,
+                 minval=-0.05,
+                 maxval=0.05,
+                 seed=None,
+                 dtype=dtypes.float32):
+        super(RandomUniform, self).__init__(minval=minval,
+                                            maxval=maxval,
+                                            seed=seed,
+                                            dtype=dtype)
 
 
 class RandomNormal(TFRandomNormal):
@@ -134,9 +138,10 @@ class RandomNormal(TFRandomNormal):
     """
 
     def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
-        super(RandomNormal, self).__init__(
-            mean=mean, stddev=stddev, seed=seed, dtype=dtype
-        )
+        super(RandomNormal, self).__init__(mean=mean,
+                                           stddev=stddev,
+                                           seed=seed,
+                                           dtype=dtype)
 
 
 # Compatibility aliases
@@ -153,7 +158,6 @@ orthogonal = Orthogonal
 glorot_normal = GlorotNormal
 glorot_uniform = GlorotUniform
 
-
 # Utility functions
 
 
@@ -168,7 +172,8 @@ def deserialize(config, custom_objects=None):
         # are aliased in this file so we need to grab them directly
         # from `init_ops_v2`.
         module_objects = {
-            obj_name: getattr(init_ops_v2, obj_name) for obj_name in dir(init_ops_v2)
+            obj_name: getattr(init_ops_v2, obj_name)
+            for obj_name in dir(init_ops_v2)
         }
     else:
         module_objects = globals()
@@ -189,7 +194,9 @@ def get(identifier):
         identifier = str(identifier)
         # We have to special-case functions that return classes.
         # TODO(omalleyt): Turn these into classes or class aliases.
-        special_cases = ["he_normal", "he_uniform", "lecun_normal", "lecun_uniform"]
+        special_cases = [
+            "he_normal", "he_uniform", "lecun_normal", "lecun_uniform"
+        ]
         if identifier in special_cases:
             # Treat like a class.
             return deserialize({"class_name": identifier, "config": {}})
@@ -197,9 +204,8 @@ def get(identifier):
     elif callable(identifier):
         return identifier
     else:
-        raise ValueError(
-            "Could not interpret initializer identifier: " + str(identifier)
-        )
+        raise ValueError("Could not interpret initializer identifier: " +
+                         str(identifier))
 
 
 # pylint: enable=invalid-name

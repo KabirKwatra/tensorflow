@@ -39,15 +39,15 @@ from tensorflow.python.platform import tf_logging as logging
 
 class CollectiveOpTest(test.TestCase):
     def _testCollectiveReduce(
-        self,
-        inputs,
-        expected,
-        set_graph_key,
-        communication_hint="auto",
-        fp16=False,
-        instance_key=1,
-        merge_op="Add",
-        final_op="Div",
+            self,
+            inputs,
+            expected,
+            set_graph_key,
+            communication_hint="auto",
+            fp16=False,
+            instance_key=1,
+            merge_op="Add",
+            final_op="Div",
     ):
         group_key = 1
         group_size = len(inputs)
@@ -60,8 +60,8 @@ class CollectiveOpTest(test.TestCase):
             for i in range(group_size):
                 with ops.device(devices[i]):
                     tensor = constant_op.constant(
-                        inputs[i], dtype=(dtypes.float16 if fp16 else dtypes.float32)
-                    )
+                        inputs[i],
+                        dtype=(dtypes.float16 if fp16 else dtypes.float32))
                     colred.append(
                         collective_ops.all_reduce(
                             tensor,
@@ -71,16 +71,19 @@ class CollectiveOpTest(test.TestCase):
                             merge_op,
                             final_op,
                             communication_hint=communication_hint,
-                        )
-                    )
+                        ))
             run_options = config_pb2.RunOptions()
             if set_graph_key:
                 run_options.experimental.collective_graph_key = 1
             results = sess.run(colred, options=run_options)
         tolerance = 1e-3 if fp16 else 1e-5
         for i in range(group_size):
-            logging.info("i {} result {} expected {}".format(i, results[i], expected))
-            self.assertAllClose(results[i], expected, rtol=tolerance, atol=tolerance)
+            logging.info("i {} result {} expected {}".format(
+                i, results[i], expected))
+            self.assertAllClose(results[i],
+                                expected,
+                                rtol=tolerance,
+                                atol=tolerance)
 
     def _testMultipleConcurrentCollectiveReduce(self, t0, t1, expected):
         group_key = 1
@@ -95,10 +98,9 @@ class CollectiveOpTest(test.TestCase):
                     in_tensor = constant_op.constant(t0 if cpu == 0 else t1)
                     for instance in range(num_instances):
                         all_reduces.append(
-                            collective_ops.all_reduce(
-                                in_tensor, group_size, group_key, instance, "Add", "Div"
-                            )
-                        )
+                            collective_ops.all_reduce(in_tensor, group_size,
+                                                      group_key, instance,
+                                                      "Add", "Div"))
             results = sess.run(all_reduces)
         for i in range(group_size * num_instances):
             self.assertAllClose(results[i], expected, rtol=1e-5, atol=1e-5)
@@ -169,18 +171,19 @@ class CollectiveOpTest(test.TestCase):
         config = config_pb2.ConfigProto(device_count={"CPU": group_size})
         rewrite_options = config.graph_options.rewrite_options
         rewrite_options.scoped_allocator_optimization = (
-            rewriter_config_pb2.RewriterConfig.ON
-        )
+            rewriter_config_pb2.RewriterConfig.ON)
         del rewrite_options.scoped_allocator_opts.enable_op[:]
-        rewrite_options.scoped_allocator_opts.enable_op.append("CollectiveReduce")
+        rewrite_options.scoped_allocator_opts.enable_op.append(
+            "CollectiveReduce")
 
         with self.session(config=config) as sess:
             loop_vars = []
             for device in devices:
                 with ops.device(device):
-                    loop_vars.append(
-                        [variables.VariableV1((1 << i) * 1.0) for i in range(num_vars)]
-                    )
+                    loop_vars.append([
+                        variables.VariableV1((1 << i) * 1.0)
+                        for i in range(num_vars)
+                    ])
             # This variable controls number of iterations.
             loop_vars.append(variables.VariableV1(0.0))
 
@@ -197,8 +200,7 @@ class CollectiveOpTest(test.TestCase):
                             # `identity` because `cast` is more resilient to getting optimized
                             # away by various optimization passes.
                             input_tensor = math_ops.cast(
-                                device_tensors[j], dtypes.float16
-                            )
+                                device_tensors[j], dtypes.float16)
                             collective_op = collective_ops.all_reduce(
                                 input_tensor,
                                 group_size,
@@ -207,7 +209,8 @@ class CollectiveOpTest(test.TestCase):
                                 "Add",
                                 "Id",
                             )
-                            output_tensor = math_ops.cast(collective_op, dtypes.float32)
+                            output_tensor = math_ops.cast(
+                                collective_op, dtypes.float32)
                             device_collectives.append(output_tensor)
                         return_ops.append(device_collectives)
                 return_ops.append(math_ops.add(loop_tensor, 1.0))
@@ -219,14 +222,11 @@ class CollectiveOpTest(test.TestCase):
 
             sess.run(variables.global_variables_initializer())
             results = sess.run(
-                control_flow_ops.while_loop(loop_cond, loop_body, loop_vars)
-            )
+                control_flow_ops.while_loop(loop_cond, loop_body, loop_vars))
             self.assertEqual(
                 results[:-1],
-                [
-                    [((1 << (num_iterations + v)) * 1.0) for v in range(num_vars)]
-                    for _ in range(group_size)
-                ],
+                [[((1 << (num_iterations + v)) * 1.0) for v in range(num_vars)]
+                 for _ in range(group_size)],
             )
 
     @test_util.run_deprecated_v1
@@ -247,10 +247,10 @@ class CollectiveOpTest(test.TestCase):
         config = config_pb2.ConfigProto(device_count={"CPU": group_size})
         rewrite_options = config.graph_options.rewrite_options
         rewrite_options.scoped_allocator_optimization = (
-            rewriter_config_pb2.RewriterConfig.ON
-        )
+            rewriter_config_pb2.RewriterConfig.ON)
         del rewrite_options.scoped_allocator_opts.enable_op[:]
-        rewrite_options.scoped_allocator_opts.enable_op.append("CollectiveReduce")
+        rewrite_options.scoped_allocator_opts.enable_op.append(
+            "CollectiveReduce")
 
         with self.session(config=config) as sess:
             run_ops = []
@@ -264,21 +264,24 @@ class CollectiveOpTest(test.TestCase):
                     def body(i):
                         return math_ops.add(i, 1.0)
 
-                    input0 = control_flow_ops.while_loop(cond, body, [constant])
+                    input0 = control_flow_ops.while_loop(
+                        cond, body, [constant])
                     input1 = math_ops.add(constant, 5)
                     colred0 = collective_ops.all_reduce(
-                        input0, group_size, group_key, instance_key0, "Add", "Id"
-                    )
+                        input0, group_size, group_key, instance_key0, "Add",
+                        "Id")
                     colred1 = collective_ops.all_reduce(
-                        input1, group_size, group_key, instance_key1, "Add", "Id"
-                    )
+                        input1, group_size, group_key, instance_key1, "Add",
+                        "Id")
                     run_ops.append(math_ops.add_n([colred0, colred1]))
             results = sess.run(run_ops)
             self.assertEqual(results, [30.0, 30.0])
 
     @test_util.run_deprecated_v1
     def testCollectiveReduceScalar(self):
-        self._testCollectiveReduce(inputs=[0.1, 0.3], expected=0.2, set_graph_key=True)
+        self._testCollectiveReduce(inputs=[0.1, 0.3],
+                                   expected=0.2,
+                                   set_graph_key=True)
 
     @test_util.run_deprecated_v1
     def testCollectiveReduceMaximum(self):
@@ -305,19 +308,17 @@ class CollectiveOpTest(test.TestCase):
     def _testCollectiveBroadcast(self, in_val):
         group_key = 1
         instance_key = 1
-        with self.session(
-            config=config_pb2.ConfigProto(device_count={"CPU": 2})
-        ) as sess:
+        with self.session(config=config_pb2.ConfigProto(
+                device_count={"CPU": 2})) as sess:
             with ops.device("/CPU:0"):
                 in0 = constant_op.constant(in_val)
-                out0 = collective_ops.broadcast_send(
-                    in0, in0.shape, in0.dtype, 2, group_key, instance_key
-                )
+                out0 = collective_ops.broadcast_send(in0, in0.shape, in0.dtype,
+                                                     2, group_key,
+                                                     instance_key)
             with ops.device("/CPU:1"):
                 c1 = constant_op.constant(in_val)
-                out1 = collective_ops.broadcast_recv(
-                    c1.shape, c1.dtype, 2, group_key, instance_key
-                )
+                out1 = collective_ops.broadcast_recv(c1.shape, c1.dtype, 2,
+                                                     group_key, instance_key)
             run_options = config_pb2.RunOptions()
             run_options.experimental.collective_graph_key = 1
             results = sess.run([out0, out1], options=run_options)
@@ -335,9 +336,8 @@ class CollectiveOpTest(test.TestCase):
     def _testCollectiveGather(self, t0, t1, expected, set_graph_key):
         group_key = 1
         instance_key = 1
-        with self.session(
-            config=config_pb2.ConfigProto(device_count={"CPU": 2})
-        ) as sess:
+        with self.session(config=config_pb2.ConfigProto(
+                device_count={"CPU": 2})) as sess:
             with ops.device("/CPU:0"):
                 in0 = constant_op.constant(t0)
                 c0 = collective_ops.all_gather(in0, 2, group_key, instance_key)
@@ -384,9 +384,8 @@ class CollectiveOpTest(test.TestCase):
         t0 = [1, 2, 3, 4]
         t1 = [5, 6, 7, 8]
         t2 = [9, 10]
-        with self.session(
-            config=config_pb2.ConfigProto(device_count={"CPU": 2})
-        ) as sess:
+        with self.session(config=config_pb2.ConfigProto(
+                device_count={"CPU": 2})) as sess:
             with ops.device("/CPU:0"):
                 in0 = constant_op.constant(t0)
                 c0 = collective_ops.all_gather(in0, 2, group_key, instance_key)
@@ -398,7 +397,8 @@ class CollectiveOpTest(test.TestCase):
             run_options = config_pb2.RunOptions()
             run_options.experimental.collective_graph_key = 1
             sess.run([c0, c1], options=run_options)
-            with self.assertRaisesRegexp(errors.InvalidArgumentError, "Shape mismatch"):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                         "Shape mismatch"):
                 sess.run([c0, c2], options=run_options)
 
     @test_util.run_deprecated_v1
@@ -407,9 +407,8 @@ class CollectiveOpTest(test.TestCase):
         instance_key = 1
         t0 = [1, 2, 3, 4]
         t1 = [5, 6]
-        with self.session(
-            config=config_pb2.ConfigProto(device_count={"CPU": 2})
-        ) as sess:
+        with self.session(config=config_pb2.ConfigProto(
+                device_count={"CPU": 2})) as sess:
             with ops.device("/CPU:0"):
                 in0 = constant_op.constant(t0)
                 c0 = collective_ops.all_gather(in0, 2, group_key, instance_key)
@@ -418,7 +417,8 @@ class CollectiveOpTest(test.TestCase):
                 c1 = collective_ops.all_gather(in1, 2, group_key, instance_key)
             run_options = config_pb2.RunOptions()
             run_options.experimental.collective_graph_key = 1
-            with self.assertRaisesRegexp(errors.InvalidArgumentError, "Shape mismatch"):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                         "Shape mismatch"):
                 sess.run([c0, c1], options=run_options)
 
     @test_util.run_deprecated_v1
@@ -428,25 +428,42 @@ class CollectiveOpTest(test.TestCase):
         group_size = 2
         group_key = 1
         instance_key = 123
-        with self.session(
-            config=config_pb2.ConfigProto(device_count={"CPU": group_size})
-        ) as sess:
+        with self.session(config=config_pb2.ConfigProto(
+                device_count={"CPU": group_size})) as sess:
             with ops.device("/CPU:0"):
                 in0 = array_ops.placeholder(dtype=dtypes.int32, shape=[None])
-                c0 = collective_ops.all_gather(in0, group_size, group_key, instance_key)
+                c0 = collective_ops.all_gather(in0, group_size, group_key,
+                                               instance_key)
             with ops.device("/CPU:1"):
                 in1 = array_ops.placeholder(dtype=dtypes.int32, shape=[None])
-                c1 = collective_ops.all_gather(in1, group_size, group_key, instance_key)
+                c1 = collective_ops.all_gather(in1, group_size, group_key,
+                                               instance_key)
 
             results = sess.run([c0, c1], feed_dict={in0: t0, in1: t1})
-            expected_output = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17]
-            self.assertAllClose(results[0], expected_output, rtol=1e-5, atol=1e-5)
-            self.assertAllClose(results[1], expected_output, rtol=1e-5, atol=1e-5)
+            expected_output = [
+                0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17
+            ]
+            self.assertAllClose(results[0],
+                                expected_output,
+                                rtol=1e-5,
+                                atol=1e-5)
+            self.assertAllClose(results[1],
+                                expected_output,
+                                rtol=1e-5,
+                                atol=1e-5)
 
             results_ = sess.run([c0, c1], feed_dict={in0: t0[1:], in1: t1[1:]})
-            expected_output_ = [1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17]
-            self.assertAllClose(results_[0], expected_output_, rtol=1e-5, atol=1e-5)
-            self.assertAllClose(results_[1], expected_output_, rtol=1e-5, atol=1e-5)
+            expected_output_ = [
+                1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17
+            ]
+            self.assertAllClose(results_[0],
+                                expected_output_,
+                                rtol=1e-5,
+                                atol=1e-5)
+            self.assertAllClose(results_[1],
+                                expected_output_,
+                                rtol=1e-5,
+                                atol=1e-5)
 
     @test_util.run_v2_only
     def testCollectiveGroupSizeMismatch(self):
@@ -489,7 +506,8 @@ class CollectiveOpTest(test.TestCase):
                 )
             return c0, c1
 
-        with self.assertRaisesRegexp(errors.InternalError, "but that group has size"):
+        with self.assertRaisesRegexp(errors.InternalError,
+                                     "but that group has size"):
             run_all_reduce()
 
     @test_util.run_deprecated_v1
@@ -508,22 +526,19 @@ class CollectiveOpTest(test.TestCase):
 
             with ops.device("/CPU:0"):
                 results.append(
-                    collective_ops.all_reduce(
-                        all_args[0], group_size, group_key, instance_key, "Add", "Div"
-                    )
-                )
+                    collective_ops.all_reduce(all_args[0], group_size,
+                                              group_key, instance_key, "Add",
+                                              "Div"))
             with ops.device("/CPU:1"):
                 results.append(
-                    collective_ops.all_reduce(
-                        all_args[1], group_size, group_key, instance_key, "Add", "Div"
-                    )
-                )
+                    collective_ops.all_reduce(all_args[1], group_size,
+                                              group_key, instance_key, "Add",
+                                              "Div"))
 
             return results
 
-        with self.session(
-            config=config_pb2.ConfigProto(device_count={"CPU": 2})
-        ) as sess:
+        with self.session(config=config_pb2.ConfigProto(
+                device_count={"CPU": 2})) as sess:
             with ops.device("/CPU:0"):
                 in0 = constant_op.constant(1)
             with ops.device("/CPU:1"):
@@ -545,14 +560,13 @@ class CollectiveOpTest(test.TestCase):
         in_value = [1, 2, 3, 4]
         in_tensor = constant_op.constant(in_value)
 
-        reduced_tensor = collective_ops.all_reduce(
-            in_tensor, group_size, group_key, instance_key, "Add", "Id"
-        )
+        reduced_tensor = collective_ops.all_reduce(in_tensor, group_size,
+                                                   group_key, instance_key,
+                                                   "Add", "Id")
         self.assertAllEqual(in_value, reduced_tensor.numpy())
 
-        gathered_tensor = collective_ops.all_gather(
-            in_tensor, group_size, group_key, instance_key
-        )
+        gathered_tensor = collective_ops.all_gather(in_tensor, group_size,
+                                                    group_key, instance_key)
         self.assertAllEqual(in_value, gathered_tensor.numpy())
 
     @test_util.run_deprecated_v1
@@ -563,17 +577,16 @@ class CollectiveOpTest(test.TestCase):
         instance_key2 = 2
 
         graph_options = config_pb2.GraphOptions(
-            optimizer_options=config_pb2.OptimizerOptions(do_constant_folding=True)
-        )
-        cfg = config_pb2.ConfigProto(
-            device_count={"CPU": group_size}, graph_options=graph_options
-        )
+            optimizer_options=config_pb2.OptimizerOptions(
+                do_constant_folding=True))
+        cfg = config_pb2.ConfigProto(device_count={"CPU": group_size},
+                                     graph_options=graph_options)
         rewrite_options = cfg.graph_options.rewrite_options
         rewrite_options.scoped_allocator_optimization = (
-            rewriter_config_pb2.RewriterConfig.ON
-        )
+            rewriter_config_pb2.RewriterConfig.ON)
         del rewrite_options.scoped_allocator_opts.enable_op[:]
-        rewrite_options.scoped_allocator_opts.enable_op.append("CollectiveReduce")
+        rewrite_options.scoped_allocator_opts.enable_op.append(
+            "CollectiveReduce")
 
         with self.session(config=cfg) as sess:
             run_ops = []
@@ -583,11 +596,11 @@ class CollectiveOpTest(test.TestCase):
                     input_tensor1 = array_ops.identity(constant)
                     input_tensor2 = array_ops.identity(constant)
                     reduced_tensor1 = collective_ops.all_reduce(
-                        input_tensor1, group_size, group_key, instance_key1, "Add", "Id"
-                    )
+                        input_tensor1, group_size, group_key, instance_key1,
+                        "Add", "Id")
                     reduced_tensor2 = collective_ops.all_reduce(
-                        input_tensor2, group_size, group_key, instance_key2, "Add", "Id"
-                    )
+                        input_tensor2, group_size, group_key, instance_key2,
+                        "Add", "Id")
                     run_ops.append(array_ops.identity(reduced_tensor1))
                     run_ops.append(array_ops.identity(reduced_tensor2))
             results = sess.run(run_ops)
