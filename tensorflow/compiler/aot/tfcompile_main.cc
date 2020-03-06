@@ -59,38 +59,38 @@ const char kUsageHeader[] =
 }  // end namespace tensorflow
 
 int main(int argc, char** argv) {
-  tensorflow::tfcompile::MainFlags flags;
-  flags.target_triple = "x86_64-pc-linux";
-  flags.out_function_object = "out_model.o";
-  flags.out_metadata_object = "out_helper.o";
-  flags.out_header = "out.h";
-  flags.entry_point = "entry";
-  flags.debug_info_path_begin_marker = "";
+    tensorflow::tfcompile::MainFlags flags;
+    flags.target_triple = "x86_64-pc-linux";
+    flags.out_function_object = "out_model.o";
+    flags.out_metadata_object = "out_helper.o";
+    flags.out_header = "out.h";
+    flags.entry_point = "entry";
+    flags.debug_info_path_begin_marker = "";
 
-  std::vector<tensorflow::Flag> flag_list;
-  AppendMainFlags(&flag_list, &flags);
-  xla::AppendDebugOptionsFlags(&flag_list);
+    std::vector<tensorflow::Flag> flag_list;
+    AppendMainFlags(&flag_list, &flags);
+    xla::AppendDebugOptionsFlags(&flag_list);
 
-  tensorflow::string usage = tensorflow::tfcompile::kUsageHeader;
-  usage += tensorflow::Flags::Usage(argv[0], flag_list);
-  if (argc > 1 && absl::string_view(argv[1]) == "--help") {
-    std::cerr << usage << "\n";
+    tensorflow::string usage = tensorflow::tfcompile::kUsageHeader;
+    usage += tensorflow::Flags::Usage(argv[0], flag_list);
+    if (argc > 1 && absl::string_view(argv[1]) == "--help") {
+        std::cerr << usage << "\n";
+        return 0;
+    }
+    bool parsed_flags_ok = tensorflow::Flags::Parse(&argc, argv, flag_list);
+    QCHECK(parsed_flags_ok) << "\n" << usage;
+
+    tensorflow::port::InitMain(usage.c_str(), &argc, &argv);
+    QCHECK(argc == 1) << "\nERROR: This command does not take any arguments "
+                      "other than flags\n\n"
+                      << usage;
+    tensorflow::Status status = tensorflow::tfcompile::Main(flags);
+    if (status.code() == tensorflow::error::INVALID_ARGUMENT) {
+        std::cerr << "INVALID ARGUMENTS: " << status.error_message() << "\n\n"
+                  << usage;
+        return 1;
+    } else {
+        TF_QCHECK_OK(status);
+    }
     return 0;
-  }
-  bool parsed_flags_ok = tensorflow::Flags::Parse(&argc, argv, flag_list);
-  QCHECK(parsed_flags_ok) << "\n" << usage;
-
-  tensorflow::port::InitMain(usage.c_str(), &argc, &argv);
-  QCHECK(argc == 1) << "\nERROR: This command does not take any arguments "
-                       "other than flags\n\n"
-                    << usage;
-  tensorflow::Status status = tensorflow::tfcompile::Main(flags);
-  if (status.code() == tensorflow::error::INVALID_ARGUMENT) {
-    std::cerr << "INVALID ARGUMENTS: " << status.error_message() << "\n\n"
-              << usage;
-    return 1;
-  } else {
-    TF_QCHECK_OK(status);
-  }
-  return 0;
 }

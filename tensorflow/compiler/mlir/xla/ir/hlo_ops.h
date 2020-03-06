@@ -39,38 +39,42 @@ class OpBuilder;
 namespace xla_hlo {
 
 class XlaHloDialect : public Dialect {
- public:
-  explicit XlaHloDialect(MLIRContext *context);
-  static StringRef getDialectNamespace() { return "xla_hlo"; }
+public:
+    explicit XlaHloDialect(MLIRContext *context);
+    static StringRef getDialectNamespace() {
+        return "xla_hlo";
+    }
 
-  // Registered hook to materialize a constant operation from a given attribute
-  // value with the desired resultant type.
-  Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
-                                 Location loc) override;
+    // Registered hook to materialize a constant operation from a given attribute
+    // value with the desired resultant type.
+    Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
+                                   Location loc) override;
 
-  // Parses a type registered to this dialect.
-  Type parseType(DialectAsmParser &parser) const override;
+    // Parses a type registered to this dialect.
+    Type parseType(DialectAsmParser &parser) const override;
 
-  // Prints a type registered to this dialect.
-  void printType(Type type, DialectAsmPrinter &os) const override;
+    // Prints a type registered to this dialect.
+    void printType(Type type, DialectAsmPrinter &os) const override;
 };
 
 namespace HLOTypes {
 enum Kind {
-  Token = Type::FIRST_XLA_HLO_TYPE,
+    Token = Type::FIRST_XLA_HLO_TYPE,
 };
 }  // namespace HLOTypes
 
 class TokenType : public Type::TypeBase<TokenType, Type> {
- public:
-  using Base::Base;
+public:
+    using Base::Base;
 
-  static TokenType get(MLIRContext *context) {
-    return Base::get(context, HLOTypes::Token);
-  }
+    static TokenType get(MLIRContext *context) {
+        return Base::get(context, HLOTypes::Token);
+    }
 
-  // Support method to enable LLVM-style type casting.
-  static bool kindof(unsigned kind) { return kind == HLOTypes::Token; }
+    // Support method to enable LLVM-style type casting.
+    static bool kindof(unsigned kind) {
+        return kind == HLOTypes::Token;
+    }
 };
 
 #define GET_OP_CLASSES
