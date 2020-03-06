@@ -44,30 +44,30 @@ namespace grappler {
 
 // A utility class to lookup a node and its outputs by node name.
 class NodeMap {
- public:
-  // Note: The NodeMap will store pointers to nodes in graph, which may become
-  // invalid if graph is changed.
-  explicit NodeMap(GraphDef* graph);
-  NodeDef* GetNode(const string& name) const;
-  bool NodeExists(const string& name) const;
-  const std::set<NodeDef*>& GetOutputs(const string& node_name) const;
-  // This method doesn't record the outputs of the added node; the outputs need
-  // to be explicitly added by the AddOutput method.
-  void AddNode(const string& name, NodeDef* node);
-  void RemoveNode(const string& name);
-  void UpdateInput(const string& node_name, const string& old_input_name,
-                   const string& new_input_name);
-  void AddOutput(const string& node_name, const string& output_name);
-  void RemoveInputs(const string& node_name);
-  void RemoveOutput(const string& node_name, const string& output_name);
-  void RemoveOutputs(const string& node_name);
-  void UpdateOutput(const string& node_name, const string& old_output_name,
-                    const string& new_output_name);
+public:
+    // Note: The NodeMap will store pointers to nodes in graph, which may become
+    // invalid if graph is changed.
+    explicit NodeMap(GraphDef* graph);
+    NodeDef* GetNode(const string& name) const;
+    bool NodeExists(const string& name) const;
+    const std::set<NodeDef*>& GetOutputs(const string& node_name) const;
+    // This method doesn't record the outputs of the added node; the outputs need
+    // to be explicitly added by the AddOutput method.
+    void AddNode(const string& name, NodeDef* node);
+    void RemoveNode(const string& name);
+    void UpdateInput(const string& node_name, const string& old_input_name,
+                     const string& new_input_name);
+    void AddOutput(const string& node_name, const string& output_name);
+    void RemoveInputs(const string& node_name);
+    void RemoveOutput(const string& node_name, const string& output_name);
+    void RemoveOutputs(const string& node_name);
+    void UpdateOutput(const string& node_name, const string& old_output_name,
+                      const string& new_output_name);
 
- private:
-  const std::set<NodeDef*> empty_set_;
-  absl::node_hash_map<string, NodeDef*> nodes_;
-  absl::node_hash_map<string, std::set<NodeDef*>> outputs_;
+private:
+    const std::set<NodeDef*> empty_set_;
+    absl::node_hash_map<string, NodeDef*> nodes_;
+    absl::node_hash_map<string, std::set<NodeDef*>> outputs_;
 };
 
 // A vector with a set. The set stores the same elements as the vector, and
@@ -75,32 +75,38 @@ class NodeMap {
 // allowed for now.
 template <class T, class Hash = std::hash<T>>
 class SetVector {
- public:
-  // Returns false if value already existed in the set, true otherwise.
-  bool PushBack(const T& value) {
-    if (!set_.insert(value).second) {
-      return false;
+public:
+    // Returns false if value already existed in the set, true otherwise.
+    bool PushBack(const T& value) {
+        if (!set_.insert(value).second) {
+            return false;
+        }
+        vector_.push_back(value);
+        return true;
     }
-    vector_.push_back(value);
-    return true;
-  }
 
-  T PopBack() {
-    T back = vector_.back();
-    set_.erase(back);
-    vector_.pop_back();
-    return back;
-  }
+    T PopBack() {
+        T back = vector_.back();
+        set_.erase(back);
+        vector_.pop_back();
+        return back;
+    }
 
-  bool Exists(const T& value) const { return set_.find(value) != set_.end(); }
+    bool Exists(const T& value) const {
+        return set_.find(value) != set_.end();
+    }
 
-  bool Empty() const { return vector_.empty(); }
+    bool Empty() const {
+        return vector_.empty();
+    }
 
-  void Reserve(int64 size) { vector_.reserve(size); }
+    void Reserve(int64 size) {
+        vector_.reserve(size);
+    }
 
- private:
-  gtl::FlatSet<T, Hash> set_;
-  std::vector<T> vector_;
+private:
+    gtl::FlatSet<T, Hash> set_;
+    std::vector<T> vector_;
 };
 
 // Returns formatted string from TensorId specific to grappler. Specifically,
@@ -127,53 +133,53 @@ bool IsSameInput(const string& name1, const string& name2);
 // node_name.
 inline int NodePositionIfSameNode(absl::string_view input_name,
                                   absl::string_view node_name) {
-  bool is_control = absl::StartsWith(input_name, "^");
-  if (is_control) input_name.remove_prefix(1);
-  if (input_name.empty() || node_name.empty() ||
-      input_name.size() < node_name.size()) {
-    return -2;
-  }
-  TensorId id = ParseTensorName(input_name);
-  if (id.first != node_name) return -2;
-  if (is_control) return -1;
-  return id.second;
+    bool is_control = absl::StartsWith(input_name, "^");
+    if (is_control) input_name.remove_prefix(1);
+    if (input_name.empty() || node_name.empty() ||
+            input_name.size() < node_name.size()) {
+        return -2;
+    }
+    TensorId id = ParseTensorName(input_name);
+    if (id.first != node_name) return -2;
+    if (is_control) return -1;
+    return id.second;
 }
 
 // Returns the node name and position in a single call.
 inline StringPiece ParseNodeNameAsStringPiece(absl::string_view name,
-                                              int* position) {
-  const bool is_control = absl::StartsWith(name, "^");
-  TensorId id = ParseTensorName(name);
-  if (position) {
-    *position = is_control ? -1 : id.second;
-  }
-  if (is_control && id.second >= 0) {
-    id.first.remove_prefix(1);
-  }
-  return id.first;
+        int* position) {
+    const bool is_control = absl::StartsWith(name, "^");
+    TensorId id = ParseTensorName(name);
+    if (position) {
+        *position = is_control ? -1 : id.second;
+    }
+    if (is_control && id.second >= 0) {
+        id.first.remove_prefix(1);
+    }
+    return id.first;
 }
 
 // Returns the node name and position in a single call.
 inline string ParseNodeName(const string& name, int* position) {
-  return string(ParseNodeNameAsStringPiece(name, position));
+    return string(ParseNodeNameAsStringPiece(name, position));
 }
 
 // Return the node name corresponding to 'name' if name is valid, or the empty
 // string otherwise.
 inline StringPiece NodeNameAsStringPiece(const string& name) {
-  return ParseNodeNameAsStringPiece(name, nullptr);
+    return ParseNodeNameAsStringPiece(name, nullptr);
 }
 
 // Return the node name corresponding to 'name' if name is valid, or the empty
 // string otherwise.
 inline string NodeName(const string& name) {
-  return string(NodeNameAsStringPiece(name));
+    return string(NodeNameAsStringPiece(name));
 }
 
 inline int NodePosition(const string& name) {
-  int position;
-  ParseNodeNameAsStringPiece(name, &position);
-  return position;
+    int position;
+    ParseNodeNameAsStringPiece(name, &position);
+    return position;
 }
 
 // Add a prefix to a node name with a custom delimiter.
