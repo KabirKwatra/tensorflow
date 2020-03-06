@@ -500,7 +500,7 @@ def string_split_v2(
     """Split elements of `input` based on `sep` into a `RaggedTensor`.
 
     Let N be the size of `input` (typically N will be the batch size). Split each
-    element of `input` based on `sep` and return a `RaggedTensor` containing the 
+    element of `input` based on `sep` and return a `RaggedTensor` containing the
     split tokens. Empty tokens are ignored.
 
     Example:
