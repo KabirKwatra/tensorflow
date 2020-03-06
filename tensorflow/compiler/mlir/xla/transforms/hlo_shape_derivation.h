@@ -16,12 +16,12 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_XLA_TRANSFORMS_HLO_SHAPE_DERIVATION_H_
 #define TENSORFLOW_COMPILER_MLIR_XLA_TRANSFORMS_HLO_SHAPE_DERIVATION_H_
 
-#include "mlir/Dialect/StandardOps/IR/Ops.h"  // TF:llvm-project
-#include "mlir/IR/Attributes.h"  // TF:llvm-project
-#include "mlir/IR/Builders.h"  // TF:llvm-project
-#include "mlir/IR/Location.h"  // TF:llvm-project
-#include "mlir/IR/MLIRContext.h"  // TF:llvm-project
-#include "mlir/IR/Operation.h"  // TF:llvm-project
+#include "mlir/Dialect/StandardOps/IR/Ops.h"    // TF:llvm-project
+#include "mlir/IR/Attributes.h"                 // TF:llvm-project
+#include "mlir/IR/Builders.h"                   // TF:llvm-project
+#include "mlir/IR/Location.h"                   // TF:llvm-project
+#include "mlir/IR/MLIRContext.h"                // TF:llvm-project
+#include "mlir/IR/Operation.h"                  // TF:llvm-project
 #include "mlir/Transforms/DialectConversion.h"  // TF:llvm-project
 #include "tensorflow/compiler/mlir/xla/ir/hlo_ops.h"
 
@@ -41,54 +41,54 @@ namespace xla_hlo {
 namespace impl {
 
 struct UnknownShape {
-    // Default shape derivation function that simply fails with a runtime error.
-    static Value deriveShapeFromOp(Operation* op, int operand_position,
-                                   ConversionPatternRewriter* rewriter) {
-        op->emitOpError()
-                << "dynamic result shapes cannot be derived for this operation";
-        return {};
-    }
+  // Default shape derivation function that simply fails with a runtime error.
+  static Value deriveShapeFromOp(Operation* op, int operand_position,
+                                 ConversionPatternRewriter* rewriter) {
+    op->emitOpError()
+        << "dynamic result shapes cannot be derived for this operation";
+    return {};
+  }
 };
 
 struct SameShapeAsFirstOperand {
-    // Shape derivation function that computes the shape of the result based on
-    // the first argument. For a 2-dimensional input tensor, this produces IR of
-    // the form
-    //
-    //  %0 = dim %arg0, 0 : memref<?x?xf32>
-    //  %1 = index_cast %0 : index to i64
-    //  %2 = dim %arg0, 1 : memref<?x?xf32>
-    //  %3 = index_cast %2 : index to i64
-    //  %4 = "xla_hlo.scalars_to_dimension_tensor"(%1, %3)
-    //    : (i64, i64) -> tensor<2xi64>
-    //
-    // and returns %4 as the shape value.
-    static Value deriveShapeFromOp(Operation* op, int result_postion,
-                                   ConversionPatternRewriter* rewriter) {
-        Value operand = op->getOperand(0);
-        ShapedType operand_type = operand.getType().dyn_cast<ShapedType>();
-        if (!operand_type) {
-            op->emitOpError() << "first operand has no shaped type";
-            return {};
-        }
-        auto loc = op->getLoc();
-        SmallVector<Value, 4> shape_values;
-        shape_values.reserve(operand_type.getRank());
-        auto shape_scalar_type = rewriter->getIntegerType(64);
-        for (auto element : llvm::enumerate(operand_type.getShape())) {
-            if (element.value() == ShapedType::kDynamicSize) {
-                Value dim = rewriter->create<DimOp>(loc, operand, element.index());
-                shape_values.push_back(
-                    rewriter->create<IndexCastOp>(loc, dim, shape_scalar_type));
-            } else {
-                shape_values.push_back(rewriter->create<ConstantOp>(
-                                           loc, rewriter->getI64IntegerAttr(element.value())));
-            }
-        }
-        return rewriter->create<ScalarsToDimensionTensorOp>(
-                   loc, RankedTensorType::get({operand_type.getRank()}, shape_scalar_type),
-                   shape_values);
+  // Shape derivation function that computes the shape of the result based on
+  // the first argument. For a 2-dimensional input tensor, this produces IR of
+  // the form
+  //
+  //  %0 = dim %arg0, 0 : memref<?x?xf32>
+  //  %1 = index_cast %0 : index to i64
+  //  %2 = dim %arg0, 1 : memref<?x?xf32>
+  //  %3 = index_cast %2 : index to i64
+  //  %4 = "xla_hlo.scalars_to_dimension_tensor"(%1, %3)
+  //    : (i64, i64) -> tensor<2xi64>
+  //
+  // and returns %4 as the shape value.
+  static Value deriveShapeFromOp(Operation* op, int result_postion,
+                                 ConversionPatternRewriter* rewriter) {
+    Value operand = op->getOperand(0);
+    ShapedType operand_type = operand.getType().dyn_cast<ShapedType>();
+    if (!operand_type) {
+      op->emitOpError() << "first operand has no shaped type";
+      return {};
     }
+    auto loc = op->getLoc();
+    SmallVector<Value, 4> shape_values;
+    shape_values.reserve(operand_type.getRank());
+    auto shape_scalar_type = rewriter->getIntegerType(64);
+    for (auto element : llvm::enumerate(operand_type.getShape())) {
+      if (element.value() == ShapedType::kDynamicSize) {
+        Value dim = rewriter->create<DimOp>(loc, operand, element.index());
+        shape_values.push_back(
+            rewriter->create<IndexCastOp>(loc, dim, shape_scalar_type));
+      } else {
+        shape_values.push_back(rewriter->create<ConstantOp>(
+            loc, rewriter->getI64IntegerAttr(element.value())));
+      }
+    }
+    return rewriter->create<ScalarsToDimensionTensorOp>(
+        loc, RankedTensorType::get({operand_type.getRank()}, shape_scalar_type),
+        shape_values);
+  }
 };
 
 }  // namespace impl
@@ -96,7 +96,7 @@ struct SameShapeAsFirstOperand {
 // Default template to cover HLO operations whose shape derivation is unknown.
 template <typename HloOpTy>
 struct ShapeDerivation {
-    using impl = impl::UnknownShape;
+  using impl = impl::UnknownShape;
 };
 
 // Element-wise operations that have the shape of their first operand.
