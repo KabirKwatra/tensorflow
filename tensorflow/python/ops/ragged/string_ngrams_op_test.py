@@ -34,7 +34,9 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_unpadded_ngrams(self):
         data = [[b"aa", b"bb", b"cc", b"dd"], [b"ee", b"ff"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(data_tensor, ngram_width=3, separator=b"|")
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [[b"aa|bb|cc", b"bb|cc|dd"], []]
         self.assertAllEqual(expected_ngrams, result)
@@ -42,9 +44,9 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_tuple_multi_ngrams(self):
         data = [[b"aa", b"bb", b"cc", b"dd"], [b"ee", b"ff"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=(2, 3), separator=b"|"
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=(2, 3),
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"aa|bb", b"bb|cc", b"cc|dd", b"aa|bb|cc", b"bb|cc|dd"],
@@ -55,9 +57,9 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_tuple_multi_ngrams_inverted_order(self):
         data = [[b"aa", b"bb", b"cc", b"dd"], [b"ee", b"ff"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=(3, 2), separator=b"|"
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=(3, 2),
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"aa|bb|cc", b"bb|cc|dd", b"aa|bb", b"bb|cc", b"cc|dd"],
@@ -68,9 +70,9 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_list_multi_ngrams(self):
         data = [[b"aa", b"bb", b"cc", b"dd"], [b"ee", b"ff"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=[2, 3], separator=b"|"
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=[2, 3],
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"aa|bb", b"bb|cc", b"cc|dd", b"aa|bb|cc", b"bb|cc|dd"],
@@ -81,9 +83,9 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_multi_ngram_ordering(self):
         data = [[b"aa", b"bb", b"cc", b"dd"], [b"ee", b"ff"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=[3, 2], separator=b"|"
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=[3, 2],
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"aa|bb|cc", b"bb|cc|dd", b"aa|bb", b"bb|cc", b"cc|dd"],
@@ -94,9 +96,10 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_fully_padded_ngrams(self):
         data = [[b"a"], [b"b", b"c", b"d"], [b"e", b"f"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=3, separator=b"|", pad_values=(b"LP", b"RP")
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|",
+                                            pad_values=(b"LP", b"RP"))
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"LP|LP|a", b"LP|a|RP", b"a|RP|RP"],  # 0
@@ -164,7 +167,8 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             padding_width=1,
         )
         result = self.evaluate(ngram_op)
-        expected_ngrams = [[b"a"], [b"b", b"c", b"d", b"LP|b|c|d|RP"], [b"e", b"f"]]
+        expected_ngrams = [[b"a"], [b"b", b"c", b"d", b"LP|b|c|d|RP"],
+                           [b"e", b"f"]]
         self.assertAllEqual(expected_ngrams, result)
 
     def test_single_padding_string(self):
@@ -198,7 +202,9 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_ragged_inputs_with_multiple_ragged_dimensions(self):
         data = [[[[b"aa", b"bb", b"cc", b"dd"]], [[b"ee", b"ff"]]]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(data_tensor, ngram_width=3, separator=b"|")
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [[[[b"aa|bb|cc", b"bb|cc|dd"]], [[]]]]
         self.assertAllEqual(expected_ngrams, result)
@@ -206,9 +212,10 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_ragged_inputs_with_multiple_ragged_dimensions_and_preserve(self):
         data = [[[[b"aa", b"bb", b"cc", b"dd"]], [[b"ee", b"ff"]]]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=3, separator=b"|", preserve_short_sequences=True
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|",
+                                            preserve_short_sequences=True)
         result = self.evaluate(ngram_op)
         expected_ngrams = [[[[b"aa|bb|cc", b"bb|cc|dd"]], [[b"ee|ff"]]]]
         self.assertAllEqual(expected_ngrams, result)
@@ -216,27 +223,32 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_ragged_inputs_with_multiple_ragged_dimensions_bigrams(self):
         data = [[[[b"aa", b"bb", b"cc", b"dd"]], [[b"ee", b"ff"]]]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(data_tensor, ngram_width=2, separator=b"|")
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=2,
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [[[[b"aa|bb", b"bb|cc", b"cc|dd"]], [[b"ee|ff"]]]]
         self.assertAllEqual(expected_ngrams, result)
 
-    def test_ragged_inputs_with_multiple_ragged_dimensions_and_multiple_ngrams(self):
+    def test_ragged_inputs_with_multiple_ragged_dimensions_and_multiple_ngrams(
+            self):
         data = [[[[b"aa", b"bb", b"cc", b"dd"]], [[b"ee", b"ff"]]]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=(3, 4), separator=b"|"
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=(3, 4),
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
-        expected_ngrams = [[[[b"aa|bb|cc", b"bb|cc|dd", b"aa|bb|cc|dd"]], [[]]]]
+        expected_ngrams = [[[[b"aa|bb|cc", b"bb|cc|dd", b"aa|bb|cc|dd"]],
+                            [[]]]]
         self.assertAllEqual(expected_ngrams, result)
 
     def test_dense_input_rank_3(self):
         data = [[[b"a", b"z"], [b"b", b""]], [[b"b", b""], [b"e", b"f"]]]
         data_tensor = constant_op.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=3, separator=b"|", pad_values=(b"LP", b"RP")
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|",
+                                            pad_values=(b"LP", b"RP"))
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [
@@ -254,9 +266,10 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_dense_input(self):
         data = [[b"a", b"z"], [b"b", b""], [b"e", b"f"]]
         data_tensor = constant_op.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=3, separator=b"|", pad_values=(b"LP", b"RP")
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|",
+                                            pad_values=(b"LP", b"RP"))
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"LP|LP|a", b"LP|a|z", b"a|z|RP", b"z|RP|RP"],
@@ -268,9 +281,10 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def test_input_list_input(self):
         data = [[b"a", b"z"], [b"b", b""], [b"e", b"f"]]
-        ngram_op = ragged_string_ops.ngrams(
-            data, ngram_width=3, separator=b"|", pad_values=(b"LP", b"RP")
-        )
+        ngram_op = ragged_string_ops.ngrams(data,
+                                            ngram_width=3,
+                                            separator=b"|",
+                                            pad_values=(b"LP", b"RP"))
         result = self.evaluate(ngram_op)
         expected_ngrams = [
             [b"LP|LP|a", b"LP|a|z", b"a|z|RP", b"z|RP|RP"],
@@ -282,9 +296,10 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_vector_input(self):
         data = [b"a", b"z"]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=3, separator=b"|", pad_values=(b"LP", b"RP")
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=3,
+                                            separator=b"|",
+                                            pad_values=(b"LP", b"RP"))
         result = self.evaluate(ngram_op)
         expected_ngrams = [b"LP|LP|a", b"LP|a|z", b"a|z|RP", b"z|RP|RP"]
         self.assertAllEqual(expected_ngrams, result)
@@ -292,13 +307,19 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_dense_input_with_multiple_ngrams(self):
         data = [[b"a", b"b", b"c", b"d"], [b"e", b"f", b"g", b"h"]]
         data_tensor = ragged_factory_ops.constant(data)
-        ngram_op = ragged_string_ops.ngrams(
-            data_tensor, ngram_width=(1, 2, 3), separator=b"|"
-        )
+        ngram_op = ragged_string_ops.ngrams(data_tensor,
+                                            ngram_width=(1, 2, 3),
+                                            separator=b"|")
         result = self.evaluate(ngram_op)
         expected_ngrams = [
-            [b"a", b"b", b"c", b"d", b"a|b", b"b|c", b"c|d", b"a|b|c", b"b|c|d"],
-            [b"e", b"f", b"g", b"h", b"e|f", b"f|g", b"g|h", b"e|f|g", b"f|g|h"],
+            [
+                b"a", b"b", b"c", b"d", b"a|b", b"b|c", b"c|d", b"a|b|c",
+                b"b|c|d"
+            ],
+            [
+                b"e", b"f", b"g", b"h", b"e|f", b"f|g", b"g|h", b"e|f|g",
+                b"f|g|h"
+            ],
         ]
         self.assertAllEqual(expected_ngrams, result)
 
@@ -307,65 +328,62 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         ngram_op = ragged_string_ops.ngrams(data, (1, 2))
         result = self.evaluate(ngram_op)
         self.assertAllEqual([0, 0, 0, 0], result.row_splits)
-        self.assertAllEqual(
-            constant_op.constant([], dtype=dtypes.string), result.values
-        )
+        self.assertAllEqual(constant_op.constant([], dtype=dtypes.string),
+                            result.values)
 
-    @parameterized.parameters(
-        [
-            dict(
-                data=[b"a", b"z"],
-                ngram_width=2,
-                pad_values=5,
-                exception=TypeError,
-                error="pad_values must be a string, tuple of strings, or None.",
-            ),
-            dict(
-                data=[b"a", b"z"],
-                ngram_width=2,
-                pad_values=[5, 3],
-                exception=TypeError,
-                error="pad_values must be a string, tuple of strings, or None.",
-            ),
-            dict(
-                data=[b"a", b"z"],
-                ngram_width=2,
-                padding_width=0,
-                pad_values="X",
-                error="padding_width must be greater than 0.",
-            ),
-            dict(
-                data=[b"a", b"z"],
-                ngram_width=2,
-                padding_width=1,
-                error="pad_values must be provided if padding_width is set.",
-            ),
-            dict(
-                data=b"hello",
-                ngram_width=2,
-                padding_width=1,
-                pad_values="X",
-                error="Data must have rank>0",
-            ),
-            dict(
-                data=[b"hello", b"world"],
-                ngram_width=[1, 2, -1],
-                padding_width=1,
-                pad_values="X",
-                error="All ngram_widths must be greater than 0. Got .*",
-            ),
-        ]
-    )
+    @parameterized.parameters([
+        dict(
+            data=[b"a", b"z"],
+            ngram_width=2,
+            pad_values=5,
+            exception=TypeError,
+            error="pad_values must be a string, tuple of strings, or None.",
+        ),
+        dict(
+            data=[b"a", b"z"],
+            ngram_width=2,
+            pad_values=[5, 3],
+            exception=TypeError,
+            error="pad_values must be a string, tuple of strings, or None.",
+        ),
+        dict(
+            data=[b"a", b"z"],
+            ngram_width=2,
+            padding_width=0,
+            pad_values="X",
+            error="padding_width must be greater than 0.",
+        ),
+        dict(
+            data=[b"a", b"z"],
+            ngram_width=2,
+            padding_width=1,
+            error="pad_values must be provided if padding_width is set.",
+        ),
+        dict(
+            data=b"hello",
+            ngram_width=2,
+            padding_width=1,
+            pad_values="X",
+            error="Data must have rank>0",
+        ),
+        dict(
+            data=[b"hello", b"world"],
+            ngram_width=[1, 2, -1],
+            padding_width=1,
+            pad_values="X",
+            error="All ngram_widths must be greater than 0. Got .*",
+        ),
+    ])
     def test_error(
-        self,
-        data,
-        ngram_width,
-        separator=" ",
-        pad_values=None,
-        padding_width=None,
-        preserve_short_sequences=False,
-        error=None,
-        exception=ValueError,
+            self,
+            data,
+            ngram_width,
+            separator=" ",
+            pad_values=None,
+            padding_width=None,
+            preserve_short_sequences=False,
+            error=None,
+            exception=ValueError,
     ):
         with self.assertRaisesRegexp(exception, error):
             ragged_string_ops.ngrams(
@@ -380,12 +398,12 @@ class StringNgramsTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def test_unknown_rank_error(self):
         # Use a tf.function that erases shape information.
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec(None, dtypes.string)]
-        )
+            input_signature=[tensor_spec.TensorSpec(None, dtypes.string)])
         def f(v):
             return ragged_string_ops.ngrams(v, 2)
 
-        with self.assertRaisesRegexp(ValueError, "Rank of data must be known."):
+        with self.assertRaisesRegexp(ValueError,
+                                     "Rank of data must be known."):
             f([b"foo", b"bar"])
 
 

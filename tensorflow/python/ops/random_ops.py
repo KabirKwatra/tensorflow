@@ -38,9 +38,12 @@ from tensorflow.python.util.tf_export import tf_export
 
 @tf_export("random.normal", v1=["random.normal", "random_normal"])
 @deprecation.deprecated_endpoints("random_normal")
-def random_normal(
-    shape, mean=0.0, stddev=1.0, dtype=dtypes.float32, seed=None, name=None
-):
+def random_normal(shape,
+                  mean=0.0,
+                  stddev=1.0,
+                  dtype=dtypes.float32,
+                  seed=None,
+                  name=None):
     """Outputs random values from a normal distribution.
 
     Example that generates a new set of random values every time:
@@ -80,11 +83,14 @@ def random_normal(
     with ops.name_scope(name, "random_normal", [shape, mean, stddev]) as name:
         shape_tensor = tensor_util.shape_tensor(shape)
         mean_tensor = ops.convert_to_tensor(mean, dtype=dtype, name="mean")
-        stddev_tensor = ops.convert_to_tensor(stddev, dtype=dtype, name="stddev")
+        stddev_tensor = ops.convert_to_tensor(stddev,
+                                              dtype=dtype,
+                                              name="stddev")
         seed1, seed2 = random_seed.get_seed(seed)
-        rnd = gen_random_ops.random_standard_normal(
-            shape_tensor, dtype, seed=seed1, seed2=seed2
-        )
+        rnd = gen_random_ops.random_standard_normal(shape_tensor,
+                                                    dtype,
+                                                    seed=seed1,
+                                                    seed2=seed2)
         mul = rnd * stddev_tensor
         value = math_ops.add(mul, mean_tensor, name=name)
         tensor_util.maybe_set_static_shape(value, shape)
@@ -95,14 +101,14 @@ ops.NotDifferentiable("RandomStandardNormal")
 
 
 def parameterized_truncated_normal(
-    shape,
-    means=0.0,
-    stddevs=1.0,
-    minvals=-2.0,
-    maxvals=2.0,
-    dtype=dtypes.float32,
-    seed=None,
-    name=None,
+        shape,
+        means=0.0,
+        stddevs=1.0,
+        minvals=-2.0,
+        maxvals=2.0,
+        dtype=dtypes.float32,
+        seed=None,
+        name=None,
 ):
     """Outputs random values from a truncated normal distribution.
 
@@ -131,15 +137,21 @@ def parameterized_truncated_normal(
       A tensor of the specified shape filled with random truncated normal values.
     """
     with ops.name_scope(
-        name,
-        "parameterized_truncated_normal",
+            name,
+            "parameterized_truncated_normal",
         [shape, means, stddevs, minvals, maxvals],
     ) as name:
         shape_tensor = tensor_util.shape_tensor(shape)
         means_tensor = ops.convert_to_tensor(means, dtype=dtype, name="means")
-        stddevs_tensor = ops.convert_to_tensor(stddevs, dtype=dtype, name="stddevs")
-        minvals_tensor = ops.convert_to_tensor(minvals, dtype=dtype, name="minvals")
-        maxvals_tensor = ops.convert_to_tensor(maxvals, dtype=dtype, name="maxvals")
+        stddevs_tensor = ops.convert_to_tensor(stddevs,
+                                               dtype=dtype,
+                                               name="stddevs")
+        minvals_tensor = ops.convert_to_tensor(minvals,
+                                               dtype=dtype,
+                                               name="minvals")
+        maxvals_tensor = ops.convert_to_tensor(maxvals,
+                                               dtype=dtype,
+                                               name="maxvals")
         seed1, seed2 = random_seed.get_seed(seed)
         rnd = gen_random_ops.parameterized_truncated_normal(
             shape_tensor,
@@ -154,13 +166,15 @@ def parameterized_truncated_normal(
         return rnd
 
 
-@tf_export(
-    "random.truncated_normal", v1=["random.truncated_normal", "truncated_normal"]
-)
+@tf_export("random.truncated_normal",
+           v1=["random.truncated_normal", "truncated_normal"])
 @deprecation.deprecated_endpoints("truncated_normal")
-def truncated_normal(
-    shape, mean=0.0, stddev=1.0, dtype=dtypes.float32, seed=None, name=None
-):
+def truncated_normal(shape,
+                     mean=0.0,
+                     stddev=1.0,
+                     dtype=dtypes.float32,
+                     seed=None,
+                     name=None):
     """Outputs random values from a truncated normal distribution.
 
     The generated values follow a normal distribution with specified mean and
@@ -183,14 +197,18 @@ def truncated_normal(
     Returns:
       A tensor of the specified shape filled with random truncated normal values.
     """
-    with ops.name_scope(name, "truncated_normal", [shape, mean, stddev]) as name:
+    with ops.name_scope(name, "truncated_normal",
+                        [shape, mean, stddev]) as name:
         shape_tensor = tensor_util.shape_tensor(shape)
         mean_tensor = ops.convert_to_tensor(mean, dtype=dtype, name="mean")
-        stddev_tensor = ops.convert_to_tensor(stddev, dtype=dtype, name="stddev")
+        stddev_tensor = ops.convert_to_tensor(stddev,
+                                              dtype=dtype,
+                                              name="stddev")
         seed1, seed2 = random_seed.get_seed(seed)
-        rnd = gen_random_ops.truncated_normal(
-            shape_tensor, dtype, seed=seed1, seed2=seed2
-        )
+        rnd = gen_random_ops.truncated_normal(shape_tensor,
+                                              dtype,
+                                              seed=seed1,
+                                              seed2=seed2)
         mul = rnd * stddev_tensor
         value = math_ops.add(mul, mean_tensor, name=name)
         tensor_util.maybe_set_static_shape(value, shape)
@@ -203,9 +221,12 @@ ops.NotDifferentiable("TruncatedNormal")
 
 @tf_export("random.uniform", v1=["random.uniform", "random_uniform"])
 @deprecation.deprecated_endpoints("random_uniform")
-def random_uniform(
-    shape, minval=0, maxval=None, dtype=dtypes.float32, seed=None, name=None
-):
+def random_uniform(shape,
+                   minval=0,
+                   maxval=None,
+                   dtype=dtypes.float32,
+                   seed=None,
+                   name=None):
     """Outputs random values from a uniform distribution.
 
     The generated values follow a uniform distribution in the range
@@ -271,19 +292,21 @@ def random_uniform(
     """
     dtype = dtypes.as_dtype(dtype)
     if dtype not in (
-        dtypes.float16,
-        dtypes.bfloat16,
-        dtypes.float32,
-        dtypes.float64,
-        dtypes.int32,
-        dtypes.int64,
+            dtypes.float16,
+            dtypes.bfloat16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.int32,
+            dtypes.int64,
     ):
         raise ValueError("Invalid dtype %r" % dtype)
     if maxval is None:
         if dtype.is_integer:
-            raise ValueError("Must specify maxval for integer dtype %r" % dtype)
+            raise ValueError("Must specify maxval for integer dtype %r" %
+                             dtype)
         maxval = 1
-    with ops.name_scope(name, "random_uniform", [shape, minval, maxval]) as name:
+    with ops.name_scope(name, "random_uniform",
+                        [shape, minval, maxval]) as name:
         shape = tensor_util.shape_tensor(shape)
         # In case of [0,1) floating results, minval and maxval is unused. We do an
         # `is` comparison here since this is cheaper than isinstance or  __eq__.
@@ -294,18 +317,24 @@ def random_uniform(
             maxval = ops.convert_to_tensor(maxval, dtype=dtype, name="max")
         seed1, seed2 = random_seed.get_seed(seed)
         if dtype.is_integer:
-            result = gen_random_ops.random_uniform_int(
-                shape, minval, maxval, seed=seed1, seed2=seed2, name=name
-            )
+            result = gen_random_ops.random_uniform_int(shape,
+                                                       minval,
+                                                       maxval,
+                                                       seed=seed1,
+                                                       seed2=seed2,
+                                                       name=name)
         else:
-            result = gen_random_ops.random_uniform(
-                shape, dtype, seed=seed1, seed2=seed2
-            )
+            result = gen_random_ops.random_uniform(shape,
+                                                   dtype,
+                                                   seed=seed1,
+                                                   seed2=seed2)
             if minval_is_zero:
                 if not maxval_is_one:
                     result = math_ops.multiply(result, maxval)
             else:
-                result = math_ops.add(result * (maxval - minval), minval, name=name)
+                result = math_ops.add(result * (maxval - minval),
+                                      minval,
+                                      name=name)
         # TODO(b/132092188): C++ shape inference inside functional ops does not
         # cross FuncGraph boundaries since that information is only available in
         # python. So we manually get the static shape using
@@ -345,7 +374,10 @@ def random_shuffle(value, seed=None, name=None):
       dimension.
     """
     seed1, seed2 = random_seed.get_seed(seed)
-    return gen_random_ops.random_shuffle(value, seed=seed1, seed2=seed2, name=name)
+    return gen_random_ops.random_shuffle(value,
+                                         seed=seed1,
+                                         seed2=seed2,
+                                         name=name)
 
 
 @tf_export("image.random_crop", v1=["image.random_crop", "random_crop"])
@@ -385,20 +417,18 @@ def random_crop(value, size, seed=None, name=None):
         )
         shape = control_flow_ops.with_dependencies([check], shape)
         limit = shape - size + 1
-        offset = (
-            random_uniform(
-                array_ops.shape(shape),
-                dtype=size.dtype,
-                maxval=size.dtype.max,
-                seed=seed,
-            )
-            % limit
-        )
+        offset = (random_uniform(
+            array_ops.shape(shape),
+            dtype=size.dtype,
+            maxval=size.dtype.max,
+            seed=seed,
+        ) % limit)
         return array_ops.slice(value, offset, size, name=name)
 
 
 @tf_export(v1=["random.multinomial", "multinomial"])
-@deprecation.deprecated(date=None, instructions="Use `tf.random.categorical` instead.")
+@deprecation.deprecated(date=None,
+                        instructions="Use `tf.random.categorical` instead.")
 def multinomial(logits, num_samples, seed=None, name=None, output_dtype=None):
     """Draws samples from a multinomial distribution.
 
@@ -423,7 +453,8 @@ def multinomial(logits, num_samples, seed=None, name=None, output_dtype=None):
       The drawn samples of shape `[batch_size, num_samples]`.
     """
     with ops.name_scope(name, "multinomial", [logits]):
-        return multinomial_categorical_impl(logits, num_samples, output_dtype, seed)
+        return multinomial_categorical_impl(logits, num_samples, output_dtype,
+                                            seed)
 
 
 @tf_export("random.categorical")
@@ -458,20 +489,20 @@ def multinomial_categorical_impl(logits, num_samples, dtype, seed):
     """Implementation for random.categorical (v1) and random.categorical (v2)."""
     logits = ops.convert_to_tensor(logits, name="logits")
     seed1, seed2 = random_seed.get_seed(seed)
-    return gen_random_ops.multinomial(
-        logits, num_samples, seed=seed1, seed2=seed2, output_dtype=dtype
-    )
+    return gen_random_ops.multinomial(logits,
+                                      num_samples,
+                                      seed=seed1,
+                                      seed2=seed2,
+                                      output_dtype=dtype)
 
 
 ops.NotDifferentiable("Multinomial")
 
 
 def _maybe_set_static_shape_helper(tensor, shape, postfix_tensor):
-    if (
-        not context.executing_eagerly()
-        and ops.get_default_graph().building_function
-        and not tensor.shape.is_fully_defined()
-    ):
+    if (not context.executing_eagerly()
+            and ops.get_default_graph().building_function
+            and not tensor.shape.is_fully_defined()):
         shape = tensor_util.shape_tensor(shape)
         const_shape = tensor_util.constant_value_as_shape(shape)
         postfix_tensor = ops.convert_to_tensor(postfix_tensor)
@@ -480,7 +511,12 @@ def _maybe_set_static_shape_helper(tensor, shape, postfix_tensor):
 
 @tf_export("random.gamma", v1=["random.gamma", "random_gamma"])
 @deprecation.deprecated_endpoints("random_gamma")
-def random_gamma(shape, alpha, beta=None, dtype=dtypes.float32, seed=None, name=None):
+def random_gamma(shape,
+                 alpha,
+                 beta=None,
+                 dtype=dtypes.float32,
+                 seed=None,
+                 name=None):
     """Draws `shape` samples from each of the given Gamma distribution(s).
 
     `alpha` is the shape parameter describing the distribution(s), and `beta` is
@@ -552,18 +588,17 @@ def random_gamma(shape, alpha, beta=None, dtype=dtypes.float32, seed=None, name=
     with ops.name_scope(name, "random_gamma", [shape, alpha, beta]):
         shape = ops.convert_to_tensor(shape, name="shape", dtype=dtypes.int32)
         alpha = ops.convert_to_tensor(alpha, name="alpha", dtype=dtype)
-        beta = ops.convert_to_tensor(
-            beta if beta is not None else 1, name="beta", dtype=dtype
-        )
+        beta = ops.convert_to_tensor(beta if beta is not None else 1,
+                                     name="beta",
+                                     dtype=dtype)
         broadcast_shape = array_ops.broadcast_dynamic_shape(
-            array_ops.shape(alpha), array_ops.shape(beta)
-        )
+            array_ops.shape(alpha), array_ops.shape(beta))
         alpha_broadcast = array_ops.broadcast_to(alpha, broadcast_shape)
         seed1, seed2 = random_seed.get_seed(seed)
         result = math_ops.maximum(
             np.finfo(alpha.dtype.as_numpy_dtype).tiny,
-            gen_random_ops.random_gamma(shape, alpha_broadcast, seed=seed1, seed2=seed2)
-            / beta,
+            gen_random_ops.random_gamma(
+                shape, alpha_broadcast, seed=seed1, seed2=seed2) / beta,
         )
         _maybe_set_static_shape_helper(result, shape, alpha_broadcast)
         return result
@@ -648,8 +683,10 @@ def random_poisson_v2(shape, lam, dtype=dtypes.float32, seed=None, name=None):
     with ops.name_scope(name, "random_poisson", [lam, shape]):
         shape = ops.convert_to_tensor(shape, name="shape", dtype=dtypes.int32)
         seed1, seed2 = random_seed.get_seed(seed)
-        result = gen_random_ops.random_poisson_v2(
-            shape, lam, dtype=dtype, seed=seed1, seed2=seed2
-        )
+        result = gen_random_ops.random_poisson_v2(shape,
+                                                  lam,
+                                                  dtype=dtype,
+                                                  seed=seed1,
+                                                  seed2=seed2)
         _maybe_set_static_shape_helper(result, shape, lam)
         return result
