@@ -27,280 +27,282 @@ from tensorflow.python.ops import math_ops
 
 
 class Regularizer(object):
-  """Regularizer base class.
+    """Regularizer base class.
 
-  Regularizers allow you to apply penalties on layer parameters or layer
-  activity during optimization. These penalties are summed into the loss
-  function that the network optimizes.
+    Regularizers allow you to apply penalties on layer parameters or layer
+    activity during optimization. These penalties are summed into the loss
+    function that the network optimizes.
 
-  Regularization penalties are applied on a per-layer basis. The exact API will
-  depend on the layer, but many layers (e.g. `Dense`, `Conv1D`, `Conv2D` and
-  `Conv3D`) have a unified API.
+    Regularization penalties are applied on a per-layer basis. The exact API will
+    depend on the layer, but many layers (e.g. `Dense`, `Conv1D`, `Conv2D` and
+    `Conv3D`) have a unified API.
 
-  These layers expose 3 keyword arguments:
+    These layers expose 3 keyword arguments:
 
-  - `kernel_regularizer`: Regularizer to apply a penalty on the layer's kernel
-  - `bias_regularizer`: Regularizer to apply a penalty on the layer's bias
-  - `activity_regularizer`: Regularizer to apply a penalty on the layer's output
+    - `kernel_regularizer`: Regularizer to apply a penalty on the layer's kernel
+    - `bias_regularizer`: Regularizer to apply a penalty on the layer's bias
+    - `activity_regularizer`: Regularizer to apply a penalty on the layer's output
 
-  All layers (including custom layers) expose `activity_regularizer` as a
-  settable property, whether or not it is in the constructor arguments.
+    All layers (including custom layers) expose `activity_regularizer` as a
+    settable property, whether or not it is in the constructor arguments.
 
-  The value returned by the `activity_regularizer` is divided by the input
-  batch size so that the relative weighting between the weight regularizers and
-  the activity regularizers does not change with the batch size.
+    The value returned by the `activity_regularizer` is divided by the input
+    batch size so that the relative weighting between the weight regularizers and
+    the activity regularizers does not change with the batch size.
 
-  You can access a layer's regularization penalties by calling `layer.losses`
-  after calling the layer on inputs.
+    You can access a layer's regularization penalties by calling `layer.losses`
+    after calling the layer on inputs.
 
-  ## Example
+    ## Example
 
-  >>> layer = tf.keras.layers.Dense(
-  ...     5, input_dim=5,
-  ...     kernel_initializer='ones',
-  ...     kernel_regularizer=tf.keras.regularizers.l1(0.01),
-  ...     activity_regularizer=tf.keras.regularizers.l2(0.01))
-  >>> tensor = tf.ones(shape=(5, 5)) * 2.0
-  >>> out = layer(tensor)
+    >>> layer = tf.keras.layers.Dense(
+    ...     5, input_dim=5,
+    ...     kernel_initializer='ones',
+    ...     kernel_regularizer=tf.keras.regularizers.l1(0.01),
+    ...     activity_regularizer=tf.keras.regularizers.l2(0.01))
+    >>> tensor = tf.ones(shape=(5, 5)) * 2.0
+    >>> out = layer(tensor)
 
-  >>> # The kernel regularization term is 0.25
-  >>> # The activity regularization term (after dividing by the batch size) is 5
-  >>> tf.math.reduce_sum(layer.losses)
-  <tf.Tensor: shape=(), dtype=float32, numpy=5.25>
+    >>> # The kernel regularization term is 0.25
+    >>> # The activity regularization term (after dividing by the batch size) is 5
+    >>> tf.math.reduce_sum(layer.losses)
+    <tf.Tensor: shape=(), dtype=float32, numpy=5.25>
 
-  ## Available penalties
+    ## Available penalties
 
-  ```python
-  tf.keras.regularizers.l1(0.3)  # L1 Regularization Penalty
-  tf.keras.regularizers.l2(0.1)  # L2 Regularization Penalty
-  tf.keras.regularizers.l1_l2(l1=0.01, l2=0.01)  # L1 + L2 penalties
-  ```
+    ```python
+    tf.keras.regularizers.l1(0.3)  # L1 Regularization Penalty
+    tf.keras.regularizers.l2(0.1)  # L2 Regularization Penalty
+    tf.keras.regularizers.l1_l2(l1=0.01, l2=0.01)  # L1 + L2 penalties
+    ```
 
-  ## Directly calling a regularizer
+    ## Directly calling a regularizer
 
-  Compute a regularization loss on a tensor by directly calling a regularizer
-  as if it is a one-argument function.
+    Compute a regularization loss on a tensor by directly calling a regularizer
+    as if it is a one-argument function.
 
-  E.g.
-  >>> regularizer = tf.keras.regularizers.l2(2.)
-  >>> tensor = tf.ones(shape=(5, 5))
-  >>> regularizer(tensor)
-  <tf.Tensor: shape=(), dtype=float32, numpy=50.0>
+    E.g.
+    >>> regularizer = tf.keras.regularizers.l2(2.)
+    >>> tensor = tf.ones(shape=(5, 5))
+    >>> regularizer(tensor)
+    <tf.Tensor: shape=(), dtype=float32, numpy=50.0>
 
 
-  ## Developing new regularizers
+    ## Developing new regularizers
 
-  Any function that takes in a weight matrix and returns a scalar
-  tensor can be used as a regularizer, e.g.:
+    Any function that takes in a weight matrix and returns a scalar
+    tensor can be used as a regularizer, e.g.:
 
-  >>> @tf.keras.utils.register_keras_serializable(package='Custom', name='l1')
-  ... def l1_reg(weight_matrix):
-  ...    return 0.01 * tf.math.reduce_sum(tf.math.abs(weight_matrix))
-  ...
-  >>> layer = tf.keras.layers.Dense(5, input_dim=5,
-  ...     kernel_initializer='ones', kernel_regularizer=l1_reg)
-  >>> tensor = tf.ones(shape=(5, 5))
-  >>> out = layer(tensor)
-  >>> layer.losses
-  [<tf.Tensor: shape=(), dtype=float32, numpy=0.25>]
+    >>> @tf.keras.utils.register_keras_serializable(package='Custom', name='l1')
+    ... def l1_reg(weight_matrix):
+    ...    return 0.01 * tf.math.reduce_sum(tf.math.abs(weight_matrix))
+    ...
+    >>> layer = tf.keras.layers.Dense(5, input_dim=5,
+    ...     kernel_initializer='ones', kernel_regularizer=l1_reg)
+    >>> tensor = tf.ones(shape=(5, 5))
+    >>> out = layer(tensor)
+    >>> layer.losses
+    [<tf.Tensor: shape=(), dtype=float32, numpy=0.25>]
 
-  Alternatively, you can write your custom regularizers in an
-  object-oriented way by extending this regularizer base class, e.g.:
+    Alternatively, you can write your custom regularizers in an
+    object-oriented way by extending this regularizer base class, e.g.:
 
-  >>> @tf.keras.utils.register_keras_serializable(package='Custom', name='l2')
-  ... class L2Regularizer(tf.keras.regularizers.Regularizer):
-  ...   def __init__(self, l2=0.):  # pylint: disable=redefined-outer-name
-  ...     self.l2 = l2
-  ...
-  ...   def __call__(self, x):
-  ...     return self.l2 * tf.math.reduce_sum(tf.math.square(x))
-  ...
-  ...   def get_config(self):
-  ...     return {'l2': float(self.l2)}
-  ...
-  >>> layer = tf.keras.layers.Dense(
-  ...   5, input_dim=5, kernel_initializer='ones',
-  ...   kernel_regularizer=L2Regularizer(l2=0.5))
+    >>> @tf.keras.utils.register_keras_serializable(package='Custom', name='l2')
+    ... class L2Regularizer(tf.keras.regularizers.Regularizer):
+    ...   def __init__(self, l2=0.):  # pylint: disable=redefined-outer-name
+    ...     self.l2 = l2
+    ...
+    ...   def __call__(self, x):
+    ...     return self.l2 * tf.math.reduce_sum(tf.math.square(x))
+    ...
+    ...   def get_config(self):
+    ...     return {'l2': float(self.l2)}
+    ...
+    >>> layer = tf.keras.layers.Dense(
+    ...   5, input_dim=5, kernel_initializer='ones',
+    ...   kernel_regularizer=L2Regularizer(l2=0.5))
 
-  >>> tensor = tf.ones(shape=(5, 5))
-  >>> out = layer(tensor)
-  >>> layer.losses
-  [<tf.Tensor: shape=(), dtype=float32, numpy=12.5>]
+    >>> tensor = tf.ones(shape=(5, 5))
+    >>> out = layer(tensor)
+    >>> layer.losses
+    [<tf.Tensor: shape=(), dtype=float32, numpy=12.5>]
 
-  ### A note on serialization and deserialization:
+    ### A note on serialization and deserialization:
 
-  Registering the regularizers as serializable is optional if you are just
-  training and executing models, exporting to and from SavedModels, or saving
-  and loading weight checkpoints.
+    Registering the regularizers as serializable is optional if you are just
+    training and executing models, exporting to and from SavedModels, or saving
+    and loading weight checkpoints.
 
-  Registration is required for Keras `model_to_estimator`, saving and
-  loading models to HDF5 formats, Keras model cloning, some visualization
-  utilities, and exporting models to and from JSON. If using this functionality,
-  you must make sure any python process running your model has also defined
-  and registered your custom regularizer.
-
-  `tf.keras.utils.register_keras_serializable` is only available in TF 2.1 and
-  beyond. In earlier versions of TensorFlow you must pass your custom
-  regularizer to the `custom_objects` argument of methods that expect custom
-  regularizers to be registered as serializable.
-  """
-
-  def __call__(self, x):
-    """Compute a regularization penalty from an input tensor."""
-    return 0.
-
-  @classmethod
-  def from_config(cls, config):
-    """Creates a regularizer from its config.
-
-    This method is the reverse of `get_config`,
-    capable of instantiating the same regularizer from the config
-    dictionary.
-
-    This method is used by Keras `model_to_estimator`, saving and
+    Registration is required for Keras `model_to_estimator`, saving and
     loading models to HDF5 formats, Keras model cloning, some visualization
-    utilities, and exporting models to and from JSON.
+    utilities, and exporting models to and from JSON. If using this functionality,
+    you must make sure any python process running your model has also defined
+    and registered your custom regularizer.
 
-    Arguments:
-        config: A Python dictionary, typically the output of get_config.
-
-    Returns:
-        A regularizer instance.
+    `tf.keras.utils.register_keras_serializable` is only available in TF 2.1 and
+    beyond. In earlier versions of TensorFlow you must pass your custom
+    regularizer to the `custom_objects` argument of methods that expect custom
+    regularizers to be registered as serializable.
     """
-    return cls(**config)
 
-  def get_config(self):
-    """Returns the config of the regularizer.
+    def __call__(self, x):
+        """Compute a regularization penalty from an input tensor."""
+        return 0.
 
-    An regularizer config is a Python dictionary (serializable)
-    containing all configuration parameters of the regularizer.
-    The same regularizer can be reinstantiated later
-    (without any saved state) from this configuration.
+    @classmethod
+    def from_config(cls, config):
+        """Creates a regularizer from its config.
 
-    This method is optional if you are just training and executing models,
-    exporting to and from SavedModels, or using weight checkpoints.
+        This method is the reverse of `get_config`,
+        capable of instantiating the same regularizer from the config
+        dictionary.
 
-    This method is required for Keras `model_to_estimator`, saving and
-    loading models to HDF5 formats, Keras model cloning, some visualization
-    utilities, and exporting models to and from JSON.
+        This method is used by Keras `model_to_estimator`, saving and
+        loading models to HDF5 formats, Keras model cloning, some visualization
+        utilities, and exporting models to and from JSON.
 
-    Returns:
-        Python dictionary.
-    """
-    raise NotImplementedError(str(self) + ' does not implement get_config()')
+        Arguments:
+            config: A Python dictionary, typically the output of get_config.
+
+        Returns:
+            A regularizer instance.
+        """
+        return cls(**config)
+
+    def get_config(self):
+        """Returns the config of the regularizer.
+
+        An regularizer config is a Python dictionary (serializable)
+        containing all configuration parameters of the regularizer.
+        The same regularizer can be reinstantiated later
+        (without any saved state) from this configuration.
+
+        This method is optional if you are just training and executing models,
+        exporting to and from SavedModels, or using weight checkpoints.
+
+        This method is required for Keras `model_to_estimator`, saving and
+        loading models to HDF5 formats, Keras model cloning, some visualization
+        utilities, and exporting models to and from JSON.
+
+        Returns:
+            Python dictionary.
+        """
+        raise NotImplementedError(
+            str(self) + ' does not implement get_config()')
 
 
 class L1L2(Regularizer):
-  r"""A regularizer that applies both L1 and L2 regularization penalties.
+    r"""A regularizer that applies both L1 and L2 regularization penalties.
 
-  The L1 regularization penalty is computed as:
-  $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
+    The L1 regularization penalty is computed as:
+    $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
 
-  The L2 regularization penalty is computed as
-  $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
+    The L2 regularization penalty is computed as
+    $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
 
-  Attributes:
-      l1: Float; L1 regularization factor.
-      l2: Float; L2 regularization factor.
-  """
+    Attributes:
+        l1: Float; L1 regularization factor.
+        l2: Float; L2 regularization factor.
+    """
 
-  def __init__(self, l1=0., l2=0.):  # pylint: disable=redefined-outer-name
-    self.l1 = K.cast_to_floatx(l1)
-    self.l2 = K.cast_to_floatx(l2)
+    def __init__(self, l1=0., l2=0.):  # pylint: disable=redefined-outer-name
+        self.l1 = K.cast_to_floatx(l1)
+        self.l2 = K.cast_to_floatx(l2)
 
-  def __call__(self, x):
-    if not self.l1 and not self.l2:
-      return K.constant(0.)
-    regularization = 0.
-    if self.l1:
-      regularization += self.l1 * math_ops.reduce_sum(math_ops.abs(x))
-    if self.l2:
-      regularization += self.l2 * math_ops.reduce_sum(math_ops.square(x))
-    return regularization
+    def __call__(self, x):
+        if not self.l1 and not self.l2:
+            return K.constant(0.)
+        regularization = 0.
+        if self.l1:
+            regularization += self.l1 * math_ops.reduce_sum(math_ops.abs(x))
+        if self.l2:
+            regularization += self.l2 * math_ops.reduce_sum(math_ops.square(x))
+        return regularization
 
-  def get_config(self):
-    return {'l1': float(self.l1), 'l2': float(self.l2)}
+    def get_config(self):
+        return {'l1': float(self.l1), 'l2': float(self.l2)}
 
 
 # Aliases.
 
 
 def l1(l=0.01):
-  r"""Create a regularizer that applies an L1 regularization penalty.
+    r"""Create a regularizer that applies an L1 regularization penalty.
 
-  The L1 regularization penalty is computed as:
-  $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
+    The L1 regularization penalty is computed as:
+    $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
 
-  Arguments:
-      l: Float; L1 regularization factor.
+    Arguments:
+        l: Float; L1 regularization factor.
 
-  Returns:
-    An L1 Regularizer with the given regularization factor.
-  """
-  return L1L2(l1=l)
+    Returns:
+      An L1 Regularizer with the given regularization factor.
+    """
+    return L1L2(l1=l)
 
 
 def l2(l=0.01):
-  r"""Create a regularizer that applies an L2 regularization penalty.
+    r"""Create a regularizer that applies an L2 regularization penalty.
 
-  The L2 regularization penalty is computed as:
-  $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
+    The L2 regularization penalty is computed as:
+    $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
 
-  Arguments:
-      l: Float; L2 regularization factor.
+    Arguments:
+        l: Float; L2 regularization factor.
 
-  Returns:
-    An L2 Regularizer with the given regularization factor.
-  """
-  return L1L2(l2=l)
+    Returns:
+      An L2 Regularizer with the given regularization factor.
+    """
+    return L1L2(l2=l)
 
 
 def l1_l2(l1=0.01, l2=0.01):  # pylint: disable=redefined-outer-name
-  r"""Create a regularizer that applies both L1 and L2 penalties.
+    r"""Create a regularizer that applies both L1 and L2 penalties.
 
-  The L1 regularization penalty is computed as:
-  $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
+    The L1 regularization penalty is computed as:
+    $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
 
-  The L2 regularization penalty is computed as:
-  $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
+    The L2 regularization penalty is computed as:
+    $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
 
-  Arguments:
-      l1: Float; L1 regularization factor.
-      l2: Float; L2 regularization factor.
+    Arguments:
+        l1: Float; L1 regularization factor.
+        l2: Float; L2 regularization factor.
 
-  Returns:
-    An L1L2 Regularizer with the given regularization factors.
-  """
-  return L1L2(l1=l1, l2=l2)
+    Returns:
+      An L1L2 Regularizer with the given regularization factors.
+    """
+    return L1L2(l1=l1, l2=l2)
 
 
 def serialize(regularizer):
-  return serialize_keras_object(regularizer)
+    return serialize_keras_object(regularizer)
 
 
 def deserialize(config, custom_objects=None):
-  return deserialize_keras_object(
-      config,
-      module_objects=globals(),
-      custom_objects=custom_objects,
-      printable_module_name='regularizer')
+    return deserialize_keras_object(
+        config,
+        module_objects=globals(),
+        custom_objects=custom_objects,
+        printable_module_name='regularizer')
 
 
 def get(identifier):
-  if identifier is None:
-    return None
-  if isinstance(identifier, dict):
-    return deserialize(identifier)
-  elif isinstance(identifier, six.string_types):
-    identifier = str(identifier)
-    # We have to special-case functions that return classes.
-    # TODO(omalleyt): Turn these into classes or class aliases.
-    special_cases = ['l1', 'l2', 'l1_l2']
-    if identifier in special_cases:
-      # Treat like a class.
-      return deserialize({'class_name': identifier, 'config': {}})
-    return deserialize(str(identifier))
-  elif callable(identifier):
-    return identifier
-  else:
-    raise ValueError('Could not interpret regularizer identifier:', identifier)
+    if identifier is None:
+        return None
+    if isinstance(identifier, dict):
+        return deserialize(identifier)
+    elif isinstance(identifier, six.string_types):
+        identifier = str(identifier)
+        # We have to special-case functions that return classes.
+        # TODO(omalleyt): Turn these into classes or class aliases.
+        special_cases = ['l1', 'l2', 'l1_l2']
+        if identifier in special_cases:
+            # Treat like a class.
+            return deserialize({'class_name': identifier, 'config': {}})
+        return deserialize(str(identifier))
+    elif callable(identifier):
+        return identifier
+    else:
+        raise ValueError(
+            'Could not interpret regularizer identifier:', identifier)

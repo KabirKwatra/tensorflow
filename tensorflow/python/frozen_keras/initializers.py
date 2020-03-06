@@ -53,7 +53,7 @@ from tensorflow.python.ops.init_ops_v2 import he_uniform as he_uniformV2
 from tensorflow.python.ops.init_ops_v2 import Identity as IdentityV2
 from tensorflow.python.ops.init_ops_v2 import Initializer as InitializerV2
 from tensorflow.python.ops.init_ops_v2 import lecun_normal as lecun_normalV2
-from tensorflow.python.ops.init_ops_v2 import lecun_uniform  as lecun_uniformV2
+from tensorflow.python.ops.init_ops_v2 import lecun_uniform as lecun_uniformV2
 from tensorflow.python.ops.init_ops_v2 import Ones as OnesV2
 from tensorflow.python.ops.init_ops_v2 import Orthogonal as OrthogonalV2
 from tensorflow.python.ops.init_ops_v2 import RandomNormal as RandomNormalV2
@@ -65,72 +65,72 @@ from tensorflow.python.ops.init_ops_v2 import Zeros as ZerosV2
 
 
 class TruncatedNormal(TFTruncatedNormal):
-  """Initializer that generates a truncated normal distribution.
+    """Initializer that generates a truncated normal distribution.
 
-  These values are similar to values from a `random_normal_initializer`
-  except that values more than two standard deviations from the mean
-  are discarded and re-drawn. This is the recommended initializer for
-  neural network weights and filters.
+    These values are similar to values from a `random_normal_initializer`
+    except that values more than two standard deviations from the mean
+    are discarded and re-drawn. This is the recommended initializer for
+    neural network weights and filters.
 
-  Args:
-    mean: a python scalar or a scalar tensor. Mean of the random values to
-      generate. Defaults to 0.
-    stddev: a python scalar or a scalar tensor. Standard deviation of the random
-      values to generate. Defaults to 0.05.
-    seed: A Python integer. Used to create random seeds. See
-      `tf.compat.v1.set_random_seed` for behavior.
-    dtype: The data type. Only floating point types are supported.
-    
-  Returns:
-    A TruncatedNormal instance.
-  """
+    Args:
+      mean: a python scalar or a scalar tensor. Mean of the random values to
+        generate. Defaults to 0.
+      stddev: a python scalar or a scalar tensor. Standard deviation of the random
+        values to generate. Defaults to 0.05.
+      seed: A Python integer. Used to create random seeds. See
+        `tf.compat.v1.set_random_seed` for behavior.
+      dtype: The data type. Only floating point types are supported.
 
-  def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
-    super(TruncatedNormal, self).__init__(
-        mean=mean, stddev=stddev, seed=seed, dtype=dtype)
+    Returns:
+      A TruncatedNormal instance.
+    """
+
+    def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
+        super(TruncatedNormal, self).__init__(
+            mean=mean, stddev=stddev, seed=seed, dtype=dtype)
 
 
 class RandomUniform(TFRandomUniform):
-  """Initializer that generates tensors with a uniform distribution.
+    """Initializer that generates tensors with a uniform distribution.
 
-  Args:
-    minval: A python scalar or a scalar tensor. Lower bound of the range of
-      random values to generate. Defaults to -0.05.
-    maxval: A python scalar or a scalar tensor. Upper bound of the range of
-      random values to generate. Defaults to 0.05.
-    seed: A Python integer. Used to create random seeds. See
-      `tf.compat.v1.set_random_seed` for behavior.
-    dtype: The data type.
-    
-  Returns:
-    A RandomUniform instance.
-  """
+    Args:
+      minval: A python scalar or a scalar tensor. Lower bound of the range of
+        random values to generate. Defaults to -0.05.
+      maxval: A python scalar or a scalar tensor. Upper bound of the range of
+        random values to generate. Defaults to 0.05.
+      seed: A Python integer. Used to create random seeds. See
+        `tf.compat.v1.set_random_seed` for behavior.
+      dtype: The data type.
 
-  def __init__(self, minval=-0.05, maxval=0.05, seed=None,
-               dtype=dtypes.float32):
-    super(RandomUniform, self).__init__(
-        minval=minval, maxval=maxval, seed=seed, dtype=dtype)
+    Returns:
+      A RandomUniform instance.
+    """
+
+    def __init__(self, minval=-0.05, maxval=0.05, seed=None,
+                 dtype=dtypes.float32):
+        super(RandomUniform, self).__init__(
+            minval=minval, maxval=maxval, seed=seed, dtype=dtype)
 
 
 class RandomNormal(TFRandomNormal):
-  """Initializer that generates tensors with a normal distribution.
+    """Initializer that generates tensors with a normal distribution.
 
-  Args:
-    mean: a python scalar or a scalar tensor. Mean of the random values to
-      generate. Defaults to 0.
-    stddev: a python scalar or a scalar tensor. Standard deviation of the random
-      values to generate. Defaults to 0.05.
-    seed: A Python integer. Used to create random seeds. See
-      `tf.compat.v1.set_random_seed` for behavior.
-    dtype: The data type. Only floating point types are supported.
+    Args:
+      mean: a python scalar or a scalar tensor. Mean of the random values to
+        generate. Defaults to 0.
+      stddev: a python scalar or a scalar tensor. Standard deviation of the random
+        values to generate. Defaults to 0.05.
+      seed: A Python integer. Used to create random seeds. See
+        `tf.compat.v1.set_random_seed` for behavior.
+      dtype: The data type. Only floating point types are supported.
 
-  Returns:
-      RandomNormal instance.
-  """
+    Returns:
+        RandomNormal instance.
+    """
 
-  def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
-    super(RandomNormal, self).__init__(
-        mean=mean, stddev=stddev, seed=seed, dtype=dtype)
+    def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
+        super(RandomNormal, self).__init__(
+            mean=mean, stddev=stddev, seed=seed, dtype=dtype)
 
 
 # Compatibility aliases
@@ -152,47 +152,48 @@ glorot_uniform = GlorotUniform
 
 
 def serialize(initializer):
-  return serialize_keras_object(initializer)
+    return serialize_keras_object(initializer)
 
 
 def deserialize(config, custom_objects=None):
-  """Return an `Initializer` object from its config."""
-  if tf2.enabled():
-    # Class names are the same for V1 and V2 but the V2 classes
-    # are aliased in this file so we need to grab them directly
-    # from `init_ops_v2`.
-    module_objects = {
-        obj_name: getattr(init_ops_v2, obj_name)
-        for obj_name in dir(init_ops_v2)
-    }
-  else:
-    module_objects = globals()
-  return deserialize_keras_object(
-      config,
-      module_objects=module_objects,
-      custom_objects=custom_objects,
-      printable_module_name='initializer')
+    """Return an `Initializer` object from its config."""
+    if tf2.enabled():
+        # Class names are the same for V1 and V2 but the V2 classes
+        # are aliased in this file so we need to grab them directly
+        # from `init_ops_v2`.
+        module_objects = {
+            obj_name: getattr(init_ops_v2, obj_name)
+            for obj_name in dir(init_ops_v2)
+        }
+    else:
+        module_objects = globals()
+    return deserialize_keras_object(
+        config,
+        module_objects=module_objects,
+        custom_objects=custom_objects,
+        printable_module_name='initializer')
 
 
 def get(identifier):
-  if identifier is None:
-    return None
-  if isinstance(identifier, dict):
-    return deserialize(identifier)
-  elif isinstance(identifier, six.string_types):
-    identifier = str(identifier)
-    # We have to special-case functions that return classes.
-    # TODO(omalleyt): Turn these into classes or class aliases.
-    special_cases = ['he_normal', 'he_uniform', 'lecun_normal', 'lecun_uniform']
-    if identifier in special_cases:
-      # Treat like a class.
-      return deserialize({'class_name': identifier, 'config': {}})
-    return deserialize(identifier)
-  elif callable(identifier):
-    return identifier
-  else:
-    raise ValueError('Could not interpret initializer identifier: ' +
-                     str(identifier))
+    if identifier is None:
+        return None
+    if isinstance(identifier, dict):
+        return deserialize(identifier)
+    elif isinstance(identifier, six.string_types):
+        identifier = str(identifier)
+        # We have to special-case functions that return classes.
+        # TODO(omalleyt): Turn these into classes or class aliases.
+        special_cases = ['he_normal', 'he_uniform',
+                         'lecun_normal', 'lecun_uniform']
+        if identifier in special_cases:
+            # Treat like a class.
+            return deserialize({'class_name': identifier, 'config': {}})
+        return deserialize(identifier)
+    elif callable(identifier):
+        return identifier
+    else:
+        raise ValueError('Could not interpret initializer identifier: ' +
+                         str(identifier))
 
 
 # pylint: enable=invalid-name
