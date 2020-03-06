@@ -42,9 +42,9 @@ from tensorflow.python.util.tf_export import tf_export
 # bits, all of which will be sent to the C++ code. The actual C++
 # implementation of some algorithms may only use a lower part of the bits.
 
-MAX_INT64 = 2**63 - 1
-MIN_INT64 = -(2**63)
-UINT64_SPAN = 2**64
+MAX_INT64 = 2 ** 63 - 1
+MIN_INT64 = -(2 ** 63)
+UINT64_SPAN = 2 ** 64
 # 'Variable' doesn't support uint32 or uint64 yet (due to reasons explained in
 # b/111604096 and cl/171681867), so I use signed int here. I choose int64
 # instead of int32 here because `VarHandleOp` doesn't support int32 on GPU.
@@ -87,8 +87,7 @@ def non_deterministic_ints(shape, dtype=dtypes.int64):
     Returns:
       a tensor whose element values are non-deterministically chosen.
     """
-    return gen_stateful_random_ops.non_deterministic_ints(
-        shape=shape, dtype=dtype)
+    return gen_stateful_random_ops.non_deterministic_ints(shape=shape, dtype=dtype)
 
 
 def _uint_to_int(n):
@@ -119,7 +118,8 @@ def _make_1d_state(state_size, seed):
     seed = np.asarray(seed, dtype=STATE_TYPE)
     if len(seed.shape) != 1:
         raise ValueError(
-            "seed should only have one dimension; got shape: %s" % seed.shape)
+            "seed should only have one dimension; got shape: %s" % seed.shape
+        )
     seed = seed[0:state_size]
     # Padding with zeros on the *left* if too short. Padding on the right would
     # cause a small seed to be used as the "counter" while the "key" is always
@@ -129,9 +129,8 @@ def _make_1d_state(state_size, seed):
     seed_size = seed.shape[0]
     if seed_size < state_size:
         seed = np.pad(
-            seed, [(state_size - seed_size, 0)],
-            mode="constant",
-            constant_values=0)
+            seed, [(state_size - seed_size, 0)], mode="constant", constant_values=0
+        )
     assert seed.shape == (state_size,), "Wrong seed.shape: %s" % seed.shape
     return seed
 
@@ -179,8 +178,9 @@ def _convert_alg_to_int(alg):
         else:
             raise ValueError("Unknown algorithm name: %s" % alg)
     else:
-        raise TypeError("Can't convert algorithm %s of type %s to int" %
-                        (alg, type(alg)))
+        raise TypeError(
+            "Can't convert algorithm %s of type %s to int" % (alg, type(alg))
+        )
 
 
 @tf_export("random.create_rng_state", "random.experimental.create_rng_state")
@@ -243,8 +243,13 @@ class GeneratorSpec(type_spec.TypeSpec):
         assert len(components) == 1
         handle = components[0]
         state_var = resource_variable_ops.BaseResourceVariable(
-            handle=handle, shape=self.shape, dtype=self.dtype,
-            trainable=False, handle_deleter=object(), handle_name="RNGVar")
+            handle=handle,
+            shape=self.shape,
+            dtype=self.dtype,
+            trainable=False,
+            handle_deleter=object(),
+            handle_name="RNGVar",
+        )
         return Generator(state=state_var, alg=self.alg)
 
     @property
@@ -270,7 +275,8 @@ def _create_variable(*args, **kwargs):
             "Creating a generator within a strategy scope is disallowed, because "
             "there is ambiguity on how to replicate a generator (e.g. should it be "
             "copied so that each replica gets the same random numbers, or 'split' "
-            "so that each replica gets different random numbers).")
+            "so that each replica gets different random numbers)."
+        )
         # TODO(wangpeng): Link to the RNG guide for solutions in such cases.
     var = variables.Variable(*args, **kwargs)
     return var
@@ -367,8 +373,9 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
         if copy_from is not None:
             # All other arguments should be None
             assert (alg or state) is None
-            self._state_var = _create_variable(copy_from.state, dtype=STATE_TYPE,
-                                               trainable=False)
+            self._state_var = _create_variable(
+                copy_from.state, dtype=STATE_TYPE, trainable=False
+            )
             self._alg = copy_from.algorithm
 
         else:
@@ -380,8 +387,9 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
             else:
                 state = _convert_to_state_tensor(state)
                 _check_state_shape(state.shape, alg)
-                self._state_var = _create_variable(state, dtype=STATE_TYPE,
-                                                   trainable=False)
+                self._state_var = _create_variable(
+                    state, dtype=STATE_TYPE, trainable=False
+                )
             self._alg = alg
 
     @classmethod
@@ -466,8 +474,7 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
             # TODO(wangpeng): more sophisticated algorithm selection
             alg = DEFAULT_ALGORITHM
         alg = _convert_alg_to_int(alg)
-        state = non_deterministic_ints(shape=[_get_state_size(alg)],
-                                       dtype=SEED_TYPE)
+        state = non_deterministic_ints(shape=[_get_state_size(alg)], dtype=SEED_TYPE)
         return cls(state=state, alg=alg)
 
     @classmethod
@@ -513,8 +520,7 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
           state: the new state.
         """
         state = _convert_to_state_tensor(state)
-        state.shape.assert_is_compatible_with(
-            [_get_state_size(self.algorithm)])
+        state.shape.assert_is_compatible_with([_get_state_size(self.algorithm)])
         self._state_var.assign(state)
 
     def reset_from_seed(self, seed):
@@ -539,8 +545,7 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
         """
         counter = _convert_to_state_tensor(counter)
         key = _convert_to_state_tensor(key)
-        counter.shape.assert_is_compatible_with(
-            [_get_state_size(self.algorithm) - 1])
+        counter.shape.assert_is_compatible_with([_get_state_size(self.algorithm) - 1])
         key.shape.assert_is_compatible_with([])
         key = array_ops.reshape(key, [1])
         state = array_ops.concat([counter, key], 0)
@@ -548,8 +553,9 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
 
     @property
     def _type_spec(self):
-        return GeneratorSpec(shape=self.state.shape, dtype=self.state.dtype,
-                             alg=self.algorithm)
+        return GeneratorSpec(
+            shape=self.state.shape, dtype=self.state.dtype, alg=self.algorithm
+        )
 
     @property
     def state(self):
@@ -563,7 +569,8 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
 
     def _standard_normal(self, shape, dtype):
         return gen_stateful_random_ops.stateful_standard_normal_v2(
-            self.state.handle, self.algorithm, shape, dtype=dtype)
+            self.state.handle, self.algorithm, shape, dtype=dtype
+        )
 
     @property
     def key(self):
@@ -597,13 +604,11 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
             (or any other distribution). The actual increment added to the
             counter is an unspecified implementation detail.
         """
-        gen_stateful_random_ops.rng_skip(
-            self.state.handle, self.algorithm, delta)
+        gen_stateful_random_ops.rng_skip(self.state.handle, self.algorithm, delta)
 
     # The following functions return a tensor and as a side effect update
     # self._state_var.
-    def normal(self, shape, mean=0.0, stddev=1.0, dtype=dtypes.float32,
-               name=None):
+    def normal(self, shape, mean=0.0, stddev=1.0, dtype=dtypes.float32, name=None):
         """Outputs random values from a normal distribution.
 
         Args:
@@ -628,13 +633,12 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
 
     def _truncated_normal(self, shape, dtype):
         return gen_stateful_random_ops.stateful_truncated_normal(
-            self.state.handle, self.algorithm, shape, dtype=dtype)
+            self.state.handle, self.algorithm, shape, dtype=dtype
+        )
 
-    def truncated_normal(self, shape,
-                         mean=0.0,
-                         stddev=1.0,
-                         dtype=dtypes.float32,
-                         name=None):
+    def truncated_normal(
+        self, shape, mean=0.0, stddev=1.0, dtype=dtypes.float32, name=None
+    ):
         """Outputs random values from a truncated normal distribution.
 
         The generated values follow a normal distribution with specified mean and
@@ -655,22 +659,20 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
           A tensor of the specified shape filled with random truncated normal
             values.
         """
-        with ops.name_scope(
-                name, "truncated_normal", [shape, mean, stddev]) as name:
+        with ops.name_scope(name, "truncated_normal", [shape, mean, stddev]) as name:
             shape_tensor = _shape_tensor(shape)
             mean_tensor = ops.convert_to_tensor(mean, dtype=dtype, name="mean")
-            stddev_tensor = ops.convert_to_tensor(
-                stddev, dtype=dtype, name="stddev")
+            stddev_tensor = ops.convert_to_tensor(stddev, dtype=dtype, name="stddev")
             rnd = self._truncated_normal(shape_tensor, dtype=dtype)
             mul = rnd * stddev_tensor
             return math_ops.add(mul, mean_tensor, name=name)
 
     def _uniform(self, shape, dtype):
         return gen_stateful_random_ops.stateful_uniform(
-            self.state.handle, self.algorithm, shape=shape, dtype=dtype)
+            self.state.handle, self.algorithm, shape=shape, dtype=dtype
+        )
 
-    def uniform(self, shape, minval=0, maxval=None,
-                dtype=dtypes.float32, name=None):
+    def uniform(self, shape, minval=0, maxval=None, dtype=dtypes.float32, name=None):
         """Outputs random values from a uniform distribution.
 
         The generated values follow a uniform distribution in the range
@@ -707,18 +709,21 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
         dtype = dtypes.as_dtype(dtype)
         if maxval is None:
             if dtype.is_integer:
-                raise ValueError(
-                    "Must specify maxval for integer dtype %r" % dtype)
+                raise ValueError("Must specify maxval for integer dtype %r" % dtype)
             maxval = 1
-        with ops.name_scope(name, "stateful_uniform",
-                            [shape, minval, maxval]) as name:
+        with ops.name_scope(name, "stateful_uniform", [shape, minval, maxval]) as name:
             shape = _shape_tensor(shape)
             minval = ops.convert_to_tensor(minval, dtype=dtype, name="min")
             maxval = ops.convert_to_tensor(maxval, dtype=dtype, name="max")
             if dtype.is_integer:
                 return gen_stateful_random_ops.stateful_uniform_int(
-                    self.state.handle, self.algorithm, shape=shape,
-                    minval=minval, maxval=maxval, name=name)
+                    self.state.handle,
+                    self.algorithm,
+                    shape=shape,
+                    minval=minval,
+                    maxval=maxval,
+                    name=name,
+                )
             else:
                 rnd = self._uniform(shape=shape, dtype=dtype)
                 return math_ops.add(rnd * (maxval - minval), minval, name=name)
@@ -738,12 +743,11 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
           A tensor of random numbers of the required shape.
         """
         dtype = dtypes.as_dtype(dtype)
-        with ops.name_scope(name, "stateful_uniform_full_int",
-                            [shape]) as name:
+        with ops.name_scope(name, "stateful_uniform_full_int", [shape]) as name:
             shape = _shape_tensor(shape)
             return gen_stateful_random_ops.stateful_uniform_full_int(
-                self.state.handle, self.algorithm, shape=shape,
-                dtype=dtype, name=name)
+                self.state.handle, self.algorithm, shape=shape, dtype=dtype, name=name
+            )
 
     def binomial(self, shape, counts, probs, dtype=dtypes.int32, name=None):
         """Outputs random values from a binomial distribution.
@@ -801,7 +805,8 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
                 counts=counts,
                 probs=probs,
                 dtype=dtype,
-                name=name)
+                name=name,
+            )
 
     # TODO(wangpeng): implement other distributions
 
@@ -880,6 +885,7 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
           A list (length `count`) of `Generator` objects independent of each other.
           The new generators have the same RNG algorithm as the old one.
         """
+
         def _key_to_state(alg, key):
             # Padding with zeros on the left. The zeros will be the counter.
             return [0] * (_get_state_size(alg) - 1) + [key]
@@ -887,8 +893,10 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
         alg = self.algorithm
         if alg == RNG_ALG_PHILOX or alg == RNG_ALG_THREEFRY:
             keys = self._make_int64_keys(shape=[count])
-            return [Generator(state=_key_to_state(alg, key), alg=alg)
-                    for key in keys.numpy()]
+            return [
+                Generator(state=_key_to_state(alg, key), alg=alg)
+                for key in keys.numpy()
+            ]
         else:
             raise ValueError("Unsupported algorithm id: %s" % alg)
 
@@ -899,8 +907,7 @@ class Generator(tracking.AutoTrackable, composite_tensor.CompositeTensor):
 global_generator = None
 
 
-@tf_export("random.get_global_generator",
-           "random.experimental.get_global_generator")
+@tf_export("random.get_global_generator", "random.experimental.get_global_generator")
 def get_global_generator():
     """Retrieves the global generator.
 
@@ -919,8 +926,7 @@ def get_global_generator():
     return global_generator
 
 
-@tf_export("random.set_global_generator",
-           "random.experimental.set_global_generator")
+@tf_export("random.set_global_generator", "random.experimental.set_global_generator")
 def set_global_generator(generator):
     """Replaces the global generator with another `Generator` object.
 
