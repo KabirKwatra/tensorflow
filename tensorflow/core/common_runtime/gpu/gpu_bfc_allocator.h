@@ -32,18 +32,18 @@ namespace tensorflow {
 // A GPU memory allocator that implements a 'best-fit with coalescing'
 // algorithm.
 class GPUBFCAllocator : public BFCAllocator {
- public:
-  GPUBFCAllocator(GPUMemAllocator* sub_allocator, size_t total_memory,
-                  const string& name);
-  GPUBFCAllocator(GPUMemAllocator* sub_allocator, size_t total_memory,
-                  const GPUOptions& gpu_options, const string& name);
-  ~GPUBFCAllocator() override {}
+public:
+    GPUBFCAllocator(GPUMemAllocator* sub_allocator, size_t total_memory,
+                    const string& name);
+    GPUBFCAllocator(GPUMemAllocator* sub_allocator, size_t total_memory,
+                    const GPUOptions& gpu_options, const string& name);
+    ~GPUBFCAllocator() override {}
 
-  TF_DISALLOW_COPY_AND_ASSIGN(GPUBFCAllocator);
+    TF_DISALLOW_COPY_AND_ASSIGN(GPUBFCAllocator);
 
- private:
-  static bool GetAllowGrowthValue(const GPUOptions& gpu_options);
-  static bool GetGarbageCollectionValue();
+private:
+    static bool GetAllowGrowthValue(const GPUOptions& gpu_options);
+    static bool GetGarbageCollectionValue();
 };
 
 }  // namespace tensorflow
