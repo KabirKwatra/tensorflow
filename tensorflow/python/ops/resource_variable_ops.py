@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Ops to use variables as resources."""
-
 # pylint: disable=g-bad-name
 from __future__ import absolute_import
 from __future__ import division
@@ -44,15 +43,13 @@ from tensorflow.python.ops import gen_state_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import variables
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_resource_variable_ops import *
-
-# pylint: enable=wildcard-import
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.util import compat
 from tensorflow.python.util.deprecation import deprecated
+# go/tf-wildcard-import
+# pylint: disable=wildcard-import
+# pylint: enable=wildcard-import
 
 
 acd.register_read_only_resource_op("ReadVariableOp")

@@ -25,9 +25,6 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
 from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 from tensorflow.python.ops import init_ops_v2
-
-# These imports are brought in so that keras.initializers.deserialize
-# has them available in module_objects.
 from tensorflow.python.ops.init_ops import Constant
 from tensorflow.python.ops.init_ops import GlorotNormal
 from tensorflow.python.ops.init_ops import GlorotUniform
@@ -48,8 +45,6 @@ from tensorflow.python.ops.init_ops import (
     VarianceScaling,
 )  # pylint: disable=unused-import
 from tensorflow.python.ops.init_ops import Zeros
-
-# pylint: disable=unused-import, disable=line-too-long
 from tensorflow.python.ops.init_ops_v2 import Constant as ConstantV2
 from tensorflow.python.ops.init_ops_v2 import GlorotNormal as GlorotNormalV2
 from tensorflow.python.ops.init_ops_v2 import GlorotUniform as GlorotUniformV2
@@ -66,6 +61,9 @@ from tensorflow.python.ops.init_ops_v2 import RandomUniform as RandomUniformV2
 from tensorflow.python.ops.init_ops_v2 import TruncatedNormal as TruncatedNormalV2
 from tensorflow.python.ops.init_ops_v2 import VarianceScaling as VarianceScalingV2
 from tensorflow.python.ops.init_ops_v2 import Zeros as ZerosV2
+# These imports are brought in so that keras.initializers.deserialize
+# has them available in module_objects.
+# pylint: disable=unused-import, disable=line-too-long
 
 # pylint: enable=unused-import, enable=line-too-long
 
