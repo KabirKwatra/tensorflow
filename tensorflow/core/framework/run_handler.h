@@ -48,34 +48,34 @@ class RunHandler;
 //
 // This class is thread safe.
 class RunHandlerPool {
-public:
-    explicit RunHandlerPool(int num_inter_op_threads);
+ public:
+  explicit RunHandlerPool(int num_inter_op_threads);
 
-    RunHandlerPool(int num_inter_op_threads, int num_intra_op_threads);
-    ~RunHandlerPool();
+  RunHandlerPool(int num_inter_op_threads, int num_intra_op_threads);
+  ~RunHandlerPool();
 
-    // Returns an inactive RunHandler from the pool.
-    //
-    // RunHandlers in RunHandlerPool are initially 'inactive'.
-    // A RunHandler becomes 'active' when its unique_ptr its returned by Get()
-    // and is being used by a client.  It becomes 'inactive' once more when the
-    // unique_ptr is destroyed.
-    //
-    // Will block unless there is an inactive handler.
-    std::unique_ptr<RunHandler> Get(
-        int64 step_id = 0, int64 timeout_in_ms = 0,
-        const RunOptions::Experimental::RunHandlerPoolOptions& options =
-            RunOptions::Experimental::RunHandlerPoolOptions());
+  // Returns an inactive RunHandler from the pool.
+  //
+  // RunHandlers in RunHandlerPool are initially 'inactive'.
+  // A RunHandler becomes 'active' when its unique_ptr its returned by Get()
+  // and is being used by a client.  It becomes 'inactive' once more when the
+  // unique_ptr is destroyed.
+  //
+  // Will block unless there is an inactive handler.
+  std::unique_ptr<RunHandler> Get(
+      int64 step_id = 0, int64 timeout_in_ms = 0,
+      const RunOptions::Experimental::RunHandlerPoolOptions& options =
+          RunOptions::Experimental::RunHandlerPoolOptions());
 
-    // Get the priorities for active handlers. The return result is with the same
-    // order of the active handler list.
-    std::vector<int64> GetActiveHandlerPrioritiesForTesting() const;
+  // Get the priorities for active handlers. The return result is with the same
+  // order of the active handler list.
+  std::vector<int64> GetActiveHandlerPrioritiesForTesting() const;
 
-private:
-    class Impl;
-    friend class RunHandler;
+ private:
+  class Impl;
+  friend class RunHandler;
 
-    std::unique_ptr<Impl> impl_;
+  std::unique_ptr<Impl> impl_;
 };
 
 // RunHandler can be used to schedule inter/intra-op closures to run on a global
@@ -91,19 +91,19 @@ private:
 //
 // This class is thread safe.
 class RunHandler {
-public:
-    void ScheduleInterOpClosure(std::function<void()> fn);
-    thread::ThreadPoolInterface* AsIntraThreadPoolInterface();
+ public:
+  void ScheduleInterOpClosure(std::function<void()> fn);
+  thread::ThreadPoolInterface* AsIntraThreadPoolInterface();
 
-    ~RunHandler();
+  ~RunHandler();
 
-private:
-    class Impl;
-    friend class RunHandlerPool::Impl;
+ private:
+  class Impl;
+  friend class RunHandlerPool::Impl;
 
-    explicit RunHandler(Impl* impl);
+  explicit RunHandler(Impl* impl);
 
-    Impl* impl_;  // NOT OWNED.
+  Impl* impl_;  // NOT OWNED.
 };
 
 }  // end namespace tensorflow.
