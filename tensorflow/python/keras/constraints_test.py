@@ -66,14 +66,12 @@ class KerasConstraintsTest(test.TestCase):
         # a more explicit example
         norm_instance = constraints.max_norm(2.0)
         x = np.array([[0, 0, 0], [1.0, 0, 0], [3, 0, 0], [3, 3, 3]]).T
-        x_normed_target = np.array(
-            [
-                [0, 0, 0],
-                [1.0, 0, 0],
-                [2.0, 0, 0],
-                [2.0 / np.sqrt(3), 2.0 / np.sqrt(3), 2.0 / np.sqrt(3)],
-            ]
-        ).T
+        x_normed_target = np.array([
+            [0, 0, 0],
+            [1.0, 0, 0],
+            [2.0, 0, 0],
+            [2.0 / np.sqrt(3), 2.0 / np.sqrt(3), 2.0 / np.sqrt(3)],
+        ]).T
         x_normed_actual = backend.eval(norm_instance(backend.variable(x)))
         self.assertAllClose(x_normed_actual, x_normed_target, rtol=1e-05)
 
@@ -85,7 +83,8 @@ class KerasConstraintsTest(test.TestCase):
     def test_unit_norm(self):
         unit_norm_instance = constraints.unit_norm()
         normalized = unit_norm_instance(backend.variable(get_example_array()))
-        norm_of_normalized = np.sqrt(np.sum(backend.eval(normalized) ** 2, axis=0))
+        norm_of_normalized = np.sqrt(
+            np.sum(backend.eval(normalized)**2, axis=0))
         # In the unit norm constraint, it should be equal to 1.
         difference = norm_of_normalized - 1.0
         largest_difference = np.max(np.abs(difference))
@@ -94,7 +93,8 @@ class KerasConstraintsTest(test.TestCase):
     def test_min_max_norm(self):
         array = get_example_array()
         for m in get_test_values():
-            norm_instance = constraints.min_max_norm(min_value=m, max_value=m * 2)
+            norm_instance = constraints.min_max_norm(min_value=m,
+                                                     max_value=m * 2)
             normed = norm_instance(backend.variable(array))
             value = backend.eval(normed)
             l2 = np.sqrt(np.sum(np.square(value), axis=0))
@@ -109,7 +109,8 @@ class KerasConstraintsTest(test.TestCase):
             value = backend.eval(normed)
             assert np.all(value.shape == array.shape)
             assert np.all(value[0:, 0, 0, 0] == value[-1:, 0, 0, 0])
-            assert len(set(value[..., 0, 0].flatten())) == math.ceil(float(width) / 2)
+            assert len(set(value[..., 0, 0].flatten())) == math.ceil(
+                float(width) / 2)
 
 
 if __name__ == "__main__":

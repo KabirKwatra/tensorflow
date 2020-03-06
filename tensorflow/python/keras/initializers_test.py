@@ -35,13 +35,13 @@ from tensorflow.python.platform import test
 @combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class KerasInitializersTest(test.TestCase):
     def _runner(
-        self,
-        init,
-        shape,
-        target_mean=None,
-        target_std=None,
-        target_max=None,
-        target_min=None,
+            self,
+            init,
+            shape,
+            target_mean=None,
+            target_std=None,
+            target_max=None,
+            target_min=None,
     ):
         variable = backend.variable(init(shape))
         output = backend.get_value(variable)
@@ -170,9 +170,9 @@ class KerasInitializersTest(test.TestCase):
     def test_orthogonal(self):
         tensor_shape = (20, 20)
         with self.cached_session():
-            self._runner(
-                initializers.OrthogonalV2(seed=123), tensor_shape, target_mean=0.0
-            )
+            self._runner(initializers.OrthogonalV2(seed=123),
+                         tensor_shape,
+                         target_mean=0.0)
 
     def test_identity(self):
         with self.cached_session():
@@ -196,16 +196,18 @@ class KerasInitializersTest(test.TestCase):
     def test_zero(self):
         tensor_shape = (4, 5)
         with self.cached_session():
-            self._runner(
-                initializers.ZerosV2(), tensor_shape, target_mean=0.0, target_max=0.0
-            )
+            self._runner(initializers.ZerosV2(),
+                         tensor_shape,
+                         target_mean=0.0,
+                         target_max=0.0)
 
     def test_one(self):
         tensor_shape = (4, 5)
         with self.cached_session():
-            self._runner(
-                initializers.OnesV2(), tensor_shape, target_mean=1.0, target_max=1.0
-            )
+            self._runner(initializers.OnesV2(),
+                         tensor_shape,
+                         target_mean=1.0,
+                         target_max=1.0)
 
     def test_default_random_uniform(self):
         ru = initializers.get("uniform")
@@ -235,12 +237,12 @@ class KerasInitializersTest(test.TestCase):
         def my_initializer(shape, dtype=None):
             return array_ops.ones(shape, dtype=dtype)
 
-        inputs = input_layer.Input((10,))
+        inputs = input_layer.Input((10, ))
         outputs = core.Dense(1, kernel_initializer=my_initializer)(inputs)
         model = models.Model(inputs, outputs)
         model2 = model.from_config(
-            model.get_config(), custom_objects={"my_initializer": my_initializer}
-        )
+            model.get_config(),
+            custom_objects={"my_initializer": my_initializer})
         self.assertEqual(model2.layers[1].kernel_initializer, my_initializer)
 
     @test_util.run_v2_only
