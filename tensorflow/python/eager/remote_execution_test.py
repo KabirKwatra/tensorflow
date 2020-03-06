@@ -13,13 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for remote eager execution."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.core.protobuf import cluster_pb2
 from tensorflow.core.protobuf import tensorflow_server_pb2
