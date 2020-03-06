@@ -36,20 +36,21 @@ class RandomOpTestCommon(test.TestCase):
 
     # Checks that executing the same rng_func multiple times rarely produces the
     # same result.
-    def _testSingleSessionNotConstant(self,
-                                      rng_func,
-                                      num,
-                                      dtype,
-                                      min_or_mean,
-                                      max_or_stddev,
-                                      use_gpu,
-                                      op_seed=None,
-                                      graph_seed=None):
+    def _testSingleSessionNotConstant(
+        self,
+        rng_func,
+        num,
+        dtype,
+        min_or_mean,
+        max_or_stddev,
+        use_gpu,
+        op_seed=None,
+        graph_seed=None,
+    ):
         with self.session(use_gpu=use_gpu, graph=ops.Graph()) as sess:
             if graph_seed is not None:
                 random_seed.set_random_seed(graph_seed)
-            x = rng_func([num], min_or_mean, max_or_stddev,
-                         dtype=dtype, seed=op_seed)
+            x = rng_func([num], min_or_mean, max_or_stddev, dtype=dtype, seed=op_seed)
 
             y = self.evaluate(x)
             z = self.evaluate(x)
@@ -57,18 +58,20 @@ class RandomOpTestCommon(test.TestCase):
 
             # We use exact equality here. If the random-number generator is producing
             # the same output, all three outputs will be bitwise identical.
-            self.assertTrue((not np.array_equal(y, z)) or
-                            (not np.array_equal(z, w)) or (not np.array_equal(y, w)))
+            self.assertTrue(
+                (not np.array_equal(y, z))
+                or (not np.array_equal(z, w))
+                or (not np.array_equal(y, w))
+            )
 
 
 class RandomNormalTest(RandomOpTestCommon):
-
     def _Sampler(self, num, mu, sigma, dtype, use_gpu, seed=None):
-
         def func():
             with self.session(use_gpu=use_gpu, graph=ops.Graph()) as sess:
                 rng = random_ops.random_normal(
-                    [num], mean=mu, stddev=sigma, dtype=dtype, seed=seed)
+                    [num], mean=mu, stddev=sigma, dtype=dtype, seed=seed
+                )
                 ret = np.empty([10, num])
                 for i in xrange(10):
                     ret[i, :] = self.evaluate(rng)
@@ -100,14 +103,13 @@ class RandomNormalTest(RandomOpTestCommon):
             results = {}
             for use_gpu in [False, True]:
                 sampler = self._Sampler(
-                    1000000, 0.0, 1.0, dt, use_gpu=use_gpu, seed=12345)
+                    1000000, 0.0, 1.0, dt, use_gpu=use_gpu, seed=12345
+                )
                 results[use_gpu] = sampler()
             if dt == dtypes.float16:
-                self.assertAllClose(
-                    results[False], results[True], rtol=1e-3, atol=1e-3)
+                self.assertAllClose(results[False], results[True], rtol=1e-3, atol=1e-3)
             else:
-                self.assertAllClose(
-                    results[False], results[True], rtol=1e-6, atol=1e-6)
+                self.assertAllClose(results[False], results[True], rtol=1e-6, atol=1e-6)
 
     @test_util.run_deprecated_v1
     def testSeed(self):
@@ -121,10 +123,8 @@ class RandomNormalTest(RandomOpTestCommon):
         for use_gpu in [False, True]:
             with self.session(use_gpu=use_gpu):
                 shape = [2, 3, 4]
-                rnd1 = random_ops.random_normal(
-                    shape, 0.0, 1.0, dtypes.float32)
-                rnd2 = random_ops.random_normal(
-                    shape, 0.0, 1.0, dtypes.float32)
+                rnd1 = random_ops.random_normal(shape, 0.0, 1.0, dtypes.float32)
+                rnd2 = random_ops.random_normal(shape, 0.0, 1.0, dtypes.float32)
                 diff = rnd2 - rnd1
                 self.assertTrue(np.linalg.norm(diff.eval()) > 0.1)
 
@@ -133,7 +133,8 @@ class RandomNormalTest(RandomOpTestCommon):
         for use_gpu in [False, True]:
             for dt in dtypes.float16, dtypes.float32, dtypes.float64:
                 self._testSingleSessionNotConstant(
-                    random_ops.random_normal, 100, dt, 0.0, 1.0, use_gpu=use_gpu)
+                    random_ops.random_normal, 100, dt, 0.0, 1.0, use_gpu=use_gpu
+                )
 
     @test_util.run_deprecated_v1
     def testSingleSessionOpSeedNotConstant(self):
@@ -146,7 +147,8 @@ class RandomNormalTest(RandomOpTestCommon):
                     0.0,
                     1.0,
                     use_gpu=use_gpu,
-                    op_seed=1345)
+                    op_seed=1345,
+                )
 
     @test_util.run_deprecated_v1
     def testSingleSessionGraphSeedNotConstant(self):
@@ -159,17 +161,17 @@ class RandomNormalTest(RandomOpTestCommon):
                     0.0,
                     1.0,
                     use_gpu=use_gpu,
-                    graph_seed=965)
+                    graph_seed=965,
+                )
 
 
 class TruncatedNormalTest(test.TestCase):
-
     def _Sampler(self, num, mu, sigma, dtype, use_gpu, seed=None):
-
         def func():
             with self.session(use_gpu=use_gpu, graph=ops.Graph()) as sess:
                 rng = random_ops.truncated_normal(
-                    [num], mean=mu, stddev=sigma, dtype=dtype, seed=seed)
+                    [num], mean=mu, stddev=sigma, dtype=dtype, seed=seed
+                )
                 ret = np.empty([10, num])
                 for i in xrange(10):
                     ret[i, :] = self.evaluate(rng)
@@ -209,14 +211,13 @@ class TruncatedNormalTest(test.TestCase):
                 # We need a particular larger number of samples to test multiple rounds
                 # on GPU
                 sampler = self._Sampler(
-                    1000000, 0.0, 1.0, dt, use_gpu=use_gpu, seed=12345)
+                    1000000, 0.0, 1.0, dt, use_gpu=use_gpu, seed=12345
+                )
                 results[use_gpu] = sampler()
             if dt == dtypes.float16:
-                self.assertAllClose(
-                    results[False], results[True], rtol=1e-3, atol=1e-3)
+                self.assertAllClose(results[False], results[True], rtol=1e-3, atol=1e-3)
             else:
-                self.assertAllClose(
-                    results[False], results[True], rtol=1e-6, atol=1e-6)
+                self.assertAllClose(results[False], results[True], rtol=1e-6, atol=1e-6)
 
     @test_util.run_deprecated_v1
     def testSeed(self):
@@ -239,7 +240,8 @@ class TruncatedNormalTest(test.TestCase):
     def testLargeShape(self):
         with self.session(use_gpu=True):
             v = variables.Variable(
-                array_ops.zeros(dtype=dtypes.float32, shape=[2**33, 1]))
+                array_ops.zeros(dtype=dtypes.float32, shape=[2 ** 33, 1])
+            )
             n = random_ops.truncated_normal(v.shape)
             self.assertEqual([8589934592, 1], n.shape.as_list())
 
@@ -264,16 +266,14 @@ class TruncatedNormalTest(test.TestCase):
             self.assertAllEqual(rnd1, rnd2)
 
 
-@test_util.for_all_test_methods(test_util.disable_xla,
-                                "This never passed on XLA")
+@test_util.for_all_test_methods(test_util.disable_xla, "This never passed on XLA")
 class RandomUniformTest(RandomOpTestCommon):
-
     def _Sampler(self, num, minv, maxv, dtype, use_gpu, seed=None):
-
         def func():
             with self.session(use_gpu=use_gpu, graph=ops.Graph()) as sess:
                 rng = random_ops.random_uniform(
-                    [num], minval=minv, maxval=maxv, dtype=dtype, seed=seed)
+                    [num], minval=minv, maxval=maxv, dtype=dtype, seed=seed
+                )
                 ret = np.empty([10, num])
                 for i in xrange(10):
                     ret[i, :] = self.evaluate(rng)
@@ -282,10 +282,14 @@ class RandomUniformTest(RandomOpTestCommon):
         return func
 
     def testRange(self):
-        for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                   dtypes.int64):
-            sampler = self._Sampler(
-                1000, minv=-2, maxv=8, dtype=dt, use_gpu=True)
+        for dt in (
+            dtypes.float16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.int32,
+            dtypes.int64,
+        ):
+            sampler = self._Sampler(1000, minv=-2, maxv=8, dtype=dt, use_gpu=True)
             x = sampler()
             self.assertTrue(-2 <= np.min(x))
             self.assertTrue(np.max(x) < 8)
@@ -294,11 +298,15 @@ class RandomUniformTest(RandomOpTestCommon):
     # to see the same sequence of values. Will catch buggy
     # implementations which uses the same random number seed.
     def testDistinct(self):
-        for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                   dtypes.int64):
+        for dt in (
+            dtypes.float16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.int32,
+            dtypes.int64,
+        ):
             maxv = 1.0 if dt.is_floating else 1 << 30
-            sampler = self._Sampler(
-                1000, minv=0, maxv=maxv, dtype=dt, use_gpu=True)
+            sampler = self._Sampler(1000, minv=0, maxv=maxv, dtype=dt, use_gpu=True)
             x = sampler()
             y = sampler()
             count = (x == y).sum()
@@ -313,13 +321,13 @@ class RandomUniformTest(RandomOpTestCommon):
     def testUniformIntsWithInvalidShape(self):
         for dtype in dtypes.int32, dtypes.int64:
             with self.assertRaisesRegexp(
-                    ValueError, "minval must be a scalar; got a tensor of shape"):
-                random_ops.random_uniform(
-                    [1000], minval=[1, 2], maxval=3, dtype=dtype)
+                ValueError, "minval must be a scalar; got a tensor of shape"
+            ):
+                random_ops.random_uniform([1000], minval=[1, 2], maxval=3, dtype=dtype)
             with self.assertRaisesRegexp(
-                    ValueError, "maxval must be a scalar; got a tensor of shape"):
-                random_ops.random_uniform(
-                    [1000], minval=1, maxval=[2, 3], dtype=dtype)
+                ValueError, "maxval must be a scalar; got a tensor of shape"
+            ):
+                random_ops.random_uniform([1000], minval=1, maxval=[2, 3], dtype=dtype)
 
     # Check that uniform ints actually follow a uniform distribution.
     @test_util.run_deprecated_v1
@@ -335,7 +343,8 @@ class RandomUniformTest(RandomOpTestCommon):
             # Use a fixed seed here to make the test deterministic.
             # Without the fixed seed, the 5 * std bound will (very rarely) fail.
             sampler = self._Sampler(
-                n // 10, minv=minv, maxv=maxv, dtype=dt, use_gpu=True, seed=17)
+                n // 10, minv=minv, maxv=maxv, dtype=dt, use_gpu=True, seed=17
+            )
             x = sampler().ravel()
             self.assertEqual(x.shape, (n,))
             counts, _ = np.histogram(x, bins=maxv - minv)
@@ -347,35 +356,46 @@ class RandomUniformTest(RandomOpTestCommon):
     # Check that minval = maxval is fine iff we're producing no numbers
     def testUniformIntsDegenerate(self):
         for dt in dtypes.int32, dtypes.int64:
+
             def sample(n):
                 return self._Sampler(n, minv=0, maxv=0, dtype=dt, use_gpu=True)()
+
             self.assertEqual(sample(0).shape, (10, 0))
-            with self.assertRaisesOpError('Need minval < maxval, got 0 >= 0'):
+            with self.assertRaisesOpError("Need minval < maxval, got 0 >= 0"):
                 sample(1)
 
     # Checks that the CPU and GPU implementation returns the same results,
     # given the same random seed
     @test_util.run_deprecated_v1
     def testCPUGPUMatch(self):
-        for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                   dtypes.int64):
+        for dt in (
+            dtypes.float16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.int32,
+            dtypes.int64,
+        ):
             maxv = 1.0 if dt.is_floating else 17
             results = {}
             for use_gpu in False, True:
                 sampler = self._Sampler(
-                    1000000, minv=0, maxv=maxv, dtype=dt, use_gpu=use_gpu, seed=12345)
+                    1000000, minv=0, maxv=maxv, dtype=dt, use_gpu=use_gpu, seed=12345
+                )
                 results[use_gpu] = sampler()
             self.assertAllEqual(results[False], results[True])
 
     @test_util.run_deprecated_v1
     def testSeed(self):
-        for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                   dtypes.int64):
-            for seed in [345, 2**100, -2**100]:
-                sx = self._Sampler(1000, 0, 17, dtype=dt,
-                                   use_gpu=True, seed=seed)
-                sy = self._Sampler(1000, 0, 17, dtype=dt,
-                                   use_gpu=True, seed=seed)
+        for dt in (
+            dtypes.float16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.int32,
+            dtypes.int64,
+        ):
+            for seed in [345, 2 ** 100, -(2 ** 100)]:
+                sx = self._Sampler(1000, 0, 17, dtype=dt, use_gpu=True, seed=seed)
+                sy = self._Sampler(1000, 0, 17, dtype=dt, use_gpu=True, seed=seed)
                 self.assertAllEqual(sx(), sy())
 
     @test_util.run_deprecated_v1
@@ -391,16 +411,27 @@ class RandomUniformTest(RandomOpTestCommon):
     @test_util.run_deprecated_v1
     def testSingleSessionNotConstant(self):
         for use_gpu in [False, True]:
-            for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                       dtypes.int64):
+            for dt in (
+                dtypes.float16,
+                dtypes.float32,
+                dtypes.float64,
+                dtypes.int32,
+                dtypes.int64,
+            ):
                 self._testSingleSessionNotConstant(
-                    random_ops.random_uniform, 100, dt, 0, 17, use_gpu=use_gpu)
+                    random_ops.random_uniform, 100, dt, 0, 17, use_gpu=use_gpu
+                )
 
     @test_util.run_deprecated_v1
     def testSingleSessionOpSeedNotConstant(self):
         for use_gpu in [False, True]:
-            for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                       dtypes.int64):
+            for dt in (
+                dtypes.float16,
+                dtypes.float32,
+                dtypes.float64,
+                dtypes.int32,
+                dtypes.int64,
+            ):
                 self._testSingleSessionNotConstant(
                     random_ops.random_uniform,
                     100,
@@ -408,13 +439,19 @@ class RandomUniformTest(RandomOpTestCommon):
                     10,
                     20,
                     use_gpu=use_gpu,
-                    op_seed=1345)
+                    op_seed=1345,
+                )
 
     @test_util.run_deprecated_v1
     def testSingleSessionGraphSeedNotConstant(self):
         for use_gpu in [False, True]:
-            for dt in (dtypes.float16, dtypes.float32, dtypes.float64, dtypes.int32,
-                       dtypes.int64):
+            for dt in (
+                dtypes.float16,
+                dtypes.float32,
+                dtypes.float64,
+                dtypes.int32,
+                dtypes.int64,
+            ):
                 self._testSingleSessionNotConstant(
                     random_ops.random_uniform,
                     100,
@@ -422,11 +459,11 @@ class RandomUniformTest(RandomOpTestCommon):
                     20,
                     200,
                     use_gpu=use_gpu,
-                    graph_seed=965)
+                    graph_seed=965,
+                )
 
 
 class RandomShapeTest(test.TestCase):
-
     @test_util.run_deprecated_v1
     def testTruncatedNormal(self):
         # Fully known shape.
@@ -434,7 +471,8 @@ class RandomShapeTest(test.TestCase):
         self.assertEqual([1, 2, 3], rnd1.get_shape())
         # Partially known shape.
         rnd2 = random_ops.truncated_normal(
-            array_ops.placeholder(dtypes.int32, shape=(3,)))
+            array_ops.placeholder(dtypes.int32, shape=(3,))
+        )
         self.assertEqual([None, None, None], rnd2.get_shape().as_list())
         # Unknown shape.
         rnd3 = random_ops.truncated_normal(array_ops.placeholder(dtypes.int32))
@@ -446,8 +484,7 @@ class RandomShapeTest(test.TestCase):
         rnd1 = random_ops.random_normal([1, 2, 3])
         self.assertEqual([1, 2, 3], rnd1.get_shape())
         # Partially known shape.
-        rnd2 = random_ops.random_normal(
-            array_ops.placeholder(dtypes.int32, shape=(3,)))
+        rnd2 = random_ops.random_normal(array_ops.placeholder(dtypes.int32, shape=(3,)))
         self.assertEqual([None, None, None], rnd2.get_shape().as_list())
         # Unknown shape.
         rnd3 = random_ops.random_normal(array_ops.placeholder(dtypes.int32))
@@ -460,7 +497,8 @@ class RandomShapeTest(test.TestCase):
         self.assertEqual([1, 2, 3], rnd1.get_shape())
         # Partially known shape.
         rnd2 = random_ops.random_uniform(
-            array_ops.placeholder(dtypes.int32, shape=(3,)))
+            array_ops.placeholder(dtypes.int32, shape=(3,))
+        )
         self.assertEqual([None, None, None], rnd2.get_shape().as_list())
         # Unknown shape.
         rnd3 = random_ops.random_uniform(array_ops.placeholder(dtypes.int32))
