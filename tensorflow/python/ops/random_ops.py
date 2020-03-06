@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Operations for generating random numbers."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,15 +28,12 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import gen_random_ops
 from tensorflow.python.ops import math_ops
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_random_ops import *
-
-# pylint: enable=wildcard-import
-
 from tensorflow.python.util import deprecation
 from tensorflow.python.util.tf_export import tf_export
+# go/tf-wildcard-import
+# pylint: disable=wildcard-import
+# pylint: enable=wildcard-import
 
 
 @tf_export("random.normal", v1=["random.normal", "random_normal"])

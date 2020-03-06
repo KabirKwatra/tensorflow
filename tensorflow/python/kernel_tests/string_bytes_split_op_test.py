@@ -14,13 +14,11 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tf.strings.to_bytes op."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-
 
 from tensorflow.python.eager import def_function
 from tensorflow.python.framework import tensor_spec

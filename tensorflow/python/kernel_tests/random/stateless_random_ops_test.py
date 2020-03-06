@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for stateless random ops."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,6 +20,7 @@ from __future__ import print_function
 import functools
 
 import numpy as np
+
 from tensorflow.python.eager import def_function
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
