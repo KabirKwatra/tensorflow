@@ -194,8 +194,8 @@ def cast_to_floatx(x):
 
     """
     if isinstance(
-        x, (ops.Tensor, variables_module.Variable, sparse_tensor.SparseTensor)
-    ):
+            x,
+        (ops.Tensor, variables_module.Variable, sparse_tensor.SparseTensor)):
         return math_ops.cast(x, dtype=floatx())
     return np.asarray(x, dtype=floatx())
 
@@ -370,8 +370,7 @@ def _mark_func_graph_as_unsaveable(graph, learning_phase):
             "The keras learning phase placeholder was used inside a function. "
             "Exporting placeholders is not supported when saving out a SavedModel. "
             "Please call `tf.keras.backend.set_learning_phase(0)` in the function "
-            "to set the learning phase to a constant value."
-        )
+            "to set the learning phase to a constant value.")
 
 
 def symbolic_learning_phase():
@@ -386,8 +385,7 @@ def _default_learning_phase():
     else:
         with name_scope(""):
             return array_ops.placeholder_with_default(
-                False, shape=(), name="keras_learning_phase"
-            )
+                False, shape=(), name="keras_learning_phase")
 
 
 @keras_export("keras.backend.set_learning_phase")
@@ -436,8 +434,7 @@ def learning_phase_scope(value):
     with ops.init_scope():
         if context.executing_eagerly():
             previous_eager_value = _GRAPH_LEARNING_PHASES.get(
-                _DUMMY_EAGER_GRAPH.key, None
-            )
+                _DUMMY_EAGER_GRAPH.key, None)
         previous_graph_value = _GRAPH_LEARNING_PHASES.get(get_graph(), None)
 
     try:
@@ -449,8 +446,7 @@ def learning_phase_scope(value):
             if context.executing_eagerly():
                 if previous_eager_value is not None:
                     _GRAPH_LEARNING_PHASES[
-                        _DUMMY_EAGER_GRAPH.key
-                    ] = previous_eager_value
+                        _DUMMY_EAGER_GRAPH.key] = previous_eager_value
                 elif _DUMMY_EAGER_GRAPH.key in _GRAPH_LEARNING_PHASES:
                     del _GRAPH_LEARNING_PHASES[_DUMMY_EAGER_GRAPH.key]
 
@@ -505,22 +501,22 @@ def _get_session(op_input_list=()):
         session = default_session
     else:
         if ops.inside_function():
-            raise RuntimeError("Cannot get session inside Tensorflow graph function.")
+            raise RuntimeError(
+                "Cannot get session inside Tensorflow graph function.")
         # If we don't have a session, or that session does not match the current
         # graph, create and cache a new session.
         if getattr(
-            _SESSION, "session", None
-        ) is None or _SESSION.session.graph is not _current_graph(op_input_list):
+                _SESSION, "session",
+                None) is None or _SESSION.session.graph is not _current_graph(
+                    op_input_list):
             # If we are creating the Session inside a tf.distribute.Strategy scope,
             # we ask the strategy for the right session options to use.
             if distribution_strategy_context.has_strategy():
                 configure_and_create_distributed_session(
-                    distribution_strategy_context.get_strategy()
-                )
+                    distribution_strategy_context.get_strategy())
             else:
                 _SESSION.session = session_module.Session(
-                    config=get_default_session_config()
-                )
+                    config=get_default_session_config())
         session = _SESSION.session
     return session
 
@@ -583,11 +579,8 @@ def _scratch_graph(graph=None):
       The current scratch graph.
     """
     global _CURRENT_SCRATCH_GRAPH
-    if (
-        _CURRENT_SCRATCH_GRAPH is not None
-        and graph is not None
-        and _CURRENT_SCRATCH_GRAPH is not graph
-    ):
+    if (_CURRENT_SCRATCH_GRAPH is not None and graph is not None
+            and _CURRENT_SCRATCH_GRAPH is not graph):
         raise ValueError("Multiple scratch graphs specified.")
 
     if _CURRENT_SCRATCH_GRAPH:
@@ -863,17 +856,17 @@ def variable(value, dtype=None, name=None, constraint=None):
         dtype = floatx()
     if hasattr(value, "tocoo"):
         sparse_coo = value.tocoo()
-        indices = np.concatenate(
-            (np.expand_dims(sparse_coo.row, 1), np.expand_dims(sparse_coo.col, 1)), 1
-        )
-        v = sparse_tensor.SparseTensor(
-            indices=indices, values=sparse_coo.data, dense_shape=sparse_coo.shape
-        )
+        indices = np.concatenate((np.expand_dims(
+            sparse_coo.row, 1), np.expand_dims(sparse_coo.col, 1)), 1)
+        v = sparse_tensor.SparseTensor(indices=indices,
+                                       values=sparse_coo.data,
+                                       dense_shape=sparse_coo.shape)
         v._keras_shape = sparse_coo.shape
         return v
-    v = variables_module.Variable(
-        value, dtype=dtypes_module.as_dtype(dtype), name=name, constraint=constraint
-    )
+    v = variables_module.Variable(value,
+                                  dtype=dtypes_module.as_dtype(dtype),
+                                  name=name,
+                                  constraint=constraint)
     if isinstance(value, np.ndarray):
         v._keras_shape = value.shape
     elif hasattr(value, "shape"):
@@ -898,9 +891,11 @@ def track_variable(v):
     _GRAPH_VARIABLES[graph].add(v)
 
 
-def unique_object_name(
-    name, name_uid_map=None, avoid_names=None, namespace="", zero_based=False
-):
+def unique_object_name(name,
+                       name_uid_map=None,
+                       avoid_names=None,
+                       namespace="",
+                       zero_based=False):
     """Makes a object name (or arbitrary string) unique within a TensorFlow graph.
 
     Arguments:
@@ -964,22 +959,22 @@ def _initialize_variables(session):
     if candidate_vars:
         # This step is expensive, so we only run it on variables not already
         # marked as initialized.
-        is_initialized = session.run(
-            [variables_module.is_variable_initialized(v) for v in candidate_vars]
-        )
+        is_initialized = session.run([
+            variables_module.is_variable_initialized(v) for v in candidate_vars
+        ])
         # TODO(kathywu): Some metric variables loaded from SavedModel are never
         # actually used, and do not have an initializer.
-        should_be_initialized = [
-            (not is_initialized[n]) and v.initializer is not None
-            for n, v in enumerate(candidate_vars)
-        ]
+        should_be_initialized = [(not is_initialized[n])
+                                 and v.initializer is not None
+                                 for n, v in enumerate(candidate_vars)]
         uninitialized_vars = []
         for flag, v in zip(should_be_initialized, candidate_vars):
             if flag:
                 uninitialized_vars.append(v)
             v._keras_initialized = True
         if uninitialized_vars:
-            session.run(variables_module.variables_initializer(uninitialized_vars))
+            session.run(
+                variables_module.variables_initializer(uninitialized_vars))
 
 
 @keras_export("keras.backend.constant")
@@ -1045,7 +1040,7 @@ def is_keras_tensor(x):
 
     """
     if not isinstance(
-        x,
+            x,
         (
             ops.Tensor,
             variables_module.Variable,
@@ -1053,18 +1048,19 @@ def is_keras_tensor(x):
             ragged_tensor.RaggedTensor,
         ),
     ):
-        raise ValueError(
-            "Unexpectedly found an instance of type `"
-            + str(type(x))
-            + "`. Expected a symbolic tensor instance."
-        )
+        raise ValueError("Unexpectedly found an instance of type `" +
+                         str(type(x)) +
+                         "`. Expected a symbolic tensor instance.")
     return hasattr(x, "_keras_history")
 
 
 @keras_export("keras.backend.placeholder")
-def placeholder(
-    shape=None, ndim=None, dtype=None, sparse=False, name=None, ragged=False
-):
+def placeholder(shape=None,
+                ndim=None,
+                dtype=None,
+                sparse=False,
+                name=None,
+                ragged=False):
     """Instantiates a placeholder tensor and returns it.
 
     Arguments:
@@ -1105,7 +1101,7 @@ def placeholder(
         dtype = floatx()
     if not shape:
         if ndim:
-            shape = (None,) * ndim
+            shape = (None, ) * ndim
     with get_graph().as_default():
         if sparse:
             x = array_ops.sparse_placeholder(dtype, shape=shape, name=name)
@@ -1114,16 +1110,17 @@ def placeholder(
             for i in range(1, len(shape)):
                 if shape[i] is None:
                     ragged_rank = i
-            type_spec = ragged_tensor.RaggedTensorSpec(
-                shape=shape, dtype=dtype, ragged_rank=ragged_rank
-            )
+            type_spec = ragged_tensor.RaggedTensorSpec(shape=shape,
+                                                       dtype=dtype,
+                                                       ragged_rank=ragged_rank)
 
             def tensor_spec_to_placeholder(tensorspec):
-                return array_ops.placeholder(tensorspec.dtype, tensorspec.shape)
+                return array_ops.placeholder(tensorspec.dtype,
+                                             tensorspec.shape)
 
-            x = nest.map_structure(
-                tensor_spec_to_placeholder, type_spec, expand_composites=True
-            )
+            x = nest.map_structure(tensor_spec_to_placeholder,
+                                   type_spec,
+                                   expand_composites=True)
         else:
             x = array_ops.placeholder(dtype, shape=shape, name=name)
     return x
@@ -1503,7 +1500,8 @@ def identity(x, name=None):
 
 
 @keras_export("keras.backend.random_uniform_variable")
-def random_uniform_variable(shape, low, high, dtype=None, name=None, seed=None):
+def random_uniform_variable(shape, low, high, dtype=None, name=None,
+                            seed=None):
     """Instantiates a variable with values drawn from a uniform distribution.
 
     Arguments:
@@ -1530,14 +1528,20 @@ def random_uniform_variable(shape, low, high, dtype=None, name=None, seed=None):
     if seed is None:
         # ensure that randomness is conditioned by the Numpy RNG
         seed = np.random.randint(10e8)
-    value = init_ops.random_uniform_initializer(low, high, dtype=tf_dtype, seed=seed)(
-        shape
-    )
+    value = init_ops.random_uniform_initializer(low,
+                                                high,
+                                                dtype=tf_dtype,
+                                                seed=seed)(shape)
     return variable(value, dtype=dtype, name=name)
 
 
 @keras_export("keras.backend.random_normal_variable")
-def random_normal_variable(shape, mean, scale, dtype=None, name=None, seed=None):
+def random_normal_variable(shape,
+                           mean,
+                           scale,
+                           dtype=None,
+                           name=None,
+                           seed=None):
     """Instantiates a variable with values drawn from a normal distribution.
 
     Arguments:
@@ -1564,9 +1568,10 @@ def random_normal_variable(shape, mean, scale, dtype=None, name=None, seed=None)
     if seed is None:
         # ensure that randomness is conditioned by the Numpy RNG
         seed = np.random.randint(10e8)
-    value = init_ops.random_normal_initializer(mean, scale, dtype=tf_dtype, seed=seed)(
-        shape
-    )
+    value = init_ops.random_normal_initializer(mean,
+                                               scale,
+                                               dtype=tf_dtype,
+                                               seed=seed)(shape)
     return variable(value, dtype=dtype, name=name)
 
 
@@ -1670,9 +1675,10 @@ def moving_average_update(x, value, momentum):
         An Operation to update the variable.
     """
     zero_debias = not tf2.enabled()
-    return moving_averages.assign_moving_average(
-        x, value, momentum, zero_debias=zero_debias
-    )
+    return moving_averages.assign_moving_average(x,
+                                                 value,
+                                                 momentum,
+                                                 zero_debias=zero_debias)
 
 
 # LINEAR ALGEBRA
@@ -1727,12 +1733,10 @@ def dot(x, y):
         y_permute_dim = list(range(ndim(y)))
         y_permute_dim = [y_permute_dim.pop(-2)] + y_permute_dim
         xt = array_ops.reshape(x, [-1, x_shape[-1]])
-        yt = array_ops.reshape(
-            array_ops.transpose(y, perm=y_permute_dim), [y_shape[-2], -1]
-        )
-        return array_ops.reshape(
-            math_ops.matmul(xt, yt), x_shape[:-1] + y_shape[:-2] + y_shape[-1:]
-        )
+        yt = array_ops.reshape(array_ops.transpose(y, perm=y_permute_dim),
+                               [y_shape[-2], -1])
+        return array_ops.reshape(math_ops.matmul(xt, yt),
+                                 x_shape[:-1] + y_shape[:-2] + y_shape[-1:])
     if is_sparse(x):
         out = sparse_ops.sparse_tensor_dense_matmul(x, y)
     else:
@@ -1792,26 +1796,20 @@ def batch_dot(x, y, axes=None):
     y_ndim = len(y_shape)
 
     if x_ndim < 2 or y_ndim < 2:
-        raise ValueError(
-            "Cannot do batch_dot on inputs "
-            "with rank < 2. "
-            "Received inputs with shapes " + str(x_shape) + " and " + str(y_shape) + "."
-        )
+        raise ValueError("Cannot do batch_dot on inputs "
+                         "with rank < 2. "
+                         "Received inputs with shapes " + str(x_shape) +
+                         " and " + str(y_shape) + ".")
 
     x_batch_size = x_shape[0]
     y_batch_size = y_shape[0]
 
     if x_batch_size is not None and y_batch_size is not None:
         if x_batch_size != y_batch_size:
-            raise ValueError(
-                "Cannot do batch_dot on inputs "
-                "with different batch sizes. "
-                "Received inputs with shapes "
-                + str(x_shape)
-                + " and "
-                + str(y_shape)
-                + "."
-            )
+            raise ValueError("Cannot do batch_dot on inputs "
+                             "with different batch sizes. "
+                             "Received inputs with shapes " + str(x_shape) +
+                             " and " + str(y_shape) + ".")
     if isinstance(axes, int):
         axes = [axes, axes]
 
@@ -1822,12 +1820,9 @@ def batch_dot(x, y, axes=None):
             axes = [x_ndim - 1, y_ndim - 2]
 
     if py_any(isinstance(a, (list, tuple)) for a in axes):
-        raise ValueError(
-            "Multiple target dimensions are not supported. "
-            + "Expected: None, int, (int, int), "
-            + "Provided: "
-            + str(axes)
-        )
+        raise ValueError("Multiple target dimensions are not supported. " +
+                         "Expected: None, int, (int, int), " + "Provided: " +
+                         str(axes))
 
     # if tuple, convert to list.
     axes = list(axes)
@@ -1840,27 +1835,20 @@ def batch_dot(x, y, axes=None):
 
     # sanity checks
     if 0 in axes:
-        raise ValueError(
-            "Cannot perform batch_dot over axis 0. "
-            "If your inputs are not batched, "
-            "add a dummy batch dimension to your "
-            "inputs using K.expand_dims(x, 0)"
-        )
+        raise ValueError("Cannot perform batch_dot over axis 0. "
+                         "If your inputs are not batched, "
+                         "add a dummy batch dimension to your "
+                         "inputs using K.expand_dims(x, 0)")
     a0, a1 = axes
     d1 = x_shape[a0]
     d2 = y_shape[a1]
 
     if d1 is not None and d2 is not None and d1 != d2:
-        raise ValueError(
-            "Cannot do batch_dot on inputs with shapes "
-            + str(x_shape)
-            + " and "
-            + str(y_shape)
-            + " with axes="
-            + str(axes)
-            + ". x.shape[%d] != "
-            "y.shape[%d] (%d != %d)." % (axes[0], axes[1], d1, d2)
-        )
+        raise ValueError("Cannot do batch_dot on inputs with shapes " +
+                         str(x_shape) + " and " + str(y_shape) +
+                         " with axes=" + str(axes) + ". x.shape[%d] != "
+                         "y.shape[%d] (%d != %d)." %
+                         (axes[0], axes[1], d1, d2))
 
     # backup ndims. Need them later.
     orig_x_ndim = x_ndim
@@ -1920,8 +1908,7 @@ def batch_dot(x, y, axes=None):
 
     if x_squashed:
         output_shape = array_ops.concat(
-            [output_shape[:1], x_mid_dims, output_shape[-1:]], 0
-        )
+            [output_shape[:1], x_mid_dims, output_shape[-1:]], 0)
         do_reshape = True
 
     if y_squashed:
@@ -2375,7 +2362,8 @@ def clip(x, min_value, max_value):
     Returns:
         A tensor.
     """
-    if isinstance(min_value, (int, float)) and isinstance(max_value, (int, float)):
+    if isinstance(min_value,
+                  (int, float)) and isinstance(max_value, (int, float)):
         if max_value < min_value:
             max_value = min_value
     if min_value is None:
@@ -2533,7 +2521,11 @@ def cos(x):
     return math_ops.cos(x)
 
 
-def _regular_normalize_batch_in_training(x, gamma, beta, reduction_axes, epsilon=1e-3):
+def _regular_normalize_batch_in_training(x,
+                                         gamma,
+                                         beta,
+                                         reduction_axes,
+                                         epsilon=1e-3):
     """Non-fused version of `normalize_batch_in_training`.
 
     Arguments:
@@ -2552,9 +2544,11 @@ def _regular_normalize_batch_in_training(x, gamma, beta, reduction_axes, epsilon
     return normed, mean, var
 
 
-def _broadcast_normalize_batch_in_training(
-    x, gamma, beta, reduction_axes, epsilon=1e-3
-):
+def _broadcast_normalize_batch_in_training(x,
+                                           gamma,
+                                           beta,
+                                           reduction_axes,
+                                           epsilon=1e-3):
     """Non-fused, broadcast version of `normalize_batch_in_training`.
 
     Arguments:
@@ -2588,13 +2582,16 @@ def _broadcast_normalize_batch_in_training(
     else:
         broadcast_beta = array_ops.reshape(beta, target_shape)
 
-    normed = nn.batch_normalization(
-        x, broadcast_mean, broadcast_var, broadcast_beta, broadcast_gamma, epsilon
-    )
+    normed = nn.batch_normalization(x, broadcast_mean, broadcast_var,
+                                    broadcast_beta, broadcast_gamma, epsilon)
     return normed, mean, var
 
 
-def _fused_normalize_batch_in_training(x, gamma, beta, reduction_axes, epsilon=1e-3):
+def _fused_normalize_batch_in_training(x,
+                                       gamma,
+                                       beta,
+                                       reduction_axes,
+                                       epsilon=1e-3):
     """Fused version of `normalize_batch_in_training`.
 
     Arguments:
@@ -2616,17 +2613,19 @@ def _fused_normalize_batch_in_training(x, gamma, beta, reduction_axes, epsilon=1
         tf_data_format = "NCHW"
 
     if gamma is None:
-        gamma = constant_op.constant(
-            1.0, dtype=x.dtype, shape=[x.shape[normalization_axis]]
-        )
+        gamma = constant_op.constant(1.0,
+                                     dtype=x.dtype,
+                                     shape=[x.shape[normalization_axis]])
     if beta is None:
-        beta = constant_op.constant(
-            0.0, dtype=x.dtype, shape=[x.shape[normalization_axis]]
-        )
+        beta = constant_op.constant(0.0,
+                                    dtype=x.dtype,
+                                    shape=[x.shape[normalization_axis]])
 
-    return nn.fused_batch_norm(
-        x, gamma, beta, epsilon=epsilon, data_format=tf_data_format
-    )
+    return nn.fused_batch_norm(x,
+                               gamma,
+                               beta,
+                               epsilon=epsilon,
+                               data_format=tf_data_format)
 
 
 @keras_export("keras.backend.normalize_batch_in_training")
@@ -2646,21 +2645,29 @@ def normalize_batch_in_training(x, gamma, beta, reduction_axes, epsilon=1e-3):
     """
     if ndim(x) == 4 and list(reduction_axes) in [[0, 1, 2], [0, 2, 3]]:
         if not _has_nchw_support() and list(reduction_axes) == [0, 2, 3]:
-            return _broadcast_normalize_batch_in_training(
-                x, gamma, beta, reduction_axes, epsilon=epsilon
-            )
-        return _fused_normalize_batch_in_training(
-            x, gamma, beta, reduction_axes, epsilon=epsilon
-        )
+            return _broadcast_normalize_batch_in_training(x,
+                                                          gamma,
+                                                          beta,
+                                                          reduction_axes,
+                                                          epsilon=epsilon)
+        return _fused_normalize_batch_in_training(x,
+                                                  gamma,
+                                                  beta,
+                                                  reduction_axes,
+                                                  epsilon=epsilon)
     else:
         if sorted(reduction_axes) == list(range(ndim(x)))[:-1]:
-            return _regular_normalize_batch_in_training(
-                x, gamma, beta, reduction_axes, epsilon=epsilon
-            )
+            return _regular_normalize_batch_in_training(x,
+                                                        gamma,
+                                                        beta,
+                                                        reduction_axes,
+                                                        epsilon=epsilon)
         else:
-            return _broadcast_normalize_batch_in_training(
-                x, gamma, beta, reduction_axes, epsilon=epsilon
-            )
+            return _broadcast_normalize_batch_in_training(x,
+                                                          gamma,
+                                                          beta,
+                                                          reduction_axes,
+                                                          epsilon=epsilon)
 
 
 @keras_export("keras.backend.batch_normalization")
@@ -2692,7 +2699,8 @@ def batch_normalization(x, mean, var, beta, gamma, axis=-1, epsilon=1e-3):
         else:
             tf_data_format = None
 
-        if tf_data_format == "NHWC" or tf_data_format == "NCHW" and _has_nchw_support():
+        if tf_data_format == "NHWC" or tf_data_format == "NCHW" and _has_nchw_support(
+        ):
             # The mean / var / beta / gamma tensors may be broadcasted
             # so they may have extra axes of size 1, which should be squeezed.
             if ndim(mean) > 1:
@@ -2822,7 +2830,11 @@ def permute_dimensions(x, pattern):
 
 
 @keras_export("keras.backend.resize_images")
-def resize_images(x, height_factor, width_factor, data_format, interpolation="nearest"):
+def resize_images(x,
+                  height_factor,
+                  width_factor,
+                  data_format,
+                  interpolation="nearest"):
     """Resizes the images contained in a 4D tensor.
 
     Arguments:
@@ -2844,26 +2856,26 @@ def resize_images(x, height_factor, width_factor, data_format, interpolation="ne
     elif data_format == "channels_last":
         rows, cols = 1, 2
     else:
-        raise ValueError("Invalid `data_format` argument: %s" % (data_format,))
+        raise ValueError("Invalid `data_format` argument: %s" %
+                         (data_format, ))
 
     original_shape = int_shape(x)
-    new_shape = array_ops.shape(x)[rows : cols + 1]
+    new_shape = array_ops.shape(x)[rows:cols + 1]
     new_shape *= constant_op.constant(
-        np.array([height_factor, width_factor], dtype="int32")
-    )
+        np.array([height_factor, width_factor], dtype="int32"))
 
     if data_format == "channels_first":
         x = permute_dimensions(x, [0, 2, 3, 1])
     if interpolation == "nearest":
         x = image_ops.resize_images_v2(
-            x, new_shape, method=image_ops.ResizeMethod.NEAREST_NEIGHBOR
-        )
+            x, new_shape, method=image_ops.ResizeMethod.NEAREST_NEIGHBOR)
     elif interpolation == "bilinear":
-        x = image_ops.resize_images_v2(
-            x, new_shape, method=image_ops.ResizeMethod.BILINEAR
-        )
+        x = image_ops.resize_images_v2(x,
+                                       new_shape,
+                                       method=image_ops.ResizeMethod.BILINEAR)
     else:
-        raise ValueError("interpolation should be one " 'of "nearest" or "bilinear".')
+        raise ValueError("interpolation should be one "
+                         'of "nearest" or "bilinear".')
     if data_format == "channels_first":
         x = permute_dimensions(x, [0, 3, 1, 2])
 
@@ -2944,7 +2956,9 @@ def repeat_elements(x, rep, axis):
     # For static axis
     if x_shape[axis] is not None:
         # slices along the repeat axis
-        splits = array_ops.split(value=x, num_or_size_splits=x_shape[axis], axis=axis)
+        splits = array_ops.split(value=x,
+                                 num_or_size_splits=x_shape[axis],
+                                 axis=axis)
         # repeat each slice the given number of reps
         x_rep = [s for s in splits for _ in range(rep)]
         return concatenate(x_rep, axis)
@@ -3333,9 +3347,8 @@ _VALUE_SET_CODE_STRING = """
 
   >>> _ = v.assign_add(1.)
   >>> print(v.numpy())
-  3.0"""[
-    3:
-]  # Prune first newline and indent to match the docstring template.
+  3.0""" [
+    3:]  # Prune first newline and indent to match the docstring template.
 
 
 @keras_export("keras.backend.get_value")
@@ -3369,7 +3382,7 @@ def get_value(x):
         return function([], x)(x)
 
     with x.graph.as_default():
-        return x.eval(session=get_session((x,)))
+        return x.eval(session=get_session((x, )))
 
 
 @keras_export("keras.backend.batch_get_value")
@@ -3388,7 +3401,8 @@ def batch_get_value(tensors):
     if context.executing_eagerly():
         return [x.numpy() for x in tensors]
     elif ops.inside_function():  # pylint: disable=protected-access
-        raise RuntimeError("Cannot get value inside Tensorflow graph function.")
+        raise RuntimeError(
+            "Cannot get value inside Tensorflow graph function.")
     if tensors:
         return get_session(tensors).run(tensors)
     else:
@@ -3424,10 +3438,10 @@ def set_value(x, value):
                 # Keras, we make a placeholder with the correct number of dimensions
                 # but with None in each dimension. This way, we can assign weights
                 # of any size (as long as they have the correct dimensionality).
-                placeholder_shape = tensor_shape.TensorShape([None] * value.ndim)
+                placeholder_shape = tensor_shape.TensorShape([None] *
+                                                             value.ndim)
                 assign_placeholder = array_ops.placeholder(
-                    tf_dtype, shape=placeholder_shape
-                )
+                    tf_dtype, shape=placeholder_shape)
                 assign_op = x.assign(assign_placeholder)
                 x._assign_placeholder = assign_placeholder
                 x._assign_op = assign_op
@@ -3452,7 +3466,8 @@ def batch_set_value(tuples):
                 feed_dict = {}
                 for x, value in tuples:
                     value = np.asarray(value, dtype=dtype(x))
-                    tf_dtype = dtypes_module.as_dtype(x.dtype.name.split("_")[0])
+                    tf_dtype = dtypes_module.as_dtype(
+                        x.dtype.name.split("_")[0])
                     if hasattr(x, "_assign_placeholder"):
                         assign_placeholder = x._assign_placeholder
                         assign_op = x._assign_op
@@ -3462,11 +3477,9 @@ def batch_set_value(tuples):
                         # but with None in each dimension. This way, we can assign weights
                         # of any size (as long as they have the correct dimensionality).
                         placeholder_shape = tensor_shape.TensorShape(
-                            [None] * value.ndim
-                        )
+                            [None] * value.ndim)
                         assign_placeholder = array_ops.placeholder(
-                            tf_dtype, shape=placeholder_shape
-                        )
+                            tf_dtype, shape=placeholder_shape)
                         assign_op = x.assign(assign_placeholder)
                         x._assign_placeholder = assign_placeholder
                         x._assign_op = assign_op
@@ -3535,19 +3548,22 @@ class GraphExecutionFunction(object):
                         `fetches`, `feed_dict`, `options`, `run_metadata`.
     """
 
-    def __init__(self, inputs, outputs, updates=None, name=None, **session_kwargs):
+    def __init__(self,
+                 inputs,
+                 outputs,
+                 updates=None,
+                 name=None,
+                 **session_kwargs):
         updates = updates or []
         if not isinstance(updates, (list, tuple)):
-            raise TypeError(
-                "`updates` in a Keras backend function " "should be a list or tuple."
-            )
+            raise TypeError("`updates` in a Keras backend function "
+                            "should be a list or tuple.")
 
         self._inputs_structure = inputs
         self.inputs = nest.flatten(inputs, expand_composites=True)
         self._outputs_structure = outputs
         self.outputs = cast_variables_to_tensor(
-            nest.flatten(outputs, expand_composites=True)
-        )
+            nest.flatten(outputs, expand_composites=True))
         # TODO(b/127668432): Consider using autograph to generate these
         # dependencies in call.
         # Index 0 = total loss or model output for `predict`.
@@ -3584,8 +3600,7 @@ class GraphExecutionFunction(object):
         if session_kwargs:
             raise ValueError(
                 "Some keys in session_kwargs are not supported at this "
-                "time: %s" % (session_kwargs.keys(),)
-            )
+                "time: %s" % (session_kwargs.keys(), ))
 
         self._callable_fn = None
         self._feed_arrays = None
@@ -3683,30 +3698,29 @@ class GraphExecutionFunction(object):
                 # We need to do array conversion and type casting at this level, since
                 # `callable_fn` only supports exact matches.
                 tensor_type = dtypes_module.as_dtype(tensor.dtype)
-                array_vals.append(np.asarray(value, dtype=tensor_type.as_numpy_dtype))
+                array_vals.append(
+                    np.asarray(value, dtype=tensor_type.as_numpy_dtype))
 
         if self.feed_dict:
             for key in sorted(self.feed_dict.keys()):
                 array_vals.append(
-                    np.asarray(self.feed_dict[key], dtype=key.dtype.base_dtype.name)
-                )
+                    np.asarray(self.feed_dict[key],
+                               dtype=key.dtype.base_dtype.name))
 
         # Refresh callable if anything has changed.
-        if (
-            self._callable_fn is None
-            or feed_arrays != self._feed_arrays
-            or symbol_vals != self._symbol_vals
-            or feed_symbols != self._feed_symbols
-            or self.fetches != self._fetches
-            or session != self._session
-        ):
-            self._make_callable(feed_arrays, feed_symbols, symbol_vals, session)
+        if (self._callable_fn is None or feed_arrays != self._feed_arrays
+                or symbol_vals != self._symbol_vals
+                or feed_symbols != self._feed_symbols
+                or self.fetches != self._fetches or session != self._session):
+            self._make_callable(feed_arrays, feed_symbols, symbol_vals,
+                                session)
 
-        fetched = self._callable_fn(*array_vals, run_metadata=self.run_metadata)
-        self._call_fetch_callbacks(fetched[-len(self._fetches) :])
+        fetched = self._callable_fn(*array_vals,
+                                    run_metadata=self.run_metadata)
+        self._call_fetch_callbacks(fetched[-len(self._fetches):])
         output_structure = nest.pack_sequence_as(
             self._outputs_structure,
-            fetched[: len(self.outputs)],
+            fetched[:len(self.outputs)],
             expand_composites=True,
         )
         # We need to evaluate any composite tensor objects that have been
@@ -3738,16 +3752,14 @@ class EagerExecutionFunction(object):
 
         updates = updates or []
         if not isinstance(updates, (list, tuple)):
-            raise TypeError(
-                "`updates` in a Keras backend function " "should be a list or tuple."
-            )
+            raise TypeError("`updates` in a Keras backend function "
+                            "should be a list or tuple.")
 
         if updates and not outputs:
             # Edge case; never happens in practice
             raise ValueError(
                 "Cannot create a Keras backend function with updates"
-                " but no outputs during eager execution."
-            )
+                " but no outputs during eager execution.")
         graphs = {
             i.graph
             for i in nest.flatten([inputs, outputs, updates])
@@ -3756,8 +3768,7 @@ class EagerExecutionFunction(object):
         if len(graphs) > 1:
             raise ValueError(
                 "Cannot create an execution function which is comprised "
-                "of elements from multiple graphs."
-            )
+                "of elements from multiple graphs.")
 
         source_graph = graphs.pop()
         global_graph = get_graph()
@@ -3781,24 +3792,18 @@ class EagerExecutionFunction(object):
         self._freezable_vars_to_feed = []
         self._freezable_vars_values = []
         freezable_vars_from_keras_graph = object_identity.ObjectIdentitySet(
-            _FREEZABLE_VARS.get(global_graph, {})
-        )
+            _FREEZABLE_VARS.get(global_graph, {}))
         with _scratch_graph() as exec_graph:
             global_graph = get_graph()
             if source_graph not in (exec_graph, global_graph):
                 raise ValueError("Unknown graph. Aborting.")
 
             if source_graph is global_graph and exec_graph is not global_graph:
-                init_tensors = (
-                    outputs
-                    + updates_ops
-                    + [p for [p, _] in legacy_update_ops]
-                    + [
-                        p_new
-                        for [_, p_new] in legacy_update_ops
-                        if isinstance(p_new, ops.Tensor)
-                    ]
-                )
+                init_tensors = (outputs + updates_ops +
+                                [p for [p, _] in legacy_update_ops] + [
+                                    p_new for [_, p_new] in legacy_update_ops
+                                    if isinstance(p_new, ops.Tensor)
+                                ])
                 lifted_map = lift_to_graph.lift_to_graph(
                     tensors=init_tensors,
                     graph=exec_graph,
@@ -3811,10 +3816,9 @@ class EagerExecutionFunction(object):
                 inputs = [lifted_map[i] for i in inputs]
                 outputs = [lifted_map[i] for i in outputs]
                 updates_ops = [lifted_map[i] for i in updates_ops]
-                legacy_update_ops = [
-                    (lifted_map[p], lifted_map.get(p_new, p_new))
-                    for p, p_new in legacy_update_ops
-                ]
+                legacy_update_ops = [(lifted_map[p],
+                                      lifted_map.get(p_new, p_new))
+                                     for p, p_new in legacy_update_ops]
 
                 # Keep track of the value to feed to any "freezable variables"
                 # created in this graph.
@@ -3827,8 +3831,7 @@ class EagerExecutionFunction(object):
                             # underlying placeholder_with_default.
                             self._freezable_vars_to_feed.append(new_op)
                             self._freezable_vars_values.append(
-                                frozen_var._current_value
-                            )
+                                frozen_var._current_value)
 
         # Consolidate updates
         with exec_graph.as_default():
@@ -3856,9 +3859,8 @@ class EagerExecutionFunction(object):
         with exec_graph.as_default():
             for x in self.inputs:
                 if x.op.type == "PlaceholderWithDefault":
-                    self._placeholder_default_values[
-                        ops.tensor_id(x)
-                    ] = tensor_util.constant_value(x.op.inputs[0])
+                    self._placeholder_default_values[ops.tensor_id(
+                        x)] = tensor_util.constant_value(x.op.inputs[0])
 
     def __call__(self, inputs):
         input_values = nest.flatten(inputs, expand_composites=True)
@@ -3870,12 +3872,11 @@ class EagerExecutionFunction(object):
             if value is None:
                 # Assume `value` is a placeholder with default
                 value = self._placeholder_default_values.get(
-                    ops.tensor_id(tensor), None
-                )
+                    ops.tensor_id(tensor), None)
                 if value is None:
                     raise ValueError(
-                        "You must feed a value for placeholder %s" % (tensor,)
-                    )
+                        "You must feed a value for placeholder %s" %
+                        (tensor, ))
             if not isinstance(value, ops.Tensor):
                 value = ops.convert_to_tensor_v2(value, dtype=tensor.dtype)
             if value.dtype != tensor.dtype:
@@ -3917,19 +3918,21 @@ def function(inputs, outputs, updates=None, name=None, **kwargs):
         if kwargs:
             raise ValueError(
                 "Session keyword arguments are not support during "
-                "eager execution. You passed: %s" % (kwargs,)
-            )
-        return EagerExecutionFunction(inputs, outputs, updates=updates, name=name)
+                "eager execution. You passed: %s" % (kwargs, ))
+        return EagerExecutionFunction(inputs,
+                                      outputs,
+                                      updates=updates,
+                                      name=name)
 
     if kwargs:
         for key in kwargs:
-            if key not in tf_inspect.getfullargspec(session_module.Session.run)[
-                0
-            ] and key not in ["inputs", "outputs", "updates", "name"]:
+            if key not in tf_inspect.getfullargspec(
+                    session_module.Session.run)[0] and key not in [
+                        "inputs", "outputs", "updates", "name"
+                    ]:
                 msg = (
                     'Invalid argument "%s" passed to K.function with TensorFlow '
-                    "backend"
-                ) % key
+                    "backend") % key
                 raise ValueError(msg)
     return GraphExecutionFunction(inputs, outputs, updates=updates, **kwargs)
 
@@ -3945,7 +3948,9 @@ def gradients(loss, variables):
     Returns:
         A gradients tensor.
     """
-    return gradients_module.gradients(loss, variables, colocate_gradients_with_ops=True)
+    return gradients_module.gradients(loss,
+                                      variables,
+                                      colocate_gradients_with_ops=True)
 
 
 @keras_export("keras.backend.stop_gradient")
@@ -3971,16 +3976,16 @@ def stop_gradient(variables):
 
 @keras_export("keras.backend.rnn")
 def rnn(
-    step_function,
-    inputs,
-    initial_states,
-    go_backwards=False,
-    mask=None,
-    constants=None,
-    unroll=False,
-    input_length=None,
-    time_major=False,
-    zero_output_for_mask=False,
+        step_function,
+        inputs,
+        initial_states,
+        go_backwards=False,
+        mask=None,
+        constants=None,
+        unroll=False,
+        input_length=None,
+        time_major=False,
+        zero_output_for_mask=False,
 ):
     """Iterates over the time dimension of a tensor.
 
@@ -4078,9 +4083,11 @@ def rnn(
     # second dimension n times.
     def _expand_mask(mask_t, input_t, fixed_dim=1):
         if nest.is_sequence(mask_t):
-            raise ValueError("mask_t is expected to be tensor, but got %s" % mask_t)
+            raise ValueError("mask_t is expected to be tensor, but got %s" %
+                             mask_t)
         if nest.is_sequence(input_t):
-            raise ValueError("input_t is expected to be tensor, but got %s" % input_t)
+            raise ValueError("input_t is expected to be tensor, but got %s" %
+                             input_t)
         rank_diff = len(input_t.shape) - len(mask_t.shape)
         for _ in range(rank_diff):
             mask_t = array_ops.expand_dims(mask_t, -1)
@@ -4106,9 +4113,10 @@ def rnn(
             return input_t
 
         if nest.is_sequence(inputs):
-            processed_input = nest.map_structure(_process_single_input_t, inputs)
+            processed_input = nest.map_structure(_process_single_input_t,
+                                                 inputs)
         else:
-            processed_input = (_process_single_input_t(inputs),)
+            processed_input = (_process_single_input_t(inputs), )
 
         def _get_input_tensor(time):
             inp = [t_[time] for t_ in processed_input]
@@ -4123,8 +4131,8 @@ def rnn(
                 inp = _get_input_tensor(i)
                 mask_t = mask_list[i]
                 output, new_states = step_function(
-                    inp, tuple(states) + tuple(constants)
-                )
+                    inp,
+                    tuple(states) + tuple(constants))
                 tiled_mask_t = _expand_mask(mask_t, output)
 
                 if not successive_outputs:
@@ -4136,11 +4144,11 @@ def rnn(
 
                 flat_states = nest.flatten(states)
                 flat_new_states = nest.flatten(new_states)
-                tiled_mask_t = tuple(_expand_mask(mask_t, s) for s in flat_states)
+                tiled_mask_t = tuple(
+                    _expand_mask(mask_t, s) for s in flat_states)
                 flat_final_states = tuple(
-                    array_ops.where_v2(m, s, ps)
-                    for m, s, ps in zip(tiled_mask_t, flat_new_states, flat_states)
-                )
+                    array_ops.where_v2(m, s, ps) for m, s, ps in zip(
+                        tiled_mask_t, flat_new_states, flat_states))
                 states = nest.pack_sequence_as(states, flat_final_states)
 
                 successive_outputs.append(output)
@@ -4164,7 +4172,9 @@ def rnn(
         else:  # mask is None
             for i in range(time_steps):
                 inp = _get_input_tensor(i)
-                output, states = step_function(inp, tuple(states) + tuple(constants))
+                output, states = step_function(
+                    inp,
+                    tuple(states) + tuple(constants))
                 successive_outputs.append(output)
                 successive_states.append(states)
             last_output = successive_outputs[-1]
@@ -4178,44 +4188,40 @@ def rnn(
         # be flattened first, and tensor array will be created one per flattened
         # tensor.
         input_ta = tuple(
-            tensor_array_ops.TensorArray(
-                dtype=inp.dtype, size=time_steps_t, tensor_array_name="input_ta_%s" % i
-            )
-            for i, inp in enumerate(flatted_inputs)
-        )
+            tensor_array_ops.TensorArray(dtype=inp.dtype,
+                                         size=time_steps_t,
+                                         tensor_array_name="input_ta_%s" % i)
+            for i, inp in enumerate(flatted_inputs))
         input_ta = tuple(
-            ta.unstack(input_) if not go_backwards else ta.unstack(reverse(input_, 0))
-            for ta, input_ in zip(input_ta, flatted_inputs)
-        )
+            ta.unstack(input_) if not go_backwards else ta.
+            unstack(reverse(input_, 0))
+            for ta, input_ in zip(input_ta, flatted_inputs))
 
         # Get the time(0) input and compute the output for that, the output will be
         # used to determine the dtype of output tensor array. Don't read from
         # input_ta due to TensorArray clear_after_read default to True.
         input_time_zero = nest.pack_sequence_as(
-            inputs, [inp[0] for inp in flatted_inputs]
-        )
+            inputs, [inp[0] for inp in flatted_inputs])
         # output_time_zero is used to determine the cell output shape and its dtype.
         # the value is discarded.
         output_time_zero, _ = step_function(
-            input_time_zero, tuple(initial_states) + tuple(constants)
-        )
+            input_time_zero,
+            tuple(initial_states) + tuple(constants))
         output_ta = tuple(
             tensor_array_ops.TensorArray(
                 dtype=out.dtype,
                 size=time_steps_t,
                 element_shape=out.shape,
                 tensor_array_name="output_ta_%s" % i,
-            )
-            for i, out in enumerate(nest.flatten(output_time_zero))
-        )
+            ) for i, out in enumerate(nest.flatten(output_time_zero)))
 
         time = constant_op.constant(0, dtype="int32", name="time")
 
         # We only specify the 'maximum_iterations' when building for XLA since that
         # causes slowdowns on GPU in TF.
-        if not context.executing_eagerly() and control_flow_util.GraphOrParentsInXlaContext(
-            ops.get_default_graph()
-        ):
+        if not context.executing_eagerly(
+        ) and control_flow_util.GraphOrParentsInXlaContext(
+                ops.get_default_graph()):
             max_iterations = math_ops.reduce_max(input_length)
         else:
             max_iterations = None
@@ -4230,9 +4236,9 @@ def rnn(
             if go_backwards:
                 mask = reverse(mask, 0)
 
-            mask_ta = tensor_array_ops.TensorArray(
-                dtype=dtypes_module.bool, size=time_steps_t, tensor_array_name="mask_ta"
-            )
+            mask_ta = tensor_array_ops.TensorArray(dtype=dtypes_module.bool,
+                                                   size=time_steps_t,
+                                                   tensor_array_name="mask_ta")
             mask_ta = mask_ta.unstack(mask)
 
             def masking_fn(time):
@@ -4241,12 +4247,10 @@ def rnn(
             def compute_masked_output(mask_t, flat_out, flat_mask):
                 tiled_mask_t = tuple(
                     _expand_mask(mask_t, o, fixed_dim=len(mask_t.shape))
-                    for o in flat_out
-                )
+                    for o in flat_out)
                 return tuple(
                     array_ops.where_v2(m, o, fm)
-                    for m, o, fm in zip(tiled_mask_t, flat_out, flat_mask)
-                )
+                    for m, o, fm in zip(tiled_mask_t, flat_out, flat_mask))
 
         elif isinstance(input_length, ops.Tensor):
             if go_backwards:
@@ -4264,8 +4268,7 @@ def rnn(
             def compute_masked_output(mask_t, flat_out, flat_mask):
                 return tuple(
                     array_ops.where(mask_t, o, zo)
-                    for (o, zo) in zip(flat_out, flat_mask)
-                )
+                    for (o, zo) in zip(flat_out, flat_mask))
 
         else:
             masking_fn = None
@@ -4274,8 +4277,8 @@ def rnn(
             # Mask for the T output will be base on the output of T - 1. In the case
             # T = 0, a zero filled tensor will be used.
             flat_zero_output = tuple(
-                array_ops.zeros_like(o) for o in nest.flatten(output_time_zero)
-            )
+                array_ops.zeros_like(o)
+                for o in nest.flatten(output_time_zero))
 
             def _step(time, output_ta_t, prev_output, *states):
                 """RNN step function.
@@ -4294,18 +4297,14 @@ def rnn(
                 current_input = nest.pack_sequence_as(inputs, current_input)
                 mask_t = masking_fn(time)
                 output, new_states = step_function(
-                    current_input, tuple(states) + tuple(constants)
-                )
+                    current_input,
+                    tuple(states) + tuple(constants))
                 # mask output
                 flat_output = nest.flatten(output)
-                flat_mask_output = (
-                    flat_zero_output
-                    if zero_output_for_mask
-                    else nest.flatten(prev_output)
-                )
+                flat_mask_output = (flat_zero_output if zero_output_for_mask
+                                    else nest.flatten(prev_output))
                 flat_new_output = compute_masked_output(
-                    mask_t, flat_output, flat_mask_output
-                )
+                    mask_t, flat_output, flat_mask_output)
 
                 # mask states
                 flat_state = nest.flatten(states)
@@ -4314,22 +4313,20 @@ def rnn(
                     if isinstance(new_state, ops.Tensor):
                         new_state.set_shape(state.shape)
                 flat_final_state = compute_masked_output(
-                    mask_t, flat_new_state, flat_state
-                )
-                new_states = nest.pack_sequence_as(new_states, flat_final_state)
+                    mask_t, flat_new_state, flat_state)
+                new_states = nest.pack_sequence_as(new_states,
+                                                   flat_final_state)
 
                 output_ta_t = tuple(
-                    ta.write(time, out) for ta, out in zip(output_ta_t, flat_new_output)
-                )
-                return (time + 1, output_ta_t, tuple(flat_new_output)) + tuple(
-                    new_states
-                )
+                    ta.write(time, out)
+                    for ta, out in zip(output_ta_t, flat_new_output))
+                return (time + 1, output_ta_t,
+                        tuple(flat_new_output)) + tuple(new_states)
 
             final_outputs = control_flow_ops.while_loop(
                 body=_step,
                 loop_vars=(time, output_ta, flat_zero_output) + states,
-                **while_loop_kwargs
-            )
+                **while_loop_kwargs)
             # Skip final_outputs[2] which is the output for final timestep.
             new_states = final_outputs[3:]
         else:
@@ -4348,8 +4345,8 @@ def rnn(
                 current_input = tuple(ta.read(time) for ta in input_ta)
                 current_input = nest.pack_sequence_as(inputs, current_input)
                 output, new_states = step_function(
-                    current_input, tuple(states) + tuple(constants)
-                )
+                    current_input,
+                    tuple(states) + tuple(constants))
                 flat_state = nest.flatten(states)
                 flat_new_state = nest.flatten(new_states)
                 for state, new_state in zip(flat_state, flat_new_state):
@@ -4358,14 +4355,16 @@ def rnn(
 
                 flat_output = nest.flatten(output)
                 output_ta_t = tuple(
-                    ta.write(time, out) for ta, out in zip(output_ta_t, flat_output)
-                )
-                new_states = nest.pack_sequence_as(initial_states, flat_new_state)
+                    ta.write(time, out)
+                    for ta, out in zip(output_ta_t, flat_output))
+                new_states = nest.pack_sequence_as(initial_states,
+                                                   flat_new_state)
                 return (time + 1, output_ta_t) + tuple(new_states)
 
             final_outputs = control_flow_ops.while_loop(
-                body=_step, loop_vars=(time, output_ta) + states, **while_loop_kwargs
-            )
+                body=_step,
+                loop_vars=(time, output_ta) + states,
+                **while_loop_kwargs)
             new_states = final_outputs[2:]
 
         output_ta = final_outputs[1]
@@ -4429,7 +4428,8 @@ def switch(condition, then_expression, else_expression):
 
         else:
             else_expression_fn = else_expression
-        x = control_flow_ops.cond(condition, then_expression_fn, else_expression_fn)
+        x = control_flow_ops.cond(condition, then_expression_fn,
+                                  else_expression_fn)
     else:
         # tf.where needs its condition tensor
         # to be the same shape as its two
@@ -4440,25 +4440,20 @@ def switch(condition, then_expression, else_expression):
             else_expression = else_expression()
         expr_ndim = ndim(then_expression)
         if cond_ndim > expr_ndim:
-            raise ValueError(
-                "Rank of `condition` should be less than or"
-                " equal to rank of `then_expression` and "
-                "`else_expression`. ndim(condition)="
-                + str(cond_ndim)
-                + ", ndim(then_expression)"
-                "=" + str(expr_ndim)
-            )
+            raise ValueError("Rank of `condition` should be less than or"
+                             " equal to rank of `then_expression` and "
+                             "`else_expression`. ndim(condition)=" +
+                             str(cond_ndim) + ", ndim(then_expression)"
+                             "=" + str(expr_ndim))
         if cond_ndim > 1:
             ndim_diff = expr_ndim - cond_ndim
             cond_shape = array_ops.concat(
-                [array_ops.shape(condition), [1] * ndim_diff], axis=0
-            )
+                [array_ops.shape(condition), [1] * ndim_diff], axis=0)
             condition = array_ops.reshape(condition, cond_shape)
             expr_shape = array_ops.shape(then_expression)
             shape_diff = expr_shape - cond_shape
-            tile_shape = array_ops.where_v2(
-                shape_diff > 0, expr_shape, array_ops.ones_like(expr_shape)
-            )
+            tile_shape = array_ops.where_v2(shape_diff > 0, expr_shape,
+                                            array_ops.ones_like(expr_shape))
             condition = array_ops.tile(condition, tile_shape)
         x = array_ops.where_v2(condition, then_expression, else_expression)
     return x
@@ -4484,8 +4479,7 @@ def in_train_phase(x, alt, training=None):
         the `training` flag defaults to `K.learning_phase()`.
     """
     from tensorflow.python.keras.engine import (
-        base_layer_utils,
-    )  # pylint: disable=g-import-not-at-top
+        base_layer_utils, )  # pylint: disable=g-import-not-at-top
 
     if training is None:
         training = base_layer_utils.call_context().training
@@ -4699,9 +4693,9 @@ def categorical_crossentropy(target, output, from_logits=False, axis=-1):
     """
     target.shape.assert_is_compatible_with(output.shape)
     if from_logits:
-        return nn.softmax_cross_entropy_with_logits_v2(
-            labels=target, logits=output, axis=axis
-        )
+        return nn.softmax_cross_entropy_with_logits_v2(labels=target,
+                                                       logits=output,
+                                                       axis=axis)
 
     if not isinstance(output, (ops.EagerTensor, variables_module.Variable)):
         output = _backtrack_identity(output)
@@ -4712,9 +4706,9 @@ def categorical_crossentropy(target, output, from_logits=False, axis=-1):
             # See b/117284466
             assert len(output.op.inputs) == 1
             output = output.op.inputs[0]
-            return nn.softmax_cross_entropy_with_logits_v2(
-                labels=target, logits=output, axis=axis
-            )
+            return nn.softmax_cross_entropy_with_logits_v2(labels=target,
+                                                           logits=output,
+                                                           axis=axis)
 
     # scale preds so that the class probas of each sample sum to 1
     output = output / math_ops.reduce_sum(output, axis, True)
@@ -4725,7 +4719,8 @@ def categorical_crossentropy(target, output, from_logits=False, axis=-1):
 
 
 @keras_export("keras.backend.sparse_categorical_crossentropy")
-def sparse_categorical_crossentropy(target, output, from_logits=False, axis=-1):
+def sparse_categorical_crossentropy(target, output, from_logits=False,
+                                    axis=-1):
     """Categorical crossentropy with integer targets.
 
     Arguments:
@@ -4746,8 +4741,7 @@ def sparse_categorical_crossentropy(target, output, from_logits=False, axis=-1):
         ValueError: if `axis` is neither -1 nor one of the axes of `output`.
     """
     if not from_logits and not isinstance(
-        output, (ops.EagerTensor, variables_module.Variable)
-    ):
+            output, (ops.EagerTensor, variables_module.Variable)):
         output = _backtrack_identity(output)
         if output.op.type == "Softmax":
             # When softmax activation function is used for output operation, we
@@ -4771,14 +4765,13 @@ def sparse_categorical_crossentropy(target, output, from_logits=False, axis=-1):
         axis %= output_rank
         if axis != output_rank - 1:
             permutation = list(
-                itertools.chain(range(axis), range(axis + 1, output_rank), [axis])
-            )
+                itertools.chain(range(axis), range(axis + 1, output_rank),
+                                [axis]))
             output = array_ops.transpose(output, perm=permutation)
     elif axis != -1:
         raise ValueError(
             "Cannot compute sparse categorical crossentropy with `axis={}` on an "
-            "output tensor with unknown rank".format(axis)
-        )
+            "output tensor with unknown rank".format(axis))
 
     target = cast(target, "int64")
 
@@ -4786,24 +4779,19 @@ def sparse_categorical_crossentropy(target, output, from_logits=False, axis=-1):
     output_shape = array_ops.shape_v2(output)
     target_rank = target.shape.ndims
 
-    update_shape = (
-        target_rank is not None
-        and output_rank is not None
-        and target_rank != output_rank - 1
-    )
+    update_shape = (target_rank is not None and output_rank is not None
+                    and target_rank != output_rank - 1)
     if update_shape:
         target = flatten(target)
         output = array_ops.reshape(output, [-1, output_shape[-1]])
 
     if py_any(_is_symbolic_tensor(v) for v in [target, output]):
         with get_graph().as_default():
-            res = nn.sparse_softmax_cross_entropy_with_logits_v2(
-                labels=target, logits=output
-            )
+            res = nn.sparse_softmax_cross_entropy_with_logits_v2(labels=target,
+                                                                 logits=output)
     else:
-        res = nn.sparse_softmax_cross_entropy_with_logits_v2(
-            labels=target, logits=output
-        )
+        res = nn.sparse_softmax_cross_entropy_with_logits_v2(labels=target,
+                                                             logits=output)
 
     if update_shape and output_rank >= 3:
         # If our output includes timesteps or spatial dimensions we need to reshape
@@ -4827,7 +4815,8 @@ def binary_crossentropy(target, output, from_logits=False):
         A tensor.
     """
     if from_logits:
-        return nn.sigmoid_cross_entropy_with_logits(labels=target, logits=output)
+        return nn.sigmoid_cross_entropy_with_logits(labels=target,
+                                                    logits=output)
 
     if not isinstance(output, (ops.EagerTensor, variables_module.Variable)):
         output = _backtrack_identity(output)
@@ -4837,7 +4826,8 @@ def binary_crossentropy(target, output, from_logits=False):
             # to prevent collapsing zero when training.
             assert len(output.op.inputs) == 1
             output = output.op.inputs[0]
-            return nn.sigmoid_cross_entropy_with_logits(labels=target, logits=output)
+            return nn.sigmoid_cross_entropy_with_logits(labels=target,
+                                                        logits=output)
 
     epsilon_ = _constant_to_tensor(epsilon(), output.dtype.base_dtype)
     output = clip_ops.clip_by_value(output, epsilon_, 1.0 - epsilon_)
@@ -5033,7 +5023,12 @@ def _preprocess_padding(padding):
 
 
 @keras_export("keras.backend.conv1d")
-def conv1d(x, kernel, strides=1, padding="valid", data_format=None, dilation_rate=1):
+def conv1d(x,
+           kernel,
+           strides=1,
+           padding="valid",
+           data_format=None,
+           dilation_rate=1):
     """1D convolution.
 
     Arguments:
@@ -5079,9 +5074,12 @@ def conv1d(x, kernel, strides=1, padding="valid", data_format=None, dilation_rat
 
 
 @keras_export("keras.backend.conv2d")
-def conv2d(
-    x, kernel, strides=(1, 1), padding="valid", data_format=None, dilation_rate=(1, 1)
-):
+def conv2d(x,
+           kernel,
+           strides=(1, 1),
+           padding="valid",
+           data_format=None,
+           dilation_rate=(1, 1)):
     """2D convolution.
 
     Arguments:
@@ -5121,13 +5119,13 @@ def conv2d(
 
 @keras_export("keras.backend.conv2d_transpose")
 def conv2d_transpose(
-    x,
-    kernel,
-    output_shape,
-    strides=(1, 1),
-    padding="valid",
-    data_format=None,
-    dilation_rate=(1, 1),
+        x,
+        kernel,
+        output_shape,
+        strides=(1, 1),
+        padding="valid",
+        data_format=None,
+        dilation_rate=(1, 1),
 ):
     """2D deconvolution (i.e.
 
@@ -5160,7 +5158,8 @@ def conv2d_transpose(
     else:
         force_transpose = False
 
-    x, tf_data_format = _preprocess_conv2d_input(x, data_format, force_transpose)
+    x, tf_data_format = _preprocess_conv2d_input(x, data_format,
+                                                 force_transpose)
 
     if data_format == "channels_first" and tf_data_format == "NHWC":
         output_shape = (
@@ -5170,14 +5169,14 @@ def conv2d_transpose(
             output_shape[1],
         )
     if output_shape[0] is None:
-        output_shape = (shape(x)[0],) + tuple(output_shape[1:])
+        output_shape = (shape(x)[0], ) + tuple(output_shape[1:])
 
     if isinstance(output_shape, (tuple, list)):
         output_shape = array_ops.stack(list(output_shape))
 
     padding = _preprocess_padding(padding)
     if tf_data_format == "NHWC":
-        strides = (1,) + strides + (1,)
+        strides = (1, ) + strides + (1, )
     else:
         strides = (1, 1) + strides
 
@@ -5192,22 +5191,24 @@ def conv2d_transpose(
         )
     else:
         assert dilation_rate[0] == dilation_rate[1]
-        x = nn.atrous_conv2d_transpose(
-            x, kernel, output_shape, rate=dilation_rate[0], padding=padding
-        )
+        x = nn.atrous_conv2d_transpose(x,
+                                       kernel,
+                                       output_shape,
+                                       rate=dilation_rate[0],
+                                       padding=padding)
     if data_format == "channels_first" and tf_data_format == "NHWC":
         x = array_ops.transpose(x, (0, 3, 1, 2))  # NHWC -> NCHW
     return x
 
 
 def separable_conv1d(
-    x,
-    depthwise_kernel,
-    pointwise_kernel,
-    strides=1,
-    padding="valid",
-    data_format=None,
-    dilation_rate=1,
+        x,
+        depthwise_kernel,
+        pointwise_kernel,
+        strides=1,
+        padding="valid",
+        data_format=None,
+        dilation_rate=1,
 ):
     """1D convolution with separable filters.
 
@@ -5233,9 +5234,9 @@ def separable_conv1d(
         raise ValueError("Unknown data_format: " + str(data_format))
 
     if isinstance(strides, int):
-        strides = (strides,)
+        strides = (strides, )
     if isinstance(dilation_rate, int):
-        dilation_rate = (dilation_rate,)
+        dilation_rate = (dilation_rate, )
 
     x, tf_data_format = _preprocess_conv1d_input(x, data_format)
     padding = _preprocess_padding(padding)
@@ -5243,14 +5244,14 @@ def separable_conv1d(
         strides = tuple(strides)
     if tf_data_format == "NWC":
         spatial_start_dim = 1
-        strides = (1,) + strides * 2 + (1,)
+        strides = (1, ) + strides * 2 + (1, )
     else:
         spatial_start_dim = 2
         strides = (1, 1) + strides * 2
     x = array_ops.expand_dims(x, spatial_start_dim)
     depthwise_kernel = array_ops.expand_dims(depthwise_kernel, 0)
     pointwise_kernel = array_ops.expand_dims(pointwise_kernel, 0)
-    dilation_rate = (1,) + dilation_rate
+    dilation_rate = (1, ) + dilation_rate
 
     x = nn.separable_conv2d(
         x,
@@ -5272,13 +5273,13 @@ def separable_conv1d(
 
 @keras_export("keras.backend.separable_conv2d")
 def separable_conv2d(
-    x,
-    depthwise_kernel,
-    pointwise_kernel,
-    strides=(1, 1),
-    padding="valid",
-    data_format=None,
-    dilation_rate=(1, 1),
+        x,
+        depthwise_kernel,
+        pointwise_kernel,
+        strides=(1, 1),
+        padding="valid",
+        data_format=None,
+        dilation_rate=(1, 1),
 ):
     """2D convolution with separable filters.
 
@@ -5312,7 +5313,7 @@ def separable_conv2d(
     if not isinstance(strides, tuple):
         strides = tuple(strides)
     if tf_data_format == "NHWC":
-        strides = (1,) + strides + (1,)
+        strides = (1, ) + strides + (1, )
     else:
         strides = (1, 1) + strides
 
@@ -5332,12 +5333,12 @@ def separable_conv2d(
 
 @keras_export("keras.backend.depthwise_conv2d")
 def depthwise_conv2d(
-    x,
-    depthwise_kernel,
-    strides=(1, 1),
-    padding="valid",
-    data_format=None,
-    dilation_rate=(1, 1),
+        x,
+        depthwise_kernel,
+        strides=(1, 1),
+        padding="valid",
+        data_format=None,
+        dilation_rate=(1, 1),
 ):
     """2D convolution with separable filters.
 
@@ -5365,7 +5366,7 @@ def depthwise_conv2d(
     x, tf_data_format = _preprocess_conv2d_input(x, data_format)
     padding = _preprocess_padding(padding)
     if tf_data_format == "NHWC":
-        strides = (1,) + strides + (1,)
+        strides = (1, ) + strides + (1, )
     else:
         strides = (1, 1) + strides
 
@@ -5384,12 +5385,12 @@ def depthwise_conv2d(
 
 @keras_export("keras.backend.conv3d")
 def conv3d(
-    x,
-    kernel,
-    strides=(1, 1, 1),
-    padding="valid",
-    data_format=None,
-    dilation_rate=(1, 1, 1),
+        x,
+        kernel,
+        strides=(1, 1, 1),
+        padding="valid",
+        data_format=None,
+        dilation_rate=(1, 1, 1),
 ):
     """3D convolution.
 
@@ -5428,9 +5429,12 @@ def conv3d(
     return x
 
 
-def conv3d_transpose(
-    x, kernel, output_shape, strides=(1, 1, 1), padding="valid", data_format=None
-):
+def conv3d_transpose(x,
+                     kernel,
+                     output_shape,
+                     strides=(1, 1, 1),
+                     padding="valid",
+                     data_format=None):
     """3D deconvolution (i.e.
 
     transposed convolution).
@@ -5468,27 +5472,33 @@ def conv3d_transpose(
             output_shape[1],
         )
     if output_shape[0] is None:
-        output_shape = (array_ops.shape(x)[0],) + tuple(output_shape[1:])
+        output_shape = (array_ops.shape(x)[0], ) + tuple(output_shape[1:])
         output_shape = array_ops.stack(list(output_shape))
 
     padding = _preprocess_padding(padding)
     if tf_data_format == "NDHWC":
-        strides = (1,) + strides + (1,)
+        strides = (1, ) + strides + (1, )
     else:
         strides = (1, 1) + strides
 
-    x = nn.conv3d_transpose(
-        x, kernel, output_shape, strides, padding=padding, data_format=tf_data_format
-    )
+    x = nn.conv3d_transpose(x,
+                            kernel,
+                            output_shape,
+                            strides,
+                            padding=padding,
+                            data_format=tf_data_format)
     if data_format == "channels_first" and tf_data_format == "NDHWC":
         x = array_ops.transpose(x, (0, 4, 1, 2, 3))
     return x
 
 
 @keras_export("keras.backend.pool2d")
-def pool2d(
-    x, pool_size, strides=(1, 1), padding="valid", data_format=None, pool_mode="max"
-):
+def pool2d(x,
+           pool_size,
+           strides=(1, 1),
+           padding="valid",
+           data_format=None,
+           pool_mode="max"):
     """2D Pooling.
 
     Arguments:
@@ -5521,20 +5531,24 @@ def pool2d(
     x, tf_data_format = _preprocess_conv2d_input(x, data_format)
     padding = _preprocess_padding(padding)
     if tf_data_format == "NHWC":
-        strides = (1,) + strides + (1,)
-        pool_size = (1,) + pool_size + (1,)
+        strides = (1, ) + strides + (1, )
+        pool_size = (1, ) + pool_size + (1, )
     else:
         strides = (1, 1) + strides
         pool_size = (1, 1) + pool_size
 
     if pool_mode == "max":
-        x = nn.max_pool(
-            x, pool_size, strides, padding=padding, data_format=tf_data_format
-        )
+        x = nn.max_pool(x,
+                        pool_size,
+                        strides,
+                        padding=padding,
+                        data_format=tf_data_format)
     elif pool_mode == "avg":
-        x = nn.avg_pool(
-            x, pool_size, strides, padding=padding, data_format=tf_data_format
-        )
+        x = nn.avg_pool(x,
+                        pool_size,
+                        strides,
+                        padding=padding,
+                        data_format=tf_data_format)
     else:
         raise ValueError("Invalid pooling mode: " + str(pool_mode))
 
@@ -5544,9 +5558,12 @@ def pool2d(
 
 
 @keras_export("keras.backend.pool3d")
-def pool3d(
-    x, pool_size, strides=(1, 1, 1), padding="valid", data_format=None, pool_mode="max"
-):
+def pool3d(x,
+           pool_size,
+           strides=(1, 1, 1),
+           padding="valid",
+           data_format=None,
+           pool_mode="max"):
     """3D Pooling.
 
     Arguments:
@@ -5573,20 +5590,24 @@ def pool3d(
     x, tf_data_format = _preprocess_conv3d_input(x, data_format)
     padding = _preprocess_padding(padding)
     if tf_data_format == "NDHWC":
-        strides = (1,) + strides + (1,)
-        pool_size = (1,) + pool_size + (1,)
+        strides = (1, ) + strides + (1, )
+        pool_size = (1, ) + pool_size + (1, )
     else:
         strides = (1, 1) + strides
         pool_size = (1, 1) + pool_size
 
     if pool_mode == "max":
-        x = nn.max_pool3d(
-            x, pool_size, strides, padding=padding, data_format=tf_data_format
-        )
+        x = nn.max_pool3d(x,
+                          pool_size,
+                          strides,
+                          padding=padding,
+                          data_format=tf_data_format)
     elif pool_mode == "avg":
-        x = nn.avg_pool3d(
-            x, pool_size, strides, padding=padding, data_format=tf_data_format
-        )
+        x = nn.avg_pool3d(x,
+                          pool_size,
+                          strides,
+                          padding=padding,
+                          data_format=tf_data_format)
     else:
         raise ValueError("Invalid pooling mode: " + str(pool_mode))
 
@@ -5595,7 +5616,12 @@ def pool3d(
     return x
 
 
-def local_conv(inputs, kernel, kernel_size, strides, output_shape, data_format=None):
+def local_conv(inputs,
+               kernel,
+               kernel_size,
+               strides,
+               output_shape,
+               data_format=None):
     """Apply N-D convolution with un-shared weights.
 
     Arguments:
@@ -5647,9 +5673,8 @@ def local_conv(inputs, kernel, kernel_size, strides, output_shape, data_format=N
             slices.append(slice(None))
 
         slices.extend(
-            slice(position[d] * strides[d], position[d] * strides[d] + kernel_size[d])
-            for d in spatial_dimensions
-        )
+            slice(position[d] * strides[d], position[d] * strides[d] +
+                  kernel_size[d]) for d in spatial_dimensions)
 
         if data_format == "channels_last":
             slices.append(slice(None))
@@ -5694,12 +5719,18 @@ def local_conv1d(inputs, kernel, kernel_size, strides, data_format=None):
         (batch_size, filters, output_length)
         if data_format='channels_last'.
     """
-    output_shape = (kernel.shape[0],)
-    return local_conv(inputs, kernel, kernel_size, strides, output_shape, data_format)
+    output_shape = (kernel.shape[0], )
+    return local_conv(inputs, kernel, kernel_size, strides, output_shape,
+                      data_format)
 
 
 @keras_export("keras.backend.local_conv2d")
-def local_conv2d(inputs, kernel, kernel_size, strides, output_shape, data_format=None):
+def local_conv2d(inputs,
+                 kernel,
+                 kernel_size,
+                 strides,
+                 output_shape,
+                 data_format=None):
     """Apply 2D conv with un-shared weights.
 
     Arguments:
@@ -5726,7 +5757,8 @@ def local_conv2d(inputs, kernel, kernel_size, strides, output_shape, data_format
         (batch_size, new_rows, new_cols, filters)
         if data_format='channels_last'.
     """
-    return local_conv(inputs, kernel, kernel_size, strides, output_shape, data_format)
+    return local_conv(inputs, kernel, kernel_size, strides, output_shape,
+                      data_format)
 
 
 @keras_export("keras.backend.bias_add")
@@ -5755,9 +5787,8 @@ def bias_add(x, bias, data_format=None):
     bias_shape = int_shape(bias)
     if len(bias_shape) != 1 and len(bias_shape) != ndim(x) - 1:
         raise ValueError(
-            "Unexpected bias dimensions %d, expect to be 1 or %d dimensions"
-            % (len(bias_shape), ndim(x))
-        )
+            "Unexpected bias dimensions %d, expect to be 1 or %d dimensions" %
+            (len(bias_shape), ndim(x)))
 
     if len(bias_shape) == 1:
         if data_format == "channels_first":
@@ -5767,7 +5798,7 @@ def bias_add(x, bias, data_format=None):
         if data_format == "channels_first":
             bias_reshape_axis = (1, bias_shape[-1]) + bias_shape[:-1]
             return x + reshape(bias, bias_reshape_axis)
-        return x + reshape(bias, (1,) + bias_shape)
+        return x + reshape(bias, (1, ) + bias_shape)
     return nn.bias_add(x, bias)
 
 
@@ -5798,9 +5829,11 @@ def random_normal(shape, mean=0.0, stddev=1.0, dtype=None, seed=None):
         dtype = floatx()
     if seed is None:
         seed = np.random.randint(10e6)
-    return random_ops.random_normal(
-        shape, mean=mean, stddev=stddev, dtype=dtype, seed=seed
-    )
+    return random_ops.random_normal(shape,
+                                    mean=mean,
+                                    stddev=stddev,
+                                    dtype=dtype,
+                                    seed=seed)
 
 
 @keras_export("keras.backend.random_uniform")
@@ -5823,9 +5856,11 @@ def random_uniform(shape, minval=0.0, maxval=1.0, dtype=None, seed=None):
         dtype = floatx()
     if seed is None:
         seed = np.random.randint(10e6)
-    return random_ops.random_uniform(
-        shape, minval=minval, maxval=maxval, dtype=dtype, seed=seed
-    )
+    return random_ops.random_uniform(shape,
+                                     minval=minval,
+                                     maxval=maxval,
+                                     dtype=dtype,
+                                     seed=seed)
 
 
 @deprecated(None, "Use `tf.keras.backend.random_bernoulli` instead.")
@@ -5898,7 +5933,11 @@ def truncated_normal(shape, mean=0.0, stddev=1.0, dtype=None, seed=None):
         dtype = floatx()
     if seed is None:
         seed = np.random.randint(10e6)
-    return random_ops.truncated_normal(shape, mean, stddev, dtype=dtype, seed=seed)
+    return random_ops.truncated_normal(shape,
+                                       mean,
+                                       stddev,
+                                       dtype=dtype,
+                                       seed=seed)
 
 
 # CTC
@@ -5925,30 +5964,32 @@ def ctc_label_dense_to_sparse(labels, label_lengths):
 
     def range_less_than(old_input, current_input):
         return array_ops.expand_dims(
-            math_ops.range(array_ops.shape(old_input)[1]), 0
-        ) < array_ops.fill(max_num_labels_tns, current_input)
+            math_ops.range(array_ops.shape(old_input)[1]), 0) < array_ops.fill(
+                max_num_labels_tns, current_input)
 
-    init = math_ops.cast(array_ops.fill([1, label_shape[1]], 0), dtypes_module.bool)
-    dense_mask = functional_ops.scan(
-        range_less_than, label_lengths, initializer=init, parallel_iterations=1
-    )
+    init = math_ops.cast(array_ops.fill([1, label_shape[1]], 0),
+                         dtypes_module.bool)
+    dense_mask = functional_ops.scan(range_less_than,
+                                     label_lengths,
+                                     initializer=init,
+                                     parallel_iterations=1)
     dense_mask = dense_mask[:, 0, :]
 
     label_array = array_ops.reshape(
-        array_ops.tile(math_ops.range(0, label_shape[1]), num_batches_tns), label_shape
-    )
+        array_ops.tile(math_ops.range(0, label_shape[1]), num_batches_tns),
+        label_shape)
     label_ind = array_ops.boolean_mask(label_array, dense_mask)
 
     batch_array = array_ops.transpose(
         array_ops.reshape(
-            array_ops.tile(math_ops.range(0, label_shape[0]), max_num_labels_tns),
+            array_ops.tile(math_ops.range(0, label_shape[0]),
+                           max_num_labels_tns),
             reverse(label_shape, 0),
-        )
-    )
+        ))
     batch_ind = array_ops.boolean_mask(batch_array, dense_mask)
     indices = array_ops.transpose(
-        array_ops.reshape(concatenate([batch_ind, label_ind], axis=0), [2, -1])
-    )
+        array_ops.reshape(concatenate([batch_ind, label_ind], axis=0),
+                          [2, -1]))
 
     vals_sparse = array_ops.gather_nd(labels, indices)
 
@@ -5977,20 +6018,20 @@ def ctc_batch_cost(y_true, y_pred, input_length, label_length):
         Tensor with shape (samples,1) containing the
             CTC loss of each element.
     """
-    label_length = math_ops.cast(
-        array_ops.squeeze(label_length, axis=-1), dtypes_module.int32
-    )
-    input_length = math_ops.cast(
-        array_ops.squeeze(input_length, axis=-1), dtypes_module.int32
-    )
+    label_length = math_ops.cast(array_ops.squeeze(label_length, axis=-1),
+                                 dtypes_module.int32)
+    input_length = math_ops.cast(array_ops.squeeze(input_length, axis=-1),
+                                 dtypes_module.int32)
     sparse_labels = math_ops.cast(
-        ctc_label_dense_to_sparse(y_true, label_length), dtypes_module.int32
-    )
+        ctc_label_dense_to_sparse(y_true, label_length), dtypes_module.int32)
 
-    y_pred = math_ops.log(array_ops.transpose(y_pred, perm=[1, 0, 2]) + epsilon())
+    y_pred = math_ops.log(
+        array_ops.transpose(y_pred, perm=[1, 0, 2]) + epsilon())
 
     return array_ops.expand_dims(
-        ctc.ctc_loss(inputs=y_pred, labels=sparse_labels, sequence_length=input_length),
+        ctc.ctc_loss(inputs=y_pred,
+                     labels=sparse_labels,
+                     sequence_length=input_length),
         1,
     )
 
@@ -6024,13 +6065,14 @@ def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
             Tensor `(top_paths, )` that contains
                 the log probability of each decoded sequence.
     """
-    y_pred = math_ops.log(array_ops.transpose(y_pred, perm=[1, 0, 2]) + epsilon())
+    y_pred = math_ops.log(
+        array_ops.transpose(y_pred, perm=[1, 0, 2]) + epsilon())
     input_length = math_ops.cast(input_length, dtypes_module.int32)
 
     if greedy:
-        (decoded, log_prob) = ctc.ctc_greedy_decoder(
-            inputs=y_pred, sequence_length=input_length
-        )
+        (decoded,
+         log_prob) = ctc.ctc_greedy_decoder(inputs=y_pred,
+                                            sequence_length=input_length)
     else:
         (decoded, log_prob) = ctc.ctc_beam_search_decoder(
             inputs=y_pred,
@@ -6039,10 +6081,10 @@ def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
             top_paths=top_paths,
         )
     decoded_dense = [
-        sparse_ops.sparse_to_dense(
-            st.indices, st.dense_shape, st.values, default_value=-1
-        )
-        for st in decoded
+        sparse_ops.sparse_to_dense(st.indices,
+                                   st.dense_shape,
+                                   st.values,
+                                   default_value=-1) for st in decoded
     ]
     return (decoded_dense, log_prob)
 
@@ -6168,9 +6210,9 @@ def configure_and_create_distributed_session(distribution_strategy):
             # there.
             distribution_strategy.configure(session_config)
             master = (
-                distribution_strategy.extended._tpu_cluster_resolver.master()
-            )  # pylint: disable=protected-access
-            session = session_module.Session(config=session_config, target=master)
+                distribution_strategy.extended._tpu_cluster_resolver.master())  # pylint: disable=protected-access
+            session = session_module.Session(config=session_config,
+                                             target=master)
         else:
             worker_context = dc_context.get_current_worker_context()
             if worker_context:
@@ -6180,8 +6222,8 @@ def configure_and_create_distributed_session(distribution_strategy):
                 # conflicting configurations.
                 dc_session_config.MergeFrom(session_config)
                 session = session_module.Session(
-                    config=dc_session_config, target=worker_context.master_target
-                )
+                    config=dc_session_config,
+                    target=worker_context.master_target)
             else:
                 distribution_strategy.configure(session_config)
                 session = session_module.Session(config=session_config)
@@ -6201,8 +6243,7 @@ def configure_and_create_distributed_session(distribution_strategy):
 def is_tpu_strategy(strategy):
     """We're executing TPU Strategy."""
     return strategy is not None and strategy.__class__.__name__.startswith(
-        "TPUStrategy"
-    )
+        "TPUStrategy")
 
 
 def cast_variables_to_tensor(tensors):
@@ -6228,8 +6269,7 @@ def convert_inputs_if_ragged(inputs):
 
     flat_inputs = nest.flatten(inputs)
     contains_ragged = py_any(
-        isinstance(i, ragged_tensor.RaggedTensor) for i in flat_inputs
-    )
+        isinstance(i, ragged_tensor.RaggedTensor) for i in flat_inputs)
 
     if not contains_ragged:
         return inputs, None
@@ -6237,7 +6277,8 @@ def convert_inputs_if_ragged(inputs):
     inputs = nest.map_structure(_convert_ragged_input, inputs)
     # Multiple mask are not yet supported, so one mask is used on all inputs.
     # We approach this similarly when using row lengths to ignore steps.
-    nested_row_lengths = math_ops.cast(flat_inputs[0].nested_row_lengths()[0], "int32")
+    nested_row_lengths = math_ops.cast(flat_inputs[0].nested_row_lengths()[0],
+                                       "int32")
     return inputs, nested_row_lengths
 
 
@@ -6313,10 +6354,8 @@ class ContextValueCache(weakref.WeakKeyDictionary):
         # isn't a default graph). Because of this bug, we have to specially set the
         # key when eager execution is enabled.
         parent_graph = graph.outer_graph
-        if (
-            not isinstance(parent_graph, func_graph.FuncGraph)
-            and ops.executing_eagerly_outside_functions()
-        ):
+        if (not isinstance(parent_graph, func_graph.FuncGraph)
+                and ops.executing_eagerly_outside_functions()):
             return _DUMMY_EAGER_GRAPH.key
         return parent_graph
 

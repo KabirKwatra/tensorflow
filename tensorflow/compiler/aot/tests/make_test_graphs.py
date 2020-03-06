@@ -71,25 +71,28 @@ def tfadd_with_ckpt_saver(out_dir):
     math_ops.add(x, y, name="x_y_sum")
 
     init_op = variables.global_variables_initializer()
-    saver = saver_lib.Saver(name="abcprefix", write_version=saver_pb2.SaverDef.V1)
+    saver = saver_lib.Saver(name="abcprefix",
+                            write_version=saver_pb2.SaverDef.V1)
     with session.Session() as sess:
         sess.run(init_op)
         sess.run(y.assign(y + 42))
         # Without the checkpoint, the variable won't be set to 42.
-        ckpt_file = os.path.join(out_dir, "test_graph_tfadd_with_ckpt_saver.ckpt")
+        ckpt_file = os.path.join(out_dir,
+                                 "test_graph_tfadd_with_ckpt_saver.ckpt")
         saver.save(sess, ckpt_file)
         # Without the SaverDef, the restore op won't be named correctly.
-        saver_file = os.path.join(out_dir, "test_graph_tfadd_with_ckpt_saver.saver")
+        saver_file = os.path.join(out_dir,
+                                  "test_graph_tfadd_with_ckpt_saver.saver")
         with open(saver_file, "wb") as f:
-            f.write(six.ensure_binary(saver.as_saver_def().SerializeToString()))
+            f.write(six.ensure_binary(
+                saver.as_saver_def().SerializeToString()))
 
 
 def tfassert_eq(_):
     x = array_ops.placeholder(dtypes.int32, name="x_hold")
     y = array_ops.placeholder(dtypes.int32, name="y_hold")
-    control_flow_ops.Assert(
-        math_ops.equal(x, y), ["Expected x == y."], name="assert_eq"
-    )
+    control_flow_ops.Assert(math_ops.equal(x, y), ["Expected x == y."],
+                            name="assert_eq")
     math_ops.add(x, math_ops.negative(y), name="x_y_diff")
 
 
@@ -204,21 +207,19 @@ def write_graph(build_graph, out_dir, debug_info=False):
     g = ops.Graph()
     with g.as_default():
         build_graph(out_dir)
-        filename = os.path.join(out_dir, "test_graph_%s.pb" % build_graph.__name__)
+        filename = os.path.join(out_dir,
+                                "test_graph_%s.pb" % build_graph.__name__)
         with open(filename, "wb") as f:
             f.write(six.ensure_binary(g.as_graph_def().SerializeToString()))
 
         if debug_info:
             filename_debuginfo = os.path.join(
-                out_dir, "test_debuginfo_%s.pb" % build_graph.__name__
-            )
+                out_dir, "test_debuginfo_%s.pb" % build_graph.__name__)
             test_debuginfo = export_debug_info(g)
             with open(filename_debuginfo, "wb") as f:
                 f.write(
                     six.ensure_binary(
-                        test_debuginfo.SerializeToString(deterministic=True)
-                    )
-                )
+                        test_debuginfo.SerializeToString(deterministic=True)))
 
 
 def main(_):
