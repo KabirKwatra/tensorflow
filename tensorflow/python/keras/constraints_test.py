@@ -34,8 +34,8 @@ def get_test_values():
 
 def get_example_array():
     np.random.seed(3537)
-    example_array = np.random.random((100, 100)) * 100. - 50.
-    example_array[0, 0] = 0.  # 0 could possibly cause trouble
+    example_array = np.random.random((100, 100)) * 100.0 - 50.0
+    example_array[0, 0] = 0.0  # 0 could possibly cause trouble
     return example_array
 
 
@@ -45,12 +45,10 @@ def get_example_kernel(width):
     return example_array
 
 
-@combinations.generate(combinations.combine(mode=['graph', 'eager']))
+@combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class KerasConstraintsTest(test.TestCase):
-
     def test_serialization(self):
-        all_activations = ['max_norm', 'non_neg',
-                           'unit_norm', 'min_max_norm']
+        all_activations = ["max_norm", "non_neg", "unit_norm", "min_max_norm"]
         for name in all_activations:
             fn = constraints.get(name)
             ref_fn = getattr(constraints, name)()
@@ -70,31 +68,34 @@ class KerasConstraintsTest(test.TestCase):
         norm_instance = constraints.max_norm(2.0)
         x = np.array([[0, 0, 0], [1.0, 0, 0], [3, 0, 0], [3, 3, 3]]).T
         x_normed_target = np.array(
-            [[0, 0, 0], [1.0, 0, 0], [2.0, 0, 0],
-             [2. / np.sqrt(3), 2. / np.sqrt(3), 2. / np.sqrt(3)]]).T
+            [
+                [0, 0, 0],
+                [1.0, 0, 0],
+                [2.0, 0, 0],
+                [2.0 / np.sqrt(3), 2.0 / np.sqrt(3), 2.0 / np.sqrt(3)],
+            ]
+        ).T
         x_normed_actual = backend.eval(norm_instance(backend.variable(x)))
         self.assertAllClose(x_normed_actual, x_normed_target, rtol=1e-05)
 
     def test_non_neg(self):
         non_neg_instance = constraints.non_neg()
         normed = non_neg_instance(backend.variable(get_example_array()))
-        assert np.all(np.min(backend.eval(normed), axis=1) == 0.)
+        assert np.all(np.min(backend.eval(normed), axis=1) == 0.0)
 
     def test_unit_norm(self):
         unit_norm_instance = constraints.unit_norm()
         normalized = unit_norm_instance(backend.variable(get_example_array()))
-        norm_of_normalized = np.sqrt(
-            np.sum(backend.eval(normalized)**2, axis=0))
+        norm_of_normalized = np.sqrt(np.sum(backend.eval(normalized) ** 2, axis=0))
         # In the unit norm constraint, it should be equal to 1.
-        difference = norm_of_normalized - 1.
+        difference = norm_of_normalized - 1.0
         largest_difference = np.max(np.abs(difference))
         assert np.abs(largest_difference) < 10e-5
 
     def test_min_max_norm(self):
         array = get_example_array()
         for m in get_test_values():
-            norm_instance = constraints.min_max_norm(
-                min_value=m, max_value=m * 2)
+            norm_instance = constraints.min_max_norm(min_value=m, max_value=m * 2)
             normed = norm_instance(backend.variable(array))
             value = backend.eval(normed)
             l2 = np.sqrt(np.sum(np.square(value), axis=0))
@@ -109,9 +110,8 @@ class KerasConstraintsTest(test.TestCase):
             value = backend.eval(normed)
             assert np.all(value.shape == array.shape)
             assert np.all(value[0:, 0, 0, 0] == value[-1:, 0, 0, 0])
-            assert len(set(value[..., 0, 0].flatten())
-                       ) == math.ceil(float(width) / 2)
+            assert len(set(value[..., 0, 0].flatten())) == math.ceil(float(width) / 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

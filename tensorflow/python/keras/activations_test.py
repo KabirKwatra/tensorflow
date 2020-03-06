@@ -37,13 +37,21 @@ def _ref_softmax(values):
     return e / np.sum(e)
 
 
-@combinations.generate(combinations.combine(mode=['graph', 'eager']))
+@combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class KerasActivationsTest(test.TestCase, parameterized.TestCase):
-
     def test_serialization(self):
-        all_activations = ['softmax', 'relu', 'elu', 'tanh',
-                           'sigmoid', 'hard_sigmoid', 'linear',
-                           'softplus', 'softsign', 'selu']
+        all_activations = [
+            "softmax",
+            "relu",
+            "elu",
+            "tanh",
+            "sigmoid",
+            "hard_sigmoid",
+            "linear",
+            "softplus",
+            "softsign",
+            "selu",
+        ]
         for name in all_activations:
             fn = activations.get(name)
             ref_fn = getattr(activations, name)
@@ -53,7 +61,7 @@ class KerasActivationsTest(test.TestCase, parameterized.TestCase):
             assert fn == ref_fn
 
     def test_serialization_v2(self):
-        activation_map = {nn.softmax_v2: 'softmax'}
+        activation_map = {nn.softmax_v2: "softmax"}
         for fn_v2_key in activation_map:
             fn_v2 = activations.get(fn_v2_key)
             config = activations.serialize(fn_v2)
@@ -65,11 +73,15 @@ class KerasActivationsTest(test.TestCase, parameterized.TestCase):
         layer = core.Dense(3, activation=activation)
         config = serialization.serialize(layer)
         deserialized_layer = serialization.deserialize(
-            config, custom_objects={'LeakyReLU': activation})
-        self.assertEqual(deserialized_layer.__class__.__name__,
-                         layer.__class__.__name__)
-        self.assertEqual(deserialized_layer.activation.__class__.__name__,
-                         activation.__class__.__name__)
+            config, custom_objects={"LeakyReLU": activation}
+        )
+        self.assertEqual(
+            deserialized_layer.__class__.__name__, layer.__class__.__name__
+        )
+        self.assertEqual(
+            deserialized_layer.activation.__class__.__name__,
+            activation.__class__.__name__,
+        )
 
     def test_softmax(self):
         x = backend.placeholder(ndim=2)
@@ -136,6 +148,7 @@ class KerasActivationsTest(test.TestCase, parameterized.TestCase):
             else:
                 z = np.exp(x)
                 return z / (1 + z)
+
         sigmoid = np.vectorize(ref_sigmoid)
 
         x = backend.placeholder(ndim=2)
@@ -150,6 +163,7 @@ class KerasActivationsTest(test.TestCase, parameterized.TestCase):
             x = (x * 0.2) + 0.5
             z = 0.0 if x <= 0 else (1.0 if x >= 1 else x)
             return z
+
         hard_sigmoid = np.vectorize(ref_hard_sigmoid)
         x = backend.placeholder(ndim=2)
         f = backend.function([x], [activations.hard_sigmoid(x)])
@@ -205,11 +219,11 @@ class KerasActivationsTest(test.TestCase, parameterized.TestCase):
 
     def test_invalid_usage(self):
         with self.assertRaises(ValueError):
-            activations.get('unknown')
+            activations.get("unknown")
 
         # The following should be possible but should raise a warning:
         activations.get(advanced_activations.LeakyReLU())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
