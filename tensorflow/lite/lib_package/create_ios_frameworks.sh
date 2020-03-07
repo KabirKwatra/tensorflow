@@ -31,19 +31,19 @@ FRAMEWORK_NAME="tensorflow_lite"
 while getopts "g" opt_name; do
   case "$opt_name" in
     g)
-        USE_GPU_DELEGATE="true"
-        FRAMEWORK_NAME="tensorflow_lite_gpu"
-        ;;
-    *) usage;;
+      USE_GPU_DELEGATE="true"
+      FRAMEWORK_NAME="tensorflow_lite_gpu"
+      ;;
+    *) usage ;;
   esac
 done
 shift $((OPTIND - 1))
 readonly USE_GPU_DELEGATE
 readonly FRAMEWORK_NAME
 
-if [ "$USE_GPU_DELEGATE" == "true" ] ; then
-  for filename in metal_delegate.h libmetal_delegate.a ; do
-    if [[ ! -f "${TFLITE_DIR}/delegates/gpu/${filename}" ]] ; then
+if [ "$USE_GPU_DELEGATE" == "true" ]; then
+  for filename in metal_delegate.h libmetal_delegate.a; do
+    if [[ ! -f "${TFLITE_DIR}/delegates/gpu/${filename}" ]]; then
       echo "File $TFLITE_DIR/delegates/gpu/$filename doesn't exist."
       echo "It's required for building TFLite Framework with GPU. Aborting."
       exit 1
@@ -64,13 +64,13 @@ echo "Headers, populating: TensorFlow Lite"
 cd "$TFLITE_DIR"/../..
 
 find tensorflow/lite -name '*.h' \
-    -not -path 'tensorflow/lite/tools/*' \
-    -not -path 'tensorflow/lite/examples/*' \
-    -not -path 'tensorflow/lite/gen/*' \
-    -not -path 'tensorflow/lite/toco/*' \
-    -not -path 'tensorflow/lite/nnapi/*' \
-    -not -path 'tensorflow/lite/java/*' \
-    | tar -cf "$FW_DIR_TFLITE_HDRS"/tmp.tar -T -
+  -not -path 'tensorflow/lite/tools/*' \
+  -not -path 'tensorflow/lite/examples/*' \
+  -not -path 'tensorflow/lite/gen/*' \
+  -not -path 'tensorflow/lite/toco/*' \
+  -not -path 'tensorflow/lite/nnapi/*' \
+  -not -path 'tensorflow/lite/java/*' |
+  tar -cf "$FW_DIR_TFLITE_HDRS"/tmp.tar -T -
 cd "$FW_DIR_TFLITE_HDRS"
 tar xf tmp.tar
 rm -f tmp.tar
@@ -87,16 +87,16 @@ echo "Generate LICENSE files and copy to target"
 bazel build //tensorflow/tools/lib_package:clicenses_generate
 cp "$TFLITE_DIR"/../../LICENSE "$FW_DIR_TFLITE"
 cp "$TFLITE_DIR"/../../bazel-bin/tensorflow/tools/lib_package/THIRD_PARTY_TF_C_LICENSES \
-   "$FW_DIR_TFLITE"
+  "$FW_DIR_TFLITE"
 
 echo "Copying static libraries"
 # Note: There must be a static library with the same name
 # as the framework name.
 cp "$TFLITE_DIR"/tools/make/gen/lib/libtensorflow-lite.a \
-    "$FW_DIR_TFLITE/$FRAMEWORK_NAME"
-if [ "$USE_GPU_DELEGATE" == "true" ] ; then
+  "$FW_DIR_TFLITE/$FRAMEWORK_NAME"
+if [ "$USE_GPU_DELEGATE" == "true" ]; then
   cp "$TFLITE_DIR/delegates/gpu/libmetal_delegate.a" \
-      "$FW_DIR_TFLITE"/libmetal_delegate.a
+    "$FW_DIR_TFLITE"/libmetal_delegate.a
 fi
 
 # This is required, otherwise they interfere with the documentation of the
