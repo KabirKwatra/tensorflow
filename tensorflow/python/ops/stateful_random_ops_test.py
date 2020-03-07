@@ -35,14 +35,12 @@ from tensorflow.python.framework import errors
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_spec
 from tensorflow.python.framework import test_util
-from tensorflow.python.kernel_tests.random import util as \
-    random_test_util
+from tensorflow.python.kernel_tests.random import util as random_test_util
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import gen_random_ops
 from tensorflow.python.ops import gen_stateful_random_ops
 from tensorflow.python.ops import logging_ops
-from tensorflow.python.ops import stateful_random_ops as \
-    random
+from tensorflow.python.ops import stateful_random_ops as random
 from tensorflow.python.ops import variables
 from tensorflow.python.platform import test
 
@@ -58,26 +56,33 @@ INTS = [dtypes.int32, dtypes.int64]
 
 
 class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
-
     def setUp(self):
         super(StatefulRandomOpsTest, self).setUp()
         physical_devices = config.list_physical_devices("CPU")
         config.set_logical_device_configuration(
-            physical_devices[0], [
+            physical_devices[0],
+            [
                 context.LogicalDeviceConfiguration(),
-                context.LogicalDeviceConfiguration()
-            ])
+                context.LogicalDeviceConfiguration(),
+            ],
+        )
 
     def testCreateRNGStateIntSeed(self):
         """Tests `create_rng_state` when `seed` is int."""
         # using leading 'F' to test overflow tolerance
-        state = random.create_rng_state(0xFFFF222233334444FFAA666677778888,
-                                        random.RNG_ALG_PHILOX)
+        state = random.create_rng_state(
+            0xFFFF222233334444FFAA666677778888, random.RNG_ALG_PHILOX
+        )
         self.assertAllEqual(
-            list(map(random._uint_to_int,
-                     [0xFFAA666677778888, 0xFFFF222233334444] +
-                     [0] * (random.PHILOX_STATE_SIZE - 2))),
-            state)
+            list(
+                map(
+                    random._uint_to_int,
+                    [0xFFAA666677778888, 0xFFFF222233334444]
+                    + [0] * (random.PHILOX_STATE_SIZE - 2),
+                )
+            ),
+            state,
+        )
 
     def assertAllDifferent(self, tensors):
         """Checks that there are no duplicate elements anywhere among the tensors.
@@ -118,20 +123,21 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         self.assertAllDifferent([seeds1[0, :], seeds2[0, :]])
         gens = gen.split(count=count)
         self.assertAllEqual(count, len(gens))
-        randoms = [g.uniform_full_int(shape=shape, dtype=dtypes.int32)
-                   for g in gens]
+        randoms = [g.uniform_full_int(shape=shape, dtype=dtypes.int32) for g in gens]
         self.assertAllDifferent(randoms)
         # Tests graph mode.
         @def_function.function
         def f():
             return gen.make_seeds(count=count)
+
         for _ in range(3):
             f()
 
     def assertRegex(self, pattern, text):
         self.assertTrue(
             re.search(pattern, text),
-            "Can't find pattern '%s' in text '%s'" % (pattern, text))
+            "Can't find pattern '%s' in text '%s'" % (pattern, text),
+        )
 
     @test_util.run_v2_only
     @test_util.run_cuda_only
@@ -156,6 +162,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         ]:
             resetter(gen)
             expected_normal = gen.normal(shape)
+
             @def_function.function
             def f(resetter):
                 resetter(gen)
@@ -163,6 +170,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
 
             def check_results(expected_normal, v):
                 self.assertAllEqual(expected_normal, v)
+
             check_results(expected_normal, f(resetter))
             check_results(expected_normal, f(resetter))
 
@@ -179,7 +187,8 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             lambda: random.Generator(state=[1, 2, 3], alg=alg),
             lambda: random.Generator.from_seed(1234),
             lambda: random.Generator.from_key_counter(  # pylint: disable=g-long-lambda
-                key=1, counter=[2, 3], alg=alg),
+                key=1, counter=[2, 3], alg=alg
+            ),
         ]:
             gen = constructor()
             # Tests tf.function
@@ -187,6 +196,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             expected_normal2 = gen.normal(shape)
             global g_seeded
             g_seeded = None
+
             @def_function.function
             def f(constructor):
                 global g_seeded
@@ -197,12 +207,16 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
 
             def check_results(expected_normal, v):
                 self.assertAllEqual(expected_normal, v)
+
             check_results(expected_normal1, f(constructor))
             check_results(expected_normal2, f(constructor))
 
-    @parameterized.parameters([
-        ("philox", random.RNG_ALG_PHILOX, random.Algorithm.PHILOX),
-        ("threefry", random.RNG_ALG_THREEFRY, random.Algorithm.THREEFRY)])
+    @parameterized.parameters(
+        [
+            ("philox", random.RNG_ALG_PHILOX, random.Algorithm.PHILOX),
+            ("threefry", random.RNG_ALG_THREEFRY, random.Algorithm.THREEFRY),
+        ]
+    )
     @test_util.run_v2_only
     def testAlg(self, name, int_id, enum_id):
         g_by_name = random.Generator.from_seed(1234, name)
@@ -231,6 +245,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         shape = [2, 3]
         global g_unseeded
         g_unseeded = None
+
         @def_function.function
         def f():
             global g_unseeded
@@ -238,6 +253,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             if g_unseeded is None:
                 g_unseeded = random.Generator.from_non_deterministic_state()
             return g_unseeded.normal(shape)
+
         self.assertAllEqual(shape, f().shape)
 
     @test_util.run_v2_only
@@ -258,22 +274,33 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             if g_seeded is None:
                 g_seeded = random.Generator(g)
             self.assertAllEqual(g.algorithm, g_seeded.algorithm)
-            self.assertAllEqual(g.state.read_value(),
-                                g_seeded.state.read_value())
+            self.assertAllEqual(g.state.read_value(), g_seeded.state.read_value())
+
         f()
 
     @test_util.run_v1_only(
-        ("This test is specifically for checking TF1 compatibility. "
-         "It cannot run under TF2."))
+        (
+            "This test is specifically for checking TF1 compatibility. "
+            "It cannot run under TF2."
+        )
+    )
     def testTF1(self):
         seed = 1234
         shape = [2, 3]
         expected_normal1 = constant_op.constant(
-            [[0.9356609, 1.0854305, -0.93788373],
-             [-0.50615472, 1.31697023, 0.71375787]], dtype=dtypes.float32)
+            [
+                [0.9356609, 1.0854305, -0.93788373],
+                [-0.50615472, 1.31697023, 0.71375787],
+            ],
+            dtype=dtypes.float32,
+        )
         expected_normal2 = constant_op.constant(
-            [[-0.3964749, 0.8369565, -0.30946946],
-             [1.1206646, 1.00852597, -0.10185789]], dtype=dtypes.float32)
+            [
+                [-0.3964749, 0.8369565, -0.30946946],
+                [1.1206646, 1.00852597, -0.10185789],
+            ],
+            dtype=dtypes.float32,
+        )
         with self.cached_session() as sess:
             gen1 = random.Generator.from_seed(seed)
             gen2 = random.Generator.from_non_deterministic_state()
@@ -287,6 +314,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             def check_results(expected_normal, v1, v2):
                 self.assertAllClose(expected_normal, v1, rtol=1e-5, atol=1e-5)
                 self.assertAllEqual(shape, v2.shape)
+
             check_results(expected_normal1, *f())
             check_results(expected_normal2, *f())
 
@@ -331,6 +359,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
 
         Fixing b/32087099
         """
+
         def f(include_print):
             shape = constant_op.constant([5])
             if include_print:
@@ -364,9 +393,11 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         gen = random.Generator(state=[0, 0, key], alg=random.RNG_ALG_PHILOX)
         got = gen.key
         self.assertAllEqual(key, got)
+
         @def_function.function
         def f():
             return gen.key
+
         got = f()
         self.assertAllEqual(key, got)
 
@@ -374,8 +405,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
     def testSkip(self):
         key = 1234
         counter = 5678
-        gen = random.Generator(
-            state=[counter, 0, key], alg=random.RNG_ALG_PHILOX)
+        gen = random.Generator(state=[counter, 0, key], alg=random.RNG_ALG_PHILOX)
         delta = 432
         gen.skip(delta)
         new_counter = gen._state_var[0]
@@ -387,8 +417,9 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             # note how the two seeds for the old op correspond to the seed for the new
             # op
             with ops.device(device):
-                gen = random.Generator(state=[0, seed2, seed1],
-                                       alg=random.RNG_ALG_PHILOX)
+                gen = random.Generator(
+                    state=[0, seed2, seed1], alg=random.RNG_ALG_PHILOX
+                )
 
             # create a graph for the old op in order to call it many times
             @def_function.function
@@ -411,14 +442,16 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         # go/gpylint-faq#undefined-loop-variable
         def old_normal(dtype, seed1, seed2):
             return gen_random_ops.random_standard_normal(
-                shape, dtype=dtype, seed=seed1, seed2=seed2)
+                shape, dtype=dtype, seed=seed1, seed2=seed2
+            )
 
         def new_normal(dtype, gen):
             return gen._standard_normal(shape, dtype=dtype)
 
         def old_truncated_normal(dtype, seed1, seed2):
             return gen_random_ops.truncated_normal(
-                shape, dtype=dtype, seed=seed1, seed2=seed2)
+                shape, dtype=dtype, seed=seed1, seed2=seed2
+            )
 
         def new_truncated_normal(dtype, gen):
             return gen._truncated_normal(shape, dtype=dtype)
@@ -427,14 +460,16 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
             minval2 = constant_op.constant(minval, dtype=dtype)
             maxval2 = constant_op.constant(maxval, dtype=dtype)
             return gen_random_ops.random_uniform_int(
-                shape, minval=minval2, maxval=maxval2, seed=seed1, seed2=seed2)
+                shape, minval=minval2, maxval=maxval2, seed=seed1, seed2=seed2
+            )
 
         def new_uniform_int(dtype, gen):
             return gen.uniform(shape, minval=minval, maxval=maxval, dtype=dtype)
 
         def old_uniform(dtype, seed1, seed2):
             return gen_random_ops.random_uniform(
-                shape, dtype=dtype, seed=seed1, seed2=seed2)
+                shape, dtype=dtype, seed=seed1, seed2=seed2
+            )
 
         def new_uniform(dtype, gen):
             return gen._uniform(shape, dtype=dtype)
@@ -472,10 +507,12 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         shape = [315, 49]
         with ops.device("/device:CPU:0"):
             cpu = random.Generator.from_seed(seed).uniform_full_int(
-                shape=shape, dtype=dtype)
+                shape=shape, dtype=dtype
+            )
         with ops.device(test_util.gpu_device_name()):
             gpu = random.Generator.from_seed(seed).uniform_full_int(
-                shape=shape, dtype=dtype)
+                shape=shape, dtype=dtype
+            )
         self.assertAllEqual(cpu, gpu)
 
     @parameterized.parameters(FLOATS + INTS)
@@ -485,8 +522,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         maxval = 33
         size = 1000
         gen = random.Generator.from_seed(1234)
-        x = gen.uniform(
-            shape=[size], dtype=dtype, minval=minval, maxval=maxval).numpy()
+        x = gen.uniform(shape=[size], dtype=dtype, minval=minval, maxval=maxval).numpy()
         self.assertTrue(np.all(x >= minval))
         self.assertTrue(np.all(x < maxval))
 
@@ -528,8 +564,7 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         # The constant 2.492 is the 5% critical value for the Anderson-Darling
         # test where the mean and variance are known. This test is probabilistic
         # so to avoid flakiness the seed is fixed.
-        self.assertLess(
-            random_test_util.anderson_darling(x.astype(float)), 2.492)
+        self.assertLess(random_test_util.anderson_darling(x.astype(float)), 2.492)
 
     @test_util.run_v2_only
     def testErrors(self):
@@ -538,58 +573,78 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         shape = [2, 3]
         gen = random.Generator.from_seed(1234)
         with self.assertRaisesWithPredicateMatch(
-                errors.InvalidArgumentError,
-                r"must have shape \[\], not"):
+            errors.InvalidArgumentError, r"must have shape \[\], not"
+        ):
             gen_stateful_random_ops.stateful_standard_normal_v2(
-                gen.state.handle, [0, 0], shape)
+                gen.state.handle, [0, 0], shape
+            )
         with self.assertRaisesWithPredicateMatch(
-                errors.InvalidArgumentError,
-                r"must have shape \[\], not"):
-            gen_stateful_random_ops.rng_skip(
-                gen.state.handle, gen.algorithm, [0, 0])
+            errors.InvalidArgumentError, r"must have shape \[\], not"
+        ):
+            gen_stateful_random_ops.rng_skip(gen.state.handle, gen.algorithm, [0, 0])
         with self.assertRaisesWithPredicateMatch(
-                TypeError, "EagerTensor of dtype int64"):
+            TypeError, "EagerTensor of dtype int64"
+        ):
             gen_stateful_random_ops.stateful_standard_normal_v2(
-                gen.state.handle, 1.1, shape)
+                gen.state.handle, 1.1, shape
+            )
         with self.assertRaisesWithPredicateMatch(
-                errors.InvalidArgumentError,
-                "Unsupported algorithm id"):
+            errors.InvalidArgumentError, "Unsupported algorithm id"
+        ):
             gen_stateful_random_ops.stateful_standard_normal_v2(
-                gen.state.handle, 123, shape)
+                gen.state.handle, 123, shape
+            )
         var = variables.Variable([0, 0], dtype=dtypes.int32)
         with self.assertRaisesWithPredicateMatch(
-                errors.InvalidArgumentError,
-                "dtype of RNG state variable must be int64, not"):
+            errors.InvalidArgumentError,
+            "dtype of RNG state variable must be int64, not",
+        ):
             gen_stateful_random_ops.stateful_standard_normal_v2(
-                var.handle, random.RNG_ALG_PHILOX, shape)
+                var.handle, random.RNG_ALG_PHILOX, shape
+            )
         var = variables.Variable([[0]], dtype=dtypes.int64)
         with self.assertRaisesWithPredicateMatch(
-                errors.InvalidArgumentError,
-                "RNG state must have one and only one dimension, not"):
+            errors.InvalidArgumentError,
+            "RNG state must have one and only one dimension, not",
+        ):
             gen_stateful_random_ops.stateful_standard_normal_v2(
-                var.handle, random.RNG_ALG_PHILOX, shape)
+                var.handle, random.RNG_ALG_PHILOX, shape
+            )
         var = variables.Variable([0], dtype=dtypes.int64)
         with self.assertRaisesWithPredicateMatch(
-                errors.InvalidArgumentError,
-                "For the Philox algorithm, the size of state must be at least"):
+            errors.InvalidArgumentError,
+            "For the Philox algorithm, the size of state must be at least",
+        ):
             gen_stateful_random_ops.stateful_standard_normal_v2(
-                var.handle, random.RNG_ALG_PHILOX, shape)
+                var.handle, random.RNG_ALG_PHILOX, shape
+            )
         with self.assertRaisesWithPredicateMatch(
-                ValueError,
-                "minval must be a scalar; got a tensor of shape "):
+            ValueError, "minval must be a scalar; got a tensor of shape "
+        ):
+
             @def_function.function
             def f():
-                gen.uniform(shape=shape, minval=array_ops.zeros(shape, "int32"),
-                            maxval=100, dtype="int32")
+                gen.uniform(
+                    shape=shape,
+                    minval=array_ops.zeros(shape, "int32"),
+                    maxval=100,
+                    dtype="int32",
+                )
+
             f()
         with self.assertRaisesWithPredicateMatch(
-                ValueError,
-                "maxval must be a scalar; got a tensor of shape "):
+            ValueError, "maxval must be a scalar; got a tensor of shape "
+        ):
+
             @def_function.function
             def f2():
                 gen.uniform(
-                    shape=shape, minval=0, maxval=array_ops.ones(shape, "int32") * 100,
-                    dtype="int32")
+                    shape=shape,
+                    minval=0,
+                    maxval=array_ops.ones(shape, "int32") * 100,
+                    dtype="int32",
+                )
+
             f2()
 
     @test_util.run_v2_only
@@ -624,7 +679,8 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
 
         random.set_global_generator(random.Generator.from_seed(50))
         with self.assertRaisesWithPredicateMatch(
-                errors.NotFoundError, "Resource .+ does not exist"):
+            errors.NotFoundError, "Resource .+ does not exist"
+        ):
             _ = f()
             random.set_global_generator(random.Generator.from_seed(50))
             _ = f()
@@ -634,9 +690,11 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         """Tests that RNG can be used as tf.function's argument.
         """
         shape = [2, 3]
+
         @def_function.function
         def f(gen):
             return gen.normal(shape)
+
         g1 = random.Generator.from_seed(1)
         g2 = random.Generator.from_seed(1)
         res1 = f(g1)
@@ -648,10 +706,12 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
     def testFunArgAlgIsInt(self):
         """Tests that `algorithm` is `int` when reconstructed from composite tensor.
         """
+
         @def_function.function
         def f(g):
             self.assertIsInstance(g.algorithm, six.integer_types)
             return g.make_seeds(), g
+
         gen = random.Generator.from_seed(123, alg="philox")
         f(gen)
 
@@ -675,17 +735,21 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         """
         spec = random.GeneratorSpec(shape=(2, 3), dtype=dtypes.int32)
         res = spec.most_specific_compatible_type(
-            random.GeneratorSpec(shape=(2, 3), dtype=dtypes.int32))
+            random.GeneratorSpec(shape=(2, 3), dtype=dtypes.int32)
+        )
         self.assertEqual(spec, res)
         with self.assertRaisesWithPredicateMatch(ValueError, ""):
             spec.most_specific_compatible_type(
-                tensor_spec.TensorSpec(shape=(2, 3), dtype=dtypes.int32))
+                tensor_spec.TensorSpec(shape=(2, 3), dtype=dtypes.int32)
+            )
         with self.assertRaisesWithPredicateMatch(ValueError, ""):
             spec.most_specific_compatible_type(
-                random.GeneratorSpec(shape=(2, 4), dtype=dtypes.int32))
+                random.GeneratorSpec(shape=(2, 4), dtype=dtypes.int32)
+            )
         with self.assertRaisesWithPredicateMatch(ValueError, ""):
             spec.most_specific_compatible_type(
-                random.GeneratorSpec(shape=(2, 3), dtype=dtypes.int64))
+                random.GeneratorSpec(shape=(2, 3), dtype=dtypes.int64)
+            )
 
     @test_util.run_v2_only
     @test_util.run_cuda_only
@@ -698,16 +762,16 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         shape = [3, 4]
         dtype = dtypes.int32
         gen = random.Generator.from_seed(1234)
-        strat = MirroredStrategy(
-            devices=["/cpu:0", test_util.gpu_device_name()])
+        strat = MirroredStrategy(devices=["/cpu:0", test_util.gpu_device_name()])
         with strat.scope():
+
             def f():
                 t1 = gen.uniform_full_int(shape=shape, dtype=dtype)
                 t2 = gen.uniform_full_int(shape=shape, dtype=dtype)
                 t = array_ops.stack([t1, t2])
                 return t
-            results = strat.extended.call_for_each_replica(
-                fn=f)
+
+            results = strat.extended.call_for_each_replica(fn=f)
             values = results.values
             self.assertAllEqual(2, len(values))
             self.assertAllDifferent(values)
@@ -725,15 +789,14 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         strat = MirroredStrategy(devices=["cpu:0", "cpu:1"])
         for creator in creators:
             with strat.scope():
-                with self.assertRaisesWithPredicateMatch(
-                        ValueError, "disallowed"):
+                with self.assertRaisesWithPredicateMatch(ValueError, "disallowed"):
                     creator()  # pylint: disable=cell-var-from-loop
 
             def f():
                 gen = creator()  # pylint: disable=cell-var-from-loop
                 return gen.uniform_full_int(shape=shape, dtype=dtype)
-            with self.assertRaisesWithPredicateMatch(
-                    ValueError, "disallowed"):
+
+            with self.assertRaisesWithPredicateMatch(ValueError, "disallowed"):
                 strat.extended.call_for_each_replica(fn=f)
 
     @test_util.run_v2_only
@@ -752,13 +815,14 @@ class StatefulRandomOpsTest(test.TestCase, parameterized.TestCase):
         # Use `PerReplica` to specify which `gen` is sent to which replica
         gens = dist_values.PerReplica([[g] for g in gens])
         with strat.scope():
+
             def f(gen):
                 t1 = gen.uniform_full_int(shape=shape, dtype=dtype)
                 t2 = gen.uniform_full_int(shape=shape, dtype=dtype)
                 t = array_ops.stack([t1, t2])
                 return t
-            results = strat.extended.call_for_each_replica(
-                fn=f, args=gens)
+
+            results = strat.extended.call_for_each_replica(fn=f, args=gens)
             local_results = strat.experimental_local_results(results)
             self.assertAllEqual(2, len(local_results))
             self.assertAllDifferent(local_results)

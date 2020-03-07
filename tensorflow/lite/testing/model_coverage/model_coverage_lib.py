@@ -56,8 +56,9 @@ def get_filepath(filename, base_dir=None):
     """
     if base_dir is None:
         base_dir = "learning/brain/mobile/tflite_compat_models"
-    return os.path.join(_resource_loader.get_root_dir_with_all_resources(),
-                        base_dir, filename)
+    return os.path.join(
+        _resource_loader.get_root_dir_with_all_resources(), base_dir, filename
+    )
 
 
 def get_image(size):
@@ -69,8 +70,7 @@ def get_image(size):
     Returns:
       np.ndarray.
     """
-    img_filename = _resource_loader.get_path_to_datafile(
-        "testdata/grace_hopper.jpg")
+    img_filename = _resource_loader.get_path_to_datafile("testdata/grace_hopper.jpg")
     img = image.load_img(img_filename, target_size=(size, size))
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
@@ -143,10 +143,9 @@ def _get_input_data_map(tflite_model, input_data):
     }
 
 
-def _generate_random_input_data(tflite_model,
-                                seed=None,
-                                input_data_range=None,
-                                input_shapes_resize=None):
+def _generate_random_input_data(
+    tflite_model, seed=None, input_data_range=None, input_shapes_resize=None
+):
     """Generates input data based on the input tensors in the TFLite model.
 
     Args:
@@ -177,11 +176,11 @@ def _generate_random_input_data(tflite_model,
     input_data = []
     for input_tensor in input_details:
         val = np.random.random_sample(input_tensor["shape"])
-        if (input_data_range is not None and
-                input_tensor["name"] in input_data_range):
-            val = (input_data_range[input_tensor["name"]][1] -
-                   input_data_range[input_tensor["name"]][0]
-                   ) * val + input_data_range[input_tensor["name"]][0]
+        if input_data_range is not None and input_tensor["name"] in input_data_range:
+            val = (
+                input_data_range[input_tensor["name"]][1]
+                - input_data_range[input_tensor["name"]][0]
+            ) * val + input_data_range[input_tensor["name"]][0]
         input_data.append(np.array(val, dtype=input_tensor["dtype"]))
 
     input_data_map = _get_input_data_map(tflite_model, input_data)
@@ -277,9 +276,9 @@ def evaluate_saved_model(directory, tag_set, signature_key):
 
         meta_graph = _loader.load(sess, tag_set, directory)
         signature_def = _convert_saved_model.get_signature_def(
-            meta_graph, signature_key)
-        inputs, outputs = _convert_saved_model.get_inputs_outputs(
-            signature_def)
+            meta_graph, signature_key
+        )
+        inputs, outputs = _convert_saved_model.get_inputs_outputs(signature_def)
 
         return lambda input_data: sess.run(outputs, dict(zip(inputs, input_data)))
 
@@ -297,12 +296,14 @@ def evaluate_keras_model(filename):
     return lambda input_data: [keras_model.predict(input_data)]
 
 
-def compare_models(tflite_model,
-                   tf_eval_func,
-                   input_shapes_resize=None,
-                   input_data=None,
-                   input_data_range=None,
-                   tolerance=5):
+def compare_models(
+    tflite_model,
+    tf_eval_func,
+    input_shapes_resize=None,
+    input_data=None,
+    input_data_range=None,
+    tolerance=5,
+):
     """Compares TensorFlow and TFLite models.
 
     Unless the input data is provided, the models are compared with random data.
@@ -326,19 +327,19 @@ def compare_models(tflite_model,
         input_data, _ = _generate_random_input_data(
             tflite_model=tflite_model,
             input_data_range=input_data_range,
-            input_shapes_resize=input_shapes_resize)
+            input_shapes_resize=input_shapes_resize,
+        )
     tf_results = tf_eval_func(input_data)
     tflite_results, _ = _evaluate_tflite_model(
-        tflite_model, input_data, input_shapes_resize=input_shapes_resize)
+        tflite_model, input_data, input_shapes_resize=input_shapes_resize
+    )
     for tf_result, tflite_result in zip(tf_results, tflite_results):
         np.testing.assert_almost_equal(tf_result, tflite_result, tolerance)
 
 
-def compare_models_v2(tflite_model,
-                      tf_eval_func,
-                      input_data=None,
-                      input_data_range=None,
-                      tolerance=5):
+def compare_models_v2(
+    tflite_model, tf_eval_func, input_data=None, input_data_range=None, tolerance=5
+):
     """Compares TensorFlow and TFLite models for TensorFlow 2.0.
 
     Unless the input data is provided, the models are compared with random data.
@@ -360,7 +361,8 @@ def compare_models_v2(tflite_model,
     # Convert the input data into a map.
     if input_data is None:
         input_data, input_data_map = _generate_random_input_data(
-            tflite_model=tflite_model, input_data_range=input_data_range)
+            tflite_model=tflite_model, input_data_range=input_data_range
+        )
     else:
         input_data_map = _get_input_data_map(tflite_model, input_data)
     input_data_func_map = {
@@ -372,16 +374,14 @@ def compare_models_v2(tflite_model,
         tf_results = tf_eval_func(**input_data_func_map)
     else:
         tf_results = tf_eval_func(constant_op.constant(input_data[0]))
-    tflite_results, tflite_labels = _evaluate_tflite_model(
-        tflite_model, input_data)
+    tflite_results, tflite_labels = _evaluate_tflite_model(tflite_model, input_data)
 
     # Convert the output TensorFlow results into an ordered list.
     if isinstance(tf_results, dict):
         if len(tf_results) == 1:
             tf_results = [tf_results[list(tf_results.keys())[0]]]
         else:
-            tf_results = [tf_results[tflite_label]
-                          for tflite_label in tflite_labels]
+            tf_results = [tf_results[tflite_label] for tflite_label in tflite_labels]
     else:
         tf_results = [tf_results]
 
@@ -389,11 +389,9 @@ def compare_models_v2(tflite_model,
         np.testing.assert_almost_equal(tf_result, tflite_result, tolerance)
 
 
-def test_frozen_graph_quant(filename,
-                            input_arrays,
-                            output_arrays,
-                            input_shapes=None,
-                            **kwargs):
+def test_frozen_graph_quant(
+    filename, input_arrays, output_arrays, input_shapes=None, **kwargs
+):
     """Sanity check to validate post quantize flag alters the graph.
 
     This test does not check correctness of the converted model. It converts the
@@ -417,7 +415,8 @@ def test_frozen_graph_quant(filename,
     """
     # Convert and load the float model.
     converter = _lite.TFLiteConverter.from_frozen_graph(
-        filename, input_arrays, output_arrays, input_shapes)
+        filename, input_arrays, output_arrays, input_shapes
+    )
     tflite_model_float = _convert(converter, **kwargs)
 
     interpreter_float = _get_tflite_interpreter(tflite_model_float)
@@ -425,10 +424,10 @@ def test_frozen_graph_quant(filename,
     float_tensors = interpreter_float.get_tensor_details()
 
     # Convert and load the quantized model.
-    converter = _lite.TFLiteConverter.from_frozen_graph(filename, input_arrays,
-                                                        output_arrays)
-    tflite_model_quant = _convert(
-        converter, post_training_quantize=True, **kwargs)
+    converter = _lite.TFLiteConverter.from_frozen_graph(
+        filename, input_arrays, output_arrays
+    )
+    tflite_model_quant = _convert(converter, post_training_quantize=True, **kwargs)
 
     interpreter_quant = _get_tflite_interpreter(tflite_model_quant)
     interpreter_quant.allocate_tensors()
@@ -441,30 +440,39 @@ def test_frozen_graph_quant(filename,
     num_tensors_float = len(float_tensors)
     num_tensors_same_dtypes = sum(
         float_tensor["dtype"] == quant_tensors_map[float_tensor["name"]]["dtype"]
-        for float_tensor in float_tensors)
+        for float_tensor in float_tensors
+    )
     has_quant_tensor = num_tensors_float != num_tensors_same_dtypes
 
     # For the "flex" case, post_training_quantize should not alter the graph,
     # unless we are quantizing to float16.
-    if ("target_ops" in kwargs and
-        not kwargs.get("quantize_to_float16", False) and
-            set(kwargs["target_ops"]) == set([_lite.OpsSet.SELECT_TF_OPS])):
+    if (
+        "target_ops" in kwargs
+        and not kwargs.get("quantize_to_float16", False)
+        and set(kwargs["target_ops"]) == set([_lite.OpsSet.SELECT_TF_OPS])
+    ):
         if has_quant_tensor:
-            raise ValueError("--post_training_quantize flag unexpectedly altered the "
-                             "full Flex mode graph.")
+            raise ValueError(
+                "--post_training_quantize flag unexpectedly altered the "
+                "full Flex mode graph."
+            )
     elif not has_quant_tensor:
-        raise ValueError("--post_training_quantize flag was unable to quantize the "
-                         "graph as expected in TFLite and mix-and-match mode.")
+        raise ValueError(
+            "--post_training_quantize flag was unable to quantize the "
+            "graph as expected in TFLite and mix-and-match mode."
+        )
 
 
-def test_frozen_graph(filename,
-                      input_arrays,
-                      output_arrays,
-                      input_shapes=None,
-                      input_shapes_resize=None,
-                      input_data=None,
-                      input_data_range=None,
-                      **kwargs):
+def test_frozen_graph(
+    filename,
+    input_arrays,
+    output_arrays,
+    input_shapes=None,
+    input_shapes_resize=None,
+    input_data=None,
+    input_data_range=None,
+    **kwargs
+):
     """Validates the TensorFlow frozen graph converts to a TFLite model.
 
     Converts the TensorFlow frozen graph to TFLite and checks the accuracy of the
@@ -490,7 +498,8 @@ def test_frozen_graph(filename,
       **kwargs: Additional arguments to be passed into the converter.
     """
     converter = _lite.TFLiteConverter.from_frozen_graph(
-        filename, input_arrays, output_arrays, input_shapes)
+        filename, input_arrays, output_arrays, input_shapes
+    )
     tflite_model = _convert(converter, **kwargs)
 
     tf_eval_func = evaluate_frozen_graph(filename, input_arrays, output_arrays)
@@ -499,16 +508,19 @@ def test_frozen_graph(filename,
         tf_eval_func,
         input_shapes_resize=input_shapes_resize,
         input_data=input_data,
-        input_data_range=input_data_range)
+        input_data_range=input_data_range,
+    )
 
 
-def test_saved_model(directory,
-                     input_shapes=None,
-                     tag_set=None,
-                     signature_key=None,
-                     input_data=None,
-                     input_data_range=None,
-                     **kwargs):
+def test_saved_model(
+    directory,
+    input_shapes=None,
+    tag_set=None,
+    signature_key=None,
+    input_data=None,
+    input_data_range=None,
+    **kwargs
+):
     """Validates the TensorFlow SavedModel converts to a TFLite model.
 
     Converts the TensorFlow SavedModel to TFLite and checks the accuracy of the
@@ -535,7 +547,8 @@ def test_saved_model(directory,
         directory,
         input_shapes=input_shapes,
         tag_set=tag_set,
-        signature_key=signature_key)
+        signature_key=signature_key,
+    )
     tflite_model = _convert(converter, **kwargs)
 
     tf_eval_func = evaluate_saved_model(directory, tag_set, signature_key)
@@ -543,15 +556,18 @@ def test_saved_model(directory,
         tflite_model,
         tf_eval_func,
         input_data=input_data,
-        input_data_range=input_data_range)
+        input_data_range=input_data_range,
+    )
 
 
-def test_saved_model_v2(directory,
-                        tag_set=None,
-                        signature_key=None,
-                        input_data=None,
-                        input_data_range=None,
-                        **kwargs):
+def test_saved_model_v2(
+    directory,
+    tag_set=None,
+    signature_key=None,
+    input_data=None,
+    input_data_range=None,
+    **kwargs
+):
     """Validates the TensorFlow SavedModel converts to a TFLite model.
 
     Converts the TensorFlow SavedModel to TFLite and checks the accuracy of the
@@ -575,15 +591,15 @@ def test_saved_model_v2(directory,
         signature_key = _signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
     concrete_func = model.signatures[signature_key]
 
-    converter = _lite.TFLiteConverterV2.from_concrete_functions([
-                                                                concrete_func])
+    converter = _lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
     tflite_model = _convert(converter, **kwargs)
 
     compare_models_v2(
         tflite_model,
         concrete_func,
         input_data=input_data,
-        input_data_range=input_data_range)
+        input_data_range=input_data_range,
+    )
 
 
 def test_saved_model_v2_quant_float16(directory, **kwargs):
@@ -601,7 +617,8 @@ def test_saved_model_v2_quant_float16(directory, **kwargs):
         version=2,
         post_training_quantize=True,
         quantize_to_float16=True,
-        **kwargs)
+        **kwargs
+    )
 
     interpreter_quant = _get_tflite_interpreter(tflite_model_quant)
     interpreter_quant.allocate_tensors()
@@ -614,20 +631,25 @@ def test_saved_model_v2_quant_float16(directory, **kwargs):
     num_tensors_float = len(float_tensors)
     num_tensors_same_dtypes = sum(
         float_tensor["dtype"] == quant_tensors_map[float_tensor["name"]]["dtype"]
-        for float_tensor in float_tensors)
+        for float_tensor in float_tensors
+    )
     has_quant_tensor = num_tensors_float != num_tensors_same_dtypes
 
     if not has_quant_tensor:
-        raise ValueError("--post_training_quantize flag was unable to quantize the "
-                         "graph as expected.")
+        raise ValueError(
+            "--post_training_quantize flag was unable to quantize the "
+            "graph as expected."
+        )
 
 
-def test_keras_model(filename,
-                     input_arrays=None,
-                     input_shapes=None,
-                     input_data=None,
-                     input_data_range=None,
-                     **kwargs):
+def test_keras_model(
+    filename,
+    input_arrays=None,
+    input_shapes=None,
+    input_data=None,
+    input_data_range=None,
+    **kwargs
+):
     """Validates the tf.keras model converts to a TFLite model.
 
     Converts the tf.keras model to TFLite and checks the accuracy of the model on
@@ -649,7 +671,8 @@ def test_keras_model(filename,
       **kwargs: Additional arguments to be passed into the converter.
     """
     converter = _lite.TFLiteConverter.from_keras_model_file(
-        filename, input_arrays=input_arrays, input_shapes=input_shapes)
+        filename, input_arrays=input_arrays, input_shapes=input_shapes
+    )
     tflite_model = _convert(converter, **kwargs)
 
     tf_eval_func = evaluate_keras_model(filename)
@@ -657,14 +680,13 @@ def test_keras_model(filename,
         tflite_model,
         tf_eval_func,
         input_data=input_data,
-        input_data_range=input_data_range)
+        input_data_range=input_data_range,
+    )
 
 
-def test_keras_model_v2(filename,
-                        input_shapes=None,
-                        input_data=None,
-                        input_data_range=None,
-                        **kwargs):
+def test_keras_model_v2(
+    filename, input_shapes=None, input_data=None, input_data_range=None, **kwargs
+):
     """Validates the tf.keras model converts to a TFLite model.
 
     Converts the tf.keras model to TFLite and checks the accuracy of the model on
@@ -696,4 +718,5 @@ def test_keras_model_v2(filename,
         tflite_model,
         tf_eval_func,
         input_data=input_data,
-        input_data_range=input_data_range)
+        input_data_range=input_data_range,
+    )
