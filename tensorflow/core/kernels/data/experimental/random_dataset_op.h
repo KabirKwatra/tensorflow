@@ -24,23 +24,23 @@ namespace experimental {
 // See tensorflow/core/api_def/base_api/api_def_RandomDataset.pbtxt for the
 // API definition that corresponds to this kernel.
 class RandomDatasetOp : public DatasetOpKernel {
-public:
-    // Names of op parameters, public so that they can be accessed by test cases.
-    // Make sure that these are kept in sync with the REGISTER_OP call in
-    // tensorflow/core/ops/experimental_dataset_ops.cc
-    static constexpr const char* const kDatasetType = "Random";
-    static constexpr const char* const kSeed = "seed";
-    static constexpr const char* const kSeed2 = "seed2";
-    static constexpr const char* const kOutputTypes = "output_types";
-    static constexpr const char* const kOutputShapes = "output_shapes";
+ public:
+  // Names of op parameters, public so that they can be accessed by test cases.
+  // Make sure that these are kept in sync with the REGISTER_OP call in
+  // tensorflow/core/ops/experimental_dataset_ops.cc
+  static constexpr const char* const kDatasetType = "Random";
+  static constexpr const char* const kSeed = "seed";
+  static constexpr const char* const kSeed2 = "seed2";
+  static constexpr const char* const kOutputTypes = "output_types";
+  static constexpr const char* const kOutputShapes = "output_shapes";
 
-    explicit RandomDatasetOp(OpKernelConstruction* ctx);
+  explicit RandomDatasetOp(OpKernelConstruction* ctx);
 
-protected:
-    void MakeDataset(OpKernelContext* ctx, DatasetBase** output) override;
+ protected:
+  void MakeDataset(OpKernelContext* ctx, DatasetBase** output) override;
 
-private:
-    class Dataset;
+ private:
+  class Dataset;
 };
 
 }  // namespace experimental

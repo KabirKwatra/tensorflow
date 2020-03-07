@@ -33,57 +33,55 @@ struct GrapplerItem;
 // An abstract interface for an algorithm for generating a candidate
 // optimization of a GrapplerItem for running on a cluster.
 class GraphOptimizer {
-public:
-    GraphOptimizer() : deadline_usec_(0) {}
-    virtual ~GraphOptimizer() {}
+ public:
+  GraphOptimizer() : deadline_usec_(0) {}
+  virtual ~GraphOptimizer() {}
 
-    virtual string name() const = 0;
+  virtual string name() const = 0;
 
-    // Returns true if the optimizer requires a valid function library to perform
-    // graph optimization. If false, optimized GrapplerItem will have a stub
-    // instead of real function library (all function signatures and attributes
-    // will be valid, but function body will be empty). Most of the optimizers
-    // that do not instantiate functions should return true.
-    virtual bool UsesFunctionLibrary() const = 0;
+  // Returns true if the optimizer requires a valid function library to perform
+  // graph optimization. If false, optimized GrapplerItem will have a stub
+  // instead of real function library (all function signatures and attributes
+  // will be valid, but function body will be empty). Most of the optimizers
+  // that do not instantiate functions should return true.
+  virtual bool UsesFunctionLibrary() const = 0;
 
-    // Routine called to allow an algorithm to propose a rewritten graph
-    // for the graph, feeds and fetches in "item" to run more efficiently
-    // on "cluster". If the returned status is Status::OK() then
-    // *optimized_graph contains the rewritten graph.
-    // Returns an error status if it failed to generate a solution.
-    //
-    // A return value of error::Aborted() can be used signal early termination of
-    // the optimizer, e.g. if the optimization turned out to be a no-op. In this
-    // case the content of *optimized_graph is undefined.
-    virtual Status Optimize(Cluster* cluster, const GrapplerItem& item,
-                            GraphDef* optimized_graph) = 0;
+  // Routine called to allow an algorithm to propose a rewritten graph
+  // for the graph, feeds and fetches in "item" to run more efficiently
+  // on "cluster". If the returned status is Status::OK() then
+  // *optimized_graph contains the rewritten graph.
+  // Returns an error status if it failed to generate a solution.
+  //
+  // A return value of error::Aborted() can be used signal early termination of
+  // the optimizer, e.g. if the optimization turned out to be a no-op. In this
+  // case the content of *optimized_graph is undefined.
+  virtual Status Optimize(Cluster* cluster, const GrapplerItem& item,
+                          GraphDef* optimized_graph) = 0;
 
-    // Subclasses may define a version of Optimize that consumes item.
-    virtual Status Optimize(Cluster* cluster, GrapplerItem&& item,
-                            GraphDef* optimized_graph) {
-        return Optimize(cluster, item, optimized_graph);
-    }
+  // Subclasses may define a version of Optimize that consumes item.
+  virtual Status Optimize(Cluster* cluster, GrapplerItem&& item,
+                          GraphDef* optimized_graph) {
+    return Optimize(cluster, item, optimized_graph);
+  }
 
-    // Method invoked by the framework so that it can provide feedback
-    // on how well the "optimized_graph" (produced as *optimized_graph from a
-    // call to Optimize) performed.  Lower "result" scores are better.
-    virtual void Feedback(Cluster* cluster, const GrapplerItem& item,
-                          const GraphDef& optimized_graph, double result) = 0;
+  // Method invoked by the framework so that it can provide feedback
+  // on how well the "optimized_graph" (produced as *optimized_graph from a
+  // call to Optimize) performed.  Lower "result" scores are better.
+  virtual void Feedback(Cluster* cluster, const GrapplerItem& item,
+                        const GraphDef& optimized_graph, double result) = 0;
 
-    // Set deadline in microseconds since epoch. A value of zero means no
-    // deadline.
-    void set_deadline_usec(uint64 deadline_usec) {
-        deadline_usec_ = deadline_usec;
-    }
-    uint64 deadline_usec() const {
-        return deadline_usec_;
-    }
-    bool DeadlineExceeded() const {
-        return deadline_usec_ > 0 && Env::Default()->NowMicros() > deadline_usec_;
-    }
+  // Set deadline in microseconds since epoch. A value of zero means no
+  // deadline.
+  void set_deadline_usec(uint64 deadline_usec) {
+    deadline_usec_ = deadline_usec;
+  }
+  uint64 deadline_usec() const { return deadline_usec_; }
+  bool DeadlineExceeded() const {
+    return deadline_usec_ > 0 && Env::Default()->NowMicros() > deadline_usec_;
+  }
 
-private:
-    uint64 deadline_usec_;
+ private:
+  uint64 deadline_usec_;
 };
 
 #define GRAPPLER_RETURN_IF_DEADLINE_EXCEEDED()                              \

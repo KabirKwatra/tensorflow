@@ -35,12 +35,12 @@ __global__ void UpperBoundKernel(const T* __restrict__ sorted_inputs,
                                  int batch_size, int sorted_inputs_size,
                                  int values_size, const T* __restrict__ values,
                                  OutType* __restrict__ outputs) {
-    GPU_1D_KERNEL_LOOP(work_unit_id, values_size * batch_size) {
-        int bid = work_unit_id / values_size;
-        T value = values[work_unit_id];
-        outputs[work_unit_id] = gpu_helper::upper_bound<T, OutType>(
-                                    sorted_inputs + bid * sorted_inputs_size, sorted_inputs_size, value);
-    }
+  GPU_1D_KERNEL_LOOP(work_unit_id, values_size * batch_size) {
+    int bid = work_unit_id / values_size;
+    T value = values[work_unit_id];
+    outputs[work_unit_id] = gpu_helper::upper_bound<T, OutType>(
+        sorted_inputs + bid * sorted_inputs_size, sorted_inputs_size, value);
+  }
 }
 
 template <typename T, typename OutType>
@@ -48,60 +48,60 @@ __global__ void LowerBoundKernel(const T* __restrict__ sorted_inputs,
                                  int batch_size, int sorted_inputs_size,
                                  int values_size, const T* __restrict__ values,
                                  OutType* __restrict__ outputs) {
-    GPU_1D_KERNEL_LOOP(work_unit_id, values_size * batch_size) {
-        int bid = work_unit_id / values_size;
-        T value = values[work_unit_id];
-        outputs[work_unit_id] = gpu_helper::lower_bound<T, OutType>(
-                                    sorted_inputs + bid * sorted_inputs_size, sorted_inputs_size, value);
-    }
+  GPU_1D_KERNEL_LOOP(work_unit_id, values_size * batch_size) {
+    int bid = work_unit_id / values_size;
+    T value = values[work_unit_id];
+    outputs[work_unit_id] = gpu_helper::lower_bound<T, OutType>(
+        sorted_inputs + bid * sorted_inputs_size, sorted_inputs_size, value);
+  }
 }
 }  // namespace
 
 namespace functor {
 template <typename T, typename OutType>
 struct UpperBoundFunctor<GPUDevice, T, OutType> {
-    static Status Compute(OpKernelContext* context,
-                          const typename TTypes<T, 1>::ConstTensor& sorted_inputs,
-                          const typename TTypes<T, 1>::ConstTensor& values,
-                          int batch_size, int num_inputs, int num_values,
-                          typename TTypes<OutType, 1>::Tensor* output) {
-        const GPUDevice& device = context->eigen_device<GPUDevice>();
-        if (values.size() == 0) {
-            // GetGpuLaunchConfig requires work_element_count > 0
-            return Status::OK();
-        }
-        GpuLaunchConfig config = GetGpuLaunchConfig(values.size(), device);
-
-        TF_CHECK_OK(GpuLaunchKernel(
-                        UpperBoundKernel<T, OutType>, config.block_count,
-                        config.thread_per_block, 0, device.stream(), sorted_inputs.data(),
-                        batch_size, num_inputs, num_values, values.data(), output->data()));
-
-        return Status::OK();
+  static Status Compute(OpKernelContext* context,
+                        const typename TTypes<T, 1>::ConstTensor& sorted_inputs,
+                        const typename TTypes<T, 1>::ConstTensor& values,
+                        int batch_size, int num_inputs, int num_values,
+                        typename TTypes<OutType, 1>::Tensor* output) {
+    const GPUDevice& device = context->eigen_device<GPUDevice>();
+    if (values.size() == 0) {
+      // GetGpuLaunchConfig requires work_element_count > 0
+      return Status::OK();
     }
+    GpuLaunchConfig config = GetGpuLaunchConfig(values.size(), device);
+
+    TF_CHECK_OK(GpuLaunchKernel(
+        UpperBoundKernel<T, OutType>, config.block_count,
+        config.thread_per_block, 0, device.stream(), sorted_inputs.data(),
+        batch_size, num_inputs, num_values, values.data(), output->data()));
+
+    return Status::OK();
+  }
 };
 
 template <typename T, typename OutType>
 struct LowerBoundFunctor<GPUDevice, T, OutType> {
-    static Status Compute(OpKernelContext* context,
-                          const typename TTypes<T, 1>::ConstTensor& sorted_inputs,
-                          const typename TTypes<T, 1>::ConstTensor& values,
-                          int batch_size, int num_inputs, int num_values,
-                          typename TTypes<OutType, 1>::Tensor* output) {
-        const GPUDevice& device = context->eigen_device<GPUDevice>();
-        if (values.size() == 0) {
-            // GetGpuLaunchConfig requires work_element_count > 0
-            return Status::OK();
-        }
-        GpuLaunchConfig config = GetGpuLaunchConfig(values.size(), device);
-
-        TF_CHECK_OK(GpuLaunchKernel(
-                        LowerBoundKernel<T, OutType>, config.block_count,
-                        config.thread_per_block, 0, device.stream(), sorted_inputs.data(),
-                        batch_size, num_inputs, num_values, values.data(), output->data()));
-
-        return Status::OK();
+  static Status Compute(OpKernelContext* context,
+                        const typename TTypes<T, 1>::ConstTensor& sorted_inputs,
+                        const typename TTypes<T, 1>::ConstTensor& values,
+                        int batch_size, int num_inputs, int num_values,
+                        typename TTypes<OutType, 1>::Tensor* output) {
+    const GPUDevice& device = context->eigen_device<GPUDevice>();
+    if (values.size() == 0) {
+      // GetGpuLaunchConfig requires work_element_count > 0
+      return Status::OK();
     }
+    GpuLaunchConfig config = GetGpuLaunchConfig(values.size(), device);
+
+    TF_CHECK_OK(GpuLaunchKernel(
+        LowerBoundKernel<T, OutType>, config.block_count,
+        config.thread_per_block, 0, device.stream(), sorted_inputs.data(),
+        batch_size, num_inputs, num_values, values.data(), output->data()));
+
+    return Status::OK();
+  }
 };
 }  // namespace functor
 
