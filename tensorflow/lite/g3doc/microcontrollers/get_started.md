@@ -10,22 +10,22 @@ microcontroller.
 To follow this guide, you'll need a supported hardware device. The example
 application we'll be using has been tested on the following devices:
 
-*   [Arduino Nano 33 BLE Sense](https://store.arduino.cc/usa/nano-33-ble-sense-with-headers)
-    (using Arduino IDE)
-*   [SparkFun Edge](https://www.sparkfun.com/products/15170) (building directly
-    from source)
-*   [STM32F746 Discovery kit](https://www.st.com/en/evaluation-tools/32f746gdiscovery.html)
-    (using Mbed)
-*   [Adafruit EdgeBadge](https://www.adafruit.com/product/4400) (using Arduino
-    IDE)
-*   [Adafruit TensorFlow Lite for Microcontrollers Kit](https://www.adafruit.com/product/4317)
-    (using Arduino IDE)
-*   [Adafruit Circuit Playground Bluefruit](https://learn.adafruit.com/tensorflow-lite-for-circuit-playground-bluefruit-quickstart?view=all)
-    (using Arduino IDE)
-*   [Espressif ESP32-DevKitC](https://www.espressif.com/en/products/hardware/esp32-devkitc/overview)
-    (using ESP IDF)
-*   [Espressif ESP-EYE](https://www.espressif.com/en/products/hardware/esp-eye/overview)
-    (using ESP IDF)
+- [Arduino Nano 33 BLE Sense](https://store.arduino.cc/usa/nano-33-ble-sense-with-headers)
+  (using Arduino IDE)
+- [SparkFun Edge](https://www.sparkfun.com/products/15170) (building directly
+  from source)
+- [STM32F746 Discovery kit](https://www.st.com/en/evaluation-tools/32f746gdiscovery.html)
+  (using Mbed)
+- [Adafruit EdgeBadge](https://www.adafruit.com/product/4400) (using Arduino
+  IDE)
+- [Adafruit TensorFlow Lite for Microcontrollers Kit](https://www.adafruit.com/product/4317)
+  (using Arduino IDE)
+- [Adafruit Circuit Playground Bluefruit](https://learn.adafruit.com/tensorflow-lite-for-circuit-playground-bluefruit-quickstart?view=all)
+  (using Arduino IDE)
+- [Espressif ESP32-DevKitC](https://www.espressif.com/en/products/hardware/esp32-devkitc/overview)
+  (using ESP IDF)
+- [Espressif ESP-EYE](https://www.espressif.com/en/products/hardware/esp-eye/overview)
+  (using ESP IDF)
 
 Learn more about supported platforms in
 [TensorFlow Lite for Microcontrollers](index.md).
@@ -36,17 +36,16 @@ TensorFlow Lite for Microcontrollers comes with several example applications
 that demonstrate its use for various tasks. At the time of writing, the
 following are available:
 
-*   [Hello World](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/hello_world) -
-    Demonstrates the absolute basics of using TensorFlow Lite for
-    Microcontrollers
-*   [Micro speech](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/micro_speech) -
-    Captures audio with a microphone in order to detect the words "yes" and "no"
-*   [Person detection](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/person_detection) -
-    Captures camera data with an image sensor in order to detect the presence or
-    absence of a person
-*   [Magic wand](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/magic_wand) -
-    Captures accelerometer data in order to classify three different physical
-    gestures
+- [Hello World](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/hello_world) -
+  Demonstrates the absolute basics of using TensorFlow Lite for Microcontrollers
+- [Micro speech](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/micro_speech) -
+  Captures audio with a microphone in order to detect the words "yes" and "no"
+- [Person detection](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/person_detection) -
+  Captures camera data with an image sensor in order to detect the presence or
+  absence of a person
+- [Magic wand](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/micro/examples/magic_wand) -
+  Captures accelerometer data in order to classify three different physical
+  gestures
 
 Each example application has a `README.md` file that explains how it can be
 deployed to its supported platforms.
@@ -69,10 +68,10 @@ its predictions are used to either blink LEDs or control an animation.
 
 The example includes the following:
 
-*   A Jupyter notebook that demonstrates how the model is trained and converted
-*   A C++ 11 application that runs inference using the model, tested to work
-    with Arduino, SparkFun Edge, STM32F746G discovery kit, and macOS
-*   A unit test that demonstrates the process of running inference
+- A Jupyter notebook that demonstrates how the model is trained and converted
+- A C++ 11 application that runs inference using the model, tested to work with
+  Arduino, SparkFun Edge, STM32F746G discovery kit, and macOS
+- A unit test that demonstrates the process of running inference
 
 ### Run the example
 
@@ -84,7 +83,7 @@ World README.md</a>
 
 ## How to run inference
 
-The following section walks through the *Hello World* example's
+The following section walks through the _Hello World_ example's
 [`hello_world_test.cc`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/examples/hello_world/hello_world_test.cc),
 which demonstrates how to run inference using TensorFlow Lite for
 Microcontrollers.
@@ -104,22 +103,22 @@ following header files:
 #include "tensorflow/lite/version.h"
 ```
 
--   [`all_ops_resolver.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/kernels/all_ops_resolver.h)
-    provides the operations used by the interpreter to run the model.
--   [`micro_error_reporter.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/micro_error_reporter.h)
-    outputs debug information.
--   [`micro_interpreter.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/micro_interpreter.h)
-    contains code to load and run models.
--   [`schema_generated.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/schema/schema_generated.h)
-    contains the schema for the TensorFlow Lite
-    [`FlatBuffer`](https://google.github.io/flatbuffers/) model file format.
--   [`version.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/version.h)
-    provides versioning information for the TensorFlow Lite schema.
+- [`all_ops_resolver.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/kernels/all_ops_resolver.h)
+  provides the operations used by the interpreter to run the model.
+- [`micro_error_reporter.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/micro_error_reporter.h)
+  outputs debug information.
+- [`micro_interpreter.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/micro_interpreter.h)
+  contains code to load and run models.
+- [`schema_generated.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/schema/schema_generated.h)
+  contains the schema for the TensorFlow Lite
+  [`FlatBuffer`](https://google.github.io/flatbuffers/) model file format.
+- [`version.h`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/version.h)
+  provides versioning information for the TensorFlow Lite schema.
 
 ### Include the model
 
 The TensorFlow Lite for Microcontrollers interpreter expects the model to be
-provided as a C++ array. In the *Hello World* example, the model is defined in
+provided as a C++ array. In the _Hello World_ example, the model is defined in
 `sine_model_data.h` and `sine_model_data.cc`. The header is included with the
 following line:
 
@@ -195,7 +194,7 @@ use a subset of these operations, it's recommended that real world applications
 load only the operations that are needed.
 
 This is done using a different class, `MicroMutableOpResolver`. You can see how
-to use it in the *Micro speech* example's
+to use it in the _Micro speech_ example's
 [`micro_speech_test.cc`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/examples/micro_speech/micro_speech_test.cc).
 
 ### Allocate memory
