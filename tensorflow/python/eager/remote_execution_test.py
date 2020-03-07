@@ -43,8 +43,7 @@ JOB_NAME = "remote_device"
 ALT_JOB_NAME = "alt_remote_device"
 
 
-def get_server_def(job_name, local_server_port, remote_server_addresses,
-                   task_index):
+def get_server_def(job_name, local_server_port, remote_server_addresses, task_index):
     """Returns a server def with a single job + multiple tasks."""
     cluster_def = cluster_pb2.ClusterDef()
     job_def = cluster_def.job.add()
@@ -55,25 +54,20 @@ def get_server_def(job_name, local_server_port, remote_server_addresses,
         job_def.tasks[i] = remote_server_address
 
     server_def = tensorflow_server_pb2.ServerDef(
-        cluster=cluster_def,
-        job_name=job_name,
-        task_index=task_index,
-        protocol="grpc")
+        cluster=cluster_def, job_name=job_name, task_index=task_index, protocol="grpc"
+    )
 
     return server_def
 
 
 class RemoteExecutionTest(test.TestCase, parameterized.TestCase):
-
     def __init__(self, methodName="runTest"):  # pylint: disable=invalid-name
         super(RemoteExecutionTest, self).__init__(methodName)
         self._cached_server1 = server_lib.Server.create_local_server()
         self._cached_server2 = server_lib.Server.create_local_server()
 
-        self._cached_server1_target = self._cached_server1.target[len(
-            "grpc://"):]
-        self._cached_server2_target = self._cached_server2.target[len(
-            "grpc://"):]
+        self._cached_server1_target = self._cached_server1.target[len("grpc://") :]
+        self._cached_server2_target = self._cached_server2.target[len("grpc://") :]
 
     def setUp(self):
         super(RemoteExecutionTest, self).setUp()
@@ -83,9 +77,12 @@ class RemoteExecutionTest(test.TestCase, parameterized.TestCase):
                 JOB_NAME,
                 local_server_port=local_port,
                 remote_server_addresses=[
-                    self._cached_server1_target, self._cached_server2_target
+                    self._cached_server1_target,
+                    self._cached_server2_target,
                 ],
-                task_index=0))
+                task_index=0,
+            )
+        )
 
     def tearDown(self):
         super(RemoteExecutionTest, self).tearDown()
@@ -149,9 +146,11 @@ class RemoteExecutionTest(test.TestCase, parameterized.TestCase):
             const_op = constant_op.constant(3.0, dtype=dtypes.float32)
             # PyFuncOp should be placed on the localhost's address space.
             py_func_op = script_ops.eager_py_func(
-                func=f, inp=[const_op], Tout=dtypes.float32)
-            self.assertEqual(py_func_op.device,
-                             "/job:%s/replica:0/task:0/device:CPU:0" % JOB_NAME)
+                func=f, inp=[const_op], Tout=dtypes.float32
+            )
+            self.assertEqual(
+                py_func_op.device, "/job:%s/replica:0/task:0/device:CPU:0" % JOB_NAME
+            )
             self.assertEqual(self.evaluate(py_func_op), 9.0)
 
     @test_util.run_in_async_and_sync_mode
@@ -184,9 +183,12 @@ class RemoteExecutionTest(test.TestCase, parameterized.TestCase):
                 ALT_JOB_NAME,
                 local_server_port=0,
                 remote_server_addresses=[
-                    self._cached_server1_target, self._cached_server2_target
+                    self._cached_server1_target,
+                    self._cached_server2_target,
                 ],
-                task_index=0))
+                task_index=0,
+            )
+        )
 
         with ops.device("job:%s/replica:0/task:1/device:CPU:0" % ALT_JOB_NAME):
             x1 = array_ops.ones([2, 2])
@@ -199,9 +201,12 @@ class RemoteExecutionTest(test.TestCase, parameterized.TestCase):
                 JOB_NAME,
                 local_server_port=0,
                 remote_server_addresses=[
-                    self._cached_server1_target, self._cached_server2_target
+                    self._cached_server1_target,
+                    self._cached_server2_target,
                 ],
-                task_index=0))
+                task_index=0,
+            )
+        )
 
         with ops.device("job:%s/replica:0/task:1/device:CPU:0" % JOB_NAME):
             x1 = array_ops.ones([2, 2])
@@ -231,12 +236,10 @@ class RemoteExecutionTest(test.TestCase, parameterized.TestCase):
         np.testing.assert_array_equal([[2, 2], [2, 2]], y.numpy())
 
         # `y` is placed on the local CPU as expected.
-        self.assertEqual(y.device,
-                         "/job:%s/replica:0/task:0/device:CPU:0" % JOB_NAME)
+        self.assertEqual(y.device, "/job:%s/replica:0/task:0/device:CPU:0" % JOB_NAME)
 
 
 class RemoteExecutionWithoutLazyRemoteInputsCopyTest(RemoteExecutionTest):
-
     @classmethod
     def setUpClass(cls):
         super(RemoteExecutionWithoutLazyRemoteInputsCopyTest, cls).setUpClass()
