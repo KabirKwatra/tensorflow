@@ -21,13 +21,10 @@ side-effect of overriding RaggedTensor operators, such as RaggedTensor.__add__).
 We don't import these modules from ragged/__init__.py, since we want to avoid
 circular dependencies.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
-# pylint: disable=unused-import
 from tensorflow.python.ops.ragged import ragged_array_ops
 from tensorflow.python.ops.ragged import ragged_batch_gather_ops
 from tensorflow.python.ops.ragged import ragged_batch_gather_with_default_op
@@ -48,3 +45,4 @@ from tensorflow.python.ops.ragged import ragged_tensor_shape
 from tensorflow.python.ops.ragged import ragged_tensor_value
 from tensorflow.python.ops.ragged import ragged_where_op
 from tensorflow.python.ops.ragged import segment_id_ops
+# pylint: disable=unused-import

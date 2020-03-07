@@ -23,7 +23,6 @@ different lengths.  For example, the inner (column) dimension of
 description of ragged tensors, see the `tf.RaggedTensor` class documentation
 and the [Ragged Tensor Guide](/guide/ragged_tensors).
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
