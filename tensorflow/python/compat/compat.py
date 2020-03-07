@@ -53,8 +53,7 @@ def _update_forward_compatibility_date_number(date_to_override=None):
             date += datetime.timedelta(days=int(delta_days))
 
     _FORWARD_COMPATIBILITY_DATE_NUMBER = _date_to_date_number(
-        date.year, date.month, date.day
-    )
+        date.year, date.month, date.day)
 
 
 _update_forward_compatibility_date_number()
@@ -116,7 +115,8 @@ def forward_compatible(year, month, day):
       can be consumed by programs that are compiled with the TensorFlow library
       source code after (year, month, day).
     """
-    return _FORWARD_COMPATIBILITY_DATE_NUMBER > _date_to_date_number(year, month, day)
+    return _FORWARD_COMPATIBILITY_DATE_NUMBER > _date_to_date_number(
+        year, month, day)
 
 
 @tf_export("compat.forward_compatibility_horizon")
@@ -159,7 +159,8 @@ def forward_compatibility_horizon(year, month, day):
       Nothing.
     """
     try:
-        _update_forward_compatibility_date_number(datetime.date(year, month, day))
+        _update_forward_compatibility_date_number(
+            datetime.date(year, month, day))
         yield
     finally:
         _update_forward_compatibility_date_number()
