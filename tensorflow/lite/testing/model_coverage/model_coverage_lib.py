@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Functions to test TFLite models."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,10 +20,10 @@ from __future__ import print_function
 import os
 
 import numpy as np
-from six import PY2
-
 from google.protobuf import text_format as _text_format
 from google.protobuf.message import DecodeError
+from six import PY2
+
 from tensorflow.core.framework import graph_pb2 as _graph_pb2
 from tensorflow.lite.python import convert_saved_model as _convert_saved_model
 from tensorflow.lite.python import lite as _lite
