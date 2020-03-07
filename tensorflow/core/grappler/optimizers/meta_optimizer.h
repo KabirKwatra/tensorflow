@@ -33,80 +33,84 @@ namespace grappler {
 
 // Run the other grappler optimizers based on the specified rewriter config.
 class MetaOptimizer : public GraphOptimizer {
- public:
-  MetaOptimizer(DeviceBase* cpu_device, const ConfigProto& cfg);
-  ~MetaOptimizer() override = default;
+public:
+    MetaOptimizer(DeviceBase* cpu_device, const ConfigProto& cfg);
+    ~MetaOptimizer() override = default;
 
-  string name() const override { return "meta_optimizer"; };
+    string name() const override {
+        return "meta_optimizer";
+    };
 
-  bool UsesFunctionLibrary() const override { return true; }
+    bool UsesFunctionLibrary() const override {
+        return true;
+    }
 
-  Status Optimize(Cluster* cluster, const GrapplerItem& item,
-                  GraphDef* optimized_graph) override {
-    GrapplerItem copy(item);
-    return OptimizeConsumeItem(cluster, std::move(copy), optimized_graph);
-  }
+    Status Optimize(Cluster* cluster, const GrapplerItem& item,
+                    GraphDef* optimized_graph) override {
+        GrapplerItem copy(item);
+        return OptimizeConsumeItem(cluster, std::move(copy), optimized_graph);
+    }
 
-  Status OptimizeConsumeItem(Cluster* cluster, GrapplerItem&& item,
-                             GraphDef* optimized_graph);
+    Status OptimizeConsumeItem(Cluster* cluster, GrapplerItem&& item,
+                               GraphDef* optimized_graph);
 
-  void PrintResult();
+    void PrintResult();
 
-  void Feedback(Cluster* cluster, const GrapplerItem& item,
-                const GraphDef& optimized_graph, double result) override {}
+    void Feedback(Cluster* cluster, const GrapplerItem& item,
+                  const GraphDef& optimized_graph, double result) override {}
 
- private:
-  std::unique_ptr<GraphOptimizer> MakeNewOptimizer(
-      const string& optimizer) const;
+private:
+    std::unique_ptr<GraphOptimizer> MakeNewOptimizer(
+        const string& optimizer) const;
 
-  bool IsSingleThreadedExecutor() const;
+    bool IsSingleThreadedExecutor() const;
 
-  // Initialize active optimizers from RewriterConfig toggles.
-  Status InitializeOptimizers(
-      std::vector<std::unique_ptr<GraphOptimizer>>* optimizers) const;
-  // Initialize active optimizers from RewriterConfig optimizer names.
-  Status InitializeOptimizersByName(
-      std::vector<std::unique_ptr<GraphOptimizer>>* optimizers) const;
-  // Initialize active optimizers from RewriterConfig.custom_optimizers.
-  Status InitializeCustomGraphOptimizers(
-      const std::set<string>& pre_initialized_optimizers,
-      std::vector<std::unique_ptr<GraphOptimizer>>* optimizers) const;
-  // Returns the config for a custom graph optimizer. Null if none was found.
-  const RewriterConfig::CustomGraphOptimizer* GetCustomGraphOptimizerConfig(
-      const string& name) const;
+    // Initialize active optimizers from RewriterConfig toggles.
+    Status InitializeOptimizers(
+        std::vector<std::unique_ptr<GraphOptimizer>>* optimizers) const;
+    // Initialize active optimizers from RewriterConfig optimizer names.
+    Status InitializeOptimizersByName(
+        std::vector<std::unique_ptr<GraphOptimizer>>* optimizers) const;
+    // Initialize active optimizers from RewriterConfig.custom_optimizers.
+    Status InitializeCustomGraphOptimizers(
+        const std::set<string>& pre_initialized_optimizers,
+        std::vector<std::unique_ptr<GraphOptimizer>>* optimizers) const;
+    // Returns the config for a custom graph optimizer. Null if none was found.
+    const RewriterConfig::CustomGraphOptimizer* GetCustomGraphOptimizerConfig(
+        const string& name) const;
 
-  // Initialize active verifiers from the RewriterConfig toggles.
-  void InitializeVerifiers(
-      std::vector<std::unique_ptr<GraphVerifier>>* inter_optimizer_verifiers,
-      std::vector<std::unique_ptr<GraphVerifier>>* post_optimization_verifiers)
-      const;
+    // Initialize active verifiers from the RewriterConfig toggles.
+    void InitializeVerifiers(
+        std::vector<std::unique_ptr<GraphVerifier>>* inter_optimizer_verifiers,
+        std::vector<std::unique_ptr<GraphVerifier>>* post_optimization_verifiers)
+    const;
 
-  // Run optimization pass over a single GrapplerItem. Meta optimizer might run
-  // multiple such passes: 1) for the main graph 2) for the function library
-  Status OptimizeGraph(Cluster* cluster, GrapplerItem&& item,
-                       GraphDef* optimized_graph);
+    // Run optimization pass over a single GrapplerItem. Meta optimizer might run
+    // multiple such passes: 1) for the main graph 2) for the function library
+    Status OptimizeGraph(Cluster* cluster, GrapplerItem&& item,
+                         GraphDef* optimized_graph);
 
-  DeviceBase* const cpu_device_;  // may be NULL
-  ConfigProto config_proto_;
-  RewriterConfig& cfg_;
+    DeviceBase* const cpu_device_;  // may be NULL
+    ConfigProto config_proto_;
+    RewriterConfig& cfg_;
 
-  struct OptimizerResult {
-    string optimizer_name;
-    string message;
-    Status status;
-  };
+    struct OptimizerResult {
+        string optimizer_name;
+        string message;
+        Status status;
+    };
 
-  struct GraphOptimizationResult {
-    explicit GraphOptimizationResult(const string& id) : id(id) {}
-    string id;
-    std::vector<OptimizerResult> results;
-  };
+    struct GraphOptimizationResult {
+        explicit GraphOptimizationResult(const string& id) : id(id) {}
+        string id;
+        std::vector<OptimizerResult> results;
+    };
 
-  Status RunOptimizer(GraphOptimizer* optimizer, Cluster* cluster,
-                      GrapplerItem* optimized_item, GraphDef* optimized_graph,
-                      GraphOptimizationResult* optimization_result);
+    Status RunOptimizer(GraphOptimizer* optimizer, Cluster* cluster,
+                        GrapplerItem* optimized_item, GraphDef* optimized_graph,
+                        GraphOptimizationResult* optimization_result);
 
-  std::vector<GraphOptimizationResult> optimization_results_;
+    std::vector<GraphOptimizationResult> optimization_results_;
 };
 
 bool MetaOptimizerEnabled(const ConfigProto& cfg);
