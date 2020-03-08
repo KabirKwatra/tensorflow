@@ -38,21 +38,21 @@ namespace eager {
 // TODO(b/134094971): Support outputting tensors on remote devices.
 class EagerProcessFunctionLibraryRuntime
     : public ProcessFunctionLibraryRuntime {
- public:
-  using ProcessFunctionLibraryRuntime::ProcessFunctionLibraryRuntime;
+public:
+    using ProcessFunctionLibraryRuntime::ProcessFunctionLibraryRuntime;
 
 #if !defined(IS_MOBILE_PLATFORM)
-  void Run(const FunctionLibraryRuntime::Options& opts,
-           FunctionLibraryRuntime::Handle handle,
-           const FunctionArgsInterface& args, std::vector<Tensor>* rets,
-           FunctionLibraryRuntime::DoneCallback done) const override;
+    void Run(const FunctionLibraryRuntime::Options& opts,
+             FunctionLibraryRuntime::Handle handle,
+             const FunctionArgsInterface& args, std::vector<Tensor>* rets,
+             FunctionLibraryRuntime::DoneCallback done) const override;
 
- private:
-  void RunRemoteDevice(
-      const FunctionLibraryRuntime::Options& opts,
-      FunctionLibraryRuntime::Handle local_handle, const InternalArgsView& args,
-      std::vector<Tensor>* rets,
-      FunctionLibraryRuntime::DoneCallback done) const override;
+private:
+    void RunRemoteDevice(
+        const FunctionLibraryRuntime::Options& opts,
+        FunctionLibraryRuntime::Handle local_handle, const InternalArgsView& args,
+        std::vector<Tensor>* rets,
+        FunctionLibraryRuntime::DoneCallback done) const override;
 #endif  // IS_MOBILE_PLATFORM
 };
 
