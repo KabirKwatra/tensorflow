@@ -25,60 +25,60 @@ limitations under the License.
 namespace xla {
 
 static std::string GetMlirOpName(HloOpcode opcode) {
-  std::string op_name = HloOpcodeString(opcode);
-  absl::c_replace(op_name, '-', '_');
-  return mlir::xla_hlo::XlaHloDialect::getDialectNamespace().str() + "." +
-         op_name;
+    std::string op_name = HloOpcodeString(opcode);
+    absl::c_replace(op_name, '-', '_');
+    return mlir::xla_hlo::XlaHloDialect::getDialectNamespace().str() + "." +
+           op_name;
 }
 
 static std::string ToString(mlir::Type ty) {
-  std::string str;
-  llvm::raw_string_ostream sstream(str);
-  ty.print(sstream);
-  sstream.flush();
-  return str;
+    std::string str;
+    llvm::raw_string_ostream sstream(str);
+    ty.print(sstream);
+    sstream.flush();
+    return str;
 }
 
 MlirHloBuilder::~MlirHloBuilder() = default;
 
 StatusOr<XlaOp> MlirHloBuilder::MakeXlaOp(mlir::Value val) {
-  mlir::Type ty = val.getType();
-  auto shape = std::make_unique<Shape>(TypeToShape(ty));
-  if (shape->element_type() == PrimitiveType::PRIMITIVE_TYPE_INVALID) {
-    return InvalidArgument("unsupported type: %s", ToString(ty).c_str());
-  }
+    mlir::Type ty = val.getType();
+    auto shape = std::make_unique<Shape>(TypeToShape(ty));
+    if (shape->element_type() == PrimitiveType::PRIMITIVE_TYPE_INVALID) {
+        return InvalidArgument("unsupported type: %s", ToString(ty).c_str());
+    }
 
-  int64 handle = reinterpret_cast<int64>(val.getAsOpaquePointer());
-  handle_to_shape_[handle] = std::move(shape);
-  return XlaOp(handle, this);
+    int64 handle = reinterpret_cast<int64>(val.getAsOpaquePointer());
+    handle_to_shape_[handle] = std::move(shape);
+    return XlaOp(handle, this);
 }
 
 XlaOp MlirHloBuilder::UnaryOp(HloOpcode unop, XlaOp operand) {
-  return ReportErrorOrReturn([&]() -> StatusOr<XlaOp> {
-    TF_ASSIGN_OR_RETURN(const Shape* operand_shape, GetShapePtr(operand));
-    TF_ASSIGN_OR_RETURN(
-        Shape shape, ShapeInference::InferUnaryOpShape(unop, *operand_shape));
+    return ReportErrorOrReturn([&]() -> StatusOr<XlaOp> {
+        TF_ASSIGN_OR_RETURN(const Shape* operand_shape, GetShapePtr(operand));
+        TF_ASSIGN_OR_RETURN(
+            Shape shape, ShapeInference::InferUnaryOpShape(unop, *operand_shape));
 
-    mlir::Value value = GetValue(operand);
-    mlir::OperationState state(loc_, GetMlirOpName(unop));
-    state.addOperands(value);
-    TF_ASSIGN_OR_RETURN(
-        mlir::Type ty,
-        ConvertShapeToType<mlir::RankedTensorType>(shape, builder_));
-    state.addTypes(ty);
-    mlir::Operation* op = builder_.createOperation(state);
-    return MakeXlaOp(op->getResult(0));
-  });
+        mlir::Value value = GetValue(operand);
+        mlir::OperationState state(loc_, GetMlirOpName(unop));
+        state.addOperands(value);
+        TF_ASSIGN_OR_RETURN(
+            mlir::Type ty,
+            ConvertShapeToType<mlir::RankedTensorType>(shape, builder_));
+        state.addTypes(ty);
+        mlir::Operation* op = builder_.createOperation(state);
+        return MakeXlaOp(op->getResult(0));
+    });
 }
 
 StatusOr<const Shape*> MlirHloBuilder::GetShapePtr(XlaOp op) const {
-  TF_RETURN_IF_ERROR(first_error());
-  TF_RETURN_IF_ERROR(CheckOpBuilder(op));
-  auto it = handle_to_shape_.find(op.handle());
-  if (it == handle_to_shape_.end()) {
-    return InvalidArgument("No XlaOp with handle %d", op.handle());
-  }
-  return it->second.get();
+    TF_RETURN_IF_ERROR(first_error());
+    TF_RETURN_IF_ERROR(CheckOpBuilder(op));
+    auto it = handle_to_shape_.find(op.handle());
+    if (it == handle_to_shape_.end()) {
+        return InvalidArgument("No XlaOp with handle %d", op.handle());
+    }
+    return it->second.get();
 }
 
 }  // namespace xla
