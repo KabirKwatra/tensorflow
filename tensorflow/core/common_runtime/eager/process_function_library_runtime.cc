@@ -31,25 +31,25 @@ void EagerProcessFunctionLibraryRuntime::RunRemoteDevice(
     FunctionLibraryRuntime::Handle local_handle, const InternalArgsView& args,
     std::vector<Tensor>* rets,
     FunctionLibraryRuntime::DoneCallback done) const {
-    if (!rets->empty()) {
-        done(
-            errors::Unimplemented("Remote outputs are not supported by "
-                                  "EagerClusterFunctionLibraryRuntime yet."));
-        return;
-    }
-    if (!args.local_args.empty()) {
-        done(
-            errors::Unimplemented("Local inputs are not by supported by "
-                                  "EagerClusterFunctionLibraryRuntime."));
-        return;
-    }
-    if (args.remote_args == nullptr) {
-        done(
-            errors::Internal("EagerClusterFunctionLibraryRuntime: remote_args "
-                             "should never be null."));
-        return;
-    }
-    parent_->Run(opts, local_handle, args.remote_args, std::move(done));
+  if (!rets->empty()) {
+    done(
+        errors::Unimplemented("Remote outputs are not supported by "
+                              "EagerClusterFunctionLibraryRuntime yet."));
+    return;
+  }
+  if (!args.local_args.empty()) {
+    done(
+        errors::Unimplemented("Local inputs are not by supported by "
+                              "EagerClusterFunctionLibraryRuntime."));
+    return;
+  }
+  if (args.remote_args == nullptr) {
+    done(
+        errors::Internal("EagerClusterFunctionLibraryRuntime: remote_args "
+                         "should never be null."));
+    return;
+  }
+  parent_->Run(opts, local_handle, args.remote_args, std::move(done));
 }
 
 void EagerProcessFunctionLibraryRuntime::Run(
@@ -57,31 +57,31 @@ void EagerProcessFunctionLibraryRuntime::Run(
     FunctionLibraryRuntime::Handle handle, const FunctionArgsInterface& args,
     std::vector<Tensor>* rets,
     FunctionLibraryRuntime::DoneCallback done) const {
-    if (!args.HasRemoteInputs()) {
-        return ProcessFunctionLibraryRuntime::Run(opts, handle, args, rets,
-                std::move(done));
-    }
-    auto* cleanup_items = new std::vector<std::unique_ptr<CleanUpItem>>;
-    done =
-        ApplyCleanUpToDoneCallback(cleanup_items, done, /*rendezvous=*/nullptr);
+  if (!args.HasRemoteInputs()) {
+    return ProcessFunctionLibraryRuntime::Run(opts, handle, args, rets,
+                                              std::move(done));
+  }
+  auto* cleanup_items = new std::vector<std::unique_ptr<CleanUpItem>>;
+  done =
+      ApplyCleanUpToDoneCallback(cleanup_items, done, /*rendezvous=*/nullptr);
 
-    auto get_component_args = [&args](const ComponentFunctionData& comp_data,
-    InternalArgs* comp_args) -> Status {
-        for (int i = 0; i < comp_data.arg_indices_.size(); ++i) {
-            const int index = comp_data.arg_indices_.at(i);
-            Tensor tensor;
-            if (args.GetLocalArg(index, &tensor).ok()) {
-                comp_args->local_args.push_back(std::move(tensor));
-            } else {
-                RemoteTensorHandle remote_handle;
-                TF_RETURN_IF_ERROR(args.GetRemoteArg(index, &remote_handle));
-                comp_args->remote_args.push_back(std::move(remote_handle));
-            }
-        }
-        return Status::OK();
-    };
-    return RunMultiDevice(opts, handle, rets, cleanup_items, std::move(done),
-                          std::move(get_component_args));
+  auto get_component_args = [&args](const ComponentFunctionData& comp_data,
+                                    InternalArgs* comp_args) -> Status {
+    for (int i = 0; i < comp_data.arg_indices_.size(); ++i) {
+      const int index = comp_data.arg_indices_.at(i);
+      Tensor tensor;
+      if (args.GetLocalArg(index, &tensor).ok()) {
+        comp_args->local_args.push_back(std::move(tensor));
+      } else {
+        RemoteTensorHandle remote_handle;
+        TF_RETURN_IF_ERROR(args.GetRemoteArg(index, &remote_handle));
+        comp_args->remote_args.push_back(std::move(remote_handle));
+      }
+    }
+    return Status::OK();
+  };
+  return RunMultiDevice(opts, handle, rets, cleanup_items, std::move(done),
+                        std::move(get_component_args));
 }
 #endif  // IS_MOBILE_PLATFORM
 

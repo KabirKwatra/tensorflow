@@ -47,86 +47,80 @@ class DeviceMgr;
 // or providing a callback: in either case, the consumer receives the
 // Tensor as soon as it is available.  A producer never blocks.
 class RendezvousInterface {
-public:
-    struct Args {
-        DeviceContext* device_context = nullptr;
-        AllocatorAttributes alloc_attrs;
-        CancellationManager* cancellation_manager = nullptr;  // not owned.
-    };
+ public:
+  struct Args {
+    DeviceContext* device_context = nullptr;
+    AllocatorAttributes alloc_attrs;
+    CancellationManager* cancellation_manager = nullptr;  // not owned.
+  };
 
-    // Parses the key constructed by CreateKey and parse src/dst device
-    // names into structures respectively.
-    struct ParsedKey {
-        StringPiece src_device;
-        DeviceNameUtils::ParsedName src;
-        uint64 src_incarnation = 0;
-        StringPiece dst_device;
-        DeviceNameUtils::ParsedName dst;
-        StringPiece edge_name;
+  // Parses the key constructed by CreateKey and parse src/dst device
+  // names into structures respectively.
+  struct ParsedKey {
+    StringPiece src_device;
+    DeviceNameUtils::ParsedName src;
+    uint64 src_incarnation = 0;
+    StringPiece dst_device;
+    DeviceNameUtils::ParsedName dst;
+    StringPiece edge_name;
 
-        ParsedKey() {}
-        ParsedKey(const ParsedKey& b) {
-            *this = b;
-        }
+    ParsedKey() {}
+    ParsedKey(const ParsedKey& b) { *this = b; }
 
-        ParsedKey& operator=(const ParsedKey& b);
-        StringPiece FullKey() const {
-            return buf_;
-        }
+    ParsedKey& operator=(const ParsedKey& b);
+    StringPiece FullKey() const { return buf_; }
 
-    private:
-        friend class Rendezvous;
-        friend class SendOp;
-        friend class RecvOp;
-        string buf_;
-    };
+   private:
+    friend class Rendezvous;
+    friend class SendOp;
+    friend class RecvOp;
+    string buf_;
+  };
 
-    // The caller is a tensor producer and it sends a message (a tensor
-    // "val" and a bool "is_dead") under the given "key".
-    //
-    // {val, is_dead} is bundled as a message sent and received.
-    // Typically, is_dead is set by some control flow nodes
-    // (e.g., a not-taken branch).  args is passed by Send to the
-    // Recv function to communicate any information that the Recv
-    // function might need.  This is typically only necessary for
-    // Send/Recv on the same worker.
-    //
-    // Send() never blocks.
-    virtual Status Send(const ParsedKey& key, const Args& args, const Tensor& val,
-                        const bool is_dead) = 0;
+  // The caller is a tensor producer and it sends a message (a tensor
+  // "val" and a bool "is_dead") under the given "key".
+  //
+  // {val, is_dead} is bundled as a message sent and received.
+  // Typically, is_dead is set by some control flow nodes
+  // (e.g., a not-taken branch).  args is passed by Send to the
+  // Recv function to communicate any information that the Recv
+  // function might need.  This is typically only necessary for
+  // Send/Recv on the same worker.
+  //
+  // Send() never blocks.
+  virtual Status Send(const ParsedKey& key, const Args& args, const Tensor& val,
+                      const bool is_dead) = 0;
 
-    // Callback provided by a tensor consumer waiting on the rendezvous.
-    // It will be invoked when the tensor is available, or when a non-OK
-    // status arises in the production of that tensor.  It also gets
-    // two Rendezvous::Args, one provided by the sender, the other by the
-    // receiver, which may be needed when a non-CPU device is in use
-    // by either side.
-    typedef std::function<void(const Status&, const Args&, const Args&,
-                               const Tensor&, const bool)>
-    DoneCallback;
+  // Callback provided by a tensor consumer waiting on the rendezvous.
+  // It will be invoked when the tensor is available, or when a non-OK
+  // status arises in the production of that tensor.  It also gets
+  // two Rendezvous::Args, one provided by the sender, the other by the
+  // receiver, which may be needed when a non-CPU device is in use
+  // by either side.
+  typedef std::function<void(const Status&, const Args&, const Args&,
+                             const Tensor&, const bool)>
+      DoneCallback;
 
-    virtual void RecvAsync(const ParsedKey& key, const Args& args,
-                           DoneCallback done) = 0;
+  virtual void RecvAsync(const ParsedKey& key, const Args& args,
+                         DoneCallback done) = 0;
 
-    // Synchronous wrapper for RecvAsync.
-    Status Recv(const ParsedKey& key, const Args& args, Tensor* val,
-                bool* is_dead, int64 timeout_ms);
-    Status Recv(const ParsedKey& key, const Args& args, Tensor* val,
-                bool* is_dead);
+  // Synchronous wrapper for RecvAsync.
+  Status Recv(const ParsedKey& key, const Args& args, Tensor* val,
+              bool* is_dead, int64 timeout_ms);
+  Status Recv(const ParsedKey& key, const Args& args, Tensor* val,
+              bool* is_dead);
 
-    // Aborts all pending and future Send/Recv with the given "status".
-    //
-    // StartAbort() does not wait for ongoing calls to finish.
-    // REQUIRES: !status.ok()
-    virtual void StartAbort(const Status& status) = 0;
+  // Aborts all pending and future Send/Recv with the given "status".
+  //
+  // StartAbort() does not wait for ongoing calls to finish.
+  // REQUIRES: !status.ok()
+  virtual void StartAbort(const Status& status) = 0;
 
-protected:
-    virtual ~RendezvousInterface();
+ protected:
+  virtual ~RendezvousInterface();
 
-    virtual bool is_cross_process() {
-        return false;
-    }
-    friend class ProcessFunctionLibraryRuntime;
+  virtual bool is_cross_process() { return false; }
+  friend class ProcessFunctionLibraryRuntime;
 };
 
 // A reference-counted implementation of RendezvousInterface.
@@ -134,17 +128,17 @@ protected:
 // This class is used in cases where a rendezvous may be shared between multiple
 // threads with no clear owner.
 class Rendezvous : public RendezvousInterface, public core::RefCounted {
-public:
-    using Factory =
-        std::function<Status(const int64, const DeviceMgr*, Rendezvous**)>;
-    // Constructs a rendezvous key for the tensor of "name" sent from
-    // "src_device" to "dst_device". The tensor is generated in the frame
-    // and iteration specified by "frame_iter".
-    static string CreateKey(const string& src_device, uint64 src_incarnation,
-                            const string& dst_device, const string& name,
-                            const FrameAndIter& frame_iter);
+ public:
+  using Factory =
+      std::function<Status(const int64, const DeviceMgr*, Rendezvous**)>;
+  // Constructs a rendezvous key for the tensor of "name" sent from
+  // "src_device" to "dst_device". The tensor is generated in the frame
+  // and iteration specified by "frame_iter".
+  static string CreateKey(const string& src_device, uint64 src_incarnation,
+                          const string& dst_device, const string& name,
+                          const FrameAndIter& frame_iter);
 
-    static Status ParseKey(StringPiece key, ParsedKey* out);
+  static Status ParseKey(StringPiece key, ParsedKey* out);
 };
 
 // Returns a Rendezvous instance that is limited to use only by

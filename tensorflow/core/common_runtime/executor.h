@@ -47,81 +47,81 @@ class StepStatsCollector;
 //
 // Multiple threads can call Executor::Run concurrently.
 class Executor {
-public:
-    virtual ~Executor() {}
+ public:
+  virtual ~Executor() {}
 
-    // RunAsync() executes the graph computation. "done" is run when the
-    // graph computation completes. If any error happens during the
-    // computation, "done" is run and the error is passed to "done".
-    //
-    // RunAsync() is given a few arguments in Args. The caller must
-    // ensure objects passed in Args (rendezvous, stats_collector, etc.)
-    // are alive at least until done is invoked. All pointers to the
-    // argument objects can be nullptr.
-    //
-    // "step_id" is a process-wide unique identifier for the step being
-    // run. Executors on different devices may receive the same step_id
-    // in the case that a step runs Ops on more than one device. The
-    // step_id is used for tracking resource usage of a given step.
-    //
-    // RunAsync() uses the given "rendezvous", if not null, as the
-    // mechanism to communicate inputs and outputs of the underlying
-    // graph computation.
-    //
-    // RunAsync() calls "stats_collector", if not null, to keep track of
-    // stats. This allows us to collect statistics and traces on demand.
-    //
-    // RunAsync() is provided a "call_frame", if the executor is used
-    // for executing a function, is used to pass arguments and return
-    // values between the caller and the callee.
-    //
-    // RunAsync() uses "cancellation_manager", if not nullptr, to
-    // register callbacks that should be called if the graph computation
-    // is canceled. Note that the callbacks merely unblock any
-    // long-running computation, and a canceled step will terminate by
-    // returning/calling the DoneCallback as usual.
-    //
-    // RunAsync() dispatches closures to "runner". Typically, "runner"
-    // is backed up by a bounded threadpool.
-    struct Args {
-        int64 step_id = 0;
-        RendezvousInterface* rendezvous = nullptr;
-        StepStatsCollectorInterface* stats_collector = nullptr;
-        CallFrameInterface* call_frame = nullptr;
-        CancellationManager* cancellation_manager = nullptr;
-        SessionState* session_state = nullptr;
-        // Unique session identifier. Can be empty.
-        string session_handle;
-        TensorStore* tensor_store = nullptr;
-        ScopedStepContainer* step_container = nullptr;
-        CollectiveExecutor* collective_executor = nullptr;
-        thread::ThreadPoolInterface* user_intra_op_threadpool = nullptr;
+  // RunAsync() executes the graph computation. "done" is run when the
+  // graph computation completes. If any error happens during the
+  // computation, "done" is run and the error is passed to "done".
+  //
+  // RunAsync() is given a few arguments in Args. The caller must
+  // ensure objects passed in Args (rendezvous, stats_collector, etc.)
+  // are alive at least until done is invoked. All pointers to the
+  // argument objects can be nullptr.
+  //
+  // "step_id" is a process-wide unique identifier for the step being
+  // run. Executors on different devices may receive the same step_id
+  // in the case that a step runs Ops on more than one device. The
+  // step_id is used for tracking resource usage of a given step.
+  //
+  // RunAsync() uses the given "rendezvous", if not null, as the
+  // mechanism to communicate inputs and outputs of the underlying
+  // graph computation.
+  //
+  // RunAsync() calls "stats_collector", if not null, to keep track of
+  // stats. This allows us to collect statistics and traces on demand.
+  //
+  // RunAsync() is provided a "call_frame", if the executor is used
+  // for executing a function, is used to pass arguments and return
+  // values between the caller and the callee.
+  //
+  // RunAsync() uses "cancellation_manager", if not nullptr, to
+  // register callbacks that should be called if the graph computation
+  // is canceled. Note that the callbacks merely unblock any
+  // long-running computation, and a canceled step will terminate by
+  // returning/calling the DoneCallback as usual.
+  //
+  // RunAsync() dispatches closures to "runner". Typically, "runner"
+  // is backed up by a bounded threadpool.
+  struct Args {
+    int64 step_id = 0;
+    RendezvousInterface* rendezvous = nullptr;
+    StepStatsCollectorInterface* stats_collector = nullptr;
+    CallFrameInterface* call_frame = nullptr;
+    CancellationManager* cancellation_manager = nullptr;
+    SessionState* session_state = nullptr;
+    // Unique session identifier. Can be empty.
+    string session_handle;
+    TensorStore* tensor_store = nullptr;
+    ScopedStepContainer* step_container = nullptr;
+    CollectiveExecutor* collective_executor = nullptr;
+    thread::ThreadPoolInterface* user_intra_op_threadpool = nullptr;
 
-        // If true, calls Sync() on the device.
-        bool sync_on_finish = false;
+    // If true, calls Sync() on the device.
+    bool sync_on_finish = false;
 
-        typedef std::function<void()> Closure;
-        typedef std::function<void(Closure)> Runner;
-        Runner runner = nullptr;
+    typedef std::function<void()> Closure;
+    typedef std::function<void(Closure)> Runner;
+    Runner runner = nullptr;
 
-        // If true, all kernels will be treated as "inexpensive", and hence executed
-        // on the scheduling thread.
-        bool run_all_kernels_inline = false;
-    };
-    typedef std::function<void(const Status&)> DoneCallback;
-    virtual void RunAsync(const Args& args, DoneCallback done) = 0;
+    // If true, all kernels will be treated as "inexpensive", and hence executed
+    // on the scheduling thread.
+    bool run_all_kernels_inline = false;
+  };
+  typedef std::function<void(const Status&)> DoneCallback;
+  virtual void RunAsync(const Args& args, DoneCallback done) = 0;
 
-    // Synchronous wrapper for RunAsync().
-    virtual Status Run(const Args& args) {
-        Status ret;
-        Notification n;
-        RunAsync(args, [&ret, &n](const Status& s) {
-            ret = s;
-            n.Notify();
-        });
-        n.WaitForNotification();
-        return ret;
-    }
+  // Synchronous wrapper for RunAsync().
+  virtual Status Run(const Args& args) {
+    Status ret;
+    Notification n;
+    RunAsync(args, [&ret, &n](const Status& s) {
+      ret = s;
+      n.Notify();
+    });
+    n.WaitForNotification();
+    return ret;
+  }
 };
 
 // Creates an Executor that computes the given "graph".
@@ -132,20 +132,20 @@ public:
 // "params" provides a set of context for the executor. We expect that
 // different context would provide different implementations.
 struct LocalExecutorParams {
-    Device* device;
+  Device* device;
 
-    const SessionMetadata* session_metadata = nullptr;
+  const SessionMetadata* session_metadata = nullptr;
 
-    // The library runtime support.
-    FunctionLibraryRuntime* function_library = nullptr;
+  // The library runtime support.
+  FunctionLibraryRuntime* function_library = nullptr;
 
-    // create_kernel returns an instance of op kernel based on NodeDef.
-    // delete_kernel is called for every kernel used by the executor
-    // when the executor is deleted.
-    std::function<Status(const std::shared_ptr<const NodeProperties>&,
-                         OpKernel**)>
-    create_kernel;
-    std::function<void(OpKernel*)> delete_kernel;
+  // create_kernel returns an instance of op kernel based on NodeDef.
+  // delete_kernel is called for every kernel used by the executor
+  // when the executor is deleted.
+  std::function<Status(const std::shared_ptr<const NodeProperties>&,
+                       OpKernel**)>
+      create_kernel;
+  std::function<void(OpKernel*)> delete_kernel;
 };
 
 ::tensorflow::Status NewLocalExecutor(const LocalExecutorParams& params,
@@ -157,83 +157,83 @@ struct LocalExecutorParams {
 // ExecutorBarrier deletes itself after the function returned by Get()
 // is called.
 class ExecutorBarrier {
-public:
-    typedef std::function<void(const Status&)> StatusCallback;
+ public:
+  typedef std::function<void(const Status&)> StatusCallback;
 
-    // Create an ExecutorBarrier for 'num' different executors.
-    //
-    // 'r' is the shared Rendezvous object that is used to communicate
-    // state.  If any of the executors experiences an error, the
-    // rendezvous object will be aborted exactly once.
-    //
-    // 'done' is called after the last executor completes, and
-    // ExecutorBarrier is deleted.
-    ExecutorBarrier(size_t num, Rendezvous* r, StatusCallback done)
-        : rendez_(r), done_cb_(done), pending_(num) {}
+  // Create an ExecutorBarrier for 'num' different executors.
+  //
+  // 'r' is the shared Rendezvous object that is used to communicate
+  // state.  If any of the executors experiences an error, the
+  // rendezvous object will be aborted exactly once.
+  //
+  // 'done' is called after the last executor completes, and
+  // ExecutorBarrier is deleted.
+  ExecutorBarrier(size_t num, Rendezvous* r, StatusCallback done)
+      : rendez_(r), done_cb_(done), pending_(num) {}
 
-    ~ExecutorBarrier() {}
+  ~ExecutorBarrier() {}
 
-    // Returns a closure that Executors must call when they are done
-    // computing, passing the status of their execution as an argument.
-    StatusCallback Get() {
-        return std::bind(&ExecutorBarrier::WhenDone, this, std::placeholders::_1);
+  // Returns a closure that Executors must call when they are done
+  // computing, passing the status of their execution as an argument.
+  StatusCallback Get() {
+    return std::bind(&ExecutorBarrier::WhenDone, this, std::placeholders::_1);
+  }
+
+ private:
+  Rendezvous* rendez_ = nullptr;
+  StatusCallback done_cb_ = nullptr;
+
+  mutable mutex mu_;
+  int pending_ TF_GUARDED_BY(mu_) = 0;
+  StatusGroup status_group_ TF_GUARDED_BY(mu_);
+
+  void WhenDone(const Status& s) {
+    Rendezvous* error_rendez = nullptr;
+    StatusCallback done = nullptr;
+    Status status;
+
+    {
+      mutex_lock l(mu_);
+
+      // If we are the first error encountered, trigger an abort of the
+      // Rendezvous object by this thread only.
+      if (status_group_.ok() && !s.ok()) {
+        error_rendez = rendez_;
+        error_rendez->Ref();
+      }
+
+      if (!s.ok() && !StatusGroup::IsDerived(s) &&
+          !status_group_.HasLogMessages()) {
+        status_group_.AttachLogMessages();
+      }
+
+      status_group_.Update(s);
+
+      // If this is the last call to WhenDone, call the final callback
+      // below.
+      if (--pending_ == 0) {
+        CHECK(done_cb_ != nullptr);
+        std::swap(done, done_cb_);
+        status = status_group_.as_summary_status();
+      }
     }
 
-private:
-    Rendezvous* rendez_ = nullptr;
-    StatusCallback done_cb_ = nullptr;
-
-    mutable mutex mu_;
-    int pending_ TF_GUARDED_BY(mu_) = 0;
-    StatusGroup status_group_ TF_GUARDED_BY(mu_);
-
-    void WhenDone(const Status& s) {
-        Rendezvous* error_rendez = nullptr;
-        StatusCallback done = nullptr;
-        Status status;
-
-        {
-            mutex_lock l(mu_);
-
-            // If we are the first error encountered, trigger an abort of the
-            // Rendezvous object by this thread only.
-            if (status_group_.ok() && !s.ok()) {
-                error_rendez = rendez_;
-                error_rendez->Ref();
-            }
-
-            if (!s.ok() && !StatusGroup::IsDerived(s) &&
-                    !status_group_.HasLogMessages()) {
-                status_group_.AttachLogMessages();
-            }
-
-            status_group_.Update(s);
-
-            // If this is the last call to WhenDone, call the final callback
-            // below.
-            if (--pending_ == 0) {
-                CHECK(done_cb_ != nullptr);
-                std::swap(done, done_cb_);
-                status = status_group_.as_summary_status();
-            }
-        }
-
-        if (error_rendez != nullptr) {
-            error_rendez->StartAbort(
-                errors::Aborted("Stopping remaining executors."));
-            error_rendez->Unref();
-        }
-
-        if (done != nullptr) {
-            delete this;
-            if (!status.ok()) {
-                VLOG(1) << "ExecutorBarrier finished with bad status: " << status;
-            }
-            done(status);
-        }
+    if (error_rendez != nullptr) {
+      error_rendez->StartAbort(
+          errors::Aborted("Stopping remaining executors."));
+      error_rendez->Unref();
     }
 
-    TF_DISALLOW_COPY_AND_ASSIGN(ExecutorBarrier);
+    if (done != nullptr) {
+      delete this;
+      if (!status.ok()) {
+        VLOG(1) << "ExecutorBarrier finished with bad status: " << status;
+      }
+      done(status);
+    }
+  }
+
+  TF_DISALLOW_COPY_AND_ASSIGN(ExecutorBarrier);
 };
 
 // A few helpers to facilitate create/delete kernels.
