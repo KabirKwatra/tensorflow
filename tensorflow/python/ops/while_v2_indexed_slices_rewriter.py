@@ -28,8 +28,7 @@ from tensorflow.python.ops import gen_resource_variable_ops
 from tensorflow.python.util import nest
 
 
-def rewrite_grad_indexed_slices(grads, body_grad_graph, loop_vars,
-                                forward_inputs):
+def rewrite_grad_indexed_slices(grads, body_grad_graph, loop_vars, forward_inputs):
     """Handles special case of IndexedSlices returned from while gradient.
 
     Some gradient functions return IndexedSlices instead of a Tensor (e.g. the
@@ -61,8 +60,7 @@ def rewrite_grad_indexed_slices(grads, body_grad_graph, loop_vars,
     # body_grad_graph.structured_outputs. However, structured_outputs may still
     # contain composite tensors such as IndexedSlices, unlike
     # body_grad_graph.outputs, which contains flattened composite tensors.
-    inputs_with_grads = [t for g, t in zip(grads, forward_inputs)
-                         if g is not None]
+    inputs_with_grads = [t for g, t in zip(grads, forward_inputs) if g is not None]
     # Skip loop counter, maximum_iterations and total number of loop iterations.
     structured_outputs = body_grad_graph.structured_outputs[3:]
 
@@ -74,8 +72,9 @@ def rewrite_grad_indexed_slices(grads, body_grad_graph, loop_vars,
             # TODO(skyewm): In theory we should use this for all captured inputs, not
             # just resource handles (which can only be captured). We can do this by
             # checking that forward_input is passed straight through to its output.
-            loop_vars = _rewrite_input_as_indexed_slices(body_grad_graph, output,
-                                                         forward_input, loop_vars)
+            loop_vars = _rewrite_input_as_indexed_slices(
+                body_grad_graph, output, forward_input, loop_vars
+            )
         else:
             _rewrite_output_as_tensor(body_grad_graph, output)
 
@@ -100,15 +99,16 @@ def _rewrite_output_as_tensor(body_grad_graph, grad_output_slices):
     with body_grad_graph.as_default():
         new_output = ops.convert_to_tensor_v2(grad_output_slices)
 
-    idx = _get_tensor_index_in_iterable(body_grad_graph.structured_outputs,
-                                        grad_output_slices)
+    idx = _get_tensor_index_in_iterable(
+        body_grad_graph.structured_outputs, grad_output_slices
+    )
     body_grad_graph.structured_outputs[idx] = new_output
-    body_grad_graph.outputs = func_graph.flatten(
-        body_grad_graph.structured_outputs)
+    body_grad_graph.outputs = func_graph.flatten(body_grad_graph.structured_outputs)
 
 
-def _rewrite_input_as_indexed_slices(body_grad_graph, grad_output_slices,
-                                     forward_input, loop_vars):
+def _rewrite_input_as_indexed_slices(
+    body_grad_graph, grad_output_slices, forward_input, loop_vars
+):
     """Rewrites grad_output_slices's corresponding input to be an IndexedSlices.
 
     This rewrite requires that forward_input was captured in the forward loop,
@@ -134,8 +134,7 @@ def _rewrite_input_as_indexed_slices(body_grad_graph, grad_output_slices,
     # op. This will start as zeros, and accumulate the IndexedSlices grad output.
     # Note that because forward_input is captured and not a loop var, its incoming
     # gradient should always be zero.
-    init_slices = _create_grad_indexed_slices_init(grad_output_slices,
-                                                   forward_input)
+    init_slices = _create_grad_indexed_slices_init(grad_output_slices, forward_input)
 
     # Create a new version of grad_output_slices's gradient computation that uses
     # the new IndexedSlices input instead of the original Tensor input. We'll
@@ -144,12 +143,12 @@ def _rewrite_input_as_indexed_slices(body_grad_graph, grad_output_slices,
     # computation.
     with body_grad_graph.as_default():
         input_slices = ops.IndexedSlices(
-            values=body_grad_graph.capture(
-                init_slices.values, whitelisted=True),
-            indices=body_grad_graph.capture(
-                init_slices.indices, whitelisted=True),
-            dense_shape=body_grad_graph.capture(init_slices.dense_shape,
-                                                whitelisted=True))
+            values=body_grad_graph.capture(init_slices.values, whitelisted=True),
+            indices=body_grad_graph.capture(init_slices.indices, whitelisted=True),
+            dense_shape=body_grad_graph.capture(
+                init_slices.dense_shape, whitelisted=True
+            ),
+        )
 
         # Remove the captured tensors from the function inputs. We'll add them back
         # at the correct index in _update_indexed_slices_param.
@@ -157,14 +156,20 @@ def _rewrite_input_as_indexed_slices(body_grad_graph, grad_output_slices,
             captured_t = body_grad_graph.captures.pop(t)
             body_grad_graph.inputs.remove(captured_t)
 
-        new_output_slices = _rewrite_grad_indexed_slices_output(grad_output_slices,
-                                                                input_slices)
+        new_output_slices = _rewrite_grad_indexed_slices_output(
+            grad_output_slices, input_slices
+        )
 
     # Update body_grad_graph's inputs and outputs to reflect the new
     # IndexedSlices computation.
     return _update_indexed_slices_param(
-        body_grad_graph, loop_vars, init_slices, input_slices, new_output_slices,
-        grad_output_slices)
+        body_grad_graph,
+        loop_vars,
+        init_slices,
+        input_slices,
+        new_output_slices,
+        grad_output_slices,
+    )
 
 
 def _create_grad_indexed_slices_init(grad_output_slices, forward_input):
@@ -185,19 +190,19 @@ def _create_grad_indexed_slices_init(grad_output_slices, forward_input):
 
     # Create the initial values tensor.
     if values_out.shape.is_fully_defined():
-        values_shape = tensor_shape.TensorShape([0] +
-                                                values_out.shape.as_list()[1:])
-        values = array_ops.zeros(values_shape, dtype=values_out.dtype,
-                                 name="values_init")
+        values_shape = tensor_shape.TensorShape([0] + values_out.shape.as_list()[1:])
+        values = array_ops.zeros(
+            values_shape, dtype=values_out.dtype, name="values_init"
+        )
     else:
         if forward_input.dtype == dtypes.resource:
-            forward_shape = gen_resource_variable_ops.variable_shape(
-                forward_input)
+            forward_shape = gen_resource_variable_ops.variable_shape(forward_input)
         else:
             forward_shape = array_ops.shape(forward_input)
         values_shape = array_ops.concat([[0], forward_shape[1:]], 0)
-        values = array_ops.zeros(values_shape, dtype=values_out.dtype,
-                                 name="values_init")
+        values = array_ops.zeros(
+            values_shape, dtype=values_out.dtype, name="values_init"
+        )
 
     # Create the initial indices tensor.
     indices = constant_op.constant([], indices_out.dtype, name="indices_init")
@@ -206,8 +211,9 @@ def _create_grad_indexed_slices_init(grad_output_slices, forward_input):
     # forward_input, since captured tensors don't change shape across loop
     # iterations.
     if forward_input.dtype == dtypes.resource:
-        shape = gen_resource_variable_ops.variable_shape(forward_input,
-                                                         name="shape_init")
+        shape = gen_resource_variable_ops.variable_shape(
+            forward_input, name="shape_init"
+        )
     else:
         shape = array_ops.shape(forward_input, name="shape_init")
 
@@ -245,12 +251,14 @@ def _rewrite_grad_indexed_slices_output(old_output_slices, new_input_slices):
 
     values = rewrite(old_output_slices.values.op, new_input_slices.values)
     indices = rewrite(old_output_slices.indices.op, new_input_slices.indices)
-    return ops.IndexedSlices(values=values, indices=indices,
-                             dense_shape=new_input_slices.dense_shape)
+    return ops.IndexedSlices(
+        values=values, indices=indices, dense_shape=new_input_slices.dense_shape
+    )
 
 
-def _update_indexed_slices_param(graph, loop_vars, init_slices, input_slices,
-                                 output_slices, old_output_slices):
+def _update_indexed_slices_param(
+    graph, loop_vars, init_slices, input_slices, output_slices, old_output_slices
+):
     """Updates graph with new IndexedSlices input/output.
 
     Updates graph's metadata to output the gradient computation defined by
@@ -272,23 +280,24 @@ def _update_indexed_slices_param(graph, loop_vars, init_slices, input_slices,
     Returns:
       New loop_vars to pass to graph.
     """
-    structured_idx = _get_tensor_index_in_iterable(graph.structured_outputs,
-                                                   old_output_slices)
+    structured_idx = _get_tensor_index_in_iterable(
+        graph.structured_outputs, old_output_slices
+    )
     # We assume that the component tensors of old_output_slices appear
     # sequentially in graph.outputs. We use the first of these tensors
     # as the reference index.
     flat_idx = _get_tensor_index_in_iterable(
-        graph.outputs,
-        func_graph.flatten(old_output_slices)[0])
+        graph.outputs, func_graph.flatten(old_output_slices)[0]
+    )
 
     graph.structured_outputs[structured_idx] = output_slices
-    graph.outputs = func_graph.flatten(
-        graph.structured_outputs)
+    graph.outputs = func_graph.flatten(graph.structured_outputs)
 
-    graph.inputs = (graph.inputs[:flat_idx] + _flatten(input_slices) +
-                    graph.inputs[flat_idx + 1:])
+    graph.inputs = (
+        graph.inputs[:flat_idx] + _flatten(input_slices) + graph.inputs[flat_idx + 1 :]
+    )
 
-    return loop_vars[:flat_idx] + _flatten(init_slices) + loop_vars[flat_idx + 1:]
+    return loop_vars[:flat_idx] + _flatten(init_slices) + loop_vars[flat_idx + 1 :]
 
 
 def _flatten(arg):
