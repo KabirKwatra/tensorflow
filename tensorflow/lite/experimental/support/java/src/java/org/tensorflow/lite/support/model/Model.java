@@ -27,13 +27,8 @@ import org.tensorflow.lite.support.common.SupportPreconditions;
 
 /** Class to load tflite models from App asset folder or remote sources. */
 public class Model {
-
   /** An instance of the driver c /** The runtime device type used for executing classification. */
-  public enum Device {
-    CPU,
-    NNAPI,
-    GPU
-  }
+  public enum Device { CPU, NNAPI, GPU }
 
   /** An instance of the driver class to run model inference with Tensorflow Lite. */
   private final Interpreter interpreter;
@@ -133,10 +128,7 @@ public class Model {
     }
   }
 
-  private Model(
-      @NonNull String modelPath,
-      @NonNull MappedByteBuffer byteModel,
-      Device device,
+  private Model(@NonNull String modelPath, @NonNull MappedByteBuffer byteModel, Device device,
       int numThreads) {
     SupportPreconditions.checkNotNull(byteModel, "Model file cannot be null.");
     SupportPreconditions.checkNotEmpty(
