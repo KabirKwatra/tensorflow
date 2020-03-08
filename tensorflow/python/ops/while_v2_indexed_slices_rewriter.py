@@ -13,7 +13,6 @@
 # limitations under the License.
 # =============================================================================
 """Methods for rewriting while_v2 grad functions with IndexedSlices output."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
