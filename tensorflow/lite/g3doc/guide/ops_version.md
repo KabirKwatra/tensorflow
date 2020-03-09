@@ -1,17 +1,17 @@
 # TensorFlow Lite operator versions
 
-This document describes TensorFlow Lite's op versioning schema. Op
-versioning enables developers to add new functionalities and parameters into
-existing ops. In addition, it guarantees the following:
+This document describes TensorFlow Lite's op versioning schema. Op versioning
+enables developers to add new functionalities and parameters into existing ops.
+In addition, it guarantees the following:
 
-*   Backward compatibility: New TensorFlow Lite implementation should
-    handle an old model file.
-*   Forward compatibility: Old TensorFlow Lite implementation should
-    handle a new model file produced by new version of TOCO, as long as no new
-    features are used.
-*   Forward in-compatibility detection: If an old TensorFlow Lite implementation
-    reads a new model that contains a new version of an op which isn't
-    supported, it should report the error.
+- Backward compatibility: New TensorFlow Lite implementation should handle an
+  old model file.
+- Forward compatibility: Old TensorFlow Lite implementation should handle a new
+  model file produced by new version of TOCO, as long as no new features are
+  used.
+- Forward in-compatibility detection: If an old TensorFlow Lite implementation
+  reads a new model that contains a new version of an op which isn't supported,
+  it should report the error.
 
 ## Example: Adding Dilation into Convolution
 
@@ -20,10 +20,10 @@ to add dilation parameters to the convolution operation.
 
 Knowledge of dilation is not required to understand this document. Note that:
 
-*   2 new integer parameters will be added: `dilation_width_factor` and
-    `dilation_height_factor`.
-*   Old convolution kernels that don't support dilation are equivalent to
-    setting the dilation factors to 1.
+- 2 new integer parameters will be added: `dilation_width_factor` and
+  `dilation_height_factor`.
+- Old convolution kernels that don't support dilation are equivalent to setting
+  the dilation factors to 1.
 
 ### Change FlatBuffer Schema
 
@@ -43,9 +43,9 @@ table Conv2DOptions {
 
 When adding new parameters:
 
-*   Add comments indicating which parameters are supported by which version.
-*   When the new implementation gets the default values for newly added
-    parameters, it should work exactly the same as the old implementation.
+- Add comments indicating which parameters are supported by which version.
+- When the new implementation gets the default values for newly added
+  parameters, it should work exactly the same as the old implementation.
 
 The table will be like this after the new parameters are added:
 
@@ -65,9 +65,9 @@ table Conv2DOptions {
 
 ### Change C Structures and Kernel Implementation
 
-In TensorFlow Lite, the kernel implementation is decoupled from
-FlatBuffer definition. The kernels read the parameter from C structures defined
-in `lite/builtin_op_data.h`.
+In TensorFlow Lite, the kernel implementation is decoupled from FlatBuffer
+definition. The kernels read the parameter from C structures defined in
+`lite/builtin_op_data.h`.
 
 The original convolution parameter is as follows:
 
@@ -124,9 +124,8 @@ case BuiltinOperator_CONV_2D: {
 ```
 
 It's not required to check the op version here. When the new implementation
-reads an old model file where dilation factors are missing, it will use 1 as
-the default value, and the new kernel will work consistently with the old
-kernel.
+reads an old model file where dilation factors are missing, it will use 1 as the
+default value, and the new kernel will work consistently with the old kernel.
 
 ### Change Kernel Registration
 
@@ -159,8 +158,8 @@ AddBuiltin(BuiltinOperator_CONV_2D, Register_CONV_2D(), 1, 2);
 The next step is to make TOCO populate the minimum version that's required to
 execute the op. In this example, it means:
 
-*   Populate version=1 when dilation factors are all 1.
-*   Populate version=2 otherwise.
+- Populate version=1 when dilation factors are all 1.
+- Populate version=2 otherwise.
 
 To do this, you need to override `GetVersion` function for the operator class in
 `lite/tools/versioning/op_version.cc`.
@@ -195,17 +194,19 @@ To do this, you need to add a new map entry in
 `lite/tools/versioning/op_version.cc`.
 
 In this example, it means you need to add the following into `op_version_map`:
+
 ```
 {{OperatorType::kConv, 3}, "kPendingReleaseOpVersion"}
 ```
+
 (`kPendingReleaseOpVersion` will be replaced with the appropriate release
 version in the next stable release.)
 
 ### Delegation Implementation
 
 TensorFlow Lite provides a delegation API which enables delegating ops to
-hardware backends. In Delegate's `Prepare` function, check if the version
-is supported for every node in Delegation code.
+hardware backends. In Delegate's `Prepare` function, check if the version is
+supported for every node in Delegation code.
 
 ```
 const int kMinVersion = 1;
@@ -220,4 +221,3 @@ if (registration->version > kMinVersion) {
 
 This is required even if the delegation only supports version 1 ops, so the
 delegation can detect incompatibility when getting a higher version op.
-
