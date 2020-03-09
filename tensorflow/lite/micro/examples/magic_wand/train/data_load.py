@@ -14,9 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 # pylint: disable=g-bad-import-order
-
 """Load data from the specified paths and format them for training."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -24,9 +22,9 @@ from __future__ import print_function
 import json
 
 import numpy as np
-import tensorflow as tf
-
 from data_augmentation import augment_data
+
+import tensorflow as tf
 
 LABEL_NAME = "gesture"
 DATA_NAME = "accel_ms2_xyz"

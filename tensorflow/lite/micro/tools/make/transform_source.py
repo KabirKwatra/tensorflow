@@ -17,7 +17,6 @@
 
 Used to generate Arduino and ESP-IDF examples.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

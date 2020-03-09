@@ -14,7 +14,6 @@
 # limitations under the License.
 # ==============================================================================
 """Resolves non-system C/C++ includes to their full paths to help Arduino."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
