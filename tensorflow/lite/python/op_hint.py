@@ -64,10 +64,8 @@ understood by toco later. The generated TensorFlow Lite flatbuffer file will
 contain a custom operator called "cool_activation". Developer needs to implement
 and register this operator in TensorFlow Lite in order to do inference.
 """
-
 # TODO(aselle): Make this use generic graph transformations.
 # TODO(aselle): _tensor_name_base should be called _tensor_name_to_op_name.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -76,6 +74,7 @@ import collections as _collections
 import copy as _copy
 import json as _json
 import uuid as _uuid
+
 import six as _six
 
 from tensorflow.core.framework import attr_value_pb2 as _attr_value_pb2
@@ -84,14 +83,13 @@ from tensorflow.core.framework import node_def_pb2 as _node_def_pb2
 from tensorflow.python.framework import dtypes as _dtypes
 from tensorflow.python.framework import ops as _ops
 from tensorflow.python.framework import tensor_util as _tensor_util
-
-# TODO(aselle): publicize these apis if we continue to use these.
 from tensorflow.python.framework.graph_util_impl import _bfs_for_reachable_nodes
 from tensorflow.python.framework.graph_util_impl import _extract_graph_summary
 from tensorflow.python.ops import array_ops as _array_ops
 from tensorflow.python.util import compat as _compat
 from tensorflow.python.util.all_util import remove_undocumented
 from tensorflow.python.util.tf_export import tf_export as _tf_export
+# TODO(aselle): publicize these apis if we continue to use these.
 
 
 @_tf_export(v1=["lite.OpHint"])

@@ -25,7 +25,6 @@ Requires a local installation of `tensorflow_docs`:
 pip install git+https://github.com/tensorflow/docs
 ```
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -33,21 +32,18 @@ from __future__ import print_function
 import pathlib
 import textwrap
 
+import base_dir
 from absl import app
 from absl import flags
-
-import tensorflow as tf
-
 from tensorflow_docs.api_generator import doc_controls
 from tensorflow_docs.api_generator import doc_generator_visitor
 from tensorflow_docs.api_generator import generate_lib
 
+import tensorflow as tf
 from tensorflow.python.framework import ops
 from tensorflow.python.util import tf_export
 from tensorflow.python.util import tf_inspect
-
 # Caution: the google and oss versions of this import are different.
-import base_dir
 
 # `tf` has an `__all__` that doesn't list important things like `keras`.
 # The doc generator recognizes `__all__` as the list of public symbols.

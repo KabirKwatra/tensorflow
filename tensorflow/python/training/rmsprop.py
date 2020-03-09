@@ -36,7 +36,6 @@ mom = momentum * mom{t-1} + learning_rate * g_t /
     sqrt(mean_square - mean_grad**2 + epsilon)
 delta = - mom
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

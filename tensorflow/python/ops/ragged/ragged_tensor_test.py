@@ -13,15 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for third_party.tensorflow.python.ops.ragged_tensor."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import re
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import context
@@ -41,7 +40,6 @@ from tensorflow.python.ops.ragged import ragged_tensor_value
 from tensorflow.python.ops.ragged.ragged_tensor import RaggedTensor
 from tensorflow.python.ops.ragged.ragged_tensor import RaggedTensorSpec
 from tensorflow.python.ops.ragged.row_partition import RowPartition
-
 from tensorflow.python.platform import googletest
 
 
