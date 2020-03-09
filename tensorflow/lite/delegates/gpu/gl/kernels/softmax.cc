@@ -33,45 +33,45 @@ namespace gl {
 namespace {
 
 float4 GetMask(int num_channels) {
-    float4 mask(0.0f);
-    const int remainder = num_channels % 4 == 0 ? 4 : num_channels % 4;
-    for (int i = 0; i < remainder; ++i) mask[i] = 1.0f;
-    return mask;
+  float4 mask(0.0f);
+  const int remainder = num_channels % 4 == 0 ? 4 : num_channels % 4;
+  for (int i = 0; i < remainder; ++i) mask[i] = 1.0f;
+  return mask;
 }
 
 class Softmax : public NodeShader {
-public:
-    Status GenerateCode(const GenerationContext& ctx,
-                        GeneratedCode* generated_code) const final {
-        const auto* input = ctx.graph->FindInputs(ctx.node->id)[0];
-        const auto* output = ctx.graph->FindOutputs(ctx.node->id)[0];
-        const auto& attr = absl::any_cast<const SoftmaxAttributes&>(
-                               ctx.node->operation.attributes);
-        if (input->tensor.shape != output->tensor.shape) {
-            return InvalidArgumentError("Input and output shapes do not match.");
-        }
-        if (attr.axis != Axis::CHANNELS) {
-            return UnimplementedError("Softmax is only supported for channels axis.");
-        }
-        return input->tensor.shape.h == 1 && input->tensor.shape.w == 1
+ public:
+  Status GenerateCode(const GenerationContext& ctx,
+                      GeneratedCode* generated_code) const final {
+    const auto* input = ctx.graph->FindInputs(ctx.node->id)[0];
+    const auto* output = ctx.graph->FindOutputs(ctx.node->id)[0];
+    const auto& attr = absl::any_cast<const SoftmaxAttributes&>(
+        ctx.node->operation.attributes);
+    if (input->tensor.shape != output->tensor.shape) {
+      return InvalidArgumentError("Input and output shapes do not match.");
+    }
+    if (attr.axis != Axis::CHANNELS) {
+      return UnimplementedError("Softmax is only supported for channels axis.");
+    }
+    return input->tensor.shape.h == 1 && input->tensor.shape.w == 1
                ? GenerateCodeFor1x1(ctx, generated_code)
                : GenerateCodeGeneral(ctx, generated_code);
-    }
+  }
 
-private:
-    Status GenerateCodeFor1x1(const GenerationContext& ctx,
-                              GeneratedCode* generated_code) const {
-        const auto* output = ctx.graph->FindOutputs(ctx.node->id)[0];
-        const int depth = IntegralDivideRoundUp(output->tensor.shape.c, 4);
-        std::vector<Variable> shared_variables = {
-            {"partial_sum", std::vector<float4>(8)},
-        };
-        std::vector<Variable> uniform_parameters = {
-            {"depth", depth},
-            {"depth_div_32", IntegralDivideRoundUp(depth, 32)},
-            {"mask", GetMask(output->tensor.shape.c)},
-        };
-        std::string source_code = R"(
+ private:
+  Status GenerateCodeFor1x1(const GenerationContext& ctx,
+                            GeneratedCode* generated_code) const {
+    const auto* output = ctx.graph->FindOutputs(ctx.node->id)[0];
+    const int depth = IntegralDivideRoundUp(output->tensor.shape.c, 4);
+    std::vector<Variable> shared_variables = {
+        {"partial_sum", std::vector<float4>(8)},
+    };
+    std::vector<Variable> uniform_parameters = {
+        {"depth", depth},
+        {"depth_div_32", IntegralDivideRoundUp(depth, 32)},
+        {"mask", GetMask(output->tensor.shape.c)},
+    };
+    std::string source_code = R"(
   highp vec4 kOnes = vec4(1.0);
   highp float sum = 0.0;
   int offset = 0;
