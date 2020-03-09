@@ -44,26 +44,26 @@ namespace tflite {
 // strategies without changing their client code, by swapping out classes that
 // implement this interface.=
 class MemoryPlanner {
-public:
-    MemoryPlanner() {}
-    virtual ~MemoryPlanner() {}
+ public:
+  MemoryPlanner() {}
+  virtual ~MemoryPlanner() {}
 
-    // Pass information about a buffer's size and lifetime to the layout
-    // algorithm. The order this is called implicitly assigns an index to the
-    // result, so the buffer information that's passed into the N-th call of
-    // this method will be used as the buffer_index argument to
-    // GetOffsetForBuffer().
-    virtual TfLiteStatus AddBuffer(tflite::ErrorReporter* error_reporter,
-                                   int size, int first_time_used,
-                                   int last_time_used) = 0;
+  // Pass information about a buffer's size and lifetime to the layout
+  // algorithm. The order this is called implicitly assigns an index to the
+  // result, so the buffer information that's passed into the N-th call of
+  // this method will be used as the buffer_index argument to
+  // GetOffsetForBuffer().
+  virtual TfLiteStatus AddBuffer(tflite::ErrorReporter* error_reporter,
+                                 int size, int first_time_used,
+                                 int last_time_used) = 0;
 
-    // The largest contiguous block of memory that's needed to hold the layout.
-    virtual size_t GetMaximumMemorySize() = 0;
-    // How many buffers have been added to the planner.
-    virtual int GetBufferCount() = 0;
-    // Calculated layout offset for the N-th buffer added to the planner.
-    virtual TfLiteStatus GetOffsetForBuffer(tflite::ErrorReporter* error_reporter,
-                                            int buffer_index, int* offset) = 0;
+  // The largest contiguous block of memory that's needed to hold the layout.
+  virtual size_t GetMaximumMemorySize() = 0;
+  // How many buffers have been added to the planner.
+  virtual int GetBufferCount() = 0;
+  // Calculated layout offset for the N-th buffer added to the planner.
+  virtual TfLiteStatus GetOffsetForBuffer(tflite::ErrorReporter* error_reporter,
+                                          int buffer_index, int* offset) = 0;
 };
 
 }  // namespace tflite
