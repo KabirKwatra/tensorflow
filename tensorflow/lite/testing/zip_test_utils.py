@@ -27,14 +27,14 @@ import traceback
 import zipfile
 
 import numpy as np
+from google.protobuf import text_format
 from six import StringIO
 
-# pylint: disable=g-import-not-at-top
 import tensorflow.compat.v1 as tf
-from google.protobuf import text_format
 from tensorflow.lite.testing import _pywrap_string_util
 from tensorflow.lite.testing import generate_examples_report as report_lib
 from tensorflow.python.framework import graph_util as tf_graph_util
+# pylint: disable=g-import-not-at-top
 
 # A map from names to functions which make test cases.
 _MAKE_TEST_FUNCTIONS_MAP = {}
