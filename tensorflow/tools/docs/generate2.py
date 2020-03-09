@@ -95,176 +95,178 @@ tf.__doc__ = """
 
 
 def generate_raw_ops_doc():
-  """Generates docs for `tf.raw_ops`."""
+    """Generates docs for `tf.raw_ops`."""
 
-  warning = textwrap.dedent("""\n
+    warning = textwrap.dedent("""\n
     Note: `tf.raw_ops` provides direct/low level access to all TensorFlow ops.
     See [the RFC](https://github.com/tensorflow/community/blob/master/rfcs/20181225-tf-raw-ops.md)
     for details. Unless you are library writer, you likely do not need to use
     these ops directly.""")
 
-  table_header = textwrap.dedent("""
+    table_header = textwrap.dedent("""
 
       | Op Name | Has Gradient |
       |---------|:------------:|""")
 
-  parts = [warning, table_header]
+    parts = [warning, table_header]
 
-  for op_name in sorted(dir(tf.raw_ops)):
-    try:
-      ops._gradient_registry.lookup(op_name)  # pylint: disable=protected-access
-      has_gradient = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
-    except LookupError:
-      has_gradient = "\N{CROSS MARK}"
+    for op_name in sorted(dir(tf.raw_ops)):
+        try:
+            ops._gradient_registry.lookup(
+                op_name)  # pylint: disable=protected-access
+            has_gradient = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
+        except LookupError:
+            has_gradient = "\N{CROSS MARK}"
 
-    if not op_name.startswith("_"):
-      path = pathlib.Path("/") / FLAGS.site_path / "tf/raw_ops" / op_name
-      path = path.with_suffix(".md")
-      link = ('<a id={op_name} href="{path}">{op_name}</a>').format(
-          op_name=op_name, path=str(path))
-      parts.append("| {link} | {has_gradient} |".format(
-          link=link, has_gradient=has_gradient))
+        if not op_name.startswith("_"):
+            path = pathlib.Path("/") / FLAGS.site_path / "tf/raw_ops" / op_name
+            path = path.with_suffix(".md")
+            link = ('<a id={op_name} href="{path}">{op_name}</a>').format(
+                op_name=op_name, path=str(path))
+            parts.append("| {link} | {has_gradient} |".format(
+                link=link, has_gradient=has_gradient))
 
-  return "\n".join(parts)
+    return "\n".join(parts)
 
 
 # The doc generator isn't aware of tf_export.
 # So prefix the score tuples with -1 when this is the canonical name, +1
 # otherwise. The generator chooses the name with the lowest score.
 class TfExportAwareVisitor(doc_generator_visitor.DocGeneratorVisitor):
-  """A `tf_export`, `keras_export` and `estimator_export` aware doc_visitor."""
+    """A `tf_export`, `keras_export` and `estimator_export` aware doc_visitor."""
 
-  def _score_name(self, name):
-    all_exports = [tf_export.TENSORFLOW_API_NAME, tf_export.ESTIMATOR_API_NAME]
+    def _score_name(self, name):
+        all_exports = [tf_export.TENSORFLOW_API_NAME,
+                       tf_export.ESTIMATOR_API_NAME]
 
-    for api_name in all_exports:
-      canonical = tf_export.get_canonical_name_for_symbol(
-          self._index[name], api_name=api_name)
-      if canonical is not None:
-        break
+        for api_name in all_exports:
+            canonical = tf_export.get_canonical_name_for_symbol(
+                self._index[name], api_name=api_name)
+            if canonical is not None:
+                break
 
-    canonical_score = 1
-    if canonical is not None and name == "tf." + canonical:
-      canonical_score = -1
+        canonical_score = 1
+        if canonical is not None and name == "tf." + canonical:
+            canonical_score = -1
 
-    scores = super()._score_name(name)
-    return (canonical_score,) + scores
+        scores = super()._score_name(name)
+        return (canonical_score,) + scores
 
 
 def _hide_layer_and_module_methods():
-  """Hide methods and properties defined in the base classes of keras layers."""
-  # __dict__ only sees attributes defined in *this* class, not on parent classes
-  module_contents = list(tf.Module.__dict__.items())
-  layer_contents = list(tf.keras.layers.Layer.__dict__.items())
+    """Hide methods and properties defined in the base classes of keras layers."""
+    # __dict__ only sees attributes defined in *this* class, not on parent classes
+    module_contents = list(tf.Module.__dict__.items())
+    layer_contents = list(tf.keras.layers.Layer.__dict__.items())
 
-  for name, obj in module_contents + layer_contents:
-    if name == "__init__":
-      continue
+    for name, obj in module_contents + layer_contents:
+        if name == "__init__":
+            continue
 
-    if isinstance(obj, property):
-      obj = obj.fget
+        if isinstance(obj, property):
+            obj = obj.fget
 
-    if isinstance(obj, (staticmethod, classmethod)):
-      obj = obj.__func__
+        if isinstance(obj, (staticmethod, classmethod)):
+            obj = obj.__func__
 
-    try:
-      doc_controls.do_not_doc_in_subclasses(obj)
-    except AttributeError:
-      pass
+        try:
+            doc_controls.do_not_doc_in_subclasses(obj)
+        except AttributeError:
+            pass
 
 
 def build_docs(output_dir, code_url_prefix, search_hints=True):
-  """Build api docs for tensorflow v2.
+    """Build api docs for tensorflow v2.
 
-  Args:
-    output_dir: A string path, where to put the files.
-    code_url_prefix: prefix for "Defined in" links.
-    search_hints: Bool. Include meta-data search hints at the top of each file.
-  """
-  # The custom page will be used for raw_ops.md not the one generated above.
-  doc_controls.set_custom_page_content(tf.raw_ops, generate_raw_ops_doc())
+    Args:
+      output_dir: A string path, where to put the files.
+      code_url_prefix: prefix for "Defined in" links.
+      search_hints: Bool. Include meta-data search hints at the top of each file.
+    """
+    # The custom page will be used for raw_ops.md not the one generated above.
+    doc_controls.set_custom_page_content(tf.raw_ops, generate_raw_ops_doc())
 
-  # Hide raw_ops from search.
-  for name, obj in tf_inspect.getmembers(tf.raw_ops):
-    if not name.startswith("_"):
-      doc_controls.hide_from_search(obj)
+    # Hide raw_ops from search.
+    for name, obj in tf_inspect.getmembers(tf.raw_ops):
+        if not name.startswith("_"):
+            doc_controls.hide_from_search(obj)
 
-  _hide_layer_and_module_methods()
+    _hide_layer_and_module_methods()
 
-  try:
-    doc_controls.do_not_generate_docs(tf.tools)
-  except AttributeError:
-    pass
+    try:
+        doc_controls.do_not_generate_docs(tf.tools)
+    except AttributeError:
+        pass
 
-  try:
-    doc_controls.do_not_generate_docs(tf.compat.v1.pywrap_tensorflow)
-  except AttributeError:
-    pass
+    try:
+        doc_controls.do_not_generate_docs(tf.compat.v1.pywrap_tensorflow)
+    except AttributeError:
+        pass
 
-  try:
-    doc_controls.do_not_generate_docs(tf.pywrap_tensorflow)
-  except AttributeError:
-    pass
+    try:
+        doc_controls.do_not_generate_docs(tf.pywrap_tensorflow)
+    except AttributeError:
+        pass
 
-  try:
-    doc_controls.do_not_generate_docs(tf.flags)
-  except AttributeError:
-    pass
+    try:
+        doc_controls.do_not_generate_docs(tf.flags)
+    except AttributeError:
+        pass
 
-  base_dirs, code_url_prefixes = base_dir.get_base_dirs_and_prefixes(
-      code_url_prefix)
-  doc_generator = generate_lib.DocGenerator(
-      root_title="TensorFlow 2",
-      py_modules=[("tf", tf)],
-      base_dir=base_dirs,
-      search_hints=search_hints,
-      code_url_prefix=code_url_prefixes,
-      site_path=FLAGS.site_path,
-      visitor_cls=TfExportAwareVisitor,
-      private_map=_PRIVATE_MAP)
+    base_dirs, code_url_prefixes = base_dir.get_base_dirs_and_prefixes(
+        code_url_prefix)
+    doc_generator = generate_lib.DocGenerator(
+        root_title="TensorFlow 2",
+        py_modules=[("tf", tf)],
+        base_dir=base_dirs,
+        search_hints=search_hints,
+        code_url_prefix=code_url_prefixes,
+        site_path=FLAGS.site_path,
+        visitor_cls=TfExportAwareVisitor,
+        private_map=_PRIVATE_MAP)
 
-  doc_generator.build(output_dir)
+    doc_generator.build(output_dir)
 
-  out_path = pathlib.Path(output_dir)
-  num_files = len(list(out_path.rglob("*")))
-  if num_files < 2500:
-    raise ValueError("The TensorFlow api should be more than 2500 files"
-                     "(found {}).".format(num_files))
-  expected_path_contents = {
-      "tf/summary/audio.md":
-          "tensorboard/plugins/audio/summary_v2.py",
-      "tf/estimator/DNNClassifier.md":
-          "tensorflow_estimator/python/estimator/canned/dnn.py",
-      "tf/nn/sigmoid_cross_entropy_with_logits.md":
-          "python/ops/nn_impl.py",
-      "tf/keras/Model.md":
-          "tensorflow/python/keras/engine/training.py",
-      "tf/compat/v1/gradients.md":
-          "tensorflow/python/ops/gradients_impl.py",
-  }
+    out_path = pathlib.Path(output_dir)
+    num_files = len(list(out_path.rglob("*")))
+    if num_files < 2500:
+        raise ValueError("The TensorFlow api should be more than 2500 files"
+                         "(found {}).".format(num_files))
+    expected_path_contents = {
+        "tf/summary/audio.md":
+            "tensorboard/plugins/audio/summary_v2.py",
+        "tf/estimator/DNNClassifier.md":
+            "tensorflow_estimator/python/estimator/canned/dnn.py",
+        "tf/nn/sigmoid_cross_entropy_with_logits.md":
+            "python/ops/nn_impl.py",
+        "tf/keras/Model.md":
+            "tensorflow/python/keras/engine/training.py",
+        "tf/compat/v1/gradients.md":
+            "tensorflow/python/ops/gradients_impl.py",
+    }
 
-  all_passed = True
-  error_msg_parts = [
-      'Some "view source" links seem to be broken, please check:'
-  ]
+    all_passed = True
+    error_msg_parts = [
+        'Some "view source" links seem to be broken, please check:'
+    ]
 
-  for (rel_path, contents) in expected_path_contents.items():
-    path = out_path / rel_path
-    if contents not in path.read_text():
-      all_passed = False
-      error_msg_parts.append("  " + str(path))
+    for (rel_path, contents) in expected_path_contents.items():
+        path = out_path / rel_path
+        if contents not in path.read_text():
+            all_passed = False
+            error_msg_parts.append("  " + str(path))
 
-  if not all_passed:
-    raise ValueError("\n".join(error_msg_parts))
+    if not all_passed:
+        raise ValueError("\n".join(error_msg_parts))
 
 
 def main(argv):
-  del argv
-  build_docs(
-      output_dir=FLAGS.output_dir,
-      code_url_prefix=FLAGS.code_url_prefix,
-      search_hints=FLAGS.search_hints)
+    del argv
+    build_docs(
+        output_dir=FLAGS.output_dir,
+        code_url_prefix=FLAGS.code_url_prefix,
+        search_hints=FLAGS.search_hints)
 
 
 if __name__ == "__main__":
-  app.run(main)
+    app.run(main)
