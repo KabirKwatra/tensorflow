@@ -38,39 +38,31 @@ from tensorflow.python.platform import test
 class UtilTest(test_util.TensorFlowTestCase):
     def testConvertDtype(self):
         self.assertEqual(
-            util.convert_dtype_to_tflite_type(lite_constants.FLOAT), _types_pb2.FLOAT
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.float32), _types_pb2.FLOAT
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.int32), _types_pb2.INT32
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.int64), _types_pb2.INT64
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.string), _types_pb2.STRING
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.uint8), _types_pb2.QUANTIZED_UINT8
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.complex64), _types_pb2.COMPLEX64
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.half), _types_pb2.FLOAT16
-        )
-        self.assertEqual(
-            util.convert_dtype_to_tflite_type(dtypes.bool), _types_pb2.BOOL
-        )
+            util.convert_dtype_to_tflite_type(lite_constants.FLOAT),
+            _types_pb2.FLOAT)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.float32),
+                         _types_pb2.FLOAT)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.int32),
+                         _types_pb2.INT32)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.int64),
+                         _types_pb2.INT64)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.string),
+                         _types_pb2.STRING)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.uint8),
+                         _types_pb2.QUANTIZED_UINT8)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.complex64),
+                         _types_pb2.COMPLEX64)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.half),
+                         _types_pb2.FLOAT16)
+        self.assertEqual(util.convert_dtype_to_tflite_type(dtypes.bool),
+                         _types_pb2.BOOL)
 
     def testTensorName(self):
         with ops.Graph().as_default():
             in_tensor = array_ops.placeholder(shape=[4], dtype=dtypes.float32)
-            out_tensors = array_ops.split(
-                value=in_tensor, num_or_size_splits=[1, 1, 1, 1], axis=0
-            )
+            out_tensors = array_ops.split(value=in_tensor,
+                                          num_or_size_splits=[1, 1, 1, 1],
+                                          axis=0)
 
         expect_names = ["split", "split:1", "split:2", "split:3"]
         for i in range(len(expect_names)):
@@ -92,8 +84,7 @@ class UtilTest(test_util.TensorFlowTestCase):
             sess = session.Session()
 
         new_graph_def = convert_to_constants.disable_lower_using_switch_merge(
-            sess.graph_def
-        )
+            sess.graph_def)
         lower_using_switch_merge_is_removed = False
         for node in new_graph_def.node:
             if node.op == "While" or node.op == "StatelessWhile":
@@ -103,21 +94,16 @@ class UtilTest(test_util.TensorFlowTestCase):
 
     def testConvertBytes(self):
         source, header = util.convert_bytes_to_c_source(
-            b"\x00\x01\x02\x23", "foo", 16, use_tensorflow_license=False
-        )
+            b"\x00\x01\x02\x23", "foo", 16, use_tensorflow_license=False)
         self.assertTrue(
-            source.find("const unsigned char foo[] DATA_ALIGN_ATTRIBUTE = {")
-        )
-        self.assertTrue(
-            source.find(
-                """    0x00, 0x01,
-    0x02, 0x23,"""
-            )
-        )
+            source.find("const unsigned char foo[] DATA_ALIGN_ATTRIBUTE = {"))
+        self.assertTrue(source.find("""    0x00, 0x01,
+    0x02, 0x23,"""))
         self.assertNotEqual(-1, source.find("const int foo_len = 4;"))
         self.assertEqual(-1, source.find("/* Copyright"))
         self.assertEqual(-1, source.find("#include " ""))
-        self.assertNotEqual(-1, header.find("extern const unsigned char foo[];"))
+        self.assertNotEqual(-1,
+                            header.find("extern const unsigned char foo[];"))
         self.assertNotEqual(-1, header.find("extern const int foo_len;"))
         self.assertEqual(-1, header.find("/* Copyright"))
 
@@ -130,8 +116,8 @@ class UtilTest(test_util.TensorFlowTestCase):
             use_tensorflow_license=True,
         )
         self.assertNotEqual(
-            -1, source.find("const unsigned char bar[] DATA_ALIGN_ATTRIBUTE = {")
-        )
+            -1,
+            source.find("const unsigned char bar[] DATA_ALIGN_ATTRIBUTE = {"))
         self.assertNotEqual(-1, source.find("""    0xff, 0xfe, 0xfd, 0xfc,"""))
         self.assertNotEqual(-1, source.find("/* Copyright"))
         self.assertNotEqual(-1, source.find('#include "my/guard.h"'))
@@ -143,32 +129,31 @@ class UtilTest(test_util.TensorFlowTestCase):
 class TensorFunctionsTest(test_util.TensorFlowTestCase):
     def testGetTensorsValid(self):
         with ops.Graph().as_default():
-            in_tensor = array_ops.placeholder(
-                shape=[1, 16, 16, 3], dtype=dtypes.float32
-            )
+            in_tensor = array_ops.placeholder(shape=[1, 16, 16, 3],
+                                              dtype=dtypes.float32)
             _ = in_tensor + in_tensor
             sess = session.Session()
 
-        tensors = util.get_tensors_from_tensor_names(sess.graph, ["Placeholder"])
+        tensors = util.get_tensors_from_tensor_names(sess.graph,
+                                                     ["Placeholder"])
         self.assertEqual("Placeholder:0", tensors[0].name)
 
     def testGetTensorsInvalid(self):
         with ops.Graph().as_default():
-            in_tensor = array_ops.placeholder(
-                shape=[1, 16, 16, 3], dtype=dtypes.float32
-            )
+            in_tensor = array_ops.placeholder(shape=[1, 16, 16, 3],
+                                              dtype=dtypes.float32)
             _ = in_tensor + in_tensor
             sess = session.Session()
 
         with self.assertRaises(ValueError) as error:
             util.get_tensors_from_tensor_names(sess.graph, ["invalid-input"])
-        self.assertEqual(
-            "Invalid tensors 'invalid-input' were found.", str(error.exception)
-        )
+        self.assertEqual("Invalid tensors 'invalid-input' were found.",
+                         str(error.exception))
 
     def testSetTensorShapeValid(self):
         with ops.Graph().as_default():
-            tensor = array_ops.placeholder(shape=[None, 3, 5], dtype=dtypes.float32)
+            tensor = array_ops.placeholder(shape=[None, 3, 5],
+                                           dtype=dtypes.float32)
         self.assertEqual([None, 3, 5], tensor.shape.as_list())
 
         util.set_tensor_shapes([tensor], {"Placeholder": [5, 3, 5]})
@@ -185,7 +170,8 @@ class TensorFunctionsTest(test_util.TensorFlowTestCase):
     def testSetTensorShapeArrayInvalid(self):
         # Tests set_tensor_shape where the tensor name passed in doesn't exist.
         with ops.Graph().as_default():
-            tensor = array_ops.placeholder(shape=[None, 3, 5], dtype=dtypes.float32)
+            tensor = array_ops.placeholder(shape=[None, 3, 5],
+                                           dtype=dtypes.float32)
         self.assertEqual([None, 3, 5], tensor.shape.as_list())
 
         with self.assertRaises(ValueError) as error:
@@ -200,19 +186,20 @@ class TensorFunctionsTest(test_util.TensorFlowTestCase):
     def testSetTensorShapeDimensionInvalid(self):
         # Tests set_tensor_shape where the shape passed in is incompatible.
         with ops.Graph().as_default():
-            tensor = array_ops.placeholder(shape=[None, 3, 5], dtype=dtypes.float32)
+            tensor = array_ops.placeholder(shape=[None, 3, 5],
+                                           dtype=dtypes.float32)
         self.assertEqual([None, 3, 5], tensor.shape.as_list())
 
         with self.assertRaises(ValueError) as error:
             util.set_tensor_shapes([tensor], {"Placeholder": [1, 5, 5]})
-        self.assertIn(
-            "The shape of tensor 'Placeholder' cannot be changed", str(error.exception)
-        )
+        self.assertIn("The shape of tensor 'Placeholder' cannot be changed",
+                      str(error.exception))
         self.assertEqual([None, 3, 5], tensor.shape.as_list())
 
     def testSetTensorShapeEmpty(self):
         with ops.Graph().as_default():
-            tensor = array_ops.placeholder(shape=[None, 3, 5], dtype=dtypes.float32)
+            tensor = array_ops.placeholder(shape=[None, 3, 5],
+                                           dtype=dtypes.float32)
         self.assertEqual([None, 3, 5], tensor.shape.as_list())
 
         util.set_tensor_shapes([tensor], {})

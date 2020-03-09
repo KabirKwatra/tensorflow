@@ -82,8 +82,8 @@ def get_tensor_name(tensor):
     parts = six.ensure_str(tensor.name).split(":")
     if len(parts) > 2:
         raise ValueError(
-            "Tensor name invalid. Expect 0 or 1 colon, got {0}".format(len(parts) - 1)
-        )
+            "Tensor name invalid. Expect 0 or 1 colon, got {0}".format(
+                len(parts) - 1))
 
     # To be consistent with the tensor naming scheme in tensorflow, we need
     # drop the ':0' suffix for the first tensor.
@@ -124,9 +124,8 @@ def get_tensors_from_tensor_names(graph, tensor_names):
 
     # Throw ValueError if any user input names are not valid tensors.
     if invalid_tensors:
-        raise ValueError(
-            "Invalid tensors '{}' were found.".format(",".join(invalid_tensors))
-        )
+        raise ValueError("Invalid tensors '{}' were found.".format(
+            ",".join(invalid_tensors)))
     return tensors
 
 
@@ -144,12 +143,14 @@ def set_tensor_shapes(tensors, shapes):
         `shapes` contains an invalid shape for a valid tensor.
     """
     if shapes:
-        tensor_names_to_tensor = {get_tensor_name(tensor): tensor for tensor in tensors}
+        tensor_names_to_tensor = {
+            get_tensor_name(tensor): tensor
+            for tensor in tensors
+        }
         for name, shape in shapes.items():
             if name not in tensor_names_to_tensor:
-                raise ValueError(
-                    "Invalid tensor '{}' found in tensor shapes " "map.".format(name)
-                )
+                raise ValueError("Invalid tensor '{}' found in tensor shapes "
+                                 "map.".format(name))
             if shape is not None:
                 tensor = tensor_names_to_tensor[name]
                 try:
@@ -157,8 +158,8 @@ def set_tensor_shapes(tensors, shapes):
                 except ValueError as error:
                     message = (
                         "The shape of tensor '{0}' cannot be changed from {1} to "
-                        "{2}. {3}".format(name, tensor.shape, shape, str(error))
-                    )
+                        "{2}. {3}".format(name, tensor.shape, shape,
+                                          str(error)))
                     raise ValueError(message)
 
 
@@ -178,7 +179,11 @@ def get_grappler_config(optimizers_list):
     return config
 
 
-def run_graph_optimizations(graph_def, input_arrays, output_arrays, config, graph=None):
+def run_graph_optimizations(graph_def,
+                            input_arrays,
+                            output_arrays,
+                            config,
+                            graph=None):
     """Apply standard TensorFlow optimizations to the graph_def.
 
     Args:
@@ -197,12 +202,14 @@ def run_graph_optimizations(graph_def, input_arrays, output_arrays, config, grap
     for array in input_arrays:
         signature.inputs[array.name].name = array.name
         signature.inputs[array.name].dtype = array.dtype.as_datatype_enum
-        signature.inputs[array.name].tensor_shape.CopyFrom(array.shape.as_proto())
+        signature.inputs[array.name].tensor_shape.CopyFrom(
+            array.shape.as_proto())
 
     for array in output_arrays:
         signature.outputs[array.name].name = array.name
         signature.outputs[array.name].dtype = array.dtype.as_datatype_enum
-        signature.outputs[array.name].tensor_shape.CopyFrom(array.shape.as_proto())
+        signature.outputs[array.name].tensor_shape.CopyFrom(
+            array.shape.as_proto())
 
     meta_graph.signature_def["not_used_key"].CopyFrom(signature)
 
@@ -216,13 +223,13 @@ def run_graph_optimizations(graph_def, input_arrays, output_arrays, config, grap
     return tf_optimizer.OptimizeGraph(config, meta_graph)
 
 
-def _convert_op_hints_if_present(sess, graph_def, output_tensors, hinted_outputs_nodes):
+def _convert_op_hints_if_present(sess, graph_def, output_tensors,
+                                 hinted_outputs_nodes):
     if is_frozen_graph(sess):
         raise ValueError("Try to convert op hints, needs unfrozen graph.")
     output_arrays = [get_tensor_name(tensor) for tensor in output_tensors]
     graph_def = tf_graph_util.convert_variables_to_constants(
-        sess, graph_def, output_arrays + hinted_outputs_nodes
-    )
+        sess, graph_def, output_arrays + hinted_outputs_nodes)
     graph_def = convert_op_hints_to_stubs(graph_def=graph_def)
     return graph_def
 
@@ -247,24 +254,25 @@ def freeze_graph(sess, input_tensors, output_tensors):
     # Asides from inlining any simple function, Grappler will also try to lower
     # while loop into switch merge representation which is undesired for Ophints,
     # so we simply remove those attributes to prevent Grappler from doing so.
-    graph_def = _convert_to_constants.disable_lower_using_switch_merge(sess.graph_def)
+    graph_def = _convert_to_constants.disable_lower_using_switch_merge(
+        sess.graph_def)
     config = get_grappler_config(["function"])
-    graph_def = run_graph_optimizations(
-        graph_def, input_tensors, output_tensors, config, graph=sess.graph
-    )
+    graph_def = run_graph_optimizations(graph_def,
+                                        input_tensors,
+                                        output_tensors,
+                                        config,
+                                        graph=sess.graph)
 
     # If ophints are present, just convert them.
     hinted_outputs_nodes = find_all_hinted_output_nodes(sess)
     if hinted_outputs_nodes:
-        return _convert_op_hints_if_present(
-            sess, graph_def, output_tensors, hinted_outputs_nodes
-        )
+        return _convert_op_hints_if_present(sess, graph_def, output_tensors,
+                                            hinted_outputs_nodes)
 
     if not is_frozen_graph(sess):
         output_arrays = [get_tensor_name(tensor) for tensor in output_tensors]
         return tf_graph_util.convert_variables_to_constants(
-            sess, graph_def, output_arrays
-        )
+            sess, graph_def, output_arrays)
     else:
         return sess.graph_def
 
@@ -283,8 +291,7 @@ def is_frozen_graph(sess):
     """
     for op in sess.graph.get_operations():
         if six.ensure_str(op.type).startswith("Variable") or six.ensure_str(
-            op.type
-        ).endswith("VariableOp"):
+                op.type).endswith("VariableOp"):
             return False
     return True
 
@@ -310,18 +317,12 @@ def build_debug_info_func(original_graph):
             try:
                 if not func:
                     useful_ops.append(
-                        (func, original_graph.get_operation_by_name(name))
-                    )
+                        (func, original_graph.get_operation_by_name(name)))
                 else:
-                    sub_func = original_graph._get_function(
-                        func
-                    )  # pylint: disable=protected-access
-                    if isinstance(
-                        sub_func, function._EagerDefinedFunction
-                    ):  # pylint: disable=protected-access
+                    sub_func = original_graph._get_function(func)  # pylint: disable=protected-access
+                    if isinstance(sub_func, function._EagerDefinedFunction):  # pylint: disable=protected-access
                         useful_ops.append(
-                            (func, sub_func.graph.get_operation_by_name(name))
-                        )
+                            (func, sub_func.graph.get_operation_by_name(name)))
                     else:
                         sys.stderr.write(
                             "Use '@tf.function' or '@defun' to decorate the function."
@@ -359,8 +360,7 @@ def convert_debug_info_func(saved_debug_info):
         for func, node in original_nodes:
             debug_key = node + "@" + func
             output_debug_info.traces[debug_key].CopyFrom(
-                saved_debug_info.traces[debug_key]
-            )
+                saved_debug_info.traces[debug_key])
         return output_debug_info
 
     return f
@@ -398,12 +398,12 @@ def get_debug_info(nodes_to_debug_info_func, converted_graph):
 
 
 def convert_bytes_to_c_source(
-    data,
-    array_name,
-    max_line_width=80,
-    include_guard=None,
-    include_path=None,
-    use_tensorflow_license=False,
+        data,
+        array_name,
+        max_line_width=80,
+        include_guard=None,
+        include_path=None,
+        use_tensorflow_license=False,
 ):
     """Returns strings representing a C constant array containing `data`.
 
@@ -435,10 +435,12 @@ def convert_bytes_to_c_source(
     array_values = "".join(array_lines)
 
     if include_guard is None:
-        include_guard = "TENSORFLOW_LITE_UTIL_" + array_name.upper() + "_DATA_H_"
+        include_guard = "TENSORFLOW_LITE_UTIL_" + array_name.upper(
+        ) + "_DATA_H_"
 
     if include_path is not None:
-        include_line = '#include "{include_path}"\n'.format(include_path=include_path)
+        include_line = '#include "{include_path}"\n'.format(
+            include_path=include_path)
     else:
         include_line = ""
 
@@ -458,9 +460,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-""".format(
-            year=datetime.date.today().year
-        )
+""".format(year=datetime.date.today().year)
     else:
         license_text = ""
 
@@ -513,8 +513,8 @@ extern const int {array_name}_len;
 #endif  // {include_guard}
 """
 
-    header_text = header_template.format(
-        array_name=array_name, include_guard=include_guard, license_text=license_text
-    )
+    header_text = header_template.format(array_name=array_name,
+                                         include_guard=include_guard,
+                                         license_text=license_text)
 
     return source_text, header_text

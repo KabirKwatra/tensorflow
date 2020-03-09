@@ -34,12 +34,12 @@ from tensorflow.python.util.tf_export import tf_export
 # ===============================================================================
 @tf_export("ragged.constant")
 def constant(
-    pylist,
-    dtype=None,
-    ragged_rank=None,
-    inner_shape=None,
-    name=None,
-    row_splits_dtype=dtypes.int64,
+        pylist,
+        dtype=None,
+        ragged_rank=None,
+        inner_shape=None,
+        name=None,
+        row_splits_dtype=dtypes.int64,
 ):
     """Constructs a constant RaggedTensor from a nested Python list.
 
@@ -83,9 +83,9 @@ def constant(
 
     def ragged_factory(values, row_splits):
         row_splits = constant_op.constant(row_splits, dtype=row_splits_dtype)
-        return ragged_tensor.RaggedTensor.from_row_splits(
-            values, row_splits, validate=False
-        )
+        return ragged_tensor.RaggedTensor.from_row_splits(values,
+                                                          row_splits,
+                                                          validate=False)
 
     with ops.name_scope(name, "RaggedConstant"):
         return _constant_value(
@@ -99,9 +99,11 @@ def constant(
 
 
 @tf_export(v1=["ragged.constant_value"])
-def constant_value(
-    pylist, dtype=None, ragged_rank=None, inner_shape=None, row_splits_dtype="int64"
-):
+def constant_value(pylist,
+                   dtype=None,
+                   ragged_rank=None,
+                   inner_shape=None,
+                   row_splits_dtype="int64"):
     """Constructs a RaggedTensorValue from a nested Python list.
 
     Warning: This function returns a `RaggedTensorValue`, not a `RaggedTensor`.
@@ -152,19 +154,15 @@ def constant_value(
         row_splits = np.array(row_splits, dtype=row_splits_dtype)
         return ragged_tensor_value.RaggedTensorValue(values, row_splits)
 
-    def _inner_factory(
-        pylist, dtype, shape, name=None
-    ):  # pylint: disable=unused-argument
+    def _inner_factory(pylist, dtype, shape, name=None):  # pylint: disable=unused-argument
         return np.reshape(np.array(pylist, dtype=dtype), shape)
 
-    return _constant_value(
-        _ragged_factory, _inner_factory, pylist, dtype, ragged_rank, inner_shape
-    )
+    return _constant_value(_ragged_factory, _inner_factory, pylist, dtype,
+                           ragged_rank, inner_shape)
 
 
-def _constant_value(
-    ragged_factory, inner_factory, pylist, dtype, ragged_rank, inner_shape
-):
+def _constant_value(ragged_factory, inner_factory, pylist, dtype, ragged_rank,
+                    inner_shape):
     """Constructs a constant RaggedTensor or RaggedTensorValue.
 
     Args:
@@ -185,24 +183,24 @@ def _constant_value(
         depth; or if ragged_rank or inner_shape are incompatible with `pylist`.
     """
     if ragged_tensor.is_ragged(pylist):
-        raise TypeError("pylist may not be a RaggedTensor or RaggedTensorValue.")
+        raise TypeError(
+            "pylist may not be a RaggedTensor or RaggedTensorValue.")
     # np.ndim builds an array, so we short-circuit lists and tuples.
     if not isinstance(pylist, (list, tuple)) and np.ndim(pylist) == 0:
         # Scalar value
         if ragged_rank is not None and ragged_rank != 0:
             raise ValueError(
-                "Invalid pylist=%r: incompatible with ragged_rank=%d"
-                % (pylist, ragged_rank)
-            )
+                "Invalid pylist=%r: incompatible with ragged_rank=%d" %
+                (pylist, ragged_rank))
         if inner_shape is not None and inner_shape:
             raise ValueError(
-                "Invalid pylist=%r: incompatible with dim(inner_shape)=%d"
-                % (pylist, len(inner_shape))
-            )
+                "Invalid pylist=%r: incompatible with dim(inner_shape)=%d" %
+                (pylist, len(inner_shape)))
         return inner_factory(pylist, dtype, ())
 
     if ragged_rank is not None and ragged_rank < 0:
-        raise ValueError("Invalid ragged_rank=%r: must be nonnegative" % ragged_rank)
+        raise ValueError("Invalid ragged_rank=%r: must be nonnegative" %
+                         ragged_rank)
 
     # Find the depth of scalar values in `pylist`.
     scalar_depth, max_depth = _find_scalar_and_max_depth(pylist)
@@ -210,29 +208,23 @@ def _constant_value(
         if max_depth > scalar_depth:
             raise ValueError(
                 "Invalid pylist=%r: empty list nesting is greater "
-                "than scalar value nesting" % pylist
-            )
+                "than scalar value nesting" % pylist)
 
     # If both inner_shape and ragged_rank were specified, then check that
     # they are compatible with pylist.
     if inner_shape is not None and ragged_rank is not None:
         expected_depth = ragged_rank + len(inner_shape) + 1
         if (scalar_depth is not None and expected_depth != scalar_depth) or (
-            scalar_depth is None and expected_depth < max_depth
-        ):
+                scalar_depth is None and expected_depth < max_depth):
             raise ValueError(
                 "Invalid pylist=%r: incompatible with ragged_rank=%d "
-                "and dim(inner_shape)=%d" % (pylist, ragged_rank, len(inner_shape))
-            )
+                "and dim(inner_shape)=%d" %
+                (pylist, ragged_rank, len(inner_shape)))
 
     # Check if the result is a `Tensor`.
-    if ragged_rank == 0 or (
-        ragged_rank is None
-        and (
-            (max_depth < 2)
-            or (inner_shape is not None and max_depth - len(inner_shape) < 2)
-        )
-    ):
+    if ragged_rank == 0 or (ragged_rank is None and (
+        (max_depth < 2) or
+        (inner_shape is not None and max_depth - len(inner_shape) < 2))):
         return inner_factory(pylist, dtype, inner_shape)
 
     # Compute default value for inner_shape.
@@ -261,9 +253,10 @@ def _constant_value(
             concatenated_values.extend(row)
         values = concatenated_values
 
-    values = inner_factory(
-        values, dtype=dtype, shape=(len(values),) + inner_shape, name="values"
-    )
+    values = inner_factory(values,
+                           dtype=dtype,
+                           shape=(len(values), ) + inner_shape,
+                           name="values")
     for row_splits in reversed(nested_splits):
         values = ragged_factory(values, row_splits)
     return values
@@ -290,12 +283,12 @@ def _find_scalar_and_max_depth(pylist):
         scalar_depth = None
         max_depth = 1
         for child in pylist:
-            child_scalar_depth, child_max_depth = _find_scalar_and_max_depth(child)
+            child_scalar_depth, child_max_depth = _find_scalar_and_max_depth(
+                child)
             if child_scalar_depth is not None:
                 if scalar_depth is not None and scalar_depth != child_scalar_depth + 1:
                     raise ValueError(
-                        "all scalar values must have the same nesting depth"
-                    )
+                        "all scalar values must have the same nesting depth")
                 scalar_depth = child_scalar_depth + 1
             max_depth = max(max_depth, child_max_depth + 1)
         return (scalar_depth, max_depth)
@@ -310,8 +303,8 @@ def _default_inner_shape_for_pylist(pylist, ragged_rank):
         if not isinstance(item, (list, tuple)) and np.ndim(item) == 0:
             return ()
         elif item:
-            return (len(item),) + get_inner_shape(item[0])
-        return (0,)
+            return (len(item), ) + get_inner_shape(item[0])
+        return (0, )
 
     def check_inner_shape(item, shape):
         """Checks that `item` has a consistent shape matching `shape`."""
@@ -328,13 +321,12 @@ def _default_inner_shape_for_pylist(pylist, ragged_rank):
     flat_values = pylist
     for dim in range(ragged_rank):
         if not all(
-            isinstance(v, (list, tuple)) or np.ndim(v) != 0 for v in flat_values
-        ):
+                isinstance(v, (list, tuple)) or np.ndim(v) != 0
+                for v in flat_values):
             raise ValueError(
                 "pylist has scalar values depth %d, but ragged_rank=%d "
-                "requires scalar value depth greater than %d"
-                % (dim + 1, ragged_rank, ragged_rank)
-            )
+                "requires scalar value depth greater than %d" %
+                (dim + 1, ragged_rank, ragged_rank))
         flat_values = sum((list(v) for v in flat_values), [])
 
     # Compute the inner shape looking only at the leftmost elements; and then
@@ -374,8 +366,8 @@ def placeholder(dtype, ragged_rank, value_shape=None, name=None):
         flat_shape = tensor_shape.TensorShape([None]).concatenate(value_shape)
         result = array_ops.placeholder(dtype, flat_shape, "flat_values")
         for i in reversed(range(ragged_rank)):
-            row_splits = array_ops.placeholder(
-                dtypes.int64, [None], "row_splits_%d" % i
-            )
-            result = ragged_tensor.RaggedTensor.from_row_splits(result, row_splits)
+            row_splits = array_ops.placeholder(dtypes.int64, [None],
+                                               "row_splits_%d" % i)
+            result = ragged_tensor.RaggedTensor.from_row_splits(
+                result, row_splits)
         return result

@@ -167,13 +167,13 @@ class OpHint(object):
         """
 
         def __init__(
-            self,
-            function_name,
-            unique_function_id,
-            node_name_prefix,
-            attr_name,
-            level=1,
-            children_inputs_mappings=None,
+                self,
+                function_name,
+                unique_function_id,
+                node_name_prefix,
+                attr_name,
+                level=1,
+                children_inputs_mappings=None,
         ):
             """Initialize ophint argument.
 
@@ -196,7 +196,8 @@ class OpHint(object):
             self._unique_function_id = unique_function_id
             self._next_global_index = 0  # The absolute global index
             self._used_global_indices = set()
-            self._tag_to_global_index = {}  # The argument index a given tag maps to
+            self._tag_to_global_index = {
+            }  # The argument index a given tag maps to
             self._tag_to_next_sort_index = {}  # The current index for each tag
             self._node_name_prefix = node_name_prefix
             self._attr_name = attr_name
@@ -220,7 +221,8 @@ class OpHint(object):
                 global_index = self._next_global_index
             else:
                 if index_override in self._used_global_indices:
-                    raise ValueError("Index %d was already used by another call to add")
+                    raise ValueError(
+                        "Index %d was already used by another call to add")
                 global_index = index_override
             # Make next_global_index valid
             self._used_global_indices.add(global_index)
@@ -228,7 +230,12 @@ class OpHint(object):
                 self._next_global_index += 1
             return global_index
 
-        def add(self, arg, tag=None, name=None, aggregate=None, index_override=None):
+        def add(self,
+                arg,
+                tag=None,
+                name=None,
+                aggregate=None,
+                index_override=None):
             """Return a wrapped tensor of an input tensor as an argument.
 
             Args:
@@ -254,24 +261,23 @@ class OpHint(object):
             # Find the appropriate index
             if tag is None:
                 if aggregate is not None:
-                    raise ValueError("You must specify `tag` if using aggregate.")
+                    raise ValueError(
+                        "You must specify `tag` if using aggregate.")
                 global_index = self._get_new_global_index(index_override)
                 sort_index = None
             else:
                 if aggregate is None:
-                    raise ValueError("You must specify `aggregate` if using tag.")
-                if tag not in self._tag_to_global_index:
-                    self._tag_to_global_index[tag] = self._get_new_global_index(
-                        index_override
-                    )
-                    self._tag_to_next_sort_index[tag] = 0
-                elif (
-                    index_override and index_override != self._tag_to_global_index[tag]
-                ):
                     raise ValueError(
-                        "Tag %r was called with two indices %r and %r"
-                        % (tag, index_override, self._tag_to_global_index[tag])
-                    )
+                        "You must specify `aggregate` if using tag.")
+                if tag not in self._tag_to_global_index:
+                    self._tag_to_global_index[
+                        tag] = self._get_new_global_index(index_override)
+                    self._tag_to_next_sort_index[tag] = 0
+                elif (index_override
+                      and index_override != self._tag_to_global_index[tag]):
+                    raise ValueError(
+                        "Tag %r was called with two indices %r and %r" %
+                        (tag, index_override, self._tag_to_global_index[tag]))
                 global_index = self._tag_to_global_index[tag]
                 sort_index = self._tag_to_next_sort_index[tag]
                 self._tag_to_next_sort_index[tag] += 1
@@ -291,24 +297,23 @@ class OpHint(object):
             # pylint: disable=protected-access
             identity_op.op._set_attr(
                 OpHint.FUNCTION_NAME_ATTR,
-                _attr_value_pb2.AttrValue(s=_compat.as_bytes(self._function_name)),
+                _attr_value_pb2.AttrValue(
+                    s=_compat.as_bytes(self._function_name)),
             )
             identity_op.op._set_attr(
                 OpHint.FUNCTION_UUID_ATTR,
-                _attr_value_pb2.AttrValue(s=_compat.as_bytes(self._unique_function_id)),
+                _attr_value_pb2.AttrValue(
+                    s=_compat.as_bytes(self._unique_function_id)),
             )
-            identity_op.op._set_attr(
-                self._attr_name, _attr_value_pb2.AttrValue(i=global_index)
-            )
-            identity_op.op._set_attr(
-                OpHint.FUNCTION_LEVEL_ATTR, _attr_value_pb2.AttrValue(i=self._level)
-            )
+            identity_op.op._set_attr(self._attr_name,
+                                     _attr_value_pb2.AttrValue(i=global_index))
+            identity_op.op._set_attr(OpHint.FUNCTION_LEVEL_ATTR,
+                                     _attr_value_pb2.AttrValue(i=self._level))
             if self._children_inputs_mappings:
                 identity_op.op._set_attr(
                     OpHint.CHILDREN_INPUTS_MAPPINGS,
-                    _attr_value_pb2.AttrValue(
-                        s=_compat.as_bytes(_json.dumps(self._children_inputs_mappings))
-                    ),
+                    _attr_value_pb2.AttrValue(s=_compat.as_bytes(
+                        _json.dumps(self._children_inputs_mappings))),
                 )
 
             if sort_index is not None:
@@ -324,7 +329,11 @@ class OpHint(object):
             # pylint: enable=protected-access
             return identity_op
 
-    def __init__(self, function_name, level=1, children_inputs_mappings=None, **kwargs):
+    def __init__(self,
+                 function_name,
+                 level=1,
+                 children_inputs_mappings=None,
+                 **kwargs):
         """Create a OpHint.
 
         Args:
@@ -348,8 +357,10 @@ class OpHint(object):
             assert isinstance(children_inputs_mappings, dict)
         self._children_inputs_mappings = children_inputs_mappings
         if self._children_inputs_mappings is not None:
-            self._validate_children_inputs_mappings(self._children_inputs_mappings)
-        self._unique_function_id = _uuid.uuid1().hex  # TODO(aselle): Unique enough?
+            self._validate_children_inputs_mappings(
+                self._children_inputs_mappings)
+        self._unique_function_id = _uuid.uuid1(
+        ).hex  # TODO(aselle): Unique enough?
         self._attrs_to_store_later = kwargs
         self._stored_attrs = False
         self._inputs = OpHint.OpHintArgumentTracker(
@@ -407,8 +418,7 @@ class OpHint(object):
         dest_op.op._set_attr(
             name,
             _attr_value_pb2.AttrValue(
-                tensor=tensor_value.op.node_def.attr["value"].tensor
-            ),
+                tensor=tensor_value.op.node_def.attr["value"].tensor),
         )
         # pylint: enable=protected-access
 
@@ -521,9 +531,8 @@ class _LiteOperand(object):
         del out_graphdef
         raise RuntimeError("Unimplemented abstract method.")
 
-    def aggregate_and_return_name_for_output(
-        self, fused_op_name, output_index, out_graphdef
-    ):
+    def aggregate_and_return_name_for_output(self, fused_op_name, output_index,
+                                             out_graphdef):
         """Add node(s) to graph representing output operands and returns type.
 
         Args:
@@ -555,7 +564,8 @@ class _LiteSingleOperand(_LiteOperand):
     def aggregate_and_return_name_for_input(self, out_graphdef):
         return self.name
 
-    def aggregate_and_return_name_for_output(self, fused_op_name, index, out_graphdef):
+    def aggregate_and_return_name_for_output(self, fused_op_name, index,
+                                             out_graphdef):
         output_node = _copy.deepcopy(self.node)
         del output_node.input[:]
         output_node.input.append(_tensorflow_output_name(fused_op_name, index))
@@ -601,9 +611,8 @@ class _LiteAggregateOperand(_LiteOperand):
             elif self.aggregation == OpHint.AGGREGATE_STACK:
                 pass
             else:
-                raise ValueError(
-                    "Invalid aggregation type %r specified" % self.aggregation
-                )
+                raise ValueError("Invalid aggregation type %r specified" %
+                                 self.aggregation)
         return self.flattened
 
     def flatten(self):
@@ -627,8 +636,7 @@ class _LiteAggregateOperand(_LiteOperand):
         """
         flattened = self.flatten_nodes()
         if (self.aggregation == OpHint.AGGREGATE_FIRST) or (
-            self.aggregation == OpHint.AGGREGATE_LAST
-        ):
+                self.aggregation == OpHint.AGGREGATE_LAST):
             assert len(flattened) == 1
         if len(flattened) == 1 and self.aggregation != OpHint.AGGREGATE_STACK:
             return _tensor_name_base(flattened[0].name)
@@ -643,9 +651,8 @@ class _LiteAggregateOperand(_LiteOperand):
             out_graphdef.node.extend([new_node])
             return new_node.name
 
-    def aggregate_and_return_name_for_output(
-        self, fused_op_name, output_index, out_graphdef
-    ):
+    def aggregate_and_return_name_for_output(self, fused_op_name, output_index,
+                                             out_graphdef):
         """This adds to `out_graphdef` all the unaggregated outputs.
 
         I.e. we are outputting from a fused stub, but we need to make it compatible
@@ -663,14 +670,12 @@ class _LiteAggregateOperand(_LiteOperand):
         """
         flattened = self.flatten_nodes()
         if (self.aggregation == OpHint.AGGREGATE_FIRST) or (
-            self.aggregation == OpHint.AGGREGATE_LAST
-        ):
+                self.aggregation == OpHint.AGGREGATE_LAST):
             assert len(flattened) == 1
         if len(flattened) == 1 and self.aggregation != OpHint.AGGREGATE_STACK:
             temp_op = _LiteSingleOperand(flattened[0])
             return temp_op.aggregate_and_return_name_for_output(
-                fused_op_name, output_index, out_graphdef
-            )
+                fused_op_name, output_index, out_graphdef)
         else:
             stack_node = _node_def_pb2.NodeDef()
             stack_node.op = "Unpack"
@@ -679,14 +684,14 @@ class _LiteAggregateOperand(_LiteOperand):
             output_type = flattened[0].attr["T"].type
             stack_node.attr["T"].type = output_type
             stack_node.input.append(
-                _tensorflow_output_name(fused_op_name, output_index)
-            )
+                _tensorflow_output_name(fused_op_name, output_index))
             out_graphdef.node.extend([stack_node])
 
             for idx, discrete in enumerate(flattened):
                 output_node = _copy.deepcopy(discrete)
                 del output_node.input[:]
-                output_node.input.append(_tensorflow_output_name(stack_node.name, idx))
+                output_node.input.append(
+                    _tensorflow_output_name(stack_node.name, idx))
                 out_graphdef.node.extend([output_node])
 
             return output_type
@@ -752,11 +757,10 @@ class _LiteFuncCall(object):
         inputs_str = "\tInputs\n" + format_args(self.inputs)
         outputs_str = "\tOutputs\n" + format_args(self.outputs)
 
-        return (
-            "tflite function %s call %s level %d "
-            "\n\tinputs:\n\t\t%s\n\toutputs:\n\t\t%s"
-            % (self.function_name, self.uuid, self.level, inputs_str, outputs_str)
-        )
+        return ("tflite function %s call %s level %d "
+                "\n\tinputs:\n\t\t%s\n\toutputs:\n\t\t%s" %
+                (self.function_name, self.uuid, self.level, inputs_str,
+                 outputs_str))
 
 
 def _find_all_hints_in_nodes(nodes):
@@ -774,10 +778,8 @@ def _find_all_hints_in_nodes(nodes):
     for node in nodes:
         attr = node.attr
         # This is an op hint if it has a FUNCTION_UUID_ATTR, otherwise skip
-        if (
-            OpHint.FUNCTION_UUID_ATTR not in attr
-            or not attr[OpHint.FUNCTION_UUID_ATTR].s
-        ):
+        if (OpHint.FUNCTION_UUID_ATTR not in attr
+                or not attr[OpHint.FUNCTION_UUID_ATTR].s):
             continue
         uuid = attr[OpHint.FUNCTION_UUID_ATTR].s
 
@@ -788,21 +790,18 @@ def _find_all_hints_in_nodes(nodes):
         call_def.level = attr[OpHint.FUNCTION_LEVEL_ATTR].i
         # Get sorting and aggregation information
 
-        sort = (
-            attr[OpHint.FUNCTION_SORT_INDEX_ATTR].i
-            if OpHint.FUNCTION_SORT_INDEX_ATTR in attr
-            else None
-        )
+        sort = (attr[OpHint.FUNCTION_SORT_INDEX_ATTR].i
+                if OpHint.FUNCTION_SORT_INDEX_ATTR in attr else None)
         if sort == -1:
             sort = None
         aggregation = None
         if OpHint.FUNCTION_AGGREGATE_ATTR in attr:
-            aggregation = _compat.as_text(attr[OpHint.FUNCTION_AGGREGATE_ATTR].s)
+            aggregation = _compat.as_text(
+                attr[OpHint.FUNCTION_AGGREGATE_ATTR].s)
 
         if OpHint.CHILDREN_INPUTS_MAPPINGS in attr:
             call_def.children_inputs_mappings = _json.loads(
-                _compat.as_text(attr[OpHint.CHILDREN_INPUTS_MAPPINGS].s)
-            )
+                _compat.as_text(attr[OpHint.CHILDREN_INPUTS_MAPPINGS].s))
 
         # Add the input or output
         def put_operand(stuff, index, sort, operand, aggregation):
@@ -834,13 +833,15 @@ def _find_all_hints_in_nodes(nodes):
         # Remember attributes
         for a in attr:
             if a.startswith("_tflite_attr_"):
-                call_def.params[a.replace("_tflite_attr_,", "")] = attr[a].tensor
+                call_def.params[a.replace("_tflite_attr_,",
+                                          "")] = attr[a].tensor
 
     return func_calls
 
 
 def _extract_topology_sequence_mapping(nodes):
-    return dict((_tensor_name_base(node.name), idx) for idx, node in enumerate(nodes))
+    return dict(
+        (_tensor_name_base(node.name), idx) for idx, node in enumerate(nodes))
 
 
 def _find_children_hints_in_while_loop(function_def, nodes_mapping):
@@ -894,8 +895,10 @@ def _find_children_hints(call, graph_def):
     name_to_input_name, _, _ = _extract_graph_summary(graph_def)
     input_names, output_names = call.flattened_inputs_and_outputs()
 
-    reachable_by_input = _bfs_for_reachable_nodes(input_names, name_to_input_name)
-    reachable_by_output = _bfs_for_reachable_nodes(output_names, name_to_input_name)
+    reachable_by_input = _bfs_for_reachable_nodes(input_names,
+                                                  name_to_input_name)
+    reachable_by_output = _bfs_for_reachable_nodes(output_names,
+                                                   name_to_input_name)
     output_nodes_set = set(output_names)
     children_hints = []
     out = _graph_pb2.GraphDef()
@@ -914,20 +917,21 @@ def _find_children_hints(call, graph_def):
                     for function_def in graph_def.library.function:
                         if function_def.signature.name == body_name:
                             function_inputs = function_def.signature.input_arg
-                            assert len(inputs_outside_loop) == len(function_inputs)
+                            assert len(inputs_outside_loop) == len(
+                                function_inputs)
                             nodes_mapping = {}
-                            for i, function_input in enumerate(function_inputs):
-                                nodes_mapping[
-                                    function_input.name
-                                ] = inputs_outside_loop[i]
+                            for i, function_input in enumerate(
+                                    function_inputs):
+                                nodes_mapping[function_input.
+                                              name] = inputs_outside_loop[i]
                             # TODO(b/123050804): Consider use grappler.
                             (
                                 children_hints_in_loop,
                                 new_nodes,
                             ) = _find_children_hints_in_while_loop(
-                                function_def, nodes_mapping
-                            )
-                            function_def_nodes.update([x.name for x in new_nodes])
+                                function_def, nodes_mapping)
+                            function_def_nodes.update(
+                                [x.name for x in new_nodes])
                             children_hints.extend(children_hints_in_loop)
                             out.node.extend(new_nodes)
 
@@ -951,11 +955,13 @@ def _tensor_name_base(full_tensor_name):
 
 
 def _tensorflow_output_name(tensor_name, output_index):
-    return tensor_name if output_index == 0 else "%s:%d" % (tensor_name, output_index)
+    return tensor_name if output_index == 0 else "%s:%d" % (tensor_name,
+                                                            output_index)
 
 
 # TODO(aselle): This should be converted to grappler in the future.
-def _check_subgraph_closed(n, reachable_by_input, input_nodes_set, name_to_input_name):
+def _check_subgraph_closed(n, reachable_by_input, input_nodes_set,
+                           name_to_input_name):
     """Checks to make sure node only connects to predecessor graph through inputs.
 
     Args:
@@ -973,21 +979,20 @@ def _check_subgraph_closed(n, reachable_by_input, input_nodes_set, name_to_input
         current_node = next_to_visit.pop()
         visited.add(current_node)
         if current_node in reachable_by_input and current_node not in input_nodes_set:
-            raise TypeError(
-                "Node %s uses input %s not in input_nodes." % (n, current_node)
-            )
+            raise TypeError("Node %s uses input %s not in input_nodes." %
+                            (n, current_node))
         if current_node not in input_nodes_set:
             next_to_visit += [
-                input_node
-                for input_node in name_to_input_name[current_node]
+                input_node for input_node in name_to_input_name[current_node]
                 if input_node not in visited
             ]
 
 
 # TODO(aselle): This should be converted to grappler in the future.
-def _convert_single_op_hint_to_stub(
-    call, graph_def, function_def_nodes=None, is_last_run=True
-):
+def _convert_single_op_hint_to_stub(call,
+                                    graph_def,
+                                    function_def_nodes=None,
+                                    is_last_run=True):
     """Given a graph_def, converts `call` into a stub and returns a new graph_def.
 
     Args:
@@ -1008,12 +1013,13 @@ def _convert_single_op_hint_to_stub(
     if function_def_nodes is None:
         function_def_nodes = set()
     name_to_input_name, name_to_node, name_to_seq_num = _extract_graph_summary(
-        graph_def
-    )
+        graph_def)
     input_names, output_names = call.flattened_inputs_and_outputs()
 
-    reachable_by_input = _bfs_for_reachable_nodes(input_names, name_to_input_name)
-    reachable_by_output = _bfs_for_reachable_nodes(output_names, name_to_input_name)
+    reachable_by_input = _bfs_for_reachable_nodes(input_names,
+                                                  name_to_input_name)
+    reachable_by_output = _bfs_for_reachable_nodes(output_names,
+                                                   name_to_input_name)
     output_nodes_set = set(output_names)
     nodes_after_fuse = []
     nodes_deleted_by_fuse = set()
@@ -1037,9 +1043,8 @@ def _convert_single_op_hint_to_stub(
 
     # Make a new graphdef with all the pre-input and input nodes
     out = _graph_pb2.GraphDef()
-    reachable_by_input_sorted = sorted(
-        list(reachable_by_input), key=lambda n: name_to_seq_num[n]
-    )
+    reachable_by_input_sorted = sorted(list(reachable_by_input),
+                                       key=lambda n: name_to_seq_num[n])
     for node in reachable_by_input_sorted:
         out.node.extend([_copy.deepcopy(name_to_node[node])])
 
@@ -1059,13 +1064,10 @@ def _convert_single_op_hint_to_stub(
     optional_input_node.name = "Const" + str(_uuid.uuid1().hex)
     optional_input_node.op = "Const"
     optional_input_node.attr["dtype"].CopyFrom(
-        _attr_value_pb2.AttrValue(type=_dtypes.float32.as_datatype_enum)
-    )
+        _attr_value_pb2.AttrValue(type=_dtypes.float32.as_datatype_enum))
     optional_input_node.attr["value"].CopyFrom(
         _attr_value_pb2.AttrValue(
-            tensor=_tensor_util.make_tensor_proto([-1], _dtypes.float32, [1])
-        )
-    )
+            tensor=_tensor_util.make_tensor_proto([-1], _dtypes.float32, [1])))
     out.node.extend([optional_input_node])
 
     max_index = max(sorted_input_indices) + 1
@@ -1077,7 +1079,8 @@ def _convert_single_op_hint_to_stub(
         else:
             new_node.input.append(optional_input_node.name)
 
-    new_node.attr[OpHint.TFLITE_INPUT_INDICES].list.i.extend(sorted_input_indices)
+    new_node.attr[OpHint.TFLITE_INPUT_INDICES].list.i.extend(
+        sorted_input_indices)
 
     # Create the function
     new_node.op = call.function_name
@@ -1092,8 +1095,7 @@ def _convert_single_op_hint_to_stub(
         if cur_index in sorted_output_indices:
             output = call.outputs[cur_index]
             output_dtype = output.aggregate_and_return_name_for_output(
-                new_node.name, cur_index, out
-            )
+                new_node.name, cur_index, out)
         else:
             output_dtype = optional_input_node.attr["type"].i
         output_dtypes.append(output_dtype)
@@ -1128,8 +1130,7 @@ def _remove_one_redundant_stack_unstack(in_graph_def):
       is true if anything was done.
     """
     name_to_input_name, name_to_node, name_to_seq_num = _extract_graph_summary(
-        in_graph_def
-    )
+        in_graph_def)
     del name_to_seq_num
 
     # TODO(aselle): Make this not hardcoded.
@@ -1140,7 +1141,8 @@ def _remove_one_redundant_stack_unstack(in_graph_def):
     out.versions.CopyFrom(in_graph_def.versions)
     for n in in_graph_def.node:
         node_name = _tensor_name_base(n.name)
-        if not node_name.startswith("OpHintStack") and not n.op.startswith("Pack"):
+        if not node_name.startswith("OpHintStack") and not n.op.startswith(
+                "Pack"):
             continue
         next_to_visit = [node_name]
         visited = set()
@@ -1159,18 +1161,16 @@ def _remove_one_redundant_stack_unstack(in_graph_def):
             node = name_to_node[current_node_name]
             is_op_hint_stack = node.name.startswith("OpHintStack")
             is_op_hint_unstack = node.name.startswith("OpHintUnstack")
-            if (
-                node.op == "Identity"
-                or is_op_hint_stack
-                or (do_generic_pack_unpack and node.op == "Pack")
-            ):
+            if (node.op == "Identity" or is_op_hint_stack
+                    or (do_generic_pack_unpack and node.op == "Pack")):
                 is_hint_created_stack |= is_op_hint_stack
                 next_to_visit += [
                     input_node
                     for input_node in name_to_input_name[current_node_name]
                     if input_node not in visited
                 ]
-            elif is_op_hint_unstack or (do_generic_pack_unpack and node.op == "Unpack"):
+            elif is_op_hint_unstack or (do_generic_pack_unpack
+                                        and node.op == "Unpack"):
                 unpack_nodes.add(node.name)
                 is_hint_created_stack &= is_op_hint_unstack
             else:
@@ -1203,10 +1203,11 @@ def _remove_one_redundant_stack_unstack(in_graph_def):
                     if node_name not in visited:
                         new_node = _copy.deepcopy(other_n)
                         new_node.input[:] = [
-                            (end_input if stripped == pack_node else non_stripped)
+                            (end_input
+                             if stripped == pack_node else non_stripped)
                             for stripped, non_stripped in zip(
-                                name_to_input_name[node_name], new_node.input[:]
-                            )
+                                name_to_input_name[node_name],
+                                new_node.input[:])
                         ]
                         out.node.extend([new_node])
                 return out, True
@@ -1235,8 +1236,7 @@ def _get_correct_mapping(original_index, nodes):
 
 
 def _convert_op_hints_to_stubs_helper(
-    graph_def, write_callback=lambda sess, graph_def: None
-):
+        graph_def, write_callback=lambda sess, graph_def: None):
     """Converts a graph_def to a new graph_def where all op hints are stubbed.
 
     Args:
@@ -1262,52 +1262,48 @@ def _convert_op_hints_to_stubs_helper(
         level, hint_uuid = hints_q[i]
         if level >= 2:
             children_hints, curr_graph_def, function_def_nodes = _find_children_hints(
-                hints[hint_uuid], curr_graph_def
-            )
+                hints[hint_uuid], curr_graph_def)
             # pylint: disable=superfluous-parens
             assert len(children_hints) > 0  # pylint: disable=g-explicit-length-test
             # pylint: enable=superfluous-parens
 
             # Re-wire the children hints inputs/outputs, so latter child's inputs
             # connect to previous child node's outputs.
-            children_inputs_mappings = hints[hint_uuid].children_inputs_mappings
+            children_inputs_mappings = hints[
+                hint_uuid].children_inputs_mappings
             for j, child_hint in enumerate(children_hints):
                 if j == 0:
-                    for mapping in children_inputs_mappings["parent_first_child_input"]:
+                    for mapping in children_inputs_mappings[
+                            "parent_first_child_input"]:
                         parent_input_index = _get_correct_mapping(
                             mapping["parent_ophint_input_index"],
                             hints[hint_uuid].inputs,
                         )
                         child_input_index = _get_correct_mapping(
-                            mapping["first_child_ophint_input_index"], child_hint.inputs
-                        )
-                        child_hint.inputs[child_input_index] = hints[hint_uuid].inputs[
-                            parent_input_index
-                        ]
+                            mapping["first_child_ophint_input_index"],
+                            child_hint.inputs)
+                        child_hint.inputs[child_input_index] = hints[
+                            hint_uuid].inputs[parent_input_index]
                 else:
                     for mapping in children_inputs_mappings[
-                        "internal_children_input_output"
-                    ]:
+                            "internal_children_input_output"]:
                         input_index = _get_correct_mapping(
-                            mapping["child_input_index"], child_hint.inputs
-                        )
+                            mapping["child_input_index"], child_hint.inputs)
                         output_index = _get_correct_mapping(
-                            mapping["child_output_index"], children_hints[j - 1].outputs
-                        )
-                        child_hint.inputs[input_index] = children_hints[j - 1].outputs[
-                            output_index
-                        ]
+                            mapping["child_output_index"],
+                            children_hints[j - 1].outputs)
+                        child_hint.inputs[input_index] = children_hints[
+                            j - 1].outputs[output_index]
                 if j == len(children_hints) - 1:
-                    for mapping in children_inputs_mappings["parent_last_child_output"]:
+                    for mapping in children_inputs_mappings[
+                            "parent_last_child_output"]:
                         parent_output_index = _get_correct_mapping(
-                            mapping["parent_output_index"], hints[hint_uuid].outputs
-                        )
+                            mapping["parent_output_index"],
+                            hints[hint_uuid].outputs)
                         child_output_index = _get_correct_mapping(
-                            mapping["child_output_index"], child_hint.outputs
-                        )
+                            mapping["child_output_index"], child_hint.outputs)
                         child_hint.outputs[child_output_index] = hints[
-                            hint_uuid
-                        ].outputs[parent_output_index]
+                            hint_uuid].outputs[parent_output_index]
 
             for j, child_hint in enumerate(children_hints):
                 curr_graph_def = _convert_single_op_hint_to_stub(
@@ -1318,8 +1314,7 @@ def _convert_op_hints_to_stubs_helper(
                 )
         else:
             curr_graph_def = _convert_single_op_hint_to_stub(
-                hints[hint_uuid], curr_graph_def
-            )
+                hints[hint_uuid], curr_graph_def)
             write_callback(curr_graph_def, "initial")
     # The stubbing process can create stacks/unstacks in the case of LSTMs
     # remove them.
@@ -1375,9 +1370,9 @@ def is_ophint_converted(graph_def):
 
 
 @_tf_export(v1=["lite.experimental.convert_op_hints_to_stubs"])
-def convert_op_hints_to_stubs(
-    session=None, graph_def=None, write_callback=lambda graph_def, comments: None
-):
+def convert_op_hints_to_stubs(session=None,
+                              graph_def=None,
+                              write_callback=lambda graph_def, comments: None):
     """Converts a graphdef with LiteOp hints into stub operations.
 
     This is used to prepare for toco conversion of complex intrinsic usages.
@@ -1399,7 +1394,8 @@ def convert_op_hints_to_stubs(
         raise ValueError("Provide only one of session and graph_def.")
 
     if session is not None:
-        return _convert_op_hints_to_stubs_helper(session.graph_def, write_callback)
+        return _convert_op_hints_to_stubs_helper(session.graph_def,
+                                                 write_callback)
     elif graph_def is not None:
         return _convert_op_hints_to_stubs_helper(graph_def, write_callback)
     else:

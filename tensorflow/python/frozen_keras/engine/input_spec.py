@@ -51,9 +51,13 @@ class InputSpec(object):
             a specific dimension value.
     """
 
-    def __init__(
-        self, dtype=None, shape=None, ndim=None, max_ndim=None, min_ndim=None, axes=None
-    ):
+    def __init__(self,
+                 dtype=None,
+                 shape=None,
+                 ndim=None,
+                 max_ndim=None,
+                 min_ndim=None,
+                 axes=None):
         self.dtype = dtypes.as_dtype(dtype).name if dtype is not None else None
         if shape is not None:
             self.ndim = len(shape)
@@ -74,10 +78,8 @@ class InputSpec(object):
             max_axis = max(self.axes)
             if max_axis > max_dim:
                 raise ValueError(
-                    "Axis {} is greater than the maximum allowed value: {}".format(
-                        max_axis, max_dim
-                    )
-                )
+                    "Axis {} is greater than the maximum allowed value: {}".
+                    format(max_axis, max_dim))
 
     def __repr__(self):
         spec = [
@@ -151,94 +153,60 @@ def assert_input_compatibility(input_spec, inputs, layer_name):
     inputs = nest.flatten(inputs)
     input_spec = nest.flatten(input_spec)
     if len(inputs) != len(input_spec):
-        raise ValueError(
-            "Layer " + layer_name + " expects " + str(len(input_spec)) + " inputs, "
-            "but it received "
-            + str(len(inputs))
-            + " input tensors. Inputs received: "
-            + str(inputs)
-        )
+        raise ValueError("Layer " + layer_name + " expects " +
+                         str(len(input_spec)) + " inputs, "
+                         "but it received " + str(len(inputs)) +
+                         " input tensors. Inputs received: " + str(inputs))
     for input_index, (x, spec) in enumerate(zip(inputs, input_spec)):
         if spec is None:
             continue
 
-        if (
-            spec.ndim is not None
-            or spec.min_ndim is not None
-            or spec.max_ndim is not None
-        ):
+        if (spec.ndim is not None or spec.min_ndim is not None
+                or spec.max_ndim is not None):
             if x.shape.ndims is None:
                 raise ValueError(
-                    "Input "
-                    + str(input_index)
-                    + " of layer "
-                    + layer_name
-                    + " is incompatible with the layer: "
+                    "Input " + str(input_index) + " of layer " + layer_name +
+                    " is incompatible with the layer: "
                     "its rank is undefined, but the layer requires a "
-                    "defined rank."
-                )
+                    "defined rank.")
 
         # Check ndim.
         if spec.ndim is not None:
             ndim = x.shape.ndims
             if ndim != spec.ndim:
-                raise ValueError(
-                    "Input "
-                    + str(input_index)
-                    + " of layer "
-                    + layer_name
-                    + " is incompatible with the layer: "
-                    "expected ndim="
-                    + str(spec.ndim)
-                    + ", found ndim="
-                    + str(ndim)
-                    + ". Full shape received: "
-                    + str(x.shape.as_list())
-                )
+                raise ValueError("Input " + str(input_index) + " of layer " +
+                                 layer_name +
+                                 " is incompatible with the layer: "
+                                 "expected ndim=" + str(spec.ndim) +
+                                 ", found ndim=" + str(ndim) +
+                                 ". Full shape received: " +
+                                 str(x.shape.as_list()))
         if spec.max_ndim is not None:
             ndim = x.shape.ndims
             if ndim is not None and ndim > spec.max_ndim:
-                raise ValueError(
-                    "Input "
-                    + str(input_index)
-                    + " of layer "
-                    + layer_name
-                    + " is incompatible with the layer: "
-                    "expected max_ndim="
-                    + str(spec.max_ndim)
-                    + ", found ndim="
-                    + str(ndim)
-                )
+                raise ValueError("Input " + str(input_index) + " of layer " +
+                                 layer_name +
+                                 " is incompatible with the layer: "
+                                 "expected max_ndim=" + str(spec.max_ndim) +
+                                 ", found ndim=" + str(ndim))
         if spec.min_ndim is not None:
             ndim = x.shape.ndims
             if ndim is not None and ndim < spec.min_ndim:
-                raise ValueError(
-                    "Input "
-                    + str(input_index)
-                    + " of layer "
-                    + layer_name
-                    + " is incompatible with the layer: "
-                    ": expected min_ndim="
-                    + str(spec.min_ndim)
-                    + ", found ndim="
-                    + str(ndim)
-                    + ". Full shape received: "
-                    + str(x.shape.as_list())
-                )
+                raise ValueError("Input " + str(input_index) + " of layer " +
+                                 layer_name +
+                                 " is incompatible with the layer: "
+                                 ": expected min_ndim=" + str(spec.min_ndim) +
+                                 ", found ndim=" + str(ndim) +
+                                 ". Full shape received: " +
+                                 str(x.shape.as_list()))
         # Check dtype.
         if spec.dtype is not None:
             if x.dtype != spec.dtype:
-                raise ValueError(
-                    "Input "
-                    + str(input_index)
-                    + " of layer "
-                    + layer_name
-                    + " is incompatible with the layer: "
-                    "expected dtype="
-                    + str(spec.dtype)
-                    + ", found dtype="
-                    + str(x.dtype)
-                )
+                raise ValueError("Input " + str(input_index) + " of layer " +
+                                 layer_name +
+                                 " is incompatible with the layer: "
+                                 "expected dtype=" + str(spec.dtype) +
+                                 ", found dtype=" + str(x.dtype))
         # Check specific shape axes.
         if spec.axes:
             shape = x.shape.as_list()
@@ -246,20 +214,16 @@ def assert_input_compatibility(input_spec, inputs, layer_name):
                 for axis, value in spec.axes.items():
                     if hasattr(value, "value"):
                         value = value.value
-                    if value is not None and shape[int(axis)] not in {value, None}:
+                    if value is not None and shape[int(axis)] not in {
+                            value, None
+                    }:
                         raise ValueError(
-                            "Input "
-                            + str(input_index)
-                            + " of layer "
-                            + layer_name
-                            + " is"
-                            " incompatible with the layer: expected axis "
-                            + str(axis)
-                            + " of input shape to have value "
-                            + str(value)
-                            + " but received input with shape "
-                            + str(shape)
-                        )
+                            "Input " + str(input_index) + " of layer " +
+                            layer_name + " is"
+                            " incompatible with the layer: expected axis " +
+                            str(axis) + " of input shape to have value " +
+                            str(value) + " but received input with shape " +
+                            str(shape))
         # Check shape.
         if spec.shape is not None:
             shape = x.shape.as_list()
@@ -267,16 +231,11 @@ def assert_input_compatibility(input_spec, inputs, layer_name):
                 for spec_dim, dim in zip(spec.shape, shape):
                     if spec_dim is not None and dim is not None:
                         if spec_dim != dim:
-                            raise ValueError(
-                                "Input "
-                                + str(input_index)
-                                + " is incompatible with layer "
-                                + layer_name
-                                + ": expected shape="
-                                + str(spec.shape)
-                                + ", found shape="
-                                + str(shape)
-                            )
+                            raise ValueError("Input " + str(input_index) +
+                                             " is incompatible with layer " +
+                                             layer_name + ": expected shape=" +
+                                             str(spec.shape) +
+                                             ", found shape=" + str(shape))
 
 
 def to_tensor_spec(input_spec, default_dtype=None):

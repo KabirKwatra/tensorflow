@@ -62,14 +62,14 @@ class RMSPropOptimizer(optimizer.Optimizer):
     """
 
     def __init__(
-        self,
-        learning_rate,
-        decay=0.9,
-        momentum=0.0,
-        epsilon=1e-10,
-        use_locking=False,
-        centered=False,
-        name="RMSProp",
+            self,
+            learning_rate,
+            decay=0.9,
+            momentum=0.0,
+            epsilon=1e-10,
+            use_locking=False,
+            centered=False,
+            name="RMSProp",
     ):
         """Construct a new RMSProp optimizer.
 
@@ -124,9 +124,9 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 init_rms = init_ops.ones_initializer(dtype=v.dtype.base_dtype)
             else:
                 init_rms = array_ops.ones_like(v)
-            self._get_or_make_slot_with_initializer(
-                v, init_rms, v.get_shape(), v.dtype.base_dtype, "rms", self._name
-            )
+            self._get_or_make_slot_with_initializer(v, init_rms, v.get_shape(),
+                                                    v.dtype.base_dtype, "rms",
+                                                    self._name)
             if self._centered:
                 self._zeros_slot(v, "mg", self._name)
             self._zeros_slot(v, "momentum", self._name)
@@ -137,9 +137,11 @@ class RMSPropOptimizer(optimizer.Optimizer):
         momentum = self._call_if_callable(self._momentum)
         epsilon = self._call_if_callable(self._epsilon)
 
-        self._learning_rate_tensor = ops.convert_to_tensor(lr, name="learning_rate")
+        self._learning_rate_tensor = ops.convert_to_tensor(
+            lr, name="learning_rate")
         self._decay_tensor = ops.convert_to_tensor(decay, name="decay")
-        self._momentum_tensor = ops.convert_to_tensor(momentum, name="momentum")
+        self._momentum_tensor = ops.convert_to_tensor(momentum,
+                                                      name="momentum")
         self._epsilon_tensor = ops.convert_to_tensor(epsilon, name="epsilon")
 
     def _apply_dense(self, grad, var):
@@ -152,7 +154,8 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 mg,
                 rms,
                 mom,
-                math_ops.cast(self._learning_rate_tensor, var.dtype.base_dtype),
+                math_ops.cast(self._learning_rate_tensor,
+                              var.dtype.base_dtype),
                 math_ops.cast(self._decay_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._momentum_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._epsilon_tensor, var.dtype.base_dtype),
@@ -164,7 +167,8 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 var,
                 rms,
                 mom,
-                math_ops.cast(self._learning_rate_tensor, var.dtype.base_dtype),
+                math_ops.cast(self._learning_rate_tensor,
+                              var.dtype.base_dtype),
                 math_ops.cast(self._decay_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._momentum_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._epsilon_tensor, var.dtype.base_dtype),
@@ -182,7 +186,8 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 mg.handle,
                 rms.handle,
                 mom.handle,
-                math_ops.cast(self._learning_rate_tensor, grad.dtype.base_dtype),
+                math_ops.cast(self._learning_rate_tensor,
+                              grad.dtype.base_dtype),
                 math_ops.cast(self._decay_tensor, grad.dtype.base_dtype),
                 math_ops.cast(self._momentum_tensor, grad.dtype.base_dtype),
                 math_ops.cast(self._epsilon_tensor, grad.dtype.base_dtype),
@@ -194,7 +199,8 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 var.handle,
                 rms.handle,
                 mom.handle,
-                math_ops.cast(self._learning_rate_tensor, grad.dtype.base_dtype),
+                math_ops.cast(self._learning_rate_tensor,
+                              grad.dtype.base_dtype),
                 math_ops.cast(self._decay_tensor, grad.dtype.base_dtype),
                 math_ops.cast(self._momentum_tensor, grad.dtype.base_dtype),
                 math_ops.cast(self._epsilon_tensor, grad.dtype.base_dtype),
@@ -212,7 +218,8 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 mg,
                 rms,
                 mom,
-                math_ops.cast(self._learning_rate_tensor, var.dtype.base_dtype),
+                math_ops.cast(self._learning_rate_tensor,
+                              var.dtype.base_dtype),
                 math_ops.cast(self._decay_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._momentum_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._epsilon_tensor, var.dtype.base_dtype),
@@ -225,7 +232,8 @@ class RMSPropOptimizer(optimizer.Optimizer):
                 var,
                 rms,
                 mom,
-                math_ops.cast(self._learning_rate_tensor, var.dtype.base_dtype),
+                math_ops.cast(self._learning_rate_tensor,
+                              var.dtype.base_dtype),
                 math_ops.cast(self._decay_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._momentum_tensor, var.dtype.base_dtype),
                 math_ops.cast(self._epsilon_tensor, var.dtype.base_dtype),
