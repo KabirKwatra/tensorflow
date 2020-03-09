@@ -69,8 +69,10 @@ def _make_tensor_slice_spec(slice_spec, use_constant=True):
                 return array_ops.placeholder_with_default(scalar, [])
         elif isinstance(piece, slice):
             return slice(
-                make_piece_scalar(piece.start), make_piece_scalar(piece.stop),
-                make_piece_scalar(piece.step))
+                make_piece_scalar(piece.start),
+                make_piece_scalar(piece.stop),
+                make_piece_scalar(piece.step),
+            )
         else:
             return piece
 
@@ -82,28 +84,35 @@ def _make_tensor_slice_spec(slice_spec, use_constant=True):
 
 # Example 2D ragged tensor value with one ragged dimension and with scalar
 # values, expressed as nested python lists and as splits+values.
-EXAMPLE_RAGGED_TENSOR_2D = [[b'a', b'b'], [b'c', b'd', b'e'], [b'f'], [],
-                            [b'g']]
+EXAMPLE_RAGGED_TENSOR_2D = [[b"a", b"b"], [b"c", b"d", b"e"], [b"f"], [], [b"g"]]
 EXAMPLE_RAGGED_TENSOR_2D_SPLITS = [0, 2, 5, 6, 6, 7]
-EXAMPLE_RAGGED_TENSOR_2D_VALUES = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+EXAMPLE_RAGGED_TENSOR_2D_VALUES = ["a", "b", "c", "d", "e", "f", "g"]
 
 # Example 4D ragged tensor value, with two ragged dimensions and with values
 # whose shape is [2], expressed as nested python lists and as splits+values.
 EXAMPLE_RAGGED_TENSOR_4D = [
-    [                                       # rt[0]
-        [[1, 2], [3, 4], [5, 6]],           # rt[0][0]
-        [[7, 8], [9, 10], [11, 12]]],       # rt[0][1]
-    [],                                     # rt[1]
-    [                                       # rt[2]
-        [[13, 14], [15, 16], [17, 18]]],    # rt[2][0]
-    [                                       # rt[3]
-        [[19, 20]]]                         # rt[3][0]
+    [  # rt[0]
+        [[1, 2], [3, 4], [5, 6]],  # rt[0][0]
+        [[7, 8], [9, 10], [11, 12]],
+    ],  # rt[0][1]
+    [],  # rt[1]
+    [[[13, 14], [15, 16], [17, 18]]],  # rt[2]  # rt[2][0]
+    [[[19, 20]]],  # rt[3]  # rt[3][0]
 ]  # pyformat: disable
 EXAMPLE_RAGGED_TENSOR_4D_SPLITS1 = [0, 2, 2, 3, 4]
 EXAMPLE_RAGGED_TENSOR_4D_SPLITS2 = [0, 3, 6, 9, 10]
-EXAMPLE_RAGGED_TENSOR_4D_VALUES = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10],
-                                   [11, 12], [13, 14], [15, 16], [17, 18],
-                                   [19, 20]]
+EXAMPLE_RAGGED_TENSOR_4D_VALUES = [
+    [1, 2],
+    [3, 4],
+    [5, 6],
+    [7, 8],
+    [9, 10],
+    [11, 12],
+    [13, 14],
+    [15, 16],
+    [17, 18],
+    [19, 20],
+]
 
 # Example 3D ragged tensor with uniform_row_lengths.
 EXAMPLE_RAGGED_TENSOR_3D = [[[1, 2, 3], [4], [5, 6]], [[], [7, 8, 9], []]]
@@ -134,7 +143,8 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         rt1 = RowPartition.from_row_splits(row_splits=[0, 4, 4, 7, 8, 8])
         rt2 = RowPartition.from_row_lengths(row_lengths=[4, 0, 3, 1, 0])
         rt3 = RowPartition.from_value_rowids(
-            value_rowids=[0, 0, 0, 0, 2, 2, 2, 3], nrows=5)
+            value_rowids=[0, 0, 0, 0, 2, 2, 2, 3], nrows=5
+        )
         rt4 = RowPartition.from_row_starts(row_starts=[0, 4, 4, 7, 8], nvals=8)
         rt5 = RowPartition.from_row_limits(row_limits=[4, 4, 7, 8, 8])
         for rt in (rt1, rt2, rt3, rt4, rt5):
@@ -158,23 +168,23 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def testRaggedTensorConstructionErrors(self):
         row_splits = constant_op.constant([0, 2, 2, 5, 6, 7], dtypes.int64)
 
-        with self.assertRaisesRegexp(ValueError,
-                                     'RaggedTensor constructor is private'):
+        with self.assertRaisesRegexp(ValueError, "RaggedTensor constructor is private"):
             RowPartition(row_splits=row_splits)
 
-        with self.assertRaisesRegexp(TypeError,
-                                     'Row-partitioning argument must be a Tensor'):
+        with self.assertRaisesRegexp(
+            TypeError, "Row-partitioning argument must be a Tensor"
+        ):
             RowPartition(row_splits=[0, 2, 2, 5, 6, 7], internal=True)
 
-        with self.assertRaisesRegexp(ValueError,
-                                     r'Shape \(6, 1\) must have rank 1'):
-            RowPartition(
-                row_splits=array_ops.expand_dims(row_splits, 1), internal=True)
+        with self.assertRaisesRegexp(ValueError, r"Shape \(6, 1\) must have rank 1"):
+            RowPartition(row_splits=array_ops.expand_dims(row_splits, 1), internal=True)
 
-        with self.assertRaisesRegexp(TypeError,
-                                     'Cached value must be a Tensor or None.'):
+        with self.assertRaisesRegexp(
+            TypeError, "Cached value must be a Tensor or None."
+        ):
             RowPartition(
-                row_splits=row_splits, cached_row_lengths=[2, 3, 4], internal=True)
+                row_splits=row_splits, cached_row_lengths=[2, 3, 4], internal=True
+            )
 
     # =============================================================================
     # RaggedTensor Factory Ops
@@ -182,8 +192,7 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testFromValueRowIdsWithDerivedNRows(self):
         # nrows is known at graph creation time.
-        value_rowids = constant_op.constant(
-            [0, 0, 2, 2, 2, 3, 4], dtypes.int64)
+        value_rowids = constant_op.constant([0, 0, 2, 2, 2, 3, 4], dtypes.int64)
         # TODO(martinz): add nrows
         rt = RowPartition.from_value_rowids(value_rowids, validate=False)
         self.assertEqual(rt.dtype, dtypes.int64)
@@ -199,10 +208,8 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testFromValueRowIdsWithDerivedNRowsDynamic(self):
         # nrows is not known at graph creation time.
-        value_rowids = constant_op.constant(
-            [0, 0, 2, 2, 2, 3, 4], dtypes.int64)
-        value_rowids = array_ops.placeholder_with_default(
-            value_rowids, shape=None)
+        value_rowids = constant_op.constant([0, 0, 2, 2, 2, 3, 4], dtypes.int64)
+        value_rowids = array_ops.placeholder_with_default(value_rowids, shape=None)
 
         rt = RowPartition.from_value_rowids(value_rowids, validate=False)
 
@@ -214,12 +221,10 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         self.assertAllEqual(rt_nrows, 5)
 
     def testFromValueRowIdsWithExplicitNRows(self):
-        value_rowids = constant_op.constant(
-            [0, 0, 2, 2, 2, 3, 4], dtypes.int64)
+        value_rowids = constant_op.constant([0, 0, 2, 2, 2, 3, 4], dtypes.int64)
         nrows = constant_op.constant(7, dtypes.int64)
 
-        rt = RowPartition.from_value_rowids(
-            value_rowids, nrows, validate=False)
+        rt = RowPartition.from_value_rowids(value_rowids, nrows, validate=False)
 
         rt_value_rowids = rt.value_rowids()
         rt_nrows = rt.nrows()
@@ -230,12 +235,10 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         self.assertAllEqual(rt_row_splits, [0, 2, 2, 5, 6, 7, 7, 7])
 
     def testFromValueRowIdsWithExplicitNRowsEqualToDefault(self):
-        value_rowids = constant_op.constant(
-            [0, 0, 2, 2, 2, 3, 4], dtypes.int64)
+        value_rowids = constant_op.constant([0, 0, 2, 2, 2, 3, 4], dtypes.int64)
         nrows = constant_op.constant(5, dtypes.int64)
 
-        rt = RowPartition.from_value_rowids(
-            value_rowids, nrows, validate=False)
+        rt = RowPartition.from_value_rowids(value_rowids, nrows, validate=False)
 
         rt_value_rowids = rt.value_rowids()
         rt_nrows = rt.nrows()
@@ -284,7 +287,7 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         self.assertEqual(rt5.row_splits.dtype, dtypes.int32)
 
     def testFromRowSplitsWithEmptySplits(self):
-        err_msg = 'row_splits tensor may not be empty'
+        err_msg = "row_splits tensor may not be empty"
         with self.assertRaisesRegexp(ValueError, err_msg):
             RowPartition.from_row_splits([], [])
 
@@ -338,13 +341,15 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testFromUniformRowLengthWithEmptyValues(self):
         a = RowPartition.from_uniform_row_length(
-            nvals=0, uniform_row_length=0, nrows=10)
+            nvals=0, uniform_row_length=0, nrows=10
+        )
         self.assertEqual(self.evaluate(a.nvals()), 0)
         self.assertEqual(self.evaluate(a.nrows()), 10)
 
     def testFromUniformRowLengthWithPlaceholders1(self):
         nvals = array_ops.placeholder_with_default(
-            constant_op.constant(6, dtype=dtypes.int64), None)
+            constant_op.constant(6, dtype=dtypes.int64), None
+        )
         rt1 = RowPartition.from_uniform_row_length(nvals, 3)
         const_nvals1 = self.evaluate(rt1.nvals())
         self.assertEqual(const_nvals1, 6)
@@ -357,34 +362,38 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         self.assertEqual(const_nvals2, 6)
 
     def testFromValueRowIdsWithBadNRows(self):
-        value_rowids = constant_op.constant(
-            [0, 0, 2, 2, 2, 3, 4], dtypes.int64)
+        value_rowids = constant_op.constant([0, 0, 2, 2, 2, 3, 4], dtypes.int64)
         nrows = constant_op.constant(5, dtypes.int64)
 
-        with self.assertRaisesRegexp(ValueError, r'Expected nrows >= 0; got -2'):
+        with self.assertRaisesRegexp(ValueError, r"Expected nrows >= 0; got -2"):
             RowPartition.from_value_rowids(
-                value_rowids=array_ops.placeholder_with_default(
-                    value_rowids, None),
-                nrows=-2)
+                value_rowids=array_ops.placeholder_with_default(value_rowids, None),
+                nrows=-2,
+            )
 
         with self.assertRaisesRegexp(
-                ValueError, r'Expected nrows >= value_rowids\[-1\] \+ 1; got nrows=2, '
-                r'value_rowids\[-1\]=4'):
+            ValueError,
+            r"Expected nrows >= value_rowids\[-1\] \+ 1; got nrows=2, "
+            r"value_rowids\[-1\]=4",
+        ):
             RowPartition.from_value_rowids(value_rowids=value_rowids, nrows=2)
 
         with self.assertRaisesRegexp(
-                ValueError, r'Expected nrows >= value_rowids\[-1\] \+ 1; got nrows=4, '
-                r'value_rowids\[-1\]=4'):
+            ValueError,
+            r"Expected nrows >= value_rowids\[-1\] \+ 1; got nrows=4, "
+            r"value_rowids\[-1\]=4",
+        ):
             RowPartition.from_value_rowids(value_rowids=value_rowids, nrows=4)
 
-        with self.assertRaisesRegexp(ValueError,
-                                     r'Shape \(7, 1\) must have rank 1'):
+        with self.assertRaisesRegexp(ValueError, r"Shape \(7, 1\) must have rank 1"):
             RowPartition.from_value_rowids(
-                value_rowids=array_ops.expand_dims(value_rowids, 1), nrows=nrows)
+                value_rowids=array_ops.expand_dims(value_rowids, 1), nrows=nrows
+            )
 
-        with self.assertRaisesRegexp(ValueError, r'Shape \(1,\) must have rank 0'):
+        with self.assertRaisesRegexp(ValueError, r"Shape \(1,\) must have rank 0"):
             RowPartition.from_value_rowids(
-                value_rowids=value_rowids, nrows=array_ops.expand_dims(nrows, 0))
+                value_rowids=value_rowids, nrows=array_ops.expand_dims(nrows, 0)
+            )
 
     # =============================================================================
     # RowPartition.__str__
@@ -392,155 +401,156 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def testRowPartitionStr(self):
         row_splits = [0, 2, 5, 6, 6, 7]
         rt = RowPartition.from_row_splits(row_splits, validate=False)
-        splits_type = 'int64'
+        splits_type = "int64"
         if context.executing_eagerly():
-            expected_repr = ('tf.RowPartition(row_splits=tf.Tensor([0 2 5 6 6 7], '
-                             'shape=(6,), dtype=int64))')
+            expected_repr = (
+                "tf.RowPartition(row_splits=tf.Tensor([0 2 5 6 6 7], "
+                "shape=(6,), dtype=int64))"
+            )
         else:
-            expected_repr = ('tf.RowPartition(row_splits='
-                             'Tensor("RowPartitionFromRowSplits/row_splits:0", '
-                             'shape=(6,), dtype={}))').format(splits_type)
+            expected_repr = (
+                "tf.RowPartition(row_splits="
+                'Tensor("RowPartitionFromRowSplits/row_splits:0", '
+                "shape=(6,), dtype={}))"
+            ).format(splits_type)
         self.assertEqual(repr(rt), expected_repr)
         self.assertEqual(str(rt), expected_repr)
 
-    @parameterized.parameters([
-        # from_value_rowids
-        {
-            'descr': 'bad rank for value_rowids',
-            'factory': RowPartition.from_value_rowids,
-            'value_rowids': [[1, 2], [3, 4]],
-            'nrows': 10
-        },
-        {
-            'descr': 'bad rank for nrows',
-            'factory': RowPartition.from_value_rowids,
-            'value_rowids': [1, 2, 3, 4],
-            'nrows': [10]
-        },
-        {
-            'descr': 'negative value_rowid',
-            'factory': RowPartition.from_value_rowids,
-            'value_rowids': [-5, 2, 3, 4],
-            'nrows': 10
-        },
-        {
-            'descr': 'non-monotonic-increasing value_rowid',
-            'factory': RowPartition.from_value_rowids,
-            'value_rowids': [4, 3, 2, 1],
-            'nrows': 10
-        },
-        {
-            'descr': 'value_rowid > nrows',
-            'factory': RowPartition.from_value_rowids,
-            'value_rowids': [1, 2, 3, 4],
-            'nrows': 2
-        },
-
-        # from_row_splits
-        {
-            'descr': 'bad rank for row_splits',
-            'factory': RowPartition.from_row_splits,
-            'row_splits': [[1, 2], [3, 4]]
-        },
-        {
-            'descr': 'row_splits[0] != 0',
-            'factory': RowPartition.from_row_splits,
-            'row_splits': [2, 3, 4]
-        },
-        {
-            'descr': 'non-monotonic-increasing row_splits',
-            'factory': RowPartition.from_row_splits,
-            'row_splits': [0, 3, 2, 4]
-        },
-
-        # from_row_lengths
-        {
-            'descr': 'bad rank for row_lengths',
-            'factory': RowPartition.from_row_lengths,
-            'row_lengths': [[1, 2], [1, 0]]
-        },
-        {
-            'descr': 'negatve row_lengths',
-            'factory': RowPartition.from_row_lengths,
-            'row_lengths': [3, -1, 2]
-        },
-
-        # from_row_starts
-        {
-            'descr': 'bad rank for row_starts',
-            'factory': RowPartition.from_row_starts,
-            'nvals': 2,
-            'row_starts': [[1, 2], [3, 4]]
-        },
-        {
-            'descr': 'row_starts[0] != 0',
-            'factory': RowPartition.from_row_starts,
-            'nvals': 5,
-            'row_starts': [2, 3, 4]
-        },
-        {
-            'descr': 'non-monotonic-increasing row_starts',
-            'factory': RowPartition.from_row_starts,
-            'nvals': 4,
-            'row_starts': [0, 3, 2, 4]
-        },
-        {
-            'descr': 'row_starts[0] > nvals',
-            'factory': RowPartition.from_row_starts,
-            'nvals': 4,
-            'row_starts': [0, 2, 3, 5]
-        },
-
-        # from_row_limits
-        {
-            'descr': 'bad rank for row_limits',
-            'factory': RowPartition.from_row_limits,
-            'row_limits': [[1, 2], [3, 4]]
-        },
-        {
-            'descr': 'row_limits[0] < 0',
-            'factory': RowPartition.from_row_limits,
-            'row_limits': [-1, 3, 4]
-        },
-        {
-            'descr': 'non-monotonic-increasing row_limits',
-            'factory': RowPartition.from_row_limits,
-            'row_limits': [0, 3, 2, 4]
-        },
-
-        # from_uniform_row_length
-        {
-            'descr': 'rowlen * nrows != nvals (1)',
-            'factory': RowPartition.from_uniform_row_length,
-            'nvals': 5,
-            'uniform_row_length': 3
-        },
-        {
-            'descr': 'rowlen * nrows != nvals (2)',
-            'factory': RowPartition.from_uniform_row_length,
-            'nvals': 5,
-            'uniform_row_length': 6
-        },
-        {
-            'descr': 'rowlen * nrows != nvals (3)',
-            'factory': RowPartition.from_uniform_row_length,
-            'nvals': 6,
-            'uniform_row_length': 3,
-            'nrows': 3
-        },
-        {
-            'descr': 'rowlen must be a scalar',
-            'factory': RowPartition.from_uniform_row_length,
-            'nvals': 4,
-            'uniform_row_length': [2]
-        },
-        {
-            'descr': 'rowlen must be nonnegative',
-            'factory': RowPartition.from_uniform_row_length,
-            'nvals': 4,
-            'uniform_row_length': -1
-        },
-    ])
+    @parameterized.parameters(
+        [
+            # from_value_rowids
+            {
+                "descr": "bad rank for value_rowids",
+                "factory": RowPartition.from_value_rowids,
+                "value_rowids": [[1, 2], [3, 4]],
+                "nrows": 10,
+            },
+            {
+                "descr": "bad rank for nrows",
+                "factory": RowPartition.from_value_rowids,
+                "value_rowids": [1, 2, 3, 4],
+                "nrows": [10],
+            },
+            {
+                "descr": "negative value_rowid",
+                "factory": RowPartition.from_value_rowids,
+                "value_rowids": [-5, 2, 3, 4],
+                "nrows": 10,
+            },
+            {
+                "descr": "non-monotonic-increasing value_rowid",
+                "factory": RowPartition.from_value_rowids,
+                "value_rowids": [4, 3, 2, 1],
+                "nrows": 10,
+            },
+            {
+                "descr": "value_rowid > nrows",
+                "factory": RowPartition.from_value_rowids,
+                "value_rowids": [1, 2, 3, 4],
+                "nrows": 2,
+            },
+            # from_row_splits
+            {
+                "descr": "bad rank for row_splits",
+                "factory": RowPartition.from_row_splits,
+                "row_splits": [[1, 2], [3, 4]],
+            },
+            {
+                "descr": "row_splits[0] != 0",
+                "factory": RowPartition.from_row_splits,
+                "row_splits": [2, 3, 4],
+            },
+            {
+                "descr": "non-monotonic-increasing row_splits",
+                "factory": RowPartition.from_row_splits,
+                "row_splits": [0, 3, 2, 4],
+            },
+            # from_row_lengths
+            {
+                "descr": "bad rank for row_lengths",
+                "factory": RowPartition.from_row_lengths,
+                "row_lengths": [[1, 2], [1, 0]],
+            },
+            {
+                "descr": "negatve row_lengths",
+                "factory": RowPartition.from_row_lengths,
+                "row_lengths": [3, -1, 2],
+            },
+            # from_row_starts
+            {
+                "descr": "bad rank for row_starts",
+                "factory": RowPartition.from_row_starts,
+                "nvals": 2,
+                "row_starts": [[1, 2], [3, 4]],
+            },
+            {
+                "descr": "row_starts[0] != 0",
+                "factory": RowPartition.from_row_starts,
+                "nvals": 5,
+                "row_starts": [2, 3, 4],
+            },
+            {
+                "descr": "non-monotonic-increasing row_starts",
+                "factory": RowPartition.from_row_starts,
+                "nvals": 4,
+                "row_starts": [0, 3, 2, 4],
+            },
+            {
+                "descr": "row_starts[0] > nvals",
+                "factory": RowPartition.from_row_starts,
+                "nvals": 4,
+                "row_starts": [0, 2, 3, 5],
+            },
+            # from_row_limits
+            {
+                "descr": "bad rank for row_limits",
+                "factory": RowPartition.from_row_limits,
+                "row_limits": [[1, 2], [3, 4]],
+            },
+            {
+                "descr": "row_limits[0] < 0",
+                "factory": RowPartition.from_row_limits,
+                "row_limits": [-1, 3, 4],
+            },
+            {
+                "descr": "non-monotonic-increasing row_limits",
+                "factory": RowPartition.from_row_limits,
+                "row_limits": [0, 3, 2, 4],
+            },
+            # from_uniform_row_length
+            {
+                "descr": "rowlen * nrows != nvals (1)",
+                "factory": RowPartition.from_uniform_row_length,
+                "nvals": 5,
+                "uniform_row_length": 3,
+            },
+            {
+                "descr": "rowlen * nrows != nvals (2)",
+                "factory": RowPartition.from_uniform_row_length,
+                "nvals": 5,
+                "uniform_row_length": 6,
+            },
+            {
+                "descr": "rowlen * nrows != nvals (3)",
+                "factory": RowPartition.from_uniform_row_length,
+                "nvals": 6,
+                "uniform_row_length": 3,
+                "nrows": 3,
+            },
+            {
+                "descr": "rowlen must be a scalar",
+                "factory": RowPartition.from_uniform_row_length,
+                "nvals": 4,
+                "uniform_row_length": [2],
+            },
+            {
+                "descr": "rowlen must be nonnegative",
+                "factory": RowPartition.from_uniform_row_length,
+                "nvals": 4,
+                "uniform_row_length": -1,
+            },
+        ]
+    )
     def testFactoryValidation(self, descr, factory, **kwargs):
         # When input tensors have shape information, some of these errors will be
         # detected statically.
@@ -555,7 +565,8 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             def wrap_arg(v):
                 return array_ops.placeholder_with_default(
                     constant_op.constant(v, dtype=dtypes.int64),
-                    tensor_shape.TensorShape(None))
+                    tensor_shape.TensorShape(None),
+                )
 
             kwargs = dict((k, wrap_arg(v)) for (k, v) in kwargs.items())
 
@@ -564,5 +575,5 @@ class RowPartitionTest(test_util.TensorFlowTestCase, parameterized.TestCase):
                 self.evaluate(partition.row_splits)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     googletest.main()

@@ -64,25 +64,30 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     "code_url_prefix",
     "/code/stable/tensorflow",
-    "A url to prepend to code paths when creating links to defining code")
-
-flags.DEFINE_string("output_dir", "/tmp/out",
-                    "A directory, where the docs will be output to.")
-
-flags.DEFINE_bool("search_hints", True,
-                  "Include meta-data search hints at the top of each file.")
+    "A url to prepend to code paths when creating links to defining code",
+)
 
 flags.DEFINE_string(
-    "site_path", "",
+    "output_dir", "/tmp/out", "A directory, where the docs will be output to."
+)
+
+flags.DEFINE_bool(
+    "search_hints", True, "Include meta-data search hints at the top of each file."
+)
+
+flags.DEFINE_string(
+    "site_path",
+    "",
     "The path prefix (up to `.../api_docs/python`) used in the "
-    "`_toc.yaml` and `_redirects.yaml` files")
+    "`_toc.yaml` and `_redirects.yaml` files",
+)
 
 _PRIVATE_MAP = {
     "tf": ["python", "core", "compiler", "examples", "tools", "contrib"],
     # There's some aliasing between the compats and v1/2s, so it's easier to
     # block by name and location than by deleting, or hiding objects.
     "tf.compat.v1.compat": ["v1", "v2"],
-    "tf.compat.v2.compat": ["v1", "v2"]
+    "tf.compat.v2.compat": ["v1", "v2"],
 }
 
 tf.__doc__ = """
@@ -97,23 +102,26 @@ tf.__doc__ = """
 def generate_raw_ops_doc():
     """Generates docs for `tf.raw_ops`."""
 
-    warning = textwrap.dedent("""\n
+    warning = textwrap.dedent(
+        """\n
     Note: `tf.raw_ops` provides direct/low level access to all TensorFlow ops.
     See [the RFC](https://github.com/tensorflow/community/blob/master/rfcs/20181225-tf-raw-ops.md)
     for details. Unless you are library writer, you likely do not need to use
-    these ops directly.""")
+    these ops directly."""
+    )
 
-    table_header = textwrap.dedent("""
+    table_header = textwrap.dedent(
+        """
 
       | Op Name | Has Gradient |
-      |---------|:------------:|""")
+      |---------|:------------:|"""
+    )
 
     parts = [warning, table_header]
 
     for op_name in sorted(dir(tf.raw_ops)):
         try:
-            ops._gradient_registry.lookup(
-                op_name)  # pylint: disable=protected-access
+            ops._gradient_registry.lookup(op_name)  # pylint: disable=protected-access
             has_gradient = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
         except LookupError:
             has_gradient = "\N{CROSS MARK}"
@@ -122,9 +130,13 @@ def generate_raw_ops_doc():
             path = pathlib.Path("/") / FLAGS.site_path / "tf/raw_ops" / op_name
             path = path.with_suffix(".md")
             link = ('<a id={op_name} href="{path}">{op_name}</a>').format(
-                op_name=op_name, path=str(path))
-            parts.append("| {link} | {has_gradient} |".format(
-                link=link, has_gradient=has_gradient))
+                op_name=op_name, path=str(path)
+            )
+            parts.append(
+                "| {link} | {has_gradient} |".format(
+                    link=link, has_gradient=has_gradient
+                )
+            )
 
     return "\n".join(parts)
 
@@ -136,12 +148,12 @@ class TfExportAwareVisitor(doc_generator_visitor.DocGeneratorVisitor):
     """A `tf_export`, `keras_export` and `estimator_export` aware doc_visitor."""
 
     def _score_name(self, name):
-        all_exports = [tf_export.TENSORFLOW_API_NAME,
-                       tf_export.ESTIMATOR_API_NAME]
+        all_exports = [tf_export.TENSORFLOW_API_NAME, tf_export.ESTIMATOR_API_NAME]
 
         for api_name in all_exports:
             canonical = tf_export.get_canonical_name_for_symbol(
-                self._index[name], api_name=api_name)
+                self._index[name], api_name=api_name
+            )
             if canonical is not None:
                 break
 
@@ -213,8 +225,7 @@ def build_docs(output_dir, code_url_prefix, search_hints=True):
     except AttributeError:
         pass
 
-    base_dirs, code_url_prefixes = base_dir.get_base_dirs_and_prefixes(
-        code_url_prefix)
+    base_dirs, code_url_prefixes = base_dir.get_base_dirs_and_prefixes(code_url_prefix)
     doc_generator = generate_lib.DocGenerator(
         root_title="TensorFlow 2",
         py_modules=[("tf", tf)],
@@ -223,32 +234,28 @@ def build_docs(output_dir, code_url_prefix, search_hints=True):
         code_url_prefix=code_url_prefixes,
         site_path=FLAGS.site_path,
         visitor_cls=TfExportAwareVisitor,
-        private_map=_PRIVATE_MAP)
+        private_map=_PRIVATE_MAP,
+    )
 
     doc_generator.build(output_dir)
 
     out_path = pathlib.Path(output_dir)
     num_files = len(list(out_path.rglob("*")))
     if num_files < 2500:
-        raise ValueError("The TensorFlow api should be more than 2500 files"
-                         "(found {}).".format(num_files))
+        raise ValueError(
+            "The TensorFlow api should be more than 2500 files"
+            "(found {}).".format(num_files)
+        )
     expected_path_contents = {
-        "tf/summary/audio.md":
-            "tensorboard/plugins/audio/summary_v2.py",
-        "tf/estimator/DNNClassifier.md":
-            "tensorflow_estimator/python/estimator/canned/dnn.py",
-        "tf/nn/sigmoid_cross_entropy_with_logits.md":
-            "python/ops/nn_impl.py",
-        "tf/keras/Model.md":
-            "tensorflow/python/keras/engine/training.py",
-        "tf/compat/v1/gradients.md":
-            "tensorflow/python/ops/gradients_impl.py",
+        "tf/summary/audio.md": "tensorboard/plugins/audio/summary_v2.py",
+        "tf/estimator/DNNClassifier.md": "tensorflow_estimator/python/estimator/canned/dnn.py",
+        "tf/nn/sigmoid_cross_entropy_with_logits.md": "python/ops/nn_impl.py",
+        "tf/keras/Model.md": "tensorflow/python/keras/engine/training.py",
+        "tf/compat/v1/gradients.md": "tensorflow/python/ops/gradients_impl.py",
     }
 
     all_passed = True
-    error_msg_parts = [
-        'Some "view source" links seem to be broken, please check:'
-    ]
+    error_msg_parts = ['Some "view source" links seem to be broken, please check:']
 
     for (rel_path, contents) in expected_path_contents.items():
         path = out_path / rel_path
@@ -265,7 +272,8 @@ def main(argv):
     build_docs(
         output_dir=FLAGS.output_dir,
         code_url_prefix=FLAGS.code_url_prefix,
-        search_hints=FLAGS.search_hints)
+        search_hints=FLAGS.search_hints,
+    )
 
 
 if __name__ == "__main__":
