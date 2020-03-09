@@ -104,7 +104,8 @@ or you may wish to make local changes to TensorFlow Lite.
 Bazel is the primary build system for TensorFlow. To build with it, you must
 have it and the Android NDK and SDK installed on your system.
 
-1.  Install the latest version of the [Bazel build system](https://bazel.build/versions/master/docs/install.html).
+1.  Install the latest version of the
+    [Bazel build system](https://bazel.build/versions/master/docs/install.html).
 2.  The Android NDK is required to build the native (C/C++) TensorFlow Lite
     code. The current recommended version is 17c, which may be found
     [here](https://developer.android.com/ndk/downloads/older_releases.html#ndk-17c-downloads).
@@ -121,10 +122,10 @@ answer "Yes" when the script asks to interactively configure the `./WORKSPACE`
 for Android builds. The script will attempt to configure settings using the
 following environment variables:
 
-*   `ANDROID_SDK_HOME`
-*   `ANDROID_SDK_API_LEVEL`
-*   `ANDROID_NDK_HOME`
-*   `ANDROID_NDK_API_LEVEL`
+- `ANDROID_SDK_HOME`
+- `ANDROID_SDK_API_LEVEL`
+- `ANDROID_NDK_HOME`
+- `ANDROID_NDK_API_LEVEL`
 
 If these variables aren't set, they must be provided interactively in the script
 prompt. Successful configuration should yield entries similar to the following
@@ -149,11 +150,11 @@ bazel build -c opt --fat_apk_cpu=x86,x86_64,arm64-v8a,armeabi-v7a \
   //tensorflow/lite/java:tensorflow-lite
 ```
 
-This will generate an AAR file in `bazel-bin/tensorflow/lite/java/`. Note
-that this builds a "fat" AAR with several different architectures; if you don't
-need all of them, use the subset appropriate for your deployment environment.
-From there, there are several approaches you can take to use the .aar in your
-Android Studio project.
+This will generate an AAR file in `bazel-bin/tensorflow/lite/java/`. Note that
+this builds a "fat" AAR with several different architectures; if you don't need
+all of them, use the subset appropriate for your deployment environment. From
+there, there are several approaches you can take to use the .aar in your Android
+Studio project.
 
 ##### Add AAR directly to project
 
