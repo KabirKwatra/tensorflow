@@ -108,7 +108,8 @@ def create_tensor_data(dtype, shape, min_value=-100, max_value=100):
         dtype = TF_TYPE_INFO[dtype][0]
 
     if dtype in (tf.float32, tf.float16):
-        value = (max_value - min_value) * np.random.random_sample(shape) + min_value
+        value = (max_value -
+                 min_value) * np.random.random_sample(shape) + min_value
     elif dtype in (tf.int32, tf.uint8, tf.int64, tf.int16):
         value = np.random.randint(min_value, max_value + 1, shape)
     elif dtype == tf.bool:
@@ -117,7 +118,8 @@ def create_tensor_data(dtype, shape, min_value=-100, max_value=100):
         # Not the best strings, but they will do for some basic testing.
         letters = list(string.ascii_uppercase)
         return np.random.choice(letters, size=shape).astype(dtype)
-    return np.dtype(dtype).type(value) if np.isscalar(value) else value.astype(dtype)
+    return np.dtype(dtype).type(value) if np.isscalar(value) else value.astype(
+        dtype)
 
 
 def create_scalar_data(dtype, min_value=-100, max_value=100):
@@ -144,13 +146,15 @@ def freeze_graph(session, outputs):
       The frozen graph_def.
     """
     return tf_graph_util.convert_variables_to_constants(
-        session, session.graph.as_graph_def(), [x.op.name for x in outputs]
-    )
+        session, session.graph.as_graph_def(), [x.op.name for x in outputs])
 
 
 def format_result(t):
     """Convert a tensor to a format that can be used in test specs."""
-    if t.dtype.kind not in [np.dtype(np.string_).kind, np.dtype(np.object_).kind]:
+    if t.dtype.kind not in [
+            np.dtype(np.string_).kind,
+            np.dtype(np.object_).kind
+    ]:
         # Output 9 digits after the point to ensure the precision is good enough.
         values = ["{:.9f}".format(value) for value in list(t.flatten())]
         return ",".join(values)
@@ -210,9 +214,8 @@ def write_test_cases(fp, model_name, examples):
             fp.write('  input: "' + format_result(t) + '"\n')
         for t in example["outputs"]:
             fp.write('  output: "' + format_result(t) + '"\n')
-            fp.write(
-                '  output_shape: "' + ",".join([str(dim) for dim in t.shape]) + '"\n'
-            )
+            fp.write('  output_shape: "' +
+                     ",".join([str(dim) for dim in t.shape]) + '"\n')
         fp.write("}\n")
 
 
@@ -235,14 +238,16 @@ def get_input_shapes_map(input_tensors):
         input_shapes_list.append(dims)
 
     input_shapes = {
-        name: shape for name, shape in zip(input_arrays, input_shapes_list) if shape
+        name: shape
+        for name, shape in zip(input_arrays, input_shapes_list) if shape
     }
     return input_shapes
 
 
 def _normalize_output_name(output_name):
     """Remove :0 suffix from tensor names."""
-    return output_name.split(":")[0] if output_name.endswith(":0") else output_name
+    return output_name.split(":")[0] if output_name.endswith(
+        ":0") else output_name
 
 
 # How many test cases we may have in a zip file. Too many test cases will
@@ -251,13 +256,13 @@ _MAX_TESTS_PER_ZIP = 500
 
 
 def make_zip_of_tests(
-    options,
-    test_parameters,
-    make_graph,
-    make_test_inputs,
-    extra_toco_options=ExtraTocoOptions(),
-    use_frozen_graph=False,
-    expected_tf_failures=0,
+        options,
+        test_parameters,
+        make_graph,
+        make_test_inputs,
+        extra_toco_options=ExtraTocoOptions(),
+        use_frozen_graph=False,
+        expected_tf_failures=0,
 ):
     """Helper to make a zip file of a bunch of TensorFlow models.
 
@@ -289,8 +294,7 @@ def make_zip_of_tests(
     parameter_count = 0
     for parameters in test_parameters:
         parameter_count += functools.reduce(
-            operator.mul, [len(values) for values in parameters.values()]
-        )
+            operator.mul, [len(values) for values in parameters.values()])
 
     all_parameter_count = parameter_count
     if options.multi_gen_state:
@@ -300,9 +304,8 @@ def make_zip_of_tests(
             "Too many parameter combinations for generating '%s'.\n"
             "There are at least %d combinations while the upper limit is %d.\n"
             "Having too many combinations will slow down the tests.\n"
-            "Please consider splitting the test into multiple functions.\n"
-            % (zip_path, all_parameter_count, _MAX_TESTS_PER_ZIP)
-        )
+            "Please consider splitting the test into multiple functions.\n" %
+            (zip_path, all_parameter_count, _MAX_TESTS_PER_ZIP))
     if options.multi_gen_state:
         options.multi_gen_state.parameter_count = all_parameter_count
 
@@ -327,8 +330,7 @@ def make_zip_of_tests(
                 parameter_count += functools.reduce(
                     operator.mul,
                     [
-                        len(values)
-                        for key, values in parameters.items()
+                        len(values) for key, values in parameters.items()
                         if key != "fully_quantize"
                     ],
                 )
@@ -340,9 +342,8 @@ def make_zip_of_tests(
     for parameters in test_parameters:
         keys = parameters.keys()
         for curr in itertools.product(*parameters.values()):
-            label = label_base_path.replace(".zip", "_") + (
-                ",".join("%s=%r" % z for z in sorted(zip(keys, curr))).replace(" ", "")
-            )
+            label = label_base_path.replace(".zip", "_") + (",".join(
+                "%s=%r" % z for z in sorted(zip(keys, curr))).replace(" ", ""))
             if label[0] == "/":
                 label = label[1:]
             if label in processed_labels:
@@ -354,13 +355,12 @@ def make_zip_of_tests(
             param_dict = dict(zip(keys, curr))
 
             if options.make_edgetpu_tests and not param_dict.get(
-                "fully_quantize", False
-            ):
+                    "fully_quantize", False):
                 continue
 
-            def generate_inputs_outputs(
-                tflite_model_binary, min_value=0, max_value=255
-            ):
+            def generate_inputs_outputs(tflite_model_binary,
+                                        min_value=0,
+                                        max_value=255):
                 """Generate input values and output values of the given tflite model.
 
                 Args:
@@ -371,7 +371,8 @@ def make_zip_of_tests(
                 Returns:
                   (input_values, output_values): input values and output values built.
                 """
-                interpreter = tf.lite.Interpreter(model_content=tflite_model_binary)
+                interpreter = tf.lite.Interpreter(
+                    model_content=tflite_model_binary)
                 interpreter.allocate_tensors()
 
                 input_details = interpreter.get_input_details()
@@ -391,7 +392,8 @@ def make_zip_of_tests(
                 output_details = interpreter.get_output_details()
                 output_values = []
                 for output_detail in output_details:
-                    output_values.append(interpreter.get_tensor(output_detail["index"]))
+                    output_values.append(
+                        interpreter.get_tensor(output_detail["index"]))
 
                 return input_values, output_values
 
@@ -424,9 +426,9 @@ def make_zip_of_tests(
                         try:
                             inputs, outputs = make_graph(param_dict_real)
                         except (
-                            tf.errors.UnimplementedError,
-                            tf.errors.InvalidArgumentError,
-                            ValueError,
+                                tf.errors.UnimplementedError,
+                                tf.errors.InvalidArgumentError,
+                                ValueError,
                         ):
                             report["tf_log"] += traceback.format_exc()
                             return None, report
@@ -434,40 +436,34 @@ def make_zip_of_tests(
                     sess = tf.Session()
                     try:
                         baseline_inputs, baseline_outputs = make_test_inputs(
-                            param_dict_real, sess, inputs, outputs
-                        )
+                            param_dict_real, sess, inputs, outputs)
                     except (
-                        tf.errors.UnimplementedError,
-                        tf.errors.InvalidArgumentError,
-                        ValueError,
+                            tf.errors.UnimplementedError,
+                            tf.errors.InvalidArgumentError,
+                            ValueError,
                     ):
                         report["tf_log"] += traceback.format_exc()
                         return None, report
                     report["toco"] = report_lib.FAILED
                     report["tf"] = report_lib.SUCCESS
                     # Convert graph to toco
-                    input_tensors = [
-                        (
-                            input_tensor.name.split(":")[0],
-                            input_tensor.shape,
-                            input_tensor.dtype,
-                        )
-                        for input_tensor in inputs
-                    ]
+                    input_tensors = [(
+                        input_tensor.name.split(":")[0],
+                        input_tensor.shape,
+                        input_tensor.dtype,
+                    ) for input_tensor in inputs]
                     output_tensors = [
                         _normalize_output_name(out.name) for out in outputs
                     ]
                     # pylint: disable=g-long-ternary
-                    graph_def = (
-                        freeze_graph(sess, tf.global_variables() + inputs + outputs)
-                        if use_frozen_graph
-                        else sess.graph_def
-                    )
+                    graph_def = (freeze_graph(
+                        sess,
+                        tf.global_variables() + inputs +
+                        outputs) if use_frozen_graph else sess.graph_def)
 
                 if "split_tflite_lstm_inputs" in param_dict_real:
                     extra_toco_options.split_tflite_lstm_inputs = param_dict_real[
-                        "split_tflite_lstm_inputs"
-                    ]
+                        "split_tflite_lstm_inputs"]
                 tflite_model_binary, toco_log = options.tflite_convert_function(
                     options,
                     graph_def,
@@ -476,11 +472,9 @@ def make_zip_of_tests(
                     extra_toco_options=extra_toco_options,
                     test_params=param_dict_real,
                 )
-                report["toco"] = (
-                    report_lib.SUCCESS
-                    if tflite_model_binary is not None
-                    else report_lib.FAILED
-                )
+                report["toco"] = (report_lib.SUCCESS
+                                  if tflite_model_binary is not None else
+                                  report_lib.FAILED)
                 report["toco_log"] = toco_log
 
                 if options.save_graphdefs:
@@ -494,18 +488,18 @@ def make_zip_of_tests(
                     if options.make_edgetpu_tests:
                         # Set proper min max values according to input dtype.
                         baseline_inputs, baseline_outputs = generate_inputs_outputs(
-                            tflite_model_binary, min_value=0, max_value=255
-                        )
-                    archive.writestr(
-                        label + ".bin", tflite_model_binary, zipfile.ZIP_DEFLATED
-                    )
-                    example = {"inputs": baseline_inputs, "outputs": baseline_outputs}
+                            tflite_model_binary, min_value=0, max_value=255)
+                    archive.writestr(label + ".bin", tflite_model_binary,
+                                     zipfile.ZIP_DEFLATED)
+                    example = {
+                        "inputs": baseline_inputs,
+                        "outputs": baseline_outputs
+                    }
 
                     example_fp = StringIO()
                     write_examples(example_fp, [example])
-                    archive.writestr(
-                        label + ".inputs", example_fp.getvalue(), zipfile.ZIP_DEFLATED
-                    )
+                    archive.writestr(label + ".inputs", example_fp.getvalue(),
+                                     zipfile.ZIP_DEFLATED)
 
                     example_fp2 = StringIO()
                     write_test_cases(example_fp2, label + ".bin", [example])
@@ -526,14 +520,14 @@ def make_zip_of_tests(
                 if not options.known_bugs_are_errors:
                     for pattern, bug_number in options.known_bugs.items():
                         if re.search(pattern, label):
-                            print("Ignored converter error due to bug %s" % bug_number)
+                            print("Ignored converter error due to bug %s" %
+                                  bug_number)
                             ignore_error = True
                 if not ignore_error:
                     toco_errors += 1
                     print(
                         "-----------------\nconverter error!\n%s\n-----------------\n"
-                        % report["toco_log"]
-                    )
+                        % report["toco_log"])
 
             convert_report.append((param_dict, report))
 
@@ -551,20 +545,21 @@ def make_zip_of_tests(
     if options.multi_gen_state:
         options.multi_gen_state.zip_manifest.extend(zip_manifest)
     else:
-        archive.writestr("manifest.txt", "".join(zip_manifest), zipfile.ZIP_DEFLATED)
+        archive.writestr("manifest.txt", "".join(zip_manifest),
+                         zipfile.ZIP_DEFLATED)
 
     # Log statistics of what succeeded
     total_conversions = len(convert_report)
-    tf_success = sum(1 for x in convert_report if x[1]["tf"] == report_lib.SUCCESS)
-    toco_success = sum(1 for x in convert_report if x[1]["toco"] == report_lib.SUCCESS)
+    tf_success = sum(1 for x in convert_report
+                     if x[1]["tf"] == report_lib.SUCCESS)
+    toco_success = sum(1 for x in convert_report
+                       if x[1]["toco"] == report_lib.SUCCESS)
     percent = 0
     if tf_success > 0:
         percent = float(toco_success) / float(tf_success) * 100.0
     tf.logging.info(
-        (
-            "Archive %s Considered %d graphs, %d TF evaluated graphs "
-            " and %d TOCO converted graphs (%.1f%%"
-        ),
+        ("Archive %s Considered %d graphs, %d TF evaluated graphs "
+         " and %d TOCO converted graphs (%.1f%%"),
         zip_path,
         total_conversions,
         tf_success,
@@ -576,21 +571,16 @@ def make_zip_of_tests(
 
     if tf_failures / parameter_count > 0.8:
         raise RuntimeError(
-            (
-                "Test for '%s' is not very useful. "
-                "TensorFlow fails in %d percent of the cases."
-            )
-            % (zip_path, int(100 * tf_failures / parameter_count))
-        )
+            ("Test for '%s' is not very useful. "
+             "TensorFlow fails in %d percent of the cases.") %
+            (zip_path, int(100 * tf_failures / parameter_count)))
 
     if not options.make_edgetpu_tests and tf_failures != expected_tf_failures:
         raise RuntimeError(
-            (
-                "Expected TF to fail %d times while generating '%s', "
-                "but that happened %d times"
-            )
-            % (expected_tf_failures, zip_path, tf_failures)
-        )
+            ("Expected TF to fail %d times while generating '%s', "
+             "but that happened %d times") %
+            (expected_tf_failures, zip_path, tf_failures))
 
     if not options.ignore_converter_errors and toco_errors > 0:
-        raise RuntimeError("Found %d errors while generating toco models" % toco_errors)
+        raise RuntimeError("Found %d errors while generating toco models" %
+                           toco_errors)

@@ -40,9 +40,8 @@ def _tflite_convert_verify_num_ops(tflite_convert_function, *args, **kwargs):
     interpreter.allocate_tensors()
     if len(interpreter.get_tensor_details()) != num_ops:
         raise RuntimeError(
-            "Expected to generate two node graph got %s "
-            % "\n".join(str(x) for x in interpreter.get_tensor_details())
-        )
+            "Expected to generate two node graph got %s " %
+            "\n".join(str(x) for x in interpreter.get_tensor_details()))
     return result
 
 
@@ -51,33 +50,32 @@ def make_hardswish_tests(options):
     """Make a set of tests to do hardswish."""
 
     # Chose a set of parameters
-    test_parameters = [
-        {
-            "input_shape": [
-                [],
-                [1],
-                [2, 3],
-                [1, 1, 1, 1],
-                [1, 3, 4, 3],
-                [3, 15, 14, 3],
-                [3, 1, 2, 4, 6],
-                [2, 2, 3, 4, 5, 6],
-            ],
-        }
-    ]
+    test_parameters = [{
+        "input_shape": [
+            [],
+            [1],
+            [2, 3],
+            [1, 1, 1, 1],
+            [1, 3, 4, 3],
+            [3, 15, 14, 3],
+            [3, 1, 2, 4, 6],
+            [2, 2, 3, 4, 5, 6],
+        ],
+    }]
 
     def build_graph(parameters):
-        inp = tf.compat.v1.placeholder(
-            dtype=tf.float32, name="input", shape=parameters["input_shape"]
-        )
+        inp = tf.compat.v1.placeholder(dtype=tf.float32,
+                                       name="input",
+                                       shape=parameters["input_shape"])
         out = inp * tf.nn.relu6(inp + np.float32(3)) * np.float32(1.0 / 6.0)
 
         return [inp], [out]
 
     def build_inputs(parameters, sess, inputs, outputs):
-        input_values = create_tensor_data(
-            np.float32, parameters["input_shape"], min_value=-10, max_value=10
-        )
+        input_values = create_tensor_data(np.float32,
+                                          parameters["input_shape"],
+                                          min_value=-10,
+                                          max_value=10)
         return (
             [input_values],
             sess.run(outputs, feed_dict=dict(zip(inputs, [input_values]))),
@@ -87,6 +85,7 @@ def make_hardswish_tests(options):
     # Flex doesn't yet support this.
     if not options.run_with_flex:
         options.tflite_convert_function = functools.partial(
-            _tflite_convert_verify_num_ops, options.tflite_convert_function, num_ops=2
-        )
+            _tflite_convert_verify_num_ops,
+            options.tflite_convert_function,
+            num_ops=2)
     make_zip_of_tests(options, test_parameters, build_graph, build_inputs)
