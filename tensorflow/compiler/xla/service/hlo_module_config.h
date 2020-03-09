@@ -28,9 +28,9 @@ limitations under the License.
 namespace xla {
 
 enum class FusionConfigCollection {
-    kOff,      // Do not collect configuration.
-    kPerEdge,  // Collect per-edge configuration.
-    kPerNode,  // Collect per-node configuration.
+  kOff,      // Do not collect configuration.
+  kPerEdge,  // Collect per-edge configuration.
+  kPerNode,  // Collect per-node configuration.
 };
 
 // This class gathers all settings and values which affect the compiled
@@ -39,203 +39,189 @@ enum class FusionConfigCollection {
 // HloModule and HloModuleConfig unambiguously determine a particular
 // executable.
 class HloModuleConfig {
-public:
-    // Represents a pair of input and output of the entry computation that can be
-    // considered as the original and updated values of a variable maintained by
-    // the caller, and that can be transparently sharded by XLA as an internal
-    // optimization. If sharded, XLA will create separate sharding/unsharding
-    // programs, and the caller is responsible to call the XLA-generated
-    // sharding/unsharding programs before and after the sharded main program.
-    //
-    // If the variable is not updated and there is not a corresponding output, use
-    // {-1} as the output_shape_index.
-    //
-    // The sharding/unsharding programs will include all the input/output pairs in
-    // shardable_value_update_pairs() as a flat tuple in their inputs/outputs,
-    // sorted by (input_parameter_number, parameter_shape_index).
-    //
-    // A typical usage pattern is to shard the variables first, then repeatedly
-    // invoke the main program, and finally invoke the unsharding program before
-    // they are used in full-shape.
-    struct ShardableValueUpdatePair {
-        int64 input_parameter_number;
-        ShapeIndex parameter_shape_index;
-        ShapeIndex output_shape_index;
-    };
+ public:
+  // Represents a pair of input and output of the entry computation that can be
+  // considered as the original and updated values of a variable maintained by
+  // the caller, and that can be transparently sharded by XLA as an internal
+  // optimization. If sharded, XLA will create separate sharding/unsharding
+  // programs, and the caller is responsible to call the XLA-generated
+  // sharding/unsharding programs before and after the sharded main program.
+  //
+  // If the variable is not updated and there is not a corresponding output, use
+  // {-1} as the output_shape_index.
+  //
+  // The sharding/unsharding programs will include all the input/output pairs in
+  // shardable_value_update_pairs() as a flat tuple in their inputs/outputs,
+  // sorted by (input_parameter_number, parameter_shape_index).
+  //
+  // A typical usage pattern is to shard the variables first, then repeatedly
+  // invoke the main program, and finally invoke the unsharding program before
+  // they are used in full-shape.
+  struct ShardableValueUpdatePair {
+    int64 input_parameter_number;
+    ShapeIndex parameter_shape_index;
+    ShapeIndex output_shape_index;
+  };
 
-    // A configuration can be created either with, or without an entry
-    // ComputationLayout. The default ctor creates it without -- in this case
-    // accessing entry_computation_layout will CHECK-fail. The ctor accepting a
-    // ProgramShape creates a computation layout using this shape.
-    // The layouts in the ProgramShape will be reset to default unless
-    // ignore_layouts is set to false.
-    HloModuleConfig() = default;
+  // A configuration can be created either with, or without an entry
+  // ComputationLayout. The default ctor creates it without -- in this case
+  // accessing entry_computation_layout will CHECK-fail. The ctor accepting a
+  // ProgramShape creates a computation layout using this shape.
+  // The layouts in the ProgramShape will be reset to default unless
+  // ignore_layouts is set to false.
+  HloModuleConfig() = default;
 
-    explicit HloModuleConfig(const ProgramShape& program_shape,
-                             bool ignore_layouts = true);
+  explicit HloModuleConfig(const ProgramShape& program_shape,
+                           bool ignore_layouts = true);
 
-    explicit HloModuleConfig(ComputationLayout entry_computation_layout);
+  explicit HloModuleConfig(ComputationLayout entry_computation_layout);
 
-    // Checks if this config has an entry computation layout already.
-    bool has_entry_computation_layout() const {
-        return entry_computation_layout_.has_value();
-    }
+  // Checks if this config has an entry computation layout already.
+  bool has_entry_computation_layout() const {
+    return entry_computation_layout_.has_value();
+  }
 
-    // Sets the entry computation layout for this config. If the entry computation
-    // layout already exists, it is silently replaced.
-    void SetDefaultComputationLayout(const ProgramShape& program_shape);
+  // Sets the entry computation layout for this config. If the entry computation
+  // layout already exists, it is silently replaced.
+  void SetDefaultComputationLayout(const ProgramShape& program_shape);
 
-    // Returns a constant reference to the layout of the entry computation.
-    // Assumes the layout was set.
-    const ComputationLayout& entry_computation_layout() const {
-        CHECK(entry_computation_layout_.has_value());
-        return *entry_computation_layout_;
-    }
+  // Returns a constant reference to the layout of the entry computation.
+  // Assumes the layout was set.
+  const ComputationLayout& entry_computation_layout() const {
+    CHECK(entry_computation_layout_.has_value());
+    return *entry_computation_layout_;
+  }
 
-    // Returns a mutable pointer to the layout of the entry computation.
-    // Assumes the layout was set.
-    ComputationLayout* mutable_entry_computation_layout() {
-        CHECK(entry_computation_layout_.has_value());
-        return &(*entry_computation_layout_);
-    }
+  // Returns a mutable pointer to the layout of the entry computation.
+  // Assumes the layout was set.
+  ComputationLayout* mutable_entry_computation_layout() {
+    CHECK(entry_computation_layout_.has_value());
+    return &(*entry_computation_layout_);
+  }
 
-    // Returns whether to enable HLO-level profiling.
-    bool hlo_profiling_enabled() const {
-        return debug_options_.xla_hlo_profile();
-    }
+  // Returns whether to enable HLO-level profiling.
+  bool hlo_profiling_enabled() const {
+    return debug_options_.xla_hlo_profile();
+  }
 
-    // Sets/returns the module seed set during execution.
-    void set_seed(uint64 seed) {
-        seed_ = seed;
-    }
-    uint64 seed() const {
-        return seed_;
-    }
+  // Sets/returns the module seed set during execution.
+  void set_seed(uint64 seed) { seed_ = seed; }
+  uint64 seed() const { return seed_; }
 
-    void set_replica_count(int64 replica_count) {
-        replica_count_ = replica_count;
-    }
-    int64 replica_count() const {
-        return replica_count_;
-    }
+  void set_replica_count(int64 replica_count) {
+    replica_count_ = replica_count;
+  }
+  int64 replica_count() const { return replica_count_; }
 
-    void set_num_partitions(int64 num_partitions) {
-        num_partitions_ = num_partitions;
-    }
-    int64 num_partitions() const {
-        return num_partitions_;
-    }
+  void set_num_partitions(int64 num_partitions) {
+    num_partitions_ = num_partitions;
+  }
+  int64 num_partitions() const { return num_partitions_; }
 
-    // Return a string which unambiguously represents all the fields of this data
-    // structure. Used for generating a cache key for storing the compiled
-    // executable.
-    string compilation_cache_key() const;
+  // Return a string which unambiguously represents all the fields of this data
+  // structure. Used for generating a cache key for storing the compiled
+  // executable.
+  string compilation_cache_key() const;
 
-    const DebugOptions& debug_options() const {
-        return debug_options_;
-    }
+  const DebugOptions& debug_options() const { return debug_options_; }
 
-    void set_debug_options(const DebugOptions& debug_options) {
-        debug_options_ = debug_options;
-    }
+  void set_debug_options(const DebugOptions& debug_options) {
+    debug_options_ = debug_options;
+  }
 
-    // Sets/returns the number of intra op threads for this module.
-    void set_intra_op_parallelism_threads(
-        const int intra_op_parallelism_threads) {
-        intra_op_parallelism_threads_ = intra_op_parallelism_threads;
-    }
-    int64 intra_op_parallelism_threads() const {
-        return intra_op_parallelism_threads_;
-    }
+  // Sets/returns the number of intra op threads for this module.
+  void set_intra_op_parallelism_threads(
+      const int intra_op_parallelism_threads) {
+    intra_op_parallelism_threads_ = intra_op_parallelism_threads;
+  }
+  int64 intra_op_parallelism_threads() const {
+    return intra_op_parallelism_threads_;
+  }
 
-    // Checks if this config has a static device assignment.
-    bool has_static_device_assignment() const {
-        return static_device_assignment_.has_value();
-    }
+  // Checks if this config has a static device assignment.
+  bool has_static_device_assignment() const {
+    return static_device_assignment_.has_value();
+  }
 
-    // Getter and setter of the compile-time known device assignment.
-    const DeviceAssignment& static_device_assignment() const {
-        CHECK(static_device_assignment_.has_value());
-        return *static_device_assignment_;
-    }
-    void set_static_device_assignment(const DeviceAssignment& device_assignment) {
-        static_device_assignment_ = device_assignment;
-    }
+  // Getter and setter of the compile-time known device assignment.
+  const DeviceAssignment& static_device_assignment() const {
+    CHECK(static_device_assignment_.has_value());
+    return *static_device_assignment_;
+  }
+  void set_static_device_assignment(const DeviceAssignment& device_assignment) {
+    static_device_assignment_ = device_assignment;
+  }
 
-    const std::vector<ShardableValueUpdatePair> shardable_value_update_pairs()
-    const {
-        return shardable_value_update_pairs_;
-    }
-    void set_shardable_value_update_pairs(
-        std::vector<ShardableValueUpdatePair> pairs) {
-        shardable_value_update_pairs_ = std::move(pairs);
-    }
+  const std::vector<ShardableValueUpdatePair> shardable_value_update_pairs()
+      const {
+    return shardable_value_update_pairs_;
+  }
+  void set_shardable_value_update_pairs(
+      std::vector<ShardableValueUpdatePair> pairs) {
+    shardable_value_update_pairs_ = std::move(pairs);
+  }
 
-    // Whether input and output buffers are aliased if the associated parameter is
-    // passed-through XLA modules without being changed.
-    bool alias_passthrough_params() const {
-        return alias_passthrough_params_;
-    }
-    void set_alias_passthrough_params(bool alias_passthrough_params) {
-        alias_passthrough_params_ = alias_passthrough_params;
-    }
+  // Whether input and output buffers are aliased if the associated parameter is
+  // passed-through XLA modules without being changed.
+  bool alias_passthrough_params() const { return alias_passthrough_params_; }
+  void set_alias_passthrough_params(bool alias_passthrough_params) {
+    alias_passthrough_params_ = alias_passthrough_params;
+  }
 
-    FusionConfigCollection fusion_config_collection() const {
-        return fusion_config_collection_;
-    }
-    void set_fusion_config_collection(
-        FusionConfigCollection fusion_config_collection) {
-        fusion_config_collection_ = fusion_config_collection;
-    }
+  FusionConfigCollection fusion_config_collection() const {
+    return fusion_config_collection_;
+  }
+  void set_fusion_config_collection(
+      FusionConfigCollection fusion_config_collection) {
+    fusion_config_collection_ = fusion_config_collection;
+  }
 
-    const std::vector<std::vector<bool>>& fusion_config() const {
-        return fusion_config_;
-    }
-    std::vector<std::vector<bool>>* mutable_fusion_config() {
-        return &fusion_config_;
-    }
+  const std::vector<std::vector<bool>>& fusion_config() const {
+    return fusion_config_;
+  }
+  std::vector<std::vector<bool>>* mutable_fusion_config() {
+    return &fusion_config_;
+  }
 
-    const std::vector<std::vector<int64>>& dot_config() const {
-        return dot_config_;
-    }
+  const std::vector<std::vector<int64>>& dot_config() const {
+    return dot_config_;
+  }
 
-    std::vector<std::vector<int64>>* mutable_dot_config() {
-        return &dot_config_;
-    }
+  std::vector<std::vector<int64>>* mutable_dot_config() { return &dot_config_; }
 
-private:
-    // If you add new members, be sure to update compilation_cache_key.
+ private:
+  // If you add new members, be sure to update compilation_cache_key.
 
-    absl::optional<ComputationLayout> entry_computation_layout_;
+  absl::optional<ComputationLayout> entry_computation_layout_;
 
-    // Module/graph-level seed handle.
-    uint64 seed_ = 0;
+  // Module/graph-level seed handle.
+  uint64 seed_ = 0;
 
-    // The number of replicas (data parallelism) to compile this binary for.
-    int64 replica_count_ = 1;
+  // The number of replicas (data parallelism) to compile this binary for.
+  int64 replica_count_ = 1;
 
-    // The number of partitions (model parallelism) to compile this binary for.
-    int64 num_partitions_ = 1;
+  // The number of partitions (model parallelism) to compile this binary for.
+  int64 num_partitions_ = 1;
 
-    // The target maximum parallelism at which to partition HLOs for parallel
-    // execution on the CPU backend.
-    int64 intra_op_parallelism_threads_ = -1;
+  // The target maximum parallelism at which to partition HLOs for parallel
+  // execution on the CPU backend.
+  int64 intra_op_parallelism_threads_ = -1;
 
-    DebugOptions debug_options_;
+  DebugOptions debug_options_;
 
-    // Compile-time known device assignment.
-    absl::optional<DeviceAssignment> static_device_assignment_;
+  // Compile-time known device assignment.
+  absl::optional<DeviceAssignment> static_device_assignment_;
 
-    std::vector<ShardableValueUpdatePair> shardable_value_update_pairs_;
+  std::vector<ShardableValueUpdatePair> shardable_value_update_pairs_;
 
-    bool alias_passthrough_params_ = false;
+  bool alias_passthrough_params_ = false;
 
-    FusionConfigCollection fusion_config_collection_ =
-        FusionConfigCollection::kOff;
+  FusionConfigCollection fusion_config_collection_ =
+      FusionConfigCollection::kOff;
 
-    std::vector<std::vector<bool>> fusion_config_;
+  std::vector<std::vector<bool>> fusion_config_;
 
-    std::vector<std::vector<int64>> dot_config_;
+  std::vector<std::vector<int64>> dot_config_;
 };
 
 }  // namespace xla

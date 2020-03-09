@@ -20,15 +20,15 @@ limitations under the License.
 namespace tflite {
 
 TEST(OpVersionTest, CompareRuntimeVersion) {
-    EXPECT_TRUE(CompareRuntimeVersion("1.9", "1.13"));
-    EXPECT_FALSE(CompareRuntimeVersion("1.13", "1.13"));
-    EXPECT_TRUE(CompareRuntimeVersion("1.14", "1.14.1"));
-    EXPECT_FALSE(CompareRuntimeVersion("1.14.1", "1.14"));
-    EXPECT_FALSE(CompareRuntimeVersion("1.14.1", "1.9"));
-    EXPECT_FALSE(CompareRuntimeVersion("1.0.9", "1.0.8"));
-    EXPECT_FALSE(CompareRuntimeVersion("2.1.0", "1.2.0"));
-    EXPECT_TRUE(CompareRuntimeVersion("", "1.13"));
-    EXPECT_FALSE(CompareRuntimeVersion("", ""));
+  EXPECT_TRUE(CompareRuntimeVersion("1.9", "1.13"));
+  EXPECT_FALSE(CompareRuntimeVersion("1.13", "1.13"));
+  EXPECT_TRUE(CompareRuntimeVersion("1.14", "1.14.1"));
+  EXPECT_FALSE(CompareRuntimeVersion("1.14.1", "1.14"));
+  EXPECT_FALSE(CompareRuntimeVersion("1.14.1", "1.9"));
+  EXPECT_FALSE(CompareRuntimeVersion("1.0.9", "1.0.8"));
+  EXPECT_FALSE(CompareRuntimeVersion("2.1.0", "1.2.0"));
+  EXPECT_TRUE(CompareRuntimeVersion("", "1.13"));
+  EXPECT_FALSE(CompareRuntimeVersion("", ""));
 }
 
 }  // namespace tflite
