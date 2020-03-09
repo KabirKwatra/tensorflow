@@ -18,34 +18,34 @@ limitations under the License.
 //
 // Note: This is a private API, subject to change.
 int main(int argc, char** argv) {
-  if (argc != 5) {
-    printf(
-        "Wrong number of arguments. Example: modify_model_interface_main "
-        "${input} ${output} ${input_interface} ${output_interface}");
-    return 1;
-  }
+    if (argc != 5) {
+        printf(
+            "Wrong number of arguments. Example: modify_model_interface_main "
+            "${input} ${output} ${input_interface} ${output_interface}");
+        return 1;
+    }
 
-  if (!strcmp(argv[3], "uint8") && !strcmp(argv[3], "int8")) {
-    printf("Only support uint8 and int8 for input interface");
-    return 1;
-  }
+    if (!strcmp(argv[3], "uint8") && !strcmp(argv[3], "int8")) {
+        printf("Only support uint8 and int8 for input interface");
+        return 1;
+    }
 
-  if (!strcmp(argv[4], "uint8") && !strcmp(argv[4], "int8")) {
-    printf("Only support uint8 and int8 for output interface");
-    return 1;
-  }
+    if (!strcmp(argv[4], "uint8") && !strcmp(argv[4], "int8")) {
+        printf("Only support uint8 and int8 for output interface");
+        return 1;
+    }
 
-  tflite::TensorType input = tflite::TensorType_INT8;
-  tflite::TensorType output = tflite::TensorType_INT8;
+    tflite::TensorType input = tflite::TensorType_INT8;
+    tflite::TensorType output = tflite::TensorType_INT8;
 
-  if (!strcmp(argv[3], "uint8")) {
-    input = tflite::TensorType_UINT8;
-  }
-  if (!strcmp(argv[4], "uint8")) {
-    output = tflite::TensorType_UINT8;
-  }
+    if (!strcmp(argv[3], "uint8")) {
+        input = tflite::TensorType_UINT8;
+    }
+    if (!strcmp(argv[4], "uint8")) {
+        output = tflite::TensorType_UINT8;
+    }
 
-  tflite::optimize::ModifyModelInterface(argv[1], argv[2], input, output);
+    tflite::optimize::ModifyModelInterface(argv[1], argv[2], input, output);
 
-  return 0;
+    return 0;
 }

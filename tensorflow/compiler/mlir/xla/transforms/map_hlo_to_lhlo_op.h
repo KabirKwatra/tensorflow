@@ -26,7 +26,7 @@ namespace xla_hlo {
 
 template <typename HloOpTy>
 struct HloToLhloOpImpl {
-  using Type = std::false_type;
+    using Type = std::false_type;
 };
 template <typename HloOpTy>
 using HloToLhloOp = typename HloToLhloOpImpl<HloOpTy>::Type;
