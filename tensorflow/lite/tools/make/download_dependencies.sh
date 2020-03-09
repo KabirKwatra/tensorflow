@@ -23,14 +23,14 @@ DOWNLOADS_DIR=tensorflow/lite/tools/make/downloads
 BZL_FILE_PATH=tensorflow/workspace.bzl
 
 if [[ "${OSTYPE}" == "darwin"* ]]; then
-  function sha256sum() { shasum -a 256 "$@" ; }
+  function sha256sum() { shasum -a 256 "$@"; }
 fi
 
 # Ensure it is being run from repo root
 if [ ! -f "$BZL_FILE_PATH" ]; then
   echo "Could not find $BZL_FILE_PATH":
-  echo "Likely you are not running this from the root directory of the repository.";
-  exit 1;
+  echo "Likely you are not running this from the root directory of the repository."
+  exit 1
 fi
 
 EIGEN_URL="$(grep -o 'https.*gitlab.com/libeigen/eigen/-/archive/.*tar\.gz' "$BZL_FILE_PATH" | grep -v mirror.tensorflow | head -n1)"
@@ -72,7 +72,7 @@ download_and_extract() {
   local sha256="${3}"
   echo "downloading $url" >&2
   mkdir -p "$dir"
-  rm -rf "$dir"/*  # Delete existing files.
+  rm -rf "$dir"/* # Delete existing files.
   tempdir=$(mktemp -d)
   filepath="$tempdir/$(basename "$url")"
   curl -Lo "$filepath" "$url"
@@ -88,7 +88,7 @@ download_and_extract() {
 
     # If the zip file contains nested directories, extract the files from the
     # inner directory.
-    if ls "$tempdir2"/*/* 1> /dev/null 2>&1; then
+    if ls "$tempdir2"/*/* 1>/dev/null 2>&1; then
       # unzip has no strip components, so unzip to a temp dir, and move the
       # files we want from the tempdir to destination.
       cp -R "$tempdir2"/*/* "$dir"/
