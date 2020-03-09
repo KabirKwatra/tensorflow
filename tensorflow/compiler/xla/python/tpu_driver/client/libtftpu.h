@@ -26,19 +26,19 @@ extern "C" {
 #endif
 
 typedef struct TpuStatus {
-  int32_t code;
-  char* msg;
+    int32_t code;
+    char* msg;
 } TpuStatus;
 
 typedef struct TpuEagerRequest {
-  int64_t size;
-  void* data;
+    int64_t size;
+    void* data;
 } TpuEagerRequest;
 
 typedef struct TpuEagerResponse {
-  struct TpuStatus* status;
-  int64_t size;
-  char* data;
+    struct TpuStatus* status;
+    int64_t size;
+    char* data;
 } TpuEagerResponse;
 
 typedef struct TpuEagerService TpuEagerService;
@@ -70,28 +70,28 @@ typedef void(PrototypeTfEager_FreeTpuEagerResponse)(
     struct TpuEagerResponse* response);
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_CreateEagerService
-    TfEager_CreateEagerService;
+TfEager_CreateEagerService;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_FreeEagerService
-    TfEager_FreeEagerService;
+TfEager_FreeEagerService;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_CreateContext
-    TfEager_CreateContext;
+TfEager_CreateContext;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_UpdateContext
-    TfEager_UpdateContext;
+TfEager_UpdateContext;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_Enqueue TfEager_Enqueue;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_WaitQueueDone
-    TfEager_WaitQueueDone;
+TfEager_WaitQueueDone;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_KeepAlive TfEager_KeepAlive;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_CloseContext TfEager_CloseContext;
 
 TPUDRIVER_CAPI_EXPORT extern PrototypeTfEager_FreeTpuEagerResponse
-    TfEager_FreeTpuEagerResponse;
+TfEager_FreeTpuEagerResponse;
 
 #ifdef __cplusplus
 }
