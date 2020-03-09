@@ -52,38 +52,38 @@ void EtaPrintExecutionTime(uint64_t);
 extern int main(int argc, char** argv);
 
 int _main(void) {
-  uint64_t time_ms;
+    uint64_t time_ms;
 
-  EtaCspInit();      // initialize csp registers
-  EtaCspGpioInit();  // initialize gpios
-  EtaCspUartInit(&g_sUart1, eUartNum0, eUartBaud115200,
-                 eUartFlowControlHardware);  // initialize Uart
-  EtaCspBuckInit(ETA_BSP_VDD_IO_SETTING, eBuckAo600Mv, eBuckM3Frequency60Mhz,
-                 eBuckMemVoltage900Mv);  // set M3 freq
-  EtaCspTimerInitMs();                   // start timer
-  main(0, NULL);  // Call to Tensorflow; this will print if test was successful.
-  time_ms = EtaCspTimerCountGetMs();  // read time
-  EtaPrintExecutionTime(time_ms);     // print execution time
+    EtaCspInit();      // initialize csp registers
+    EtaCspGpioInit();  // initialize gpios
+    EtaCspUartInit(&g_sUart1, eUartNum0, eUartBaud115200,
+                   eUartFlowControlHardware);  // initialize Uart
+    EtaCspBuckInit(ETA_BSP_VDD_IO_SETTING, eBuckAo600Mv, eBuckM3Frequency60Mhz,
+                   eBuckMemVoltage900Mv);  // set M3 freq
+    EtaCspTimerInitMs();                   // start timer
+    main(0, NULL);  // Call to Tensorflow; this will print if test was successful.
+    time_ms = EtaCspTimerCountGetMs();  // read time
+    EtaPrintExecutionTime(time_ms);     // print execution time
 }
 
 void EtaPrintExecutionTime(uint64_t time_ms) {
-  uint8_t c;
-  int k1;
-  char time_string[] = "00000";
+    uint8_t c;
+    int k1;
+    char time_string[] = "00000";
 
-  EtaCspIoPrintf("Execution time (msec) = ");
-  if (time_ms < 100000)  // Convert time to a string
-  {
-    for (k1 = 0; k1 < 5; k1++) {
-      c = time_ms % 10;
-      time_ms = time_ms / 10;
-      time_string[k1] = (char)(0x30 + c);
+    EtaCspIoPrintf("Execution time (msec) = ");
+    if (time_ms < 100000)  // Convert time to a string
+    {
+        for (k1 = 0; k1 < 5; k1++) {
+            c = time_ms % 10;
+            time_ms = time_ms / 10;
+            time_string[k1] = (char)(0x30 + c);
+        }
+        for (k1 = 4; k1 >= 0; k1--) {  // print out 1 char at a time
+            EtaCspUartPutc(&g_sUart1, time_string[k1]);
+        }
+    } else {
+        EtaCspIoPrintf("Execution time exceeds 100 sec\n");
     }
-    for (k1 = 4; k1 >= 0; k1--) {  // print out 1 char at a time
-      EtaCspUartPutc(&g_sUart1, time_string[k1]);
-    }
-  } else {
-    EtaCspIoPrintf("Execution time exceeds 100 sec\n");
-  }
-  EtaCspIoPrintf("\n\n");
+    EtaCspIoPrintf("\n\n");
 }

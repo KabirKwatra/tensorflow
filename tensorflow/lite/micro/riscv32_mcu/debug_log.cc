@@ -15,4 +15,6 @@ limitations under the License.
 
 #include <stdio.h>
 
-extern "C" void DebugLog(const char* s) { puts(s); }
+extern "C" void DebugLog(const char* s) {
+    puts(s);
+}
