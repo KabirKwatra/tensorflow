@@ -29,43 +29,44 @@ from tensorflow.python.platform import test
 @test_util.run_all_in_graph_and_eager_modes
 class TrackableWeightHandlerTest(test.TestCase, parameterized.TestCase):
 
-  def get_table_handler(self):
-    # Note: There is some repetition in these tests' setup. However, Tensorflow
-    # does not play nicely with a separate setUp() call (causing errors related
-    # to graph building), so we have to use a called setup instead of a setUp()
-    # call.
-    table = lookup_ops.MutableHashTable(
-        key_dtype=dtypes.string, value_dtype=dtypes.int32, default_value=0)
-    return base_layer_utils.TrackableWeightHandler(table)
+    def get_table_handler(self):
+        # Note: There is some repetition in these tests' setup. However, Tensorflow
+        # does not play nicely with a separate setUp() call (causing errors related
+        # to graph building), so we have to use a called setup instead of a setUp()
+        # call.
+        table = lookup_ops.MutableHashTable(
+            key_dtype=dtypes.string, value_dtype=dtypes.int32, default_value=0)
+        return base_layer_utils.TrackableWeightHandler(table)
 
-  def test_get_num_tensors(self):
-    table_handler = self.get_table_handler()
-    self.assertEqual(2, table_handler.num_tensors)
+    def test_get_num_tensors(self):
+        table_handler = self.get_table_handler()
+        self.assertEqual(2, table_handler.num_tensors)
 
-  def test_get_and_set_weights(self):
-    table_handler = self.get_table_handler()
+    def test_get_and_set_weights(self):
+        table_handler = self.get_table_handler()
 
-    table_data = {b"a": 1, b"b": 2, b"c": 3}
-    table_handler.set_weights(
-        [list(table_data.keys()),
-         list(table_data.values())])
-    weights = backend.batch_get_value(table_handler.get_tensors())
-    weight_data = {key: value for key, value in zip(weights[0], weights[1])}
-    self.assertDictEqual(table_data, weight_data)
+        table_data = {b"a": 1, b"b": 2, b"c": 3}
+        table_handler.set_weights(
+            [list(table_data.keys()),
+             list(table_data.values())])
+        weights = backend.batch_get_value(table_handler.get_tensors())
+        weight_data = {key: value for key,
+                       value in zip(weights[0], weights[1])}
+        self.assertDictEqual(table_data, weight_data)
 
-  def test_get_and_set_weights_does_not_add_ops(self):
-    table_handler = self.get_table_handler()
-    table_data = {b"a": 1, b"b": 2, b"c": 3}
-    table_handler.set_weights(
-        [list(table_data.keys()),
-         list(table_data.values())])
-    _ = backend.batch_get_value(table_handler.get_tensors())
-    backend.get_session().graph.finalize()
-    table_handler.set_weights(
-        [list(table_data.keys()),
-         list(table_data.values())])
-    _ = backend.batch_get_value(table_handler.get_tensors())
+    def test_get_and_set_weights_does_not_add_ops(self):
+        table_handler = self.get_table_handler()
+        table_data = {b"a": 1, b"b": 2, b"c": 3}
+        table_handler.set_weights(
+            [list(table_data.keys()),
+             list(table_data.values())])
+        _ = backend.batch_get_value(table_handler.get_tensors())
+        backend.get_session().graph.finalize()
+        table_handler.set_weights(
+            [list(table_data.keys()),
+             list(table_data.values())])
+        _ = backend.batch_get_value(table_handler.get_tensors())
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
