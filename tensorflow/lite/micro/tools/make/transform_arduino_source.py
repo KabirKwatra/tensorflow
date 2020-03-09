@@ -35,16 +35,15 @@ def replace_includes(line, supplied_headers_list):
             if six.ensure_str(supplied_header).endswith(path):
                 path = supplied_header
                 break
-        line = include_match.group(1) + six.ensure_str(path) + include_match.group(
-            3)
+        line = include_match.group(1) + six.ensure_str(path) + include_match.group(3)
     return line
 
 
 def replace_main(line):
     """Updates any occurrences of a bare main definition to the Arduino equivalent."""
-    main_match = re.match(r'(.*int )(main)(\(.*)', line)
+    main_match = re.match(r"(.*int )(main)(\(.*)", line)
     if main_match:
-        line = main_match.group(1) + 'tflite_micro_main' + main_match.group(3)
+        line = main_match.group(1) + "tflite_micro_main" + main_match.group(3)
     return line
 
 
@@ -52,20 +51,23 @@ def check_ino_functions(input_text):
     """Ensures the required functions exist."""
     # We're moving to an Arduino-friendly structure for all our examples, so they
     # have to have a setup() and loop() function, just like their IDE expects.
-    if not re.search(r'void setup\(\) \{', input_text):
+    if not re.search(r"void setup\(\) \{", input_text):
         raise Exception(
-            'All examples must have a setup() function for Arduino compatibility\n'
-            + input_text)
-    if not re.search(r'void loop\(\) \{', input_text):
+            "All examples must have a setup() function for Arduino compatibility\n"
+            + input_text
+        )
+    if not re.search(r"void loop\(\) \{", input_text):
         raise Exception(
-            'All examples must have a loop() function for Arduino compatibility')
+            "All examples must have a loop() function for Arduino compatibility"
+        )
     return input_text
 
 
 def add_example_ino_library_include(input_text):
     """Makes sure the example includes the header that loads the library."""
-    return re.sub(r'#include ', '#include <TensorFlowLite.h>\n\n#include ',
-                  input_text, 1)
+    return re.sub(
+        r"#include ", "#include <TensorFlowLite.h>\n\n#include ", input_text, 1
+    )
 
 
 def replace_example_includes(line, _):
@@ -73,21 +75,21 @@ def replace_example_includes(line, _):
     # Because the export process moves the example source and header files out of
     # their default locations into the top-level 'examples' folder in the Arduino
     # library, we have to update any include references to match.
-    dir_path = 'tensorflow/lite/micro/examples/'
+    dir_path = "tensorflow/lite/micro/examples/"
     include_match = re.match(
-        r'(.*#include.*")' + six.ensure_str(dir_path) + r'([^/]+)/(.*")', line)
+        r'(.*#include.*")' + six.ensure_str(dir_path) + r'([^/]+)/(.*")', line
+    )
     if include_match:
-        flattened_name = re.sub(r'/', '_', include_match.group(3))
+        flattened_name = re.sub(r"/", "_", include_match.group(3))
         line = include_match.group(1) + flattened_name
     return line
 
 
 def main(unused_args, flags):
     """Transforms the input source file to work when exported to Arduino."""
-    input_file_lines = sys.stdin.read().split('\n')
+    input_file_lines = sys.stdin.read().split("\n")
 
-    supplied_headers_list = six.ensure_str(
-        flags.third_party_headers).split(' ')
+    supplied_headers_list = six.ensure_str(flags.third_party_headers).split(" ")
 
     output_lines = []
     for line in input_file_lines:
@@ -97,7 +99,7 @@ def main(unused_args, flags):
         else:
             line = replace_main(line)
         output_lines.append(line)
-    output_text = '\n'.join(output_lines)
+    output_text = "\n".join(output_lines)
 
     if flags.is_example_ino:
         output_text = check_ino_functions(output_text)
@@ -110,29 +112,33 @@ def parse_args():
     """Converts the raw arguments into accessible flags."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--third_party_headers',
+        "--third_party_headers",
         type=str,
-        default='',
-        help='Space-separated list of headers to resolve.')
+        default="",
+        help="Space-separated list of headers to resolve.",
+    )
     parser.add_argument(
-        '--is_example_ino',
-        dest='is_example_ino',
-        action='store_true',
-        help='Whether the destination is an example main ino.')
+        "--is_example_ino",
+        dest="is_example_ino",
+        action="store_true",
+        help="Whether the destination is an example main ino.",
+    )
     parser.add_argument(
-        '--is_example_source',
-        dest='is_example_source',
-        action='store_true',
-        help='Whether the destination is an example cpp or header file.')
+        "--is_example_source",
+        dest="is_example_source",
+        action="store_true",
+        help="Whether the destination is an example cpp or header file.",
+    )
     parser.add_argument(
-        '--source_path',
+        "--source_path",
         type=str,
-        default='',
-        help='The relative path of the source code file.')
+        default="",
+        help="The relative path of the source code file.",
+    )
     flags, unparsed = parser.parse_known_args()
 
     main(unparsed, flags)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parse_args()

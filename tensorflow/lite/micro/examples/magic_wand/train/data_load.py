@@ -35,17 +35,19 @@ DATA_NAME = "accel_ms2_xyz"
 class DataLoader(object):
     """Loads data and prepares for training."""
 
-    def __init__(self, train_data_path, valid_data_path, test_data_path,
-                 seq_length):
+    def __init__(self, train_data_path, valid_data_path, test_data_path, seq_length):
         self.dim = 3
         self.seq_length = seq_length
         self.label2id = {"wing": 0, "ring": 1, "slope": 2, "negative": 3}
         self.train_data, self.train_label, self.train_len = self.get_data_file(
-            train_data_path, "train")
+            train_data_path, "train"
+        )
         self.valid_data, self.valid_label, self.valid_len = self.get_data_file(
-            valid_data_path, "valid")
+            valid_data_path, "valid"
+        )
         self.test_data, self.test_label, self.test_len = self.get_data_file(
-            test_data_path, "test")
+            test_data_path, "test"
+        )
 
     def get_data_file(self, data_path, data_type):
         """Get train, valid and test data from files."""
@@ -68,16 +70,14 @@ class DataLoader(object):
         noise_level = 20
         padded_data = []
         # Before- Neighbour padding
-        tmp_data = (np.random.rand(seq_length, dim) - 0.5) * \
-            noise_level + data[0]
-        tmp_data[(seq_length -
-                  min(len(data), seq_length)):] = data[:min(len(data), seq_length)]
+        tmp_data = (np.random.rand(seq_length, dim) - 0.5) * noise_level + data[0]
+        tmp_data[(seq_length - min(len(data), seq_length)) :] = data[
+            : min(len(data), seq_length)
+        ]
         padded_data.append(tmp_data)
         # After- Neighbour padding
-        tmp_data = (np.random.rand(seq_length, dim) - 0.5) * \
-            noise_level + data[-1]
-        tmp_data[:min(len(data), seq_length)
-                 ] = data[:min(len(data), seq_length)]
+        tmp_data = (np.random.rand(seq_length, dim) - 0.5) * noise_level + data[-1]
+        tmp_data[: min(len(data), seq_length)] = data[: min(len(data), seq_length)]
         padded_data.append(tmp_data)
         return padded_data
 
@@ -94,16 +94,18 @@ class DataLoader(object):
                 features[padded_num * idx + num] = padded_data[num]
                 labels[padded_num * idx + num] = self.label2id[label]
         # Turn into tf.data.Dataset
-        dataset = tf.data.Dataset.from_tensor_slices(
-            (features, labels.astype("int32")))
+        dataset = tf.data.Dataset.from_tensor_slices((features, labels.astype("int32")))
         return length, dataset
 
     def format(self):
         """Format data(including padding, etc.) and get the dataset for the model."""
         padded_num = 2
         self.train_len, self.train_data = self.format_support_func(
-            padded_num, self.train_len, self.train_data, self.train_label)
+            padded_num, self.train_len, self.train_data, self.train_label
+        )
         self.valid_len, self.valid_data = self.format_support_func(
-            padded_num, self.valid_len, self.valid_data, self.valid_label)
+            padded_num, self.valid_len, self.valid_data, self.valid_label
+        )
         self.test_len, self.test_data = self.format_support_func(
-            padded_num, self.test_len, self.test_data, self.test_label)
+            padded_num, self.test_len, self.test_data, self.test_label
+        )
