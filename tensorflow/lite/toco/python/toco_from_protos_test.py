@@ -56,17 +56,22 @@ class TocoFromProtosTest(googletest.TestCase):
         input_array.shape.dims.extend(map(int, in_tensor.shape))
         model_flags.output_arrays.append(TensorName(out_tensor))
         # Shell out to run toco (in case it crashes)
-        with tempfile.NamedTemporaryFile() as fp_toco, tempfile.NamedTemporaryFile() as fp_model, tempfile.NamedTemporaryFile() as fp_input, tempfile.NamedTemporaryFile() as fp_output:
+        with tempfile.NamedTemporaryFile(
+        ) as fp_toco, tempfile.NamedTemporaryFile(
+        ) as fp_model, tempfile.NamedTemporaryFile(
+        ) as fp_input, tempfile.NamedTemporaryFile() as fp_output:
             fp_model.write(model_flags.SerializeToString())
             fp_toco.write(toco_flags.SerializeToString())
             fp_input.write(graph_def.SerializeToString())
             fp_model.flush()
             fp_toco.flush()
             fp_input.flush()
-            tflite_bin = resource_loader.get_path_to_datafile("toco_from_protos.par")
-            cmdline = " ".join(
-                [tflite_bin, fp_model.name, fp_toco.name, fp_input.name, fp_output.name]
-            )
+            tflite_bin = resource_loader.get_path_to_datafile(
+                "toco_from_protos.par")
+            cmdline = " ".join([
+                tflite_bin, fp_model.name, fp_toco.name, fp_input.name,
+                fp_output.name
+            ])
             exitcode = os.system(cmdline)
             if exitcode == 0:
                 stuff = fp_output.read()
@@ -77,8 +82,11 @@ class TocoFromProtosTest(googletest.TestCase):
     def test_toco(self):
         """Run a couple of TensorFlow graphs against TOCO through the python bin."""
         with tf.Session() as sess:
-            img = tf.placeholder(name="img", dtype=tf.float32, shape=(1, 64, 64, 3))
-            val = img + tf.constant([1.0, 2.0, 3.0]) + tf.constant([1.0, 4.0, 4.0])
+            img = tf.placeholder(name="img",
+                                 dtype=tf.float32,
+                                 shape=(1, 64, 64, 3))
+            val = img + tf.constant([1.0, 2.0, 3.0]) + tf.constant(
+                [1.0, 4.0, 4.0])
             out = tf.identity(val, name="out")
             out2 = tf.sin(val, name="out2")
             # This is a valid mdoel

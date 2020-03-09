@@ -28,7 +28,6 @@ import sys
 
 import six
 
-
 EXAMPLE_DIR_PATH = "tensorflow/lite/micro/examples/"
 
 
@@ -41,7 +40,8 @@ def replace_arduino_includes(line, supplied_headers_list):
             if six.ensure_str(supplied_header).endswith(path):
                 path = supplied_header
                 break
-        line = include_match.group(1) + six.ensure_str(path) + include_match.group(3)
+        line = include_match.group(1) + six.ensure_str(
+            path) + include_match.group(3)
     return line
 
 
@@ -60,8 +60,7 @@ def check_ino_functions(input_text):
     if not re.search(r"void setup\(\) \{", input_text):
         raise Exception(
             "All examples must have a setup() function for Arduino compatibility\n"
-            + input_text
-        )
+            + input_text)
     if not re.search(r"void loop\(\) \{", input_text):
         raise Exception(
             "All examples must have a loop() function for Arduino compatibility"
@@ -71,9 +70,8 @@ def check_ino_functions(input_text):
 
 def add_example_ino_library_include(input_text):
     """Makes sure the example includes the header that loads the library."""
-    return re.sub(
-        r"#include ", "#include <TensorFlowLite.h>\n\n#include ", input_text, 1
-    )
+    return re.sub(r"#include ", "#include <TensorFlowLite.h>\n\n#include ",
+                  input_text, 1)
 
 
 def replace_arduino_example_includes(line, _):
@@ -83,8 +81,7 @@ def replace_arduino_example_includes(line, _):
     # library, we have to update any include references to match.
     dir_path = "tensorflow/lite/micro/examples/"
     include_match = re.match(
-        r'(.*#include.*")' + six.ensure_str(dir_path) + r'([^/]+)/(.*")', line
-    )
+        r'(.*#include.*")' + six.ensure_str(dir_path) + r'([^/]+)/(.*")', line)
     if include_match:
         flattened_name = re.sub(r"/", "_", include_match.group(3))
         line = include_match.group(1) + flattened_name
@@ -96,7 +93,8 @@ def replace_esp_example_includes(line, source_path):
     # Because the export process moves the example source and header files out of
     # their default locations into the top-level 'main' folder in the ESP-IDF
     # project, we have to update any include references to match.
-    include_match = re.match(r'.*#include.*"(' + EXAMPLE_DIR_PATH + r'.*)"', line)
+    include_match = re.match(r'.*#include.*"(' + EXAMPLE_DIR_PATH + r'.*)"',
+                             line)
 
     if include_match:
         # Compute the target path relative from the source's directory
@@ -118,7 +116,8 @@ def transform_arduino_sources(input_lines, flags):
     Returns:
       The transformed output as a string.
     """
-    supplied_headers_list = six.ensure_str(flags.third_party_headers).split(" ")
+    supplied_headers_list = six.ensure_str(
+        flags.third_party_headers).split(" ")
 
     output_lines = []
     for line in input_lines:
@@ -173,9 +172,10 @@ def main(unused_args, flags):
 def parse_args():
     """Converts the raw arguments into accessible flags."""
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--platform", choices=["arduino", "esp"], required=True, help="Target platform."
-    )
+    parser.add_argument("--platform",
+                        choices=["arduino", "esp"],
+                        required=True,
+                        help="Target platform.")
     parser.add_argument(
         "--third_party_headers",
         type=str,

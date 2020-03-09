@@ -41,19 +41,19 @@ _call_context = threading.local()
 
 
 def make_variable(
-    name,
-    shape=None,
-    dtype=dtypes.float32,
-    initializer=None,
-    trainable=None,
-    caching_device=None,
-    validate_shape=True,
-    constraint=None,
-    use_resource=None,
-    collections=None,
-    synchronization=tf_variables.VariableSynchronization.AUTO,
-    aggregation=tf_variables.VariableAggregation.NONE,
-    partitioner=None,
+        name,
+        shape=None,
+        dtype=dtypes.float32,
+        initializer=None,
+        trainable=None,
+        caching_device=None,
+        validate_shape=True,
+        constraint=None,
+        use_resource=None,
+        collections=None,
+        synchronization=tf_variables.VariableSynchronization.AUTO,
+        aggregation=tf_variables.VariableAggregation.NONE,
+        partitioner=None,
 ):  # pylint: disable=unused-argument
     """Temporary util to create a variable (relies on `variable_scope.variable`).
 
@@ -109,8 +109,8 @@ def make_variable(
     else:
         # Instantiate initializer if provided initializer is a type object.
         if isinstance(
-            initializer, (type(init_ops.Initializer), type(init_ops_v2.Initializer))
-        ):
+                initializer,
+            (type(init_ops.Initializer), type(init_ops_v2.Initializer))):
             initializer = initializer()
 
         def init_val():
@@ -204,8 +204,7 @@ def _create_keras_history_helper(tensors, processed_ops, created_layers):
     # Cannot be imported at top because of circular dependencies.
     # TODO(omalleyt): Resolve circular dependency.
     from tensorflow.python.frozen_keras.engine import (
-        legacy_base_layer as base_layer,
-    )  # pylint: disable=g-import-not-at-top
+        legacy_base_layer as base_layer, )  # pylint: disable=g-import-not-at-top
 
     tensor_list = nest.flatten(tensors)
     for tensor in tensor_list:
@@ -221,8 +220,8 @@ def _create_keras_history_helper(tensors, processed_ops, created_layers):
                 raise ValueError(
                     "Sparse ops are not supported with functional models with built-in "
                     "layer wrapping. Please wrap the sparse ops in a Lambda layer like"
-                    ": \n{lambda_example}\n".format(lambda_example=lambda_example)
-                )
+                    ": \n{lambda_example}\n".format(
+                        lambda_example=lambda_example))
 
             # Recursively set `_keras_history`.
             op_inputs = list(op.inputs)
@@ -235,12 +234,10 @@ def _create_keras_history_helper(tensors, processed_ops, created_layers):
                     # Treat any value not originating from a `keras.Input` as
                     # a constant. Variables cannot be supported.
                     ds_with_session = (
-                        distribution_strategy_context.in_cross_replica_context()
-                        and not ops.executing_eagerly_outside_functions()
-                    )
+                        distribution_strategy_context.in_cross_replica_context(
+                        ) and not ops.executing_eagerly_outside_functions())
                     using_xla = control_flow_util.GraphOrParentsInXlaContext(
-                        ops.get_default_graph()
-                    )
+                        ops.get_default_graph())
                     if ds_with_session or using_xla:
                         # In Legacy Graph mode, evaluating here makes Session be
                         # configured improperly. The downside of this is that saving
@@ -251,17 +248,15 @@ def _create_keras_history_helper(tensors, processed_ops, created_layers):
                             constants[i] = backend.function([], op_input)([])
             layer_inputs = unnest_if_single_tensor(layer_inputs)
             processed_ops, created_layers = _create_keras_history_helper(
-                layer_inputs, processed_ops, created_layers
-            )
+                layer_inputs, processed_ops, created_layers)
             name = op.name
             node_def = op.node_def.SerializeToString()
-            op_layer = base_layer.TensorFlowOpLayer(
-                node_def, constants=constants, name=name
-            )
+            op_layer = base_layer.TensorFlowOpLayer(node_def,
+                                                    constants=constants,
+                                                    name=name)
             created_layers.append(op_layer)
             op_layer._add_inbound_node(  # pylint: disable=protected-access
-                layer_inputs, op.outputs
-            )
+                layer_inputs, op.outputs)
             processed_ops.update([op])
     return processed_ops, created_layers
 
@@ -299,8 +294,8 @@ def needs_keras_history(tensors, ignore_call_context=False):
     if call_context().in_call and not ignore_call_context:
         return False
     if all(
-        getattr(tensor, "_keras_history", None) is not None for tensor in input_tensors
-    ):
+            getattr(tensor, "_keras_history", None) is not None
+            for tensor in input_tensors):
         # KerasHistory already set.
         return False
     return uses_keras_history(tensors)
@@ -328,7 +323,8 @@ def is_in_tf_function():
         return False
     # Check for a v1 `wrap_function` FuncGraph.
     graph = ops.get_default_graph()
-    if getattr(graph, "name", False) and graph.name.startswith("wrapped_function"):
+    if getattr(graph, "name",
+               False) and graph.name.startswith("wrapped_function"):
         return False
     return True
 
@@ -441,8 +437,8 @@ class CallContext(object):
         self.in_call = True
         self.training = training
         self._in_keras_graph = self._in_keras_graph or (
-            build_graph and getattr(backend.get_graph(), "name", None) == "keras_graph"
-        )
+            build_graph
+            and getattr(backend.get_graph(), "name", None) == "keras_graph")
         self.saving = prev_saving if saving is None else saving
 
         try:
@@ -462,10 +458,8 @@ class CallContext(object):
         # created by control flow ops.
         if context.executing_eagerly():
             return False
-        return (
-            self._in_keras_graph
-            or getattr(backend.get_graph(), "name", None) == "keras_graph"
-        )
+        return (self._in_keras_graph
+                or getattr(backend.get_graph(), "name", None) == "keras_graph")
 
 
 def training_arg_passed_to_call(argspec, args, kwargs):
@@ -490,17 +484,13 @@ def autocast_context_manager(dtype):
     """
     if dtype and not dtypes.as_dtype(dtype).is_floating:
         dtype = None
-    return ops.get_default_graph()._enable_auto_casting_variables(
-        dtype
-    )  # pylint: disable=protected-access
+    return ops.get_default_graph()._enable_auto_casting_variables(dtype)  # pylint: disable=protected-access
 
 
 def is_subclassed(layer):
     """Returns True if the object is a subclassed layer or subclassed model."""
-    return (
-        layer.__module__.find("keras.engine") == -1
-        and layer.__module__.find("keras.layers") == -1
-    )
+    return (layer.__module__.find("keras.engine") == -1
+            and layer.__module__.find("keras.layers") == -1)
 
 
 def from_saved_model(layer):
@@ -524,18 +514,15 @@ def check_graph_consistency(tensor=None, method="add_loss", force_raise=False):
     Raises:
       RuntimeError: In case of an out-of-graph tensor.
     """
-    if force_raise or (
-        ops.executing_eagerly_outside_functions()
-        and hasattr(tensor, "graph")
-        and isinstance(
-            tensor.graph,
-            (
-                control_flow_v2_func_graphs.CondBranchFuncGraph,
-                control_flow_v2_func_graphs.WhileCondFuncGraph,
-                control_flow_v2_func_graphs.WhileBodyFuncGraph,
-            ),
-        )
-    ):
+    if force_raise or (ops.executing_eagerly_outside_functions()
+                       and hasattr(tensor, "graph") and isinstance(
+                           tensor.graph,
+                           (
+                               control_flow_v2_func_graphs.CondBranchFuncGraph,
+                               control_flow_v2_func_graphs.WhileCondFuncGraph,
+                               control_flow_v2_func_graphs.WhileBodyFuncGraph,
+                           ),
+                       )):
         if method == "activity_regularizer":
             bad_example = """
       class TestModel(tf.keras.Model):
@@ -570,10 +557,8 @@ def check_graph_consistency(tensor=None, method="add_loss", force_raise=False):
                 "Any kind of control flow is supported with dynamic layers. "
                 "Note that using `dynamic=True` requires you to implement static "
                 "shape inference in the `compute_output_shape(input_shape)` "
-                "method.".format(
-                    bad_example=bad_example, correct_example=correct_example
-                )
-            )
+                "method.".format(bad_example=bad_example,
+                                 correct_example=correct_example))
 
         if method == "add_metric":
             bad_example = """
@@ -638,9 +623,9 @@ def check_graph_consistency(tensor=None, method="add_loss", force_raise=False):
             "Note that using `dynamic=True` requires you "
             "to implement static shape inference "
             "in the `compute_output_shape(input_shape)` method.".format(
-                method=method, bad_example=bad_example, correct_example=correct_example
-            )
-        )
+                method=method,
+                bad_example=bad_example,
+                correct_example=correct_example))
 
 
 def mark_as_return(outputs, acd):
@@ -740,15 +725,14 @@ class TrackableWeightHandler(object):
 
     def __init__(self, trackable):
         if not isinstance(trackable, tracking.Trackable):
-            raise ValueError("%s is not a Trackable object." % (trackable,))
+            raise ValueError("%s is not a Trackable object." % (trackable, ))
         self._trackable = trackable
 
         # TODO(b/141682913): Figure out why this is private and fix it.
-        saveables = (
-            trackable._gather_saveables_for_checkpoint().values()
-        )  # pylint: disable=protected-access
+        saveables = (trackable._gather_saveables_for_checkpoint().values())  # pylint: disable=protected-access
         if len(saveables) != 1:
-            raise ValueError("Only Trackables with one Saveable are supported.")
+            raise ValueError(
+                "Only Trackables with one Saveable are supported.")
         saveable = list(saveables)[0]
 
         if ops.executing_eagerly_outside_functions():
@@ -759,8 +743,11 @@ class TrackableWeightHandler(object):
             # produce.
             self._saveable = saveable
             self._num_tensors = len(self._saveable().specs)
-            self._setter = lambda weights: self._saveable().restore(weights, None)
-            self._getter = lambda: [spec.tensor for spec in self._saveable().specs]
+            self._setter = lambda weights: self._saveable().restore(
+                weights, None)
+            self._getter = lambda: [
+                spec.tensor for spec in self._saveable().specs
+            ]
         else:
             # If we're in Graph mode, we need to evaluate the Saveable only once and
             # cache the resulting restore graph. Failing to do this will result in
@@ -772,11 +759,13 @@ class TrackableWeightHandler(object):
             for spec in self._saveable.specs:
                 tensor = spec.tensor
                 self._placeholder_tensors.append(
-                    array_ops.placeholder(tensor.dtype, tensor.shape)
-                )
-            self._assign_op = self._saveable.restore(self._placeholder_tensors, None)
+                    array_ops.placeholder(tensor.dtype, tensor.shape))
+            self._assign_op = self._saveable.restore(self._placeholder_tensors,
+                                                     None)
             self._setter = self._set_weights_v1
-            self._getter = lambda: [spec.tensor for spec in self._saveable.specs]
+            self._getter = lambda: [
+                spec.tensor for spec in self._saveable.specs
+            ]
 
     @property
     def num_tensors(self):
@@ -784,13 +773,11 @@ class TrackableWeightHandler(object):
 
     def set_weights(self, weights):
         if len(weights) != self._num_tensors:
-            raise ValueError(
-                (
-                    "Weight handler for trackable %s received the wrong number of "
-                    + "weights: expected %s, got %s."
-                )
-                % (self._trackable, self._num_tensors, len(weights))
-            )
+            raise ValueError((
+                "Weight handler for trackable %s received the wrong number of "
+                + "weights: expected %s, got %s.") %
+                             (self._trackable, self._num_tensors,
+                              len(weights)))
         self._setter(weights)
 
     def get_tensors(self):
