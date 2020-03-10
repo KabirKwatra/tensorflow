@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """State management for eager execution."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,9 +24,9 @@ import os
 import random
 import threading
 
-from absl import logging
 import numpy as np
 import six
+from absl import logging
 
 from tensorflow.core.framework import function_pb2
 from tensorflow.core.protobuf import config_pb2
