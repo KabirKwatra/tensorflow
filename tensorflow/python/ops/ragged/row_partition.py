@@ -85,13 +85,13 @@ class RowPartition(object):
     # Constructor (private)
     # =============================================================================
     def __init__(
-        self,
-        row_splits,
-        cached_row_lengths=None,
-        cached_value_rowids=None,
-        cached_nrows=None,
-        internal=False,
-        uniform_row_length=None,
+            self,
+            row_splits,
+            cached_row_lengths=None,
+            cached_value_rowids=None,
+            cached_nrows=None,
+            internal=False,
+            uniform_row_length=None,
     ):
         """Creates a `RowPartition` with a specified partitioning for `values`.
 
@@ -124,16 +124,16 @@ class RowPartition(object):
             raise ValueError(
                 "RaggedTensor constructor is private; please use one "
                 "of the factory methods instead (e.g., "
-                "RaggedTensor.from_row_lengths())"
-            )
+                "RaggedTensor.from_row_lengths())")
 
         # Validate the arguments.
         if not isinstance(row_splits, ops.Tensor):
             raise TypeError(
-                "Row-partitioning argument must be a Tensor, got %r" % row_splits
-            )
+                "Row-partitioning argument must be a Tensor, got %r" %
+                row_splits)
         if row_splits.dtype not in (dtypes.int32, dtypes.int64):
-            raise ValueError("Row-partitioning argument must be int32 or int64")
+            raise ValueError(
+                "Row-partitioning argument must be int32 or int64")
 
         # Validate shapes & dtypes.
         row_splits.shape.assert_has_rank(1)
@@ -165,9 +165,12 @@ class RowPartition(object):
     # =============================================================================
 
     @classmethod
-    def from_value_rowids(
-        cls, value_rowids, nrows=None, name=None, validate=True, preferred_dtype=None
-    ):
+    def from_value_rowids(cls,
+                          value_rowids,
+                          nrows=None,
+                          name=None,
+                          validate=True,
+                          preferred_dtype=None):
         """Creates a `RowPartition` with rows partitioned by `value_rowids`.
 
         The implied `RaggedTensor` corresponds with the python list defined by:
@@ -206,49 +209,57 @@ class RowPartition(object):
         """
         if not isinstance(validate, bool):
             raise TypeError("validate must have type bool")
-        with ops.name_scope(name, "RowPartitionFromValueRowIds", [value_rowids, nrows]):
-            value_rowids = cls._convert_row_partition(
-                value_rowids, "value_rowids", preferred_dtype
-            )
+        with ops.name_scope(name, "RowPartitionFromValueRowIds",
+                            [value_rowids, nrows]):
+            value_rowids = cls._convert_row_partition(value_rowids,
+                                                      "value_rowids",
+                                                      preferred_dtype)
             if nrows is None:
                 const_rowids = tensor_util.constant_value(value_rowids)
                 if const_rowids is None:
-                    nrows = array_ops.concat([value_rowids[-1:], [-1]], axis=0)[0] + 1
+                    nrows = array_ops.concat([value_rowids[-1:], [-1]],
+                                             axis=0)[0] + 1
                     const_nrows = None
                 else:
-                    const_nrows = const_rowids[-1] + 1 if const_rowids.size > 0 else 0
-                    nrows = ops.convert_to_tensor(
-                        const_nrows, value_rowids.dtype, name="nrows"
-                    )
+                    const_nrows = const_rowids[
+                        -1] + 1 if const_rowids.size > 0 else 0
+                    nrows = ops.convert_to_tensor(const_nrows,
+                                                  value_rowids.dtype,
+                                                  name="nrows")
             else:
-                nrows = ops.convert_to_tensor(nrows, value_rowids.dtype, "nrows")
+                nrows = ops.convert_to_tensor(nrows, value_rowids.dtype,
+                                              "nrows")
                 const_nrows = tensor_util.constant_value(nrows)
                 if const_nrows is not None:
                     if const_nrows < 0:
-                        raise ValueError("Expected nrows >= 0; got %d" % const_nrows)
+                        raise ValueError("Expected nrows >= 0; got %d" %
+                                         const_nrows)
                     const_rowids = tensor_util.constant_value(value_rowids)
                     if const_rowids is not None and const_rowids.size > 0:
                         if not const_nrows >= const_rowids[-1] + 1:
                             raise ValueError(
                                 "Expected nrows >= value_rowids[-1] + 1; got nrows=%d, "
-                                "value_rowids[-1]=%d" % (const_nrows, const_rowids[-1])
-                            )
+                                "value_rowids[-1]=%d" %
+                                (const_nrows, const_rowids[-1]))
 
             value_rowids.shape.assert_has_rank(1)
             nrows.shape.assert_has_rank(0)
 
             if validate:
-                msg = (
-                    "Arguments to from_value_rowids do not form a valid " "RowPartition"
-                )
+                msg = ("Arguments to from_value_rowids do not form a valid "
+                       "RowPartition")
                 checks = [
                     check_ops.assert_rank(value_rowids, 1, message=msg),
                     check_ops.assert_rank(nrows, 0, message=msg),
-                    check_ops.assert_non_negative(value_rowids[:1], message=msg),
+                    check_ops.assert_non_negative(value_rowids[:1],
+                                                  message=msg),
                     _assert_monotonic_increasing(value_rowids, message=msg),
-                    check_ops.assert_less(value_rowids[-1:], nrows, message=msg),
+                    check_ops.assert_less(value_rowids[-1:],
+                                          nrows,
+                                          message=msg),
                 ]
-                value_rowids = control_flow_ops.with_dependencies(checks, value_rowids)
+                value_rowids = control_flow_ops.with_dependencies(
+                    checks, value_rowids)
 
             # Convert value_rowids & nrows to row_splits.
             # Note: we don't use segment_ids_to_row_splits() here because we want
@@ -263,7 +274,8 @@ class RowPartition(object):
                 maxlength=nrows_int32,
                 dtype=value_rowids.dtype,
             )
-            row_splits = array_ops.concat([[0], math_ops.cumsum(row_lengths)], axis=0)
+            row_splits = array_ops.concat(
+                [[0], math_ops.cumsum(row_lengths)], axis=0)
             if const_nrows is not None:
                 row_lengths.set_shape([const_nrows])
                 row_splits.set_shape([const_nrows + 1])
@@ -277,9 +289,11 @@ class RowPartition(object):
             )
 
     @classmethod
-    def from_row_splits(
-        cls, row_splits, name=None, validate=True, preferred_dtype=None
-    ):
+    def from_row_splits(cls,
+                        row_splits,
+                        name=None,
+                        validate=True,
+                        preferred_dtype=None):
         """Creates a `RowPartition` with rows partitioned by `row_splits`.
 
         A `RaggedTensor` constructed with this corresponds with the python list
@@ -315,28 +329,31 @@ class RowPartition(object):
             return cls(row_splits=row_splits, internal=True)
 
         with ops.name_scope(name, "RowPartitionFromRowSplits", [row_splits]):
-            row_splits = cls._convert_row_partition(
-                row_splits, "row_splits", preferred_dtype
-            )
+            row_splits = cls._convert_row_partition(row_splits, "row_splits",
+                                                    preferred_dtype)
             row_splits.shape.assert_has_rank(1)
 
             if validate:
                 msg = "Arguments to from_row_splits do not form a valid RaggedTensor:"
                 checks = [
-                    check_ops.assert_rank(row_splits, 1, message=(msg + "rank")),
+                    check_ops.assert_rank(row_splits,
+                                          1,
+                                          message=(msg + "rank")),
                     _assert_zero(row_splits[0], message=(msg + "zero")),
-                    _assert_monotonic_increasing(
-                        row_splits, message=(msg + "monotonic")
-                    ),
+                    _assert_monotonic_increasing(row_splits,
+                                                 message=(msg + "monotonic")),
                 ]
-                row_splits = control_flow_ops.with_dependencies(checks, row_splits)
+                row_splits = control_flow_ops.with_dependencies(
+                    checks, row_splits)
 
             return cls(row_splits=row_splits, internal=True)
 
     @classmethod
-    def from_row_lengths(
-        cls, row_lengths, name=None, validate=True, preferred_dtype=None
-    ):
+    def from_row_lengths(cls,
+                         row_lengths,
+                         name=None,
+                         validate=True,
+                         preferred_dtype=None):
         """Creates a `RowPartition` with rows partitioned by `row_lengths`.
 
         A `RaggedTensor` constructed with this corresponds with the python list
@@ -362,9 +379,9 @@ class RowPartition(object):
         if not isinstance(validate, bool):
             raise TypeError("validate must have type bool")
         with ops.name_scope(name, "RowPartitionFromRowLengths", [row_lengths]):
-            row_lengths = cls._convert_row_partition(
-                row_lengths, "row_lengths", preferred_dtype
-            )
+            row_lengths = cls._convert_row_partition(row_lengths,
+                                                     "row_lengths",
+                                                     preferred_dtype)
             row_lengths.shape.assert_has_rank(1)
 
             if validate:
@@ -373,18 +390,22 @@ class RowPartition(object):
                     check_ops.assert_rank(row_lengths, 1, message=msg),
                     check_ops.assert_non_negative(row_lengths, message=msg),
                 ]
-                row_lengths = control_flow_ops.with_dependencies(checks, row_lengths)
+                row_lengths = control_flow_ops.with_dependencies(
+                    checks, row_lengths)
 
             row_limits = math_ops.cumsum(row_lengths)
             row_splits = array_ops.concat([[0], row_limits], axis=0)
-            return cls(
-                row_splits=row_splits, cached_row_lengths=row_lengths, internal=True
-            )
+            return cls(row_splits=row_splits,
+                       cached_row_lengths=row_lengths,
+                       internal=True)
 
     @classmethod
-    def from_row_starts(
-        cls, row_starts, nvals, name=None, validate=True, preferred_dtype=None
-    ):
+    def from_row_starts(cls,
+                        row_starts,
+                        nvals,
+                        name=None,
+                        validate=True,
+                        preferred_dtype=None):
         """Creates a `RowPartition` with rows partitioned by `row_starts`.
 
         Equivalent to: `from_row_splits(concat([row_starts, nvals]))`.
@@ -406,9 +427,8 @@ class RowPartition(object):
         if not isinstance(validate, bool):
             raise TypeError("validate must have type bool")
         with ops.name_scope(name, "RowPartitionFromRowStarts", [row_starts]):
-            row_starts = cls._convert_row_partition(
-                row_starts, "row_starts", preferred_dtype
-            )
+            row_starts = cls._convert_row_partition(row_starts, "row_starts",
+                                                    preferred_dtype)
             row_starts.shape.assert_has_rank(1)
             nvals = math_ops.cast(nvals, row_starts.dtype)
             if validate:
@@ -417,9 +437,12 @@ class RowPartition(object):
                     check_ops.assert_rank(row_starts, 1, message=msg),
                     _assert_zero(row_starts[:1], message=msg),
                     _assert_monotonic_increasing(row_starts, message=msg),
-                    check_ops.assert_less_equal(row_starts[-1:], nvals, message=msg),
+                    check_ops.assert_less_equal(row_starts[-1:],
+                                                nvals,
+                                                message=msg),
                 ]
-                row_starts = control_flow_ops.with_dependencies(checks, row_starts)
+                row_starts = control_flow_ops.with_dependencies(
+                    checks, row_starts)
 
             row_splits = array_ops.concat([row_starts, [nvals]], axis=0)
             return cls(row_splits=row_splits, internal=True)
@@ -428,9 +451,11 @@ class RowPartition(object):
         return self._cached_value_rowids is not None
 
     @classmethod
-    def from_row_limits(
-        cls, row_limits, name=None, validate=True, preferred_dtype=None
-    ):
+    def from_row_limits(cls,
+                        row_limits,
+                        name=None,
+                        validate=True,
+                        preferred_dtype=None):
         """Creates a `RowPartition` with rows partitioned by `row_limits`.
 
         Equivalent to: `from_row_splits(values, concat([0, row_limits]))`.
@@ -449,9 +474,8 @@ class RowPartition(object):
         if not isinstance(validate, bool):
             raise TypeError("validate must have type bool")
         with ops.name_scope(name, "RowPartitionFromRowLimits", [row_limits]):
-            row_limits = cls._convert_row_partition(
-                row_limits, "row_limits", preferred_dtype
-            )
+            row_limits = cls._convert_row_partition(row_limits, "row_limits",
+                                                    preferred_dtype)
             row_limits.shape.assert_has_rank(1)
 
             if validate:
@@ -461,7 +485,8 @@ class RowPartition(object):
                     check_ops.assert_non_negative(row_limits[:1], message=msg),
                     _assert_monotonic_increasing(row_limits, message=msg),
                 ]
-                row_limits = control_flow_ops.with_dependencies(checks, row_limits)
+                row_limits = control_flow_ops.with_dependencies(
+                    checks, row_limits)
 
             zero = array_ops.zeros([1], row_limits.dtype)
             row_splits = array_ops.concat([zero, row_limits], axis=0)
@@ -469,13 +494,13 @@ class RowPartition(object):
 
     @classmethod
     def from_uniform_row_length(
-        cls,
-        nvals,
-        uniform_row_length,
-        nrows=None,
-        validate=True,
-        name=None,
-        preferred_dtype=None,
+            cls,
+            nvals,
+            uniform_row_length,
+            nrows=None,
+            validate=True,
+            name=None,
+            preferred_dtype=None,
     ):
         """Creates a `RowPartition` with rows partitioned by `uniform_row_length`.
 
@@ -512,12 +537,10 @@ class RowPartition(object):
         """
         if not isinstance(validate, bool):
             raise TypeError("validate must have type bool")
-        with ops.name_scope(
-            name, "RowPartitionFromUniformRowLength", [uniform_row_length, nrows]
-        ):
+        with ops.name_scope(name, "RowPartitionFromUniformRowLength",
+                            [uniform_row_length, nrows]):
             uniform_row_length = cls._convert_row_partition(
-                uniform_row_length, "uniform_row_length", preferred_dtype
-            )
+                uniform_row_length, "uniform_row_length", preferred_dtype)
             uniform_row_length.shape.assert_has_rank(0)
 
             # Find nrows.
@@ -534,25 +557,27 @@ class RowPartition(object):
                     nrows = 0
                 else:
                     nrows = nvals // const_row_length
-            nrows = ops.convert_to_tensor(nrows, uniform_row_length.dtype, name="nrows")
+            nrows = ops.convert_to_tensor(nrows,
+                                          uniform_row_length.dtype,
+                                          name="nrows")
             const_nrows = tensor_util.constant_value(nrows)
             const_nvals = tensor_util.constant_value(nvals)
 
             # Find row_splits.
             if const_nrows is not None and const_row_length is not None:
-                row_splits = [v * const_row_length for v in range(const_nrows + 1)]
-                row_splits = constant_op.constant(row_splits, uniform_row_length.dtype)
+                row_splits = [
+                    v * const_row_length for v in range(const_nrows + 1)
+                ]
+                row_splits = constant_op.constant(row_splits,
+                                                  uniform_row_length.dtype)
             else:
                 row_splits = math_ops.range(nrows + 1) * uniform_row_length
 
             if validate:
                 checks = []
 
-                if (
-                    const_nrows is None
-                    or const_row_length is None
-                    or const_nvals is None
-                ):
+                if (const_nrows is None or const_row_length is None
+                        or const_nvals is None):
                     checks.append(
                         check_ops.assert_equal(
                             nrows * uniform_row_length,
@@ -565,14 +590,12 @@ class RowPartition(object):
                                 "must equal nvals",
                                 nvals,
                             ),
-                        )
-                    )
+                        ))
                 else:
                     if const_nrows * const_row_length != const_nvals:
                         raise ValueError(
                             "uniform_row_length=%d times nrows=%d must equal nvals=%d"
-                            % (const_row_length, const_nrows, const_nvals)
-                        )
+                            % (const_row_length, const_nrows, const_nvals))
 
                 if uniform_row_length.shape.rank is None:
                     checks.append(
@@ -580,23 +603,23 @@ class RowPartition(object):
                             uniform_row_length,
                             0,
                             message="uniform_row_length must be a scalar.",
-                        )
-                    )
+                        ))
 
-                const_row_length = tensor_util.constant_value(uniform_row_length)
+                const_row_length = tensor_util.constant_value(
+                    uniform_row_length)
                 if const_row_length is None:
                     checks.append(
                         check_ops.assert_greater_equal(
                             uniform_row_length,
                             constant_op.constant(0, uniform_row_length.dtype),
                             message="uniform_row_length must be >= 0.",
-                        )
-                    )
+                        ))
                 else:
                     if const_row_length < 0:
                         raise ValueError("uniform_row_length must be >= 0.")
 
-                row_splits = control_flow_ops.with_dependencies(checks, row_splits)
+                row_splits = control_flow_ops.with_dependencies(
+                    checks, row_splits)
 
             return cls(
                 row_splits=row_splits,
@@ -628,9 +651,9 @@ class RowPartition(object):
         if isinstance(partition, np.ndarray) and partition.dtype == np.int32:
             partition = ops.convert_to_tensor(partition, name=name)
         else:
-            partition = ops.convert_to_tensor(
-                partition, preferred_dtype=preferred_dtype, name=name
-            )
+            partition = ops.convert_to_tensor(partition,
+                                              preferred_dtype=preferred_dtype,
+                                              name=name)
         if partition.dtype not in (dtypes.int32, dtypes.int64):
             raise ValueError("%s must have dtype int32 or int64" % name)
 
@@ -649,8 +672,7 @@ class RowPartition(object):
           A new RowPartition object.
         """
         new_row_splits = control_flow_ops.with_dependencies(
-            dependencies, self._row_splits
-        )
+            dependencies, self._row_splits)
         return RowPartition(
             row_splits=new_row_splits,
             cached_row_lengths=self._cached_row_lengths,
@@ -728,7 +750,9 @@ class RowPartition(object):
             return self.row_splits[-1]
         else:
             out_type = dtypes.as_dtype(out_type)
-            return math_ops.cast(self.row_splits[-1], name=name, dtype=out_type)
+            return math_ops.cast(self.row_splits[-1],
+                                 name=name,
+                                 dtype=out_type)
 
     def nrows(self, out_type=None, name=None):
         """Returns the number of rows in this ragged tensor.
@@ -753,7 +777,8 @@ class RowPartition(object):
         with ops.name_scope(name, "RaggedNRows", [self]):
             nsplits = tensor_shape.dimension_at_index(self.row_splits.shape, 0)
             if nsplits.value is None:
-                return array_ops.shape(self.row_splits, out_type=out_type)[0] - 1
+                return array_ops.shape(self.row_splits,
+                                       out_type=out_type)[0] - 1
             else:
                 return constant_op.constant(nsplits.value - 1, dtype=out_type)
 
@@ -861,10 +886,11 @@ class RowPartition(object):
 
 
 def _assert_monotonic_increasing(tensor, message=None):
-    return check_ops.assert_non_negative(tensor[1:] - tensor[:-1], message=message)
+    return check_ops.assert_non_negative(tensor[1:] - tensor[:-1],
+                                         message=message)
 
 
 def _assert_zero(tensor, message=None):
-    return check_ops.assert_equal(
-        tensor, constant_op.constant(0, dtype=tensor.dtype), message=message
-    )
+    return check_ops.assert_equal(tensor,
+                                  constant_op.constant(0, dtype=tensor.dtype),
+                                  message=message)

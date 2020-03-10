@@ -68,28 +68,29 @@ def get_source_inputs(tensor, layer=None, node_index=None):
 
 
 def validate_string_arg(
-    input_data,
-    allowable_strings,
-    layer_name,
-    arg_name,
-    allow_none=False,
-    allow_callables=False,
+        input_data,
+        allowable_strings,
+        layer_name,
+        arg_name,
+        allow_none=False,
+        allow_callables=False,
 ):
     """Validates the correctness of a string-based arg."""
     if allow_none and input_data is None:
         return
     elif allow_callables and callable(input_data):
         return
-    elif isinstance(input_data, six.string_types) and input_data in allowable_strings:
+    elif isinstance(input_data,
+                    six.string_types) and input_data in allowable_strings:
         return
     else:
         allowed_args = "`None`, " if allow_none else ""
         allowed_args += "a `Callable`, " if allow_callables else ""
-        allowed_args += "or one of the following values: %s" % (allowable_strings,)
-        raise ValueError(
-            ("%s's %s arg received an invalid value %s. " + "Allowed values are %s.")
-            % (layer_name, arg_name, input_data, allowed_args)
-        )
+        allowed_args += "or one of the following values: %s" % (
+            allowable_strings, )
+        raise ValueError(("%s's %s arg received an invalid value %s. " +
+                          "Allowed values are %s.") %
+                         (layer_name, arg_name, input_data, allowed_args))
 
 
 def count_params(weights):
@@ -103,9 +104,8 @@ def count_params(weights):
     """
     unique_weights = object_identity.ObjectIdentitySet(weights)
     weight_shapes = [w.shape.as_list() for w in unique_weights]
-    standardized_weight_shapes = [
-        [0 if w_i is None else w_i for w_i in w] for w in weight_shapes
-    ]
+    standardized_weight_shapes = [[0 if w_i is None else w_i for w_i in w]
+                                  for w in weight_shapes]
     return int(sum(np.prod(p) for p in standardized_weight_shapes))
 
 
@@ -139,9 +139,8 @@ def print_summary(model, line_length=None, positions=None, print_fn=None):
         nodes_by_depth = model._nodes_by_depth.values()
         nodes = []
         for v in nodes_by_depth:
-            if (len(v) > 1) or (
-                len(v) == 1 and len(nest.flatten(v[0].inbound_layers)) > 1
-            ):
+            if (len(v) > 1) or (len(v) == 1 and
+                                len(nest.flatten(v[0].inbound_layers)) > 1):
                 # if the model has multiple nodes
                 # or if the nodes have multiple inbound_layers
                 # the model is no longer sequential
@@ -175,7 +174,9 @@ def print_summary(model, line_length=None, positions=None, print_fn=None):
         if positions[-1] <= 1:
             positions = [int(line_length * p) for p in positions]
         # header names for the different log elements
-        to_display = ["Layer (type)", "Output Shape", "Param #", "Connected to"]
+        to_display = [
+            "Layer (type)", "Output Shape", "Param #", "Connected to"
+        ]
         relevant_nodes = []
         for v in model._nodes_by_depth.values():
             relevant_nodes += v
@@ -186,7 +187,7 @@ def print_summary(model, line_length=None, positions=None, print_fn=None):
             if i > 0:
                 line = line[:-1] + " "
             line += str(fields[i])
-            line = line[: positions[i]]
+            line = line[:positions[i]]
             line += " " * (positions[i] - len(line))
         print_fn(line)
 
@@ -209,7 +210,10 @@ def print_summary(model, line_length=None, positions=None, print_fn=None):
             output_shape = "?"
         name = layer.name
         cls_name = layer.__class__.__name__
-        fields = [name + " (" + cls_name + ")", output_shape, layer.count_params()]
+        fields = [
+            name + " (" + cls_name + ")", output_shape,
+            layer.count_params()
+        ]
         print_row(fields, positions)
 
     def print_layer_summary_with_connections(layer):
@@ -228,10 +232,11 @@ def print_summary(model, line_length=None, positions=None, print_fn=None):
                 # node is not part of the current network
                 continue
 
-            for inbound_layer, node_index, tensor_index, _ in node.iterate_inbound():
-                connections.append(
-                    "{}[{}][{}]".format(inbound_layer.name, node_index, tensor_index)
-                )
+            for inbound_layer, node_index, tensor_index, _ in node.iterate_inbound(
+            ):
+                connections.append("{}[{}][{}]".format(inbound_layer.name,
+                                                       node_index,
+                                                       tensor_index))
 
         name = layer.name
         cls_name = layer.__class__.__name__
@@ -269,7 +274,8 @@ def print_summary(model, line_length=None, positions=None, print_fn=None):
 
     non_trainable_count = count_params(model.non_trainable_weights)
 
-    print_fn("Total params: {:,}".format(trainable_count + non_trainable_count))
+    print_fn("Total params: {:,}".format(trainable_count +
+                                         non_trainable_count))
     print_fn("Trainable params: {:,}".format(trainable_count))
     print_fn("Non-trainable params: {:,}".format(non_trainable_count))
     print_fn("_" * line_length)
@@ -324,18 +330,13 @@ def gather_non_trainable_weights(trainable, sub_layers, extra_variables):
         trainable_weights = []
         for layer in sub_layers:
             trainable_weights += layer.trainable_weights
-        return (
-            trainable_weights
-            + trainable_extra_variables
-            + weights
-            + non_trainable_extra_variables
-        )
+        return (trainable_weights + trainable_extra_variables + weights +
+                non_trainable_extra_variables)
     return weights + non_trainable_extra_variables
 
 
-@deprecation.deprecated(
-    "2020-06-23", "The Theano kernel format is legacy; " "this utility will be removed."
-)
+@deprecation.deprecated("2020-06-23", "The Theano kernel format is legacy; "
+                        "this utility will be removed.")
 def convert_all_kernels_in_model(model):
     """Converts all convolution kernels in a model from Theano to TensorFlow.
 
@@ -363,9 +364,9 @@ def convert_all_kernels_in_model(model):
     K.batch_set_value(to_assign)
 
 
-def convert_dense_weights_data_format(
-    dense, previous_feature_map_shape, target_data_format="channels_first"
-):
+def convert_dense_weights_data_format(dense,
+                                      previous_feature_map_shape,
+                                      target_data_format="channels_first"):
     """Utility useful when changing a convnet's `data_format`.
 
     When porting the weights of a convnet from one data format to the other,
@@ -398,7 +399,7 @@ def convert_dense_weights_data_format(
             original_fm_shape = (c, h, w)
             ki = kernel[:, i].reshape(original_fm_shape)
             ki = np.transpose(ki, (1, 2, 0))  # first -> last
-        kernel[:, i] = np.reshape(ki, (np.prod(previous_feature_map_shape),))
+        kernel[:, i] = np.reshape(ki, (np.prod(previous_feature_map_shape), ))
     dense.set_weights([kernel, bias])
 
 
@@ -409,5 +410,5 @@ def is_builtin_layer(layer):
     # Subclasses of `Layer` that are not exported inherit the export name
     # of the base layer class.
     return layer._keras_api_names != (
-        "keras.layers.Layer",
-    ) and layer._keras_api_names_v1 != ("keras.layers.Layer",)
+        "keras.layers.Layer", ) and layer._keras_api_names_v1 != (
+            "keras.layers.Layer", )
