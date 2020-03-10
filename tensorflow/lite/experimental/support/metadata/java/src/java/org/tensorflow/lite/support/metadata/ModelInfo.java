@@ -84,8 +84,7 @@ final class ModelInfo {
    */
   @Nullable
   Tensor getInputTensor(int inputIndex) {
-    checkArgument(
-        inputIndex >= 0 && inputIndex < inputTensors.size(),
+    checkArgument(inputIndex >= 0 && inputIndex < inputTensors.size(),
         "The inputIndex specified is invalid.");
     return inputTensors.get(inputIndex);
   }
@@ -141,8 +140,7 @@ final class ModelInfo {
    */
   @Nullable
   Tensor getOutputTensor(int outputIndex) {
-    checkArgument(
-        outputIndex >= 0 && outputIndex < outputTensors.size(),
+    checkArgument(outputIndex >= 0 && outputIndex < outputTensors.size(),
         "The outputIndex specified is invalid.");
     return outputTensors.get(outputIndex);
   }
@@ -209,11 +207,9 @@ final class ModelInfo {
 
     // Tensors that are not quantized do not have quantization parameters.
     // quantization.scaleLength() and quantization.zeroPointLength() may both return 0.
-    checkArgument(
-        quantization.scaleLength() <= 1,
+    checkArgument(quantization.scaleLength() <= 1,
         "Input and output tensors do not support per-channel quantization.");
-    checkArgument(
-        quantization.zeroPointLength() <= 1,
+    checkArgument(quantization.zeroPointLength() <= 1,
         "Input and output tensors do not support per-channel quantization.");
 
     // For tensors that are not quantized, quantization.scale(0) and quantization.zeroPoint(0) will
@@ -234,8 +230,7 @@ final class ModelInfo {
    * @throws IllegalArgumentException if the tensor type is not supported.
    */
   private DataType getDataType(byte tensorType) {
-    checkArgument(
-        tensorTypeToDataTypeMap.containsKey(tensorType),
+    checkArgument(tensorTypeToDataTypeMap.containsKey(tensorType),
         String.format("Tensor type %d is not supported.", tensorType));
     return tensorTypeToDataTypeMap.get(tensorType);
   }

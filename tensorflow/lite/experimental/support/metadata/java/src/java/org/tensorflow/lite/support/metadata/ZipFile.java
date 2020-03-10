@@ -86,8 +86,7 @@ final class ZipFile implements Closeable {
    * @throws IllegalArgumentException if the specified file does not exist in the zip file
    */
   public InputStream getRawInputStream(String name) {
-    checkArgument(
-        nameMap.containsKey(name),
+    checkArgument(nameMap.containsKey(name),
         String.format("The file, %s, does not exist in the zip file.", name));
 
     List<ZipEntry> entriesWithTheSameName = nameMap.get(name);
@@ -268,12 +267,8 @@ final class ZipFile implements Closeable {
         // Gets the data offset of this entry.
         int fileNameLen = getShort();
         int extraFieldLen = getShort();
-        long dataOffset =
-            offset
-                + ZipConstants.LOCEXT
-                + ZipConstants.SHORT_BYTE_SIZE
-                + fileNameLen
-                + extraFieldLen;
+        long dataOffset = offset + ZipConstants.LOCEXT + ZipConstants.SHORT_BYTE_SIZE + fileNameLen
+            + extraFieldLen;
         entry.setDataOffset(dataOffset);
 
         // Puts the entry into the nameMap.
@@ -304,7 +299,6 @@ final class ZipFile implements Closeable {
 
   /** Stores the data offset and the size of an entry in the archive. */
   private static class ZipEntry {
-
     private String name;
     private long dataOffset = -1;
     private long size = -1;

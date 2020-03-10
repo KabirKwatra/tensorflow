@@ -24,7 +24,6 @@ import java.nio.channels.NonWritableChannelException;
 
 /** Implements the {@link SeekableByteChannelCompat} on top of {@link ByteBuffer}. */
 final class ByteBufferChannel implements SeekableByteChannelCompat {
-
   /** The ByteBuffer that holds the data. */
   private final ByteBuffer buffer;
 
@@ -63,8 +62,7 @@ final class ByteBufferChannel implements SeekableByteChannelCompat {
    */
   @Override
   public synchronized ByteBufferChannel position(long newPosition) {
-    checkArgument(
-        (newPosition >= 0 && newPosition <= Integer.MAX_VALUE),
+    checkArgument((newPosition >= 0 && newPosition <= Integer.MAX_VALUE),
         "The new position should be non-negative and be less than Integer.MAX_VALUE.");
     buffer.position((int) newPosition);
     return this;
@@ -100,8 +98,7 @@ final class ByteBufferChannel implements SeekableByteChannelCompat {
 
   @Override
   public synchronized ByteBufferChannel truncate(long size) {
-    checkArgument(
-        (size >= 0 && size <= Integer.MAX_VALUE),
+    checkArgument((size >= 0 && size <= Integer.MAX_VALUE),
         "The new size should be non-negative and be less than Integer.MAX_VALUE.");
 
     if (size < buffer.limit()) {

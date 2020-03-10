@@ -75,14 +75,12 @@ public class MetadataExtractor {
     ByteBuffer metadataBuffer = modelInfo.getMetadataBuffer();
     if (metadataBuffer != null) {
       metadataInfo = new ModelMetadataInfo(metadataBuffer);
-      checkArgument(
-          modelInfo.getInputTensorCount() == metadataInfo.getInputTensorCount(),
+      checkArgument(modelInfo.getInputTensorCount() == metadataInfo.getInputTensorCount(),
           String.format(
               "The number of input tensors in the model is %d. The number of input tensors that"
                   + " recorded in the metadata is %d. These two values does not match.",
               modelInfo.getInputTensorCount(), metadataInfo.getInputTensorCount()));
-      checkArgument(
-          modelInfo.getOutputTensorCount() == metadataInfo.getOutputTensorCount(),
+      checkArgument(modelInfo.getOutputTensorCount() == metadataInfo.getOutputTensorCount(),
           String.format(
               "The number of output tensors in the model is %d. The number of output tensors that"
                   + " recorded in the metadata is %d. These two values does not match.",

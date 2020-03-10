@@ -49,8 +49,7 @@ final class BoundedInputStream extends InputStream {
    * @throws IllegalArgumentException if {@code start} or {@code remaining} is negative
    */
   BoundedInputStream(SeekableByteChannelCompat channel, long start, long remaining) {
-    checkArgument(
-        remaining >= 0 && start >= 0,
+    checkArgument(remaining >= 0 && start >= 0,
         String.format("Invalid length of stream at offset=%d, length=%d", start, remaining));
 
     end = start + remaining;
