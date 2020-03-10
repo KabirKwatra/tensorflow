@@ -40,14 +40,16 @@ _to_complex = linear_operator_toeplitz._to_complex
 
 @test_util.run_all_in_graph_and_eager_modes
 class LinearOperatorToeplitzTest(
-        linear_operator_test_util.SquareLinearOperatorDerivedClassTest):
+    linear_operator_test_util.SquareLinearOperatorDerivedClassTest
+):
     """Most tests done in the base class LinearOperatorDerivedClassTest."""
 
     @contextlib.contextmanager
     def _constrain_devices_and_set_default(self, sess, use_gpu, force_gpu):
         """We overwrite the FFT operation mapping for testing."""
         with test.TestCase._constrain_devices_and_set_default(
-                self, sess, use_gpu, force_gpu) as sess:
+            self, sess, use_gpu, force_gpu
+        ) as sess:
             yield sess
 
     def setUp(self):
@@ -77,15 +79,15 @@ class LinearOperatorToeplitzTest(
             shape_info((1, 1)),
             shape_info((1, 6, 6)),
             shape_info((3, 4, 4)),
-            shape_info((2, 1, 3, 3))
+            shape_info((2, 1, 3, 3)),
         ]
 
     def operator_and_matrix(
-            self, build_info, dtype, use_placeholder,
-            ensure_self_adjoint_and_pd=False):
+        self, build_info, dtype, use_placeholder, ensure_self_adjoint_and_pd=False
+    ):
         shape = list(build_info.shape)
-        row = np.random.uniform(low=1., high=5., size=shape[:-1])
-        col = np.random.uniform(low=1., high=5., size=shape[:-1])
+        row = np.random.uniform(low=1.0, high=5.0, size=shape[:-1])
+        col = np.random.uniform(low=1.0, high=5.0, size=shape[:-1])
 
         # Make sure first entry is the same
         row[..., 0] = col[..., 0]
@@ -95,7 +97,7 @@ class LinearOperatorToeplitzTest(
             # non-negative sequence is positive definite. See
             # https://www.math.cinvestav.mx/~grudsky/Papers/118_29062012_Albrecht.pdf
             # for details.
-            row = np.linspace(start=10., stop=1., num=shape[-1])
+            row = np.linspace(start=10.0, stop=1.0, num=shape[-1])
 
             # The entries for the first row and column should be the same to guarantee
             # symmetric.
@@ -105,25 +107,23 @@ class LinearOperatorToeplitzTest(
         lin_op_col = math_ops.cast(col, dtype=dtype)
 
         if use_placeholder:
-            lin_op_row = array_ops.placeholder_with_default(
-                lin_op_row, shape=None)
-            lin_op_col = array_ops.placeholder_with_default(
-                lin_op_col, shape=None)
+            lin_op_row = array_ops.placeholder_with_default(lin_op_row, shape=None)
+            lin_op_col = array_ops.placeholder_with_default(lin_op_col, shape=None)
 
         operator = linear_operator_toeplitz.LinearOperatorToeplitz(
             row=lin_op_row,
             col=lin_op_col,
             is_self_adjoint=True if ensure_self_adjoint_and_pd else None,
-            is_positive_definite=True if ensure_self_adjoint_and_pd else None)
+            is_positive_definite=True if ensure_self_adjoint_and_pd else None,
+        )
 
         flattened_row = np.reshape(row, (-1, shape[-1]))
         flattened_col = np.reshape(col, (-1, shape[-1]))
-        flattened_toeplitz = np.zeros(
-            [flattened_row.shape[0], shape[-1], shape[-1]])
+        flattened_toeplitz = np.zeros([flattened_row.shape[0], shape[-1], shape[-1]])
         for i in range(flattened_row.shape[0]):
             flattened_toeplitz[i] = scipy.linalg.toeplitz(
-                flattened_col[i],
-                flattened_row[i])
+                flattened_col[i], flattened_row[i]
+            )
         matrix = np.reshape(flattened_toeplitz, shape)
         matrix = math_ops.cast(matrix, dtype=dtype)
 
@@ -131,26 +131,28 @@ class LinearOperatorToeplitzTest(
 
     def test_scalar_row_col_raises(self):
         with self.assertRaisesRegexp(ValueError, "must have at least 1 dimension"):
-            linear_operator_toeplitz.LinearOperatorToeplitz(1., 1.)
+            linear_operator_toeplitz.LinearOperatorToeplitz(1.0, 1.0)
 
         with self.assertRaisesRegexp(ValueError, "must have at least 1 dimension"):
-            linear_operator_toeplitz.LinearOperatorToeplitz([1.], 1.)
+            linear_operator_toeplitz.LinearOperatorToeplitz([1.0], 1.0)
 
         with self.assertRaisesRegexp(ValueError, "must have at least 1 dimension"):
-            linear_operator_toeplitz.LinearOperatorToeplitz(1., [1.])
+            linear_operator_toeplitz.LinearOperatorToeplitz(1.0, [1.0])
 
     def test_tape_safe(self):
-        col = variables_module.Variable([1.])
-        row = variables_module.Variable([1.])
+        col = variables_module.Variable([1.0])
+        row = variables_module.Variable([1.0])
         operator = linear_operator_toeplitz.LinearOperatorToeplitz(
-            col, row, is_self_adjoint=True, is_positive_definite=True)
+            col, row, is_self_adjoint=True, is_positive_definite=True
+        )
         self.check_tape_safe(
             operator,
             skip_options=[
                 # .diag_part, .trace depend only on `col`, so test explicitly below.
                 linear_operator_test_util.CheckTapeSafeSkipOptions.DIAG_PART,
                 linear_operator_test_util.CheckTapeSafeSkipOptions.TRACE,
-            ])
+            ],
+        )
 
         with backprop.GradientTape() as tape:
             self.assertIsNotNone(tape.gradient(operator.diag_part(), col))
