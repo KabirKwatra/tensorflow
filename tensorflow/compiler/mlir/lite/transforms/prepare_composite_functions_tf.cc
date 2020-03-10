@@ -53,38 +53,38 @@ constexpr char kTFAPIImplements[] = "tf.api_implements";
 
 // Abstracts the conversion of the embedded lookup composite function.
 class ConvertEmbeddedLookupFunc {
- public:
-  explicit ConvertEmbeddedLookupFunc(FuncOp func) : func_(func) {}
+public:
+    explicit ConvertEmbeddedLookupFunc(FuncOp func) : func_(func) {}
 
-  void RewriteFunc() {
-    func_.setAttr(kTFImplements,
-                  StringAttr::get("embedding_lookup", func_.getContext()));
-    Value lookup = func_.getArgument(1);
-    Value value = func_.getArgument(0);
-    auto output_type = func_.getType().getResult(0);
+    void RewriteFunc() {
+        func_.setAttr(kTFImplements,
+                      StringAttr::get("embedding_lookup", func_.getContext()));
+        Value lookup = func_.getArgument(1);
+        Value value = func_.getArgument(0);
+        auto output_type = func_.getType().getResult(0);
 
-    OpBuilder builder(func_.getBody());
-    auto op = builder.create<mlir::TFL::EmbeddingLookupOp>(
-        func_.getLoc(), output_type, lookup, value);
+        OpBuilder builder(func_.getBody());
+        auto op = builder.create<mlir::TFL::EmbeddingLookupOp>(
+                      func_.getLoc(), output_type, lookup, value);
 
-    builder.create<mlir::ReturnOp>(func_.getLoc(), op.getResult());
-  }
-
-  LogicalResult VerifySignature() {
-    if (func_.getNumArguments() != 2) {
-      return func_.emitError()
-             << "Invalid number of arguments in the embedding "
-                "matmul composite function";
+        builder.create<mlir::ReturnOp>(func_.getLoc(), op.getResult());
     }
-    if (func_.getType().getNumResults() != 1) {
-      return func_.emitError() << "Invalid number of results in the embedding "
-                                  "matmul composite function";
-    }
-    return success();
-  }
 
- private:
-  FuncOp func_;
+    LogicalResult VerifySignature() {
+        if (func_.getNumArguments() != 2) {
+            return func_.emitError()
+                   << "Invalid number of arguments in the embedding "
+                   "matmul composite function";
+        }
+        if (func_.getType().getNumResults() != 1) {
+            return func_.emitError() << "Invalid number of results in the embedding "
+                   "matmul composite function";
+        }
+        return success();
+    }
+
+private:
+    FuncOp func_;
 };
 
 // This pass uses mechanisms listed in RFC:
@@ -95,124 +95,124 @@ class ConvertEmbeddedLookupFunc {
 // be a fused op, though that is the primary use case.
 class PrepareCompositeFunctionsPass
     : public ModulePass<PrepareCompositeFunctionsPass> {
- public:
-  explicit PrepareCompositeFunctionsPass() {}
+public:
+    explicit PrepareCompositeFunctionsPass() {}
 
- private:
-  void ConvertTFImplements(FuncOp func, StringAttr attr);
-  void ConvertTFAPIImplements(FuncOp func, StringAttr attr, ModuleOp module);
-  void runOnModule() override;
+private:
+    void ConvertTFImplements(FuncOp func, StringAttr attr);
+    void ConvertTFAPIImplements(FuncOp func, StringAttr attr, ModuleOp module);
+    void runOnModule() override;
 };
 
 void PrepareCompositeFunctionsPass::ConvertTFImplements(FuncOp func,
-                                                        StringAttr attr) {
-  if (attr.getValue() == "embedding_matmul") {
-    func.eraseBody();
-    func.addEntryBlock();
-    // Convert the composite embedding_matmul function body to a
-    // TFLite fused embedding_lookup op.
-    ConvertEmbeddedLookupFunc convert_embedded_lookup(func);
-    if (failed(convert_embedded_lookup.VerifySignature())) {
-      return signalPassFailure();
-    }
-    convert_embedded_lookup.RewriteFunc();
-  } else if (attr.getValue() == mlir::TFL::kLstmCellSimple) {
-    func.eraseBody();
-    func.addEntryBlock();
-    ConvertLSTMCellSimpleToFusedLSTM convert_lstm_cell_simple(func);
-    if (failed(convert_lstm_cell_simple.RewriteFunc())) {
-      return signalPassFailure();
-    }
-  } else if (attr.getValue() == mlir::TFL::kLayerNormalizedLstmCellSimple) {
-    func.eraseBody();
-    func.addEntryBlock();
-    ConvertLayerNormalizedLSTMCellSimpleToFusedLSTM
+        StringAttr attr) {
+    if (attr.getValue() == "embedding_matmul") {
+        func.eraseBody();
+        func.addEntryBlock();
+        // Convert the composite embedding_matmul function body to a
+        // TFLite fused embedding_lookup op.
+        ConvertEmbeddedLookupFunc convert_embedded_lookup(func);
+        if (failed(convert_embedded_lookup.VerifySignature())) {
+            return signalPassFailure();
+        }
+        convert_embedded_lookup.RewriteFunc();
+    } else if (attr.getValue() == mlir::TFL::kLstmCellSimple) {
+        func.eraseBody();
+        func.addEntryBlock();
+        ConvertLSTMCellSimpleToFusedLSTM convert_lstm_cell_simple(func);
+        if (failed(convert_lstm_cell_simple.RewriteFunc())) {
+            return signalPassFailure();
+        }
+    } else if (attr.getValue() == mlir::TFL::kLayerNormalizedLstmCellSimple) {
+        func.eraseBody();
+        func.addEntryBlock();
+        ConvertLayerNormalizedLSTMCellSimpleToFusedLSTM
         convert_layer_norm_lstm_cell_simple(func);
-    if (failed(convert_layer_norm_lstm_cell_simple.RewriteFunc())) {
-      return signalPassFailure();
+        if (failed(convert_layer_norm_lstm_cell_simple.RewriteFunc())) {
+            return signalPassFailure();
+        }
     }
-  }
 }
 
 LogicalResult CheckOutputConsumer(
     Operation* call_op, int expected_num_outputs,
     llvm::DenseSet<int> expected_consumer_indices) {
-  if (call_op->getNumResults() != expected_num_outputs) return failure();
+    if (call_op->getNumResults() != expected_num_outputs) return failure();
 
-  for (int i = 0; i < expected_num_outputs; ++i) {
-    auto it = expected_consumer_indices.find(i);
-    if (it == expected_consumer_indices.end()) {
-      // Unexpected consumer.
-      if (!call_op->getResult(i).use_empty()) return failure();
+    for (int i = 0; i < expected_num_outputs; ++i) {
+        auto it = expected_consumer_indices.find(i);
+        if (it == expected_consumer_indices.end()) {
+            // Unexpected consumer.
+            if (!call_op->getResult(i).use_empty()) return failure();
+        }
     }
-  }
-  return success();
+    return success();
 }
 
 LogicalResult CheckFusableKerasLstm(FuncOp lstm_func, ModuleOp module) {
-  bool check_failed = false;
-  for (auto func : module.getOps<FuncOp>()) {
-    func.walk([&](Operation* op) {
-      auto call_op = dyn_cast_or_null<CallOpInterface>(op);
-      if (call_op && op->getAttrOfType<SymbolRefAttr>("f").getRootReference() ==
-                         lstm_func.getName()) {
-        // Keras LSTM have 5 outputs.
-        // We should make sure only the first or the second output are consumed.
-        if (failed(CheckOutputConsumer(call_op, 5, {0, 1})))
-          check_failed = true;
-      }
-    });
-  }
+    bool check_failed = false;
+    for (auto func : module.getOps<FuncOp>()) {
+        func.walk([&](Operation* op) {
+            auto call_op = dyn_cast_or_null<CallOpInterface>(op);
+            if (call_op && op->getAttrOfType<SymbolRefAttr>("f").getRootReference() ==
+                    lstm_func.getName()) {
+                // Keras LSTM have 5 outputs.
+                // We should make sure only the first or the second output are consumed.
+                if (failed(CheckOutputConsumer(call_op, 5, {0, 1})))
+                    check_failed = true;
+            }
+        });
+    }
 
-  if (check_failed) return failure();
-  return success();
+    if (check_failed) return failure();
+    return success();
 }
 
 void PrepareCompositeFunctionsPass::ConvertTFAPIImplements(FuncOp func,
-                                                           StringAttr attr,
-                                                           ModuleOp module) {
-  // Keras lstm tf.api_implements usually has attribute like "lstm_abcde91...".
-  // TODO(b/147436982): we need to make sure that only the
-  // outputs(full sequence) is used, not the last_output, not the new_states.
-  // We will discard everything except the outputs.
-  // And the outputs is in the shape of [batch, time, units].
-  if (attr.getValue().startswith("lstm_")) {
-    // Check if the keras lstm can be fused, if not, we just don't do anything.
-    if (failed(CheckFusableKerasLstm(func, module))) return;
+        StringAttr attr,
+        ModuleOp module) {
+    // Keras lstm tf.api_implements usually has attribute like "lstm_abcde91...".
+    // TODO(b/147436982): we need to make sure that only the
+    // outputs(full sequence) is used, not the last_output, not the new_states.
+    // We will discard everything except the outputs.
+    // And the outputs is in the shape of [batch, time, units].
+    if (attr.getValue().startswith("lstm_")) {
+        // Check if the keras lstm can be fused, if not, we just don't do anything.
+        if (failed(CheckFusableKerasLstm(func, module))) return;
 
-    func.eraseBody();
-    func.addEntryBlock();
+        func.eraseBody();
+        func.addEntryBlock();
 
-    OpBuilder builder(func.getBody());
-    if (failed(ConvertKerasLSTMLayer(func, &builder)))
-      return signalPassFailure();
-  }
+        OpBuilder builder(func.getBody());
+        if (failed(ConvertKerasLSTMLayer(func, &builder)))
+            return signalPassFailure();
+    }
 }
 
 void PrepareCompositeFunctionsPass::runOnModule() {
-  auto module = getModule();
-  for (auto func : module.getOps<FuncOp>()) {
-    // We have two kinds of implements:
-    // 1) tf._implements.
-    // 2) tf.api_implements.
-    // We need to handle them separately.
-    auto tf_implements_attr = func.getAttrOfType<StringAttr>(kTFImplements);
-    if (tf_implements_attr) {
-      ConvertTFImplements(func, tf_implements_attr);
-    }
+    auto module = getModule();
+    for (auto func : module.getOps<FuncOp>()) {
+        // We have two kinds of implements:
+        // 1) tf._implements.
+        // 2) tf.api_implements.
+        // We need to handle them separately.
+        auto tf_implements_attr = func.getAttrOfType<StringAttr>(kTFImplements);
+        if (tf_implements_attr) {
+            ConvertTFImplements(func, tf_implements_attr);
+        }
 
-    auto tf_api_implements_attr =
-        func.getAttrOfType<StringAttr>(kTFAPIImplements);
-    if (tf_api_implements_attr) {
-      // TODO(b/147536816): Keras lstm should set up the correct attributes.
-      ConvertTFAPIImplements(func, tf_api_implements_attr, module);
+        auto tf_api_implements_attr =
+            func.getAttrOfType<StringAttr>(kTFAPIImplements);
+        if (tf_api_implements_attr) {
+            // TODO(b/147536816): Keras lstm should set up the correct attributes.
+            ConvertTFAPIImplements(func, tf_api_implements_attr, module);
+        }
     }
-  }
 }
 }  // namespace
 
 std::unique_ptr<OpPassBase<ModuleOp>> CreatePrepareCompositeFunctionsPass() {
-  return std::make_unique<PrepareCompositeFunctionsPass>();
+    return std::make_unique<PrepareCompositeFunctionsPass>();
 }
 
 static PassRegistration<PrepareCompositeFunctionsPass> pass(
