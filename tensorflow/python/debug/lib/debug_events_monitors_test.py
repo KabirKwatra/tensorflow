@@ -49,20 +49,17 @@ class TestMonitor(debug_events_monitors.BaseMonitor):
             raise ValueError("Duplicate execution index: %d" % execution_index)
         self.executions[execution_index] = execution
 
-    def on_graph_execution_trace(
-        self, graph_execution_trace_index, graph_execution_trace
-    ):
+    def on_graph_execution_trace(self, graph_execution_trace_index,
+                                 graph_execution_trace):
         if graph_execution_trace_index in self.graph_execution_traces:
-            raise ValueError(
-                "Duplicate graph-execution-trace index: %d"
-                % graph_execution_trace_index
-            )
-        self.graph_execution_traces[graph_execution_trace_index] = graph_execution_trace
+            raise ValueError("Duplicate graph-execution-trace index: %d" %
+                             graph_execution_trace_index)
+        self.graph_execution_traces[
+            graph_execution_trace_index] = graph_execution_trace
 
 
-class DebugEventsMonitorTest(
-    dumping_callback_test_lib.DumpingCallbackTestBase, parameterized.TestCase
-):
+class DebugEventsMonitorTest(dumping_callback_test_lib.DumpingCallbackTestBase,
+                             parameterized.TestCase):
     @parameterized.named_parameters(
         ("NoTensor", "NO_TENSOR"),
         ("ConciseHealth", "CONCISE_HEALTH"),
@@ -71,8 +68,7 @@ class DebugEventsMonitorTest(
     )
     def testOnExecutionIsCalled(self, tensor_debug_mode):
         writer = dumping_callback.enable_dump_debug_info(
-            self.dump_root, tensor_debug_mode=tensor_debug_mode
-        )
+            self.dump_root, tensor_debug_mode=tensor_debug_mode)
         x = constant_op.constant([[1, 2], [3, 4]], dtype=dtypes.float32)
         y = constant_op.constant([[-1], [1]], dtype=dtypes.float32)
         math_ops.matmul(x, y)
@@ -108,8 +104,8 @@ class DebugEventsMonitorTest(
                 # Full tensor values are not stored in the debug_tensor_values field.
                 self.assertIsNone(execution.debug_tensor_values)
                 self.assertAllClose(
-                    reader.execution_to_tensor_values(execution), [[[1.0], [1.0]]]
-                )
+                    reader.execution_to_tensor_values(execution),
+                    [[[1.0], [1.0]]])
 
     @parameterized.named_parameters(
         ("ConciseHealth", "CONCISE_HEALTH"),
@@ -118,8 +114,7 @@ class DebugEventsMonitorTest(
     )
     def testOnGraphExecutionTraceIsCalled(self, tensor_debug_mode):
         writer = dumping_callback.enable_dump_debug_info(
-            self.dump_root, tensor_debug_mode=tensor_debug_mode
-        )
+            self.dump_root, tensor_debug_mode=tensor_debug_mode)
 
         @def_function.function
         def unique_sum(xs):
@@ -127,7 +122,8 @@ class DebugEventsMonitorTest(
             unique_xs, indices = array_ops.unique(xs)
             return math_ops.reduce_sum(unique_xs), indices
 
-        xs = constant_op.constant([2.0, 6.0, 8.0, 1.0, 2.0], dtype=dtypes.float32)
+        xs = constant_op.constant([2.0, 6.0, 8.0, 1.0, 2.0],
+                                  dtype=dtypes.float32)
         unique_sum(xs)
         writer.FlushNonExecutionFiles()
         writer.FlushExecutionFiles()
@@ -203,8 +199,8 @@ class DebugEventsMonitorTest(
                 self.assertEqual(traces[3].output_slot, 0)
                 self.assertIsNone(traces[3].debug_tensor_value)
                 self.assertAllClose(
-                    reader.graph_execution_trace_to_tensor_value(traces[3]), 17.0
-                )
+                    reader.graph_execution_trace_to_tensor_value(traces[3]),
+                    17.0)
 
 
 class AlertDataObjectsTest(test_util.TensorFlowTestCase):
@@ -243,8 +239,7 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         mock_reader = test.mock.MagicMock()
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         execution_digest = debug_events_reader.ExecutionDigest(
-            1234, 1, "FooOp", output_tensor_device_ids=[0, 1]
-        )
+            1234, 1, "FooOp", output_tensor_device_ids=[0, 1])
         execution = debug_events_reader.Execution(
             execution_digest,
             "worker01",
@@ -289,14 +284,12 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             ],
         ),
     )
-    def testInfNanMonitorOnExecutionUnderHealthMode(
-        self, tensor_debug_mode, debug_tensor_values
-    ):
+    def testInfNanMonitorOnExecutionUnderHealthMode(self, tensor_debug_mode,
+                                                    debug_tensor_values):
         mock_reader = test.mock.MagicMock()
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         execution_digest = debug_events_reader.ExecutionDigest(
-            1234, 1, "BarOp", output_tensor_device_ids=[0, 1]
-        )
+            1234, 1, "BarOp", output_tensor_device_ids=[0, 1])
 
         execution = debug_events_reader.Execution(
             execution_digest,
@@ -327,17 +320,15 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             "Shape",
             debug_event_pb2.TensorDebugMode.SHAPE,
             # [tensor_id, dtype, rank, element_cont, ...shape_truncate_6]
-            [[-1, 1, 2, 6, 3, 2, 0, 0, 0, 0], [-1, 10, 1, 7, 7, 0, 0, 0, 0, 0]],
-        ),
-    )
+            [[-1, 1, 2, 6, 3, 2, 0, 0, 0, 0], [-1, 10, 1, 7, 7, 0, 0, 0, 0, 0]
+             ],
+        ), )
     def testInfNanMonitorOnExecutionUnderModeWithNoInfNanInfo(
-        self, tensor_debug_mode, debug_tensor_values
-    ):
+            self, tensor_debug_mode, debug_tensor_values):
         mock_reader = test.mock.MagicMock()
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         execution_digest = debug_events_reader.ExecutionDigest(
-            1234, 1, "BarOp", output_tensor_device_ids=[0, 1]
-        )
+            1234, 1, "BarOp", output_tensor_device_ids=[0, 1])
 
         execution = debug_events_reader.Execution(
             execution_digest,
@@ -364,18 +355,19 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             0,
             2,
         ),
-        ("Floats1DWithoutInfOrNan", [0, -1e6, 1e6, 9e5], np.float32, 4, 0, 0, 0),
+        ("Floats1DWithoutInfOrNan", [0, -1e6, 1e6, 9e5
+                                     ], np.float32, 4, 0, 0, 0),
         ("Integers", [[0, 1000, -200, -300]], np.int32, 4, 0, 0, 0),
         ("Booleans", [False, True, False, False], np.int32, 4, 0, 0, 0),
     )
     def testInfNanMonitorOnExecutionUnderFullTensorModeWorks(
-        self,
-        tensor_value,
-        dtype,
-        expected_size,
-        expected_num_neg_inf,
-        expected_num_pos_inf,
-        expected_num_nan,
+            self,
+            tensor_value,
+            dtype,
+            expected_size,
+            expected_num_neg_inf,
+            expected_num_pos_inf,
+            expected_num_nan,
     ):
         mock_reader = test.mock.MagicMock()
         mock_reader.execution_to_tensor_values.return_value = [
@@ -384,8 +376,10 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         ]
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         execution_digest = debug_events_reader.ExecutionDigest(
-            1234, 1, "__inference_bar_function_1234", output_tensor_device_ids=[0, 1]
-        )
+            1234,
+            1,
+            "__inference_bar_function_1234",
+            output_tensor_device_ids=[0, 1])
         execution = debug_events_reader.Execution(
             execution_digest,
             "worker01",
@@ -416,8 +410,7 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         mock_reader = test.mock.MagicMock()
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         trace_digest = debug_events_reader.GraphExecutionTraceDigest(
-            1234, 1, "FooOp", "FooOp_1", 2, "g1"
-        )
+            1234, 1, "FooOp", "FooOp_1", 2, "g1")
         trace = debug_events_reader.GraphExecutionTrace(
             trace_digest,
             ["g0", "g1"],
@@ -442,8 +435,7 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         mock_reader = test.mock.MagicMock()
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         trace_digest = debug_events_reader.GraphExecutionTraceDigest(
-            1234, 1, "FooOp", "FooOp_1", 2, "g1"
-        )
+            1234, 1, "FooOp", "FooOp_1", 2, "g1")
         trace = debug_events_reader.GraphExecutionTrace(
             trace_digest,
             ["g0", "g1"],
@@ -475,30 +467,29 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             0,
             2,
         ),
-        ("Floats1DWithoutInfOrNan", [0, -1e6, 1e6, 9e5], np.float32, 4, 0, 0, 0),
+        ("Floats1DWithoutInfOrNan", [0, -1e6, 1e6, 9e5
+                                     ], np.float32, 4, 0, 0, 0),
         ("Integers", [[0, 1000, -200, -300]], np.int32, 4, 0, 0, 0),
         ("Booleans", [False, True, False, False], np.int32, 4, 0, 0, 0),
     )
     def testInfNanMonitorOnGraphExecutionTraceUnderFullTensorModeWorks(
-        self,
-        tensor_value,
-        dtype,
-        expected_size,
-        expected_num_neg_inf,
-        expected_num_pos_inf,
-        expected_num_nan,
+            self,
+            tensor_value,
+            dtype,
+            expected_size,
+            expected_num_neg_inf,
+            expected_num_pos_inf,
+            expected_num_nan,
     ):
         mock_reader = test.mock.MagicMock()
         mock_reader.graph_execution_trace_to_tensor_value.return_value = np.array(
-            tensor_value, dtype=dtype
-        )
+            tensor_value, dtype=dtype)
         monitor = debug_events_monitors.InfNanMonitor(mock_reader)
         trace_digest = debug_events_reader.GraphExecutionTraceDigest(
-            1234, 1, "BazOp", "name_scope_3/BazOp_1", 2, "g1"
-        )
+            1234, 1, "BazOp", "name_scope_3/BazOp_1", 2, "g1")
         trace = debug_events_reader.GraphExecutionTrace(
-            trace_digest, ["g0", "g1"], debug_event_pb2.TensorDebugMode.FULL_TENSOR
-        )
+            trace_digest, ["g0", "g1"],
+            debug_event_pb2.TensorDebugMode.FULL_TENSOR)
         monitor.on_graph_execution_trace(80, trace)
 
         if expected_num_neg_inf or expected_num_pos_inf or expected_num_nan:
@@ -521,8 +512,7 @@ class InfNanMonitorTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         monitor = debug_events_monitors.InfNanMonitor(mock_reader, limit=3)
         for i in range(10):
             execution_digest = debug_events_reader.ExecutionDigest(
-                i * 1000, 1, "FooOp", output_tensor_device_ids=[0, 1]
-            )
+                i * 1000, 1, "FooOp", output_tensor_device_ids=[0, 1])
             execution = debug_events_reader.Execution(
                 execution_digest,
                 "worker01",
