@@ -38,187 +38,175 @@ std::string OpenCLVersionToString(OpenCLVersion version);
 int GetAdrenoGPUVersion(const std::string& gpu_version);
 
 struct AdrenoInfo {
-    AdrenoInfo() = default;
-    explicit AdrenoInfo(const std::string& device_version);
-    int gpu_version = -1;  // can be, for example, 405/430/540/530/630 etc.
+  AdrenoInfo() = default;
+  explicit AdrenoInfo(const std::string& device_version);
+  int gpu_version = -1;  // can be, for example, 405/430/540/530/630 etc.
 
-    // This function returns some not very documented physical parameter of
-    // Adreno6xx GPU.
-    // We obtained it using Snapdragon Profiler.
-    int GetMaximumWavesCount() const;
+  // This function returns some not very documented physical parameter of
+  // Adreno6xx GPU.
+  // We obtained it using Snapdragon Profiler.
+  int GetMaximumWavesCount() const;
 
-    // returns amount of register memory per CU(Compute Unit) in bytes.
-    int GetRegisterMemorySizePerComputeUnit() const;
+  // returns amount of register memory per CU(Compute Unit) in bytes.
+  int GetRegisterMemorySizePerComputeUnit() const;
 
-    // returns maximum possible amount of waves based on register usage.
-    int GetMaximumWavesCount(int register_footprint_per_tread,
-                             bool full_wave = true) const;
+  // returns maximum possible amount of waves based on register usage.
+  int GetMaximumWavesCount(int register_footprint_per_tread,
+                           bool full_wave = true) const;
 
-    int GetWaveSize(bool full_wave) const;
+  int GetWaveSize(bool full_wave) const;
 
-    // Not supported on some Adreno devices with specific driver version.
-    // b/131099086
-    bool support_one_layer_texture_array = true;
+  // Not supported on some Adreno devices with specific driver version.
+  // b/131099086
+  bool support_one_layer_texture_array = true;
 };
 
 enum class MaliGPU {
-    T604,
-    T622,
-    T624,
-    T628,
-    T658,
-    T678,
-    T720,
-    T760,
-    T820,
-    T830,
-    T860,
-    T880,
-    G31,
-    G51,
-    G71,
-    G52,
-    G72,
-    G76,
-    G57,
-    G77,
-    UNKNOWN
+  T604,
+  T622,
+  T624,
+  T628,
+  T658,
+  T678,
+  T720,
+  T760,
+  T820,
+  T830,
+  T860,
+  T880,
+  G31,
+  G51,
+  G71,
+  G52,
+  G72,
+  G76,
+  G57,
+  G77,
+  UNKNOWN
 };
 
 struct MaliInfo {
-    MaliInfo() = default;
-    explicit MaliInfo(const std::string& device_name);
-    MaliGPU gpu_version;
+  MaliInfo() = default;
+  explicit MaliInfo(const std::string& device_name);
+  MaliGPU gpu_version;
 
-    bool IsMaliT6xx() const;
-    bool IsMaliT7xx() const;
-    bool IsMaliT8xx() const;
-    bool IsMidgard() const;
-    bool IsBifrost() const;
-    bool IsValhall() const;
+  bool IsMaliT6xx() const;
+  bool IsMaliT7xx() const;
+  bool IsMaliT8xx() const;
+  bool IsMidgard() const;
+  bool IsBifrost() const;
+  bool IsValhall() const;
 };
 
 struct DeviceInfo {
-    DeviceInfo() = default;
-    explicit DeviceInfo(cl_device_id id);
+  DeviceInfo() = default;
+  explicit DeviceInfo(cl_device_id id);
 
-    bool SupportsTextureArray() const;
-    bool SupportsImageBuffer() const;
-    bool SupportsImage3D() const;
+  bool SupportsTextureArray() const;
+  bool SupportsImageBuffer() const;
+  bool SupportsImage3D() const;
 
-    std::vector<std::string> extensions;
-    bool supports_fp16;
-    bool supports_image3d_writes;
-    Vendor vendor;
-    OpenCLVersion cl_version;
-    int compute_units_count;
-    uint64_t buffer_max_size;
-    uint64_t image2d_max_width;
-    uint64_t image2d_max_height;
-    uint64_t image_buffer_max_size;
-    uint64_t image_array_max_layers;
-    uint64_t image3d_max_width;
-    uint64_t image3d_max_height;
-    uint64_t image3d_max_depth;
-    int3 max_work_group_sizes;
+  std::vector<std::string> extensions;
+  bool supports_fp16;
+  bool supports_image3d_writes;
+  Vendor vendor;
+  OpenCLVersion cl_version;
+  int compute_units_count;
+  uint64_t buffer_max_size;
+  uint64_t image2d_max_width;
+  uint64_t image2d_max_height;
+  uint64_t image_buffer_max_size;
+  uint64_t image_array_max_layers;
+  uint64_t image3d_max_width;
+  uint64_t image3d_max_height;
+  uint64_t image3d_max_depth;
+  int3 max_work_group_sizes;
 
-    cl_device_fp_config f32_config;
-    // valid only with cl_khr_fp16
-    cl_device_fp_config f16_config;
+  cl_device_fp_config f32_config;
+  // valid only with cl_khr_fp16
+  cl_device_fp_config f16_config;
 
-    // rtn is ROUND_TO_NEAREST
-    // with rtn precision is much better then with rtz (ROUND_TO_ZERO)
-    // Adreno 3xx supports only rtz, Adreno 4xx and more support rtn
-    // Mali from T6xx supports rtn
-    // PowerVR supports only rtz
-    bool supports_fp32_rtn;
-    bool supports_fp16_rtn;
+  // rtn is ROUND_TO_NEAREST
+  // with rtn precision is much better then with rtz (ROUND_TO_ZERO)
+  // Adreno 3xx supports only rtz, Adreno 4xx and more support rtn
+  // Mali from T6xx supports rtn
+  // PowerVR supports only rtz
+  bool supports_fp32_rtn;
+  bool supports_fp16_rtn;
 
-    AdrenoInfo adreno_info;
-    MaliInfo mali_info;
+  AdrenoInfo adreno_info;
+  MaliInfo mali_info;
 };
 
 // A wrapper around opencl device id
 class CLDevice {
-public:
-    CLDevice() = default;
-    CLDevice(cl_device_id id, cl_platform_id platform_id);
+ public:
+  CLDevice() = default;
+  CLDevice(cl_device_id id, cl_platform_id platform_id);
 
-    CLDevice(CLDevice&& device);
-    CLDevice& operator=(CLDevice&& device);
-    CLDevice(const CLDevice&);
-    CLDevice& operator=(const CLDevice&);
+  CLDevice(CLDevice&& device);
+  CLDevice& operator=(CLDevice&& device);
+  CLDevice(const CLDevice&);
+  CLDevice& operator=(const CLDevice&);
 
-    ~CLDevice() {}
+  ~CLDevice() {}
 
-    cl_device_id id() const {
-        return id_;
-    }
-    cl_platform_id platform() const {
-        return platform_id_;
-    }
-    std::string GetPlatformVersion() const;
+  cl_device_id id() const { return id_; }
+  cl_platform_id platform() const { return platform_id_; }
+  std::string GetPlatformVersion() const;
 
-    const DeviceInfo& GetInfo() const {
-        return info_;
-    }
-    const DeviceInfo* GetInfoPtr() const {
-        return &info_;
-    }
+  const DeviceInfo& GetInfo() const { return info_; }
+  const DeviceInfo* GetInfoPtr() const { return &info_; }
 
-    Vendor vendor() const {
-        return info_.vendor;
-    }
-    OpenCLVersion cl_version() const {
-        return info_.cl_version;
-    }
-    bool SupportsFP16() const;
-    bool SupportsTextureArray() const;
-    bool SupportsImageBuffer() const;
-    bool SupportsImage3D() const;
-    bool SupportsExtension(const std::string& extension) const;
-    bool SupportsFP32RTN() const;
-    bool SupportsFP16RTN() const;
-    bool IsAdreno() const;
-    bool IsAdreno3xx() const;
-    bool IsAdreno4xx() const;
-    bool IsAdreno5xx() const;
-    bool IsAdreno6xx() const;
-    bool IsAdreno6xxOrHigher() const;
-    bool IsPowerVR() const;
-    bool IsNvidia() const;
-    bool IsMali() const;
-    bool IsAMD() const;
+  Vendor vendor() const { return info_.vendor; }
+  OpenCLVersion cl_version() const { return info_.cl_version; }
+  bool SupportsFP16() const;
+  bool SupportsTextureArray() const;
+  bool SupportsImageBuffer() const;
+  bool SupportsImage3D() const;
+  bool SupportsExtension(const std::string& extension) const;
+  bool SupportsFP32RTN() const;
+  bool SupportsFP16RTN() const;
+  bool IsAdreno() const;
+  bool IsAdreno3xx() const;
+  bool IsAdreno4xx() const;
+  bool IsAdreno5xx() const;
+  bool IsAdreno6xx() const;
+  bool IsAdreno6xxOrHigher() const;
+  bool IsPowerVR() const;
+  bool IsNvidia() const;
+  bool IsMali() const;
+  bool IsAMD() const;
 
-    // To track bug on some Adreno. b/131099086
-    bool SupportsOneLayerTextureArray() const;
-    void DisableOneLayerTextureArray();
+  // To track bug on some Adreno. b/131099086
+  bool SupportsOneLayerTextureArray() const;
+  void DisableOneLayerTextureArray();
 
-private:
-    cl_device_id id_ = nullptr;
-    cl_platform_id platform_id_ = nullptr;
-    DeviceInfo info_;
+ private:
+  cl_device_id id_ = nullptr;
+  cl_platform_id platform_id_ = nullptr;
+  DeviceInfo info_;
 };
 
 Status CreateDefaultGPUDevice(CLDevice* result);
 
 template <typename T>
 T GetDeviceInfo(cl_device_id id, cl_device_info info) {
-    T result;
-    cl_int error = clGetDeviceInfo(id, info, sizeof(T), &result, nullptr);
-    if (error != CL_SUCCESS) {
-        return -1;
-    }
-    return result;
+  T result;
+  cl_int error = clGetDeviceInfo(id, info, sizeof(T), &result, nullptr);
+  if (error != CL_SUCCESS) {
+    return -1;
+  }
+  return result;
 }
 
 template <typename T>
 Status GetDeviceInfo(cl_device_id id, cl_device_info info, T* result) {
-    cl_int error = clGetDeviceInfo(id, info, sizeof(T), result, nullptr);
-    if (error != CL_SUCCESS) {
-        return InvalidArgumentError(CLErrorCodeToString(error));
-    }
-    return OkStatus();
+  cl_int error = clGetDeviceInfo(id, info, sizeof(T), result, nullptr);
+  if (error != CL_SUCCESS) {
+    return InvalidArgumentError(CLErrorCodeToString(error));
+  }
+  return OkStatus();
 }
 
 }  // namespace cl
