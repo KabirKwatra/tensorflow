@@ -18,17 +18,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.platform import test
-from tensorflow.python.platform import resource_loader
-from tensorflow.python.framework import test_util
-from tensorflow.lite.python.testdata import _pywrap_test_registerer as test_registerer
-from tensorflow.lite.python import interpreter as interpreter_wrapper
 import ctypes
 import io
 import sys
 
 import numpy as np
 import six
+
+from tensorflow.lite.python import interpreter as interpreter_wrapper
+from tensorflow.lite.python.testdata import _pywrap_test_registerer as test_registerer
+from tensorflow.python.framework import test_util
+from tensorflow.python.platform import resource_loader
+from tensorflow.python.platform import test
 
 # Force loaded shared object symbols to be globally visible. This is needed so
 # that the interpreter_wrapper, in one .so file, can see the test_registerer,
