@@ -38,9 +38,9 @@ Status BackwardsConstAnalysis(
     const Graph& g, std::vector<bool>* compile_time_const_arg_indices,
     std::vector<bool>* compile_time_const_nodes,
     FunctionLibraryRuntime* flib_runtime,
-std::function<bool(const Edge&)> edge_filter = [](const Edge& e) {
-    return true;
-});
+    std::function<bool(const Edge&)> edge_filter = [](const Edge& e) {
+      return true;
+    });
 
 // Given an op kernel and function library runtime, return all the indices of
 // inputs that need to be compile time constant.
