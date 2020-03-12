@@ -69,9 +69,8 @@ def make_space_to_batch_nd_tests(options):
     def build_graph(parameters):
         """Build a space_to_batch graph given `parameters`."""
         input_tensor = tf.compat.v1.placeholder(
-            dtype=parameters["dtype"],
-            name="input",
-            shape=parameters["input_shape"])
+            dtype=parameters["dtype"], name="input", shape=parameters["input_shape"]
+        )
         input_tensors = [input_tensor]
 
         # Get block_shape either as a const or as a placeholder (tensor).
@@ -80,7 +79,8 @@ def make_space_to_batch_nd_tests(options):
         else:
             shape = [len(parameters["block_shape"])]
             block_shape = tf.compat.v1.placeholder(
-                dtype=tf.int32, name="shape", shape=shape)
+                dtype=tf.int32, name="shape", shape=shape
+            )
             input_tensors.append(block_shape)
 
         # Get paddings either as a const or as a placeholder (tensor).
@@ -89,16 +89,15 @@ def make_space_to_batch_nd_tests(options):
         else:
             shape = [len(parameters["paddings"]), 2]
             paddings = tf.compat.v1.placeholder(
-                dtype=tf.int32, name="paddings", shape=shape)
+                dtype=tf.int32, name="paddings", shape=shape
+            )
             input_tensors.append(paddings)
 
         out = tf.space_to_batch_nd(input_tensor, block_shape, paddings)
         return input_tensors, [out]
 
     def build_inputs(parameters, sess, inputs, outputs):
-        values = [
-            create_tensor_data(parameters["dtype"], parameters["input_shape"])
-        ]
+        values = [create_tensor_data(parameters["dtype"], parameters["input_shape"])]
         if not parameters["constant_block_shape"]:
             values.append(np.array(parameters["block_shape"]))
         if not parameters["constant_paddings"]:
@@ -106,8 +105,5 @@ def make_space_to_batch_nd_tests(options):
         return values, sess.run(outputs, feed_dict=dict(zip(inputs, values)))
 
     make_zip_of_tests(
-        options,
-        test_parameters,
-        build_graph,
-        build_inputs,
-        expected_tf_failures=56)
+        options, test_parameters, build_graph, build_inputs, expected_tf_failures=56
+    )
