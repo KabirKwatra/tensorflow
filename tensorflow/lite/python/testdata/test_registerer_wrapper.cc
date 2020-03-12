@@ -14,21 +14,21 @@ limitations under the License.
 #include "tensorflow/lite/python/testdata/test_registerer.h"
 
 PYBIND11_MODULE(_pywrap_test_registerer, m) {
-    m.doc() = R"pbdoc(
+  m.doc() = R"pbdoc(
     _pywrap_test_registerer
     -----
   )pbdoc";
-    m.def("get_num_test_registerer_calls", &tflite::get_num_test_registerer_calls,
-          R"pbdoc(
+  m.def("get_num_test_registerer_calls", &tflite::get_num_test_registerer_calls,
+        R"pbdoc(
           Returns the num_test_registerer_calls counter and re-sets it.
         )pbdoc");
-    m.def(
-        "TF_TestRegisterer",
-    [](uintptr_t resolver) {
+  m.def(
+      "TF_TestRegisterer",
+      [](uintptr_t resolver) {
         tflite::TF_TestRegisterer(
             reinterpret_cast<tflite::MutableOpResolver*>(resolver));
-    },
-    R"pbdoc(
+      },
+      R"pbdoc(
         Dummy registerer function with the correct signature. Registers a fake
         custom op needed by test models. Increments the
         num_test_registerer_calls counter by one.
