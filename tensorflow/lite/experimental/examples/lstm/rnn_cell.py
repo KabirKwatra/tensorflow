@@ -20,6 +20,7 @@ TODO(renjieliu): Find a better home for this one.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import itertools
 
 from tensorflow.lite.python.op_hint import OpHint

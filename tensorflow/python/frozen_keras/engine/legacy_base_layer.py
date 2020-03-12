@@ -33,9 +33,9 @@ import weakref
 
 import numpy as np
 import six
+from google.protobuf import json_format
 from six.moves import zip  # pylint: disable=redefined-builtin
 
-from google.protobuf import json_format
 from tensorflow.core.framework import node_def_pb2
 from tensorflow.python.autograph.core import ag_ctx
 from tensorflow.python.autograph.impl import api as autograph
@@ -61,8 +61,6 @@ from tensorflow.python.frozen_keras.engine import node as node_module
 from tensorflow.python.frozen_keras.utils import generic_utils
 from tensorflow.python.frozen_keras.utils import layer_utils
 from tensorflow.python.frozen_keras.utils import tf_utils
-
-# A module that only depends on `keras.layers` import these from here.
 from tensorflow.python.frozen_keras.utils.generic_utils import (
     to_snake_case,
 )  # pylint: disable=unused-import
@@ -85,6 +83,7 @@ from tensorflow.python.util import nest
 from tensorflow.python.util import object_identity
 from tensorflow.python.util import tf_inspect
 from tensorflow.tools.docs import doc_controls
+# A module that only depends on `keras.layers` import these from here.
 
 # Prefix that is added to the TF op layer names.
 _TF_OP_LAYER_NAME_PREFIX = "tf_op_layer_"
