@@ -29,34 +29,34 @@ _sparsification_wrapper = LazyLoader(
 
 
 class Sparsifier(object):
-  """Convert a model from dense to sparse format.
+    """Convert a model from dense to sparse format.
 
-  This is an internal class, not a public interface.
-  """
-
-  def __init__(self, model_content):
-    """Constructor.
-
-    Args:
-      model_content: Content of a TFLite Flatbuffer file.
-
-    Raises:
-      ValueError: If unable to open the model.
+    This is an internal class, not a public interface.
     """
-    if not model_content:
-      raise ValueError("`model_content` must be specified.")
-    try:
-      self._sparsifier = (
-          _sparsification_wrapper.SparsificationWrapper(model_content))
-    except Exception as e:
-      raise ValueError("Failed to parse the model: %s." % e)
-    if not self._sparsifier:
-      raise ValueError("Failed to parse the model.")
 
-  def sparsify(self):
-    """Convert the model to sparse format.
+    def __init__(self, model_content):
+        """Constructor.
 
-    Returns:
-      A sparse model.
-    """
-    return self._sparsifier.SparsifyModel()
+        Args:
+          model_content: Content of a TFLite Flatbuffer file.
+
+        Raises:
+          ValueError: If unable to open the model.
+        """
+        if not model_content:
+            raise ValueError("`model_content` must be specified.")
+        try:
+            self._sparsifier = (
+                _sparsification_wrapper.SparsificationWrapper(model_content))
+        except Exception as e:
+            raise ValueError("Failed to parse the model: %s." % e)
+        if not self._sparsifier:
+            raise ValueError("Failed to parse the model.")
+
+    def sparsify(self):
+        """Convert the model to sparse format.
+
+        Returns:
+          A sparse model.
+        """
+        return self._sparsifier.SparsifyModel()
