@@ -46,9 +46,13 @@ class TfLiteRNNCell(rnn_cell_impl.LayerRNNCell):
     variables in the desired for the tflite ops.
     """
 
-    def __init__(
-        self, num_units, activation=None, reuse=None, name=None, dtype=None, **kwargs
-    ):
+    def __init__(self,
+                 num_units,
+                 activation=None,
+                 reuse=None,
+                 name=None,
+                 dtype=None,
+                 **kwargs):
         """Initializes the parameters for an RNN cell.
 
         Args:
@@ -68,9 +72,10 @@ class TfLiteRNNCell(rnn_cell_impl.LayerRNNCell):
         Raises:
           ValueError: If the existing scope already has the given variables.
         """
-        super(TfLiteRNNCell, self).__init__(
-            _reuse=reuse, name=name, dtype=dtype, **kwargs
-        )
+        super(TfLiteRNNCell, self).__init__(_reuse=reuse,
+                                            name=name,
+                                            dtype=dtype,
+                                            **kwargs)
 
         # Inputs must be Rank-2.
         self.input_spec = base_layer.InputSpec(ndim=2)
@@ -101,21 +106,21 @@ class TfLiteRNNCell(rnn_cell_impl.LayerRNNCell):
         """
         if inputs_shape[-1] is None:
             raise ValueError(
-                "Expected inputs.shape[-1] to be known, saw shape: %s" % (inputs_shape,)
-            )
+                "Expected inputs.shape[-1] to be known, saw shape: %s" %
+                (inputs_shape, ))
 
         input_depth = inputs_shape[-1]
 
         def add_variable_wrapped(name, shape, initializer, index):
             var = self.add_weight(name, shape=shape, initializer=initializer)
-            return self._tflite_wrapper.add_input(var, name=name, index_override=index)
+            return self._tflite_wrapper.add_input(var,
+                                                  name=name,
+                                                  index_override=index)
 
         self._input_weights = add_variable_wrapped(
-            "input_weights", [self._num_units, input_depth], None, 1
-        )
+            "input_weights", [self._num_units, input_depth], None, 1)
         self._recurrent_weights = add_variable_wrapped(
-            "recurrent_weights", [self._num_units, self._num_units], None, 2
-        )
+            "recurrent_weights", [self._num_units, self._num_units], None, 2)
         self._bias = add_variable_wrapped(
             "bias",
             shape=[self._num_units],
@@ -127,9 +132,11 @@ class TfLiteRNNCell(rnn_cell_impl.LayerRNNCell):
 
     def call(self, inputs, state):
         """Most basic RNN: output = new_state = act(W * input + U * state + B)."""
-        inputs = self._tflite_wrapper.add_input(
-            inputs, tag="input", name="input", aggregate="stack", index_override=0
-        )
+        inputs = self._tflite_wrapper.add_input(inputs,
+                                                tag="input",
+                                                name="input",
+                                                aggregate="stack",
+                                                index_override=0)
         state = self._tflite_wrapper.add_input(
             state,
             tag="hidden_state",
@@ -138,14 +145,17 @@ class TfLiteRNNCell(rnn_cell_impl.LayerRNNCell):
             index_override=4,
         )
         weights = array_ops.transpose(
-            array_ops.concat([self._input_weights, self._recurrent_weights], 1)
-        )
-        gate_inputs = math_ops.matmul(array_ops.concat([inputs, state], 1), weights)
+            array_ops.concat([self._input_weights, self._recurrent_weights],
+                             1))
+        gate_inputs = math_ops.matmul(array_ops.concat([inputs, state], 1),
+                                      weights)
         gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
         output = self._activation(gate_inputs)
-        output = self._tflite_wrapper.add_output(
-            output, tag="output", name="output", index_override=1, aggregate="stack"
-        )
+        output = self._tflite_wrapper.add_output(output,
+                                                 tag="output",
+                                                 name="output",
+                                                 index_override=1,
+                                                 aggregate="stack")
         return output, output
 
     def get_config(self):
@@ -155,7 +165,8 @@ class TfLiteRNNCell(rnn_cell_impl.LayerRNNCell):
             "reuse": self._reuse,
         }
         base_config = super(TfLiteRNNCell, self).get_config()
-        return dict(itertools.chain(list(base_config.items()), list(config.items())))
+        return dict(
+            itertools.chain(list(base_config.items()), list(config.items())))
 
 
 @tf_export(v1=["lite.experimental.nn.TFLiteLSTMCell"])
@@ -190,21 +201,21 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
     """
 
     def __init__(
-        self,
-        num_units,
-        use_peepholes=False,
-        cell_clip=None,
-        initializer=None,
-        num_proj=None,
-        proj_clip=None,
-        num_unit_shards=None,
-        num_proj_shards=None,
-        forget_bias=1.0,
-        state_is_tuple=True,
-        activation=None,
-        reuse=None,
-        name=None,
-        dtype=None,
+            self,
+            num_units,
+            use_peepholes=False,
+            cell_clip=None,
+            initializer=None,
+            num_proj=None,
+            proj_clip=None,
+            num_unit_shards=None,
+            num_proj_shards=None,
+            forget_bias=1.0,
+            state_is_tuple=True,
+            activation=None,
+            reuse=None,
+            name=None,
+            dtype=None,
     ):
         """Initialize the parameters for an LSTM cell.
 
@@ -242,7 +253,9 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
             restoring from CudnnLSTM-trained checkpoints, use
             `CudnnCompatibleLSTMCell` instead.
         """
-        super(TFLiteLSTMCell, self).__init__(_reuse=reuse, name=name, dtype=dtype)
+        super(TFLiteLSTMCell, self).__init__(_reuse=reuse,
+                                             name=name,
+                                             dtype=dtype)
         # TODO(raziel): decide if we want to just support tuples (yes please!).
         if not state_is_tuple:
             logging.warn(
@@ -277,11 +290,9 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
         self._activation = activation or math_ops.tanh
 
         self._output_size = num_proj if num_proj else num_units
-        self._state_size = (
-            rnn_cell_impl.LSTMStateTuple(num_units, self._output_size)
-            if state_is_tuple
-            else num_units + self._output_size
-        )
+        self._state_size = (rnn_cell_impl.LSTMStateTuple(
+            num_units, self._output_size) if state_is_tuple else num_units +
+                            self._output_size)
 
     @property
     def state_size(self):
@@ -303,30 +314,29 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
         """
         if len(inputs_shape) != 2:
             raise ValueError(
-                "inputs_shape must be 2-dimensional, saw shape: %s" % inputs_shape
-            )
-        input_depth = (
-            inputs_shape[1]
-            if isinstance(inputs_shape[1], int)
-            else inputs_shape[1].value
-        )
+                "inputs_shape must be 2-dimensional, saw shape: %s" %
+                inputs_shape)
+        input_depth = (inputs_shape[1] if isinstance(inputs_shape[1], int) else
+                       inputs_shape[1].value)
         if input_depth is None:
-            raise ValueError("Invalid inputs_shape, saw shape: %s" % inputs_shape)
+            raise ValueError("Invalid inputs_shape, saw shape: %s" %
+                             inputs_shape)
 
-        maybe_partitioner = (
-            partitioned_variables.fixed_size_partitioner(self._num_unit_shards)
-            if self._num_unit_shards is not None
-            else None
-        )
+        maybe_partitioner = (partitioned_variables.fixed_size_partitioner(
+            self._num_unit_shards)
+                             if self._num_unit_shards is not None else None)
         input_weight_shape = [self._num_units, input_depth]
         cell_weight_shape = [self._num_units, self._output_size]
         bias_shape = [self._num_units]
 
         def add_variable_wrapped(name, shape, initializer, index, partitioner):
-            var = self.add_weight(
-                name, shape=shape, initializer=initializer, partitioner=partitioner
-            )
-            return self._tflite_wrapper.add_input(var, name=name, index_override=index)
+            var = self.add_weight(name,
+                                  shape=shape,
+                                  initializer=initializer,
+                                  partitioner=partitioner)
+            return self._tflite_wrapper.add_input(var,
+                                                  name=name,
+                                                  index_override=index)
 
         weight_initializer = self._initializer
         if self.dtype is None:
@@ -334,7 +344,8 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
         else:
             bias_initializer = init_ops.zeros_initializer(dtype=self.dtype)
 
-        forget_bias_initializer = init_ops.constant_initializer(self._forget_bias)
+        forget_bias_initializer = init_ops.constant_initializer(
+            self._forget_bias)
 
         self.input_to_input_w = add_variable_wrapped(
             "input_to_input_w",
@@ -393,39 +404,41 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
             maybe_partitioner,
         )
 
-        self.input_bias = add_variable_wrapped(
-            "input_bias", bias_shape, bias_initializer, 12, maybe_partitioner
-        )
-        self.forget_bias = add_variable_wrapped(
-            "forget_bias", bias_shape, forget_bias_initializer, 13, maybe_partitioner
-        )
-        self.cell_bias = add_variable_wrapped(
-            "cell_bias", bias_shape, bias_initializer, 14, maybe_partitioner
-        )
-        self.output_bias = add_variable_wrapped(
-            "output_bias", bias_shape, bias_initializer, 15, maybe_partitioner
-        )
+        self.input_bias = add_variable_wrapped("input_bias", bias_shape,
+                                               bias_initializer, 12,
+                                               maybe_partitioner)
+        self.forget_bias = add_variable_wrapped("forget_bias", bias_shape,
+                                                forget_bias_initializer, 13,
+                                                maybe_partitioner)
+        self.cell_bias = add_variable_wrapped("cell_bias", bias_shape,
+                                              bias_initializer, 14,
+                                              maybe_partitioner)
+        self.output_bias = add_variable_wrapped("output_bias", bias_shape,
+                                                bias_initializer, 15,
+                                                maybe_partitioner)
 
         # index 9, 10, 11.
         # f stands for forget, i stands for input and o stands for output.
         if self._use_peepholes:
-            self._w_f_diag = add_variable_wrapped(
-                "w_f_diag", [self._num_units], self._initializer, 10, maybe_partitioner
-            )
-            self._w_i_diag = add_variable_wrapped(
-                "w_i_diag", [self._num_units], self._initializer, 9, maybe_partitioner
-            )
-            self._w_o_diag = add_variable_wrapped(
-                "w_o_diag", [self._num_units], self._initializer, 11, maybe_partitioner
-            )
+            self._w_f_diag = add_variable_wrapped("w_f_diag",
+                                                  [self._num_units],
+                                                  self._initializer, 10,
+                                                  maybe_partitioner)
+            self._w_i_diag = add_variable_wrapped("w_i_diag",
+                                                  [self._num_units],
+                                                  self._initializer, 9,
+                                                  maybe_partitioner)
+            self._w_o_diag = add_variable_wrapped("w_o_diag",
+                                                  [self._num_units],
+                                                  self._initializer, 11,
+                                                  maybe_partitioner)
 
         # index 16 for proj kernel.
         if self._num_proj is not None:
             maybe_proj_partitioner = (
-                partitioned_variables.fixed_size_partitioner(self._num_proj_shards)
-                if self._num_proj_shards is not None
-                else None
-            )
+                partitioned_variables.fixed_size_partitioner(
+                    self._num_proj_shards)
+                if self._num_proj_shards is not None else None)
             self._proj_kernel = add_variable_wrapped(
                 "projection/kernel",
                 [self._num_proj, self._num_units],
@@ -460,9 +473,11 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
           ValueError: If input size cannot be inferred from inputs via
             static shape inference.
         """
-        inputs = self._tflite_wrapper.add_input(
-            inputs, tag="input", name="input", aggregate="stack", index_override=0
-        )
+        inputs = self._tflite_wrapper.add_input(inputs,
+                                                tag="input",
+                                                name="input",
+                                                aggregate="stack",
+                                                index_override=0)
 
         # Make sure inputs and bias_initializer has the same type.
         assert inputs.dtype == self.input_to_input_w.dtype
@@ -474,20 +489,26 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
             (c_prev, m_prev) = state
         else:
             c_prev = array_ops.slice(state, [0, 0], [-1, self._num_units])
-            m_prev = array_ops.slice(state, [0, self._num_units], [-1, num_proj])
+            m_prev = array_ops.slice(state, [0, self._num_units],
+                                     [-1, num_proj])
 
         # Note: For TfLite, cell_state is at index 19 while activation state at
         # index 18.
-        c_prev = self._tflite_wrapper.add_input(
-            c_prev, tag="c_prev", name="c_prev", aggregate="first", index_override=19
-        )
-        m_prev = self._tflite_wrapper.add_input(
-            m_prev, tag="m_prev", name="m_prev", aggregate="first", index_override=18
-        )
+        c_prev = self._tflite_wrapper.add_input(c_prev,
+                                                tag="c_prev",
+                                                name="c_prev",
+                                                aggregate="first",
+                                                index_override=19)
+        m_prev = self._tflite_wrapper.add_input(m_prev,
+                                                tag="m_prev",
+                                                name="m_prev",
+                                                aggregate="first",
+                                                index_override=18)
 
         input_size = inputs.shape.with_rank(2).dims[1]
         if input_size.value is None:
-            raise ValueError("Could not infer input size from inputs.shape[-1]")
+            raise ValueError(
+                "Could not infer input size from inputs.shape[-1]")
 
         inputs_and_m_prev = array_ops.concat([inputs, m_prev], axis=1)
 
@@ -500,7 +521,8 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
         i = nn_ops.bias_add(
             math_ops.matmul(
                 inputs_and_m_prev,
-                array_ops.concat([self.input_to_input_w, self.cell_to_input_w], axis=1),
+                array_ops.concat([self.input_to_input_w, self.cell_to_input_w],
+                                 axis=1),
                 transpose_b=True,
             ),
             self.input_bias,
@@ -509,8 +531,7 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
             math_ops.matmul(
                 inputs_and_m_prev,
                 array_ops.concat(
-                    [self.input_to_forget_w, self.cell_to_forget_w], axis=1
-                ),
+                    [self.input_to_forget_w, self.cell_to_forget_w], axis=1),
                 transpose_b=True,
             ),
             self.forget_bias,
@@ -519,8 +540,7 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
             math_ops.matmul(
                 inputs_and_m_prev,
                 array_ops.concat(
-                    [self.input_to_output_w, self.cell_to_output_w], axis=1
-                ),
+                    [self.input_to_output_w, self.cell_to_output_w], axis=1),
                 transpose_b=True,
             ),
             self.output_bias,
@@ -528,7 +548,8 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
         j = nn_ops.bias_add(
             math_ops.matmul(
                 inputs_and_m_prev,
-                array_ops.concat([self.input_to_cell_w, self.cell_to_cell_w], axis=1),
+                array_ops.concat([self.input_to_cell_w, self.cell_to_cell_w],
+                                 axis=1),
                 transpose_b=True,
             ),
             self.cell_bias,
@@ -537,8 +558,7 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
         # Diagonal connections
         if self._use_peepholes:
             c = sigmoid(f + self._w_f_diag * c_prev) * c_prev + sigmoid(
-                i + self._w_i_diag * c_prev
-            ) * self._activation(j)
+                i + self._w_i_diag * c_prev) * self._activation(j)
         else:
             c = sigmoid(f) * c_prev + sigmoid(i) * self._activation(j)
 
@@ -557,21 +577,23 @@ class TFLiteLSTMCell(rnn_cell_impl.LayerRNNCell):
 
             if self._proj_clip is not None:
                 # pylint: disable=invalid-unary-operand-type
-                m = clip_ops.clip_by_value(m, -self._proj_clip, self._proj_clip)
+                m = clip_ops.clip_by_value(m, -self._proj_clip,
+                                           self._proj_clip)
                 # pylint: enable=invalid-unary-operand-type
 
-        c = self._tflite_wrapper.add_output(
-            c, tag="c", name="c", aggregate="last", index_override=1
-        )
-        m = self._tflite_wrapper.add_output(
-            m, tag="m", name="m", index_override=2, aggregate="stack"
-        )
+        c = self._tflite_wrapper.add_output(c,
+                                            tag="c",
+                                            name="c",
+                                            aggregate="last",
+                                            index_override=1)
+        m = self._tflite_wrapper.add_output(m,
+                                            tag="m",
+                                            name="m",
+                                            index_override=2,
+                                            aggregate="stack")
 
-        new_state = (
-            rnn_cell_impl.LSTMStateTuple(c, m)
-            if self._state_is_tuple
-            else array_ops.concat([c, m], 1)
-        )
+        new_state = (rnn_cell_impl.LSTMStateTuple(c, m)
+                     if self._state_is_tuple else array_ops.concat([c, m], 1))
         return m, new_state
 
     def get_config(self):
