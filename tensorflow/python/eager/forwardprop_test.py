@@ -52,12 +52,11 @@ from tensorflow.python.ops.unconnected_gradients import UnconnectedGradients
 from tensorflow.python.platform import test
 from tensorflow.python.util import nest
 
-
 _X11_35_DERIVATIVES = [
-    1.1 ** 3.5,
-    3.5 * 1.1 ** 2.5,
-    3.5 * 2.5 * 1.1 ** 1.5,
-    3.5 * 2.5 * 1.5 * 1.1 ** 0.5,
+    1.1**3.5,
+    3.5 * 1.1**2.5,
+    3.5 * 2.5 * 1.1**1.5,
+    3.5 * 2.5 * 1.5 * 1.1**0.5,
 ]
 
 
@@ -84,14 +83,13 @@ def _jacfwd(f, primals):
         for element_index in math_ops.range(primal_vector_length):
             mask = array_ops.one_hot(element_index, primal_vector_length)
             tangent_mask[primal_index] = array_ops.reshape(
-                mask, array_ops.shape(primal)
-            )
+                mask, array_ops.shape(primal))
             jac_columns.append(
                 nest.map_structure(
                     functools.partial(array_ops.reshape, shape=[-1]),
-                    _jvp(f, primals, nest.pack_sequence_as(primals, tangent_mask))[1],
-                )
-            )
+                    _jvp(f, primals,
+                         nest.pack_sequence_as(primals, tangent_mask))[1],
+                ))
         jac_flat.append(array_ops.stack(jac_columns, axis=1))
         tangent_mask[primal_index] = array_ops.zeros_like(primal)
     return nest.pack_sequence_as(primals, jac_flat)
@@ -118,17 +116,16 @@ def _gradfwd(f, argnums=0, f_out_dtypes=dtypes.float32):
 
     def _f(*params):
         def _single_jvp(param_mask):
-            with forwardprop.ForwardAccumulator(
-                primals=[params[argnums]], tangents=param_mask
-            ) as acc:
+            with forwardprop.ForwardAccumulator(primals=[params[argnums]],
+                                                tangents=param_mask) as acc:
                 primals_out = f(*params)
             return acc.jvp(primals_out)
 
         # Building up a function to run with pfor takes a bit too long since we're
         # only running it a handful of times.
-        return _vectorize_parameters(
-            _single_jvp, [params[argnums]], use_pfor=False, dtype=f_out_dtypes
-        )
+        return _vectorize_parameters(_single_jvp, [params[argnums]],
+                                     use_pfor=False,
+                                     dtype=f_out_dtypes)
 
     return _f
 
@@ -158,7 +155,8 @@ def _vectorize_parameters(f, params, use_pfor, dtype):
         return f(tangents)
 
     if use_pfor:
-        return control_flow_ops.vectorized_map(_wrapper, math_ops.range(total_size))
+        return control_flow_ops.vectorized_map(_wrapper,
+                                               math_ops.range(total_size))
     else:
         return map_fn.map_fn(_wrapper, math_ops.range(total_size), dtype)
 
@@ -180,17 +178,23 @@ def _forward_over_back_hessian(f, params, use_pfor, dtype=None):
       parameters (`sum_s(p_s)`). The full matrix can be obtained by concatenating
       along the second axis.
     """
-    return _vectorize_parameters(
-        functools.partial(_hvp, f, params), params, use_pfor=use_pfor, dtype=dtype
-    )
+    return _vectorize_parameters(functools.partial(_hvp, f, params),
+                                 params,
+                                 use_pfor=use_pfor,
+                                 dtype=dtype)
 
 
-def _test_gradients(testcase, f, primals, order, delta=1e-3, rtol=1e-2, atol=1e-6):
+def _test_gradients(testcase,
+                    f,
+                    primals,
+                    order,
+                    delta=1e-3,
+                    rtol=1e-2,
+                    atol=1e-6):
     """Tests forward/backward jacobians of `f`'s [0, `order`)-order gradients."""
     if order < 1:
         raise ValueError(
-            "`order` should be a positive integer, got '{}'.".format(order)
-        )
+            "`order` should be a positive integer, got '{}'.".format(order))
     if order > 1:
         _test_gradients(
             testcase=testcase,
@@ -201,9 +205,9 @@ def _test_gradients(testcase, f, primals, order, delta=1e-3, rtol=1e-2, atol=1e-
             rtol=rtol,
             atol=atol,
         )
-    sym_jac_back, num_jac = gradient_checker_v2.compute_gradient(
-        f, primals, delta=delta
-    )
+    sym_jac_back, num_jac = gradient_checker_v2.compute_gradient(f,
+                                                                 primals,
+                                                                 delta=delta)
     testcase.assertAllClose(num_jac, sym_jac_back, rtol=rtol, atol=atol)
     sym_jac_fwd = _jacfwd(f, primals)
     testcase.assertAllClose(num_jac, sym_jac_fwd, rtol=rtol, atol=atol)
@@ -213,23 +217,29 @@ def _test_gradients(testcase, f, primals, order, delta=1e-3, rtol=1e-2, atol=1e-
 
 class ForwardpropTest(test.TestCase, parameterized.TestCase):
     def testJVPFunction(self):
-        add_outputs = (constant_op.constant(4.0),)
-        (vp,) = forwardprop._jvp_dispatch(
+        add_outputs = (constant_op.constant(4.0), )
+        (vp, ) = forwardprop._jvp_dispatch(
             op_name="Add",
             attr_tuple=(),
             inputs=(constant_op.constant(1.0), constant_op.constant(3.0)),
             outputs=add_outputs,
-            tangents=(constant_op.constant(1.0), constant_op.constant(5.0),),
+            tangents=(
+                constant_op.constant(1.0),
+                constant_op.constant(5.0),
+            ),
         )
         self.assertAllClose(1.0 + 5.0, self.evaluate(vp))
 
-        mul_outputs = (constant_op.constant([20.0]),)
-        (vp,) = forwardprop._jvp_dispatch(
+        mul_outputs = (constant_op.constant([20.0]), )
+        (vp, ) = forwardprop._jvp_dispatch(
             op_name="Mul",
             attr_tuple=(),
             inputs=(constant_op.constant([4.0]), constant_op.constant([5.0])),
             outputs=mul_outputs,
-            tangents=(constant_op.constant([2.0]), constant_op.constant([3.0]),),
+            tangents=(
+                constant_op.constant([2.0]),
+                constant_op.constant([3.0]),
+            ),
         )
         self.assertAllClose([2.0 * 5.0 + 3.0 * 4.0], self.evaluate(vp))
 
@@ -248,8 +258,7 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             with forwardprop.ForwardAccumulator(x, 2.0) as acc:
                 y = x + x
                 pywrap_tfe.TFE_Py_RegisterJVPFunction(
-                    lambda *args, **kwargs: [constant_op.constant(-15.0)]
-                )
+                    lambda *args, **kwargs: [constant_op.constant(-15.0)])
                 z = x + x
             self.assertAllClose(4.0, acc.jvp(y))
             self.assertAllClose(-15.0, acc.jvp(z))
@@ -266,7 +275,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             execution_count = getattr(self, "_execution_count", 0)
             self._execution_count = execution_count + 1
             x = array_ops.zeros([execution_count])
-            with forwardprop.ForwardAccumulator(x, array_ops.ones_like(x)) as acc:
+            with forwardprop.ForwardAccumulator(x,
+                                                array_ops.ones_like(x)) as acc:
                 y = x + x
             self.assertAllClose(2.0 * array_ops.ones_like(x), acc.jvp(y))
 
@@ -325,9 +335,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testJVPManual(self):
-        primal, tangent = _jvp(
-            math_ops.sin, (constant_op.constant(0.1),), (constant_op.constant(0.2),)
-        )
+        primal, tangent = _jvp(math_ops.sin, (constant_op.constant(0.1), ),
+                               (constant_op.constant(0.2), ))
         self.assertAllClose(math_ops.sin(0.1), primal)
         self.assertAllClose(math_ops.cos(0.1) * 0.2, tangent)
 
@@ -335,13 +344,13 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
     def testNumericHigherOrder(self):
         def f(x):
             pointwise = math_ops.sin(x) * math_ops.tan(x)
-            return math_ops.reduce_prod(
-                pointwise + math_ops.reduce_sum(pointwise), axis=1
-            )
+            return math_ops.reduce_prod(pointwise +
+                                        math_ops.reduce_sum(pointwise),
+                                        axis=1)
 
-        _test_gradients(
-            self, f, [constant_op.constant([[2.0, 3.0], [1.0, 4.0]])], order=3
-        )
+        _test_gradients(self,
+                        f, [constant_op.constant([[2.0, 3.0], [1.0, 4.0]])],
+                        order=3)
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testCustomGradient(self):
@@ -358,7 +367,7 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
     def testCustomGradientRecomputeGrad(self):
         @custom_gradient.recompute_grad
         def f(x):
-            return math_ops.reduce_prod(math_ops.tanh(x) ** 2)
+            return math_ops.reduce_prod(math_ops.tanh(x)**2)
 
         _test_gradients(self, f, [constant_op.constant([1.0])], order=3)
 
@@ -376,31 +385,27 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             with self.assertRaisesRegexp(ValueError, "test_error_string"):
                 f(c)
 
-    @parameterized.named_parameters(
-        [
-            ("EluM5", -0.5, nn_ops.elu),
-            ("EluP5", [0.5], nn_ops.elu),
-            ("SwishP5", 0.5, nn_impl.swish),
-            ("SwishM5", [-0.5], nn_impl.swish),
-        ]
-    )
+    @parameterized.named_parameters([
+        ("EluM5", -0.5, nn_ops.elu),
+        ("EluP5", [0.5], nn_ops.elu),
+        ("SwishP5", 0.5, nn_impl.swish),
+        ("SwishM5", [-0.5], nn_impl.swish),
+    ])
     def testElementwiseNNOps(self, value, op_fn):
         _test_gradients(self, op_fn, [constant_op.constant(value)], order=3)
 
-    @parameterized.named_parameters(
-        [
-            ("Dense", [[0.1]], functools.partial(core.Dense, 5)),
-            (
-                "Conv2D",
-                np.reshape(
-                    np.arange(start=-1.0, stop=1.0, step=2.0 / (1 * 2 * 4 * 4)),
-                    [1, 2, 4, 4],
-                ),
-                functools.partial(convolutional.Conv2D, 2, 2),
-                1e-3,
+    @parameterized.named_parameters([
+        ("Dense", [[0.1]], functools.partial(core.Dense, 5)),
+        (
+            "Conv2D",
+            np.reshape(
+                np.arange(start=-1.0, stop=1.0, step=2.0 / (1 * 2 * 4 * 4)),
+                [1, 2, 4, 4],
             ),
-        ]
-    )
+            functools.partial(convolutional.Conv2D, 2, 2),
+            1e-3,
+        ),
+    ])
     def testKerasLayers(self, value, op_fn, atol=1e-6):
         layer = op_fn()
         input_value = constant_op.constant(value, dtype=dtypes.float32)
@@ -417,8 +422,7 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                         dtype=dtypes.float32,
                     ),
                     v.shape,
-                )
-            )
+                ))
         _test_gradients(
             self,
             layer,
@@ -428,20 +432,19 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             order=2,
         )
 
-    @parameterized.named_parameters(
-        [
-            (
-                "NonFused",
-                [[0.1], [0.2], [-0.3]],
-                functools.partial(normalization_v2.BatchNormalization, fused=False),
-            ),
-            (
-                "Fused",
-                [[[[0.1, 2.0]]], [[[0.2, -3.0]]], [[[-0.3, 4.0]]]],
-                functools.partial(normalization_v2.BatchNormalization, fused=True),
-            ),
-        ]
-    )
+    @parameterized.named_parameters([
+        (
+            "NonFused",
+            [[0.1], [0.2], [-0.3]],
+            functools.partial(normalization_v2.BatchNormalization,
+                              fused=False),
+        ),
+        (
+            "Fused",
+            [[[[0.1, 2.0]]], [[[0.2, -3.0]]], [[[-0.3, 4.0]]]],
+            functools.partial(normalization_v2.BatchNormalization, fused=True),
+        ),
+    ])
     def testBatchNorm(self, value, op_fn):
         for training in [True, False]:
             layer = op_fn()
@@ -455,20 +458,19 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 atol=1e-3,
             )
 
-    @parameterized.named_parameters(
-        [
-            (
-                "NonFused",
-                [[0.1], [0.2], [-0.3]],
-                functools.partial(normalization_v2.BatchNormalization, fused=False),
-            ),
-            (
-                "Fused",
-                [[[[0.1, 2.0]]], [[[0.2, -3.0]]], [[[-0.3, 4.0]]]],
-                functools.partial(normalization_v2.BatchNormalization, fused=True),
-            ),
-        ]
-    )
+    @parameterized.named_parameters([
+        (
+            "NonFused",
+            [[0.1], [0.2], [-0.3]],
+            functools.partial(normalization_v2.BatchNormalization,
+                              fused=False),
+        ),
+        (
+            "Fused",
+            [[[[0.1, 2.0]]], [[[0.2, -3.0]]], [[[-0.3, 4.0]]]],
+            functools.partial(normalization_v2.BatchNormalization, fused=True),
+        ),
+    ])
     def testBatchNormLayerParamGrads(self, value, op_fn):
         for training in [True, False]:
             layer = op_fn()
@@ -476,31 +478,26 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 input_value = constant_op.constant(value, dtype=dtypes.float32)
                 tape.watch(input_value)
                 output = layer(input_value, training=training)
-            jac_back = tape.jacobian(output, [input_value] + layer.trainable_variables)
+            jac_back = tape.jacobian(output,
+                                     [input_value] + layer.trainable_variables)
             jac_forward = _jacfwd(
-                lambda *args: layer(
-                    args[0], training=training
-                ),  # pylint:disable=cell-var-from-loop
+                lambda *args: layer(args[0], training=training),  # pylint:disable=cell-var-from-loop
                 [input_value] + layer.trainable_variables,
             )
             for backward, forward in zip(jac_back, jac_forward):
                 forward = array_ops.reshape(forward, array_ops.shape(backward))
                 self.assertAllClose(backward, forward)
 
-    @parameterized.named_parameters(
-        [
-            ("NCHW", "NCHW", [4, 3, 2, 2], 3, False),
-            ("NHWC", "NHWC", [4, 2, 2, 3], 3, False),
-            ("NCHWForward", "NCHW", [2, 2, 1, 1], 2, True),
-            ("NHWCForward", "NHWC", [2, 1, 1, 2], 2, True),
-        ]
-    )
-    def testFusedBatchNormGradsTraining(
-        self, data_format, x_shape, channels, test_back_over_forward
-    ):
+    @parameterized.named_parameters([
+        ("NCHW", "NCHW", [4, 3, 2, 2], 3, False),
+        ("NHWC", "NHWC", [4, 2, 2, 3], 3, False),
+        ("NCHWForward", "NCHW", [2, 2, 1, 1], 2, True),
+        ("NHWCForward", "NHWC", [2, 1, 1, 2], 2, True),
+    ])
+    def testFusedBatchNormGradsTraining(self, data_format, x_shape, channels,
+                                        test_back_over_forward):
         increment = 3.0 / math_ops.reduce_prod(
-            constant_op.constant(x_shape, dtype=dtypes.float32)
-        )
+            constant_op.constant(x_shape, dtype=dtypes.float32))
         x = array_ops.reshape(math_ops.range(-2.0, 1.0, increment), x_shape)
         scale = constant_op.constant([1.0, 1.1, 0.9])[:channels]
         offset = constant_op.constant([-0.5, -0.6, -0.7])[:channels]
@@ -516,18 +513,28 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 data_format=data_format,
             )[0]
 
-        _test_gradients(self, _bn_fused, [x, scale, offset], order=2, atol=1e-3)
+        _test_gradients(self,
+                        _bn_fused, [x, scale, offset],
+                        order=2,
+                        atol=1e-3)
         if test_back_over_forward:
             # Note that this uses a loop over parameters, and so is quite slow. Thus
             # it's skipped for the larger test cases.
             gradfwd_x = _gradfwd(_bn_fused, 0)
-            _test_gradients(self, gradfwd_x, [x, scale, offset], order=1, atol=1e-3)
+            _test_gradients(self,
+                            gradfwd_x, [x, scale, offset],
+                            order=1,
+                            atol=1e-3)
             gradfwd_scale = _gradfwd(_bn_fused, 1)
-            _test_gradients(self, gradfwd_scale, [x, scale, offset], order=1, atol=1e-3)
+            _test_gradients(self,
+                            gradfwd_scale, [x, scale, offset],
+                            order=1,
+                            atol=1e-3)
             gradfwd_offset = _gradfwd(_bn_fused, 2)
-            _test_gradients(
-                self, gradfwd_offset, [x, scale, offset], order=1, atol=1e-3
-            )
+            _test_gradients(self,
+                            gradfwd_offset, [x, scale, offset],
+                            order=1,
+                            atol=1e-3)
 
     def testFusedBatchNormGradsInference(self):
 
@@ -535,12 +542,12 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             # This test was addeded recently and has been failing on the ROCm
             # platform, since it was added.
             # TODO(rocm): do root cause analysis of test failure and fix it.
-            self.skipTest("Test fails on ROCm platform, needs further analysis")
+            self.skipTest(
+                "Test fails on ROCm platform, needs further analysis")
 
         x_shape = [4, 10, 10, 2]
         increment = 3.0 / math_ops.reduce_prod(
-            constant_op.constant(x_shape, dtype=dtypes.float32)
-        )
+            constant_op.constant(x_shape, dtype=dtypes.float32))
         x = array_ops.reshape(math_ops.range(-2.0, 1.0, increment), x_shape)
         scale = constant_op.constant([1.0, 1.1])
         offset = constant_op.constant([-0.5, -0.6])
@@ -559,18 +566,21 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 is_training=False,
             )[0]
 
-        _test_gradients(self, _bn_fused, [x, scale, offset], order=2, atol=1e-2)
+        _test_gradients(self,
+                        _bn_fused, [x, scale, offset],
+                        order=2,
+                        atol=1e-2)
 
-    @parameterized.named_parameters(
-        [("Function", def_function.function), ("NoFunction", lambda f: f)]
-    )
+    @parameterized.named_parameters([("Function", def_function.function),
+                                     ("NoFunction", lambda f: f)])
     def testVariablesHVP(self, decorator):
 
         if test.is_built_with_rocm():
             # TODO(rocm)
             # This test was recently added and has never passed on the
             # ROCm platform. Remove this skip once the test is passing again
-            self.skipTest("NoFunction decorator test fails on the ROCm platform")
+            self.skipTest(
+                "NoFunction decorator test fails on the ROCm platform")
 
         class _Model(module.Module):
             def __init__(self):
@@ -583,7 +593,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 x = self._first_dense(x)
                 x = nn_ops.relu(x)
                 x = self._norm(x)
-                x = nn_ops.relu(self._conv(array_ops.reshape(x, [-1, 2, 3, 3])))
+                x = nn_ops.relu(self._conv(array_ops.reshape(x,
+                                                             [-1, 2, 3, 3])))
                 return self._second_dense(x)
 
         model = _Model()
@@ -591,7 +602,7 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         def _loss():
             input_value = constant_op.constant([[-0.5, 1.0], [0.5, -1.0]])
             target = constant_op.constant([[-1.0], [2.0]])
-            return math_ops.reduce_sum((model(input_value) - target) ** 2.0)
+            return math_ops.reduce_sum((model(input_value) - target)**2.0)
 
         @decorator
         def _compute_hvps():
@@ -602,16 +613,16 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             def variable_input_fn(unused_variables):
                 return _loss()
 
-            (forward_over_back_hvp,) = _hvp(
-                variable_input_fn, [model.trainable_variables], [vector]
-            )
+            (forward_over_back_hvp, ) = _hvp(variable_input_fn,
+                                             [model.trainable_variables],
+                                             [vector])
             with backprop.GradientTape(persistent=True) as tape:
                 tape.watch(model.trainable_variables)
                 loss = _loss()
                 first_grads = tape.gradient(loss, model.trainable_variables)
-            back_over_back_hvp = tape.gradient(
-                first_grads, model.trainable_variables, output_gradients=vector
-            )
+            back_over_back_hvp = tape.gradient(first_grads,
+                                               model.trainable_variables,
+                                               output_gradients=vector)
             return forward_over_back_hvp, back_over_back_hvp
 
         self.assertAllClose(*_compute_hvps(), rtol=1e-5, atol=1e-5)
@@ -640,12 +651,10 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             output = f(c)
             self.assertAllClose(d * math_ops.cos(c), acc.jvp(output))
 
-    @parameterized.named_parameters(
-        [
-            ("Order{}".format(order), order, expected)
-            for order, expected in enumerate(_X11_35_DERIVATIVES)
-        ]
-    )
+    @parameterized.named_parameters([
+        ("Order{}".format(order), order, expected)
+        for order, expected in enumerate(_X11_35_DERIVATIVES)
+    ])
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testHigherOrderPureForward(self, order, expected):
         def _forwardgrad(f):
@@ -658,7 +667,7 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             return _compute_forwardgrad
 
         def _forward(x):
-            return x ** 3.5
+            return x**3.5
 
         f = _forward
         primal = constant_op.constant(1.1)
@@ -666,27 +675,24 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             f = _forwardgrad(f)
         self.assertAllClose(expected, f(primal))
 
-    @parameterized.named_parameters(
-        [("Function", def_function.function), ("NoFunction", lambda f: f)]
-    )
+    @parameterized.named_parameters([("Function", def_function.function),
+                                     ("NoFunction", lambda f: f)])
     def testGradPureForward(self, decorator):
         @decorator
         def f(x):
-            return x ** 3.5
+            return x**3.5
 
         primal = constant_op.constant(1.1)
         with forwardprop.ForwardAccumulator(
-            primal, constant_op.constant(1.0)
-        ) as outer_acc:
+                primal, constant_op.constant(1.0)) as outer_acc:
             with forwardprop.ForwardAccumulator(
-                primal, constant_op.constant(1.0)
-            ) as acc:
+                    primal, constant_op.constant(1.0)) as acc:
                 primal_out = f(primal)
         inner_jvp = acc.jvp(primal_out)
         outer_jvp = outer_acc.jvp(inner_jvp)
-        self.assertAllClose(1.1 ** 3.5, primal_out)
-        self.assertAllClose(3.5 * 1.1 ** 2.5, inner_jvp)
-        self.assertAllClose(3.5 * 2.5 * 1.1 ** 1.5, outer_jvp)
+        self.assertAllClose(1.1**3.5, primal_out)
+        self.assertAllClose(3.5 * 1.1**2.5, inner_jvp)
+        self.assertAllClose(3.5 * 2.5 * 1.1**1.5, outer_jvp)
         self.assertIsNone(acc.jvp(outer_acc.jvp(primal_out)))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
@@ -696,9 +702,11 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         inner_jvp = constant_op.constant(3.0)
         with forwardprop.ForwardAccumulator(
             [primal_in, inner_jvp],
-            [constant_op.constant(2.0), constant_op.constant(4.0)],
+            [constant_op.constant(2.0),
+             constant_op.constant(4.0)],
         ) as outer_acc:
-            with forwardprop.ForwardAccumulator(primal_in, inner_jvp) as inner_acc:
+            with forwardprop.ForwardAccumulator(primal_in,
+                                                inner_jvp) as inner_acc:
                 (
                     packed_input_indices,
                     packed_input_tangents,
@@ -706,7 +714,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 self.assertAllClose([3.0, 2.0, 4.0], packed_input_tangents)
                 expected_indices = (
                     # inner_acc watches primal_in
-                    ((0, 1),),
+                    (
+                        (0, 1), ),
                     # outer_acc watches primal_in and inner_jvp
                     ((0, 2), (1, 3)),
                 )
@@ -714,7 +723,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 primal_out = primal_in * two
                 self.assertAllClose(6.0, inner_acc.jvp(primal_out))
                 self.assertAllClose(4.0, outer_acc.jvp(primal_out))
-                self.assertAllClose(8.0, outer_acc.jvp(inner_acc.jvp(primal_out)))
+                self.assertAllClose(8.0,
+                                    outer_acc.jvp(inner_acc.jvp(primal_out)))
                 (
                     packed_output_indices,
                     packed_output_tangents,
@@ -727,15 +737,13 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         def take_gradients():
             @def_function.function
             def f(x):
-                return x ** 3.5
+                return x**3.5
 
             primal = constant_op.constant(1.1)
             with forwardprop.ForwardAccumulator(
-                primal, constant_op.constant(1.0)
-            ) as outer_acc:
+                    primal, constant_op.constant(1.0)) as outer_acc:
                 with forwardprop.ForwardAccumulator(
-                    primal, constant_op.constant(1.0)
-                ) as acc:
+                        primal, constant_op.constant(1.0)) as acc:
                     primal_out = f(primal)
             inner_jvp = acc.jvp(primal_out)
             outer_jvp = outer_acc.jvp(inner_jvp)
@@ -743,14 +751,14 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             return primal_out, inner_jvp, outer_jvp
 
         primal_out, inner_jvp, outer_jvp = take_gradients()
-        self.assertAllClose(1.1 ** 3.5, primal_out)
-        self.assertAllClose(3.5 * 1.1 ** 2.5, inner_jvp)
-        self.assertAllClose(3.5 * 2.5 * 1.1 ** 1.5, outer_jvp)
+        self.assertAllClose(1.1**3.5, primal_out)
+        self.assertAllClose(3.5 * 1.1**2.5, inner_jvp)
+        self.assertAllClose(3.5 * 2.5 * 1.1**1.5, outer_jvp)
 
     def testFunctionGrad(self):
         @def_function.function
         def f(x):
-            return math_ops.reduce_prod(math_ops.tanh(x) ** 2)
+            return math_ops.reduce_prod(math_ops.tanh(x)**2)
 
         _test_gradients(self, f, [constant_op.constant([1.0, 2.0])], order=3)
 
@@ -761,16 +769,16 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         tangent2 = random_ops.random_uniform((256, 2096))
         matmul = def_function.function(math_ops.matmul)
 
-        with forwardprop.ForwardAccumulator(
-            primals=[m1, m2], tangents=[tangent1, tangent2]
-        ) as acc:
+        with forwardprop.ForwardAccumulator(primals=[m1, m2],
+                                            tangents=[tangent1,
+                                                      tangent2]) as acc:
             result1 = matmul(m1, m1, transpose_b=True)
             result2 = matmul(m2, m2, transpose_b=True)
 
         def _expected(mat, tangent):
-            return math_ops.matmul(tangent, mat, transpose_b=True) + math_ops.matmul(
-                mat, tangent, transpose_b=True
-            )
+            return math_ops.matmul(tangent, mat,
+                                   transpose_b=True) + math_ops.matmul(
+                                       mat, tangent, transpose_b=True)
 
         self.assertAllClose(result1, result2)
         self.assertAllClose(_expected(m1, tangent1), acc.jvp(result1))
@@ -779,23 +787,22 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testHVPMemory(self):
         def fun(x):
-            return math_ops.reduce_prod(math_ops.tanh(x) ** 2)
+            return math_ops.reduce_prod(math_ops.tanh(x)**2)
 
         primals = constant_op.constant([1.0, 2.0, 3.0])
         tangents = constant_op.constant([3.0, 4.0, 5.0])
-        _hvp(fun, (primals,), (tangents,))
+        _hvp(fun, (primals, ), (tangents, ))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testHVPCorrectness(self):
         def fun(x):
-            return math_ops.reduce_prod(math_ops.tanh(x) ** 2)
+            return math_ops.reduce_prod(math_ops.tanh(x)**2)
 
         primals = constant_op.constant([1.0, 2.0, 3.0])
         tangents = constant_op.constant([3.0, 4.0, 5.0])
-        (forwardback_hvp_eager,) = _hvp(fun, (primals,), (tangents,))
-        (forwardback_hvp_function,) = def_function.function(_hvp)(
-            fun, (primals,), (tangents,)
-        )
+        (forwardback_hvp_eager, ) = _hvp(fun, (primals, ), (tangents, ))
+        (forwardback_hvp_function, ) = def_function.function(_hvp)(
+            fun, (primals, ), (tangents, ))
 
         with backprop.GradientTape(persistent=True) as g:
             g.watch(primals)
@@ -819,17 +826,19 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         with forwardprop.ForwardAccumulator(c, c_tangent) as acc:
             with backprop.GradientTape() as tape:
                 self.assertFalse(tape_lib.should_record_backprop([c]))
-                self.assertEqual(1, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
+                self.assertEqual(
+                    1, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
                 tape.watch(c)
-                self.assertEqual(2, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
+                self.assertEqual(
+                    2, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
                 self.assertTrue(tape_lib.should_record_backprop([c]))
                 with tape_lib.stop_recording():
                     self.assertEqual(
-                        0, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c])
-                    )
+                        0, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
                     self.assertFalse(tape_lib.should_record_backprop([c]))
                     d = c * 2.0
-                self.assertEqual(2, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
+                self.assertEqual(
+                    2, pywrap_tfe.TFE_Py_TapeSetPossibleGradientTypes([c]))
                 self.assertTrue(tape_lib.should_record_backprop([c]))
                 self.assertFalse(tape_lib.should_record_backprop([d]))
                 self.assertIsNone(acc.jvp(d))
@@ -889,7 +898,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             self.assertAllClose((1.0, 2.0), result)
             self.assertAllClose((11.0, 22.0), acc.jvp(result))
 
-    @parameterized.named_parameters([("ForwardPropFirst", True), ("TapeFirst", False)])
+    @parameterized.named_parameters([("ForwardPropFirst", True),
+                                     ("TapeFirst", False)])
     def testForwardOverBackwardMemoryEfficiency(self, forward_prop_first):
         # Watching depends depends on nesting, not creation order
         c = constant_op.constant(1.0)
@@ -909,7 +919,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 with gradient_tape as tape:
                     tape.watch(c)
                     d = math_ops.cos(c)
-                    self.assertFalse(tape_lib.should_record_backprop((acc.jvp(d),)))
+                    self.assertFalse(
+                        tape_lib.should_record_backprop((acc.jvp(d), )))
                     e = math_ops.cos(acc.jvp(d))
                     math_ops.cos(e)
                     weak_e = weakref.ref(e)
@@ -919,7 +930,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         finally:
             gc.enable()
 
-    @parameterized.named_parameters([("ForwardPropFirst", True), ("TapeFirst", False)])
+    @parameterized.named_parameters([("ForwardPropFirst", True),
+                                     ("TapeFirst", False)])
     def testBackwardOverForward(self, forward_prop_first):
         c = constant_op.constant(1.0)
         # Watching depends depends on nesting, not creation order
@@ -933,14 +945,17 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
             with forward_accumulator as acc:
                 tape.watch(c)
                 d = math_ops.cos(c)
-                self.assertTrue(tape_lib.should_record_backprop((acc.jvp(d),)))
-            self.assertAllClose(-0.1 * math_ops.cos(1.0), tape.gradient(acc.jvp(d), c))
+                self.assertTrue(tape_lib.should_record_backprop(
+                    (acc.jvp(d), )))
+            self.assertAllClose(-0.1 * math_ops.cos(1.0),
+                                tape.gradient(acc.jvp(d), c))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testRecordingWithJVPIndices(self):
         c = constant_op.constant(1.0)
         with forwardprop.ForwardAccumulator(c, 10.0) as acc:
-            packed_input_tangents = forwardprop_util.pack_tangents([c]).tangents
+            packed_input_tangents = forwardprop_util.pack_tangents([c
+                                                                    ]).tangents
             self.assertAllClose([10.0], packed_input_tangents)
             d = constant_op.constant(2.0)
             d_tangent = constant_op.constant(3.0)
@@ -949,7 +964,7 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 [d] + [d_tangent],
                 [c] + packed_input_tangents,
                 None,
-                (((0, 1),),),
+                (((0, 1), ), ),
             )
             self.assertAllClose(3.0, acc.jvp(d))
 
@@ -959,22 +974,20 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         d = constant_op.constant(2.0)
         e = constant_op.constant(3.0)
         with forwardprop.ForwardAccumulator(c, 10.0) as acc:
-            tape_lib.record_operation(
-                "ForwardIsSpecial", [d], [c], None, lambda jvp: [-2.0 * jvp]
-            )
+            tape_lib.record_operation("ForwardIsSpecial", [d], [c],
+                                      None, lambda jvp: [-2.0 * jvp])
             self.assertAllClose(-20.0, acc.jvp(d))
-            tape_lib.record_operation("ForwardIsSpecial2", [], [], None, lambda: [])
-            tape_lib.record_operation(
-                "ForwardIsSpecial3", [e], [d], None, lambda x: [x]
-            )
+            tape_lib.record_operation("ForwardIsSpecial2", [], [],
+                                      None, lambda: [])
+            tape_lib.record_operation("ForwardIsSpecial3", [e], [d],
+                                      None, lambda x: [x])
             self.assertAllClose(-20.0, acc.jvp(e))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testVariableWatched(self):
         v = variables.Variable([1.0, 2.0, 3.0])
         with forwardprop.ForwardAccumulator(
-            v, constant_op.constant([0.1, -0.2, 0.3])
-        ) as acc:
+                v, constant_op.constant([0.1, -0.2, 0.3])) as acc:
             self.assertAllClose([0.1, -0.2, 0.3], acc.jvp(v))
             x = v * 2.0
             self.assertAllClose([0.2, -0.4, 0.6], acc.jvp(x))
@@ -1002,8 +1015,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
                 if self._v is None:
                     self._v = variables.Variable([1.0, 2.0, 3.0])
                 with forwardprop.ForwardAccumulator(
-                    self._v, constant_op.constant([0.1, -0.2, 0.3])
-                ) as acc:
+                        self._v, constant_op.constant([0.1, -0.2,
+                                                       0.3])) as acc:
                     x = self._v * 2.0
                     x2 = self._v + 0.1
                 return acc.jvp((self._v, x, x2))
@@ -1029,7 +1042,8 @@ class ForwardpropTest(test.TestCase, parameterized.TestCase):
         strategy = mirrored_strategy.MirroredStrategy()
         with strategy.scope():
             v = variables.Variable([1.0, 2.0, 3.0])
-            strategy.run(_replicated, args=(constant_op.constant([0.1, -0.2, 0.3]),))
+            strategy.run(_replicated,
+                         args=(constant_op.constant([0.1, -0.2, 0.3]), ))
 
     # TODO(b/141025187): Add a no_new_pyobjects decorator.
     def testArgumentUnused(self):
@@ -1087,29 +1101,32 @@ class ControlFlowTests(test.TestCase):
     def testOfFunctionWhile(self):
         y = constant_op.constant(1.0)
         with forwardprop.ForwardAccumulator(y, 1.0) as acc:
-            self.assertAllClose(10.0, acc.jvp(_has_loop(constant_op.constant(5), y)))
+            self.assertAllClose(10.0,
+                                acc.jvp(_has_loop(constant_op.constant(5), y)))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testOfFunctionCond(self):
         y = constant_op.constant(1.0)
         with forwardprop.ForwardAccumulator(y, 1.0) as acc:
-            self.assertAllClose(3.0, acc.jvp(_has_cond(constant_op.constant(5), y)))
-            self.assertAllClose(0.0, acc.jvp(_has_cond(constant_op.constant(0), y)))
+            self.assertAllClose(3.0,
+                                acc.jvp(_has_cond(constant_op.constant(5), y)))
+            self.assertAllClose(0.0,
+                                acc.jvp(_has_cond(constant_op.constant(0), y)))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testInFunctionWhile(self):
         self.assertAllClose(
-            10.0, _fprop_while(constant_op.constant(5), constant_op.constant(1.0))
-        )
+            10.0,
+            _fprop_while(constant_op.constant(5), constant_op.constant(1.0)))
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testInFunctionCond(self):
         self.assertAllClose(
-            3.0, _fprop_cond(constant_op.constant(5), constant_op.constant(1.0))
-        )
+            3.0, _fprop_cond(constant_op.constant(5),
+                             constant_op.constant(1.0)))
         self.assertAllClose(
-            0.0, _fprop_cond(constant_op.constant(0), constant_op.constant(1.0))
-        )
+            0.0, _fprop_cond(constant_op.constant(0),
+                             constant_op.constant(1.0)))
 
 
 class HessianTests(test.TestCase, parameterized.TestCase):
@@ -1125,17 +1142,21 @@ class HessianTests(test.TestCase, parameterized.TestCase):
         def _f(x):
             return math_ops.reduce_sum(x[:, None] * mat * x[None, :])
 
-        (hessian_eager,) = _forward_over_back_hessian(
-            _f, [constant_op.constant(x_value)], use_pfor=False, dtype=[dtypes.float32]
-        )
+        (hessian_eager, ) = _forward_over_back_hessian(
+            _f, [constant_op.constant(x_value)],
+            use_pfor=False,
+            dtype=[dtypes.float32])
         self.assertAllClose(hess_value, hessian_eager)
-        (hessian_function,) = def_function.function(_forward_over_back_hessian)(
-            _f, [constant_op.constant(x_value)], use_pfor=False, dtype=[dtypes.float32]
-        )
+        (hessian_function,
+         ) = def_function.function(_forward_over_back_hessian)(
+             _f, [constant_op.constant(x_value)],
+             use_pfor=False,
+             dtype=[dtypes.float32])
         self.assertAllClose(hess_value, hessian_function)
-        (hessian_pfor,) = def_function.function(_forward_over_back_hessian)(
-            _f, [constant_op.constant(x_value)], use_pfor=True, dtype=[dtypes.float32]
-        )
+        (hessian_pfor, ) = def_function.function(_forward_over_back_hessian)(
+            _f, [constant_op.constant(x_value)],
+            use_pfor=True,
+            dtype=[dtypes.float32])
         self.assertAllClose(hess_value, hessian_pfor)
 
     @parameterized.named_parameters([("PFor", True), ("MapFn", False)])
@@ -1146,7 +1167,7 @@ class HessianTests(test.TestCase, parameterized.TestCase):
         def _loss(*unused_args):
             input_value = constant_op.constant([[-0.5, 1.0], [0.5, -1.0]])
             target = constant_op.constant([[-1.0], [2.0]])
-            return math_ops.reduce_sum((model(input_value) - target) ** 2.0)
+            return math_ops.reduce_sum((model(input_value) - target)**2.0)
 
         kernel_hess, bias_hess = _forward_over_back_hessian(
             _loss,
@@ -1158,8 +1179,7 @@ class HessianTests(test.TestCase, parameterized.TestCase):
         self.assertEqual([3, 2, 1], kernel_hess.shape)
         self.assertEqual([3, 1], bias_hess.shape)
         full_hessian = array_ops.concat(
-            [array_ops.reshape(kernel_hess, [3, 2]), bias_hess], axis=1
-        )
+            [array_ops.reshape(kernel_hess, [3, 2]), bias_hess], axis=1)
         # The full Hessian should be symmetric.
         self.assertAllClose(full_hessian, array_ops.transpose(full_hessian))
 

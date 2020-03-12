@@ -61,12 +61,11 @@ class AssertFlattenedMixin(object):
             self.assertAllEqual(expected_result, final_result)
 
 
-class GradientTapeTest(test.TestCase, parameterized.TestCase, AssertFlattenedMixin):
+class GradientTapeTest(test.TestCase, parameterized.TestCase,
+                       AssertFlattenedMixin):
     @combinations.generate(
-        combinations.combine(
-            distribution=strategy_combinations.all_strategies, mode=["eager"]
-        )
-    )
+        combinations.combine(distribution=strategy_combinations.all_strategies,
+                             mode=["eager"]))
     def testStepInFunctionGradient(self, distribution):
         dataset = get_dataset_from_tensor_slices([5.0, 6.0, 7.0, 8.0]).batch(2)
 
@@ -85,16 +84,13 @@ class GradientTapeTest(test.TestCase, parameterized.TestCase, AssertFlattenedMix
         results = []
         for x in dist_dataset:
             output = distribution.experimental_local_results(
-                distribution.run(train_step, args=(x,))
-            )
+                distribution.run(train_step, args=(x, )))
             results.append(output)
         self.assert_equal_flattened([[10.0, 12.0], [14.0, 16.0]], results)
 
     @combinations.generate(
-        combinations.combine(
-            distribution=strategy_combinations.all_strategies, mode=["eager"]
-        )
-    )
+        combinations.combine(distribution=strategy_combinations.all_strategies,
+                             mode=["eager"]))
     def testRunInFunctionGradient(self, distribution):
         dataset = get_dataset_from_tensor_slices([5.0, 6.0, 7.0, 8.0]).batch(2)
 
@@ -111,8 +107,7 @@ class GradientTapeTest(test.TestCase, parameterized.TestCase, AssertFlattenedMix
                 return grads
 
             return distribution.experimental_local_results(
-                distribution.run(train_step, args=(x,))
-            )
+                distribution.run(train_step, args=(x, )))
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         results = []
@@ -126,8 +121,7 @@ class GradientTapeTest(test.TestCase, parameterized.TestCase, AssertFlattenedMix
             distribution=strategy_combinations.all_strategies,
             mode=["eager"],
             model_in_tf_function=[True, False],
-        )
-    )
+        ))
     def testNestedFunction(self, distribution, model_in_tf_function):
         def model(x):
             return x * x

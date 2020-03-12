@@ -24,12 +24,10 @@ from tensorflow.python.framework import ops
 from tensorflow.python.util.lazy_loader import LazyLoader
 from tensorflow.python.util.tf_export import tf_export
 
-
 # There is a circular dependency between this and the `distribute_lib` module.
 # So we load it lazily to work around this.
-distribute_lib = LazyLoader(
-    "distribute_lib", globals(), "tensorflow.python.distribute.distribute_lib"
-)
+distribute_lib = LazyLoader("distribute_lib", globals(),
+                            "tensorflow.python.distribute.distribute_lib")
 
 # ------------------------------------------------------------------------------
 # Internal API for setting the current thread mode as being either in a
@@ -54,15 +52,11 @@ class _InReplicaThreadMode(_ThreadMode):
 
 
 def _push_per_thread_mode(context):
-    ops.get_default_graph()._distribution_strategy_stack.append(
-        context
-    )  # pylint: disable=protected-access
+    ops.get_default_graph()._distribution_strategy_stack.append(context)  # pylint: disable=protected-access
 
 
 def _pop_per_thread_mode():
-    ops.get_default_graph()._distribution_strategy_stack.pop(
-        -1
-    )  # pylint: disable=protected-access
+    ops.get_default_graph()._distribution_strategy_stack.pop(-1)  # pylint: disable=protected-access
 
 
 class _DefaultReplicaThreadMode(_ThreadMode):
@@ -72,16 +66,13 @@ class _DefaultReplicaThreadMode(_ThreadMode):
     """
 
     def __init__(self):
-        _ThreadMode.__init__(
-            self, _get_default_strategy(), None, _get_default_replica_context()
-        )
+        _ThreadMode.__init__(self, _get_default_strategy(), None,
+                             _get_default_replica_context())
 
 
 def _get_per_thread_mode():
     try:
-        return ops.get_default_graph()._distribution_strategy_stack[
-            -1
-        ]  # pylint: disable=protected-access
+        return ops.get_default_graph()._distribution_strategy_stack[-1]  # pylint: disable=protected-access
     except (AttributeError, IndexError):
         return _get_default_replica_mode()
 
@@ -256,9 +247,7 @@ def experimental_set_strategy(strategy):
     Raises:
       RuntimeError: If called inside a `with strategy.scope():`.
     """
-    old_scope = (
-        ops.get_default_graph()._global_distribute_strategy_scope
-    )  # pylint: disable=protected-access
+    old_scope = (ops.get_default_graph()._global_distribute_strategy_scope)  # pylint: disable=protected-access
     if old_scope is not None:
         old_scope.__exit__(None, None, None)
         ops.get_default_graph()._global_distribute_strategy_scope = (
@@ -266,8 +255,7 @@ def experimental_set_strategy(strategy):
         )
     if has_strategy():
         raise RuntimeError(
-            "Must not be called inside a `tf.distribute.Strategy` scope."
-        )
+            "Must not be called inside a `tf.distribute.Strategy` scope.")
     if strategy is not None:
         new_scope = strategy.scope()
         new_scope.__enter__()
@@ -306,15 +294,13 @@ _default_replica_mode_lock = threading.Lock()
 
 def _assert_strategy(strategy):
     if not has_strategy():
-        raise RuntimeError(
-            'Need to be inside "with strategy.scope()" for %s' % (strategy,)
-        )
+        raise RuntimeError('Need to be inside "with strategy.scope()" for %s' %
+                           (strategy, ))
     current_strategy = get_strategy()
     if current_strategy is not strategy:
         raise RuntimeError(
-            "Mixing different tf.distribute.Strategy objects: %s is not %s"
-            % (current_strategy, strategy)
-        )
+            "Mixing different tf.distribute.Strategy objects: %s is not %s" %
+            (current_strategy, strategy))
 
 
 def _get_default_strategy():
@@ -326,7 +312,9 @@ def _get_default_strategy():
                 # Make sure distribute_lib module is loaded by accessing some member.
                 _ = distribute_lib._creating_default_strategy_singleton
                 distribute_lib._creating_default_strategy_singleton = True
-                _defaults["strategy"] = distribute_lib._DefaultDistributionStrategy()
+                _defaults[
+                    "strategy"] = distribute_lib._DefaultDistributionStrategy(
+                    )
                 distribute_lib._creating_default_strategy_singleton = False
                 # pylint: enable=protected-access
     return _defaults["strategy"]
@@ -338,8 +326,7 @@ def _get_default_replica_context():
         with _default_replica_context_lock:
             if _defaults["replica_context"] is None:
                 _defaults["replica_context"] = distribute_lib.ReplicaContext(
-                    _get_default_strategy(), replica_id_in_sync_group=0
-                )
+                    _get_default_strategy(), replica_id_in_sync_group=0)
     return _defaults["replica_context"]
 
 

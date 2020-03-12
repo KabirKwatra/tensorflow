@@ -30,7 +30,6 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import variables
 from tensorflow.python.training import moving_averages
 
-
 all_distributions = [
     strategy_combinations.default_strategy,
     strategy_combinations.one_device_strategy,
@@ -39,11 +38,12 @@ all_distributions = [
     strategy_combinations.tpu_strategy,
 ]
 
-all_combinations = combinations.combine(distribution=all_distributions, mode=["graph"])
+all_combinations = combinations.combine(distribution=all_distributions,
+                                        mode=["graph"])
 
-all_combinations_eager = combinations.combine(
-    distribution=all_distributions, mode=["eager"], use_function=[True, False]
-)
+all_combinations_eager = combinations.combine(distribution=all_distributions,
+                                              mode=["eager"],
+                                              use_function=[True, False])
 
 
 class AssignMovingAveragesTest(test.TestCase, parameterized.TestCase):
@@ -53,16 +53,19 @@ class AssignMovingAveragesTest(test.TestCase, parameterized.TestCase):
 
         def replica_fn():
             var = variables.Variable([10.0, 11.0])
-            val = constant_op.constant([1.0 + replica_id[0], 2.0 - replica_id[0]])
+            val = constant_op.constant(
+                [1.0 + replica_id[0], 2.0 - replica_id[0]])
             replica_id[0] += 1
             decay = 0.25
-            assign = moving_averages.assign_moving_average(
-                var, val, decay, zero_debias=False
-            )
+            assign = moving_averages.assign_moving_average(var,
+                                                           val,
+                                                           decay,
+                                                           zero_debias=False)
             return var, assign
 
         with distribution.scope(), self.cached_session() as sess:
-            var, assign = distribution.extended.call_for_each_replica(replica_fn)
+            var, assign = distribution.extended.call_for_each_replica(
+                replica_fn)
             variables.global_variables_initializer().run()
             self.assertAllClose([10.0, 11.0], var.eval())
             sess.run(distribution.experimental_local_results(assign))
@@ -86,14 +89,16 @@ class AssignMovingAveragesTest(test.TestCase, parameterized.TestCase):
 
         def replica_fn():
             var = variables.Variable([0.0, 0.0])
-            val = constant_op.constant([1.0 + replica_id[0], 2.0 - replica_id[0]])
+            val = constant_op.constant(
+                [1.0 + replica_id[0], 2.0 - replica_id[0]])
             replica_id[0] += 1
             decay = 0.25
             assign = moving_averages.assign_moving_average(var, val, decay)
             return var, assign.op
 
         with distribution.scope(), self.cached_session() as sess:
-            var, assign_op = distribution.extended.call_for_each_replica(replica_fn)
+            var, assign_op = distribution.extended.call_for_each_replica(
+                replica_fn)
             variables.global_variables_initializer().run()
             self.assertAllClose([0.0, 0.0], var.eval())
             sess.run(distribution.experimental_local_results(assign_op))
@@ -112,9 +117,10 @@ class AssignMovingAveragesTest(test.TestCase, parameterized.TestCase):
             decay = 0.25
             # NOTE(josh11b): We currently generate an error if val is a PerReplica
             # value.
-            assign = moving_averages.assign_moving_average(
-                var, val, decay, zero_debias=False
-            )
+            assign = moving_averages.assign_moving_average(var,
+                                                           val,
+                                                           decay,
+                                                           zero_debias=False)
 
             variables.global_variables_initializer().run()
             self.assertAllClose([10.0, 11.0], var.eval())
@@ -172,32 +178,35 @@ class AssignMovingAveragesTest(test.TestCase, parameterized.TestCase):
             # Here we expect to check the case when input value are variable.
             val = variables.Variable([1.0, 2.0])
             decay = 0.25
-            assign = moving_averages.assign_moving_average(
-                var, val, decay, zero_debias=False
-            )
+            assign = moving_averages.assign_moving_average(var,
+                                                           val,
+                                                           decay,
+                                                           zero_debias=False)
             return var, assign
 
         with distribution.scope(), self.cached_session() as sess:
-            var, assign = distribution.extended.call_for_each_replica(replica_fn)
+            var, assign = distribution.extended.call_for_each_replica(
+                replica_fn)
             variables.global_variables_initializer().run()
             self.assertAllClose([10.0, 11.0], var.eval())
             sess.run(distribution.experimental_local_results(assign))
             self.assertAllClose(
-                [10 * 0.25 + 1.0 * (1 - 0.25), 11 * 0.25 + 2.0 * (1 - 0.25)], var.eval()
-            )
+                [10 * 0.25 + 1.0 * (1 - 0.25), 11 * 0.25 + 2.0 * (1 - 0.25)],
+                var.eval())
 
 
 class ExponentialMovingAverageTest(test.TestCase, parameterized.TestCase):
     @combinations.generate(all_combinations_eager)
     def testReplicaContextEager(self, distribution, use_function):
         if not use_function and isinstance(
-            distribution, (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)
-        ):
+                distribution,
+            (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)):
             self.skipTest("TPUStrategy doesn't support pure eager execution.")
         with distribution.scope():
             w = variables.Variable(
-                [1.0], name="w", aggregation=variables.VariableAggregation.MEAN
-            )
+                [1.0],
+                name="w",
+                aggregation=variables.VariableAggregation.MEAN)
             ema = moving_averages.ExponentialMovingAverage(0.8)
 
             def fn():
@@ -221,8 +230,9 @@ class ExponentialMovingAverageTest(test.TestCase, parameterized.TestCase):
     def testCrossReplicaContextEager(self, distribution, use_function):
         with distribution.scope():
             w = variables.Variable(
-                [1.0], name="w", aggregation=variables.VariableAggregation.MEAN
-            )
+                [1.0],
+                name="w",
+                aggregation=variables.VariableAggregation.MEAN)
             ema = moving_averages.ExponentialMovingAverage(0.8)
 
             def fn():
@@ -235,13 +245,13 @@ class ExponentialMovingAverageTest(test.TestCase, parameterized.TestCase):
                 fn = def_function.function(fn)
             avg = fn()
         self.assertAllClose(
-            self.evaluate(distribution.experimental_local_results(avg))[0], [0.89999998]
-        )
+            self.evaluate(distribution.experimental_local_results(avg))[0],
+            [0.89999998])
 
     def _ema_replica_fn_graph(self):
-        w = variables.Variable(
-            [1.0], name="w", aggregation=variables.VariableAggregation.MEAN
-        )
+        w = variables.Variable([1.0],
+                               name="w",
+                               aggregation=variables.VariableAggregation.MEAN)
         ema = moving_averages.ExponentialMovingAverage(0.8)
         w_apply = ema.apply([w])
         w_assign = w.assign_sub([0.5])
@@ -249,15 +259,14 @@ class ExponentialMovingAverageTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(all_combinations)
     def testReplicaContextGraph(self, distribution):
-        if isinstance(
-            distribution, (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)
-        ):
+        if isinstance(distribution,
+                      (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)):
             self.skipTest(
                 "b/139550827: Cannot do variable.assign in replica context "
-                "of TPUStrategy"
-            )
+                "of TPUStrategy")
         with distribution.scope():
-            w_assign, w_apply, ema_w = distribution.run(self._ema_replica_fn_graph)
+            w_assign, w_apply, ema_w = distribution.run(
+                self._ema_replica_fn_graph)
         self.assertEqual(ema_w.name, "w/ExponentialMovingAverage:0")
         with self.cached_session():
             variables.global_variables_initializer().run()
@@ -265,7 +274,8 @@ class ExponentialMovingAverageTest(test.TestCase, parameterized.TestCase):
             self.evaluate(distribution.experimental_local_results(w_assign))
             self.evaluate(distribution.experimental_local_results(w_apply))
             self.assertAllClose(
-                self.evaluate(distribution.experimental_local_results(ema_w))[0],
+                self.evaluate(
+                    distribution.experimental_local_results(ema_w))[0],
                 [0.89999998],
             )
 
@@ -280,7 +290,8 @@ class ExponentialMovingAverageTest(test.TestCase, parameterized.TestCase):
             self.evaluate(distribution.experimental_local_results(w_assign))
             self.evaluate(distribution.experimental_local_results(w_apply))
             self.assertAllClose(
-                self.evaluate(distribution.experimental_local_results(ema_w))[0],
+                self.evaluate(
+                    distribution.experimental_local_results(ema_w))[0],
                 [0.89999998],
             )
 

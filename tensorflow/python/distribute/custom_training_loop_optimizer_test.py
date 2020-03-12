@@ -46,9 +46,9 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                     expected=[[[-0.1, -0.1], [-0.2, -0.2]]],
                 ),
             ),
-        )
-    )
-    def test_custom_aggregation(self, distribution, all_reduce_sum_gradients, expected):
+        ))
+    def test_custom_aggregation(self, distribution, all_reduce_sum_gradients,
+                                expected):
 
         with distribution.scope():
             v = variables.Variable([0.0, 0.0])
@@ -56,19 +56,19 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
 
         @def_function.function
         def optimize():
-            grads = values.PerReplica(
-                [ops.convert_to_tensor([1.0, 1.0]), ops.convert_to_tensor([2.0, 2.0]),]
-            )
+            grads = values.PerReplica([
+                ops.convert_to_tensor([1.0, 1.0]),
+                ops.convert_to_tensor([2.0, 2.0]),
+            ])
 
             def step_fn(grads):
                 optimizer.apply_gradients(
-                    [(grads, v)], all_reduce_sum_gradients=all_reduce_sum_gradients
-                )
+                    [(grads, v)],
+                    all_reduce_sum_gradients=all_reduce_sum_gradients)
                 return v.read_value()
 
             return distribution.experimental_local_results(
-                distribution.run(step_fn, args=(grads,))
-            )
+                distribution.run(step_fn, args=(grads, )))
 
         self.assertAllClose(optimize(), expected)
 
@@ -77,11 +77,9 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             distribution=strategy_combinations.one_device_strategy,
             mode=["eager"],
             all_reduce_sum_gradients=[True, False],
-        )
-    )
-    def test_custom_aggregation_one_device(
-        self, distribution, all_reduce_sum_gradients
-    ):
+        ))
+    def test_custom_aggregation_one_device(self, distribution,
+                                           all_reduce_sum_gradients):
 
         with distribution.scope():
             v = variables.Variable([0.0, 0.0])
@@ -93,13 +91,12 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
 
             def step_fn(grads):
                 optimizer.apply_gradients(
-                    [(grads, v)], all_reduce_sum_gradients=all_reduce_sum_gradients
-                )
+                    [(grads, v)],
+                    all_reduce_sum_gradients=all_reduce_sum_gradients)
                 return v.read_value()
 
             return distribution.experimental_local_results(
-                distribution.run(step_fn, args=(grads,))
-            )
+                distribution.run(step_fn, args=(grads, )))
 
         self.assertAllClose(optimize(), [[-0.1, -0.1]])
 

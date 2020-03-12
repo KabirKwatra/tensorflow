@@ -68,7 +68,12 @@ class Resizing(Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, height, width, interpolation="bilinear", name=None, **kwargs):
+    def __init__(self,
+                 height,
+                 width,
+                 interpolation="bilinear",
+                 name=None,
+                 **kwargs):
         self.target_height = height
         self.target_width = width
         self.interpolation = interpolation
@@ -86,9 +91,10 @@ class Resizing(Layer):
 
     def compute_output_shape(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape).as_list()
-        return tensor_shape.TensorShape(
-            [input_shape[0], self.target_height, self.target_width, input_shape[3]]
-        )
+        return tensor_shape.TensorShape([
+            input_shape[0], self.target_height, self.target_width,
+            input_shape[3]
+        ])
 
     def get_config(self):
         config = {
@@ -140,28 +146,28 @@ class CenterCrop(Layer):
                 img_hd_diff,
                 message="The crop height {} should not be greater than input "
                 "height.".format(self.target_height),
-            )
-        )
+            ))
         checks.append(
             check_ops.assert_non_negative(
                 img_wd_diff,
                 message="The crop width {} should not be greater than input "
                 "width.".format(self.target_width),
-            )
-        )
+            ))
         with ops.control_dependencies(checks):
             bbox_h_start = math_ops.cast(img_hd_diff / 2, dtypes.int32)
             bbox_w_start = math_ops.cast(img_wd_diff / 2, dtypes.int32)
             bbox_begin = array_ops.stack([0, bbox_h_start, bbox_w_start, 0])
-            bbox_size = array_ops.stack([-1, self.target_height, self.target_width, -1])
+            bbox_size = array_ops.stack(
+                [-1, self.target_height, self.target_width, -1])
             outputs = array_ops.slice(inputs, bbox_begin, bbox_size)
             return outputs
 
     def compute_output_shape(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape).as_list()
-        return tensor_shape.TensorShape(
-            [input_shape[0], self.target_height, self.target_width, input_shape[3]]
-        )
+        return tensor_shape.TensorShape([
+            input_shape[0], self.target_height, self.target_width,
+            input_shape[3]
+        ])
 
     def get_config(self):
         config = {
@@ -214,22 +220,19 @@ class RandomCrop(Layer):
             """Cropped inputs with stateless random ops."""
             input_shape = array_ops.shape(inputs)
             crop_size = array_ops.stack(
-                [input_shape[0], self.height, self.width, input_shape[3]]
-            )
+                [input_shape[0], self.height, self.width, input_shape[3]])
             check = control_flow_ops.Assert(
-                math_ops.reduce_all(input_shape >= crop_size), [self.height, self.width]
-            )
-            input_shape = control_flow_ops.with_dependencies([check], input_shape)
+                math_ops.reduce_all(input_shape >= crop_size),
+                [self.height, self.width])
+            input_shape = control_flow_ops.with_dependencies([check],
+                                                             input_shape)
             limit = input_shape - crop_size + 1
-            offset = (
-                stateless_random_ops.stateless_random_uniform(
-                    array_ops.shape(input_shape),
-                    dtype=crop_size.dtype,
-                    maxval=crop_size.dtype.max,
-                    seed=self._rng.make_seeds()[:, 0],
-                )
-                % limit
-            )
+            offset = (stateless_random_ops.stateless_random_uniform(
+                array_ops.shape(input_shape),
+                dtype=crop_size.dtype,
+                maxval=crop_size.dtype.max,
+                seed=self._rng.make_seeds()[:, 0],
+            ) % limit)
             return array_ops.slice(inputs, offset, crop_size)
 
         # TODO(b/143885775): Share logic with Resize and CenterCrop.
@@ -243,21 +246,21 @@ class RandomCrop(Layer):
             resized_height = tf_utils.smart_cond(
                 ratio_cond,
                 lambda: math_ops.cast(
-                    self.width * input_height_t / input_width_t, input_height_t.dtype
-                ),
+                    self.width * input_height_t / input_width_t, input_height_t
+                    .dtype),
                 lambda: self.height,
             )
             resized_width = tf_utils.smart_cond(
                 ratio_cond,
                 lambda: self.width,
                 lambda: math_ops.cast(
-                    self.height * input_width_t / input_height_t, input_width_t.dtype
-                ),
+                    self.height * input_width_t / input_height_t, input_width_t
+                    .dtype),
             )
             # pylint: enable=g-long-lambda
             resized_inputs = image_ops.resize_images_v2(
-                images=inputs, size=array_ops.stack([resized_height, resized_width])
-            )
+                images=inputs,
+                size=array_ops.stack([resized_height, resized_width]))
 
             img_hd_diff = resized_height - self.height
             img_wd_diff = resized_width - self.width
@@ -268,20 +271,19 @@ class RandomCrop(Layer):
             outputs = array_ops.slice(resized_inputs, bbox_begin, bbox_size)
             return outputs
 
-        output = tf_utils.smart_cond(
-            training, random_cropped_inputs, resize_and_center_cropped_inputs
-        )
+        output = tf_utils.smart_cond(training, random_cropped_inputs,
+                                     resize_and_center_cropped_inputs)
         original_shape = inputs.shape.as_list()
         batch_size, num_channels = original_shape[0], original_shape[3]
-        output_shape = [batch_size] + [self.height, self.width] + [num_channels]
+        output_shape = [batch_size] + [self.height, self.width
+                                       ] + [num_channels]
         output.set_shape(output_shape)
         return output
 
     def compute_output_shape(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape).as_list()
         return tensor_shape.TensorShape(
-            [input_shape[0], self.height, self.width, input_shape[3]]
-        )
+            [input_shape[0], self.height, self.width, input_shape[3]])
 
     def get_config(self):
         config = {
@@ -361,7 +363,11 @@ class RandomFlip(Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, mode=HORIZONTAL_AND_VERTICAL, seed=None, name=None, **kwargs):
+    def __init__(self,
+                 mode=HORIZONTAL_AND_VERTICAL,
+                 seed=None,
+                 name=None,
+                 **kwargs):
         super(RandomFlip, self).__init__(name=name, **kwargs)
         self.mode = mode
         if mode == HORIZONTAL:
@@ -376,8 +382,7 @@ class RandomFlip(Layer):
         else:
             raise ValueError(
                 "RandomFlip layer {name} received an unknown mode "
-                "argument {arg}".format(name=name, arg=mode)
-            )
+                "argument {arg}".format(name=name, arg=mode))
         self.seed = seed
         self._rng = make_generator(self.seed)
         self.input_spec = InputSpec(ndim=4)
@@ -390,15 +395,14 @@ class RandomFlip(Layer):
             flipped_outputs = inputs
             if self.horizontal:
                 flipped_outputs = image_ops.random_flip_up_down(
-                    flipped_outputs, self.seed
-                )
+                    flipped_outputs, self.seed)
             if self.vertical:
                 flipped_outputs = image_ops.random_flip_left_right(
-                    flipped_outputs, self.seed
-                )
+                    flipped_outputs, self.seed)
             return flipped_outputs
 
-        output = tf_utils.smart_cond(training, random_flipped_inputs, lambda: inputs)
+        output = tf_utils.smart_cond(training,
+                                     random_flipped_inputs, lambda: inputs)
         output.set_shape(inputs.shape)
         return output
 
@@ -451,16 +455,14 @@ class RandomTranslation(Layer):
         negative.
     """
 
-    def __init__(
-        self,
-        height_factor,
-        width_factor,
-        fill_mode="nearest",
-        fill_value=0.0,
-        seed=None,
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 height_factor,
+                 width_factor,
+                 fill_mode="nearest",
+                 fill_value=0.0,
+                 seed=None,
+                 name=None,
+                 **kwargs):
         self.height_factor = height_factor
         if isinstance(height_factor, (tuple, list)):
             self.height_lower = abs(height_factor[0])
@@ -470,13 +472,11 @@ class RandomTranslation(Layer):
         if self.height_upper < 0.0:
             raise ValueError(
                 "`height_factor` cannot have negative values as upper "
-                "bound, got {}".format(height_factor)
-            )
+                "bound, got {}".format(height_factor))
         if abs(self.height_lower) > 1.0 or abs(self.height_upper) > 1.0:
             raise ValueError(
                 "`height_factor` must have values between [-1, 1], "
-                "got {}".format(height_factor)
-            )
+                "got {}".format(height_factor))
 
         self.width_factor = width_factor
         if isinstance(width_factor, (tuple, list)):
@@ -487,18 +487,15 @@ class RandomTranslation(Layer):
         if self.width_upper < 0.0:
             raise ValueError(
                 "`width_factor` cannot have negative values as upper "
-                "bound, got {}".format(width_factor)
-            )
+                "bound, got {}".format(width_factor))
         if abs(self.width_lower) > 1.0 or abs(self.width_upper) > 1.0:
             raise ValueError(
                 "`width_factor` must have values between [-1, 1], "
-                "got {}".format(width_factor)
-            )
+                "got {}".format(width_factor))
 
         if fill_mode not in {"nearest", "bilinear"}:
             raise NotImplementedError(
-                "`fill_mode` {} is not supported yet.".format(fill_mode)
-            )
+                "`fill_mode` {} is not supported yet.".format(fill_mode))
         self.fill_mode = fill_mode
         self.fill_value = fill_value
         self.seed = seed
@@ -523,9 +520,9 @@ class RandomTranslation(Layer):
                 maxval=self.height_upper,
             )
             height_translate = height_translate * img_hd
-            width_translate = self._rng.uniform(
-                shape=[batch_size, 1], minval=-self.width_lower, maxval=self.width_upper
-            )
+            width_translate = self._rng.uniform(shape=[batch_size, 1],
+                                                minval=-self.width_lower,
+                                                maxval=self.width_upper)
             width_translate = width_translate * img_wd
             translations = math_ops.cast(
                 array_ops.concat([height_translate, width_translate], axis=1),
@@ -537,7 +534,8 @@ class RandomTranslation(Layer):
                 interpolation=self.fill_mode,
             )
 
-        output = tf_utils.smart_cond(training, random_translated_inputs, lambda: inputs)
+        output = tf_utils.smart_cond(training,
+                                     random_translated_inputs, lambda: inputs)
         output.set_shape(inputs.shape)
         return output
 
@@ -590,9 +588,11 @@ def get_translation_matrix(translations, name=None):
         )
 
 
-def transform(
-    images, transforms, interpolation="nearest", output_shape=None, name=None
-):
+def transform(images,
+              transforms,
+              interpolation="nearest",
+              output_shape=None,
+              name=None):
     """Applies the given transform(s) to the image(s).
 
     Args:
@@ -629,16 +629,15 @@ def transform(
                 if output_shape_value is not None:
                     output_shape = output_shape_value
 
-        output_shape = ops.convert_to_tensor_v2(
-            output_shape, dtypes.int32, name="output_shape"
-        )
+        output_shape = ops.convert_to_tensor_v2(output_shape,
+                                                dtypes.int32,
+                                                name="output_shape")
 
         if not output_shape.get_shape().is_compatible_with([2]):
             raise ValueError(
                 "output_shape must be a 1-D Tensor of 2 elements: "
                 "new_height, new_width, instead got "
-                "{}".format(output_shape)
-            )
+                "{}".format(output_shape))
 
         return image_ops.image_projective_transform_v2(
             images,
@@ -668,20 +667,14 @@ def get_rotation_matrix(angles, image_height, image_width, name=None):
          where `k = c0 x + c1 y + 1`.
     """
     with ops.name_scope(name, "rotation_matrix"):
-        x_offset = (
-            (image_width - 1)
-            - (
-                math_ops.cos(angles) * (image_width - 1)
-                - math_ops.sin(angles) * (image_height - 1)
-            )
-        ) / 2.0
-        y_offset = (
-            (image_height - 1)
-            - (
-                math_ops.sin(angles) * (image_width - 1)
-                + math_ops.cos(angles) * (image_height - 1)
-            )
-        ) / 2.0
+        x_offset = ((image_width - 1) -
+                    (math_ops.cos(angles) *
+                     (image_width - 1) - math_ops.sin(angles) *
+                     (image_height - 1))) / 2.0
+        y_offset = ((image_height - 1) -
+                    (math_ops.sin(angles) *
+                     (image_width - 1) + math_ops.cos(angles) *
+                     (image_height - 1))) / 2.0
         num_angles = array_ops.shape(angles)[0]
         return array_ops.concat(
             values=[
@@ -728,7 +721,12 @@ class RandomRotation(Layer):
         negative.
     """
 
-    def __init__(self, factor, fill_mode="nearest", seed=None, name=None, **kwargs):
+    def __init__(self,
+                 factor,
+                 fill_mode="nearest",
+                 seed=None,
+                 name=None,
+                 **kwargs):
         self.factor = factor
         if isinstance(factor, (tuple, list)):
             self.lower = factor[0]
@@ -736,13 +734,11 @@ class RandomRotation(Layer):
         else:
             self.lower = self.upper = factor
         if self.lower < 0.0 or self.upper < 0.0:
-            raise ValueError(
-                "Factor cannot have negative values, " "got {}".format(factor)
-            )
+            raise ValueError("Factor cannot have negative values, "
+                             "got {}".format(factor))
         if fill_mode not in {"nearest", "bilinear"}:
             raise NotImplementedError(
-                "`fill_mode` {} is not supported yet.".format(fill_mode)
-            )
+                "`fill_mode` {} is not supported yet.".format(fill_mode))
         self.fill_mode = fill_mode
         self.seed = seed
         self._rng = make_generator(self.seed)
@@ -762,16 +758,17 @@ class RandomRotation(Layer):
             img_wd = math_ops.cast(inputs_shape[w_axis], dtypes.float32)
             min_angle = self.lower * 2.0 * np.pi
             max_angle = self.upper * 2.0 * np.pi
-            angles = self._rng.uniform(
-                shape=[batch_size], minval=-min_angle, maxval=max_angle
-            )
+            angles = self._rng.uniform(shape=[batch_size],
+                                       minval=-min_angle,
+                                       maxval=max_angle)
             return transform(
                 inputs,
                 get_rotation_matrix(angles, img_hd, img_wd),
                 interpolation=self.fill_mode,
             )
 
-        output = tf_utils.smart_cond(training, random_rotated_inputs, lambda: inputs)
+        output = tf_utils.smart_cond(training,
+                                     random_rotated_inputs, lambda: inputs)
         output.set_shape(inputs.shape)
         return output
 
@@ -823,16 +820,14 @@ class RandomZoom(Layer):
         negative.
     """
 
-    def __init__(
-        self,
-        height_factor,
-        width_factor,
-        fill_mode="nearest",
-        fill_value=0.0,
-        seed=None,
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 height_factor,
+                 width_factor,
+                 fill_mode="nearest",
+                 fill_value=0.0,
+                 seed=None,
+                 name=None,
+                 **kwargs):
         self.height_factor = height_factor
         if isinstance(height_factor, (tuple, list)):
             self.height_lower = height_factor[0]
@@ -840,15 +835,12 @@ class RandomZoom(Layer):
         else:
             self.height_lower = self.height_upper = height_factor
         if self.height_lower < 0.0 or self.height_upper < 0.0:
-            raise ValueError(
-                "`height_factor` cannot have negative values, "
-                "got {}".format(height_factor)
-            )
+            raise ValueError("`height_factor` cannot have negative values, "
+                             "got {}".format(height_factor))
         if self.height_lower > self.height_upper:
             raise ValueError(
                 "`height_factor` cannot have lower bound larger than "
-                "upper bound, got {}.".format(height_factor)
-            )
+                "upper bound, got {}.".format(height_factor))
 
         self.width_factor = width_factor
         if isinstance(width_factor, (tuple, list)):
@@ -857,20 +849,16 @@ class RandomZoom(Layer):
         else:
             self.width_lower = self.width_upper = width_factor
         if self.width_lower < 0.0 or self.width_upper < 0.0:
-            raise ValueError(
-                "`width_factor` cannot have negative values, "
-                "got {}".format(width_factor)
-            )
+            raise ValueError("`width_factor` cannot have negative values, "
+                             "got {}".format(width_factor))
         if self.width_lower > self.width_upper:
             raise ValueError(
                 "`width_factor` cannot have lower bound larger than "
-                "upper bound, got {}.".format(width_factor)
-            )
+                "upper bound, got {}.".format(width_factor))
 
         if fill_mode not in {"nearest", "bilinear"}:
             raise NotImplementedError(
-                "`fill_mode` {} is not supported yet.".format(fill_mode)
-            )
+                "`fill_mode` {} is not supported yet.".format(fill_mode))
         self.fill_mode = fill_mode
         self.fill_value = fill_value
         self.seed = seed
@@ -895,20 +883,21 @@ class RandomZoom(Layer):
                 maxval=self.height_upper,
             )
             height_zoom = height_zoom * img_hd
-            width_zoom = self._rng.uniform(
-                shape=[batch_size, 1], minval=-self.width_lower, maxval=self.width_upper
-            )
+            width_zoom = self._rng.uniform(shape=[batch_size, 1],
+                                           minval=-self.width_lower,
+                                           maxval=self.width_upper)
             width_zoom = width_zoom * img_wd
-            zooms = math_ops.cast(
-                array_ops.concat([height_zoom, width_zoom], axis=1), dtype=inputs.dtype
-            )
+            zooms = math_ops.cast(array_ops.concat([height_zoom, width_zoom],
+                                                   axis=1),
+                                  dtype=inputs.dtype)
             return transform(
                 inputs,
                 get_zoom_matrix(zooms, img_hd, img_wd),
                 interpolation=self.fill_mode,
             )
 
-        output = tf_utils.smart_cond(training, random_zoomed_inputs, lambda: inputs)
+        output = tf_utils.smart_cond(training,
+                                     random_zoomed_inputs, lambda: inputs)
         output.set_shape(inputs.shape)
         return output
 
@@ -1009,9 +998,8 @@ class RandomContrast(Layer):
         else:
             self.lower = self.upper = factor
         if self.lower < 0.0 or self.upper < 0.0 or self.lower > 1.0:
-            raise ValueError(
-                "Factor cannot have negative values, " "got {}".format(factor)
-            )
+            raise ValueError("Factor cannot have negative values, "
+                             "got {}".format(factor))
         self.seed = seed
         self.input_spec = InputSpec(ndim=4)
         super(RandomContrast, self).__init__(name=name, **kwargs)
@@ -1021,11 +1009,11 @@ class RandomContrast(Layer):
             training = K.learning_phase()
 
         def random_contrasted_inputs():
-            return image_ops.random_contrast(
-                inputs, 1.0 - self.lower, 1.0 + self.upper, self.seed
-            )
+            return image_ops.random_contrast(inputs, 1.0 - self.lower,
+                                             1.0 + self.upper, self.seed)
 
-        output = tf_utils.smart_cond(training, random_contrasted_inputs, lambda: inputs)
+        output = tf_utils.smart_cond(training,
+                                     random_contrasted_inputs, lambda: inputs)
         output.set_shape(inputs.shape)
         return output
 
@@ -1072,9 +1060,12 @@ class RandomHeight(Layer):
       4D tensor with shape: `(samples, random_height, width, channels)`.
     """
 
-    def __init__(
-        self, factor, interpolation="bilinear", seed=None, name=None, **kwargs
-    ):
+    def __init__(self,
+                 factor,
+                 interpolation="bilinear",
+                 seed=None,
+                 name=None,
+                 **kwargs):
         self.factor = factor
         if isinstance(factor, (tuple, list)):
             self.height_lower = -factor[0]
@@ -1084,8 +1075,7 @@ class RandomHeight(Layer):
         if self.height_lower > 1.0:
             raise ValueError(
                 "`factor` cannot have abs lower bound larger than 1.0, "
-                "got {}".format(factor)
-            )
+                "got {}".format(factor))
         self.interpolation = interpolation
         self._interpolation_method = get_interpolation(interpolation)
         self.input_spec = InputSpec(ndim=4)
@@ -1108,23 +1098,25 @@ class RandomHeight(Layer):
                 minval=(1.0 - self.height_lower),
                 maxval=(1.0 + self.height_upper),
             )
-            adjusted_height = math_ops.cast(height_factor * img_hd, dtypes.int32)
+            adjusted_height = math_ops.cast(height_factor * img_hd,
+                                            dtypes.int32)
             adjusted_size = array_ops.stack([adjusted_height, img_wd])
             output = image_ops.resize_images_v2(
-                images=inputs, size=adjusted_size, method=self._interpolation_method
-            )
+                images=inputs,
+                size=adjusted_size,
+                method=self._interpolation_method)
             original_shape = inputs.shape.as_list()
             output_shape = [original_shape[0]] + [None] + original_shape[2:4]
             output.set_shape(output_shape)
             return output
 
-        return tf_utils.smart_cond(training, random_height_inputs, lambda: inputs)
+        return tf_utils.smart_cond(training,
+                                   random_height_inputs, lambda: inputs)
 
     def compute_output_shape(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape).as_list()
         return tensor_shape.TensorShape(
-            [input_shape[0], None, input_shape[2], input_shape[3]]
-        )
+            [input_shape[0], None, input_shape[2], input_shape[3]])
 
     def get_config(self):
         config = {
@@ -1169,9 +1161,12 @@ class RandomWidth(Layer):
       `(samples, random_height, width, channels)`.
     """
 
-    def __init__(
-        self, factor, interpolation="bilinear", seed=None, name=None, **kwargs
-    ):
+    def __init__(self,
+                 factor,
+                 interpolation="bilinear",
+                 seed=None,
+                 name=None,
+                 **kwargs):
         self.factor = factor
         if isinstance(factor, (tuple, list)):
             self.width_lower = -factor[0]
@@ -1181,8 +1176,7 @@ class RandomWidth(Layer):
         if self.width_lower > 1.0:
             raise ValueError(
                 "`factor` cannot have abs lower bound larger than 1.0, "
-                "got {}".format(factor)
-            )
+                "got {}".format(factor))
         self.interpolation = interpolation
         self._interpolation_method = get_interpolation(interpolation)
         self.input_spec = InputSpec(ndim=4)
@@ -1208,20 +1202,21 @@ class RandomWidth(Layer):
             adjusted_width = math_ops.cast(width_factor * img_wd, dtypes.int32)
             adjusted_size = array_ops.stack([img_hd, adjusted_width])
             output = image_ops.resize_images_v2(
-                images=inputs, size=adjusted_size, method=self._interpolation_method
-            )
+                images=inputs,
+                size=adjusted_size,
+                method=self._interpolation_method)
             original_shape = inputs.shape.as_list()
             output_shape = original_shape[0:2] + [None] + [original_shape[3]]
             output.set_shape(output_shape)
             return output
 
-        return tf_utils.smart_cond(training, random_width_inputs, lambda: inputs)
+        return tf_utils.smart_cond(training,
+                                   random_width_inputs, lambda: inputs)
 
     def compute_output_shape(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape).as_list()
         return tensor_shape.TensorShape(
-            [input_shape[0], input_shape[1], None, input_shape[3]]
-        )
+            [input_shape[0], input_shape[1], None, input_shape[3]])
 
     def get_config(self):
         config = {
@@ -1245,6 +1240,5 @@ def get_interpolation(interpolation):
     if interpolation not in _RESIZE_METHODS:
         raise NotImplementedError(
             "Value not recognized for `interpolation`: {}. Supported values "
-            "are: {}".format(interpolation, _RESIZE_METHODS.keys())
-        )
+            "are: {}".format(interpolation, _RESIZE_METHODS.keys()))
     return _RESIZE_METHODS[interpolation]

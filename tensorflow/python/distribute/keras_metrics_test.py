@@ -34,11 +34,10 @@ def _labeled_dataset_fn():
     #  4: 4, 1 -> False;  5: 0, 2 -> False;  6: 1, 0 -> False;  7: 2, 1 -> False
     #  8: 3, 2 -> False;  9: 4, 0 -> False; 10: 0, 1 -> False; 11: 1, 2 -> False
     # 12: 2, 0 -> False; 13: 3, 1 -> False; 14: 4, 2 -> False; 15: 0, 0 -> True
-    return (
-        dataset_ops.Dataset.range(1000)
-        .map(lambda x: {"labels": x % 5, "predictions": x % 3})
-        .batch(4, drop_remainder=True)
-    )
+    return (dataset_ops.Dataset.range(1000).map(lambda x: {
+        "labels": x % 5,
+        "predictions": x % 3
+    }).batch(4, drop_remainder=True))
 
 
 def _boolean_dataset_fn():
@@ -48,16 +47,10 @@ def _boolean_dataset_fn():
     #   F, F -> TN;  T, T -> TP;   F, T -> FP
     #   T, F -> FN;  F, F -> TN;   T, T -> TP
     #   F, T -> FP;  T, F -> FN;   F, F -> TN
-    return (
-        dataset_ops.Dataset.from_tensor_slices(
-            {
-                "labels": [True, False, True, False],
-                "predictions": [True, True, False, False],
-            }
-        )
-        .repeat()
-        .batch(3, drop_remainder=True)
-    )
+    return (dataset_ops.Dataset.from_tensor_slices({
+        "labels": [True, False, True, False],
+        "predictions": [True, True, False, False],
+    }).repeat().batch(3, drop_remainder=True))
 
 
 def _threshold_dataset_fn():
@@ -67,22 +60,17 @@ def _threshold_dataset_fn():
     #  False, 0.0 -> TN;   True, 1.0 -> TP;  False, .75 -> FP
     #   True, .25 -> FN;  False, 0.0 -> TN;   True, 1.0 -> TP
     #  False, .75 -> FP;   True, .25 -> FN;  False, 0.0 -> TN
-    return (
-        dataset_ops.Dataset.from_tensor_slices(
-            {
-                "labels": [True, False, True, False],
-                "predictions": [1.0, 0.75, 0.25, 0.0],
-            }
-        )
-        .repeat()
-        .batch(3, drop_remainder=True)
-    )
+    return (dataset_ops.Dataset.from_tensor_slices({
+        "labels": [True, False, True, False],
+        "predictions": [1.0, 0.75, 0.25, 0.0],
+    }).repeat().batch(3, drop_remainder=True))
 
 
 def _regression_dataset_fn():
-    return dataset_ops.Dataset.from_tensor_slices(
-        {"labels": [1.0, 0.5, 1.0, 0.0], "predictions": [1.0, 0.75, 0.25, 0.0]}
-    ).repeat()
+    return dataset_ops.Dataset.from_tensor_slices({
+        "labels": [1.0, 0.5, 1.0, 0.0],
+        "predictions": [1.0, 0.75, 0.25, 0.0]
+    }).repeat()
 
 
 def all_combinations():
@@ -98,20 +86,22 @@ def all_combinations():
 
 
 def tpu_combinations():
-    return combinations.combine(
-        distribution=[strategy_combinations.tpu_strategy_one_step,], mode=["graph"]
-    )
+    return combinations.combine(distribution=[
+        strategy_combinations.tpu_strategy_one_step,
+    ],
+                                mode=["graph"])
 
 
 class KerasMetricsTest(test.TestCase, parameterized.TestCase):
-    def _test_metric(self, distribution, dataset_fn, metric_init_fn, expected_fn):
+    def _test_metric(self, distribution, dataset_fn, metric_init_fn,
+                     expected_fn):
         with ops.Graph().as_default(), distribution.scope():
             metric = metric_init_fn()
 
-            iterator = distribution.make_input_fn_iterator(lambda _: dataset_fn())
+            iterator = distribution.make_input_fn_iterator(lambda _:
+                                                           dataset_fn())
             updates = distribution.experimental_local_results(
-                distribution.run(metric, args=(iterator.get_next(),))
-            )
+                distribution.run(metric, args=(iterator.get_next(), )))
             batches_per_update = distribution.num_replicas_in_sync
 
             self.evaluate(iterator.initializer)
@@ -133,17 +123,15 @@ class KerasMetricsTest(test.TestCase, parameterized.TestCase):
     @combinations.generate(all_combinations() + tpu_combinations())
     def testMean(self, distribution):
         def _dataset_fn():
-            return (
-                dataset_ops.Dataset.range(1000)
-                .map(math_ops.to_float)
-                .batch(4, drop_remainder=True)
-            )
+            return (dataset_ops.Dataset.range(1000).map(
+                math_ops.to_float).batch(4, drop_remainder=True))
 
         def _expected_fn(num_batches):
             # Mean(0..3) = 1.5, Mean(0..7) = 3.5, Mean(0..11) = 5.5, etc.
             return num_batches * 2 - 0.5
 
-        self._test_metric(distribution, _dataset_fn, metrics.Mean, _expected_fn)
+        self._test_metric(distribution, _dataset_fn, metrics.Mean,
+                          _expected_fn)
 
 
 if __name__ == "__main__":

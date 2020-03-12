@@ -37,8 +37,7 @@ from tensorflow.python.keras.engine import data_adapter
 from tensorflow.python.keras.engine import network
 from tensorflow.python.keras.engine import training_utils
 from tensorflow.python.keras.mixed_precision.experimental import (
-    loss_scale_optimizer as lso,
-)
+    loss_scale_optimizer as lso, )
 from tensorflow.python.keras.saving.saved_model import model_serialization
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.keras.utils import version_utils
@@ -54,10 +53,8 @@ from tensorflow.python.util import nest
 from tensorflow.python.util import tf_decorator
 from tensorflow.python.util.tf_export import keras_export
 
-
-_keras_api_gauge = monitoring.BoolGauge(
-    "/tensorflow/api/keras", "keras api usage", "method"
-)
+_keras_api_gauge = monitoring.BoolGauge("/tensorflow/api/keras",
+                                        "keras api usage", "method")
 
 
 def enable_multi_worker(method):
@@ -77,7 +74,8 @@ def enable_multi_worker(method):
             mode=dc.CoordinatorMode.INDEPENDENT_WORKER,
         )
 
-    return tf_decorator.make_decorator(target=method, decorator_func=_method_wrapper)
+    return tf_decorator.make_decorator(target=method,
+                                       decorator_func=_method_wrapper)
 
 
 def disable_multi_worker(method):
@@ -86,11 +84,12 @@ def disable_multi_worker(method):
     def _method_wrapper(self, *args, **kwargs):
         if self._in_multi_worker_mode():  # pylint: disable=protected-access
             raise ValueError(
-                "{} is not supported in multi-worker mode.".format(method.__name__)
-            )
+                "{} is not supported in multi-worker mode.".format(
+                    method.__name__))
         return method(self, *args, **kwargs)
 
-    return tf_decorator.make_decorator(target=method, decorator_func=_method_wrapper)
+    return tf_decorator.make_decorator(target=method,
+                                       decorator_func=_method_wrapper)
 
 
 @keras_export("keras.Model", "keras.models.Model")
@@ -246,24 +245,21 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         """
         if dist_utils.is_tpu_strategy(self._distribution_strategy):
             if self._distribution_strategy.extended.steps_per_run > 1 and (
-                not network._is_hdf5_filepath(filepath)
-            ):  # pylint: disable=protected-access
+                    not network._is_hdf5_filepath(filepath)):  # pylint: disable=protected-access
                 raise ValueError(
                     "Load weights is not yet supported with TPUStrategy "
-                    "with steps_per_run greater than 1."
-                )
-        return super(Model, self).load_weights(filepath, by_name, skip_mismatch)
+                    "with steps_per_run greater than 1.")
+        return super(Model, self).load_weights(filepath, by_name,
+                                               skip_mismatch)
 
-    def compile(
-        self,
-        optimizer="rmsprop",
-        loss=None,
-        metrics=None,
-        loss_weights=None,
-        sample_weight_mode=None,
-        weighted_metrics=None,
-        **kwargs
-    ):
+    def compile(self,
+                optimizer="rmsprop",
+                loss=None,
+                metrics=None,
+                loss_weights=None,
+                sample_weight_mode=None,
+                weighted_metrics=None,
+                **kwargs):
         """Configures the model for training.
 
         Arguments:
@@ -334,11 +330,9 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
             self.optimizer = self._get_optimizer(optimizer)
             self.compiled_loss = compile_utils.LossesContainer(
-                loss, loss_weights, output_names=self.output_names
-            )
+                loss, loss_weights, output_names=self.output_names)
             self.compiled_metrics = compile_utils.MetricsContainer(
-                metrics, weighted_metrics, output_names=self.output_names
-            )
+                metrics, weighted_metrics, output_names=self.output_names)
 
             # Initializes attrs that are reset each time `compile` is called.
             self._reset_compile_cache()
@@ -352,9 +346,9 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         def _get_single_optimizer(opt):
             opt = optimizers.get(opt)
             if self._dtype_policy.loss_scale is not None and not isinstance(
-                opt, lso.LossScaleOptimizer
-            ):
-                opt = lso.LossScaleOptimizer(opt, self._dtype_policy.loss_scale)
+                    opt, lso.LossScaleOptimizer):
+                opt = lso.LossScaleOptimizer(opt,
+                                             self._dtype_policy.loss_scale)
             return opt
 
         return nest.map_structure(_get_single_optimizer, optimizer)
@@ -414,8 +408,8 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         """
         if self._run_eagerly is True and not context.executing_eagerly():
             raise ValueError(
-                "You can only set `run_eagerly=True` if eager execution " "is enabled."
-            )
+                "You can only set `run_eagerly=True` if eager execution "
+                "is enabled.")
         if not self.dynamic:
             if self._run_eagerly is None:
                 # Respect `tf.config.experimental_run_functions_eagerly` unless
@@ -425,21 +419,17 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                 return self._run_eagerly
         else:
             if not context.executing_eagerly():
-                raise ValueError(
-                    "Your model contains layers that can only be "
-                    "successfully run in eager execution (layers "
-                    "constructed with `dynamic=True`). "
-                    "You must enable eager execution with "
-                    "`tf.enable_eager_execution()`."
-                )
+                raise ValueError("Your model contains layers that can only be "
+                                 "successfully run in eager execution (layers "
+                                 "constructed with `dynamic=True`). "
+                                 "You must enable eager execution with "
+                                 "`tf.enable_eager_execution()`.")
             if self._run_eagerly is False:
                 # TODO(fchollet): consider using py_func to enable this.
-                raise ValueError(
-                    "Your model contains layers that can only be "
-                    "successfully run in eager execution (layers "
-                    "constructed with `dynamic=True`). "
-                    "You cannot set `run_eagerly=False`."
-                )
+                raise ValueError("Your model contains layers that can only be "
+                                 "successfully run in eager execution (layers "
+                                 "constructed with `dynamic=True`). "
+                                 "You cannot set `run_eagerly=False`.")
             return context.executing_eagerly()
 
     @run_eagerly.setter
@@ -478,9 +468,10 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
         with backprop.GradientTape() as tape:
             y_pred = self(x, training=True)
-            loss = self.compiled_loss(
-                y, y_pred, sample_weight, regularization_losses=self.losses
-            )
+            loss = self.compiled_loss(y,
+                                      y_pred,
+                                      sample_weight,
+                                      regularization_losses=self.losses)
         # For custom training steps, users can just write:
         #   trainable_variables = self.trainable_variables
         #   gradients = tape.gradient(loss, trainable_variables)
@@ -517,44 +508,42 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
         def train_function(iterator):
             data = next(iterator)
-            outputs = self.distribute_strategy.run(self.train_step, args=(data,))
-            outputs = reduce_per_replica(
-                outputs, self.distribute_strategy, reduction="first"
-            )
+            outputs = self.distribute_strategy.run(self.train_step,
+                                                   args=(data, ))
+            outputs = reduce_per_replica(outputs,
+                                         self.distribute_strategy,
+                                         reduction="first")
             return outputs
 
         if not self.run_eagerly:
             train_function = def_function.function(
-                train_function, experimental_relax_shapes=True
-            )
+                train_function, experimental_relax_shapes=True)
 
         self.train_function = train_function
         return self.train_function
 
     @enable_multi_worker
-    def fit(
-        self,
-        x=None,
-        y=None,
-        batch_size=None,
-        epochs=1,
-        verbose=1,
-        callbacks=None,
-        validation_split=0.0,
-        validation_data=None,
-        shuffle=True,
-        class_weight=None,
-        sample_weight=None,
-        initial_epoch=0,
-        steps_per_epoch=None,
-        validation_steps=None,
-        validation_batch_size=None,
-        validation_freq=1,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        **kwargs
-    ):
+    def fit(self,
+            x=None,
+            y=None,
+            batch_size=None,
+            epochs=1,
+            verbose=1,
+            callbacks=None,
+            validation_split=0.0,
+            validation_data=None,
+            shuffle=True,
+            class_weight=None,
+            sample_weight=None,
+            initial_epoch=0,
+            steps_per_epoch=None,
+            validation_steps=None,
+            validation_batch_size=None,
+            validation_freq=1,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            **kwargs):
         """Trains the model for a fixed number of epochs (iterations on a dataset).
 
         Arguments:
@@ -750,12 +739,12 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                 (x, y, sample_weight),
                 validation_data,
             ) = data_adapter.train_validation_split(
-                (x, y, sample_weight), validation_split=validation_split, shuffle=False
-            )
+                (x, y, sample_weight),
+                validation_split=validation_split,
+                shuffle=False)
 
-        with self.distribute_strategy.scope(), training_utils.RespectCompiledTrainableState(
-            self
-        ):
+        with self.distribute_strategy.scope(
+        ), training_utils.RespectCompiledTrainableState(self):
             # Creates a `tf.data.Dataset` and handles batch and epoch iteration.
             data_handler = data_adapter.DataHandler(
                 x=x,
@@ -792,19 +781,18 @@ class Model(network.Network, version_utils.ModelVersionSelector):
             # TODO(omalleyt): Fix the ordering issues that mean this has to
             # happen after `callbacks.on_train_begin`.
             data_handler._initial_epoch = self._maybe_load_initial_epoch_from_ckpt(  # pylint: disable=protected-access
-                initial_epoch
-            )
+                initial_epoch)
             for epoch, iterator in data_handler.enumerate_epochs():
                 self.reset_metrics()
                 callbacks.on_epoch_begin(epoch)
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
                         with traceme.TraceMe(
-                            "TraceContext",
-                            graph_type="train",
-                            epoch_num=epoch,
-                            step_num=step,
-                            batch_size=batch_size,
+                                "TraceContext",
+                                graph_type="train",
+                                epoch_num=epoch,
+                                step_num=step,
+                                batch_size=batch_size,
                         ):
                             callbacks.on_train_batch_begin(step)
                             tmp_logs = train_function(iterator)
@@ -819,7 +807,8 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                 epoch_logs = copy.copy(logs)
 
                 # Run validation.
-                if validation_data and self._should_eval(epoch, validation_freq):
+                if validation_data and self._should_eval(
+                        epoch, validation_freq):
                     (
                         val_x,
                         val_y,
@@ -837,7 +826,10 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                         use_multiprocessing=use_multiprocessing,
                         return_dict=True,
                     )
-                    val_logs = {"val_" + name: val for name, val in val_logs.items()}
+                    val_logs = {
+                        "val_" + name: val
+                        for name, val in val_logs.items()
+                    }
                     epoch_logs.update(val_logs)
 
                 callbacks.on_epoch_end(epoch, epoch_logs)
@@ -875,7 +867,10 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
         y_pred = self(x, training=False)
         # Updates stateful loss metrics.
-        self.compiled_loss(y, y_pred, sample_weight, regularization_losses=self.losses)
+        self.compiled_loss(y,
+                           y_pred,
+                           sample_weight,
+                           regularization_losses=self.losses)
 
         self.compiled_metrics.update_state(y, y_pred, sample_weight)
         return {m.name: m.result() for m in self.metrics}
@@ -904,34 +899,34 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
         def test_function(iterator):
             data = next(iterator)
-            outputs = self.distribute_strategy.run(self.test_step, args=(data,))
-            outputs = reduce_per_replica(
-                outputs, self.distribute_strategy, reduction="first"
-            )
+            outputs = self.distribute_strategy.run(self.test_step,
+                                                   args=(data, ))
+            outputs = reduce_per_replica(outputs,
+                                         self.distribute_strategy,
+                                         reduction="first")
             return outputs
 
         if not self.run_eagerly:
             test_function = def_function.function(
-                test_function, experimental_relax_shapes=True
-            )
+                test_function, experimental_relax_shapes=True)
 
         self.test_function = test_function
         return self.test_function
 
     @enable_multi_worker
     def evaluate(
-        self,
-        x=None,
-        y=None,
-        batch_size=None,
-        verbose=1,
-        sample_weight=None,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        return_dict=False,
+            self,
+            x=None,
+            y=None,
+            batch_size=None,
+            verbose=1,
+            sample_weight=None,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            return_dict=False,
     ):
         """Returns the loss value & metrics values for the model in test mode.
 
@@ -1040,13 +1035,14 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
             test_function = self.make_test_function()
             callbacks.on_test_begin()
-            for _, iterator in data_handler.enumerate_epochs():  # Single epoch.
+            for _, iterator in data_handler.enumerate_epochs(
+            ):  # Single epoch.
                 self.reset_metrics()
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
-                        with traceme.TraceMe(
-                            "TraceContext", graph_type="test", step_num=step
-                        ):
+                        with traceme.TraceMe("TraceContext",
+                                             graph_type="test",
+                                             step_num=step):
                             callbacks.on_test_batch_begin(step)
                             tmp_logs = test_function(iterator)
                             # Catch OutOfRangeError for Datasets of unknown size.
@@ -1115,31 +1111,31 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
         def predict_function(iterator):
             data = next(iterator)
-            outputs = self.distribute_strategy.run(self.predict_step, args=(data,))
-            outputs = reduce_per_replica(
-                outputs, self.distribute_strategy, reduction="concat"
-            )
+            outputs = self.distribute_strategy.run(self.predict_step,
+                                                   args=(data, ))
+            outputs = reduce_per_replica(outputs,
+                                         self.distribute_strategy,
+                                         reduction="concat")
             return outputs
 
         if not self.run_eagerly:
             predict_function = def_function.function(
-                predict_function, experimental_relax_shapes=True
-            )
+                predict_function, experimental_relax_shapes=True)
 
         self.predict_function = predict_function
         return self.predict_function
 
     @disable_multi_worker
     def predict(
-        self,
-        x,
-        batch_size=None,
-        verbose=0,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
+            self,
+            x,
+            batch_size=None,
+            verbose=0,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
     ):
         """Generates output predictions for the input samples.
 
@@ -1237,7 +1233,8 @@ class Model(network.Network, version_utils.ModelVersionSelector):
 
             predict_function = self.make_predict_function()
             callbacks.on_predict_begin()
-            for _, iterator in data_handler.enumerate_epochs():  # Single epoch.
+            for _, iterator in data_handler.enumerate_epochs(
+            ):  # Single epoch.
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
                         callbacks.on_predict_batch_begin(step)
@@ -1251,18 +1248,18 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                         batch_outputs = tmp_batch_outputs
                         if outputs is None:
                             outputs = nest.map_structure(
-                                lambda batch_output: [batch_output], batch_outputs
-                            )
+                                lambda batch_output: [batch_output],
+                                batch_outputs)
                         else:
                             nest.map_structure_up_to(
                                 batch_outputs,
                                 lambda output, batch_output: output.append(
-                                    batch_output
-                                ),
+                                    batch_output),
                                 outputs,
                                 batch_outputs,
                             )
-                        callbacks.on_predict_batch_end(step, {"outputs": batch_outputs})
+                        callbacks.on_predict_batch_end(
+                            step, {"outputs": batch_outputs})
             callbacks.on_predict_end()
         all_outputs = nest.map_structure_up_to(batch_outputs, concat, outputs)
         return tf_utils.to_numpy_or_python_type(all_outputs)
@@ -1273,13 +1270,13 @@ class Model(network.Network, version_utils.ModelVersionSelector):
             m.reset_states()
 
     def train_on_batch(
-        self,
-        x,
-        y=None,
-        sample_weight=None,
-        class_weight=None,
-        reset_metrics=True,
-        return_dict=False,
+            self,
+            x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
+            reset_metrics=True,
+            return_dict=False,
     ):
         """Runs a single gradient update on a single batch of data.
 
@@ -1323,12 +1320,10 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         """
         self._assert_compile_was_called()
         self._check_call_args("train_on_batch")
-        with self.distribute_strategy.scope(), training_utils.RespectCompiledTrainableState(
-            self
-        ):
+        with self.distribute_strategy.scope(
+        ), training_utils.RespectCompiledTrainableState(self):
             iterator = data_adapter.single_batch_iterator(
-                self.distribute_strategy, x, y, sample_weight, class_weight
-            )
+                self.distribute_strategy, x, y, sample_weight, class_weight)
             train_function = self.make_train_function()
             logs = train_function(iterator)
 
@@ -1343,9 +1338,12 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                 return results[0]
             return results
 
-    def test_on_batch(
-        self, x, y=None, sample_weight=None, reset_metrics=True, return_dict=False
-    ):
+    def test_on_batch(self,
+                      x,
+                      y=None,
+                      sample_weight=None,
+                      reset_metrics=True,
+                      return_dict=False):
         """Test the model on a single batch of samples.
 
         Arguments:
@@ -1383,8 +1381,7 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         self._check_call_args("test_on_batch")
         with self.distribute_strategy.scope():
             iterator = data_adapter.single_batch_iterator(
-                self.distribute_strategy, x, y, sample_weight
-            )
+                self.distribute_strategy, x, y, sample_weight)
             test_function = self.make_test_function()
             logs = test_function(iterator)
 
@@ -1416,28 +1413,30 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         """
         self._check_call_args("predict_on_batch")
         with self.distribute_strategy.scope():
-            iterator = data_adapter.single_batch_iterator(self.distribute_strategy, x)
+            iterator = data_adapter.single_batch_iterator(
+                self.distribute_strategy, x)
             predict_function = self.make_predict_function()
             outputs = predict_function(iterator)
         return tf_utils.to_numpy_or_python_type(outputs)
 
-    @deprecation.deprecated(None, "Please use Model.fit, which supports generators.")
+    @deprecation.deprecated(None,
+                            "Please use Model.fit, which supports generators.")
     def fit_generator(
-        self,
-        generator,
-        steps_per_epoch=None,
-        epochs=1,
-        verbose=1,
-        callbacks=None,
-        validation_data=None,
-        validation_steps=None,
-        validation_freq=1,
-        class_weight=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        shuffle=True,
-        initial_epoch=0,
+            self,
+            generator,
+            steps_per_epoch=None,
+            epochs=1,
+            verbose=1,
+            callbacks=None,
+            validation_data=None,
+            validation_steps=None,
+            validation_freq=1,
+            class_weight=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            shuffle=True,
+            initial_epoch=0,
     ):
         """Fits the model on data yielded batch-by-batch by a Python generator.
 
@@ -1464,17 +1463,16 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         )
 
     @deprecation.deprecated(
-        None, "Please use Model.evaluate, which supports generators."
-    )
+        None, "Please use Model.evaluate, which supports generators.")
     def evaluate_generator(
-        self,
-        generator,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        verbose=0,
+            self,
+            generator,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            verbose=0,
     ):
         """Evaluates the model on a data generator.
 
@@ -1496,17 +1494,16 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         )
 
     @deprecation.deprecated(
-        None, "Please use Model.predict, which supports generators."
-    )
+        None, "Please use Model.predict, which supports generators.")
     def predict_generator(
-        self,
-        generator,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        verbose=0,
+            self,
+            generator,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            verbose=0,
     ):
         """Generates predictions for the input samples from a data generator.
 
@@ -1530,7 +1527,7 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         # Always allow first arg, regardless of arg name.
         fullargspec = self._call_full_argspec
         if fullargspec.defaults:
-            positional_args = fullargspec.args[: -len(fullargspec.defaults)]
+            positional_args = fullargspec.args[:-len(fullargspec.defaults)]
         else:
             positional_args = fullargspec.args
         if "training" in positional_args:
@@ -1540,16 +1537,16 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         if len(positional_args) > 2:
             extra_args = positional_args[2:]
             raise ValueError(
-                "Models passed to `" + method_name + "` can only have `training` "
+                "Models passed to `" + method_name +
+                "` can only have `training` "
                 "and the first argument in `call` as positional arguments, "
-                "found: " + str(extra_args) + "."
-            )
+                "found: " + str(extra_args) + ".")
 
     def _validate_compile(self, optimizer, metrics, **kwargs):
         """Performs validation checks for the default `compile`."""
         if any(
-            isinstance(opt, optimizers.Optimizer) for opt in nest.flatten(optimizer)
-        ):
+                isinstance(opt, optimizers.Optimizer)
+                for opt in nest.flatten(optimizer)):
             raise ValueError(
                 "`tf.compat.v1.keras` Optimizer (",
                 optimizer,
@@ -1564,17 +1561,15 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         if kwargs.pop("distribute", None) is not None:
             raise ValueError(
                 "Distribute argument in compile is not available in TF 2.0 please "
-                "create the model under the distribution strategy scope."
-            )
+                "create the model under the distribution strategy scope.")
         if kwargs.pop("target_tensors", None) is not None:
             raise ValueError(
                 "target_tensors argument is not supported when executing eagerly."
             )
         invalid_kwargs = set(kwargs) - {"run_eagerly"}
         if invalid_kwargs:
-            raise TypeError(
-                "Invalid keyword argument(s) in `compile`: %s" % (invalid_kwargs,)
-            )
+            raise TypeError("Invalid keyword argument(s) in `compile`: %s" %
+                            (invalid_kwargs, ))
 
         # Model must be created and compiled with the same DistStrat.
         if self.built and ds_context.has_strategy():
@@ -1589,8 +1584,7 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                         "to the following.\n"
                         "with strategy.scope():\n"
                         "  model=_create_model()\n"
-                        "  model.compile(...)" % (v, strategy)
-                    )
+                        "  model.compile(...)" % (v, strategy))
 
         # Model metrics must be created in the same distribution strategy scope
         # as the model.
@@ -1605,8 +1599,7 @@ class Model(network.Network, version_utils.ModelVersionSelector):
                         "scope as the model (in this case %s). If you pass in a string "
                         "identifier for a metric to compile the metric will "
                         "automatically be created in the correct distribution "
-                        "strategy scope." % (metric, strategy)
-                    )
+                        "strategy scope." % (metric, strategy))
 
     def _maybe_load_initial_epoch_from_ckpt(self, initial_epoch):
         """Maybe load initial epoch from ckpt considering possible worker recovery.
@@ -1624,8 +1617,7 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         """
         if self._training_state is not None:
             return self._training_state.maybe_load_initial_epoch_from_ckpt(
-                initial_epoch, mode=ModeKeys.TRAIN
-            )
+                initial_epoch, mode=ModeKeys.TRAIN)
         return initial_epoch
 
     def _assert_compile_was_called(self):
@@ -1634,11 +1626,9 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         # model is compiled
         # (i.e. whether the model is built and its inputs/outputs are set).
         if not self._is_compiled:
-            raise RuntimeError(
-                "You must compile your model before "
-                "training/testing. "
-                "Use `model.compile(optimizer, loss)`."
-            )
+            raise RuntimeError("You must compile your model before "
+                               "training/testing. "
+                               "Use `model.compile(optimizer, loss)`.")
 
     def _set_inputs(self, inputs, outputs=None, training=None):
         """This method is for compat with Modelv1. Only inputs are needed here."""
@@ -1656,9 +1646,8 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         self.train_function = None
         self.test_function = None
         self.predict_function = None
-        functions = super(Model, self)._list_functions_for_serialization(
-            serialization_cache
-        )
+        functions = super(
+            Model, self)._list_functions_for_serialization(serialization_cache)
         self.train_function = train_function
         self.test_function = test_function
         self.predict_function = predict_function
@@ -1696,9 +1685,7 @@ class Model(network.Network, version_utils.ModelVersionSelector):
         return self
 
     def _in_multi_worker_mode(self):
-        return (
-            self.distribute_strategy.extended._in_multi_worker_mode()
-        )  # pylint: disable=protected-access
+        return (self.distribute_strategy.extended._in_multi_worker_mode())  # pylint: disable=protected-access
 
     def _get_distribution_strategy(self):
         return self.distribute_strategy
@@ -1748,7 +1735,8 @@ def concat(tensors, axis=0):
 
 
 def _is_tpu_multi_host(strategy):
-    return dist_utils.is_tpu_strategy(strategy) and strategy.extended.num_hosts > 1
+    return dist_utils.is_tpu_strategy(
+        strategy) and strategy.extended.num_hosts > 1
 
 
 def _tpu_multi_host_concat(v, strategy):
@@ -1805,8 +1793,7 @@ def _minimize(tape, optimizer, loss, trainable_variables):
     gradients = optimizer._clip_gradients(gradients)  # pylint: disable=protected-access
     if trainable_variables:
         if optimizer._HAS_ALL_REDUCE_SUM_GRAD:  # pylint: disable=protected-access
-            optimizer.apply_gradients(
-                zip(gradients, trainable_variables), all_reduce_sum_gradients=False
-            )
+            optimizer.apply_gradients(zip(gradients, trainable_variables),
+                                      all_reduce_sum_gradients=False)
         else:
             optimizer.apply_gradients(zip(gradients, trainable_variables))

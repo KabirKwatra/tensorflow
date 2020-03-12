@@ -53,8 +53,9 @@ class CentralStorageStrategy(distribute_lib.Strategy):
 
     def __init__(self, compute_devices=None, parameter_device=None):
         extended = parameter_server_strategy.ParameterServerStrategyExtended(
-            self, compute_devices=compute_devices, parameter_device=parameter_device
-        )
+            self,
+            compute_devices=compute_devices,
+            parameter_device=parameter_device)
         """Initializes the strategy with optional device strings.
 
     Args:
@@ -66,16 +67,13 @@ class CentralStorageStrategy(distribute_lib.Strategy):
     """
         super(CentralStorageStrategy, self).__init__(extended)
         distribute_lib.distribution_strategy_gauge.get_cell("V2").set(
-            "CentralStorageStrategy"
-        )
+            "CentralStorageStrategy")
 
     @classmethod
     def _from_num_gpus(cls, num_gpus):
         return cls(device_util.local_devices_from_num_gpus(num_gpus))
 
-    def experimental_distribute_dataset(
-        self, dataset
-    ):  # pylint: disable=useless-super-delegation
+    def experimental_distribute_dataset(self, dataset):  # pylint: disable=useless-super-delegation
         """Distributes a tf.data.Dataset instance provided via dataset.
 
         The returned dataset is a wrapped strategy dataset which creates a
@@ -101,13 +99,10 @@ class CentralStorageStrategy(distribute_lib.Strategy):
         Returns:
           A "distributed `Dataset`" that the caller can iterate over.
         """
-        return super(CentralStorageStrategy, self).experimental_distribute_dataset(
-            dataset
-        )
+        return super(CentralStorageStrategy,
+                     self).experimental_distribute_dataset(dataset)
 
-    def experimental_distribute_datasets_from_function(
-        self, dataset_fn
-    ):  # pylint: disable=useless-super-delegation
+    def experimental_distribute_datasets_from_function(self, dataset_fn):  # pylint: disable=useless-super-delegation
         """Distributes `tf.data.Dataset` instances created by calls to `dataset_fn`.
 
         `dataset_fn` will be called once for each worker in the strategy. In this
@@ -146,12 +141,10 @@ class CentralStorageStrategy(distribute_lib.Strategy):
           datasets.
         """
         return super(
-            CentralStorageStrategy, self
-        ).experimental_distribute_datasets_from_function(dataset_fn)
+            CentralStorageStrategy,
+            self).experimental_distribute_datasets_from_function(dataset_fn)
 
-    def experimental_local_results(
-        self, value
-    ):  # pylint: disable=useless-super-delegation
+    def experimental_local_results(self, value):  # pylint: disable=useless-super-delegation
         """Returns the list of all local per-replica values contained in `value`.
 
         In `CentralStorageStrategy` there is a single worker so the value returned
@@ -165,11 +158,10 @@ class CentralStorageStrategy(distribute_lib.Strategy):
           A tuple of values contained in `value`. If `value` represents a single
           value, this returns `(value,).`
         """
-        return super(CentralStorageStrategy, self).experimental_local_results(value)
+        return super(CentralStorageStrategy,
+                     self).experimental_local_results(value)
 
-    def run(
-        self, fn, args=(), kwargs=None, options=None
-    ):  # pylint: disable=useless-super-delegation
+    def run(self, fn, args=(), kwargs=None, options=None):  # pylint: disable=useless-super-delegation
         """Run `fn` on each replica, with the given arguments.
 
         In `CentralStorageStrategy`, `fn` is  called on each of the compute
@@ -185,11 +177,10 @@ class CentralStorageStrategy(distribute_lib.Strategy):
         Returns:
           Return value from running `fn`.
         """
-        return super(CentralStorageStrategy, self).run(fn, args, kwargs, options)
+        return super(CentralStorageStrategy, self).run(fn, args, kwargs,
+                                                       options)
 
-    def reduce(
-        self, reduce_op, value, axis
-    ):  # pylint: disable=useless-super-delegation
+    def reduce(self, reduce_op, value, axis):  # pylint: disable=useless-super-delegation
         """Reduce `value` across replicas.
 
         Given a per-replica value returned by `run`, say a
@@ -253,12 +244,11 @@ class CentralStorageStrategy(distribute_lib.Strategy):
         Returns:
           A `Tensor`.
         """
-        return super(CentralStorageStrategy, self).reduce(reduce_op, value, axis)
+        return super(CentralStorageStrategy,
+                     self).reduce(reduce_op, value, axis)
 
 
-@tf_export(
-    v1=["distribute.experimental.CentralStorageStrategy"]
-)  # pylint: disable=missing-docstring
+@tf_export(v1=["distribute.experimental.CentralStorageStrategy"])  # pylint: disable=missing-docstring
 class CentralStorageStrategyV1(distribute_lib.StrategyV1):
 
     __doc__ = CentralStorageStrategy.__doc__
@@ -266,11 +256,10 @@ class CentralStorageStrategyV1(distribute_lib.StrategyV1):
     def __init__(self, compute_devices=None, parameter_device=None):
         super(CentralStorageStrategyV1, self).__init__(
             parameter_server_strategy.ParameterServerStrategyExtended(
-                self, compute_devices=compute_devices, parameter_device=parameter_device
-            )
-        )
+                self,
+                compute_devices=compute_devices,
+                parameter_device=parameter_device))
         distribute_lib.distribution_strategy_gauge.get_cell("V1").set(
-            "CentralStorageStrategy"
-        )
+            "CentralStorageStrategy")
 
     __init__.__doc__ = CentralStorageStrategy.__init__.__doc__

@@ -33,7 +33,6 @@ from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.tpu import device_assignment as device_assignment_lib
 from tensorflow.python.tpu import tpu_strategy_util
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string("tpu", "", "Name of TPU to connect to.")
 flags.DEFINE_string("project", None, "Name of GCP project with TPU.")
@@ -42,7 +41,9 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 def get_tpu_cluster_resolver():
     resolver = tpu_cluster_resolver.TPUClusterResolver(
-        tpu=FLAGS.tpu, zone=FLAGS.zone, project=FLAGS.project,
+        tpu=FLAGS.tpu,
+        zone=FLAGS.zone,
+        project=FLAGS.project,
     )
     return resolver
 
@@ -62,7 +63,8 @@ class TPUStrategyTest(test.TestCase):
 
         with test.mock.patch.object(logging, "warning") as mock_log:
             tpu_strategy_util.initialize_tpu_system(resolver)
-            self.assertRegex(str(mock_log.call_args), "already been initialized")
+            self.assertRegex(str(mock_log.call_args),
+                             "already been initialized")
 
     def test_sequential_experimental_runs(self):
         resolver = get_tpu_cluster_resolver()
@@ -70,15 +72,15 @@ class TPUStrategyTest(test.TestCase):
         topology = tpu_strategy_util.initialize_tpu_system(resolver)
         # Computation replicated to all cores.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=2
-        )
-        strategy = tpu_lib.TPUStrategy(resolver, device_assignment=device_assignment)
+            topology, num_replicas=2)
+        strategy = tpu_lib.TPUStrategy(resolver,
+                                       device_assignment=device_assignment)
 
         # Computation on the 1st core.
         device_assignment2 = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1
-        )
-        strategy2 = tpu_lib.TPUStrategy(resolver, device_assignment=device_assignment2)
+            topology, num_replicas=1)
+        strategy2 = tpu_lib.TPUStrategy(resolver,
+                                        device_assignment=device_assignment2)
 
         def computation(x):
             return math_ops.square(x)
@@ -86,9 +88,8 @@ class TPUStrategyTest(test.TestCase):
         @def_function.function
         def train_step():
             outputs = strategy.experimental_local_results(
-                strategy.run(computation, args=([2.0, 2.0],))
-            )
-            outputs2 = strategy2.run(computation, args=([outputs[0]],))
+                strategy.run(computation, args=([2.0, 2.0], )))
+            outputs2 = strategy2.run(computation, args=([outputs[0]], ))
             return outputs2
 
         self.assertAllEqual([[16.0, 16.0]], train_step())
@@ -113,7 +114,8 @@ class TPUStrategyTest(test.TestCase):
                 0: (lambda: do_inference("/device:TPU:0", inference_fn, 0)),
                 1: (lambda: do_inference("/device:TPU:1", inference_fn, 1)),
             }
-            branch_index = inference_iteration.assign_add(1, use_locking=True) % 2
+            branch_index = inference_iteration.assign_add(1,
+                                                          use_locking=True) % 2
             return control_flow_ops.switch_case(branch_index, branch_fns)
 
         self.assertAllEqual(2.0, run_inference(1))  # Use TPU core 0.
@@ -133,9 +135,8 @@ class TPUStrategyTest(test.TestCase):
 
             return strategy.experimental_run_v2(computation)
 
-        with self.assertRaisesRegexp(
-            errors.InvalidArgumentError, "TPU compilation failed"
-        ):
+        with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                     "TPU compilation failed"):
             compilation_failure_run()
 
         @def_function.function
@@ -154,23 +155,20 @@ class TPUStrategyTest(test.TestCase):
         all_core_strategy = tpu_lib.TPUStrategy(resolver)
 
         with all_core_strategy.scope():
-            v = variables.Variable(0.0, aggregation=variables.VariableAggregation.MEAN)
+            v = variables.Variable(
+                0.0, aggregation=variables.VariableAggregation.MEAN)
 
         # Computation on the 1st core.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1
-        )
+            topology, num_replicas=1)
         first_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment
-        )
+            resolver, device_assignment=device_assignment)
 
         # Computation on the 2nd core.
         device_assignment2 = device_assignment_lib.DeviceAssignment(
-            topology, [[[0, 0, 0, 1]]]
-        )
+            topology, [[[0, 0, 0, 1]]])
         second_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment2
-        )
+            resolver, device_assignment=device_assignment2)
 
         @def_function.function
         def train_step():
@@ -192,29 +190,23 @@ class TPUStrategyTest(test.TestCase):
 
         # Strategy for the 1st core.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1
-        )
+            topology, num_replicas=1)
         first_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment
-        )
+            resolver, device_assignment=device_assignment)
 
         # Strategy for the 2nd core.
         device_assignment2 = device_assignment_lib.DeviceAssignment(
-            topology, [[[0, 0, 0, 1]]]
-        )
+            topology, [[[0, 0, 0, 1]]])
         second_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment2
-        )
+            resolver, device_assignment=device_assignment2)
 
         self.assertLen(first_core_strategy.extended.worker_devices, 1)
-        self.assertEndsWith(
-            first_core_strategy.extended.worker_devices[0], "device:TPU:0"
-        )
+        self.assertEndsWith(first_core_strategy.extended.worker_devices[0],
+                            "device:TPU:0")
 
         self.assertLen(second_core_strategy.extended.worker_devices, 1)
-        self.assertEndsWith(
-            second_core_strategy.extended.worker_devices[0], "device:TPU:1"
-        )
+        self.assertEndsWith(second_core_strategy.extended.worker_devices[0],
+                            "device:TPU:1")
 
 
 if __name__ == "__main__":

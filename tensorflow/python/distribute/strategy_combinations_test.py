@@ -51,16 +51,17 @@ class StrategyCombinationsTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(
         combinations.combine(
-            distribution=[strategy_combinations.mirrored_strategy_with_cpu_1_and_2],
+            distribution=[
+                strategy_combinations.mirrored_strategy_with_cpu_1_and_2
+            ],
             mode=["graph", "eager"],
-        )
-    )
+        ))
     def testMirrored2CPUs(self, distribution):
         with distribution.scope():
             one_per_replica = distribution.run(lambda: constant_op.constant(1))
-            num_replicas = distribution.reduce(
-                reduce_util.ReduceOp.SUM, one_per_replica, axis=None
-            )
+            num_replicas = distribution.reduce(reduce_util.ReduceOp.SUM,
+                                               one_per_replica,
+                                               axis=None)
             self.assertEqual(2, self.evaluate(num_replicas))
 
 
