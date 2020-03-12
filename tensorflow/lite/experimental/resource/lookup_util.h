@@ -25,65 +25,61 @@ namespace internal {
 /// Helper class for accessing TFLite tensor data.
 template <typename T>
 class TensorReader {
-public:
-    explicit TensorReader(const TfLiteTensor* input) {
-        input_data_ = GetTensorData<T>(input);
-    }
+ public:
+  explicit TensorReader(const TfLiteTensor* input) {
+    input_data_ = GetTensorData<T>(input);
+  }
 
-    // Returns the corresponding scalar data at the given index position.
-    // In here, it does not check the validity of the index should be guaranteed
-    // in order not to harm the performance. Caller should take care of it.
-    T GetData(int index) {
-        return input_data_[index];
-    }
+  // Returns the corresponding scalar data at the given index position.
+  // In here, it does not check the validity of the index should be guaranteed
+  // in order not to harm the performance. Caller should take care of it.
+  T GetData(int index) { return input_data_[index]; }
 
-private:
-    const T* input_data_;
+ private:
+  const T* input_data_;
 };
 
 /// Helper class for accessing TFLite tensor data. This specialized class is for
 /// std::string type.
 template <>
 class TensorReader<std::string> {
-public:
-    explicit TensorReader(const TfLiteTensor* input) : input_(input) {}
+ public:
+  explicit TensorReader(const TfLiteTensor* input) : input_(input) {}
 
-    // Returns the corresponding string data at the given index position.
-    // In here, it does not check the validity of the index should be guaranteed
-    // in order not to harm the performance. Caller should take care of it.
-    std::string GetData(int index) {
-        auto string_ref = GetString(input_, index);
-        return std::string(string_ref.str, string_ref.len);
-    }
+  // Returns the corresponding string data at the given index position.
+  // In here, it does not check the validity of the index should be guaranteed
+  // in order not to harm the performance. Caller should take care of it.
+  std::string GetData(int index) {
+    auto string_ref = GetString(input_, index);
+    return std::string(string_ref.str, string_ref.len);
+  }
 
-private:
-    const TfLiteTensor* input_;
+ private:
+  const TfLiteTensor* input_;
 };
 
 /// WARNING: Experimental interface, subject to change.
 /// Helper class for writing TFLite tensor data.
 template <typename ValueType>
 class TensorWriter {
-public:
-    explicit TensorWriter(TfLiteTensor* values) {
-        output_data_ = GetTensorData<ValueType>(values);
-    }
+ public:
+  explicit TensorWriter(TfLiteTensor* values) {
+    output_data_ = GetTensorData<ValueType>(values);
+  }
 
-    // Sets the given value to the given index position of the tensor storage.
-    // In here, it does not check the validity of the index should be guaranteed
-    // in order not to harm the performance. Caller should take care of it.
-    void SetData(int index, ValueType& value) {
-        output_data_[index] = value;
-    }
+  // Sets the given value to the given index position of the tensor storage.
+  // In here, it does not check the validity of the index should be guaranteed
+  // in order not to harm the performance. Caller should take care of it.
+  void SetData(int index, ValueType& value) { output_data_[index] = value; }
 
-    // Commit updates. In this case, it does nothing since the SetData method
-    // writes data directly.
-    void Commit() {
-        // Noop.
-    }
+  // Commit updates. In this case, it does nothing since the SetData method
+  // writes data directly.
+  void Commit() {
+    // Noop.
+  }
 
-private:
-    ValueType* output_data_;
+ private:
+  ValueType* output_data_;
 };
 
 /// WARNING: Experimental interface, subject to change.
@@ -91,26 +87,24 @@ private:
 /// std::string type.
 template <>
 class TensorWriter<std::string> {
-public:
-    explicit TensorWriter(TfLiteTensor* values) : values_(values) {}
+ public:
+  explicit TensorWriter(TfLiteTensor* values) : values_(values) {}
 
-    // Queues the given string value to the buffer regardless of the provided
-    // index.
-    // In here, it does not check the validity of the index should be guaranteed
-    // in order not to harm the performance. Caller should take care of it.
-    void SetData(int index, const std::string& value) {
-        buf_.AddString(value.data(), value.length());
-    }
+  // Queues the given string value to the buffer regardless of the provided
+  // index.
+  // In here, it does not check the validity of the index should be guaranteed
+  // in order not to harm the performance. Caller should take care of it.
+  void SetData(int index, const std::string& value) {
+    buf_.AddString(value.data(), value.length());
+  }
 
-    // Commit updates. The stored data in DynamicBuffer will be written into the
-    // tensor storage.
-    void Commit() {
-        buf_.WriteToTensor(values_, nullptr);
-    }
+  // Commit updates. The stored data in DynamicBuffer will be written into the
+  // tensor storage.
+  void Commit() { buf_.WriteToTensor(values_, nullptr); }
 
-private:
-    TfLiteTensor* values_;
-    DynamicBuffer buf_;
+ private:
+  TfLiteTensor* values_;
+  DynamicBuffer buf_;
 };
 
 }  // namespace internal

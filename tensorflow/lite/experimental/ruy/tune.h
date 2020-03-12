@@ -90,14 +90,14 @@ limitations under the License.
 namespace ruy {
 
 enum class Tuning {
-    // kAuto means please use auto-detection. It's the default in the
-    // user-visible parts (see Context). It's meant to be resolved to an
-    // actual tuning at some point by means of TuningResolver.
-    kAuto,
-    // Target an out-order CPU. Example: ARM Cortex-A75.
-    kOutOfOrder,
-    // Target an in-order CPU. Example: ARM Cortex-A55.
-    kInOrder
+  // kAuto means please use auto-detection. It's the default in the
+  // user-visible parts (see Context). It's meant to be resolved to an
+  // actual tuning at some point by means of TuningResolver.
+  kAuto,
+  // Target an out-order CPU. Example: ARM Cortex-A75.
+  kOutOfOrder,
+  // Target an in-order CPU. Example: ARM Cortex-A55.
+  kInOrder
 };
 
 // Why a TuningResolver class?
@@ -110,54 +110,52 @@ enum class Tuning {
 // a fixed amount of time. This need to store state is why this library
 // has to expose a class, TuningResolver, not just a function.
 class TuningResolver {
-public:
-    TuningResolver();
+ public:
+  TuningResolver();
 
-    // Allows the user to specify an explicit Tuning value, bypassing auto
-    // detection; or to specify Tuning::kAuto, reverting to auto detection.
-    void SetTuning(Tuning tuning) {
-        unresolved_tuning_ = tuning;
-    }
+  // Allows the user to specify an explicit Tuning value, bypassing auto
+  // detection; or to specify Tuning::kAuto, reverting to auto detection.
+  void SetTuning(Tuning tuning) { unresolved_tuning_ = tuning; }
 
-    // Get an actual tuning --- that is the function that this class wanted to be.
-    Tuning Resolve();
+  // Get an actual tuning --- that is the function that this class wanted to be.
+  Tuning Resolve();
 
-private:
-    TuningResolver(const TuningResolver&) = delete;
+ private:
+  TuningResolver(const TuningResolver&) = delete;
 
-    // TuningTool is a demo/tool used to tweak the tuning implementation to
-    // specific devices. It needs to access some finer granularity information
-    // than just the Tuning returned by Resolve. Nothing else should need
-    // access to that.
-    friend class TuneTool;
-    // Actually runs a nano-benchmark, producing a real number called 'ratio'
-    // whose meaning is generally opaque / implementation defined. Typically,
-    // this would be the ratio between the latencies of two different
-    // pieces of asm code differing only by the ordering of instructions,
-    // revealing whether the CPU cares about such ordering details.
-    // An implementation may just return a dummy value if it is not based on
-    // such nanobenchmarking / ratio evaluation.
-    float EvalRatio();
-    // Empirically determined threshold on ratio values delineating
-    // out-of-order (ratios closer to 1) from in-order (ratios farther from 1).
-    // An implementation may just return a dummy value if it is not based on
-    // such nanobenchmarking / ratio evaluation.
-    float ThresholdRatio();
-    // Perform the tuning resolution now. That may typically use EvalRatio and
-    // ThresholdRatio, but an implementation may use a different approach instead.
-    Tuning ResolveNow();
+  // TuningTool is a demo/tool used to tweak the tuning implementation to
+  // specific devices. It needs to access some finer granularity information
+  // than just the Tuning returned by Resolve. Nothing else should need
+  // access to that.
+  friend class TuneTool;
+  // Actually runs a nano-benchmark, producing a real number called 'ratio'
+  // whose meaning is generally opaque / implementation defined. Typically,
+  // this would be the ratio between the latencies of two different
+  // pieces of asm code differing only by the ordering of instructions,
+  // revealing whether the CPU cares about such ordering details.
+  // An implementation may just return a dummy value if it is not based on
+  // such nanobenchmarking / ratio evaluation.
+  float EvalRatio();
+  // Empirically determined threshold on ratio values delineating
+  // out-of-order (ratios closer to 1) from in-order (ratios farther from 1).
+  // An implementation may just return a dummy value if it is not based on
+  // such nanobenchmarking / ratio evaluation.
+  float ThresholdRatio();
+  // Perform the tuning resolution now. That may typically use EvalRatio and
+  // ThresholdRatio, but an implementation may use a different approach instead.
+  Tuning ResolveNow();
 
-    // The tuning as specified by the user, before actual resolution happens
-    // i.e. before querying any specifics of the current CPU.
-    // The default value kAuto means try to auto-detect. Other values mean
-    // bypass auto-detect, use explicit value instead. See SetTuning().
-    Tuning unresolved_tuning_ = Tuning::kAuto;
-    // Cached last resolved tuning.
-    Tuning last_resolved_tuning_ = Tuning::kAuto;
-    // Timepoint of cached last resolved tuning, for invalidation purposes.
-    TimePoint last_resolved_timepoint_;
-    // Cached last resolved tunings that are older than this age are invalid.
-    const Duration expiry_duration_;
+  // The tuning as specified by the user, before actual resolution happens
+  // i.e. before querying any specifics of the current CPU.
+  // The default value kAuto means try to auto-detect. Other values mean
+  // bypass auto-detect, use explicit value instead. See SetTuning().
+  Tuning unresolved_tuning_ = Tuning::kAuto;
+  // Cached last resolved tuning.
+  Tuning last_resolved_tuning_ = Tuning::kAuto;
+  // Timepoint of cached last resolved tuning, for invalidation purposes.
+  TimePoint last_resolved_timepoint_;
+  // Cached last resolved tunings that are older than this age are invalid.
+  const Duration expiry_duration_;
 };
 
 }  // namespace ruy

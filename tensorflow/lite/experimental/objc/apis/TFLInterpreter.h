@@ -24,50 +24,50 @@ NS_ASSUME_NONNULL_BEGIN
  * This enum specifies various error codes related to `TFLInterpreter`.
  */
 typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
-    /** Provided tensor index is invalid. */
-    TFLInterpreterErrorCodeInvalidTensorIndex,
+  /** Provided tensor index is invalid. */
+  TFLInterpreterErrorCodeInvalidTensorIndex,
 
-    /** Input data has invalid byte size. */
-    TFLInterpreterErrorCodeInvalidInputByteSize,
+  /** Input data has invalid byte size. */
+  TFLInterpreterErrorCodeInvalidInputByteSize,
 
-    /** Provided shape is invalid. It must be a non-empty array of positive unsigned integers. */
-    TFLInterpreterErrorCodeInvalidShape,
+  /** Provided shape is invalid. It must be a non-empty array of positive unsigned integers. */
+  TFLInterpreterErrorCodeInvalidShape,
 
-    /** Provided model cannot be loaded. */
-    TFLInterpreterErrorCodeFailedToLoadModel,
+  /** Provided model cannot be loaded. */
+  TFLInterpreterErrorCodeFailedToLoadModel,
 
-    /** Failed to create `TFLInterpreter`. */
-    TFLInterpreterErrorCodeFailedToCreateInterpreter,
+  /** Failed to create `TFLInterpreter`. */
+  TFLInterpreterErrorCodeFailedToCreateInterpreter,
 
-    /** Failed to invoke `TFLInterpreter`. */
-    TFLInterpreterErrorCodeFailedToInvoke,
+  /** Failed to invoke `TFLInterpreter`. */
+  TFLInterpreterErrorCodeFailedToInvoke,
 
-    /** Failed to retrieve a tensor. */
-    TFLInterpreterErrorCodeFailedToGetTensor,
+  /** Failed to retrieve a tensor. */
+  TFLInterpreterErrorCodeFailedToGetTensor,
 
-    /** Invalid tensor. */
-    TFLInterpreterErrorCodeInvalidTensor,
+  /** Invalid tensor. */
+  TFLInterpreterErrorCodeInvalidTensor,
 
-    /** Failed to resize an input tensor. */
-    TFLInterpreterErrorCodeFailedToResizeInputTensor,
+  /** Failed to resize an input tensor. */
+  TFLInterpreterErrorCodeFailedToResizeInputTensor,
 
-    /** Failed to copy data into an input tensor. */
-    TFLInterpreterErrorCodeFailedToCopyDataToInputTensor,
+  /** Failed to copy data into an input tensor. */
+  TFLInterpreterErrorCodeFailedToCopyDataToInputTensor,
 
-    /** Copying data into an output tensor not allowed. */
-    TFLInterpreterErrorCodeCopyDataToOutputTensorNotAllowed,
+  /** Copying data into an output tensor not allowed. */
+  TFLInterpreterErrorCodeCopyDataToOutputTensorNotAllowed,
 
-    /** Failed to get data from a tensor. */
-    TFLInterpreterErrorCodeFailedToGetDataFromTensor,
+  /** Failed to get data from a tensor. */
+  TFLInterpreterErrorCodeFailedToGetDataFromTensor,
 
-    /** Failed to allocate memory for tensors. */
-    TFLInterpreterErrorCodeFailedToAllocateTensors,
+  /** Failed to allocate memory for tensors. */
+  TFLInterpreterErrorCodeFailedToAllocateTensors,
 
-    /** Operation not allowed without allocating memory for tensors first. */
-    TFLInterpreterErrorCodeAllocateTensorsRequired,
+  /** Operation not allowed without allocating memory for tensors first. */
+  TFLInterpreterErrorCodeAllocateTensorsRequired,
 
-    /** Operation not allowed without invoking the interpreter first. */
-    TFLInterpreterErrorCodeInvokeInterpreterRequired,
+  /** Operation not allowed without invoking the interpreter first. */
+  TFLInterpreterErrorCodeInvokeInterpreterRequired,
 };
 
 /**
@@ -75,7 +75,7 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  */
 @interface TFLInterpreter : NSObject
 
-    /** The total number of input tensors. 0 if the interpreter creation failed. */
+/** The total number of input tensors. 0 if the interpreter creation failed. */
 @property(nonatomic, readonly) NSUInteger inputTensorCount;
 
 /** The total number of output tensors. 0 if the interpreter creation failed. */
@@ -95,7 +95,7 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  * @return A new instance of `TFLInterpreter` with the given model and the default interpreter
  *     options. `nil` if there is an error in initializing the interpreter.
  */
-- (nullable instancetype)initWithModelPath:(NSString *)modelPath error:(NSError **)error;
+- (nullable instancetype)initWithModelPath:(NSString*)modelPath error:(NSError**)error;
 
 /**
  * Initializes a new TensorFlow Lite interpreter instance with the given model file path and
@@ -109,9 +109,9 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  * @return A new instance of `TFLInterpreter` with the given model and options. `nil` if there is an
  *     error in initializing the interpreter.
  */
-- (nullable instancetype)initWithModelPath:(NSString *)modelPath
-    options:(TFLInterpreterOptions *)options
-    error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithModelPath:(NSString*)modelPath
+                                   options:(TFLInterpreterOptions*)options
+                                     error:(NSError**)error NS_DESIGNATED_INITIALIZER;
 
 /**
  * Invokes the interpreter to run inference.
@@ -121,7 +121,7 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  *
  * @return Whether the invocation is successful. Returns NO if an error occurred.
  */
-- (BOOL)invokeWithError:(NSError **)error;
+- (BOOL)invokeWithError:(NSError**)error;
 
 /**
  * Returns the input tensor at the given index.
@@ -134,7 +134,7 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  *     class documentation for more details on the life expectancy between the returned tensor and
  *     this interpreter.
  */
-- (nullable TFLTensor *)inputTensorAtIndex:(NSUInteger)index error:(NSError **)error;
+- (nullable TFLTensor*)inputTensorAtIndex:(NSUInteger)index error:(NSError**)error;
 
 /**
  * Returns the output tensor at the given index.
@@ -147,7 +147,7 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  *     class documentation for more details on the life expectancy between the returned tensor and
  *     this interpreter.
  */
-- (nullable TFLTensor *)outputTensorAtIndex:(NSUInteger)index error:(NSError **)error;
+- (nullable TFLTensor*)outputTensorAtIndex:(NSUInteger)index error:(NSError**)error;
 
 /**
  * Resizes the input tensor at the given index to the specified shape (an array of positive unsigned
@@ -162,8 +162,8 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  * @return Whether the input tensor was resized successfully. Returns NO if an error occurred.
  */
 - (BOOL)resizeInputTensorAtIndex:(NSUInteger)index
-    toShape:(NSArray<NSNumber *> *)shape
-    error:(NSError **)error;
+                         toShape:(NSArray<NSNumber*>*)shape
+                           error:(NSError**)error;
 
 /**
  * Allocates memory for tensors.
@@ -172,7 +172,7 @@ typedef NS_ENUM(NSUInteger, TFLInterpreterErrorCode) {
  *
  * @return Whether memory allocation is successful. Returns NO if an error occurred.
  */
-- (BOOL)allocateTensorsWithError:(NSError **)error;
+- (BOOL)allocateTensorsWithError:(NSError**)error;
 
 @end
 

@@ -155,8 +155,7 @@ public abstract class TensorBuffer {
    * than float, the values will be converted into float. For example, values in {@link
    * TensorBufferUint8} will be converted from uint8 to float.
    */
-  @NonNull
-  public abstract float[] getFloatArray();
+  @NonNull public abstract float[] getFloatArray();
 
   /**
    * Returns an int array of the values stored in this buffer. If the buffer is of different type
@@ -164,8 +163,7 @@ public abstract class TensorBuffer {
    * getting an int array from a {@link TensorBufferFloat} with values {400.32f, 23.04f}, the output
    * is {400, 23}.
    */
-  @NonNull
-  public abstract int[] getIntArray();
+  @NonNull public abstract int[] getIntArray();
 
   /**
    * Returns the number of bytes of a single element in the array. For example, a float buffer will
@@ -256,13 +254,11 @@ public abstract class TensorBuffer {
   public void loadBuffer(@NonNull ByteBuffer buffer, @NonNull int[] shape) {
     SupportPreconditions.checkNotNull(buffer, "Byte buffer cannot be null.");
     int flatSize = computeFlatSize(shape);
-    SupportPreconditions.checkArgument(
-        (buffer.limit() == getTypeSize() * flatSize),
+    SupportPreconditions.checkArgument((buffer.limit() == getTypeSize() * flatSize),
         "The size of byte buffer and the shape do not match.");
 
     if (!isDynamic) {
-      SupportPreconditions.checkArgument(
-          flatSize == this.flatSize,
+      SupportPreconditions.checkArgument(flatSize == this.flatSize,
           "The size of byte buffer and the size of the tensor buffer do not match.");
     } else {
       this.flatSize = flatSize;
