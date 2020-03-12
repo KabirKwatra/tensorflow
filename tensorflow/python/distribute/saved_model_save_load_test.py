@@ -27,54 +27,61 @@ from tensorflow.python.saved_model import saved_model
 
 
 class SavedModelKerasModelTest(test_base.TestSavedModelBase):
-
     def setUp(self):
-        self._root_dir = 'saved_model_save_load'
+        self._root_dir = "saved_model_save_load"
         super(SavedModelKerasModelTest, self).setUp()
 
     def _save_model(self, model, saved_dir):
         saved_model.save(model, saved_dir)
 
-    def _load_and_run_model(self,
-                            distribution,
-                            saved_dir,
-                            predict_dataset,
-                            output_name='output_1'):
-        return test_base.load_and_run_with_saved_model_api(distribution, saved_dir,
-                                                           predict_dataset,
-                                                           output_name)
+    def _load_and_run_model(
+        self, distribution, saved_dir, predict_dataset, output_name="output_1"
+    ):
+        return test_base.load_and_run_with_saved_model_api(
+            distribution, saved_dir, predict_dataset, output_name
+        )
 
     @combinations.generate(test_base.simple_models_with_strategies())
-    def test_save_no_strategy_restore_strategy(self, model_and_input,
-                                               distribution):
-        self.run_test_save_no_strategy_restore_strategy(
-            model_and_input, distribution)
+    def test_save_no_strategy_restore_strategy(self, model_and_input, distribution):
+        self.run_test_save_no_strategy_restore_strategy(model_and_input, distribution)
 
     @combinations.generate(
-        combinations.times(test_base.simple_models_with_strategies(),
-                           combinations.combine(save_in_scope=[True, False])))
-    def test_save_strategy_restore_no_strategy(self, model_and_input,
-                                               distribution, save_in_scope):
+        combinations.times(
+            test_base.simple_models_with_strategies(),
+            combinations.combine(save_in_scope=[True, False]),
+        )
+    )
+    def test_save_strategy_restore_no_strategy(
+        self, model_and_input, distribution, save_in_scope
+    ):
         self.run_test_save_strategy_restore_no_strategy(
-            model_and_input, distribution, save_in_scope)
+            model_and_input, distribution, save_in_scope
+        )
 
     @combinations.generate(
-        combinations.times(test_base.simple_models_with_strategy_pairs(),
-                           combinations.combine(save_in_scope=[True, False])))
-    def test_save_strategy_restore_strategy(self, model_and_input,
-                                            distribution_for_saving,
-                                            distribution_for_restoring,
-                                            save_in_scope):
-        self.run_test_save_strategy_restore_strategy(model_and_input,
-                                                     distribution_for_saving,
-                                                     distribution_for_restoring,
-                                                     save_in_scope)
+        combinations.times(
+            test_base.simple_models_with_strategy_pairs(),
+            combinations.combine(save_in_scope=[True, False]),
+        )
+    )
+    def test_save_strategy_restore_strategy(
+        self,
+        model_and_input,
+        distribution_for_saving,
+        distribution_for_restoring,
+        save_in_scope,
+    ):
+        self.run_test_save_strategy_restore_strategy(
+            model_and_input,
+            distribution_for_saving,
+            distribution_for_restoring,
+            save_in_scope,
+        )
 
 
 class SavedModelTFModuleTest(test_base.TestSavedModelBase):
-
     def setUp(self):
-        self._root_dir = 'saved_model_save_load'
+        self._root_dir = "saved_model_save_load"
         super(SavedModelTFModuleTest, self).setUp()
 
     def _train_model(self, model, x_train, y_train, batch_size):
@@ -83,7 +90,8 @@ class SavedModelTFModuleTest(test_base.TestSavedModelBase):
     def _predict_with_model(self, distribution, model, predict_dataset):
         if distribution:
             dist_predict_dataset = distribution.experimental_distribute_dataset(
-                predict_dataset)
+                predict_dataset
+            )
             per_replica_predict_data = next(iter(dist_predict_dataset))
             result = distribution.run(model, args=(per_replica_predict_data,))
             # Convert the per_replica value to a list, then concatenate them
@@ -94,45 +102,53 @@ class SavedModelTFModuleTest(test_base.TestSavedModelBase):
             return model(next(iter(predict_dataset)))
 
     def _save_model(self, model, saved_dir):
-        call = model.__call__.get_concrete_function(
-            tensor_spec.TensorSpec(None))
+        call = model.__call__.get_concrete_function(tensor_spec.TensorSpec(None))
         saved_model.save(model, saved_dir, signatures=call)
 
-    def _load_and_run_model(self,
-                            distribution,
-                            saved_dir,
-                            predict_dataset,
-                            output_name='output_1'):
+    def _load_and_run_model(
+        self, distribution, saved_dir, predict_dataset, output_name="output_1"
+    ):
         del output_name
         model = saved_model.load(saved_dir)
         return self._predict_with_model(distribution, model, predict_dataset)
 
     @combinations.generate(test_base.tfmodule_models_with_strategies())
-    def test_save_no_strategy_restore_strategy(self, model_and_input,
-                                               distribution):
-        self.run_test_save_no_strategy_restore_strategy(
-            model_and_input, distribution)
+    def test_save_no_strategy_restore_strategy(self, model_and_input, distribution):
+        self.run_test_save_no_strategy_restore_strategy(model_and_input, distribution)
 
     @combinations.generate(
-        combinations.times(test_base.tfmodule_models_with_strategies(),
-                           combinations.combine(save_in_scope=[True, False])))
+        combinations.times(
+            test_base.tfmodule_models_with_strategies(),
+            combinations.combine(save_in_scope=[True, False]),
+        )
+    )
     def test_save_strategy_restore_no_strategy(
-            self, model_and_input, distribution, save_in_scope):
+        self, model_and_input, distribution, save_in_scope
+    ):
         self.run_test_save_strategy_restore_no_strategy(
-            model_and_input, distribution, save_in_scope)
+            model_and_input, distribution, save_in_scope
+        )
 
     @combinations.generate(
-        combinations.times(test_base.tfmodule_models_with_strategy_pairs(),
-                           combinations.combine(save_in_scope=[True, False])))
-    def test_save_strategy_restore_strategy(self, model_and_input,
-                                            distribution_for_saving,
-                                            distribution_for_restoring,
-                                            save_in_scope):
-        self.run_test_save_strategy_restore_strategy(model_and_input,
-                                                     distribution_for_saving,
-                                                     distribution_for_restoring,
-                                                     save_in_scope)
+        combinations.times(
+            test_base.tfmodule_models_with_strategy_pairs(),
+            combinations.combine(save_in_scope=[True, False]),
+        )
+    )
+    def test_save_strategy_restore_strategy(
+        self,
+        model_and_input,
+        distribution_for_saving,
+        distribution_for_restoring,
+        save_in_scope,
+    ):
+        self.run_test_save_strategy_restore_strategy(
+            model_and_input,
+            distribution_for_saving,
+            distribution_for_restoring,
+            save_in_scope,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

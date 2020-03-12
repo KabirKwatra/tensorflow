@@ -62,15 +62,17 @@ class MaybeStrategyScope(object):
 
 def get_model(sync_batchnorm=False):
     model = keras.Sequential()
-    model.add(keras.layers.Dense(10, activation='relu', input_shape=(1,)))
-    model.add(keras.layers.Dense(
-        10, activation='relu',
-        kernel_regularizer=keras.regularizers.l2(1e-4)))
+    model.add(keras.layers.Dense(10, activation="relu", input_shape=(1,)))
+    model.add(
+        keras.layers.Dense(
+            10, activation="relu", kernel_regularizer=keras.regularizers.l2(1e-4)
+        )
+    )
     if sync_batchnorm:
         model.add(keras.layers.SyncBatchNormalization())
     else:
         model.add(keras.layers.BatchNormalization())
-    model.add(keras.layers.Dense(10, activation='relu'))
+    model.add(keras.layers.Dense(10, activation="relu"))
     model.add(keras.layers.Dense(1))
     return model
 
@@ -78,24 +80,28 @@ def get_model(sync_batchnorm=False):
 def get_data():
     x_train = np.random.rand(_NUM_SAMPLES, 1)
     y_train = 3 * x_train
-    x_train = x_train.astype('float32')
-    y_train = y_train.astype('float32')
-    train_dataset = dataset_ops.DatasetV2.from_tensor_slices(
-        (x_train, y_train))
+    x_train = x_train.astype("float32")
+    y_train = y_train.astype("float32")
+    train_dataset = dataset_ops.DatasetV2.from_tensor_slices((x_train, y_train))
     train_dataset = train_dataset.batch(_BATCH_SIZE)
     return train_dataset
 
 
 def compute_loss(labels, logits, reg_losses):
     pred_loss = keras.losses.mean_squared_error(labels, logits)
-    scaled_loss = nn.compute_average_loss(
-        pred_loss, global_batch_size=_BATCH_SIZE)
+    scaled_loss = nn.compute_average_loss(pred_loss, global_batch_size=_BATCH_SIZE)
     l2_loss = nn.scale_regularization_loss(reg_losses)
     return scaled_loss + l2_loss
 
 
-def iteration_inside_func(initial_weights, dataset, optimizer_fn,
-                          iteration_type, strategy=None, sync_batchnorm=None):
+def iteration_inside_func(
+    initial_weights,
+    dataset,
+    optimizer_fn,
+    iteration_type,
+    strategy=None,
+    sync_batchnorm=None,
+):
     """Helper function to test iterating over data inside a tf.function."""
     with MaybeStrategyScope(strategy):
         if strategy and sync_batchnorm:
@@ -106,31 +112,32 @@ def iteration_inside_func(initial_weights, dataset, optimizer_fn,
         optimizer = optimizer_fn()
 
         training_accuracy = keras.metrics.CategoricalAccuracy(
-            'training_accuracy', dtype=dtypes.float32)
+            "training_accuracy", dtype=dtypes.float32
+        )
 
         @def_function.function
         def train_epoch(dist_input):
             """Training StepFn."""
+
             def step_fn(inputs):
                 samples, labels = inputs
                 with backprop.GradientTape() as tape:
                     logits = model(samples)
                     loss = compute_loss(labels, logits, model.losses)
                 grads = tape.gradient(loss, model.trainable_variables)
-                optimizer.apply_gradients(
-                    zip(grads, model.trainable_variables))
+                optimizer.apply_gradients(zip(grads, model.trainable_variables))
                 training_accuracy.update_state(labels, logits)
                 return loss
 
             total_loss = 0.0
             num_batches = 0
-            if iteration_type == 'dataset':
+            if iteration_type == "dataset":
                 for x in dist_input:
                     if strategy:
                         per_replica_losses = strategy.run(step_fn, args=(x,))
-                        total_loss += strategy.reduce(reduce_util.ReduceOp.SUM,
-                                                      per_replica_losses,
-                                                      axis=None)
+                        total_loss += strategy.reduce(
+                            reduce_util.ReduceOp.SUM, per_replica_losses, axis=None
+                        )
                     else:
                         total_loss += step_fn(x)
                     num_batches += 1
@@ -139,10 +146,11 @@ def iteration_inside_func(initial_weights, dataset, optimizer_fn,
                 for _ in range(_STEPS_PER_EPOCH):
                     if strategy:
                         per_replica_losses = strategy.run(
-                            step_fn, args=(next(iterator),))
-                        total_loss += strategy.reduce(reduce_util.ReduceOp.SUM,
-                                                      per_replica_losses,
-                                                      axis=None)
+                            step_fn, args=(next(iterator),)
+                        )
+                        total_loss += strategy.reduce(
+                            reduce_util.ReduceOp.SUM, per_replica_losses, axis=None
+                        )
                     else:
                         total_loss += step_fn(next(iterator))
                     num_batches += 1
@@ -155,13 +163,17 @@ def iteration_inside_func(initial_weights, dataset, optimizer_fn,
         for _ in range(_NUM_EPOCHS):
             loss = train_epoch(dataset)
 
-        return (model.get_weights(),
-                loss,
-                training_accuracy.result())
+        return (model.get_weights(), loss, training_accuracy.result())
 
 
-def iteration_outside_func(initial_weights, dataset, optimizer_fn,
-                           iteration_type, strategy=None, sync_batchnorm=None):
+def iteration_outside_func(
+    initial_weights,
+    dataset,
+    optimizer_fn,
+    iteration_type,
+    strategy=None,
+    sync_batchnorm=None,
+):
     """Helper function to test iterating over data outside a tf.function."""
     with MaybeStrategyScope(strategy):
         model = get_model(sync_batchnorm=sync_batchnorm)
@@ -169,27 +181,28 @@ def iteration_outside_func(initial_weights, dataset, optimizer_fn,
         optimizer = optimizer_fn()
 
         training_accuracy = keras.metrics.CategoricalAccuracy(
-            'training_accuracy', dtype=dtypes.float32)
+            "training_accuracy", dtype=dtypes.float32
+        )
 
         @def_function.function
         def train_step(dist_inputs):
             """Training StepFn."""
+
             def step_fn(inputs):
                 samples, labels = inputs
                 with backprop.GradientTape() as tape:
                     logits = model(samples)
                     loss = compute_loss(labels, logits, model.losses)
                 grads = tape.gradient(loss, model.trainable_variables)
-                optimizer.apply_gradients(
-                    zip(grads, model.trainable_variables))
+                optimizer.apply_gradients(zip(grads, model.trainable_variables))
                 training_accuracy.update_state(labels, logits)
                 return loss
 
             if strategy:
                 per_replica_losses = strategy.run(step_fn, args=(dist_inputs,))
-                return strategy.reduce(reduce_util.ReduceOp.SUM,
-                                       per_replica_losses,
-                                       axis=None)
+                return strategy.reduce(
+                    reduce_util.ReduceOp.SUM, per_replica_losses, axis=None
+                )
             else:
                 return step_fn(dist_inputs)
 
@@ -198,7 +211,7 @@ def iteration_outside_func(initial_weights, dataset, optimizer_fn,
 
         total_loss = 0.0
         num_batches = 0
-        if iteration_type == 'dataset':
+        if iteration_type == "dataset":
             for _ in range(_NUM_EPOCHS):
                 for x in dataset:
                     total_loss += train_step(x)
@@ -210,13 +223,14 @@ def iteration_outside_func(initial_weights, dataset, optimizer_fn,
                     total_loss += train_step(next(iterator))
                     num_batches += 1
 
-        return (model.get_weights(),
-                total_loss / math_ops.cast(num_batches, dtype=dtypes.float32),
-                training_accuracy.result())
+        return (
+            model.get_weights(),
+            total_loss / math_ops.cast(num_batches, dtype=dtypes.float32),
+            training_accuracy.result(),
+        )
 
 
-class TestDistributionStrategyDnnCorrectness(test.TestCase,
-                                             parameterized.TestCase):
+class TestDistributionStrategyDnnCorrectness(test.TestCase, parameterized.TestCase):
     """Test custom training loop correctness with a simple DNN model."""
 
     def setUp(self):
@@ -229,22 +243,30 @@ class TestDistributionStrategyDnnCorrectness(test.TestCase,
         combinations.combine(
             distribution=strategy_combinations.all_strategies,
             optimizer_fn=strategy_combinations.optimizers_v1_and_v2,
-            mode=['eager'],
-            iteration_type=['iterator', 'dataset'],
+            mode=["eager"],
+            iteration_type=["iterator", "dataset"],
             inside_func=[False, True],
-            sync_batchnorm=[True, False]
-        ))
-    def test_dnn_correctness_minus_tpus(self, distribution, optimizer_fn,
-                                        iteration_type, inside_func,
-                                        sync_batchnorm):
+            sync_batchnorm=[True, False],
+        )
+    )
+    def test_dnn_correctness_minus_tpus(
+        self, distribution, optimizer_fn, iteration_type, inside_func, sync_batchnorm
+    ):
         # TODO(anjs): Identify why this particular V1 optimizer needs a higher tol.
-        if 'FtrlV1' in optimizer_fn._name and 'TPU' in type(distribution).__name__:
-            self.skipTest('Reduced tolerance of the order of 1e-1 required.')
-        self.dnn_correctness(distribution, optimizer_fn, iteration_type,
-                             inside_func, sync_batchnorm)
+        if "FtrlV1" in optimizer_fn._name and "TPU" in type(distribution).__name__:
+            self.skipTest("Reduced tolerance of the order of 1e-1 required.")
+        self.dnn_correctness(
+            distribution, optimizer_fn, iteration_type, inside_func, sync_batchnorm
+        )
 
-    def dnn_correctness(self, distribution, optimizer_fn, iteration_type,
-                        inside_func, sync_batchnorm=None):
+    def dnn_correctness(
+        self,
+        distribution,
+        optimizer_fn,
+        iteration_type,
+        inside_func,
+        sync_batchnorm=None,
+    ):
         model = get_model(sync_batchnorm)
         initial_weights = model.get_weights()
         dataset = get_data()
@@ -253,16 +275,25 @@ class TestDistributionStrategyDnnCorrectness(test.TestCase,
         else:
             iteration_func = iteration_outside_func
         wts_with_ds, loss_with_ds, acc_with_ds = iteration_func(
-            initial_weights, dataset, optimizer_fn, iteration_type,
-            strategy=distribution, sync_batchnorm=sync_batchnorm)
-        wts, loss, acc = iteration_func(initial_weights, dataset, optimizer_fn,
-                                        iteration_type,
-                                        sync_batchnorm=sync_batchnorm)
+            initial_weights,
+            dataset,
+            optimizer_fn,
+            iteration_type,
+            strategy=distribution,
+            sync_batchnorm=sync_batchnorm,
+        )
+        wts, loss, acc = iteration_func(
+            initial_weights,
+            dataset,
+            optimizer_fn,
+            iteration_type,
+            sync_batchnorm=sync_batchnorm,
+        )
 
         self.assertAllClose(wts, wts_with_ds, atol=1e-3, rtol=1e-3)
         self.assertAllClose(loss, loss_with_ds, atol=1e-3, rtol=1e-3)
         self.assertAllClose(acc, acc_with_ds, atol=1e-3, rtol=1e-3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

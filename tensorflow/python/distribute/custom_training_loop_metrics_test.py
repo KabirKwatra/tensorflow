@@ -31,12 +31,11 @@ from tensorflow.python.framework import constant_op
 
 
 class KerasMetricsTest(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_multiple_keras_metrics_experimental_run(self, distribution):
         with distribution.scope():
             loss_metric = keras.metrics.Mean("loss", dtype=np.float32)
@@ -52,15 +51,14 @@ class KerasMetricsTest(test.TestCase, parameterized.TestCase):
             distribution.run(step_fn)
 
         train_step()
-        self.assertEqual(loss_metric.result().numpy(),
-                         loss_metric_2.result().numpy())
+        self.assertEqual(loss_metric.result().numpy(), loss_metric_2.result().numpy())
         self.assertEqual(loss_metric.result().numpy(), 5.0)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_update_keras_metric_declared_in_strategy_scope(self, distribution):
         with distribution.scope():
             metric = keras.metrics.Mean("test_metric", dtype=np.float32)
@@ -81,11 +79,12 @@ class KerasMetricsTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_update_keras_metric_outside_strategy_scope_cross_replica(
-            self, distribution):
+        self, distribution
+    ):
         metric = keras.metrics.Mean("test_metric", dtype=np.float32)
 
         with distribution.scope():

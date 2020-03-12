@@ -42,11 +42,11 @@ from tensorflow.python.training.tracking import util as trackable_utils
 
 
 class NonLayerTrackable(tracking.AutoTrackable):
-
     def __init__(self):
         super(NonLayerTrackable, self).__init__()
         self.a_variable = trackable_utils.add_variable(
-            self, name="a_variable", shape=[])
+            self, name="a_variable", shape=[]
+        )
 
 
 class Subclassed(training.Model):
@@ -65,7 +65,6 @@ class Subclassed(training.Model):
 
 
 class TrainingCheckpointTests(test.TestCase, parameterized.TestCase):
-
     def testEagerTPUDistributionStrategy(self):
         self.skipTest("b/121387144")
         num_training_steps = 10
@@ -73,10 +72,10 @@ class TrainingCheckpointTests(test.TestCase, parameterized.TestCase):
         checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
 
         def _train_fn(optimizer, model):
-            input_value = constant_op.constant([[3.]])
+            input_value = constant_op.constant([[3.0]])
             optimizer.minimize(
-                functools.partial(model, input_value),
-                global_step=root.optimizer_step)
+                functools.partial(model, input_value), global_step=root.optimizer_step
+            )
 
         for training_continuation in range(3):
             strategy = tpu_strategy.TPUStrategy()
@@ -84,17 +83,23 @@ class TrainingCheckpointTests(test.TestCase, parameterized.TestCase):
                 model = Subclassed()
                 optimizer = adam_v1.AdamOptimizer(0.001)
                 root = trackable_utils.Checkpoint(
-                    optimizer=optimizer, model=model,
-                    optimizer_step=training_util.get_or_create_global_step())
-                root.restore(checkpoint_management.latest_checkpoint(
-                    checkpoint_directory))
+                    optimizer=optimizer,
+                    model=model,
+                    optimizer_step=training_util.get_or_create_global_step(),
+                )
+                root.restore(
+                    checkpoint_management.latest_checkpoint(checkpoint_directory)
+                )
 
                 for _ in range(num_training_steps):
                     strategy.extended.call_for_each_replica(
-                        functools.partial(_train_fn, optimizer, model))
+                        functools.partial(_train_fn, optimizer, model)
+                    )
                 root.save(file_prefix=checkpoint_prefix)
-                self.assertEqual((training_continuation + 1) * num_training_steps,
-                                 root.optimizer_step.numpy())
+                self.assertEqual(
+                    (training_continuation + 1) * num_training_steps,
+                    root.optimizer_step.numpy(),
+                )
 
     @combinations.generate(
         combinations.combine(
@@ -104,7 +109,9 @@ class TrainingCheckpointTests(test.TestCase, parameterized.TestCase):
                 strategy_combinations.tpu_strategy,
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
-            mode=["eager"]))
+            mode=["eager"],
+        )
+    )
     def testCheckpointRestoreOptimizerSlots(self, distribution):
         def state():
             with distribution.scope():
@@ -151,7 +158,8 @@ class TrainingCheckpointTests(test.TestCase, parameterized.TestCase):
         # Restore from the checkpoint outside a distribution.scope().
         with self.test_session():
             with self.assertRaisesRegex(
-                    ValueError, "optimizer slot variable under the scope"):
+                ValueError, "optimizer slot variable under the scope"
+            ):
                 checkpoint.restore(save_path)
 
 

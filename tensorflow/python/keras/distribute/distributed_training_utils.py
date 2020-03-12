@@ -80,9 +80,14 @@ def set_weights(distribution_strategy, dist_model, weights):
         K.get_session(assign_ops).run(assign_ops)
 
 
-def unwrap_values(distribution_strategy, grouped_inputs, grouped_outputs,
-                  grouped_updates=None, grouped_session_args=None,
-                  with_loss_tensor=False):
+def unwrap_values(
+    distribution_strategy,
+    grouped_inputs,
+    grouped_outputs,
+    grouped_updates=None,
+    grouped_session_args=None,
+    with_loss_tensor=False,
+):
     """Unwrap the list of values contained in the PerReplica parameters.
 
     This function calls `flatten_per_replica_values` to parse each of the input
@@ -110,28 +115,29 @@ def unwrap_values(distribution_strategy, grouped_inputs, grouped_outputs,
     """
     # Unwrap per device values returned from each model's train function.
     # This will be used to construct the main train function.
-    all_inputs = flatten_per_replica_values(distribution_strategy,
-                                            grouped_inputs)
-    all_outputs = unwrap_outputs(distribution_strategy, grouped_outputs,
-                                 with_loss_tensor)
+    all_inputs = flatten_per_replica_values(distribution_strategy, grouped_inputs)
+    all_outputs = unwrap_outputs(
+        distribution_strategy, grouped_outputs, with_loss_tensor
+    )
 
     if grouped_updates:
-        all_updates = flatten_per_replica_values(distribution_strategy,
-                                                 grouped_updates)
+        all_updates = flatten_per_replica_values(distribution_strategy, grouped_updates)
     else:
         all_updates = None
 
     all_session_args = {}
     if grouped_session_args:
-        grouped_feed_dict = grouped_session_args.get('feed_dict')
+        grouped_feed_dict = grouped_session_args.get("feed_dict")
         if grouped_feed_dict:
-            all_session_args['feed_dict'] = flatten_per_replica_values(
-                distribution_strategy, grouped_feed_dict)
+            all_session_args["feed_dict"] = flatten_per_replica_values(
+                distribution_strategy, grouped_feed_dict
+            )
 
-        grouped_fetches = grouped_session_args.get('fetches')
+        grouped_fetches = grouped_session_args.get("fetches")
         if grouped_fetches:
-            all_session_args['fetches'] = flatten_per_replica_values(
-                distribution_strategy, grouped_fetches)
+            all_session_args["fetches"] = flatten_per_replica_values(
+                distribution_strategy, grouped_fetches
+            )
 
     # TODO(priyag): Return only non empty/None values
     return all_inputs, all_outputs, all_updates, all_session_args
@@ -145,32 +151,34 @@ def unwrap_output_dict(strategy, grouped_outputs, mode):
     # In the case of fit/eval, the grouped_outputs is a dict, whereas in predict,
     # the output is as same structure as model output. They need to be treated
     # differently
-    total_loss = strategy.reduce(reduce_util.ReduceOp.SUM,
-                                 grouped_outputs['total_loss'][0], axis=None)
-    output_losses = flatten_per_replica_values(strategy,
-                                               grouped_outputs['output_losses'])
-    metrics = flatten_per_replica_values(strategy,
-                                         grouped_outputs['metrics'])
-    batch_size = strategy.reduce(reduce_util.ReduceOp.SUM,
-                                 grouped_outputs['batch_size'], axis=None)
-    if (is_tpu_strategy(strategy) and
-            ops.executing_eagerly_outside_functions()):
+    total_loss = strategy.reduce(
+        reduce_util.ReduceOp.SUM, grouped_outputs["total_loss"][0], axis=None
+    )
+    output_losses = flatten_per_replica_values(
+        strategy, grouped_outputs["output_losses"]
+    )
+    metrics = flatten_per_replica_values(strategy, grouped_outputs["metrics"])
+    batch_size = strategy.reduce(
+        reduce_util.ReduceOp.SUM, grouped_outputs["batch_size"], axis=None
+    )
+    if is_tpu_strategy(strategy) and ops.executing_eagerly_outside_functions():
         # Choose 1 value per replica in the TPU case since all replicas produce the
         # same output.
         # We only do this in eager mode for now since this function is used in
         # both graph and eager mode and in the graph case we currently don't use
         # experimental_run so would need to be removed when we converge the graph
         # code path as well.
-        output_losses = output_losses[::strategy.num_replicas_in_sync]
-        metrics = metrics[::strategy.num_replicas_in_sync]
-    return {'total_loss': [total_loss],
-            'output_losses': output_losses,
-            'metrics': metrics,
-            'batch_size': batch_size}
+        output_losses = output_losses[:: strategy.num_replicas_in_sync]
+        metrics = metrics[:: strategy.num_replicas_in_sync]
+    return {
+        "total_loss": [total_loss],
+        "output_losses": output_losses,
+        "metrics": metrics,
+        "batch_size": batch_size,
+    }
 
 
-def unwrap_outputs(distribution_strategy, grouped_outputs,
-                   with_loss_tensor=False):
+def unwrap_outputs(distribution_strategy, grouped_outputs, with_loss_tensor=False):
     """Unwrap the list of outputs contained in the PerReplica parameters.
 
     This function calls `flatten_per_replica_values` to parse each of the input
@@ -191,25 +199,26 @@ def unwrap_outputs(distribution_strategy, grouped_outputs,
 
     """
     if not with_loss_tensor:
-        return flatten_per_replica_values(distribution_strategy,
-                                          grouped_outputs)
+        return flatten_per_replica_values(distribution_strategy, grouped_outputs)
 
     if not isinstance(grouped_outputs, list):
         grouped_outputs = [grouped_outputs]
     # reduce loss tensor before adding it to the list of fetches
-    loss = distribution_strategy.reduce(reduce_util.ReduceOp.SUM,
-                                        grouped_outputs[0], axis=None)
-    all_outputs = flatten_per_replica_values(distribution_strategy,
-                                             grouped_outputs[1:])
-    if (is_tpu_strategy(distribution_strategy) and
-            ops.executing_eagerly_outside_functions()):
+    loss = distribution_strategy.reduce(
+        reduce_util.ReduceOp.SUM, grouped_outputs[0], axis=None
+    )
+    all_outputs = flatten_per_replica_values(distribution_strategy, grouped_outputs[1:])
+    if (
+        is_tpu_strategy(distribution_strategy)
+        and ops.executing_eagerly_outside_functions()
+    ):
         # Choose 1 value per replica in the TPU case since all replicas produce the
         # same output.
         # We only do this in eager mode for now since this function is used in
         # both graph and eager mode and in the graph case we currently don't use
         # experimental_run so would need to be removed when we converge the graph
         # code path as well.
-        all_outputs = all_outputs[::distribution_strategy.num_replicas_in_sync]
+        all_outputs = all_outputs[:: distribution_strategy.num_replicas_in_sync]
     return [loss] + all_outputs
 
 
@@ -233,8 +242,11 @@ def flatten_per_replica_values(distribution_strategy, per_replica_values):
     # pylint: disable=g-complex-comprehension
     # This function takes a PerReplica object or a list of PerReplica objects and
     # returns all the values associated with it.
-    return [e for flattened in nest.flatten(per_replica_values)
-            for e in distribution_strategy.unwrap(flattened)]
+    return [
+        e
+        for flattened in nest.flatten(per_replica_values)
+        for e in distribution_strategy.unwrap(flattened)
+    ]
 
 
 def validate_callbacks(input_callbacks, optimizer):
@@ -252,28 +264,34 @@ def validate_callbacks(input_callbacks, optimizer):
     """
     if input_callbacks:
         for callback in input_callbacks:
-            if isinstance(callback, (callbacks.LearningRateScheduler,
-                                     callbacks.ReduceLROnPlateau)):
+            if isinstance(
+                callback, (callbacks.LearningRateScheduler, callbacks.ReduceLROnPlateau)
+            ):
 
                 if not isinstance(optimizer, optimizer_v2.OptimizerV2):
-                    raise ValueError('You must specify a Keras Optimizer V2 when using '
-                                     '%s callback with DistributionStrategy.' % callback)
+                    raise ValueError(
+                        "You must specify a Keras Optimizer V2 when using "
+                        "%s callback with DistributionStrategy." % callback
+                    )
 
             # If users want to use the TensorBoard callback they cannot use certain
             # features of the callback that involve accessing model attributes and
             # running ops.
             if isinstance(callback, callbacks.TensorBoard):
-                if getattr(callback, 'write_grads', False):
+                if getattr(callback, "write_grads", False):
                     logging.warning(
                         UserWarning(
-                            '`write_grads` in the TensorBoard callback is not supported '
-                            'when using DistributionStrategy. Setting `write_grads` '
-                            'to `False`.'))
+                            "`write_grads` in the TensorBoard callback is not supported "
+                            "when using DistributionStrategy. Setting `write_grads` "
+                            "to `False`."
+                        )
+                    )
                     callback.write_grads = False
 
 
-def validate_distributed_dataset_inputs(distribution_strategy, x, y,
-                                        sample_weights=None):
+def validate_distributed_dataset_inputs(
+    distribution_strategy, x, y, sample_weights=None
+):
     """Validate all the components of a DistributedValue Dataset input.
 
     Args:
@@ -313,8 +331,9 @@ def validate_distributed_dataset_inputs(distribution_strategy, x, y,
         y_values_list = None
 
     if sample_weights is not None:
-        sample_weights_list = validate_per_replica_inputs(distribution_strategy,
-                                                          sample_weights)
+        sample_weights_list = validate_per_replica_inputs(
+            distribution_strategy, sample_weights
+        )
     else:
         sample_weights_list = None
 
@@ -347,8 +366,10 @@ def validate_per_replica_inputs(distribution_strategy, x):
         x_values = distribution_strategy.unwrap(x)
         for value in x_values:
             if not tensor_util.is_tensor(value):
-                raise ValueError('Dataset input to the model should be tensors instead '
-                                 'they are of type {}'.format(type(value)))
+                raise ValueError(
+                    "Dataset input to the model should be tensors instead "
+                    "they are of type {}".format(type(value))
+                )
 
         if not context.executing_eagerly():
             # Validate that the shape and dtype of all the elements in x are the same.
@@ -363,8 +384,10 @@ def validate_all_tensor_types(x, x_values):
     x_dtype = x_values[0].dtype
     for i in range(1, len(x_values)):
         if x_dtype != x_values[i].dtype:
-            raise ValueError('Input tensor dtypes do not match for distributed tensor'
-                             ' inputs {}'.format(x))
+            raise ValueError(
+                "Input tensor dtypes do not match for distributed tensor"
+                " inputs {}".format(x)
+            )
 
 
 def validate_all_tensor_shapes(x, x_values):
@@ -372,17 +395,18 @@ def validate_all_tensor_shapes(x, x_values):
     x_shape = x_values[0].shape.as_list()
     for i in range(1, len(x_values)):
         if x_shape != x_values[i].shape.as_list():
-            raise ValueError('Input tensor shapes do not match for distributed tensor'
-                             ' inputs {}'.format(x))
+            raise ValueError(
+                "Input tensor shapes do not match for distributed tensor"
+                " inputs {}".format(x)
+            )
 
 
 def _wait_for_variable_initialization(session):
     """Utility to wait for variables to be initialized."""
-    all_variables = K._get_variables(
-        K.get_graph())  # pylint: disable=protected-access
+    all_variables = K._get_variables(K.get_graph())  # pylint: disable=protected-access
     candidate_vars = []
     for v in all_variables:
-        if not getattr(v, '_keras_initialized', False):
+        if not getattr(v, "_keras_initialized", False):
             candidate_vars.append(v)
 
     if not candidate_vars:
@@ -390,7 +414,8 @@ def _wait_for_variable_initialization(session):
 
     while True:
         is_initialized = session.run(
-            [variables.is_variable_initialized(v) for v in candidate_vars])
+            [variables.is_variable_initialized(v) for v in candidate_vars]
+        )
         uninitialized_vars = []
         for flag, v in zip(is_initialized, candidate_vars):
             if not flag:
@@ -403,8 +428,10 @@ def _wait_for_variable_initialization(session):
 def init_restore_or_wait_for_variables():
     """Initialize or restore variables or wait for variables to be initialized."""
     session = K._get_session()  # pylint: disable=protected-access
-    if not multi_worker_util.has_worker_context(
-    ) or multi_worker_util.should_load_checkpoint():
+    if (
+        not multi_worker_util.has_worker_context()
+        or multi_worker_util.should_load_checkpoint()
+    ):
         # TODO(yuefengz): if checkpoints exist, restore from checkpoint.
         K._initialize_variables(session)  # pylint: disable=protected-access
     else:
@@ -422,25 +449,29 @@ def validate_inputs(x, y):
       ValueError: if input is not a Dataset or a numpy array(when we use
         MirroredStrategy).
     """
-    if (isinstance(x, iterator_ops.Iterator) or
-            isinstance(y, iterator_ops.Iterator)):
-        raise ValueError('`DistributionStrategy` does not support inputs of type '
-                         'Iterator. You must pass a `tf.data.Dataset` object or a '
-                         'numpy array as input.')
+    if isinstance(x, iterator_ops.Iterator) or isinstance(y, iterator_ops.Iterator):
+        raise ValueError(
+            "`DistributionStrategy` does not support inputs of type "
+            "Iterator. You must pass a `tf.data.Dataset` object or a "
+            "numpy array as input."
+        )
 
 
 # TODO(b/118776054): Currently we support global batch size for TPUStrategy and
 # core MirroredStrategy only. Remove this check when contrib MirroredStrategy is
 # no longer needed.
 def global_batch_size_supported(distribution_strategy):
-    return distribution_strategy.extended._global_batch_size  # pylint: disable=protected-access
+    return (
+        distribution_strategy.extended._global_batch_size
+    )  # pylint: disable=protected-access
 
 
 # TODO(sourabhbajaj): Remove this once we use the same API for all strategies.
 def is_tpu_strategy(strategy):
     """We're executing TPU Strategy."""
-    return (strategy is not None and
-            strategy.__class__.__name__.startswith('TPUStrategy'))
+    return strategy is not None and strategy.__class__.__name__.startswith(
+        "TPUStrategy"
+    )
 
 
 def is_dataset_shape_fully_defined(dataset):
@@ -450,31 +481,25 @@ def is_dataset_shape_fully_defined(dataset):
     return not unknown_shapes
 
 
-def process_batch_and_step_size(strategy,
-                                inputs,
-                                batch_size,
-                                steps_per_epoch,
-                                mode,
-                                validation_split=0.):
+def process_batch_and_step_size(
+    strategy, inputs, batch_size, steps_per_epoch, mode, validation_split=0.0
+):
     """Process the batch size and step size based on input and dist strategy."""
     first_x_value = nest.flatten(inputs)[0]
     if isinstance(first_x_value, np.ndarray):
         num_samples = first_x_value.shape[0]
-        if validation_split and 0. < validation_split < 1.:
+        if validation_split and 0.0 < validation_split < 1.0:
             num_samples = int(num_samples * (1 - validation_split))
         # Until support for partial batch is implemented across all
         # functions and distribution strategy, we pass `mode` to selectively
         # relax the constraint to consume all the training samples.
         steps_per_epoch, batch_size = get_input_params(
-            strategy, num_samples, steps_per_epoch, batch_size, mode=mode)
+            strategy, num_samples, steps_per_epoch, batch_size, mode=mode
+        )
     return batch_size, steps_per_epoch
 
 
-def get_input_params(distribution_strategy,
-                     num_samples,
-                     steps,
-                     batch_size,
-                     mode=None):
+def get_input_params(distribution_strategy, num_samples, steps, batch_size, mode=None):
     """Calculate the number of batches and steps/steps_per_epoch.
 
     Args:
@@ -500,8 +525,7 @@ def get_input_params(distribution_strategy,
     """
     # TODO(b/118776054): Use global batch size for Keras/DS support.
     # Currently this is only supported in TPUStrategy and CoreMirroredStrategy.
-    use_per_replica_batch = not global_batch_size_supported(
-        distribution_strategy)
+    use_per_replica_batch = not global_batch_size_supported(distribution_strategy)
 
     # TODO(b/128995245): In eager mode, uneven batch sizes are allowed except for
     # `fit()` on TPUStrategy.
@@ -509,12 +533,14 @@ def get_input_params(distribution_strategy,
     # XLA-GPU regression. Uneven batch sizes are not allowed except
     # for `test()` and `predict()` on TPUStrategy.
     if context.executing_eagerly():
-        allow_partial_batch = (mode != ModeKeys.TRAIN or
-                               not is_tpu_strategy(distribution_strategy))
+        allow_partial_batch = mode != ModeKeys.TRAIN or not is_tpu_strategy(
+            distribution_strategy
+        )
     else:
-        allow_partial_batch = (mode == ModeKeys.TRAIN or
-                               ((mode == ModeKeys.PREDICT or mode == ModeKeys.TEST)
-                                and is_tpu_strategy(distribution_strategy)))
+        allow_partial_batch = mode == ModeKeys.TRAIN or (
+            (mode == ModeKeys.PREDICT or mode == ModeKeys.TEST)
+            and is_tpu_strategy(distribution_strategy)
+        )
 
     if steps is None:
         if batch_size is None:
@@ -532,17 +558,20 @@ def get_input_params(distribution_strategy,
             steps = np.ceil(num_samples / global_batch_size).astype(int)
         else:
             if num_samples % global_batch_size:
-                raise ValueError('The number of samples %s is not divisible by '
-                                 'batch size %s.' % (num_samples, global_batch_size))
+                raise ValueError(
+                    "The number of samples %s is not divisible by "
+                    "batch size %s." % (num_samples, global_batch_size)
+                )
             steps = num_samples // global_batch_size
     else:
         if batch_size is None:
             # We calculate the batch size based on the number of steps specified
             if num_samples % steps:
-                raise ValueError('The number of samples %s is not divisible by '
-                                 'steps %s. Please change the number of steps to a '
-                                 'value that can consume all the samples' % (
-                                     num_samples, steps))
+                raise ValueError(
+                    "The number of samples %s is not divisible by "
+                    "steps %s. Please change the number of steps to a "
+                    "value that can consume all the samples" % (num_samples, steps)
+                )
             global_batch_size = num_samples // steps
         else:
             # If the user provided the batch size we need to handle the case
@@ -553,21 +582,25 @@ def get_input_params(distribution_strategy,
 
             min_num_samples = global_batch_size * steps
             if allow_partial_batch:
-                min_num_samples = global_batch_size * \
-                    (steps-1) + 1 if steps > 1 else 0
+                min_num_samples = (
+                    global_batch_size * (steps - 1) + 1 if steps > 1 else 0
+                )
 
             if num_samples < min_num_samples:
-                raise ValueError('Number of samples %s is less than samples required '
-                                 'for specified batch_size %s and steps %s' % (
-                                     num_samples, global_batch_size, steps))
+                raise ValueError(
+                    "Number of samples %s is less than samples required "
+                    "for specified batch_size %s and steps %s"
+                    % (num_samples, global_batch_size, steps)
+                )
 
     # We need to return the per replica or global batch size based on the strategy
     if use_per_replica_batch:
         if global_batch_size % distribution_strategy.num_replicas_in_sync:
             raise ValueError(
-                'The batch size (%s) could not be sharded evenly across the sync '
-                'replicas (%s) in the distribution strategy.' % (
-                    global_batch_size, distribution_strategy.num_replicas_in_sync))
+                "The batch size (%s) could not be sharded evenly across the sync "
+                "replicas (%s) in the distribution strategy."
+                % (global_batch_size, distribution_strategy.num_replicas_in_sync)
+            )
         batch_size = global_batch_size // distribution_strategy.num_replicas_in_sync
     else:
         batch_size = global_batch_size
@@ -609,8 +642,7 @@ def _get_input_from_iterator(iterator, model):
         x = next_element
         y = None
         sample_weights = None
-    elif len(nest.flatten(next_element)) == (len(model.inputs) +
-                                             len(model.outputs)):
+    elif len(nest.flatten(next_element)) == (len(model.inputs) + len(model.outputs)):
         x, y = next_element
         sample_weights = None
     else:
@@ -618,7 +650,8 @@ def _get_input_from_iterator(iterator, model):
 
     # Validate that all the elements in x and y are of the same type and shape.
     validate_distributed_dataset_inputs(
-        model._distribution_strategy, x, y, sample_weights)
+        model._distribution_strategy, x, y, sample_weights
+    )
     return x, y, sample_weights
 
 
@@ -639,7 +672,7 @@ def _prepare_feed_values(model, inputs, targets, sample_weights, mode):
     inputs, targets, sample_weights = _get_input_from_iterator(inputs, model)
     if is_tpu_strategy(strategy):
         if sample_weights is not None:
-            raise ValueError('TPUStrategy does not support sample weights.')
+            raise ValueError("TPUStrategy does not support sample weights.")
 
     # When the inputs are dict, then we want to flatten it in the same order as
     # the input layers, such that the data are fed into the input layers in the
@@ -653,7 +686,8 @@ def _prepare_feed_values(model, inputs, targets, sample_weights, mode):
         # TODO(b/124535720): Remove once this standarize data logic is shared with
         # main flow.
         inputs, targets = nest.map_structure(
-            training_utils.standardize_single_array, (inputs, targets))
+            training_utils.standardize_single_array, (inputs, targets)
+        )
     else:
         inputs = training_utils.ModelInputs(inputs).as_list()
 
@@ -662,9 +696,11 @@ def _prepare_feed_values(model, inputs, targets, sample_weights, mode):
         targets = []
     elif sample_weights is not None and is_distributing_by_cloning(model):
         if context.executing_eagerly() and not model._compile_distribution:
-            raise NotImplementedError('`sample_weight` is not supported when using '
-                                      'tf.distribute.Strategy in eager mode and '
-                                      'cloning=True.')
+            raise NotImplementedError(
+                "`sample_weight` is not supported when using "
+                "tf.distribute.Strategy in eager mode and "
+                "cloning=True."
+            )
         sample_weights = flatten_per_replica_values(strategy, sample_weights)
 
     ins = [inputs, targets, sample_weights]
@@ -683,8 +719,9 @@ def is_distributing_by_cloning(model):
       True if the `model` is going to be distributed using cloning and False
       otherwise.
     """
-    if (is_tpu_strategy(model._distribution_strategy) and
-            context.executing_eagerly):  # b/137580852
+    if (
+        is_tpu_strategy(model._distribution_strategy) and context.executing_eagerly
+    ):  # b/137580852
         return False
     elif ops.executing_eagerly_outside_functions():
         return bool(model._compile_distribution)
@@ -732,16 +769,20 @@ def _build_network_on_replica(model, mode, inputs=None, targets=None):
     """
     # Need to do imports here since we run into a circular dependency error.
     from tensorflow.python.keras import models  # pylint: disable=g-import-not-at-top
-    from tensorflow.python.keras.engine import sequential  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.engine import (
+        sequential,
+    )  # pylint: disable=g-import-not-at-top
 
     # We rely on the internal methods to avoid having share_weights weights in the
     # public API.
     if isinstance(model, sequential.Sequential):
         updated_model = models._clone_sequential_model(
-            model, input_tensors=inputs, layer_fn=models.share_weights)
+            model, input_tensors=inputs, layer_fn=models.share_weights
+        )
     else:
         updated_model = models._clone_functional_model(
-            model, input_tensors=inputs, layer_fn=models.share_weights)
+            model, input_tensors=inputs, layer_fn=models.share_weights
+        )
         # Callable losses added directly to a functional Model need to be added
         # here.
         updated_model._callable_losses = model._callable_losses
@@ -754,8 +795,10 @@ def _build_network_on_replica(model, mode, inputs=None, targets=None):
             return math_ops.cast(output, dtypes.float32)
         else:
             return output
-    updated_model.outputs = [_upcast_low_precision_outputs(o)
-                             for o in updated_model.outputs]
+
+    updated_model.outputs = [
+        _upcast_low_precision_outputs(o) for o in updated_model.outputs
+    ]
 
     if isinstance(targets, tuple):
         targets = nest.flatten(targets)
@@ -770,18 +813,19 @@ def _build_network_on_replica(model, mode, inputs=None, targets=None):
             loss_weights=model.loss_weights,
             sample_weight_mode=model.sample_weight_mode,
             weighted_metrics=metrics_module.clone_metrics(
-                model._compile_weighted_metrics),
-            target_tensors=targets)
+                model._compile_weighted_metrics
+            ),
+            target_tensors=targets,
+        )
     return updated_model
 
 
-def _build_distributed_network(model, strategy, mode, inputs=None,
-                               targets=None):
+def _build_distributed_network(model, strategy, mode, inputs=None, targets=None):
     """Create a cloned model on each replica."""
     with K.get_graph().as_default(), strategy.scope():
         distributed_model = strategy.extended.call_for_each_replica(
-            _build_network_on_replica,
-            args=(model, mode, inputs, targets))
+            _build_network_on_replica, args=(model, mode, inputs, targets)
+        )
         set_distributed_model(model, mode, distributed_model)
 
 
@@ -790,6 +834,7 @@ def _clone_and_build_model(model, mode, inputs=None, targets=None):
     # We need to set the import here since we run into a circular dependency
     # error.
     from tensorflow.python.keras import models  # pylint: disable=g-import-not-at-top
+
     cloned_model = models.clone_model(model, input_tensors=inputs)
 
     # Compile and build model.
@@ -807,8 +852,10 @@ def _clone_and_build_model(model, mode, inputs=None, targets=None):
             return math_ops.cast(output, dtypes.float32)
         else:
             return output
-    cloned_model.outputs = [_upcast_low_precision_outputs(o)
-                            for o in cloned_model.outputs]
+
+    cloned_model.outputs = [
+        _upcast_low_precision_outputs(o) for o in cloned_model.outputs
+    ]
 
     if isinstance(targets, tuple):
         targets = nest.flatten(targets)
@@ -822,8 +869,10 @@ def _clone_and_build_model(model, mode, inputs=None, targets=None):
             loss_weights=model.loss_weights,
             sample_weight_mode=model.sample_weight_mode,
             weighted_metrics=metrics_module.clone_metrics(
-                model._compile_weighted_metrics),
-            target_tensors=targets)
+                model._compile_weighted_metrics
+            ),
+            target_tensors=targets,
+        )
     return cloned_model
 
 
@@ -831,7 +880,8 @@ def clone_model_on_replicas(model, strategy, mode, inputs=None, targets=None):
     """Create a cloned model on each replica."""
     with K.get_graph().as_default(), strategy.scope():
         distributed_model = strategy.extended.call_for_each_replica(
-            _clone_and_build_model, args=(model, mode, inputs, targets))
+            _clone_and_build_model, args=(model, mode, inputs, targets)
+        )
         set_distributed_model(model, mode, distributed_model)
     if mode == ModeKeys.TRAIN:
         model._make_callback_model(distributed_model)
@@ -846,8 +896,7 @@ def _make_execution_function(model, mode):
     if distributed_function:
         return distributed_function
 
-    distribution_function = _make_execution_function_without_cloning(
-        model, mode)
+    distribution_function = _make_execution_function_without_cloning(model, mode)
     set_distributed_function(model, mode, distribution_function)
     return distribution_function
 
@@ -866,11 +915,11 @@ def _make_execution_function_without_cloning(model, mode):
             # PerReplicas as arguments.  On every replica inside this call, each
             # PerReplica object will return the value for that replica.  The outputs
             # are PerReplicas too.
-            outputs = strategy.run(per_replica_function,
-                                   args=(x, y, sample_weights))
+            outputs = strategy.run(per_replica_function, args=(x, y, sample_weights))
             # Out of PerReplica outputs reduce or pick values to return.
             all_outputs = unwrap_outputs(
-                strategy, outputs, with_loss_tensor=(mode != ModeKeys.PREDICT))
+                strategy, outputs, with_loss_tensor=(mode != ModeKeys.PREDICT)
+            )
             return all_outputs
 
         if not model.run_eagerly:
@@ -879,6 +928,7 @@ def _make_execution_function_without_cloning(model, mode):
             def execution_function(input_fn):
                 # `numpy` translates Tensors to values in Eager mode.
                 return [out.numpy() for out in distributed_function(input_fn)]
+
         else:
             execution_function = distributed_function
 
@@ -929,9 +979,14 @@ def _make_execution_function_with_cloning(model, mode):
     # If you have updated the sample_weight_mode on the model, then you will need
     # to recompile metrics and recreate the execution function. This is indicated
     # by the `_recompile_exec_function` property.
-    if (distributed_model and hasattr(distributed_model, '_distribution_function')
-        and not (hasattr(distributed_model, '_recompile_exec_function') and
-                 distributed_model._recompile_exec_function)):
+    if (
+        distributed_model
+        and hasattr(distributed_model, "_distribution_function")
+        and not (
+            hasattr(distributed_model, "_recompile_exec_function")
+            and distributed_model._recompile_exec_function
+        )
+    ):
         return distributed_model._distributed_function
 
     if not distributed_model:
@@ -963,9 +1018,14 @@ def _make_graph_execution_function(model, mode):
     with strategy.scope():
         # Create train ops on each of the devices when we call
         # `_per_replica_fit_function`.
-        (grouped_inputs, grouped_outputs, grouped_updates,
-         grouped_session_args) = strategy.extended.call_for_each_replica(
-             _per_replica_function, args=(get_distributed_model(model, mode),))
+        (
+            grouped_inputs,
+            grouped_outputs,
+            grouped_updates,
+            grouped_session_args,
+        ) = strategy.extended.call_for_each_replica(
+            _per_replica_function, args=(get_distributed_model(model, mode),)
+        )
 
         # Initialize the variables in the replicated model. This is necessary for
         # multi-worker training because on some workers, initialization is not
@@ -983,18 +1043,21 @@ def _make_graph_execution_function(model, mode):
             grouped_outputs,
             grouped_updates,
             grouped_session_args,
-            with_loss_tensor=(mode != ModeKeys.PREDICT))
+            with_loss_tensor=(mode != ModeKeys.PREDICT),
+        )
 
         return K.function(
             all_inputs,
             all_outputs,
             updates=all_updates,
-            name='distributed_{}_function'.format(mode),
-            **all_session_args)
+            name="distributed_{}_function".format(mode),
+            **all_session_args
+        )
 
 
 def _make_eager_execution_function(model, mode):
     """Makes function to run one step of distributed model eager execution."""
+
     def _per_replica_function(model):
         f = model._make_execution_function(mode)
         return (f.inputs, f.outputs)
@@ -1012,7 +1075,8 @@ def _make_eager_execution_function(model, mode):
             # Create train ops on each of the devices when we call
             # `_per_replica_fit_function`.
             grouped = strategy.extended.call_for_each_replica(
-                _per_replica_function, args=(get_distributed_model(model, mode),))
+                _per_replica_function, args=(get_distributed_model(model, mode),)
+            )
             grouped_inputs, grouped_outputs = grouped
 
             # Unwrap all the per device values returned from `call_for_each_replica`.
@@ -1023,14 +1087,14 @@ def _make_eager_execution_function(model, mode):
                 strategy,
                 grouped_inputs,
                 grouped_outputs,
-                with_loss_tensor=(mode != ModeKeys.PREDICT))
+                with_loss_tensor=(mode != ModeKeys.PREDICT),
+            )
 
         # Finally, a joint Keras function is created; this one will be created in
         # a separate FuncGraph.
         return K.function(
-            all_inputs,
-            all_outputs,
-            name='eager_distributed_{}_function'.format(mode))
+            all_inputs, all_outputs, name="eager_distributed_{}_function".format(mode)
+        )
 
 
 def _copy_weights_to_distributed_model(original_model, mode):
@@ -1049,8 +1113,9 @@ def _copy_weights_to_original_model(model, mode):
     """Copies weights from first distributed model back to original model."""
     if model._distribution_strategy and mode == ModeKeys.TRAIN:
         distributed_model = get_distributed_model(model, mode)
-        updated_weights = model._distribution_strategy.unwrap(
-            distributed_model)[0].get_weights()
+        updated_weights = model._distribution_strategy.unwrap(distributed_model)[
+            0
+        ].get_weights()
         model.set_weights(updated_weights)
 
 
@@ -1060,10 +1125,10 @@ def _per_replica_aggregate_batch(strategy, batch_outs, model, mode):
         total_batch_outs = []
         for i in range(len(model.outputs)):
             num_replicas = strategy.num_replicas_in_sync
-            nested_outs = batch_outs[i *
-                                     num_replicas:i * num_replicas + num_replicas]
+            nested_outs = batch_outs[i * num_replicas : i * num_replicas + num_replicas]
             total_batch_outs.append(
-                concat_along_batch_dimension(nest.flatten(nested_outs)))
+                concat_along_batch_dimension(nest.flatten(nested_outs))
+            )
         return total_batch_outs
     return batch_outs
 
@@ -1073,8 +1138,7 @@ def _reset_metrics(model):
         for mode in [ModeKeys.TRAIN, ModeKeys.TEST, ModeKeys.PREDICT]:
             distributed_model = get_distributed_model(model, mode)
             if distributed_model:
-                first_model = model._distribution_strategy.unwrap(distributed_model)[
-                    0]
+                first_model = model._distribution_strategy.unwrap(distributed_model)[0]
                 first_model.reset_metrics()
 
 
@@ -1126,15 +1190,15 @@ def call_replica_local_fn(fn, *args, **kwargs):
     # TODO(b/132666209): Remove this function when we support assign_*
     # for replica-local variables.
     strategy = None
-    if 'strategy' in kwargs:
-        strategy = kwargs.pop('strategy')
+    if "strategy" in kwargs:
+        strategy = kwargs.pop("strategy")
     else:
         if ds_context.has_strategy():
             strategy = ds_context.get_strategy()
 
     # TODO(b/120571621): TPUStrategy does not implement replica-local variables.
     is_tpu = is_tpu_strategy(strategy)
-    if ((not is_tpu) and strategy and ds_context.in_cross_replica_context()):
+    if (not is_tpu) and strategy and ds_context.in_cross_replica_context():
         with strategy.scope():
             return strategy.extended.call_for_each_replica(fn, args, kwargs)
     return fn(*args, **kwargs)
@@ -1157,17 +1221,18 @@ def filter_distributed_callbacks(callbacks_list, model):
 
     if not model._in_multi_worker_mode():
         raise ValueError(
-            'filter_distributed_callbacks() should only be called when Keras '
-            'is in multi worker mode.')
+            "filter_distributed_callbacks() should only be called when Keras "
+            "is in multi worker mode."
+        )
 
     callbacks_list = callbacks_list or []
-    if not [
-        c for c in callbacks_list if isinstance(c, callbacks.ModelCheckpoint)
-    ]:
+    if not [c for c in callbacks_list if isinstance(c, callbacks.ModelCheckpoint)]:
         # TODO(rchao): Consider providing a ModelCheckpoint here if the user
         # fails to (possibly with tempfile directory).
-        logging.warning('ModelCheckpoint callback is not provided. '
-                        'Workers will need to restart training if any fails.')
+        logging.warning(
+            "ModelCheckpoint callback is not provided. "
+            "Workers will need to restart training if any fails."
+        )
 
     if callbacks_list is None or is_current_worker_chief():
         return callbacks_list
@@ -1186,11 +1251,13 @@ def _update_sample_weight_modes(model, mode, sample_weights):
             _make_replicated_models_with_cloning(model, mode)
             distributed_model = get_distributed_model(model, mode)
         distributed_model._recompile_exec_function = any(
-            [e.sample_weights_mismatch() for e in model._training_endpoints])
+            [e.sample_weights_mismatch() for e in model._training_endpoints]
+        )
 
         if sample_weights:
             distributed_models = flatten_per_replica_values(
-                model._distribution_strategy, distributed_model)
+                model._distribution_strategy, distributed_model
+            )
             # sample_weights is a tuple of 1 list where the number of elements in the
             # list is equal to the number of replicas in sync.
             sample_weights = sample_weights[0]

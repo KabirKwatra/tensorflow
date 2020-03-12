@@ -138,8 +138,9 @@ class DataAdapter(object):
             use it, or raise exception if any required argument is not provide.
         """
         if not self.can_handle(x, y):
-            raise ValueError("{} Cannot handle input {}, {}".format(
-                self.__class__, x, y))
+            raise ValueError(
+                "{} Cannot handle input {}, {}".format(self.__class__, x, y)
+            )
 
     @abc.abstractmethod
     def get_dataset(self):
@@ -222,7 +223,7 @@ class DataAdapter(object):
             return None
         total_sample = self.get_size() * self.batch_size()
         if self.has_partial_batch():
-            total_sample -= (self.batch_size() - self.partial_batch_size())
+            total_sample -= self.batch_size() - self.partial_batch_size()
         return total_sample
 
     def on_epoch_end(self):
@@ -252,24 +253,28 @@ class TensorLikeDataAdapter(DataAdapter):
 
         return all(_is_tensor(v) for v in flat_inputs)
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weights=None,
-                 sample_weight_modes=None,
-                 batch_size=None,
-                 epochs=1,
-                 steps=None,
-                 shuffle=False,
-                 **kwargs):
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weights=None,
+        sample_weight_modes=None,
+        batch_size=None,
+        epochs=1,
+        steps=None,
+        shuffle=False,
+        **kwargs
+    ):
         super(TensorLikeDataAdapter, self).__init__(x, y, **kwargs)
         x, y, sample_weights = _process_tensorlike((x, y, sample_weights))
         sample_weight_modes = broadcast_sample_weight_modes(
-            sample_weights, sample_weight_modes)
+            sample_weights, sample_weight_modes
+        )
 
         # If sample_weights are not specified for an output use 1.0 as weights.
         (sample_weights, _, _) = training_utils.handle_partial_sample_weights(
-            y, sample_weights, sample_weight_modes, check_all_flat=True)
+            y, sample_weights, sample_weight_modes, check_all_flat=True
+        )
 
         inputs = pack_x_y_sample_weight(x, y, sample_weights)
 
@@ -278,7 +283,8 @@ class TensorLikeDataAdapter(DataAdapter):
             msg = "Data cardinality is ambiguous:\n"
             for label, data in zip(["x", "y", "sample_weight"], inputs):
                 msg += "  {} sizes: {}\n".format(
-                    label, ", ".join(str(i.shape[0]) for i in nest.flatten(data)))
+                    label, ", ".join(str(i.shape[0]) for i in nest.flatten(data))
+                )
             msg += "Please provide data which shares the same first dimension."
             raise ValueError(msg)
         num_samples = num_samples.pop()
@@ -345,16 +351,18 @@ class TensorLikeDataAdapter(DataAdapter):
               A Dataset of batched indices.
             """
             num_in_full_batch = num_full_batches * batch_size
-            first_k_indices = array_ops.slice(
-                indices, [0], [num_in_full_batch])
+            first_k_indices = array_ops.slice(indices, [0], [num_in_full_batch])
             first_k_indices = array_ops.reshape(
-                first_k_indices, [num_full_batches, batch_size])
+                first_k_indices, [num_full_batches, batch_size]
+            )
 
-            flat_dataset = dataset_ops.DatasetV2.from_tensor_slices(
-                first_k_indices)
+            flat_dataset = dataset_ops.DatasetV2.from_tensor_slices(first_k_indices)
             if self._partial_batch_size:
-                index_remainder = dataset_ops.DatasetV2.from_tensors(array_ops.slice(
-                    indices, [num_in_full_batch], [self._partial_batch_size]))
+                index_remainder = dataset_ops.DatasetV2.from_tensors(
+                    array_ops.slice(
+                        indices, [num_in_full_batch], [self._partial_batch_size]
+                    )
+                )
                 flat_dataset = flat_dataset.concatenate(index_remainder)
 
             if shuffle == "batch":
@@ -367,8 +375,10 @@ class TensorLikeDataAdapter(DataAdapter):
         dataset = self.slice_inputs(indices_dataset, inputs)
 
         if shuffle == "batch":
+
             def shuffle_batch(*batch):
                 return nest.map_structure(random_ops.random_shuffle, batch)
+
             dataset = dataset.map(shuffle_batch)
 
         self._dataset = dataset
@@ -388,16 +398,14 @@ class TensorLikeDataAdapter(DataAdapter):
         Returns:
           A Dataset of input batches matching the batch indices.
         """
-        dataset = dataset_ops.DatasetV2.zip((
-            indices_dataset,
-            dataset_ops.DatasetV2.from_tensors(inputs).repeat()
-        ))
+        dataset = dataset_ops.DatasetV2.zip(
+            (indices_dataset, dataset_ops.DatasetV2.from_tensors(inputs).repeat())
+        )
 
         def grab_batch(i, data):
             return nest.map_structure(lambda d: array_ops.gather(d, i, axis=0), data)
 
-        dataset = dataset.map(
-            grab_batch, num_parallel_calls=dataset_ops.AUTOTUNE)
+        dataset = dataset.map(grab_batch, num_parallel_calls=dataset_ops.AUTOTUNE)
 
         # Default optimizations are disabled to avoid the overhead of (unnecessary)
         # input pipeline graph serialization and deserialization
@@ -406,7 +414,8 @@ class TensorLikeDataAdapter(DataAdapter):
         if self._shuffle:
             # See b/141490660 for more details.
             options.experimental_external_state_policy = (
-                distribute_options.ExternalStatePolicy.IGNORE)
+                distribute_options.ExternalStatePolicy.IGNORE
+            )
         dataset = dataset.with_options(options)
         return dataset
 
@@ -457,14 +466,15 @@ class GenericArrayLikeDataAdapter(TensorLikeDataAdapter):
         def _is_array_like(v):
             """Return True if v is a Tensor, array, or is array-like."""
             return (
-                hasattr(v, "__getitem__") and
-                hasattr(v, "shape") and
-                hasattr(v, "dtype") and
-                hasattr(v, "__len__")
+                hasattr(v, "__getitem__")
+                and hasattr(v, "shape")
+                and hasattr(v, "dtype")
+                and hasattr(v, "__len__")
             )
 
-        if (not TensorLikeDataAdapter.can_handle(x, y) and
-                not CompositeTensorDataAdapter.can_handle(x, y)):
+        if not TensorLikeDataAdapter.can_handle(
+            x, y
+        ) and not CompositeTensorDataAdapter.can_handle(x, y):
             return all(_is_array_like(v) for v in flat_inputs)
         else:
             return False
@@ -474,7 +484,8 @@ class GenericArrayLikeDataAdapter(TensorLikeDataAdapter):
             "Keras is training/fitting/evaluating on array-like data. Keras may "
             "not be optimized for this format, so if your input data format is "
             "supported by TensorFlow I/O (https://github.com/tensorflow/io) we "
-            "recommend using that to load a Dataset instead.")
+            "recommend using that to load a Dataset instead."
+        )
 
         super(GenericArrayLikeDataAdapter, self).__init__(*args, **kwargs)
 
@@ -512,18 +523,20 @@ class GenericArrayLikeDataAdapter(TensorLikeDataAdapter):
             # to a Tensor may force it into memory..
             def py_method(ind):
                 def slice_array(data):
-                    return training_utils.slice_arrays(data, ind.numpy(),
-                                                       contiguous=contiguous)
+                    return training_utils.slice_arrays(
+                        data, ind.numpy(), contiguous=contiguous
+                    )
+
                 return [slice_array(inp) for inp in flat_inputs]
 
-            flat_out = script_ops.eager_py_func(
-                py_method, [indices], flat_dtypes)
+            flat_out = script_ops.eager_py_func(py_method, [indices], flat_dtypes)
             for v, original_inp in zip(flat_out, flat_inputs):
                 v.set_shape(dynamic_shape_like(original_inp))
             return nest.pack_sequence_as(inputs, flat_out)
 
         dataset = indices_dataset.map(
-            grab_batch, num_parallel_calls=dataset_ops.AUTOTUNE)
+            grab_batch, num_parallel_calls=dataset_ops.AUTOTUNE
+        )
 
         return dataset
 
@@ -539,8 +552,9 @@ class CompositeTensorDataAdapter(DataAdapter):
 
         def _is_composite(v):
             # Dataset inherits from CompositeTensor but shouldn't be handled here.
-            if (isinstance(v, composite_tensor.CompositeTensor) and
-                    not isinstance(v, dataset_ops.DatasetV2)):
+            if isinstance(v, composite_tensor.CompositeTensor) and not isinstance(
+                v, dataset_ops.DatasetV2
+            ):
                 return True
             # Support Scipy sparse tensors if scipy is installed
             if scipy_sparse is not None and scipy_sparse.issparse(v):
@@ -552,26 +566,31 @@ class CompositeTensorDataAdapter(DataAdapter):
                 return True
             return _is_composite(v)
 
-        return (any(_is_composite(v) for v in flat_inputs) and
-                all(_is_tensor_or_composite(v) for v in flat_inputs))
+        return any(_is_composite(v) for v in flat_inputs) and all(
+            _is_tensor_or_composite(v) for v in flat_inputs
+        )
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weights=None,
-                 sample_weight_modes=None,
-                 batch_size=None,
-                 steps=None,
-                 shuffle=False,
-                 **kwargs):
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weights=None,
+        sample_weight_modes=None,
+        batch_size=None,
+        steps=None,
+        shuffle=False,
+        **kwargs
+    ):
         super(CompositeTensorDataAdapter, self).__init__(x, y, **kwargs)
         x, y, sample_weights = _process_tensorlike((x, y, sample_weights))
         sample_weight_modes = broadcast_sample_weight_modes(
-            sample_weights, sample_weight_modes)
+            sample_weights, sample_weight_modes
+        )
 
         # If sample_weights are not specified for an output use 1.0 as weights.
         (sample_weights, _, _) = training_utils.handle_partial_sample_weights(
-            y, sample_weights, sample_weight_modes, check_all_flat=True)
+            y, sample_weights, sample_weight_modes, check_all_flat=True
+        )
 
         inputs = pack_x_y_sample_weight(x, y, sample_weights)
 
@@ -588,12 +607,11 @@ class CompositeTensorDataAdapter(DataAdapter):
         dataset = dataset.batch(batch_size)
         self._size = int(math.ceil(num_samples / batch_size))
         self._batch_size = batch_size
-        self._has_partial_batch = (self._size != (num_samples // batch_size))
+        self._has_partial_batch = self._size != (num_samples // batch_size)
 
         self._partial_batch_size = None
         if self._has_partial_batch:
-            self._partial_batch_size = (
-                num_samples - (self._size - 1) * self._batch_size)
+            self._partial_batch_size = num_samples - (self._size - 1) * self._batch_size
 
         self._dataset = dataset
 
@@ -635,14 +653,16 @@ class ListsOfScalarsDataAdapter(DataAdapter):
             return ListsOfScalarsDataAdapter._is_list_of_scalars(inp[0])
         return False
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weights=None,
-                 sample_weight_modes=None,
-                 batch_size=None,
-                 shuffle=False,
-                 **kwargs):
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weights=None,
+        sample_weight_modes=None,
+        batch_size=None,
+        shuffle=False,
+        **kwargs
+    ):
         super(ListsOfScalarsDataAdapter, self).__init__(x, y, **kwargs)
         x = np.asarray(x)
         if y is not None:
@@ -650,7 +670,8 @@ class ListsOfScalarsDataAdapter(DataAdapter):
         if sample_weights is not None:
             sample_weights = np.asarray(sample_weights)
         sample_weight_modes = broadcast_sample_weight_modes(
-            sample_weights, sample_weight_modes)
+            sample_weights, sample_weight_modes
+        )
 
         self._internal_adapter = TensorLikeDataAdapter(
             x,
@@ -659,7 +680,8 @@ class ListsOfScalarsDataAdapter(DataAdapter):
             sample_weight_modes=sample_weight_modes,
             batch_size=batch_size,
             shuffle=shuffle,
-            **kwargs)
+            **kwargs
+        )
 
     def get_dataset(self):
         return self._internal_adapter.get_dataset()
@@ -685,15 +707,11 @@ class DatasetAdapter(DataAdapter):
 
     @staticmethod
     def can_handle(x, y=None):
-        return (isinstance(x, (dataset_ops.DatasetV1, dataset_ops.DatasetV2)) or
-                _is_distributed_dataset(x))
+        return isinstance(
+            x, (dataset_ops.DatasetV1, dataset_ops.DatasetV2)
+        ) or _is_distributed_dataset(x)
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weights=None,
-                 steps=None,
-                 **kwargs):
+    def __init__(self, x, y=None, sample_weights=None, steps=None, **kwargs):
         super(DatasetAdapter, self).__init__(x, y, **kwargs)
         # Note that the dataset instance is immutable, its fine to reuse the user
         # provided dataset.
@@ -728,23 +746,30 @@ class DatasetAdapter(DataAdapter):
         # If user doesn't supply `steps`, or if they supply `steps` that
         # exactly equals the size of the `Dataset`, create a new iterator
         # each epoch.
-        return (self._user_steps is None or
-                cardinality.cardinality(self._dataset).numpy() == self._user_steps)
+        return (
+            self._user_steps is None
+            or cardinality.cardinality(self._dataset).numpy() == self._user_steps
+        )
 
     def _validate_args(self, y, sample_weights, steps):
         """Validates `__init__` arguments."""
         # Arguments that shouldn't be passed.
         if not is_none_or_empty(y):
-            raise ValueError("`y` argument is not supported when using "
-                             "dataset as input.")
+            raise ValueError(
+                "`y` argument is not supported when using " "dataset as input."
+            )
         if not is_none_or_empty(sample_weights):
-            raise ValueError("`sample_weight` argument is not supported when using "
-                             "dataset as input.")
+            raise ValueError(
+                "`sample_weight` argument is not supported when using "
+                "dataset as input."
+            )
 
         if steps is None:
             if _is_distributed_dataset(self._dataset):
-                raise ValueError("When providing a distributed dataset, you must "
-                                 "specify the number of steps to run.")
+                raise ValueError(
+                    "When providing a distributed dataset, you must "
+                    "specify the number of steps to run."
+                )
 
             size = cardinality.cardinality(self._dataset).numpy()
             if size == cardinality.INFINITE and steps is None:
@@ -752,7 +777,8 @@ class DatasetAdapter(DataAdapter):
                     "When providing an infinite dataset, you must specify "
                     "the number of steps to run (if you did not intend to ."
                     "create an infinite dataset, make sure to not call "
-                    "`repeat()` on the dataset).")
+                    "`repeat()` on the dataset)."
+                )
 
 
 class GeneratorDataAdapter(DataAdapter):
@@ -760,29 +786,36 @@ class GeneratorDataAdapter(DataAdapter):
 
     @staticmethod
     def can_handle(x, y=None):
-        return ((hasattr(x, "__next__") or hasattr(x, "next"))
-                and hasattr(x, "__iter__")
-                and not isinstance(x, data_utils.Sequence))
+        return (
+            (hasattr(x, "__next__") or hasattr(x, "next"))
+            and hasattr(x, "__iter__")
+            and not isinstance(x, data_utils.Sequence)
+        )
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weights=None,
-                 workers=1,
-                 use_multiprocessing=False,
-                 max_queue_size=10,
-                 model=None,
-                 **kwargs):
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weights=None,
+        workers=1,
+        use_multiprocessing=False,
+        max_queue_size=10,
+        model=None,
+        **kwargs
+    ):
         # Generators should never shuffle as exhausting the generator in order to
         # shuffle the batches is inefficient.
         kwargs.pop("shuffle", None)
 
         if not is_none_or_empty(y):
-            raise ValueError("`y` argument is not supported when using "
-                             "python generator as input.")
+            raise ValueError(
+                "`y` argument is not supported when using " "python generator as input."
+            )
         if not is_none_or_empty(sample_weights):
-            raise ValueError("`sample_weight` argument is not supported when using "
-                             "python generator as input.")
+            raise ValueError(
+                "`sample_weight` argument is not supported when using "
+                "python generator as input."
+            )
 
         super(GeneratorDataAdapter, self).__init__(x, y, **kwargs)
 
@@ -797,7 +830,8 @@ class GeneratorDataAdapter(DataAdapter):
         if model is not None and not model.built:
             concrete_x, _, _ = unpack_x_y_sample_weight(peek)
             model.distribute_strategy.run(
-                lambda x: model(x, training=False), args=(concrete_x,))
+                lambda x: model(x, training=False), args=(concrete_x,)
+            )
 
         self._first_batch_size = int(nest.flatten(peek)[0].shape[0])
 
@@ -813,15 +847,17 @@ class GeneratorDataAdapter(DataAdapter):
 
         # Note that dataset API takes a callable that creates a generator object,
         # rather than generator itself, which is why we define a function here.
-        generator_fn = self._handle_multiprocessing(x, workers, use_multiprocessing,
-                                                    max_queue_size)
+        generator_fn = self._handle_multiprocessing(
+            x, workers, use_multiprocessing, max_queue_size
+        )
 
         def wrapped_generator():
             for data in generator_fn():
                 yield self._standardize_batch(data)
 
         dataset = dataset_ops.DatasetV2.from_generator(
-            wrapped_generator, output_types, output_shapes=output_shapes)
+            wrapped_generator, output_types, output_shapes=output_shapes
+        )
 
         if workers == 1 and not use_multiprocessing:
             dataset = dataset.prefetch(1)
@@ -837,7 +873,7 @@ class GeneratorDataAdapter(DataAdapter):
         data = nest._list_to_tuple(data)  # pylint: disable=protected-access
 
         def _convert_dtype(t):
-            if (isinstance(t, np.ndarray) and issubclass(t.dtype.type, np.floating)):
+            if isinstance(t, np.ndarray) and issubclass(t.dtype.type, np.floating):
                 return np.array(t, dtype=backend.floatx())
             return t
 
@@ -849,23 +885,30 @@ class GeneratorDataAdapter(DataAdapter):
         peek = next(x)
         return peek, itertools.chain([peek], x)
 
-    def _handle_multiprocessing(self, x, workers, use_multiprocessing,
-                                max_queue_size):
+    def _handle_multiprocessing(self, x, workers, use_multiprocessing, max_queue_size):
         """Create a callable, possibly including an Enqueuer."""
         if workers > 1 or (workers > 0 and use_multiprocessing):
             if use_multiprocessing:
                 logging.warning(
-                    UserWarning("Using a generator with `use_multiprocessing=True` "
-                                "and multiple workers may duplicate your data. "
-                                "Please consider using the `tf.data.Dataset`."))
+                    UserWarning(
+                        "Using a generator with `use_multiprocessing=True` "
+                        "and multiple workers may duplicate your data. "
+                        "Please consider using the `tf.data.Dataset`."
+                    )
+                )
 
             def generator_fn():
                 enqueuer = data_utils.GeneratorEnqueuer(
-                    x, use_multiprocessing=use_multiprocessing)
+                    x, use_multiprocessing=use_multiprocessing
+                )
                 enqueuer.start(workers=workers, max_queue_size=max_queue_size)
                 return enqueuer.get()
+
         else:
-            def generator_fn(): return x
+
+            def generator_fn():
+                return x
+
         return generator_fn
 
     def get_dataset(self):
@@ -897,22 +940,28 @@ class KerasSequenceAdapter(GeneratorDataAdapter):
     def can_handle(x, y=None):
         return isinstance(x, data_utils.Sequence)
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weights=None,
-                 shuffle=False,
-                 workers=1,
-                 use_multiprocessing=False,
-                 max_queue_size=10,
-                 model=None,
-                 **kwargs):
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weights=None,
+        shuffle=False,
+        workers=1,
+        use_multiprocessing=False,
+        max_queue_size=10,
+        model=None,
+        **kwargs
+    ):
         if not is_none_or_empty(y):
-            raise ValueError("`y` argument is not supported when using "
-                             "`keras.utils.Sequence` as input.")
+            raise ValueError(
+                "`y` argument is not supported when using "
+                "`keras.utils.Sequence` as input."
+            )
         if not is_none_or_empty(sample_weights):
-            raise ValueError("`sample_weight` argument is not supported when using "
-                             "`keras.utils.Sequence` as input.")
+            raise ValueError(
+                "`sample_weight` argument is not supported when using "
+                "`keras.utils.Sequence` as input."
+            )
 
         self._size = len(x)
         self._shuffle_sequence = shuffle
@@ -924,22 +973,27 @@ class KerasSequenceAdapter(GeneratorDataAdapter):
             use_multiprocessing=use_multiprocessing,
             max_queue_size=max_queue_size,
             model=model,
-            **kwargs)
+            **kwargs
+        )
 
     @staticmethod
     def _peek_and_restore(x):
         return x[0], x
 
-    def _handle_multiprocessing(self, x, workers, use_multiprocessing,
-                                max_queue_size):
+    def _handle_multiprocessing(self, x, workers, use_multiprocessing, max_queue_size):
         if workers > 1 or (workers > 0 and use_multiprocessing):
+
             def generator_fn():
                 enqueuer = data_utils.OrderedEnqueuer(
-                    x, use_multiprocessing=use_multiprocessing,
-                    shuffle=self._shuffle_sequence)
+                    x,
+                    use_multiprocessing=use_multiprocessing,
+                    shuffle=self._shuffle_sequence,
+                )
                 enqueuer.start(workers=workers, max_queue_size=max_queue_size)
                 return enqueuer.get()
+
         else:
+
             def generator_fn():
                 order = range(len(x))
                 if self._shuffle_sequence:
@@ -963,9 +1017,13 @@ class KerasSequenceAdapter(GeneratorDataAdapter):
 
 
 ALL_ADAPTER_CLS = [
-    ListsOfScalarsDataAdapter, TensorLikeDataAdapter,
-    GenericArrayLikeDataAdapter, DatasetAdapter,
-    GeneratorDataAdapter, KerasSequenceAdapter, CompositeTensorDataAdapter,
+    ListsOfScalarsDataAdapter,
+    TensorLikeDataAdapter,
+    GenericArrayLikeDataAdapter,
+    DatasetAdapter,
+    GeneratorDataAdapter,
+    KerasSequenceAdapter,
+    CompositeTensorDataAdapter,
 ]
 
 
@@ -976,14 +1034,14 @@ def select_data_adapter(x, y):
         # TODO(scottzhu): This should be a less implementation-specific error.
         raise ValueError(
             "Failed to find data adapter that can handle "
-            "input: {}, {}".format(
-                _type_name(x), _type_name(y)))
+            "input: {}, {}".format(_type_name(x), _type_name(y))
+        )
     elif len(adapter_cls) > 1:
         raise RuntimeError(
             "Data adapters should be mutually exclusive for "
             "handling inputs. Found multiple adapters {} to handle "
-            "input: {}, {}".format(
-                adapter_cls, _type_name(x), _type_name(y)))
+            "input: {}, {}".format(adapter_cls, _type_name(x), _type_name(y))
+        )
     return adapter_cls[0]
 
 
@@ -993,11 +1051,11 @@ def _type_name(x):
         key_types = set(_type_name(key) for key in x.keys())
         val_types = set(_type_name(key) for key in x.values())
         return "({} containing {} keys and {} values)".format(
-            type(x), key_types, val_types)
+            type(x), key_types, val_types
+        )
     if isinstance(x, (list, tuple)):
         types = set(_type_name(val) for val in x)
-        return "({} containing values of types {})".format(
-            type(x), types)
+        return "({} containing values of types {})".format(type(x), types)
     return str(type(x))
 
 
@@ -1054,62 +1112,71 @@ def broadcast_sample_weight_modes(target_structure, sample_weight_modes):
         try:
             nest.assert_same_structure(
                 training_utils.list_to_tuple(target_structure),
-                training_utils.list_to_tuple(sample_weight_modes))
+                training_utils.list_to_tuple(sample_weight_modes),
+            )
         except (ValueError, TypeError):
-            target_str = str(nest.map_structure(
-                lambda _: "...", target_structure))
-            mode_str = str(nest.map_structure(
-                lambda _: "...", sample_weight_modes))
+            target_str = str(nest.map_structure(lambda _: "...", target_structure))
+            mode_str = str(nest.map_structure(lambda _: "...", sample_weight_modes))
 
             # Attempt to coerce sample_weight_modes to the target structure. This
             # implicitly depends on the fact that Model flattens outputs for its
             # internal representation.
             try:
                 sample_weight_modes = nest.pack_sequence_as(
-                    target_structure, nest.flatten(sample_weight_modes))
+                    target_structure, nest.flatten(sample_weight_modes)
+                )
                 logging.warning(
-                    "sample_weight modes were coerced from\n  {}\n    to  \n  {}"
-                    .format(target_str, mode_str))
+                    "sample_weight modes were coerced from\n  {}\n    to  \n  {}".format(
+                        target_str, mode_str
+                    )
+                )
             except (ValueError, TypeError):
                 raise ValueError(
                     "Unable to match target structure and sample_weight_modes "
-                    "structure:\n  {}\n    to  \n  {}".format(target_str, mode_str))
+                    "structure:\n  {}\n    to  \n  {}".format(target_str, mode_str)
+                )
 
     return sample_weight_modes
 
 
 def assert_not_namedtuple(x):
-    if (isinstance(x, tuple) and
+    if (
+        isinstance(x, tuple)
+        and
         # TODO(b/144192902): Use a namedtuple checking utility.
-        hasattr(x, "_fields") and
-        isinstance(x._fields, collections.Sequence) and
-            all(isinstance(f, six.string_types) for f in x._fields)):
+        hasattr(x, "_fields")
+        and isinstance(x._fields, collections.Sequence)
+        and all(isinstance(f, six.string_types) for f in x._fields)
+    ):
         raise ValueError(
             "Received namedtuple ({}) with fields `{}` as input. namedtuples "
             "cannot, in general, be unambiguously resolved into `x`, `y`, "
             "and `sample_weight`. For this reason Keras has elected not to "
             "support them. If you would like the value to be unpacked, "
             "please explicitly convert it to a tuple before passing it to "
-            "Keras.".format(x.__class__, x._fields))
+            "Keras.".format(x.__class__, x._fields)
+        )
 
 
 class DataHandler(object):
     """Handles iterating over epoch-level `tf.data.Iterator` objects."""
 
-    def __init__(self,
-                 x,
-                 y=None,
-                 sample_weight=None,
-                 batch_size=None,
-                 steps_per_epoch=None,
-                 initial_epoch=0,
-                 epochs=1,
-                 shuffle=False,
-                 class_weight=None,
-                 max_queue_size=10,
-                 workers=1,
-                 use_multiprocessing=False,
-                 model=None):
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weight=None,
+        batch_size=None,
+        steps_per_epoch=None,
+        initial_epoch=0,
+        epochs=1,
+        shuffle=False,
+        class_weight=None,
+        max_queue_size=10,
+        workers=1,
+        use_multiprocessing=False,
+        model=None,
+    ):
 
         self._initial_epoch = initial_epoch
         self._epochs = epochs
@@ -1128,7 +1195,8 @@ class DataHandler(object):
             workers=workers,
             use_multiprocessing=use_multiprocessing,
             distribution_strategy=ds_context.get_strategy(),
-            model=model)
+            model=model,
+        )
 
         strategy = ds_context.get_strategy()
         dataset = self._adapter.get_dataset()
@@ -1163,8 +1231,11 @@ class DataHandler(object):
             yield
             context.async_wait()
         except (StopIteration, errors.OutOfRangeError):
-            if (self._adapter.get_size() is None and self._inferred_steps is None and
-                    self._current_step > 0):
+            if (
+                self._adapter.get_size() is None
+                and self._inferred_steps is None
+                and self._current_step > 0
+            ):
                 # The input passed by the user ran out of batches.
                 # Now we know the cardinality of the input(dataset or generator).
                 self._inferred_steps = self._current_step
@@ -1176,15 +1247,16 @@ class DataHandler(object):
                     "Make sure that your dataset or generator can generate at "
                     "least `steps_per_epoch * epochs` batches (in this case, "
                     "{} batches). You may need to use the repeat() function "
-                    "when building your dataset.".format(total_epochs *
-                                                         self._inferred_steps))
+                    "when building your dataset.".format(
+                        total_epochs * self._inferred_steps
+                    )
+                )
 
     def steps(self):
         """Yields steps for the current epoch."""
         self._current_step = 0
         # `self._inferred_steps` can be changed by `catch_stop_iteration`.
-        while (self._inferred_steps is None or
-               self._current_step < self._inferred_steps):
+        while self._inferred_steps is None or self._current_step < self._inferred_steps:
             if self._insufficient_data:  # Set by `catch_stop_iteration`.
                 break
             yield self._current_step
@@ -1214,22 +1286,27 @@ class DataHandler(object):
         if adapter_steps is not None:
             return adapter_steps
 
-        if (ds_context.get_strategy().extended._in_multi_worker_mode() and  # pylint: disable=protected-access
-            (dataset.options().experimental_distribute.auto_shard_policy !=
-             distribute_options.AutoShardPolicy.OFF)):
+        if ds_context.get_strategy().extended._in_multi_worker_mode() and (  # pylint: disable=protected-access
+            dataset.options().experimental_distribute.auto_shard_policy
+            != distribute_options.AutoShardPolicy.OFF
+        ):
             # If the dataset would be auto-sharded, we should not infer a local
             # steps_per_epoch due to the possible inbalanced sharding between workers.
-            raise ValueError("When dataset is sharded across workers, please "
-                             "specify a reasonable `steps_per_epoch` such that all "
-                             "workers will train the same number of steps and each "
-                             "step can get data from dataset without EOF. This is "
-                             "required for allreduce to succeed. We will handle the "
-                             "last partial batch in the future.")
+            raise ValueError(
+                "When dataset is sharded across workers, please "
+                "specify a reasonable `steps_per_epoch` such that all "
+                "workers will train the same number of steps and each "
+                "step can get data from dataset without EOF. This is "
+                "required for allreduce to succeed. We will handle the "
+                "last partial batch in the future."
+            )
 
         size = cardinality.cardinality(dataset)
         if size == cardinality.INFINITE and steps is None:
-            raise ValueError("When passing an infinitely repeating dataset, you "
-                             "must specify how many steps to draw.")
+            raise ValueError(
+                "When passing an infinitely repeating dataset, you "
+                "must specify how many steps to draw."
+            )
         if size >= 0:
             return size.numpy().item()
         return None
@@ -1258,11 +1335,13 @@ def _make_class_weight_map_fn(class_weight):
     if class_ids != expected_class_ids:
         error_msg = (
             "Expected `class_weight` to be a dict with keys from 0 to one less "
-            "than the number of classes, found {}").format(class_weight)
+            "than the number of classes, found {}"
+        ).format(class_weight)
         raise ValueError(error_msg)
 
     class_weight_tensor = ops.convert_to_tensor_v2(
-        [int(class_weight[c]) for c in class_ids], dtype="int64")
+        [int(class_weight[c]) for c in class_ids], dtype="int64"
+    )
 
     def _class_weights_map_fn(*data):
         """Convert `class_weight` to `sample_weight`."""
@@ -1270,16 +1349,19 @@ def _make_class_weight_map_fn(class_weight):
 
         if nest.is_sequence(y):
             raise ValueError(
-                "`class_weight` is only supported for Models with a single output.")
+                "`class_weight` is only supported for Models with a single output."
+            )
 
         if y.shape.rank > 2:
-            raise ValueError("`class_weight` not supported for "
-                             "3+ dimensional targets.")
+            raise ValueError(
+                "`class_weight` not supported for " "3+ dimensional targets."
+            )
 
         y_classes = smart_cond.smart_cond(
             y.shape.rank == 2 and backend.shape(y)[1] > 1,
             lambda: backend.argmax(y, axis=1),
-            lambda: math_ops.cast(backend.reshape(y, (-1,)), dtypes.int64))
+            lambda: math_ops.cast(backend.reshape(y, (-1,)), dtypes.int64),
+        )
 
         cw = array_ops.gather_v2(class_weight_tensor, y_classes)
         if sw is not None:
@@ -1300,8 +1382,11 @@ def expand_1d(data):
 
     def _expand_single_1d_tensor(t):
         # Leaves `CompositeTensor`s as-is.
-        if (isinstance(t, ops.Tensor) and
-                isinstance(t.shape, tensor_shape.TensorShape) and t.shape.rank == 1):
+        if (
+            isinstance(t, ops.Tensor)
+            and isinstance(t.shape, tensor_shape.TensorShape)
+            and t.shape.rank == 1
+        ):
             return array_ops.expand_dims_v2(t, axis=-1)
         return t
 
@@ -1335,7 +1420,8 @@ def train_validation_split(arrays, validation_split, shuffle=True):
     if not all(_can_split(t) for t in flat_arrays):
         raise ValueError(
             "`validation_split` is only supported for Tensors or NumPy "
-            "arrays, found: {}".format(arrays))
+            "arrays, found: {}".format(arrays)
+        )
 
     if all(t is None for t in flat_arrays):
         return arrays, arrays
@@ -1351,7 +1437,7 @@ def train_validation_split(arrays, validation_split, shuffle=True):
     indices = ops.convert_to_tensor_v2(range(batch_dim))
     if shuffle:
         indices = random_ops.random_shuffle(indices)
-    split_at = int(math.floor(batch_dim * (1. - validation_split)))
+    split_at = int(math.floor(batch_dim * (1.0 - validation_split)))
     train_indices = indices[:split_at]
     val_indices = indices[split_at:]
 
@@ -1362,9 +1448,11 @@ def train_validation_split(arrays, validation_split, shuffle=True):
         return array_ops.gather_v2(t, indices)
 
     train_arrays = nest.map_structure(
-        functools.partial(_split, indices=train_indices), arrays)
+        functools.partial(_split, indices=train_indices), arrays
+    )
     val_arrays = nest.map_structure(
-        functools.partial(_split, indices=val_indices), arrays)
+        functools.partial(_split, indices=val_indices), arrays
+    )
 
     return train_arrays, val_arrays
 
@@ -1393,11 +1481,7 @@ def pack_x_y_sample_weight(x, y=None, sample_weight=None):
         return (x, y, sample_weight)
 
 
-def single_batch_iterator(strategy,
-                          x,
-                          y=None,
-                          sample_weight=None,
-                          class_weight=None):
+def single_batch_iterator(strategy, x, y=None, sample_weight=None, class_weight=None):
     """Creates a single-batch dataset."""
     x, y, sample_weight = _process_tensorlike((x, y, sample_weight))
     if y is None:
@@ -1422,12 +1506,13 @@ def _scipy_sparse_to_sparse_tensor(t):
     if issubclass(data.dtype.type, np.floating):
         data = data.astype(backend.floatx())
     indices = np.concatenate(
-        (np.expand_dims(row, axis=1), np.expand_dims(col, axis=1)), axis=1)
+        (np.expand_dims(row, axis=1), np.expand_dims(col, axis=1)), axis=1
+    )
     return sparse_tensor.SparseTensor(indices, data, shape)
 
 
 def _is_distributed_dataset(ds):
     # TODO(b/151165986): Use public APIs.
     return isinstance(
-        ds,
-        (input_lib.DistributedDataset, input_lib.DistributedDatasetsFromFunction))
+        ds, (input_lib.DistributedDataset, input_lib.DistributedDatasetsFromFunction)
+    )

@@ -30,12 +30,12 @@ from tensorflow.python.framework import tensor_util
 
 
 class MirroredFunctionStrategyTest(test.TestCase):
-
     def setUp(self):
         super(MirroredFunctionStrategyTest, self).setUp()
         strategy_combinations.set_virtual_cpus_to_at_least(3)
         self._strategy = mirrored_function_strategy.MirroredFunctionStrategy(
-            devices=("/cpu:1", "/cpu:2"))
+            devices=("/cpu:1", "/cpu:2")
+        )
 
     def testReplicaId(self):
         f_traces = []
@@ -57,15 +57,13 @@ class MirroredFunctionStrategyTest(test.TestCase):
         self.assertLen(f_traces, 1)
         # Returns a per-replica value.
         self.assertIsInstance(result1, values.PerReplica)
-        self.assertAllEqual([1, 2],
-                            self._strategy.experimental_local_results(result1))
+        self.assertAllEqual([1, 2], self._strategy.experimental_local_results(result1))
 
         # Try passing a per-replica value as an argument.
         result2 = self._strategy.run(f, args=(result1,))
         self.assertLen(f_traces, 1)
         self.assertIsInstance(result2, values.PerReplica)
-        self.assertAllEqual([1, 3],
-                            self._strategy.experimental_local_results(result2))
+        self.assertAllEqual([1, 3], self._strategy.experimental_local_results(result2))
 
     def testMergeCall(self):
         f_traces = []
@@ -74,8 +72,7 @@ class MirroredFunctionStrategyTest(test.TestCase):
         def g(strategy, z):
             g_traces.append(None)  # Only happens on trace.
             self.assertIs(strategy, self._strategy)
-            self.assertTrue(
-                distribution_strategy_context.in_cross_replica_context())
+            self.assertTrue(distribution_strategy_context.in_cross_replica_context())
             self.assertIsInstance(z, mirrored_function_strategy.FnMergedValue)
             return z
 
@@ -96,8 +93,7 @@ class MirroredFunctionStrategyTest(test.TestCase):
         self.assertLen(g_traces, 1)
         # Returns a per-replica value.
         self.assertIsInstance(result, values.PerReplica)
-        self.assertAllEqual([1, 1],
-                            self._strategy.experimental_local_results(result))
+        self.assertAllEqual([1, 1], self._strategy.experimental_local_results(result))
 
 
 if __name__ == "__main__":

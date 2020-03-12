@@ -36,14 +36,13 @@ from tensorflow.python.training import gradient_descent
 
 
 class NormalizationTest(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.combine(
-            distribution=[
-                strategy_combinations.one_device_strategy,
-            ],
+            distribution=[strategy_combinations.one_device_strategy,],
             mode=["graph"],
-            fused=[True, False]))
+            fused=[True, False],
+        )
+    )
     def testBNWithZeroBatchInputGraph(self, distribution, fused):
         distribution.extended.experimental_enable_get_next_as_optional = True
         with distribution.scope(), self.cached_session() as sess:
@@ -51,13 +50,16 @@ class NormalizationTest(test.TestCase, parameterized.TestCase):
             inputs = np.random.random((0, 4, 4, 3)) + 100
             targets = np.random.random((0, 4, 4, 3))
             inputs_placeholder = array_ops.placeholder(
-                dtype=dtypes.float32, shape=[None, 4, 4, 3])
+                dtype=dtypes.float32, shape=[None, 4, 4, 3]
+            )
             targets_placeholder = array_ops.placeholder(
-                dtype=dtypes.float32, shape=[None, 4, 4, 3])
+                dtype=dtypes.float32, shape=[None, 4, 4, 3]
+            )
 
             def step_fn(is_training, inputs, targets=None):
                 bn = normalization.BatchNormalization(
-                    axis=3, epsilon=1e-3, momentum=0.9, fused=fused)
+                    axis=3, epsilon=1e-3, momentum=0.9, fused=fused
+                )
                 bn_list.append(bn)
                 outputs = bn.apply(inputs, training=is_training)
                 if not is_training:
@@ -70,16 +72,19 @@ class NormalizationTest(test.TestCase, parameterized.TestCase):
                     return array_ops.identity(loss)
 
             train_op = distribution.extended.call_for_each_replica(
-                step_fn, args=(True, inputs_placeholder, targets_placeholder))
+                step_fn, args=(True, inputs_placeholder, targets_placeholder)
+            )
             predict_op = distribution.extended.call_for_each_replica(
-                step_fn, args=(False, inputs_placeholder))
+                step_fn, args=(False, inputs_placeholder)
+            )
             bn = bn_list[0]
 
             self.evaluate(variables.global_variables_initializer())
 
             # Check for initial statistics and weights.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance])
+                [bn.moving_mean, bn.moving_variance]
+            )
             self.assertAllEqual([0, 0, 0], moving_mean)
             self.assertAllEqual([1, 1, 1], moving_var)
 
@@ -88,15 +93,16 @@ class NormalizationTest(test.TestCase, parameterized.TestCase):
             self.assertAllEqual([0, 0, 0], np_beta)
 
             for _ in range(100):
-                np_output, _, _ = sess.run([train_op] + bn.updates, {
-                    inputs_placeholder: inputs,
-                    targets_placeholder: targets
-                })
+                np_output, _, _ = sess.run(
+                    [train_op] + bn.updates,
+                    {inputs_placeholder: inputs, targets_placeholder: targets},
+                )
                 self.assertEqual(0.0, np_output)
 
             # Verify that the statistics and weights are not changed after training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance])
+                [bn.moving_mean, bn.moving_variance]
+            )
             self.assertAllEqual([0, 0, 0], moving_mean)
             self.assertAllEqual([1, 1, 1], moving_var)
 
@@ -110,18 +116,19 @@ class NormalizationTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(
         combinations.combine(
-            distribution=[
-                strategy_combinations.one_device_strategy,
-            ],
+            distribution=[strategy_combinations.one_device_strategy,],
             mode=["eager"],
-            fused=[True, False]))
+            fused=[True, False],
+        )
+    )
     def testBNWithZeroBatchInput(self, distribution, fused):
         distribution.extended.experimental_enable_get_next_as_optional = True
         with distribution.scope():
             inputs = np.random.random((0, 4, 4, 3)).astype(np.float32) + 100
             targets = np.random.random((0, 4, 4, 3)).astype(np.float32)
             bn = normalization.BatchNormalization(
-                axis=3, epsilon=1e-3, momentum=0.9, fused=fused)
+                axis=3, epsilon=1e-3, momentum=0.9, fused=fused
+            )
             optimizer = gradient_descent.GradientDescentOptimizer(0.01)
 
             @def_function.function
@@ -155,8 +162,9 @@ class NormalizationTest(test.TestCase, parameterized.TestCase):
                 return distribution.run(step_fn, args=(inputs,))
 
             # Test inference.
-            self.assertAllEqual(np.zeros(shape=(0, 4, 4, 3), dtype=np.float32),
-                                test_step().numpy())
+            self.assertAllEqual(
+                np.zeros(shape=(0, 4, 4, 3), dtype=np.float32), test_step().numpy()
+            )
 
 
 if __name__ == "__main__":

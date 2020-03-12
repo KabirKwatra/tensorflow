@@ -29,7 +29,6 @@ from tensorflow.python.platform import test
 
 
 class StrategyCombinationsTest(test.TestCase, parameterized.TestCase):
-
     def setUp(self):
         # Need to call set_virtual_cpus_to_at_least() in setUp with the maximum
         # value needed in any test.
@@ -51,15 +50,18 @@ class StrategyCombinationsTest(test.TestCase, parameterized.TestCase):
         with self.assertRaisesRegexp(RuntimeError, "with 3 < 5 virtual CPUs"):
             strategy_combinations.set_virtual_cpus_to_at_least(5)
 
-    @combinations.generate(combinations.combine(
-        distribution=[
-            strategy_combinations.mirrored_strategy_with_cpu_1_and_2],
-        mode=["graph", "eager"]))
+    @combinations.generate(
+        combinations.combine(
+            distribution=[strategy_combinations.mirrored_strategy_with_cpu_1_and_2],
+            mode=["graph", "eager"],
+        )
+    )
     def testMirrored2CPUs(self, distribution):
         with distribution.scope():
             one_per_replica = distribution.run(lambda: constant_op.constant(1))
             num_replicas = distribution.reduce(
-                reduce_util.ReduceOp.SUM, one_per_replica, axis=None)
+                reduce_util.ReduceOp.SUM, one_per_replica, axis=None
+            )
             self.assertEqual(2, self.evaluate(num_replicas))
 
 

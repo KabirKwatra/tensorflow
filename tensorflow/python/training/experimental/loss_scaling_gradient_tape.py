@@ -41,8 +41,7 @@ def _convert_to_per_replicas(distribution, values):
       `values`, but each element has been converted to a PerReplica value.
     """
     return distribution.experimental_run_v2(
-        lambda values: [array_ops.identity(v) for v in values],
-        args=(values,)
+        lambda values: [array_ops.identity(v) for v in values], args=(values,)
     )
 
 
@@ -89,10 +88,7 @@ class LossScaleGradientTape(backprop.GradientTape):
     occur.
     """
 
-    def __init__(self,
-                 loss_scale,
-                 persistent=False,
-                 watch_accessed_variables=True):
+    def __init__(self, loss_scale, persistent=False, watch_accessed_variables=True):
         """Creates a new LossScaleGradientTape.
 
         Args:
@@ -113,23 +109,25 @@ class LossScaleGradientTape(backprop.GradientTape):
             request gradients from.
         """
         if not isinstance(loss_scale, loss_scale_module.LossScale):
-            raise ValueError("`loss_scale` must be an instance of LossScale, "
-                             "but got: %s" % (loss_scale,))
-        if not ops.executing_eagerly_outside_functions():
             raise ValueError(
-                "LossScaleGradientTape is only supported in Eager mode.")
+                "`loss_scale` must be an instance of LossScale, "
+                "but got: %s" % (loss_scale,)
+            )
+        if not ops.executing_eagerly_outside_functions():
+            raise ValueError("LossScaleGradientTape is only supported in Eager mode.")
 
         # always make a persistent tape to loop over loss scaling
-        super(LossScaleGradientTape, self).__init__(True,
-                                                    watch_accessed_variables)
+        super(LossScaleGradientTape, self).__init__(True, watch_accessed_variables)
         self._outer_persistent = persistent
         self._loss_scale = loss_scale
 
-    def gradient(self,
-                 target,
-                 sources,
-                 output_gradients=None,
-                 unconnected_gradients=UnconnectedGradients.NONE):
+    def gradient(
+        self,
+        target,
+        sources,
+        output_gradients=None,
+        unconnected_gradients=UnconnectedGradients.NONE,
+    ):
         """Computes the gradient using operations recorded in context of this tape.
 
         Uses the `LossScale` object provided in the constructor to scale `target`
@@ -162,11 +160,15 @@ class LossScaleGradientTape(backprop.GradientTape):
            called with an unknown value.
         """
         if self._tape is None:  # pylint: disable=access-member-before-definition
-            raise RuntimeError("GradientTape.gradient can only be called once on "
-                               "non-persistent tapes.")
+            raise RuntimeError(
+                "GradientTape.gradient can only be called once on "
+                "non-persistent tapes."
+            )
         if distribution_strategy_context.in_cross_replica_context():
-            raise ValueError("LossScaleGradientTape.gradient() must be called in a "
-                             "replica context.")
+            raise ValueError(
+                "LossScaleGradientTape.gradient() must be called in a "
+                "replica context."
+            )
 
         # Note: DistributionStrategy does not support running a while loop in a
         # replica context. So, we call `_compute_gradients_until_finite` in a cross-
@@ -174,37 +176,56 @@ class LossScaleGradientTape(backprop.GradientTape):
         replica_context = distribution_strategy_context.get_replica_context()
         grads = replica_context.merge_call(
             _compute_gradients_until_finite,
-            args=(self, self._loss_scale, target, sources, output_gradients,
-                  unconnected_gradients))
+            args=(
+                self,
+                self._loss_scale,
+                target,
+                sources,
+                output_gradients,
+                unconnected_gradients,
+            ),
+        )
 
         if not self._outer_persistent:
             self._tape = None  # free up resources if a persistent tape was not needed
         return grads
 
-    def jacobian(self,
-                 target,
-                 sources,
-                 unconnected_gradients=UnconnectedGradients.NONE,
-                 parallel_iterations=None,
-                 experimental_use_pfor=True):
+    def jacobian(
+        self,
+        target,
+        sources,
+        unconnected_gradients=UnconnectedGradients.NONE,
+        parallel_iterations=None,
+        experimental_use_pfor=True,
+    ):
         # TODO(reedwm): Implement this
-        raise NotImplementedError("LossScaleGradientTape.jacobian is not "
-                                  "yet implemented")
+        raise NotImplementedError(
+            "LossScaleGradientTape.jacobian is not " "yet implemented"
+        )
 
-    def batch_jacobian(self,
-                       target,
-                       source,
-                       unconnected_gradients=UnconnectedGradients.NONE,
-                       parallel_iterations=None,
-                       experimental_use_pfor=True):
+    def batch_jacobian(
+        self,
+        target,
+        source,
+        unconnected_gradients=UnconnectedGradients.NONE,
+        parallel_iterations=None,
+        experimental_use_pfor=True,
+    ):
         # TODO(reedwm): Implement this
-        raise NotImplementedError("LossScaleGradientTape.batch_jacobian is not "
-                                  "yet implemented")
+        raise NotImplementedError(
+            "LossScaleGradientTape.batch_jacobian is not " "yet implemented"
+        )
 
 
 def _compute_gradients_until_finite(
-        distribution, loss_scale_gradient_tapes, loss_scale, target, sources,
-        output_gradients, unconnected_gradients):
+    distribution,
+    loss_scale_gradient_tapes,
+    loss_scale,
+    target,
+    sources,
+    output_gradients,
+    unconnected_gradients,
+):
     """Compute gradients and update the loss scale until the gradients are finite.
 
     This must be called in a cross-replica context.
@@ -262,8 +283,9 @@ def _compute_gradients_until_finite(
         return math_ops.logical_or(
             is_first_iteration,
             math_ops.logical_and(
-                math_ops.logical_not(ready_to_update),
-                math_ops.greater(loss_scale(), 1)))
+                math_ops.logical_not(ready_to_update), math_ops.greater(loss_scale(), 1)
+            ),
+        )
 
     # Boolean list specifying whether each gradient is None or not. Set by body().
     is_nones = []
@@ -272,16 +294,21 @@ def _compute_gradients_until_finite(
         """The body of the while loop."""
         del grads, ready_to_update, is_first_iteration
 
-        def replica_fn(gradient_tape, target, flattened_sources, output_gradients,
-                       initial_grads):
+        def replica_fn(
+            gradient_tape, target, flattened_sources, output_gradients, initial_grads
+        ):
             """Scales the loss, computes the gradients, and unscales the gradients."""
             loss_scale_val = loss_scale()
             with gradient_tape:  # re-enter gradient tape so it sees the loss scaling
                 scaled_target = nest.map_structure(
-                    lambda t: t * math_ops.cast(loss_scale_val, t.dtype), target)
+                    lambda t: t * math_ops.cast(loss_scale_val, t.dtype), target
+                )
             scaled_grads = super(LossScaleGradientTape, gradient_tape).gradient(
-                scaled_target, flattened_sources, output_gradients,
-                unconnected_gradients)
+                scaled_target,
+                flattened_sources,
+                output_gradients,
+                unconnected_gradients,
+            )
 
             is_nones[:] = [g is None for g in scaled_grads]
             inv_loss_scale = 1.0 / loss_scale_val
@@ -306,16 +333,23 @@ def _compute_gradients_until_finite(
         # Switch to a replica-context to compute gradients once per replica.
         grads = distribution.run(
             replica_fn,
-            args=(loss_scale_gradient_tapes, target, flattened_sources,
-                  output_gradients, initial_grads))
+            args=(
+                loss_scale_gradient_tapes,
+                target,
+                flattened_sources,
+                output_gradients,
+                initial_grads,
+            ),
+        )
         # Check for non-finite gradients possibly resulting from scaling
         _, ready_to_update = loss_scale.update(grads)
         is_first_iteration = False
         return grads, ready_to_update, is_first_iteration
 
     grads, _, _ = control_flow_ops.while_loop(
-        cond, body, [initial_grads, initial_ready_to_update,
-                     initial_is_first_iteration],
+        cond,
+        body,
+        [initial_grads, initial_ready_to_update, initial_is_first_iteration],
     )
     grads = [None if is_none else g for g, is_none in zip(grads, is_nones)]
     grads = nest.pack_sequence_as(sources, grads)

@@ -50,7 +50,9 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.tpu import device_assignment as device_assignment_lib  # pylint: disable=unused-import
+from tensorflow.python.tpu import (
+    device_assignment as device_assignment_lib,
+)  # pylint: disable=unused-import
 from tensorflow.python.tpu import tpu
 from tensorflow.python.tpu import tpu_strategy_util
 from tensorflow.python.tpu import tpu_system_metadata as tpu_system_metadata_lib
@@ -67,11 +69,9 @@ def get_tpu_system_metadata(tpu_cluster_resolver):
     # pylint: disable=protected-access
     cluster_spec = tpu_cluster_resolver.cluster_spec()
     cluster_def = cluster_spec.as_cluster_def() if cluster_spec else None
-    tpu_system_metadata = (
-        tpu_system_metadata_lib._query_tpu_system_metadata(
-            master,
-            cluster_def=cluster_def,
-            query_topology=False))
+    tpu_system_metadata = tpu_system_metadata_lib._query_tpu_system_metadata(
+        master, cluster_def=cluster_def, query_topology=False
+    )
 
     return tpu_system_metadata
 
@@ -98,25 +98,26 @@ def validate_run_function(fn):
     # Otherwise we return an error, because we don't support eagerly running
     # run in TPUStrategy.
 
-    if context.executing_eagerly() \
-            and not isinstance(fn, def_function.Function) \
-            and not isinstance(fn, function.ConcreteFunction) \
-            and not (callable(fn) and isinstance(fn.__call__, def_function.Function)):
+    if (
+        context.executing_eagerly()
+        and not isinstance(fn, def_function.Function)
+        and not isinstance(fn, function.ConcreteFunction)
+        and not (callable(fn) and isinstance(fn.__call__, def_function.Function))
+    ):
         raise NotImplementedError(
             "TPUStrategy.run(fn, ...) does not support pure eager "
             "execution. please make sure the function passed into "
             "`strategy.run` is a `tf.function` or "
             "`strategy.run` is called inside a `tf.function` if "
-            "eager behavior is enabled.")
+            "eager behavior is enabled."
+        )
 
 
 @tf_export("distribute.experimental.TPUStrategy", v1=[])
 class TPUStrategy(distribute_lib.Strategy):
     """TPU distribution strategy implementation."""
 
-    def __init__(self,
-                 tpu_cluster_resolver=None,
-                 device_assignment=None):
+    def __init__(self, tpu_cluster_resolver=None, device_assignment=None):
         """Synchronous training in TPU donuts or Pods.
 
         To construct a TPUStrategy object, you need to run the
@@ -148,14 +149,16 @@ class TPUStrategy(distribute_lib.Strategy):
             specify the placement of replicas on the TPU cluster. Currently only
             supports the usecase of using a single core within a TPU cluster.
         """
-        super(TPUStrategy, self).__init__(TPUExtended(
-            self, tpu_cluster_resolver, device_assignment=device_assignment))
-        distribute_lib.distribution_strategy_gauge.get_cell(
-            "V2").set("TPUStrategy")
+        super(TPUStrategy, self).__init__(
+            TPUExtended(self, tpu_cluster_resolver, device_assignment=device_assignment)
+        )
+        distribute_lib.distribution_strategy_gauge.get_cell("V2").set("TPUStrategy")
+        distribute_lib.distribution_strategy_replica_gauge.get_cell("num_workers").set(
+            self.extended.num_hosts
+        )
         distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_workers").set(self.extended.num_hosts)
-        distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_replicas_per_worker").set(self.extended.num_replicas_per_host)
+            "num_replicas_per_worker"
+        ).set(self.extended.num_replicas_per_host)
 
     # TODO(cjfj): Modify `_call_for_each_replica` in `TPUExtended` such that this
     # can use the default implementation.
@@ -175,10 +178,9 @@ class TPUStrategy(distribute_lib.Strategy):
 class TPUStrategyV1(distribute_lib.StrategyV1):
     """TPU distribution strategy implementation."""
 
-    def __init__(self,
-                 tpu_cluster_resolver=None,
-                 steps_per_run=None,
-                 device_assignment=None):
+    def __init__(
+        self, tpu_cluster_resolver=None, steps_per_run=None, device_assignment=None
+    ):
         """Initializes the TPUStrategy object.
 
         Args:
@@ -193,14 +195,16 @@ class TPUStrategyV1(distribute_lib.StrategyV1):
               specify the placement of replicas on the TPU cluster. Currently only
               supports the usecase of using a single core within a TPU cluster.
         """
-        super(TPUStrategyV1, self).__init__(TPUExtended(
-            self, tpu_cluster_resolver, steps_per_run, device_assignment))
-        distribute_lib.distribution_strategy_gauge.get_cell(
-            "V1").set("TPUStrategy")
+        super(TPUStrategyV1, self).__init__(
+            TPUExtended(self, tpu_cluster_resolver, steps_per_run, device_assignment)
+        )
+        distribute_lib.distribution_strategy_gauge.get_cell("V1").set("TPUStrategy")
+        distribute_lib.distribution_strategy_replica_gauge.get_cell("num_workers").set(
+            self.extended.num_hosts
+        )
         distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_workers").set(self.extended.num_hosts)
-        distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_replicas_per_worker").set(self.extended.num_replicas_per_host)
+            "num_replicas_per_worker"
+        ).set(self.extended.num_replicas_per_host)
 
     @property
     def steps_per_run(self):
@@ -272,11 +276,13 @@ class TPUStrategyV1(distribute_lib.StrategyV1):
 class TPUExtended(distribute_lib.StrategyExtendedV1):
     """Implementation of TPUStrategy."""
 
-    def __init__(self,
-                 container_strategy,
-                 tpu_cluster_resolver=None,
-                 steps_per_run=None,
-                 device_assignment=None):
+    def __init__(
+        self,
+        container_strategy,
+        tpu_cluster_resolver=None,
+        steps_per_run=None,
+        device_assignment=None,
+    ):
         super(TPUExtended, self).__init__(container_strategy)
 
         if tpu_cluster_resolver is None:
@@ -289,21 +295,19 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
 
         self._tpu_function_cache = weakref.WeakKeyDictionary()
         self._tpu_cluster_resolver = tpu_cluster_resolver
-        self._tpu_metadata = get_tpu_system_metadata(
-            self._tpu_cluster_resolver)
+        self._tpu_metadata = get_tpu_system_metadata(self._tpu_cluster_resolver)
         self._device_assignment = device_assignment
 
         tpu_devices_flat = [
-            d.name for d in self._tpu_metadata.devices if "device:TPU:" in d.name]
+            d.name for d in self._tpu_metadata.devices if "device:TPU:" in d.name
+        ]
 
         # `self._tpu_devices` is a two-dimensional NumPy array of strings. It is
         # indexed using `[replica_id][logical_device_id]`.
         if device_assignment is None:
-            self._tpu_devices = np.array(
-                [[d] for d in tpu_devices_flat], dtype=object)
+            self._tpu_devices = np.array([[d] for d in tpu_devices_flat], dtype=object)
         else:
-            job_name = device_spec.DeviceSpecV2.from_string(
-                tpu_devices_flat[0]).job
+            job_name = device_spec.DeviceSpecV2.from_string(tpu_devices_flat[0]).job
 
             tpu_devices = []
             for replica_id in range(device_assignment.num_replicas):
@@ -315,13 +319,15 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                             device_assignment.tpu_device(
                                 replica=replica_id,
                                 logical_core=logical_core,
-                                job=job_name)))
+                                job=job_name,
+                            )
+                        )
+                    )
 
                 tpu_devices.append(replica_devices)
             self._tpu_devices = np.array(tpu_devices, dtype=object)
 
-        self._host_device = device_util.get_host_for_device(
-            self._tpu_devices[0][0])
+        self._host_device = device_util.get_host_for_device(self._tpu_devices[0][0])
 
         # Preload the data onto the TPUs. Currently we always preload onto logical
         # device 0 for each replica.
@@ -360,16 +366,20 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         if self._prefetch_on_host == value:
             return
         if self._input_workers_obj is not None:
-            raise RuntimeError("Unable to change prefetch on host behavior as "
-                               "InputWorkers are already created.")
+            raise RuntimeError(
+                "Unable to change prefetch on host behavior as "
+                "InputWorkers are already created."
+            )
         self._prefetch_on_host = value
         if value:
             # To prefetch on the host, we must set all the input worker devices to the
             # corresponding host devices.
-            self._input_worker_devices = tuple([
-                tuple([host,
-                       [device_util.get_host_for_device(d) for d in devices]])
-                for host, devices in self._input_worker_devices])
+            self._input_worker_devices = tuple(
+                [
+                    tuple([host, [device_util.get_host_for_device(d) for d in devices]])
+                    for host, devices in self._input_worker_devices
+                ]
+            )
             # Force creation of the workers.
             workers = self._input_workers
             del workers
@@ -377,8 +387,7 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
     @property
     def _input_workers(self):
         if self._input_workers_obj is None:
-            self._input_workers_obj = input_lib.InputWorkers(
-                self._input_worker_devices)
+            self._input_workers_obj = input_lib.InputWorkers(self._input_worker_devices)
         return self._input_workers_obj
 
     def _validate_colocate_with_variable(self, colocate_with_variable):
@@ -390,65 +399,71 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             dataset,
             self._input_workers,
             self._container_strategy(),
-            split_batch_by=self._num_replicas_in_sync)
+            split_batch_by=self._num_replicas_in_sync,
+        )
 
     def _make_input_fn_iterator(
-            self,
-            input_fn,
-            replication_mode=distribute_lib.InputReplicationMode.PER_WORKER):
+        self, input_fn, replication_mode=distribute_lib.InputReplicationMode.PER_WORKER
+    ):
         input_contexts = []
         num_workers = self._input_workers.num_workers
         for i in range(num_workers):
-            input_contexts.append(distribute_lib.InputContext(
-                num_input_pipelines=num_workers,
-                input_pipeline_id=i,
-                num_replicas_in_sync=self._num_replicas_in_sync))
+            input_contexts.append(
+                distribute_lib.InputContext(
+                    num_input_pipelines=num_workers,
+                    input_pipeline_id=i,
+                    num_replicas_in_sync=self._num_replicas_in_sync,
+                )
+            )
         return input_lib.InputFunctionIterator(
-            input_fn,
-            self._input_workers,
-            input_contexts,
-            self._container_strategy())
+            input_fn, self._input_workers, input_contexts, self._container_strategy()
+        )
 
     def _experimental_make_numpy_dataset(self, numpy_input, session):
         return numpy_dataset.one_host_numpy_dataset(
-            numpy_input, numpy_dataset.SingleDevice(self._host_device),
-            session)
+            numpy_input, numpy_dataset.SingleDevice(self._host_device), session
+        )
 
     def _experimental_distribute_dataset(self, dataset):
         return input_lib.get_distributed_dataset(
             dataset,
             self._input_workers,
             self._container_strategy(),
-            split_batch_by=self._num_replicas_in_sync)
+            split_batch_by=self._num_replicas_in_sync,
+        )
 
     def _experimental_distribute_datasets_from_function(self, dataset_fn):
         input_contexts = []
         num_workers = self._input_workers.num_workers
         for i in range(num_workers):
-            input_contexts.append(distribute_lib.InputContext(
-                num_input_pipelines=num_workers,
-                input_pipeline_id=i,
-                num_replicas_in_sync=self._num_replicas_in_sync))
+            input_contexts.append(
+                distribute_lib.InputContext(
+                    num_input_pipelines=num_workers,
+                    input_pipeline_id=i,
+                    num_replicas_in_sync=self._num_replicas_in_sync,
+                )
+            )
 
         return input_lib.get_distributed_datasets_from_function(
-            dataset_fn,
-            self._input_workers,
-            input_contexts,
-            self._container_strategy())
+            dataset_fn, self._input_workers, input_contexts, self._container_strategy()
+        )
 
     def _experimental_distribute_values_from_function(self, value_fn):
         per_replica_values = []
         for replica_id in range(self._num_replicas_in_sync):
             per_replica_values.append(
-                value_fn(distribute_lib.ValueContext(replica_id,
-                                                     self._num_replicas_in_sync)))
+                value_fn(
+                    distribute_lib.ValueContext(replica_id, self._num_replicas_in_sync)
+                )
+            )
         return values.regroup(per_replica_values, always_wrap=True)
 
     # TODO(priyag): Deal with OutOfRange errors once b/111349762 is fixed.
     # TODO(sourabhbajaj): Remove the initial_loop_values parameter when we have
     # a mechanism to infer the outputs of `fn`. Pending b/110550782.
     def _experimental_run_steps_on_iterator(
-            self, fn, multi_worker_iterator, iterations, initial_loop_values=None):
+        self, fn, multi_worker_iterator, iterations, initial_loop_values=None
+    ):
         # Wrap `fn` for repeat.
         if initial_loop_values is None:
             initial_loop_values = {}
@@ -472,7 +487,8 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         # evaluated only once at the end of the loop on the host. One such usage
         # is in creating metrics' value op.
         self._outer_control_flow_context = (
-            ops.get_default_graph()._get_control_flow_context())  # pylint: disable=protected-access
+            ops.get_default_graph()._get_control_flow_context()
+        )  # pylint: disable=protected-access
 
         def rewrite_fn(*args):
             """The rewritten step fn running on TPU."""
@@ -481,13 +497,19 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             per_replica_inputs = multi_worker_iterator.get_next()
             replicate_inputs = []
             for replica_id in range(self._num_replicas_in_sync):
-                def select_replica(x): return values.select_replica(
-                    replica_id, x)  # pylint: disable=cell-var-from-loop
-                replicate_inputs.append((nest.map_structure(
-                    select_replica, per_replica_inputs),))
+
+                def select_replica(x):
+                    return values.select_replica(
+                        replica_id, x
+                    )  # pylint: disable=cell-var-from-loop
+
+                replicate_inputs.append(
+                    (nest.map_structure(select_replica, per_replica_inputs),)
+                )
 
             replicate_outputs = tpu.replicate(
-                run_fn, replicate_inputs, device_assignment=self._device_assignment)
+                run_fn, replicate_inputs, device_assignment=self._device_assignment
+            )
 
             # If run_fn has tensor outputs, tpu.replicate returns a list of list. We
             # will flatten it in this case. If run_fn has no tensor outputs,
@@ -508,8 +530,9 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             if self.steps_per_run == 1:
                 replicate_outputs = rewrite_fn()
             else:
-                replicate_outputs = training_loop.repeat(iterations, rewrite_fn,
-                                                         initial_loop_values)
+                replicate_outputs = training_loop.repeat(
+                    iterations, rewrite_fn, initial_loop_values
+                )
 
         del self._outer_control_flow_context
         ctx.run_op = control_flow_ops.group(replicate_outputs)
@@ -529,8 +552,7 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             # [[output0_device0, output0_device1],
             #  [output1_device0, output1_device1],
             #  [output2_device0, output2_device1]]
-            output_num = len(
-                last_step_tensor_outputs) // self._num_replicas_in_sync
+            output_num = len(last_step_tensor_outputs) // self._num_replicas_in_sync
             last_step_tensor_outputs = [
                 last_step_tensor_outputs[i::output_num] for i in range(output_num)
             ]
@@ -555,7 +577,9 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             raise ValueError(
                 "`logical_device_id` not in range (was {}, but there are only {} "
                 "logical devices per replica).".format(
-                    logical_device_id, num_logical_devices_per_replica))
+                    logical_device_id, num_logical_devices_per_replica
+                )
+            )
 
         self._logical_device_stack.append(logical_device_id)
         try:
@@ -570,17 +594,21 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
     def _experimental_assign_to_logical_device(self, tensor, logical_device_id):
         """See `DistributionStrategy.experimental_assign_to_logical_device`."""
         num_logical_devices_per_replica = self._tpu_devices.shape[1]
-        if (logical_device_id < 0 or
-                logical_device_id >= num_logical_devices_per_replica):
-            raise ValueError("`logical_core_id` to assign must be lower then total "
-                             "number of logical devices per replica. Received "
-                             "logical device id {} but there are only total of {} "
-                             "logical devices in replica.".format(
-                                 logical_device_id, num_logical_devices_per_replica))
+        if (
+            logical_device_id < 0
+            or logical_device_id >= num_logical_devices_per_replica
+        ):
+            raise ValueError(
+                "`logical_core_id` to assign must be lower then total "
+                "number of logical devices per replica. Received "
+                "logical device id {} but there are only total of {} "
+                "logical devices in replica.".format(
+                    logical_device_id, num_logical_devices_per_replica
+                )
+            )
         return xla_sharding.assign_device(tensor, logical_device_id)
 
-    def _experimental_split_to_logical_devices(self, tensor,
-                                               partition_dimensions):
+    def _experimental_split_to_logical_devices(self, tensor, partition_dimensions):
         """See `DistributionStrategy.experimental_split_to_logical_devices`."""
         num_logical_devices_per_replica = self._tpu_devices.shape[1]
         num_partition_splits = np.prod(partition_dimensions)
@@ -588,9 +616,12 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         tensor_rank = len(input_shape)
 
         if tensor_rank != len(partition_dimensions):
-            raise ValueError("Length of `partition_dimensions` ({}) must be  "
-                             "equal to the rank of `x` ({}).".format(
-                                 len(partition_dimensions), tensor_rank))
+            raise ValueError(
+                "Length of `partition_dimensions` ({}) must be  "
+                "equal to the rank of `x` ({}).".format(
+                    len(partition_dimensions), tensor_rank
+                )
+            )
 
         for dim_index, dim_size in enumerate(input_shape):
             if dim_size is None:
@@ -598,19 +629,21 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
 
             split_size = partition_dimensions[dim_index]
             if dim_size % split_size != 0:
-                raise ValueError("Tensor shape at dimension ({}) must be "
-                                 "divisible by corresponding value specified "
-                                 "by `partition_dimensions` ({}).".format(
-                                     dim_index, split_size))
+                raise ValueError(
+                    "Tensor shape at dimension ({}) must be "
+                    "divisible by corresponding value specified "
+                    "by `partition_dimensions` ({}).".format(dim_index, split_size)
+                )
 
         if num_partition_splits != num_logical_devices_per_replica:
-            raise ValueError("Number of logical devices ({}) does not match the "
-                             "number of partition splits specified ({}).".format(
-                                 num_logical_devices_per_replica,
-                                 num_partition_splits))
+            raise ValueError(
+                "Number of logical devices ({}) does not match the "
+                "number of partition splits specified ({}).".format(
+                    num_logical_devices_per_replica, num_partition_splits
+                )
+            )
 
-        tile_assignment = np.arange(num_partition_splits).reshape(
-            partition_dimensions)
+        tile_assignment = np.arange(num_partition_splits).reshape(partition_dimensions)
         return xla_sharding.tile(tensor, tile_assignment, use_sharding_op=True)
 
     def _experimental_replicate_to_logical_devices(self, tensor):
@@ -649,8 +682,11 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                         # Note: some v1 code expects variable initializer creation to happen
                         # inside a init_scope.
                         with maybe_init_scope():
-                            initial_value = initial_value() if callable(
-                                initial_value) else initial_value
+                            initial_value = (
+                                initial_value()
+                                if callable(initial_value)
+                                else initial_value
+                            )
 
                     if i > 0:
                         # Give replicas meaningful distinct names:
@@ -668,22 +704,25 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                     value_list.append(v)
             return value_list
 
-        return values.create_mirrored_variable(self._container_strategy(),
-                                               _real_mirrored_creator,
-                                               tpu_values.TPUMirroredVariable,
-                                               tpu_values.TPUSyncOnReadVariable,
-                                               **kwargs)
+        return values.create_mirrored_variable(
+            self._container_strategy(),
+            _real_mirrored_creator,
+            tpu_values.TPUMirroredVariable,
+            tpu_values.TPUSyncOnReadVariable,
+            **kwargs
+        )
 
     def _reduce_to(self, reduce_op, value, destinations, experimental_hints):
-        if (isinstance(value, values.DistributedValues) or
-                tensor_util.is_tensor(value)
-            ) and tpu_values.enclosing_tpu_context() is not None:
+        if (
+            isinstance(value, values.DistributedValues) or tensor_util.is_tensor(value)
+        ) and tpu_values.enclosing_tpu_context() is not None:
             if reduce_op == reduce_util.ReduceOp.MEAN:
                 # TODO(jhseu):  Revisit once we support model-parallelism.
-                value *= (1. / self._num_replicas_in_sync)
+                value *= 1.0 / self._num_replicas_in_sync
             elif reduce_op != reduce_util.ReduceOp.SUM:
                 raise NotImplementedError(
-                    "Currently only support sum & mean in TPUStrategy.")
+                    "Currently only support sum & mean in TPUStrategy."
+                )
             return tpu_ops.cross_replica_sum(value)
 
         if not isinstance(value, values.DistributedValues):
@@ -692,14 +731,15 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             # replicas in which case `value` would be a single value or value could
             # be 0.
             return cross_device_ops_lib.reduce_non_distributed_value(
-                reduce_op, value, destinations, self._num_replicas_in_sync)
+                reduce_op, value, destinations, self._num_replicas_in_sync
+            )
 
         # TODO(cjfj): Detect when it is possible to use `cross_replica_sum`.
         # Always performs the reduction on the TPU host.
         with ops.device(self._host_device):
             output = math_ops.add_n(value.values)
             if reduce_op == reduce_util.ReduceOp.MEAN:
-                output *= (1. / len(value.values))
+                output *= 1.0 / len(value.values)
 
         devices = cross_device_ops_lib.get_devices_from(destinations)
 
@@ -712,14 +752,14 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                 with ops.device(dest_canonical):
                     output = array_ops.identity(output)
         else:
-            output = cross_device_ops_lib.simple_broadcast(
-                output, destinations)
+            output = cross_device_ops_lib.simple_broadcast(output, destinations)
 
         return output
 
     def _update(self, var, fn, args, kwargs, group):
         assert isinstance(var, tpu_values.TPUVariableMixin) or isinstance(
-            var, resource_variable_ops.BaseResourceVariable)
+            var, resource_variable_ops.BaseResourceVariable
+        )
         if tpu_values.enclosing_tpu_context() is not None:
             if group:
                 return fn(var, *args, **kwargs)
@@ -731,18 +771,23 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         updates = []
         for i, v in enumerate(var.values):
             name = "update_%d" % i
-            with ops.device(v.device), \
-                    distribute_lib.UpdateContext(i), \
-                    ops.name_scope(name):
+            with ops.device(v.device), distribute_lib.UpdateContext(i), ops.name_scope(
+                name
+            ):
                 # If args and kwargs are not mirrored, the value is returned as is.
-                updates.append(fn(v,
-                                  *values.select_replica_mirrored(i, args),
-                                  **values.select_replica_mirrored(i, kwargs)))
+                updates.append(
+                    fn(
+                        v,
+                        *values.select_replica_mirrored(i, args),
+                        **values.select_replica_mirrored(i, kwargs)
+                    )
+                )
         return values.update_regroup(self, updates, group)
 
     def read_var(self, var):
         assert isinstance(var, tpu_values.TPUVariableMixin) or isinstance(
-            var, resource_variable_ops.BaseResourceVariable)
+            var, resource_variable_ops.BaseResourceVariable
+        )
         return var.read_value()
 
     def _local_results(self, val):
@@ -763,13 +808,13 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         if isinstance(tensor, (float, int)):
             return tensor
         if tpu_values.enclosing_tpu_context() is not None:
-            broadcast_tensor = [tensor for _ in range(
-                self._num_replicas_in_sync)]
+            broadcast_tensor = [tensor for _ in range(self._num_replicas_in_sync)]
             result = tpu_ops.all_to_all(
                 broadcast_tensor,
                 concat_dimension=0,
                 split_dimension=0,
-                split_count=self._num_replicas_in_sync)
+                split_count=self._num_replicas_in_sync,
+            )
 
             # This uses the broadcasted value from the first replica because the only
             # caller of this is for ONLY_FIRST_REPLICA variables aggregation.
@@ -781,8 +826,14 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         if self._device_assignment is None:
             return self._tpu_metadata.num_hosts
 
-        return len(set([self._device_assignment.host_device(r)
-                        for r in range(self._device_assignment.num_replicas)]))
+        return len(
+            set(
+                [
+                    self._device_assignment.host_device(r)
+                    for r in range(self._device_assignment.num_replicas)
+                ]
+            )
+        )
 
     @property
     def num_replicas_per_host(self):
@@ -794,8 +845,10 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
         # when using device_assignment. This is a temporary workaround to support
         # StatefulRNN as everything is 1 in that case.
         # This method needs to take host_id as input for correct computation.
-        max_models_per_host = (self._tpu_metadata.num_of_cores_per_host //
-                               self._device_assignment.num_cores_per_replica)
+        max_models_per_host = (
+            self._tpu_metadata.num_of_cores_per_host
+            // self._device_assignment.num_cores_per_replica
+        )
         return min(self._device_assignment.num_replicas, max_models_per_host)
 
     @property
@@ -840,11 +893,9 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             else:
                 return nest.map_structure(self._local_results, result)
 
-    def _configure(self,
-                   session_config=None,
-                   cluster_spec=None,
-                   task_type=None,
-                   task_id=None):
+    def _configure(
+        self, session_config=None, cluster_spec=None, task_type=None, task_id=None
+    ):
         del cluster_spec, task_type, task_id
         if session_config:
             session_config.CopyFrom(self._update_config_proto(session_config))
@@ -906,9 +957,12 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
             replicate_inputs = []  # By replica.
             for i in range(strategy.num_replicas_in_sync):
                 replicate_inputs.append(
-                    [constant_op.constant(i, dtype=dtypes.int32),
-                     values.select_replica(i, args),
-                     values.select_replica(i, kwargs)])
+                    [
+                        constant_op.constant(i, dtype=dtypes.int32),
+                        values.select_replica(i, args),
+                        values.select_replica(i, kwargs),
+                    ]
+                )
 
             # Construct and pass `maximum_shapes` so that we could support dynamic
             # shapes using dynamic padder.
@@ -922,8 +976,9 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                         rank = np.rank(input_tensor)
                     maximum_shape = tensor_shape.TensorShape([None] * rank)
                     maximum_shapes.append(maximum_shape)
-                maximum_shapes = nest.pack_sequence_as(replicate_inputs[0],
-                                                       maximum_shapes)
+                maximum_shapes = nest.pack_sequence_as(
+                    replicate_inputs[0], maximum_shapes
+                )
             else:
                 maximum_shapes = None
 
@@ -938,13 +993,15 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                     replicate_inputs,
                     device_assignment=self._device_assignment,
                     maximum_shapes=maximum_shapes,
-                    padding_spec=padding_spec)
+                    padding_spec=padding_spec,
+                )
 
             # Remove all no ops that may have been added during 'tpu.replicate()'
             if isinstance(result[0], list):
                 result[0] = [
-                    output for output in result[0] if not isinstance(
-                        output, ops.Operation)
+                    output
+                    for output in result[0]
+                    if not isinstance(output, ops.Operation)
                 ]
 
             # Workaround for `tpu.replicate` behaviour when single `Tensor` returned.
@@ -952,8 +1009,7 @@ class TPUExtended(distribute_lib.StrategyExtendedV1):
                 replicate_outputs = [None] * len(replicate_outputs)
             else:
                 replicate_outputs = [
-                    nest.pack_sequence_as(
-                        result[0], nest.flatten(replica_output))
+                    nest.pack_sequence_as(result[0], nest.flatten(replica_output))
                     for replica_output in replicate_outputs
                 ]
             return values.regroup(replicate_outputs)
@@ -983,7 +1039,8 @@ class _TPUReplicaContext(distribute_lib.ReplicaContext):
         if replica_id_in_sync_group is None:
             replica_id_in_sync_group = constant_op.constant(0, dtypes.int32)
         distribute_lib.ReplicaContext.__init__(
-            self, strategy, replica_id_in_sync_group=replica_id_in_sync_group)
+            self, strategy, replica_id_in_sync_group=replica_id_in_sync_group
+        )
 
     @property
     def devices(self):
@@ -1007,9 +1064,13 @@ def _set_last_step_outputs(ctx, last_step_tensor_outputs):
     # Convert replicate_outputs to the original dict structure of
     # last_step_outputs.
     last_step_tensor_outputs_dict = nest.pack_sequence_as(
-        ctx.last_step_outputs, last_step_tensor_outputs)
+        ctx.last_step_outputs, last_step_tensor_outputs
+    )
 
-    for name, reduce_op in ctx._last_step_outputs_reduce_ops.items():  # pylint: disable=protected-access
+    for (
+        name,
+        reduce_op,
+    ) in ctx._last_step_outputs_reduce_ops.items():  # pylint: disable=protected-access
         output = last_step_tensor_outputs_dict[name]
         # For outputs that aren't reduced, return a PerReplica of all values. Else
         # take the first value from the list as each value should be the same.
@@ -1019,4 +1080,5 @@ def _set_last_step_outputs(ctx, last_step_tensor_outputs):
             # TODO(priyag): Should this return the element or a list with 1 element
             last_step_tensor_outputs_dict[name] = output[0]
     ctx._set_last_step_outputs(
-        last_step_tensor_outputs_dict)  # pylint: disable=protected-access
+        last_step_tensor_outputs_dict
+    )  # pylint: disable=protected-access

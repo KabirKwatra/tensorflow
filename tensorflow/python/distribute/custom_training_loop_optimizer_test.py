@@ -31,7 +31,6 @@ from tensorflow.python.ops import variables
 
 
 class OptimizerTest(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.times(
             combinations.combine(
@@ -41,32 +40,36 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             combinations.concat(
                 combinations.combine(
                     all_reduce_sum_gradients=True,
-                    expected=[[[-0.3, -0.3], [-0.3, -0.3]]]),
+                    expected=[[[-0.3, -0.3], [-0.3, -0.3]]],
+                ),
                 combinations.combine(
                     all_reduce_sum_gradients=False,
-                    expected=[[[-0.1, -0.1], [-0.2, -0.2]]]),
-            )))
-    def test_custom_aggregation(self, distribution, all_reduce_sum_gradients,
-                                expected):
+                    expected=[[[-0.1, -0.1], [-0.2, -0.2]]],
+                ),
+            ),
+        )
+    )
+    def test_custom_aggregation(self, distribution, all_reduce_sum_gradients, expected):
 
         with distribution.scope():
-            v = variables.Variable([0., 0.])
+            v = variables.Variable([0.0, 0.0])
             optimizer = keras.optimizer_v2.gradient_descent.SGD(0.1)
 
         @def_function.function
         def optimize():
-            grads = values.PerReplica([
-                ops.convert_to_tensor([1., 1.]),
-                ops.convert_to_tensor([2., 2.]),
-            ])
+            grads = values.PerReplica(
+                [ops.convert_to_tensor([1.0, 1.0]), ops.convert_to_tensor([2.0, 2.0]),]
+            )
 
             def step_fn(grads):
                 optimizer.apply_gradients(
-                    [(grads, v)], all_reduce_sum_gradients=all_reduce_sum_gradients)
+                    [(grads, v)], all_reduce_sum_gradients=all_reduce_sum_gradients
+                )
                 return v.read_value()
 
             return distribution.experimental_local_results(
-                distribution.run(step_fn, args=(grads,)))
+                distribution.run(step_fn, args=(grads,))
+            )
 
         self.assertAllClose(optimize(), expected)
 
@@ -74,25 +77,30 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
         combinations.combine(
             distribution=strategy_combinations.one_device_strategy,
             mode=["eager"],
-            all_reduce_sum_gradients=[True, False]))
-    def test_custom_aggregation_one_device(self, distribution,
-                                           all_reduce_sum_gradients):
+            all_reduce_sum_gradients=[True, False],
+        )
+    )
+    def test_custom_aggregation_one_device(
+        self, distribution, all_reduce_sum_gradients
+    ):
 
         with distribution.scope():
-            v = variables.Variable([0., 0.])
+            v = variables.Variable([0.0, 0.0])
             optimizer = keras.optimizer_v2.gradient_descent.SGD(0.1)
 
         @def_function.function
         def optimize():
-            grads = ops.convert_to_tensor([1., 1.])
+            grads = ops.convert_to_tensor([1.0, 1.0])
 
             def step_fn(grads):
                 optimizer.apply_gradients(
-                    [(grads, v)], all_reduce_sum_gradients=all_reduce_sum_gradients)
+                    [(grads, v)], all_reduce_sum_gradients=all_reduce_sum_gradients
+                )
                 return v.read_value()
 
             return distribution.experimental_local_results(
-                distribution.run(step_fn, args=(grads,)))
+                distribution.run(step_fn, args=(grads,))
+            )
 
         self.assertAllClose(optimize(), [[-0.1, -0.1]])
 
