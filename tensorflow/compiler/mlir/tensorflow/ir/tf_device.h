@@ -19,10 +19,10 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_TF_DEVICE_H_
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_TF_DEVICE_H_
 
-#include "mlir/IR/Builders.h"  // TF:llvm-project
-#include "mlir/IR/Dialect.h"  // TF:llvm-project
+#include "mlir/IR/Builders.h"      // TF:llvm-project
+#include "mlir/IR/Dialect.h"       // TF:llvm-project
 #include "mlir/IR/OpDefinition.h"  // TF:llvm-project
-#include "mlir/IR/Value.h"  // TF:llvm-project
+#include "mlir/IR/Value.h"         // TF:llvm-project
 
 namespace mlir {
 namespace tf_device {
@@ -34,9 +34,9 @@ namespace tf_device {
 // pass later to transform them into Compile/Run op pairs, like XlaCompile and
 // XlaRun.
 class TensorFlowDeviceDialect : public Dialect {
-public:
-    // Constructing TensorFlowDevice dialect under an non-null MLIRContext.
-    explicit TensorFlowDeviceDialect(MLIRContext* context);
+ public:
+  // Constructing TensorFlowDevice dialect under an non-null MLIRContext.
+  explicit TensorFlowDeviceDialect(MLIRContext* context);
 };
 
 // Declares the operations for this dialect using the generated header.
@@ -65,25 +65,23 @@ public:
 // ParallelExecute op are blocked until all regions are executed.
 class ParallelExecuteOp
     : public Op<ParallelExecuteOp,
-      OpTrait::SingleBlockImplicitTerminator<ReturnOp>::Impl> {
-public:
-    using Op::Op;
+                OpTrait::SingleBlockImplicitTerminator<ReturnOp>::Impl> {
+ public:
+  using Op::Op;
 
-    static void build(Builder* builder, OperationState& state, int num_regions,
-                      llvm::ArrayRef<Type> output_types);
+  static void build(Builder* builder, OperationState& state, int num_regions,
+                    llvm::ArrayRef<Type> output_types);
 
-    static StringRef getOperationName() {
-        return "tf_device.parallel_execute";
-    }
+  static StringRef getOperationName() { return "tf_device.parallel_execute"; }
 
-    LogicalResult verify();
-    Block& GetRegionBlockWithIndex(unsigned index);
-    Operation::result_range GetRegionOutputs(unsigned region_index);
+  LogicalResult verify();
+  Block& GetRegionBlockWithIndex(unsigned index);
+  Operation::result_range GetRegionOutputs(unsigned region_index);
 
-    // Checks if a tf_device.parallel_execute index'th region block wraps a single
-    // operation and the single operation results are perfectly forwarded to the
-    // region block's return.
-    bool RegionWrapsSingleOp(unsigned index);
+  // Checks if a tf_device.parallel_execute index'th region block wraps a single
+  // operation and the single operation results are perfectly forwarded to the
+  // region block's return.
+  bool RegionWrapsSingleOp(unsigned index);
 };
 
 }  // namespace tf_device
