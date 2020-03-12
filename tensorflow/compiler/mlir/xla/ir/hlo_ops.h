@@ -19,18 +19,18 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_MLIR_XLA_IR_HLO_OPS_H_
 
 #include "llvm/ADT/StringRef.h"
-#include "mlir/IR/Attributes.h"  // TF:llvm-project
-#include "mlir/IR/Dialect.h"  // TF:llvm-project
-#include "mlir/IR/DialectImplementation.h"  // TF:llvm-project
-#include "mlir/IR/Location.h"  // TF:llvm-project
-#include "mlir/IR/MLIRContext.h"  // TF:llvm-project
-#include "mlir/IR/OpDefinition.h"  // TF:llvm-project
-#include "mlir/IR/Operation.h"  // TF:llvm-project
-#include "mlir/IR/StandardTypes.h"  // TF:llvm-project
-#include "mlir/IR/Types.h"  // TF:llvm-project
+#include "mlir/IR/Attributes.h"                    // TF:llvm-project
+#include "mlir/IR/Dialect.h"                       // TF:llvm-project
+#include "mlir/IR/DialectImplementation.h"         // TF:llvm-project
+#include "mlir/IR/Location.h"                      // TF:llvm-project
+#include "mlir/IR/MLIRContext.h"                   // TF:llvm-project
+#include "mlir/IR/OpDefinition.h"                  // TF:llvm-project
+#include "mlir/IR/Operation.h"                     // TF:llvm-project
+#include "mlir/IR/StandardTypes.h"                 // TF:llvm-project
+#include "mlir/IR/Types.h"                         // TF:llvm-project
 #include "mlir/Interfaces/InferTypeOpInterface.h"  // TF:llvm-project
-#include "mlir/Interfaces/SideEffects.h"  // TF:llvm-project
-#include "mlir/Support/Functional.h"  // TF:llvm-project
+#include "mlir/Interfaces/SideEffects.h"           // TF:llvm-project
+#include "mlir/Support/Functional.h"               // TF:llvm-project
 
 namespace mlir {
 class OpBuilder;
@@ -40,42 +40,38 @@ class OpBuilder;
 namespace xla_hlo {
 
 class XlaHloDialect : public Dialect {
-public:
-    explicit XlaHloDialect(MLIRContext *context);
-    static StringRef getDialectNamespace() {
-        return "xla_hlo";
-    }
+ public:
+  explicit XlaHloDialect(MLIRContext* context);
+  static StringRef getDialectNamespace() { return "xla_hlo"; }
 
-    // Registered hook to materialize a constant operation from a given attribute
-    // value with the desired resultant type.
-    Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
-                                   Location loc) override;
+  // Registered hook to materialize a constant operation from a given attribute
+  // value with the desired resultant type.
+  Operation* materializeConstant(OpBuilder& builder, Attribute value, Type type,
+                                 Location loc) override;
 
-    // Parses a type registered to this dialect.
-    Type parseType(DialectAsmParser &parser) const override;
+  // Parses a type registered to this dialect.
+  Type parseType(DialectAsmParser& parser) const override;
 
-    // Prints a type registered to this dialect.
-    void printType(Type type, DialectAsmPrinter &os) const override;
+  // Prints a type registered to this dialect.
+  void printType(Type type, DialectAsmPrinter& os) const override;
 };
 
 namespace HLOTypes {
 enum Kind {
-    Token = Type::FIRST_XLA_HLO_TYPE,
+  Token = Type::FIRST_XLA_HLO_TYPE,
 };
 }  // namespace HLOTypes
 
 class TokenType : public Type::TypeBase<TokenType, Type> {
-public:
-    using Base::Base;
+ public:
+  using Base::Base;
 
-    static TokenType get(MLIRContext *context) {
-        return Base::get(context, HLOTypes::Token);
-    }
+  static TokenType get(MLIRContext* context) {
+    return Base::get(context, HLOTypes::Token);
+  }
 
-    // Support method to enable LLVM-style type casting.
-    static bool kindof(unsigned kind) {
-        return kind == HLOTypes::Token;
-    }
+  // Support method to enable LLVM-style type casting.
+  static bool kindof(unsigned kind) { return kind == HLOTypes::Token; }
 };
 
 // Shape derivation function that computes the shape of the result based on
@@ -91,8 +87,8 @@ public:
 //
 // and returns %4 as the shape value.
 LogicalResult deriveShapeFromFirstOperand(
-    OpBuilder *builder, Operation *op,
-    SmallVectorImpl<Value> *reifiedReturnShapes);
+    OpBuilder* builder, Operation* op,
+    SmallVectorImpl<Value>* reifiedReturnShapes);
 
 #define GET_OP_CLASSES
 #include "tensorflow/compiler/mlir/xla/ir/hlo_ops.h.inc"

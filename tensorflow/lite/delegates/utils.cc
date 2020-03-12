@@ -21,25 +21,25 @@ namespace tflite {
 namespace delegates {
 
 TfLiteStatus CreateNewTensorWithDifferentType(TfLiteContext* context,
-        const int original_tensor_index,
-        TfLiteType new_type,
-        TfLiteTensor** new_tensor,
-        int* new_tensor_index) {
-    const TfLiteTensor& original_tensor = context->tensors[original_tensor_index];
-    TF_LITE_ENSURE_STATUS(context->AddTensors(context, 1, new_tensor_index));
-    *new_tensor = &context->tensors[*new_tensor_index];
-    (*new_tensor)->type = new_type;
-    (*new_tensor)->allocation_type = kTfLiteArenaRw;
-    const auto* original_dims = original_tensor.dims;
-    TfLiteIntArray* dims = TfLiteIntArrayCreate(original_dims->size);
-    for (int i = 0; i < original_dims->size; ++i) {
-        dims->data[i] = original_dims->data[i];
-    }
-    if (context->ResizeTensor(context, *new_tensor, dims) != kTfLiteOk) {
-        TF_LITE_KERNEL_LOG(context, "Could not resize new delegate tensor");
-        return kTfLiteError;
-    }
-    return kTfLiteOk;
+                                              const int original_tensor_index,
+                                              TfLiteType new_type,
+                                              TfLiteTensor** new_tensor,
+                                              int* new_tensor_index) {
+  const TfLiteTensor& original_tensor = context->tensors[original_tensor_index];
+  TF_LITE_ENSURE_STATUS(context->AddTensors(context, 1, new_tensor_index));
+  *new_tensor = &context->tensors[*new_tensor_index];
+  (*new_tensor)->type = new_type;
+  (*new_tensor)->allocation_type = kTfLiteArenaRw;
+  const auto* original_dims = original_tensor.dims;
+  TfLiteIntArray* dims = TfLiteIntArrayCreate(original_dims->size);
+  for (int i = 0; i < original_dims->size; ++i) {
+    dims->data[i] = original_dims->data[i];
+  }
+  if (context->ResizeTensor(context, *new_tensor, dims) != kTfLiteOk) {
+    TF_LITE_KERNEL_LOG(context, "Could not resize new delegate tensor");
+    return kTfLiteError;
+  }
+  return kTfLiteOk;
 }
 
 }  // namespace delegates
