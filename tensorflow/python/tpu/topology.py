@@ -46,7 +46,10 @@ class Topology(object):
     TensorFlow TPU devices to physical mesh coordinates.
     """
 
-    def __init__(self, serialized=None, mesh_shape=None, device_coordinates=None):
+    def __init__(self,
+                 serialized=None,
+                 mesh_shape=None,
+                 device_coordinates=None):
         """Builds a Topology object.
 
         If `serialized` is not `None`, the topology is parsed from `serialized` and
@@ -81,12 +84,11 @@ class Topology(object):
             if len(self._mesh_shape) != 4 or any(self._mesh_shape < 1):
                 raise ValueError(
                     "`mesh_shape` must be a sequence of 4 positive "
-                    "entries; got {}".format(self._mesh_shape)
-                )
+                    "entries; got {}".format(self._mesh_shape))
 
-            if len(
-                self._device_coordinates.shape
-            ) != 3 or self._device_coordinates.shape[2] != len(self._mesh_shape):
+            if len(self._device_coordinates.shape
+                   ) != 3 or self._device_coordinates.shape[2] != len(
+                       self._mesh_shape):
                 raise ValueError(
                     "`device_coordinates` must be a rank 3 int32 array "
                     "with minor dimension equal to the mesh shape rank"
@@ -96,8 +98,7 @@ class Topology(object):
                         self._device_coordinates.shape[2],
                         self._mesh_shape,
                         len(self._mesh_shape),
-                    )
-                )
+                    ))
 
         self._topology_tasks, self._topology_devices = self._invert_topology()
 
@@ -113,21 +114,19 @@ class Topology(object):
         if len(self._mesh_shape) != 4 or any(self._mesh_shape < 1):
             raise ValueError(
                 "`mesh_shape` must be a vector of size 4 with positive "
-                "entries; got {}".format(self._mesh_shape)
-            )
+                "entries; got {}".format(self._mesh_shape))
 
         if proto.num_tasks < 0:
-            raise ValueError("`num_tasks` must be >= 0; got {}".format(proto.num_tasks))
+            raise ValueError("`num_tasks` must be >= 0; got {}".format(
+                proto.num_tasks))
         if proto.num_tpu_devices_per_task < 0:
             raise ValueError(
                 "`num_tpu_devices_per_task` must be >= 0; got {}".format(
-                    proto.num_tpu_devices_per_task
-                )
-            )
+                    proto.num_tpu_devices_per_task))
 
-        expected_coordinates_size = (
-            proto.num_tasks * proto.num_tpu_devices_per_task * len(proto.mesh_shape)
-        )
+        expected_coordinates_size = (proto.num_tasks *
+                                     proto.num_tpu_devices_per_task *
+                                     len(proto.mesh_shape))
         if len(proto.device_coordinates) != expected_coordinates_size:
             raise ValueError(
                 "`device_coordinates` must have shape num_tasks ({}) * "
@@ -137,15 +136,14 @@ class Topology(object):
                     proto.num_tpu_devices_per_task,
                     proto.mesh_shape,
                     len(proto.device_coordinates),
-                )
-            )
+                ))
 
         coords = np.array(proto.device_coordinates, dtype=np.int32)
         if any(coords < 0):
             raise ValueError("`device_coordinates` must be >= 0")
         coords = coords.reshape(
-            (proto.num_tasks, proto.num_tpu_devices_per_task, len(proto.mesh_shape))
-        )
+            (proto.num_tasks, proto.num_tpu_devices_per_task,
+             len(proto.mesh_shape)))
         self._device_coordinates = coords
 
     def _invert_topology(self):
@@ -217,8 +215,7 @@ class Topology(object):
     def cpu_device_name_at_coordinates(self, device_coordinates, job=None):
         """Returns the CPU device attached to a logical core."""
         return _tpu_host_device_name(
-            job, self._topology_tasks[tuple(device_coordinates)]
-        )
+            job, self._topology_tasks[tuple(device_coordinates)])
 
     def tpu_device_name_at_coordinates(self, device_coordinates, job=None):
         """Returns the name of the TPU device assigned to a logical core."""
@@ -245,7 +242,8 @@ class Topology(object):
             proto.mesh_shape[:] = list(self._mesh_shape)
             proto.num_tasks = self._device_coordinates.shape[0]
             proto.num_tpu_devices_per_task = self._device_coordinates.shape[1]
-            proto.device_coordinates.extend(list(self._device_coordinates.flatten()))
+            proto.device_coordinates.extend(
+                list(self._device_coordinates.flatten()))
             self._serialized = proto.SerializeToString()
 
         return self._serialized

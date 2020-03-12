@@ -32,9 +32,9 @@ class TrackableWeightHandlerTest(keras_parameterized.TestCase):
         # does not play nicely with a separate setUp() call (causing errors related
         # to graph building), so we have to use a called setup instead of a setUp()
         # call.
-        table = lookup_ops.MutableHashTable(
-            key_dtype=dtypes.string, value_dtype=dtypes.int32, default_value=0
-        )
+        table = lookup_ops.MutableHashTable(key_dtype=dtypes.string,
+                                            value_dtype=dtypes.int32,
+                                            default_value=0)
         return base_layer_utils.TrackableWeightHandler(table)
 
     def test_get_num_tensors(self):
@@ -45,18 +45,27 @@ class TrackableWeightHandlerTest(keras_parameterized.TestCase):
         table_handler = self.get_table_handler()
 
         table_data = {b"a": 1, b"b": 2, b"c": 3}
-        table_handler.set_weights([list(table_data.keys()), list(table_data.values())])
+        table_handler.set_weights(
+            [list(table_data.keys()),
+             list(table_data.values())])
         weights = backend.batch_get_value(table_handler.get_tensors())
-        weight_data = {key: value for key, value in zip(weights[0], weights[1])}
+        weight_data = {
+            key: value
+            for key, value in zip(weights[0], weights[1])
+        }
         self.assertDictEqual(table_data, weight_data)
 
     def test_get_and_set_weights_does_not_add_ops(self):
         table_handler = self.get_table_handler()
         table_data = {b"a": 1, b"b": 2, b"c": 3}
-        table_handler.set_weights([list(table_data.keys()), list(table_data.values())])
+        table_handler.set_weights(
+            [list(table_data.keys()),
+             list(table_data.values())])
         _ = backend.batch_get_value(table_handler.get_tensors())
         backend.get_session().graph.finalize()
-        table_handler.set_weights([list(table_data.keys()), list(table_data.values())])
+        table_handler.set_weights(
+            [list(table_data.keys()),
+             list(table_data.values())])
         _ = backend.batch_get_value(table_handler.get_tensors())
 
 

@@ -55,13 +55,10 @@ class Trace(object):
         """
         if _pywrap_traceme.TraceMe.IsEnabled():
             if kwargs:
-                name += (
-                    "#"
-                    + ",".join(
-                        key + "=" + str(value) for key, value in six.iteritems(kwargs)
-                    )
-                    + "#"
-                )
+                name += ("#" +
+                         ",".join(key + "=" + str(value)
+                                  for key, value in six.iteritems(kwargs)) +
+                         "#")
             self._traceme = _pywrap_traceme.TraceMe(name)
         else:
             self._traceme = None
