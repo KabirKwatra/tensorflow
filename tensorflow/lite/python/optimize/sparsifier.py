@@ -25,7 +25,8 @@ from tensorflow.python.util.lazy_loader import LazyLoader
 _sparsification_wrapper = LazyLoader(
     "_sparsification_wrapper",
     globals(),
-    "tensorflow.lite.python.optimize." "_pywrap_tensorflow_lite_sparsification_wrapper",
+    "tensorflow.lite.python.optimize."
+    "_pywrap_tensorflow_lite_sparsification_wrapper",
 )
 
 
@@ -48,8 +49,7 @@ class Sparsifier(object):
             raise ValueError("`model_content` must be specified.")
         try:
             self._sparsifier = _sparsification_wrapper.SparsificationWrapper(
-                model_content
-            )
+                model_content)
         except Exception as e:
             raise ValueError("Failed to parse the model: %s." % e)
         if not self._sparsifier:
