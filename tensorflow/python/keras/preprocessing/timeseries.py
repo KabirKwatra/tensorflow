@@ -26,16 +26,17 @@ from tensorflow.python.ops import math_ops
 
 
 def timeseries_dataset(
-        data,
-        targets,
-        sequence_length,
-        sampling_rate=1,
-        sequence_stride=1,
-        batch_size=128,
-        shuffle=False,
-        seed=None,
-        start_index=None,
-        end_index=None):
+    data,
+    targets,
+    sequence_length,
+    sampling_rate=1,
+    sequence_stride=1,
+    batch_size=128,
+    shuffle=False,
+    seed=None,
+    start_index=None,
+    end_index=None,
+):
     """Utility function for generating batches of temporal data.
 
     This function takes in a sequence of data-points gathered at
@@ -97,37 +98,46 @@ def timeseries_dataset(
     """
     # Validate the shape of data and targets
     if targets is not None and len(targets) != len(data):
-        raise ValueError('Expected data and targets to have the same number of '
-                         'time steps (axis 0) but got '
-                         'shape(data) = %s; shape(targets) = %s.' %
-                         (data.shape, targets.shape))
+        raise ValueError(
+            "Expected data and targets to have the same number of "
+            "time steps (axis 0) but got "
+            "shape(data) = %s; shape(targets) = %s." % (data.shape, targets.shape)
+        )
     if start_index and (start_index < 0 or start_index >= len(data)):
-        raise ValueError('start_index must be higher than 0 and lower than the '
-                         'length of the data. Got: start_index=%s '
-                         'for data of length %s.' % (start_index, len(data)))
+        raise ValueError(
+            "start_index must be higher than 0 and lower than the "
+            "length of the data. Got: start_index=%s "
+            "for data of length %s." % (start_index, len(data))
+        )
     if end_index:
         if start_index and end_index <= start_index:
-            raise ValueError('end_index must be higher than start_index. Got: '
-                             'start_index=%s, end_index=%s.' %
-                             (start_index, end_index))
+            raise ValueError(
+                "end_index must be higher than start_index. Got: "
+                "start_index=%s, end_index=%s." % (start_index, end_index)
+            )
         if end_index >= len(data):
-            raise ValueError('end_index must be lower than the length of the data. '
-                             'Got: end_index=%s' % (end_index,))
+            raise ValueError(
+                "end_index must be lower than the length of the data. "
+                "Got: end_index=%s" % (end_index,)
+            )
         if end_index <= 0:
-            raise ValueError('end_index must be higher than 0. '
-                             'Got: end_index=%s' % (end_index,))
+            raise ValueError(
+                "end_index must be higher than 0. " "Got: end_index=%s" % (end_index,)
+            )
 
     # Validate strides
     if sampling_rate <= 0 or sampling_rate >= len(data):
         raise ValueError(
-            'sampling_rate must be higher than 0 and lower than '
-            'the length of the data. Got: '
-            'sampling_rate=%s for data of length %s.' % (sampling_rate, len(data)))
+            "sampling_rate must be higher than 0 and lower than "
+            "the length of the data. Got: "
+            "sampling_rate=%s for data of length %s." % (sampling_rate, len(data))
+        )
     if sequence_stride <= 0 or sequence_stride >= len(data):
         raise ValueError(
-            'sequence_stride must be higher than 0 and lower than '
-            'the length of the data. Got: sequence_stride=%s '
-            'for data of length %s.' % (sequence_stride, len(data)))
+            "sequence_stride must be higher than 0 and lower than "
+            "the length of the data. Got: sequence_stride=%s "
+            "for data of length %s." % (sequence_stride, len(data))
+        )
 
     if start_index is None:
         start_index = 0
@@ -137,13 +147,12 @@ def timeseries_dataset(
     # Determine the lowest dtype to store start positions (to lower memory usage).
     num_seqs = end_index - start_index - (sequence_length * sampling_rate) + 1
     if num_seqs < 2147483647:
-        index_dtype = 'int32'
+        index_dtype = "int32"
     else:
-        index_dtype = 'int64'
+        index_dtype = "int64"
 
     # Generate start positions
-    start_positions = np.arange(
-        0, num_seqs, sequence_stride, dtype=index_dtype)
+    start_positions = np.arange(0, num_seqs, sequence_stride, dtype=index_dtype)
     if shuffle:
         if seed is None:
             seed = np.random.randint(1e6)
@@ -155,18 +164,20 @@ def timeseries_dataset(
 
     # For each initial window position, generates indices of the window elements
     indices = dataset_ops.Dataset.zip(
-        (dataset_ops.Dataset.range(len(start_positions)),
-         dataset_ops.Dataset.from_tensors(start_positions).repeat())).map(
-             lambda i, positions: math_ops.range(  # pylint: disable=g-long-lambda
-                 positions[i],
-                 positions[i] + sequence_length * sampling_rate,
-                 sampling_rate),
-             num_parallel_calls=dataset_ops.AUTOTUNE)
+        (
+            dataset_ops.Dataset.range(len(start_positions)),
+            dataset_ops.Dataset.from_tensors(start_positions).repeat(),
+        )
+    ).map(
+        lambda i, positions: math_ops.range(  # pylint: disable=g-long-lambda
+            positions[i], positions[i] + sequence_length * sampling_rate, sampling_rate
+        ),
+        num_parallel_calls=dataset_ops.AUTOTUNE,
+    )
 
     dataset = sequences_from_indices(data, indices, start_index, end_index)
     if targets is not None:
-        target_ds = sequences_from_indices(
-            targets, indices, start_index, end_index)
+        target_ds = sequences_from_indices(targets, indices, start_index, end_index)
         dataset = dataset_ops.Dataset.zip((dataset, target_ds))
     if shuffle:
         # Shuffle locally at each iteration
@@ -176,9 +187,11 @@ def timeseries_dataset(
 
 
 def sequences_from_indices(array, indices_ds, start_index, end_index):
-    dataset = dataset_ops.Dataset.from_tensors(array[start_index: end_index])
+    dataset = dataset_ops.Dataset.from_tensors(array[start_index:end_index])
     dataset = dataset_ops.Dataset.zip((dataset.repeat(), indices_ds)).map(
         lambda steps, inds: array_ops.gather(
-            steps, inds),  # pylint: disable=unnecessary-lambda
-        num_parallel_calls=dataset_ops.AUTOTUNE)
+            steps, inds
+        ),  # pylint: disable=unnecessary-lambda
+        num_parallel_calls=dataset_ops.AUTOTUNE,
+    )
     return dataset
