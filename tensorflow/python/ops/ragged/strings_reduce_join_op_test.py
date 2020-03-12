@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
+
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.framework import test_util
 from tensorflow.python.ops.ragged import ragged_factory_ops

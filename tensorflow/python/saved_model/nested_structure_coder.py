@@ -25,7 +25,6 @@ signature_proto = coder.encode_structure(function.input_signature)
 # Decode into a Python object.
 restored_signature = coder.decode_proto(signature_proto)
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

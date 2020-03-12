@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """A tf.distribute.Strategy for running on a single device."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

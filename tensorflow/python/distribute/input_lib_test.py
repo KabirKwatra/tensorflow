@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the input_lib library."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,8 +21,8 @@ import collections
 import json
 import threading
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python import tf2
 from tensorflow.python.data.experimental.ops.distribute_options import AutoShardPolicy

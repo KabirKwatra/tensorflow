@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for custom training loops that involves advanced optimizer usage."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
