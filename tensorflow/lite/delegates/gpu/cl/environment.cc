@@ -27,7 +27,7 @@ namespace gpu {
 namespace cl {
 namespace {
 std::string GetKernelOneLayerTextureArray() {
-  return R"(
+    return R"(
 
 __kernel void main_function(__write_only image2d_array_t dst) {
   int X = (int)(get_global_id(0));
