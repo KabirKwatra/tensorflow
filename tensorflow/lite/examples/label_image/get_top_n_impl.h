@@ -33,48 +33,48 @@ template <class T>
 void get_top_n(T* prediction, int prediction_size, size_t num_results,
                float threshold, std::vector<std::pair<float, int>>* top_results,
                TfLiteType input_type) {
-  // Will contain top N results in ascending order.
-  std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>,
-                      std::greater<std::pair<float, int>>>
-      top_result_pq;
+    // Will contain top N results in ascending order.
+    std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>,
+        std::greater<std::pair<float, int>>>
+        top_result_pq;
 
-  const long count = prediction_size;  // NOLINT(runtime/int)
-  float value = 0.0;
+    const long count = prediction_size;  // NOLINT(runtime/int)
+    float value = 0.0;
 
-  for (int i = 0; i < count; ++i) {
-    switch (input_type) {
-      case kTfLiteFloat32:
-        value = prediction[i];
-        break;
-      case kTfLiteInt8:
-        value = (prediction[i] + 128) / 256.0;
-        break;
-      case kTfLiteUInt8:
-        value = prediction[i] / 255.0;
-        break;
-      default:
-        break;
+    for (int i = 0; i < count; ++i) {
+        switch (input_type) {
+        case kTfLiteFloat32:
+            value = prediction[i];
+            break;
+        case kTfLiteInt8:
+            value = (prediction[i] + 128) / 256.0;
+            break;
+        case kTfLiteUInt8:
+            value = prediction[i] / 255.0;
+            break;
+        default:
+            break;
+        }
+        // Only add it if it beats the threshold and has a chance at being in
+        // the top N.
+        if (value < threshold) {
+            continue;
+        }
+
+        top_result_pq.push(std::pair<float, int>(value, i));
+
+        // If at capacity, kick the smallest value out.
+        if (top_result_pq.size() > num_results) {
+            top_result_pq.pop();
+        }
     }
-    // Only add it if it beats the threshold and has a chance at being in
-    // the top N.
-    if (value < threshold) {
-      continue;
+
+    // Copy to output vector and reverse into descending order.
+    while (!top_result_pq.empty()) {
+        top_results->push_back(top_result_pq.top());
+        top_result_pq.pop();
     }
-
-    top_result_pq.push(std::pair<float, int>(value, i));
-
-    // If at capacity, kick the smallest value out.
-    if (top_result_pq.size() > num_results) {
-      top_result_pq.pop();
-    }
-  }
-
-  // Copy to output vector and reverse into descending order.
-  while (!top_result_pq.empty()) {
-    top_results->push_back(top_result_pq.top());
-    top_result_pq.pop();
-  }
-  std::reverse(top_results->begin(), top_results->end());
+    std::reverse(top_results->begin(), top_results->end());
 }
 
 }  // namespace label_image
