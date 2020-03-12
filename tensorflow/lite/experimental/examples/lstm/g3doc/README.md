@@ -9,8 +9,7 @@ LSTM ops in TensorFlow Lite realm are expressed as "fused ops" (e.g.,
 UnidirectionalSequenceRNN, BidirectionalSequenceLSTM, etc.). However, in
 TensorFlow, LSTM ops are expressed as a "cell" (e.g., `tf.nn.rnn_cell.LSTMCell`,
 `tf.nn.rnn_cell.BasicRNNCell`, etc., and they all contain multiple TensorFlow
-ops) and a "rnn" ( e.g., `tf.nn.static_rnn`,
-`tf.nn.bidirectional_dynamic_rnn`).
+ops) and a "rnn" ( e.g., `tf.nn.static_rnn`, `tf.nn.bidirectional_dynamic_rnn`).
 
 The ops breakdown in TensorFlow gives us flexibility while the "fused op" in
 TensorFlow Lite gives us performance boost.
@@ -53,7 +52,6 @@ session, then convert to TensorFlow Lite model.
 
 Then you can convert the model to TensorFlow Lite model as usual.
 
-
 ```python
 converter = tf.lite.TFLiteConverter.from_session(sess, [INPUTS], [OUTPUTS])
 converter.post_training_quantize = True  # If post training quantize is desired.
@@ -84,13 +82,13 @@ tflite_model = converter.convert()  # You got a tflite model!
 ## Why introduce another set of LSTM APIs?
 
 Bridging TensorFlow LSTM and TensorFlow Lite is not easy, and the use of
-`dynamic_rnn` adds additional complexity (as the while loop is introduced).
-With the help of
+`dynamic_rnn` adds additional complexity (as the while loop is introduced). With
+the help of
 [OpHint](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/python/op_hint.py)
 (also see the next section), we create special wrappers around `rnn_cell` and
-`rnn` to help us identify the inputs and outputs of the LSTM ops, and these
-ops are converted to a single fused LSTM op when converting TensorFlow models
-to TensorFlow Lite format.
+`rnn` to help us identify the inputs and outputs of the LSTM ops, and these ops
+are converted to a single fused LSTM op when converting TensorFlow models to
+TensorFlow Lite format.
 
 ### What's OpHint
 
@@ -108,7 +106,6 @@ graph on the right), and all the "OpHinted" tensors will become the
 inputs/outputs of the "my customized conv" op.
 
 ![Ophinted Customized Graph](./images/op_hint.png)
-
 
 ## Simple Tutorial
 
@@ -343,17 +340,16 @@ See below.
 
 ## Caveat
 
-*   Currently, `tf.lite.experimental.nn.dynamic_rnn` &
-    `tf.lite.experimental.nn.bidirectional_dynamic_rnn` only supports
-    `control_flow_v2`, you can this on by setting the environment variable
-    `TF_ENABLE_CONTROL_FLOW_V2=1`, see in the tutorial.
-*   Currently, `sequence_length` is not supported, prefer to set it to None.
-*   `num_unit_shards` & `num_proj_shards` in LSTMCell are not supported as
-    well.
-*   Currently, `final_state` is not supported.
-*   Currently, `tf.lite.experimental.nn.dynamic_rnn` &
-    `tf.lite.experimental.nn.bidirectional_dynamic_rnn` only takes
-    `time_major=True`.
-*   The behavior of `tf.lite.experimental.nn.bidirectional_dynamic_rnn` is a
-    wrapper around `tf.nn.bidirectional_dynamic_rnn`, not
-    `tf.contrib.rnn.stack_bidirectional_dynamic_rnn`.
+- Currently, `tf.lite.experimental.nn.dynamic_rnn` &
+  `tf.lite.experimental.nn.bidirectional_dynamic_rnn` only supports
+  `control_flow_v2`, you can this on by setting the environment variable
+  `TF_ENABLE_CONTROL_FLOW_V2=1`, see in the tutorial.
+- Currently, `sequence_length` is not supported, prefer to set it to None.
+- `num_unit_shards` & `num_proj_shards` in LSTMCell are not supported as well.
+- Currently, `final_state` is not supported.
+- Currently, `tf.lite.experimental.nn.dynamic_rnn` &
+  `tf.lite.experimental.nn.bidirectional_dynamic_rnn` only takes
+  `time_major=True`.
+- The behavior of `tf.lite.experimental.nn.bidirectional_dynamic_rnn` is a
+  wrapper around `tf.nn.bidirectional_dynamic_rnn`, not
+  `tf.contrib.rnn.stack_bidirectional_dynamic_rnn`.
