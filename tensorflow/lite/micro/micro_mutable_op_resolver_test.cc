@@ -20,20 +20,20 @@ limitations under the License.
 namespace tflite {
 namespace {
 void* MockInit(TfLiteContext* context, const char* buffer, size_t length) {
-  // Do nothing.
-  return nullptr;
+    // Do nothing.
+    return nullptr;
 }
 
 void MockFree(TfLiteContext* context, void* buffer) {
-  // Do nothing.
+    // Do nothing.
 }
 
 TfLiteStatus MockPrepare(TfLiteContext* context, TfLiteNode* node) {
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 TfLiteStatus MockInvoke(TfLiteContext* context, TfLiteNode* node) {
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 }  // namespace
 }  // namespace tflite
@@ -41,97 +41,100 @@ TfLiteStatus MockInvoke(TfLiteContext* context, TfLiteNode* node) {
 TF_LITE_MICRO_TESTS_BEGIN
 
 TF_LITE_MICRO_TEST(TestOperations) {
-  using tflite::BuiltinOperator_CONV_2D;
-  using tflite::BuiltinOperator_RELU;
-  using tflite::MicroOpResolver;
-  using tflite::OpResolver;
+    using tflite::BuiltinOperator_CONV_2D;
+    using tflite::BuiltinOperator_RELU;
+    using tflite::MicroOpResolver;
+    using tflite::OpResolver;
 
-  static TfLiteRegistration r = {tflite::MockInit, tflite::MockFree,
-                                 tflite::MockPrepare, tflite::MockInvoke};
+    static TfLiteRegistration r = {tflite::MockInit, tflite::MockFree,
+                                   tflite::MockPrepare, tflite::MockInvoke
+                                  };
 
-  // We need space for 7 operators because of 2 ops, one with 3 versions, one
-  // with 4 versions.
-  MicroOpResolver<7> micro_op_resolver;
-  micro_op_resolver.AddBuiltin(BuiltinOperator_CONV_2D, &r, 1, 3);
-  micro_op_resolver.AddCustom("mock_custom", &r, 1, 4);
-  OpResolver* resolver = &micro_op_resolver;
+    // We need space for 7 operators because of 2 ops, one with 3 versions, one
+    // with 4 versions.
+    MicroOpResolver<7> micro_op_resolver;
+    micro_op_resolver.AddBuiltin(BuiltinOperator_CONV_2D, &r, 1, 3);
+    micro_op_resolver.AddCustom("mock_custom", &r, 1, 4);
+    OpResolver* resolver = &micro_op_resolver;
 
-  const TfLiteRegistration* registration =
-      resolver->FindOp(BuiltinOperator_CONV_2D, 1);
-  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
+    const TfLiteRegistration* registration =
+        resolver->FindOp(BuiltinOperator_CONV_2D, 1);
+    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
 
-  TF_LITE_MICRO_EXPECT_EQ(7, micro_op_resolver.GetRegistrationLength());
+    TF_LITE_MICRO_EXPECT_EQ(7, micro_op_resolver.GetRegistrationLength());
 
-  registration = resolver->FindOp(BuiltinOperator_CONV_2D, 10);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
+    registration = resolver->FindOp(BuiltinOperator_CONV_2D, 10);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
 
-  registration = resolver->FindOp(BuiltinOperator_RELU, 0);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
+    registration = resolver->FindOp(BuiltinOperator_RELU, 0);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
 
-  registration = resolver->FindOp("mock_custom", 1);
-  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
+    registration = resolver->FindOp("mock_custom", 1);
+    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
 
-  registration = resolver->FindOp("mock_custom", 10);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
+    registration = resolver->FindOp("mock_custom", 10);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
 
-  registration = resolver->FindOp("nonexistent_custom", 0);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
+    registration = resolver->FindOp("nonexistent_custom", 0);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration);
 }
 
 TF_LITE_MICRO_TEST(TestOpRegistrationOverflow) {
-  using tflite::BuiltinOperator_CONV_2D;
-  using tflite::BuiltinOperator_RELU;
-  using tflite::MicroOpResolver;
-  using tflite::OpResolver;
+    using tflite::BuiltinOperator_CONV_2D;
+    using tflite::BuiltinOperator_RELU;
+    using tflite::MicroOpResolver;
+    using tflite::OpResolver;
 
-  static TfLiteRegistration r = {tflite::MockInit, tflite::MockFree,
-                                 tflite::MockPrepare, tflite::MockInvoke};
+    static TfLiteRegistration r = {tflite::MockInit, tflite::MockFree,
+                                   tflite::MockPrepare, tflite::MockInvoke
+                                  };
 
-  MicroOpResolver<4> micro_op_resolver;
-  // Register 7 ops, but only 4 is expected because the class is created with
-  // that limit..
-  micro_op_resolver.AddBuiltin(BuiltinOperator_CONV_2D, &r, 0, 2);
-  micro_op_resolver.AddCustom("mock_custom", &r, 0, 3);
-  OpResolver* resolver = &micro_op_resolver;
+    MicroOpResolver<4> micro_op_resolver;
+    // Register 7 ops, but only 4 is expected because the class is created with
+    // that limit..
+    micro_op_resolver.AddBuiltin(BuiltinOperator_CONV_2D, &r, 0, 2);
+    micro_op_resolver.AddCustom("mock_custom", &r, 0, 3);
+    OpResolver* resolver = &micro_op_resolver;
 
-  TF_LITE_MICRO_EXPECT_EQ(4, micro_op_resolver.GetRegistrationLength());
+    TF_LITE_MICRO_EXPECT_EQ(4, micro_op_resolver.GetRegistrationLength());
 }
 
 TF_LITE_MICRO_TEST(TestZeroVersionRegistration) {
-  using tflite::MicroOpResolver;
-  using tflite::OpResolver;
+    using tflite::MicroOpResolver;
+    using tflite::OpResolver;
 
-  static TfLiteRegistration r = {tflite::MockInit, tflite::MockFree,
-                                 tflite::MockPrepare, tflite::MockInvoke};
+    static TfLiteRegistration r = {tflite::MockInit, tflite::MockFree,
+                                   tflite::MockPrepare, tflite::MockInvoke
+                                  };
 
-  MicroOpResolver<1> micro_op_resolver;
-  micro_op_resolver.AddCustom("mock_custom", &r,
-                              tflite::MicroOpResolverAnyVersion());
-  OpResolver* resolver = &micro_op_resolver;
+    MicroOpResolver<1> micro_op_resolver;
+    micro_op_resolver.AddCustom("mock_custom", &r,
+                                tflite::MicroOpResolverAnyVersion());
+    OpResolver* resolver = &micro_op_resolver;
 
-  const TfLiteRegistration* registration = resolver->FindOp("mock_custom", 0);
-  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
+    const TfLiteRegistration* registration = resolver->FindOp("mock_custom", 0);
+    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
 
-  registration = resolver->FindOp("mock_custom", 1);
-  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
+    registration = resolver->FindOp("mock_custom", 1);
+    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
 
-  registration = resolver->FindOp("mock_custom", 42);
-  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
-  TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
-  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
+    registration = resolver->FindOp("mock_custom", 42);
+    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+    TF_LITE_MICRO_EXPECT_EQ(nullptr, registration->init(nullptr, nullptr, 0));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(nullptr, nullptr));
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(nullptr, nullptr));
 }
 
 TF_LITE_MICRO_TESTS_END
