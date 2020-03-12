@@ -24,7 +24,7 @@ from tensorflow.python.profiler.internal import _pywrap_traceme
 from tensorflow.python.util.tf_export import tf_export
 
 
-@tf_export('profiler.experimental.Trace', v1=[])
+@tf_export("profiler.experimental.Trace", v1=[])
 class Trace(object):
     """Context manager that generates a trace event in the profiler.
 
@@ -56,8 +56,13 @@ class Trace(object):
         """
         if _pywrap_traceme.TraceMe.IsEnabled():
             if kwargs:
-                name += '#' + ','.join(key + '=' + str(value)
-                                       for key, value in six.iteritems(kwargs)) + '#'
+                name += (
+                    "#"
+                    + ",".join(
+                        key + "=" + str(value) for key, value in six.iteritems(kwargs)
+                    )
+                    + "#"
+                )
             self._traceme = _pywrap_traceme.TraceMe(name)
         else:
             self._traceme = None

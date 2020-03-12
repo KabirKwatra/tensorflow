@@ -159,8 +159,9 @@ ragged.__doc__ += _ragged_ops.ragged_dispatch.ragged_op_list()
 # Eager execution
 
 # Check whether TF2_BEHAVIOR is turned on.
-_tf2_gauge = _monitoring.BoolGauge('/tensorflow/api/tf2_enable',
-                                   'Environment variable TF2_BEHAVIOR is set".')
+_tf2_gauge = _monitoring.BoolGauge(
+    "/tensorflow/api/tf2_enable", 'Environment variable TF2_BEHAVIOR is set".'
+)
 _tf2_gauge.get_cell().set(_tf2.enabled())
 
 # Necessary for the symbols in this module to be taken into account by
@@ -185,37 +186,39 @@ nn.rnn_cell = rnn_cell
 
 # Export protos
 # pylint: disable=undefined-variable
-tf_export(v1=['AttrValue'])(AttrValue)
-tf_export(v1=['ConfigProto'])(ConfigProto)
-tf_export(v1=['Event', 'summary.Event'])(Event)
-tf_export(v1=['GPUOptions'])(GPUOptions)
-tf_export(v1=['GraphDef'])(GraphDef)
-tf_export(v1=['GraphOptions'])(GraphOptions)
-tf_export(v1=['HistogramProto'])(HistogramProto)
-tf_export(v1=['LogMessage'])(LogMessage)
-tf_export(v1=['MetaGraphDef'])(MetaGraphDef)
-tf_export(v1=['NameAttrList'])(NameAttrList)
-tf_export(v1=['NodeDef'])(NodeDef)
-tf_export(v1=['OptimizerOptions'])(OptimizerOptions)
-tf_export(v1=['RunMetadata'])(RunMetadata)
-tf_export(v1=['RunOptions'])(RunOptions)
-tf_export(v1=['SessionLog', 'summary.SessionLog'])(SessionLog)
-tf_export(v1=['Summary', 'summary.Summary'])(Summary)
-tf_export(v1=['summary.SummaryDescription'])(SummaryDescription)
-tf_export(v1=['SummaryMetadata'])(SummaryMetadata)
-tf_export(v1=['summary.TaggedRunMetadata'])(TaggedRunMetadata)
-tf_export(v1=['TensorInfo'])(TensorInfo)
+tf_export(v1=["AttrValue"])(AttrValue)
+tf_export(v1=["ConfigProto"])(ConfigProto)
+tf_export(v1=["Event", "summary.Event"])(Event)
+tf_export(v1=["GPUOptions"])(GPUOptions)
+tf_export(v1=["GraphDef"])(GraphDef)
+tf_export(v1=["GraphOptions"])(GraphOptions)
+tf_export(v1=["HistogramProto"])(HistogramProto)
+tf_export(v1=["LogMessage"])(LogMessage)
+tf_export(v1=["MetaGraphDef"])(MetaGraphDef)
+tf_export(v1=["NameAttrList"])(NameAttrList)
+tf_export(v1=["NodeDef"])(NodeDef)
+tf_export(v1=["OptimizerOptions"])(OptimizerOptions)
+tf_export(v1=["RunMetadata"])(RunMetadata)
+tf_export(v1=["RunOptions"])(RunOptions)
+tf_export(v1=["SessionLog", "summary.SessionLog"])(SessionLog)
+tf_export(v1=["Summary", "summary.Summary"])(Summary)
+tf_export(v1=["summary.SummaryDescription"])(SummaryDescription)
+tf_export(v1=["SummaryMetadata"])(SummaryMetadata)
+tf_export(v1=["summary.TaggedRunMetadata"])(TaggedRunMetadata)
+tf_export(v1=["TensorInfo"])(TensorInfo)
 # pylint: enable=undefined-variable
 
 # Special dunders that we choose to export:
-_exported_dunders = set([
-    '__version__',
-    '__git_version__',
-    '__compiler_version__',
-    '__cxx11_abi_flag__',
-    '__monolithic_build__',
-])
+_exported_dunders = set(
+    [
+        "__version__",
+        "__git_version__",
+        "__compiler_version__",
+        "__cxx11_abi_flag__",
+        "__monolithic_build__",
+    ]
+)
 
 # Expose symbols minus dunders, unless they are whitelisted above.
 # This is necessary to export our dunders.
-__all__ = [s for s in dir() if s in _exported_dunders or not s.startswith('_')]
+__all__ = [s for s in dir() if s in _exported_dunders or not s.startswith("_")]
