@@ -8,9 +8,8 @@ their existing models and training code with minimal code changes.
 
 It can be used with TensorFlow's high level APIs, tf.keras and tf.estimator,
 with just a couple of lines of code change. It does so by changing the
-underlying components of TensorFlow to become strategy-aware.
-This includes variables, layers, models, optimizers, metrics, summaries,
-and checkpoints.
+underlying components of TensorFlow to become strategy-aware. This includes
+variables, layers, models, optimizers, metrics, summaries, and checkpoints.
 
 ## Documentation
 
@@ -80,4 +79,3 @@ train_step(input_iterator)
 
 Tests here should cover all distribution strategies to ensure feature parity.
 This can be done using the test decorators in `strategy_combinations.py`.
-
