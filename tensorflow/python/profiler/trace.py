@@ -26,46 +26,46 @@ from tensorflow.python.util.tf_export import tf_export
 
 @tf_export('profiler.experimental.Trace', v1=[])
 class Trace(object):
-  """Context manager that generates a trace event in the profiler.
+    """Context manager that generates a trace event in the profiler.
 
-  A trace event will start when entering the context, and stop and save the
-  result to the profiler when exiting the context. Open TensorBoard Profile tab
-  and choose trace viewer to view the trace event in the timeline.
+    A trace event will start when entering the context, and stop and save the
+    result to the profiler when exiting the context. Open TensorBoard Profile tab
+    and choose trace viewer to view the trace event in the timeline.
 
-  Trace events are created only when the profiler is enabled. More information
-  on how to use the profiler can be found at
-  https://tensorflow.org/guide/profiler
+    Trace events are created only when the profiler is enabled. More information
+    on how to use the profiler can be found at
+    https://tensorflow.org/guide/profiler
 
-  Example usage:
-  ```python
-  tf.profiler.experimental.start('logdir')
-  for step in range(num_steps):
-    # Creates a trace event for each training step with the step number.
-    with tf.profiler.experimental.Trace("Train", step_num=step):
-      train_fn()
-  tf.profiler.experimental.stop()
-  ```
-  """
-
-  def __init__(self, name, **kwargs):
-    """Creates a trace event in the profiler.
-
-    Args:
-      name: The name of the trace event.
-      **kwargs: Keyword arguments added to the trace event.
+    Example usage:
+    ```python
+    tf.profiler.experimental.start('logdir')
+    for step in range(num_steps):
+      # Creates a trace event for each training step with the step number.
+      with tf.profiler.experimental.Trace("Train", step_num=step):
+        train_fn()
+    tf.profiler.experimental.stop()
+    ```
     """
-    if _pywrap_traceme.TraceMe.IsEnabled():
-      if kwargs:
-        name += '#' + ','.join(key + '=' + str(value)
-                               for key, value in six.iteritems(kwargs)) + '#'
-      self._traceme = _pywrap_traceme.TraceMe(name)
-    else:
-      self._traceme = None
 
-  def __enter__(self):
-    if self._traceme:
-      self._traceme.Enter()
+    def __init__(self, name, **kwargs):
+        """Creates a trace event in the profiler.
 
-  def __exit__(self, exc_type, exc_val, exc_tb):
-    if self._traceme:
-      self._traceme.Exit()
+        Args:
+          name: The name of the trace event.
+          **kwargs: Keyword arguments added to the trace event.
+        """
+        if _pywrap_traceme.TraceMe.IsEnabled():
+            if kwargs:
+                name += '#' + ','.join(key + '=' + str(value)
+                                       for key, value in six.iteritems(kwargs)) + '#'
+            self._traceme = _pywrap_traceme.TraceMe(name)
+        else:
+            self._traceme = None
+
+    def __enter__(self):
+        if self._traceme:
+            self._traceme.Enter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._traceme:
+            self._traceme.Exit()
