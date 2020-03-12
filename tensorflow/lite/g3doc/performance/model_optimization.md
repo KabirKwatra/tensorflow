@@ -23,14 +23,14 @@ development.
 Some forms of optimization can be used to reduce the size of a model. Smaller
 models have the following benefits:
 
--   **Smaller storage size:** Smaller models occupy less storage space on your
-    users' devices. For example, an Android app using a smaller model will take
-    up less storage space on a user's mobile device.
--   **Smaller download size:** Smaller models require less time and bandwidth to
-    download to users' devices.
--   **Less memory usage:** Smaller models use less RAM when they are run, which
-    frees up memory for other parts of your application to use, and can
-    translate to better performance and stability.
+- **Smaller storage size:** Smaller models occupy less storage space on your
+  users' devices. For example, an Android app using a smaller model will take up
+  less storage space on a user's mobile device.
+- **Smaller download size:** Smaller models require less time and bandwidth to
+  download to users' devices.
+- **Less memory usage:** Smaller models use less RAM when they are run, which
+  frees up memory for other parts of your application to use, and can translate
+  to better performance and stability.
 
 Quantization can reduce the size of a model in all of these cases, potentially
 at the expense of some accuracy. Pruning can reduce the size of a model for
@@ -38,7 +38,7 @@ download by making it more easily compressible.
 
 ### Latency reduction
 
-*Latency* is the amount of time it takes to run a single inference with a given
+_Latency_ is the amount of time it takes to run a single inference with a given
 model. Some forms of optimization can reduce the amount of computation required
 to run inference using a model, resulting in lower latency. Latency can also
 have an impact on power consumption.
@@ -86,12 +86,12 @@ a smaller model size and faster computation.
 
 The following types of quantization are available in TensorFlow Lite:
 
-Technique                                                                                                      | Data requirements                | Size reduction | Accuracy                    | Supported hardware
--------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------- | --------------------------- | ------------------
-[Post-training float16 quantization](post_training_float16_quant.ipynb)                                        | No data                          | Up to 50%      | Insignificant accuracy loss | CPU, GPU
-[Post-training weight quantization](post_training_quant.ipynb)                                                 | No data                          | Up to 75%      | Accuracy loss               | CPU
-[Post-training integer quantization](post_training_integer_quant.ipynb)                                        | Unlabelled representative sample | Up to 75%      | Smaller accuracy loss       | CPU, EdgeTPU, Hexagon DSP
-[Quantization-aware training](https://github.com/tensorflow/tensorflow/tree/r1.13/tensorflow/contrib/quantize) | Labelled training data           | Up to 75%      | Smallest accuracy loss      | CPU, EdgeTPU, Hexagon DSP
+| Technique                                                                                                      | Data requirements                | Size reduction | Accuracy                    | Supported hardware        |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------- | --------------------------- | ------------------------- |
+| [Post-training float16 quantization](post_training_float16_quant.ipynb)                                        | No data                          | Up to 50%      | Insignificant accuracy loss | CPU, GPU                  |
+| [Post-training weight quantization](post_training_quant.ipynb)                                                 | No data                          | Up to 75%      | Accuracy loss               | CPU                       |
+| [Post-training integer quantization](post_training_integer_quant.ipynb)                                        | Unlabelled representative sample | Up to 75%      | Smaller accuracy loss       | CPU, EdgeTPU, Hexagon DSP |
+| [Quantization-aware training](https://github.com/tensorflow/tensorflow/tree/r1.13/tensorflow/contrib/quantize) | Labelled training data           | Up to 75%      | Smallest accuracy loss      | CPU, EdgeTPU, Hexagon DSP |
 
 Below are the latency and accuracy results for post-training quantization and
 quantization-aware training on a few models. All latency numbers are measured on
@@ -148,7 +148,8 @@ accelerator support is important,
 is the better option. See additional optimization techniques under the
 [Tensorflow Model Optimization Toolkit](https://www.tensorflow.org/model_optimization).
 
-Note: Quantization-aware training supports a subset of convolutional neural network architectures.
+Note: Quantization-aware training supports a subset of convolutional neural
+network architectures.
 
 If you want to further reduce your model size, you can try [pruning](#pruning)
 prior to quantizing your models.

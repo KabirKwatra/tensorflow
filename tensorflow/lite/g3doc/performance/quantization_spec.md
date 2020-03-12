@@ -75,13 +75,13 @@ activation value. By enforcing that zero-point is 0 we can avoid this cost.
 
 Explanation of the math:
 
-$A$ is a $m \times n$ matrix of quantized activations. <br />
-$B$ is a $n \times p$ matrix of quantized weights. <br />
-Consider multiplying the $j$th row of $A$, $a_j$ by the $k$th column of
-$B$, $b_k$, both of length $n$. The quantized integer values and
-zero-points values are $q_a$, $z_a$ and $q_b$, $z_b$ respectively.
+$A$ is a $m \times n$ matrix of quantized activations. <br /> $B$ is a
+$n \times p$ matrix of quantized weights. <br /> Consider multiplying the $j$th
+row of $A$, $a_j$ by the $k$th column of $B$, $b_k$, both of length $n$. The
+quantized integer values and zero-points values are $q_a$, $z_a$ and $q_b$,
+$z_b$ respectively.
 
-$$a_j \cdot b_k = \sum_{i=0}^{n} a_{j}^{(i)} b_{k}^{(i)} =
+$$
 \sum_{i=0}^{n} (q_{a}^{(i)} - z_a) (q_{b}^{(i)} - z_b) =
 \sum_{i=0}^{n} q_{a}^{(i)} q_{b}^{(i)} - \sum_{i=0}^{n} q_{a}^{(i)} z_b -
 \sum_{i=0}^{n} q_{b}^{(i)} z_a + \sum_{i=0}^{n} z_a z_b$$
@@ -539,3 +539,4 @@ QUANTIZE (Requantization)
     range      : [-128, 127]
     granularity: per-tensor
 ```
+$$
