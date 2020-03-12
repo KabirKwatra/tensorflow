@@ -154,7 +154,7 @@ public class FileUtil {
     SupportPreconditions.checkNotNull(context, "Context should not be null.");
     SupportPreconditions.checkNotNull(filePath, "File path cannot be null.");
     try (AssetFileDescriptor fileDescriptor = context.getAssets().openFd(filePath);
-    FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor())) {
+         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor())) {
       FileChannel fileChannel = inputStream.getChannel();
       long startOffset = fileDescriptor.getStartOffset();
       long declaredLength = fileDescriptor.getDeclaredLength();
