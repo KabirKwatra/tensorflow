@@ -21,41 +21,41 @@ namespace py = pybind11;
 using tflite::calibration_wrapper::CalibrationWrapper;
 
 PYBIND11_MODULE(_pywrap_tensorflow_lite_calibration_wrapper, m) {
-  m.doc() = R"pbdoc(
+    m.doc() = R"pbdoc(
     _pywrap_tensorflow_lite_calibration_wrapper
     -----
   )pbdoc";
-  py::class_<CalibrationWrapper>(m, "CalibrationWrapper")
-      .def(py::init([](py::handle& data) {
+    py::class_<CalibrationWrapper>(m, "CalibrationWrapper")
+    .def(py::init([](py::handle& data) {
         return ::CalibrationWrapper::CreateWrapperCPPFromBuffer(data.ptr());
-      }))
-      .def("Prepare",
-           [](CalibrationWrapper& self) {
-             return tensorflow::pyo_or_throw(self.Prepare());
-           })
-      .def(
-          "FeedTensor",
-          [](CalibrationWrapper& self, py::handle& input_value) {
-            return tensorflow::pyo_or_throw(self.FeedTensor(input_value.ptr()));
-          })
-      .def("QuantizeModel",
-           [](CalibrationWrapper& self, int input_py_type, int output_py_type,
-              bool allow_float, bool enable_mlir_quantizer) {
-             return tensorflow::pyo_or_throw(
-                 self.QuantizeModel(input_py_type, output_py_type, allow_float,
-                                    enable_mlir_quantizer));
-           })
-      .def("QuantizeModel",
-           [](CalibrationWrapper& self, int input_py_type, int output_py_type,
-              bool allow_float) {
-             return tensorflow::pyo_or_throw(
-                 self.QuantizeModel(input_py_type, output_py_type, allow_float,
-                                    /*enable_mlir_quantizer=*/false));
-           })
-      .def("QuantizeModel", [](CalibrationWrapper& self, int input_py_type,
-                               int output_py_type, bool allow_float,
-                               const char* operator_output_name) {
+    }))
+    .def("Prepare",
+    [](CalibrationWrapper& self) {
+        return tensorflow::pyo_or_throw(self.Prepare());
+    })
+    .def(
+        "FeedTensor",
+    [](CalibrationWrapper& self, py::handle& input_value) {
+        return tensorflow::pyo_or_throw(self.FeedTensor(input_value.ptr()));
+    })
+    .def("QuantizeModel",
+         [](CalibrationWrapper& self, int input_py_type, int output_py_type,
+    bool allow_float, bool enable_mlir_quantizer) {
+        return tensorflow::pyo_or_throw(
+                   self.QuantizeModel(input_py_type, output_py_type, allow_float,
+                                      enable_mlir_quantizer));
+    })
+    .def("QuantizeModel",
+         [](CalibrationWrapper& self, int input_py_type, int output_py_type,
+    bool allow_float) {
+        return tensorflow::pyo_or_throw(
+                   self.QuantizeModel(input_py_type, output_py_type, allow_float,
+                                      /*enable_mlir_quantizer=*/false));
+    })
+    .def("QuantizeModel", [](CalibrationWrapper& self, int input_py_type,
+                             int output_py_type, bool allow_float,
+    const char* operator_output_name) {
         return tensorflow::pyo_or_throw(self.QuantizeModel(
-            input_py_type, output_py_type, allow_float, operator_output_name));
-      });
+                                            input_py_type, output_py_type, allow_float, operator_output_name));
+    });
 }
