@@ -41,82 +41,78 @@ namespace tensorflow {
 // ValueType must be memcopyable.
 template <typename ValueType, int MaxInlineValues = 8>
 class GpuDeviceArrayOnHost {
-public:
-    GpuDeviceArrayOnHost(OpKernelContext* context, int32 size)
-        : context_(context),
-          total_bytes_(static_cast<int64>(size) * sizeof(ValueType)) {
-        data_.size = size;
+ public:
+  GpuDeviceArrayOnHost(OpKernelContext* context, int32 size)
+      : context_(context),
+        total_bytes_(static_cast<int64>(size) * sizeof(ValueType)) {
+    data_.size = size;
+  }
+
+  Status Init() {
+    if (inlined()) {
+      values_ = data_.inline_values;
+      return Status::OK();
     }
 
-    Status Init() {
-        if (inlined()) {
-            values_ = data_.inline_values;
-            return Status::OK();
-        }
+    // Out-of-line: allocate data that will be memcopied.
+    AllocatorAttributes attr;
+    attr.set_on_host(true);
+    attr.set_gpu_compatible(true);
+    TF_RETURN_IF_ERROR(
+        context_->allocate_temp(DT_INT8, TensorShape{total_bytes_},
+                                &out_of_line_values_on_host_, attr));
+    values_ = reinterpret_cast<ValueType*>(
+        out_of_line_values_on_host_.flat<int8>().data());
+    return Status::OK();
+  }
 
-        // Out-of-line: allocate data that will be memcopied.
-        AllocatorAttributes attr;
-        attr.set_on_host(true);
-        attr.set_gpu_compatible(true);
-        TF_RETURN_IF_ERROR(
-            context_->allocate_temp(DT_INT8, TensorShape{total_bytes_},
-                                    &out_of_line_values_on_host_, attr));
-        values_ = reinterpret_cast<ValueType*>(
-                      out_of_line_values_on_host_.flat<int8>().data());
-        return Status::OK();
+  void Set(int index, ValueType val) {
+    DCHECK(values_);  // ensure Init was called.
+    DCHECK_LT(index, data_.size);
+    *(values_ + index) = val;
+  }
+
+  Status Finalize() {
+    if (inlined()) {
+      return Status::OK();
     }
 
-    void Set(int index, ValueType val) {
-        DCHECK(values_);  // ensure Init was called.
-        DCHECK_LT(index, data_.size);
-        *(values_ + index) = val;
-    }
+    // Out-of-line - copy pointers to device.
+    auto stream = context_->op_device_context()->stream();
+    TensorReference tensor_ref(out_of_line_values_on_host_);
+    TF_RETURN_IF_ERROR(context_->allocate_temp(
+        DT_INT8, TensorShape{total_bytes_}, &out_of_line_values_on_gpu_));
+    se::DeviceMemoryBase output_values_base{
+        out_of_line_values_on_gpu_.flat<int8>().data(),
+        static_cast<uint64>(total_bytes_)};
+    stream->ThenMemcpy(&output_values_base,
+                       out_of_line_values_on_host_.flat<int8>().data(),
+                       total_bytes_);
+    context_->device()->tensorflow_gpu_device_info()->event_mgr->ThenExecute(
+        stream, [tensor_ref]() { tensor_ref.Unref(); });
+    data_.out_of_line_values = reinterpret_cast<ValueType*>(
+        out_of_line_values_on_gpu_.flat<int8>().data());
+    return Status::OK();
+  }
 
-    Status Finalize() {
-        if (inlined()) {
-            return Status::OK();
-        }
+  const GpuDeviceArrayStruct<ValueType, MaxInlineValues>& data() const {
+    // Ensure Finalize is called.
+    DCHECK(inlined() || out_of_line_values_on_gpu_.IsInitialized());
+    return data_;
+  }
 
-        // Out-of-line - copy pointers to device.
-        auto stream = context_->op_device_context()->stream();
-        TensorReference tensor_ref(out_of_line_values_on_host_);
-        TF_RETURN_IF_ERROR(context_->allocate_temp(
-                               DT_INT8, TensorShape{total_bytes_}, &out_of_line_values_on_gpu_));
-        se::DeviceMemoryBase output_values_base{
-            out_of_line_values_on_gpu_.flat<int8>().data(),
-            static_cast<uint64>(total_bytes_)};
-        stream->ThenMemcpy(&output_values_base,
-                           out_of_line_values_on_host_.flat<int8>().data(),
-                           total_bytes_);
-        context_->device()->tensorflow_gpu_device_info()->event_mgr->ThenExecute(
-        stream, [tensor_ref]() {
-            tensor_ref.Unref();
-        });
-        data_.out_of_line_values = reinterpret_cast<ValueType*>(
-                                       out_of_line_values_on_gpu_.flat<int8>().data());
-        return Status::OK();
-    }
+ private:
+  bool inlined() const { return data_.size <= MaxInlineValues; }
 
-    const GpuDeviceArrayStruct<ValueType, MaxInlineValues>& data() const {
-        // Ensure Finalize is called.
-        DCHECK(inlined() || out_of_line_values_on_gpu_.IsInitialized());
-        return data_;
-    }
+  OpKernelContext* const context_;
+  const int64 total_bytes_;  // total size of all pointers.
+  ValueType* values_ = nullptr;
+  GpuDeviceArrayStruct<ValueType, MaxInlineValues> data_;
 
-private:
-    bool inlined() const {
-        return data_.size <= MaxInlineValues;
-    }
+  Tensor out_of_line_values_on_host_;
+  Tensor out_of_line_values_on_gpu_;
 
-    OpKernelContext* const context_;
-    const int64 total_bytes_;  // total size of all pointers.
-    ValueType* values_ = nullptr;
-    GpuDeviceArrayStruct<ValueType, MaxInlineValues> data_;
-
-    Tensor out_of_line_values_on_host_;
-    Tensor out_of_line_values_on_gpu_;
-
-    TF_DISALLOW_COPY_AND_ASSIGN(GpuDeviceArrayOnHost);
+  TF_DISALLOW_COPY_AND_ASSIGN(GpuDeviceArrayOnHost);
 };
 
 }  // namespace tensorflow
