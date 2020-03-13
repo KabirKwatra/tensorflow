@@ -47,23 +47,23 @@ class GpuExecutableRunOptions;
 // communicate via collective ops (e.g. kAllToAll), whereas runs that are part
 // of different logical executions are isolated.
 class RunId {
-public:
-    // Creates a new, unique RunId.
-    RunId();
+ public:
+  // Creates a new, unique RunId.
+  RunId();
 
-    RunId(const RunId&) = default;
-    RunId& operator=(const RunId&) = default;
-    friend bool operator==(const RunId& a, const RunId& b);
-    std::string ToString() const;
-    int64 ToInt() const;
+  RunId(const RunId&) = default;
+  RunId& operator=(const RunId&) = default;
+  friend bool operator==(const RunId& a, const RunId& b);
+  std::string ToString() const;
+  int64 ToInt() const;
 
-    template <typename H>
-    friend H AbslHashValue(H h, const RunId& id) {
-        return H::combine(std::move(h), id.data_);
-    }
+  template <typename H>
+  friend H AbslHashValue(H h, const RunId& id) {
+    return H::combine(std::move(h), id.data_);
+  }
 
-private:
-    int64 data_;
+ private:
+  int64 data_;
 };
 
 // Callback used by the GPU backend only. This is an "one-sided" version of
@@ -77,86 +77,86 @@ using ThenExecuteFunction =
 
 // Class containing options for running a LocalExecutable.
 class ExecutableRunOptions {
-public:
-    // Specifies the allocator to use during execution.
-    ExecutableRunOptions& set_allocator(
-        stream_executor::DeviceMemoryAllocator* allocator);
-    stream_executor::DeviceMemoryAllocator* allocator() const;
+ public:
+  // Specifies the allocator to use during execution.
+  ExecutableRunOptions& set_allocator(
+      stream_executor::DeviceMemoryAllocator* allocator);
+  stream_executor::DeviceMemoryAllocator* allocator() const;
 
-    // If set, this is the device to run the computation on. Valid device_ordinal
-    // values are: 0 to # of devices - 1. These values are identical to the device
-    // ordinal values used by StreamExecutor. The device must be of the same type
-    // as the executable was compiled for. A value of -1 indicates this option has
-    // not been set.
-    ExecutableRunOptions& set_device_ordinal(int device_ordinal);
-    int device_ordinal() const;
+  // If set, this is the device to run the computation on. Valid device_ordinal
+  // values are: 0 to # of devices - 1. These values are identical to the device
+  // ordinal values used by StreamExecutor. The device must be of the same type
+  // as the executable was compiled for. A value of -1 indicates this option has
+  // not been set.
+  ExecutableRunOptions& set_device_ordinal(int device_ordinal);
+  int device_ordinal() const;
 
-    // If set, this is the stream to run the computation on. The platform of the
-    // stream must match the platform the executable was built for.  A value of
-    // nullptr indicates the option has not been set.
-    ExecutableRunOptions& set_stream(stream_executor::Stream* stream);
-    stream_executor::Stream* stream() const;
+  // If set, this is the stream to run the computation on. The platform of the
+  // stream must match the platform the executable was built for.  A value of
+  // nullptr indicates the option has not been set.
+  ExecutableRunOptions& set_stream(stream_executor::Stream* stream);
+  stream_executor::Stream* stream() const;
 
-    // If set, this is the stream to perform any pre-computation transfers on.
-    // The platform of the stream must match the platform the executable was
-    // built for.  A value of nullptr indicates the option has not been set.
-    ExecutableRunOptions& set_host_to_device_stream(
-        stream_executor::Stream* stream);
-    stream_executor::Stream* host_to_device_stream() const;
+  // If set, this is the stream to perform any pre-computation transfers on.
+  // The platform of the stream must match the platform the executable was
+  // built for.  A value of nullptr indicates the option has not been set.
+  ExecutableRunOptions& set_host_to_device_stream(
+      stream_executor::Stream* stream);
+  stream_executor::Stream* host_to_device_stream() const;
 
-    // Sets the thread pool device on which to run Eigen subcomputations.
-    //
-    // This field must be set for XLA:CPU models that call Eigen routines, but may
-    // be null otherwise.  Routines that use this field should always CHECK (or
-    // TF_RET_CHECK) that it's not null before dereferencing it, so that users get
-    // a clean crash rather than a segfault.
-    //
-    // Does not take ownership.
-    ExecutableRunOptions& set_intra_op_thread_pool(
-        const Eigen::ThreadPoolDevice* intra_op_thread_pool);
-    const Eigen::ThreadPoolDevice* intra_op_thread_pool() const;
+  // Sets the thread pool device on which to run Eigen subcomputations.
+  //
+  // This field must be set for XLA:CPU models that call Eigen routines, but may
+  // be null otherwise.  Routines that use this field should always CHECK (or
+  // TF_RET_CHECK) that it's not null before dereferencing it, so that users get
+  // a clean crash rather than a segfault.
+  //
+  // Does not take ownership.
+  ExecutableRunOptions& set_intra_op_thread_pool(
+      const Eigen::ThreadPoolDevice* intra_op_thread_pool);
+  const Eigen::ThreadPoolDevice* intra_op_thread_pool() const;
 
-    // If set, profiling information is written to 'profile'.
-    ExecutionProfile* execution_profile() const;
-    ExecutableRunOptions& set_execution_profile(ExecutionProfile* profile);
+  // If set, profiling information is written to 'profile'.
+  ExecutionProfile* execution_profile() const;
+  ExecutableRunOptions& set_execution_profile(ExecutionProfile* profile);
 
-    ExecutableRunOptions& set_device_assignment(
-        const DeviceAssignment* device_assignment);
-    const DeviceAssignment* device_assignment() const;
+  ExecutableRunOptions& set_device_assignment(
+      const DeviceAssignment* device_assignment);
+  const DeviceAssignment* device_assignment() const;
 
-    ExecutableRunOptions& set_rng_seed(int rng_seed);
-    int rng_seed() const;
+  ExecutableRunOptions& set_rng_seed(int rng_seed);
+  int rng_seed() const;
 
-    ExecutableRunOptions& set_run_id(RunId id);
-    RunId run_id() const;
+  ExecutableRunOptions& set_run_id(RunId id);
+  RunId run_id() const;
 
-    // See documentation on ThenExecuteFunction.
-    ExecutableRunOptions& set_then_execute_function(ThenExecuteFunction* f) {
-        then_execute_function_ = f;
-        return *this;
-    }
-    ThenExecuteFunction* then_execute_function() const {
-        return then_execute_function_;
-    }
+  // See documentation on ThenExecuteFunction.
+  ExecutableRunOptions& set_then_execute_function(ThenExecuteFunction* f) {
+    then_execute_function_ = f;
+    return *this;
+  }
+  ThenExecuteFunction* then_execute_function() const {
+    return then_execute_function_;
+  }
 
-    // GPU-backend specific options. These are kept out-of-line to avoid bloating
-    // the size of this dependency for CPU-only AOT builds.
-    ExecutableRunOptions& set_gpu_executable_run_options(
-        const GpuExecutableRunOptions* gpu_executable_run_options);
-    const GpuExecutableRunOptions* gpu_executable_run_options() const;
+  // GPU-backend specific options. These are kept out-of-line to avoid bloating
+  // the size of this dependency for CPU-only AOT builds.
+  ExecutableRunOptions& set_gpu_executable_run_options(
+      const GpuExecutableRunOptions* gpu_executable_run_options);
+  const GpuExecutableRunOptions* gpu_executable_run_options() const;
 
-private:
-    stream_executor::DeviceMemoryAllocator* allocator_ = nullptr;
-    int device_ordinal_ = -1;
-    const DeviceAssignment* device_assignment_ = nullptr;
-    stream_executor::Stream* stream_ = nullptr;
-    const Eigen::ThreadPoolDevice* intra_op_thread_pool_ = nullptr;
-    ExecutionProfile* execution_profile_ = nullptr;
-    int rng_seed_ = 0;
-    stream_executor::Stream* host_to_device_stream_ = nullptr;
-    ThenExecuteFunction* then_execute_function_ = nullptr;
-    RunId run_id_;
-    const GpuExecutableRunOptions* gpu_executable_run_options_ = nullptr;
+ private:
+  stream_executor::DeviceMemoryAllocator* allocator_ = nullptr;
+  int device_ordinal_ = -1;
+  const DeviceAssignment* device_assignment_ = nullptr;
+  stream_executor::Stream* stream_ = nullptr;
+  const Eigen::ThreadPoolDevice* intra_op_thread_pool_ = nullptr;
+  ExecutionProfile* execution_profile_ = nullptr;
+  int rng_seed_ = 0;
+  stream_executor::Stream* host_to_device_stream_ = nullptr;
+  ThenExecuteFunction* then_execute_function_ = nullptr;
+  RunId run_id_;
+  const GpuExecutableRunOptions* gpu_executable_run_options_ = nullptr;
 };
 
 }  // namespace xla
