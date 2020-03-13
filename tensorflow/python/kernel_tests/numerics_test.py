@@ -35,14 +35,12 @@ from tensorflow.python.platform import test
 
 
 class VerifyTensorAllFiniteTest(test.TestCase):
-
     def testVerifyTensorAllFiniteSucceeds(self):
         x_shape = [5, 4]
         x = np.random.random_sample(x_shape).astype(np.float32)
         with test_util.use_gpu():
             t = constant_op.constant(x, shape=x_shape, dtype=dtypes.float32)
-            t_verified = numerics.verify_tensor_all_finite(t,
-                                                           "Input is not a number.")
+            t_verified = numerics.verify_tensor_all_finite(t, "Input is not a number.")
             self.assertAllClose(x, self.evaluate(t_verified))
 
     def testVerifyTensorAllFiniteFails(self):
@@ -54,8 +52,7 @@ class VerifyTensorAllFiniteTest(test.TestCase):
         x[0] = np.nan
         with test_util.use_gpu():
             with self.assertRaisesOpError(my_msg):
-                t = constant_op.constant(
-                    x, shape=x_shape, dtype=dtypes.float32)
+                t = constant_op.constant(x, shape=x_shape, dtype=dtypes.float32)
                 t_verified = numerics.verify_tensor_all_finite(t, my_msg)
                 self.evaluate(t_verified)
 
@@ -63,15 +60,13 @@ class VerifyTensorAllFiniteTest(test.TestCase):
         x[0] = np.inf
         with test_util.use_gpu():
             with self.assertRaisesOpError(my_msg):
-                t = constant_op.constant(
-                    x, shape=x_shape, dtype=dtypes.float32)
+                t = constant_op.constant(x, shape=x_shape, dtype=dtypes.float32)
                 t_verified = numerics.verify_tensor_all_finite(t, my_msg)
                 self.evaluate(t_verified)
 
 
 @test_util.run_v1_only("b/120545219")
 class NumericsTest(test.TestCase):
-
     def testInf(self):
         with self.session(graph=ops.Graph()):
             t1 = constant_op.constant(1.0)
@@ -104,36 +99,40 @@ class NumericsTest(test.TestCase):
 
     def testPassThrough(self):
         with self.session(graph=ops.Graph()):
-            t1 = constant_op.constant(
-                [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], shape=[2, 3])
+            t1 = constant_op.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], shape=[2, 3])
             checked = array_ops.check_numerics(t1, message="pass through test")
             value = self.evaluate(checked)
-            self.assertAllEqual(
-                np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), value)
+            self.assertAllEqual(np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), value)
             self.assertEqual([2, 3], checked.get_shape())
 
     def testControlFlowCond(self):
         predicate = array_ops.placeholder(dtypes.bool, shape=[])
-        _ = control_flow_ops.cond(predicate,
-                                  lambda: constant_op.constant([37.]),
-                                  lambda: constant_op.constant([42.]))
+        _ = control_flow_ops.cond(
+            predicate,
+            lambda: constant_op.constant([37.0]),
+            lambda: constant_op.constant([42.0]),
+        )
         with self.assertRaisesRegexp(
             ValueError,
             r"`tf\.add_check_numerics_ops\(\) is not compatible with "
             r"TensorFlow control flow operations such as `tf\.cond\(\)` "
-                r"or `tf.while_loop\(\)`\."):
+            r"or `tf.while_loop\(\)`\.",
+        ):
             numerics.add_check_numerics_ops()
 
     def testControlFlowWhile(self):
         predicate = array_ops.placeholder(dtypes.bool, shape=[])
-        _ = control_flow_ops.while_loop(lambda _: predicate,
-                                        lambda _: constant_op.constant([37.]),
-                                        [constant_op.constant([42.])])
+        _ = control_flow_ops.while_loop(
+            lambda _: predicate,
+            lambda _: constant_op.constant([37.0]),
+            [constant_op.constant([42.0])],
+        )
         with self.assertRaisesRegexp(
             ValueError,
             r"`tf\.add_check_numerics_ops\(\) is not compatible with "
             r"TensorFlow control flow operations such as `tf\.cond\(\)` "
-                r"or `tf.while_loop\(\)`\."):
+            r"or `tf.while_loop\(\)`\.",
+        ):
             numerics.add_check_numerics_ops()
 
     def testCheckNumericsV2OpNegativeAndPositiveInf(self):
@@ -141,8 +140,7 @@ class NumericsTest(test.TestCase):
         with self.session(graph=ops.Graph()):
             t1 = constant_op.constant([-1.0, 1.0])
             t2 = constant_op.constant([0.0, 0.0])
-            checked = array_ops.check_numerics_v2(
-                t1 / t2, message="pass through test")
+            checked = array_ops.check_numerics_v2(t1 / t2, message="pass through test")
             caught = None
             try:
                 self.evaluate(checked)
@@ -156,8 +154,7 @@ class NumericsTest(test.TestCase):
         with self.session(graph=ops.Graph()):
             t1 = constant_op.constant([-1.0, 1.0, 0.0])
             t2 = constant_op.constant([0.0, 0.0, 0.0])
-            checked = array_ops.check_numerics_v2(
-                t1 / t2, message="pass through test")
+            checked = array_ops.check_numerics_v2(t1 / t2, message="pass through test")
             caught = None
             try:
                 self.evaluate(checked)
@@ -171,8 +168,7 @@ class NumericsTest(test.TestCase):
         with self.session(graph=ops.Graph()):
             t1 = constant_op.constant([0.0, 1.0])
             t2 = constant_op.constant([0.0, 0.0])
-            checked = array_ops.check_numerics_v2(
-                t1 / t2, message="pass through test")
+            checked = array_ops.check_numerics_v2(t1 / t2, message="pass through test")
             caught = None
             try:
                 self.evaluate(checked)
@@ -184,7 +180,7 @@ class NumericsTest(test.TestCase):
 
 if __name__ == "__main__":
     # TODO(b/130689556): XLA CPU does not honor inf/nan which causes problems
-    os.environ[
-        "XLA_FLAGS"] = "--xla_cpu_enable_fast_math=false " + os.environ.get(
-            "XLA_FLAGS", "")
+    os.environ["XLA_FLAGS"] = "--xla_cpu_enable_fast_math=false " + os.environ.get(
+        "XLA_FLAGS", ""
+    )
     test.main()
