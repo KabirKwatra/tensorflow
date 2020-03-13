@@ -17,7 +17,6 @@
 This is not part of mixed_precision.py to avoid a circular dependency.
 mixed_precision.py depends on Session, and Session depends on this file.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

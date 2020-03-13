@@ -18,12 +18,12 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
-from os import path
 import shutil
 import tempfile
+from os import path
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops

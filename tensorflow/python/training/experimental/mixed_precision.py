@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Contains functions to use mixed precision with the graph rewrite."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
