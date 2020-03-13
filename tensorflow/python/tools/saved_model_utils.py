@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """SavedModel utils."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,6 +21,7 @@ import os
 
 from google.protobuf import message
 from google.protobuf import text_format
+
 from tensorflow.core.protobuf import saved_model_pb2
 from tensorflow.python.lib.io import file_io
 from tensorflow.python.saved_model import constants

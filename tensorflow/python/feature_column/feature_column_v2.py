@@ -122,7 +122,6 @@ Example of building model using FeatureColumns, this can be used in a
 NOTE: Functions prefixed with "_" indicate experimental or private parts of
 the API subject to change, and should not be relied upon!
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -130,8 +129,8 @@ from __future__ import print_function
 import abc
 import collections
 import math
-
 import re
+
 import numpy as np
 import six
 
@@ -142,13 +141,10 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor as sparse_tensor_lib
 from tensorflow.python.framework import tensor_shape
-
-# TODO(b/118385027): Dependency on keras can be problematic if Keras moves out
-# of the main repo.
 from tensorflow.python.keras import initializers
-from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.engine import training
 from tensorflow.python.keras.engine.base_layer import Layer
+from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import check_ops
 from tensorflow.python.ops import control_flow_ops
@@ -165,13 +161,15 @@ from tensorflow.python.ops import variables
 from tensorflow.python.platform import gfile
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import checkpoint_utils
+from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.training.tracking import data_structures
 from tensorflow.python.training.tracking import tracking
-from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.util import deprecation
 from tensorflow.python.util import nest
-from tensorflow.python.util.tf_export import tf_export
 from tensorflow.python.util.compat import collections_abc
+from tensorflow.python.util.tf_export import tf_export
+# TODO(b/118385027): Dependency on keras can be problematic if Keras moves out
+# of the main repo.
 
 
 _FEATURE_COLUMN_DEPRECATION_DATE = None
