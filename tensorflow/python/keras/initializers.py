@@ -84,8 +84,9 @@ else:
     from tensorflow.python.ops.init_ops import Zeros
 
 
-@keras_export(v1=['keras.initializers.TruncatedNormal',
-                  'keras.initializers.truncated_normal'])
+@keras_export(
+    v1=["keras.initializers.TruncatedNormal", "keras.initializers.truncated_normal"]
+)
 class TruncatedNormalV1(TFTruncatedNormalV1):
     """Initializer that generates a truncated normal distribution.
 
@@ -109,12 +110,17 @@ class TruncatedNormalV1(TFTruncatedNormalV1):
 
     def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
         super(TruncatedNormalV1, self).__init__(
-            mean=mean, stddev=stddev, seed=seed, dtype=dtype)
+            mean=mean, stddev=stddev, seed=seed, dtype=dtype
+        )
 
 
-@keras_export(v1=['keras.initializers.RandomUniform',
-                  'keras.initializers.uniform',
-                  'keras.initializers.random_uniform'])
+@keras_export(
+    v1=[
+        "keras.initializers.RandomUniform",
+        "keras.initializers.uniform",
+        "keras.initializers.random_uniform",
+    ]
+)
 class RandomUniformV1(TFRandomUniformV1):
     """Initializer that generates tensors with a uniform distribution.
 
@@ -131,15 +137,19 @@ class RandomUniformV1(TFRandomUniformV1):
       A RandomUniform instance.
     """
 
-    def __init__(self, minval=-0.05, maxval=0.05, seed=None,
-                 dtype=dtypes.float32):
+    def __init__(self, minval=-0.05, maxval=0.05, seed=None, dtype=dtypes.float32):
         super(RandomUniformV1, self).__init__(
-            minval=minval, maxval=maxval, seed=seed, dtype=dtype)
+            minval=minval, maxval=maxval, seed=seed, dtype=dtype
+        )
 
 
-@keras_export(v1=['keras.initializers.RandomNormal',
-                  'keras.initializers.normal',
-                  'keras.initializers.random_normal'])
+@keras_export(
+    v1=[
+        "keras.initializers.RandomNormal",
+        "keras.initializers.normal",
+        "keras.initializers.random_normal",
+    ]
+)
 class RandomNormalV1(TFRandomNormalV1):
     """Initializer that generates tensors with a normal distribution.
 
@@ -158,7 +168,8 @@ class RandomNormalV1(TFRandomNormalV1):
 
     def __init__(self, mean=0.0, stddev=0.05, seed=None, dtype=dtypes.float32):
         super(RandomNormalV1, self).__init__(
-            mean=mean, stddev=stddev, seed=seed, dtype=dtype)
+            mean=mean, stddev=stddev, seed=seed, dtype=dtype
+        )
 
 
 if tf2.enabled():
@@ -185,12 +196,12 @@ glorot_uniform = GlorotUniform
 # Utility functions
 
 
-@keras_export('keras.initializers.serialize')
+@keras_export("keras.initializers.serialize")
 def serialize(initializer):
     return serialize_keras_object(initializer)
 
 
-@keras_export('keras.initializers.deserialize')
+@keras_export("keras.initializers.deserialize")
 def deserialize(config, custom_objects=None):
     """Return an `Initializer` object from its config."""
     if tf2.enabled():
@@ -198,8 +209,7 @@ def deserialize(config, custom_objects=None):
         # are aliased in this file so we need to grab them directly
         # from `init_ops_v2`.
         module_objects = {
-            obj_name: getattr(init_ops_v2, obj_name)
-            for obj_name in dir(init_ops_v2)
+            obj_name: getattr(init_ops_v2, obj_name) for obj_name in dir(init_ops_v2)
         }
     else:
         module_objects = globals()
@@ -207,10 +217,11 @@ def deserialize(config, custom_objects=None):
         config,
         module_objects=module_objects,
         custom_objects=custom_objects,
-        printable_module_name='initializer')
+        printable_module_name="initializer",
+    )
 
 
-@keras_export('keras.initializers.get')
+@keras_export("keras.initializers.get")
 def get(identifier):
     if identifier is None:
         return None
@@ -220,14 +231,14 @@ def get(identifier):
         identifier = str(identifier)
         # We have to special-case functions that return classes.
         # TODO(omalleyt): Turn these into classes or class aliases.
-        special_cases = ['he_normal', 'he_uniform',
-                         'lecun_normal', 'lecun_uniform']
+        special_cases = ["he_normal", "he_uniform", "lecun_normal", "lecun_uniform"]
         if identifier in special_cases:
             # Treat like a class.
-            return deserialize({'class_name': identifier, 'config': {}})
+            return deserialize({"class_name": identifier, "config": {}})
         return deserialize(identifier)
     elif callable(identifier):
         return identifier
     else:
-        raise ValueError('Could not interpret initializer identifier: ' +
-                         str(identifier))
+        raise ValueError(
+            "Could not interpret initializer identifier: " + str(identifier)
+        )

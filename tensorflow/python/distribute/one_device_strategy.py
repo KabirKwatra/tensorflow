@@ -77,12 +77,14 @@ class OneDeviceStrategy(distribute_lib.Strategy):
             should be placed. See class docs for more details on how the device is
             used. Examples: "/cpu:0", "/gpu:0", "/device:CPU:0", "/device:GPU:0"
         """
-        super(OneDeviceStrategy, self).__init__(
-            OneDeviceExtended(self, device))
+        super(OneDeviceStrategy, self).__init__(OneDeviceExtended(self, device))
         distribute_lib.distribution_strategy_gauge.get_cell("V2").set(
-            "OneDeviceStrategy")
+            "OneDeviceStrategy"
+        )
 
-    def experimental_distribute_dataset(self, dataset):  # pylint: disable=useless-super-delegation
+    def experimental_distribute_dataset(
+        self, dataset
+    ):  # pylint: disable=useless-super-delegation
         """Distributes a tf.data.Dataset instance provided via dataset.
 
         In this case, there is only one device, so this is only a thin wrapper
@@ -107,10 +109,11 @@ class OneDeviceStrategy(distribute_lib.Strategy):
         Returns:
           A "distributed `Dataset`" that the caller can iterate over.
         """
-        return super(OneDeviceStrategy, self).experimental_distribute_dataset(
-            dataset)
+        return super(OneDeviceStrategy, self).experimental_distribute_dataset(dataset)
 
-    def experimental_distribute_datasets_from_function(self, dataset_fn):  # pylint: disable=useless-super-delegation
+    def experimental_distribute_datasets_from_function(
+        self, dataset_fn
+    ):  # pylint: disable=useless-super-delegation
         """Distributes `tf.data.Dataset` instances created by calls to `dataset_fn`.
 
         `dataset_fn` will be called once for each worker in the strategy. In this
@@ -147,10 +150,12 @@ class OneDeviceStrategy(distribute_lib.Strategy):
           datasets.
         """
         return super(
-            OneDeviceStrategy, self).experimental_distribute_datasets_from_function(
-                dataset_fn)
+            OneDeviceStrategy, self
+        ).experimental_distribute_datasets_from_function(dataset_fn)
 
-    def experimental_local_results(self, value):  # pylint: disable=useless-super-delegation
+    def experimental_local_results(
+        self, value
+    ):  # pylint: disable=useless-super-delegation
         """Returns the list of all local per-replica values contained in `value`.
 
         In `OneDeviceStrategy`, the `value` is always expected to be a single
@@ -166,7 +171,9 @@ class OneDeviceStrategy(distribute_lib.Strategy):
         """
         return super(OneDeviceStrategy, self).experimental_local_results(value)
 
-    def run(self, fn, args=(), kwargs=None, options=None):  # pylint: disable=useless-super-delegation
+    def run(
+        self, fn, args=(), kwargs=None, options=None
+    ):  # pylint: disable=useless-super-delegation
         """Run `fn` on each replica, with the given arguments.
 
         In `OneDeviceStrategy`, `fn` is simply called within a device scope for the
@@ -184,7 +191,9 @@ class OneDeviceStrategy(distribute_lib.Strategy):
         """
         return super(OneDeviceStrategy, self).run(fn, args, kwargs, options)
 
-    def reduce(self, reduce_op, value, axis):  # pylint: disable=useless-super-delegation
+    def reduce(
+        self, reduce_op, value, axis
+    ):  # pylint: disable=useless-super-delegation
         """Reduce `value` across replicas.
 
         In `OneDeviceStrategy`, there is only one replica, so if axis=None, value
@@ -238,14 +247,15 @@ class OneDeviceStrategy(distribute_lib.Strategy):
 class OneDeviceStrategyV1(distribute_lib.StrategyV1):
 
     __doc__ = OneDeviceStrategy.__doc__.replace(
-        "For example:\n  ```",
-        "For example:\n  ```\n  tf.enable_eager_execution()")
+        "For example:\n  ```", "For example:\n  ```\n  tf.enable_eager_execution()"
+    )
 
     def __init__(self, device):
-        super(OneDeviceStrategyV1, self).__init__(
-            OneDeviceExtended(self, device))
+        super(OneDeviceStrategyV1, self).__init__(OneDeviceExtended(self, device))
         distribute_lib.distribution_strategy_gauge.get_cell("V1").set(
-            "OneDeviceStrategy")
+            "OneDeviceStrategy"
+        )
+
     __init__.__doc__ = OneDeviceStrategy.__init__.__doc__
 
 
@@ -280,20 +290,24 @@ class OneDeviceExtended(distribute_lib.StrategyExtendedV1):
         """Make iterator from dataset without splitting the batch."""
         # Note that split_batch_by argument is not passed because it is always 1 in
         # this strategy, and adding it adds unnecessary overhead to the dataset.
-        return input_lib.DatasetIterator(dataset, self._input_workers,
-                                         self._container_strategy())
+        return input_lib.DatasetIterator(
+            dataset, self._input_workers, self._container_strategy()
+        )
 
     def _make_input_fn_iterator(
-            self,
+        self, input_fn, replication_mode=distribute_lib.InputReplicationMode.PER_WORKER
+    ):
+        return input_lib.InputFunctionIterator(
             input_fn,
-            replication_mode=distribute_lib.InputReplicationMode.PER_WORKER):
-        return input_lib.InputFunctionIterator(input_fn, self._input_workers,
-                                               [distribute_lib.InputContext()],
-                                               self._container_strategy())
+            self._input_workers,
+            [distribute_lib.InputContext()],
+            self._container_strategy(),
+        )
 
     def _experimental_make_numpy_dataset(self, numpy_input, session):
         return numpy_dataset.one_host_numpy_dataset(
-            numpy_input, numpy_dataset.SingleDevice(self._input_device), session)
+            numpy_input, numpy_dataset.SingleDevice(self._input_device), session
+        )
 
     def _broadcast_to(self, tensor, destinations):
         del destinations
@@ -302,15 +316,17 @@ class OneDeviceExtended(distribute_lib.StrategyExtendedV1):
     def _experimental_distribute_dataset(self, dataset):
         # Note that split_batch_by argument is not passed because it is always 1 in
         # this strategy, and adding it adds unnecessary overhead to the dataset.
-        return input_lib.get_distributed_dataset(dataset, self._input_workers,
-                                                 self._container_strategy())
+        return input_lib.get_distributed_dataset(
+            dataset, self._input_workers, self._container_strategy()
+        )
 
     def _experimental_distribute_datasets_from_function(self, dataset_fn):
         return input_lib.get_distributed_datasets_from_function(
             dataset_fn,
             self._input_workers,
             [distribute_lib.InputContext()],
-            self._container_strategy())
+            self._container_strategy(),
+        )
 
     def _experimental_distribute_values_from_function(self, value_fn):
         # TODO(b/137795644): This should return a PerReplica value but other
@@ -319,8 +335,9 @@ class OneDeviceExtended(distribute_lib.StrategyExtendedV1):
         return value_fn(distribute_lib.ValueContext())
 
     # TODO(priyag): Deal with OutOfRange errors  once b/111349762 is fixed.
-    def _experimental_run_steps_on_iterator(self, fn, iterator, iterations,
-                                            initial_loop_values=None):
+    def _experimental_run_steps_on_iterator(
+        self, fn, iterator, iterations, initial_loop_values=None
+    ):
         if initial_loop_values is None:
             initial_loop_values = {}
         initial_loop_values = nest.flatten(initial_loop_values)
@@ -341,15 +358,22 @@ class OneDeviceExtended(distribute_lib.StrategyExtendedV1):
         # e.g. create an op which should be evaluated only once at the end of the
         # loop on the host. One such usage is in creating metrics' value op.
         self._outer_control_flow_context = (
-            ops.get_default_graph()._get_control_flow_context())  # pylint: disable=protected-access
+            ops.get_default_graph()._get_control_flow_context()
+        )  # pylint: disable=protected-access
 
         # TODO(priyag): Use max_iterations instead of an explicit counter.
         cond = lambda i, *args: i < iterations
         i = constant_op.constant(0)
         loop_result = control_flow_ops.while_loop(
-            cond, body, [i] + initial_loop_values, name="",
-            parallel_iterations=1, back_prop=False, swap_memory=False,
-            return_same_structure=True)
+            cond,
+            body,
+            [i] + initial_loop_values,
+            name="",
+            parallel_iterations=1,
+            back_prop=False,
+            swap_memory=False,
+            return_same_structure=True,
+        )
         del self._outer_control_flow_context
 
         ctx.run_op = control_flow_ops.group(loop_result)
@@ -358,10 +382,12 @@ class OneDeviceExtended(distribute_lib.StrategyExtendedV1):
         # of last_step_outputs.
         last_step_tensor_outputs = loop_result[1:]
         last_step_tensor_outputs_dict = nest.pack_sequence_as(
-            ctx.last_step_outputs, last_step_tensor_outputs)
+            ctx.last_step_outputs, last_step_tensor_outputs
+        )
 
         ctx._set_last_step_outputs(
-            last_step_tensor_outputs_dict)  # pylint: disable=protected-access
+            last_step_tensor_outputs_dict
+        )  # pylint: disable=protected-access
         return ctx
 
     def _call_for_each_replica(self, fn, args, kwargs):
@@ -450,7 +476,8 @@ class _OneDeviceReplicaContext(distribute_lib.ReplicaContext):
     def __init__(self, strategy):
         zero = constant_op.constant(0, dtypes.int32)
         distribute_lib.ReplicaContext.__init__(
-            self, strategy, replica_id_in_sync_group=zero)
+            self, strategy, replica_id_in_sync_group=zero
+        )
 
     @property
     def devices(self):
