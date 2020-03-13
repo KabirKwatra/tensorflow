@@ -72,11 +72,9 @@ class KerasActivationsTest(test.TestCase, parameterized.TestCase):
         layer = core.Dense(3, activation=activation)
         config = serialization.serialize(layer)
         deserialized_layer = serialization.deserialize(
-            config, custom_objects={"LeakyReLU": activation}
-        )
-        self.assertEqual(
-            deserialized_layer.__class__.__name__, layer.__class__.__name__
-        )
+            config, custom_objects={"LeakyReLU": activation})
+        self.assertEqual(deserialized_layer.__class__.__name__,
+                         layer.__class__.__name__)
         self.assertEqual(
             deserialized_layer.activation.__class__.__name__,
             activation.__class__.__name__,
