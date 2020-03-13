@@ -285,7 +285,7 @@ def enable_mixed_precision_graph_rewrite_v1(opt, loss_scale="dynamic"):
     The graph rewrite operation changes the `dtype` of certain operations in the
     graph from float32 to float16. There are several categories of operations
     that are either included or excluded by this rewrite operation. The following
-    categories of Ops are defined inside corresponding functions under the class 
+    categories of Ops are defined inside corresponding functions under the class
     `AutoMixedPrecisionLists` in
     <a href="https://github.com/tensorflow/tensorflow/blob/master/tensorflow/
     core/grappler/optimizers/auto_mixed_precision_lists.h">
