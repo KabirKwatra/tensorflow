@@ -39,12 +39,10 @@ from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.deprecation import deprecated
 from tensorflow.python.util.tf_export import keras_export
 
-
 SINGLE_LAYER_OUTPUT_ERROR_MSG = (
     "All layers in a Sequential model should have "
     "a single output tensor. For multi-output "
-    "layers, use the functional API."
-)
+    "layers, use the functional API.")
 
 
 @keras_export("keras.Sequential", "keras.models.Sequential")
@@ -171,12 +169,11 @@ class Sequential(training.Model):
             if isinstance(origin_layer, input_layer.InputLayer):
                 layer = origin_layer
 
-        if not isinstance(layer, (base_layer.Layer, legacy_base_layer.LegacyBaseLayer)):
-            raise TypeError(
-                "The added layer must be "
-                "an instance of class Layer. "
-                "Found: " + str(layer)
-            )
+        if not isinstance(
+                layer, (base_layer.Layer, legacy_base_layer.LegacyBaseLayer)):
+            raise TypeError("The added layer must be "
+                            "an instance of class Layer. "
+                            "Found: " + str(layer))
 
         tf_utils.assert_no_legacy_layers([layer])
 
@@ -189,15 +186,17 @@ class Sequential(training.Model):
         if not self._layers:
             if isinstance(layer, input_layer.InputLayer):
                 # Corner case where the user passes an InputLayer layer via `add`.
-                assert len(nest.flatten(layer._inbound_nodes[-1].output_tensors)) == 1
+                assert len(
+                    nest.flatten(layer._inbound_nodes[-1].output_tensors)) == 1
                 set_inputs = True
             else:
-                batch_shape, dtype = training_utils.get_input_shape_and_dtype(layer)
+                batch_shape, dtype = training_utils.get_input_shape_and_dtype(
+                    layer)
                 if batch_shape:
                     # Instantiate an input layer.
-                    x = input_layer.Input(
-                        batch_shape=batch_shape, dtype=dtype, name=layer.name + "_input"
-                    )
+                    x = input_layer.Input(batch_shape=batch_shape,
+                                          dtype=dtype,
+                                          name=layer.name + "_input")
                     # This will build the current layer
                     # and create the node connecting the current layer
                     # to the input layer we just created.
@@ -206,7 +205,8 @@ class Sequential(training.Model):
 
             if set_inputs:
                 # If an input layer (placeholder) is available.
-                if len(nest.flatten(layer._inbound_nodes[-1].output_tensors)) != 1:
+                if len(nest.flatten(
+                        layer._inbound_nodes[-1].output_tensors)) != 1:
                     raise ValueError(SINGLE_LAYER_OUTPUT_ERROR_MSG)
                 self.outputs = [
                     nest.flatten(layer._inbound_nodes[-1].output_tensors)[0]
@@ -232,7 +232,8 @@ class Sequential(training.Model):
             self._layers.append(layer)
             self._handle_deferred_layer_dependencies([layer])
 
-        self._layer_call_argspecs[layer] = tf_inspect.getfullargspec(layer.call)
+        self._layer_call_argspecs[layer] = tf_inspect.getfullargspec(
+            layer.call)
         # Different Model types add to `._layers` in different ways, so for safety
         # we do a cache invalidation to make sure the changes are reflected.
         self._attribute_sentinel.invalidate_all()
@@ -272,17 +273,19 @@ class Sequential(training.Model):
             super(Sequential, self).build(input_shape)
         self.built = True
 
-    def call(
-        self, inputs, training=None, mask=None
-    ):  # pylint: disable=redefined-outer-name
+    def call(self, inputs, training=None, mask=None):  # pylint: disable=redefined-outer-name
         if self._build_input_shape is None:
             input_shapes = nest.map_structure(_get_shape_tuple, inputs)
             self._build_input_shape = input_shapes
 
         if self._is_graph_network:
             if not self.built:
-                self._init_graph_network(self.inputs, self.outputs, name=self.name)
-            return super(Sequential, self).call(inputs, training=training, mask=mask)
+                self._init_graph_network(self.inputs,
+                                         self.outputs,
+                                         name=self.name)
+            return super(Sequential, self).call(inputs,
+                                                training=training,
+                                                mask=mask)
 
         outputs = inputs  # handle the corner case where self.layers is empty
         for layer in self.layers:
@@ -336,12 +339,10 @@ class Sequential(training.Model):
         """
         preds = self.predict(x, batch_size, verbose)
         if preds.min() < 0.0 or preds.max() > 1.0:
-            logging.warning(
-                "Network returning invalid probability values. "
-                "The last layer might not normalize predictions "
-                "into probabilities "
-                "(like softmax or sigmoid would)."
-            )
+            logging.warning("Network returning invalid probability values. "
+                            "The last layer might not normalize predictions "
+                            "into probabilities "
+                            "(like softmax or sigmoid would).")
         return preds
 
     @deprecated(
@@ -380,12 +381,9 @@ class Sequential(training.Model):
             layer_configs.append(generic_utils.serialize_keras_object(layer))
         # When constructed using an `InputLayer` the first non-input layer may not
         # have the shape information to reconstruct `Sequential` as a graph network.
-        if (
-            self._is_graph_network
-            and layer_configs
-            and "batch_input_shape" not in layer_configs[0]["config"]
-            and isinstance(self._layers[0], input_layer.InputLayer)
-        ):
+        if (self._is_graph_network and layer_configs
+                and "batch_input_shape" not in layer_configs[0]["config"]
+                and isinstance(self._layers[0], input_layer.InputLayer)):
             batch_input_shape = self._layers[0]._batch_input_shape
             layer_configs[0]["config"]["batch_input_shape"] = batch_input_shape
 
@@ -406,15 +404,11 @@ class Sequential(training.Model):
             layer_configs = config
         model = cls(name=name)
         for layer_config in layer_configs:
-            layer = layer_module.deserialize(
-                layer_config, custom_objects=custom_objects
-            )
+            layer = layer_module.deserialize(layer_config,
+                                             custom_objects=custom_objects)
             model.add(layer)
-        if (
-            not model.inputs
-            and build_input_shape
-            and isinstance(build_input_shape, (tuple, list))
-        ):
+        if (not model.inputs and build_input_shape
+                and isinstance(build_input_shape, (tuple, list))):
             model.build(build_input_shape)
         return model
 

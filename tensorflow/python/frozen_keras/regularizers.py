@@ -147,7 +147,8 @@ class Regularizer(object):
         Returns:
             Python dictionary.
         """
-        raise NotImplementedError(str(self) + " does not implement get_config()")
+        raise NotImplementedError(
+            str(self) + " does not implement get_config()")
 
 
 class L1L2(Regularizer):
@@ -264,4 +265,5 @@ def get(identifier):
     elif callable(identifier):
         return identifier
     else:
-        raise ValueError("Could not interpret regularizer identifier:", identifier)
+        raise ValueError("Could not interpret regularizer identifier:",
+                         identifier)

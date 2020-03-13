@@ -39,7 +39,8 @@ from tensorflow.python.util import tf_inspect
 
 
 def _is_tensor(t):
-    return isinstance(t, (ops.Tensor, resource_variable_ops.BaseResourceVariable))
+    return isinstance(t,
+                      (ops.Tensor, resource_variable_ops.BaseResourceVariable))
 
 
 def _call_concrete_function(function, inputs):
@@ -60,17 +61,16 @@ def _call_concrete_function(function, inputs):
       The structured function output.
     """
     expected_structure = function.graph.structured_input_signature
-    flatten_inputs = nest.flatten_up_to(
-        expected_structure, inputs, expand_composites=True
-    )
+    flatten_inputs = nest.flatten_up_to(expected_structure,
+                                        inputs,
+                                        expand_composites=True)
     flatten_expected = nest.flatten(expected_structure, expand_composites=True)
     tensor_inputs = []
     for arg, expected in zip(flatten_inputs, flatten_expected):
         if isinstance(expected, tensor_spec.TensorSpec):
-            tensor_inputs.append(ops.convert_to_tensor(arg, dtype_hint=expected.dtype))
-    result = function._call_flat(
-        tensor_inputs, function._captured_inputs
-    )  # pylint: disable=protected-access
+            tensor_inputs.append(
+                ops.convert_to_tensor(arg, dtype_hint=expected.dtype))
+    result = function._call_flat(tensor_inputs, function._captured_inputs)  # pylint: disable=protected-access
     if isinstance(result, ops.Operation):
         return None
     return result
@@ -82,7 +82,8 @@ def _try_convert_to_tensor_spec(arg, dtype_hint):
         # Note: try conversion in a FuncGraph to avoid polluting current context.
         with func_graph_lib.FuncGraph(name="guess_conversion").as_default():
             result = ops.convert_to_tensor(arg, dtype_hint=dtype_hint)
-            return tensor_spec.TensorSpec(shape=result.shape, dtype=result.dtype)
+            return tensor_spec.TensorSpec(shape=result.shape,
+                                          dtype=result.dtype)
     except (TypeError, ValueError):
         return None
 
@@ -108,8 +109,10 @@ def _concrete_function_callable_with(function, inputs, allow_conversion):
     for arg, expected in zip(flatten_inputs, nest.flatten(expected_structure)):
         if isinstance(expected, tensor_spec.TensorSpec):
             if allow_conversion:
-                arg = _try_convert_to_tensor_spec(arg, dtype_hint=expected.dtype)
-            if not _is_tensor(arg) and not isinstance(arg, tensor_spec.TensorSpec):
+                arg = _try_convert_to_tensor_spec(arg,
+                                                  dtype_hint=expected.dtype)
+            if not _is_tensor(arg) and not isinstance(arg,
+                                                      tensor_spec.TensorSpec):
                 return False
             if arg.dtype != expected.dtype:
                 return False
@@ -117,9 +120,9 @@ def _concrete_function_callable_with(function, inputs, allow_conversion):
                 return False
         elif isinstance(expected, type_spec.TypeSpec):
             return expected.is_compatible_with(arg)
-        elif (_is_tensor(arg) and id(arg) != id(expected)) or (
-            not _is_tensor(arg) and arg != expected
-        ):
+        elif (_is_tensor(arg)
+              and id(arg) != id(expected)) or (not _is_tensor(arg)
+                                               and arg != expected):
             return False
     return True
 
@@ -133,8 +136,7 @@ def _deserialize_function_spec_as_nonmethod(function_spec_proto, coder):
         if not typeless_fullargspec.args:
             raise NotImplementedError(
                 "Missing support to deserialize a method function without a named "
-                "'self' argument."
-            )
+                "'self' argument.")
         args = typeless_fullargspec.args[1:]
     else:
         args = typeless_fullargspec.args
@@ -162,18 +164,17 @@ def _deserialize_function_spec_as_nonmethod(function_spec_proto, coder):
 # conventions from the serialized input spec right now is unfortunate. Merging
 # these would be good, maybe by adding TensorSpec names to cache keys so renamed
 # keyword arguments would yield different ConcreteFunctions.
-def setup_bare_concrete_function(saved_bare_concrete_function, concrete_functions):
+def setup_bare_concrete_function(saved_bare_concrete_function,
+                                 concrete_functions):
     """Makes a restored bare concrete function callable."""
     # Bare concrete functions accept only flat lists of Tensors with unique
     # names.
     concrete_function = concrete_functions[
-        saved_bare_concrete_function.concrete_function_name
-    ]
+        saved_bare_concrete_function.concrete_function_name]
     # pylint: disable=protected-access
     concrete_function._arg_keywords = saved_bare_concrete_function.argument_keywords
     concrete_function._num_positional_args = (
-        saved_bare_concrete_function.allowed_positional_arguments
-    )
+        saved_bare_concrete_function.allowed_positional_arguments)
     # pylint: enable=protected-access
     concrete_function.add_to_graph()
     return concrete_function
@@ -185,9 +186,12 @@ class RestoredFunction(def_function.Function):
     See `def_function.Function`.
     """
 
-    def __init__(self, python_function, name, function_spec, concrete_functions):
+    def __init__(self, python_function, name, function_spec,
+                 concrete_functions):
         # TODO(mdan): We may enable autograph once exceptions are supported.
-        super(RestoredFunction, self).__init__(python_function, name, autograph=False)
+        super(RestoredFunction, self).__init__(python_function,
+                                               name,
+                                               autograph=False)
         self.concrete_functions = concrete_functions
         self._function_spec = function_spec
 
@@ -227,8 +231,7 @@ def recreate_function(saved_function, concrete_functions):
     # there are SavedModels which have "ismethod" populated and have an extra
     # argument that they expect to be ignored, we do it at deserialization.
     function_spec = _deserialize_function_spec_as_nonmethod(
-        saved_function.function_spec, coder
-    )
+        saved_function.function_spec, coder)
 
     def restored_function_body(*args, **kwargs):
         """Calls a restored function."""
@@ -242,38 +245,38 @@ def recreate_function(saved_function, concrete_functions):
         for allow_conversion in [False, True]:
             for function_name in saved_function.concrete_functions:
                 function = concrete_functions[function_name]
-                if _concrete_function_callable_with(function, inputs, allow_conversion):
+                if _concrete_function_callable_with(function, inputs,
+                                                    allow_conversion):
                     return _call_concrete_function(function, inputs)
 
         signature_descriptions = []
 
         def _pretty_format_positional(positional):
             return "Positional arguments ({} total):\n    * {}".format(
-                len(positional), "\n    * ".join(str(a) for a in positional)
-            )
+                len(positional), "\n    * ".join(str(a) for a in positional))
 
-        for index, function_name in enumerate(saved_function.concrete_functions):
+        for index, function_name in enumerate(
+                saved_function.concrete_functions):
             concrete_function = concrete_functions[function_name]
             positional, keyword = concrete_function.structured_input_signature
             signature_descriptions.append(
                 "Option {}:\n  {}\n  Keyword arguments: {}".format(
-                    index + 1, _pretty_format_positional(positional), keyword
-                )
-            )
+                    index + 1, _pretty_format_positional(positional), keyword))
         raise ValueError(
             "Could not find matching function to call loaded from the SavedModel. "
             "Got:\n  {}\n  Keyword arguments: {}\n\nExpected "
-            "these arguments to match one of the following {} option(s):\n\n{}".format(
+            "these arguments to match one of the following {} option(s):\n\n{}"
+            .format(
                 _pretty_format_positional(args),
                 kwargs,
                 len(saved_function.concrete_functions),
                 "\n\n".join(signature_descriptions),
-            )
-        )
+            ))
 
     concrete_function_objects = []
     for concrete_function_name in saved_function.concrete_functions:
-        concrete_function_objects.append(concrete_functions[concrete_function_name])
+        concrete_function_objects.append(
+            concrete_functions[concrete_function_name])
 
     restored_function = RestoredFunction(
         restored_function_body,
@@ -307,7 +310,8 @@ def load_function_def_library(library, load_shared_name_suffix=None):
     Raises:
       ValueError: if functions dependencies have a cycle.
     """
-    library_function_names = set(fdef.signature.name for fdef in library.function)
+    library_function_names = set(fdef.signature.name
+                                 for fdef in library.function)
     functions = {}
     renamed_functions = {}
 
@@ -361,12 +365,9 @@ def _restore_gradient_functions(func_graph, renamed_functions):
         # function call is the default gradient for the function and not a custom
         # one.
         if op.type in ["StatefulPartitionedCall", "PartitionedCall"]:
-            function = renamed_functions[
-                compat.as_bytes(op.node_def.attr["f"].func.name)
-            ]
-            op._gradient_function = (
-                function._get_gradient_function()
-            )  # pylint: disable=protected-access
+            function = renamed_functions[compat.as_bytes(
+                op.node_def.attr["f"].func.name)]
+            op._gradient_function = (function._get_gradient_function())  # pylint: disable=protected-access
 
 
 def _sort_function_defs(library, library_function_names):
@@ -380,8 +381,7 @@ def _sort_function_defs(library, library_function_names):
             in_count[fdef.signature.name] += 1
 
     ready = [
-        fdef.signature.name
-        for fdef in library.function
+        fdef.signature.name for fdef in library.function
         if in_count[fdef.signature.name] == 0
     ]
     output = []
@@ -397,7 +397,7 @@ def _sort_function_defs(library, library_function_names):
         failed_to_resolve = sorted(set(in_count.keys()) - set(output))
         raise ValueError(
             "There is a cyclic-dependency between functions. ",
-            "Could not resolve %r." % (failed_to_resolve,),
+            "Could not resolve %r." % (failed_to_resolve, ),
         )
 
     reverse = {fdef.signature.name: fdef for fdef in library.function}
@@ -407,8 +407,8 @@ def _sort_function_defs(library, library_function_names):
 def fix_node_def(node_def, functions, shared_name_suffix, debug_name):
     """Replace functions calls and shared names in `node_def`."""
     if "_gradient_op_type" in node_def.attr and node_def.op not in [
-        "StatefulPartitionedCall",
-        "PartitionedCall",
+            "StatefulPartitionedCall",
+            "PartitionedCall",
     ]:
         logging.warning(
             "Importing a function (%s) with ops with custom gradients. Will likely "
@@ -423,10 +423,8 @@ def fix_node_def(node_def, functions, shared_name_suffix, debug_name):
 
     # Fix old table creation bug.
     if node_def.op == "HashTableV2":
-        if (
-            "use_node_name_sharing" not in node_def.attr
-            or not node_def.attr["use_node_name_sharing"].b
-        ):
+        if ("use_node_name_sharing" not in node_def.attr
+                or not node_def.attr["use_node_name_sharing"].b):
             node_def.attr["use_node_name_sharing"].b = True
             # We are turning on node mame sharing, so have to make sure we don't
             # accidentally share a table resource.
@@ -441,7 +439,8 @@ def fix_node_def(node_def, functions, shared_name_suffix, debug_name):
         attr = next((a for a in op_def.attr if a.name == "shared_name"), None)
         if attr:
             shared_name = None
-            if "shared_name" in node_def.attr and node_def.attr["shared_name"].s:
+            if "shared_name" in node_def.attr and node_def.attr[
+                    "shared_name"].s:
                 shared_name = node_def.attr["shared_name"].s
             elif attr.default_value.s:
                 shared_name = compat.as_bytes(attr.default_value.s)
@@ -449,8 +448,7 @@ def fix_node_def(node_def, functions, shared_name_suffix, debug_name):
                 shared_name = compat.as_bytes(node_def.name)
 
             node_def.attr["shared_name"].s = shared_name + compat.as_bytes(
-                shared_name_suffix
-            )
+                shared_name_suffix)
 
 
 def _fix_fdef(orig_fdef, functions, shared_name_suffix):
@@ -473,7 +471,8 @@ def _fix_fdef(orig_fdef, functions, shared_name_suffix):
     fdef = function_pb2.FunctionDef()
     fdef.CopyFrom(orig_fdef)
     for node_def in fdef.node_def:
-        fix_node_def(node_def, functions, shared_name_suffix, fdef.signature.name)
+        fix_node_def(node_def, functions, shared_name_suffix,
+                     fdef.signature.name)
 
     fdef.signature.name = _clean_function_name(fdef.signature.name)
     return fdef
@@ -496,8 +495,7 @@ def _list_function_deps(fdef, library_function_names):
 
 
 _FUNCTION_WRAPPER_NAME_REGEX = r"^%s(.*)_\d+$" % (
-    function_lib._INFERENCE_PREFIX
-)  # pylint:disable=protected-access
+    function_lib._INFERENCE_PREFIX)  # pylint:disable=protected-access
 
 
 def _clean_function_name(name):
