@@ -16,7 +16,7 @@ limitations under the License.
 #include "tensorflow/compiler/mlir/tensorflow/utils/error_util.h"
 
 #include "llvm/ADT/Twine.h"
-#include "mlir/IR/Builders.h"  // TF:llvm-project
+#include "mlir/IR/Builders.h"     // TF:llvm-project
 #include "mlir/IR/MLIRContext.h"  // TF:llvm-project
 #include "tensorflow/compiler/xla/test.h"
 #include "tensorflow/core/lib/core/errors.h"
@@ -28,44 +28,44 @@ namespace {
 using testing::HasSubstr;
 
 TEST(ErrorUtilTest, StatusScopedDiagnosticHandler) {
-    MLIRContext context;
-    auto id = Identifier::get("test.cc", &context);
-    auto loc = FileLineColLoc::get(id, 0, 0, &context);
+  MLIRContext context;
+  auto id = Identifier::get("test.cc", &context);
+  auto loc = FileLineColLoc::get(id, 0, 0, &context);
 
-    // Test OK without diagnostic gets passed through.
-    {
-        TF_ASSERT_OK(StatusScopedDiagnosticHandler(&context).Combine(Status::OK()));
-    }
+  // Test OK without diagnostic gets passed through.
+  {
+    TF_ASSERT_OK(StatusScopedDiagnosticHandler(&context).Combine(Status::OK()));
+  }
 
-    // Verify diagnostics are captured as Unknown status.
-    {
-        StatusScopedDiagnosticHandler handler(&context);
-        emitError(loc) << "Diagnostic message";
-        ASSERT_TRUE(tensorflow::errors::IsUnknown(handler.ConsumeStatus()));
-    }
+  // Verify diagnostics are captured as Unknown status.
+  {
+    StatusScopedDiagnosticHandler handler(&context);
+    emitError(loc) << "Diagnostic message";
+    ASSERT_TRUE(tensorflow::errors::IsUnknown(handler.ConsumeStatus()));
+  }
 
-    // Verify passed in errors are propagated.
-    {
-        Status err = tensorflow::errors::Internal("Passed in error");
-        ASSERT_TRUE(tensorflow::errors::IsInternal(
-                        StatusScopedDiagnosticHandler(&context).Combine(err)));
-    }
+  // Verify passed in errors are propagated.
+  {
+    Status err = tensorflow::errors::Internal("Passed in error");
+    ASSERT_TRUE(tensorflow::errors::IsInternal(
+        StatusScopedDiagnosticHandler(&context).Combine(err)));
+  }
 
-    // Verify diagnostic reported are append to passed in error.
-    {
-        auto function = [&]() {
-            emitError(loc) << "Diagnostic message reported";
-            emitError(loc) << "Second diagnostic message reported";
-            return tensorflow::errors::Internal("Passed in error");
-        };
-        StatusScopedDiagnosticHandler ssdh(&context);
-        Status s = ssdh.Combine(function());
-        ASSERT_TRUE(tensorflow::errors::IsInternal(s));
-        EXPECT_THAT(s.error_message(), HasSubstr("Passed in error"));
-        EXPECT_THAT(s.error_message(), HasSubstr("Diagnostic message reported"));
-        EXPECT_THAT(s.error_message(),
-                    HasSubstr("Second diagnostic message reported"));
-    }
+  // Verify diagnostic reported are append to passed in error.
+  {
+    auto function = [&]() {
+      emitError(loc) << "Diagnostic message reported";
+      emitError(loc) << "Second diagnostic message reported";
+      return tensorflow::errors::Internal("Passed in error");
+    };
+    StatusScopedDiagnosticHandler ssdh(&context);
+    Status s = ssdh.Combine(function());
+    ASSERT_TRUE(tensorflow::errors::IsInternal(s));
+    EXPECT_THAT(s.error_message(), HasSubstr("Passed in error"));
+    EXPECT_THAT(s.error_message(), HasSubstr("Diagnostic message reported"));
+    EXPECT_THAT(s.error_message(),
+                HasSubstr("Second diagnostic message reported"));
+  }
 }
 
 }  // namespace
