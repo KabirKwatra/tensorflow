@@ -43,17 +43,17 @@ def read_saved_model(saved_model_dir):
     # Build the path to the SavedModel in pbtxt format.
     path_to_pbtxt = os.path.join(
         compat.as_bytes(saved_model_dir),
-        compat.as_bytes(constants.SAVED_MODEL_FILENAME_PBTXT))
+        compat.as_bytes(constants.SAVED_MODEL_FILENAME_PBTXT),
+    )
     # Build the path to the SavedModel in pb format.
     path_to_pb = os.path.join(
         compat.as_bytes(saved_model_dir),
-        compat.as_bytes(constants.SAVED_MODEL_FILENAME_PB))
+        compat.as_bytes(constants.SAVED_MODEL_FILENAME_PB),
+    )
 
     # Ensure that the SavedModel exists at either path.
-    if not file_io.file_exists(path_to_pbtxt) and not file_io.file_exists(
-            path_to_pb):
-        raise IOError("SavedModel file does not exist at: %s" %
-                      saved_model_dir)
+    if not file_io.file_exists(path_to_pbtxt) and not file_io.file_exists(path_to_pb):
+        raise IOError("SavedModel file does not exist at: %s" % saved_model_dir)
 
     # Parse the SavedModel protocol buffer.
     saved_model = saved_model_pb2.SavedModel()
@@ -70,12 +70,16 @@ def read_saved_model(saved_model_dir):
             text_format.Merge(file_content.decode("utf-8"), saved_model)
             return saved_model
         except text_format.ParseError as e:
-            raise IOError("Cannot parse file %s: %s." %
-                          (path_to_pbtxt, str(e)))
+            raise IOError("Cannot parse file %s: %s." % (path_to_pbtxt, str(e)))
     else:
-        raise IOError("SavedModel file does not exist at: %s/{%s|%s}" %
-                      (saved_model_dir, constants.SAVED_MODEL_FILENAME_PBTXT,
-                       constants.SAVED_MODEL_FILENAME_PB))
+        raise IOError(
+            "SavedModel file does not exist at: %s/{%s|%s}"
+            % (
+                saved_model_dir,
+                constants.SAVED_MODEL_FILENAME_PBTXT,
+                constants.SAVED_MODEL_FILENAME_PB,
+            )
+        )
 
 
 def get_saved_model_tag_sets(saved_model_dir):
@@ -121,5 +125,7 @@ def get_meta_graph_def(saved_model_dir, tag_set):
         if set(meta_graph_def.meta_info_def.tags) == set_of_tags:
             return meta_graph_def
 
-    raise RuntimeError("MetaGraphDef associated with tag-set %r could not be"
-                       " found in SavedModel" % tag_set)
+    raise RuntimeError(
+        "MetaGraphDef associated with tag-set %r could not be"
+        " found in SavedModel" % tag_set
+    )
