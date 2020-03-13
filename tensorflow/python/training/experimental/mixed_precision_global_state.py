@@ -21,7 +21,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
 # Whether the mixed precision graph rewrite has been enabled or not with
 # `enable_mixed_precision_graph_rewrite`. Used to turn on auto_mixed_precision
 # in ConfigProtos passed to Sessions.

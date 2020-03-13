@@ -57,9 +57,8 @@ class FileCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
         )
 
         def dataset_fn(count=5, filename=None):
-            repeat_dataset = dataset_ops.Dataset.from_tensor_slices(components).repeat(
-                count
-            )
+            repeat_dataset = dataset_ops.Dataset.from_tensor_slices(
+                components).repeat(count)
             if filename:
                 return repeat_dataset.cache(filename)
             else:
@@ -91,7 +90,8 @@ class FileCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         # Re-initialize with an empty upstream (to throw errors.OutOfRangeError
         # if we didn't use the cache).
-        get_next = self.getNext(dataset_fn(count=0, filename=self.cache_prefix))
+        get_next = self.getNext(dataset_fn(count=0,
+                                           filename=self.cache_prefix))
         replayed_elements = []
         for _ in range(20):
             replayed_elements.append(self.evaluate(get_next()))
@@ -102,8 +102,7 @@ class FileCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
         # Re-initialize with an empty upstream and a missing cache file (should
         # throw errors.OutOfRangeError immediately).
         get_next = self.getNext(
-            dataset_fn(count=0, filename=self.cache_prefix + "nonsense")
-        )
+            dataset_fn(count=0, filename=self.cache_prefix + "nonsense"))
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
 
@@ -115,12 +114,10 @@ class FileCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
             np.array([9.0, 10.0, 11.0, 12.0]),
         )
 
-        cache_dataset1 = dataset_ops.Dataset.from_tensor_slices(components).cache(
-            self.cache_prefix
-        )
-        cache_dataset2 = dataset_ops.Dataset.from_tensor_slices(components).cache(
-            self.cache_prefix
-        )
+        cache_dataset1 = dataset_ops.Dataset.from_tensor_slices(
+            components).cache(self.cache_prefix)
+        cache_dataset2 = dataset_ops.Dataset.from_tensor_slices(
+            components).cache(self.cache_prefix)
 
         get_next1 = self.getNext(cache_dataset1)
         get_next2 = self.getNext(cache_dataset2)
@@ -140,12 +137,10 @@ class FileCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
             np.array([9.0, 10.0, 11.0, 12.0]),
         )
 
-        cache_dataset1 = dataset_ops.Dataset.from_tensor_slices(components).cache(
-            self.cache_prefix
-        )
-        cache_dataset2 = dataset_ops.Dataset.from_tensor_slices(components).cache(
-            self.cache_prefix
-        )
+        cache_dataset1 = dataset_ops.Dataset.from_tensor_slices(
+            components).cache(self.cache_prefix)
+        cache_dataset2 = dataset_ops.Dataset.from_tensor_slices(
+            components).cache(self.cache_prefix)
 
         get_next1 = self.getNext(cache_dataset1)
         get_next2 = self.getNext(cache_dataset2)
@@ -201,7 +196,8 @@ class FileCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
                     break
 
         if not context.executing_eagerly():
-            self.skipTest("Test requires eager mode for iterators to be deconstructed")
+            self.skipTest(
+                "Test requires eager mode for iterators to be deconstructed")
 
         for i in [0, 3, 10, 12, 15]:
             do_test(i)
@@ -211,18 +207,21 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.default_test_combinations())
     def testCacheDatasetPassthrough(self):
         with ops.device("cpu:0"):
-            repeat_count = variables.Variable(constant_op.constant(10, dtypes.int64))
-            dataset = dataset_ops.Dataset.range(3).flat_map(
-                lambda x: dataset_ops.Dataset.from_tensors(x).repeat(repeat_count)
-            )
+            repeat_count = variables.Variable(
+                constant_op.constant(10, dtypes.int64))
+            dataset = dataset_ops.Dataset.range(
+                3).flat_map(lambda x: dataset_ops.Dataset.from_tensors(x).
+                            repeat(repeat_count))
 
             cached_dataset = dataset.cache().repeat(2)
             uncached_dataset = dataset.repeat(2)
 
             self.evaluate(repeat_count.initializer)
             # Needs to be initializable to capture the variable.
-            cached_next = self.getNext(cached_dataset, requires_initialization=True)
-            uncached_next = self.getNext(uncached_dataset, requires_initialization=True)
+            cached_next = self.getNext(cached_dataset,
+                                       requires_initialization=True)
+            uncached_next = self.getNext(uncached_dataset,
+                                         requires_initialization=True)
             for i in range(3):
                 for _ in range(10):
                     self.assertEqual(self.evaluate(cached_next()), i)
@@ -251,7 +250,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
             np.array([9.0, 10.0, 11.0, 12.0]),
         )
 
-        repeat_dataset = dataset_ops.Dataset.from_tensor_slices(components).repeat(0)
+        repeat_dataset = dataset_ops.Dataset.from_tensor_slices(
+            components).repeat(0)
         cache_dataset = repeat_dataset.cache()
 
         # Create initialization ops for iterators without and with
@@ -278,8 +278,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
         self.assertEqual(7, self.evaluate(get_next2()))
         self.assertEqual(4, self.evaluate(get_next1()))  # interleave execution
         self.assertEqual(
-            [8, 5], [self.evaluate(get_next2()), self.evaluate(get_next1())]
-        )
+            [8, 5], [self.evaluate(get_next2()),
+                     self.evaluate(get_next1())])
         self.assertEqual(9, self.evaluate(get_next2()))
         self.assertEqual(10, self.evaluate(get_next2()))
 
@@ -304,7 +304,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
             counter.assign_add(1)
             return x
 
-        dataset = dataset_ops.Dataset.range(10).map(increment_fn).cache().repeat(2)
+        dataset = dataset_ops.Dataset.range(10).map(
+            increment_fn).cache().repeat(2)
         get_next = self.getNext(dataset, requires_initialization=True)
 
         # first epoch
@@ -318,7 +319,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
 
-    @combinations.generate(combinations.combine(tf_api_version=2, mode="eager"))
+    @combinations.generate(combinations.combine(tf_api_version=2,
+                                                mode="eager"))
     def testCacheIterationEpochs(self):
         counter = variables.Variable(0)
         self.evaluate(counter.initializer)
@@ -343,7 +345,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
             self.assertEqual(i, self.evaluate(elem))
             i += 1
 
-    @combinations.generate(combinations.combine(tf_api_version=2, mode="eager"))
+    @combinations.generate(combinations.combine(tf_api_version=2,
+                                                mode="eager"))
     def testCacheV2ResourceCapture(self):
         def make_dataset():
             ids = dataset_ops.Dataset.range(10)
@@ -362,7 +365,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         self.assertAllEqual(results, range(10))
 
-    @combinations.generate(combinations.combine(tf_api_version=2, mode="eager"))
+    @combinations.generate(combinations.combine(tf_api_version=2,
+                                                mode="eager"))
     def testCacheV2ConcurrentIterators(self):
 
         dataset = dataset_ops.Dataset.range(10).cache()
@@ -374,7 +378,8 @@ class MemoryCacheTest(test_base.DatasetTestBase, parameterized.TestCase):
             self.assertEqual(next(it1), i)
             self.assertEqual(next(it2), i)
 
-    @combinations.generate(combinations.combine(tf_api_version=2, mode="eager"))
+    @combinations.generate(combinations.combine(tf_api_version=2,
+                                                mode="eager"))
     def testCacheKnownCardinality(self):
 
         # Check that a dataset which produces random permutation of range(10) ends

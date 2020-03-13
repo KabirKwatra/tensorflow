@@ -21,8 +21,7 @@ from tensorflow.python.framework import config
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.training import optimizer
 from tensorflow.python.training.experimental import (
-    loss_scale_optimizer as loss_scale_optimizer_v1,
-)
+    loss_scale_optimizer as loss_scale_optimizer_v1, )
 from tensorflow.python.training.experimental import mixed_precision_global_state
 from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import tf_export
@@ -31,30 +30,28 @@ from tensorflow.python.util.tf_export import tf_export
 def _wrap_optimizer(opt, loss_scale, use_v1_behavior):
     """Wraps an optimizer with a LossScaleOptimizer."""
 
-    if isinstance(opt, loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer):
-        raise ValueError(
-            '"opt" must not already be an instance of a '
-            "MixedPrecisionLossScaleOptimizer. "
-            "`enable_mixed_precision_graph_rewrite` will "
-            "automatically wrap the optimizer with a "
-            "MixedPrecisionLossScaleOptimizer."
-        )
+    if isinstance(opt,
+                  loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer):
+        raise ValueError('"opt" must not already be an instance of a '
+                         "MixedPrecisionLossScaleOptimizer. "
+                         "`enable_mixed_precision_graph_rewrite` will "
+                         "automatically wrap the optimizer with a "
+                         "MixedPrecisionLossScaleOptimizer.")
     # To avoid a circular dependency, we cannot depend on tf.keras. Because
     # LossScaleOptimizer is in Keras, we cannot use isinstance, so instead check
     # the class name.
     if opt.__class__.__name__ == "LossScaleOptimizer":
-        raise ValueError(
-            '"opt" must not already be an instance of a '
-            "LossScaleOptimizer. "
-            "`enable_mixed_precision_graph_rewrite` will "
-            "automatically wrap the optimizer with a "
-            "LossScaleOptimizer."
-        )
+        raise ValueError('"opt" must not already be an instance of a '
+                         "LossScaleOptimizer. "
+                         "`enable_mixed_precision_graph_rewrite` will "
+                         "automatically wrap the optimizer with a "
+                         "LossScaleOptimizer.")
 
     if isinstance(opt, optimizer.Optimizer):
         # For convenience, we allow the V2 version of this function to wrap the V1
         # optimizer, even though we do not document this.
-        return loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer(opt, loss_scale)
+        return loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer(
+            opt, loss_scale)
 
     # Because we cannot depend on tf.keras, we see if `opt` is an instance of the
     # Keras OptimizerV2 class by checking the subclass names.
@@ -69,21 +66,17 @@ def _wrap_optimizer(opt, loss_scale, use_v1_behavior):
         # to have a dependency on OptimizerV2 and not LossScaleOptimizer, but this
         # is not done in practice).
         from tensorflow.python.keras.mixed_precision.experimental import (
-            loss_scale_optimizer as loss_scale_optimizer_v2,
-        )  # pylint: disable=g-import-not-at-top
+            loss_scale_optimizer as loss_scale_optimizer_v2, )  # pylint: disable=g-import-not-at-top
 
         return loss_scale_optimizer_v2.LossScaleOptimizer(opt, loss_scale)
 
     if use_v1_behavior:
         raise ValueError(
             '"opt" must be an instance of a tf.train.Optimizer or a '
-            "tf.keras.optimizers.Optimizer, but got: %s" % opt
-        )
+            "tf.keras.optimizers.Optimizer, but got: %s" % opt)
     else:
-        raise ValueError(
-            '"opt" must be an instance of a '
-            "tf.keras.optimizers.Optimizer, but got: %s" % opt
-        )
+        raise ValueError('"opt" must be an instance of a '
+                         "tf.keras.optimizers.Optimizer, but got: %s" % opt)
 
 
 @tf_export("train.experimental.enable_mixed_precision_graph_rewrite", v1=[])
@@ -227,9 +220,9 @@ def enable_mixed_precision_graph_rewrite(opt, loss_scale="dynamic"):
     Returns:
       A version of `opt` that will use loss scaling to prevent underflow.
     """
-    return _enable_mixed_precision_graph_rewrite_base(
-        opt, loss_scale, use_v1_behavior=False
-    )
+    return _enable_mixed_precision_graph_rewrite_base(opt,
+                                                      loss_scale,
+                                                      use_v1_behavior=False)
 
 
 @tf_export(v1=["train.experimental.enable_mixed_precision_graph_rewrite"])
@@ -341,12 +334,13 @@ def enable_mixed_precision_graph_rewrite_v1(opt, loss_scale="dynamic"):
     """
     # TODO(reedwm): If a ConfigProto is passed to Session, either assert that
     # auto_mixed_precision is on or turn it on for the user.
-    return _enable_mixed_precision_graph_rewrite_base(
-        opt, loss_scale, use_v1_behavior=True
-    )
+    return _enable_mixed_precision_graph_rewrite_base(opt,
+                                                      loss_scale,
+                                                      use_v1_behavior=True)
 
 
-def _enable_mixed_precision_graph_rewrite_base(opt, loss_scale, use_v1_behavior):
+def _enable_mixed_precision_graph_rewrite_base(opt, loss_scale,
+                                               use_v1_behavior):
     """Enables mixed precision. See `enable_mixed_precision_graph_rewrite`."""
     if mixed_precision_global_state.using_mixed_precision_policy:
         raise ValueError(
@@ -360,8 +354,7 @@ def _enable_mixed_precision_graph_rewrite_base(opt, loss_scale, use_v1_behavior)
             "You called both functions, which is an error, because both functions "
             "enable you to use mixed precision. If in doubt which function to use, "
             "use the first, as it supports Eager execution and is more "
-            "customizable."
-        )
+            "customizable.")
 
     if mixed_precision_global_state.non_mixed_precision_session_created:
         # TODO(reedwm): Give the stacktrace of the existing Sessions. And if the
@@ -369,8 +362,7 @@ def _enable_mixed_precision_graph_rewrite_base(opt, loss_scale, use_v1_behavior)
         tf_logging.warn(
             "You already have existing Sessions that do not use mixed "
             "precision. enable_mixed_precision_graph_rewrite() will "
-            "not affect these Sessions."
-        )
+            "not affect these Sessions.")
     opt = _wrap_optimizer(opt, loss_scale, use_v1_behavior=use_v1_behavior)
     config.set_optimizer_experimental_options({"auto_mixed_precision": True})
     mixed_precision_global_state.mixed_precision_graph_rewrite_is_enabled = True
@@ -397,8 +389,7 @@ def disable_mixed_precision_graph_rewrite():
     if not mixed_precision_global_state.mixed_precision_graph_rewrite_is_enabled:
         tf_logging.warn(
             "disable_mixed_precision_graph_rewrite() called when mixed "
-            "precision is already disabled."
-        )
+            "precision is already disabled.")
     config.set_optimizer_experimental_options({"auto_mixed_precision": False})
     mixed_precision_global_state.mixed_precision_graph_rewrite_is_enabled = False
 

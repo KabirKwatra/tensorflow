@@ -24,8 +24,7 @@ from tensorflow.python.framework import test_util
 from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.engine import base_layer_utils
 from tensorflow.python.keras.mixed_precision.experimental import (
-    device_compatibility_check,
-)
+    device_compatibility_check, )
 from tensorflow.python.keras.mixed_precision.experimental import policy as mp_policy
 from tensorflow.python.keras.optimizer_v2 import gradient_descent
 from tensorflow.python.platform import test
@@ -77,50 +76,51 @@ class PolicyTest(test.TestCase):
         # Test passing invalid strings
 
         with self.assertRaisesRegexp(
-            ValueError, "Cannot convert value abc to a mixed precision Policy."
-        ):
+                ValueError,
+                "Cannot convert value abc to a mixed precision Policy."):
             mp_policy.Policy("abc")
 
         # Test passing a DType
         with self.assertRaisesRegexp(
-            TypeError,
-            "'name' must be a string, not a DType. "
-            "Instead, pass DType.name. Got: float16",
+                TypeError,
+                "'name' must be a string, not a DType. "
+                "Instead, pass DType.name. Got: float16",
         ):
             mp_policy.Policy(dtypes.float16)
 
         # Test passing a non-DType invalid type
-        with self.assertRaisesRegexp(TypeError, "'name' must be a string, but got: 5"):
+        with self.assertRaisesRegexp(TypeError,
+                                     "'name' must be a string, but got: 5"):
             mp_policy.Policy(5)
 
         # Test passing a now-removed policy ending in float32_vars
         with self.assertRaisesRegexp(
-            ValueError,
-            "Policies ending in '_float32_vars' have been removed "
-            "from TensorFlow. Please use the 'mixed_float16' or "
-            "'mixed_bfloat16' policy instead. Got policy name: "
-            "'infer_float32_vars'",
+                ValueError,
+                "Policies ending in '_float32_vars' have been removed "
+                "from TensorFlow. Please use the 'mixed_float16' or "
+                "'mixed_bfloat16' policy instead. Got policy name: "
+                "'infer_float32_vars'",
         ):
             mp_policy.Policy("infer_float32_vars")
         with self.assertRaisesRegexp(
-            ValueError,
-            "Policies ending in '_float32_vars' have been removed "
-            "from TensorFlow. Please use the 'mixed_float16' policy "
-            "instead. Got policy name: 'float16_with_float32_vars'",
+                ValueError,
+                "Policies ending in '_float32_vars' have been removed "
+                "from TensorFlow. Please use the 'mixed_float16' policy "
+                "instead. Got policy name: 'float16_with_float32_vars'",
         ):
             mp_policy.Policy("float16_with_float32_vars")
         with self.assertRaisesRegexp(
-            ValueError,
-            "Policies ending in '_float32_vars' have been removed "
-            "from TensorFlow. Please use the 'mixed_bfloat16' policy "
-            "instead. Got policy name: 'bfloat16_with_float32_vars'",
+                ValueError,
+                "Policies ending in '_float32_vars' have been removed "
+                "from TensorFlow. Please use the 'mixed_bfloat16' policy "
+                "instead. Got policy name: 'bfloat16_with_float32_vars'",
         ):
             mp_policy.Policy("bfloat16_with_float32_vars")
         with self.assertRaisesRegexp(
-            ValueError,
-            "Policies ending in '_float32_vars' have been removed "
-            "from TensorFlow. Got policy name: "
-            "'int8_with_float32_vars'",
+                ValueError,
+                "Policies ending in '_float32_vars' have been removed "
+                "from TensorFlow. Got policy name: "
+                "'int8_with_float32_vars'",
         ):
             mp_policy.Policy("int8_with_float32_vars")
 
@@ -137,10 +137,12 @@ class PolicyTest(test.TestCase):
         self.assertIs(policy.loss_scale, ls)
 
         policy = mp_policy.Policy("float32", loss_scale="dynamic")
-        self.assertIsInstance(policy.loss_scale, loss_scale_module.DynamicLossScale)
+        self.assertIsInstance(policy.loss_scale,
+                              loss_scale_module.DynamicLossScale)
 
         policy = mp_policy.Policy("mixed_float16")
-        self.assertIsInstance(policy.loss_scale, loss_scale_module.DynamicLossScale)
+        self.assertIsInstance(policy.loss_scale,
+                              loss_scale_module.DynamicLossScale)
 
         policy = mp_policy.Policy("mixed_float16", loss_scale=None)
         self.assertEqual(policy.loss_scale, None)
@@ -158,8 +160,10 @@ class PolicyTest(test.TestCase):
         try:
             mp_policy.set_policy("mixed_float16")
             self.assertEqual(mp_policy.global_policy().name, "mixed_float16")
-            with ops.Graph().as_default():  # Policies are not associated with a graph
-                self.assertEqual(mp_policy.global_policy().name, "mixed_float16")
+            with ops.Graph().as_default(
+            ):  # Policies are not associated with a graph
+                self.assertEqual(mp_policy.global_policy().name,
+                                 "mixed_float16")
             mp_policy.set_policy("_infer")
             self.assertEqual(mp_policy.global_policy().name, "_infer")
             policy = mp_policy.Policy("mixed_bfloat16")
@@ -189,8 +193,8 @@ class PolicyTest(test.TestCase):
         with context.eager_mode():
             device_compatibility_check._logged_compatibility_check = False
             with test.mock.patch.object(
-                tf_logging, "warn"
-            ) as mock_warn, test.mock.patch.object(tf_logging, "info") as mock_info:
+                    tf_logging, "warn") as mock_warn, test.mock.patch.object(
+                        tf_logging, "info") as mock_info:
                 mp_policy.Policy("mixed_float16")
             if mock_warn.called:
                 self.assertRegexpMatches(
@@ -206,8 +210,8 @@ class PolicyTest(test.TestCase):
 
             # Assert message is only logged once
             with test.mock.patch.object(
-                tf_logging, "warn"
-            ) as mock_warn, test.mock.patch.object(tf_logging, "info") as mock_info:
+                    tf_logging, "warn") as mock_warn, test.mock.patch.object(
+                        tf_logging, "info") as mock_info:
                 mp_policy.Policy("mixed_float16")
             mock_warn.assert_not_called()
             mock_info.assert_not_called()
@@ -228,18 +232,18 @@ class PolicyTest(test.TestCase):
     @testing_utils.enable_v2_dtype_behavior
     def test_config(self):
         for policy in (
-            mp_policy.Policy("float16"),
-            mp_policy.Policy("float32"),
-            mp_policy.Policy("int16"),
-            mp_policy.Policy("mixed_float16"),
-            mp_policy.Policy("mixed_bfloat16"),
-            mp_policy.Policy("_infer"),
-            mp_policy.Policy("float32", loss_scale=2.0),
-            mp_policy.Policy("float32", loss_scale=None),
-            mp_policy.Policy("mixed_float16", loss_scale=2.0),
-            mp_policy.Policy("mixed_float16", loss_scale=None),
-            mp_policy.Policy("mixed_bfloat16", loss_scale=2.0),
-            mp_policy.Policy("mixed_bfloat16", loss_scale=None),
+                mp_policy.Policy("float16"),
+                mp_policy.Policy("float32"),
+                mp_policy.Policy("int16"),
+                mp_policy.Policy("mixed_float16"),
+                mp_policy.Policy("mixed_bfloat16"),
+                mp_policy.Policy("_infer"),
+                mp_policy.Policy("float32", loss_scale=2.0),
+                mp_policy.Policy("float32", loss_scale=None),
+                mp_policy.Policy("mixed_float16", loss_scale=2.0),
+                mp_policy.Policy("mixed_float16", loss_scale=None),
+                mp_policy.Policy("mixed_bfloat16", loss_scale=2.0),
+                mp_policy.Policy("mixed_bfloat16", loss_scale=None),
         ):
             config = policy.get_config()
             new_policy = mp_policy.Policy.from_config(config)
@@ -269,38 +273,41 @@ class PolicyTest(test.TestCase):
 
         # Test policies that do not override the loss scale
         for policy in (
-            mp_policy.Policy("mixed_float16"),
-            mp_policy.Policy("mixed_bfloat16"),
-            MyPolicy("float32"),
+                mp_policy.Policy("mixed_float16"),
+                mp_policy.Policy("mixed_bfloat16"),
+                MyPolicy("float32"),
         ):
             config = mp_policy.serialize(policy)
             self.assertEqual(
                 config,
                 {
                     "class_name": policy.__class__.__name__,
-                    "config": {"name": policy.name},
+                    "config": {
+                        "name": policy.name
+                    },
                 },
             )
             new_policy = mp_policy.deserialize(
-                config, custom_objects={"MyPolicy": MyPolicy}
-            )
+                config, custom_objects={"MyPolicy": MyPolicy})
             self.assertEqual(str(policy), str(new_policy))
 
         # Test policies that override the loss scale
         for policy in (
-            mp_policy.Policy("float32", loss_scale=2.0),
-            mp_policy.Policy("float32", loss_scale=None),
-            mp_policy.Policy("mixed_float16", loss_scale=2.0),
-            mp_policy.Policy("mixed_float16", loss_scale=None),
-            mp_policy.Policy("mixed_bfloat16", loss_scale=2.0),
-            mp_policy.Policy("mixed_bfloat16", loss_scale=None),
+                mp_policy.Policy("float32", loss_scale=2.0),
+                mp_policy.Policy("float32", loss_scale=None),
+                mp_policy.Policy("mixed_float16", loss_scale=2.0),
+                mp_policy.Policy("mixed_float16", loss_scale=None),
+                mp_policy.Policy("mixed_bfloat16", loss_scale=2.0),
+                mp_policy.Policy("mixed_bfloat16", loss_scale=None),
         ):
             config = mp_policy.serialize(policy)
             expected_loss_scale_config = None
             if policy.loss_scale:
                 expected_loss_scale_config = {
                     "class_name": "FixedLossScale",
-                    "config": {"loss_scale_value": 2.0},
+                    "config": {
+                        "loss_scale_value": 2.0
+                    },
                 }
             self.assertEqual(
                 config,
@@ -313,20 +320,18 @@ class PolicyTest(test.TestCase):
                 },
             )
             new_policy = mp_policy.deserialize(
-                config, custom_objects={"MyPolicy": MyPolicy}
-            )
+                config, custom_objects={"MyPolicy": MyPolicy})
             self.assertEqual(str(policy), str(new_policy))
 
     @testing_utils.enable_v2_dtype_behavior
     def test_error_if_graph_rewrite_enabled(self):
         try:
             mixed_precision.enable_mixed_precision_graph_rewrite(
-                gradient_descent.SGD(1.0)
-            )
+                gradient_descent.SGD(1.0))
             with self.assertRaisesRegexp(
-                ValueError,
-                'cannot be set to "mixed_float16", .* the mixed '
-                "precision graph rewrite has already been enabled",
+                    ValueError,
+                    'cannot be set to "mixed_float16", .* the mixed '
+                    "precision graph rewrite has already been enabled",
             ):
                 mp_policy.set_policy("mixed_float16")
             with mp_policy.policy_scope("float64"):
@@ -338,18 +343,15 @@ class PolicyTest(test.TestCase):
     def test_v1_dtype_behavior(self):
         # Setting global policies are not allowed with V1 dtype behavior
         with self.assertRaisesRegexp(
-            ValueError, "global policy can only be set in TensorFlow 2"
-        ):
+                ValueError, "global policy can only be set in TensorFlow 2"):
             with mp_policy.policy_scope(mp_policy.Policy("_infer")):
                 pass
         with self.assertRaisesRegexp(
-            ValueError, "global policy can only be set in TensorFlow 2"
-        ):
+                ValueError, "global policy can only be set in TensorFlow 2"):
             with mp_policy.policy_scope(mp_policy.Policy("float32")):
                 pass
         with self.assertRaisesRegexp(
-            ValueError, "global policy can only be set in TensorFlow 2"
-        ):
+                ValueError, "global policy can only be set in TensorFlow 2"):
             with mp_policy.policy_scope(mp_policy.Policy("mixed_float16")):
                 pass
 

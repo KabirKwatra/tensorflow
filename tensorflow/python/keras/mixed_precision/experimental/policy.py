@@ -25,16 +25,13 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.engine import base_layer_utils
 from tensorflow.python.keras.mixed_precision.experimental import (
-    device_compatibility_check,
-)
+    device_compatibility_check, )
 from tensorflow.python.keras.mixed_precision.experimental import (
-    loss_scale as keras_loss_scale_module,
-)
+    loss_scale as keras_loss_scale_module, )
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.training.experimental import mixed_precision_global_state
 from tensorflow.python.util.tf_export import keras_export
-
 
 # Default value of certain arguments, indicating the default behavior for
 # that argument should be used.
@@ -317,12 +314,11 @@ class Policy(object):
             during `Model.fit`, `Model.train_on_batch`, and other similar methods.
         """
         if isinstance(name, dtypes.DType):
-            raise TypeError(
-                "'name' must be a string, not a DType. "
-                "Instead, pass DType.name. Got: %s" % (name.name,)
-            )
+            raise TypeError("'name' must be a string, not a DType. "
+                            "Instead, pass DType.name. Got: %s" %
+                            (name.name, ))
         elif not isinstance(name, six.string_types):
-            raise TypeError("'name' must be a string, but got: %s" % (name,))
+            raise TypeError("'name' must be a string, but got: %s" % (name, ))
         self._name = name
         self._compute_dtype, self._variable_dtype = self._parse_name(name)
 
@@ -335,8 +331,8 @@ class Policy(object):
             tf_logging.warn(
                 "Creating a Policy with a loss scale is only useful for "
                 "float16 policies. You passed loss_scale=%r for policy "
-                "%s. Consider not passing any loss_scale instead." % (loss_scale, name)
-            )
+                "%s. Consider not passing any loss_scale instead." %
+                (loss_scale, name))
         self._loss_scale = keras_loss_scale_module.get(loss_scale)
 
         if name in ("mixed_float16", "mixed_bloat16"):
@@ -354,13 +350,11 @@ class Policy(object):
         if name.endswith("_float32_vars"):
             error_msg = (
                 "Policies ending in '_float32_vars' have been removed "
-                "from TensorFlow."
-            )
+                "from TensorFlow.")
             if name in ("infer_float32_vars", "infer_with_float32_vars"):
                 error_msg += (
                     " Please use the 'mixed_float16' or 'mixed_bfloat16' "
-                    "policy instead."
-                )
+                    "policy instead.")
             elif name == "float16_with_float32_vars":
                 error_msg += " Please use the 'mixed_float16' policy instead."
             elif name == "bfloat16_with_float32_vars":
@@ -388,12 +382,10 @@ class Policy(object):
         try:
             dtype = dtypes.as_dtype(name).name
         except TypeError:
-            error = (
-                "Cannot convert value %s to a mixed precision Policy. "
-                "Valid policies include include 'mixed_float16', "
-                "'mixed_bfloat16', and the name of any dtype such as "
-                "'float32'." % (name,)
-            )
+            error = ("Cannot convert value %s to a mixed precision Policy. "
+                     "Valid policies include include 'mixed_float16', "
+                     "'mixed_bfloat16', and the name of any dtype such as "
+                     "'float32'." % (name, ))
             # six.raise_from suppresses the original TypeError from being raised
             six.raise_from(ValueError(error), None)
         return dtype, dtype
@@ -473,7 +465,8 @@ class Policy(object):
             # We only include the loss scale if the default loss scale is not used.
             # This allows us to change the loss scale config format without breaking
             # users who use the default loss scale.
-            config["loss_scale"] = keras_loss_scale_module.serialize(self.loss_scale)
+            config["loss_scale"] = keras_loss_scale_module.serialize(
+                self.loss_scale)
         return config
 
     @classmethod
@@ -481,8 +474,7 @@ class Policy(object):
         if "loss_scale" in config and isinstance(config["loss_scale"], dict):
             config = config.copy()
             config["loss_scale"] = keras_loss_scale_module.deserialize(
-                config["loss_scale"], custom_objects=custom_objects
-            )
+                config["loss_scale"], custom_objects=custom_objects)
         return cls(**config)
 
 
@@ -524,7 +516,8 @@ def global_policy():
 
 def policy_defaults_to_floatx():
     """Returns True if `global_policy()` will use the current value of floatx."""
-    return _global_policy is None and base_layer_utils.v2_dtype_behavior_enabled()
+    return _global_policy is None and base_layer_utils.v2_dtype_behavior_enabled(
+    )
 
 
 def _check_if_mixed_precision_graph_rewrite_is_enabled(policy):
@@ -540,8 +533,7 @@ def _check_if_mixed_precision_graph_rewrite_is_enabled(policy):
             "You called both functions, which is an error, because both functions "
             "enable you to use mixed precision. If in doubt which function to use, "
             "use the second, as it supports Eager execution and is more "
-            "customizable.".format(policy=policy)
-        )
+            "customizable.".format(policy=policy))
 
 
 @keras_export("keras.mixed_precision.experimental.set_policy", v1=[])
@@ -613,12 +605,9 @@ def _policy_equivalent_to_dtype(policy):
     """
     # We use type() instead of isinstance because a sublcass of Policy is never
     # equivalent to a dtype.
-    return (
-        type(policy) == Policy
-        and list(policy.get_config().keys())  # pylint: disable=unidiomatic-typecheck
-        == ["name"]
-        and (policy.name == "_infer" or _is_convertible_to_dtype(policy.name))
-    )
+    return (type(policy) == Policy and list(policy.get_config().keys())  # pylint: disable=unidiomatic-typecheck
+            == ["name"] and
+            (policy.name == "_infer" or _is_convertible_to_dtype(policy.name)))
 
 
 def serialize(policy):
