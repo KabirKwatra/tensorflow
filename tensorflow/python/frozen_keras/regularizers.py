@@ -107,7 +107,7 @@ class Regularizer(object):
 
     def __call__(self, x):
         """Compute a regularization penalty from an input tensor."""
-        return 0.
+        return 0.0
 
     @classmethod
     def from_config(cls, config):
@@ -147,8 +147,7 @@ class Regularizer(object):
         Returns:
             Python dictionary.
         """
-        raise NotImplementedError(
-            str(self) + ' does not implement get_config()')
+        raise NotImplementedError(str(self) + " does not implement get_config()")
 
 
 class L1L2(Regularizer):
@@ -165,14 +164,14 @@ class L1L2(Regularizer):
         l2: Float; L2 regularization factor.
     """
 
-    def __init__(self, l1=0., l2=0.):  # pylint: disable=redefined-outer-name
+    def __init__(self, l1=0.0, l2=0.0):  # pylint: disable=redefined-outer-name
         self.l1 = K.cast_to_floatx(l1)
         self.l2 = K.cast_to_floatx(l2)
 
     def __call__(self, x):
         if not self.l1 and not self.l2:
-            return K.constant(0.)
-        regularization = 0.
+            return K.constant(0.0)
+        regularization = 0.0
         if self.l1:
             regularization += self.l1 * math_ops.reduce_sum(math_ops.abs(x))
         if self.l2:
@@ -180,7 +179,7 @@ class L1L2(Regularizer):
         return regularization
 
     def get_config(self):
-        return {'l1': float(self.l1), 'l2': float(self.l2)}
+        return {"l1": float(self.l1), "l2": float(self.l2)}
 
 
 # Aliases.
@@ -244,7 +243,8 @@ def deserialize(config, custom_objects=None):
         config,
         module_objects=globals(),
         custom_objects=custom_objects,
-        printable_module_name='regularizer')
+        printable_module_name="regularizer",
+    )
 
 
 def get(identifier):
@@ -256,13 +256,12 @@ def get(identifier):
         identifier = str(identifier)
         # We have to special-case functions that return classes.
         # TODO(omalleyt): Turn these into classes or class aliases.
-        special_cases = ['l1', 'l2', 'l1_l2']
+        special_cases = ["l1", "l2", "l1_l2"]
         if identifier in special_cases:
             # Treat like a class.
-            return deserialize({'class_name': identifier, 'config': {}})
+            return deserialize({"class_name": identifier, "config": {}})
         return deserialize(str(identifier))
     elif callable(identifier):
         return identifier
     else:
-        raise ValueError(
-            'Could not interpret regularizer identifier:', identifier)
+        raise ValueError("Could not interpret regularizer identifier:", identifier)

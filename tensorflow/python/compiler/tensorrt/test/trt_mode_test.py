@@ -21,7 +21,9 @@ from __future__ import print_function
 from unittest import SkipTest  # pylint: disable=g-importing-member
 
 from tensorflow.compiler.tf2tensorrt._pywrap_py_utils import get_linked_tensorrt_version
-from tensorflow.python.compiler.tensorrt.test import tf_trt_integration_test_base as trt_test
+from tensorflow.python.compiler.tensorrt.test import (
+    tf_trt_integration_test_base as trt_test,
+)
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
@@ -52,30 +54,27 @@ class TrtModeTestBase(trt_test.TfTrtIntegrationTestBase):
         allowed to manipulate (squeeze) the first dimension in implicit batch mode.
         Therefore the graph will be converted using multiple segments.
         """
-        return self.BuildParams(self.GraphFn, dtypes.float32, [[1, 12, 5]],
-                                [[12, 5]])
+        return self.BuildParams(self.GraphFn, dtypes.float32, [[1, 12, 5]], [[12, 5]])
 
     def GetConversionParams(self, run_params, implicit_batch=False):
         """Return a TrtConversionParams for test."""
 
-        conversion_params = super(TrtModeTestBase,
-                                  self).GetConversionParams(run_params)
+        conversion_params = super(TrtModeTestBase, self).GetConversionParams(run_params)
         rewriter_config = self.GetTrtRewriterConfig(
             run_params=run_params,
             conversion_params=conversion_params,
-            use_implicit_batch=implicit_batch)
+            use_implicit_batch=implicit_batch,
+        )
         return conversion_params._replace(rewriter_config_template=rewriter_config)
 
     @classmethod
     def setUpClass(cls):
         if cls is TrtModeTestBase:
-            raise SkipTest(
-                "TrtModeTestBase defines base class for other test.")
+            raise SkipTest("TrtModeTestBase defines base class for other test.")
         super(TrtModeTestBase, cls).setUpClass()
 
 
 class ImplicitBatchTest(TrtModeTestBase):
-
     def GetConversionParams(self, run_params):
         """Return a TrtConversionParams for test using implicit batch mdoe."""
         return super(ImplicitBatchTest, self).GetConversionParams(run_params, True)
@@ -98,16 +97,18 @@ class ImplicitBatchTest(TrtModeTestBase):
 
 
 class ExplicitBatchTest(TrtModeTestBase):
-
     def GetParams(self):
         """We specify input/output masks with static (known) shapes."""
         return self.BuildParamsWithMask(
             self.GraphFn,
-            dtypes.float32, [[1, 12, 5]], [[12, 5]],
+            dtypes.float32,
+            [[1, 12, 5]],
+            [[12, 5]],
             input_mask=[[True, True, True]],
             output_mask=[[True, True]],
             extra_inputs=[],
-            extra_outputs=[])
+            extra_outputs=[],
+        )
 
     def GetConversionParams(self, run_params):
         """Return a TrtConversionParams for test that enables explicit batch."""
@@ -129,8 +130,10 @@ class ExplicitBatchTest(TrtModeTestBase):
     def ShouldRunTest(self, run_params):
         # Only run for TRT 6 and above.
         ver = get_linked_tensorrt_version()
-        return run_params.is_v2 and ver[0] >= 6 and (
-            not run_params.use_calibration), "test v2, >=TRT6 and non-calibration"
+        return (
+            run_params.is_v2 and ver[0] >= 6 and (not run_params.use_calibration),
+            "test v2, >=TRT6 and non-calibration",
+        )
 
 
 class DynamicShapesTest(TrtModeTestBase):
@@ -149,11 +152,14 @@ class DynamicShapesTest(TrtModeTestBase):
         """
         return self.BuildParamsWithMask(
             self.GraphFn,
-            dtypes.float32, [[1, 12, 5]], [[12, 5]],
+            dtypes.float32,
+            [[1, 12, 5]],
+            [[12, 5]],
             extra_inputs=[[[1, 2, 3]], [[1, 4, 6]]],
             extra_outputs=[[[2, 3]], [[4, 6]]],
             input_mask=[[False, False, False]],
-            output_mask=[[False, False]])
+            output_mask=[[False, False]],
+        )
 
     def GetConversionParams(self, run_params):
         """Return a TrtConversionParams for test that enables explicit batch."""
@@ -166,8 +172,10 @@ class DynamicShapesTest(TrtModeTestBase):
     def ShouldRunTest(self, run_params):
         # Only run for TRT 6 and above.
         ver = get_linked_tensorrt_version()
-        return run_params.is_v2 and ver[0] >= 6 and (
-            not run_params.use_calibration), "test v2 >=TRT6 and non-calibration"
+        return (
+            run_params.is_v2 and ver[0] >= 6 and (not run_params.use_calibration),
+            "test v2 >=TRT6 and non-calibration",
+        )
 
 
 if __name__ == "__main__":
