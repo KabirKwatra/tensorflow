@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Image ops.
 
 The `tf.image` module contains various functions for image
@@ -156,18 +155,15 @@ from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import gen_image_ops
 from tensorflow.python.ops import linalg_ops
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_image_ops import *
 from tensorflow.python.ops.image_ops_impl import *
-
-# pylint: enable=wildcard-import
-
-# TODO(drpng): remove these once internal use has discontinued.
-# pylint: disable=unused-import
 from tensorflow.python.ops.image_ops_impl import _Check3DImage
 from tensorflow.python.ops.image_ops_impl import _ImageDimensions
+# go/tf-wildcard-import
+# pylint: disable=wildcard-import
+# pylint: enable=wildcard-import
+# TODO(drpng): remove these once internal use has discontinued.
+# pylint: disable=unused-import
 
 # pylint: enable=unused-import
 

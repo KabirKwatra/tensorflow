@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for TensorFlow 2.0 layer behavior."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,7 +24,6 @@ import traceback
 
 import numpy as np
 
-# TODO(scottzhu): Move to use all frozen_keras code when other deps are moved.
 from tensorflow.python import keras
 from tensorflow.python.eager import context
 from tensorflow.python.eager import def_function
@@ -50,6 +48,7 @@ from tensorflow.python.ops import variables
 from tensorflow.python.platform import gfile
 from tensorflow.python.platform import test
 from tensorflow.python.summary import summary_iterator
+# TODO(scottzhu): Move to use all frozen_keras code when other deps are moved.
 
 
 class DynamicLayer(legacy_base_layer.LegacyBaseLayer):
