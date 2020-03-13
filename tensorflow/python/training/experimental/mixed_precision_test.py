@@ -29,7 +29,9 @@ from tensorflow.python.eager import def_function
 from tensorflow.python.framework import config
 from tensorflow.python.framework import test_util
 from tensorflow.python.keras import testing_utils
-from tensorflow.python.keras.mixed_precision.experimental import loss_scale_optimizer as loss_scale_optimizer_v2
+from tensorflow.python.keras.mixed_precision.experimental import (
+    loss_scale_optimizer as loss_scale_optimizer_v2,
+)
 from tensorflow.python.keras.mixed_precision.experimental import policy
 from tensorflow.python.keras.optimizer_v2 import gradient_descent as gradient_descent_v2
 from tensorflow.python.ops import array_ops
@@ -38,29 +40,33 @@ from tensorflow.python.ops import variables
 from tensorflow.python.platform import test
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.training import gradient_descent as gradient_descent_v1
-from tensorflow.python.training.experimental import loss_scale_optimizer as loss_scale_optimizer_v1
+from tensorflow.python.training.experimental import (
+    loss_scale_optimizer as loss_scale_optimizer_v1,
+)
 from tensorflow.python.training.experimental import mixed_precision
 from tensorflow.python.training.experimental import mixed_precision_global_state
 
 
 if tf2.enabled():
     enable_mixed_precision_graph_rewrite = (
-        mixed_precision.enable_mixed_precision_graph_rewrite)
+        mixed_precision.enable_mixed_precision_graph_rewrite
+    )
 else:
     enable_mixed_precision_graph_rewrite = (
-        mixed_precision.enable_mixed_precision_graph_rewrite_v1)
+        mixed_precision.enable_mixed_precision_graph_rewrite_v1
+    )
 
 
 class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
 
-    IGNORE_PERF_VAR = 'TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_IGNORE_PERFORMANCE'
+    IGNORE_PERF_VAR = "TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_IGNORE_PERFORMANCE"
 
     def setUp(self):
         super(MixedPrecisionTest, self).setUp()
         # Enable the tests to be run on pre-Volta GPUs by telling the grappler pass
         # to ignore performance and always transform the graph.
         self._original_ignore_perf_value = os.getenv(self.IGNORE_PERF_VAR)
-        os.environ[self.IGNORE_PERF_VAR] = '1'
+        os.environ[self.IGNORE_PERF_VAR] = "1"
 
     def tearDown(self):
         # Set the IGNORE_PERF_VAR variable back to it's original value.
@@ -75,55 +81,70 @@ class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_wrap_optimizer(self):
         opt = gradient_descent_v1.GradientDescentOptimizer(1.0)
-        opt = enable_mixed_precision_graph_rewrite(opt, 123.)
+        opt = enable_mixed_precision_graph_rewrite(opt, 123.0)
         self.assertIsInstance(
-            opt, loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer)
-        self.assertEqual(self.evaluate(opt._loss_scale()), 123.)
+            opt, loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer
+        )
+        self.assertEqual(self.evaluate(opt._loss_scale()), 123.0)
 
         opt = gradient_descent_v2.SGD(1.0)
-        opt = enable_mixed_precision_graph_rewrite(opt, 123.)
-        self.assertIsInstance(
-            opt, loss_scale_optimizer_v2.LossScaleOptimizer)
-        self.assertEqual(self.evaluate(opt._loss_scale()), 123.)
+        opt = enable_mixed_precision_graph_rewrite(opt, 123.0)
+        self.assertIsInstance(opt, loss_scale_optimizer_v2.LossScaleOptimizer)
+        self.assertEqual(self.evaluate(opt._loss_scale()), 123.0)
 
     @test_util.run_in_graph_and_eager_modes
     def test_optimizer_errors(self):
         opt = 1
         if tf2.enabled():
-            expected_regex = ('"opt" must be an instance of a '
-                              'tf.keras.optimizers.Optimizer, but got')
+            expected_regex = (
+                '"opt" must be an instance of a '
+                "tf.keras.optimizers.Optimizer, but got"
+            )
         else:
-            expected_regex = ('"opt" must be an instance of a tf.train.Optimizer or '
-                              'a tf.keras.optimizers.Optimizer, but got')
+            expected_regex = (
+                '"opt" must be an instance of a tf.train.Optimizer or '
+                "a tf.keras.optimizers.Optimizer, but got"
+            )
         with self.assertRaisesRegexp(ValueError, expected_regex):
             enable_mixed_precision_graph_rewrite(opt)
-        self.assertFalse(config.get_optimizer_experimental_options()
-                         .get('auto_mixed_precision', False))
+        self.assertFalse(
+            config.get_optimizer_experimental_options().get(
+                "auto_mixed_precision", False
+            )
+        )
 
         opt = gradient_descent_v1.GradientDescentOptimizer(1.0)
-        opt = loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer(opt,
-                                                                       'dynamic')
-        with self.assertRaisesRegexp(ValueError,
-                                     '"opt" must not already be an instance of a '
-                                     'MixedPrecisionLossScaleOptimizer.'):
+        opt = loss_scale_optimizer_v1.MixedPrecisionLossScaleOptimizer(opt, "dynamic")
+        with self.assertRaisesRegexp(
+            ValueError,
+            '"opt" must not already be an instance of a '
+            "MixedPrecisionLossScaleOptimizer.",
+        ):
             enable_mixed_precision_graph_rewrite(opt)
-        self.assertFalse(config.get_optimizer_experimental_options()
-                         .get('auto_mixed_precision', False))
+        self.assertFalse(
+            config.get_optimizer_experimental_options().get(
+                "auto_mixed_precision", False
+            )
+        )
 
         opt = gradient_descent_v2.SGD(1.0)
-        opt = loss_scale_optimizer_v2.LossScaleOptimizer(opt, 'dynamic')
-        with self.assertRaisesRegexp(ValueError,
-                                     '"opt" must not already be an instance of a '
-                                     'LossScaleOptimizer.'):
+        opt = loss_scale_optimizer_v2.LossScaleOptimizer(opt, "dynamic")
+        with self.assertRaisesRegexp(
+            ValueError,
+            '"opt" must not already be an instance of a ' "LossScaleOptimizer.",
+        ):
             enable_mixed_precision_graph_rewrite(opt)
-        self.assertFalse(config.get_optimizer_experimental_options()
-                         .get('auto_mixed_precision', False))
+        self.assertFalse(
+            config.get_optimizer_experimental_options().get(
+                "auto_mixed_precision", False
+            )
+        )
 
     @test_util.run_gpu_only
     @test_util.run_in_graph_and_eager_modes
     def test_grappler_pass_enabled(self):
         opt = gradient_descent_v2.SGD(1.0)
-        enable_mixed_precision_graph_rewrite(opt, 123.)
+        enable_mixed_precision_graph_rewrite(opt, 123.0)
 
         var = variables.Variable([[1.0]])
 
@@ -134,7 +155,7 @@ class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
 
         if context.executing_eagerly():
             f = def_function.function(overflow_in_float16)
-            self.assertEqual(f().numpy(), float('Inf'))
+            self.assertEqual(f().numpy(), float("Inf"))
             # Outside a def_function.function, the grappler pass will not be applied.
             self.assertAlmostEqual(overflow_in_float16().numpy(), 2 ** 20)
 
@@ -145,14 +166,14 @@ class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
             with session.Session() as sess:
                 out = overflow_in_float16()
                 sess.run(var.initializer)
-                self.assertEqual(sess.run(out), float('Inf'))
+                self.assertEqual(sess.run(out), float("Inf"))
 
             # Test Session will enable the auto_mixed_precision grappler pass in a
             # ConfigProto passed by the user
             with session.Session(config=config_pb2.ConfigProto()) as sess:
                 out = overflow_in_float16()
                 sess.run(var.initializer)
-                self.assertEqual(sess.run(out), float('Inf'))
+                self.assertEqual(sess.run(out), float("Inf"))
 
             # Test disabling mixed precision.
             mixed_precision.disable_mixed_precision_graph_rewrite()
@@ -161,7 +182,7 @@ class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
                 sess.run(var.initializer)
                 self.assertAlmostEqual(sess.run(out), 2 ** 20)
 
-    @test.mock.patch.object(tf_logging, 'warn')
+    @test.mock.patch.object(tf_logging, "warn")
     def test_warn_if_session_already_exists(self, mock_warn):
         # Set this to False, so Sessions created in previous tests do not trigger
         # the warning.
@@ -170,11 +191,12 @@ class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
         with session.Session():
             enable_mixed_precision_graph_rewrite(gradient_descent_v2.SGD(1.0))
             mock_warn.assert_any_call(
-                'You already have existing Sessions that do not use mixed precision. '
-                'enable_mixed_precision_graph_rewrite() will not affect these '
-                'Sessions.')
+                "You already have existing Sessions that do not use mixed precision. "
+                "enable_mixed_precision_graph_rewrite() will not affect these "
+                "Sessions."
+            )
 
-    @test.mock.patch.object(tf_logging, 'warn')
+    @test.mock.patch.object(tf_logging, "warn")
     def test_do_not_warn_if_session_does_not_already_exist(self, mock_warn):
         # Set this to False, so Sessions created in previous tests do not trigger
         # the warning.
@@ -187,22 +209,25 @@ class MixedPrecisionTest(test.TestCase, parameterized.TestCase):
             # enable_mixed_precision_graph_rewrite.
             for call_arg in mock_warn.call_args_list:
                 msg = call_arg[0][0]
-                self.assertNotIn('You already have existing Sessions that do not use '
-                                 'mixed precision', msg)
+                self.assertNotIn(
+                    "You already have existing Sessions that do not use "
+                    "mixed precision",
+                    msg,
+                )
 
     @testing_utils.enable_v2_dtype_behavior
     def test_error_if_policy_is_set(self):
-        with policy.policy_scope('mixed_float16'):
+        with policy.policy_scope("mixed_float16"):
             with self.assertRaisesRegexp(
-                    ValueError, 'the global Keras dtype Policy has been set'):
-                enable_mixed_precision_graph_rewrite(
-                    gradient_descent_v2.SGD(1.0))
+                ValueError, "the global Keras dtype Policy has been set"
+            ):
+                enable_mixed_precision_graph_rewrite(gradient_descent_v2.SGD(1.0))
         # Test no error is thrown when the policy is currently the default.
         enable_mixed_precision_graph_rewrite(gradient_descent_v2.SGD(1.0))
         # Test no error is thrown when the policy is a non-mixed policy.
-        with policy.policy_scope('float64'):
+        with policy.policy_scope("float64"):
             enable_mixed_precision_graph_rewrite(gradient_descent_v2.SGD(1.0))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
