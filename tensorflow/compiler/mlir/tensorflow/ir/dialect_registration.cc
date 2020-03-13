@@ -23,13 +23,13 @@ namespace mlir {
 
 // Static initialization for TF dialect registration.
 static DialectRegistration<TFControlFlow::TFControlFlowDialect>
-    tf_control_flow_ops;
+tf_control_flow_ops;
 static DialectRegistration<TF::TensorFlowDialect> tf_ops;
 static DialectRegistration<tf_executor::TensorFlowExecutorDialect>
-    tf_executor_dialect;
+tf_executor_dialect;
 static DialectRegistration<tf_device::TensorFlowDeviceDialect>
-    tf_device_dialect;
+tf_device_dialect;
 static DialectRegistration<tf_saved_model::TensorFlowSavedModelDialect>
-    tf_saved_model_dialect;
+tf_saved_model_dialect;
 
 }  // namespace mlir
