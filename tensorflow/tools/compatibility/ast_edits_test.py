@@ -58,7 +58,8 @@ class ModuleDeprecationSpec(ast_edits.NoUpdateSpec):
 
     def __init__(self):
         ast_edits.NoUpdateSpec.__init__(self)
-        self.module_deprecations.update({"a.b": (ast_edits.ERROR, "a.b is evil.")})
+        self.module_deprecations.update(
+            {"a.b": (ast_edits.ERROR, "a.b is evil.")})
 
 
 class RenameKeywordSpec(ast_edits.NoUpdateSpec):
@@ -178,8 +179,7 @@ class TestAstEdits(test_util.TensorFlowTestCase):
         out_file = six.StringIO()
         upgrader = ast_edits.ASTCodeUpgrader(spec)
         count, report, errors = upgrader.process_opened_file(
-            "test.py", in_file, "test_out.py", out_file
-        )
+            "test.py", in_file, "test_out.py", out_file)
         return (count, report, errors), out_file.getvalue()
 
     def testModuleDeprecation(self):
@@ -283,7 +283,8 @@ class TestAstEdits(test_util.TensorFlowTestCase):
             "f(a=a, b=b, kw1=c, kw3=d)\n",
             "f(a=a, b=b, kw3=d, kw1=c)\n",
         ]
-        (_, report, _), new_text = self._upgrade(ReorderAndRenameKeywordSpec(), text)
+        (_, report, _), new_text = self._upgrade(ReorderAndRenameKeywordSpec(),
+                                                 text)
         self.assertIn(new_text, acceptable_outputs)
         self.assertNotIn("Manual check required", report)
 
@@ -294,7 +295,8 @@ class TestAstEdits(test_util.TensorFlowTestCase):
             "f(a=a, b=b, kw1=c, kw3=d)\n",
             "f(a=a, b=b, kw3=d, kw1=c)\n",
         ]
-        (_, report, _), new_text = self._upgrade(ReorderAndRenameKeywordSpec(), text)
+        (_, report, _), new_text = self._upgrade(ReorderAndRenameKeywordSpec(),
+                                                 text)
         self.assertIn(new_text, acceptable_outputs)
         self.assertNotIn("Manual check required", report)
 
@@ -353,7 +355,8 @@ class TestAstEdits(test_util.TensorFlowTestCase):
             "g(a, b, c=c, kw1=x)\n",
             "g(a=a, b=b, kw1=x, c=c)\n",
         ]
-        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(), text)
+        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(),
+                                    text)
         self.assertIn(new_text, acceptable_outputs)
 
         # Keywords are reordered, so we should reorder arguments too
@@ -363,7 +366,8 @@ class TestAstEdits(test_util.TensorFlowTestCase):
             "g(a, b, c, x)\n",
             "g(a=a, b=b, kw1=x, c=c)\n",
         ]
-        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(), text)
+        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(),
+                                    text)
         self.assertIn(new_text, acceptable_outputs)
 
         # If we used the alias, it should get renamed
@@ -395,7 +399,8 @@ class TestAstEdits(test_util.TensorFlowTestCase):
             "g2(a, b, c=c, d=d, kw1=x)\n",
             "g2(a=a, b=b, kw1=x, c=c, d=d)\n",
         ]
-        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(), text)
+        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(),
+                                    text)
         self.assertIn(new_text, acceptable_outputs)
 
         # Keywords are reordered, so we should reorder arguments too
@@ -405,7 +410,8 @@ class TestAstEdits(test_util.TensorFlowTestCase):
             "g2(a, b, c, d, x)\n",
             "g2(a=a, b=b, kw1=x, c=c, d=d)\n",
         ]
-        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(), text)
+        _, new_text = self._upgrade(RemoveDeprecatedAliasAndReorderRest(),
+                                    text)
         self.assertIn(new_text, acceptable_outputs)
 
         # If we used the alias, it should get renamed
@@ -472,7 +478,9 @@ class TestAstEdits(test_util.TensorFlowTestCase):
 
             def __init__(self):
                 ast_edits.NoUpdateSpec.__init__(self)
-                self.function_warnings = {"*.foo": (ast_edits.WARNING, "not good")}
+                self.function_warnings = {
+                    "*.foo": (ast_edits.WARNING, "not good")
+                }
 
         texts = [
             "object.foo()",
@@ -486,7 +494,9 @@ class TestAstEdits(test_util.TensorFlowTestCase):
 
         # Note that foo() won't result in a warning, because in this case foo is
         # not an attribute, but a name.
-        false_alarms = ["foo", "foo()", "foo.bar()", "obj.run_foo()", "obj.foo"]
+        false_alarms = [
+            "foo", "foo()", "foo.bar()", "obj.run_foo()", "obj.foo"
+        ]
         for text in false_alarms:
             (_, report, _), _ = self._upgrade(FooWarningSpec(), text)
             self.assertNotIn("not good", report)
