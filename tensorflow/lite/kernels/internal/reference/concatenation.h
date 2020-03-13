@@ -30,42 +30,42 @@ inline void Concatenation(const ConcatenationParams& params,
                           const Scalar* const* input_data,
                           const RuntimeShape& output_shape,
                           Scalar* output_data) {
-  int axis = params.axis;
-  int inputs_count = params.inputs_count;
-  const int concat_dimensions = output_shape.DimensionsCount();
-  TFLITE_DCHECK_LT(axis, concat_dimensions);
+    int axis = params.axis;
+    int inputs_count = params.inputs_count;
+    const int concat_dimensions = output_shape.DimensionsCount();
+    TFLITE_DCHECK_LT(axis, concat_dimensions);
 
-  int64_t concat_size = 0;
-  for (int i = 0; i < inputs_count; i++) {
-    TFLITE_DCHECK_EQ(input_shapes[i]->DimensionsCount(), concat_dimensions);
-    for (int j = 0; j < concat_dimensions; j++) {
-      if (j != axis) {
-        MatchingDim(*input_shapes[i], j, output_shape, j);
-      }
+    int64_t concat_size = 0;
+    for (int i = 0; i < inputs_count; i++) {
+        TFLITE_DCHECK_EQ(input_shapes[i]->DimensionsCount(), concat_dimensions);
+        for (int j = 0; j < concat_dimensions; j++) {
+            if (j != axis) {
+                MatchingDim(*input_shapes[i], j, output_shape, j);
+            }
+        }
+        concat_size += input_shapes[i]->Dims(axis);
     }
-    concat_size += input_shapes[i]->Dims(axis);
-  }
-  TFLITE_DCHECK_EQ(concat_size, output_shape.Dims(axis));
-  int64_t outer_size = 1;
-  for (int i = 0; i < axis; ++i) {
-    outer_size *= output_shape.Dims(i);
-  }
-  // For all input arrays,
-  // FlatSize() = outer_size * Dims(axis) * base_inner_size;
-  int64_t base_inner_size = 1;
-  for (int i = axis + 1; i < concat_dimensions; ++i) {
-    base_inner_size *= output_shape.Dims(i);
-  }
+    TFLITE_DCHECK_EQ(concat_size, output_shape.Dims(axis));
+    int64_t outer_size = 1;
+    for (int i = 0; i < axis; ++i) {
+        outer_size *= output_shape.Dims(i);
+    }
+    // For all input arrays,
+    // FlatSize() = outer_size * Dims(axis) * base_inner_size;
+    int64_t base_inner_size = 1;
+    for (int i = axis + 1; i < concat_dimensions; ++i) {
+        base_inner_size *= output_shape.Dims(i);
+    }
 
-  Scalar* output_ptr = output_data;
-  for (int k = 0; k < outer_size; k++) {
-    for (int i = 0; i < inputs_count; ++i) {
-      const int copy_size = input_shapes[i]->Dims(axis) * base_inner_size;
-      const Scalar* input_ptr = input_data[i] + k * copy_size;
-      memcpy(output_ptr, input_ptr, copy_size * sizeof(Scalar));
-      output_ptr += copy_size;
+    Scalar* output_ptr = output_data;
+    for (int k = 0; k < outer_size; k++) {
+        for (int i = 0; i < inputs_count; ++i) {
+            const int copy_size = input_shapes[i]->Dims(axis) * base_inner_size;
+            const Scalar* input_ptr = input_data[i] + k * copy_size;
+            memcpy(output_ptr, input_ptr, copy_size * sizeof(Scalar));
+            output_ptr += copy_size;
+        }
     }
-  }
 }
 
 // TODO(prabhumk): This is the same as the optimized implementation.
@@ -77,61 +77,61 @@ inline void ConcatenationWithScaling(const ConcatenationParams& params,
                                      const uint8* const* input_data,
                                      const RuntimeShape& output_shape,
                                      uint8* output_data) {
-  int axis = params.axis;
-  const int32* input_zeropoint = params.input_zeropoint;
-  const float* input_scale = params.input_scale;
-  int inputs_count = params.inputs_count;
-  const int32 output_zeropoint = params.output_zeropoint;
-  const float output_scale = params.output_scale;
+    int axis = params.axis;
+    const int32* input_zeropoint = params.input_zeropoint;
+    const float* input_scale = params.input_scale;
+    int inputs_count = params.inputs_count;
+    const int32 output_zeropoint = params.output_zeropoint;
+    const float output_scale = params.output_scale;
 
-  const int concat_dimensions = output_shape.DimensionsCount();
-  TFLITE_DCHECK_LT(axis, concat_dimensions);
+    const int concat_dimensions = output_shape.DimensionsCount();
+    TFLITE_DCHECK_LT(axis, concat_dimensions);
 
-  int64_t concat_size = 0;
-  for (int i = 0; i < inputs_count; i++) {
-    TFLITE_DCHECK_EQ(input_shapes[i]->DimensionsCount(), concat_dimensions);
-    for (int j = 0; j < concat_dimensions; j++) {
-      if (j != axis) {
-        MatchingDim(*input_shapes[i], j, output_shape, j);
-      }
-    }
-    concat_size += input_shapes[i]->Dims(axis);
-  }
-  TFLITE_DCHECK_EQ(concat_size, output_shape.Dims(axis));
-  int64_t outer_size = 1;
-  for (int i = 0; i < axis; ++i) {
-    outer_size *= output_shape.Dims(i);
-  }
-  // For all input arrays,
-  // FlatSize() = outer_size * Dims(axis) * base_inner_size;
-  int64_t base_inner_size = 1;
-  for (int i = axis + 1; i < concat_dimensions; ++i) {
-    base_inner_size *= output_shape.Dims(i);
-  }
-
-  const float inverse_output_scale = 1.f / output_scale;
-  uint8* output_ptr = output_data;
-  for (int k = 0; k < outer_size; k++) {
-    for (int i = 0; i < inputs_count; ++i) {
-      const int copy_size = input_shapes[i]->Dims(axis) * base_inner_size;
-      const uint8* input_ptr = input_data[i] + k * copy_size;
-      if (input_zeropoint[i] == output_zeropoint &&
-          input_scale[i] == output_scale) {
-        memcpy(output_ptr, input_ptr, copy_size);
-      } else {
-        const float scale = input_scale[i] * inverse_output_scale;
-        const float bias = -input_zeropoint[i] * scale;
-        for (int j = 0; j < copy_size; ++j) {
-          const int32_t value = static_cast<int32_t>(tflite::TfLiteRound(
-                                    input_ptr[j] * scale + bias)) +
-                                output_zeropoint;
-          output_ptr[j] = static_cast<uint8_t>(
-              std::max<int32_t>(std::min<int32_t>(255, value), 0));
+    int64_t concat_size = 0;
+    for (int i = 0; i < inputs_count; i++) {
+        TFLITE_DCHECK_EQ(input_shapes[i]->DimensionsCount(), concat_dimensions);
+        for (int j = 0; j < concat_dimensions; j++) {
+            if (j != axis) {
+                MatchingDim(*input_shapes[i], j, output_shape, j);
+            }
         }
-      }
-      output_ptr += copy_size;
+        concat_size += input_shapes[i]->Dims(axis);
     }
-  }
+    TFLITE_DCHECK_EQ(concat_size, output_shape.Dims(axis));
+    int64_t outer_size = 1;
+    for (int i = 0; i < axis; ++i) {
+        outer_size *= output_shape.Dims(i);
+    }
+    // For all input arrays,
+    // FlatSize() = outer_size * Dims(axis) * base_inner_size;
+    int64_t base_inner_size = 1;
+    for (int i = axis + 1; i < concat_dimensions; ++i) {
+        base_inner_size *= output_shape.Dims(i);
+    }
+
+    const float inverse_output_scale = 1.f / output_scale;
+    uint8* output_ptr = output_data;
+    for (int k = 0; k < outer_size; k++) {
+        for (int i = 0; i < inputs_count; ++i) {
+            const int copy_size = input_shapes[i]->Dims(axis) * base_inner_size;
+            const uint8* input_ptr = input_data[i] + k * copy_size;
+            if (input_zeropoint[i] == output_zeropoint &&
+                    input_scale[i] == output_scale) {
+                memcpy(output_ptr, input_ptr, copy_size);
+            } else {
+                const float scale = input_scale[i] * inverse_output_scale;
+                const float bias = -input_zeropoint[i] * scale;
+                for (int j = 0; j < copy_size; ++j) {
+                    const int32_t value = static_cast<int32_t>(tflite::TfLiteRound(
+                                              input_ptr[j] * scale + bias)) +
+                                          output_zeropoint;
+                    output_ptr[j] = static_cast<uint8_t>(
+                                        std::max<int32_t>(std::min<int32_t>(255, value), 0));
+                }
+            }
+            output_ptr += copy_size;
+        }
+    }
 }
 
 }  // namespace reference_ops
