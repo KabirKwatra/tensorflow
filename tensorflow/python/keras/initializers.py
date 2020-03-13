@@ -23,10 +23,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.util.tf_export import keras_export
-from tensorflow.python.ops.init_ops import TruncatedNormal as TFTruncatedNormalV1
-from tensorflow.python.ops.init_ops import RandomUniform as TFRandomUniformV1
-from tensorflow.python.ops.init_ops import RandomNormal as TFRandomNormalV1
 import six
 
 from tensorflow.python import tf2
@@ -34,9 +30,9 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
 from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 from tensorflow.python.ops import init_ops_v2
-
-# These imports are brought in so that keras.initializers.deserialize
-# has them available in module_objects.
+from tensorflow.python.ops.init_ops import RandomNormal as TFRandomNormalV1
+from tensorflow.python.ops.init_ops import RandomUniform as TFRandomUniformV1
+from tensorflow.python.ops.init_ops import TruncatedNormal as TFTruncatedNormalV1
 from tensorflow.python.ops.init_ops_v2 import Constant as ConstantV2
 from tensorflow.python.ops.init_ops_v2 import GlorotNormal as GlorotNormalV2
 from tensorflow.python.ops.init_ops_v2 import GlorotUniform as GlorotUniformV2
@@ -53,6 +49,9 @@ from tensorflow.python.ops.init_ops_v2 import RandomUniform as RandomUniformV2
 from tensorflow.python.ops.init_ops_v2 import TruncatedNormal as TruncatedNormalV2
 from tensorflow.python.ops.init_ops_v2 import VarianceScaling as VarianceScalingV2
 from tensorflow.python.ops.init_ops_v2 import Zeros as ZerosV2
+from tensorflow.python.util.tf_export import keras_export
+# These imports are brought in so that keras.initializers.deserialize
+# has them available in module_objects.
 
 if tf2.enabled():
     Constant = ConstantV2
