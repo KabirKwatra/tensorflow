@@ -70,8 +70,9 @@ def make_batch_to_space_nd_tests(options):
     def build_graph(parameters):
         """Build a batch_to_space graph given `parameters`."""
         input_tensor = tf.compat.v1.placeholder(
-            dtype=parameters["dtype"], name="input", shape=parameters["input_shape"]
-        )
+            dtype=parameters["dtype"],
+            name="input",
+            shape=parameters["input_shape"])
         input_tensors = [input_tensor]
 
         # Get block_shape either as a const or as a placeholder (tensor).
@@ -79,9 +80,9 @@ def make_batch_to_space_nd_tests(options):
             block_shape = parameters["block_shape"]
         else:
             shape = [len(parameters["block_shape"])]
-            block_shape = tf.compat.v1.placeholder(
-                dtype=tf.int32, name="shape", shape=shape
-            )
+            block_shape = tf.compat.v1.placeholder(dtype=tf.int32,
+                                                   name="shape",
+                                                   shape=shape)
             input_tensors.append(block_shape)
 
         # Get crops either as a const or as a placeholder (tensor).
@@ -89,14 +90,18 @@ def make_batch_to_space_nd_tests(options):
             crops = parameters["crops"]
         else:
             shape = [len(parameters["crops"]), 2]
-            crops = tf.compat.v1.placeholder(dtype=tf.int32, name="crops", shape=shape)
+            crops = tf.compat.v1.placeholder(dtype=tf.int32,
+                                             name="crops",
+                                             shape=shape)
             input_tensors.append(crops)
 
         out = tf.batch_to_space_nd(input_tensor, block_shape, crops)
         return input_tensors, [out]
 
     def build_inputs(parameters, sess, inputs, outputs):
-        values = [create_tensor_data(parameters["dtype"], parameters["input_shape"])]
+        values = [
+            create_tensor_data(parameters["dtype"], parameters["input_shape"])
+        ]
         if not parameters["constant_block_shape"]:
             values.append(np.array(parameters["block_shape"]))
         if not parameters["constant_crops"]:
