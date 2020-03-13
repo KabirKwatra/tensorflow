@@ -28,25 +28,25 @@ namespace tensorflow {
 // TensorBuffer.
 // IMPORTANT: If you do not call Unref(), you will likely leak tensor memory.
 class TensorReference {
- public:
-  // Take the reference of the root buffer so the size will be more accurate
-  explicit TensorReference(const Tensor& tensor)
-      : buf_(tensor.buf_ ? tensor.buf_->root_buffer() : nullptr) {
-    if (buf_) buf_->Ref();
-  }
+public:
+    // Take the reference of the root buffer so the size will be more accurate
+    explicit TensorReference(const Tensor& tensor)
+        : buf_(tensor.buf_ ? tensor.buf_->root_buffer() : nullptr) {
+        if (buf_) buf_->Ref();
+    }
 
-  ~TensorReference() {}
+    ~TensorReference() {}
 
-  void Unref() const {
-    if (buf_) buf_->Unref();
-  }
+    void Unref() const {
+        if (buf_) buf_->Unref();
+    }
 
-  void FillDescription(AllocationDescription* description) const {
-    if (buf_) buf_->FillAllocationDescription(description);
-  }
+    void FillDescription(AllocationDescription* description) const {
+        if (buf_) buf_->FillAllocationDescription(description);
+    }
 
- private:
-  TensorBuffer* buf_;
+private:
+    TensorBuffer* buf_;
 };
 
 }  // namespace tensorflow

@@ -50,85 +50,85 @@ using generator::Mode;
 
 template <typename Device, typename T>
 class ImageProjectiveTransformV2 : public OpKernel {
- private:
-  Interpolation interpolation_;
-  Mode fill_mode_;
+private:
+    Interpolation interpolation_;
+    Mode fill_mode_;
 
- public:
-  explicit ImageProjectiveTransformV2(OpKernelConstruction* ctx)
-      : OpKernel(ctx) {
-    string interpolation_str;
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("interpolation", &interpolation_str));
-    if (interpolation_str == "NEAREST") {
-      interpolation_ = Interpolation::NEAREST;
-    } else if (interpolation_str == "BILINEAR") {
-      interpolation_ = Interpolation::BILINEAR;
-    } else {
-      LOG(ERROR) << "Invalid interpolation " << interpolation_str
-                 << ". Supported types: NEAREST, BILINEAR";
-    }
-    string mode_str;
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("fill_mode", &mode_str));
-    if (mode_str == "REFLECT") {
-      fill_mode_ = Mode::REFLECT;
-    } else if (mode_str == "WRAP") {
-      fill_mode_ = Mode::WRAP;
-    } else if (mode_str == "CONSTANT") {
-      fill_mode_ = Mode::CONSTANT;
-    } else {
-      LOG(ERROR) << "Invalid mode " << mode_str
-                 << ". Supported types: REFLECT, WRAP, CONSTANT";
-    }
-  }
-
-  void Compute(OpKernelContext* ctx) override {
-    const Tensor& images_t = ctx->input(0);
-    const Tensor& transform_t = ctx->input(1);
-    OP_REQUIRES(ctx, images_t.shape().dims() == 4,
-                errors::InvalidArgument("Input images must have rank 4"));
-    OP_REQUIRES(ctx,
-                (TensorShapeUtils::IsMatrix(transform_t.shape()) &&
-                 (transform_t.dim_size(0) == images_t.dim_size(0) ||
-                  transform_t.dim_size(0) == 1) &&
-                 transform_t.dim_size(1) == 8),
-                errors::InvalidArgument(
-                    "Input transform should be num_images x 8 or 1 x 8"));
-
-    int32 out_height, out_width;
-    // Kernel is shared by legacy "ImageProjectiveTransform" op with 2 args.
-    if (ctx->num_inputs() >= 3) {
-      const Tensor& shape_t = ctx->input(2);
-      OP_REQUIRES(ctx, shape_t.dims() == 1,
-                  errors::InvalidArgument("output shape must be 1-dimensional",
-                                          shape_t.shape().DebugString()));
-      OP_REQUIRES(ctx, shape_t.NumElements() == 2,
-                  errors::InvalidArgument("output shape must have two elements",
-                                          shape_t.shape().DebugString()));
-      auto shape_vec = shape_t.vec<int32>();
-      out_height = shape_vec(0);
-      out_width = shape_vec(1);
-      OP_REQUIRES(
-          ctx, out_height > 0 && out_width > 0,
-          errors::InvalidArgument("output dimensions must be positive"));
-    } else {
-      // Shape is N (batch size), H (height), W (width), C (channels).
-      out_height = images_t.shape().dim_size(1);
-      out_width = images_t.shape().dim_size(2);
+public:
+    explicit ImageProjectiveTransformV2(OpKernelConstruction* ctx)
+        : OpKernel(ctx) {
+        string interpolation_str;
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("interpolation", &interpolation_str));
+        if (interpolation_str == "NEAREST") {
+            interpolation_ = Interpolation::NEAREST;
+        } else if (interpolation_str == "BILINEAR") {
+            interpolation_ = Interpolation::BILINEAR;
+        } else {
+            LOG(ERROR) << "Invalid interpolation " << interpolation_str
+                       << ". Supported types: NEAREST, BILINEAR";
+        }
+        string mode_str;
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("fill_mode", &mode_str));
+        if (mode_str == "REFLECT") {
+            fill_mode_ = Mode::REFLECT;
+        } else if (mode_str == "WRAP") {
+            fill_mode_ = Mode::WRAP;
+        } else if (mode_str == "CONSTANT") {
+            fill_mode_ = Mode::CONSTANT;
+        } else {
+            LOG(ERROR) << "Invalid mode " << mode_str
+                       << ". Supported types: REFLECT, WRAP, CONSTANT";
+        }
     }
 
-    Tensor* output_t;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(
-                            0,
-                            TensorShape({images_t.dim_size(0), out_height,
-                                         out_width, images_t.dim_size(3)}),
-                            &output_t));
-    auto output = output_t->tensor<T, 4>();
-    auto images = images_t.tensor<T, 4>();
-    auto transform = transform_t.matrix<float>();
+    void Compute(OpKernelContext* ctx) override {
+        const Tensor& images_t = ctx->input(0);
+        const Tensor& transform_t = ctx->input(1);
+        OP_REQUIRES(ctx, images_t.shape().dims() == 4,
+                    errors::InvalidArgument("Input images must have rank 4"));
+        OP_REQUIRES(ctx,
+                    (TensorShapeUtils::IsMatrix(transform_t.shape()) &&
+                     (transform_t.dim_size(0) == images_t.dim_size(0) ||
+                      transform_t.dim_size(0) == 1) &&
+                     transform_t.dim_size(1) == 8),
+                    errors::InvalidArgument(
+                        "Input transform should be num_images x 8 or 1 x 8"));
 
-    (FillProjectiveTransform<Device, T>(interpolation_))(
-        ctx->eigen_device<Device>(), &output, images, transform, fill_mode_);
-  }
+        int32 out_height, out_width;
+        // Kernel is shared by legacy "ImageProjectiveTransform" op with 2 args.
+        if (ctx->num_inputs() >= 3) {
+            const Tensor& shape_t = ctx->input(2);
+            OP_REQUIRES(ctx, shape_t.dims() == 1,
+                        errors::InvalidArgument("output shape must be 1-dimensional",
+                                                shape_t.shape().DebugString()));
+            OP_REQUIRES(ctx, shape_t.NumElements() == 2,
+                        errors::InvalidArgument("output shape must have two elements",
+                                                shape_t.shape().DebugString()));
+            auto shape_vec = shape_t.vec<int32>();
+            out_height = shape_vec(0);
+            out_width = shape_vec(1);
+            OP_REQUIRES(
+                ctx, out_height > 0 && out_width > 0,
+                errors::InvalidArgument("output dimensions must be positive"));
+        } else {
+            // Shape is N (batch size), H (height), W (width), C (channels).
+            out_height = images_t.shape().dim_size(1);
+            out_width = images_t.shape().dim_size(2);
+        }
+
+        Tensor* output_t;
+        OP_REQUIRES_OK(ctx, ctx->allocate_output(
+                           0,
+                           TensorShape({images_t.dim_size(0), out_height,
+                                        out_width, images_t.dim_size(3)}),
+                           &output_t));
+        auto output = output_t->tensor<T, 4>();
+        auto images = images_t.tensor<T, 4>();
+        auto transform = transform_t.matrix<float>();
+
+        (FillProjectiveTransform<Device, T>(interpolation_))(
+            ctx->eigen_device<Device>(), &output, images, transform, fill_mode_);
+    }
 };
 
 #define REGISTER(TYPE)                                        \
