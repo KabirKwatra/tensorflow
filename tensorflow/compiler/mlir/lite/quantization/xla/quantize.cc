@@ -23,7 +23,7 @@ namespace xla_hlo {
 // Quantizes the model in the computation.
 tensorflow::Status XlaQuantize(const tensorflow::tf2xla::Config& config,
                                xla::XlaComputation* computation) {
-  return tensorflow::Status::OK();
+    return tensorflow::Status::OK();
 }
 
 }  // namespace xla_hlo
