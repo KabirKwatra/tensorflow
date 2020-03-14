@@ -26,7 +26,7 @@ from tensorflow.python.util import deprecation
 from tensorflow.python.util.tf_export import tf_export
 
 
-@tf_export(v1=['layers.Conv1D'])
+@tf_export(v1=["layers.Conv1D"])
 class Conv1D(keras_layers.Conv1D, base.Layer):
     """1D convolution layer (e.g. temporal convolution).
 
@@ -77,24 +77,27 @@ class Conv1D(keras_layers.Conv1D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, filters,
-                 kernel_size,
-                 strides=1,
-                 padding='valid',
-                 data_format='channels_last',
-                 dilation_rate=1,
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=1,
+        padding="valid",
+        data_format="channels_last",
+        dilation_rate=1,
+        activation=None,
+        use_bias=True,
+        kernel_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(Conv1D, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -112,32 +115,34 @@ class Conv1D(keras_layers.Conv1D, base.Layer):
             kernel_constraint=kernel_constraint,
             bias_constraint=bias_constraint,
             trainable=trainable,
-            name=name, **kwargs)
+            name=name,
+            **kwargs
+        )
 
 
-@deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.Conv1D` instead.')
-@tf_export(v1=['layers.conv1d'])
-def conv1d(inputs,
-           filters,
-           kernel_size,
-           strides=1,
-           padding='valid',
-           data_format='channels_last',
-           dilation_rate=1,
-           activation=None,
-           use_bias=True,
-           kernel_initializer=None,
-           bias_initializer=init_ops.zeros_initializer(),
-           kernel_regularizer=None,
-           bias_regularizer=None,
-           activity_regularizer=None,
-           kernel_constraint=None,
-           bias_constraint=None,
-           trainable=True,
-           name=None,
-           reuse=None):
+@deprecation.deprecated(date=None, instructions="Use `tf.keras.layers.Conv1D` instead.")
+@tf_export(v1=["layers.conv1d"])
+def conv1d(
+    inputs,
+    filters,
+    kernel_size,
+    strides=1,
+    padding="valid",
+    data_format="channels_last",
+    dilation_rate=1,
+    activation=None,
+    use_bias=True,
+    kernel_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for 1D convolution layer (e.g. temporal convolution).
 
     This layer creates a convolution kernel that is convolved
@@ -214,11 +219,12 @@ def conv1d(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
-@tf_export(v1=['layers.Conv2D'])
+@tf_export(v1=["layers.Conv2D"])
 class Conv2D(keras_layers.Conv2D, base.Layer):
     """2D convolution layer (e.g. spatial convolution over images).
 
@@ -276,24 +282,27 @@ class Conv2D(keras_layers.Conv2D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, filters,
-                 kernel_size,
-                 strides=(1, 1),
-                 padding='valid',
-                 data_format='channels_last',
-                 dilation_rate=(1, 1),
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=(1, 1),
+        padding="valid",
+        data_format="channels_last",
+        dilation_rate=(1, 1),
+        activation=None,
+        use_bias=True,
+        kernel_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(Conv2D, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -311,32 +320,34 @@ class Conv2D(keras_layers.Conv2D, base.Layer):
             kernel_constraint=kernel_constraint,
             bias_constraint=bias_constraint,
             trainable=trainable,
-            name=name, **kwargs)
+            name=name,
+            **kwargs
+        )
 
 
-@deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.Conv2D` instead.')
-@tf_export(v1=['layers.conv2d'])
-def conv2d(inputs,
-           filters,
-           kernel_size,
-           strides=(1, 1),
-           padding='valid',
-           data_format='channels_last',
-           dilation_rate=(1, 1),
-           activation=None,
-           use_bias=True,
-           kernel_initializer=None,
-           bias_initializer=init_ops.zeros_initializer(),
-           kernel_regularizer=None,
-           bias_regularizer=None,
-           activity_regularizer=None,
-           kernel_constraint=None,
-           bias_constraint=None,
-           trainable=True,
-           name=None,
-           reuse=None):
+@deprecation.deprecated(date=None, instructions="Use `tf.keras.layers.Conv2D` instead.")
+@tf_export(v1=["layers.conv2d"])
+def conv2d(
+    inputs,
+    filters,
+    kernel_size,
+    strides=(1, 1),
+    padding="valid",
+    data_format="channels_last",
+    dilation_rate=(1, 1),
+    activation=None,
+    use_bias=True,
+    kernel_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for the 2D convolution layer.
 
     This layer creates a convolution kernel that is convolved
@@ -420,11 +431,12 @@ def conv2d(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
-@tf_export(v1=['layers.Conv3D'])
+@tf_export(v1=["layers.Conv3D"])
 class Conv3D(keras_layers.Conv3D, base.Layer):
     """3D convolution layer (e.g. spatial convolution over volumes).
 
@@ -483,24 +495,27 @@ class Conv3D(keras_layers.Conv3D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, filters,
-                 kernel_size,
-                 strides=(1, 1, 1),
-                 padding='valid',
-                 data_format='channels_last',
-                 dilation_rate=(1, 1, 1),
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=(1, 1, 1),
+        padding="valid",
+        data_format="channels_last",
+        dilation_rate=(1, 1, 1),
+        activation=None,
+        use_bias=True,
+        kernel_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(Conv3D, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -518,32 +533,34 @@ class Conv3D(keras_layers.Conv3D, base.Layer):
             kernel_constraint=kernel_constraint,
             bias_constraint=bias_constraint,
             trainable=trainable,
-            name=name, **kwargs)
+            name=name,
+            **kwargs
+        )
 
 
-@deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.Conv3D` instead.')
-@tf_export(v1=['layers.conv3d'])
-def conv3d(inputs,
-           filters,
-           kernel_size,
-           strides=(1, 1, 1),
-           padding='valid',
-           data_format='channels_last',
-           dilation_rate=(1, 1, 1),
-           activation=None,
-           use_bias=True,
-           kernel_initializer=None,
-           bias_initializer=init_ops.zeros_initializer(),
-           kernel_regularizer=None,
-           bias_regularizer=None,
-           activity_regularizer=None,
-           kernel_constraint=None,
-           bias_constraint=None,
-           trainable=True,
-           name=None,
-           reuse=None):
+@deprecation.deprecated(date=None, instructions="Use `tf.keras.layers.Conv3D` instead.")
+@tf_export(v1=["layers.conv3d"])
+def conv3d(
+    inputs,
+    filters,
+    kernel_size,
+    strides=(1, 1, 1),
+    padding="valid",
+    data_format="channels_last",
+    dilation_rate=(1, 1, 1),
+    activation=None,
+    use_bias=True,
+    kernel_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for the 3D convolution layer.
 
     This layer creates a convolution kernel that is convolved
@@ -628,11 +645,12 @@ def conv3d(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
-@tf_export(v1=['layers.SeparableConv1D'])
+@tf_export(v1=["layers.SeparableConv1D"])
 class SeparableConv1D(keras_layers.SeparableConv1D, base.Layer):
     """Depthwise separable 1D convolution.
 
@@ -692,28 +710,31 @@ class SeparableConv1D(keras_layers.SeparableConv1D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, filters,
-                 kernel_size,
-                 strides=1,
-                 padding='valid',
-                 data_format='channels_last',
-                 dilation_rate=1,
-                 depth_multiplier=1,
-                 activation=None,
-                 use_bias=True,
-                 depthwise_initializer=None,
-                 pointwise_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 depthwise_regularizer=None,
-                 pointwise_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 depthwise_constraint=None,
-                 pointwise_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=1,
+        padding="valid",
+        data_format="channels_last",
+        dilation_rate=1,
+        depth_multiplier=1,
+        activation=None,
+        use_bias=True,
+        depthwise_initializer=None,
+        pointwise_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        depthwise_regularizer=None,
+        pointwise_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        depthwise_constraint=None,
+        pointwise_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(SeparableConv1D, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -736,10 +757,11 @@ class SeparableConv1D(keras_layers.SeparableConv1D, base.Layer):
             bias_constraint=bias_constraint,
             trainable=trainable,
             name=name,
-            **kwargs)
+            **kwargs
+        )
 
 
-@tf_export(v1=['layers.SeparableConv2D'])
+@tf_export(v1=["layers.SeparableConv2D"])
 class SeparableConv2D(keras_layers.SeparableConv2D, base.Layer):
     """Depthwise separable 2D convolution.
 
@@ -804,28 +826,31 @@ class SeparableConv2D(keras_layers.SeparableConv2D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, filters,
-                 kernel_size,
-                 strides=(1, 1),
-                 padding='valid',
-                 data_format='channels_last',
-                 dilation_rate=(1, 1),
-                 depth_multiplier=1,
-                 activation=None,
-                 use_bias=True,
-                 depthwise_initializer=None,
-                 pointwise_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 depthwise_regularizer=None,
-                 pointwise_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 depthwise_constraint=None,
-                 pointwise_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=(1, 1),
+        padding="valid",
+        data_format="channels_last",
+        dilation_rate=(1, 1),
+        depth_multiplier=1,
+        activation=None,
+        use_bias=True,
+        depthwise_initializer=None,
+        pointwise_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        depthwise_regularizer=None,
+        pointwise_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        depthwise_constraint=None,
+        pointwise_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(SeparableConv2D, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -848,36 +873,39 @@ class SeparableConv2D(keras_layers.SeparableConv2D, base.Layer):
             bias_constraint=bias_constraint,
             trainable=trainable,
             name=name,
-            **kwargs)
+            **kwargs
+        )
 
 
 @deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.SeparableConv1D` instead.')
-@tf_export(v1=['layers.separable_conv1d'])
-def separable_conv1d(inputs,
-                     filters,
-                     kernel_size,
-                     strides=1,
-                     padding='valid',
-                     data_format='channels_last',
-                     dilation_rate=1,
-                     depth_multiplier=1,
-                     activation=None,
-                     use_bias=True,
-                     depthwise_initializer=None,
-                     pointwise_initializer=None,
-                     bias_initializer=init_ops.zeros_initializer(),
-                     depthwise_regularizer=None,
-                     pointwise_regularizer=None,
-                     bias_regularizer=None,
-                     activity_regularizer=None,
-                     depthwise_constraint=None,
-                     pointwise_constraint=None,
-                     bias_constraint=None,
-                     trainable=True,
-                     name=None,
-                     reuse=None):
+    date=None, instructions="Use `tf.keras.layers.SeparableConv1D` instead."
+)
+@tf_export(v1=["layers.separable_conv1d"])
+def separable_conv1d(
+    inputs,
+    filters,
+    kernel_size,
+    strides=1,
+    padding="valid",
+    data_format="channels_last",
+    dilation_rate=1,
+    depth_multiplier=1,
+    activation=None,
+    use_bias=True,
+    depthwise_initializer=None,
+    pointwise_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    depthwise_regularizer=None,
+    pointwise_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    depthwise_constraint=None,
+    pointwise_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for the depthwise separable 1D convolution layer.
 
     This layer performs a depthwise convolution that acts separately on
@@ -967,37 +995,40 @@ def separable_conv1d(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
 @deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.SeparableConv2D` instead.')
-@tf_export(v1=['layers.separable_conv2d'])
-def separable_conv2d(inputs,
-                     filters,
-                     kernel_size,
-                     strides=(1, 1),
-                     padding='valid',
-                     data_format='channels_last',
-                     dilation_rate=(1, 1),
-                     depth_multiplier=1,
-                     activation=None,
-                     use_bias=True,
-                     depthwise_initializer=None,
-                     pointwise_initializer=None,
-                     bias_initializer=init_ops.zeros_initializer(),
-                     depthwise_regularizer=None,
-                     pointwise_regularizer=None,
-                     bias_regularizer=None,
-                     activity_regularizer=None,
-                     depthwise_constraint=None,
-                     pointwise_constraint=None,
-                     bias_constraint=None,
-                     trainable=True,
-                     name=None,
-                     reuse=None):
+    date=None, instructions="Use `tf.keras.layers.SeparableConv2D` instead."
+)
+@tf_export(v1=["layers.separable_conv2d"])
+def separable_conv2d(
+    inputs,
+    filters,
+    kernel_size,
+    strides=(1, 1),
+    padding="valid",
+    data_format="channels_last",
+    dilation_rate=(1, 1),
+    depth_multiplier=1,
+    activation=None,
+    use_bias=True,
+    depthwise_initializer=None,
+    pointwise_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    depthwise_regularizer=None,
+    pointwise_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    depthwise_constraint=None,
+    pointwise_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for the depthwise separable 2D convolution layer.
 
     This layer performs a depthwise convolution that acts separately on
@@ -1092,11 +1123,12 @@ def separable_conv2d(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
-@tf_export(v1=['layers.Conv2DTranspose'])
+@tf_export(v1=["layers.Conv2DTranspose"])
 class Conv2DTranspose(keras_layers.Conv2DTranspose, base.Layer):
     """Transposed 2D convolution layer (sometimes called 2D Deconvolution).
 
@@ -1144,23 +1176,26 @@ class Conv2DTranspose(keras_layers.Conv2DTranspose, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self, filters,
-                 kernel_size,
-                 strides=(1, 1),
-                 padding='valid',
-                 data_format='channels_last',
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=(1, 1),
+        padding="valid",
+        data_format="channels_last",
+        activation=None,
+        use_bias=True,
+        kernel_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(Conv2DTranspose, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -1178,31 +1213,34 @@ class Conv2DTranspose(keras_layers.Conv2DTranspose, base.Layer):
             bias_constraint=bias_constraint,
             trainable=trainable,
             name=name,
-            **kwargs)
+            **kwargs
+        )
 
 
 @deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.Conv2DTranspose` instead.')
-@tf_export(v1=['layers.conv2d_transpose'])
-def conv2d_transpose(inputs,
-                     filters,
-                     kernel_size,
-                     strides=(1, 1),
-                     padding='valid',
-                     data_format='channels_last',
-                     activation=None,
-                     use_bias=True,
-                     kernel_initializer=None,
-                     bias_initializer=init_ops.zeros_initializer(),
-                     kernel_regularizer=None,
-                     bias_regularizer=None,
-                     activity_regularizer=None,
-                     kernel_constraint=None,
-                     bias_constraint=None,
-                     trainable=True,
-                     name=None,
-                     reuse=None):
+    date=None, instructions="Use `tf.keras.layers.Conv2DTranspose` instead."
+)
+@tf_export(v1=["layers.conv2d_transpose"])
+def conv2d_transpose(
+    inputs,
+    filters,
+    kernel_size,
+    strides=(1, 1),
+    padding="valid",
+    data_format="channels_last",
+    activation=None,
+    use_bias=True,
+    kernel_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for transposed 2D convolution layer.
 
     The need for transposed convolutions generally arises
@@ -1275,11 +1313,12 @@ def conv2d_transpose(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
-@tf_export(v1=['layers.Conv3DTranspose'])
+@tf_export(v1=["layers.Conv3DTranspose"])
 class Conv3DTranspose(keras_layers.Conv3DTranspose, base.Layer):
     """Transposed 3D convolution layer (sometimes called 3D Deconvolution).
 
@@ -1323,24 +1362,26 @@ class Conv3DTranspose(keras_layers.Conv3DTranspose, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(self,
-                 filters,
-                 kernel_size,
-                 strides=(1, 1, 1),
-                 padding='valid',
-                 data_format='channels_last',
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer=None,
-                 bias_initializer=init_ops.zeros_initializer(),
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=(1, 1, 1),
+        padding="valid",
+        data_format="channels_last",
+        activation=None,
+        use_bias=True,
+        kernel_initializer=None,
+        bias_initializer=init_ops.zeros_initializer(),
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        trainable=True,
+        name=None,
+        **kwargs
+    ):
         super(Conv3DTranspose, self).__init__(
             filters=filters,
             kernel_size=kernel_size,
@@ -1358,31 +1399,34 @@ class Conv3DTranspose(keras_layers.Conv3DTranspose, base.Layer):
             bias_constraint=bias_constraint,
             trainable=trainable,
             name=name,
-            **kwargs)
+            **kwargs
+        )
 
 
 @deprecation.deprecated(
-    date=None,
-    instructions='Use `tf.keras.layers.Conv3DTranspose` instead.')
-@tf_export(v1=['layers.conv3d_transpose'])
-def conv3d_transpose(inputs,
-                     filters,
-                     kernel_size,
-                     strides=(1, 1, 1),
-                     padding='valid',
-                     data_format='channels_last',
-                     activation=None,
-                     use_bias=True,
-                     kernel_initializer=None,
-                     bias_initializer=init_ops.zeros_initializer(),
-                     kernel_regularizer=None,
-                     bias_regularizer=None,
-                     activity_regularizer=None,
-                     kernel_constraint=None,
-                     bias_constraint=None,
-                     trainable=True,
-                     name=None,
-                     reuse=None):
+    date=None, instructions="Use `tf.keras.layers.Conv3DTranspose` instead."
+)
+@tf_export(v1=["layers.conv3d_transpose"])
+def conv3d_transpose(
+    inputs,
+    filters,
+    kernel_size,
+    strides=(1, 1, 1),
+    padding="valid",
+    data_format="channels_last",
+    activation=None,
+    use_bias=True,
+    kernel_initializer=None,
+    bias_initializer=init_ops.zeros_initializer(),
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    trainable=True,
+    name=None,
+    reuse=None,
+):
     """Functional interface for transposed 3D convolution layer.
 
     Arguments:
@@ -1449,7 +1493,8 @@ def conv3d_transpose(inputs,
         trainable=trainable,
         name=name,
         _reuse=reuse,
-        _scope=name)
+        _scope=name,
+    )
     return layer.apply(inputs)
 
 
