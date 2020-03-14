@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
-
 """Contains the core layers: Dense, Dropout.
 
 Also contains their functional aliases.

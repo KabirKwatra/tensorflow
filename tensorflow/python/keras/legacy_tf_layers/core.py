@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
-
 """Contains the core layers: Dense, Dropout.
 
 Also contains their functional aliases.
@@ -20,7 +19,6 @@ Also contains their functional aliases.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 
 from tensorflow.python.keras import layers as keras_layers
 from tensorflow.python.keras.legacy_tf_layers import base

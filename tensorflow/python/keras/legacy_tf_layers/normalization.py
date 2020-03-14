@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
-
 """Contains the normalization layer classes and their functional aliases.
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 
 from tensorflow.python.keras.layers import normalization as keras_normalization
 from tensorflow.python.keras.legacy_tf_layers import base
