@@ -44,11 +44,9 @@ from tensorflow.python.util import tf_decorator
 from tensorflow.python.util import tf_inspect
 
 
-def get_test_data(train_samples,
-                  test_samples,
-                  input_shape,
-                  num_classes,
-                  random_seed=None):
+def get_test_data(
+    train_samples, test_samples, input_shape, num_classes, random_seed=None
+):
     """Generates test data to train a model on.
 
     Arguments:
@@ -64,29 +62,31 @@ def get_test_data(train_samples,
     if random_seed is not None:
         np.random.seed(random_seed)
     num_sample = train_samples + test_samples
-    templates = 2 * num_classes * \
-        np.random.random((num_classes,) + input_shape)
+    templates = 2 * num_classes * np.random.random((num_classes,) + input_shape)
     y = np.random.randint(0, num_classes, size=(num_sample,))
     x = np.zeros((num_sample,) + input_shape, dtype=np.float32)
     for i in range(num_sample):
-        x[i] = templates[y[i]] + \
-            np.random.normal(loc=0, scale=1., size=input_shape)
-    return ((x[:train_samples], y[:train_samples]),
-            (x[train_samples:], y[train_samples:]))
+        x[i] = templates[y[i]] + np.random.normal(loc=0, scale=1.0, size=input_shape)
+    return (
+        (x[:train_samples], y[:train_samples]),
+        (x[train_samples:], y[train_samples:]),
+    )
 
 
 @test_util.disable_cudnn_autotune
-def layer_test(layer_cls,
-               kwargs=None,
-               input_shape=None,
-               input_dtype=None,
-               input_data=None,
-               expected_output=None,
-               expected_output_dtype=None,
-               expected_output_shape=None,
-               validate_training=True,
-               adapt_data=None,
-               custom_objects=None):
+def layer_test(
+    layer_cls,
+    kwargs=None,
+    input_shape=None,
+    input_dtype=None,
+    input_data=None,
+    expected_output=None,
+    expected_output_dtype=None,
+    expected_output_shape=None,
+    validate_training=True,
+    adapt_data=None,
+    custom_objects=None,
+):
     """Test routine for a layer with a single input and single output.
 
     Arguments:
@@ -116,15 +116,15 @@ def layer_test(layer_cls,
     """
     if input_data is None:
         if input_shape is None:
-            raise ValueError('input_shape is None')
+            raise ValueError("input_shape is None")
         if not input_dtype:
-            input_dtype = 'float32'
+            input_dtype = "float32"
         input_data_shape = list(input_shape)
         for i, e in enumerate(input_data_shape):
             if e is None:
                 input_data_shape[i] = np.random.randint(1, 4)
         input_data = 10 * np.random.random(input_data_shape)
-        if input_dtype[:5] == 'float':
+        if input_dtype[:5] == "float":
             input_data -= 0.5
         input_data = input_data.astype(input_dtype)
     elif input_shape is None:
@@ -147,26 +147,28 @@ def layer_test(layer_cls,
     layer.set_weights(weights)
 
     # test and instantiation from weights
-    if 'weights' in tf_inspect.getargspec(layer_cls.__init__):
-        kwargs['weights'] = weights
+    if "weights" in tf_inspect.getargspec(layer_cls.__init__):
+        kwargs["weights"] = weights
         layer = layer_cls(**kwargs)
 
     # test in functional API
     x = layers.Input(shape=input_shape[1:], dtype=input_dtype)
     y = layer(x)
     if backend.dtype(y) != expected_output_dtype:
-        raise AssertionError('When testing layer %s, for input %s, found output '
-                             'dtype=%s but expected to find %s.\nFull kwargs: %s' %
-                             (layer_cls.__name__, x, backend.dtype(y),
-                              expected_output_dtype, kwargs))
+        raise AssertionError(
+            "When testing layer %s, for input %s, found output "
+            "dtype=%s but expected to find %s.\nFull kwargs: %s"
+            % (layer_cls.__name__, x, backend.dtype(y), expected_output_dtype, kwargs)
+        )
 
     def assert_shapes_equal(expected, actual):
         """Asserts that the output shape from the layer matches the actual shape."""
         if len(expected) != len(actual):
             raise AssertionError(
-                'When testing layer %s, for input %s, found output_shape='
-                '%s but expected to find %s.\nFull kwargs: %s' %
-                (layer_cls.__name__, x, actual, expected, kwargs))
+                "When testing layer %s, for input %s, found output_shape="
+                "%s but expected to find %s.\nFull kwargs: %s"
+                % (layer_cls.__name__, x, actual, expected, kwargs)
+            )
 
         for expected_dim, actual_dim in zip(expected, actual):
             if isinstance(expected_dim, tensor_shape.Dimension):
@@ -175,34 +177,40 @@ def layer_test(layer_cls,
                 actual_dim = actual_dim.value
             if expected_dim is not None and expected_dim != actual_dim:
                 raise AssertionError(
-                    'When testing layer %s, for input %s, found output_shape='
-                    '%s but expected to find %s.\nFull kwargs: %s' %
-                    (layer_cls.__name__, x, actual, expected, kwargs))
+                    "When testing layer %s, for input %s, found output_shape="
+                    "%s but expected to find %s.\nFull kwargs: %s"
+                    % (layer_cls.__name__, x, actual, expected, kwargs)
+                )
 
     if expected_output_shape is not None:
-        assert_shapes_equal(tensor_shape.TensorShape(expected_output_shape),
-                            y.shape)
+        assert_shapes_equal(tensor_shape.TensorShape(expected_output_shape), y.shape)
 
     # check shape inference
     model = models.Model(x, y)
     computed_output_shape = tuple(
-        layer.compute_output_shape(
-            tensor_shape.TensorShape(input_shape)).as_list())
+        layer.compute_output_shape(tensor_shape.TensorShape(input_shape)).as_list()
+    )
     computed_output_signature = layer.compute_output_signature(
-        tensor_spec.TensorSpec(shape=input_shape, dtype=input_dtype))
+        tensor_spec.TensorSpec(shape=input_shape, dtype=input_dtype)
+    )
     actual_output = model.predict(input_data)
     actual_output_shape = actual_output.shape
     assert_shapes_equal(computed_output_shape, actual_output_shape)
     assert_shapes_equal(computed_output_signature.shape, actual_output_shape)
     if computed_output_signature.dtype != actual_output.dtype:
         raise AssertionError(
-            'When testing layer %s, for input %s, found output_dtype='
-            '%s but expected to find %s.\nFull kwargs: %s' %
-            (layer_cls.__name__, x, actual_output.dtype,
-             computed_output_signature.dtype, kwargs))
+            "When testing layer %s, for input %s, found output_dtype="
+            "%s but expected to find %s.\nFull kwargs: %s"
+            % (
+                layer_cls.__name__,
+                x,
+                actual_output.dtype,
+                computed_output_signature.dtype,
+                kwargs,
+            )
+        )
     if expected_output is not None:
-        np.testing.assert_allclose(actual_output, expected_output,
-                                   rtol=1e-3, atol=1e-6)
+        np.testing.assert_allclose(actual_output, expected_output, rtol=1e-3, atol=1e-6)
 
     # test serialization, weight setting at model level
     model_config = model.get_config()
@@ -220,17 +228,18 @@ def layer_test(layer_cls,
         model = models.Model(x, layer(x))
         if _thread_local_data.run_eagerly is not None:
             model.compile(
-                'rmsprop',
-                'mse',
-                weighted_metrics=['acc'],
-                run_eagerly=should_run_eagerly())
+                "rmsprop",
+                "mse",
+                weighted_metrics=["acc"],
+                run_eagerly=should_run_eagerly(),
+            )
         else:
-            model.compile('rmsprop', 'mse', weighted_metrics=['acc'])
+            model.compile("rmsprop", "mse", weighted_metrics=["acc"])
         model.train_on_batch(input_data, actual_output)
 
     # test as first layer in Sequential API
     layer_config = layer.get_config()
-    layer_config['batch_input_shape'] = input_shape
+    layer_config["batch_input_shape"] = input_shape
     layer = layer.__class__.from_config(layer_config)
 
     # Test adapt, if data was passed.
@@ -242,27 +251,27 @@ def layer_test(layer_cls,
     model.add(layer)
     actual_output = model.predict(input_data)
     actual_output_shape = actual_output.shape
-    for expected_dim, actual_dim in zip(computed_output_shape,
-                                        actual_output_shape):
+    for expected_dim, actual_dim in zip(computed_output_shape, actual_output_shape):
         if expected_dim is not None:
             if expected_dim != actual_dim:
                 raise AssertionError(
-                    'When testing layer %s **after deserialization**, '
-                    'for input %s, found output_shape='
-                    '%s but expected to find inferred shape %s.\nFull kwargs: %s' %
-                    (layer_cls.__name__,
-                     x,
-                     actual_output_shape,
-                     computed_output_shape,
-                     kwargs))
+                    "When testing layer %s **after deserialization**, "
+                    "for input %s, found output_shape="
+                    "%s but expected to find inferred shape %s.\nFull kwargs: %s"
+                    % (
+                        layer_cls.__name__,
+                        x,
+                        actual_output_shape,
+                        computed_output_shape,
+                        kwargs,
+                    )
+                )
     if expected_output is not None:
-        np.testing.assert_allclose(actual_output, expected_output,
-                                   rtol=1e-3, atol=1e-6)
+        np.testing.assert_allclose(actual_output, expected_output, rtol=1e-3, atol=1e-6)
 
     # test serialization, weight setting at model level
     model_config = model.get_config()
-    recovered_model = models.Sequential.from_config(
-        model_config, custom_objects)
+    recovered_model = models.Sequential.from_config(model_config, custom_objects)
     if model.weights:
         weights = model.get_weights()
         recovered_model.set_weights(weights)
@@ -325,9 +334,11 @@ def run_eagerly_scope(value):
 def should_run_eagerly():
     """Returns whether the models we are testing should be run eagerly."""
     if _thread_local_data.run_eagerly is None:
-        raise ValueError('Cannot call `should_run_eagerly()` outside of a '
-                         '`run_eagerly_scope()` or `run_all_keras_modes` '
-                         'decorator.')
+        raise ValueError(
+            "Cannot call `should_run_eagerly()` outside of a "
+            "`run_eagerly_scope()` or `run_all_keras_modes` "
+            "decorator."
+        )
 
     return _thread_local_data.run_eagerly and context.executing_eagerly()
 
@@ -357,18 +368,21 @@ def saved_model_format_scope(value):
 def get_save_format():
     if _thread_local_data.saved_model_format is None:
         raise ValueError(
-            'Cannot call `get_save_format()` outside of a '
-            '`saved_model_format_scope()` or `run_with_all_saved_model_formats` '
-            'decorator.')
+            "Cannot call `get_save_format()` outside of a "
+            "`saved_model_format_scope()` or `run_with_all_saved_model_formats` "
+            "decorator."
+        )
     return _thread_local_data.saved_model_format
 
 
 def get_model_type():
     """Gets the model type that should be tested."""
     if _thread_local_data.model_type is None:
-        raise ValueError('Cannot call `get_model_type()` outside of a '
-                         '`model_type_scope()` or `run_with_all_model_types` '
-                         'decorator.')
+        raise ValueError(
+            "Cannot call `get_model_type()` outside of a "
+            "`model_type_scope()` or `run_with_all_model_types` "
+            "decorator."
+        )
 
     return _thread_local_data.model_type
 
@@ -376,19 +390,18 @@ def get_model_type():
 def get_small_sequential_mlp(num_hidden, num_classes, input_dim=None):
     model = models.Sequential()
     if input_dim:
-        model.add(layers.Dense(
-            num_hidden, activation='relu', input_dim=input_dim))
+        model.add(layers.Dense(num_hidden, activation="relu", input_dim=input_dim))
     else:
-        model.add(layers.Dense(num_hidden, activation='relu'))
-    activation = 'sigmoid' if num_classes == 1 else 'softmax'
+        model.add(layers.Dense(num_hidden, activation="relu"))
+    activation = "sigmoid" if num_classes == 1 else "softmax"
     model.add(layers.Dense(num_classes, activation=activation))
     return model
 
 
 def get_small_functional_mlp(num_hidden, num_classes, input_dim):
     inputs = layers.Input(shape=(input_dim,))
-    outputs = layers.Dense(num_hidden, activation='relu')(inputs)
-    activation = 'sigmoid' if num_classes == 1 else 'softmax'
+    outputs = layers.Dense(num_hidden, activation="relu")(inputs)
+    activation = "sigmoid" if num_classes == 1 else "softmax"
     outputs = layers.Dense(num_classes, activation=activation)(outputs)
     return models.Model(inputs, outputs)
 
@@ -397,12 +410,12 @@ class SmallSubclassMLP(models.Model):
     """A subclass model based small MLP."""
 
     def __init__(self, num_hidden, num_classes, use_bn=False, use_dp=False):
-        super(SmallSubclassMLP, self).__init__(name='test_model')
+        super(SmallSubclassMLP, self).__init__(name="test_model")
         self.use_bn = use_bn
         self.use_dp = use_dp
 
-        self.layer_a = layers.Dense(num_hidden, activation='relu')
-        activation = 'sigmoid' if num_classes == 1 else 'softmax'
+        self.layer_a = layers.Dense(num_hidden, activation="relu")
+        activation = "sigmoid" if num_classes == 1 else "softmax"
         self.layer_b = layers.Dense(num_classes, activation=activation)
         if self.use_dp:
             self.dp = layers.Dropout(0.5)
@@ -429,8 +442,8 @@ class _SmallSubclassMLPCustomBuild(models.Model):
         self.num_classes = num_classes
 
     def build(self, input_shape):
-        self.layer_a = layers.Dense(self.num_hidden, activation='relu')
-        activation = 'sigmoid' if self.num_classes == 1 else 'softmax'
+        self.layer_a = layers.Dense(self.num_hidden, activation="relu")
+        activation = "sigmoid" if self.num_classes == 1 else "softmax"
         self.layer_b = layers.Dense(self.num_classes, activation=activation)
 
     def call(self, inputs, **kwargs):
@@ -449,15 +462,15 @@ def get_small_subclass_mlp_with_custom_build(num_hidden, num_classes):
 def get_small_mlp(num_hidden, num_classes, input_dim):
     """Get a small mlp of the model type specified by `get_model_type`."""
     model_type = get_model_type()
-    if model_type == 'subclass':
+    if model_type == "subclass":
         return get_small_subclass_mlp(num_hidden, num_classes)
-    if model_type == 'subclass_custom_build':
+    if model_type == "subclass_custom_build":
         return get_small_subclass_mlp_with_custom_build(num_hidden, num_classes)
-    if model_type == 'sequential':
+    if model_type == "sequential":
         return get_small_sequential_mlp(num_hidden, num_classes, input_dim)
-    if model_type == 'functional':
+    if model_type == "functional":
         return get_small_functional_mlp(num_hidden, num_classes, input_dim)
-    raise ValueError('Unknown model type {}'.format(model_type))
+    raise ValueError("Unknown model type {}".format(model_type))
 
 
 class _SubclassModel(models.Model):
@@ -473,7 +486,7 @@ class _SubclassModel(models.Model):
             tensor required for ragged/sparse input.
         """
 
-        inputs = kwargs.pop('input_tensor', None)
+        inputs = kwargs.pop("input_tensor", None)
         super(_SubclassModel, self).__init__(*args, **kwargs)
         # Note that clone and build doesn't support lists of layers in subclassed
         # models. Adding each layer directly here.
@@ -486,7 +499,7 @@ class _SubclassModel(models.Model):
             self._set_inputs(inputs)
 
     def _layer_name_for_i(self, i):
-        return 'layer{}'.format(i)
+        return "layer{}".format(i)
 
     def call(self, inputs, **kwargs):
         x = inputs
@@ -517,12 +530,14 @@ class _SubclassModelCustomBuild(models.Model):
         return x
 
 
-def get_model_from_layers(model_layers,
-                          input_shape=None,
-                          input_dtype=None,
-                          name=None,
-                          input_ragged=None,
-                          input_sparse=None):
+def get_model_from_layers(
+    model_layers,
+    input_shape=None,
+    input_dtype=None,
+    name=None,
+    input_ragged=None,
+    input_sparse=None,
+):
     """Builds a model from a sequence of layers.
 
     Args:
@@ -538,21 +553,25 @@ def get_model_from_layers(model_layers,
     """
 
     model_type = get_model_type()
-    if model_type == 'subclass':
+    if model_type == "subclass":
         inputs = None
         if input_ragged or input_sparse:
             inputs = layers.Input(
                 shape=input_shape,
                 dtype=input_dtype,
                 ragged=input_ragged,
-                sparse=input_sparse)
+                sparse=input_sparse,
+            )
         return _SubclassModel(model_layers, name=name, input_tensor=inputs)
 
-    if model_type == 'subclass_custom_build':
-        def layer_generating_func(): return model_layers
+    if model_type == "subclass_custom_build":
+
+        def layer_generating_func():
+            return model_layers
+
         return _SubclassModelCustomBuild(layer_generating_func, name=name)
 
-    if model_type == 'sequential':
+    if model_type == "sequential":
         model = models.Sequential(name=name)
         if input_shape:
             model.add(
@@ -560,32 +579,35 @@ def get_model_from_layers(model_layers,
                     input_shape=input_shape,
                     dtype=input_dtype,
                     ragged=input_ragged,
-                    sparse=input_sparse))
+                    sparse=input_sparse,
+                )
+            )
         for layer in model_layers:
             model.add(layer)
         return model
 
-    if model_type == 'functional':
+    if model_type == "functional":
         if not input_shape:
-            raise ValueError('Cannot create a functional model from layers with no '
-                             'input shape.')
+            raise ValueError(
+                "Cannot create a functional model from layers with no " "input shape."
+            )
         inputs = layers.Input(
             shape=input_shape,
             dtype=input_dtype,
             ragged=input_ragged,
-            sparse=input_sparse)
+            sparse=input_sparse,
+        )
         outputs = inputs
         for layer in model_layers:
             outputs = layer(outputs)
         return models.Model(inputs, outputs, name=name)
 
-    raise ValueError('Unknown model type {}'.format(model_type))
+    raise ValueError("Unknown model type {}".format(model_type))
 
 
 class Bias(layers.Layer):
-
     def build(self, input_shape):
-        self.bias = self.add_variable('bias', (1,), initializer='zeros')
+        self.bias = self.add_variable("bias", (1,), initializer="zeros")
 
     def call(self, inputs):
         return inputs + self.bias
@@ -594,8 +616,14 @@ class Bias(layers.Layer):
 class _MultiIOSubclassModel(models.Model):
     """Multi IO Keras subclass model."""
 
-    def __init__(self, branch_a, branch_b, shared_input_branch=None,
-                 shared_output_branch=None, name=None):
+    def __init__(
+        self,
+        branch_a,
+        branch_b,
+        shared_input_branch=None,
+        shared_output_branch=None,
+        name=None,
+    ):
         super(_MultiIOSubclassModel, self).__init__(name=name)
         self._shared_input_branch = shared_input_branch
         self._branch_a = branch_a
@@ -609,8 +637,8 @@ class _MultiIOSubclassModel(models.Model):
             a = inputs
             b = inputs
         elif isinstance(inputs, dict):
-            a = inputs['input_1']
-            b = inputs['input_2']
+            a = inputs["input_1"]
+            b = inputs["input_2"]
         else:
             a, b = inputs
 
@@ -630,9 +658,13 @@ class _MultiIOSubclassModel(models.Model):
 class _MultiIOSubclassModelCustomBuild(models.Model):
     """Multi IO Keras subclass model that uses a custom build method."""
 
-    def __init__(self, branch_a_func, branch_b_func,
-                 shared_input_branch_func=None,
-                 shared_output_branch_func=None):
+    def __init__(
+        self,
+        branch_a_func,
+        branch_b_func,
+        shared_input_branch_func=None,
+        shared_output_branch_func=None,
+    ):
         super(_MultiIOSubclassModelCustomBuild, self).__init__()
         self._shared_input_branch_func = shared_input_branch_func
         self._branch_a_func = branch_a_func
@@ -676,10 +708,8 @@ class _MultiIOSubclassModelCustomBuild(models.Model):
 
 
 def get_multi_io_model(
-        branch_a,
-        branch_b,
-        shared_input_branch=None,
-        shared_output_branch=None):
+    branch_a, branch_b, shared_input_branch=None, shared_output_branch=None
+):
     """Builds a multi-io model that contains two branches.
 
     The produced model will be of the type specified by `get_model_type`.
@@ -767,21 +797,25 @@ def get_multi_io_model(
         branch_b = branch_b[1:]
 
     model_type = get_model_type()
-    if model_type == 'subclass':
-        return _MultiIOSubclassModel(branch_a, branch_b, shared_input_branch,
-                                     shared_output_branch)
+    if model_type == "subclass":
+        return _MultiIOSubclassModel(
+            branch_a, branch_b, shared_input_branch, shared_output_branch
+        )
 
-    if model_type == 'subclass_custom_build':
-        return _MultiIOSubclassModelCustomBuild((lambda: branch_a),
-                                                (lambda: branch_b),
-                                                (lambda: shared_input_branch),
-                                                (lambda: shared_output_branch))
+    if model_type == "subclass_custom_build":
+        return _MultiIOSubclassModelCustomBuild(
+            (lambda: branch_a),
+            (lambda: branch_b),
+            (lambda: shared_input_branch),
+            (lambda: shared_output_branch),
+        )
 
-    if model_type == 'sequential':
-        raise ValueError('Cannot use `get_multi_io_model` to construct '
-                         'sequential models')
+    if model_type == "sequential":
+        raise ValueError(
+            "Cannot use `get_multi_io_model` to construct " "sequential models"
+        )
 
-    if model_type == 'functional':
+    if model_type == "functional":
         if shared_input_branch:
             a_and_b = inputs
             for layer in shared_input_branch:
@@ -803,17 +837,17 @@ def get_multi_io_model(
 
         return models.Model(inputs, outputs)
 
-    raise ValueError('Unknown model type {}'.format(model_type))
+    raise ValueError("Unknown model type {}".format(model_type))
 
 
 _V2_OPTIMIZER_MAP = {
-    'adadelta': adadelta_v2.Adadelta,
-    'adagrad': adagrad_v2.Adagrad,
-    'adam': adam_v2.Adam,
-    'adamax': adamax_v2.Adamax,
-    'nadam': nadam_v2.Nadam,
-    'rmsprop': rmsprop_v2.RMSprop,
-    'sgd': gradient_descent_v2.SGD
+    "adadelta": adadelta_v2.Adadelta,
+    "adagrad": adagrad_v2.Adagrad,
+    "adam": adam_v2.Adam,
+    "adamax": adamax_v2.Adamax,
+    "nadam": nadam_v2.Nadam,
+    "rmsprop": rmsprop_v2.RMSprop,
+    "sgd": gradient_descent_v2.SGD,
 }
 
 
@@ -838,17 +872,19 @@ def get_v2_optimizer(name, **kwargs):
         return _V2_OPTIMIZER_MAP[name](**kwargs)
     except KeyError:
         raise ValueError(
-            'Could not find requested v2 optimizer: {}\nValid choices: {}'.format(
-                name, list(_V2_OPTIMIZER_MAP.keys())))
+            "Could not find requested v2 optimizer: {}\nValid choices: {}".format(
+                name, list(_V2_OPTIMIZER_MAP.keys())
+            )
+        )
 
 
-def get_expected_metric_variable_names(var_names, name_suffix=''):
+def get_expected_metric_variable_names(var_names, name_suffix=""):
     """Returns expected metric variable names given names and prefix/suffix."""
     if tf2.enabled() or context.executing_eagerly():
         # In V1 eager mode and V2 variable names are not made unique.
-        return [n + ':0' for n in var_names]
+        return [n + ":0" for n in var_names]
     # In V1 graph mode variable names are made unique using a suffix.
-    return [n + name_suffix + ':0' for n in var_names]
+    return [n + name_suffix + ":0" for n in var_names]
 
 
 def enable_v2_dtype_behavior(fn):
@@ -863,6 +899,7 @@ def disable_v2_dtype_behavior(fn):
 
 def _set_v2_dtype_behavior(fn, enabled):
     """Returns version of 'fn' that runs with v2 dtype behavior on or off."""
+
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         v2_dtype_behavior = base_layer_utils.V2_DTYPE_BEHAVIOR

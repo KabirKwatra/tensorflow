@@ -26,7 +26,6 @@ from tensorflow.python.platform import test
 
 
 class DeviceUtilTest(test.TestCase):
-
     @test_util.run_deprecated_v1
     def testCurrentDeviceWithGlobalGraph(self):
         with ops.device("/cpu:0"):
@@ -34,8 +33,7 @@ class DeviceUtilTest(test.TestCase):
 
         with ops.device("/job:worker"):
             with ops.device("/cpu:0"):
-                self.assertEqual(device_util.current(),
-                                 "/job:worker/device:CPU:0")
+                self.assertEqual(device_util.current(), "/job:worker/device:CPU:0")
 
         with ops.device("/cpu:0"):
             with ops.device("/gpu:0"):
@@ -49,45 +47,54 @@ class DeviceUtilTest(test.TestCase):
     def testCurrentDeviceWithEager(self):
         with context.eager_mode():
             with ops.device("/cpu:0"):
-                self.assertEqual(device_util.current(),
-                                 "/job:localhost/replica:0/task:0/device:CPU:0")
+                self.assertEqual(
+                    device_util.current(),
+                    "/job:localhost/replica:0/task:0/device:CPU:0",
+                )
 
     @test_util.run_deprecated_v1
     def testCanonicalizeWithoutDefaultDevice(self):
         self.assertEqual(
-            device_util.canonicalize("/cpu:0"),
-            "/replica:0/task:0/device:CPU:0")
+            device_util.canonicalize("/cpu:0"), "/replica:0/task:0/device:CPU:0"
+        )
         self.assertEqual(
             device_util.canonicalize("/job:worker/cpu:0"),
-            "/job:worker/replica:0/task:0/device:CPU:0")
+            "/job:worker/replica:0/task:0/device:CPU:0",
+        )
         self.assertEqual(
             device_util.canonicalize("/job:worker/task:1/cpu:0"),
-            "/job:worker/replica:0/task:1/device:CPU:0")
+            "/job:worker/replica:0/task:1/device:CPU:0",
+        )
 
     def testCanonicalizeWithDefaultDevice(self):
         self.assertEqual(
-            device_util.canonicalize(
-                "/job:worker/task:1/cpu:0", default="/gpu:0"),
-            "/job:worker/replica:0/task:1/device:CPU:0")
+            device_util.canonicalize("/job:worker/task:1/cpu:0", default="/gpu:0"),
+            "/job:worker/replica:0/task:1/device:CPU:0",
+        )
         self.assertEqual(
             device_util.canonicalize("/job:worker/task:1", default="/gpu:0"),
-            "/job:worker/replica:0/task:1/device:GPU:0")
+            "/job:worker/replica:0/task:1/device:GPU:0",
+        )
         self.assertEqual(
             device_util.canonicalize("/cpu:0", default="/job:worker"),
-            "/job:worker/replica:0/task:0/device:CPU:0")
+            "/job:worker/replica:0/task:0/device:CPU:0",
+        )
 
     def testResolveWithDeviceScope(self):
         with ops.device("/gpu:0"):
             self.assertEqual(
                 device_util.resolve("/job:worker/task:1/cpu:0"),
-                "/job:worker/replica:0/task:1/device:CPU:0")
+                "/job:worker/replica:0/task:1/device:CPU:0",
+            )
             self.assertEqual(
                 device_util.resolve("/job:worker/task:1"),
-                "/job:worker/replica:0/task:1/device:GPU:0")
+                "/job:worker/replica:0/task:1/device:GPU:0",
+            )
         with ops.device("/job:worker"):
             self.assertEqual(
                 device_util.resolve("/cpu:0"),
-                "/job:worker/replica:0/task:0/device:CPU:0")
+                "/job:worker/replica:0/task:0/device:CPU:0",
+            )
 
 
 if __name__ == "__main__":
