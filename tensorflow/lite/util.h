@@ -55,9 +55,9 @@ bool EqualArrayAndTfLiteIntArray(const TfLiteIntArray* a, const int b_size,
 size_t CombineHashes(std::initializer_list<size_t> hashes);
 
 struct TfLiteIntArrayDeleter {
-  void operator()(TfLiteIntArray* a) {
-    if (a) TfLiteIntArrayFree(a);
-  }
+    void operator()(TfLiteIntArray* a) {
+        if (a) TfLiteIntArrayFree(a);
+    }
 };
 
 // Populates the size in bytes of a type into `bytes`. Returns kTfLiteOk for
