@@ -20,7 +20,6 @@ from __future__ import print_function
 
 from tensorflow.python.keras.legacy_tf_layers import pooling
 
-
 AveragePooling1D = pooling.AveragePooling1D
 average_pooling1d = pooling.average_pooling1d
 MaxPooling1D = pooling.MaxPooling1D

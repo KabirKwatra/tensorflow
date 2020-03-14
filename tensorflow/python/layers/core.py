@@ -22,7 +22,6 @@ from __future__ import print_function
 
 from tensorflow.python.keras.legacy_tf_layers import core
 
-
 Dense = core.Dense
 dense = core.dense
 Dropout = core.Dropout

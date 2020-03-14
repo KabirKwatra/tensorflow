@@ -20,7 +20,6 @@ from __future__ import print_function
 
 from tensorflow.python.keras.legacy_tf_layers import normalization
 
-
 BatchNormalization = normalization.BatchNormalization
 batch_normalization = normalization.batch_normalization
 # Aliases

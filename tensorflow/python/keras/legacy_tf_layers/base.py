@@ -208,21 +208,20 @@ class Layer(base_layer.Layer):
         if "autocast" not in kwargs:
             kwargs["autocast"] = False
 
-        super(Layer, self).__init__(
-            trainable=trainable, name=name, dtype=dtype, **kwargs
-        )
+        super(Layer, self).__init__(trainable=trainable,
+                                    name=name,
+                                    dtype=dtype,
+                                    **kwargs)
 
         if _is_in_keras_style_scope():
             if scope is not None:
                 raise ValueError(
                     "scope argument not allowed when keras style layers are enabled, "
-                    "but saw: {}".format(scope)
-                )
+                    "but saw: {}".format(scope))
             if self._reuse is not None:
                 raise ValueError(
                     "reuse argument not allowed when keras style layers are enabled, "
-                    "but saw: {}".format(self._reuse)
-                )
+                    "but saw: {}".format(self._reuse))
             self._keras_style = True
         else:
             self._keras_style = False
@@ -245,7 +244,8 @@ class Layer(base_layer.Layer):
     )
     def graph(self):
         if context.executing_eagerly():
-            raise RuntimeError("Layer.graph not supported when executing eagerly.")
+            raise RuntimeError(
+                "Layer.graph not supported when executing eagerly.")
         return None
 
     def _init_set_name(self, name):
@@ -260,9 +260,11 @@ class Layer(base_layer.Layer):
             self._name, base_name = self._make_unique_name()
         self._base_name = base_name
 
-    def _make_unique_name(
-        self, name_uid_map=None, avoid_names=None, namespace="", zero_based=False
-    ):
+    def _make_unique_name(self,
+                          name_uid_map=None,
+                          avoid_names=None,
+                          namespace="",
+                          zero_based=False):
         base_name = base_layer.to_snake_case(self.__class__.__name__)
         name = backend.unique_object_name(
             base_name,
@@ -277,13 +279,11 @@ class Layer(base_layer.Layer):
     def scope_name(self):
         if not self._scope:
             raise ValueError(
-                'No name available for layer scope because the layer "'
-                + self._name
-                + '" has not been used yet. The scope name '
-                + " is determined the first time the layer instance is "
-                + "called. You must therefore call the layer before "
-                + "querying `scope_name`."
-            )
+                'No name available for layer scope because the layer "' +
+                self._name + '" has not been used yet. The scope name ' +
+                " is determined the first time the layer instance is " +
+                "called. You must therefore call the layer before " +
+                "querying `scope_name`.")
         return self._scope.name
 
     def add_loss(self, losses, inputs=None):
@@ -294,13 +294,13 @@ class Layer(base_layer.Layer):
             # TODO(fchollet): deprecate collection below.
             new_losses = self._losses[previous_losses_length:]
             new_callable_losses = self._callable_losses[
-                previous_callable_losses_length:
-            ]
+                previous_callable_losses_length:]
             for regularizer in new_callable_losses:
                 loss_tensor = regularizer()
                 if loss_tensor is not None:
                     new_losses.append(loss_tensor)
-            _add_elements_to_collection(new_losses, ops.GraphKeys.REGULARIZATION_LOSSES)
+            _add_elements_to_collection(new_losses,
+                                        ops.GraphKeys.REGULARIZATION_LOSSES)
 
     def _name_scope(self):
         """Determines op naming for the Layer."""
@@ -312,31 +312,27 @@ class Layer(base_layer.Layer):
         if self._scope is None:
             # If constructed with _scope=None, lazy setting of scope.
             if self._reuse:
-                with vs.variable_scope(
-                    scope if scope is not None else self._base_name
-                ) as captured_scope:
+                with vs.variable_scope(scope if scope is not None else self.
+                                       _base_name) as captured_scope:
                     self._scope = captured_scope
             else:
                 with vs.variable_scope(
-                    scope, default_name=self._base_name
-                ) as captured_scope:
+                        scope, default_name=self._base_name) as captured_scope:
                     self._scope = captured_scope
 
-    def add_weight(
-        self,
-        name,
-        shape,
-        dtype=None,
-        initializer=None,
-        regularizer=None,
-        trainable=None,
-        constraint=None,
-        use_resource=None,
-        synchronization=vs.VariableSynchronization.AUTO,
-        aggregation=vs.VariableAggregation.NONE,
-        partitioner=None,
-        **kwargs
-    ):
+    def add_weight(self,
+                   name,
+                   shape,
+                   dtype=None,
+                   initializer=None,
+                   regularizer=None,
+                   trainable=None,
+                   constraint=None,
+                   use_resource=None,
+                   synchronization=vs.VariableSynchronization.AUTO,
+                   aggregation=vs.VariableAggregation.NONE,
+                   partitioner=None,
+                   **kwargs):
         """Adds a new variable to the layer, or gets an existing one; returns it.
 
         Arguments:
@@ -400,8 +396,7 @@ class Layer(base_layer.Layer):
                 synchronization=vs.VariableSynchronization.AUTO,
                 aggregation=vs.VariableAggregation.NONE,
                 partitioner=partitioner,
-                **kwargs
-            )
+                **kwargs)
 
         if synchronization == vs.VariableSynchronization.ON_READ:
             if trainable:
@@ -409,8 +404,7 @@ class Layer(base_layer.Layer):
                     "Synchronization value can be set to "
                     "VariableSynchronization.ON_READ only for non-trainable variables. "
                     "You have specified trainable=True and "
-                    "synchronization=VariableSynchronization.ON_READ."
-                )
+                    "synchronization=VariableSynchronization.ON_READ.")
             else:
                 # Set trainable to be false when variable is to be synced on read.
                 trainable = False
@@ -437,7 +431,8 @@ class Layer(base_layer.Layer):
                     # collections are not supported when eager execution is enabled.
                     if not context.executing_eagerly():
                         init_graph = ops.get_default_graph()
-                        existing_variables = set(tf_variables.global_variables())
+                        existing_variables = set(
+                            tf_variables.global_variables())
             else:
                 # Initialization ops will not be lifted out of the default graph.
                 init_graph = default_graph
@@ -449,14 +444,13 @@ class Layer(base_layer.Layer):
         self._set_scope(None)
         reuse = self.built or self._reuse
         prev_len_trainable = len(self._trainable_weights)
-        with vs.variable_scope(
-            self._scope, reuse=reuse, auxiliary_name_scope=False
-        ) as scope:
+        with vs.variable_scope(self._scope,
+                               reuse=reuse,
+                               auxiliary_name_scope=False) as scope:
             self._current_scope = scope
             with ops.name_scope(self._name_scope(), skip_on_eager=False):
-                use_resource = (
-                    use_resource or self._use_resource_variables or scope.use_resource
-                )
+                use_resource = (use_resource or self._use_resource_variables
+                                or scope.use_resource)
                 if initializer is None:
                     initializer = scope.initializer
                 variable = super(Layer, self).add_weight(
@@ -471,14 +465,13 @@ class Layer(base_layer.Layer):
                     synchronization=synchronization,
                     aggregation=aggregation,
                     getter=vs.get_variable,
-                    **kwargs
-                )
+                    **kwargs)
 
                 if regularizer:
-                    if ops.executing_eagerly_outside_functions() or _should_add_regularizer(
-                        variable, existing_variables
-                    ):
-                        self._handle_weight_regularization(name, variable, regularizer)
+                    if ops.executing_eagerly_outside_functions(
+                    ) or _should_add_regularizer(variable, existing_variables):
+                        self._handle_weight_regularization(
+                            name, variable, regularizer)
 
                 if init_graph is not None:
                     # Handle edge case where a custom getter has overridden `trainable`.
@@ -486,19 +479,15 @@ class Layer(base_layer.Layer):
                     # testBasicRNNCellNotTrainable in
                     # contrib.rnn.python.kernel_tests.core_rnn_cell_test
                     with init_graph.as_default():
-                        trainable_variables = tf_variables.trainable_variables()
-                    if (
-                        trainable
-                        and self.trainable
-                        and variable not in trainable_variables
-                    ):
+                        trainable_variables = tf_variables.trainable_variables(
+                        )
+                    if (trainable and self.trainable
+                            and variable not in trainable_variables):
                         # A custom getter / variable scope overrode the trainable flag.
                         extra_trainable_vars = self._trainable_weights[
-                            prev_len_trainable:
-                        ]
-                        self._trainable_weights = self._trainable_weights[
-                            :prev_len_trainable
-                        ]
+                            prev_len_trainable:]
+                        self._trainable_weights = self._trainable_weights[:
+                                                                          prev_len_trainable]
                         self._non_trainable_weights += extra_trainable_vars
         return variable
 
@@ -532,8 +521,7 @@ class Layer(base_layer.Layer):
             if scope is not None:
                 raise ValueError(
                     "scope argument not allowed when keras style layers are enabled, "
-                    "but saw: {}".format(scope)
-                )
+                    "but saw: {}".format(scope))
             return super(Layer, self).__call__(inputs, *args, **kwargs)
 
         self._set_scope(scope)
@@ -548,13 +536,11 @@ class Layer(base_layer.Layer):
                 # variable scope with this setting. We avoid re-creating variable scopes
                 # after this point as an optimization.
                 self._always_reuse_variable_scope = vs.variable_scope(
-                    self._scope, reuse=True, auxiliary_name_scope=False
-                )
+                    self._scope, reuse=True, auxiliary_name_scope=False)
                 scope_context_manager = self._always_reuse_variable_scope
         else:
             scope_context_manager = vs.variable_scope(
-                self._scope, reuse=self._reuse, auxiliary_name_scope=False
-            )
+                self._scope, reuse=self._reuse, auxiliary_name_scope=False)
 
         with scope_context_manager as scope:
             self._current_scope = scope
@@ -607,8 +593,7 @@ def _add_elements_to_collection(elements, collection_list):
     if context.executing_eagerly():
         raise RuntimeError(
             "Using collections from Layers not supported in Eager "
-            "mode. Tried to add %s to %s" % (elements, collection_list)
-        )
+            "mode. Tried to add %s to %s" % (elements, collection_list))
     elements = nest.flatten(elements)
     collection_list = nest.flatten(collection_list)
     for name in collection_list:

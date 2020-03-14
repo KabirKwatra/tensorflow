@@ -67,16 +67,14 @@ class BaseLayerTest(test.TestCase):
         keras_layer = keras_base_layer.Layer(name="keras_layer")
         with ops.name_scope("foo", skip_on_eager=False):
             keras_variable = keras_layer.add_variable(
-                "my_var", [2, 2], initializer=init_ops.zeros_initializer()
-            )
+                "my_var", [2, 2], initializer=init_ops.zeros_initializer())
         self.assertEqual(keras_variable.name, "foo/my_var:0")
 
         with ops.name_scope("baz", skip_on_eager=False):
             old_style_layer = base_layers.Layer(name="my_layer")
             # Test basic variable creation.
             variable = old_style_layer.add_variable(
-                "my_var", [2, 2], initializer=init_ops.zeros_initializer()
-            )
+                "my_var", [2, 2], initializer=init_ops.zeros_initializer())
         self.assertEqual(variable.name, "my_layer/my_var:0")
 
         with base_layers.keras_style_scope():
@@ -84,8 +82,7 @@ class BaseLayerTest(test.TestCase):
         # Test basic variable creation.
         with ops.name_scope("bar", skip_on_eager=False):
             variable = layer.add_variable(
-                "my_var", [2, 2], initializer=init_ops.zeros_initializer()
-            )
+                "my_var", [2, 2], initializer=init_ops.zeros_initializer())
         self.assertEqual(variable.name, "bar/my_var:0")
 
     @test_util.run_in_graph_and_eager_modes
@@ -93,17 +90,16 @@ class BaseLayerTest(test.TestCase):
         layer = base_layers.Layer(name="my_layer")
 
         # Test basic variable creation.
-        variable = layer.add_variable(
-            "my_var", [2, 2], initializer=init_ops.zeros_initializer()
-        )
+        variable = layer.add_variable("my_var", [2, 2],
+                                      initializer=init_ops.zeros_initializer())
         self.assertEqual(variable.name, "my_layer/my_var:0")
         self.assertEqual(layer.variables, [variable])
         self.assertEqual(layer.trainable_variables, [variable])
         self.assertEqual(layer.non_trainable_variables, [])
         if not context.executing_eagerly():
             self.assertEqual(
-                layer.variables, ops.get_collection(ops.GraphKeys.TRAINABLE_VARIABLES)
-            )
+                layer.variables,
+                ops.get_collection(ops.GraphKeys.TRAINABLE_VARIABLES))
 
         # Test non-trainable variable creation.
         # layer.add_variable should work even outside `build` and `call`.
@@ -119,8 +115,7 @@ class BaseLayerTest(test.TestCase):
 
         if not context.executing_eagerly():
             self.assertEqual(
-                len(ops.get_collection(ops.GraphKeys.TRAINABLE_VARIABLES)), 1
-            )
+                len(ops.get_collection(ops.GraphKeys.TRAINABLE_VARIABLES)), 1)
 
         def regularizer(x):
             return math_ops.reduce_sum(x) * 1e-3
@@ -143,7 +138,8 @@ class BaseLayerTest(test.TestCase):
             synchronization=variable_scope.VariableSynchronization.ON_READ,
             aggregation=variable_scope.VariableAggregation.SUM,
         )
-        self.assertEqual(layer.non_trainable_variables, [variable_2, variable_3])
+        self.assertEqual(layer.non_trainable_variables,
+                         [variable_2, variable_3])
 
         @def_function.function
         def function_adds_weight():
@@ -163,11 +159,11 @@ class BaseLayerTest(test.TestCase):
         layer = base_layers.Layer(name="my_layer")
 
         with self.assertRaisesRegexp(
-            ValueError,
-            "Synchronization value can be set to "
-            "VariableSynchronization.ON_READ only for non-trainable variables. "
-            "You have specified trainable=True and "
-            "synchronization=VariableSynchronization.ON_READ.",
+                ValueError,
+                "Synchronization value can be set to "
+                "VariableSynchronization.ON_READ only for non-trainable variables. "
+                "You have specified trainable=True and "
+                "synchronization=VariableSynchronization.ON_READ.",
         ):
             _ = layer.add_variable(
                 "v",
@@ -185,9 +181,9 @@ class BaseLayerTest(test.TestCase):
         partitioner = partitioned_variables.fixed_size_partitioner(3)
         for reuse in [False, True]:
             with variable_scope.variable_scope(
-                variable_scope.get_variable_scope(),
-                partitioner=partitioner,
-                reuse=reuse,
+                    variable_scope.get_variable_scope(),
+                    partitioner=partitioner,
+                    reuse=reuse,
             ):
                 layer = base_layers.Layer(name="my_layer")
                 _ = layer.add_variable(
@@ -197,8 +193,7 @@ class BaseLayerTest(test.TestCase):
                     regularizer=regularizer,
                 )
         self.assertEqual(
-            len(ops.get_collection(ops.GraphKeys.REGULARIZATION_LOSSES)), 3
-        )
+            len(ops.get_collection(ops.GraphKeys.REGULARIZATION_LOSSES)), 3)
 
     @test_util.run_in_graph_and_eager_modes
     def testCall(self):
@@ -207,7 +202,7 @@ class BaseLayerTest(test.TestCase):
                 return math_ops.square(inputs)
 
         layer = MyLayer(name="my_layer")
-        inputs = random_ops.random_uniform((5,), seed=1)
+        inputs = random_ops.random_uniform((5, ), seed=1)
         outputs = layer.apply(inputs)
         self.assertEqual(layer.built, True)
         if not context.executing_eagerly():
@@ -222,7 +217,7 @@ class BaseLayerTest(test.TestCase):
 
         layer = MyLayer(name="my_layer")
         layer._private_tensor = random_ops.random_uniform(())
-        inputs = random_ops.random_uniform((5,), seed=1)
+        inputs = random_ops.random_uniform((5, ), seed=1)
         outputs = layer.apply(inputs)
         self.assertEqual(layer.built, True)
         if not context.executing_eagerly():
@@ -240,7 +235,7 @@ class BaseLayerTest(test.TestCase):
             def call(self, inputs):
                 return inputs
 
-        inputs = random_ops.random_uniform((5,))
+        inputs = random_ops.random_uniform((5, ))
         default_layer = PrivateLayer()
         _ = default_layer.apply(inputs)
         self.assertEqual(default_layer._scope.name, "private_layer")
@@ -271,15 +266,15 @@ class BaseLayerTest(test.TestCase):
         with variable_scope.variable_scope("var_scope"):
             default_layer_scoped = PrivateLayer()
             default_layer_scoped.apply(inputs)
-            self.assertEqual(
-                default_layer_scoped._scope.name, "var_scope/private_layer"
-            )
+            self.assertEqual(default_layer_scoped._scope.name,
+                             "var_scope/private_layer")
             my_layer_scoped = PrivateLayer(name="my_layer")
             my_layer_scoped.apply(inputs)
             self.assertEqual(my_layer_scoped._scope.name, "var_scope/my_layer")
             my_layer_scoped1 = PrivateLayer(name="my_layer")
             my_layer_scoped1.apply(inputs)
-            self.assertEqual(my_layer_scoped1._scope.name, "var_scope/my_layer_1")
+            self.assertEqual(my_layer_scoped1._scope.name,
+                             "var_scope/my_layer_1")
 
     @test_util.run_in_graph_and_eager_modes
     def testInputSpecNdimCheck(self):
@@ -293,7 +288,8 @@ class BaseLayerTest(test.TestCase):
 
         if not context.executing_eagerly():
             layer = CustomerLayer()
-            with self.assertRaisesRegexp(ValueError, r"requires a defined rank"):
+            with self.assertRaisesRegexp(ValueError,
+                                         r"requires a defined rank"):
                 layer.apply(array_ops.placeholder("int32"))
 
         layer = CustomerLayer()
@@ -318,7 +314,8 @@ class BaseLayerTest(test.TestCase):
 
         if not context.executing_eagerly():
             layer = CustomerLayer()
-            with self.assertRaisesRegexp(ValueError, r"requires a defined rank"):
+            with self.assertRaisesRegexp(ValueError,
+                                         r"requires a defined rank"):
                 layer.apply(array_ops.placeholder("int32"))
 
         layer = CustomerLayer()
@@ -344,7 +341,8 @@ class BaseLayerTest(test.TestCase):
 
         if not context.executing_eagerly():
             layer = CustomerLayer()
-            with self.assertRaisesRegexp(ValueError, r"requires a defined rank"):
+            with self.assertRaisesRegexp(ValueError,
+                                         r"requires a defined rank"):
                 layer.apply(array_ops.placeholder("int32"))
 
         layer = CustomerLayer()
@@ -556,15 +554,21 @@ class BaseLayerTest(test.TestCase):
     def testGetUpdateFor(self):
         class MyLayer(base_layers.Layer):
             def build(self, input_shape):
-                self.a = self.add_variable("a", (), dtypes.float32, trainable=False)
-                self.b = self.add_variable("b", (), dtypes.float32, trainable=False)
-                self.add_update(state_ops.assign_add(self.a, 1.0, name="b_update"))
+                self.a = self.add_variable("a", (),
+                                           dtypes.float32,
+                                           trainable=False)
+                self.b = self.add_variable("b", (),
+                                           dtypes.float32,
+                                           trainable=False)
+                self.add_update(
+                    state_ops.assign_add(self.a, 1.0, name="b_update"))
                 self.built = True
 
             def call(self, inputs):
-                self.add_update(
-                    state_ops.assign_add(self.a, inputs, name="a_update"), inputs=True
-                )
+                self.add_update(state_ops.assign_add(self.a,
+                                                     inputs,
+                                                     name="a_update"),
+                                inputs=True)
                 return inputs + 1
 
         layer = MyLayer()
@@ -594,8 +598,12 @@ class BaseLayerTest(test.TestCase):
     def testGetLossesFor(self):
         class MyLayer(base_layers.Layer):
             def build(self, input_shape):
-                self.a = self.add_variable("a", (), dtypes.float32, trainable=False)
-                self.b = self.add_variable("b", (), dtypes.float32, trainable=False)
+                self.a = self.add_variable("a", (),
+                                           dtypes.float32,
+                                           trainable=False)
+                self.b = self.add_variable("b", (),
+                                           dtypes.float32,
+                                           trainable=False)
                 self.add_loss(self.a)
                 self.built = True
 

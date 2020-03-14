@@ -27,8 +27,7 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework import test_util
 from tensorflow.python.keras.legacy_tf_layers import convolutional as conv_layers
 from tensorflow.python.keras.legacy_tf_layers import (
-    normalization as normalization_layers,
-)
+    normalization as normalization_layers, )
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
@@ -67,20 +66,21 @@ class BNTest(test.TestCase):
         return loss, train_op, saver
 
     def _train(
-        self,
-        checkpoint_path,
-        shape,
-        use_gpu,
-        is_fused,
-        restore=False,
-        freeze_mode=False,
-        dtype=dtypes.float32,
+            self,
+            checkpoint_path,
+            shape,
+            use_gpu,
+            is_fused,
+            restore=False,
+            freeze_mode=False,
+            dtype=dtypes.float32,
     ):
         ops.reset_default_graph()
         graph = ops.get_default_graph()
         with self.session(graph=graph, use_gpu=use_gpu) as sess:
             image = array_ops.placeholder(dtype=dtype, shape=shape)
-            loss, train_op, saver = self._simple_model(image, is_fused, freeze_mode)
+            loss, train_op, saver = self._simple_model(image, is_fused,
+                                                       freeze_mode)
             if restore:
                 saver.restore(sess, checkpoint_path)
             else:
@@ -107,7 +107,8 @@ class BNTest(test.TestCase):
             loss_val = sess.run(loss, feed_dict={image: image_val})
             return loss_val
 
-    def _trainEvalSequence(self, dtype, train1_use_gpu, train2_use_gpu, infer_use_gpu):
+    def _trainEvalSequence(self, dtype, train1_use_gpu, train2_use_gpu,
+                           infer_use_gpu):
         batch, height, width, input_channels = 2, 4, 5, 3
         shape = [batch, height, width, input_channels]
 
@@ -119,8 +120,8 @@ class BNTest(test.TestCase):
         }
         checkpoint = os.path.join(
             self.get_temp_dir(),
-            "cp_%s_%s_%s_%s"
-            % (dtype_to_valid_fn[dtype], train1_use_gpu, train2_use_gpu, infer_use_gpu),
+            "cp_%s_%s_%s_%s" % (dtype_to_valid_fn[dtype], train1_use_gpu,
+                                train2_use_gpu, infer_use_gpu),
         )
 
         self._train(
@@ -144,12 +145,13 @@ class BNTest(test.TestCase):
         )
 
         np.random.seed(0)
-        image_val = np.random.rand(batch, height, width, input_channels).astype(
-            dtype.as_numpy_dtype
-        )
-        loss_val = self._infer(
-            checkpoint, image_val, shape, use_gpu=infer_use_gpu, is_fused=True
-        )
+        image_val = np.random.rand(batch, height, width,
+                                   input_channels).astype(dtype.as_numpy_dtype)
+        loss_val = self._infer(checkpoint,
+                               image_val,
+                               shape,
+                               use_gpu=infer_use_gpu,
+                               is_fused=True)
 
         return train_vars, loss_val
 
@@ -167,22 +169,28 @@ class BNTest(test.TestCase):
             for train2_use_gpu in [True, False]:
                 for infer_use_gpu in [True, False]:
                     test_vars, test_loss = self._trainEvalSequence(
-                        dtypes.float16, train1_use_gpu, train2_use_gpu, infer_use_gpu
-                    )
+                        dtypes.float16, train1_use_gpu, train2_use_gpu,
+                        infer_use_gpu)
                     self.assertEqual(len(test_vars), 5)
                     for test_var, ref_var in zip(test_vars, ref_vars):
-                        self.assertAllClose(test_var, ref_var, rtol=1.0e-3, atol=1.0e-3)
-                    self.assertAllClose(test_loss, ref_loss, rtol=1.0e-3, atol=1.0e-3)
+                        self.assertAllClose(test_var,
+                                            ref_var,
+                                            rtol=1.0e-3,
+                                            atol=1.0e-3)
+                    self.assertAllClose(test_loss,
+                                        ref_loss,
+                                        rtol=1.0e-3,
+                                        atol=1.0e-3)
 
     def _testCheckpoint(
-        self,
-        is_fused_checkpoint_a,
-        is_fused_checkpoint_b,
-        use_gpu_checkpoint_a,
-        use_gpu_checkpoint_b,
-        use_gpu_test_a,
-        use_gpu_test_b,
-        freeze_mode,
+            self,
+            is_fused_checkpoint_a,
+            is_fused_checkpoint_b,
+            use_gpu_checkpoint_a,
+            use_gpu_checkpoint_b,
+            use_gpu_test_a,
+            use_gpu_test_b,
+            freeze_mode,
     ):
         batch, height, width, input_channels = 2, 4, 5, 3
         shape = [batch, height, width, input_channels]
@@ -195,9 +203,8 @@ class BNTest(test.TestCase):
             use_gpu_test_b,
         )
 
-        checkpoint_path_a = os.path.join(
-            self.get_temp_dir(), "checkpoint_a_%s" % base_path
-        )
+        checkpoint_path_a = os.path.join(self.get_temp_dir(),
+                                         "checkpoint_a_%s" % base_path)
         self._train(
             checkpoint_path_a,
             shape,
@@ -206,9 +213,8 @@ class BNTest(test.TestCase):
             restore=False,
             freeze_mode=freeze_mode,
         )
-        checkpoint_path_b = os.path.join(
-            self.get_temp_dir(), "checkpoint_b_%s" % base_path
-        )
+        checkpoint_path_b = os.path.join(self.get_temp_dir(),
+                                         "checkpoint_b_%s" % base_path)
         self._train(
             checkpoint_path_b,
             shape,
@@ -239,20 +245,19 @@ class BNTest(test.TestCase):
         for var_fused, var_nonfused in zip(vars_fused, vars_nonfused):
             self.assertAllClose(var_fused, var_nonfused, atol=1e-5)
 
-        image_val = np.random.rand(batch, height, width, input_channels).astype(
-            np.float32
-        )
-        loss_fused_val = self._infer(
-            checkpoint_path_a, image_val, shape, use_gpu_test_a, True
-        )
-        loss_nonfused_val = self._infer(
-            checkpoint_path_b, image_val, shape, use_gpu_test_b, False
-        )
-        self.assertAllClose(loss_fused_val, loss_nonfused_val, atol=1e-6, rtol=3e-4)
+        image_val = np.random.rand(batch, height, width,
+                                   input_channels).astype(np.float32)
+        loss_fused_val = self._infer(checkpoint_path_a, image_val, shape,
+                                     use_gpu_test_a, True)
+        loss_nonfused_val = self._infer(checkpoint_path_b, image_val, shape,
+                                        use_gpu_test_b, False)
+        self.assertAllClose(loss_fused_val,
+                            loss_nonfused_val,
+                            atol=1e-6,
+                            rtol=3e-4)
 
-    def _testCheckpointCrossDevice(
-        self, ckpt_a_fused, ckpt_a_use_gpu, ckpt_b_fused, ckpt_b_use_gpu
-    ):
+    def _testCheckpointCrossDevice(self, ckpt_a_fused, ckpt_a_use_gpu,
+                                   ckpt_b_fused, ckpt_b_use_gpu):
         for use_gpu_test_a in [True, False]:
             for use_gpu_test_b in [True, False]:
                 for freeze_mode in [True, False]:
@@ -311,7 +316,8 @@ class BNTest(test.TestCase):
 
         # Test that updates were created and added to UPDATE_OPS.
         self.assertEqual(len(bn.updates), 2)
-        self.assertListEqual(ops.get_collection(ops.GraphKeys.UPDATE_OPS), bn.updates)
+        self.assertListEqual(ops.get_collection(ops.GraphKeys.UPDATE_OPS),
+                             bn.updates)
 
         # Test that weights were created and added to TRAINABLE_VARIABLES.
         self.assertListEqual(
@@ -322,7 +328,9 @@ class BNTest(test.TestCase):
     def testCreateFusedBNFloat16(self):
         # Call layer.
         bn = normalization_layers.BatchNormalization(axis=1, fused=True)
-        inputs = random_ops.random_uniform((5, 4, 3, 3), seed=1, dtype=dtypes.float16)
+        inputs = random_ops.random_uniform((5, 4, 3, 3),
+                                           seed=1,
+                                           dtype=dtypes.float16)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -339,7 +347,8 @@ class BNTest(test.TestCase):
 
         # Test that updates were created and added to UPDATE_OPS.
         self.assertEqual(len(bn.updates), 2)
-        self.assertListEqual(ops.get_collection(ops.GraphKeys.UPDATE_OPS), bn.updates)
+        self.assertListEqual(ops.get_collection(ops.GraphKeys.UPDATE_OPS),
+                             bn.updates)
 
         # Test that weights were created and added to TRAINABLE_VARIABLES.
         self.assertListEqual(
@@ -349,12 +358,11 @@ class BNTest(test.TestCase):
 
     def test3DInputAxis1(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=1, epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=1,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -367,18 +375,18 @@ class BNTest(test.TestCase):
             np_beta = np.reshape(np_beta, (1, 4, 1))
 
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 2))
             std = np.std(np_inputs, axis=(0, 2))
@@ -396,12 +404,11 @@ class BNTest(test.TestCase):
 
     def test3DInputAxis2(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=2, epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=2,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -412,18 +419,18 @@ class BNTest(test.TestCase):
             np_gamma = np.reshape(np_gamma, (1, 1, 3))
             np_beta = np.reshape(np_beta, (1, 1, 3))
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 1))
             std = np.std(np_inputs, axis=(0, 1))
@@ -442,12 +449,11 @@ class BNTest(test.TestCase):
     def test4DInputAxis1(self):
         if test.is_gpu_available(cuda_only=True):
             epsilon = 1e-3
-            bn = normalization_layers.BatchNormalization(
-                axis=1, epsilon=epsilon, momentum=0.9
-            )
-            inputs = variables.Variable(
-                np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-            )
+            bn = normalization_layers.BatchNormalization(axis=1,
+                                                         epsilon=epsilon,
+                                                         momentum=0.9)
+            inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                        dtype=dtypes.float32)
             training = array_ops.placeholder(dtype="bool")
             outputs = bn.apply(inputs, training=training)
 
@@ -458,18 +464,21 @@ class BNTest(test.TestCase):
                 np_gamma = np.reshape(np_gamma, (1, 4, 1, 1))
                 np_beta = np.reshape(np_beta, (1, 4, 1, 1))
                 for _ in range(100):
-                    np_output, _, _ = sess.run(
-                        [outputs] + bn.updates, feed_dict={training: True}
-                    )
+                    np_output, _, _ = sess.run([outputs] + bn.updates,
+                                               feed_dict={training: True})
                     # Verify that the axis is normalized during training.
-                    normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                    self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
-                    self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
+                    normed_np_output = (
+                        (np_output - epsilon) * np_gamma) + np_beta
+                    self.assertAlmostEqual(np.mean(normed_np_output),
+                                           0.0,
+                                           places=1)
+                    self.assertAlmostEqual(np.std(normed_np_output),
+                                           1.0,
+                                           places=1)
 
                 # Verify that the statistics are updated during training.
                 moving_mean, moving_var = self.evaluate(
-                    [bn.moving_mean, bn.moving_variance]
-                )
+                    [bn.moving_mean, bn.moving_variance])
                 np_inputs = self.evaluate(inputs)
                 mean = np.mean(np_inputs, axis=(0, 2, 3))
                 std = np.std(np_inputs, axis=(0, 2, 3))
@@ -482,17 +491,18 @@ class BNTest(test.TestCase):
 
                 # Verify that the axis is normalized during inference.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
     def test4DInputAxis2(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=2, epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=2,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -503,18 +513,18 @@ class BNTest(test.TestCase):
             np_gamma = np.reshape(np_gamma, (1, 1, 3, 1))
             np_beta = np.reshape(np_beta, (1, 1, 3, 1))
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 1, 3))
             std = np.std(np_inputs, axis=(0, 1, 3))
@@ -532,12 +542,11 @@ class BNTest(test.TestCase):
 
     def test4DInputAxis3(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=3, epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=3,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -548,18 +557,18 @@ class BNTest(test.TestCase):
             np_gamma = np.reshape(np_gamma, (1, 1, 1, 6))
             np_beta = np.reshape(np_beta, (1, 1, 1, 6))
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 1, 2))
             std = np.std(np_inputs, axis=(0, 1, 2))
@@ -577,12 +586,12 @@ class BNTest(test.TestCase):
 
     def test4DInputAxis3Fused(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=3, epsilon=epsilon, momentum=0.9, fused=True
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=3,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9,
+                                                     fused=True)
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -593,18 +602,18 @@ class BNTest(test.TestCase):
             np_gamma = np.reshape(np_gamma, (1, 1, 1, 6))
             np_beta = np.reshape(np_beta, (1, 1, 1, 6))
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 1, 2))
             std = np.std(np_inputs, axis=(0, 1, 2))
@@ -623,12 +632,12 @@ class BNTest(test.TestCase):
     def test4DInputAxis1Fused(self):
         if test.is_gpu_available(cuda_only=True):
             epsilon = 1e-3
-            bn = normalization_layers.BatchNormalization(
-                axis=1, epsilon=epsilon, momentum=0.9, fused=True
-            )
-            inputs = variables.Variable(
-                np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-            )
+            bn = normalization_layers.BatchNormalization(axis=1,
+                                                         epsilon=epsilon,
+                                                         momentum=0.9,
+                                                         fused=True)
+            inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                        dtype=dtypes.float32)
             training = array_ops.placeholder(dtype="bool")
             outputs = bn.apply(inputs, training=training)
 
@@ -639,18 +648,21 @@ class BNTest(test.TestCase):
                 np_gamma = np.reshape(np_gamma, (1, 4, 1, 1))
                 np_beta = np.reshape(np_beta, (1, 4, 1, 1))
                 for _ in range(100):
-                    np_output, _, _ = sess.run(
-                        [outputs] + bn.updates, feed_dict={training: True}
-                    )
+                    np_output, _, _ = sess.run([outputs] + bn.updates,
+                                               feed_dict={training: True})
                     # Verify that the axis is normalized during training.
-                    normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                    self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
-                    self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
+                    normed_np_output = (
+                        (np_output - epsilon) * np_gamma) + np_beta
+                    self.assertAlmostEqual(np.mean(normed_np_output),
+                                           0.0,
+                                           places=1)
+                    self.assertAlmostEqual(np.std(normed_np_output),
+                                           1.0,
+                                           places=1)
 
                 # Verify that the statistics are updated during training.
                 moving_mean, moving_var = self.evaluate(
-                    [bn.moving_mean, bn.moving_variance]
-                )
+                    [bn.moving_mean, bn.moving_variance])
                 np_inputs = self.evaluate(inputs)
                 mean = np.mean(np_inputs, axis=(0, 2, 3))
                 std = np.std(np_inputs, axis=(0, 2, 3))
@@ -663,17 +675,18 @@ class BNTest(test.TestCase):
 
                 # Verify that the axis is normalized during inference.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
     def testNegativeAxis(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=-1, epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=-1,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -684,19 +697,19 @@ class BNTest(test.TestCase):
             np_gamma = np.reshape(np_gamma, (1, 1, 1, 6))
             np_beta = np.reshape(np_beta, (1, 1, 1, 6))
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
 
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 1, 2))
             std = np.std(np_inputs, axis=(0, 1, 2))
@@ -714,12 +727,11 @@ class BNTest(test.TestCase):
 
     def testBooleanLearningPhase(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=-1, epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=-1,
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)) + 100,
+                                    dtype=dtypes.float32)
         outputs_training = bn.apply(inputs, training=True)
         outputs_infer = bn.apply(inputs, training=False)
 
@@ -733,13 +745,14 @@ class BNTest(test.TestCase):
                 np_output, _, _ = sess.run([outputs_training] + bn.updates)
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=2)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=2)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 1, 2))
             std = np.std(np_inputs, axis=(0, 1, 2))
@@ -756,14 +769,16 @@ class BNTest(test.TestCase):
             self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
     def testFunctionalNoReuse(self):
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)), dtype=dtypes.float32
-        )
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)),
+                                    dtype=dtypes.float32)
         epsilon = 1e-3
         training = array_ops.placeholder(dtype="bool")
-        outputs = normalization_layers.batch_norm(
-            inputs, axis=-1, momentum=0.9, epsilon=epsilon, training=training, name="bn"
-        )
+        outputs = normalization_layers.batch_norm(inputs,
+                                                  axis=-1,
+                                                  momentum=0.9,
+                                                  epsilon=epsilon,
+                                                  training=training,
+                                                  name="bn")
 
         updates = ops.get_collection(ops.GraphKeys.UPDATE_OPS)
         all_vars = dict([(v.name, v) for v in variables.global_variables()])
@@ -779,18 +794,18 @@ class BNTest(test.TestCase):
             np_gamma = np.reshape(np_gamma, (1, 1, 1, 6))
             np_beta = np.reshape(np_beta, (1, 1, 1, 6))
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             np_moving_mean, np_moving_var = self.evaluate(
-                [moving_mean, moving_variance]
-            )
+                [moving_mean, moving_variance])
             np_inputs = self.evaluate(inputs)
             np_mean = np.mean(np_inputs, axis=(0, 1, 2))
             np_std = np.std(np_inputs, axis=(0, 1, 2))
@@ -807,12 +822,10 @@ class BNTest(test.TestCase):
             self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
     def testFunctionalReuse(self):
-        inputs1 = variables.Variable(
-            np.random.random((5, 4, 3, 6)), dtype=dtypes.float32
-        )
-        inputs2 = variables.Variable(
-            np.random.random((5, 4, 3, 6)), dtype=dtypes.float32
-        )
+        inputs1 = variables.Variable(np.random.random((5, 4, 3, 6)),
+                                     dtype=dtypes.float32)
+        inputs2 = variables.Variable(np.random.random((5, 4, 3, 6)),
+                                     dtype=dtypes.float32)
         epsilon = 1e-3
         training = array_ops.placeholder(dtype="bool")
         _ = normalization_layers.batch_norm(
@@ -845,14 +858,12 @@ class BNTest(test.TestCase):
             # Test training with placeholder learning phase.
             self.evaluate(variables.global_variables_initializer())
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs2] + updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs2] + updates,
+                                           feed_dict={training: True})
 
             # Verify that the statistics are updated during training.
             np_moving_mean, np_moving_var = self.evaluate(
-                [moving_mean, moving_variance]
-            )
+                [moving_mean, moving_variance])
             np_inputs = self.evaluate(inputs2)
             np_mean = np.mean(np_inputs, axis=(0, 1, 2))
             np_std = np.std(np_inputs, axis=(0, 1, 2))
@@ -877,20 +888,23 @@ class BNTest(test.TestCase):
             self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
     def testFunctionalReuseFromScope(self):
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3, 6)), dtype=dtypes.float32
-        )
+        inputs = variables.Variable(np.random.random((5, 4, 3, 6)),
+                                    dtype=dtypes.float32)
         epsilon = 1e-3
         training = array_ops.placeholder(dtype="bool")
         with variable_scope.variable_scope("scope"):
-            _ = normalization_layers.batch_norm(
-                inputs, axis=-1, momentum=0.9, epsilon=epsilon, training=training
-            )
+            _ = normalization_layers.batch_norm(inputs,
+                                                axis=-1,
+                                                momentum=0.9,
+                                                epsilon=epsilon,
+                                                training=training)
             self.assertEqual(len(variables.global_variables()), 5)
         with variable_scope.variable_scope("scope", reuse=True):
-            _ = normalization_layers.batch_norm(
-                inputs, axis=-1, momentum=0.9, epsilon=epsilon, training=training
-            )
+            _ = normalization_layers.batch_norm(inputs,
+                                                axis=-1,
+                                                momentum=0.9,
+                                                epsilon=epsilon,
+                                                training=training)
             self.assertEqual(len(variables.global_variables()), 5)
 
     def testNoCenter(self):
@@ -927,13 +941,15 @@ class BNTest(test.TestCase):
         def reg(x):
             return 0.1 * math_ops.reduce_sum(x)
 
-        bn = normalization_layers.BatchNormalization(axis=1, beta_regularizer=reg)
+        bn = normalization_layers.BatchNormalization(axis=1,
+                                                     beta_regularizer=reg)
         inputs = random_ops.random_uniform((5, 4, 3), seed=1)
         training = array_ops.placeholder(dtype="bool")
         _ = bn.apply(inputs, training=training)
         self.assertEqual(len(bn.losses), 1)
 
-        bn = normalization_layers.BatchNormalization(axis=1, gamma_regularizer=reg)
+        bn = normalization_layers.BatchNormalization(axis=1,
+                                                     gamma_regularizer=reg)
         inputs = random_ops.random_uniform((5, 4, 3), seed=1)
         training = array_ops.placeholder(dtype="bool")
         _ = bn.apply(inputs, training=training)
@@ -947,8 +963,9 @@ class BNTest(test.TestCase):
             return x / math_ops.reduce_max(x)
 
         bn = normalization_layers.BatchNormalization(
-            axis=1, gamma_constraint=g_constraint, beta_constraint=b_constraint
-        )
+            axis=1,
+            gamma_constraint=g_constraint,
+            beta_constraint=b_constraint)
         inputs = random_ops.random_uniform((5, 4, 3), seed=1)
         bn(inputs)
         self.assertEqual(bn.gamma_constraint, g_constraint)
@@ -972,7 +989,11 @@ class BNTest(test.TestCase):
             epsilon=epsilon,
             momentum=momentum,
             renorm=True,
-            renorm_clipping={"rmax": rmax, "rmin": rmin, "dmax": dmax},
+            renorm_clipping={
+                "rmax": rmax,
+                "rmin": rmin,
+                "dmax": dmax
+            },
             renorm_momentum=renorm_momentum,
         )
         training = array_ops.placeholder(dtypes.bool)
@@ -994,20 +1015,24 @@ class BNTest(test.TestCase):
                 d = ((mean - renorm_mean) / renorm_stddev).clip(-dmax, dmax)
                 y_train = ((x - mean) / stddev * r + d) * gamma + beta
                 renorm_mean += (mean - renorm_mean) * (1.0 - renorm_momentum)
-                renorm_stddev += (stddev - renorm_stddev) * (1.0 - renorm_momentum)
+                renorm_stddev += (stddev - renorm_stddev) * (1.0 -
+                                                             renorm_momentum)
                 moving_mean += (mean - moving_mean) * (1.0 - momentum)
                 moving_stddev += (stddev - moving_stddev) * (1.0 - momentum)
 
-                y_test = (
-                    (x - moving_mean) / (moving_stddev * moving_stddev) ** 0.5 * gamma
-                ) + beta
+                y_test = ((x - moving_mean) /
+                          (moving_stddev * moving_stddev)**0.5 * gamma) + beta
 
-                yt_val_train, _, _ = sess.run(
-                    [yt] + bn.updates, feed_dict={xt: x, training: True}
-                )
-                yt_val_test, _, _ = sess.run(
-                    [yt] + bn.updates, feed_dict={xt: x, training: False}
-                )
+                yt_val_train, _, _ = sess.run([yt] + bn.updates,
+                                              feed_dict={
+                                                  xt: x,
+                                                  training: True
+                                              })
+                yt_val_test, _, _ = sess.run([yt] + bn.updates,
+                                             feed_dict={
+                                                 xt: x,
+                                                 training: False
+                                             })
 
                 self.assertAllClose(y_train, yt_val_train, atol=1e-5)
                 self.assertAllClose(y_test, yt_val_test, atol=1e-5)
@@ -1046,23 +1071,27 @@ class BNTest(test.TestCase):
                 stddev = np.sqrt(variance + epsilon)
                 r = stddev / renorm_stddev
                 d = (mean - renorm_mean) / renorm_stddev
-                y_test = (
-                    (x - moving_mean) / (moving_stddev * moving_stddev) ** 0.5 * gamma
-                ) + beta
+                y_test = ((x - moving_mean) /
+                          (moving_stddev * moving_stddev)**0.5 * gamma) + beta
                 y_train = ((x - mean) / stddev * r + d) * gamma + beta
                 renorm_mean += (mean - renorm_mean) * (1.0 - renorm_momentum)
-                renorm_stddev += (stddev - renorm_stddev) * (1.0 - renorm_momentum)
+                renorm_stddev += (stddev - renorm_stddev) * (1.0 -
+                                                             renorm_momentum)
                 moving_mean += (mean - moving_mean) * (1.0 - momentum)
                 moving_stddev += (stddev - moving_stddev) * (1.0 - momentum)
 
                 # Compute test values first, before the train mode updates the moving
                 # averages.
-                yt_val_test, _, _ = sess.run(
-                    [yt] + bn.updates, feed_dict={xt: x, training: False}
-                )
-                yt_val_train, _, _ = sess.run(
-                    [yt] + bn.updates, feed_dict={xt: x, training: True}
-                )
+                yt_val_test, _, _ = sess.run([yt] + bn.updates,
+                                             feed_dict={
+                                                 xt: x,
+                                                 training: False
+                                             })
+                yt_val_train, _, _ = sess.run([yt] + bn.updates,
+                                              feed_dict={
+                                                  xt: x,
+                                                  training: True
+                                              })
 
                 # Due to initialization inconsistencies, values may not be identical
                 # on the first iteration (but shouldn't be different by much more than
@@ -1100,24 +1129,28 @@ class BNTest(test.TestCase):
                 x = np.random.random(shape)
                 yt_val_train, adj_scale_val, adj_bias_val = sess.run(
                     [yt, adjust_scale, adjust_bias] + bn.updates,
-                    feed_dict={xt: x, training: True},
+                    feed_dict={
+                        xt: x,
+                        training: True
+                    },
                 )[:3]
-                yt_val_test = sess.run(
-                    [yt] + bn.updates, feed_dict={xt: x, training: False}
-                )[0]
+                yt_val_test = sess.run([yt] + bn.updates,
+                                       feed_dict={
+                                           xt: x,
+                                           training: False
+                                       })[0]
 
                 mean = x.mean(0)
                 variance = x.var(0)
-                y_train = (
-                    ((x - mean) / (variance + epsilon) ** 0.5) * adj_scale_val
-                    + adj_bias_val
-                ) * gamma + beta
+                y_train = (((x - mean) /
+                            (variance + epsilon)**0.5) * adj_scale_val +
+                           adj_bias_val) * gamma + beta
                 moving_mean += (mean - moving_mean) * (1.0 - momentum)
-                moving_variance += (variance - moving_variance) * (1.0 - momentum)
+                moving_variance += (variance - moving_variance) * (1.0 -
+                                                                   momentum)
 
-                y_test = (
-                    (x - moving_mean) / (moving_variance + epsilon) ** 0.5 * gamma
-                ) + beta
+                y_test = ((x - moving_mean) /
+                          (moving_variance + epsilon)**0.5 * gamma) + beta
 
                 self.assertAllClose(y_train, yt_val_train, atol=1e-5)
                 self.assertAllClose(y_test, yt_val_test, atol=1e-5)
@@ -1142,7 +1175,11 @@ class BNTest(test.TestCase):
             epsilon=epsilon,
             momentum=momentum,
             renorm=True,
-            renorm_clipping={"rmax": rmax, "rmin": rmin, "dmax": dmax},
+            renorm_clipping={
+                "rmax": rmax,
+                "rmin": rmin,
+                "dmax": dmax
+            },
             renorm_momentum=renorm_momentum,
             adjustment=lambda _: (adjust_scale, adjust_bias),
         )
@@ -1159,28 +1196,32 @@ class BNTest(test.TestCase):
                 x = np.random.random(shape)
                 yt_val_train, adj_scale_val, adj_bias_val = sess.run(
                     [yt, adjust_scale, adjust_bias] + bn.updates,
-                    feed_dict={xt: x, training: True},
+                    feed_dict={
+                        xt: x,
+                        training: True
+                    },
                 )[:3]
-                yt_val_test = sess.run(
-                    [yt] + bn.updates, feed_dict={xt: x, training: False}
-                )[0]
+                yt_val_test = sess.run([yt] + bn.updates,
+                                       feed_dict={
+                                           xt: x,
+                                           training: False
+                                       })[0]
 
                 mean = x.mean(0)
                 variance = x.var(0)
                 stddev = np.sqrt(variance + epsilon)
                 r = (stddev / renorm_stddev).clip(rmin, rmax)
                 d = ((mean - renorm_mean) / renorm_stddev).clip(-dmax, dmax)
-                y_train = (
-                    ((x - mean) / stddev * r + d) * adj_scale_val + adj_bias_val
-                ) * gamma + beta
+                y_train = (((x - mean) / stddev * r + d) * adj_scale_val +
+                           adj_bias_val) * gamma + beta
                 renorm_mean += (mean - renorm_mean) * (1.0 - renorm_momentum)
-                renorm_stddev += (stddev - renorm_stddev) * (1.0 - renorm_momentum)
+                renorm_stddev += (stddev - renorm_stddev) * (1.0 -
+                                                             renorm_momentum)
                 moving_mean += (mean - moving_mean) * (1.0 - momentum)
                 moving_stddev += (stddev - moving_stddev) * (1.0 - momentum)
 
-                y_test = (
-                    (x - moving_mean) / (moving_stddev * moving_stddev) ** 0.5 * gamma
-                ) + beta
+                y_test = ((x - moving_mean) /
+                          (moving_stddev * moving_stddev)**0.5 * gamma) + beta
 
                 self.assertAllClose(y_train, yt_val_train, atol=1e-5)
                 self.assertAllClose(y_test, yt_val_test, atol=1e-5)
@@ -1190,13 +1231,15 @@ class BNTest(test.TestCase):
         inp = random_ops.random_uniform(shape, seed=1)
 
         with self.assertRaises(ValueError):
-            normalization_layers.batch_normalization(inp, virtual_batch_size=-1)
+            normalization_layers.batch_normalization(inp,
+                                                     virtual_batch_size=-1)
 
     def testGhostBNVirtualBatchFull(self):
         shape = [6, 5, 4, 3]
         inp = random_ops.random_uniform(shape, seed=1)
         out1 = normalization_layers.batch_normalization(inp)
-        out2 = normalization_layers.batch_normalization(inp, virtual_batch_size=6)
+        out2 = normalization_layers.batch_normalization(inp,
+                                                        virtual_batch_size=6)
 
         self.assertListEqual(out1.shape.as_list(), out2.shape.as_list())
 
@@ -1211,14 +1254,16 @@ class BNTest(test.TestCase):
     def testGhostBNInputOutputShapesMatch(self):
         shape = [6, 4, 3]
         inp = random_ops.random_uniform(shape, seed=1)
-        out = normalization_layers.batch_normalization(inp, virtual_batch_size=3)
+        out = normalization_layers.batch_normalization(inp,
+                                                       virtual_batch_size=3)
         self.assertListEqual(out.shape.as_list(), shape)
 
     def testGhostBNUnknownBatchSize(self):
         np_shape = [10, 5, 4]
         tf_shape = [None, 5, 4]
         inp = array_ops.placeholder(dtypes.float32, tf_shape)
-        out = normalization_layers.batch_normalization(inp, virtual_batch_size=2)
+        out = normalization_layers.batch_normalization(inp,
+                                                       virtual_batch_size=2)
 
         with self.session(use_gpu=True) as sess:
             self.evaluate(variables.global_variables_initializer())
@@ -1248,7 +1293,9 @@ class BNTest(test.TestCase):
             virtual_batch_size=virtual_batch_size,
         )
         out = bn.apply(inp, training=is_training)
-        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size, shape[1]]
+        ghost_shape = [
+            virtual_batch_size, shape[0] // virtual_batch_size, shape[1]
+        ]
 
         with self.session(use_gpu=True) as sess:
             self.evaluate(variables.global_variables_initializer())
@@ -1262,25 +1309,29 @@ class BNTest(test.TestCase):
                 avg_means = np.mean(means, axis=1, keepdims=True)
                 avg_variances = np.mean(variances, axis=1, keepdims=True)
 
-                moving_means = moving_means * momentum + avg_means * (1.0 - momentum)
-                moving_vars = moving_vars * momentum + avg_variances * (1.0 - momentum)
+                moving_means = moving_means * momentum + avg_means * (1.0 -
+                                                                      momentum)
+                moving_vars = moving_vars * momentum + avg_variances * (
+                    1.0 - momentum)
 
-                y_train = (
-                    (sub_batched - means) / (variances + epsilon) ** 0.5 * gamma
-                ) + beta
-                y_test = (
-                    (sub_batched - moving_means)
-                    / (moving_vars + epsilon) ** 0.5
-                    * gamma
-                ) + beta
+                y_train = ((sub_batched - means) /
+                           (variances + epsilon)**0.5 * gamma) + beta
+                y_test = ((sub_batched - moving_means) /
+                          (moving_vars + epsilon)**0.5 * gamma) + beta
 
                 y_train = np.reshape(y_train, shape)
                 y_test = np.reshape(y_test, shape)
 
-                y_val_train, _, _ = sess.run(
-                    [out] + bn.updates, feed_dict={inp: x, is_training: True}
-                )
-                y_val_test = sess.run(out, feed_dict={inp: x, is_training: False})
+                y_val_train, _, _ = sess.run([out] + bn.updates,
+                                             feed_dict={
+                                                 inp: x,
+                                                 is_training: True
+                                             })
+                y_val_test = sess.run(out,
+                                      feed_dict={
+                                          inp: x,
+                                          is_training: False
+                                      })
 
                 self.assertAllClose(y_train, y_val_train, atol=1e-5)
                 self.assertAllClose(y_test, y_val_test, atol=1e-5)
@@ -1306,7 +1357,8 @@ class BNTest(test.TestCase):
             virtual_batch_size=virtual_batch_size,
         )
         out = bn.apply(inp, training=is_training)
-        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size] + shape[1:]
+        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size
+                       ] + shape[1:]
 
         with self.session(use_gpu=True) as sess:
             self.evaluate(variables.global_variables_initializer())
@@ -1320,25 +1372,29 @@ class BNTest(test.TestCase):
                 avg_means = np.mean(means, axis=1, keepdims=True)
                 avg_variances = np.mean(variances, axis=1, keepdims=True)
 
-                moving_means = moving_means * momentum + avg_means * (1.0 - momentum)
-                moving_vars = moving_vars * momentum + avg_variances * (1.0 - momentum)
+                moving_means = moving_means * momentum + avg_means * (1.0 -
+                                                                      momentum)
+                moving_vars = moving_vars * momentum + avg_variances * (
+                    1.0 - momentum)
 
-                y_train = (
-                    (sub_batched - means) / (variances + epsilon) ** 0.5 * gamma
-                ) + beta
-                y_test = (
-                    (sub_batched - moving_means)
-                    / (moving_vars + epsilon) ** 0.5
-                    * gamma
-                ) + beta
+                y_train = ((sub_batched - means) /
+                           (variances + epsilon)**0.5 * gamma) + beta
+                y_test = ((sub_batched - moving_means) /
+                          (moving_vars + epsilon)**0.5 * gamma) + beta
 
                 y_train = np.reshape(y_train, shape)
                 y_test = np.reshape(y_test, shape)
 
-                y_val_train, _, _ = sess.run(
-                    [out] + bn.updates, feed_dict={inp: x, is_training: True}
-                )
-                y_val_test = sess.run(out, feed_dict={inp: x, is_training: False})
+                y_val_train, _, _ = sess.run([out] + bn.updates,
+                                             feed_dict={
+                                                 inp: x,
+                                                 is_training: True
+                                             })
+                y_val_test = sess.run(out,
+                                      feed_dict={
+                                          inp: x,
+                                          is_training: False
+                                      })
 
                 self.assertAllClose(y_train, y_val_train, atol=1e-2)
                 self.assertAllClose(y_test, y_val_test, atol=1e-2)
@@ -1365,7 +1421,8 @@ class BNTest(test.TestCase):
             fused=False,
         )  # NCHW is unsupported by CPU fused batch norm
         out = bn.apply(inp, training=is_training)
-        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size] + shape[1:]
+        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size
+                       ] + shape[1:]
 
         with self.session(use_gpu=True) as sess:
             self.evaluate(variables.global_variables_initializer())
@@ -1379,25 +1436,29 @@ class BNTest(test.TestCase):
                 avg_means = np.mean(means, axis=1, keepdims=True)
                 avg_variances = np.mean(variances, axis=1, keepdims=True)
 
-                moving_means = moving_means * momentum + avg_means * (1.0 - momentum)
-                moving_vars = moving_vars * momentum + avg_variances * (1.0 - momentum)
+                moving_means = moving_means * momentum + avg_means * (1.0 -
+                                                                      momentum)
+                moving_vars = moving_vars * momentum + avg_variances * (
+                    1.0 - momentum)
 
-                y_train = (
-                    (sub_batched - means) / (variances + epsilon) ** 0.5 * gamma
-                ) + beta
-                y_test = (
-                    (sub_batched - moving_means)
-                    / (moving_vars + epsilon) ** 0.5
-                    * gamma
-                ) + beta
+                y_train = ((sub_batched - means) /
+                           (variances + epsilon)**0.5 * gamma) + beta
+                y_test = ((sub_batched - moving_means) /
+                          (moving_vars + epsilon)**0.5 * gamma) + beta
 
                 y_train = np.reshape(y_train, shape)
                 y_test = np.reshape(y_test, shape)
 
-                y_val_train, _, _ = sess.run(
-                    [out] + bn.updates, feed_dict={inp: x, is_training: True}
-                )
-                y_val_test = sess.run(out, feed_dict={inp: x, is_training: False})
+                y_val_train, _, _ = sess.run([out] + bn.updates,
+                                             feed_dict={
+                                                 inp: x,
+                                                 is_training: True
+                                             })
+                y_val_test = sess.run(out,
+                                      feed_dict={
+                                          inp: x,
+                                          is_training: False
+                                      })
 
                 self.assertAllClose(y_train, y_val_train, atol=1e-2)
                 self.assertAllClose(y_test, y_val_test, atol=1e-2)
@@ -1407,22 +1468,27 @@ class BNTest(test.TestCase):
         inp = random_ops.random_uniform(shape, seed=1)
 
         with self.assertRaises(ValueError):
-            normalization_layers.batch_normalization(inp, axis=[1, 4])  # out of bounds
+            normalization_layers.batch_normalization(inp,
+                                                     axis=[1,
+                                                           4])  # out of bounds
 
         with self.assertRaises(ValueError):
-            normalization_layers.batch_normalization(inp, axis=[-5, 1])  # out of bounds
+            normalization_layers.batch_normalization(inp,
+                                                     axis=[-5,
+                                                           1])  # out of bounds
 
         with self.assertRaises(ValueError):
-            normalization_layers.batch_normalization(inp, axis=[1, 2, 1])  # duplicate
+            normalization_layers.batch_normalization(inp,
+                                                     axis=[1, 2,
+                                                           1])  # duplicate
 
     def test3DInputMultiAxis12(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=[1, 2], epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 4, 3)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=[1, 2],
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 4, 3)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -1433,18 +1499,18 @@ class BNTest(test.TestCase):
             np_gamma, np_beta = self.evaluate([bn.gamma, bn.beta])
 
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=0, keepdims=True)
             std = np.std(np_inputs, axis=0, keepdims=True)
@@ -1462,12 +1528,11 @@ class BNTest(test.TestCase):
 
     def test5DInputMultiAxis123(self):
         epsilon = 1e-3
-        bn = normalization_layers.BatchNormalization(
-            axis=[1, 2, 3], epsilon=epsilon, momentum=0.9
-        )
-        inputs = variables.Variable(
-            np.random.random((5, 3, 4, 4, 3)) + 100, dtype=dtypes.float32
-        )
+        bn = normalization_layers.BatchNormalization(axis=[1, 2, 3],
+                                                     epsilon=epsilon,
+                                                     momentum=0.9)
+        inputs = variables.Variable(np.random.random((5, 3, 4, 4, 3)) + 100,
+                                    dtype=dtypes.float32)
         training = array_ops.placeholder(dtype="bool")
         outputs = bn.apply(inputs, training=training)
 
@@ -1478,18 +1543,18 @@ class BNTest(test.TestCase):
             np_gamma, np_beta = self.evaluate([bn.gamma, bn.beta])
 
             for _ in range(100):
-                np_output, _, _ = sess.run(
-                    [outputs] + bn.updates, feed_dict={training: True}
-                )
+                np_output, _, _ = sess.run([outputs] + bn.updates,
+                                           feed_dict={training: True})
                 # Verify that the axis is normalized during training.
                 normed_np_output = ((np_output - epsilon) * np_gamma) + np_beta
-                self.assertAlmostEqual(np.mean(normed_np_output), 0.0, places=1)
+                self.assertAlmostEqual(np.mean(normed_np_output),
+                                       0.0,
+                                       places=1)
                 self.assertAlmostEqual(np.std(normed_np_output), 1.0, places=1)
 
             # Verify that the statistics are updated during training.
             moving_mean, moving_var = self.evaluate(
-                [bn.moving_mean, bn.moving_variance]
-            )
+                [bn.moving_mean, bn.moving_variance])
             np_inputs = self.evaluate(inputs)
             mean = np.mean(np_inputs, axis=(0, 4), keepdims=True)
             std = np.std(np_inputs, axis=(0, 4), keepdims=True)
@@ -1527,7 +1592,8 @@ class BNTest(test.TestCase):
             fused=False,
         )
         out = bn.apply(inp, training=is_training)
-        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size] + shape[1:]
+        ghost_shape = [virtual_batch_size, shape[0] // virtual_batch_size
+                       ] + shape[1:]
 
         with self.session(use_gpu=True) as sess:
             self.evaluate(variables.global_variables_initializer())
@@ -1541,25 +1607,29 @@ class BNTest(test.TestCase):
                 avg_means = np.mean(means, axis=1, keepdims=True)
                 avg_variances = np.mean(variances, axis=1, keepdims=True)
 
-                moving_means = moving_means * momentum + avg_means * (1.0 - momentum)
-                moving_vars = moving_vars * momentum + avg_variances * (1.0 - momentum)
+                moving_means = moving_means * momentum + avg_means * (1.0 -
+                                                                      momentum)
+                moving_vars = moving_vars * momentum + avg_variances * (
+                    1.0 - momentum)
 
-                y_train = (
-                    (sub_batched - means) / (variances + epsilon) ** 0.5 * gamma
-                ) + beta
-                y_test = (
-                    (sub_batched - moving_means)
-                    / (moving_vars + epsilon) ** 0.5
-                    * gamma
-                ) + beta
+                y_train = ((sub_batched - means) /
+                           (variances + epsilon)**0.5 * gamma) + beta
+                y_test = ((sub_batched - moving_means) /
+                          (moving_vars + epsilon)**0.5 * gamma) + beta
 
                 y_train = np.reshape(y_train, shape)
                 y_test = np.reshape(y_test, shape)
 
-                y_val_train, _, _ = sess.run(
-                    [out] + bn.updates, feed_dict={inp: x, is_training: True}
-                )
-                y_val_test = sess.run(out, feed_dict={inp: x, is_training: False})
+                y_val_train, _, _ = sess.run([out] + bn.updates,
+                                             feed_dict={
+                                                 inp: x,
+                                                 is_training: True
+                                             })
+                y_val_test = sess.run(out,
+                                      feed_dict={
+                                          inp: x,
+                                          is_training: False
+                                      })
 
                 self.assertAllClose(y_train, y_val_train, atol=1e-2)
                 self.assertAllClose(y_test, y_val_test, atol=1e-2)

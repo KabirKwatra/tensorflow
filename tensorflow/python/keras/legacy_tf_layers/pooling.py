@@ -43,34 +43,32 @@ class AveragePooling1D(keras_layers.AveragePooling1D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(
-        self,
-        pool_size,
-        strides,
-        padding="valid",
-        data_format="channels_last",
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 pool_size,
+                 strides,
+                 padding="valid",
+                 data_format="channels_last",
+                 name=None,
+                 **kwargs):
         if strides is None:
             raise ValueError("Argument `strides` must not be None.")
-        super(AveragePooling1D, self).__init__(
-            pool_size=pool_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            name=name,
-            **kwargs
-        )
+        super(AveragePooling1D, self).__init__(pool_size=pool_size,
+                                               strides=strides,
+                                               padding=padding,
+                                               data_format=data_format,
+                                               name=name,
+                                               **kwargs)
 
 
 @deprecation.deprecated(
-    date=None, instructions="Use keras.layers.AveragePooling1D instead."
-)
+    date=None, instructions="Use keras.layers.AveragePooling1D instead.")
 @tf_export(v1=["layers.average_pooling1d"])
-def average_pooling1d(
-    inputs, pool_size, strides, padding="valid", data_format="channels_last", name=None
-):
+def average_pooling1d(inputs,
+                      pool_size,
+                      strides,
+                      padding="valid",
+                      data_format="channels_last",
+                      name=None):
     """Average Pooling layer for 1D inputs.
 
     Arguments:
@@ -123,34 +121,32 @@ class MaxPooling1D(keras_layers.MaxPooling1D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(
-        self,
-        pool_size,
-        strides,
-        padding="valid",
-        data_format="channels_last",
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 pool_size,
+                 strides,
+                 padding="valid",
+                 data_format="channels_last",
+                 name=None,
+                 **kwargs):
         if strides is None:
             raise ValueError("Argument `strides` must not be None.")
-        super(MaxPooling1D, self).__init__(
-            pool_size=pool_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            name=name,
-            **kwargs
-        )
+        super(MaxPooling1D, self).__init__(pool_size=pool_size,
+                                           strides=strides,
+                                           padding=padding,
+                                           data_format=data_format,
+                                           name=name,
+                                           **kwargs)
 
 
-@deprecation.deprecated(
-    date=None, instructions="Use keras.layers.MaxPooling1D instead."
-)
+@deprecation.deprecated(date=None,
+                        instructions="Use keras.layers.MaxPooling1D instead.")
 @tf_export(v1=["layers.max_pooling1d"])
-def max_pooling1d(
-    inputs, pool_size, strides, padding="valid", data_format="channels_last", name=None
-):
+def max_pooling1d(inputs,
+                  pool_size,
+                  strides,
+                  padding="valid",
+                  data_format="channels_last",
+                  name=None):
     """Max Pooling layer for 1D inputs.
 
     Arguments:
@@ -207,34 +203,32 @@ class AveragePooling2D(keras_layers.AveragePooling2D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(
-        self,
-        pool_size,
-        strides,
-        padding="valid",
-        data_format="channels_last",
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 pool_size,
+                 strides,
+                 padding="valid",
+                 data_format="channels_last",
+                 name=None,
+                 **kwargs):
         if strides is None:
             raise ValueError("Argument `strides` must not be None.")
-        super(AveragePooling2D, self).__init__(
-            pool_size=pool_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            name=name,
-            **kwargs
-        )
+        super(AveragePooling2D, self).__init__(pool_size=pool_size,
+                                               strides=strides,
+                                               padding=padding,
+                                               data_format=data_format,
+                                               name=name,
+                                               **kwargs)
 
 
 @deprecation.deprecated(
-    date=None, instructions="Use keras.layers.AveragePooling2D instead."
-)
+    date=None, instructions="Use keras.layers.AveragePooling2D instead.")
 @tf_export(v1=["layers.average_pooling2d"])
-def average_pooling2d(
-    inputs, pool_size, strides, padding="valid", data_format="channels_last", name=None
-):
+def average_pooling2d(inputs,
+                      pool_size,
+                      strides,
+                      padding="valid",
+                      data_format="channels_last",
+                      name=None):
     """Average pooling layer for 2D inputs (e.g. images).
 
     Arguments:
@@ -295,34 +289,32 @@ class MaxPooling2D(keras_layers.MaxPooling2D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(
-        self,
-        pool_size,
-        strides,
-        padding="valid",
-        data_format="channels_last",
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 pool_size,
+                 strides,
+                 padding="valid",
+                 data_format="channels_last",
+                 name=None,
+                 **kwargs):
         if strides is None:
             raise ValueError("Argument `strides` must not be None.")
-        super(MaxPooling2D, self).__init__(
-            pool_size=pool_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            name=name,
-            **kwargs
-        )
+        super(MaxPooling2D, self).__init__(pool_size=pool_size,
+                                           strides=strides,
+                                           padding=padding,
+                                           data_format=data_format,
+                                           name=name,
+                                           **kwargs)
 
 
-@deprecation.deprecated(
-    date=None, instructions="Use keras.layers.MaxPooling2D instead."
-)
+@deprecation.deprecated(date=None,
+                        instructions="Use keras.layers.MaxPooling2D instead.")
 @tf_export(v1=["layers.max_pooling2d"])
-def max_pooling2d(
-    inputs, pool_size, strides, padding="valid", data_format="channels_last", name=None
-):
+def max_pooling2d(inputs,
+                  pool_size,
+                  strides,
+                  padding="valid",
+                  data_format="channels_last",
+                  name=None):
     """Max pooling layer for 2D inputs (e.g. images).
 
     Arguments:
@@ -385,34 +377,32 @@ class AveragePooling3D(keras_layers.AveragePooling3D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(
-        self,
-        pool_size,
-        strides,
-        padding="valid",
-        data_format="channels_last",
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 pool_size,
+                 strides,
+                 padding="valid",
+                 data_format="channels_last",
+                 name=None,
+                 **kwargs):
         if strides is None:
             raise ValueError("Argument `strides` must not be None.")
-        super(AveragePooling3D, self).__init__(
-            pool_size=pool_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            name=name,
-            **kwargs
-        )
+        super(AveragePooling3D, self).__init__(pool_size=pool_size,
+                                               strides=strides,
+                                               padding=padding,
+                                               data_format=data_format,
+                                               name=name,
+                                               **kwargs)
 
 
 @deprecation.deprecated(
-    date=None, instructions="Use keras.layers.AveragePooling3D instead."
-)
+    date=None, instructions="Use keras.layers.AveragePooling3D instead.")
 @tf_export(v1=["layers.average_pooling3d"])
-def average_pooling3d(
-    inputs, pool_size, strides, padding="valid", data_format="channels_last", name=None
-):
+def average_pooling3d(inputs,
+                      pool_size,
+                      strides,
+                      padding="valid",
+                      data_format="channels_last",
+                      name=None):
     """Average pooling layer for 3D inputs (e.g. volumes).
 
     Arguments:
@@ -477,34 +467,32 @@ class MaxPooling3D(keras_layers.MaxPooling3D, base.Layer):
       name: A string, the name of the layer.
     """
 
-    def __init__(
-        self,
-        pool_size,
-        strides,
-        padding="valid",
-        data_format="channels_last",
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 pool_size,
+                 strides,
+                 padding="valid",
+                 data_format="channels_last",
+                 name=None,
+                 **kwargs):
         if strides is None:
             raise ValueError("Argument `strides` must not be None.")
-        super(MaxPooling3D, self).__init__(
-            pool_size=pool_size,
-            strides=strides,
-            padding=padding,
-            data_format=data_format,
-            name=name,
-            **kwargs
-        )
+        super(MaxPooling3D, self).__init__(pool_size=pool_size,
+                                           strides=strides,
+                                           padding=padding,
+                                           data_format=data_format,
+                                           name=name,
+                                           **kwargs)
 
 
-@deprecation.deprecated(
-    date=None, instructions="Use keras.layers.MaxPooling3D instead."
-)
+@deprecation.deprecated(date=None,
+                        instructions="Use keras.layers.MaxPooling3D instead.")
 @tf_export(v1=["layers.max_pooling3d"])
-def max_pooling3d(
-    inputs, pool_size, strides, padding="valid", data_format="channels_last", name=None
-):
+def max_pooling3d(inputs,
+                  pool_size,
+                  strides,
+                  padding="valid",
+                  data_format="channels_last",
+                  name=None):
     """Max pooling layer for 3D inputs (e.g.
 
     volumes).
@@ -543,7 +531,6 @@ def max_pooling3d(
 
 
 # Aliases
-
 
 AvgPool2D = AveragePooling2D
 MaxPool2D = MaxPooling2D
