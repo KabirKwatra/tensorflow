@@ -63,18 +63,22 @@ class Node(object):
       - B._inbound_nodes
     """
 
-    def __init__(self,
-                 outbound_layer,
-                 inbound_layers,
-                 node_indices,
-                 tensor_indices,
-                 input_tensors,
-                 output_tensors,
-                 arguments=None):
+    def __init__(
+        self,
+        outbound_layer,
+        inbound_layers,
+        node_indices,
+        tensor_indices,
+        input_tensors,
+        output_tensors,
+        arguments=None,
+    ):
         # Layer instance (NOT a sequence)
         if isinstance(outbound_layer, (list, tuple, dict)):
-            raise ValueError('`outbound_layer` should be a layer instance, '
-                             'not a list, tuple, or, dict.')
+            raise ValueError(
+                "`outbound_layer` should be a layer instance, "
+                "not a list, tuple, or, dict."
+            )
 
         # These arguments are user-provided. Copy them here so that future
         # user modifications do not affect the node's metadata.
@@ -111,11 +115,9 @@ class Node(object):
         # Following 2 properties: input and output shapes.
 
         # Nested structure of shape tuples, shapes of input_tensors.
-        self.input_shapes = nest.map_structure(
-            backend.int_shape, input_tensors)
+        self.input_shapes = nest.map_structure(backend.int_shape, input_tensors)
         # Nested structure of shape tuples, shapes of output_tensors.
-        self.output_shapes = nest.map_structure(
-            backend.int_shape, output_tensors)
+        self.output_shapes = nest.map_structure(backend.int_shape, output_tensors)
 
         # Optional keyword arguments to layer's `call`.
         self.arguments = arguments
@@ -126,7 +128,8 @@ class Node(object):
         ]
         for tensor_argument in tensor_arguments:
             if base_layer_utils.needs_keras_history(
-                    tensor_argument, ignore_call_context=True):
+                tensor_argument, ignore_call_context=True
+            ):
                 base_layer_utils.create_keras_history(tensor_argument)
 
         # Add nodes to all layers involved.
@@ -154,20 +157,22 @@ class Node(object):
                 nest.flatten(self.inbound_layers),
                 nest.flatten(self.node_indices),
                 nest.flatten(self.tensor_indices),
-                nest.flatten(self.input_tensors)))
+                nest.flatten(self.input_tensors),
+            )
+        )
 
         if include_arguments:
             keras_tensor_arguments = [
-                kt for kt in nest.flatten(self.arguments)
-                if hasattr(kt, '_keras_history')
+                kt
+                for kt in nest.flatten(self.arguments)
+                if hasattr(kt, "_keras_history")
             ]
 
             def _get_inbound(keras_tensor):
                 kh = keras_tensor._keras_history
                 return kh.layer, kh.node_index, kh.tensor_index, keras_tensor
 
-            arguments_inbound = nest.map_structure(_get_inbound,
-                                                   keras_tensor_arguments)
+            arguments_inbound = nest.map_structure(_get_inbound, keras_tensor_arguments)
 
             return inputs_inbound + arguments_inbound
         else:
@@ -180,7 +185,7 @@ class Node(object):
             node_deps.append(layer._inbound_nodes[node_index])
 
         for arg in nest.flatten(self.arguments):
-            if isinstance(arg, ops.Tensor) and hasattr(arg, '_keras_history'):
+            if isinstance(arg, ops.Tensor) and hasattr(arg, "_keras_history"):
                 kh = arg._keras_history
                 node_deps.append(kh.layer._inbound_nodes[kh.node_index])
 
@@ -188,10 +193,11 @@ class Node(object):
 
     def get_config(self):
         inbound_names = nest.map_structure(
-            lambda layer: layer.name if layer else None, self.inbound_layers)
+            lambda layer: layer.name if layer else None, self.inbound_layers
+        )
         return {
-            'outbound_layer': self.outbound_layer.name,
-            'inbound_layers': inbound_names,
-            'node_indices': self.node_indices,
-            'tensor_indices': self.tensor_indices
+            "outbound_layer": self.outbound_layer.name,
+            "inbound_layers": inbound_names,
+            "node_indices": self.node_indices,
+            "tensor_indices": self.tensor_indices,
         }
