@@ -55,22 +55,28 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def test_get_updates(self):
         class MyLayer(layers.Layer):
             def build(self, input_shape):
-                self.a = self.add_variable("a", (1, 1), "float32", trainable=False)
-                self.b = self.add_variable("b", (1, 1), "float32", trainable=False)
+                self.a = self.add_variable("a", (1, 1),
+                                           "float32",
+                                           trainable=False)
+                self.b = self.add_variable("b", (1, 1),
+                                           "float32",
+                                           trainable=False)
                 self.add_update(
-                    state_ops.assign_add(self.a, [[1.0]], name="unconditional_update")
-                )
+                    state_ops.assign_add(self.a, [[1.0]],
+                                         name="unconditional_update"))
                 self.built = True
 
             def call(self, inputs):
                 self.add_update(
-                    state_ops.assign_add(self.b, inputs, name="conditional_update"),
+                    state_ops.assign_add(self.b,
+                                         inputs,
+                                         name="conditional_update"),
                     inputs=True,
                 )
                 return inputs + 1
 
         with ops.Graph().as_default():
-            x1 = input_layer_lib.Input(shape=(1,))
+            x1 = input_layer_lib.Input(shape=(1, ))
             layer = MyLayer()
             _ = layer(x1)
 
@@ -78,7 +84,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             self.assertEqual(len(layer.get_updates_for(x1)), 1)
             self.assertEqual(len(layer.get_updates_for(None)), 1)
 
-            x2 = input_layer_lib.Input(shape=(1,))
+            x2 = input_layer_lib.Input(shape=(1, ))
             y2 = layer(x2)
 
             self.assertEqual(len(layer.updates), 3)
@@ -91,11 +97,11 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             self.assertEqual(len(network.get_updates_for(x2)), 1)
             self.assertEqual(len(network.get_updates_for(None)), 1)
 
-            x3 = input_layer_lib.Input(shape=(1,))
+            x3 = input_layer_lib.Input(shape=(1, ))
             _ = layer(x3)
             self.assertEqual(len(network.updates), 4)
 
-            x4 = input_layer_lib.Input(shape=(1,))
+            x4 = input_layer_lib.Input(shape=(1, ))
             _ = network(x4)
             self.assertEqual(len(network.updates), 5)
             self.assertEqual(len(network.get_updates_for(x2)), 1)
@@ -112,7 +118,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_get_updates_bn(self):
-        x1 = input_layer_lib.Input(shape=(1,))
+        x1 = input_layer_lib.Input(shape=(1, ))
         layer = layers.BatchNormalization()
         _ = layer(x1)
 
@@ -123,8 +129,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testTopologicalAttributes(self):
         # test layer attributes / methods related to cross-layer connectivity.
-        a = input_layer_lib.Input(shape=(32,), name="input_a")
-        b = input_layer_lib.Input(shape=(32,), name="input_b")
+        a = input_layer_lib.Input(shape=(32, ), name="input_a")
+        b = input_layer_lib.Input(shape=(32, ), name="input_b")
 
         # test input, output, input_shape, output_shape
         test_layer = layers.Dense(16, name="test_layer")
@@ -185,9 +191,9 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def testTopologicalAttributesMultiOutputLayer(self):
         class PowersLayer(layers.Layer):
             def call(self, inputs):
-                return [inputs ** 2, inputs ** 3]
+                return [inputs**2, inputs**3]
 
-        x = input_layer_lib.Input(shape=(32,))
+        x = input_layer_lib.Input(shape=(32, ))
         test_layer = PowersLayer()
         p1, p2 = test_layer(x)  # pylint: disable=not-callable
 
@@ -203,8 +209,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
                 assert len(inputs) == 2
                 return inputs[0] + inputs[1]
 
-        a = input_layer_lib.Input(shape=(32,))
-        b = input_layer_lib.Input(shape=(32,))
+        a = input_layer_lib.Input(shape=(32, ))
+        b = input_layer_lib.Input(shape=(32, ))
         test_layer = AddLayer()
         y = test_layer([a, b])  # pylint: disable=not-callable
 
@@ -216,7 +222,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def testBasicNetwork(self):
         with ops.Graph().as_default():
             # minimum viable network
-            x = input_layer_lib.Input(shape=(32,))
+            x = input_layer_lib.Input(shape=(32, ))
             dense = layers.Dense(2)
             y = dense(x)
             network = network_lib.Network(x, y, name="dense_network")
@@ -226,13 +232,13 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             self.assertEqual(len(network.layers), 2)  # InputLayer + Dense
             self.assertEqual(network.layers[1], dense)
             self._assertAllIs(network.weights, dense.weights)
-            self._assertAllIs(network.trainable_weights, dense.trainable_weights)
-            self._assertAllIs(
-                network.non_trainable_weights, dense.non_trainable_weights
-            )
+            self._assertAllIs(network.trainable_weights,
+                              dense.trainable_weights)
+            self._assertAllIs(network.non_trainable_weights,
+                              dense.non_trainable_weights)
 
             # test callability on Input
-            x_2 = input_layer_lib.Input(shape=(32,))
+            x_2 = input_layer_lib.Input(shape=(32, ))
             y_2 = network(x_2)
             self.assertEqual(y_2.shape.as_list(), [None, 2])
 
@@ -252,7 +258,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_trainable_weights(self):
-        a = layers.Input(shape=(2,))
+        a = layers.Input(shape=(2, ))
         b = layers.Dense(1)(a)
         model = training_lib.Model(a, b)
 
@@ -295,7 +301,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def test_layer_call_arguments(self):
         with ops.Graph().as_default():
             # Test the ability to pass and serialize arguments to `call`.
-            inp = layers.Input(shape=(2,))
+            inp = layers.Input(shape=(2, ))
             x = layers.Dense(3)(inp)
             x = layers.Dropout(0.5)(x, training=True)
             model = training_lib.Model(inp, x)
@@ -303,7 +309,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             self.assertIn("dropout", model.output.op.name)
 
             # Test that argument is kept when applying the model
-            inp2 = layers.Input(shape=(2,))
+            inp2 = layers.Input(shape=(2, ))
             out2 = model(inp2)
             self.assertIn("dropout", out2.op.name)
 
@@ -314,13 +320,13 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
     def test_node_construction(self):
         # test basics
-        a = layers.Input(shape=(32,), name="input_a")
-        b = layers.Input(shape=(32,), name="input_b")
+        a = layers.Input(shape=(32, ), name="input_a")
+        b = layers.Input(shape=(32, ), name="input_b")
 
         with self.assertRaises(ValueError):
-            _ = layers.Input(shape=(32,), batch_shape=(10, 32))
+            _ = layers.Input(shape=(32, ), batch_shape=(10, 32))
         with self.assertRaises(ValueError):
-            _ = layers.Input(shape=(32,), unknown_kwarg=None)
+            _ = layers.Input(shape=(32, ), unknown_kwarg=None)
 
         self.assertListEqual(a.shape.as_list(), [None, 32])
         a_layer, a_node_index, a_tensor_index = a._keras_history
@@ -375,8 +381,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def test_multi_input_layer(self):
         with self.cached_session():
             # test multi-input layer
-            a = layers.Input(shape=(32,), name="input_a")
-            b = layers.Input(shape=(32,), name="input_b")
+            a = layers.Input(shape=(32, ), name="input_a")
+            b = layers.Input(shape=(32, ), name="input_b")
 
             dense = layers.Dense(16, name="dense_1")
             a_2 = dense(a)
@@ -392,18 +398,24 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             self.assertEqual(len(merge_layer._inbound_nodes), 1)
             self.assertEqual(len(merge_layer._outbound_nodes), 0)
 
-            self.assertEqual(len(merge_layer._inbound_nodes[0].input_tensors), 2)
-            self.assertEqual(len(merge_layer._inbound_nodes[0].inbound_layers), 2)
+            self.assertEqual(len(merge_layer._inbound_nodes[0].input_tensors),
+                             2)
+            self.assertEqual(len(merge_layer._inbound_nodes[0].inbound_layers),
+                             2)
 
             c = layers.Dense(64, name="dense_2")(merged)
             d = layers.Dense(5, name="dense_3")(c)
 
-            model = training_lib.Model(inputs=[a, b], outputs=[c, d], name="model")
+            model = training_lib.Model(inputs=[a, b],
+                                       outputs=[c, d],
+                                       name="model")
             self.assertEqual(len(model.layers), 6)
-            output_shapes = model.compute_output_shape([(None, 32), (None, 32)])
+            output_shapes = model.compute_output_shape([(None, 32),
+                                                        (None, 32)])
             self.assertListEqual(output_shapes[0].as_list(), [None, 64])
             self.assertListEqual(output_shapes[1].as_list(), [None, 5])
-            self.assertListEqual(model.compute_mask([a, b], [None, None]), [None, None])
+            self.assertListEqual(model.compute_mask([a, b], [None, None]),
+                                 [None, None])
 
             # we don't check names of first 2 layers (inputs) because
             # ordering of same-level layers is not fixed
@@ -411,19 +423,18 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
                 [l.name for l in model.layers][2:],
                 ["dense_1", "merge", "dense_2", "dense_3"],
             )
-            self.assertListEqual(
-                [l.name for l in model._input_layers], ["input_a", "input_b"]
-            )
-            self.assertListEqual(
-                [l.name for l in model._output_layers], ["dense_2", "dense_3"]
-            )
+            self.assertListEqual([l.name for l in model._input_layers],
+                                 ["input_a", "input_b"])
+            self.assertListEqual([l.name for l in model._output_layers],
+                                 ["dense_2", "dense_3"])
 
             # actually run model
             fn = backend.function(model.inputs, model.outputs)
             input_a_np = np.random.random((10, 32))
             input_b_np = np.random.random((10, 32))
             fn_outputs = fn([input_a_np, input_b_np])
-            self.assertListEqual([x.shape for x in fn_outputs], [(10, 64), (10, 5)])
+            self.assertListEqual([x.shape for x in fn_outputs], [(10, 64),
+                                                                 (10, 5)])
 
             # test get_source_inputs
             self._assertAllIs(layer_utils.get_source_inputs(c), [a, b])
@@ -438,20 +449,22 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
                 ["dense_1", "merge", "dense_2", "dense_3"],
             )
             self.assertListEqual(
-                [l.name for l in recreated_model._input_layers], ["input_a", "input_b"]
-            )
+                [l.name for l in recreated_model._input_layers],
+                ["input_a", "input_b"])
             self.assertListEqual(
-                [l.name for l in recreated_model._output_layers], ["dense_2", "dense_3"]
-            )
+                [l.name for l in recreated_model._output_layers],
+                ["dense_2", "dense_3"])
 
-            fn = backend.function(recreated_model.inputs, recreated_model.outputs)
+            fn = backend.function(recreated_model.inputs,
+                                  recreated_model.outputs)
             input_a_np = np.random.random((10, 32))
             input_b_np = np.random.random((10, 32))
             fn_outputs = fn([input_a_np, input_b_np])
-            self.assertListEqual([x.shape for x in fn_outputs], [(10, 64), (10, 5)])
+            self.assertListEqual([x.shape for x in fn_outputs], [(10, 64),
+                                                                 (10, 5)])
 
     def test_multi_output_layer_output_names(self):
-        inp = layers.Input(name="inp", shape=(None,), dtype=dtypes.float32)
+        inp = layers.Input(name="inp", shape=(None, ), dtype=dtypes.float32)
 
         class _MultiOutput(layers.Layer):
             def call(self, x):
@@ -464,8 +477,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
     def test_recursion(self):
         with ops.Graph().as_default(), self.cached_session():
-            a = layers.Input(shape=(32,), name="input_a")
-            b = layers.Input(shape=(32,), name="input_b")
+            a = layers.Input(shape=(32, ), name="input_a")
+            b = layers.Input(shape=(32, ), name="input_b")
 
             dense = layers.Dense(16, name="dense_1")
             a_2 = dense(a)
@@ -474,10 +487,12 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             c = layers.Dense(64, name="dense_2")(merged)
             d = layers.Dense(5, name="dense_3")(c)
 
-            model = training_lib.Model(inputs=[a, b], outputs=[c, d], name="model")
+            model = training_lib.Model(inputs=[a, b],
+                                       outputs=[c, d],
+                                       name="model")
 
-            e = layers.Input(shape=(32,), name="input_e")
-            f = layers.Input(shape=(32,), name="input_f")
+            e = layers.Input(shape=(32, ), name="input_e")
+            f = layers.Input(shape=(32, ), name="input_f")
             self.assertEqual(len(model.inputs), 2)
             g, h = model([e, f])
             self.assertEqual(len(model.inputs), 2)
@@ -489,19 +504,20 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             # test separate manipulation of different layer outputs
             i = layers.Dense(7, name="dense_4")(h)
 
-            final_model = training_lib.Model(
-                inputs=[e, f], outputs=[i, g], name="final"
-            )
+            final_model = training_lib.Model(inputs=[e, f],
+                                             outputs=[i, g],
+                                             name="final")
             self.assertEqual(len(final_model.inputs), 2)
             self.assertEqual(len(final_model.outputs), 2)
             self.assertEqual(len(final_model.layers), 4)
 
             # we don't check names of first 2 layers (inputs) because
             # ordering of same-level layers is not fixed
-            self.assertListEqual(
-                [layer.name for layer in final_model.layers][2:], ["model", "dense_4"]
-            )
-            self.assertListEqual(model.compute_mask([e, f], [None, None]), [None, None])
+            self.assertListEqual([layer.name
+                                  for layer in final_model.layers][2:],
+                                 ["model", "dense_4"])
+            self.assertListEqual(model.compute_mask([e, f], [None, None]),
+                                 [None, None])
             self.assertListEqual(
                 final_model.compute_output_shape([(10, 32), (10, 32)]),
                 [(10, 7), (10, 64)],
@@ -512,24 +528,27 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             input_a_np = np.random.random((10, 32))
             input_b_np = np.random.random((10, 32))
             fn_outputs = fn([input_a_np, input_b_np])
-            self.assertListEqual([x.shape for x in fn_outputs], [(10, 7), (10, 64)])
+            self.assertListEqual([x.shape for x in fn_outputs], [(10, 7),
+                                                                 (10, 64)])
 
             # test serialization
             model_config = final_model.get_config()
             recreated_model = models.Model.from_config(model_config)
 
-            fn = backend.function(recreated_model.inputs, recreated_model.outputs)
+            fn = backend.function(recreated_model.inputs,
+                                  recreated_model.outputs)
             input_a_np = np.random.random((10, 32))
             input_b_np = np.random.random((10, 32))
             fn_outputs = fn([input_a_np, input_b_np])
-            self.assertListEqual([x.shape for x in fn_outputs], [(10, 7), (10, 64)])
+            self.assertListEqual([x.shape for x in fn_outputs], [(10, 7),
+                                                                 (10, 64)])
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_multi_input_multi_output_recursion(self):
         with self.cached_session():
             # test multi-input multi-output
-            a = layers.Input(shape=(32,), name="input_a")
-            b = layers.Input(shape=(32,), name="input_b")
+            a = layers.Input(shape=(32, ), name="input_a")
+            b = layers.Input(shape=(32, ), name="input_b")
 
             dense = layers.Dense(16, name="dense_1")
             a_2 = dense(a)
@@ -538,14 +557,16 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             c = layers.Dense(64, name="dense_2")(merged)
             d = layers.Dense(5, name="dense_3")(c)
 
-            model = training_lib.Model(inputs=[a, b], outputs=[c, d], name="model")
+            model = training_lib.Model(inputs=[a, b],
+                                       outputs=[c, d],
+                                       name="model")
 
-            j = layers.Input(shape=(32,), name="input_j")
-            k = layers.Input(shape=(32,), name="input_k")
+            j = layers.Input(shape=(32, ), name="input_j")
+            k = layers.Input(shape=(32, ), name="input_k")
             _, n = model([j, k])
 
-            o = layers.Input(shape=(32,), name="input_o")
-            p = layers.Input(shape=(32,), name="input_p")
+            o = layers.Input(shape=(32, ), name="input_o")
+            p = layers.Input(shape=(32, ), name="input_p")
             q, _ = model([o, p])
 
             self.assertListEqual(n.shape.as_list(), [None, 5])
@@ -556,29 +577,27 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             # test with single output as 1-elem list
             multi_io_model = training_lib.Model([j, k, o, p], [s])
 
-            fn = backend.function(multi_io_model.inputs, multi_io_model.outputs)
-            fn_outputs = fn(
-                [
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                ]
-            )
+            fn = backend.function(multi_io_model.inputs,
+                                  multi_io_model.outputs)
+            fn_outputs = fn([
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+            ])
             self.assertListEqual([x.shape for x in fn_outputs], [(10, 69)])
 
             # test with single output as tensor
             multi_io_model = training_lib.Model([j, k, o, p], s)
 
-            fn = backend.function(multi_io_model.inputs, multi_io_model.outputs)
-            fn_outputs = fn(
-                [
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                ]
-            )
+            fn = backend.function(multi_io_model.inputs,
+                                  multi_io_model.outputs)
+            fn_outputs = fn([
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+            ])
             # note that the output of the function will still be a 1-elem list
             self.assertListEqual([x.shape for x in fn_outputs], [(10, 69)])
 
@@ -586,15 +605,14 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             model_config = multi_io_model.get_config()
             recreated_model = models.Model.from_config(model_config)
 
-            fn = backend.function(recreated_model.inputs, recreated_model.outputs)
-            fn_outputs = fn(
-                [
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                    np.random.random((10, 32)),
-                ]
-            )
+            fn = backend.function(recreated_model.inputs,
+                                  recreated_model.outputs)
+            fn_outputs = fn([
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+                np.random.random((10, 32)),
+            ])
             # note that the output of the function will still be a 1-elem list
             self.assertListEqual([x.shape for x in fn_outputs], [(10, 69)])
 
@@ -611,8 +629,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_invalid_graphs(self):
-        a = layers.Input(shape=(32,), name="input_a")
-        b = layers.Input(shape=(32,), name="input_b")
+        a = layers.Input(shape=(32, ), name="input_a")
+        b = layers.Input(shape=(32, ), name="input_b")
 
         dense = layers.Dense(16, name="dense_1")
         a_2 = dense(a)
@@ -624,38 +642,38 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         model = training_lib.Model(inputs=[a, b], outputs=[c, d], name="model")
 
         # input is not an Input tensor
-        j = layers.Input(shape=(32,), name="input_j")
+        j = layers.Input(shape=(32, ), name="input_j")
         j = layers.Dense(32)(j)
-        k = layers.Input(shape=(32,), name="input_k")
+        k = layers.Input(shape=(32, ), name="input_k")
         m, n = model([j, k])
 
         with self.assertRaises(Exception):
             training_lib.Model([j, k], [m, n])
 
         # disconnected graph
-        j = layers.Input(shape=(32,), name="input_j")
-        k = layers.Input(shape=(32,), name="input_k")
+        j = layers.Input(shape=(32, ), name="input_j")
+        k = layers.Input(shape=(32, ), name="input_k")
         m, n = model([j, k])
         with self.assertRaises(Exception):
             training_lib.Model([j], [m, n])
 
         # redundant outputs
-        j = layers.Input(shape=(32,), name="input_j")
-        k = layers.Input(shape=(32,), name="input_k")
+        j = layers.Input(shape=(32, ), name="input_j")
+        k = layers.Input(shape=(32, ), name="input_k")
         m, n = model([j, k])
 
         training_lib.Model([j, k], [m, n, n])
 
         # redundant inputs
-        j = layers.Input(shape=(32,), name="input_j")
-        k = layers.Input(shape=(32,), name="input_k")
+        j = layers.Input(shape=(32, ), name="input_j")
+        k = layers.Input(shape=(32, ), name="input_k")
         m, n = model([j, k])
         with self.assertRaises(Exception):
             training_lib.Model([j, k, j], [m, n])
 
         # i have not idea what I'm doing: garbage as inputs/outputs
-        j = layers.Input(shape=(32,), name="input_j")
-        k = layers.Input(shape=(32,), name="input_k")
+        j = layers.Input(shape=(32, ), name="input_j")
+        k = layers.Input(shape=(32, ), name="input_k")
         m, n = model([j, k])
         with self.assertRaises(Exception):
             training_lib.Model([j, k], [m, n, 0])
@@ -663,8 +681,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def test_raw_tf_compatibility(self):
         with ops.Graph().as_default():
             # test calling layers/models on TF tensors
-            a = layers.Input(shape=(32,), name="input_a")
-            b = layers.Input(shape=(32,), name="input_b")
+            a = layers.Input(shape=(32, ), name="input_a")
+            b = layers.Input(shape=(32, ), name="input_b")
 
             dense = layers.Dense(16, name="dense_1")
             a_2 = dense(a)
@@ -673,17 +691,21 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             c = layers.Dense(64, name="dense_2")(merged)
             d = layers.Dense(5, name="dense_3")(c)
 
-            model = training_lib.Model(inputs=[a, b], outputs=[c, d], name="model")
+            model = training_lib.Model(inputs=[a, b],
+                                       outputs=[c, d],
+                                       name="model")
 
-            j = layers.Input(shape=(32,), name="input_j")
-            k = layers.Input(shape=(32,), name="input_k")
+            j = layers.Input(shape=(32, ), name="input_j")
+            k = layers.Input(shape=(32, ), name="input_k")
             self.assertEqual(len(model.inputs), 2)
             m, n = model([j, k])
             self.assertEqual(len(model.inputs), 2)
             tf_model = training_lib.Model([j, k], [m, n])
 
-            j_tf = array_ops.placeholder(dtype=dtypes.float32, shape=(None, 32))
-            k_tf = array_ops.placeholder(dtype=dtypes.float32, shape=(None, 32))
+            j_tf = array_ops.placeholder(dtype=dtypes.float32,
+                                         shape=(None, 32))
+            k_tf = array_ops.placeholder(dtype=dtypes.float32,
+                                         shape=(None, 32))
             m_tf, n_tf = tf_model([j_tf, k_tf])
             self.assertListEqual(m_tf.shape.as_list(), [None, 64])
             self.assertListEqual(n_tf.shape.as_list(), [None, 5])
@@ -728,12 +750,12 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
             )
             self.assertAllEqual(self.evaluate(a * mask), self.evaluate(b))
         else:
-            x = input_layer_lib.Input(shape=(32,))
+            x = input_layer_lib.Input(shape=(32, ))
             y = MaskedLayer()(x)  # pylint: disable=not-callable
             network = network_lib.Network(x, y)
 
             # test callability on Input
-            x_2 = input_layer_lib.Input(shape=(32,))
+            x_2 = input_layer_lib.Input(shape=(32, ))
             y_2 = network(x_2)
             self.assertEqual(y_2.shape.as_list(), [None, 32])
 
@@ -746,14 +768,15 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         def reg(x):
             return math_ops.reduce_sum(x)
 
-        net_a_input = input_layer_lib.Input((2,))
+        net_a_input = input_layer_lib.Input((2, ))
         net_a = net_a_input
-        net_a = layers.Dense(
-            2, kernel_initializer="ones", use_bias=False, activity_regularizer=reg
-        )(net_a)
+        net_a = layers.Dense(2,
+                             kernel_initializer="ones",
+                             use_bias=False,
+                             activity_regularizer=reg)(net_a)
         model_a = training_lib.Model([net_a_input], [net_a])
 
-        net_b_input = input_layer_lib.Input((2,))
+        net_b_input = input_layer_lib.Input((2, ))
         net_b = model_a(net_b_input)
         model_b = training_lib.Model([net_b_input], [net_b])
 
@@ -766,7 +789,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def test_layer_sharing_at_heterogenous_depth(self):
         x_val = np.random.random((10, 5))
 
-        x = input_layer_lib.Input(shape=(5,))
+        x = input_layer_lib.Input(shape=(5, ))
         a = layers.Dense(5, name="A")
         b = layers.Dense(5, name="B")
         output = a(b(a(b(x))))
@@ -814,24 +837,24 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
     @combinations.generate(combinations.keras_mode_combinations())
     def test_explicit_training_argument(self):
-        a = layers.Input(shape=(2,))
+        a = layers.Input(shape=(2, ))
         b = layers.Dropout(0.5)(a)
         base_model = training_lib.Model(a, b)
 
-        a = layers.Input(shape=(2,))
+        a = layers.Input(shape=(2, ))
         b = base_model(a, training=False)
         model = training_lib.Model(a, b)
 
         x = np.ones((100, 2))
         y = np.ones((100, 2))
-        model.compile(
-            optimizer="sgd", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
-        )
+        model.compile(optimizer="sgd",
+                      loss="mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         loss = model.train_on_batch(x, y)
         # In inference mode, output is equal to input.
         self.assertEqual(loss, 0)
 
-        a = layers.Input(shape=(2,))
+        a = layers.Input(shape=(2, ))
         b = base_model(a, training=True)
         model = training_lib.Model(a, b)
         preds = model.predict(x)
@@ -840,10 +863,12 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     @combinations.generate(combinations.keras_mode_combinations())
     def test_mask_derived_from_keras_layer(self):
         inputs = input_layer_lib.Input((5, 10))
-        mask = input_layer_lib.Input((5,))
+        mask = input_layer_lib.Input((5, ))
         outputs = layers.RNN(layers.LSTMCell(100))(inputs, mask=mask)
         model = training_lib.Model([inputs, mask], outputs)
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
             x=[np.ones((10, 5, 10)), np.zeros((10, 5))],
             y=np.zeros((10, 100)),
@@ -860,7 +885,9 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertGreater(history.history["loss"][0], 0.0)
 
         model = training_lib.Model.from_config(model.get_config())
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
             x=[np.ones((10, 5, 10)), np.zeros((10, 5))],
             y=np.zeros((10, 100)),
@@ -886,7 +913,9 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         input2 = input_layer_lib.Input(10)
         outputs = MyAdd()(input1, input2)
         model = training_lib.Model([input1, input2], outputs)
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
             x=[3 * np.ones((10, 10)), 7 * np.ones((10, 10))],
             y=10 * np.ones((10, 10)),
@@ -896,10 +925,11 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertEqual(history.history["loss"][0], 0.0)
 
         # Check serialization.
-        model = training_lib.Model.from_config(
-            model.get_config(), custom_objects={"MyAdd": MyAdd}
-        )
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model = training_lib.Model.from_config(model.get_config(),
+                                               custom_objects={"MyAdd": MyAdd})
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
             x=[3 * np.ones((10, 10)), 7 * np.ones((10, 10))],
             y=10 * np.ones((10, 10)),
@@ -920,7 +950,9 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         input2 = input_layer_lib.Input(10)
         outputs = MaybeAdd()(input1, x2=input2)
         model = training_lib.Model([input1, input2], outputs)
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
             x=[3 * np.ones((10, 10)), 7 * np.ones((10, 10))],
             y=10 * np.ones((10, 10)),
@@ -930,9 +962,10 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertEqual(history.history["loss"][0], 0.0)
 
         model = training_lib.Model.from_config(
-            model.get_config(), custom_objects={"MaybeAdd": MaybeAdd}
-        )
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+            model.get_config(), custom_objects={"MaybeAdd": MaybeAdd})
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
             x=[3 * np.ones((10, 10)), 7 * np.ones((10, 10))],
             y=10 * np.ones((10, 10)),
@@ -958,11 +991,13 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
                     return (x1 + x2).to_tensor(default_value=0)
                 return x1.to_tensor(default_value=0)
 
-        input1 = input_layer_lib.Input((None,), ragged=True)
-        input2 = input_layer_lib.Input((None,), ragged=True)
+        input1 = input_layer_lib.Input((None, ), ragged=True)
+        input2 = input_layer_lib.Input((None, ), ragged=True)
         outputs = MaybeAdd()(input1, x2=input2)
         model = training_lib.Model([input1, input2], outputs)
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         input_data = [
             ragged_factory_ops.constant([[3.0, 3.0], [3.0, 3.0], [3.0]]),
             ragged_factory_ops.constant([[7.0, 7.0], [7.0, 7.0], [7.0]]),
@@ -974,9 +1009,10 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertEqual(history.history["loss"][0], 0.0)
 
         model = training_lib.Model.from_config(
-            model.get_config(), custom_objects={"MaybeAdd": MaybeAdd}
-        )
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+            model.get_config(), custom_objects={"MaybeAdd": MaybeAdd})
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(x=input_data, y=expected_data)
         # Check that second input was correctly added to first.
         self.assertEqual(history.history["loss"][0], 0.0)
@@ -997,12 +1033,20 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         outputs = AddAll()(
             input1,
             4 * array_ops.ones((1, 10)),
-            x3={"a": input2, "b": input3, "c": 5 * array_ops.ones((1, 10))},
+            x3={
+                "a": input2,
+                "b": input3,
+                "c": 5 * array_ops.ones((1, 10))
+            },
         )
         model = training_lib.Model([input1, input2, input3], outputs)
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
-            x=[np.ones((10, 10)), 2 * np.ones((10, 10)), 3 * np.ones((10, 10))],
+            x=[
+                np.ones((10, 10)), 2 * np.ones((10, 10)), 3 * np.ones((10, 10))
+            ],
             y=15 * np.ones((10, 10)),
             batch_size=2,
         )
@@ -1010,11 +1054,14 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertEqual(history.history["loss"][0], 0.0)
 
         model = training_lib.Model.from_config(
-            model.get_config(), custom_objects={"AddAll": AddAll}
-        )
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+            model.get_config(), custom_objects={"AddAll": AddAll})
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         history = model.fit(
-            x=[np.ones((10, 10)), 2 * np.ones((10, 10)), 3 * np.ones((10, 10))],
+            x=[
+                np.ones((10, 10)), 2 * np.ones((10, 10)), 3 * np.ones((10, 10))
+            ],
             y=15 * np.ones((10, 10)),
             batch_size=2,
         )
@@ -1053,7 +1100,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     def test_constant_initializer_with_numpy(self):
         initializer = initializers.Constant(np.ones((3, 2)))
         model = sequential.Sequential()
-        model.add(layers.Dense(2, input_shape=(3,), kernel_initializer=initializer))
+        model.add(
+            layers.Dense(2, input_shape=(3, ), kernel_initializer=initializer))
         model.add(layers.Dense(3))
         model.compile(
             loss="mse",
@@ -1088,17 +1136,21 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_model_initialization(self):
         # Functional model
-        inputs = input_layer_lib.Input(shape=(32,))
+        inputs = input_layer_lib.Input(shape=(32, ))
         outputs = layers.Dense(4)(inputs)
 
         with self.assertRaisesRegexp(TypeError, "unexpected argument"):
-            model = training_lib.Model(
-                inputs, outputs, name="m", trainable=False, dtype="int64"
-            )
+            model = training_lib.Model(inputs,
+                                       outputs,
+                                       name="m",
+                                       trainable=False,
+                                       dtype="int64")
         with self.assertRaisesRegexp(TypeError, "unexpected argument"):
-            model = training_lib.Model(
-                inputs, outputs, name="m", trainable=False, dynamic=False
-            )
+            model = training_lib.Model(inputs,
+                                       outputs,
+                                       name="m",
+                                       trainable=False,
+                                       dynamic=False)
 
         model = training_lib.Model(inputs, outputs, name="m", trainable=False)
         self.assertEqual("m", model.name)
@@ -1106,9 +1158,10 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertFalse(model.dynamic)
 
         # Subclassed model
-        model = training_lib.Model(
-            name="subclassed", trainable=True, dtype="int64", dynamic=True
-        )
+        model = training_lib.Model(name="subclassed",
+                                   trainable=True,
+                                   dtype="int64",
+                                   dynamic=True)
         self.assertEqual("subclassed", model.name)
         self.assertTrue(model.dynamic)
         self.assertTrue(model.trainable)
@@ -1120,9 +1173,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         input_tensor2 = input_layer_lib.Input(shape=[10], name="b")
         output_tensor1 = layers.Dense(units=10)(input_tensor1)
 
-        net = network_lib.Network(
-            inputs=[input_tensor1, input_tensor2], outputs=[output_tensor1]
-        )
+        net = network_lib.Network(inputs=[input_tensor1, input_tensor2],
+                                  outputs=[output_tensor1])
         net2 = network_lib.Network.from_config(net.get_config())
         self.assertLen(net2.inputs, 2)
         self.assertEqual("a", net2.layers[0].name)
@@ -1133,13 +1185,14 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         model = testing_utils.get_small_mlp(1, 4, input_dim=3)
         model.trackable = Checkpoint()
         self.assertIn("trackable", model._unconditional_dependency_names)
-        self.assertEqual(model.trackable, model._lookup_dependency("trackable"))
+        self.assertEqual(model.trackable,
+                         model._lookup_dependency("trackable"))
 
 
 class DeferredModeTest(keras_parameterized.TestCase):
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testSimpleNetworkBuilding(self):
-        inputs = input_layer_lib.Input(shape=(32,))
+        inputs = input_layer_lib.Input(shape=(32, ))
         if context.executing_eagerly():
             self.assertEqual(inputs.dtype.name, "float32")
             self.assertEqual(inputs.shape.as_list(), [None, 32])
@@ -1155,14 +1208,15 @@ class DeferredModeTest(keras_parameterized.TestCase):
 
         if context.executing_eagerly():
             # It should be possible to call such a network on EagerTensors.
-            inputs = constant_op.constant(np.random.random((10, 32)).astype("float32"))
+            inputs = constant_op.constant(
+                np.random.random((10, 32)).astype("float32"))
             outputs = network(inputs)
             self.assertEqual(outputs.shape.as_list(), [10, 4])
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testMultiIONetworkBuilding(self):
-        input_a = input_layer_lib.Input(shape=(32,))
-        input_b = input_layer_lib.Input(shape=(16,))
+        input_a = input_layer_lib.Input(shape=(32, ))
+        input_b = input_layer_lib.Input(shape=(16, ))
         a = layers.Dense(16)(input_a)
 
         class AddLayer(layers.Layer):
@@ -1174,8 +1228,10 @@ class DeferredModeTest(keras_parameterized.TestCase):
 
         network = network_lib.Network([input_a, input_b], [a, c])
         if context.executing_eagerly():
-            a_val = constant_op.constant(np.random.random((10, 32)).astype("float32"))
-            b_val = constant_op.constant(np.random.random((10, 16)).astype("float32"))
+            a_val = constant_op.constant(
+                np.random.random((10, 32)).astype("float32"))
+            b_val = constant_op.constant(
+                np.random.random((10, 16)).astype("float32"))
             outputs = network([a_val, b_val])
             self.assertEqual(len(outputs), 2)
             self.assertEqual(outputs[0].shape.as_list(), [10, 16])
@@ -1197,16 +1253,18 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
             def call(self, inputs):
                 return backend.dot(inputs, self.w)
 
-        inputs = input_layer_lib.Input(shape=(3,))
+        inputs = input_layer_lib.Input(shape=(3, ))
         layer = LayerWithOneInput()
 
         if context.executing_eagerly():
-            self.assertEqual(layer.compute_output_shape((None, 3)).as_list(), [None, 4])
+            self.assertEqual(
+                layer.compute_output_shape((None, 3)).as_list(), [None, 4])
             # As a side-effect, compute_output_shape builds the layer.
             self.assertTrue(layer.built)
             # We can still query the layer's compute_output_shape with compatible
             # input shapes.
-            self.assertEqual(layer.compute_output_shape((6, 3)).as_list(), [6, 4])
+            self.assertEqual(
+                layer.compute_output_shape((6, 3)).as_list(), [6, 4])
 
         outputs = layer(inputs)
         model = training_lib.Model(inputs, outputs)
@@ -1223,13 +1281,13 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
                 b = a + inputs[1]
                 return [a, b]
 
-        input_a = input_layer_lib.Input(shape=(3,))
-        input_b = input_layer_lib.Input(shape=(4,))
+        input_a = input_layer_lib.Input(shape=(3, ))
+        input_b = input_layer_lib.Input(shape=(4, ))
         output_a, output_b = MultiInputOutputLayer()([input_a, input_b])
         model = training_lib.Model([input_a, input_b], [output_a, output_b])
         output_a_val, output_b_val = model.predict(
-            [np.random.random((2, 3)), np.random.random((2, 4))]
-        )
+            [np.random.random((2, 3)),
+             np.random.random((2, 4))])
         self.assertEqual(output_a_val.shape, (2, 4))
         self.assertEqual(output_b_val.shape, (2, 4))
 
@@ -1242,7 +1300,7 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
             def call(self, inputs, training):
                 return backend.dot(inputs, self.w)
 
-        inputs = input_layer_lib.Input(shape=(3,))
+        inputs = input_layer_lib.Input(shape=(3, ))
         outputs = LayerWithTrainingArg()(inputs, training=False)
         model = training_lib.Model(inputs, outputs)
         self._testShapeInference(model, (2, 3), (2, 4))
@@ -1267,7 +1325,8 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
         self.assertTrue(model.built, "Model should be built")
         self.assertTrue(
             model.weights,
-            "Model should have its weights created as it " "has been built",
+            "Model should have its weights created as it "
+            "has been built",
         )
         sample_input = array_ops.ones((1, 10, 10, 1))
         output = model(sample_input)
@@ -1302,7 +1361,8 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
         self.assertTrue(model.built, "Model should be built")
         self.assertTrue(
             model.weights,
-            "Model should have its weights created as it " "has been built",
+            "Model should have its weights created as it "
+            "has been built",
         )
         sample_input = array_ops.ones((1, 10, 10, 1))
         output = model(sample_input)  # pylint: disable=not-callable
@@ -1333,7 +1393,8 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
         self.assertTrue(model.built, "Model should be built")
         self.assertTrue(
             model.weights,
-            "Model should have its weights created as it " "has been built",
+            "Model should have its weights created as it "
+            "has been built",
         )
         sample_input = array_ops.ones((1, 10, 10, 1))
         output = model(sample_input)
@@ -1345,7 +1406,7 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
         x = layers.Masking(mask_value=0.0, input_shape=(3, 4))(inputs)
 
         s = sequential.Sequential()
-        s.add(layers.Dense(5, input_shape=(4,)))
+        s.add(layers.Dense(5, input_shape=(4, )))
 
         x = layers.wrappers.TimeDistributed(s)(x)
         model = training_lib.Model(inputs=inputs, outputs=x)
@@ -1355,28 +1416,35 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
             run_eagerly=testing_utils.should_run_eagerly(),
         )
 
-        model_input = np.random.randint(low=1, high=5, size=(10, 3, 4)).astype(
-            "float32"
-        )
+        model_input = np.random.randint(low=1, high=5,
+                                        size=(10, 3, 4)).astype("float32")
         for i in range(4):
             model_input[i, i:, :] = 0.0
-        model.fit(model_input, np.random.random((10, 3, 5)), epochs=1, batch_size=6)
+        model.fit(model_input,
+                  np.random.random((10, 3, 5)),
+                  epochs=1,
+                  batch_size=6)
 
         if not context.executing_eagerly():
             # Note: this doesn't work in eager due to DeferredTensor/ops compatibility
             # issue.
-            mask_outputs = [model.layers[1].compute_mask(model.layers[1].input)]
+            mask_outputs = [
+                model.layers[1].compute_mask(model.layers[1].input)
+            ]
             mask_outputs += [
-                model.layers[2].compute_mask(model.layers[2].input, mask_outputs[-1])
+                model.layers[2].compute_mask(model.layers[2].input,
+                                             mask_outputs[-1])
             ]
             func = backend.function([model.input], mask_outputs)
             mask_outputs_val = func([model_input])
-            self.assertAllClose(mask_outputs_val[0], np.any(model_input, axis=-1))
-            self.assertAllClose(mask_outputs_val[1], np.any(model_input, axis=-1))
+            self.assertAllClose(mask_outputs_val[0],
+                                np.any(model_input, axis=-1))
+            self.assertAllClose(mask_outputs_val[1],
+                                np.any(model_input, axis=-1))
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_external_keras_serialization_compat_input_layers(self):
-        inputs = input_layer_lib.Input(shape=(10,))
+        inputs = input_layer_lib.Input(shape=(10, ))
         outputs = layers.Dense(1)(inputs)
         model = training_lib.Model(inputs, outputs)
         config = model.get_config()
@@ -1389,15 +1457,16 @@ class DefaultShapeInferenceBehaviorTest(keras_parameterized.TestCase):
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_external_keras_serialization_compat_inbound_nodes(self):
         # Check single Tensor input.
-        inputs = input_layer_lib.Input(shape=(10,), name="in")
+        inputs = input_layer_lib.Input(shape=(10, ), name="in")
         outputs = layers.Dense(1)(inputs)
         model = training_lib.Model(inputs, outputs)
         config = model.get_config()
-        self.assertEqual(config["layers"][1]["inbound_nodes"], [[["in", 0, 0, {}]]])
+        self.assertEqual(config["layers"][1]["inbound_nodes"],
+                         [[["in", 0, 0, {}]]])
 
         # Check multiple Tensor input.
-        inputs1 = input_layer_lib.Input(shape=(10,), name="in1")
-        inputs2 = input_layer_lib.Input(shape=(10,), name="in2")
+        inputs1 = input_layer_lib.Input(shape=(10, ), name="in1")
+        inputs2 = input_layer_lib.Input(shape=(10, ), name="in2")
         outputs = layers.Add()([inputs1, inputs2])
         model = training_lib.Model([inputs1, inputs2], outputs)
         config = model.get_config()
@@ -1426,44 +1495,47 @@ class GraphUtilsTest(test.TestCase):
             )
             self.assertEqual(
                 tf_utils.get_reachable_from_inputs([pl_1, pl_2]),
-                {pl_1, pl_2, x_1, x_2, x_4, x_5, x_1.op, x_2.op, x_4.op, x_5.op},
+                {
+                    pl_1, pl_2, x_1, x_2, x_4, x_5, x_1.op, x_2.op, x_4.op,
+                    x_5.op
+                },
             )
             self.assertEqual(
                 tf_utils.get_reachable_from_inputs([pl_3]),
                 {pl_3, x_3, x_5, x_3.op, x_5.op},
             )
-            self.assertEqual(
-                tf_utils.get_reachable_from_inputs([x_3]), {x_3, x_5, x_5.op}
-            )
+            self.assertEqual(tf_utils.get_reachable_from_inputs([x_3]),
+                             {x_3, x_5, x_5.op})
 
 
 @combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class NestedNetworkTest(keras_parameterized.TestCase):
     def test_nested_inputs_network(self):
         inputs = {
-            "x1": input_layer_lib.Input(shape=(1,)),
-            "x2": input_layer_lib.Input(shape=(1,)),
+            "x1": input_layer_lib.Input(shape=(1, )),
+            "x2": input_layer_lib.Input(shape=(1, )),
         }
         outputs = layers.Add()([inputs["x1"], inputs["x2"]])
         network = network_lib.Network(inputs, outputs)
 
         network = network_lib.Network.from_config(network.get_config())
 
-        result_tensor = network(
-            {
-                "x": array_ops.ones((1, 1), "float32"),
-                "y": array_ops.ones((1, 1), "float32"),
-            }
-        )
+        result_tensor = network({
+            "x": array_ops.ones((1, 1), "float32"),
+            "y": array_ops.ones((1, 1), "float32"),
+        })
         result = self.evaluate(result_tensor)
         self.assertAllEqual(result, [[2.0]])
 
         # TODO(b/122726584): Investigate why concrete batch is flaky in some builds.
-        output_shape = network.compute_output_shape({"x1": (None, 1), "x2": (None, 1)})
+        output_shape = network.compute_output_shape({
+            "x1": (None, 1),
+            "x2": (None, 1)
+        })
         self.assertListEqual(output_shape.as_list(), [None, 1])
 
     def test_nested_outputs_network(self):
-        inputs = input_layer_lib.Input(shape=(1,))
+        inputs = input_layer_lib.Input(shape=(1, ))
         outputs = {
             "x+x": layers.Add()([inputs, inputs]),
             "x*x": layers.Multiply()([inputs, inputs]),
@@ -1484,16 +1556,20 @@ class NestedNetworkTest(keras_parameterized.TestCase):
 
     def test_nested_network_inside_network(self):
         inner_inputs = {
-            "x1": input_layer_lib.Input(shape=(1,)),
-            "x2": input_layer_lib.Input(shape=(1,)),
+            "x1": input_layer_lib.Input(shape=(1, )),
+            "x2": input_layer_lib.Input(shape=(1, )),
         }
         inner_outputs = {
             "x1+x2": layers.Add()([inner_inputs["x1"], inner_inputs["x2"]]),
-            "x1*x2": layers.Multiply()([inner_inputs["x1"], inner_inputs["x2"]]),
+            "x1*x2":
+            layers.Multiply()([inner_inputs["x1"], inner_inputs["x2"]]),
         }
         inner_network = network_lib.Network(inner_inputs, inner_outputs)
 
-        inputs = [input_layer_lib.Input(shape=(1,)), input_layer_lib.Input(shape=(1,))]
+        inputs = [
+            input_layer_lib.Input(shape=(1, )),
+            input_layer_lib.Input(shape=(1, ))
+        ]
         middle = inner_network({"x1": inputs[0], "x2": inputs[1]})
         outputs = layers.Add()([middle["x1+x2"], middle["x1*x2"]])
         network = network_lib.Network(inputs, outputs)
@@ -1501,9 +1577,10 @@ class NestedNetworkTest(keras_parameterized.TestCase):
         network = network_lib.Network.from_config(network.get_config())
 
         # Computes: `(x1+x2) + (x1*x2)`
-        result_tensor = network(
-            [array_ops.ones((1, 1), "float32"), array_ops.ones((1, 1), "float32")]
-        )
+        result_tensor = network([
+            array_ops.ones((1, 1), "float32"),
+            array_ops.ones((1, 1), "float32")
+        ])
         result = self.evaluate(result_tensor)
         self.assertAllEqual(result, [[3.0]])
 
@@ -1512,7 +1589,7 @@ class NestedNetworkTest(keras_parameterized.TestCase):
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_updates_with_direct_call(self):
-        inputs = input_layer_lib.Input(shape=(10,))
+        inputs = input_layer_lib.Input(shape=(10, ))
         x = layers.BatchNormalization()(inputs)
         x = layers.Dense(10)(x)
         model = training_lib.Model(inputs, x)
@@ -1531,8 +1608,8 @@ class NestedNetworkTest(keras_parameterized.TestCase):
 
         # Checks that inputs are put in same order as the
         # Model was constructed with.
-        b = input_layer_lib.Input(shape=(10,), name="b")
-        a = input_layer_lib.Input(shape=(10,), name="a")
+        b = input_layer_lib.Input(shape=(10, ), name="b")
+        a = input_layer_lib.Input(shape=(10, ), name="a")
         outputs = ReturnFirst()([b, a])
 
         b_val = array_ops.ones((10, 10))
@@ -1547,7 +1624,7 @@ class NestedNetworkTest(keras_parameterized.TestCase):
         self.assertAllClose(self.evaluate(res), self.evaluate(b_val))
 
     def test_dict_mapping_single_input(self):
-        b = input_layer_lib.Input(shape=(1,), name="b")
+        b = input_layer_lib.Input(shape=(1, ), name="b")
         outputs = b * 2
         model = training_lib.Model(b, outputs)
 
@@ -1564,7 +1641,7 @@ class NestedNetworkTest(keras_parameterized.TestCase):
 @combinations.generate(combinations.keras_mode_combinations())
 class AddLossTest(keras_parameterized.TestCase):
     def test_add_loss_outside_call_only_loss(self):
-        inputs = input_layer_lib.Input((10,))
+        inputs = input_layer_lib.Input((10, ))
         mid = layers.Dense(10)(inputs)
         outputs = layers.Dense(1)(mid)
         model = training_lib.Model(inputs, outputs)
@@ -1587,7 +1664,7 @@ class AddLossTest(keras_parameterized.TestCase):
         self.assertAllClose(model.get_weights(), model2.get_weights())
 
     def test_add_loss_outside_call_multiple_losses(self):
-        inputs = input_layer_lib.Input((10,))
+        inputs = input_layer_lib.Input((10, ))
         x1 = layers.Dense(10)(inputs)
         x2 = layers.Dense(10)(x1)
         outputs = layers.Dense(1)(x2)
@@ -1599,11 +1676,15 @@ class AddLossTest(keras_parameterized.TestCase):
         initial_weights = model.get_weights()
 
         x, y = np.ones((10, 10)), np.ones((10, 1))
-        model.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("sgd",
+                      "mse",
+                      run_eagerly=testing_utils.should_run_eagerly())
         model.fit(x, y, batch_size=2, epochs=1)
 
         model2 = model.from_config(model.get_config())
-        model2.compile("sgd", "mse", run_eagerly=testing_utils.should_run_eagerly())
+        model2.compile("sgd",
+                       "mse",
+                       run_eagerly=testing_utils.should_run_eagerly())
         model2.set_weights(initial_weights)
         model2.fit(x, y, batch_size=2, epochs=1)
 
@@ -1613,7 +1694,7 @@ class AddLossTest(keras_parameterized.TestCase):
 @combinations.generate(combinations.keras_mode_combinations())
 class WeightAccessTest(keras_parameterized.TestCase):
     def test_functional_model(self):
-        inputs = input_layer_lib.Input((10,))
+        inputs = input_layer_lib.Input((10, ))
         x1 = layers.Dense(10)(inputs)
         x2 = layers.Dense(10)(x1)
         outputs = layers.Dense(1)(x2)
@@ -1622,7 +1703,7 @@ class WeightAccessTest(keras_parameterized.TestCase):
         self.assertEqual(len(model.weights), 6)
 
     def test_sequential_model_with_input_shape(self):
-        x1 = layers.Dense(10, input_shape=(10,))
+        x1 = layers.Dense(10, input_shape=(10, ))
         x2 = layers.Dense(10)
         x3 = layers.Dense(1)
         model = sequential.Sequential([x1, x2, x3])
@@ -1636,14 +1717,14 @@ class WeightAccessTest(keras_parameterized.TestCase):
         model = sequential.Sequential([x1, x2, x3])
 
         with self.assertRaisesRegexp(
-            ValueError, "Weights for model .* have not yet been created"
-        ):
+                ValueError, "Weights for model .* have not yet been created"):
             _ = model.weights
 
     def test_subclass_model_with_build_method(self):
         class SubclassModel(models.Model):
             def build(self, input_shape):
-                self.w = self.add_weight(shape=input_shape[-1], initializer="ones")
+                self.w = self.add_weight(shape=input_shape[-1],
+                                         initializer="ones")
 
             def call(self, inputs):
                 return inputs * self.w
@@ -1651,11 +1732,10 @@ class WeightAccessTest(keras_parameterized.TestCase):
         model = SubclassModel()
 
         with self.assertRaisesRegexp(
-            ValueError, "Weights for model .* have not yet been created"
-        ):
+                ValueError, "Weights for model .* have not yet been created"):
             _ = model.weights
 
-        model(input_layer_lib.Input((10,)))
+        model(input_layer_lib.Input((10, )))
         self.assertEqual(len(model.weights), 1)
 
     def test_subclass_model_without_build_method(self):
@@ -1675,7 +1755,7 @@ class WeightAccessTest(keras_parameterized.TestCase):
 class DTypeTest(keras_parameterized.TestCase):
     @testing_utils.enable_v2_dtype_behavior
     def test_graph_network_dtype(self):
-        inputs = input_layer_lib.Input((10,))
+        inputs = input_layer_lib.Input((10, ))
         outputs = layers.Dense(10)(inputs)
         network = network_lib.Network(inputs, outputs)
         self.assertEqual(network.dtype, "float32")
@@ -1688,15 +1768,18 @@ class DTypeTest(keras_parameterized.TestCase):
 
         network = IdentityNetwork()
         self.assertEqual(network.dtype, "float32")
-        self.assertEqual(network(array_ops.constant(1, "float64")).dtype, "float32")
+        self.assertEqual(
+            network(array_ops.constant(1, "float64")).dtype, "float32")
 
         network = IdentityNetwork(dtype="float16")
         self.assertEqual(network.dtype, "float16")
-        self.assertEqual(network(array_ops.constant(1, "float64")).dtype, "float16")
+        self.assertEqual(
+            network(array_ops.constant(1, "float64")).dtype, "float16")
 
         network = IdentityNetwork(autocast=False)
         self.assertEqual(network.dtype, "float32")
-        self.assertEqual(network(array_ops.constant(1, "float64")).dtype, "float64")
+        self.assertEqual(
+            network(array_ops.constant(1, "float64")).dtype, "float64")
 
 
 class AttrTrackingLayer(base_layer.Layer):
@@ -1829,7 +1912,8 @@ class CacheCorrectnessTest(keras_parameterized.TestCase):
         network = network_lib.Network(x, y, name="dense_network")
 
         for i in range(999, 1024):
-            self.assertEqual(network.compute_output_shape((1, i, 32)), (1, i, 2))
+            self.assertEqual(network.compute_output_shape((1, i, 32)),
+                             (1, i, 2))
 
     def test_2d_inputs_squeezed_to_1d(self):
         input_1d = input_layer_lib.Input(shape=())
@@ -1841,11 +1925,11 @@ class CacheCorrectnessTest(keras_parameterized.TestCase):
         self.assertEqual(y.shape.rank, 1)
 
     def test_1d_inputs_expanded_to_2d(self):
-        input_1d = input_layer_lib.Input(shape=(1,))
+        input_1d = input_layer_lib.Input(shape=(1, ))
         outputs = input_1d * 2.0
         net = network_lib.Network(input_1d, outputs)
 
-        x = np.ones((10,))
+        x = np.ones((10, ))
         y = net(x)
         self.assertEqual(y.shape.rank, 2)
 
