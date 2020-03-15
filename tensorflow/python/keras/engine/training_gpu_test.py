@@ -49,8 +49,9 @@ class TrainingGPUTest(test.TestCase, parameterized.TestCase):
 
                 def loss(y_true, y_pred):
                     return K.sparse_categorical_crossentropy(  # pylint: disable=g-long-lambda
-                        y_true, y_pred, axis=axis
-                    )
+                        y_true,
+                        y_pred,
+                        axis=axis)
 
                 num_channels = int(np.amax(target) + 1)
                 activation = "softmax"
@@ -58,17 +59,16 @@ class TrainingGPUTest(test.TestCase, parameterized.TestCase):
 
                 def loss(y_true, y_pred):
                     return K.categorical_crossentropy(  # pylint: disable=g-long-lambda
-                        y_true, y_pred, axis=axis
-                    )
+                        y_true,
+                        y_pred,
+                        axis=axis)
 
                 num_channels = target.shape[axis]
                 activation = "softmax"
             elif loss_name == "binary_crossentropy":
 
                 def loss(y_true, y_pred):
-                    return K.binary_crossentropy(
-                        y_true, y_pred
-                    )  # pylint: disable=unnecessary-lambda
+                    return K.binary_crossentropy(y_true, y_pred)  # pylint: disable=unnecessary-lambda
 
                 num_channels = target.shape[axis]
                 activation = "sigmoid"
@@ -80,7 +80,8 @@ class TrainingGPUTest(test.TestCase, parameterized.TestCase):
                 kernel_initializer="ones",
                 bias_initializer="ones",
             )(input_tensor)
-            simple_model = training.Model(inputs=input_tensor, outputs=predictions)
+            simple_model = training.Model(inputs=input_tensor,
+                                          outputs=predictions)
             simple_model.compile(optimizer="rmsprop", loss=loss)
             return simple_model
 
@@ -137,9 +138,10 @@ class TrainingGPUTest(test.TestCase, parameterized.TestCase):
                     labels = np.moveaxis(labels_channels_first[index], 1, -1)
                     inputs = input_layer.Input(shape=(3, 3, 1))
                     model = prepare_simple_model(inputs, loss_function, labels)
-                    loss_channels_last[index] = model.evaluate(
-                        x=data, y=labels, batch_size=1, verbose=0
-                    )
+                    loss_channels_last[index] = model.evaluate(x=data,
+                                                               y=labels,
+                                                               batch_size=1,
+                                                               verbose=0)
 
                 # Evaluate the same network with channels first, with all three loss
                 # functions:
@@ -149,9 +151,10 @@ class TrainingGPUTest(test.TestCase, parameterized.TestCase):
                     labels = labels_channels_first[index]
                     inputs = input_layer.Input(shape=(1, 3, 3))
                     model = prepare_simple_model(inputs, loss_function, labels)
-                    loss_channels_first[index] = model.evaluate(
-                        x=data, y=labels, batch_size=1, verbose=0
-                    )
+                    loss_channels_first[index] = model.evaluate(x=data,
+                                                                y=labels,
+                                                                batch_size=1,
+                                                                verbose=0)
 
                 K.set_image_data_format(old_data_format)
 
