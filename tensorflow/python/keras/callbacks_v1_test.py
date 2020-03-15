@@ -38,7 +38,6 @@ from tensorflow.python.keras.utils import np_utils
 from tensorflow.python.platform import test
 from tensorflow.python.training import adam
 
-
 TRAIN_SAMPLES = 10
 TEST_SAMPLES = 10
 NUM_CLASSES = 2
@@ -57,7 +56,7 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
         (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
             train_samples=TRAIN_SAMPLES,
             test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
+            input_shape=(INPUT_DIM, ),
             num_classes=NUM_CLASSES,
         )
         y_test = np_utils.to_categorical(y_test)
@@ -72,13 +71,13 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
             while 1:
                 if train:
                     yield (
-                        x_train[i * BATCH_SIZE : (i + 1) * BATCH_SIZE],
-                        y_train[i * BATCH_SIZE : (i + 1) * BATCH_SIZE],
+                        x_train[i * BATCH_SIZE:(i + 1) * BATCH_SIZE],
+                        y_train[i * BATCH_SIZE:(i + 1) * BATCH_SIZE],
                     )
                 else:
                     yield (
-                        x_test[i * BATCH_SIZE : (i + 1) * BATCH_SIZE],
-                        y_test[i * BATCH_SIZE : (i + 1) * BATCH_SIZE],
+                        x_test[i * BATCH_SIZE:(i + 1) * BATCH_SIZE],
+                        y_test[i * BATCH_SIZE:(i + 1) * BATCH_SIZE],
                     )
                 i += 1
                 i %= max_batch_index
@@ -86,13 +85,16 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
         # case: Sequential
         with ops.Graph().as_default(), self.cached_session():
             model = sequential.Sequential()
-            model.add(layers.Dense(NUM_HIDDEN, input_dim=INPUT_DIM, activation="relu"))
+            model.add(
+                layers.Dense(NUM_HIDDEN,
+                             input_dim=INPUT_DIM,
+                             activation="relu"))
             # non_trainable_weights: moving_variance, moving_mean
             model.add(layers.BatchNormalization())
             model.add(layers.Dense(NUM_CLASSES, activation="softmax"))
-            model.compile(
-                loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"]
-            )
+            model.compile(loss="categorical_crossentropy",
+                          optimizer="sgd",
+                          metrics=["accuracy"])
             tsb = callbacks_v1.TensorBoard(
                 log_dir=temp_dir,
                 histogram_freq=1,
@@ -137,9 +139,11 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
             # fit generator without validation data
             # histogram_freq must be zero
             tsb.histogram_freq = 0
-            model.fit_generator(
-                data_generator(True), len(x_train), epochs=2, callbacks=cbks, verbose=0
-            )
+            model.fit_generator(data_generator(True),
+                                len(x_train),
+                                epochs=2,
+                                callbacks=cbks,
+                                verbose=0)
 
             # fit generator with validation data and accuracy
             tsb.histogram_freq = 1
@@ -154,9 +158,10 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
 
             # fit generator without validation data and accuracy
             tsb.histogram_freq = 0
-            model.fit_generator(
-                data_generator(True), len(x_train), epochs=2, callbacks=cbks
-            )
+            model.fit_generator(data_generator(True),
+                                len(x_train),
+                                epochs=2,
+                                callbacks=cbks)
             assert os.path.exists(temp_dir)
 
     def test_TensorBoard_multi_input_output(self):
@@ -170,7 +175,7 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
             (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
                 train_samples=TRAIN_SAMPLES,
                 test_samples=TEST_SAMPLES,
-                input_shape=(INPUT_DIM,),
+                input_shape=(INPUT_DIM, ),
                 num_classes=NUM_CLASSES,
             )
             y_test = np_utils.to_categorical(y_test)
@@ -186,28 +191,28 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
                     if train:
                         # simulate multi-input/output models
                         yield (
-                            [x_train[i * BATCH_SIZE : (i + 1) * BATCH_SIZE]] * 2,
-                            [y_train[i * BATCH_SIZE : (i + 1) * BATCH_SIZE]] * 2,
+                            [x_train[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]] * 2,
+                            [y_train[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]] * 2,
                         )
                     else:
                         yield (
-                            [x_test[i * BATCH_SIZE : (i + 1) * BATCH_SIZE]] * 2,
-                            [y_test[i * BATCH_SIZE : (i + 1) * BATCH_SIZE]] * 2,
+                            [x_test[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]] * 2,
+                            [y_test[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]] * 2,
                         )
                     i += 1
                     i %= max_batch_index
 
-            inp1 = input_layer.Input((INPUT_DIM,))
-            inp2 = input_layer.Input((INPUT_DIM,))
+            inp1 = input_layer.Input((INPUT_DIM, ))
+            inp2 = input_layer.Input((INPUT_DIM, ))
             inp = layers.add([inp1, inp2])
             hidden = layers.Dense(2, activation="relu")(inp)
             hidden = layers.Dropout(0.1)(hidden)
             output1 = layers.Dense(NUM_CLASSES, activation="softmax")(hidden)
             output2 = layers.Dense(NUM_CLASSES, activation="softmax")(hidden)
             model = training.Model([inp1, inp2], [output1, output2])
-            model.compile(
-                loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"]
-            )
+            model.compile(loss="categorical_crossentropy",
+                          optimizer="sgd",
+                          metrics=["accuracy"])
 
             # we must generate new callbacks for each test, as they aren't stateless
             def callbacks_factory(histogram_freq):
@@ -295,7 +300,7 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
         (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
             train_samples=TRAIN_SAMPLES,
             test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
+            input_shape=(INPUT_DIM, ),
             num_classes=NUM_CLASSES,
         )
         y_test = np_utils.to_categorical(y_test)
@@ -303,13 +308,16 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
 
         with ops.Graph().as_default(), self.cached_session():
             model = sequential.Sequential()
-            model.add(layers.Dense(NUM_HIDDEN, input_dim=INPUT_DIM, activation="relu"))
+            model.add(
+                layers.Dense(NUM_HIDDEN,
+                             input_dim=INPUT_DIM,
+                             activation="relu"))
             # non_trainable_weights: moving_variance, moving_mean
             model.add(layers.BatchNormalization())
             model.add(layers.Dense(NUM_CLASSES, activation="softmax"))
-            model.compile(
-                loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"]
-            )
+            model.compile(loss="categorical_crossentropy",
+                          optimizer="sgd",
+                          metrics=["accuracy"])
             callbacks_v1.TensorBoard._init_writer = _init_writer
             tsb = callbacks_v1.TensorBoard(
                 log_dir=tmpdir,
@@ -345,12 +353,12 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
                 yield x, y
 
         with ops.Graph().as_default(), self.cached_session():
-            model = testing_utils.get_small_sequential_mlp(
-                num_hidden=10, num_classes=10, input_dim=100
-            )
-            model.compile(
-                loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"]
-            )
+            model = testing_utils.get_small_sequential_mlp(num_hidden=10,
+                                                           num_classes=10,
+                                                           input_dim=100)
+            model.compile(loss="categorical_crossentropy",
+                          optimizer="sgd",
+                          metrics=["accuracy"])
             tsb = callbacks_v1.TensorBoard(
                 log_dir=tmpdir,
                 histogram_freq=1,
@@ -393,23 +401,25 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
             (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
                 train_samples=TRAIN_SAMPLES,
                 test_samples=TEST_SAMPLES,
-                input_shape=(INPUT_DIM,),
+                input_shape=(INPUT_DIM, ),
                 num_classes=NUM_CLASSES,
             )
             y_test = np_utils.to_categorical(y_test)
             y_train = np_utils.to_categorical(y_train)
 
             model = testing_utils.get_small_sequential_mlp(
-                num_hidden=NUM_HIDDEN, num_classes=NUM_CLASSES, input_dim=INPUT_DIM
-            )
-            model.compile(
-                loss="binary_crossentropy", optimizer="sgd", metrics=["accuracy"]
-            )
+                num_hidden=NUM_HIDDEN,
+                num_classes=NUM_CLASSES,
+                input_dim=INPUT_DIM)
+            model.compile(loss="binary_crossentropy",
+                          optimizer="sgd",
+                          metrics=["accuracy"])
 
             cbks = [
-                callbacks.ReduceLROnPlateau(
-                    monitor="val_loss", factor=0.5, patience=4, verbose=1
-                ),
+                callbacks.ReduceLROnPlateau(monitor="val_loss",
+                                            factor=0.5,
+                                            patience=4,
+                                            verbose=1),
                 callbacks_v1.TensorBoard(log_dir=temp_dir),
             ]
 
@@ -455,7 +465,8 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
             for batch in range(5):
                 tb_cbk.on_batch_end(batch, {"acc": batch})
             self.assertEqual(tb_cbk.writer.batches_logged, [0, 1, 2, 3, 4])
-            self.assertEqual(tb_cbk.writer.summary_values, [0.0, 1.0, 2.0, 3.0, 4.0])
+            self.assertEqual(tb_cbk.writer.summary_values,
+                             [0.0, 1.0, 2.0, 3.0, 4.0])
             self.assertEqual(tb_cbk.writer.summary_tags, ["batch_acc"] * 5)
 
     def test_Tensorboard_epoch_and_batch_logging(self):
@@ -505,15 +516,15 @@ class TestTensorBoardV1(test.TestCase, parameterized.TestCase):
         (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
             train_samples=TRAIN_SAMPLES,
             test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
+            input_shape=(INPUT_DIM, ),
             num_classes=NUM_CLASSES,
         )
         y_test = np_utils.to_categorical(y_test)
         y_train = np_utils.to_categorical(y_train)
 
-        model = testing_utils.get_small_sequential_mlp(
-            num_hidden=NUM_HIDDEN, num_classes=NUM_CLASSES, input_dim=INPUT_DIM
-        )
+        model = testing_utils.get_small_sequential_mlp(num_hidden=NUM_HIDDEN,
+                                                       num_classes=NUM_CLASSES,
+                                                       input_dim=INPUT_DIM)
         model.compile(
             loss="binary_crossentropy",
             optimizer=adam.AdamOptimizer(0.01),
