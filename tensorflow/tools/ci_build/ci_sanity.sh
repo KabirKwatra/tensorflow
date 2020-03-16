@@ -23,10 +23,10 @@
 #                 the latest commit
 
 # Current script directory
-SCRIPT_DIR=$( cd "${0%/*}" && pwd -P )
+SCRIPT_DIR=$(cd "${0%/*}" && pwd -P)
 source "$SCRIPT_DIR/builds/builds_common.sh"
 
-ROOT_DIR=$( cd "$SCRIPT_DIR/../../.." && pwd -P )
+ROOT_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd -P)
 
 # Helper functions
 die() {
@@ -40,7 +40,7 @@ num_cpus() {
     N_CPUS=$(grep -c ^processor /proc/cpuinfo)
   else
     # Fallback method
-    N_CPUS=`getconf _NPROCESSORS_ONLN`
+    N_CPUS=$(getconf _NPROCESSORS_ONLN)
   fi
   if [[ -z ${N_CPUS} ]]; then
     die "ERROR: Unable to determine the number of CPUs"
@@ -70,8 +70,8 @@ get_changed_files_in_last_non_merge_git_commit() {
 # Usage: get_py_files_to_check [--incremental]
 get_py_files_to_check() {
   if [[ "$1" == "--incremental" ]]; then
-    CHANGED_PY_FILES=$(get_changed_files_in_last_non_merge_git_commit | \
-                       grep '.*\.py$')
+    CHANGED_PY_FILES=$(get_changed_files_in_last_non_merge_git_commit |
+      grep '.*\.py$')
 
     # Do not include files removed in the last non-merge commit.
     PY_FILES=""
@@ -98,26 +98,26 @@ do_pylint() {
 
   # Use this list to whitelist pylint errors
   ERROR_WHITELIST="^tensorflow/python/framework/function_test\.py.*\[E1123.*noinline "\
-"^tensorflow/python/platform/default/_gfile\.py.*\[E0301.*non-iterator "\
-"^tensorflow/python/platform/default/_googletest\.py.*\[E0102.*function\salready\sdefined "\
-"^tensorflow/python/feature_column/feature_column_test\.py.*\[E0110.*abstract-class-instantiated "\
-"^tensorflow/contrib/layers/python/layers/feature_column\.py.*\[E0110.*abstract-class-instantiated "\
-"^tensorflow/contrib/eager/python/evaluator\.py.*\[E0202.*method-hidden "\
-"^tensorflow/contrib/eager/python/metrics_impl\.py.*\[E0202.*method-hidden "\
-"^tensorflow/contrib/rate/rate\.py.*\[E0202.*method-hidden "\
-"^tensorflow/python/training/tracking/tracking\.py.*\[E0202.*method-hidden "\
-"^tensorflow/python/platform/gfile\.py.*\[E0301.*non-iterator "\
-"^tensorflow/python/keras/callbacks\.py.*\[E1133.*not-an-iterable "\
-"^tensorflow/python/keras/engine/base_layer.py.*\[E0203.*access-member-before-definition "\
-"^tensorflow/python/keras/layers/recurrent\.py.*\[E0203.*access-member-before-definition "\
-"^tensorflow/python/kernel_tests/constant_op_eager_test.py.*\[E0303.*invalid-length-returned "\
-"^tensorflow/python/keras/utils/data_utils.py.*\[E1102.*not-callable "\
-"^tensorflow/python/autograph/.*_py3_test\.py.*\[E0001.*syntax-error "\
-"^tensorflow/python/keras/preprocessing/image\.py.*\[E0240.*Inconsistent method resolution "
+    "^tensorflow/python/platform/default/_gfile\.py.*\[E0301.*non-iterator "\
+    "^tensorflow/python/platform/default/_googletest\.py.*\[E0102.*function\salready\sdefined "\
+    "^tensorflow/python/feature_column/feature_column_test\.py.*\[E0110.*abstract-class-instantiated "\
+    "^tensorflow/contrib/layers/python/layers/feature_column\.py.*\[E0110.*abstract-class-instantiated "\
+    "^tensorflow/contrib/eager/python/evaluator\.py.*\[E0202.*method-hidden "\
+    "^tensorflow/contrib/eager/python/metrics_impl\.py.*\[E0202.*method-hidden "\
+    "^tensorflow/contrib/rate/rate\.py.*\[E0202.*method-hidden "\
+    "^tensorflow/python/training/tracking/tracking\.py.*\[E0202.*method-hidden "\
+    "^tensorflow/python/platform/gfile\.py.*\[E0301.*non-iterator "\
+    "^tensorflow/python/keras/callbacks\.py.*\[E1133.*not-an-iterable "\
+    "^tensorflow/python/keras/engine/base_layer.py.*\[E0203.*access-member-before-definition "\
+    "^tensorflow/python/keras/layers/recurrent\.py.*\[E0203.*access-member-before-definition "\
+    "^tensorflow/python/kernel_tests/constant_op_eager_test.py.*\[E0303.*invalid-length-returned "\
+    "^tensorflow/python/keras/utils/data_utils.py.*\[E1102.*not-callable "\
+    "^tensorflow/python/autograph/.*_py3_test\.py.*\[E0001.*syntax-error "\
+    "^tensorflow/python/keras/preprocessing/image\.py.*\[E0240.*Inconsistent method resolution "
 
   echo "ERROR_WHITELIST=\"$ERROR_WHITELIST\""
 
-  if [[ $# != "0" ]]  && [[ $# != "1" ]]; then
+  if [[ $# != "0" ]] && [[ $# != "1" ]]; then
     echo "Invalid syntax when invoking do_pylint"
     echo "Usage: do_pylint [--incremental]"
     return 1
@@ -130,7 +130,7 @@ do_pylint() {
 
     if [[ -z "${PYTHON_SRC_FILES}" ]]; then
       echo "do_pylint will NOT run due to --incremental flag and due to the "\
-"absence of Python code changes in the last commit."
+      "absence of Python code changes in the last commit."
       return 0
     else
       # For incremental builds, we still check all Python files in cases there
@@ -160,7 +160,7 @@ do_pylint() {
   NUM_CPUS=$(num_cpus)
 
   echo "Running pylint on $NUM_SRC_FILES files with $NUM_CPUS "\
-"parallel jobs..."
+  "parallel jobs..."
   echo ""
 
   PYLINT_START_TIME=$(date +'%s')
@@ -174,7 +174,7 @@ do_pylint() {
   touch "$NONWL_ERRORS_FILE"
 
   "$PYLINT_BIN" --rcfile="$PYLINTRC_FILE" --output-format=parseable \
-      --jobs="$NUM_CPUS" "$PYTHON_SRC_FILES" > "$OUTPUT_FILE" 2>&1
+    --jobs="$NUM_CPUS" "$PYTHON_SRC_FILES" >"$OUTPUT_FILE" 2>&1
   PYLINT_END_TIME=$(date +'%s')
 
   echo ""
@@ -191,7 +191,7 @@ do_pylint() {
   # C0326 bad-whitespace
   # W0611 unused-import
   # W0622 redefined-builtin
-  grep -E '(\[E|\[W0311|\[W0312|\[C0330|\[C0301|\[C0326|\[W0611|\[W0622)' "$OUTPUT_FILE" > "$ERRORS_FILE"
+  grep -E '(\[E|\[W0311|\[W0312|\[C0330|\[C0301|\[C0326|\[W0611|\[W0622)' "$OUTPUT_FILE" >"$ERRORS_FILE"
 
   N_ERRORS=0
   while read -r LINE; do
@@ -205,8 +205,8 @@ do_pylint() {
     done
 
     if [[ ${IS_WHITELISTED} == "0" ]]; then
-      echo "$LINE" >> "$NONWL_ERRORS_FILE"
-      echo "" >> "$NONWL_ERRORS_FILE"
+      echo "$LINE" >>"$NONWL_ERRORS_FILE"
+      echo "" >>"$NONWL_ERRORS_FILE"
       ((N_ERRORS++))
     fi
   done <"$ERRORS_FILE"
@@ -237,8 +237,8 @@ do_pep8() {
     NUM_PYTHON_SRC_FILES=$(echo "$PYTHON_SRC_FILES" | wc -w)
 
     echo "do_pep8 will perform checks on only the $NUM_PYTHON_SRC_FILES "\
-"Python file(s) changed in the last non-merge git commit due to the "\
-"--incremental flag:"
+    "Python file(s) changed in the last non-merge git commit due to the "\
+    "--incremental flag:"
     echo "$PYTHON_SRC_FILES"
     echo ""
   else
@@ -266,7 +266,7 @@ do_pep8() {
   rm -rf "$PEP8_OUTPUT_FILE"
 
   "$PEP8_BIN" --config="$PEP8_CONFIG_FILE" --statistics \
-      "$PYTHON_SRC_FILES" 2>&1 | tee "$PEP8_OUTPUT_FILE"
+    "$PYTHON_SRC_FILES" 2>&1 | tee "$PEP8_OUTPUT_FILE"
   PEP8_END_TIME=$(date +'%s')
 
   echo ""
@@ -282,8 +282,7 @@ do_pep8() {
   fi
 }
 
-
-do_buildifier(){
+do_buildifier() {
   BUILD_FILES=$(find tensorflow -name 'BUILD*')
   NUM_BUILD_FILES=$(echo "$BUILD_FILES" | wc -w)
 
@@ -315,7 +314,7 @@ do_buildifier(){
   fi
 }
 
-do_external_licenses_check(){
+do_external_licenses_check() {
   BUILD_TARGET="$1"
   LICENSES_TARGET="$2"
 
@@ -328,30 +327,30 @@ do_external_licenses_check(){
   TMP_FILE="$(mktemp)_tmp.log"
 
   echo "Getting external dependencies for $BUILD_TARGET"
- bazel cquery "attr('licenses', 'notice', deps($BUILD_TARGET))" --keep_going > "$TMP_FILE" 2>&1
- cat "$TMP_FILE" \
-  | grep -e "^\/\/" -e "^@" \
-  | grep -E -v "^//tensorflow" \
-  | sed -e 's|:.*||' \
-  | sort \
-  | uniq 2>&1 \
-  | tee "$EXTERNAL_DEPENDENCIES_FILE"
+  bazel cquery "attr('licenses', 'notice', deps($BUILD_TARGET))" --keep_going >"$TMP_FILE" 2>&1
+  cat "$TMP_FILE" |
+    grep -e "^\/\/" -e "^@" |
+    grep -E -v "^//tensorflow" |
+    sed -e 's|:.*||' |
+    sort |
+    uniq 2>&1 |
+    tee "$EXTERNAL_DEPENDENCIES_FILE"
 
   echo
   echo "Getting list of external licenses mentioned in $LICENSES_TARGET."
-  bazel cquery "deps($LICENSES_TARGET)" --keep_going > "$TMP_FILE" 2>&1
- cat "$TMP_FILE" \
-  | grep -e "^\/\/" -e "^@" \
-  | grep -E -v "^//tensorflow" \
-  | sed -e 's|:.*||' \
-  | sort \
-  | uniq 2>&1 \
-  | tee "$LICENSES_FILE"
+  bazel cquery "deps($LICENSES_TARGET)" --keep_going >"$TMP_FILE" 2>&1
+  cat "$TMP_FILE" |
+    grep -e "^\/\/" -e "^@" |
+    grep -E -v "^//tensorflow" |
+    sed -e 's|:.*||' |
+    sort |
+    uniq 2>&1 |
+    tee "$LICENSES_FILE"
 
   echo
-  comm -1 -3 "$EXTERNAL_DEPENDENCIES_FILE"  "$LICENSES_FILE" 2>&1 | tee "$EXTRA_LICENSES_FILE"
+  comm -1 -3 "$EXTERNAL_DEPENDENCIES_FILE" "$LICENSES_FILE" 2>&1 | tee "$EXTRA_LICENSES_FILE"
   echo
-  comm -2 -3 "$EXTERNAL_DEPENDENCIES_FILE"  "$LICENSES_FILE" 2>&1 | tee "$MISSING_LICENSES_FILE"
+  comm -2 -3 "$EXTERNAL_DEPENDENCIES_FILE" "$LICENSES_FILE" 2>&1 | tee "$MISSING_LICENSES_FILE"
 
   EXTERNAL_LICENSES_CHECK_END_TIME=$(date +'%s')
 
@@ -366,7 +365,7 @@ do_external_licenses_check(){
     -e "@com_github_googlecloudplatform_google_cloud_cpp//google" \
     -e "@com_github_grpc_grpc//src/compiler" \
     -e "@platforms//os" \
-    -v "$MISSING_LICENSES_FILE" > temp.txt
+    -v "$MISSING_LICENSES_FILE" >temp.txt
   mv temp.txt "$MISSING_LICENSES_FILE"
 
   # Whitelist
@@ -383,22 +382,20 @@ do_external_licenses_check(){
     -e "@com_github_googlecloudplatform_google_cloud_cpp//" \
     -e "@embedded_jdk//" \
     -e "^//$" \
-    -v "$EXTRA_LICENSES_FILE" > temp.txt
+    -v "$EXTRA_LICENSES_FILE" >temp.txt
   mv temp.txt "$EXTRA_LICENSES_FILE"
-
-
 
   echo
   echo "do_external_licenses_check took $((EXTERNAL_LICENSES_CHECK_END_TIME - EXTERNAL_LICENSES_CHECK_START_TIME)) s"
   echo
 
-  if [[ -s ${MISSING_LICENSES_FILE} ]] || [[ -s ${EXTRA_LICENSES_FILE} ]] ; then
+  if [[ -s ${MISSING_LICENSES_FILE} ]] || [[ -s ${EXTRA_LICENSES_FILE} ]]; then
     echo "FAIL: mismatch in packaged licenses and external dependencies"
-    if [[ -s ${MISSING_LICENSES_FILE} ]] ; then
+    if [[ -s ${MISSING_LICENSES_FILE} ]]; then
       echo "Missing the licenses for the following external dependencies:"
       cat "$MISSING_LICENSES_FILE"
     fi
-    if [[ -s ${EXTRA_LICENSES_FILE} ]] ; then
+    if [[ -s ${EXTRA_LICENSES_FILE} ]]; then
       echo "Please remove the licenses for the following external dependencies:"
       cat "$EXTRA_LICENSES_FILE"
     fi
@@ -442,7 +439,7 @@ do_java_package_licenses_check() {
 }
 
 #Check for the bazel cmd status (First arg is error message)
-cmd_status(){
+cmd_status() {
   if [[ $? != 0 ]]; then
     echo ""
     echo "FAIL: $BUILD_CMD"
@@ -484,7 +481,7 @@ do_bazel_deps_query() {
 
   # We've set the flag noimplicit_deps as a workaround for
   # https://github.com/bazelbuild/bazel/issues/10544
-  bazel query "$BAZEL_FLAGS" --noimplicit_deps -- "deps($BUILD_TARGET)" > /dev/null
+  bazel query "$BAZEL_FLAGS" --noimplicit_deps -- "deps($BUILD_TARGET)" >/dev/null
 
   cmd_status \
     "This is due to invalid BUILD files."
@@ -504,8 +501,8 @@ do_code_link_check() {
 # Usage: get_clang_files_to_check [--incremental]
 get_clang_files_to_check() {
   if [[ "$1" == "--incremental" ]]; then
-    CHANGED_CLANG_FILES=$(get_changed_files_in_last_non_merge_git_commit | \
-                       grep '.*\.h$\|.*\.cc$')
+    CHANGED_CLANG_FILES=$(get_changed_files_in_last_non_merge_git_commit |
+      grep '.*\.h$\|.*\.cc$')
 
     # Do not include files removed in the last non-merge commit.
     CLANG_FILES=""
@@ -533,7 +530,7 @@ do_clang_format_check() {
 
     if [[ -z "${CLANG_SRC_FILES}" ]]; then
       echo "do_clang_format_check will NOT run due to --incremental flag and "\
-"due to the absence of .h or .cc code changes in the last commit."
+      "due to the absence of .h or .cc code changes in the last commit."
       return 0
     fi
   elif [[ -z "$1" ]]; then
@@ -550,11 +547,11 @@ do_clang_format_check() {
 
   success=1
   for filename in "$CLANG_SRC_FILES"; do
-    "$CLANG_FORMAT" --style=google "$filename" | diff "$filename" - > /dev/null
+    "$CLANG_FORMAT" --style=google "$filename" | diff "$filename" - >/dev/null
     if [ ! $? -eq 0 ]; then
       success=0
       echo File "$filename" is not properly formatted with "clang-format "\
-"--style=google"
+      "--style=google"
     fi
   done
 
@@ -588,16 +585,16 @@ _check_no_deps() {
 
   TMP_FILE="$(mktemp)_tmp.log"
   echo "Checking $TARGET does not depend on $DISALLOWED_DEP ..."
-  bazel cquery "$EXTRA_FLAG" "somepath($TARGET, $DISALLOWED_DEP)" --keep_going> "$TMP_FILE" 2>&1
+  bazel cquery "$EXTRA_FLAG" "somepath($TARGET, $DISALLOWED_DEP)" --keep_going >"$TMP_FILE" 2>&1
   if cat "$TMP_FILE" | grep "Empty query results"; then
-      echo "Success."
+    echo "Success."
   else
-      cat "$TMP_FILE"
-      echo
-      echo "ERROR: Found path from $TARGET to disallowed dependency $DISALLOWED_DEP."
-      echo "See above for path."
-      rm "$TMP_FILE"
-      exit 1
+    cat "$TMP_FILE"
+    echo
+    echo "ERROR: Found path from $TARGET to disallowed dependency $DISALLOWED_DEP."
+    echo "See above for path."
+    rm "$TMP_FILE"
+    exit 1
   fi
   rm "$TMP_FILE"
 }
@@ -605,21 +602,20 @@ _check_no_deps() {
 _do_pip_no_cuda_deps_check() {
   EXTRA_FLAG="$1"
   DISALLOWED_CUDA_DEPS=("@local_config_cuda//cuda:cudart"
-        "@local_config_cuda//cuda:cublas"
-        "@local_config_cuda//cuda:cuda_driver"
-        "@local_config_cuda//cuda:cudnn"
-        "@local_config_cuda//cuda:curand"
-        "@local_config_cuda//cuda:cusolver"
-        "@local_config_cuda//cuda:cusparse"
-        "@local_config_tensorrt//:tensorrt")
-  for cuda_dep in "${DISALLOWED_CUDA_DEPS[@]}"
-  do
-   _check_no_deps "//tensorflow/tools/pip_package:build_pip_package" "$cuda_dep" "$EXTRA_FLAG"
-   RESULT=$?
+    "@local_config_cuda//cuda:cublas"
+    "@local_config_cuda//cuda:cuda_driver"
+    "@local_config_cuda//cuda:cudnn"
+    "@local_config_cuda//cuda:curand"
+    "@local_config_cuda//cuda:cusolver"
+    "@local_config_cuda//cuda:cusparse"
+    "@local_config_tensorrt//:tensorrt")
+  for cuda_dep in "${DISALLOWED_CUDA_DEPS[@]}"; do
+    _check_no_deps "//tensorflow/tools/pip_package:build_pip_package" "$cuda_dep" "$EXTRA_FLAG"
+    RESULT=$?
 
-   if [[ ${RESULT} != "0" ]]; then
-    exit 1
-   fi
+    if [[ ${RESULT} != "0" ]]; then
+      exit 1
+    fi
   done
 }
 
@@ -632,8 +628,7 @@ do_pip_no_cuda_deps_check_windows() {
 }
 
 do_configure_test() {
-  for WITH_CUDA in 1 0
-  do
+  for WITH_CUDA in 1 0; do
     export TF_NEED_CUDA="$WITH_CUDA"
     export CUDNN_INSTALL_PATH="/usr/local/cudnn"
     export PYTHON_BIN_PATH="$(which python)"
@@ -641,7 +636,7 @@ do_configure_test() {
 
     RESULT=$?
     if [[ ${RESULT} != "0" ]]; then
-     exit 1
+      exit 1
     fi
   done
 }
@@ -667,7 +662,6 @@ for arg in "$@"; do
   fi
 done
 
-
 FAIL_COUNTER=0
 PASS_COUNTER=0
 STEP_EXIT_CODES=()
@@ -679,13 +673,13 @@ while [[ ${COUNTER} -lt "${#SANITY_STEPS[@]}" ]]; do
   ((INDEX++))
 
   echo ""
-  echo "=== Sanity check step $INDEX of ${#SANITY_STEPS[@]}: "\
-"${SANITY_STEPS[COUNTER]} (${SANITY_STEPS_DESC[COUNTER]}) ==="
+  echo "=== Sanity check step $INDEX of ${#SANITY_STEPS[@]}: " \
+  "${SANITY_STEPS[COUNTER]} (${SANITY_STEPS_DESC[COUNTER]}) ==="
   echo ""
 
   # subshell: don't leak variables or changes of working directory
   (
-  "${SANITY_STEPS[COUNTER]}" "$INCREMENTAL_FLAG"
+    "${SANITY_STEPS[COUNTER]}" "$INCREMENTAL_FLAG"
   )
   RESULT=$?
 
