@@ -26,13 +26,20 @@ import warnings
 import zipfile
 
 from flatbuffers.python import flatbuffers
-from tensorflow.lite.experimental.support.metadata import metadata_schema_py_generated as _metadata_fb
-from tensorflow.lite.experimental.support.metadata import schema_py_generated as _schema_fb
-from tensorflow.lite.experimental.support.metadata.flatbuffers_lib import _pywrap_flatbuffers
+from tensorflow.lite.experimental.support.metadata import (
+    metadata_schema_py_generated as _metadata_fb,
+)
+from tensorflow.lite.experimental.support.metadata import (
+    schema_py_generated as _schema_fb,
+)
+from tensorflow.lite.experimental.support.metadata.flatbuffers_lib import (
+    _pywrap_flatbuffers,
+)
 from tensorflow.python.platform import resource_loader
 
 _FLATC_TFLITE_METADATA_SCHEMA_FILE = resource_loader.get_path_to_datafile(
-    "metadata_schema.fbs")
+    "metadata_schema.fbs"
+)
 
 
 # TODO(b/141467403): add delete method for associated files.
@@ -79,6 +86,7 @@ class MetadataPopulator(object):
         f.write(updated_model_buf)
       ```
     """
+
     # As Zip API is used to concatenate associated files after tflite model file,
     # the populating operation is developed based on a model file. For in-memory
     # model buffer, we create a tempfile to serve the populating operation.
@@ -168,29 +176,26 @@ class MetadataPopulator(object):
             return recorded_files
 
         metadata = _metadata_fb.ModelMetadata.GetRootAsModelMetadata(
-            self._metadata_buf, 0)
+            self._metadata_buf, 0
+        )
 
         # Add associated files attached to ModelMetadata
-        self._get_associated_files_from_metadata_struct(
-            metadata, recorded_files)
+        self._get_associated_files_from_metadata_struct(metadata, recorded_files)
 
         # Add associated files attached to each SubgraphMetadata
         for j in range(metadata.SubgraphMetadataLength()):
             subgraph = metadata.SubgraphMetadata(j)
-            self._get_associated_files_from_metadata_struct(
-                subgraph, recorded_files)
+            self._get_associated_files_from_metadata_struct(subgraph, recorded_files)
 
             # Add associated files attached to each input tensor
             for k in range(subgraph.InputTensorMetadataLength()):
                 tensor = subgraph.InputTensorMetadata(k)
-                self._get_associated_files_from_metadata_struct(
-                    tensor, recorded_files)
+                self._get_associated_files_from_metadata_struct(tensor, recorded_files)
 
             # Add associated files attached to each output tensor
             for k in range(subgraph.OutputTensorMetadataLength()):
                 tensor = subgraph.OutputTensorMetadata(k)
-                self._get_associated_files_from_metadata_struct(
-                    tensor, recorded_files)
+                self._get_associated_files_from_metadata_struct(tensor, recorded_files)
 
         return recorded_files
 
@@ -266,18 +271,20 @@ class MetadataPopulator(object):
         # Checks all files recorded in the metadata will be populated.
         for rf in recorded_files:
             if rf not in to_be_populated_files and rf not in packed_files:
-                raise ValueError("File, '{0}', is recorded in the metadata, but has "
-                                 "not been loaded into the populator.".format(rf))
+                raise ValueError(
+                    "File, '{0}', is recorded in the metadata, but has "
+                    "not been loaded into the populator.".format(rf)
+                )
 
         for f in to_be_populated_files:
             if f in packed_files:
-                raise ValueError(
-                    "File, '{0}', has already been packed.".format(f))
+                raise ValueError("File, '{0}', has already been packed.".format(f))
 
             if f not in recorded_files:
                 warnings.warn(
                     "File, '{0}', does not exsit in the metadata. But packing it to "
-                    "tflite model is still allowed.".format(f))
+                    "tflite model is still allowed.".format(f)
+                )
 
     def _copy_archived_files(self, src_zip, dst_zip, file_list):
         """Copy archieved files in file_list from src_zip ro dst_zip."""
@@ -285,22 +292,23 @@ class MetadataPopulator(object):
         if not zipfile.is_zipfile(src_zip):
             raise ValueError("File, '{0}', is not a zipfile.".format(src_zip))
 
-        with zipfile.ZipFile(src_zip,
-                             "r") as src_zf, zipfile.ZipFile(dst_zip,
-                                                             "a") as dst_zf:
+        with zipfile.ZipFile(src_zip, "r") as src_zf, zipfile.ZipFile(
+            dst_zip, "a"
+        ) as dst_zf:
             src_list = src_zf.namelist()
             for f in file_list:
                 if f not in src_list:
                     raise ValueError(
                         "File, '{0}', does not exist in the zipfile, {1}.".format(
-                            f, src_zip))
+                            f, src_zip
+                        )
+                    )
                 file_buffer = src_zf.read(f)
                 dst_zf.writestr(f, file_buffer)
 
     def _get_associated_files_from_metadata_struct(self, file_holder, file_list):
         for j in range(file_holder.AssociatedFilesLength()):
-            file_list.append(file_holder.AssociatedFiles(
-                j).Name().decode("utf-8"))
+            file_list.append(file_holder.AssociatedFiles(j).Name().decode("utf-8"))
 
     def _populate_associated_files(self):
         """Concatenates associated files after TensorFlow Lite model file.
@@ -331,7 +339,8 @@ class MetadataPopulator(object):
             model_buf = f.read()
 
         model = _schema_fb.ModelT.InitFromObj(
-            _schema_fb.Model.GetRootAsModel(model_buf, 0))
+            _schema_fb.Model.GetRootAsModel(model_buf, 0)
+        )
         buffer_field = _schema_fb.BufferT()
         buffer_field.data = self._metadata_buf
 
@@ -449,8 +458,7 @@ class MetadataDisplayer(object):
         """
         _assert_exist(model_file)
         metadata_file = cls._save_temporary_metadata_file(model_file)
-        associated_file_list = cls._parse_packed_associted_file_list(
-            model_file)
+        associated_file_list = cls._parse_packed_associted_file_list(model_file)
         return cls(model_file, metadata_file, associated_file_list)
 
     @classmethod
@@ -483,8 +491,7 @@ class MetadataDisplayer(object):
         with open(self._metadata_file, "rb") as f:
             metadata_file_content = f.read()
         if not parser.parse(metadata_schema_content):
-            raise ValueError(
-                "Cannot parse metadata schema. Reason: " + parser.error)
+            raise ValueError("Cannot parse metadata schema. Reason: " + parser.error)
         with open(self._metadata_file, "rb") as f:
             metadata_file_content = f.read()
         return _pywrap_flatbuffers.generate_text(parser, metadata_file_content)
