@@ -13,13 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for compute_gradient."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import numpy as np
 
+import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.python.eager import backprop
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
@@ -29,11 +29,9 @@ from tensorflow.python.ops import custom_gradient
 from tensorflow.python.ops import gradient_checker_v2 as gradient_checker
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn_ops
-
-# needs this to register gradient for SoftmaxCrossEntropyWithLogits:
-import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.python.platform import test
 from tensorflow.python.platform import tf_logging
+# needs this to register gradient for SoftmaxCrossEntropyWithLogits:
 
 
 def _random_complex(shape, dtype):
