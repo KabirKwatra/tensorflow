@@ -53,13 +53,15 @@ class _CuDNNRNN(RNN):
           be `(batch, timesteps, ...)`.
     """
 
-    def __init__(self,
-                 return_sequences=False,
-                 return_state=False,
-                 go_backwards=False,
-                 stateful=False,
-                 time_major=False,
-                 **kwargs):
+    def __init__(
+        self,
+        return_sequences=False,
+        return_state=False,
+        go_backwards=False,
+        stateful=False,
+        time_major=False,
+        **kwargs
+    ):
         # We invoke the base layer's initializer directly here because we do not
         # want to create RNN cell instance.
         super(RNN, self).__init__(**kwargs)  # pylint: disable=bad-super-call
@@ -70,7 +72,7 @@ class _CuDNNRNN(RNN):
         self.time_major = time_major
         self.supports_masking = False
         self.input_spec = [InputSpec(ndim=3)]
-        if hasattr(self.cell.state_size, '__len__'):
+        if hasattr(self.cell.state_size, "__len__"):
             state_size = self.cell.state_size
         else:
             state_size = [self.cell.state_size]
@@ -84,7 +86,7 @@ class _CuDNNRNN(RNN):
         if isinstance(mask, list):
             mask = mask[0]
         if mask is not None:
-            raise ValueError('Masking is not supported for CuDNN RNNs.')
+            raise ValueError("Masking is not supported for CuDNN RNNs.")
 
         # input shape: `(samples, time (padded with zeros), input_dim)`
         # note that the .build() method of subclasses MUST define
@@ -100,9 +102,13 @@ class _CuDNNRNN(RNN):
             initial_state = self.get_initial_state(inputs)
 
         if len(initial_state) != len(self.states):
-            raise ValueError('Layer has ' + str(len(self.states)) +
-                             ' states but was passed ' + str(len(initial_state)) +
-                             ' initial states.')
+            raise ValueError(
+                "Layer has "
+                + str(len(self.states))
+                + " states but was passed "
+                + str(len(initial_state))
+                + " initial states."
+            )
 
         if self.go_backwards:
             # Reverse time axis.
@@ -123,14 +129,13 @@ class _CuDNNRNN(RNN):
 
     def get_config(self):
         config = {
-            'return_sequences': self.return_sequences,
-            'return_state': self.return_state,
-            'go_backwards': self.go_backwards,
-            'stateful': self.stateful,
-            'time_major': self.time_major,
+            "return_sequences": self.return_sequences,
+            "return_state": self.return_state,
+            "go_backwards": self.go_backwards,
+            "stateful": self.stateful,
+            "time_major": self.time_major,
         }
-        base_config = super(  # pylint: disable=bad-super-call
-            RNN, self).get_config()
+        base_config = super(RNN, self).get_config()  # pylint: disable=bad-super-call
         return dict(list(base_config.items()) + list(config.items()))
 
     @classmethod
@@ -154,11 +159,12 @@ class _CuDNNRNN(RNN):
         return super(RNN, self).losses
 
     def get_losses_for(self, inputs=None):
-        return super(  # pylint: disable=bad-super-call
-            RNN, self).get_losses_for(inputs=inputs)
+        return super(RNN, self).get_losses_for(  # pylint: disable=bad-super-call
+            inputs=inputs
+        )
 
 
-@keras_export(v1=['keras.layers.CuDNNGRU'])
+@keras_export(v1=["keras.layers.CuDNNGRU"])
 class CuDNNGRU(_CuDNNRNN):
     """Fast GRU implementation backed by cuDNN.
 
@@ -196,32 +202,35 @@ class CuDNNGRU(_CuDNNRNN):
           index i in the following batch.
     """
 
-    def __init__(self,
-                 units,
-                 kernel_initializer='glorot_uniform',
-                 recurrent_initializer='orthogonal',
-                 bias_initializer='zeros',
-                 kernel_regularizer=None,
-                 recurrent_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 recurrent_constraint=None,
-                 bias_constraint=None,
-                 return_sequences=False,
-                 return_state=False,
-                 go_backwards=False,
-                 stateful=False,
-                 **kwargs):
+    def __init__(
+        self,
+        units,
+        kernel_initializer="glorot_uniform",
+        recurrent_initializer="orthogonal",
+        bias_initializer="zeros",
+        kernel_regularizer=None,
+        recurrent_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        recurrent_constraint=None,
+        bias_constraint=None,
+        return_sequences=False,
+        return_state=False,
+        go_backwards=False,
+        stateful=False,
+        **kwargs
+    ):
         self.units = units
-        cell_spec = collections.namedtuple('cell', 'state_size')
+        cell_spec = collections.namedtuple("cell", "state_size")
         self._cell = cell_spec(state_size=self.units)
         super(CuDNNGRU, self).__init__(
             return_sequences=return_sequences,
             return_state=return_state,
             go_backwards=go_backwards,
             stateful=stateful,
-            **kwargs)
+            **kwargs
+        )
 
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.recurrent_initializer = initializers.get(recurrent_initializer)
@@ -248,24 +257,27 @@ class CuDNNGRU(_CuDNNRNN):
 
         self.kernel = self.add_weight(
             shape=(input_dim, self.units * 3),
-            name='kernel',
+            name="kernel",
             initializer=self.kernel_initializer,
             regularizer=self.kernel_regularizer,
-            constraint=self.kernel_constraint)
+            constraint=self.kernel_constraint,
+        )
 
         self.recurrent_kernel = self.add_weight(
             shape=(self.units, self.units * 3),
-            name='recurrent_kernel',
+            name="recurrent_kernel",
             initializer=self.recurrent_initializer,
             regularizer=self.recurrent_regularizer,
-            constraint=self.recurrent_constraint)
+            constraint=self.recurrent_constraint,
+        )
 
         self.bias = self.add_weight(
             shape=(self.units * 6,),
-            name='bias',
+            name="bias",
             initializer=self.bias_initializer,
             regularizer=self.bias_regularizer,
-            constraint=self.bias_constraint)
+            constraint=self.bias_constraint,
+        )
 
         self.built = True
 
@@ -275,32 +287,33 @@ class CuDNNGRU(_CuDNNRNN):
         input_h = initial_state[0]
         input_h = array_ops.expand_dims(input_h, axis=0)
 
-        params = recurrent_v2._canonical_to_params(    # pylint: disable=protected-access
+        params = recurrent_v2._canonical_to_params(  # pylint: disable=protected-access
             weights=[
-                self.kernel[:, self.units:self.units * 2],
-                self.kernel[:, :self.units],
-                self.kernel[:, self.units * 2:],
-                self.recurrent_kernel[:, self.units:self.units * 2],
-                self.recurrent_kernel[:, :self.units],
-                self.recurrent_kernel[:, self.units * 2:],
+                self.kernel[:, self.units : self.units * 2],
+                self.kernel[:, : self.units],
+                self.kernel[:, self.units * 2 :],
+                self.recurrent_kernel[:, self.units : self.units * 2],
+                self.recurrent_kernel[:, : self.units],
+                self.recurrent_kernel[:, self.units * 2 :],
             ],
             biases=[
-                self.bias[self.units:self.units * 2],
-                self.bias[:self.units],
-                self.bias[self.units * 2:self.units * 3],
-                self.bias[self.units * 4:self.units * 5],
-                self.bias[self.units * 3:self.units * 4],
-                self.bias[self.units * 5:],
+                self.bias[self.units : self.units * 2],
+                self.bias[: self.units],
+                self.bias[self.units * 2 : self.units * 3],
+                self.bias[self.units * 4 : self.units * 5],
+                self.bias[self.units * 3 : self.units * 4],
+                self.bias[self.units * 5 :],
             ],
-            shape=self._vector_shape)
+            shape=self._vector_shape,
+        )
 
         args = {
-            'input': inputs,
-            'input_h': input_h,
-            'input_c': 0,
-            'params': params,
-            'is_training': True,
-            'rnn_mode': 'gru',
+            "input": inputs,
+            "input_h": input_h,
+            "input_c": 0,
+            "params": params,
+            "is_training": True,
+            "rnn_mode": "gru",
         }
 
         outputs, h, _, _, _ = gen_cudnn_rnn_ops.cudnn_rnnv2(**args)
@@ -318,27 +331,23 @@ class CuDNNGRU(_CuDNNRNN):
 
     def get_config(self):
         config = {
-            'units': self.units,
-            'kernel_initializer': initializers.serialize(self.kernel_initializer),
-            'recurrent_initializer':
-                initializers.serialize(self.recurrent_initializer),
-            'bias_initializer': initializers.serialize(self.bias_initializer),
-            'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
-            'recurrent_regularizer':
-                regularizers.serialize(self.recurrent_regularizer),
-            'bias_regularizer': regularizers.serialize(self.bias_regularizer),
-            'activity_regularizer':
-                regularizers.serialize(self.activity_regularizer),
-            'kernel_constraint': constraints.serialize(self.kernel_constraint),
-            'recurrent_constraint':
-                constraints.serialize(self.recurrent_constraint),
-            'bias_constraint': constraints.serialize(self.bias_constraint)
+            "units": self.units,
+            "kernel_initializer": initializers.serialize(self.kernel_initializer),
+            "recurrent_initializer": initializers.serialize(self.recurrent_initializer),
+            "bias_initializer": initializers.serialize(self.bias_initializer),
+            "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
+            "recurrent_regularizer": regularizers.serialize(self.recurrent_regularizer),
+            "bias_regularizer": regularizers.serialize(self.bias_regularizer),
+            "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+            "kernel_constraint": constraints.serialize(self.kernel_constraint),
+            "recurrent_constraint": constraints.serialize(self.recurrent_constraint),
+            "bias_constraint": constraints.serialize(self.bias_constraint),
         }
         base_config = super(CuDNNGRU, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export(v1=['keras.layers.CuDNNLSTM'])
+@keras_export(v1=["keras.layers.CuDNNLSTM"])
 class CuDNNLSTM(_CuDNNRNN):
     """Fast LSTM implementation backed by cuDNN.
 
@@ -380,33 +389,36 @@ class CuDNNLSTM(_CuDNNRNN):
           index i in the following batch.
     """
 
-    def __init__(self,
-                 units,
-                 kernel_initializer='glorot_uniform',
-                 recurrent_initializer='orthogonal',
-                 bias_initializer='zeros',
-                 unit_forget_bias=True,
-                 kernel_regularizer=None,
-                 recurrent_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 recurrent_constraint=None,
-                 bias_constraint=None,
-                 return_sequences=False,
-                 return_state=False,
-                 go_backwards=False,
-                 stateful=False,
-                 **kwargs):
+    def __init__(
+        self,
+        units,
+        kernel_initializer="glorot_uniform",
+        recurrent_initializer="orthogonal",
+        bias_initializer="zeros",
+        unit_forget_bias=True,
+        kernel_regularizer=None,
+        recurrent_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        recurrent_constraint=None,
+        bias_constraint=None,
+        return_sequences=False,
+        return_state=False,
+        go_backwards=False,
+        stateful=False,
+        **kwargs
+    ):
         self.units = units
-        cell_spec = collections.namedtuple('cell', 'state_size')
+        cell_spec = collections.namedtuple("cell", "state_size")
         self._cell = cell_spec(state_size=(self.units, self.units))
         super(CuDNNLSTM, self).__init__(
             return_sequences=return_sequences,
             return_state=return_state,
             go_backwards=go_backwards,
             stateful=stateful,
-            **kwargs)
+            **kwargs
+        )
 
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.recurrent_initializer = initializers.get(recurrent_initializer)
@@ -434,34 +446,41 @@ class CuDNNLSTM(_CuDNNRNN):
 
         self.kernel = self.add_weight(
             shape=(input_dim, self.units * 4),
-            name='kernel',
+            name="kernel",
             initializer=self.kernel_initializer,
             regularizer=self.kernel_regularizer,
-            constraint=self.kernel_constraint)
+            constraint=self.kernel_constraint,
+        )
 
         self.recurrent_kernel = self.add_weight(
             shape=(self.units, self.units * 4),
-            name='recurrent_kernel',
+            name="recurrent_kernel",
             initializer=self.recurrent_initializer,
             regularizer=self.recurrent_regularizer,
-            constraint=self.recurrent_constraint)
+            constraint=self.recurrent_constraint,
+        )
 
         if self.unit_forget_bias:
 
             def bias_initializer(_, *args, **kwargs):
-                return array_ops.concat([
-                    self.bias_initializer((self.units * 5,), *args, **kwargs),
-                    initializers.Ones()((self.units,), *args, **kwargs),
-                    self.bias_initializer((self.units * 2,), *args, **kwargs),
-                ], axis=0)
+                return array_ops.concat(
+                    [
+                        self.bias_initializer((self.units * 5,), *args, **kwargs),
+                        initializers.Ones()((self.units,), *args, **kwargs),
+                        self.bias_initializer((self.units * 2,), *args, **kwargs),
+                    ],
+                    axis=0,
+                )
+
         else:
             bias_initializer = self.bias_initializer
         self.bias = self.add_weight(
             shape=(self.units * 8,),
-            name='bias',
+            name="bias",
             initializer=bias_initializer,
             regularizer=self.bias_regularizer,
-            constraint=self.bias_constraint)
+            constraint=self.bias_constraint,
+        )
 
         self.built = True
 
@@ -473,35 +492,36 @@ class CuDNNLSTM(_CuDNNRNN):
         input_h = array_ops.expand_dims(input_h, axis=0)
         input_c = array_ops.expand_dims(input_c, axis=0)
 
-        params = recurrent_v2._canonical_to_params(    # pylint: disable=protected-access
+        params = recurrent_v2._canonical_to_params(  # pylint: disable=protected-access
             weights=[
-                self.kernel[:, :self.units],
-                self.kernel[:, self.units:self.units * 2],
-                self.kernel[:, self.units * 2:self.units * 3],
-                self.kernel[:, self.units * 3:],
-                self.recurrent_kernel[:, :self.units],
-                self.recurrent_kernel[:, self.units:self.units * 2],
-                self.recurrent_kernel[:, self.units * 2:self.units * 3],
-                self.recurrent_kernel[:, self.units * 3:],
+                self.kernel[:, : self.units],
+                self.kernel[:, self.units : self.units * 2],
+                self.kernel[:, self.units * 2 : self.units * 3],
+                self.kernel[:, self.units * 3 :],
+                self.recurrent_kernel[:, : self.units],
+                self.recurrent_kernel[:, self.units : self.units * 2],
+                self.recurrent_kernel[:, self.units * 2 : self.units * 3],
+                self.recurrent_kernel[:, self.units * 3 :],
             ],
             biases=[
-                self.bias[:self.units],
-                self.bias[self.units:self.units * 2],
-                self.bias[self.units * 2:self.units * 3],
-                self.bias[self.units * 3:self.units * 4],
-                self.bias[self.units * 4:self.units * 5],
-                self.bias[self.units * 5:self.units * 6],
-                self.bias[self.units * 6:self.units * 7],
-                self.bias[self.units * 7:],
+                self.bias[: self.units],
+                self.bias[self.units : self.units * 2],
+                self.bias[self.units * 2 : self.units * 3],
+                self.bias[self.units * 3 : self.units * 4],
+                self.bias[self.units * 4 : self.units * 5],
+                self.bias[self.units * 5 : self.units * 6],
+                self.bias[self.units * 6 : self.units * 7],
+                self.bias[self.units * 7 :],
             ],
-            shape=self._vector_shape)
+            shape=self._vector_shape,
+        )
 
         args = {
-            'input': inputs,
-            'input_h': input_h,
-            'input_c': input_c,
-            'params': params,
-            'is_training': True,
+            "input": inputs,
+            "input_h": input_h,
+            "input_c": input_c,
+            "params": params,
+            "is_training": True,
         }
 
         outputs, h, c, _, _ = gen_cudnn_rnn_ops.cudnn_rnnv2(**args)
@@ -520,22 +540,18 @@ class CuDNNLSTM(_CuDNNRNN):
 
     def get_config(self):
         config = {
-            'units': self.units,
-            'kernel_initializer': initializers.serialize(self.kernel_initializer),
-            'recurrent_initializer':
-                initializers.serialize(self.recurrent_initializer),
-            'bias_initializer': initializers.serialize(self.bias_initializer),
-            'unit_forget_bias': self.unit_forget_bias,
-            'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
-            'recurrent_regularizer':
-                regularizers.serialize(self.recurrent_regularizer),
-            'bias_regularizer': regularizers.serialize(self.bias_regularizer),
-            'activity_regularizer':
-                regularizers.serialize(self.activity_regularizer),
-            'kernel_constraint': constraints.serialize(self.kernel_constraint),
-            'recurrent_constraint':
-                constraints.serialize(self.recurrent_constraint),
-            'bias_constraint': constraints.serialize(self.bias_constraint)
+            "units": self.units,
+            "kernel_initializer": initializers.serialize(self.kernel_initializer),
+            "recurrent_initializer": initializers.serialize(self.recurrent_initializer),
+            "bias_initializer": initializers.serialize(self.bias_initializer),
+            "unit_forget_bias": self.unit_forget_bias,
+            "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
+            "recurrent_regularizer": regularizers.serialize(self.recurrent_regularizer),
+            "bias_regularizer": regularizers.serialize(self.bias_regularizer),
+            "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+            "kernel_constraint": constraints.serialize(self.kernel_constraint),
+            "recurrent_constraint": constraints.serialize(self.recurrent_constraint),
+            "bias_constraint": constraints.serialize(self.bias_constraint),
         }
         base_config = super(CuDNNLSTM, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))

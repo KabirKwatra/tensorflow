@@ -76,13 +76,15 @@ class CollectiveAllReduceStrategy(distribute_lib.Strategy):
     mode have to run after the strategy object is created.
 
     """
+
     # TODO(anjalisridhar): Update our guides with examples showing how we can use
     # the cluster_resolver argument.
 
     def __init__(
-            self,
-            communication=cross_device_ops_lib.CollectiveCommunication.AUTO,
-            cluster_resolver=None):
+        self,
+        communication=cross_device_ops_lib.CollectiveCommunication.AUTO,
+        cluster_resolver=None,
+    ):
         """Creates the strategy.
 
         Args:
@@ -98,24 +100,28 @@ class CollectiveAllReduceStrategy(distribute_lib.Strategy):
         # TODO(b/150151677): consider move communication to CollectiveHints.
         super(CollectiveAllReduceStrategy, self).__init__(
             CollectiveAllReduceExtended(
-                self,
-                communication=communication,
-                cluster_resolver=cluster_resolver))
+                self, communication=communication, cluster_resolver=cluster_resolver
+            )
+        )
 
         distribute_lib.distribution_strategy_gauge.get_cell("V2").set(
-            "MultiWorkerMirroredStrategy")
+            "MultiWorkerMirroredStrategy"
+        )
         # pylint: disable=protected-access
+        distribute_lib.distribution_strategy_replica_gauge.get_cell("num_workers").set(
+            self.extended._num_workers
+        )
         distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_workers").set(self.extended._num_workers)
-        distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_replicas_per_worker").set(self.extended._num_gpus_per_worker)
+            "num_replicas_per_worker"
+        ).set(self.extended._num_gpus_per_worker)
 
     @classmethod
     def _from_local_devices(cls, devices):
         """A convenience method to create an object with a list of devices."""
         obj = cls()
-        obj.extended._initialize_local(TFConfigClusterResolver(
-        ), devices=devices)  # pylint: disable=protected-access
+        obj.extended._initialize_local(
+            TFConfigClusterResolver(), devices=devices
+        )  # pylint: disable=protected-access
         return obj
 
     def scope(self):  # pylint: disable=useless-super-delegation
@@ -136,46 +142,48 @@ class CollectiveAllReduceStrategy(distribute_lib.Strategy):
         return super(CollectiveAllReduceStrategy, self).scope()
 
 
-@tf_export(v1=["distribute.experimental.MultiWorkerMirroredStrategy"])  # pylint: disable=missing-docstring
+@tf_export(
+    v1=["distribute.experimental.MultiWorkerMirroredStrategy"]
+)  # pylint: disable=missing-docstring
 class CollectiveAllReduceStrategyV1(distribute_lib.StrategyV1):
 
     __doc__ = CollectiveAllReduceStrategy.__doc__
 
     def __init__(
-            self,
-            communication=cross_device_ops_lib.CollectiveCommunication.AUTO,
-            cluster_resolver=None):
+        self,
+        communication=cross_device_ops_lib.CollectiveCommunication.AUTO,
+        cluster_resolver=None,
+    ):
         """Initializes the object."""
         super(CollectiveAllReduceStrategyV1, self).__init__(
             CollectiveAllReduceExtended(
-                self,
-                communication=communication,
-                cluster_resolver=cluster_resolver))
+                self, communication=communication, cluster_resolver=cluster_resolver
+            )
+        )
         distribute_lib.distribution_strategy_gauge.get_cell("V1").set(
-            "MultiWorkerMirroredStrategy")
+            "MultiWorkerMirroredStrategy"
+        )
         # pylint: disable=protected-access
+        distribute_lib.distribution_strategy_replica_gauge.get_cell("num_workers").set(
+            self.extended._num_workers
+        )
         distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_workers").set(self.extended._num_workers)
-        distribute_lib.distribution_strategy_replica_gauge.get_cell(
-            "num_gpu_per_worker").set(self.extended._num_gpus_per_worker)
+            "num_gpu_per_worker"
+        ).set(self.extended._num_gpus_per_worker)
 
 
 class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
     """Implementation of CollectiveAllReduceStrategy."""
 
-    def __init__(self,
-                 container_strategy,
-                 communication,
-                 cluster_resolver):
+    def __init__(self, container_strategy, communication, cluster_resolver):
         self._cluster_resolver = cluster_resolver or TFConfigClusterResolver()
         distribute_lib.StrategyExtendedV1.__init__(self, container_strategy)
-        assert isinstance(
-            communication,
-            cross_device_ops_lib.CollectiveCommunication)
+        assert isinstance(communication, cross_device_ops_lib.CollectiveCommunication)
         self._communication = communication
         self._initialize_strategy(self._cluster_resolver)
-        assert isinstance(self._get_cross_device_ops(),
-                          cross_device_ops_lib.CollectiveAllReduce)
+        assert isinstance(
+            self._get_cross_device_ops(), cross_device_ops_lib.CollectiveAllReduce
+        )
 
     def _initialize_strategy(self, cluster_resolver):
         if cluster_resolver.cluster_spec().as_dict():
@@ -191,10 +199,13 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
         if ops.executing_eagerly_outside_functions():
             try:
                 context.context().configure_collective_ops(
-                    scoped_allocator_enabled_ops=("CollectiveReduce",))
+                    scoped_allocator_enabled_ops=("CollectiveReduce",)
+                )
             except RuntimeError:
-                logging.warning("Collective ops is not configured at program startup. "
-                                "Some performance features may not be enabled.")
+                logging.warning(
+                    "Collective ops is not configured at program startup. "
+                    "Some performance features may not be enabled."
+                )
             self._collective_ops_configured = True
 
         # TODO(b/126786766): TFConfigClusterResolver returns wrong number of GPUs in
@@ -208,14 +219,12 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             local_devices = devices
         else:
             if num_gpus:
-                local_devices = tuple("/device:GPU:%d" %
-                                      i for i in range(num_gpus))
+                local_devices = tuple("/device:GPU:%d" % i for i in range(num_gpus))
             else:
                 local_devices = ("/device:CPU:0",)
 
         self._worker_device = device_util.canonicalize("/device:CPU:0")
-        self._host_input_device = numpy_dataset.SingleDevice(
-            self._worker_device)
+        self._host_input_device = numpy_dataset.SingleDevice(self._worker_device)
 
         self._collective_keys = cross_device_utils.CollectiveKeys()
         # TODO(yuefengz): remove num_gpus_per_worker from CollectiveAllReduce.
@@ -223,9 +232,11 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             num_workers=self._num_workers,
             num_gpus_per_worker=num_gpus,
             collective_keys=self._collective_keys,
-            communication=self._communication)
+            communication=self._communication,
+        )
         super(CollectiveAllReduceExtended, self)._initialize_single_worker(
-            local_devices)
+            local_devices
+        )
 
         self._cluster_spec = None
         self._task_type = None
@@ -242,48 +253,59 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
         self._rpc_layer = cluster_resolver.rpc_layer
         self._warn_nccl_no_gpu()
 
-        logging.info("Single-worker MultiWorkerMirroredStrategy with local_devices "
-                     "= %r, communication = %s", local_devices, self._communication)
+        logging.info(
+            "Single-worker MultiWorkerMirroredStrategy with local_devices "
+            "= %r, communication = %s",
+            local_devices,
+            self._communication,
+        )
 
     def _initialize_multi_worker(self, cluster_resolver):
         """Initializes the object for multi-worker training."""
         cluster_spec = multi_worker_util.normalize_cluster_spec(
-            cluster_resolver.cluster_spec())
+            cluster_resolver.cluster_spec()
+        )
         task_type = cluster_resolver.task_type
         task_id = cluster_resolver.task_id
         if task_type is None or task_id is None:
-            raise ValueError("When `cluster_spec` is given, you must also specify "
-                             "`task_type` and `task_id`.")
+            raise ValueError(
+                "When `cluster_spec` is given, you must also specify "
+                "`task_type` and `task_id`."
+            )
         self._cluster_spec = cluster_spec
         self._task_type = task_type
         self._task_id = task_id
 
-        self._num_workers = multi_worker_util.worker_count(
-            cluster_spec, task_type)
+        self._num_workers = multi_worker_util.worker_count(cluster_spec, task_type)
         if not self._num_workers:
-            raise ValueError("No `worker`, `chief` or `evaluator` tasks can be found "
-                             "in `cluster_spec`.")
+            raise ValueError(
+                "No `worker`, `chief` or `evaluator` tasks can be found "
+                "in `cluster_spec`."
+            )
 
-        self._is_chief = multi_worker_util.is_chief(cluster_spec, task_type,
-                                                    task_id)
+        self._is_chief = multi_worker_util.is_chief(cluster_spec, task_type, task_id)
 
         self._worker_device = "/job:%s/task:%d" % (task_type, task_id)
-        self._host_input_device = numpy_dataset.SingleDevice(
-            self._worker_device)
+        self._host_input_device = numpy_dataset.SingleDevice(self._worker_device)
 
-        if (ops.executing_eagerly_outside_functions() and
-                not getattr(self, "_local_or_standalone_client_mode", False)):
+        if ops.executing_eagerly_outside_functions() and not getattr(
+            self, "_local_or_standalone_client_mode", False
+        ):
             context.context().configure_collective_ops(
                 collective_leader=multi_worker_util.collective_leader(
-                    cluster_spec, task_type, task_id),
+                    cluster_spec, task_type, task_id
+                ),
                 scoped_allocator_enabled_ops=("CollectiveReduce",),
-                device_filters=("/job:%s/task:%d" % (task_type, task_id),))
+                device_filters=("/job:%s/task:%d" % (task_type, task_id),),
+            )
             self._collective_ops_configured = True
 
         # Starting a std server in eager mode and in independent worker mode.
-        if (context.executing_eagerly() and
-            not getattr(self, "_std_server_started", False) and
-                not getattr(self, "_local_or_standalone_client_mode", False)):
+        if (
+            context.executing_eagerly()
+            and not getattr(self, "_std_server_started", False)
+            and not getattr(self, "_local_or_standalone_client_mode", False)
+        ):
             # Checking _local_or_standalone_client_mode as well because we should not
             # create the std server in standalone client mode.
             config_proto = config_pb2.ConfigProto()
@@ -299,7 +321,8 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
                 job_name=task_type,
                 task_index=task_id,
                 protocol=cluster_resolver.rpc_layer or "grpc",
-                port=port)
+                port=port,
+            )
             context.context().enable_collective_ops(server_def)
             self._std_server_started = True
             # The `ensure_initialized` is needed before calling
@@ -307,7 +330,8 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             context.context().ensure_initialized()
             logging.info(
                 "Enabled multi-worker collective ops with available devices: %r",
-                context.context().devices())
+                context.context().devices(),
+            )
 
         # TODO(yuefengz): The `num_gpus` is only for this particular task. It
         # assumes all workers have the same number of GPUs. We should remove this
@@ -320,8 +344,9 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             num_gpus = cluster_resolver.num_accelerators().get("GPU", 0)
 
         if num_gpus:
-            local_devices = tuple("%s/device:GPU:%d" % (self._worker_device, i)
-                                  for i in range(num_gpus))
+            local_devices = tuple(
+                "%s/device:GPU:%d" % (self._worker_device, i) for i in range(num_gpus)
+            )
         else:
             local_devices = (self._worker_device,)
 
@@ -330,11 +355,14 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             num_workers=self._num_workers,
             num_gpus_per_worker=num_gpus,
             collective_keys=self._collective_keys,
-            communication=self._communication)
+            communication=self._communication,
+        )
         super(CollectiveAllReduceExtended, self)._initialize_single_worker(
-            local_devices)
+            local_devices
+        )
         self._input_workers = input_lib.InputWorkers(
-            [(self._worker_device, self.worker_devices)])
+            [(self._worker_device, self.worker_devices)]
+        )
 
         # Add a default device so that ops without specified devices will not end up
         # on other workers.
@@ -348,15 +376,18 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
         logging.info(
             "MultiWorkerMirroredStrategy with cluster_spec = %r, task_type = %r, "
             "task_id = %r, num_workers = %r, local_devices = %r, "
-            "communication = %s", cluster_spec.as_dict(), task_type,
-            task_id, self._num_workers, local_devices,
-            self._communication)
+            "communication = %s",
+            cluster_spec.as_dict(),
+            task_type,
+            task_id,
+            self._num_workers,
+            local_devices,
+            self._communication,
+        )
 
-    def _get_variable_creator_initial_value(self,
-                                            replica_id,
-                                            device,
-                                            primary_var,
-                                            **kwargs):
+    def _get_variable_creator_initial_value(
+        self, replica_id, device, primary_var, **kwargs
+    ):
         if replica_id == 0:  # First replica on each worker.
             assert device is not None
             assert primary_var is None
@@ -366,7 +397,8 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
                 group_key = self._collective_keys.get_group_key([device])
                 group_size = self._num_workers
                 collective_instance_key = (
-                    self._collective_keys.get_variable_instance_key())
+                    self._collective_keys.get_variable_instance_key()
+                )
 
                 with ops.device(device):
                     initial_value = kwargs["initial_value"]
@@ -374,41 +406,51 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
                         initial_value = initial_value()
                     assert not callable(initial_value)
                     initial_value = ops.convert_to_tensor(
-                        initial_value, dtype=kwargs.get("dtype", None))
+                        initial_value, dtype=kwargs.get("dtype", None)
+                    )
 
                     if self._num_workers > 1:
                         if self._is_chief:
                             bcast_send = collective_ops.broadcast_send(
-                                initial_value, initial_value.shape, initial_value.dtype,
-                                group_size, group_key, collective_instance_key)
+                                initial_value,
+                                initial_value.shape,
+                                initial_value.dtype,
+                                group_size,
+                                group_key,
+                                collective_instance_key,
+                            )
                             with ops.control_dependencies([bcast_send]):
                                 return array_ops.identity(initial_value)
                         else:
-                            return collective_ops.broadcast_recv(initial_value.shape,
-                                                                 initial_value.dtype,
-                                                                 group_size, group_key,
-                                                                 collective_instance_key)
+                            return collective_ops.broadcast_recv(
+                                initial_value.shape,
+                                initial_value.dtype,
+                                group_size,
+                                group_key,
+                                collective_instance_key,
+                            )
                     return initial_value
 
             return initial_value_fn
         else:
-            return super(CollectiveAllReduceExtended,
-                         self)._get_variable_creator_initial_value(
-                             replica_id=replica_id,
-                             device=device,
-                             primary_var=primary_var,
-                             **kwargs)
+            return super(
+                CollectiveAllReduceExtended, self
+            )._get_variable_creator_initial_value(
+                replica_id=replica_id, device=device, primary_var=primary_var, **kwargs
+            )
 
     def _make_input_context(self):
         if self._cluster_spec is None:
             input_pipeline_id = 0
         else:
             input_pipeline_id = multi_worker_util.id_in_cluster(
-                self._cluster_spec, self._task_type, self._task_id)
+                self._cluster_spec, self._task_type, self._task_id
+            )
         input_context = distribute_lib.InputContext(
             num_input_pipelines=self._num_workers,
             input_pipeline_id=input_pipeline_id,
-            num_replicas_in_sync=self._num_replicas_in_sync)
+            num_replicas_in_sync=self._num_replicas_in_sync,
+        )
         return input_context
 
     def _experimental_distribute_dataset(self, dataset):
@@ -418,7 +460,8 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             self._input_workers,
             self._container_strategy(),
             split_batch_by=self._num_replicas_in_sync,
-            input_context=input_context)
+            input_context=input_context,
+        )
 
     def _make_dataset_iterator(self, dataset):
         """Distributes the dataset to each local GPU."""
@@ -428,23 +471,21 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             self._input_workers,
             self._container_strategy(),
             split_batch_by=self._num_replicas_in_sync,
-            input_context=input_context)
+            input_context=input_context,
+        )
 
     def _make_input_fn_iterator(
-            self,
-            input_fn,
-            replication_mode=distribute_lib.InputReplicationMode.PER_WORKER):
+        self, input_fn, replication_mode=distribute_lib.InputReplicationMode.PER_WORKER
+    ):
         """Distributes the input function to each local GPU."""
         input_context = self._make_input_context()
-        return input_lib.InputFunctionIterator(input_fn, self._input_workers,
-                                               [input_context],
-                                               self._container_strategy())
+        return input_lib.InputFunctionIterator(
+            input_fn, self._input_workers, [input_context], self._container_strategy()
+        )
 
-    def _configure(self,
-                   session_config=None,
-                   cluster_spec=None,
-                   task_type=None,
-                   task_id=None):
+    def _configure(
+        self, session_config=None, cluster_spec=None, task_type=None, task_id=None
+    ):
         """Configures the object.
 
         Args:
@@ -461,15 +502,16 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
             # Use the num_gpus_per_worker recorded in constructor since _configure
             # doesn't take num_gpus.
             cluster_resolver = SimpleClusterResolver(
-                cluster_spec=multi_worker_util.normalize_cluster_spec(
-                    cluster_spec),
+                cluster_spec=multi_worker_util.normalize_cluster_spec(cluster_spec),
                 task_type=task_type,
                 task_id=task_id,
                 num_accelerators={"GPU": self._num_gpus_per_worker},
-                rpc_layer=self._rpc_layer)
+                rpc_layer=self._rpc_layer,
+            )
             self._initialize_multi_worker(cluster_resolver)
-            assert isinstance(self._get_cross_device_ops(),
-                              cross_device_ops_lib.CollectiveAllReduce)
+            assert isinstance(
+                self._get_cross_device_ops(), cross_device_ops_lib.CollectiveAllReduce
+            )
 
         if session_config:
             session_config.CopyFrom(self._update_config_proto(session_config))
@@ -481,17 +523,18 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
         # all-reduces.
         rewrite_options = updated_config.graph_options.rewrite_options
         rewrite_options.scoped_allocator_optimization = (
-            rewriter_config_pb2.RewriterConfig.ON)
+            rewriter_config_pb2.RewriterConfig.ON
+        )
         # We turn on ScopedAllocator only for CollectiveReduce op, i.e. enable_op =
         # ["CollectiveReduce"].  Since we can't assign to a repeated proto field, we
         # clear and then append.
         del rewrite_options.scoped_allocator_opts.enable_op[:]
-        rewrite_options.scoped_allocator_opts.enable_op.append(
-            "CollectiveReduce")
+        rewrite_options.scoped_allocator_opts.enable_op.append("CollectiveReduce")
 
-        if (not ops.executing_eagerly_outside_functions() and
-            self._communication ==
-                cross_device_ops_lib.CollectiveCommunication.NCCL):
+        if (
+            not ops.executing_eagerly_outside_functions()
+            and self._communication == cross_device_ops_lib.CollectiveCommunication.NCCL
+        ):
             updated_config.experimental.collective_nccl = True
 
         if not self._cluster_spec:
@@ -502,49 +545,56 @@ class CollectiveAllReduceExtended(mirrored_strategy.MirroredExtended):
 
         # Collective group leader is needed for collective ops to coordinate
         # workers.
-        updated_config.experimental.collective_group_leader = (
-            multi_worker_util.collective_leader(self._cluster_spec, self._task_type,
-                                                self._task_id))
+        updated_config.experimental.collective_group_leader = multi_worker_util.collective_leader(
+            self._cluster_spec, self._task_type, self._task_id
+        )
 
         # The device filters prevent communication between workers.
         del updated_config.device_filters[:]
         updated_config.device_filters.append(
-            "/job:%s/task:%d" % (self._task_type, self._task_id))
+            "/job:%s/task:%d" % (self._task_type, self._task_id)
+        )
 
         return updated_config
 
     def _reduce_to(self, reduce_op, value, destinations, experimental_hints):
-        if (isinstance(value, values.Mirrored) and
-                reduce_op == reduce_util.ReduceOp.MEAN):
+        if (
+            isinstance(value, values.Mirrored)
+            and reduce_op == reduce_util.ReduceOp.MEAN
+        ):
             return value
         assert not isinstance(value, values.Mirrored)
 
-        if (isinstance(value, values.DistributedValues) and
-                len(self.worker_devices) == 1):
+        if (
+            isinstance(value, values.DistributedValues)
+            and len(self.worker_devices) == 1
+        ):
             value = value.values[0]
 
         # When there are multiple workers, we need to reduce across workers using
         # collective ops.
-        if (not isinstance(value, values.DistributedValues) and
-                self._num_workers == 1):
+        if not isinstance(value, values.DistributedValues) and self._num_workers == 1:
             # This function handles reducing values that are not PerReplica or
             # Mirrored values. For example, the same value could be present on all
             # replicas in which case `value` would be a single value or value could
             # be 0.
             return cross_device_ops_lib.reduce_non_distributed_value(
-                reduce_op, value, destinations, len(self.worker_devices))
+                reduce_op, value, destinations, len(self.worker_devices)
+            )
         return self._get_cross_device_ops().reduce(
             reduce_op,
             value,
             destinations=destinations,
-            experimental_hints=experimental_hints)
+            experimental_hints=experimental_hints,
+        )
 
     def _warn_nccl_no_gpu(self):
-        if ((self._communication ==
-             cross_device_ops_lib.CollectiveCommunication.NCCL) and
-                self._num_gpus_per_worker == 0):
-            logging.warning("Enabled NCCL communication but no GPUs detected/"
-                            "specified.")
+        if (
+            self._communication == cross_device_ops_lib.CollectiveCommunication.NCCL
+        ) and self._num_gpus_per_worker == 0:
+            logging.warning(
+                "Enabled NCCL communication but no GPUs detected/" "specified."
+            )
 
     def _in_multi_worker_mode(self):
         """Whether this strategy indicates working in multi-worker settings."""

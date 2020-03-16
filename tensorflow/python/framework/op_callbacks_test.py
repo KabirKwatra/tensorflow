@@ -75,7 +75,6 @@ _WHILE_OP = b"While"
 
 
 class _NumpyFunctionCallback(object):
-
     def __init__(self, instrument_graph_ops=True, float_only=False):
         self.instrument_graph_ops = instrument_graph_ops
         self._float_only = float_only
@@ -84,18 +83,14 @@ class _NumpyFunctionCallback(object):
     def callback(self, op_type, inputs, attrs, outputs, op_name=None, graph=None):
         is_eager = not graph
         if is_eager:
-            self.eager_op_types.append(
-                compat.as_bytes(op_type) if op_type else op_type)
-            self.eager_op_names.append(
-                compat.as_bytes(op_name) if op_name else op_name)
+            self.eager_op_types.append(compat.as_bytes(op_type) if op_type else op_type)
+            self.eager_op_names.append(compat.as_bytes(op_name) if op_name else op_name)
             self.eager_attrs.append(attrs)
             self.eager_graphs.append(graph)
             self.eager_inputs.append(inputs)
         else:
-            self.graph_op_types.append(
-                compat.as_bytes(op_type) if op_type else op_type)
-            self.graph_op_names.append(
-                compat.as_bytes(op_name) if op_name else op_name)
+            self.graph_op_types.append(compat.as_bytes(op_type) if op_type else op_type)
+            self.graph_op_names.append(compat.as_bytes(op_name) if op_name else op_name)
             self.graph_attrs.append(attrs)
             self.graph_graphs.append(graph)
             self.graph_graph_versions.append(graph.version)
@@ -107,29 +102,40 @@ class _NumpyFunctionCallback(object):
             # Instrument the graph with numpy_function.
             instrumented_outputs = []
             for output in outputs:
-                if compat.as_bytes(op_type) in (_ENTER_OP, _EXIT_OP, _IF_OP, _MERGE_OP,
-                                                _NEXT_ITERATION_OP, _STATELESS_IF_OP,
-                                                _SWITCH_OP, _WHILE_OP, _IDENTITY_OP,
-                                                _VAR_HANDLE_OP, _PLACEHOLDER_OP):
+                if compat.as_bytes(op_type) in (
+                    _ENTER_OP,
+                    _EXIT_OP,
+                    _IF_OP,
+                    _MERGE_OP,
+                    _NEXT_ITERATION_OP,
+                    _STATELESS_IF_OP,
+                    _SWITCH_OP,
+                    _WHILE_OP,
+                    _IDENTITY_OP,
+                    _VAR_HANDLE_OP,
+                    _PLACEHOLDER_OP,
+                ):
                     # TODO(cais): Overriding the output of StatelessIf, If and While ops
                     # currently fails with error. Investigate (b/139668453).
                     # Avoid instrumenting Identity ops as well, as they are inserted
                     # by tf.function/AutoGraph for marshalling outputs.
                     instrumented_output = output
                 else:
+
                     def record(ndarray_value):
                         if compat.as_bytes(op_name) not in self.graph_internal_ndarrays:
-                            self.graph_internal_ndarrays[compat.as_bytes(op_name)] = [
-                            ]
+                            self.graph_internal_ndarrays[compat.as_bytes(op_name)] = []
                         self.graph_internal_ndarrays[compat.as_bytes(op_name)].append(
-                            ndarray_value)
+                            ndarray_value
+                        )
                         return ndarray_value
 
                     if self._float_only and not output.dtype.is_floating:
                         instrumented_output = output
                     else:
                         instrumented_output = script_ops.numpy_function(
-                            record, [output], output.dtype)
+                            record, [output], output.dtype
+                        )
                         instrumented_output.set_shape(output.shape)
                 instrumented_outputs.append(instrumented_output)
 
@@ -157,7 +163,6 @@ class _NumpyFunctionCallback(object):
 
 
 class OpCallbacksTest(test_util.TensorFlowTestCase):
-
     def tearDown(self):
         op_callbacks.clear_op_callbacks()
         super(OpCallbacksTest, self).tearDown()
@@ -313,11 +318,11 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
 
         # Each of the two dtypes should be associated with its own FuncGraph.
         self.assertIn(
-            square_log.get_concrete_function(x_float32).name,
-            instrument.eager_op_types)
+            square_log.get_concrete_function(x_float32).name, instrument.eager_op_types
+        )
         self.assertIn(
-            square_log.get_concrete_function(x_float64).name,
-            instrument.eager_op_types)
+            square_log.get_concrete_function(x_float64).name, instrument.eager_op_types
+        )
 
         self.assertEqual(len(instrument.eager_inputs), 2)
         self.assertIsInstance(instrument.eager_inputs[0], tuple)
@@ -359,12 +364,14 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         # Each of the two dtypes should be associated with its own FuncGraph.
         self.assertIn(
             square_log.get_concrete_function(x_float64).name,
-            instrument_0.eager_op_types)
+            instrument_0.eager_op_types,
+        )
         self.assertEqual(instrument_0.eager_op_names, [None])
         self.assertFalse(instrument_0.graph_op_types)
         self.assertIn(
             square_log.get_concrete_function(x_float32).name,
-            instrument_1.eager_op_types)
+            instrument_1.eager_op_types,
+        )
         self.assertEqual(instrument_1.eager_op_names, [None])
         self.assertFalse(instrument_1.graph_op_types)
 
@@ -387,8 +394,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertIn(_UNIQUE_OP, instrument.graph_op_types)
         self.assertIn(_ADD_OP, instrument.graph_op_types)
         self.assertIn(_LOG_OP, instrument.graph_op_types)
-        self.assertEqual(
-            len(instrument.graph_op_names), len(instrument.graph_op_types))
+        self.assertEqual(len(instrument.graph_op_names), len(instrument.graph_op_types))
 
         # Check the graph internal ndarrays recorded at runtime.
         unique_op_outputs = instrument.graph_internal_ndarrays[_UNIQUE_OP]
@@ -422,15 +428,19 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         paddings = [[1, 1], [2, 2]]
 
         y = my_pad(x, paddings)
-        expected_output = np.array([
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 2, 0, 0],
-            [0, 0, 3, 4, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-        ], dtype=np.float32)
+        expected_output = np.array(
+            [
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 2, 0, 0],
+                [0, 0, 3, 4, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+            ],
+            dtype=np.float32,
+        )
         self.assertAllClose(y, expected_output)
         self.assertAllClose(
-            instrument.graph_internal_ndarrays[b"Pad"][0], expected_output)
+            instrument.graph_internal_ndarrays[b"Pad"][0], expected_output
+        )
 
     @test_util.run_in_graph_and_eager_modes
     def testKerasLSTMPredict(self):
@@ -456,12 +466,9 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         """Test that callbacks that return None works."""
         op_types = []
 
-        def no_return_callback(op_type,
-                               inputs,
-                               attrs,
-                               outputs,
-                               op_name=None,
-                               graph=None):
+        def no_return_callback(
+            op_type, inputs, attrs, outputs, op_name=None, graph=None
+        ):
             del inputs, attrs, outputs, op_name, graph  # Unused.
             op_types.append(compat.as_bytes(op_type))
 
@@ -470,6 +477,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         @def_function.function
         def log1p(x):
             return math_ops.log(1.0 + x)
+
         x = constant_op.constant(3.0)
         y = log1p(x)
 
@@ -494,39 +502,36 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertAllClose(y2, [0, 0, 1])
 
         # Check the recorded input tensors.
-        self.assertEqual(
-            len(instrument.graph_inputs), len(instrument.graph_op_types))
-        unique_inputs = instrument.graph_inputs[instrument.graph_op_types.index(
-            _UNIQUE_OP)]
+        self.assertEqual(len(instrument.graph_inputs), len(instrument.graph_op_types))
+        unique_inputs = instrument.graph_inputs[
+            instrument.graph_op_types.index(_UNIQUE_OP)
+        ]
         self.assertIsInstance(unique_inputs, tuple)
         self.assertEqual(len(unique_inputs), 1)
         self.assertEqual(
-            compat.as_bytes(unique_inputs[0].op.op_def.name), _PLACEHOLDER_OP)
+            compat.as_bytes(unique_inputs[0].op.op_def.name), _PLACEHOLDER_OP
+        )
 
-        add_inputs = instrument.graph_inputs[instrument.graph_op_types.index(
-            _ADD_OP)]
+        add_inputs = instrument.graph_inputs[instrument.graph_op_types.index(_ADD_OP)]
         self.assertIsInstance(add_inputs, tuple)
         self.assertEqual(len(add_inputs), 2)
-        self.assertEqual(
-            compat.as_bytes(add_inputs[0].op.op_def.name), _CONSTANT_OP)
-        self.assertEqual(compat.as_bytes(
-            add_inputs[1].op.op_def.name), _UNIQUE_OP)
+        self.assertEqual(compat.as_bytes(add_inputs[0].op.op_def.name), _CONSTANT_OP)
+        self.assertEqual(compat.as_bytes(add_inputs[1].op.op_def.name), _UNIQUE_OP)
 
-        log_inputs = instrument.graph_inputs[instrument.graph_op_types.index(
-            _LOG_OP)]
+        log_inputs = instrument.graph_inputs[instrument.graph_op_types.index(_LOG_OP)]
         self.assertIsInstance(log_inputs, tuple)
         self.assertEqual(len(log_inputs), 1)
-        self.assertEqual(compat.as_bytes(
-            log_inputs[0].op.op_def.name), _ADD_OP)
+        self.assertEqual(compat.as_bytes(log_inputs[0].op.op_def.name), _ADD_OP)
 
         # Check the recorded graphs.
-        self.assertEqual(
-            len(instrument.graph_graphs), len(instrument.graph_op_types))
+        self.assertEqual(len(instrument.graph_graphs), len(instrument.graph_op_types))
         self.assertGreater(len(instrument.graph_graph_versions), 1)
         if context.executing_eagerly():
             for i in range(len(instrument.graph_graph_versions) - 1):
-                self.assertGreater(instrument.graph_graph_versions[i + 1],
-                                   instrument.graph_graph_versions[i])
+                self.assertGreater(
+                    instrument.graph_graph_versions[i + 1],
+                    instrument.graph_graph_versions[i],
+                )
 
     @test_util.run_in_graph_and_eager_modes
     def testEagerGraphOpConstructionSimpleGraphScopeInsideFunction(self):
@@ -552,8 +557,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         # The "Sin" op should not have been captured, because it was constructed
         # outside the scope of `op_callback()`.
         self.assertNotIn(_SIN_OP, instrument.graph_op_types)
-        self.assertEqual(
-            len(instrument.graph_op_names), len(instrument.graph_op_types))
+        self.assertEqual(len(instrument.graph_op_names), len(instrument.graph_op_types))
 
         # Check the graph internal ndarrays recorded at runtime.
         unique_op_outputs = instrument.graph_internal_ndarrays[_UNIQUE_OP]
@@ -578,11 +582,17 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertEqual(len(instrument.eager_attrs), 1)
         self.assertIsInstance(instrument.eager_attrs[0], tuple)
         self.assertEqual(
-            instrument.eager_attrs[0][instrument.eager_attrs[0].index("transpose_a")
-                                      + 1], True)
+            instrument.eager_attrs[0][
+                instrument.eager_attrs[0].index("transpose_a") + 1
+            ],
+            True,
+        )
         self.assertEqual(
-            instrument.eager_attrs[0][instrument.eager_attrs[0].index("transpose_b")
-                                      + 1], False)
+            instrument.eager_attrs[0][
+                instrument.eager_attrs[0].index("transpose_b") + 1
+            ],
+            False,
+        )
         self.assertEqual(len(instrument.graph_attrs), 0)
 
     @test_util.run_in_graph_and_eager_modes
@@ -603,10 +613,16 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertIsInstance(instrument.graph_attrs[index], tuple)
         self.assertEqual(
             instrument.graph_attrs[index][
-                instrument.graph_attrs[index].index("transpose_a") + 1].b, True)
+                instrument.graph_attrs[index].index("transpose_a") + 1
+            ].b,
+            True,
+        )
         self.assertEqual(
             instrument.graph_attrs[index][
-                instrument.graph_attrs[index].index("transpose_b") + 1].b, False)
+                instrument.graph_attrs[index].index("transpose_b") + 1
+            ].b,
+            False,
+        )
         if context.executing_eagerly():
             self.assertEqual(len(instrument.eager_attrs), 1)
             self.assertIsInstance(instrument.eager_attrs[0], tuple)
@@ -619,9 +635,9 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         @def_function.function
         def my_function_with_cond(x):
             if math_ops.greater(x, 0.0):
-                return x**2.0
+                return x ** 2.0
             else:
-                return x**3.0
+                return x ** 3.0
 
         x = constant_op.constant(-4.0)
         self.assertAllClose(my_function_with_cond(x), -64.0)
@@ -629,8 +645,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertIn(_IF_OP, instrument.graph_op_types)
         self.assertIn(_GREATER_OP, instrument.graph_op_types)
         self.assertIn(_POW_OP, instrument.graph_op_types)
-        self.assertEqual(
-            len(instrument.graph_op_names), len(instrument.graph_op_types))
+        self.assertEqual(len(instrument.graph_op_names), len(instrument.graph_op_types))
 
         # Check the graph internal ndarrays recorded at runtime.
         greater_op_outputs = instrument.graph_internal_ndarrays[_GREATER_OP]
@@ -659,12 +674,12 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertIn(_WHILE_OP, instrument.graph_op_types)
         self.assertIn(_LESS_OP, instrument.graph_op_types)
         self.assertIn(_ASSIGN_ADD_VARIABLE_OP, instrument.graph_op_types)
-        self.assertEqual(
-            len(instrument.graph_op_names), len(instrument.graph_op_types))
+        self.assertEqual(len(instrument.graph_op_names), len(instrument.graph_op_types))
 
         # Check the graph internal ndarrays recorded at runtime.
         read_variable_op_outputs = instrument.graph_internal_ndarrays[
-            b"while/" + _READ_VARIABLE_OP]
+            b"while/" + _READ_VARIABLE_OP
+        ]
         self.assertAllClose(read_variable_op_outputs, [1.0, 2.0, 4.0, 8.0])
         less_op_outputs = instrument.graph_internal_ndarrays[b"while/" + _LESS_OP]
         self.assertAllClose(less_op_outputs, [True, True, True, True, False])
@@ -679,13 +694,13 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         op_callbacks.add_op_callback(instrument.callback)
 
         tensor = constant_op.constant(
-            [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
+            [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+        )
 
         def map_fn(x):
             return math_ops.log(math_ops.square(x) + 1)
 
-        dataset = dataset_ops.Dataset.from_tensor_slices(tensor).batch(2).map(
-            map_fn)
+        dataset = dataset_ops.Dataset.from_tensor_slices(tensor).batch(2).map(map_fn)
         iterator = dataset_ops.make_one_shot_iterator(dataset)
 
         self.assertAllClose(iterator.next(), np.log([1.25, 2]))
@@ -694,8 +709,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertIn(_SQUARE_OP, instrument.graph_op_types)
         self.assertIn(_ADD_OP, instrument.graph_op_types)
         self.assertIn(_LOG_OP, instrument.graph_op_types)
-        self.assertEqual(
-            len(instrument.eager_op_types), len(instrument.eager_op_names))
+        self.assertEqual(len(instrument.eager_op_types), len(instrument.eager_op_names))
 
     def testSparseTensorEagerExecution(self):
         instrument = _NumpyFunctionCallback()
@@ -709,8 +723,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
 
         y = sparse_ops.sparse_tensor_dense_matmul(sp, w)
         self.assertAllClose(y, [[0.0], [0.0], [8.0], [-2.0]])
-        self.assertIn(_SPARSE_TENSOR_DENSE_MATMUL_OP,
-                      instrument.eager_op_types)
+        self.assertIn(_SPARSE_TENSOR_DENSE_MATMUL_OP, instrument.eager_op_types)
         self.assertFalse(instrument.graph_op_types)
 
     @test_util.run_in_graph_and_eager_modes
@@ -729,20 +742,20 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         w = ops.convert_to_tensor(np.ones([5, 1], np.float32))
         y = dense_matmul(sp, w)
         self.assertAllClose(y, [[0.0], [0.0], [8.0], [-2.0]])
-        self.assertIn(_SPARSE_TENSOR_DENSE_MATMUL_OP,
-                      instrument.graph_op_types)
+        self.assertIn(_SPARSE_TENSOR_DENSE_MATMUL_OP, instrument.graph_op_types)
         if context.executing_eagerly():
             self.assertIn(
                 dense_matmul.get_concrete_function(sp, w).name,
-                instrument.eager_op_types)
+                instrument.eager_op_types,
+            )
 
         # Check the graph internal ndarrays recorded at runtime.
         sparse_matmul_outputs = instrument.graph_internal_ndarrays[
-            _SPARSE_TENSOR_DENSE_MATMUL_OP + b"/" + _SPARSE_TENSOR_DENSE_MATMUL_OP]
+            _SPARSE_TENSOR_DENSE_MATMUL_OP + b"/" + _SPARSE_TENSOR_DENSE_MATMUL_OP
+        ]
         if context.executing_eagerly():
             self.assertEqual(len(sparse_matmul_outputs), 1)
-        self.assertAllClose(sparse_matmul_outputs[0], [
-                            [0.0], [0.0], [8.0], [-2.0]])
+        self.assertAllClose(sparse_matmul_outputs[0], [[0.0], [0.0], [8.0], [-2.0]])
 
     @test_util.run_in_graph_and_eager_modes
     def testOverrideDTypeInFuncGraph(self):
@@ -801,8 +814,7 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         self.assertIn(_COS_OP, instrument.graph_op_types)
 
         # Check the ndarrays from runtime.
-        cos_op_outputs = instrument.graph_internal_ndarrays[b"gradient_tape/" +
-                                                            _COS_OP]
+        cos_op_outputs = instrument.graph_internal_ndarrays[b"gradient_tape/" + _COS_OP]
         self.assertEqual(len(cos_op_outputs), 1)
         self.assertAllClose(cos_op_outputs[0], np.cos(3.0 * 3.0))
 
@@ -832,14 +844,12 @@ class OpCallbacksTest(test_util.TensorFlowTestCase):
         # maintenance cost.
         self.assertEqual(len(history.history["loss"]), 2)
         self.assertTrue(instrument.graph_op_types)
-        self.assertEqual(len(instrument.graph_op_types),
-                         len(instrument.graph_op_names))
+        self.assertEqual(len(instrument.graph_op_types), len(instrument.graph_op_names))
         if context.executing_eagerly():
             self.assertTrue(instrument.eager_op_types)
 
 
 class OpCallbacksErrorConditionsTest(test_util.TensorFlowTestCase):
-
     def tearDown(self):
         op_callbacks.clear_op_callbacks()
         super(OpCallbacksErrorConditionsTest, self).tearDown()
@@ -861,12 +871,9 @@ class OpCallbacksErrorConditionsTest(test_util.TensorFlowTestCase):
             op_callbacks.remove_op_callback(instrument.callback)
 
     def testOverridingWithWrongNumberOfTensorOutputsErrors(self):
-        def wrong_outputs_callback(op_type,
-                                   inputs,
-                                   attrs,
-                                   outputs,
-                                   op_name=None,
-                                   graph=None):
+        def wrong_outputs_callback(
+            op_type, inputs, attrs, outputs, op_name=None, graph=None
+        ):
             del op_type, inputs, attrs, op_name, graph  # Unused.
             return outputs[0], math_ops.negative(outputs[0])
 
@@ -878,8 +885,8 @@ class OpCallbacksErrorConditionsTest(test_util.TensorFlowTestCase):
 
         x = constant_op.constant(3.0)
         with self.assertRaisesRegex(
-                ValueError,
-                r"returned 2 tensors, .* does not match .* \(1\)"):
+            ValueError, r"returned 2 tensors, .* does not match .* \(1\)"
+        ):
             log1p(x)
 
 
