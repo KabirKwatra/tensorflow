@@ -22,24 +22,24 @@ from tensorflow.python.framework.func_graph import FuncGraph
 
 
 class CondBranchFuncGraph(FuncGraph):
-  """FuncGraph for branches of tf.cond().
+    """FuncGraph for branches of tf.cond().
 
-  This is used to distinguish cond branches from other functions.
-  """
-  pass
+    This is used to distinguish cond branches from other functions.
+    """
+    pass
 
 
 class WhileCondFuncGraph(FuncGraph):
-  """FuncGraph for the condition of tf.while_loop().
+    """FuncGraph for the condition of tf.while_loop().
 
-  This is used to distinguish while conditions from other functions.
-  """
-  pass
+    This is used to distinguish while conditions from other functions.
+    """
+    pass
 
 
 class WhileBodyFuncGraph(FuncGraph):
-  """FuncGraph for the body of tf.while_loop().
+    """FuncGraph for the body of tf.while_loop().
 
-  This is used to distinguish while bodies from other functions.
-  """
-  pass
+    This is used to distinguish while bodies from other functions.
+    """
+    pass
