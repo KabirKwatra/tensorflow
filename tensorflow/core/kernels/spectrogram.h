@@ -35,93 +35,89 @@ limitations under the License.
 #include <deque>
 #include <vector>
 
-#include "third_party/fft2d/fft.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor.h"
+#include "third_party/fft2d/fft.h"
 
 namespace tensorflow {
 
 class Spectrogram {
-public:
-    Spectrogram() : initialized_(false) {}
-    ~Spectrogram() {}
+ public:
+  Spectrogram() : initialized_(false) {}
+  ~Spectrogram() {}
 
-    // Initializes the class with a given window length and step length
-    // (both in samples). Internally a Hann window is used as the window
-    // function. Returns true on success, after which calls to Process()
-    // are possible. window_length must be greater than 1 and step
-    // length must be greater than 0.
-    bool Initialize(int window_length, int step_length);
+  // Initializes the class with a given window length and step length
+  // (both in samples). Internally a Hann window is used as the window
+  // function. Returns true on success, after which calls to Process()
+  // are possible. window_length must be greater than 1 and step
+  // length must be greater than 0.
+  bool Initialize(int window_length, int step_length);
 
-    // Initialize with an explicit window instead of a length.
-    bool Initialize(const std::vector<double>& window, int step_length);
+  // Initialize with an explicit window instead of a length.
+  bool Initialize(const std::vector<double>& window, int step_length);
 
-    // Reset internal variables.
-    // Spectrogram keeps internal state: remaining input data from previous call.
-    // As a result it can produce different number of frames when you call
-    // ComputeComplexSpectrogram multiple times (even though input data
-    // has the same size). As it is shown in
-    // MultipleCallsToComputeComplexSpectrogramMayYieldDifferentNumbersOfFrames
-    // in tensorflow/core/kernels/spectrogram_test.cc.
-    // But if you need to compute Spectrogram on input data without keeping
-    // internal state (and clear remaining input data from the previous call)
-    // you have to call Reset() before computing Spectrogram.
-    // For example in tensorflow/core/kernels/spectrogram_op.cc
-    bool Reset();
+  // Reset internal variables.
+  // Spectrogram keeps internal state: remaining input data from previous call.
+  // As a result it can produce different number of frames when you call
+  // ComputeComplexSpectrogram multiple times (even though input data
+  // has the same size). As it is shown in
+  // MultipleCallsToComputeComplexSpectrogramMayYieldDifferentNumbersOfFrames
+  // in tensorflow/core/kernels/spectrogram_test.cc.
+  // But if you need to compute Spectrogram on input data without keeping
+  // internal state (and clear remaining input data from the previous call)
+  // you have to call Reset() before computing Spectrogram.
+  // For example in tensorflow/core/kernels/spectrogram_op.cc
+  bool Reset();
 
-    // Processes an arbitrary amount of audio data (contained in input)
-    // to yield complex spectrogram frames. After a successful call to
-    // Initialize(), Process() may be called repeatedly with new input data
-    // each time.  The audio input is buffered internally, and the output
-    // vector is populated with as many temporally-ordered spectral slices
-    // as it is possible to generate from the input.  The output is cleared
-    // on each call before the new frames (if any) are added.
-    //
-    // The template parameters can be float or double.
-    template <class InputSample, class OutputSample>
-    bool ComputeComplexSpectrogram(
-        const std::vector<InputSample>& input,
-        std::vector<std::vector<std::complex<OutputSample>>>* output);
+  // Processes an arbitrary amount of audio data (contained in input)
+  // to yield complex spectrogram frames. After a successful call to
+  // Initialize(), Process() may be called repeatedly with new input data
+  // each time.  The audio input is buffered internally, and the output
+  // vector is populated with as many temporally-ordered spectral slices
+  // as it is possible to generate from the input.  The output is cleared
+  // on each call before the new frames (if any) are added.
+  //
+  // The template parameters can be float or double.
+  template <class InputSample, class OutputSample>
+  bool ComputeComplexSpectrogram(
+      const std::vector<InputSample>& input,
+      std::vector<std::vector<std::complex<OutputSample>>>* output);
 
-    // This function works as the one above, but returns the power
-    // (the L2 norm, or the squared magnitude) of each complex value.
-    template <class InputSample, class OutputSample>
-    bool ComputeSquaredMagnitudeSpectrogram(
-        const std::vector<InputSample>& input,
-        std::vector<std::vector<OutputSample>>* output);
+  // This function works as the one above, but returns the power
+  // (the L2 norm, or the squared magnitude) of each complex value.
+  template <class InputSample, class OutputSample>
+  bool ComputeSquaredMagnitudeSpectrogram(
+      const std::vector<InputSample>& input,
+      std::vector<std::vector<OutputSample>>* output);
 
-    // Return reference to the window function used internally.
-    const std::vector<double>& GetWindow() const {
-        return window_;
-    }
+  // Return reference to the window function used internally.
+  const std::vector<double>& GetWindow() const { return window_; }
 
-    // Return the number of frequency channels in the spectrogram.
-    int output_frequency_channels() const {
-        return output_frequency_channels_;
-    }
+  // Return the number of frequency channels in the spectrogram.
+  int output_frequency_channels() const { return output_frequency_channels_; }
 
-private:
-    template <class InputSample>
-    bool GetNextWindowOfSamples(const std::vector<InputSample>& input,
-                                int* input_start);
-    void ProcessCoreFFT();
+ private:
+  template <class InputSample>
+  bool GetNextWindowOfSamples(const std::vector<InputSample>& input,
+                              int* input_start);
+  void ProcessCoreFFT();
 
-    int fft_length_;
-    int output_frequency_channels_;
-    int window_length_;
-    int step_length_;
-    bool initialized_;
-    int samples_to_next_step_;
+  int fft_length_;
+  int output_frequency_channels_;
+  int window_length_;
+  int step_length_;
+  bool initialized_;
+  int samples_to_next_step_;
 
-    std::vector<double> window_;
-    std::vector<double> fft_input_output_;
-    std::deque<double> input_queue_;
+  std::vector<double> window_;
+  std::vector<double> fft_input_output_;
+  std::deque<double> input_queue_;
 
-    // Working data areas for the FFT routines.
-    std::vector<int> fft_integer_working_area_;
-    std::vector<double> fft_double_working_area_;
+  // Working data areas for the FFT routines.
+  std::vector<int> fft_integer_working_area_;
+  std::vector<double> fft_double_working_area_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(Spectrogram);
+  TF_DISALLOW_COPY_AND_ASSIGN(Spectrogram);
 };
 
 }  // namespace tensorflow

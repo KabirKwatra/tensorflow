@@ -42,26 +42,26 @@ namespace interpreter {
 // Responsible for running a HLO graph through the HloEvaluator and output
 // buffer allocation. Refer to interpreter/README.md for more.
 class InterpreterExecutable : public InterpreterExecutableBase {
-public:
-    InterpreterExecutable(
-        std::unique_ptr<HloModule> hlo_module,
-        std::unique_ptr<HloEvaluator> evaluator,
-        absl::optional<DynamicDimensionInference> dynamic_dymension_inference);
+ public:
+  InterpreterExecutable(
+      std::unique_ptr<HloModule> hlo_module,
+      std::unique_ptr<HloEvaluator> evaluator,
+      absl::optional<DynamicDimensionInference> dynamic_dymension_inference);
 
-    static int64 ShapeSizeBytes(const Shape& shape);
+  static int64 ShapeSizeBytes(const Shape& shape);
 
-protected:
-    StatusOr<Literal> Evaluate(const HloComputation& computation,
-                               absl::Span<const Literal> arg_literals) override
-    TF_LOCKS_EXCLUDED(evaluator_lock_);
+ protected:
+  StatusOr<Literal> Evaluate(const HloComputation& computation,
+                             absl::Span<const Literal> arg_literals) override
+      TF_LOCKS_EXCLUDED(evaluator_lock_);
 
-    // The interpreter interprets executables with an HloEvaluator.
-    std::unique_ptr<HloEvaluator> evaluator_ TF_PT_GUARDED_BY(evaluator_lock_);
-    mutable tensorflow::mutex evaluator_lock_;
+  // The interpreter interprets executables with an HloEvaluator.
+  std::unique_ptr<HloEvaluator> evaluator_ TF_PT_GUARDED_BY(evaluator_lock_);
+  mutable tensorflow::mutex evaluator_lock_;
 
-private:
-    absl::optional<DynamicDimensionInference> dynamic_dimension_inference_;
-    TF_DISALLOW_COPY_AND_ASSIGN(InterpreterExecutable);
+ private:
+  absl::optional<DynamicDimensionInference> dynamic_dimension_inference_;
+  TF_DISALLOW_COPY_AND_ASSIGN(InterpreterExecutable);
 };
 
 }  // namespace interpreter

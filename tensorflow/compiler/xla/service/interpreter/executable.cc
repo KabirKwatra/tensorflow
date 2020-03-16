@@ -45,25 +45,25 @@ InterpreterExecutable::InterpreterExecutable(
     : InterpreterExecutableBase(std::move(hlo_module)),
       evaluator_(std::move(evaluator)),
       dynamic_dimension_inference_(std::move(dynamic_dymension_inference)) {
-    if (dynamic_dimension_inference_.has_value()) {
-        evaluator_->set_dynamic_dimension_inference(
-            &dynamic_dimension_inference_.value());
-    }
+  if (dynamic_dimension_inference_.has_value()) {
+    evaluator_->set_dynamic_dimension_inference(
+        &dynamic_dimension_inference_.value());
+  }
 }
 
 StatusOr<Literal> InterpreterExecutable::Evaluate(
     const HloComputation& computation, absl::Span<const Literal> arg_literals) {
-    // Execute the graph using the HloEvaluator.
-    tensorflow::mutex_lock lock(evaluator_lock_);
-    evaluator_->ResetVisitStates();
-    return evaluator_->Evaluate(computation, arg_literals);
+  // Execute the graph using the HloEvaluator.
+  tensorflow::mutex_lock lock(evaluator_lock_);
+  evaluator_->ResetVisitStates();
+  return evaluator_->Evaluate(computation, arg_literals);
 }
 
 /*static*/ int64 InterpreterExecutable::ShapeSizeBytes(const Shape& shape) {
-    if (shape.IsOpaque()) {
-        return sizeof(void*);
-    }
-    return ShapeUtil::ByteSizeOf(shape, sizeof(void*));
+  if (shape.IsOpaque()) {
+    return sizeof(void*);
+  }
+  return ShapeUtil::ByteSizeOf(shape, sizeof(void*));
 }
 
 }  // namespace interpreter
