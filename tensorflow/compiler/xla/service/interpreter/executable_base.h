@@ -34,21 +34,21 @@ namespace interpreter {
 // Responsible for running a HLO graph through the HloEvaluator and output
 // buffer allocation. Refer to interpreter/README.md for more.
 class InterpreterExecutableBase : public Executable {
- public:
-  explicit InterpreterExecutableBase(std::unique_ptr<HloModule> hlo_module);
+public:
+    explicit InterpreterExecutableBase(std::unique_ptr<HloModule> hlo_module);
 
-  StatusOr<ExecutionOutput> ExecuteAsyncOnStream(
-      const ServiceExecutableRunOptions* run_options,
-      std::vector<ExecutionInput> arguments,
-      HloExecutionProfile* hlo_execution_profile) override;
+    StatusOr<ExecutionOutput> ExecuteAsyncOnStream(
+        const ServiceExecutableRunOptions* run_options,
+        std::vector<ExecutionInput> arguments,
+        HloExecutionProfile* hlo_execution_profile) override;
 
- protected:
-  virtual StatusOr<Literal> Evaluate(
-      const HloComputation& computation,
-      absl::Span<const Literal> arg_literals) = 0;
+protected:
+    virtual StatusOr<Literal> Evaluate(
+        const HloComputation& computation,
+        absl::Span<const Literal> arg_literals) = 0;
 
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(InterpreterExecutableBase);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(InterpreterExecutableBase);
 };
 
 }  // namespace interpreter
