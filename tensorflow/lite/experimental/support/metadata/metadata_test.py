@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tensorflow.lite.experimental.support.metadata.metadata."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,8 +20,8 @@ from __future__ import print_function
 import os
 
 import six
-
 from flatbuffers.python import flatbuffers
+
 from tensorflow.lite.experimental.support.metadata import metadata as _metadata
 from tensorflow.lite.experimental.support.metadata import (
     metadata_schema_py_generated as _metadata_fb,

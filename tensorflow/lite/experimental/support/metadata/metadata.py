@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """TensorFlow Lite metadata tools."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -26,6 +25,7 @@ import warnings
 import zipfile
 
 from flatbuffers.python import flatbuffers
+
 from tensorflow.lite.experimental.support.metadata import (
     metadata_schema_py_generated as _metadata_fb,
 )
