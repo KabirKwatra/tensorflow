@@ -62,14 +62,12 @@ class Adagrad(optimizer_v2.OptimizerV2):
 
     _HAS_ALL_REDUCE_SUM_GRAD = True
 
-    def __init__(
-        self,
-        learning_rate=0.001,
-        initial_accumulator_value=0.1,
-        epsilon=1e-7,
-        name="Adagrad",
-        **kwargs
-    ):
+    def __init__(self,
+                 learning_rate=0.001,
+                 initial_accumulator_value=0.1,
+                 epsilon=1e-7,
+                 name="Adagrad",
+                 **kwargs):
         """Construct a new Adagrad optimizer.
 
         Args:
@@ -91,9 +89,8 @@ class Adagrad(optimizer_v2.OptimizerV2):
         """
         if initial_accumulator_value < 0.0:
             raise ValueError(
-                "initial_accumulator_value must be non-negative: %s"
-                % initial_accumulator_value
-            )
+                "initial_accumulator_value must be non-negative: %s" %
+                initial_accumulator_value)
         if epsilon is None:
             epsilon = backend_config.epsilon()
         super(Adagrad, self).__init__(name, **kwargs)
@@ -106,8 +103,7 @@ class Adagrad(optimizer_v2.OptimizerV2):
         for var in var_list:
             dtype = var.dtype.base_dtype
             init = init_ops.constant_initializer(
-                self._initial_accumulator_value, dtype=dtype
-            )
+                self._initial_accumulator_value, dtype=dtype)
             self.add_slot(var, "accumulator", init)
 
     def _prepare_local(self, var_device, var_dtype, apply_state):
@@ -117,8 +113,7 @@ class Adagrad(optimizer_v2.OptimizerV2):
                 epsilon=ops.convert_to_tensor_v2(self.epsilon, var_dtype),
                 neg_lr_t=-apply_state[(var_device, var_dtype)]["lr_t"],
                 zero=array_ops.zeros((), dtype=dtypes.int64),
-            )
-        )
+            ))
 
     def set_weights(self, weights):
         params = self.weights
@@ -155,8 +150,8 @@ class Adagrad(optimizer_v2.OptimizerV2):
     def _resource_apply_dense(self, grad, var, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         acc = self.get_slot(var, "accumulator")
         return training_ops.resource_apply_adagrad_v2(
@@ -171,8 +166,8 @@ class Adagrad(optimizer_v2.OptimizerV2):
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         acc = self.get_slot(var, "accumulator")
         return training_ops.resource_sparse_apply_adagrad_v2(
@@ -187,12 +182,14 @@ class Adagrad(optimizer_v2.OptimizerV2):
 
     def get_config(self):
         config = super(Adagrad, self).get_config()
-        config.update(
-            {
-                "learning_rate": self._serialize_hyperparameter("learning_rate"),
-                "decay": self._serialize_hyperparameter("decay"),
-                "initial_accumulator_value": self._initial_accumulator_value,
-                "epsilon": self.epsilon,
-            }
-        )
+        config.update({
+            "learning_rate":
+            self._serialize_hyperparameter("learning_rate"),
+            "decay":
+            self._serialize_hyperparameter("decay"),
+            "initial_accumulator_value":
+            self._initial_accumulator_value,
+            "epsilon":
+            self.epsilon,
+        })
         return config

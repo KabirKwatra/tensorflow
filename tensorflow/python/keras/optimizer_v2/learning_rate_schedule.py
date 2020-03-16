@@ -41,11 +41,13 @@ class LearningRateSchedule(object):
 
     @abc.abstractmethod
     def __call__(self, step):
-        raise NotImplementedError("Learning rate schedule must override __call__")
+        raise NotImplementedError(
+            "Learning rate schedule must override __call__")
 
     @abc.abstractmethod
     def get_config(self):
-        raise NotImplementedError("Learning rate schedule must override get_config")
+        raise NotImplementedError(
+            "Learning rate schedule must override get_config")
 
     @classmethod
     def from_config(cls, config):
@@ -112,9 +114,12 @@ class ExponentialDecay(LearningRateSchedule):
       type as `initial_learning_rate`.
     """
 
-    def __init__(
-        self, initial_learning_rate, decay_steps, decay_rate, staircase=False, name=None
-    ):
+    def __init__(self,
+                 initial_learning_rate,
+                 decay_steps,
+                 decay_rate,
+                 staircase=False,
+                 name=None):
         """Applies exponential decay to the learning rate.
 
         Args:
@@ -139,8 +144,7 @@ class ExponentialDecay(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "ExponentialDecay") as name:
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             decay_steps = math_ops.cast(self.decay_steps, dtype)
             decay_rate = math_ops.cast(self.decay_rate, dtype)
@@ -149,9 +153,9 @@ class ExponentialDecay(LearningRateSchedule):
             p = global_step_recomp / decay_steps
             if self.staircase:
                 p = math_ops.floor(p)
-            return math_ops.multiply(
-                initial_learning_rate, math_ops.pow(decay_rate, p), name=name
-            )
+            return math_ops.multiply(initial_learning_rate,
+                                     math_ops.pow(decay_rate, p),
+                                     name=name)
 
     def get_config(self):
         return {
@@ -240,9 +244,12 @@ class PiecewiseConstantDecay(LearningRateSchedule):
                     b = math_ops.cast(b, x_recomp.dtype.base_dtype)
                     boundaries[i] = b
             pred_fn_pairs = []
-            pred_fn_pairs.append((x_recomp <= boundaries[0], lambda: values[0]))
-            pred_fn_pairs.append((x_recomp > boundaries[-1], lambda: values[-1]))
-            for low, high, v in zip(boundaries[:-1], boundaries[1:], values[1:-1]):
+            pred_fn_pairs.append(
+                (x_recomp <= boundaries[0], lambda: values[0]))
+            pred_fn_pairs.append(
+                (x_recomp > boundaries[-1], lambda: values[-1]))
+            for low, high, v in zip(boundaries[:-1], boundaries[1:],
+                                    values[1:-1]):
                 # Need to bind v here; can do this with lambda v=v: ...
                 pred = (x_recomp > low) & (x_recomp <= high)
                 pred_fn_pairs.append((pred, lambda v=v: v))
@@ -252,10 +259,16 @@ class PiecewiseConstantDecay(LearningRateSchedule):
             def default():
                 return values[0]
 
-            return control_flow_ops.case(pred_fn_pairs, default, exclusive=True)
+            return control_flow_ops.case(pred_fn_pairs,
+                                         default,
+                                         exclusive=True)
 
     def get_config(self):
-        return {"boundaries": self.boundaries, "values": self.values, "name": self.name}
+        return {
+            "boundaries": self.boundaries,
+            "values": self.values,
+            "name": self.name
+        }
 
 
 @keras_export("keras.optimizers.schedules.PolynomialDecay")
@@ -331,13 +344,13 @@ class PolynomialDecay(LearningRateSchedule):
     """
 
     def __init__(
-        self,
-        initial_learning_rate,
-        decay_steps,
-        end_learning_rate=0.0001,
-        power=1.0,
-        cycle=False,
-        name=None,
+            self,
+            initial_learning_rate,
+            decay_steps,
+            end_learning_rate=0.0001,
+            power=1.0,
+            cycle=False,
+            name=None,
     ):
         """Applies a polynomial decay to the learning rate.
 
@@ -366,8 +379,7 @@ class PolynomialDecay(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "PolynomialDecay") as name:
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             end_learning_rate = math_ops.cast(self.end_learning_rate, dtype)
             power = math_ops.cast(self.power, dtype)
@@ -380,14 +392,15 @@ class PolynomialDecay(LearningRateSchedule):
                 multiplier = control_flow_ops.cond(
                     math_ops.equal(global_step_recomp, 0),
                     lambda: 1.0,
-                    lambda: math_ops.ceil(global_step_recomp / self.decay_steps),
+                    lambda: math_ops.ceil(global_step_recomp / self.decay_steps
+                                          ),
                 )
-                decay_steps_recomp = math_ops.multiply(decay_steps_recomp, multiplier)
+                decay_steps_recomp = math_ops.multiply(decay_steps_recomp,
+                                                       multiplier)
             else:
                 # Make sure that the global_step used is not bigger than decay_steps.
-                global_step_recomp = math_ops.minimum(
-                    global_step_recomp, decay_steps_recomp
-                )
+                global_step_recomp = math_ops.minimum(global_step_recomp,
+                                                      decay_steps_recomp)
 
             p = math_ops.divide(global_step_recomp, decay_steps_recomp)
             return math_ops.add(
@@ -463,9 +476,12 @@ class InverseTimeDecay(LearningRateSchedule):
       type as `initial_learning_rate`.
     """
 
-    def __init__(
-        self, initial_learning_rate, decay_steps, decay_rate, staircase=False, name=None
-    ):
+    def __init__(self,
+                 initial_learning_rate,
+                 decay_steps,
+                 decay_rate,
+                 staircase=False,
+                 name=None):
         """Applies inverse time decay to the initial learning rate.
 
         Args:
@@ -489,8 +505,7 @@ class InverseTimeDecay(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "InverseTimeDecay") as name:
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             decay_steps = math_ops.cast(self.decay_steps, dtype)
             decay_rate = math_ops.cast(self.decay_rate, dtype)
@@ -557,7 +572,11 @@ class CosineDecay(LearningRateSchedule):
       type as `initial_learning_rate`.
     """
 
-    def __init__(self, initial_learning_rate, decay_steps, alpha=0.0, name=None):
+    def __init__(self,
+                 initial_learning_rate,
+                 decay_steps,
+                 alpha=0.0,
+                 name=None):
         """Applies cosine decay to the learning rate.
 
         Args:
@@ -579,17 +598,16 @@ class CosineDecay(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "CosineDecay"):
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             decay_steps = math_ops.cast(self.decay_steps, dtype)
 
             global_step_recomp = math_ops.cast(step, dtype)
-            global_step_recomp = math_ops.minimum(global_step_recomp, decay_steps)
+            global_step_recomp = math_ops.minimum(global_step_recomp,
+                                                  decay_steps)
             completed_fraction = global_step_recomp / decay_steps
-            cosine_decayed = 0.5 * (
-                1.0 + math_ops.cos(constant_op.constant(math.pi) * completed_fraction)
-            )
+            cosine_decayed = 0.5 * (1.0 + math_ops.cos(
+                constant_op.constant(math.pi) * completed_fraction))
 
             decayed = (1 - self.alpha) * cosine_decayed + self.alpha
             return math_ops.multiply(initial_learning_rate, decayed)
@@ -646,13 +664,13 @@ class CosineDecayRestarts(LearningRateSchedule):
     """
 
     def __init__(
-        self,
-        initial_learning_rate,
-        first_decay_steps,
-        t_mul=2.0,
-        m_mul=1.0,
-        alpha=0.0,
-        name=None,
+            self,
+            initial_learning_rate,
+            first_decay_steps,
+            t_mul=2.0,
+            m_mul=1.0,
+            alpha=0.0,
+            name=None,
     ):
         """Applies cosine decay with restarts to the learning rate.
 
@@ -681,8 +699,7 @@ class CosineDecayRestarts(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "SGDRDecay") as name:
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             first_decay_steps = math_ops.cast(self.first_decay_steps, dtype)
             alpha = math_ops.cast(self.alpha, dtype)
@@ -696,14 +713,12 @@ class CosineDecayRestarts(LearningRateSchedule):
                 """Helper for `cond` operation."""
                 if geometric:
                     i_restart = math_ops.floor(
-                        math_ops.log(1.0 - completed_fraction * (1.0 - t_mul))
-                        / math_ops.log(t_mul)
-                    )
+                        math_ops.log(1.0 - completed_fraction *
+                                     (1.0 - t_mul)) / math_ops.log(t_mul))
 
-                    sum_r = (1.0 - t_mul ** i_restart) / (1.0 - t_mul)
-                    completed_fraction = (
-                        completed_fraction - sum_r
-                    ) / t_mul ** i_restart
+                    sum_r = (1.0 - t_mul**i_restart) / (1.0 - t_mul)
+                    completed_fraction = (completed_fraction -
+                                          sum_r) / t_mul**i_restart
 
                 else:
                     i_restart = math_ops.floor(completed_fraction)
@@ -717,15 +732,9 @@ class CosineDecayRestarts(LearningRateSchedule):
                 lambda: compute_step(completed_fraction, geometric=True),
             )
 
-            m_fac = m_mul ** i_restart
-            cosine_decayed = (
-                0.5
-                * m_fac
-                * (
-                    1.0
-                    + math_ops.cos(constant_op.constant(math.pi) * completed_fraction)
-                )
-            )
+            m_fac = m_mul**i_restart
+            cosine_decayed = (0.5 * m_fac * (1.0 + math_ops.cos(
+                constant_op.constant(math.pi) * completed_fraction)))
             decayed = (1 - alpha) * cosine_decayed + alpha
 
             return math_ops.multiply(initial_learning_rate, decayed, name=name)
@@ -796,13 +805,13 @@ class LinearCosineDecay(LearningRateSchedule):
     """
 
     def __init__(
-        self,
-        initial_learning_rate,
-        decay_steps,
-        num_periods=0.5,
-        alpha=0.0,
-        beta=0.001,
-        name=None,
+            self,
+            initial_learning_rate,
+            decay_steps,
+            num_periods=0.5,
+            alpha=0.0,
+            beta=0.001,
+            name=None,
     ):
         """Applies linear cosine decay to the learning rate.
 
@@ -830,8 +839,7 @@ class LinearCosineDecay(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "LinearCosineDecay") as name:
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             decay_steps = math_ops.cast(self.decay_steps, dtype)
             num_periods = math_ops.cast(self.num_periods, dtype)
@@ -839,18 +847,19 @@ class LinearCosineDecay(LearningRateSchedule):
             beta = math_ops.cast(self.beta, dtype)
 
             global_step_recomp = math_ops.cast(step, dtype)
-            global_step_recomp = math_ops.minimum(global_step_recomp, decay_steps)
+            global_step_recomp = math_ops.minimum(global_step_recomp,
+                                                  decay_steps)
             linear_decayed = (decay_steps - global_step_recomp) / decay_steps
             completed_fraction = global_step_recomp / decay_steps
             fraction = 2.0 * num_periods * completed_fraction
             cosine_decayed = 0.5 * (
-                1.0 + math_ops.cos(constant_op.constant(math.pi) * fraction)
-            )
+                1.0 + math_ops.cos(constant_op.constant(math.pi) * fraction))
 
-            linear_cosine_decayed = (alpha + linear_decayed) * cosine_decayed + beta
-            return math_ops.multiply(
-                initial_learning_rate, linear_cosine_decayed, name=name
-            )
+            linear_cosine_decayed = (alpha +
+                                     linear_decayed) * cosine_decayed + beta
+            return math_ops.multiply(initial_learning_rate,
+                                     linear_cosine_decayed,
+                                     name=name)
 
     def get_config(self):
         return {
@@ -920,15 +929,15 @@ class NoisyLinearCosineDecay(LearningRateSchedule):
     """
 
     def __init__(
-        self,
-        initial_learning_rate,
-        decay_steps,
-        initial_variance=1.0,
-        variance_decay=0.55,
-        num_periods=0.5,
-        alpha=0.0,
-        beta=0.001,
-        name=None,
+            self,
+            initial_learning_rate,
+            decay_steps,
+            initial_variance=1.0,
+            variance_decay=0.55,
+            num_periods=0.5,
+            alpha=0.0,
+            beta=0.001,
+            name=None,
     ):
         """Applies noisy linear cosine decay to the learning rate.
 
@@ -960,8 +969,7 @@ class NoisyLinearCosineDecay(LearningRateSchedule):
     def __call__(self, step):
         with ops.name_scope_v2(self.name or "NoisyLinearCosineDecay") as name:
             initial_learning_rate = ops.convert_to_tensor_v2(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
+                self.initial_learning_rate, name="initial_learning_rate")
             dtype = initial_learning_rate.dtype
             decay_steps = math_ops.cast(self.decay_steps, dtype)
             initial_variance = math_ops.cast(self.initial_variance, dtype)
@@ -971,28 +979,25 @@ class NoisyLinearCosineDecay(LearningRateSchedule):
             beta = math_ops.cast(self.beta, dtype)
 
             global_step_recomp = math_ops.cast(step, dtype)
-            global_step_recomp = math_ops.minimum(global_step_recomp, decay_steps)
+            global_step_recomp = math_ops.minimum(global_step_recomp,
+                                                  decay_steps)
             linear_decayed = (decay_steps - global_step_recomp) / decay_steps
-            variance = initial_variance / (
-                math_ops.pow(1.0 + global_step_recomp, variance_decay)
-            )
+            variance = initial_variance / (math_ops.pow(
+                1.0 + global_step_recomp, variance_decay))
             std = math_ops.sqrt(variance)
             noisy_linear_decayed = linear_decayed + random_ops.random_normal(
-                linear_decayed.shape, stddev=std
-            )
+                linear_decayed.shape, stddev=std)
 
             completed_fraction = global_step_recomp / decay_steps
             fraction = 2.0 * num_periods * completed_fraction
             cosine_decayed = 0.5 * (
-                1.0 + math_ops.cos(constant_op.constant(math.pi) * fraction)
-            )
+                1.0 + math_ops.cos(constant_op.constant(math.pi) * fraction))
             noisy_linear_cosine_decayed = (
-                alpha + noisy_linear_decayed
-            ) * cosine_decayed + beta
+                alpha + noisy_linear_decayed) * cosine_decayed + beta
 
-            return math_ops.multiply(
-                initial_learning_rate, noisy_linear_cosine_decayed, name=name
-            )
+            return math_ops.multiply(initial_learning_rate,
+                                     noisy_linear_cosine_decayed,
+                                     name=name)
 
     def get_config(self):
         return {

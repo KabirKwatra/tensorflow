@@ -57,17 +57,15 @@ class Ftrl(optimizer_v2.OptimizerV2):
     [paper](https://www.eecs.tufts.edu/~dsculley/papers/ad-click-prediction.pdf)
     """
 
-    def __init__(
-        self,
-        learning_rate=0.001,
-        learning_rate_power=-0.5,
-        initial_accumulator_value=0.1,
-        l1_regularization_strength=0.0,
-        l2_regularization_strength=0.0,
-        name="Ftrl",
-        l2_shrinkage_regularization_strength=0.0,
-        **kwargs
-    ):
+    def __init__(self,
+                 learning_rate=0.001,
+                 learning_rate_power=-0.5,
+                 initial_accumulator_value=0.1,
+                 l1_regularization_strength=0.0,
+                 l2_regularization_strength=0.0,
+                 name="Ftrl",
+                 l2_shrinkage_regularization_strength=0.0,
+                 **kwargs):
         r"""Construct a new FTRL optimizer.
 
         Args:
@@ -110,47 +108,42 @@ class Ftrl(optimizer_v2.OptimizerV2):
 
         if initial_accumulator_value < 0.0:
             raise ValueError(
-                "initial_accumulator_value %f needs to be positive or zero"
-                % initial_accumulator_value
-            )
+                "initial_accumulator_value %f needs to be positive or zero" %
+                initial_accumulator_value)
         if learning_rate_power > 0.0:
             raise ValueError(
-                "learning_rate_power %f needs to be negative or zero"
-                % learning_rate_power
-            )
+                "learning_rate_power %f needs to be negative or zero" %
+                learning_rate_power)
         if l1_regularization_strength < 0.0:
             raise ValueError(
-                "l1_regularization_strength %f needs to be positive or zero"
-                % l1_regularization_strength
-            )
+                "l1_regularization_strength %f needs to be positive or zero" %
+                l1_regularization_strength)
         if l2_regularization_strength < 0.0:
             raise ValueError(
-                "l2_regularization_strength %f needs to be positive or zero"
-                % l2_regularization_strength
-            )
+                "l2_regularization_strength %f needs to be positive or zero" %
+                l2_regularization_strength)
         if l2_shrinkage_regularization_strength < 0.0:
             raise ValueError(
                 "l2_shrinkage_regularization_strength %f needs to be positive"
-                " or zero" % l2_shrinkage_regularization_strength
-            )
+                " or zero" % l2_shrinkage_regularization_strength)
 
         self._set_hyper("learning_rate", learning_rate)
         self._set_hyper("decay", self._initial_decay)
         self._set_hyper("learning_rate_power", learning_rate_power)
-        self._set_hyper("l1_regularization_strength", l1_regularization_strength)
-        self._set_hyper("l2_regularization_strength", l2_regularization_strength)
+        self._set_hyper("l1_regularization_strength",
+                        l1_regularization_strength)
+        self._set_hyper("l2_regularization_strength",
+                        l2_regularization_strength)
         self._initial_accumulator_value = initial_accumulator_value
         self._l2_shrinkage_regularization_strength = (
-            l2_shrinkage_regularization_strength
-        )
+            l2_shrinkage_regularization_strength)
 
     def _create_slots(self, var_list):
         # Create the "accum" and "linear" slots.
         for var in var_list:
             dtype = var.dtype.base_dtype
             init = init_ops.constant_initializer(
-                self._initial_accumulator_value, dtype=dtype
-            )
+                self._initial_accumulator_value, dtype=dtype)
             self.add_slot(var, "accumulator", init)
             self.add_slot(var, "linear")
 
@@ -159,25 +152,20 @@ class Ftrl(optimizer_v2.OptimizerV2):
         apply_state[(var_device, var_dtype)].update(
             dict(
                 learning_rate_power=array_ops.identity(
-                    self._get_hyper("learning_rate_power", var_dtype)
-                ),
+                    self._get_hyper("learning_rate_power", var_dtype)),
                 l1_regularization_strength=array_ops.identity(
-                    self._get_hyper("l1_regularization_strength", var_dtype)
-                ),
+                    self._get_hyper("l1_regularization_strength", var_dtype)),
                 l2_regularization_strength=array_ops.identity(
-                    self._get_hyper("l2_regularization_strength", var_dtype)
-                ),
+                    self._get_hyper("l2_regularization_strength", var_dtype)),
                 l2_shrinkage_regularization_strength=math_ops.cast(
-                    self._l2_shrinkage_regularization_strength, var_dtype
-                ),
-            )
-        )
+                    self._l2_shrinkage_regularization_strength, var_dtype),
+            ))
 
     def _resource_apply_dense(self, grad, var, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         accum = self.get_slot(var, "accumulator")
         linear = self.get_slot(var, "linear")
@@ -211,8 +199,8 @@ class Ftrl(optimizer_v2.OptimizerV2):
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
         var_device, var_dtype = var.device, var.dtype.base_dtype
         coefficients = (apply_state or {}).get(
-            (var_device, var_dtype)
-        ) or self._fallback_apply_state(var_device, var_dtype)
+            (var_device, var_dtype)) or self._fallback_apply_state(
+                var_device, var_dtype)
 
         accum = self.get_slot(var, "accumulator")
         linear = self.get_slot(var, "linear")
@@ -247,21 +235,20 @@ class Ftrl(optimizer_v2.OptimizerV2):
 
     def get_config(self):
         config = super(Ftrl, self).get_config()
-        config.update(
-            {
-                "learning_rate": self._serialize_hyperparameter("learning_rate"),
-                "decay": self._serialize_hyperparameter("decay"),
-                "initial_accumulator_value": self._initial_accumulator_value,
-                "learning_rate_power": self._serialize_hyperparameter(
-                    "learning_rate_power"
-                ),
-                "l1_regularization_strength": self._serialize_hyperparameter(
-                    "l1_regularization_strength"
-                ),
-                "l2_regularization_strength": self._serialize_hyperparameter(
-                    "l2_regularization_strength"
-                ),
-                "l2_shrinkage_regularization_strength": self._l2_shrinkage_regularization_strength,
-            }
-        )
+        config.update({
+            "learning_rate":
+            self._serialize_hyperparameter("learning_rate"),
+            "decay":
+            self._serialize_hyperparameter("decay"),
+            "initial_accumulator_value":
+            self._initial_accumulator_value,
+            "learning_rate_power":
+            self._serialize_hyperparameter("learning_rate_power"),
+            "l1_regularization_strength":
+            self._serialize_hyperparameter("l1_regularization_strength"),
+            "l2_regularization_strength":
+            self._serialize_hyperparameter("l2_regularization_strength"),
+            "l2_shrinkage_regularization_strength":
+            self._l2_shrinkage_regularization_strength,
+        })
         return config
