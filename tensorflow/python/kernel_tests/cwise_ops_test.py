@@ -36,49 +36,64 @@ from tensorflow.python.ops import nn_grad  # pylint: disable=unused-import
 from tensorflow.python.platform import test
 
 
-def _ADD(x, y): return x + y
+def _ADD(x, y):
+    return x + y
 
 
-def _SUB(x, y): return x - y
+def _SUB(x, y):
+    return x - y
 
 
-def _MUL(x, y): return x * y
+def _MUL(x, y):
+    return x * y
 
 
-def _POW(x, y): return x**y
+def _POW(x, y):
+    return x ** y
 
 
-def _TRUEDIV(x, y): return x / y
+def _TRUEDIV(x, y):
+    return x / y
 
 
-def _FLOORDIV(x, y): return x // y
+def _FLOORDIV(x, y):
+    return x // y
 
 
-def _MOD(x, y): return x % y
+def _MOD(x, y):
+    return x % y
 
 
-def _LT(x, y): return x < y
+def _LT(x, y):
+    return x < y
 
 
-def _LE(x, y): return x <= y
+def _LE(x, y):
+    return x <= y
 
 
-def _GT(x, y): return x > y
+def _GT(x, y):
+    return x > y
 
 
-def _GE(x, y): return x >= y
+def _GE(x, y):
+    return x >= y
 
 
-def _AND(x, y): return x & y
+def _AND(x, y):
+    return x & y
 
 
-def _OR(x, y): return x | y
+def _OR(x, y):
+    return x | y
 
 
-def _XOR(x, y): return x ^ y
+def _XOR(x, y):
+    return x ^ y
 
 
-def _INV(x): return ~x
+def _INV(x):
+    return ~x
 
 
 # TODO(zongheng): it'd be great to factor out this function and various random
@@ -91,8 +106,12 @@ def _sparsify(x, thresh=0.5, index_dtype=np.int64):
     x_values = x[non_zero]
     x_shape = x.shape
 
-    return sparse_tensor.SparseTensor(
-        indices=x_indices, values=x_values, dense_shape=x_shape), x_values
+    return (
+        sparse_tensor.SparseTensor(
+            indices=x_indices, values=x_values, dense_shape=x_shape
+        ),
+        x_values,
+    )
 
 
 def _default_tolerance(dtype):
@@ -112,12 +131,12 @@ def _default_tolerance(dtype):
 
 
 class ComparisonOpTest(test.TestCase):
-
     def _compareScalar(self, func, x, y, dtype):
         with test_util.use_gpu():
             out = func(
                 ops.convert_to_tensor(np.array([x]).astype(dtype)),
-                ops.convert_to_tensor(np.array([y]).astype(dtype)))
+                ops.convert_to_tensor(np.array([y]).astype(dtype)),
+            )
             ret = self.evaluate(out)
         return ret[0]
 
@@ -127,26 +146,32 @@ class ComparisonOpTest(test.TestCase):
         for t in dtypes:
             for x in data:
                 for y in data:
-                    self.assertEqual(self._compareScalar(
-                        math_ops.less, x, y, t), x < y)
+                    self.assertEqual(self._compareScalar(math_ops.less, x, y, t), x < y)
                     self.assertEqual(
-                        self._compareScalar(math_ops.less_equal, x, y, t), x <= y)
+                        self._compareScalar(math_ops.less_equal, x, y, t), x <= y
+                    )
                     self.assertEqual(
-                        self._compareScalar(math_ops.greater, x, y, t), x > y)
+                        self._compareScalar(math_ops.greater, x, y, t), x > y
+                    )
                     self.assertEqual(
-                        self._compareScalar(math_ops.greater_equal, x, y, t), x >= y)
-                    self.assertEqual(self._compareScalar(
-                        math_ops.equal, x, y, t), x == y)
+                        self._compareScalar(math_ops.greater_equal, x, y, t), x >= y
+                    )
                     self.assertEqual(
-                        self._compareScalar(math_ops.not_equal, x, y, t), x != y)
+                        self._compareScalar(math_ops.equal, x, y, t), x == y
+                    )
+                    self.assertEqual(
+                        self._compareScalar(math_ops.not_equal, x, y, t), x != y
+                    )
         data = [-1, 0, 1, -1j, 1j, 1 + 1j, 1 - 1j]
         for t in [np.complex64, np.complex128]:
             for x in data:
                 for y in data:
-                    self.assertEqual(self._compareScalar(
-                        math_ops.equal, x, y, t), x == y)
                     self.assertEqual(
-                        self._compareScalar(math_ops.not_equal, x, y, t), x != y)
+                        self._compareScalar(math_ops.equal, x, y, t), x == y
+                    )
+                    self.assertEqual(
+                        self._compareScalar(math_ops.not_equal, x, y, t), x != y
+                    )
 
     def _compare(self, x, y, np_func, tf_func):
         np_ans = np_func(x, y)
@@ -229,14 +254,17 @@ class ComparisonOpTest(test.TestCase):
         self._testBCastByFunc(np.equal, math_ops.equal, include_complex=True)
 
     def testBCastNotEqual(self):
-        self._testBCastByFunc(
-            np.not_equal, math_ops.not_equal, include_complex=True)
+        self._testBCastByFunc(np.not_equal, math_ops.not_equal, include_complex=True)
 
     def testShapeMismatch(self):
         dtypes = [np.float16, np.float32, np.float64, np.int32, np.int64]
         funcs = [
-            math_ops.less, math_ops.less_equal, math_ops.greater,
-            math_ops.greater_equal, math_ops.equal, math_ops.not_equal
+            math_ops.less,
+            math_ops.less_equal,
+            math_ops.greater,
+            math_ops.greater_equal,
+            math_ops.equal,
+            math_ops.not_equal,
         ]
         x = np.arange(0, 10).reshape([2, 5])
         y = np.arange(0, 10).reshape([5, 2])
@@ -244,12 +272,12 @@ class ComparisonOpTest(test.TestCase):
             for f in funcs:
                 with self.assertRaisesRegexp(
                     (ValueError, errors.InvalidArgumentError),
-                        "Incompatible shapes|Dimensions must be equal"):
+                    "Incompatible shapes|Dimensions must be equal",
+                ):
                     f(x.astype(t), y.astype(t))
 
 
 class LogicalOpTest(test.TestCase):
-
     def _compareBinary(self, x, y, np_func, tf_func, use_gpu=False):
         np_ans = np_func(x, y)
         with test_util.device(use_gpu=use_gpu):
@@ -277,24 +305,24 @@ class LogicalOpTest(test.TestCase):
                 self._not(x, use_gpu)
             for x in data:
                 for y in data:
-                    self._compareBinary(x, y, np.logical_and, math_ops.logical_and,
-                                        use_gpu)
-                    self._compareBinary(x, y, np.logical_or,
-                                        math_ops.logical_or, use_gpu)
-                    self._compareBinary(x, y, np.logical_xor, math_ops.logical_xor,
-                                        use_gpu)
+                    self._compareBinary(
+                        x, y, np.logical_and, math_ops.logical_and, use_gpu
+                    )
+                    self._compareBinary(
+                        x, y, np.logical_or, math_ops.logical_or, use_gpu
+                    )
+                    self._compareBinary(
+                        x, y, np.logical_xor, math_ops.logical_xor, use_gpu
+                    )
 
     def testTensor(self):
         x = np.random.randint(0, 2, 6).astype(np.bool).reshape(1, 3, 2)
         y = np.random.randint(0, 2, 6).astype(np.bool).reshape(1, 3, 2)
         for use_gpu in [True, False]:
             self._not(x, use_gpu)
-            self._compareBinary(x, y, np.logical_and,
-                                math_ops.logical_and, use_gpu)
-            self._compareBinary(x, y, np.logical_or,
-                                math_ops.logical_or, use_gpu)
-            self._compareBinary(x, y, np.logical_xor,
-                                math_ops.logical_xor, use_gpu)
+            self._compareBinary(x, y, np.logical_and, math_ops.logical_and, use_gpu)
+            self._compareBinary(x, y, np.logical_or, math_ops.logical_or, use_gpu)
+            self._compareBinary(x, y, np.logical_xor, math_ops.logical_xor, use_gpu)
 
     def testBCast(self):
         shapes = [
@@ -311,17 +339,12 @@ class LogicalOpTest(test.TestCase):
             ([2, 3, 0], [2, 3, 1]),
         ]
         for (xs, ys) in shapes:
-            x = np.random.randint(0, 2, np.prod(
-                xs)).astype(np.bool).reshape(xs)
-            y = np.random.randint(0, 2, np.prod(
-                ys)).astype(np.bool).reshape(ys)
+            x = np.random.randint(0, 2, np.prod(xs)).astype(np.bool).reshape(xs)
+            y = np.random.randint(0, 2, np.prod(ys)).astype(np.bool).reshape(ys)
             for use_gpu in [True, False]:
-                self._compareBinary(x, y, np.logical_and,
-                                    math_ops.logical_and, use_gpu)
-                self._compareBinary(x, y, np.logical_or,
-                                    math_ops.logical_or, use_gpu)
-                self._compareBinary(x, y, np.logical_xor,
-                                    math_ops.logical_xor, use_gpu)
+                self._compareBinary(x, y, np.logical_and, math_ops.logical_and, use_gpu)
+                self._compareBinary(x, y, np.logical_or, math_ops.logical_or, use_gpu)
+                self._compareBinary(x, y, np.logical_xor, math_ops.logical_xor, use_gpu)
 
     @test_util.run_deprecated_v1
     def testShapeMismatch(self):
@@ -329,7 +352,8 @@ class LogicalOpTest(test.TestCase):
         y = np.random.randint(0, 2, 6).astype(np.bool).reshape(3, 2, 1)
         for f in [math_ops.logical_and, math_ops.logical_or, math_ops.logical_xor]:
             with self.assertRaisesWithPredicateMatch(
-                    ValueError, lambda e: "Dimensions must" in str(e)):
+                ValueError, lambda e: "Dimensions must" in str(e)
+            ):
                 f(x, y)
 
     @test_util.run_deprecated_v1
@@ -356,7 +380,6 @@ class LogicalOpTest(test.TestCase):
 
 
 class SelectOpTest(test.TestCase):
-
     def _compare(self, fn, c, x, y, use_gpu):
         np_ans = np.where(c, x, y)
         with test_util.device(use_gpu=use_gpu):
@@ -365,13 +388,9 @@ class SelectOpTest(test.TestCase):
         self.assertAllEqual(np_ans, tf_ans)
         self.assertShapeEqual(np_ans, out)
 
-    def _compareGradientX(self,
-                          fn,
-                          c,
-                          x,
-                          y,
-                          numeric_gradient_type=None,
-                          x_init_value=None):
+    def _compareGradientX(
+        self, fn, c, x, y, numeric_gradient_type=None, x_init_value=None
+    ):
         with self.cached_session():
             inx = ops.convert_to_tensor(x)
             iny = ops.convert_to_tensor(y)
@@ -382,7 +401,8 @@ class SelectOpTest(test.TestCase):
             if x.shape != y.shape:
                 x_init_value = np.broadcast_to(y, x.shape)
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                inx, s, out, s, x_init_value=x_init_value)
+                inx, s, out, s, x_init_value=x_init_value
+            )
             if numeric_gradient_type is not None:
                 xf = x.astype(numeric_gradient_type)
                 yf = y.astype(numeric_gradient_type)
@@ -390,7 +410,8 @@ class SelectOpTest(test.TestCase):
                 inyf = ops.convert_to_tensor(yf)
                 outf = fn(c, inxf, inyf)
                 _, jacob_n = gradient_checker.compute_gradient(
-                    inxf, s, outf, s, x_init_value=xf)
+                    inxf, s, outf, s, x_init_value=xf
+                )
                 jacob_n = jacob_n.astype(x.dtype)
         if x.dtype == np.float16:
             self.assertAllClose(jacob_t, jacob_n, rtol=1e-3, atol=1e-3)
@@ -406,7 +427,8 @@ class SelectOpTest(test.TestCase):
             out = fn(c, inx, iny)
             s = list(np.shape(c))
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                iny, s, out, s, x_init_value=x, delta=1.0)
+                iny, s, out, s, x_init_value=x, delta=1.0
+            )
             if numeric_gradient_type is not None:
                 xf = x.astype(numeric_gradient_type)
                 yf = y.astype(numeric_gradient_type)
@@ -414,7 +436,8 @@ class SelectOpTest(test.TestCase):
                 inyf = ops.convert_to_tensor(yf)
                 outf = fn(c, inxf, inyf)
                 _, jacob_n = gradient_checker.compute_gradient(
-                    inyf, s, outf, s, x_init_value=yf)
+                    inyf, s, outf, s, x_init_value=yf
+                )
                 jacob_n = jacob_n.astype(x.dtype)
         if x.dtype == np.float16:
             self.assertAllClose(jacob_t, jacob_n, rtol=1e-3, atol=1e-3)
@@ -428,8 +451,13 @@ class SelectOpTest(test.TestCase):
         x = np.random.rand(1, 3, 2) * 100
         y = np.random.rand(1, 3, 2) * 100
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -443,8 +471,13 @@ class SelectOpTest(test.TestCase):
 
     def _testScalarBroadcast(self, fn, c, x, y):
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -489,8 +522,13 @@ class SelectOpTest(test.TestCase):
         x = np.random.rand(1, 3, 2) * 100
         y = np.random.rand(1, 3, 2) * 100
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -504,8 +542,13 @@ class SelectOpTest(test.TestCase):
 
     def _testBasicBroadcast(self, fn, c, x, y):
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -580,40 +623,38 @@ class SelectOpTest(test.TestCase):
             # where_v2 only
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(1, 1, 1) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(1, 3, 1) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(1, 1, 2) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(1, 1) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(1) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(1, 2) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
             x = np.random.rand(1, 3, 2) * 100
             y = np.random.rand(3, 2) * 100
-            self._compareGradientX(array_ops.where_v2, c,
-                                   x.astype(t), y.astype(t))
+            self._compareGradientX(array_ops.where_v2, c, x.astype(t), y.astype(t))
 
     def _testShapeMismatch(self, fn):
         c = np.random.randint(0, 2, 6).astype(np.bool).reshape(1, 3, 2)
         x = np.random.rand(1, 3, 2) * 100
         y = np.random.rand(2, 5, 3) * 100
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -662,8 +703,8 @@ class BatchSelectOpTest(test.TestCase):
 
     def _compare(self, c, x, y, use_gpu):
         np_ans = np.dstack(
-            [x_i if c_i else y_i for c_i, x_i, y_i in zip(c, x, y)]).transpose(
-                [2, 0, 1])
+            [x_i if c_i else y_i for c_i, x_i, y_i in zip(c, x, y)]
+        ).transpose([2, 0, 1])
         with test_util.device(use_gpu=use_gpu):
             out = array_ops.where(c, x, y)
             tf_ans = self.evaluate(out)
@@ -677,7 +718,8 @@ class BatchSelectOpTest(test.TestCase):
             out = array_ops.where(c, inx, iny)
             s = list(np.shape(x))
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                inx, s, out, s, x_init_value=x)
+                inx, s, out, s, x_init_value=x
+            )
             if numeric_gradient_type is not None:
                 xf = x.astype(numeric_gradient_type)
                 yf = y.astype(numeric_gradient_type)
@@ -685,7 +727,8 @@ class BatchSelectOpTest(test.TestCase):
                 inyf = ops.convert_to_tensor(yf)
                 outf = array_ops.where(c, inxf, inyf)
                 _, jacob_n = gradient_checker.compute_gradient(
-                    inxf, s, outf, s, x_init_value=xf)
+                    inxf, s, outf, s, x_init_value=xf
+                )
                 jacob_n = jacob_n.astype(x.dtype)
         if x.dtype == np.float16:
             self.assertAllClose(jacob_t, jacob_n, rtol=1e-3, atol=1e-3)
@@ -701,7 +744,8 @@ class BatchSelectOpTest(test.TestCase):
             out = array_ops.where(c, inx, iny)
             s = list(np.shape(x))
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                iny, s, out, s, x_init_value=y)
+                iny, s, out, s, x_init_value=y
+            )
             if numeric_gradient_type is not None:
                 xf = x.astype(numeric_gradient_type)
                 yf = y.astype(numeric_gradient_type)
@@ -709,7 +753,8 @@ class BatchSelectOpTest(test.TestCase):
                 inyf = ops.convert_to_tensor(yf)
                 outf = array_ops.where(c, inxf, inyf)
                 _, jacob_n = gradient_checker.compute_gradient(
-                    inyf, s, outf, s, x_init_value=yf)
+                    inyf, s, outf, s, x_init_value=yf
+                )
                 jacob_n = jacob_n.astype(x.dtype)
         if x.dtype == np.float16:
             self.assertAllClose(jacob_t, jacob_n, rtol=1e-3, atol=1e-3)
@@ -723,8 +768,13 @@ class BatchSelectOpTest(test.TestCase):
         x = np.random.rand(16, 2, 8) * 100
         y = np.random.rand(16, 2, 8) * 100
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -758,8 +808,13 @@ class BatchSelectOpTest(test.TestCase):
         x = np.random.rand(16, 3, 2) * 100
         y = np.random.rand(16, 3, 2) * 100
         for t in [
-            np.float16, np.float32, np.float64, np.int32, np.int64, np.complex64,
-            np.complex128
+            np.float16,
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.complex64,
+            np.complex128,
         ]:
             xt = x.astype(t)
             yt = y.astype(t)
@@ -768,7 +823,6 @@ class BatchSelectOpTest(test.TestCase):
 
 
 class MinMaxOpTest(test.TestCase):
-
     def _compare(self, x, y, use_gpu):
         np_min, np_max = np.minimum(x, y), np.maximum(x, y)
         with test_util.device(use_gpu=use_gpu):
@@ -780,22 +834,22 @@ class MinMaxOpTest(test.TestCase):
         self.assertAllEqual(np_max, tf_max)
 
     def testBasic(self):
-        x = np.random.rand(1, 3, 2) * 100.
-        y = np.random.rand(1, 3, 2) * 100.
+        x = np.random.rand(1, 3, 2) * 100.0
+        y = np.random.rand(1, 3, 2) * 100.0
         for t in [np.float16, np.float32, np.float64, np.int32, np.int64]:
             self._compare(x.astype(t), y.astype(t), use_gpu=False)
             self._compare(x.astype(t), y.astype(t), use_gpu=True)
 
     def testDifferentShapes(self):
-        x = np.random.rand(1, 3, 2) * 100.
-        y = np.random.rand(2) * 100.  # should broadcast
+        x = np.random.rand(1, 3, 2) * 100.0
+        y = np.random.rand(2) * 100.0  # should broadcast
         for t in [np.float16, np.float32, np.float64, np.int32, np.int64]:
             self._compare(x.astype(t), y.astype(t), use_gpu=False)
             self._compare(x.astype(t), y.astype(t), use_gpu=True)
 
     def testScalar(self):
-        x = np.random.rand(1, 3, 2) * 100.
-        y = np.random.rand(1).item() * 100.  # should broadcast
+        x = np.random.rand(1, 3, 2) * 100.0
+        y = np.random.rand(1).item() * 100.0  # should broadcast
         # dropped np.float64, int64 because TF automatically converts to 32 bit
         for t in [np.float32, np.int32]:
             self._compare(x.astype(t), t(y), use_gpu=False)
@@ -808,7 +862,8 @@ class MinMaxOpTest(test.TestCase):
             out = func(inx, iny)
             s = list(np.shape(x))
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                inx, s, out, s, x_init_value=x)
+                inx, s, out, s, x_init_value=x
+            )
         if x.dtype == np.float16:
             self.assertAllClose(jacob_t, jacob_n, rtol=1e-3, atol=1e-3)
         elif x.dtype == np.float32:
@@ -823,7 +878,8 @@ class MinMaxOpTest(test.TestCase):
             out = func(inx, iny)
             s = list(np.shape(x))
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                iny, s, out, s, x_init_value=y)
+                iny, s, out, s, x_init_value=y
+            )
         if x.dtype == np.float16:
             self.assertAllClose(jacob_t, jacob_n, rtol=1e-3, atol=1e-3)
         elif x.dtype == np.float32:
@@ -833,9 +889,9 @@ class MinMaxOpTest(test.TestCase):
 
     @test_util.run_deprecated_v1
     def testGradients(self):
-        x = np.random.rand(1, 3, 2) * 100.
+        x = np.random.rand(1, 3, 2) * 100.0
         # ensure x != y
-        y = x + (np.random.randint(2, size=x.shape) - .5) * 2  # -1 or +1
+        y = x + (np.random.randint(2, size=x.shape) - 0.5) * 2  # -1 or +1
         self._compareGradientX(math_ops.maximum, x, y)
         self._compareGradientY(math_ops.maximum, x, y)
         self._compareGradientX(math_ops.minimum, x, y)
@@ -843,7 +899,6 @@ class MinMaxOpTest(test.TestCase):
 
 
 class MathOpsOverloadTest(test.TestCase):
-
     def _computeTensorAndLiteral(self, x, y, dtype, func):
         with test_util.force_cpu():
             inx = ops.convert_to_tensor(x, dtype=dtype)
@@ -858,16 +913,15 @@ class MathOpsOverloadTest(test.TestCase):
 
     def _compareBinary(self, x, y, dtype, np_func, tf_func):
         np_ans = np_func(x, y).astype(dtype.as_numpy_dtype)
-        self.assertAllClose(np_ans,
-                            self._computeTensorAndLiteral(x, y, dtype, tf_func))
-        self.assertAllClose(np_ans,
-                            self._computeLiteralAndTensor(x, y, dtype, tf_func))
+        self.assertAllClose(np_ans, self._computeTensorAndLiteral(x, y, dtype, tf_func))
+        self.assertAllClose(np_ans, self._computeLiteralAndTensor(x, y, dtype, tf_func))
 
     def _compareUnary(self, x, dtype, np_func, tf_func):
         np_ans = np_func(x).astype(dtype.as_numpy_dtype)
         with test_util.force_cpu():
             self.assertAllClose(
-                np_ans, self.evaluate(tf_func(ops.convert_to_tensor(x, dtype=dtype))))
+                np_ans, self.evaluate(tf_func(ops.convert_to_tensor(x, dtype=dtype)))
+            )
 
     def testOverload(self):
         dtypes = [
@@ -889,8 +943,10 @@ class MathOpsOverloadTest(test.TestCase):
         ]
         for dtype in dtypes:
             for np_func, tf_func in funcs:
-                if dtype in (dtypes_lib.complex64,
-                             dtypes_lib.complex128) and tf_func == _FLOORDIV:
+                if (
+                    dtype in (dtypes_lib.complex64, dtypes_lib.complex128)
+                    and tf_func == _FLOORDIV
+                ):
                     continue  # floordiv makes no sense for complex
                 self._compareBinary(10, 5, dtype, np_func, tf_func)
         # Mod only works for int32 and int64.
@@ -914,32 +970,40 @@ class MathOpsOverloadTest(test.TestCase):
         for dtype in dtypes:
             for np_func, tf_func in funcs:
                 self._compareBinary(10, 5, dtype, np_func, tf_func)
-        logical_funcs = [(np.logical_and, _AND), (np.logical_or, _OR),
-                         (np.logical_xor, _XOR), (np.equal, math_ops.equal),
-                         (np.not_equal, math_ops.not_equal)]
+        logical_funcs = [
+            (np.logical_and, _AND),
+            (np.logical_or, _OR),
+            (np.logical_xor, _XOR),
+            (np.equal, math_ops.equal),
+            (np.not_equal, math_ops.not_equal),
+        ]
         for np_func, tf_func in logical_funcs:
             self._compareBinary(True, False, dtypes_lib.bool, np_func, tf_func)
             self._compareBinary(True, True, dtypes_lib.bool, np_func, tf_func)
-            self._compareBinary(
-                False, False, dtypes_lib.bool, np_func, tf_func)
+            self._compareBinary(False, False, dtypes_lib.bool, np_func, tf_func)
             self._compareBinary(False, True, dtypes_lib.bool, np_func, tf_func)
-            self._compareBinary([True, True, False, False],
-                                [True, False, True, False], dtypes_lib.bool, np_func,
-                                tf_func)
+            self._compareBinary(
+                [True, True, False, False],
+                [True, False, True, False],
+                dtypes_lib.bool,
+                np_func,
+                tf_func,
+            )
         self._compareUnary(True, dtypes_lib.bool, np.logical_not, _INV)
         self._compareUnary(False, dtypes_lib.bool, np.logical_not, _INV)
-        self._compareUnary([True, False], dtypes_lib.bool,
-                           np.logical_not, _INV)
+        self._compareUnary([True, False], dtypes_lib.bool, np.logical_not, _INV)
 
 
 class IsFiniteInfNanTest(test.TestCase):
-
     def _compare(self, x, use_gpu):
         np_finite, np_inf, np_nan = np.isfinite(x), np.isinf(x), np.isnan(x)
         with test_util.device(use_gpu=use_gpu):
             inx = ops.convert_to_tensor(x)
-            ofinite, oinf, onan = math_ops.is_finite(inx), math_ops.is_inf(
-                inx), math_ops.is_nan(inx)
+            ofinite, oinf, onan = (
+                math_ops.is_finite(inx),
+                math_ops.is_inf(inx),
+                math_ops.is_nan(inx),
+            )
             tf_finite, tf_inf, tf_nan = self.evaluate([ofinite, oinf, onan])
         self.assertAllEqual(np_inf, tf_inf)
         self.assertAllEqual(np_nan, tf_nan)
@@ -950,10 +1014,20 @@ class IsFiniteInfNanTest(test.TestCase):
 
     def _testDtype(self, dtype):
         fi = np.finfo(dtype)
-        data = np.array([
-            0, -1, 1, fi.resolution, -fi.resolution, fi.min, fi.max, -np.inf,
-            np.inf, np.nan
-        ]).astype(dtype)
+        data = np.array(
+            [
+                0,
+                -1,
+                1,
+                fi.resolution,
+                -fi.resolution,
+                fi.min,
+                fi.max,
+                -np.inf,
+                np.inf,
+                np.nan,
+            ]
+        ).astype(dtype)
         self._compare(data, use_gpu=False)
         self._compare(data, use_gpu=True)
 
@@ -984,11 +1058,11 @@ class IsFiniteInfNanTest(test.TestCase):
                             self.assertAllEqual(np_nan, self.evaluate(tf_nan))
                         else:
                             self.assertAllCloseAccordingToType(
-                                np_y, self.evaluate(tf_y))
+                                np_y, self.evaluate(tf_y)
+                            )
 
 
 class RoundingTest(test.TestCase):
-
     def _compare_values(self, x, y=None):
         y = np.rint(x) if y is None else np.asarray(y)
 
@@ -1011,7 +1085,7 @@ class RoundingTest(test.TestCase):
         self.assertShapeEqual(np_ceil, oceil)
 
     def _testDtype(self, dtype):
-        data = (np.arange(-3, 3) / 4.).reshape(1, 3, 2).astype(dtype)
+        data = (np.arange(-3, 3) / 4.0).reshape(1, 3, 2).astype(dtype)
         self._compare(data)
         # TODO: rint op is not supported for float16
         if dtype is np.float16:
@@ -1023,7 +1097,7 @@ class RoundingTest(test.TestCase):
 
         # numpy example
         x = [-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0]
-        y = [-2., -2., -0., 0., 2., 2., 2.]
+        y = [-2.0, -2.0, -0.0, 0.0, 2.0, 2.0, 2.0]
         self._compare_values(x, y=y)
 
     def testTypes(self):
@@ -1033,7 +1107,6 @@ class RoundingTest(test.TestCase):
 
 
 class ComplexMakeRealImagTest(test.TestCase):
-
     def _compareMake(self, real, imag, use_gpu):
         np_ans = real + (1j) * imag
 
@@ -1047,8 +1120,8 @@ class ComplexMakeRealImagTest(test.TestCase):
         self.assertShapeEqual(np_ans, tf_ans)
 
     def testMake(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float32)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float32)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float32)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float32)
         for use_gpu in [False, True]:
             self._compareMake(real, imag, use_gpu)
             self._compareMake(real, 12.0, use_gpu)
@@ -1056,7 +1129,7 @@ class ComplexMakeRealImagTest(test.TestCase):
 
     def testRealImagNumericType(self):
         for use_gpu in [True, False]:
-            for value in [1., 1j, 1. + 1j]:
+            for value in [1.0, 1j, 1.0 + 1j]:
                 np_real, np_imag = np.real(value), np.imag(value)
                 with test_util.device(use_gpu=use_gpu):
                     tf_real = math_ops.real(value)
@@ -1080,15 +1153,15 @@ class ComplexMakeRealImagTest(test.TestCase):
             self.assertAllEqual(np_zeros, self.evaluate(tf_imag_real))
 
     def testRealImag64(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float32)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float32)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float32)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float32)
         cplx = real + 1j * imag
         self._compareRealImag(cplx, use_gpu=False)
         self._compareRealImag(cplx, use_gpu=True)
 
     def testRealImag128(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float64)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float64)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float64)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float64)
         cplx = real + 1j * imag
         self._compareRealImag(cplx, use_gpu=False)
         self._compareRealImag(cplx, use_gpu=True)
@@ -1105,23 +1178,27 @@ class ComplexMakeRealImagTest(test.TestCase):
         self.assertShapeEqual(np_angle, tf_angle)
 
     def testAngle64(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float32)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float32)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float32)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float32)
         cplx = real + 1j * imag
         self._compareAngle(cplx, use_gpu=False)
         self._compareAngle(cplx, use_gpu=True)
 
     def testAngle(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float64)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float64)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float64)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float64)
         cplx = real + 1j * imag
         self._compareAngle(cplx, use_gpu=False)
         self._compareAngle(cplx, use_gpu=True)
 
     @test_util.run_deprecated_v1
     def testRealReal(self):
-        for dtype in (dtypes_lib.int32, dtypes_lib.int64, dtypes_lib.float32,
-                      dtypes_lib.float64):
+        for dtype in (
+            dtypes_lib.int32,
+            dtypes_lib.int64,
+            dtypes_lib.float32,
+            dtypes_lib.float64,
+        ):
             x = array_ops.placeholder(dtype)
             y = math_ops.real(x)
             self.assertEqual(x, y)
@@ -1136,23 +1213,28 @@ class ComplexMakeRealImagTest(test.TestCase):
         self.assertShapeEqual(np_ans, tf_conj)
 
     def testConj64(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float32)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float32)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float32)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float32)
         cplx = real + 1j * imag
         self._compareConj(cplx, use_gpu=False)
         self._compareConj(cplx, use_gpu=True)
 
     def testConj128(self):
-        real = (np.arange(-3, 3) / 4.).reshape([1, 3, 2]).astype(np.float64)
-        imag = (np.arange(-3, 3) / 5.).reshape([1, 3, 2]).astype(np.float64)
+        real = (np.arange(-3, 3) / 4.0).reshape([1, 3, 2]).astype(np.float64)
+        imag = (np.arange(-3, 3) / 5.0).reshape([1, 3, 2]).astype(np.float64)
         cplx = real + 1j * imag
         self._compareConj(cplx, use_gpu=False)
         self._compareConj(cplx, use_gpu=True)
 
     @test_util.run_deprecated_v1
     def testConjReal(self):
-        for dtype in (dtypes_lib.int32, dtypes_lib.int64, dtypes_lib.float16,
-                      dtypes_lib.float32, dtypes_lib.float64):
+        for dtype in (
+            dtypes_lib.int32,
+            dtypes_lib.int64,
+            dtypes_lib.float16,
+            dtypes_lib.float32,
+            dtypes_lib.float64,
+        ):
             x = array_ops.placeholder(dtype)
             y = math_ops.conj(x)
             self.assertEqual(x, y)
@@ -1160,8 +1242,7 @@ class ComplexMakeRealImagTest(test.TestCase):
     @test_util.run_deprecated_v1
     def testConjString(self):
         x = array_ops.placeholder(dtypes_lib.string)
-        with self.assertRaisesRegexp(TypeError,
-                                     r"Expected numeric or variant tensor"):
+        with self.assertRaisesRegexp(TypeError, r"Expected numeric or variant tensor"):
             math_ops.conj(x)
 
     def _compareGradient(self, x):
@@ -1172,30 +1253,29 @@ class ComplexMakeRealImagTest(test.TestCase):
         # gradient function is checked.
         with self.cached_session():
             inx = ops.convert_to_tensor(x)
-            real, imag = array_ops.split(
-                value=inx, num_or_size_splits=2, axis=1)
-            real, imag = array_ops.reshape(
-                real, [-1]), array_ops.reshape(imag, [-1])
+            real, imag = array_ops.split(value=inx, num_or_size_splits=2, axis=1)
+            real, imag = array_ops.reshape(real, [-1]), array_ops.reshape(imag, [-1])
             cplx = math_ops.complex(real, imag)
             cplx = math_ops.conj(cplx)
-            loss = math_ops.reduce_sum(math_ops.square(
-                math_ops.real(cplx))) + math_ops.reduce_sum(
-                    math_ops.square(math_ops.imag(cplx)))
+            loss = math_ops.reduce_sum(
+                math_ops.square(math_ops.real(cplx))
+            ) + math_ops.reduce_sum(math_ops.square(math_ops.imag(cplx)))
             epsilon = 1e-3
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                inx, list(x.shape), loss, [1], x_init_value=x, delta=epsilon)
+                inx, list(x.shape), loss, [1], x_init_value=x, delta=epsilon
+            )
         self.assertAllClose(jacob_t, jacob_n, rtol=epsilon, atol=epsilon)
 
     def _compareBroadcastGradient(self, x):
         x_ = ops.convert_to_tensor(x)
         epsilon = 1e-3
         with self.cached_session():
-            for args in [(x_, 0.), (0., x_)]:
+            for args in [(x_, 0.0), (0.0, x_)]:
                 z = math_ops.reduce_sum(math_ops.abs(math_ops.complex(*args)))
                 jacob_t, jacob_n = gradient_checker.compute_gradient(
-                    x_, list(x.shape), z, [1], x_init_value=x, delta=epsilon)
-                self.assertAllClose(
-                    jacob_t, jacob_n, rtol=epsilon, atol=epsilon)
+                    x_, list(x.shape), z, [1], x_init_value=x, delta=epsilon
+                )
+                self.assertAllClose(jacob_t, jacob_n, rtol=epsilon, atol=epsilon)
 
     @test_util.run_deprecated_v1
     def testGradient(self):
@@ -1213,8 +1293,7 @@ class ComplexMakeRealImagTest(test.TestCase):
         # x, real parts of y and imaginary parts of y.
         with self.cached_session():
             inp = ops.convert_to_tensor(data)
-            xr, xi, yr, yi = array_ops.split(
-                value=inp, num_or_size_splits=4, axis=1)
+            xr, xi, yr, yi = array_ops.split(value=inp, num_or_size_splits=4, axis=1)
 
             def vec(x):  # Reshape to a vector
                 return array_ops.reshape(x, [-1])
@@ -1231,7 +1310,8 @@ class ComplexMakeRealImagTest(test.TestCase):
             loss = math_ops.reduce_sum(math_ops.real(z) + math_ops.imag(z))
             epsilon = 0.005
             jacob_t, jacob_n = gradient_checker.compute_gradient(
-                inp, list(data.shape), loss, [1], x_init_value=data, delta=epsilon)
+                inp, list(data.shape), loss, [1], x_init_value=data, delta=epsilon
+            )
         self.assertAllClose(jacob_t, jacob_n, rtol=epsilon, atol=epsilon)
 
     @test_util.run_deprecated_v1
@@ -1241,20 +1321,16 @@ class ComplexMakeRealImagTest(test.TestCase):
 
 
 class PolyvalTest(test.TestCase):
-
     def _runtest(self, dtype, degree):
         x = np.random.rand(2, 2).astype(dtype)
-        coeffs = [np.random.rand(2, 2).astype(dtype)
-                  for _ in range(degree + 1)]
+        coeffs = [np.random.rand(2, 2).astype(dtype) for _ in range(degree + 1)]
         np_val = np.polyval(coeffs, x)
         with self.cached_session():
             tf_val = math_ops.polyval(coeffs, x)
             self.assertAllClose(np_val, self.evaluate(tf_val))
 
     def testSimple(self):
-        for dtype in [
-            np.int32, np.float32, np.float64, np.complex64, np.complex128
-        ]:
+        for dtype in [np.int32, np.float32, np.float64, np.complex64, np.complex128]:
             for degree in range(5):
                 self._runtest(dtype, degree)
 
@@ -1290,53 +1366,55 @@ class PolyvalTest(test.TestCase):
 
 
 class SingularGradientOpTest(test.TestCase):
-
     @test_util.run_deprecated_v1
     def testGradientAtSingularity(self):
         if not compat.forward_compatible(2020, 6, 14):
             self.skipTest("Skipping test for future functionality.")
 
         ops_and_singularity = [
-            (gen_math_ops.reciprocal, (0.,)),
-            (gen_math_ops.rsqrt, (0.,)),
-            (gen_math_ops.sqrt, (0.,)),
-            (gen_math_ops.sqrt_grad, (
-                0.,
-                0.,
-            )),
-            (gen_math_ops.reciprocal_grad, (
-                1.,
-                0.,
-            )),
+            (gen_math_ops.reciprocal, (0.0,)),
+            (gen_math_ops.rsqrt, (0.0,)),
+            (gen_math_ops.sqrt, (0.0,)),
+            (gen_math_ops.sqrt_grad, (0.0, 0.0,)),
+            (gen_math_ops.reciprocal_grad, (1.0, 0.0,)),
             (gen_math_ops.tan, (np.pi / 2,)),
-            (gen_math_ops.log, (0.,)),
-            (gen_math_ops.log1p, (-1.,)),
-            (gen_math_ops.acosh, (0.,)),
-            (gen_math_ops.asin, (1.,)),
-            (gen_math_ops.acos, (1.,)),
-            (gen_math_ops.atan2, (0., 0.)),
-            (gen_math_ops.div, (1., 0.)),
-            (gen_math_ops.div_no_nan, (1., 0.)),
-            (gen_math_ops.real_div, (1., 0.)),
-            (math_ops.pow, (0., -1.)),
+            (gen_math_ops.log, (0.0,)),
+            (gen_math_ops.log1p, (-1.0,)),
+            (gen_math_ops.acosh, (0.0,)),
+            (gen_math_ops.asin, (1.0,)),
+            (gen_math_ops.acos, (1.0,)),
+            (gen_math_ops.atan2, (0.0, 0.0)),
+            (gen_math_ops.div, (1.0, 0.0)),
+            (gen_math_ops.div_no_nan, (1.0, 0.0)),
+            (gen_math_ops.real_div, (1.0, 0.0)),
+            (math_ops.pow, (0.0, -1.0)),
         ]
         for op, singularity in ops_and_singularity:
-            for dtype in (dtypes_lib.half, dtypes_lib.float32, dtypes_lib.float64,
-                          dtypes_lib.complex64, dtypes_lib.complex128):
+            for dtype in (
+                dtypes_lib.half,
+                dtypes_lib.float32,
+                dtypes_lib.float64,
+                dtypes_lib.complex64,
+                dtypes_lib.complex128,
+            ):
                 if dtype.is_complex and op in [
-                    gen_math_ops.asin, gen_math_ops.acos, gen_math_ops.atan2
+                    gen_math_ops.asin,
+                    gen_math_ops.acos,
+                    gen_math_ops.atan2,
                 ]:
                     continue
                 if dtype == dtypes_lib.half and op in [
-                    gen_math_ops.acosh, gen_math_ops.asin, gen_math_ops.acos,
-                    gen_math_ops.atan2
+                    gen_math_ops.acosh,
+                    gen_math_ops.asin,
+                    gen_math_ops.acos,
+                    gen_math_ops.atan2,
                 ]:
                     continue
                 with self.cached_session():
-                    print("op = ", op, ", singularity = ", singularity, ", type = ",
-                          dtype)
-                    args = [constant_op.constant(
-                        s, dtype=dtype) for s in singularity]
+                    print(
+                        "op = ", op, ", singularity = ", singularity, ", type = ", dtype
+                    )
+                    args = [constant_op.constant(s, dtype=dtype) for s in singularity]
                     grad_y = constant_op.constant(0, dtype=dtype)
                     y = op(*args)
                     g = gradients_impl.gradients(y, args, grad_ys=grad_y)
