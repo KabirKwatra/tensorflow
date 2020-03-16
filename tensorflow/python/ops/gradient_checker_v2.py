@@ -60,7 +60,8 @@ def _eval_indexed_slices(a):
         return ops.IndexedSlicesValue(
             indices=[x.numpy() for x in a.indices],
             values=[x.numpy() for x in a.values],
-            dense_shape=a.dense_shape)
+            dense_shape=a.dense_shape,
+        )
     return a
 
 
@@ -83,11 +84,13 @@ def _to_numpy(a):
     if isinstance(a, ops.IndexedSlicesValue):
         arr = np.zeros(a.dense_shape)
         assert len(a.values) == len(a.indices), (
-            "IndexedSlicesValue has %s value slices but %s indices\n%s" %
-            (a.values, a.indices, a))
+            "IndexedSlicesValue has %s value slices but %s indices\n%s"
+            % (a.values, a.indices, a)
+        )
         for values_slice, index in zip(a.values, a.indices):
-            assert 0 <= index < len(arr), (
-                "IndexedSlicesValue has invalid index %s\n%s" % (index, a))
+            assert (
+                0 <= index < len(arr)
+            ), "IndexedSlicesValue has invalid index %s\n%s" % (index, a)
             arr[index] += values_slice
         return arr
     return a
@@ -159,8 +162,7 @@ def _compute_theoretical_jacobian(f, y_shape, y_dtype, xs, param):
 
     # Allocate 2-D Jacobian, with y dimensions smashed into the first
     # dimension and x dimensions smashed into the second.
-    jacobian = np.zeros(
-        (y_size, x_size), dtype=x.dtype.real_dtype.as_numpy_dtype)
+    jacobian = np.zeros((y_size, x_size), dtype=x.dtype.real_dtype.as_numpy_dtype)
 
     # For each of the entry of dy, we set this to be 1 and
     # everything else to be 0 and compute the gradients -- this will give us one
@@ -168,9 +170,11 @@ def _compute_theoretical_jacobian(f, y_shape, y_dtype, xs, param):
     dy_data = np.zeros(y_shape, dtype=y_dtype.as_numpy_dtype)
     dy_data_flat = dy_data.ravel().view(y_dtype.real_dtype.as_numpy_dtype)
     grad_fn_unprep = backprop.gradients_function(f, [param])
-    grad_fn = _prepare(lambda dy, *xs: grad_fn_unprep(*xs, dy=dy),
-                       [y_dtype] + [z.dtype for z in xs],
-                       [None] + [z.shape for z in xs])
+    grad_fn = _prepare(
+        lambda dy, *xs: grad_fn_unprep(*xs, dy=dy),
+        [y_dtype] + [z.dtype for z in xs],
+        [None] + [z.shape for z in xs],
+    )
     for row in range(y_size):
         dy_data_flat[row] = 1
         grad = _to_numpy(grad_fn(dy_data, *xs)[0])
@@ -189,8 +193,10 @@ def _compute_theoretical_jacobian(f, y_shape, y_dtype, xs, param):
     if y_size == 0:  # don't use 'not y_size', because y_size may not be an int
         grad = _to_numpy(grad_fn(dy_data, *xs)[0])
         if grad.shape != x.shape:
-            raise ValueError("Empty gradient has wrong shape: expected %s, got %s" %
-                             (x.shape, grad.shape))
+            raise ValueError(
+                "Empty gradient has wrong shape: expected %s, got %s"
+                % (x.shape, grad.shape)
+            )
         if np.any(grad):
             raise ValueError("Empty tensor with nonzero gradients")
 
@@ -267,15 +273,21 @@ def _compute_gradient(f, y_shape, y_dtype, xs, param, delta):
     x = xs[param]
     t = x.dtype
     allowed_types = [
-        dtypes.float16, dtypes.bfloat16, dtypes.float32, dtypes.float64,
-        dtypes.complex64, dtypes.complex128
+        dtypes.float16,
+        dtypes.bfloat16,
+        dtypes.float32,
+        dtypes.float64,
+        dtypes.complex64,
+        dtypes.complex128,
     ]
-    assert t.base_dtype in allowed_types, ("Cannot compute gradient for "
-                                           "unsupported type %s of argument %s" %
-                                           (t.name, param))
+    assert t.base_dtype in allowed_types, (
+        "Cannot compute gradient for "
+        "unsupported type %s of argument %s" % (t.name, param)
+    )
     t2 = y_dtype
-    assert t2.base_dtype in allowed_types, ("Cannot compute gradient for "
-                                            "unsupported type %s of y" % t2.name)
+    assert t2.base_dtype in allowed_types, (
+        "Cannot compute gradient for " "unsupported type %s of y" % t2.name
+    )
     y_size = _product(y_shape)
     jacob_t = _compute_theoretical_jacobian(f, y_shape, y_dtype, xs, param)
     jacob_n = _compute_numeric_jacobian(f, y_size, y_dtype, xs, param, delta)
@@ -291,10 +303,12 @@ def _compute_gradient_list(f, xs, delta):
     xs_shapes = [x.shape for x in xs]
     f_temp = _prepare(f, xs_dtypes, xs_shapes)
     y = f_temp(*xs)
-    return zip(*[
-        _compute_gradient(f, y.shape, dtypes.as_dtype(y.dtype), xs, i, delta)
-        for i in range(len(xs))
-    ])
+    return zip(
+        *[
+            _compute_gradient(f, y.shape, dtypes.as_dtype(y.dtype), xs, i, delta)
+            for i in range(len(xs))
+        ]
+    )
 
 
 @tf_export("test.compute_gradient", v1=[])
@@ -334,7 +348,8 @@ def compute_gradient(f, x, delta=1e-3):
     if not isinstance(x, (list, tuple)):
         raise ValueError(
             "`x` must be a list or tuple of values convertible to a Tensor "
-            "(arguments to `f`), not a %s" % type(x))
+            "(arguments to `f`), not a %s" % type(x)
+        )
     return _compute_gradient_list(f, x, delta)
 
 

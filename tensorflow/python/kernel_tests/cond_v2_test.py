@@ -42,13 +42,12 @@ from tensorflow.python.training import saver
 from tensorflow.python.util import compat
 
 
-_OPTIONAL_OPS = frozenset([
-    "OptionalFromValue", "OptionalNone", "OptionalHasValue", "OptionalGetValue"
-])
+_OPTIONAL_OPS = frozenset(
+    ["OptionalFromValue", "OptionalNone", "OptionalHasValue", "OptionalGetValue"]
+)
 
 
 class CondV2Test(test.TestCase):
-
     def _testCond(self, true_fn, false_fn, train_vals, feed_dict=None):
         if not feed_dict:
             feed_dict = {}
@@ -56,7 +55,8 @@ class CondV2Test(test.TestCase):
             pred = array_ops.placeholder(dtypes.bool, name="pred")
 
             expected = control_flow_ops.cond(
-                array_ops.squeeze_v2(pred), true_fn, false_fn, name="expected")
+                array_ops.squeeze_v2(pred), true_fn, false_fn, name="expected"
+            )
             actual = cond_v2.cond_v2(pred, true_fn, false_fn, name="actual")
 
             expected_grad = gradients_impl.gradients(expected, train_vals)
@@ -65,28 +65,32 @@ class CondV2Test(test.TestCase):
             sess_run_args = {pred: True}
             sess_run_args.update(feed_dict)
             expected_val, actual_val, expected_grad_val, actual_grad_val = sess.run(
-                (expected, actual, expected_grad, actual_grad), sess_run_args)
+                (expected, actual, expected_grad, actual_grad), sess_run_args
+            )
             self.assertEqual(expected_val, actual_val)
             self.assertEqual(expected_grad_val, actual_grad_val)
 
             sess_run_args = {pred: [[True]]}
             sess_run_args.update(feed_dict)
             expected_val, actual_val, expected_grad_val, actual_grad_val = sess.run(
-                (expected, actual, expected_grad, actual_grad), sess_run_args)
+                (expected, actual, expected_grad, actual_grad), sess_run_args
+            )
             self.assertEqual(expected_val, actual_val)
             self.assertEqual(expected_grad_val, actual_grad_val)
 
             sess_run_args = {pred: False}
             sess_run_args.update(feed_dict)
             expected_val, actual_val, expected_grad_val, actual_grad_val = sess.run(
-                (expected, actual, expected_grad, actual_grad), sess_run_args)
+                (expected, actual, expected_grad, actual_grad), sess_run_args
+            )
             self.assertEqual(expected_val, actual_val)
             self.assertEqual(expected_grad_val, actual_grad_val)
 
             sess_run_args = {pred: [[False]]}
             sess_run_args.update(feed_dict)
             expected_val, actual_val, expected_grad_val, actual_grad_val = sess.run(
-                (expected, actual, expected_grad, actual_grad), sess_run_args)
+                (expected, actual, expected_grad, actual_grad), sess_run_args
+            )
             self.assertEqual(expected_val, actual_val)
             self.assertEqual(expected_grad_val, actual_grad_val)
 
@@ -111,29 +115,38 @@ class CondV2Test(test.TestCase):
             pred = constant_op.constant(True)
 
             def true_fn():
-                return math_ops._as_indexed_slices(constant_op.constant([1.])), None
+                return math_ops._as_indexed_slices(constant_op.constant([1.0])), None
 
             def false_fn():
-                return math_ops._as_indexed_slices(constant_op.constant([2.])), None
+                return math_ops._as_indexed_slices(constant_op.constant([2.0])), None
+
             result = cond_v2.cond_v2(pred, true_fn, false_fn)
             self.assertIsNone(result[1])
             return ops.convert_to_tensor(result[0])
+
         output = build_cond_with_indexed_slices()
-        self.assertAllEqual(output, [1.])
+        self.assertAllEqual(output, [1.0])
 
     def testReturnsNonesAndIndexedSlices(self):
-
         @def_function.function
         def build_cond_with_indexed_slices():
             pred = constant_op.constant(True)
 
             def true_fn():
-                return (None, None, None,
-                        math_ops._as_indexed_slices(constant_op.constant([1.])))
+                return (
+                    None,
+                    None,
+                    None,
+                    math_ops._as_indexed_slices(constant_op.constant([1.0])),
+                )
 
             def false_fn():
-                return (None, None, None,
-                        math_ops._as_indexed_slices(constant_op.constant([2.])))
+                return (
+                    None,
+                    None,
+                    None,
+                    math_ops._as_indexed_slices(constant_op.constant([2.0])),
+                )
 
             result = cond_v2.cond_v2(pred, true_fn, false_fn)
             self.assertIsNone(result[0])
@@ -142,7 +155,7 @@ class CondV2Test(test.TestCase):
             return ops.convert_to_tensor(result[3])
 
         output = build_cond_with_indexed_slices()
-        self.assertAllEqual(output, [1.])
+        self.assertAllEqual(output, [1.0])
 
     def testExternalControlDependencies(self):
         with ops.Graph().as_default(), self.test_session():
@@ -154,9 +167,11 @@ class CondV2Test(test.TestCase):
                 with ops.control_dependencies([op]):
                     return 1.0
 
-            cond_v2.cond_v2(array_ops.placeholder_with_default(False, None),
-                            true_branch,
-                            lambda: 2.0).eval()
+            cond_v2.cond_v2(
+                array_ops.placeholder_with_default(False, None),
+                true_branch,
+                lambda: 2.0,
+            ).eval()
             self.assertAllEqual(self.evaluate(v), 2.0)
 
     @test_util.run_deprecated_v1
@@ -242,25 +257,31 @@ class CondV2Test(test.TestCase):
             _, cond_op = self._createCond(None)
             self.assertEqual(cond_op.name, "cond")
             self.assertRegexpMatches(
-                cond_op.get_attr("then_branch").name, r"cond_true_\d*")
+                cond_op.get_attr("then_branch").name, r"cond_true_\d*"
+            )
             self.assertRegexpMatches(
-                cond_op.get_attr("else_branch").name, r"cond_false_\d*")
+                cond_op.get_attr("else_branch").name, r"cond_false_\d*"
+            )
 
         with ops.Graph().as_default():
             with ops.name_scope("foo"):
                 _, cond1_op = self._createCond("")
                 self.assertEqual(cond1_op.name, "foo/cond")
                 self.assertRegexpMatches(
-                    cond1_op.get_attr("then_branch").name, r"foo_cond_true_\d*")
+                    cond1_op.get_attr("then_branch").name, r"foo_cond_true_\d*"
+                )
                 self.assertRegexpMatches(
-                    cond1_op.get_attr("else_branch").name, r"foo_cond_false_\d*")
+                    cond1_op.get_attr("else_branch").name, r"foo_cond_false_\d*"
+                )
 
                 _, cond2_op = self._createCond(None)
                 self.assertEqual(cond2_op.name, "foo/cond_1")
                 self.assertRegexpMatches(
-                    cond2_op.get_attr("then_branch").name, r"foo_cond_1_true_\d*")
+                    cond2_op.get_attr("then_branch").name, r"foo_cond_1_true_\d*"
+                )
                 self.assertRegexpMatches(
-                    cond2_op.get_attr("else_branch").name, r"foo_cond_1_false_\d*")
+                    cond2_op.get_attr("else_branch").name, r"foo_cond_1_false_\d*"
+                )
 
     @test_util.run_v1_only("b/120545219")
     def testDefunInCond(self):
@@ -268,7 +289,6 @@ class CondV2Test(test.TestCase):
         y = constant_op.constant(2.0, name="y")
 
         def true_fn():
-
             @function.defun
             def fn():
                 return x * y * 2.0
@@ -291,10 +311,8 @@ class CondV2Test(test.TestCase):
             return 2.0
 
         def false_fn():
-
             @function.defun
             def fn():
-
                 @function.defun
                 def nested_fn():
                     return x * y * 2.0
@@ -313,13 +331,10 @@ class CondV2Test(test.TestCase):
         y = constant_op.constant(2.0, name="y")
 
         def true_fn():
-
             @function.defun
             def fn():
-
                 @function.defun
                 def nested_fn():
-
                     @function.defun
                     def nested_nested_fn():
                         return x * y * 2.0
@@ -338,9 +353,7 @@ class CondV2Test(test.TestCase):
         self._testCond(true_fn, false_fn, [y])
 
     def testNestedCond(self):
-
         def run_test(pred_value):
-
             def build_graph():
                 pred = array_ops.placeholder(dtypes.bool, name="pred")
                 x = constant_op.constant(1.0, name="x")
@@ -350,7 +363,6 @@ class CondV2Test(test.TestCase):
                     return 2.0
 
                 def false_fn():
-
                     def false_true_fn():
                         return x * y * 2.0
 
@@ -371,9 +383,7 @@ class CondV2Test(test.TestCase):
         run_test(False)
 
     def testNestedCondBothBranches(self):
-
         def run_test(pred_value):
-
             def build_graph():
                 pred = array_ops.placeholder(dtypes.bool, name="pred")
                 x = constant_op.constant(1.0, name="x")
@@ -397,9 +407,7 @@ class CondV2Test(test.TestCase):
         run_test(False)
 
     def testDoubleNestedCond(self):
-
         def run_test(pred1_value, pred2_value):
-
             def build_graph():
                 pred1 = array_ops.placeholder(dtypes.bool, name="pred1")
                 pred2 = array_ops.placeholder(dtypes.bool, name="pred2")
@@ -410,9 +418,7 @@ class CondV2Test(test.TestCase):
                     return 2.0
 
                 def false_fn():
-
                     def false_true_fn():
-
                         def false_true_true_fn():
                             return x * y * 2.0
 
@@ -423,32 +429,31 @@ class CondV2Test(test.TestCase):
                             pred1,
                             false_true_true_fn,
                             false_true_false_fn,
-                            name="inside_false_true_fn")
+                            name="inside_false_true_fn",
+                        )
 
                     def false_false_fn():
                         return x * 5.0
 
                     return _cond(
-                        pred2, false_true_fn, false_false_fn, name="inside_false_fn")
+                        pred2, false_true_fn, false_false_fn, name="inside_false_fn"
+                    )
 
                 return x, y, pred1, pred2, true_fn, false_fn
 
             with ops.Graph().as_default():
                 x, y, pred1, pred2, true_fn, false_fn = build_graph()
-                self._testCond(true_fn, false_fn, [x, y], {
-                    pred1: pred1_value,
-                    pred2: pred2_value
-                })
+                self._testCond(
+                    true_fn, false_fn, [x, y], {pred1: pred1_value, pred2: pred2_value}
+                )
                 x, y, pred1, pred2, true_fn, false_fn = build_graph()
-                self._testCond(true_fn, false_fn, [x], {
-                    pred1: pred1_value,
-                    pred2: pred2_value
-                })
+                self._testCond(
+                    true_fn, false_fn, [x], {pred1: pred1_value, pred2: pred2_value}
+                )
                 x, y, pred1, pred2, true_fn, false_fn = build_graph()
-                self._testCond(true_fn, false_fn, [y], {
-                    pred1: pred1_value,
-                    pred2: pred2_value
-                })
+                self._testCond(
+                    true_fn, false_fn, [y], {pred1: pred1_value, pred2: pred2_value}
+                )
 
         run_test(True, True)
         run_test(True, False)
@@ -456,7 +461,6 @@ class CondV2Test(test.TestCase):
         run_test(False, True)
 
     def testGradientFromInsideDefun(self):
-
         def build_graph():
             pred_outer = array_ops.placeholder(dtypes.bool, name="pred_outer")
             pred_inner = array_ops.placeholder(dtypes.bool, name="pred_inner")
@@ -467,7 +471,6 @@ class CondV2Test(test.TestCase):
                 return 2.0
 
             def false_fn():
-
                 def inner_true_fn():
                     return x * y * 2.0
 
@@ -475,10 +478,12 @@ class CondV2Test(test.TestCase):
                     return x * 5.0
 
                 return cond_v2.cond_v2(
-                    pred_inner, inner_true_fn, inner_false_fn, name="inner_cond")
+                    pred_inner, inner_true_fn, inner_false_fn, name="inner_cond"
+                )
 
             cond_outer = cond_v2.cond_v2(
-                pred_outer, true_fn, false_fn, name="outer_cond")
+                pred_outer, true_fn, false_fn, name="outer_cond"
+            )
 
             # Compute grads inside a Defun.
             @function.defun
@@ -493,28 +498,19 @@ class CondV2Test(test.TestCase):
             grads, pred_outer, pred_inner = build_graph()
             with self.session(graph=ops.get_default_graph()) as sess:
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: True,
-                        pred_inner: True
-                    }), [0., 0.])
+                    sess.run(grads, {pred_outer: True, pred_inner: True}), [0.0, 0.0]
+                )
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: True,
-                        pred_inner: False
-                    }), [0., 0.])
+                    sess.run(grads, {pred_outer: True, pred_inner: False}), [0.0, 0.0]
+                )
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: False,
-                        pred_inner: True
-                    }), [4., 2.])
+                    sess.run(grads, {pred_outer: False, pred_inner: True}), [4.0, 2.0]
+                )
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: False,
-                        pred_inner: False
-                    }), [5., 0.])
+                    sess.run(grads, {pred_outer: False, pred_inner: False}), [5.0, 0.0]
+                )
 
     def testGradientFromInsideNestedDefun(self):
-
         def build_graph():
             pred_outer = array_ops.placeholder(dtypes.bool, name="pred_outer")
             pred_inner = array_ops.placeholder(dtypes.bool, name="pred_inner")
@@ -525,7 +521,6 @@ class CondV2Test(test.TestCase):
                 return 2.0
 
             def false_fn():
-
                 def inner_true_fn():
                     return x * y * 2.0
 
@@ -533,15 +528,16 @@ class CondV2Test(test.TestCase):
                     return x * 5.0
 
                 return cond_v2.cond_v2(
-                    pred_inner, inner_true_fn, inner_false_fn, name="inner_cond")
+                    pred_inner, inner_true_fn, inner_false_fn, name="inner_cond"
+                )
 
             cond_outer = cond_v2.cond_v2(
-                pred_outer, true_fn, false_fn, name="outer_cond")
+                pred_outer, true_fn, false_fn, name="outer_cond"
+            )
 
             # Compute grads inside a Defun.
             @function.defun
             def nesting_fn():
-
                 @function.defun
                 def inner_nesting_fn():
                     return gradients_impl.gradients(cond_outer, [x, y])
@@ -556,28 +552,19 @@ class CondV2Test(test.TestCase):
             grads, pred_outer, pred_inner = build_graph()
             with self.session(graph=ops.get_default_graph()) as sess:
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: True,
-                        pred_inner: True
-                    }), [0., 0.])
+                    sess.run(grads, {pred_outer: True, pred_inner: True}), [0.0, 0.0]
+                )
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: True,
-                        pred_inner: False
-                    }), [0., 0.])
+                    sess.run(grads, {pred_outer: True, pred_inner: False}), [0.0, 0.0]
+                )
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: False,
-                        pred_inner: True
-                    }), [4., 2.])
+                    sess.run(grads, {pred_outer: False, pred_inner: True}), [4.0, 2.0]
+                )
                 self.assertSequenceEqual(
-                    sess.run(grads, {
-                        pred_outer: False,
-                        pred_inner: False
-                    }), [5., 0.])
+                    sess.run(grads, {pred_outer: False, pred_inner: False}), [5.0, 0.0]
+                )
 
     def testBuildCondAndGradientInsideDefun(self):
-
         def build_graph():
             pred_outer = array_ops.placeholder(dtypes.bool, name="pred_outer")
             pred_inner = array_ops.placeholder(dtypes.bool, name="pred_inner")
@@ -587,12 +574,10 @@ class CondV2Test(test.TestCase):
             # Build cond and its gradient inside a Defun.
             @function.defun
             def fn():
-
                 def true_fn():
                     return 2.0
 
                 def false_fn():
-
                     def inner_true_fn():
                         return x * y * 2.0
 
@@ -600,10 +585,12 @@ class CondV2Test(test.TestCase):
                         return x * 5.0
 
                     return cond_v2.cond_v2(
-                        pred_inner, inner_true_fn, inner_false_fn, name="inner_cond")
+                        pred_inner, inner_true_fn, inner_false_fn, name="inner_cond"
+                    )
 
                 cond_outer = cond_v2.cond_v2(
-                    pred_outer, true_fn, false_fn, name="outer_cond")
+                    pred_outer, true_fn, false_fn, name="outer_cond"
+                )
                 return gradients_impl.gradients(cond_outer, [x, y])
 
             grads = fn()
@@ -611,28 +598,21 @@ class CondV2Test(test.TestCase):
             return grads, pred_outer, pred_inner
 
         with ops.Graph().as_default(), self.session(
-                graph=ops.get_default_graph()) as sess:
+            graph=ops.get_default_graph()
+        ) as sess:
             grads, pred_outer, pred_inner = build_graph()
             self.assertSequenceEqual(
-                sess.run(grads, {
-                    pred_outer: True,
-                    pred_inner: True
-                }), [0., 0.])
+                sess.run(grads, {pred_outer: True, pred_inner: True}), [0.0, 0.0]
+            )
             self.assertSequenceEqual(
-                sess.run(grads, {
-                    pred_outer: True,
-                    pred_inner: False
-                }), [0., 0.])
+                sess.run(grads, {pred_outer: True, pred_inner: False}), [0.0, 0.0]
+            )
             self.assertSequenceEqual(
-                sess.run(grads, {
-                    pred_outer: False,
-                    pred_inner: True
-                }), [4., 2.])
+                sess.run(grads, {pred_outer: False, pred_inner: True}), [4.0, 2.0]
+            )
             self.assertSequenceEqual(
-                sess.run(grads, {
-                    pred_outer: False,
-                    pred_inner: False
-                }), [5., 0.])
+                sess.run(grads, {pred_outer: False, pred_inner: False}), [5.0, 0.0]
+            )
 
     @test_util.run_deprecated_v1
     def testSecondDerivative(self):
@@ -687,10 +667,10 @@ class CondV2Test(test.TestCase):
                 x = ops.get_collection("x")[0]
                 pred = ops.get_collection("pred")[0]
                 cond = ops.get_collection("cond")
-                cond_grad = gradients_impl.gradients(
-                    cond, [x], name="cond_grad")
+                cond_grad = gradients_impl.gradients(cond, [x], name="cond_grad")
                 cond_grad_grad = gradients_impl.gradients(
-                    cond_grad, [x], name="cond_grad_grad")
+                    cond_grad, [x], name="cond_grad_grad"
+                )
                 # d[x^3]/dx = 3x^2
                 true_val = sess.run(cond_grad, {pred: True})
                 self.assertEqual(true_val, [27.0])
@@ -707,19 +687,20 @@ class CondV2Test(test.TestCase):
 
     @test_util.run_deprecated_v1
     def testFuncCond(self):
-
         @def_function.function
         def fn_with_cond():
             cond_v2.cond_v2(
                 constant_op.constant(True),
                 lambda: array_ops.zeros([]),
                 lambda: array_ops.ones([]),
-                name="cond_1")
+                name="cond_1",
+            )
             return cond_v2.cond_v2(
                 constant_op.constant(False),
                 lambda: array_ops.zeros([]),
                 lambda: array_ops.ones([]),
-                name="cond_2")
+                name="cond_2",
+            )
 
         concrete_fn = fn_with_cond.get_concrete_function()
         cond_1 = concrete_fn.graph.get_operation_by_name("cond_1")
@@ -735,24 +716,25 @@ class CondV2Test(test.TestCase):
 
     @test_util.run_deprecated_v1
     def testFuncCondFunc(self):
-
         @def_function.function
         def fn_with_cond():
             cond_v2.cond_v2(
                 constant_op.constant(True),
-                lambda: constant_op.constant(1.),
-                lambda: constant_op.constant(2.),
-                name="cond_1")
+                lambda: constant_op.constant(1.0),
+                lambda: constant_op.constant(2.0),
+                name="cond_1",
+            )
 
             @def_function.function
             def true_branch():
-                return constant_op.constant(3.)
+                return constant_op.constant(3.0)
 
             return cond_v2.cond_v2(
                 constant_op.constant(True),
                 true_branch,
-                lambda: constant_op.constant(4.),
-                name="cond_2")
+                lambda: constant_op.constant(4.0),
+                name="cond_2",
+            )
 
         concrete_fn = fn_with_cond.get_concrete_function()
         cond_1 = concrete_fn.graph.get_operation_by_name("cond_1")
@@ -764,22 +746,25 @@ class CondV2Test(test.TestCase):
         self.assertLen(cond_2.control_inputs, 0)
         cond_2_true_graph, _ = cond_v2.get_func_graphs(cond_2)
         cond_2_true_graph_operations = cond_2_true_graph.get_operations()
-        self.assertEmpty([
-            op for op in cond_2_true_graph_operations
-            if op.type == "StatefulPartitionedCall"
-        ])
-        self.assertLen([
-            op for op in cond_2_true_graph_operations
-            if op.type == "PartitionedCall"
-        ], 1)
+        self.assertEmpty(
+            [
+                op
+                for op in cond_2_true_graph_operations
+                if op.type == "StatefulPartitionedCall"
+            ]
+        )
+        self.assertLen(
+            [op for op in cond_2_true_graph_operations if op.type == "PartitionedCall"],
+            1,
+        )
         fn_output = concrete_fn()
         self.assertEqual(fn_output.op.type, "PartitionedCall")
         self.assertAllEqual(fn_output, 3.0)
 
     @test_util.run_deprecated_v1
     def testFuncCondWithVariable(self):
-        v1 = variables.Variable(2.)
-        v2 = variables.Variable(4.)
+        v1 = variables.Variable(2.0)
+        v2 = variables.Variable(4.0)
 
         self.evaluate(variables.global_variables_initializer())
 
@@ -796,28 +781,33 @@ class CondV2Test(test.TestCase):
             cond_v2.cond_v2(
                 constant_op.constant(True),
                 update_v1,
-                lambda: constant_op.constant(0.),
-                name="cond_1")
+                lambda: constant_op.constant(0.0),
+                name="cond_1",
+            )
             cond_2 = cond_v2.cond_v2(
                 constant_op.constant(False),
-                lambda: constant_op.constant(0.),
+                lambda: constant_op.constant(0.0),
                 update_v1,
-                name="cond_2")
+                name="cond_2",
+            )
             cond_v2.cond_v2(
                 constant_op.constant(True),
                 update_v2,
-                lambda: constant_op.constant(0.),
-                name="cond_3")
+                lambda: constant_op.constant(0.0),
+                name="cond_3",
+            )
             cond_4 = cond_v2.cond_v2(
                 constant_op.constant(False),
-                lambda: constant_op.constant(0.),
+                lambda: constant_op.constant(0.0),
                 lambda: v2,
-                name="cond_4")
+                name="cond_4",
+            )
             stateless_cond = cond_v2.cond_v2(
                 constant_op.constant(False),
-                lambda: constant_op.constant(5.),
-                lambda: constant_op.constant(6.),
-                name="stateless_cond")
+                lambda: constant_op.constant(5.0),
+                lambda: constant_op.constant(6.0),
+                name="stateless_cond",
+            )
             return cond_2, cond_4, stateless_cond
 
         concrete_fn = fn_with_cond.get_concrete_function()
@@ -825,8 +815,7 @@ class CondV2Test(test.TestCase):
         cond_2 = concrete_fn.graph.get_operation_by_name("cond_2")
         cond_3 = concrete_fn.graph.get_operation_by_name("cond_3")
         cond_4 = concrete_fn.graph.get_operation_by_name("cond_4")
-        stateless_cond = concrete_fn.graph.get_operation_by_name(
-            "stateless_cond")
+        stateless_cond = concrete_fn.graph.get_operation_by_name("stateless_cond")
         self.assertEqual(cond_1.type, "If")
         self.assertEqual(cond_2.type, "If")
         self.assertEqual(cond_3.type, "If")
@@ -846,14 +835,13 @@ class CondV2Test(test.TestCase):
 
     @test_util.run_deprecated_v1
     def testFuncCondFuncWithVariable(self):
-        v1 = variables.Variable(2.)
-        v2 = variables.Variable(4.)
+        v1 = variables.Variable(2.0)
+        v2 = variables.Variable(4.0)
 
         self.evaluate(variables.global_variables_initializer())
 
         @def_function.function
         def fn_with_cond():
-
             def update_v1():
                 v1.assign(v1)
                 return v1
@@ -865,18 +853,21 @@ class CondV2Test(test.TestCase):
             cond_v2.cond_v2(
                 constant_op.constant(True),
                 update_v1,
-                lambda: constant_op.constant(0.),
-                name="cond_1")
+                lambda: constant_op.constant(0.0),
+                name="cond_1",
+            )
             cond_2 = cond_v2.cond_v2(
                 constant_op.constant(False),
-                lambda: constant_op.constant(0.),
+                lambda: constant_op.constant(0.0),
                 update_v1,
-                name="cond_2")
+                name="cond_2",
+            )
             cond_v2.cond_v2(
                 constant_op.constant(True),
                 update_v2,
-                lambda: constant_op.constant(0.),
-                name="cond_3")
+                lambda: constant_op.constant(0.0),
+                name="cond_3",
+            )
 
             @def_function.function
             def cond_4_false_branch():
@@ -885,9 +876,10 @@ class CondV2Test(test.TestCase):
 
             cond_4 = cond_v2.cond_v2(
                 constant_op.constant(False),
-                lambda: constant_op.constant(0.),
+                lambda: constant_op.constant(0.0),
                 cond_4_false_branch,
-                name="cond_4")
+                name="cond_4",
+            )
             return cond_2, cond_4
 
         concrete_fn = fn_with_cond.get_concrete_function()
@@ -907,21 +899,24 @@ class CondV2Test(test.TestCase):
         self.assertIs(cond_4.control_inputs[0], cond_3)
         _, cond_4_false_graph = cond_v2.get_func_graphs(cond_4)
         cond_4_false_graph_operations = cond_4_false_graph.get_operations()
-        self.assertEmpty([
-            op for op in cond_4_false_graph_operations
-            if op.type == "PartitionedCall"
-        ])
-        self.assertLen([
-            op for op in cond_4_false_graph_operations
-            if op.type == "StatefulPartitionedCall"
-        ], 1)
+        self.assertEmpty(
+            [op for op in cond_4_false_graph_operations if op.type == "PartitionedCall"]
+        )
+        self.assertLen(
+            [
+                op
+                for op in cond_4_false_graph_operations
+                if op.type == "StatefulPartitionedCall"
+            ],
+            1,
+        )
         fn_output = concrete_fn()
         self.assertEqual(fn_output[0].op.type, "StatefulPartitionedCall")
         self.assertAllEqual(self.evaluate(fn_output), [2.0, 4.0])
 
     def testGradientTapeOfCondWithResourceVariableInFunction(self):
         with context.eager_mode():
-            v = variables.Variable(2.)
+            v = variables.Variable(2.0)
 
             @def_function.function
             def fn_with_cond():
@@ -934,8 +929,7 @@ class CondV2Test(test.TestCase):
                     def false_fn():
                         return v
 
-                    cond = cond_v2.cond_v2(
-                        pred, true_fn, false_fn, name="cond")
+                    cond = cond_v2.cond_v2(pred, true_fn, false_fn, name="cond")
                 return tape.gradient(cond, v)
 
             self.assertAllEqual(fn_with_cond(), 12.0)
@@ -945,21 +939,21 @@ class CondV2Test(test.TestCase):
             with self.session(graph=g) as sess:
                 cond_output, _ = self._createCond("cond")
 
-                run_options = config_pb2.RunOptions(
-                    output_partition_graphs=True)
+                run_options = config_pb2.RunOptions(output_partition_graphs=True)
                 run_metadata = config_pb2.RunMetadata()
-                sess.run(cond_output, options=run_options,
-                         run_metadata=run_metadata)
+                sess.run(cond_output, options=run_options, run_metadata=run_metadata)
 
                 # If lowering was enabled, there should be a `Switch` node
                 self.assertTrue(
                     _has_node_with_op(run_metadata, "Switch"),
-                    "A `Switch` op should exist if the graph was lowered.")
+                    "A `Switch` op should exist if the graph was lowered.",
+                )
 
                 # If lowering was enabled, there should be no `If` node
                 self.assertFalse(
                     _has_node_with_op(run_metadata, "StatelessIf"),
-                    "An `If` op was found, but it should be lowered.")
+                    "An `If` op was found, but it should be lowered.",
+                )
 
     @test_util.run_deprecated_v1
     def testLoweringDisabledInXLA(self):
@@ -977,35 +971,47 @@ class CondV2Test(test.TestCase):
             # Check the actual graph that is run.
             run_options = config_pb2.RunOptions(output_partition_graphs=True)
             run_metadata = config_pb2.RunMetadata()
-            sess.run(cond_output, options=run_options,
-                     run_metadata=run_metadata)
+            sess.run(cond_output, options=run_options, run_metadata=run_metadata)
 
             # Lowering disabled in XLA, there should be no `Switch` node
             self.assertFalse(
                 _has_node_with_op(run_metadata, "Switch"),
-                "A `Switch` op exists, but the graph should not be lowered.")
+                "A `Switch` op exists, but the graph should not be lowered.",
+            )
 
             if test_util.is_xla_enabled():
                 # If XLA is actually enabled then we expect the StatelessIf to have been
                 # put inside an XLA cluster.
                 self.assertFalse(
                     _has_node_with_op(run_metadata, "StatelessIf"),
-                    ("A `StatelessIf` op was found, but the node should have been " +
-                     "clustered."))
+                    (
+                        "A `StatelessIf` op was found, but the node should have been "
+                        + "clustered."
+                    ),
+                )
                 self.assertTrue(
                     _has_node_with_op(run_metadata, "_XlaCompile"),
-                    ("An `_XlaCompile` op was not found, but the `StatelessIf` (at " +
-                     "least) op should have been clustered."))
+                    (
+                        "An `_XlaCompile` op was not found, but the `StatelessIf` (at "
+                        + "least) op should have been clustered."
+                    ),
+                )
                 self.assertTrue(
                     _has_node_with_op(run_metadata, "_XlaRun"),
-                    ("An `_XlaRun` op was not found, but the `StatelessIf` (at " +
-                     "least) op should have been clustered."))
+                    (
+                        "An `_XlaRun` op was not found, but the `StatelessIf` (at "
+                        + "least) op should have been clustered."
+                    ),
+                )
             else:
                 # Lowering disabled in XLA, there should still be an `If` node
                 self.assertTrue(
                     _has_node_with_op(run_metadata, "StatelessIf"),
-                    ("A `StatelessIf` op was not found, but the graph should not be " +
-                     "lowered."))
+                    (
+                        "A `StatelessIf` op was not found, but the graph should not be "
+                        + "lowered."
+                    ),
+                )
 
     @test_util.run_deprecated_v1
     def testNestedLoweringDisabledInXLA(self):
@@ -1022,7 +1028,8 @@ class CondV2Test(test.TestCase):
         nested_if_ops = []
         for func in ops.get_default_graph()._functions.values():
             nested_if_ops.extend(
-                op for op in func.graph.get_operations() if op.type == "StatelessIf")
+                op for op in func.graph.get_operations() if op.type == "StatelessIf"
+            )
         self.assertEqual(len(nested_if_ops), 1)
         with self.assertRaises(ValueError):
             nested_if_ops[0].get_attr("_lower_using_switch_merge")
@@ -1033,7 +1040,6 @@ class CondV2Test(test.TestCase):
     # b/131355614
     @test_util.run_deprecated_v1
     def testNoOptionalsInXla(self):
-
         @def_function.function
         def func_with_cond():
             pred = constant_op.constant(True, name="pred")
@@ -1054,7 +1060,8 @@ class CondV2Test(test.TestCase):
 
             def verify_no_optional_ops(op, branch_name):
                 branch_function = ops.get_default_graph()._get_function(
-                    op.get_attr(branch_name).name)
+                    op.get_attr(branch_name).name
+                )
                 function_def = branch_function.definition
                 for node_def in function_def.node_def:
                     self.assertNotIn(node_def.op, _OPTIONAL_OPS)
@@ -1074,12 +1081,12 @@ class CondV2Test(test.TestCase):
     @test_util.run_deprecated_v1
     def testLoweringDisabledWithSingleThreadedExecutorContext(self):
         with self.session(graph=ops.Graph()) as sess:
+
             @function.defun
             def _add_cond(x):
                 return cond_v2.cond_v2(
-                    constant_op.constant(True, name="pred"),
-                    lambda: x,
-                    lambda: x + 1)
+                    constant_op.constant(True, name="pred"), lambda: x, lambda: x + 1
+                )
 
             x = array_ops.placeholder(shape=None, dtype=dtypes.float32)
             with context.function_executor_type("SINGLE_THREADED_EXECUTOR"):
@@ -1100,10 +1107,9 @@ class CondV2Test(test.TestCase):
         def false_fn():
             return ((x,), y * 3.0)
 
-        output = control_flow_ops.cond(
-            constant_op.constant(False), true_fn, false_fn)
-        self.assertEqual(self.evaluate(output[0][0]), 1.)
-        self.assertEqual(self.evaluate(output[1]), 9.)
+        output = control_flow_ops.cond(constant_op.constant(False), true_fn, false_fn)
+        self.assertEqual(self.evaluate(output[0][0]), 1.0)
+        self.assertEqual(self.evaluate(output[1]), 9.0)
 
     @test_util.enable_control_flow_v2
     @test_util.run_deprecated_v1
@@ -1118,21 +1124,20 @@ class CondV2Test(test.TestCase):
             return ((x,), y * 3.0)
 
         with self.assertRaisesRegexp(
-                TypeError, "true_fn and false_fn arguments to tf.cond must have the "
-                "same number, type, and overall structure of return values."):
-            control_flow_ops.cond(
-                constant_op.constant(False), true_fn, false_fn)
+            TypeError,
+            "true_fn and false_fn arguments to tf.cond must have the "
+            "same number, type, and overall structure of return values.",
+        ):
+            control_flow_ops.cond(constant_op.constant(False), true_fn, false_fn)
 
     @test_util.enable_control_flow_v2
     def testCondAndTensorArray(self):
         x = math_ops.range(-5, 5)
-        output = tensor_array_ops.TensorArray(
-            dtype=dtypes.int32, size=x.shape[0])
+        output = tensor_array_ops.TensorArray(dtype=dtypes.int32, size=x.shape[0])
 
         def loop_body(i, output):
-
             def if_true():
-                return output.write(i, x[i]**2)
+                return output.write(i, x[i] ** 2)
 
             def if_false():
                 return output.write(i, x[i])
@@ -1143,24 +1148,23 @@ class CondV2Test(test.TestCase):
         _, output = control_flow_ops.while_loop(
             lambda i, arr: i < x.shape[0],
             loop_body,
-            loop_vars=(constant_op.constant(0), output))
+            loop_vars=(constant_op.constant(0), output),
+        )
         output_t = output.stack()
         self.assertAllEqual(
-            self.evaluate(output_t), [-5, -4, -3, -2, -1, 0, 1, 4, 9, 16])
+            self.evaluate(output_t), [-5, -4, -3, -2, -1, 0, 1, 4, 9, 16]
+        )
 
     @test_util.enable_control_flow_v2
     def testCondAndTensorArrayInDefun(self):
-
         @function.defun
         def f():
             x = math_ops.range(-5, 5)
-            output = tensor_array_ops.TensorArray(
-                dtype=dtypes.int32, size=x.shape[0])
+            output = tensor_array_ops.TensorArray(dtype=dtypes.int32, size=x.shape[0])
 
             def loop_body(i, output):
-
                 def if_true():
-                    return output.write(i, x[i]**2)
+                    return output.write(i, x[i] ** 2)
 
                 def if_false():
                     return output.write(i, x[i])
@@ -1171,7 +1175,8 @@ class CondV2Test(test.TestCase):
             _, output = control_flow_ops.while_loop(
                 lambda i, arr: i < x.shape[0],
                 loop_body,
-                loop_vars=(constant_op.constant(0), output))
+                loop_vars=(constant_op.constant(0), output),
+            )
             return output.stack()
 
         output_t = f()
@@ -1183,11 +1188,10 @@ class CondV2Test(test.TestCase):
         y = constant_op.constant(1.0, name="y")
 
         def true_fn():
-            y_plus_one = y + 1.
+            y_plus_one = y + 1.0
             return x * y_plus_one
 
-        output = cond_v2.cond_v2(
-            constant_op.constant(True), true_fn, lambda: x)
+        output = cond_v2.cond_v2(constant_op.constant(True), true_fn, lambda: x)
         if_op = output.op.inputs[0].op
         self.assertEqual(if_op.type, "StatelessIf")
         # pylint: disable=g-deprecated-assert
@@ -1205,8 +1209,7 @@ class CondV2Test(test.TestCase):
     @test_util.run_deprecated_v1
     def testDoNotAccumulateConstants(self):
         x = constant_op.constant(1.0, name="x")
-        output = cond_v2.cond_v2(
-            constant_op.constant(True), lambda: x * 2.0, lambda: x)
+        output = cond_v2.cond_v2(constant_op.constant(True), lambda: x * 2.0, lambda: x)
         if_op = output.op.inputs[0].op
         self.assertEqual(if_op.type, "StatelessIf")
         # pylint: disable=g-deprecated-assert
@@ -1225,7 +1228,6 @@ class CondV2Test(test.TestCase):
 
 
 class CondV2CollectionTest(test.TestCase):
-
     def testCollectionIntValueAccessInCond(self):
         """Read values from graph collections inside of cond_v2."""
         with ops.Graph().as_default() as g:
@@ -1276,8 +1278,7 @@ class CondV2CollectionTest(test.TestCase):
                     z = math_ops.add(x, y)
                     return math_ops.mul(x, z)
 
-                cnd = cond_v2.cond_v2(
-                    constant_op.constant(True), true_fn, false_fn)
+                cnd = cond_v2.cond_v2(constant_op.constant(True), true_fn, false_fn)
                 self.assertEquals(cnd.eval(), 14)
 
                 read_z_collection = ops.get_collection("z")
@@ -1285,7 +1286,6 @@ class CondV2CollectionTest(test.TestCase):
 
 
 class CondV2ContainerTest(test.TestCase):
-
     def testContainer(self):
         """Set containers outside & inside of cond_v2.
 
@@ -1319,14 +1319,11 @@ class CondV2ContainerTest(test.TestCase):
                     q3 = data_flow_ops.FIFOQueue(1, dtypes.float32)
 
                     self.assertEqual(compat.as_bytes("l1"), container(v1))
-                    self.assertEqual(compat.as_bytes(
-                        "l1"), container(q1.queue_ref))
+                    self.assertEqual(compat.as_bytes("l1"), container(q1.queue_ref))
                     self.assertEqual(compat.as_bytes("l2t"), container(v2))
-                    self.assertEqual(compat.as_bytes("l2t"),
-                                     container(q2.queue_ref))
+                    self.assertEqual(compat.as_bytes("l2t"), container(q2.queue_ref))
                     self.assertEqual(compat.as_bytes("l1"), container(v3))
-                    self.assertEqual(compat.as_bytes(
-                        "l1"), container(q3.queue_ref))
+                    self.assertEqual(compat.as_bytes("l1"), container(q3.queue_ref))
 
                     return constant_op.constant(2.0)
 
@@ -1344,24 +1341,23 @@ class CondV2ContainerTest(test.TestCase):
                     q3 = data_flow_ops.FIFOQueue(1, dtypes.float32)
 
                     self.assertEqual(compat.as_bytes("l1"), container(v1))
-                    self.assertEqual(compat.as_bytes(
-                        "l1"), container(q1.queue_ref))
+                    self.assertEqual(compat.as_bytes("l1"), container(q1.queue_ref))
                     self.assertEqual(compat.as_bytes("l2f"), container(v2))
-                    self.assertEqual(compat.as_bytes("l2f"),
-                                     container(q2.queue_ref))
+                    self.assertEqual(compat.as_bytes("l2f"), container(q2.queue_ref))
                     self.assertEqual(compat.as_bytes("l1"), container(v3))
-                    self.assertEqual(compat.as_bytes(
-                        "l1"), container(q3.queue_ref))
+                    self.assertEqual(compat.as_bytes("l1"), container(q3.queue_ref))
 
                     return constant_op.constant(6.0)
 
                 with ops.container("l1"):
                     cnd_true = cond_v2.cond_v2(
-                        constant_op.constant(True), true_fn, false_fn)
+                        constant_op.constant(True), true_fn, false_fn
+                    )
                     self.assertEquals(cnd_true.eval(), 2)
 
                     cnd_false = cond_v2.cond_v2(
-                        constant_op.constant(False), true_fn, false_fn)
+                        constant_op.constant(False), true_fn, false_fn
+                    )
                     self.assertEquals(cnd_false.eval(), 6)
 
                     v4 = variables.Variable([3])
@@ -1376,7 +1372,6 @@ class CondV2ContainerTest(test.TestCase):
 
 
 class CondV2ColocationGroupAndDeviceTest(test.TestCase):
-
     def testColocateWithBeforeCond(self):
         with ops.Graph().as_default() as g:
             with self.session(graph=g):
@@ -1391,18 +1386,22 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
 
                 with ops.colocate_with(a.op):
                     self.assertEquals(
-                        cond_v2.cond_v2(constant_op.constant(True), fn, fn).eval(), 3)
+                        cond_v2.cond_v2(constant_op.constant(True), fn, fn).eval(), 3
+                    )
 
                 def fn2():
                     c = constant_op.constant(3.0)
-                    self.assertEqual([b"loc:@a", b"loc:@b"],
-                                     c.op.colocation_groups())
+                    self.assertEqual([b"loc:@a", b"loc:@b"], c.op.colocation_groups())
                     return c
 
                 with ops.colocate_with(a.op):
                     with ops.colocate_with(b.op):
                         self.assertEquals(
-                            cond_v2.cond_v2(constant_op.constant(True), fn2, fn2).eval(), 3)
+                            cond_v2.cond_v2(
+                                constant_op.constant(True), fn2, fn2
+                            ).eval(),
+                            3,
+                        )
 
     def testColocateWithInAndOutOfCond(self):
         with ops.Graph().as_default() as g:
@@ -1414,13 +1413,15 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
                 def fn2():
                     with ops.colocate_with(b.op):
                         c = constant_op.constant(3.0)
-                        self.assertEqual([b"loc:@a", b"loc:@b"],
-                                         c.op.colocation_groups())
+                        self.assertEqual(
+                            [b"loc:@a", b"loc:@b"], c.op.colocation_groups()
+                        )
                         return c
 
                 with ops.colocate_with(a.op):
                     self.assertEquals(
-                        cond_v2.cond_v2(constant_op.constant(True), fn2, fn2).eval(), 3)
+                        cond_v2.cond_v2(constant_op.constant(True), fn2, fn2).eval(), 3
+                    )
 
                     d = constant_op.constant([2.0], name="d")
                     self.assertEqual([b"loc:@a"], d.op.colocation_groups())
@@ -1428,8 +1429,7 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
     def testColocateWithInCondGraphPartitioning(self):
         with ops.Graph().as_default() as g:
             with self.session(
-                graph=g,
-                config=config_pb2.ConfigProto(device_count={"CPU": 2})
+                graph=g, config=config_pb2.ConfigProto(device_count={"CPU": 2})
             ) as sess:
 
                 with ops.device("/device:CPU:0"):
@@ -1441,14 +1441,12 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
                     with ops.colocate_with(b.op):
                         c = math_ops.add(a, a, name="c")
                     return c
-                out_cond_2 = cond_v2.cond_v2(
-                    constant_op.constant(True), fn, fn)
 
-                run_options = config_pb2.RunOptions(
-                    output_partition_graphs=True)
+                out_cond_2 = cond_v2.cond_v2(constant_op.constant(True), fn, fn)
+
+                run_options = config_pb2.RunOptions(output_partition_graphs=True)
                 run_metadata = config_pb2.RunMetadata()
-                sess.run(out_cond_2, options=run_options,
-                         run_metadata=run_metadata)
+                sess.run(out_cond_2, options=run_options, run_metadata=run_metadata)
 
                 # We expect there to be two partitions because of the
                 # colocate_with. We are only running the cond, which has a data
@@ -1467,8 +1465,10 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
                 with ops.device("/device:CPU:0"):
                     self.assertIn(
                         compat.as_bytes("CPU:0"),
-                        self.evaluate(cond_v2.cond_v2(constant_op.constant(True),
-                                                      fn, fn)))
+                        self.evaluate(
+                            cond_v2.cond_v2(constant_op.constant(True), fn, fn)
+                        ),
+                    )
 
                 def fn2():
                     self.assertEqual("", constant_op.constant(3.0).op.device)
@@ -1478,16 +1478,18 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
                     with ops.device("/device:GPU:0"):
                         self.assertIn(
                             compat.as_bytes("GPU:0"),
-                            self.evaluate(cond_v2.cond_v2(constant_op.constant(True),
-                                                          fn2, fn2)))
+                            self.evaluate(
+                                cond_v2.cond_v2(constant_op.constant(True), fn2, fn2)
+                            ),
+                        )
                 else:
-                    self.skipTest(
-                        "Test requires a GPU to check GPU device placement.")
+                    self.skipTest("Test requires a GPU to check GPU device placement.")
 
     def testDeviceInAndOutOfCond(self):
         with ops.Graph().as_default() as g:
             with self.session(
-                    graph=g, config=config_pb2.ConfigProto(device_count={"CPU": 2})):
+                graph=g, config=config_pb2.ConfigProto(device_count={"CPU": 2})
+            ):
 
                 def fn2():
                     with ops.device("/device:CPU:1"):
@@ -1497,7 +1499,8 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
 
                 with ops.device("/device:CPU:0"):
                     self.assertEquals(
-                        cond_v2.cond_v2(constant_op.constant(True), fn2, fn2).eval(), 3)
+                        cond_v2.cond_v2(constant_op.constant(True), fn2, fn2).eval(), 3
+                    )
 
                     d = constant_op.constant(4.0)
                     self.assertEqual("/device:CPU:0", d.op.device)
@@ -1505,8 +1508,7 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
     def testDeviceInCondGraphPartitioning(self):
         with ops.Graph().as_default() as g:
             with self.session(
-                graph=g,
-                config=config_pb2.ConfigProto(device_count={"CPU": 2})
+                graph=g, config=config_pb2.ConfigProto(device_count={"CPU": 2})
             ) as sess:
 
                 def fn():
@@ -1516,14 +1518,11 @@ class CondV2ColocationGroupAndDeviceTest(test.TestCase):
 
                 with ops.device("/device:CPU:0"):
                     a = constant_op.constant([2.0], name="a")
-                    out_cond_2 = cond_v2.cond_v2(
-                        constant_op.constant(True), fn, fn)
+                    out_cond_2 = cond_v2.cond_v2(constant_op.constant(True), fn, fn)
 
-                run_options = config_pb2.RunOptions(
-                    output_partition_graphs=True)
+                run_options = config_pb2.RunOptions(output_partition_graphs=True)
                 run_metadata = config_pb2.RunMetadata()
-                sess.run(out_cond_2, options=run_options,
-                         run_metadata=run_metadata)
+                sess.run(out_cond_2, options=run_options, run_metadata=run_metadata)
 
                 self.assertTrue(len(run_metadata.partition_graphs) >= 2)
 
@@ -1536,8 +1535,10 @@ def _cond(pred, true_fn, false_fn, name):
 
 
 def _is_old_cond():
-    return isinstance(ops.get_default_graph()._get_control_flow_context(),
-                      control_flow_ops.CondContext)
+    return isinstance(
+        ops.get_default_graph()._get_control_flow_context(),
+        control_flow_ops.CondContext,
+    )
 
 
 def _has_node_with_op(run_metadata, op_type):

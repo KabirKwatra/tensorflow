@@ -26,6 +26,7 @@ class CondBranchFuncGraph(FuncGraph):
 
     This is used to distinguish cond branches from other functions.
     """
+
     pass
 
 
@@ -34,6 +35,7 @@ class WhileCondFuncGraph(FuncGraph):
 
     This is used to distinguish while conditions from other functions.
     """
+
     pass
 
 
@@ -42,4 +44,5 @@ class WhileBodyFuncGraph(FuncGraph):
 
     This is used to distinguish while bodies from other functions.
     """
+
     pass
