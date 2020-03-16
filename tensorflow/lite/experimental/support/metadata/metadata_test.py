@@ -24,11 +24,9 @@ from flatbuffers.python import flatbuffers
 
 from tensorflow.lite.experimental.support.metadata import metadata as _metadata
 from tensorflow.lite.experimental.support.metadata import (
-    metadata_schema_py_generated as _metadata_fb,
-)
+    metadata_schema_py_generated as _metadata_fb, )
 from tensorflow.lite.experimental.support.metadata import (
-    schema_py_generated as _schema_fb,
-)
+    schema_py_generated as _schema_fb, )
 from tensorflow.python.framework import test_util
 from tensorflow.python.platform import resource_loader
 from tensorflow.python.platform import test
@@ -43,7 +41,8 @@ class MetadataTest(test_util.TensorFlowTestCase):
         self._empty_model_file = self.create_tempfile().full_path
         with open(self._empty_model_file, "wb") as f:
             f.write(self._empty_model_buf)
-        self._model_file = self._create_model_file_with_metadata_and_buf_fields()
+        self._model_file = self._create_model_file_with_metadata_and_buf_fields(
+        )
         self._metadata_file = self._create_metadata_file()
         self._file1 = self.create_tempfile("file1").full_path
         self._file2 = self.create_tempfile("file2").full_path
@@ -97,9 +96,8 @@ class MetadataTest(test_util.TensorFlowTestCase):
         model_meta.associatedFiles = [associated_file1]
         model_meta.subgraphMetadata = [subgraph]
         b = flatbuffers.Builder(0)
-        b.Finish(
-            model_meta.Pack(b), _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER
-        )
+        b.Finish(model_meta.Pack(b),
+                 _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)
 
         metadata_file = self.create_tempfile().full_path
         with open(metadata_file, "wb") as f:
@@ -109,7 +107,8 @@ class MetadataTest(test_util.TensorFlowTestCase):
 
 class MetadataPopulatorTest(MetadataTest):
     def testToValidModelFile(self):
-        populator = _metadata.MetadataPopulator.with_model_file(self._empty_model_file)
+        populator = _metadata.MetadataPopulator.with_model_file(
+            self._empty_model_file)
         self.assertIsInstance(populator, _metadata.MetadataPopulator)
 
     def testToInvalidModelFile(self):
@@ -121,16 +120,19 @@ class MetadataPopulatorTest(MetadataTest):
         )
 
     def testToValidModelBuffer(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         self.assertIsInstance(populator, _metadata.MetadataPopulator)
 
     def testToInvalidModelBuffer(self):
         with self.assertRaises(ValueError) as error:
-            _metadata.MetadataPopulator.with_model_buffer(self._invalid_model_buf)
+            _metadata.MetadataPopulator.with_model_buffer(
+                self._invalid_model_buf)
         self.assertEqual("model_buf cannot be empty.", str(error.exception))
 
     def testSinglePopulateAssociatedFile(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         populator.load_associated_files([self._file1])
         populator.populate()
 
@@ -139,7 +141,8 @@ class MetadataPopulatorTest(MetadataTest):
         self.assertEqual(set(packed_files), set(expected_packed_files))
 
     def testRepeatedPopulateAssociatedFile(self):
-        populator = _metadata.MetadataPopulator.with_model_file(self._empty_model_file)
+        populator = _metadata.MetadataPopulator.with_model_file(
+            self._empty_model_file)
         populator.load_associated_files([self._file1, self._file2])
         # Loads file2 multiple times.
         populator.load_associated_files([self._file2])
@@ -161,7 +164,8 @@ class MetadataPopulatorTest(MetadataTest):
         self.assertEqual(model_buf_from_file, model_buf_from_getter)
 
     def testPopulateInvalidAssociatedFile(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         with self.assertRaises(IOError) as error:
             populator.load_associated_files([self._invalid_file])
         self.assertEqual(
@@ -170,7 +174,8 @@ class MetadataPopulatorTest(MetadataTest):
         )
 
     def testPopulatePackedAssociatedFile(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         populator.load_associated_files([self._file1])
         populator.populate()
         with self.assertRaises(ValueError) as error:
@@ -178,18 +183,19 @@ class MetadataPopulatorTest(MetadataTest):
             populator.populate()
         self.assertEqual(
             "File, '{0}', has already been packed.".format(
-                os.path.basename(self._file1)
-            ),
+                os.path.basename(self._file1)),
             str(error.exception),
         )
 
     def testGetPackedAssociatedFileList(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         packed_files = populator.get_packed_associated_file_list()
         self.assertEqual(packed_files, [])
 
     def testPopulateMetadataFileToEmptyModelFile(self):
-        populator = _metadata.MetadataPopulator.with_model_file(self._empty_model_file)
+        populator = _metadata.MetadataPopulator.with_model_file(
+            self._empty_model_file)
         populator.load_metadata_file(self._metadata_file)
         populator.load_associated_files([self._file1, self._file2])
         populator.populate()
@@ -212,7 +218,8 @@ class MetadataPopulatorTest(MetadataTest):
         self.assertEqual(metadata_buf, expected_metadata_buf)
 
         recorded_files = populator.get_recorded_associated_file_list()
-        self.assertEqual(set(recorded_files), set(self.expected_recorded_files))
+        self.assertEqual(set(recorded_files),
+                         set(self.expected_recorded_files))
 
         # Up to now, we've proved the correctness of the model buffer that read from
         # file. Then we'll test if get_model_buffer() gives the same model buffer.
@@ -220,17 +227,17 @@ class MetadataPopulatorTest(MetadataTest):
         self.assertEqual(model_buf_from_file, model_buf_from_getter)
 
     def testPopulateMetadataFileWithoutAssociatedFiles(self):
-        populator = _metadata.MetadataPopulator.with_model_file(self._empty_model_file)
+        populator = _metadata.MetadataPopulator.with_model_file(
+            self._empty_model_file)
         populator.load_metadata_file(self._metadata_file)
         populator.load_associated_files([self._file1])
         # Suppose to populate self._file2, because it is recorded in the metadta.
         with self.assertRaises(ValueError) as error:
             populator.populate()
         self.assertEqual(
-            (
-                "File, '{0}', is recorded in the metadata, but has "
-                "not been loaded into the populator."
-            ).format(os.path.basename(self._file2)),
+            ("File, '{0}', is recorded in the metadata, but has "
+             "not been loaded into the populator.").format(
+                 os.path.basename(self._file2)),
             str(error.exception),
         )
 
@@ -260,18 +267,19 @@ class MetadataPopulatorTest(MetadataTest):
         model_meta = _metadata_fb.ModelMetadataT()
         model_meta.name = "Mobilenet_quantized"
         b = flatbuffers.Builder(0)
-        b.Finish(
-            model_meta.Pack(b), _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER
-        )
+        b.Finish(model_meta.Pack(b),
+                 _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)
         metadata_buf = b.Output()
 
-        populator1 = _metadata.MetadataPopulator.with_model_file(self._model_file)
+        populator1 = _metadata.MetadataPopulator.with_model_file(
+            self._model_file)
         populator1.load_metadata_buffer(metadata_buf)
         populator1.load_associated_files([self._file1, self._file2])
         populator1.populate()
 
         # Then, populates the metadata again.
-        populator2 = _metadata.MetadataPopulator.with_model_file(self._model_file)
+        populator2 = _metadata.MetadataPopulator.with_model_file(
+            self._model_file)
         populator2.load_metadata_file(self._metadata_file)
         populator2.populate()
 
@@ -279,7 +287,8 @@ class MetadataPopulatorTest(MetadataTest):
         self._assert_golden_metadata(self._model_file)
 
     def testPopulateMetadataFileToModelFileWithMetadataAndBufFields(self):
-        populator = _metadata.MetadataPopulator.with_model_file(self._model_file)
+        populator = _metadata.MetadataPopulator.with_model_file(
+            self._model_file)
         populator.load_metadata_file(self._metadata_file)
         populator.load_associated_files([self._file1, self._file2])
         populator.populate()
@@ -288,7 +297,8 @@ class MetadataPopulatorTest(MetadataTest):
         self._assert_golden_metadata(self._model_file)
 
         recorded_files = populator.get_recorded_associated_file_list()
-        self.assertEqual(set(recorded_files), set(self.expected_recorded_files))
+        self.assertEqual(set(recorded_files),
+                         set(self.expected_recorded_files))
 
         # Up to now, we've proved the correctness of the model buffer that read from
         # file. Then we'll test if get_model_buffer() gives the same model buffer.
@@ -298,7 +308,8 @@ class MetadataPopulatorTest(MetadataTest):
         self.assertEqual(model_buf_from_file, model_buf_from_getter)
 
     def testPopulateInvalidMetadataFile(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         with self.assertRaises(IOError) as error:
             populator.load_metadata_file(self._invalid_file)
         self.assertEqual(
@@ -307,13 +318,16 @@ class MetadataPopulatorTest(MetadataTest):
         )
 
     def testPopulateInvalidMetadataBuffer(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         with self.assertRaises(ValueError) as error:
             populator.load_metadata_buffer([])
-        self.assertEqual("The metadata to be populated is empty.", str(error.exception))
+        self.assertEqual("The metadata to be populated is empty.",
+                         str(error.exception))
 
     def testGetModelBufferBeforePopulatingData(self):
-        populator = _metadata.MetadataPopulator.with_model_buffer(self._empty_model_buf)
+        populator = _metadata.MetadataPopulator.with_model_buffer(
+            self._empty_model_buf)
         model_buf = populator.get_model_buffer()
         expected_model_buf = self._empty_model_buf
         self.assertEqual(model_buf, expected_model_buf)
@@ -322,7 +336,8 @@ class MetadataPopulatorTest(MetadataTest):
 class MetadataDisplayerTest(MetadataTest):
     def setUp(self):
         super(MetadataDisplayerTest, self).setUp()
-        self._model_file = self._create_model_with_metadata_and_associated_files()
+        self._model_file = self._create_model_with_metadata_and_associated_files(
+        )
 
     def _create_model_with_metadata_and_associated_files(self):
         model_buf = self._create_empty_model_buf()
@@ -347,39 +362,41 @@ class MetadataDisplayerTest(MetadataTest):
     def test_load_model_file_modelWithoutMetadata_throwsException(self):
         with self.assertRaises(ValueError) as error:
             _metadata.MetadataDisplayer.with_model_file(self._empty_model_file)
-        self.assertEqual("The model does not have metadata.", str(error.exception))
+        self.assertEqual("The model does not have metadata.",
+                         str(error.exception))
 
     def test_load_model_file_modelWithMetadata(self):
-        displayer = _metadata.MetadataDisplayer.with_model_file(self._model_file)
+        displayer = _metadata.MetadataDisplayer.with_model_file(
+            self._model_file)
         self.assertIsInstance(displayer, _metadata.MetadataDisplayer)
 
     def test_load_model_buffer_modelWithOutMetadata_throwsException(self):
         with self.assertRaises(ValueError) as error:
             _metadata.MetadataDisplayer.with_model_buffer(
-                self._create_empty_model_buf()
-            )
-        self.assertEqual("The model does not have metadata.", str(error.exception))
+                self._create_empty_model_buf())
+        self.assertEqual("The model does not have metadata.",
+                         str(error.exception))
 
     def test_load_model_buffer_modelWithMetadata(self):
         displayer = _metadata.MetadataDisplayer.with_model_buffer(
-            open(self._model_file, "rb").read()
-        )
+            open(self._model_file, "rb").read())
         self.assertIsInstance(displayer, _metadata.MetadataDisplayer)
 
     def test_get_metadata_json_modelWithMetadata(self):
-        displayer = _metadata.MetadataDisplayer.with_model_file(self._model_file)
+        displayer = _metadata.MetadataDisplayer.with_model_file(
+            self._model_file)
         actual = displayer.get_metadata_json()
 
         # Verifies the generated json file.
         golden_json_file_path = resource_loader.get_path_to_datafile(
-            "testdata/golden_json.json"
-        )
+            "testdata/golden_json.json")
         with open(golden_json_file_path, "r") as f:
             expected = f.read()
         self.assertEqual(actual, expected)
 
     def test_get_packed_associated_file_list_modelWithMetadata(self):
-        displayer = _metadata.MetadataDisplayer.with_model_file(self._model_file)
+        displayer = _metadata.MetadataDisplayer.with_model_file(
+            self._model_file)
         packed_files = displayer.get_packed_associated_file_list()
 
         expected_packed_files = [
