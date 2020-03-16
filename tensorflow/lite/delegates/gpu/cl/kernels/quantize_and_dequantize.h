@@ -46,36 +46,36 @@ namespace cl {
 // NOTE: We do not need to nudge min/max values in this op, since they would
 // already be adjusted while generating the quantized model.
 class QuantizeAndDequantize : public ElementwiseOperation {
-public:
-    QuantizeAndDequantize() = default;
-    // Move only
-    QuantizeAndDequantize(QuantizeAndDequantize&& operation);
-    QuantizeAndDequantize& operator=(QuantizeAndDequantize&& operation);
-    QuantizeAndDequantize(const QuantizeAndDequantize&) = delete;
-    QuantizeAndDequantize& operator=(const QuantizeAndDequantize&) = delete;
+ public:
+  QuantizeAndDequantize() = default;
+  // Move only
+  QuantizeAndDequantize(QuantizeAndDequantize&& operation);
+  QuantizeAndDequantize& operator=(QuantizeAndDequantize&& operation);
+  QuantizeAndDequantize(const QuantizeAndDequantize&) = delete;
+  QuantizeAndDequantize& operator=(const QuantizeAndDequantize&) = delete;
 
-    void SetLinkIndex(int index) override;
-    std::string GetCoreCode(const LinkingContext& context) const override;
-    std::string GetArgsDeclaration() const override;
-    Status BindArguments(CLKernel* kernel) override;
+  void SetLinkIndex(int index) override;
+  std::string GetCoreCode(const LinkingContext& context) const override;
+  std::string GetArgsDeclaration() const override;
+  Status BindArguments(CLKernel* kernel) override;
 
-    friend Status CreateQuantizeAndDequantize(
-        const CreationContext& creation_context, const OperationDef& definition,
-        const QuantizeAndDequantizeAttributes& attr,
-        QuantizeAndDequantize* result);
+  friend Status CreateQuantizeAndDequantize(
+      const CreationContext& creation_context, const OperationDef& definition,
+      const QuantizeAndDequantizeAttributes& attr,
+      QuantizeAndDequantize* result);
 
-private:
-    QuantizeAndDequantize(const OperationDef& definition,
-                          const QuantizeAndDequantizeAttributes& attr,
-                          CalculationsPrecision scalar_precision);
+ private:
+  QuantizeAndDequantize(const OperationDef& definition,
+                        const QuantizeAndDequantizeAttributes& attr,
+                        CalculationsPrecision scalar_precision);
 
-    template <DataType T>
-    Status UploadParameters(const ::tflite::gpu::Tensor<Linear, T>& parameters,
-                            CLContext* context);
+  template <DataType T>
+  Status UploadParameters(const ::tflite::gpu::Tensor<Linear, T>& parameters,
+                          CLContext* context);
 
-    FLT min_;
-    FLT max_;
-    FLT scale_;
+  FLT min_;
+  FLT max_;
+  FLT scale_;
 };
 
 Status CreateQuantizeAndDequantize(const CreationContext& creation_context,
@@ -86,11 +86,11 @@ Status CreateQuantizeAndDequantize(const CreationContext& creation_context,
 template <DataType T>
 Status QuantizeAndDequantize::UploadParameters(
     const ::tflite::gpu::Tensor<Linear, T>& parameters, CLContext* context) {
-    LinearStorageCreateInfo create_info;
-    create_info.storage_type =
-        DeduceLinearStorageType(definition_.GetPrimaryStorageType());
-    create_info.data_type = definition_.GetPrimaryDataType();
-    return OkStatus();
+  LinearStorageCreateInfo create_info;
+  create_info.storage_type =
+      DeduceLinearStorageType(definition_.GetPrimaryStorageType());
+  create_info.data_type = definition_.GetPrimaryDataType();
+  return OkStatus();
 }
 
 }  // namespace cl

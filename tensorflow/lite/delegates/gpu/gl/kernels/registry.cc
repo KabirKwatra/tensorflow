@@ -58,92 +58,92 @@ namespace gl {
 namespace {
 
 class Registry : public NodeShader {
-public:
-    Registry() {
-        using Type = OperationType;
-        using NewShaderFunc = std::function<std::unique_ptr<NodeShader>()>;
+ public:
+  Registry() {
+    using Type = OperationType;
+    using NewShaderFunc = std::function<std::unique_ptr<NodeShader>()>;
 
-        const auto insert_op = [&](Type type, NewShaderFunc func) {
-            shaders_[ToString(type)].push_back(func());
-        };
-        const auto insert_elementwise_op = [&](Type operation_type) {
-            shaders_[ToString(operation_type)].push_back(
-                NewElementwiseNodeShader(operation_type));
-        };
+    const auto insert_op = [&](Type type, NewShaderFunc func) {
+      shaders_[ToString(type)].push_back(func());
+    };
+    const auto insert_elementwise_op = [&](Type operation_type) {
+      shaders_[ToString(operation_type)].push_back(
+          NewElementwiseNodeShader(operation_type));
+    };
 
-        insert_op(Type::ADD, NewAddNodeShader);
-        insert_op(Type::CONCAT, NewAlignedConcatNodeShader);
-        insert_op(Type::CONCAT, NewFlatConcatNodeShader);
-        insert_op(Type::CONCAT, NewConcatNodeShader);
-        insert_op(Type::CONVOLUTION_2D, NewConvolution1x1NodeShader);
-        insert_op(Type::CONVOLUTION_2D, NewConvolutionNodeShader);
-        insert_op(Type::CONVOLUTION_TRANSPOSED, NewConvolutionTransposedNodeShader);
-        insert_op(Type::DEPTHWISE_CONVOLUTION, NewDepthwiseConvolutionNodeShader);
-        insert_op(Type::FULLY_CONNECTED, NewFullyConnectedNodeShader);
-        insert_op(Type::LSTM, NewLstmNodeShader);
-        insert_op(Type::MEAN, NewMeanNodeShader);
-        insert_op(Type::MUL, NewMultiplyNodeShader);
-        insert_op(Type::PAD, NewPadNodeShader);
-        insert_op(Type::POOLING_2D, NewPoolingNodeShader);
-        insert_op(Type::PRELU, NewPReLUNodeShader);
-        insert_op(Type::QUANTIZE_AND_DEQUANTIZE,
-                  NewQuantizeAndDequantizeNodeShader);
-        insert_op(Type::RELU, NewReLUNodeShader);
-        insert_op(Type::RESIZE, NewResizeNodeShader);
-        insert_op(Type::RESHAPE, NewReshapeNodeShader);
-        insert_op(Type::SLICE, NewSliceNodeShader);
-        insert_op(Type::SOFTMAX, NewSoftmaxNodeShader);
+    insert_op(Type::ADD, NewAddNodeShader);
+    insert_op(Type::CONCAT, NewAlignedConcatNodeShader);
+    insert_op(Type::CONCAT, NewFlatConcatNodeShader);
+    insert_op(Type::CONCAT, NewConcatNodeShader);
+    insert_op(Type::CONVOLUTION_2D, NewConvolution1x1NodeShader);
+    insert_op(Type::CONVOLUTION_2D, NewConvolutionNodeShader);
+    insert_op(Type::CONVOLUTION_TRANSPOSED, NewConvolutionTransposedNodeShader);
+    insert_op(Type::DEPTHWISE_CONVOLUTION, NewDepthwiseConvolutionNodeShader);
+    insert_op(Type::FULLY_CONNECTED, NewFullyConnectedNodeShader);
+    insert_op(Type::LSTM, NewLstmNodeShader);
+    insert_op(Type::MEAN, NewMeanNodeShader);
+    insert_op(Type::MUL, NewMultiplyNodeShader);
+    insert_op(Type::PAD, NewPadNodeShader);
+    insert_op(Type::POOLING_2D, NewPoolingNodeShader);
+    insert_op(Type::PRELU, NewPReLUNodeShader);
+    insert_op(Type::QUANTIZE_AND_DEQUANTIZE,
+              NewQuantizeAndDequantizeNodeShader);
+    insert_op(Type::RELU, NewReLUNodeShader);
+    insert_op(Type::RESIZE, NewResizeNodeShader);
+    insert_op(Type::RESHAPE, NewReshapeNodeShader);
+    insert_op(Type::SLICE, NewSliceNodeShader);
+    insert_op(Type::SOFTMAX, NewSoftmaxNodeShader);
 
-        insert_elementwise_op(Type::ABS);
-        insert_elementwise_op(Type::COS);
-        insert_elementwise_op(Type::DIV);
-        insert_elementwise_op(Type::EXP);
-        insert_elementwise_op(Type::HARD_SWISH);
-        insert_elementwise_op(Type::LOG);
-        insert_elementwise_op(Type::MAXIMUM);
-        insert_elementwise_op(Type::MINIMUM);
-        insert_elementwise_op(Type::POW);
-        insert_elementwise_op(Type::RSQRT);
-        insert_elementwise_op(Type::SIGMOID);
-        insert_elementwise_op(Type::SIN);
-        insert_elementwise_op(Type::SQRT);
-        insert_elementwise_op(Type::SQUARE);
-        insert_elementwise_op(Type::SQUARED_DIFF);
-        insert_elementwise_op(Type::SUB);
-        insert_elementwise_op(Type::TANH);
+    insert_elementwise_op(Type::ABS);
+    insert_elementwise_op(Type::COS);
+    insert_elementwise_op(Type::DIV);
+    insert_elementwise_op(Type::EXP);
+    insert_elementwise_op(Type::HARD_SWISH);
+    insert_elementwise_op(Type::LOG);
+    insert_elementwise_op(Type::MAXIMUM);
+    insert_elementwise_op(Type::MINIMUM);
+    insert_elementwise_op(Type::POW);
+    insert_elementwise_op(Type::RSQRT);
+    insert_elementwise_op(Type::SIGMOID);
+    insert_elementwise_op(Type::SIN);
+    insert_elementwise_op(Type::SQRT);
+    insert_elementwise_op(Type::SQUARE);
+    insert_elementwise_op(Type::SQUARED_DIFF);
+    insert_elementwise_op(Type::SUB);
+    insert_elementwise_op(Type::TANH);
 
 #ifndef TFLITE_GPU_BINARY_RELEASE
-        insert_op(Type::MAX_UNPOOLING_2D, NewMaxUnpoolingNodeShader);
-        RegisterCustomOps(&shaders_);
+    insert_op(Type::MAX_UNPOOLING_2D, NewMaxUnpoolingNodeShader);
+    RegisterCustomOps(&shaders_);
 #endif  // TFLITE_GPU_BINARY_RELEASE
+  }
+
+  ~Registry() final = default;
+
+  Status GenerateCode(const GenerationContext& ctx,
+                      GeneratedCode* generated_code) const final {
+    std::vector<std::string> errors;
+    auto it = shaders_.find(ctx.node->operation.type);
+    if (it != shaders_.end()) {
+      for (auto& shader : it->second) {
+        const auto status = shader->GenerateCode(ctx, generated_code);
+        if (status.ok()) return status;
+        errors.push_back(status.error_message());
+      }
     }
+    return NotFoundError(absl::StrCat("Suitable node shader is not found: ",
+                                      absl::StrJoin(errors, ", ")));
+  }
 
-    ~Registry() final = default;
-
-    Status GenerateCode(const GenerationContext& ctx,
-                        GeneratedCode* generated_code) const final {
-        std::vector<std::string> errors;
-        auto it = shaders_.find(ctx.node->operation.type);
-        if (it != shaders_.end()) {
-            for (auto& shader : it->second) {
-                const auto status = shader->GenerateCode(ctx, generated_code);
-                if (status.ok()) return status;
-                errors.push_back(status.error_message());
-            }
-        }
-        return NotFoundError(absl::StrCat("Suitable node shader is not found: ",
-                                          absl::StrJoin(errors, ", ")));
-    }
-
-private:
-    std::unordered_map<std::string, std::vector<std::unique_ptr<NodeShader>>>
-    shaders_;
+ private:
+  std::unordered_map<std::string, std::vector<std::unique_ptr<NodeShader>>>
+      shaders_;
 };
 
 }  // namespace
 
 std::unique_ptr<NodeShader> NewNodeShaderRegistry() {
-    return absl::make_unique<Registry>();
+  return absl::make_unique<Registry>();
 }
 
 }  // namespace gl
