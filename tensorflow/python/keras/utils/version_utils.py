@@ -41,45 +41,47 @@ base_layer_v1 = lazy_loader.LazyLoader(
 
 
 class ModelVersionSelector(object):
-  """Chooses between Keras v1 and v2 Model class."""
+    """Chooses between Keras v1 and v2 Model class."""
 
-  def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
-    eager_enabled = ops.executing_eagerly_outside_functions()
-    cls = swap_class(cls, training.Model, training_v1.Model, eager_enabled)
-    return super(ModelVersionSelector, cls).__new__(cls)
+    def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+        eager_enabled = ops.executing_eagerly_outside_functions()
+        cls = swap_class(cls, training.Model, training_v1.Model, eager_enabled)
+        return super(ModelVersionSelector, cls).__new__(cls)
 
 
 class LayerVersionSelector(object):
-  """Chooses between Keras v1 and v2 Layer class."""
+    """Chooses between Keras v1 and v2 Layer class."""
 
-  def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
-    eager_enabled = ops.executing_eagerly_outside_functions()
-    cls = swap_class(cls, base_layer.Layer, base_layer_v1.Layer, eager_enabled)
-    return super(LayerVersionSelector, cls).__new__(cls)
+    def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+        eager_enabled = ops.executing_eagerly_outside_functions()
+        cls = swap_class(cls, base_layer.Layer,
+                         base_layer_v1.Layer, eager_enabled)
+        return super(LayerVersionSelector, cls).__new__(cls)
 
 
 def swap_class(cls, v2_cls, v1_cls, eager_enabled):
-  """Swaps in v2_cls or v1_cls depending on graph mode."""
-  if cls == object:
+    """Swaps in v2_cls or v1_cls depending on graph mode."""
+    if cls == object:
+        return cls
+
+    if cls in (v2_cls, v1_cls):
+        if eager_enabled:
+            return v2_cls
+        return v1_cls
+
+    # Recursively search superclasses to swap in the right Keras class.
+    cls.__bases__ = tuple(
+        swap_class(base, v2_cls, v1_cls, eager_enabled) for base in cls.__bases__)
     return cls
-
-  if cls in (v2_cls, v1_cls):
-    if eager_enabled:
-      return v2_cls
-    return v1_cls
-
-  # Recursively search superclasses to swap in the right Keras class.
-  cls.__bases__ = tuple(
-      swap_class(base, v2_cls, v1_cls, eager_enabled) for base in cls.__bases__)
-  return cls
 
 
 def disallow_legacy_graph(cls_name, method_name):
-  if not ops.executing_eagerly_outside_functions():
-    error_msg = (
-        "Calling `{cls_name}.{method_name}` in graph mode is not supported "
-        "when the `{cls_name}` instance was constructed with eager mode "
-        "enabled. Please construct your `{cls_name}` instance in graph mode or"
-        " call `{cls_name}.{method_name}` with eager mode enabled.")
-    error_msg = error_msg.format(cls_name=cls_name, method_name=method_name)
-    raise ValueError(error_msg)
+    if not ops.executing_eagerly_outside_functions():
+        error_msg = (
+            "Calling `{cls_name}.{method_name}` in graph mode is not supported "
+            "when the `{cls_name}` instance was constructed with eager mode "
+            "enabled. Please construct your `{cls_name}` instance in graph mode or"
+            " call `{cls_name}.{method_name}` with eager mode enabled.")
+        error_msg = error_msg.format(
+            cls_name=cls_name, method_name=method_name)
+        raise ValueError(error_msg)
