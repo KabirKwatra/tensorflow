@@ -31,135 +31,129 @@ namespace experimental {
 /* static */ constexpr const char* const AssertNextDatasetOp::kOutputShapes;
 
 class AssertNextDatasetOp::Dataset : public DatasetBase {
-public:
-    Dataset(OpKernelContext* ctx, const DatasetBase* input,
-            const std::vector<tstring>& transformations,
-            const DataTypeVector& output_types,
-            const std::vector<PartialTensorShape>& output_shapes)
-        : DatasetBase(DatasetContext(ctx)),
-          input_(input),
-          transformations_(transformations),
-          output_types_(output_types),
-          output_shapes_(output_shapes) {
-        input_->Ref();
-    }
+ public:
+  Dataset(OpKernelContext* ctx, const DatasetBase* input,
+          const std::vector<tstring>& transformations,
+          const DataTypeVector& output_types,
+          const std::vector<PartialTensorShape>& output_shapes)
+      : DatasetBase(DatasetContext(ctx)),
+        input_(input),
+        transformations_(transformations),
+        output_types_(output_types),
+        output_shapes_(output_shapes) {
+    input_->Ref();
+  }
 
-    ~Dataset() override {
-        input_->Unref();
-    }
+  ~Dataset() override { input_->Unref(); }
 
-    std::unique_ptr<IteratorBase> MakeIteratorInternal(
-        const string& prefix) const override {
-        return absl::make_unique<Iterator>(Iterator::Params{
-            this, name_utils::IteratorPrefix(kDatasetType, prefix)});
-    }
+  std::unique_ptr<IteratorBase> MakeIteratorInternal(
+      const string& prefix) const override {
+    return absl::make_unique<Iterator>(Iterator::Params{
+        this, name_utils::IteratorPrefix(kDatasetType, prefix)});
+  }
 
-    const DataTypeVector& output_dtypes() const override {
-        return output_types_;
-    }
-    const std::vector<PartialTensorShape>& output_shapes() const override {
-        return output_shapes_;
-    }
+  const DataTypeVector& output_dtypes() const override { return output_types_; }
+  const std::vector<PartialTensorShape>& output_shapes() const override {
+    return output_shapes_;
+  }
 
-    string DebugString() const override {
-        return name_utils::DatasetDebugString(kDatasetType);
-    }
+  string DebugString() const override {
+    return name_utils::DatasetDebugString(kDatasetType);
+  }
 
-    int64 Cardinality() const override {
-        return input_->Cardinality();
-    }
+  int64 Cardinality() const override { return input_->Cardinality(); }
 
-    Status CheckExternalState() const override {
-        return input_->CheckExternalState();
-    }
+  Status CheckExternalState() const override {
+    return input_->CheckExternalState();
+  }
 
-protected:
-    Status AsGraphDefInternal(SerializationContext* ctx,
-                              DatasetGraphDefBuilder* b,
-                              Node** output) const override {
-        Node* input_graph_node = nullptr;
-        TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
-        Node* transformations_node = nullptr;
-        TF_RETURN_IF_ERROR(b->AddVector(transformations_, &transformations_node));
-        TF_RETURN_IF_ERROR(
-            b->AddDataset(this, {input_graph_node, transformations_node}, output));
-        return Status::OK();
-    }
+ protected:
+  Status AsGraphDefInternal(SerializationContext* ctx,
+                            DatasetGraphDefBuilder* b,
+                            Node** output) const override {
+    Node* input_graph_node = nullptr;
+    TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
+    Node* transformations_node = nullptr;
+    TF_RETURN_IF_ERROR(b->AddVector(transformations_, &transformations_node));
+    TF_RETURN_IF_ERROR(
+        b->AddDataset(this, {input_graph_node, transformations_node}, output));
+    return Status::OK();
+  }
 
-private:
-    class Iterator : public DatasetIterator<Dataset> {
-    public:
-        explicit Iterator(const Params& params)
-            : DatasetIterator<Dataset>(params) {}
+ private:
+  class Iterator : public DatasetIterator<Dataset> {
+   public:
+    explicit Iterator(const Params& params)
+        : DatasetIterator<Dataset>(params) {}
 
-        Status Initialize(IteratorContext* ctx) override {
-            std::vector<string> tokens =
-                absl::StrSplit(prefix(), ':', absl::SkipEmpty());
-            if (dataset()->transformations_.size() > tokens.size() - 2) {
-                return errors::InvalidArgument(
-                           "Asserted next ", dataset()->transformations_.size(),
-                           " transformations but encountered only ", tokens.size() - 2, ".");
-            }
-            int n = tokens.size();
-            for (size_t i = 0; i < dataset()->transformations_.size(); ++i) {
-                if (dataset()->transformations_[i] != tokens[n - 2 - i]) {
-                    return errors::InvalidArgument(
-                               "Asserted ", dataset()->transformations_[i],
-                               " transformation at offset ", i, " but encountered ",
-                               tokens[n - 2 - i], " transformation instead.");
-                }
-            }
-            return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
+    Status Initialize(IteratorContext* ctx) override {
+      std::vector<string> tokens =
+          absl::StrSplit(prefix(), ':', absl::SkipEmpty());
+      if (dataset()->transformations_.size() > tokens.size() - 2) {
+        return errors::InvalidArgument(
+            "Asserted next ", dataset()->transformations_.size(),
+            " transformations but encountered only ", tokens.size() - 2, ".");
+      }
+      int n = tokens.size();
+      for (size_t i = 0; i < dataset()->transformations_.size(); ++i) {
+        if (dataset()->transformations_[i] != tokens[n - 2 - i]) {
+          return errors::InvalidArgument(
+              "Asserted ", dataset()->transformations_[i],
+              " transformation at offset ", i, " but encountered ",
+              tokens[n - 2 - i], " transformation instead.");
         }
+      }
+      return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
+    }
 
-        Status GetNextInternal(IteratorContext* ctx,
-                               std::vector<Tensor>* out_tensors,
-                               bool* end_of_sequence) override {
-            return input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-        }
+    Status GetNextInternal(IteratorContext* ctx,
+                           std::vector<Tensor>* out_tensors,
+                           bool* end_of_sequence) override {
+      return input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+    }
 
-    protected:
-        std::shared_ptr<model::Node> CreateNode(
-            IteratorContext* ctx, model::Node::Args args) const override {
-            return model::MakeKnownRatioNode(std::move(args),
-                                             /*ratio=*/1);
-        }
+   protected:
+    std::shared_ptr<model::Node> CreateNode(
+        IteratorContext* ctx, model::Node::Args args) const override {
+      return model::MakeKnownRatioNode(std::move(args),
+                                       /*ratio=*/1);
+    }
 
-        Status SaveInternal(SerializationContext* ctx,
-                            IteratorStateWriter* writer) override {
-            TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-            return Status::OK();
-        }
+    Status SaveInternal(SerializationContext* ctx,
+                        IteratorStateWriter* writer) override {
+      TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+      return Status::OK();
+    }
 
-        Status RestoreInternal(IteratorContext* ctx,
-                               IteratorStateReader* reader) override {
-            TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-            return Status::OK();
-        }
+    Status RestoreInternal(IteratorContext* ctx,
+                           IteratorStateReader* reader) override {
+      TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+      return Status::OK();
+    }
 
-    private:
-        std::unique_ptr<IteratorBase> input_impl_;
-    };
+   private:
+    std::unique_ptr<IteratorBase> input_impl_;
+  };
 
-    const DatasetBase* input_;
-    const std::vector<tstring> transformations_;
-    const DataTypeVector output_types_;
-    const std::vector<PartialTensorShape> output_shapes_;
+  const DatasetBase* input_;
+  const std::vector<tstring> transformations_;
+  const DataTypeVector output_types_;
+  const std::vector<PartialTensorShape> output_shapes_;
 };
 
 AssertNextDatasetOp::AssertNextDatasetOp(OpKernelConstruction* ctx)
     : UnaryDatasetOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputTypes, &output_types_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputShapes, &output_shapes_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputTypes, &output_types_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputShapes, &output_shapes_));
 }
 
 void AssertNextDatasetOp::MakeDataset(OpKernelContext* ctx, DatasetBase* input,
                                       DatasetBase** output) {
-    std::vector<tstring> transformations;
-    OP_REQUIRES_OK(ctx, ParseVectorArgument<tstring>(ctx, kTransformations,
-                   &transformations));
-    *output =
-        new Dataset(ctx, input, transformations, output_types_, output_shapes_);
+  std::vector<tstring> transformations;
+  OP_REQUIRES_OK(ctx, ParseVectorArgument<tstring>(ctx, kTransformations,
+                                                   &transformations));
+  *output =
+      new Dataset(ctx, input, transformations, output_types_, output_shapes_);
 }
 
 namespace {

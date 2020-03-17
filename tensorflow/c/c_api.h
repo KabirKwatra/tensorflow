@@ -35,25 +35,25 @@ extern "C" {
 #endif
 
 typedef struct TF_WhileParams {
-    // The number of inputs to the while loop, i.e. the number of loop variables.
-    // This is the size of cond_inputs, body_inputs, and body_outputs.
-    const int ninputs;
+  // The number of inputs to the while loop, i.e. the number of loop variables.
+  // This is the size of cond_inputs, body_inputs, and body_outputs.
+  const int ninputs;
 
-    // The while condition graph. The inputs are the current values of the loop
-    // variables. The output should be a scalar boolean.
-    TF_Graph* const cond_graph;
-    const TF_Output* const cond_inputs;
-    TF_Output cond_output;
+  // The while condition graph. The inputs are the current values of the loop
+  // variables. The output should be a scalar boolean.
+  TF_Graph* const cond_graph;
+  const TF_Output* const cond_inputs;
+  TF_Output cond_output;
 
-    // The loop body graph. The inputs are the current values of the loop
-    // variables. The outputs are the updated values of the loop variables.
-    TF_Graph* const body_graph;
-    const TF_Output* const body_inputs;
-    TF_Output* const body_outputs;
+  // The loop body graph. The inputs are the current values of the loop
+  // variables. The outputs are the updated values of the loop variables.
+  TF_Graph* const body_graph;
+  const TF_Output* const body_inputs;
+  TF_Output* const body_outputs;
 
-    // Unique null-terminated name for this while loop. This is used as a prefix
-    // for created operations.
-    const char* name;
+  // Unique null-terminated name for this while loop. This is used as a prefix
+  // for created operations.
+  const char* name;
 } TF_WhileParams;
 
 // Creates a TF_WhileParams for creating a while loop in `g`. `inputs` are
@@ -77,8 +77,8 @@ typedef struct TF_WhileParams {
 // - Directly referencing external tensors from the cond/body graphs (this is
 //   possible in the Python API)
 TF_CAPI_EXPORT extern TF_WhileParams TF_NewWhile(TF_Graph* g, TF_Output* inputs,
-        int ninputs,
-        TF_Status* status);
+                                                 int ninputs,
+                                                 TF_Status* status);
 
 // Builds the while loop specified by `params` and returns the output tensors of
 // the while loop in `outputs`. `outputs` should be allocated to size
@@ -89,8 +89,8 @@ TF_CAPI_EXPORT extern TF_WhileParams TF_NewWhile(TF_Graph* g, TF_Output* inputs,
 // Either this or TF_AbortWhile() must be called after a successful
 // TF_NewWhile() call.
 TF_CAPI_EXPORT extern void TF_FinishWhile(const TF_WhileParams* params,
-        TF_Status* status,
-        TF_Output* outputs);
+                                          TF_Status* status,
+                                          TF_Output* outputs);
 
 // Frees `params`s resources without building a while loop. `params` is no
 // longer valid after this returns. Either this or TF_FinishWhile() must be
@@ -144,10 +144,10 @@ TF_CAPI_EXPORT void TF_AddGradients(TF_Graph* g, TF_Output* y, int ny,
 // https://www.tensorflow.org/code/tensorflow/cc/gradients/README.md
 // for instructions on how to add C++ more gradients.
 TF_CAPI_EXPORT void TF_AddGradientsWithPrefix(TF_Graph* g, const char* prefix,
-        TF_Output* y, int ny,
-        TF_Output* x, int nx,
-        TF_Output* dx, TF_Status* status,
-        TF_Output* dy);
+                                              TF_Output* y, int ny,
+                                              TF_Output* x, int nx,
+                                              TF_Output* dx, TF_Status* status,
+                                              TF_Output* dy);
 
 #ifdef __cplusplus
 } /* end extern "C" */

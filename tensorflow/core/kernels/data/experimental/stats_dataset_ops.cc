@@ -36,247 +36,239 @@ namespace {
 // on the input, each executing an op that gets the current time and performing
 // the subtraction.
 class LatencyStatsDatasetOp : public UnaryDatasetOpKernel {
-public:
-    explicit LatencyStatsDatasetOp(OpKernelConstruction* ctx)
-        : UnaryDatasetOpKernel(ctx) {}
+ public:
+  explicit LatencyStatsDatasetOp(OpKernelConstruction* ctx)
+      : UnaryDatasetOpKernel(ctx) {}
 
-    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                     DatasetBase** output) override {
-        tstring tag;
-        OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, "tag", &tag));
-        *output = new Dataset(ctx, input, std::move(tag));
+  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                   DatasetBase** output) override {
+    tstring tag;
+    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, "tag", &tag));
+    *output = new Dataset(ctx, input, std::move(tag));
+  }
+
+ private:
+  class Dataset : public DatasetBase {
+   public:
+    explicit Dataset(OpKernelContext* ctx, const DatasetBase* input, string tag)
+        : DatasetBase(DatasetContext(ctx)),
+          input_(input),
+          tag_(std::move(tag)) {
+      input_->Ref();
     }
 
-private:
-    class Dataset : public DatasetBase {
-    public:
-        explicit Dataset(OpKernelContext* ctx, const DatasetBase* input, string tag)
-            : DatasetBase(DatasetContext(ctx)),
-              input_(input),
-              tag_(std::move(tag)) {
-            input_->Ref();
+    ~Dataset() override { input_->Unref(); }
+
+    std::unique_ptr<IteratorBase> MakeIteratorInternal(
+        const string& prefix) const override {
+      return absl::make_unique<Iterator>(
+          Iterator::Params{this, strings::StrCat(prefix, "::LatencyStats")});
+    }
+
+    const DataTypeVector& output_dtypes() const override {
+      return input_->output_dtypes();
+    }
+    const std::vector<PartialTensorShape>& output_shapes() const override {
+      return input_->output_shapes();
+    }
+
+    string DebugString() const override {
+      return "LatencyStatsDatasetOp::Dataset";
+    }
+
+    int64 Cardinality() const override { return input_->Cardinality(); }
+
+    Status CheckExternalState() const override {
+      return input_->CheckExternalState();
+    }
+
+   protected:
+    Status AsGraphDefInternal(SerializationContext* ctx,
+                              DatasetGraphDefBuilder* b,
+                              Node** output) const override {
+      Node* input_node;
+      TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_node));
+      Node* tag_node;
+      TF_RETURN_IF_ERROR(b->AddScalar(tag_, &tag_node));
+      TF_RETURN_IF_ERROR(b->AddDataset(this, {input_node, tag_node}, output));
+      return Status::OK();
+    }
+
+   private:
+    class Iterator : public DatasetIterator<Dataset> {
+     public:
+      explicit Iterator(const Params& params)
+          : DatasetIterator<Dataset>(params) {}
+
+      Status Initialize(IteratorContext* ctx) override {
+        return dataset()->input_->MakeIterator(ctx, this, prefix(),
+                                               &input_impl_);
+      }
+
+      Status GetNextInternal(IteratorContext* ctx,
+                             std::vector<Tensor>* out_tensors,
+                             bool* end_of_sequence) override {
+        tf_shared_lock l(mu_);
+        uint64 start = EnvTime::NowMicros();
+        Status s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+        uint64 end = EnvTime::NowMicros();
+        auto stats_aggregator = ctx->stats_aggregator();
+        if (stats_aggregator && !*end_of_sequence) {
+          int64 steps = num_elements();
+          stats_aggregator->AddToHistogram(
+              dataset()->tag_, {static_cast<double>(end - start)}, steps);
         }
+        return s;
+      }
 
-        ~Dataset() override {
-            input_->Unref();
-        }
+     protected:
+      std::shared_ptr<model::Node> CreateNode(
+          IteratorContext* ctx, model::Node::Args args) const override {
+        return model::MakeKnownRatioNode(std::move(args),
+                                         /*ratio=*/1);
+      }
 
-        std::unique_ptr<IteratorBase> MakeIteratorInternal(
-            const string& prefix) const override {
-            return absl::make_unique<Iterator>(
-                       Iterator::Params{this, strings::StrCat(prefix, "::LatencyStats")});
-        }
+      Status SaveInternal(SerializationContext* ctx,
+                          IteratorStateWriter* writer) override {
+        mutex_lock l(mu_);
+        TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+        return Status::OK();
+      }
 
-        const DataTypeVector& output_dtypes() const override {
-            return input_->output_dtypes();
-        }
-        const std::vector<PartialTensorShape>& output_shapes() const override {
-            return input_->output_shapes();
-        }
+      Status RestoreInternal(IteratorContext* ctx,
+                             IteratorStateReader* reader) override {
+        mutex_lock l(mu_);
+        TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+        return Status::OK();
+      }
 
-        string DebugString() const override {
-            return "LatencyStatsDatasetOp::Dataset";
-        }
-
-        int64 Cardinality() const override {
-            return input_->Cardinality();
-        }
-
-        Status CheckExternalState() const override {
-            return input_->CheckExternalState();
-        }
-
-    protected:
-        Status AsGraphDefInternal(SerializationContext* ctx,
-                                  DatasetGraphDefBuilder* b,
-                                  Node** output) const override {
-            Node* input_node;
-            TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_node));
-            Node* tag_node;
-            TF_RETURN_IF_ERROR(b->AddScalar(tag_, &tag_node));
-            TF_RETURN_IF_ERROR(b->AddDataset(this, {input_node, tag_node}, output));
-            return Status::OK();
-        }
-
-    private:
-        class Iterator : public DatasetIterator<Dataset> {
-        public:
-            explicit Iterator(const Params& params)
-                : DatasetIterator<Dataset>(params) {}
-
-            Status Initialize(IteratorContext* ctx) override {
-                return dataset()->input_->MakeIterator(ctx, this, prefix(),
-                                                       &input_impl_);
-            }
-
-            Status GetNextInternal(IteratorContext* ctx,
-                                   std::vector<Tensor>* out_tensors,
-                                   bool* end_of_sequence) override {
-                tf_shared_lock l(mu_);
-                uint64 start = EnvTime::NowMicros();
-                Status s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-                uint64 end = EnvTime::NowMicros();
-                auto stats_aggregator = ctx->stats_aggregator();
-                if (stats_aggregator && !*end_of_sequence) {
-                    int64 steps = num_elements();
-                    stats_aggregator->AddToHistogram(
-                        dataset()->tag_, {static_cast<double>(end - start)}, steps);
-                }
-                return s;
-            }
-
-        protected:
-            std::shared_ptr<model::Node> CreateNode(
-                IteratorContext* ctx, model::Node::Args args) const override {
-                return model::MakeKnownRatioNode(std::move(args),
-                                                 /*ratio=*/1);
-            }
-
-            Status SaveInternal(SerializationContext* ctx,
-                                IteratorStateWriter* writer) override {
-                mutex_lock l(mu_);
-                TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-                return Status::OK();
-            }
-
-            Status RestoreInternal(IteratorContext* ctx,
-                                   IteratorStateReader* reader) override {
-                mutex_lock l(mu_);
-                TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-                return Status::OK();
-            }
-
-        private:
-            mutex mu_;
-            std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
-        };
-
-        const DatasetBase* const input_;
-        const tstring tag_;
+     private:
+      mutex mu_;
+      std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
     };
+
+    const DatasetBase* const input_;
+    const tstring tag_;
+  };
 };
 
 class BytesProducedStatsDatasetOp : public UnaryDatasetOpKernel {
-public:
-    explicit BytesProducedStatsDatasetOp(OpKernelConstruction* ctx)
-        : UnaryDatasetOpKernel(ctx) {}
+ public:
+  explicit BytesProducedStatsDatasetOp(OpKernelConstruction* ctx)
+      : UnaryDatasetOpKernel(ctx) {}
 
-    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                     DatasetBase** output) override {
-        tstring tag;
-        OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, "tag", &tag));
-        *output = new Dataset(ctx, input, std::move(tag));
+  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                   DatasetBase** output) override {
+    tstring tag;
+    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, "tag", &tag));
+    *output = new Dataset(ctx, input, std::move(tag));
+  }
+
+ private:
+  class Dataset : public DatasetBase {
+   public:
+    explicit Dataset(OpKernelContext* ctx, const DatasetBase* input, string tag)
+        : DatasetBase(DatasetContext(ctx)),
+          input_(input),
+          tag_(std::move(tag)) {
+      input_->Ref();
     }
 
-private:
-    class Dataset : public DatasetBase {
-    public:
-        explicit Dataset(OpKernelContext* ctx, const DatasetBase* input, string tag)
-            : DatasetBase(DatasetContext(ctx)),
-              input_(input),
-              tag_(std::move(tag)) {
-            input_->Ref();
+    ~Dataset() override { input_->Unref(); }
+
+    std::unique_ptr<IteratorBase> MakeIteratorInternal(
+        const string& prefix) const override {
+      return absl::make_unique<Iterator>(Iterator::Params{
+          this, strings::StrCat(prefix, "::BytesProducedStats")});
+    }
+
+    const DataTypeVector& output_dtypes() const override {
+      return input_->output_dtypes();
+    }
+    const std::vector<PartialTensorShape>& output_shapes() const override {
+      return input_->output_shapes();
+    }
+
+    string DebugString() const override {
+      return "BytesProducedStatsDatasetOp::Dataset";
+    }
+
+    int64 Cardinality() const override { return input_->Cardinality(); }
+
+    Status CheckExternalState() const override {
+      return input_->CheckExternalState();
+    }
+
+   protected:
+    Status AsGraphDefInternal(SerializationContext* ctx,
+                              DatasetGraphDefBuilder* b,
+                              Node** output) const override {
+      Node* input_node;
+      TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_node));
+      Node* tag_node;
+      TF_RETURN_IF_ERROR(b->AddScalar(tag_, &tag_node));
+      TF_RETURN_IF_ERROR(b->AddDataset(this, {input_node, tag_node}, output));
+      return Status::OK();
+    }
+
+   private:
+    class Iterator : public DatasetIterator<Dataset> {
+     public:
+      explicit Iterator(const Params& params)
+          : DatasetIterator<Dataset>(params) {}
+
+      Status Initialize(IteratorContext* ctx) override {
+        return dataset()->input_->MakeIterator(ctx, this, prefix(),
+                                               &input_impl_);
+      }
+
+      Status GetNextInternal(IteratorContext* ctx,
+                             std::vector<Tensor>* out_tensors,
+                             bool* end_of_sequence) override {
+        tf_shared_lock l(mu_);
+        Status s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+        auto stats_aggregator = ctx->stats_aggregator();
+        if (stats_aggregator && s.ok() && !*end_of_sequence) {
+          size_t total_bytes = 0;
+          for (const Tensor& t : *out_tensors) {
+            total_bytes += t.TotalBytes();
+          }
+          int64 steps = num_elements();
+          stats_aggregator->AddToHistogram(
+              dataset()->tag_, {static_cast<double>(total_bytes)}, steps);
         }
+        return s;
+      }
 
-        ~Dataset() override {
-            input_->Unref();
-        }
+     protected:
+      std::shared_ptr<model::Node> CreateNode(
+          IteratorContext* ctx, model::Node::Args args) const override {
+        return model::MakeKnownRatioNode(std::move(args),
+                                         /*ratio=*/1);
+      }
 
-        std::unique_ptr<IteratorBase> MakeIteratorInternal(
-            const string& prefix) const override {
-            return absl::make_unique<Iterator>(Iterator::Params{
-                this, strings::StrCat(prefix, "::BytesProducedStats")});
-        }
+      Status SaveInternal(SerializationContext* ctx,
+                          IteratorStateWriter* writer) override {
+        mutex_lock l(mu_);
+        TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+        return Status::OK();
+      }
 
-        const DataTypeVector& output_dtypes() const override {
-            return input_->output_dtypes();
-        }
-        const std::vector<PartialTensorShape>& output_shapes() const override {
-            return input_->output_shapes();
-        }
+      Status RestoreInternal(IteratorContext* ctx,
+                             IteratorStateReader* reader) override {
+        mutex_lock l(mu_);
+        TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+        return Status::OK();
+      }
 
-        string DebugString() const override {
-            return "BytesProducedStatsDatasetOp::Dataset";
-        }
-
-        int64 Cardinality() const override {
-            return input_->Cardinality();
-        }
-
-        Status CheckExternalState() const override {
-            return input_->CheckExternalState();
-        }
-
-    protected:
-        Status AsGraphDefInternal(SerializationContext* ctx,
-                                  DatasetGraphDefBuilder* b,
-                                  Node** output) const override {
-            Node* input_node;
-            TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_node));
-            Node* tag_node;
-            TF_RETURN_IF_ERROR(b->AddScalar(tag_, &tag_node));
-            TF_RETURN_IF_ERROR(b->AddDataset(this, {input_node, tag_node}, output));
-            return Status::OK();
-        }
-
-    private:
-        class Iterator : public DatasetIterator<Dataset> {
-        public:
-            explicit Iterator(const Params& params)
-                : DatasetIterator<Dataset>(params) {}
-
-            Status Initialize(IteratorContext* ctx) override {
-                return dataset()->input_->MakeIterator(ctx, this, prefix(),
-                                                       &input_impl_);
-            }
-
-            Status GetNextInternal(IteratorContext* ctx,
-                                   std::vector<Tensor>* out_tensors,
-                                   bool* end_of_sequence) override {
-                tf_shared_lock l(mu_);
-                Status s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-                auto stats_aggregator = ctx->stats_aggregator();
-                if (stats_aggregator && s.ok() && !*end_of_sequence) {
-                    size_t total_bytes = 0;
-                    for (const Tensor& t : *out_tensors) {
-                        total_bytes += t.TotalBytes();
-                    }
-                    int64 steps = num_elements();
-                    stats_aggregator->AddToHistogram(
-                        dataset()->tag_, {static_cast<double>(total_bytes)}, steps);
-                }
-                return s;
-            }
-
-        protected:
-            std::shared_ptr<model::Node> CreateNode(
-                IteratorContext* ctx, model::Node::Args args) const override {
-                return model::MakeKnownRatioNode(std::move(args),
-                                                 /*ratio=*/1);
-            }
-
-            Status SaveInternal(SerializationContext* ctx,
-                                IteratorStateWriter* writer) override {
-                mutex_lock l(mu_);
-                TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-                return Status::OK();
-            }
-
-            Status RestoreInternal(IteratorContext* ctx,
-                                   IteratorStateReader* reader) override {
-                mutex_lock l(mu_);
-                TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-                return Status::OK();
-            }
-
-        private:
-            mutex mu_;
-            std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
-        };
-
-        const DatasetBase* const input_;
-        const tstring tag_;
+     private:
+      mutex mu_;
+      std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
     };
+
+    const DatasetBase* const input_;
+    const tstring tag_;
+  };
 };
 
 REGISTER_KERNEL_BUILDER(Name("BytesProducedStatsDataset").Device(DEVICE_CPU),

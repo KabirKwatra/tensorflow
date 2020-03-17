@@ -107,15 +107,15 @@ TF_CAPI_EXPORT extern const char* TF_Version(void);
 // pointed-to block.  If need be, users of this struct should specify how to
 // deallocate the block by setting the `data_deallocator` function pointer.
 typedef struct TF_Buffer {
-    const void* data;
-    size_t length;
-    void (*data_deallocator)(void* data, size_t length);
+  const void* data;
+  size_t length;
+  void (*data_deallocator)(void* data, size_t length);
 } TF_Buffer;
 
 // Makes a copy of the input and sets an appropriate deallocator.  Useful for
 // passing in read-only, input protobufs.
 TF_CAPI_EXPORT extern TF_Buffer* TF_NewBufferFromString(const void* proto,
-        size_t proto_len);
+                                                        size_t proto_len);
 
 // Useful for passing *out* a protobuf.
 TF_CAPI_EXPORT extern TF_Buffer* TF_NewBuffer(void);
@@ -178,14 +178,14 @@ typedef struct TF_Operation TF_Operation;
 
 // Represents a specific input of an operation.
 typedef struct TF_Input {
-    TF_Operation* oper;
-    int index;  // The index of the input within oper.
+  TF_Operation* oper;
+  int index;  // The index of the input within oper.
 } TF_Input;
 
 // Represents a specific output of an operation.
 typedef struct TF_Output {
-    TF_Operation* oper;
-    int index;  // The index of the output within oper.
+  TF_Operation* oper;
+  int index;  // The index of the output within oper.
 } TF_Output;
 
 // TF_Function is a grouping of operations with defined inputs and outputs.
@@ -213,10 +213,10 @@ typedef struct TF_FunctionOptions TF_FunctionOptions;
 //   * An invalid shape is being set (e.g., the shape being set
 //     is incompatible with the existing shape).
 TF_CAPI_EXPORT extern void TF_GraphSetTensorShape(TF_Graph* graph,
-        TF_Output output,
-        const int64_t* dims,
-        const int num_dims,
-        TF_Status* status);
+                                                  TF_Output output,
+                                                  const int64_t* dims,
+                                                  const int num_dims,
+                                                  TF_Status* status);
 
 // Returns the number of dimensions of the Tensor referenced by `output`
 // in `graph`.
@@ -226,8 +226,8 @@ TF_CAPI_EXPORT extern void TF_GraphSetTensorShape(TF_Graph* graph,
 // Returns an error into `status` if:
 //   * `output` is not in `graph`.
 TF_CAPI_EXPORT extern int TF_GraphGetTensorNumDims(TF_Graph* graph,
-        TF_Output output,
-        TF_Status* status);
+                                                   TF_Output output,
+                                                   TF_Status* status);
 
 // Returns the shape of the Tensor referenced by `output` in `graph`
 // into `dims`. `dims` must be an array large enough to hold `num_dims`
@@ -242,9 +242,9 @@ TF_CAPI_EXPORT extern int TF_GraphGetTensorNumDims(TF_Graph* graph,
 //   * `output` is not in `graph`.
 //   * `num_dims` does not match the actual number of dimensions.
 TF_CAPI_EXPORT extern void TF_GraphGetTensorShape(TF_Graph* graph,
-        TF_Output output,
-        int64_t* dims, int num_dims,
-        TF_Status* status);
+                                                  TF_Output output,
+                                                  int64_t* dims, int num_dims,
+                                                  TF_Status* status);
 
 // Operation will only be added to *graph when TF_FinishOperation() is
 // called (assuming TF_FinishOperation() does not return an error).
@@ -284,12 +284,12 @@ TF_CAPI_EXPORT extern void TF_AddInput(TF_OperationDescription* desc,
 // For inputs that take a list of tensors.
 // inputs must point to TF_Output[num_inputs].
 TF_CAPI_EXPORT extern void TF_AddInputList(TF_OperationDescription* desc,
-        const TF_Output* inputs,
-        int num_inputs);
+                                           const TF_Output* inputs,
+                                           int num_inputs);
 
 // Call once per control input to `desc`.
 TF_CAPI_EXPORT extern void TF_AddControlInput(TF_OperationDescription* desc,
-        TF_Operation* input);
+                                              TF_Operation* input);
 
 // Request that `desc` be co-located on the device where `op`
 // is placed.
@@ -297,7 +297,7 @@ TF_CAPI_EXPORT extern void TF_AddControlInput(TF_OperationDescription* desc,
 // Use of this is discouraged since the implementation of device placement is
 // subject to change. Primarily intended for internal libraries
 TF_CAPI_EXPORT extern void TF_ColocateWith(TF_OperationDescription* desc,
-        TF_Operation* op);
+                                           TF_Operation* op);
 
 // Call some TF_SetAttr*() function for every attr that is not
 // inferred from an input and doesn't have a default value you wish to
@@ -305,66 +305,66 @@ TF_CAPI_EXPORT extern void TF_ColocateWith(TF_OperationDescription* desc,
 
 // `value` must point to a string of length `length` bytes.
 TF_CAPI_EXPORT extern void TF_SetAttrString(TF_OperationDescription* desc,
-        const char* attr_name,
-        const void* value, size_t length);
+                                            const char* attr_name,
+                                            const void* value, size_t length);
 // `values` and `lengths` each must have lengths `num_values`.
 // `values[i]` must point to a string of length `lengths[i]` bytes.
 TF_CAPI_EXPORT extern void TF_SetAttrStringList(TF_OperationDescription* desc,
-        const char* attr_name,
-        const void* const* values,
-        const size_t* lengths,
-        int num_values);
+                                                const char* attr_name,
+                                                const void* const* values,
+                                                const size_t* lengths,
+                                                int num_values);
 TF_CAPI_EXPORT extern void TF_SetAttrInt(TF_OperationDescription* desc,
-        const char* attr_name, int64_t value);
+                                         const char* attr_name, int64_t value);
 TF_CAPI_EXPORT extern void TF_SetAttrIntList(TF_OperationDescription* desc,
-        const char* attr_name,
-        const int64_t* values,
-        int num_values);
+                                             const char* attr_name,
+                                             const int64_t* values,
+                                             int num_values);
 TF_CAPI_EXPORT extern void TF_SetAttrFloat(TF_OperationDescription* desc,
-        const char* attr_name, float value);
+                                           const char* attr_name, float value);
 TF_CAPI_EXPORT extern void TF_SetAttrFloatList(TF_OperationDescription* desc,
-        const char* attr_name,
-        const float* values,
-        int num_values);
+                                               const char* attr_name,
+                                               const float* values,
+                                               int num_values);
 TF_CAPI_EXPORT extern void TF_SetAttrBool(TF_OperationDescription* desc,
-        const char* attr_name,
-        unsigned char value);
+                                          const char* attr_name,
+                                          unsigned char value);
 TF_CAPI_EXPORT extern void TF_SetAttrBoolList(TF_OperationDescription* desc,
-        const char* attr_name,
-        const unsigned char* values,
-        int num_values);
+                                              const char* attr_name,
+                                              const unsigned char* values,
+                                              int num_values);
 TF_CAPI_EXPORT extern void TF_SetAttrType(TF_OperationDescription* desc,
-        const char* attr_name,
-        TF_DataType value);
+                                          const char* attr_name,
+                                          TF_DataType value);
 TF_CAPI_EXPORT extern void TF_SetAttrTypeList(TF_OperationDescription* desc,
-        const char* attr_name,
-        const TF_DataType* values,
-        int num_values);
+                                              const char* attr_name,
+                                              const TF_DataType* values,
+                                              int num_values);
 TF_CAPI_EXPORT extern void TF_SetAttrPlaceholder(TF_OperationDescription* desc,
-        const char* attr_name,
-        const char* placeholder);
+                                                 const char* attr_name,
+                                                 const char* placeholder);
 
 // Set a 'func' attribute to the specified name.
 // `value` must point to a string of length `length` bytes.
 TF_CAPI_EXPORT extern void TF_SetAttrFuncName(TF_OperationDescription* desc,
-        const char* attr_name,
-        const char* value, size_t length);
+                                              const char* attr_name,
+                                              const char* value, size_t length);
 
 // Set `num_dims` to -1 to represent "unknown rank".  Otherwise,
 // `dims` points to an array of length `num_dims`.  `dims[i]` must be
 // >= -1, with -1 meaning "unknown dimension".
 TF_CAPI_EXPORT extern void TF_SetAttrShape(TF_OperationDescription* desc,
-        const char* attr_name,
-        const int64_t* dims, int num_dims);
+                                           const char* attr_name,
+                                           const int64_t* dims, int num_dims);
 // `dims` and `num_dims` must point to arrays of length `num_shapes`.
 // Set `num_dims[i]` to -1 to represent "unknown rank".  Otherwise,
 // `dims[i]` points to an array of length `num_dims[i]`.  `dims[i][j]`
 // must be >= -1, with -1 meaning "unknown dimension".
 TF_CAPI_EXPORT extern void TF_SetAttrShapeList(TF_OperationDescription* desc,
-        const char* attr_name,
-        const int64_t* const* dims,
-        const int* num_dims,
-        int num_shapes);
+                                               const char* attr_name,
+                                               const int64_t* const* dims,
+                                               const int* num_dims,
+                                               int num_shapes);
 // `proto` must point to an array of `proto_len` bytes representing a
 // binary-serialized TensorShapeProto.
 TF_CAPI_EXPORT extern void TF_SetAttrTensorShapeProto(
@@ -379,23 +379,23 @@ TF_CAPI_EXPORT extern void TF_SetAttrTensorShapeProtoList(
     TF_Status* status);
 
 TF_CAPI_EXPORT extern void TF_SetAttrTensor(TF_OperationDescription* desc,
-        const char* attr_name,
-        TF_Tensor* value,
-        TF_Status* status);
+                                            const char* attr_name,
+                                            TF_Tensor* value,
+                                            TF_Status* status);
 TF_CAPI_EXPORT extern void TF_SetAttrTensorList(TF_OperationDescription* desc,
-        const char* attr_name,
-        TF_Tensor* const* values,
-        int num_values,
-        TF_Status* status);
+                                                const char* attr_name,
+                                                TF_Tensor* const* values,
+                                                int num_values,
+                                                TF_Status* status);
 
 // `proto` should point to a sequence of bytes of length `proto_len`
 // representing a binary serialization of an AttrValue protocol
 // buffer.
 TF_CAPI_EXPORT extern void TF_SetAttrValueProto(TF_OperationDescription* desc,
-        const char* attr_name,
-        const void* proto,
-        size_t proto_len,
-        TF_Status* status);
+                                                const char* attr_name,
+                                                const void* proto,
+                                                size_t proto_len,
+                                                TF_Status* status);
 
 // If this function succeeds:
 //   * *status is set to an OK value,
@@ -420,14 +420,14 @@ TF_CAPI_EXPORT extern const char* TF_OperationDevice(TF_Operation* oper);
 TF_CAPI_EXPORT extern int TF_OperationNumOutputs(TF_Operation* oper);
 TF_CAPI_EXPORT extern TF_DataType TF_OperationOutputType(TF_Output oper_out);
 TF_CAPI_EXPORT extern int TF_OperationOutputListLength(TF_Operation* oper,
-        const char* arg_name,
-        TF_Status* status);
+                                                       const char* arg_name,
+                                                       TF_Status* status);
 
 TF_CAPI_EXPORT extern int TF_OperationNumInputs(TF_Operation* oper);
 TF_CAPI_EXPORT extern TF_DataType TF_OperationInputType(TF_Input oper_in);
 TF_CAPI_EXPORT extern int TF_OperationInputListLength(TF_Operation* oper,
-        const char* arg_name,
-        TF_Status* status);
+                                                      const char* arg_name,
+                                                      TF_Status* status);
 
 // In this code:
 //   TF_Output producer = TF_OperationInput(consumer);
@@ -441,8 +441,8 @@ TF_CAPI_EXPORT extern TF_Output TF_OperationInput(TF_Input oper_in);
 // modification of the graph can increase the number of inputs of
 // an operation.
 TF_CAPI_EXPORT extern void TF_OperationAllInputs(TF_Operation* oper,
-        TF_Output* inputs,
-        int max_inputs);
+                                                 TF_Output* inputs,
+                                                 int max_inputs);
 
 // Get the number of current consumers of a specific output of an
 // operation.  Note that this number can change when new operations
@@ -457,8 +457,8 @@ TF_CAPI_EXPORT extern int TF_OperationOutputNumConsumers(TF_Output oper_out);
 // an operation.  Returns the number of output consumers (should match
 // TF_OperationOutputNumConsumers(oper_out)).
 TF_CAPI_EXPORT extern int TF_OperationOutputConsumers(TF_Output oper_out,
-        TF_Input* consumers,
-        int max_consumers);
+                                                      TF_Input* consumers,
+                                                      int max_consumers);
 
 // Get the number of control inputs to an operation.
 TF_CAPI_EXPORT extern int TF_OperationNumControlInputs(TF_Operation* oper);
@@ -488,33 +488,33 @@ TF_CAPI_EXPORT extern int TF_OperationGetControlOutputs(
 
 // TF_AttrMetadata describes the value of an attribute on an operation.
 typedef struct TF_AttrMetadata {
-    // A boolean: 1 if the attribute value is a list, 0 otherwise.
-    unsigned char is_list;
+  // A boolean: 1 if the attribute value is a list, 0 otherwise.
+  unsigned char is_list;
 
-    // Length of the list if is_list is true. Undefined otherwise.
-    int64_t list_size;
+  // Length of the list if is_list is true. Undefined otherwise.
+  int64_t list_size;
 
-    // Type of elements of the list if is_list != 0.
-    // Type of the single value stored in the attribute if is_list == 0.
-    TF_AttrType type;
+  // Type of elements of the list if is_list != 0.
+  // Type of the single value stored in the attribute if is_list == 0.
+  TF_AttrType type;
 
-    // Total size the attribute value.
-    // The units of total_size depend on is_list and type.
-    // (1) If type == TF_ATTR_STRING and is_list == 0
-    //     then total_size is the byte size of the string
-    //     valued attribute.
-    // (2) If type == TF_ATTR_STRING and is_list == 1
-    //     then total_size is the cumulative byte size
-    //     of all the strings in the list.
-    // (3) If type == TF_ATTR_SHAPE and is_list == 0
-    //     then total_size is the number of dimensions
-    //     of the shape valued attribute, or -1
-    //     if its rank is unknown.
-    // (4) If type == TF_ATTR_SHAPE and is_list == 1
-    //     then total_size is the cumulative number
-    //     of dimensions of all shapes in the list.
-    // (5) Otherwise, total_size is undefined.
-    int64_t total_size;
+  // Total size the attribute value.
+  // The units of total_size depend on is_list and type.
+  // (1) If type == TF_ATTR_STRING and is_list == 0
+  //     then total_size is the byte size of the string
+  //     valued attribute.
+  // (2) If type == TF_ATTR_STRING and is_list == 1
+  //     then total_size is the cumulative byte size
+  //     of all the strings in the list.
+  // (3) If type == TF_ATTR_SHAPE and is_list == 0
+  //     then total_size is the number of dimensions
+  //     of the shape valued attribute, or -1
+  //     if its rank is unknown.
+  // (4) If type == TF_ATTR_SHAPE and is_list == 1
+  //     then total_size is the cumulative number
+  //     of dimensions of all shapes in the list.
+  // (5) Otherwise, total_size is undefined.
+  int64_t total_size;
 } TF_AttrMetadata;
 
 // Returns metadata about the value of the attribute `attr_name` of `oper`.
@@ -526,10 +526,10 @@ TF_CAPI_EXPORT extern TF_AttrMetadata TF_OperationGetAttrMetadata(
 // TF_AttrMetadata.total_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrString(TF_Operation* oper,
-        const char* attr_name,
-        void* value,
-        size_t max_length,
-        TF_Status* status);
+                                                     const char* attr_name,
+                                                     void* value,
+                                                     size_t max_length,
+                                                     TF_Status* status);
 
 // Get the list of strings in the value of the attribute `attr_name`.  Fills in
 // `values` and `lengths`, each of which must point to an array of length at
@@ -547,73 +547,73 @@ TF_CAPI_EXPORT extern void TF_OperationGetAttrStringList(
     int max_values, void* storage, size_t storage_size, TF_Status* status);
 
 TF_CAPI_EXPORT extern void TF_OperationGetAttrInt(TF_Operation* oper,
-        const char* attr_name,
-        int64_t* value,
-        TF_Status* status);
+                                                  const char* attr_name,
+                                                  int64_t* value,
+                                                  TF_Status* status);
 
 // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrIntList(TF_Operation* oper,
-        const char* attr_name,
-        int64_t* values,
-        int max_values,
-        TF_Status* status);
+                                                      const char* attr_name,
+                                                      int64_t* values,
+                                                      int max_values,
+                                                      TF_Status* status);
 
 TF_CAPI_EXPORT extern void TF_OperationGetAttrFloat(TF_Operation* oper,
-        const char* attr_name,
-        float* value,
-        TF_Status* status);
+                                                    const char* attr_name,
+                                                    float* value,
+                                                    TF_Status* status);
 
 // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // to TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrFloatList(TF_Operation* oper,
-        const char* attr_name,
-        float* values,
-        int max_values,
-        TF_Status* status);
+                                                        const char* attr_name,
+                                                        float* values,
+                                                        int max_values,
+                                                        TF_Status* status);
 
 TF_CAPI_EXPORT extern void TF_OperationGetAttrBool(TF_Operation* oper,
-        const char* attr_name,
-        unsigned char* value,
-        TF_Status* status);
+                                                   const char* attr_name,
+                                                   unsigned char* value,
+                                                   TF_Status* status);
 
 // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // to TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrBoolList(TF_Operation* oper,
-        const char* attr_name,
-        unsigned char* values,
-        int max_values,
-        TF_Status* status);
+                                                       const char* attr_name,
+                                                       unsigned char* values,
+                                                       int max_values,
+                                                       TF_Status* status);
 
 TF_CAPI_EXPORT extern void TF_OperationGetAttrType(TF_Operation* oper,
-        const char* attr_name,
-        TF_DataType* value,
-        TF_Status* status);
+                                                   const char* attr_name,
+                                                   TF_DataType* value,
+                                                   TF_Status* status);
 
 // Fills in `values` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `max_values` (ideally set
 // to TF_AttrMetadata.list_size from TF_OperationGetAttrMetadata(oper,
 // attr_name)).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrTypeList(TF_Operation* oper,
-        const char* attr_name,
-        TF_DataType* values,
-        int max_values,
-        TF_Status* status);
+                                                       const char* attr_name,
+                                                       TF_DataType* values,
+                                                       int max_values,
+                                                       TF_Status* status);
 
 // Fills in `value` with the value of the attribute `attr_name` of `oper`.
 // `values` must point to an array of length at least `num_dims` (ideally set to
 // TF_Attr_Meta.size from TF_OperationGetAttrMetadata(oper, attr_name)).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrShape(TF_Operation* oper,
-        const char* attr_name,
-        int64_t* value,
-        int num_dims,
-        TF_Status* status);
+                                                    const char* attr_name,
+                                                    int64_t* value,
+                                                    int num_dims,
+                                                    TF_Status* status);
 
 // Fills in `dims` with the list of shapes in the attribute `attr_name` of
 // `oper` and `num_dims` with the corresponding number of dimensions. On return,
@@ -651,9 +651,9 @@ TF_CAPI_EXPORT extern void TF_OperationGetAttrTensorShapeProtoList(
 // Allocates a new TF_Tensor which the caller is expected to take
 // ownership of (and can deallocate using TF_DeleteTensor).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrTensor(TF_Operation* oper,
-        const char* attr_name,
-        TF_Tensor** value,
-        TF_Status* status);
+                                                     const char* attr_name,
+                                                     TF_Tensor** value,
+                                                     TF_Status* status);
 
 // Fills in `values` with the TF_Tensor values of the attribute `attr_name` of
 // `oper`. `values` must point to an array of TF_Tensor* of length at least
@@ -663,10 +663,10 @@ TF_CAPI_EXPORT extern void TF_OperationGetAttrTensor(TF_Operation* oper,
 // The caller takes ownership of all the non-null TF_Tensor* entries in `values`
 // (which can be deleted using TF_DeleteTensor(values[i])).
 TF_CAPI_EXPORT extern void TF_OperationGetAttrTensorList(TF_Operation* oper,
-        const char* attr_name,
-        TF_Tensor** values,
-        int max_values,
-        TF_Status* status);
+                                                         const char* attr_name,
+                                                         TF_Tensor** values,
+                                                         int max_values,
+                                                         TF_Status* status);
 
 // Sets `output_attr_value` to the binary-serialized AttrValue proto
 // representation of the value of the `attr_name` attr of `oper`.
@@ -686,7 +686,7 @@ TF_CAPI_EXPORT extern TF_Operation* TF_GraphOperationByName(
 //   DoSomethingWithOperation(oper);
 // }
 TF_CAPI_EXPORT extern TF_Operation* TF_GraphNextOperation(TF_Graph* graph,
-        size_t* pos);
+                                                          size_t* pos);
 
 // Write out a serialized representation of `graph` (as a GraphDef protocol
 // message) to `output_graph_def` (allocated by TF_NewBuffer()).
@@ -695,20 +695,20 @@ TF_CAPI_EXPORT extern TF_Operation* TF_GraphNextOperation(TF_Graph* graph,
 //
 // May fail on very large graphs in the future.
 TF_CAPI_EXPORT extern void TF_GraphToGraphDef(TF_Graph* graph,
-        TF_Buffer* output_graph_def,
-        TF_Status* status);
+                                              TF_Buffer* output_graph_def,
+                                              TF_Status* status);
 
 // Returns the serialized OpDef proto with name `op_name`, or a bad status if no
 // such op exists. This can return OpDefs of functions copied into the graph.
 TF_CAPI_EXPORT extern void TF_GraphGetOpDef(TF_Graph* graph,
-        const char* op_name,
-        TF_Buffer* output_op_def,
-        TF_Status* status);
+                                            const char* op_name,
+                                            TF_Buffer* output_op_def,
+                                            TF_Status* status);
 
 // Returns the serialized VersionDef proto for this graph.
 TF_CAPI_EXPORT extern void TF_GraphVersions(TF_Graph* graph,
-        TF_Buffer* output_version_def,
-        TF_Status* status);
+                                            TF_Buffer* output_version_def,
+                                            TF_Status* status);
 
 // TF_ImportGraphDefOptions holds options that can be passed to
 // TF_GraphImportGraphDef.
@@ -870,9 +870,9 @@ TF_CAPI_EXPORT extern void TF_GraphImportGraphDef(
 // If successful, status is set to OK and `func` and `grad` are added to `g`.
 // Otherwise, status is set to the encountered error and `g` is unmodified.
 TF_CAPI_EXPORT extern void TF_GraphCopyFunction(TF_Graph* g,
-        const TF_Function* func,
-        const TF_Function* grad,
-        TF_Status* status);
+                                                const TF_Function* func,
+                                                const TF_Function* grad,
+                                                TF_Status* status);
 
 // Returns the number of TF_Functions registered in `g`.
 TF_CAPI_EXPORT extern int TF_GraphNumFunctions(TF_Graph* g);
@@ -889,13 +889,13 @@ TF_CAPI_EXPORT extern int TF_GraphNumFunctions(TF_Graph* g);
 // On error, returns 0, sets status to the encountered error, and the contents
 // of funcs will be undefined.
 TF_CAPI_EXPORT extern int TF_GraphGetFunctions(TF_Graph* g, TF_Function** funcs,
-        int max_func, TF_Status* status);
+                                               int max_func, TF_Status* status);
 
 // Note: The following function may fail on very large protos in the future.
 
 TF_CAPI_EXPORT extern void TF_OperationToNodeDef(TF_Operation* oper,
-        TF_Buffer* output_node_def,
-        TF_Status* status);
+                                                 TF_Buffer* output_node_def,
+                                                 TF_Status* status);
 
 // Create a TF_Function from a TF_Graph
 //
@@ -1020,8 +1020,8 @@ TF_CAPI_EXPORT extern const char* TF_FunctionName(TF_Function* func);
 //
 // May fail on very large graphs in the future.
 TF_CAPI_EXPORT extern void TF_FunctionToFunctionDef(TF_Function* func,
-        TF_Buffer* output_func_def,
-        TF_Status* status);
+                                                    TF_Buffer* output_func_def,
+                                                    TF_Status* status);
 
 // Construct and return the function whose FunctionDef representation is
 // serialized in `proto`. `proto_len` must equal the number of bytes
@@ -1040,10 +1040,10 @@ TF_CAPI_EXPORT extern TF_Function* TF_FunctionImportFunctionDef(
 // representing a binary serialization of an AttrValue protocol
 // buffer.
 TF_CAPI_EXPORT extern void TF_FunctionSetAttrValueProto(TF_Function* func,
-        const char* attr_name,
-        const void* proto,
-        size_t proto_len,
-        TF_Status* status);
+                                                        const char* attr_name,
+                                                        const void* proto,
+                                                        size_t proto_len,
+                                                        TF_Status* status);
 
 // Sets `output_attr_value` to the binary-serialized AttrValue proto
 // representation of the value of the `attr_name` attr of `func`.
@@ -1066,9 +1066,9 @@ TF_CAPI_EXPORT extern void TF_DeleteFunction(TF_Function* func);
 // returned if something is wrong with the graph or input. Note that this may
 // return false even if no error status is set.
 TF_CAPI_EXPORT extern unsigned char TF_TryEvaluateConstant(TF_Graph* graph,
-        TF_Output output,
-        TF_Tensor** result,
-        TF_Status* status);
+                                                           TF_Output output,
+                                                           TF_Tensor** result,
+                                                           TF_Status* status);
 
 // TODO(josh11b): Register OpDef, available to all operations added
 // to this graph.
@@ -1085,8 +1085,8 @@ typedef struct TF_Session TF_Session;
 // kept alive for the lifetime of the returned TF_Session. New nodes can still
 // be added to `graph` after this call.
 TF_CAPI_EXPORT extern TF_Session* TF_NewSession(TF_Graph* graph,
-        const TF_SessionOptions* opts,
-        TF_Status* status);
+                                                const TF_SessionOptions* opts,
+                                                TF_Status* status);
 
 // This function creates a new TF_Session (which is created on success) using
 // `session_options`, and then initializes state (restoring tensors and other
@@ -1209,9 +1209,9 @@ typedef struct TF_DeprecatedSession TF_DeprecatedSession;
 TF_CAPI_EXPORT extern TF_DeprecatedSession* TF_NewDeprecatedSession(
     const TF_SessionOptions*, TF_Status* status);
 TF_CAPI_EXPORT extern void TF_CloseDeprecatedSession(TF_DeprecatedSession*,
-        TF_Status* status);
+                                                     TF_Status* status);
 TF_CAPI_EXPORT extern void TF_DeleteDeprecatedSession(TF_DeprecatedSession*,
-        TF_Status* status);
+                                                      TF_Status* status);
 TF_CAPI_EXPORT extern void TF_Reset(const TF_SessionOptions* opt,
                                     const char** containers, int ncontainers,
                                     TF_Status* status);
@@ -1220,8 +1220,8 @@ TF_CAPI_EXPORT extern void TF_Reset(const TF_SessionOptions* opt,
 //
 // Prefer use of TF_Session and TF_GraphImportGraphDef over this.
 TF_CAPI_EXPORT extern void TF_ExtendGraph(TF_DeprecatedSession*,
-        const void* proto, size_t proto_len,
-        TF_Status*);
+                                          const void* proto, size_t proto_len,
+                                          TF_Status*);
 
 // See TF_SessionRun() above.
 TF_CAPI_EXPORT extern void TF_Run(TF_DeprecatedSession*,
@@ -1255,7 +1255,7 @@ typedef struct TF_DeviceList TF_DeviceList;
 // Caller takes ownership of the returned TF_DeviceList* which must eventually
 // be freed with a call to TF_DeleteDeviceList.
 TF_CAPI_EXPORT extern TF_DeviceList* TF_SessionListDevices(TF_Session* session,
-        TF_Status* status);
+                                                           TF_Status* status);
 
 // Lists all devices in a TF_Session.
 //
@@ -1278,8 +1278,8 @@ TF_CAPI_EXPORT extern int TF_DeviceListCount(const TF_DeviceList* list);
 // If index is out of bounds, an error code will be set in the status object,
 // and a null pointer will be returned.
 TF_CAPI_EXPORT extern const char* TF_DeviceListName(const TF_DeviceList* list,
-        int index,
-        TF_Status* status);
+                                                    int index,
+                                                    TF_Status* status);
 
 // Retrieves the type of the device at the given index.
 //
@@ -1289,8 +1289,8 @@ TF_CAPI_EXPORT extern const char* TF_DeviceListName(const TF_DeviceList* list,
 // If index is out of bounds, an error code will be set in the status object,
 // and a null pointer will be returned.
 TF_CAPI_EXPORT extern const char* TF_DeviceListType(const TF_DeviceList* list,
-        int index,
-        TF_Status* status);
+                                                    int index,
+                                                    TF_Status* status);
 
 // Retrieve the amount of memory associated with a given device.
 //
@@ -1324,7 +1324,7 @@ typedef struct TF_Library TF_Library;
 //
 // On failure, place an error status in status and return NULL.
 TF_CAPI_EXPORT extern TF_Library* TF_LoadLibrary(const char* library_filename,
-        TF_Status* status);
+                                                 TF_Status* status);
 
 // Get the OpList of OpDefs defined in the library pointed by lib_handle.
 //
@@ -1364,7 +1364,7 @@ typedef struct TF_ApiDefMap TF_ApiDefMap;
 //    for the OpList proto definition).
 //  status - Set to OK on success and an appropriate error on failure.
 TF_CAPI_EXPORT extern TF_ApiDefMap* TF_NewApiDefMap(TF_Buffer* op_list_buffer,
-        TF_Status* status);
+                                                    TF_Status* status);
 
 // Deallocates a TF_ApiDefMap.
 TF_CAPI_EXPORT extern void TF_DeleteApiDefMap(TF_ApiDefMap* apimap);
@@ -1378,15 +1378,15 @@ TF_CAPI_EXPORT extern void TF_DeleteApiDefMap(TF_ApiDefMap* apimap);
 // precedence given to the newly added version in case of conflicts with
 // previous calls to TF_ApiDefMapPut.
 TF_CAPI_EXPORT extern void TF_ApiDefMapPut(TF_ApiDefMap* api_def_map,
-        const char* text, size_t text_len,
-        TF_Status* status);
+                                           const char* text, size_t text_len,
+                                           TF_Status* status);
 
 // Returns a serialized ApiDef protocol buffer for the TensorFlow operation
 // named `name`.
 TF_CAPI_EXPORT extern TF_Buffer* TF_ApiDefMapGet(TF_ApiDefMap* api_def_map,
-        const char* name,
-        size_t name_len,
-        TF_Status* status);
+                                                 const char* name,
+                                                 size_t name_len,
+                                                 TF_Status* status);
 
 // --------------------------------------------------------------------------
 // Kernel definition information.
@@ -1418,8 +1418,8 @@ typedef struct TF_Server TF_Server;
 // The server will stop serving requests once TF_ServerStop or
 // TF_DeleteServer is invoked.
 TF_CAPI_EXPORT extern TF_Server* TF_NewServer(const void* proto,
-        size_t proto_len,
-        TF_Status* status);
+                                              size_t proto_len,
+                                              TF_Status* status);
 
 // Starts an in-process TensorFlow server.
 TF_CAPI_EXPORT extern void TF_ServerStart(TF_Server* server, TF_Status* status);

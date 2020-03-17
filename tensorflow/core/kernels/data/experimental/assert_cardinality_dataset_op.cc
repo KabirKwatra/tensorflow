@@ -25,156 +25,150 @@ namespace data {
 namespace experimental {
 
 /* static */ constexpr const char* const
-AssertCardinalityDatasetOp::kInputDataset;
+    AssertCardinalityDatasetOp::kInputDataset;
 /* static */ constexpr const char* const
-AssertCardinalityDatasetOp::kDatasetType;
+    AssertCardinalityDatasetOp::kDatasetType;
 /* static */ constexpr const char* const
-AssertCardinalityDatasetOp::kCardinality;
+    AssertCardinalityDatasetOp::kCardinality;
 /* static */ constexpr const char* const
-AssertCardinalityDatasetOp::kOutputTypes;
+    AssertCardinalityDatasetOp::kOutputTypes;
 /* static */ constexpr const char* const
-AssertCardinalityDatasetOp::kOutputShapes;
+    AssertCardinalityDatasetOp::kOutputShapes;
 
 class AssertCardinalityDatasetOp::Dataset : public DatasetBase {
-public:
-    Dataset(OpKernelContext* ctx, const DatasetBase* input, int64 cardinality,
-            const DataTypeVector& output_types,
-            const std::vector<PartialTensorShape>& output_shapes)
-        : DatasetBase(DatasetContext(ctx)),
-          input_(input),
-          cardinality_(cardinality),
-          output_types_(output_types),
-          output_shapes_(output_shapes) {
-        input_->Ref();
+ public:
+  Dataset(OpKernelContext* ctx, const DatasetBase* input, int64 cardinality,
+          const DataTypeVector& output_types,
+          const std::vector<PartialTensorShape>& output_shapes)
+      : DatasetBase(DatasetContext(ctx)),
+        input_(input),
+        cardinality_(cardinality),
+        output_types_(output_types),
+        output_shapes_(output_shapes) {
+    input_->Ref();
+  }
+
+  ~Dataset() override { input_->Unref(); }
+
+  std::unique_ptr<IteratorBase> MakeIteratorInternal(
+      const string& prefix) const override {
+    return absl::make_unique<Iterator>(Iterator::Params{
+        this, name_utils::IteratorPrefix(kDatasetType, prefix)});
+  }
+
+  const DataTypeVector& output_dtypes() const override { return output_types_; }
+  const std::vector<PartialTensorShape>& output_shapes() const override {
+    return output_shapes_;
+  }
+
+  string DebugString() const override {
+    return name_utils::DatasetDebugString(kDatasetType);
+  }
+
+  int64 Cardinality() const override { return cardinality_; }
+
+  Status CheckExternalState() const override {
+    return input_->CheckExternalState();
+  }
+
+ protected:
+  Status AsGraphDefInternal(SerializationContext* ctx,
+                            DatasetGraphDefBuilder* b,
+                            Node** output) const override {
+    Node* input_graph_node = nullptr;
+    TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
+    Node* cardinality_node = nullptr;
+    TF_RETURN_IF_ERROR(b->AddScalar(cardinality_, &cardinality_node));
+    TF_RETURN_IF_ERROR(
+        b->AddDataset(this, {input_graph_node, cardinality_node}, output));
+    return Status::OK();
+  }
+
+ private:
+  class Iterator : public DatasetIterator<Dataset> {
+   public:
+    explicit Iterator(const Params& params)
+        : DatasetIterator<Dataset>(params), num_elements_(0) {}
+
+    Status Initialize(IteratorContext* ctx) override {
+      return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
     }
 
-    ~Dataset() override {
-        input_->Unref();
+    Status GetNextInternal(IteratorContext* ctx,
+                           std::vector<Tensor>* out_tensors,
+                           bool* end_of_sequence) override {
+      TF_RETURN_IF_ERROR(
+          input_impl_->GetNext(ctx, out_tensors, end_of_sequence));
+      if (!*end_of_sequence) {
+        num_elements_++;
+      }
+      if (*end_of_sequence && num_elements_ != dataset()->cardinality_) {
+        return errors::FailedPrecondition(
+            "Input dataset was expected to contain ",
+            ElementString(dataset()->cardinality_), " but contained only ",
+            ElementString(num_elements_), ".");
+      }
+      if (num_elements_ > dataset()->cardinality_) {
+        return errors::FailedPrecondition(
+            "Input dataset was expected to contain ",
+            ElementString(dataset()->cardinality_), " but contained at least ",
+            ElementString(num_elements_), ".");
+      }
+      return Status::OK();
     }
 
-    std::unique_ptr<IteratorBase> MakeIteratorInternal(
-        const string& prefix) const override {
-        return absl::make_unique<Iterator>(Iterator::Params{
-            this, name_utils::IteratorPrefix(kDatasetType, prefix)});
+   protected:
+    std::shared_ptr<model::Node> CreateNode(
+        IteratorContext* ctx, model::Node::Args args) const override {
+      return model::MakeKnownRatioNode(std::move(args),
+                                       /*ratio=*/1);
     }
 
-    const DataTypeVector& output_dtypes() const override {
-        return output_types_;
-    }
-    const std::vector<PartialTensorShape>& output_shapes() const override {
-        return output_shapes_;
-    }
-
-    string DebugString() const override {
-        return name_utils::DatasetDebugString(kDatasetType);
+    Status SaveInternal(SerializationContext* ctx,
+                        IteratorStateWriter* writer) override {
+      TF_RETURN_IF_ERROR(
+          writer->WriteScalar(full_name("num_elements"), num_elements_));
+      TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+      return Status::OK();
     }
 
-    int64 Cardinality() const override {
-        return cardinality_;
+    Status RestoreInternal(IteratorContext* ctx,
+                           IteratorStateReader* reader) override {
+      TF_RETURN_IF_ERROR(
+          reader->ReadScalar(full_name("num_elements"), &num_elements_));
+      TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+      return Status::OK();
     }
 
-    Status CheckExternalState() const override {
-        return input_->CheckExternalState();
+   private:
+    static string ElementString(int64 n) {
+      return strings::StrCat(n, " element", n != 1 ? "s" : "");
     }
 
-protected:
-    Status AsGraphDefInternal(SerializationContext* ctx,
-                              DatasetGraphDefBuilder* b,
-                              Node** output) const override {
-        Node* input_graph_node = nullptr;
-        TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
-        Node* cardinality_node = nullptr;
-        TF_RETURN_IF_ERROR(b->AddScalar(cardinality_, &cardinality_node));
-        TF_RETURN_IF_ERROR(
-            b->AddDataset(this, {input_graph_node, cardinality_node}, output));
-        return Status::OK();
-    }
+    std::unique_ptr<IteratorBase> input_impl_;
+    int64 num_elements_;
+  };
 
-private:
-    class Iterator : public DatasetIterator<Dataset> {
-    public:
-        explicit Iterator(const Params& params)
-            : DatasetIterator<Dataset>(params), num_elements_(0) {}
-
-        Status Initialize(IteratorContext* ctx) override {
-            return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
-        }
-
-        Status GetNextInternal(IteratorContext* ctx,
-                               std::vector<Tensor>* out_tensors,
-                               bool* end_of_sequence) override {
-            TF_RETURN_IF_ERROR(
-                input_impl_->GetNext(ctx, out_tensors, end_of_sequence));
-            if (!*end_of_sequence) {
-                num_elements_++;
-            }
-            if (*end_of_sequence && num_elements_ != dataset()->cardinality_) {
-                return errors::FailedPrecondition(
-                           "Input dataset was expected to contain ",
-                           ElementString(dataset()->cardinality_), " but contained only ",
-                           ElementString(num_elements_), ".");
-            }
-            if (num_elements_ > dataset()->cardinality_) {
-                return errors::FailedPrecondition(
-                           "Input dataset was expected to contain ",
-                           ElementString(dataset()->cardinality_), " but contained at least ",
-                           ElementString(num_elements_), ".");
-            }
-            return Status::OK();
-        }
-
-    protected:
-        std::shared_ptr<model::Node> CreateNode(
-            IteratorContext* ctx, model::Node::Args args) const override {
-            return model::MakeKnownRatioNode(std::move(args),
-                                             /*ratio=*/1);
-        }
-
-        Status SaveInternal(SerializationContext* ctx,
-                            IteratorStateWriter* writer) override {
-            TF_RETURN_IF_ERROR(
-                writer->WriteScalar(full_name("num_elements"), num_elements_));
-            TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-            return Status::OK();
-        }
-
-        Status RestoreInternal(IteratorContext* ctx,
-                               IteratorStateReader* reader) override {
-            TF_RETURN_IF_ERROR(
-                reader->ReadScalar(full_name("num_elements"), &num_elements_));
-            TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-            return Status::OK();
-        }
-
-    private:
-        static string ElementString(int64 n) {
-            return strings::StrCat(n, " element", n != 1 ? "s" : "");
-        }
-
-        std::unique_ptr<IteratorBase> input_impl_;
-        int64 num_elements_;
-    };
-
-    const DatasetBase* input_;
-    const int64 cardinality_;
-    const DataTypeVector output_types_;
-    const std::vector<PartialTensorShape> output_shapes_;
+  const DatasetBase* input_;
+  const int64 cardinality_;
+  const DataTypeVector output_types_;
+  const std::vector<PartialTensorShape> output_shapes_;
 };
 
 AssertCardinalityDatasetOp::AssertCardinalityDatasetOp(
     OpKernelConstruction* ctx)
     : UnaryDatasetOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputTypes, &output_types_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputShapes, &output_shapes_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputTypes, &output_types_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputShapes, &output_shapes_));
 }
 
 void AssertCardinalityDatasetOp::MakeDataset(OpKernelContext* ctx,
-        DatasetBase* input,
-        DatasetBase** output) {
-    int64 cardinality;
-    OP_REQUIRES_OK(ctx,
-                   ParseScalarArgument<int64>(ctx, kCardinality, &cardinality));
-    *output = new Dataset(ctx, input, cardinality, output_types_, output_shapes_);
+                                             DatasetBase* input,
+                                             DatasetBase** output) {
+  int64 cardinality;
+  OP_REQUIRES_OK(ctx,
+                 ParseScalarArgument<int64>(ctx, kCardinality, &cardinality));
+  *output = new Dataset(ctx, input, cardinality, output_types_, output_shapes_);
 }
 
 namespace {

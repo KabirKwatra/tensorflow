@@ -35,170 +35,164 @@ namespace data {
 constexpr char kCurIndex[] = "i";
 
 class TensorSliceDatasetOp::Dataset : public DatasetBase {
-public:
-    explicit Dataset(OpKernelContext* ctx, std::vector<Tensor> tensors)
-        : DatasetBase(DatasetContext(ctx)), tensors_(std::move(tensors)) {
-        for (const Tensor& t : tensors_) {
-            dtypes_.push_back(t.dtype());
-            gtl::InlinedVector<int64, 4> element_dim_sizes;
-            // Handle scalar here. Check that everyone matches here? Or fail
-            // at runtime?
-            for (int i = 1; i < t.dims(); ++i) {
-                element_dim_sizes.push_back(t.dim_size(i));
-            }
-            partial_shapes_.emplace_back(element_dim_sizes);
-            shapes_.emplace_back(std::move(element_dim_sizes));
+ public:
+  explicit Dataset(OpKernelContext* ctx, std::vector<Tensor> tensors)
+      : DatasetBase(DatasetContext(ctx)), tensors_(std::move(tensors)) {
+    for (const Tensor& t : tensors_) {
+      dtypes_.push_back(t.dtype());
+      gtl::InlinedVector<int64, 4> element_dim_sizes;
+      // Handle scalar here. Check that everyone matches here? Or fail
+      // at runtime?
+      for (int i = 1; i < t.dims(); ++i) {
+        element_dim_sizes.push_back(t.dim_size(i));
+      }
+      partial_shapes_.emplace_back(element_dim_sizes);
+      shapes_.emplace_back(std::move(element_dim_sizes));
+    }
+  }
+
+  std::unique_ptr<IteratorBase> MakeIteratorInternal(
+      const string& prefix) const override {
+    return absl::make_unique<Iterator>(Iterator::Params{
+        this, name_utils::IteratorPrefix(kDatasetType, prefix)});
+  }
+
+  const DataTypeVector& output_dtypes() const override { return dtypes_; }
+
+  const std::vector<PartialTensorShape>& output_shapes() const override {
+    return partial_shapes_;
+  }
+
+  string DebugString() const override {
+    return name_utils::DatasetDebugString(kDatasetType);
+  }
+
+  int64 Cardinality() const override { return tensors_[0].dim_size(0); }
+
+  Status CheckExternalState() const override { return Status::OK(); }
+
+ protected:
+  Status AsGraphDefInternal(SerializationContext* ctx,
+                            DatasetGraphDefBuilder* b,
+                            Node** output) const override {
+    std::vector<Node*> components;
+    components.reserve(tensors_.size());
+    for (const Tensor& t : tensors_) {
+      Node* node;
+      if (ctx->serialize_data_tensors()) {
+        TF_RETURN_IF_ERROR(b->AddTensor(t, &node));
+      } else {
+        TF_RETURN_IF_ERROR(b->AddPlaceholder(t, &node));
+        DCHECK_NE(ctx->input_list(), nullptr);
+        ctx->input_list()->emplace_back(node->name(), t);
+      }
+      components.emplace_back(node);
+    }
+    AttrValue dtypes;
+    b->BuildAttrValue(dtypes_, &dtypes);
+    TF_RETURN_IF_ERROR(b->AddDataset(this, {}, {{0, components}},
+                                     {{kToutputTypes, dtypes}}, output));
+    return Status::OK();
+  }
+
+ private:
+  class Iterator : public DatasetIterator<Dataset> {
+   public:
+    explicit Iterator(const Params& params)
+        : DatasetIterator<Dataset>(params),
+          i_(0),
+          n_(params.dataset->tensors_[0].dim_size(0)) {}
+
+    Status GetNextInternal(IteratorContext* ctx,
+                           std::vector<Tensor>* out_tensors,
+                           bool* end_of_sequence) override {
+      int64 index = 0;
+      {
+        mutex_lock l(mu_);
+        if (i_ < n_) {
+          index = i_;
+          ++i_;
+        } else {
+          *end_of_sequence = true;
+          return Status::OK();
         }
+      }
+      out_tensors->clear();
+      out_tensors->reserve(dataset()->tensors_.size());
+      for (size_t i = 0; i < dataset()->tensors_.size(); ++i) {
+        const Tensor& t = dataset()->tensors_[i];
+        out_tensors->emplace_back(ctx->allocator({}), t.dtype(),
+                                  dataset()->shapes_[i]);
+        TF_RETURN_IF_ERROR(
+            batch_util::CopySliceToElement(t, &out_tensors->back(), index));
+      }
+      *end_of_sequence = false;
+      return Status::OK();
     }
 
-    std::unique_ptr<IteratorBase> MakeIteratorInternal(
-        const string& prefix) const override {
-        return absl::make_unique<Iterator>(Iterator::Params{
-            this, name_utils::IteratorPrefix(kDatasetType, prefix)});
+   protected:
+    std::shared_ptr<model::Node> CreateNode(
+        IteratorContext* ctx, model::Node::Args args) const override {
+      return model::MakeSourceNode(std::move(args));
     }
 
-    const DataTypeVector& output_dtypes() const override {
-        return dtypes_;
+    Status SaveInternal(SerializationContext* ctx,
+                        IteratorStateWriter* writer) override {
+      mutex_lock l(mu_);
+      TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kCurIndex), i_));
+      return Status::OK();
     }
 
-    const std::vector<PartialTensorShape>& output_shapes() const override {
-        return partial_shapes_;
+    Status RestoreInternal(IteratorContext* ctx,
+                           IteratorStateReader* reader) override {
+      mutex_lock l(mu_);
+      TF_RETURN_IF_ERROR(reader->ReadScalar(full_name(kCurIndex), &i_));
+      return Status::OK();
     }
 
-    string DebugString() const override {
-        return name_utils::DatasetDebugString(kDatasetType);
-    }
+   private:
+    mutex mu_;
+    int64 i_ TF_GUARDED_BY(mu_);
+    const int64 n_;
+  };
 
-    int64 Cardinality() const override {
-        return tensors_[0].dim_size(0);
-    }
-
-    Status CheckExternalState() const override {
-        return Status::OK();
-    }
-
-protected:
-    Status AsGraphDefInternal(SerializationContext* ctx,
-                              DatasetGraphDefBuilder* b,
-                              Node** output) const override {
-        std::vector<Node*> components;
-        components.reserve(tensors_.size());
-        for (const Tensor& t : tensors_) {
-            Node* node;
-            if (ctx->serialize_data_tensors()) {
-                TF_RETURN_IF_ERROR(b->AddTensor(t, &node));
-            } else {
-                TF_RETURN_IF_ERROR(b->AddPlaceholder(t, &node));
-                DCHECK_NE(ctx->input_list(), nullptr);
-                ctx->input_list()->emplace_back(node->name(), t);
-            }
-            components.emplace_back(node);
-        }
-        AttrValue dtypes;
-        b->BuildAttrValue(dtypes_, &dtypes);
-        TF_RETURN_IF_ERROR(b->AddDataset(this, {}, {{0, components}},
-        {{kToutputTypes, dtypes}}, output));
-        return Status::OK();
-    }
-
-private:
-    class Iterator : public DatasetIterator<Dataset> {
-    public:
-        explicit Iterator(const Params& params)
-            : DatasetIterator<Dataset>(params),
-              i_(0),
-              n_(params.dataset->tensors_[0].dim_size(0)) {}
-
-        Status GetNextInternal(IteratorContext* ctx,
-                               std::vector<Tensor>* out_tensors,
-                               bool* end_of_sequence) override {
-            int64 index = 0;
-            {
-                mutex_lock l(mu_);
-                if (i_ < n_) {
-                    index = i_;
-                    ++i_;
-                } else {
-                    *end_of_sequence = true;
-                    return Status::OK();
-                }
-            }
-            out_tensors->clear();
-            out_tensors->reserve(dataset()->tensors_.size());
-            for (size_t i = 0; i < dataset()->tensors_.size(); ++i) {
-                const Tensor& t = dataset()->tensors_[i];
-                out_tensors->emplace_back(ctx->allocator({}), t.dtype(),
-                                          dataset()->shapes_[i]);
-                TF_RETURN_IF_ERROR(
-                    batch_util::CopySliceToElement(t, &out_tensors->back(), index));
-            }
-            *end_of_sequence = false;
-            return Status::OK();
-        }
-
-    protected:
-        std::shared_ptr<model::Node> CreateNode(
-            IteratorContext* ctx, model::Node::Args args) const override {
-            return model::MakeSourceNode(std::move(args));
-        }
-
-        Status SaveInternal(SerializationContext* ctx,
-                            IteratorStateWriter* writer) override {
-            mutex_lock l(mu_);
-            TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kCurIndex), i_));
-            return Status::OK();
-        }
-
-        Status RestoreInternal(IteratorContext* ctx,
-                               IteratorStateReader* reader) override {
-            mutex_lock l(mu_);
-            TF_RETURN_IF_ERROR(reader->ReadScalar(full_name(kCurIndex), &i_));
-            return Status::OK();
-        }
-
-    private:
-        mutex mu_;
-        int64 i_ TF_GUARDED_BY(mu_);
-        const int64 n_;
-    };
-
-    const std::vector<Tensor> tensors_;
-    DataTypeVector dtypes_;
-    std::vector<TensorShape> shapes_;
-    std::vector<PartialTensorShape> partial_shapes_;
+  const std::vector<Tensor> tensors_;
+  DataTypeVector dtypes_;
+  std::vector<TensorShape> shapes_;
+  std::vector<PartialTensorShape> partial_shapes_;
 };
 
 TensorSliceDatasetOp::TensorSliceDatasetOp(OpKernelConstruction* ctx)
     : DatasetOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr(kToutputTypes, &output_types_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputShapes, &output_shapes_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr(kToutputTypes, &output_types_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr(kOutputShapes, &output_shapes_));
 }
 
 void TensorSliceDatasetOp::MakeDataset(OpKernelContext* ctx,
                                        DatasetBase** output) {
-    OpInputList inputs;
-    OP_REQUIRES_OK(ctx, ctx->input_list(kComponents, &inputs));
-    std::vector<Tensor> components;
-    components.reserve(inputs.size());
+  OpInputList inputs;
+  OP_REQUIRES_OK(ctx, ctx->input_list(kComponents, &inputs));
+  std::vector<Tensor> components;
+  components.reserve(inputs.size());
+  OP_REQUIRES(
+      ctx, inputs[0].dims() > 0,
+      errors::InvalidArgument("All components must be at least 1-dimensional"));
+  const int64 num_slices = inputs[0].dim_size(0);
+  for (const Tensor& t : inputs) {
+    components.push_back(t);
+    OP_REQUIRES(ctx, t.dims() > 0,
+                errors::InvalidArgument(
+                    "All components must be at least 1-dimensional"));
     OP_REQUIRES(
-        ctx, inputs[0].dims() > 0,
-        errors::InvalidArgument("All components must be at least 1-dimensional"));
-    const int64 num_slices = inputs[0].dim_size(0);
-    for (const Tensor& t : inputs) {
-        components.push_back(t);
-        OP_REQUIRES(ctx, t.dims() > 0,
-                    errors::InvalidArgument(
-                        "All components must be at least 1-dimensional"));
-        OP_REQUIRES(
-            ctx, t.dim_size(0) == num_slices,
-            errors::InvalidArgument(
-                "All components must have the same size in the 0th dimension"));
-    }
-    *output = new Dataset(ctx, std::move(components));
-    OP_REQUIRES_OK(ctx,
-                   VerifyTypesMatch((*output)->output_dtypes(), output_types_));
-    OP_REQUIRES_OK(
-        ctx, VerifyShapesCompatible((*output)->output_shapes(), output_shapes_));
+        ctx, t.dim_size(0) == num_slices,
+        errors::InvalidArgument(
+            "All components must have the same size in the 0th dimension"));
+  }
+  *output = new Dataset(ctx, std::move(components));
+  OP_REQUIRES_OK(ctx,
+                 VerifyTypesMatch((*output)->output_dtypes(), output_types_));
+  OP_REQUIRES_OK(
+      ctx, VerifyShapesCompatible((*output)->output_shapes(), output_shapes_));
 }
 
 namespace {
