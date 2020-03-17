@@ -63,23 +63,23 @@ TF_CAPI_EXPORT extern void TFE_ContextOptionsSetConfig(
 // LINT.IfChange
 // Note: Keep in sync with internal copy of enum in eager/context.h.
 typedef enum TFE_ContextDevicePlacementPolicy {
-  // Running operations with input tensors on the wrong device will fail.
-  TFE_DEVICE_PLACEMENT_EXPLICIT = 0,
-  // Copy the tensor to the right device but log a warning.
-  TFE_DEVICE_PLACEMENT_WARN = 1,
-  // Silently copy the tensor, which has a performance cost since the operation
-  // will be blocked till the copy completes. This is the default placement
-  // policy.
-  TFE_DEVICE_PLACEMENT_SILENT = 2,
-  // Placement policy which silently copies int32 tensors but not other dtypes.
-  TFE_DEVICE_PLACEMENT_SILENT_FOR_INT32 = 3,
+    // Running operations with input tensors on the wrong device will fail.
+    TFE_DEVICE_PLACEMENT_EXPLICIT = 0,
+    // Copy the tensor to the right device but log a warning.
+    TFE_DEVICE_PLACEMENT_WARN = 1,
+    // Silently copy the tensor, which has a performance cost since the operation
+    // will be blocked till the copy completes. This is the default placement
+    // policy.
+    TFE_DEVICE_PLACEMENT_SILENT = 2,
+    // Placement policy which silently copies int32 tensors but not other dtypes.
+    TFE_DEVICE_PLACEMENT_SILENT_FOR_INT32 = 3,
 } TFE_ContextDevicePlacementPolicy;
 // LINT.ThenChange(//tensorflow/core/common_runtime/eager/context.h)
 
 // Sets the default execution mode (sync/async). Note that this can be
 // overridden per thread using TFE_ContextSetExecutorForThread.
 TF_CAPI_EXPORT extern void TFE_ContextOptionsSetAsync(TFE_ContextOptions*,
-                                                      unsigned char enable);
+        unsigned char enable);
 
 TF_CAPI_EXPORT extern void TFE_ContextOptionsSetDevicePlacementPolicy(
     TFE_ContextOptions*, TFE_ContextDevicePlacementPolicy);
@@ -100,7 +100,7 @@ TF_CAPI_EXPORT extern TFE_Context* TFE_NewContext(
     const TFE_ContextOptions* opts, TF_Status* status);
 TF_CAPI_EXPORT extern void TFE_DeleteContext(TFE_Context* ctx);
 TF_CAPI_EXPORT extern TF_DeviceList* TFE_ContextListDevices(TFE_Context* ctx,
-                                                            TF_Status* status);
+        TF_Status* status);
 
 // Clears the internal caches in the TFE context. Useful when reseeding random
 // ops.
@@ -125,10 +125,10 @@ TFE_ContextGetDevicePlacementPolicy(TFE_Context* ctx);
 // If the following is set, all servers identified by the
 // ServerDef must be up when the context is created.
 TF_CAPI_EXPORT extern void TFE_ContextSetServerDef(TFE_Context* ctx,
-                                                   int keep_alive_secs,
-                                                   const void* proto,
-                                                   size_t proto_len,
-                                                   TF_Status* status);
+        int keep_alive_secs,
+        const void* proto,
+        size_t proto_len,
+        TF_Status* status);
 
 // A handle to a tensor on a device.
 //
@@ -138,19 +138,19 @@ TF_CAPI_EXPORT extern void TFE_ContextSetServerDef(TFE_Context* ctx,
 typedef struct TFE_TensorHandle TFE_TensorHandle;
 
 TF_CAPI_EXPORT extern TFE_TensorHandle* TFE_NewTensorHandle(TF_Tensor* t,
-                                                            TF_Status* status);
+        TF_Status* status);
 // Indicates that the caller will not be using `h` any more.
 TF_CAPI_EXPORT extern void TFE_DeleteTensorHandle(TFE_TensorHandle* h);
 TF_CAPI_EXPORT extern TF_DataType TFE_TensorHandleDataType(TFE_TensorHandle* h);
 // This function will block till the operation that produces `h` has completed.
 TF_CAPI_EXPORT extern int TFE_TensorHandleNumDims(TFE_TensorHandle* h,
-                                                  TF_Status* status);
+        TF_Status* status);
 TF_CAPI_EXPORT extern int64_t TFE_TensorHandleNumElements(TFE_TensorHandle* h,
-                                                          TF_Status* status);
+        TF_Status* status);
 // This function will block till the operation that produces `h` has completed.
 TF_CAPI_EXPORT extern int64_t TFE_TensorHandleDim(TFE_TensorHandle* h,
-                                                  int dim_index,
-                                                  TF_Status* status);
+        int dim_index,
+        TF_Status* status);
 
 // Returns the device of the operation that produced `h`. If `h` was produced by
 // a copy, returns the destination device of the copy. Note that the returned
@@ -178,7 +178,7 @@ TF_CAPI_EXPORT extern TFE_TensorHandle* TFE_TensorHandleCopySharingTensor(
 // modifying the memory region pointed to by TF_TensorData() on the returned
 // TF_Tensor).
 TF_CAPI_EXPORT extern TF_Tensor* TFE_TensorHandleResolve(TFE_TensorHandle* h,
-                                                         TF_Status* status);
+        TF_Status* status);
 
 // Create a new TFE_TensorHandle with the same contents as 'h' but placed
 // in the memory of the device name 'device_name'.
@@ -252,30 +252,30 @@ TF_CAPI_EXPORT extern TFE_Op* TFE_NewOp(TFE_Context* ctx,
 TF_CAPI_EXPORT extern void TFE_DeleteOp(TFE_Op* op);
 
 TF_CAPI_EXPORT extern void TFE_OpSetDevice(TFE_Op* op, const char* device_name,
-                                           TF_Status* status);
+        TF_Status* status);
 // The returned string remains valid throughout the lifetime of 'op'.
 TF_CAPI_EXPORT extern const char* TFE_OpGetDevice(TFE_Op* op,
-                                                  TF_Status* status);
+        TF_Status* status);
 
 // When 'enable' is set to 1, and if TensorFlow library is built with XLA
 // support, a subsequent TFE_Execute() call on `op` will run the op via XLA.
 //
 // If the library is not built with XLA support, this call would be a no-op.
 TF_CAPI_EXPORT extern void TFE_OpSetXLACompilation(TFE_Op* op,
-                                                   unsigned char enable);
+        unsigned char enable);
 
 TF_CAPI_EXPORT extern void TFE_OpAddInput(TFE_Op* op, TFE_TensorHandle* input,
-                                          TF_Status* status);
+        TF_Status* status);
 
 TF_CAPI_EXPORT extern void TFE_OpAddInputList(TFE_Op* op,
-                                              TFE_TensorHandle** inputs,
-                                              int num_inputs,
-                                              TF_Status* status);
+        TFE_TensorHandle** inputs,
+        int num_inputs,
+        TF_Status* status);
 
 TF_CAPI_EXPORT extern TF_AttrType TFE_OpGetAttrType(TFE_Op* op,
-                                                    const char* attr_name,
-                                                    unsigned char* is_list,
-                                                    TF_Status* status);
+        const char* attr_name,
+        unsigned char* is_list,
+        TF_Status* status);
 // Get an attribute type given an op name; a fusion of TFE_NewOp and
 // TFE_OpGetAttrType for use from Python without the overhead of the individual
 // calls and memory management of TFE_Op.
@@ -284,81 +284,81 @@ TF_CAPI_EXPORT extern TF_AttrType TFE_OpNameGetAttrType(
     unsigned char* is_list, TF_Status* status);
 
 TF_CAPI_EXPORT extern void TFE_OpSetAttrString(TFE_Op* op,
-                                               const char* attr_name,
-                                               const void* value,
-                                               size_t length);
+        const char* attr_name,
+        const void* value,
+        size_t length);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrInt(TFE_Op* op, const char* attr_name,
-                                            int64_t value);
+        int64_t value);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrFloat(TFE_Op* op, const char* attr_name,
-                                              float value);
+        float value);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrBool(TFE_Op* op, const char* attr_name,
-                                             unsigned char value);
+        unsigned char value);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrType(TFE_Op* op, const char* attr_name,
-                                             TF_DataType value);
+        TF_DataType value);
 // If the number of dimensions is unknown, `num_dims` must be set to
 // -1 and `dims` can be null.  If a dimension is unknown, the
 // corresponding entry in the `dims` array must be -1.
 TF_CAPI_EXPORT extern void TFE_OpSetAttrShape(TFE_Op* op, const char* attr_name,
-                                              const int64_t* dims,
-                                              const int num_dims,
-                                              TF_Status* out_status);
+        const int64_t* dims,
+        const int num_dims,
+        TF_Status* out_status);
 
 // Sets the attribute attr_name to be a function specified by 'function'.
 //
 // TODO(ashankar,iga): Add this functionality to the C API for graph
 // construction. Perhaps we want an AttrValueMap equivalent in the C API?
 TF_CAPI_EXPORT extern void TFE_OpSetAttrFunction(TFE_Op* op,
-                                                 const char* attr_name,
-                                                 const TFE_Op* value);
+        const char* attr_name,
+        const TFE_Op* value);
 
 TF_CAPI_EXPORT void TFE_OpSetAttrFunctionName(TFE_Op* op, const char* attr_name,
-                                              const char* data, size_t length);
+        const char* data, size_t length);
 
 TF_CAPI_EXPORT extern void TFE_OpSetAttrTensor(TFE_Op* op,
-                                               const char* attr_name,
-                                               TF_Tensor* tensor,
-                                               TF_Status* status);
+        const char* attr_name,
+        TF_Tensor* tensor,
+        TF_Status* status);
 
 TF_CAPI_EXPORT extern void TFE_OpSetAttrStringList(TFE_Op* op,
-                                                   const char* attr_name,
-                                                   const void* const* values,
-                                                   const size_t* lengths,
-                                                   int num_values);
+        const char* attr_name,
+        const void* const* values,
+        const size_t* lengths,
+        int num_values);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrIntList(TFE_Op* op,
-                                                const char* attr_name,
-                                                const int64_t* values,
-                                                int num_values);
+        const char* attr_name,
+        const int64_t* values,
+        int num_values);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrFloatList(TFE_Op* op,
-                                                  const char* attr_name,
-                                                  const float* values,
-                                                  int num_values);
+        const char* attr_name,
+        const float* values,
+        int num_values);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrBoolList(TFE_Op* op,
-                                                 const char* attr_name,
-                                                 const unsigned char* values,
-                                                 int num_values);
+        const char* attr_name,
+        const unsigned char* values,
+        int num_values);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrTypeList(TFE_Op* op,
-                                                 const char* attr_name,
-                                                 const TF_DataType* values,
-                                                 int num_values);
+        const char* attr_name,
+        const TF_DataType* values,
+        int num_values);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrShapeList(
     TFE_Op* op, const char* attr_name, const int64_t** dims,
     const int* num_dims, int num_values, TF_Status* out_status);
 TF_CAPI_EXPORT extern void TFE_OpSetAttrFunctionList(TFE_Op* op,
-                                                     const char* attr_name,
-                                                     const TFE_Op** value,
-                                                     int num_values);
+        const char* attr_name,
+        const TFE_Op** value,
+        int num_values);
 
 // Returns the length (number of tensors) of the input argument `input_name`
 // found in the provided `op`.
 TF_CAPI_EXPORT extern int TFE_OpGetInputLength(TFE_Op* op,
-                                               const char* input_name,
-                                               TF_Status* status);
+        const char* input_name,
+        TF_Status* status);
 
 // Returns the length (number of tensors) of the output argument `output_name`
 // found in the provided `op`.
 TF_CAPI_EXPORT extern int TFE_OpGetOutputLength(TFE_Op* op,
-                                                const char* output_name,
-                                                TF_Status* status);
+        const char* output_name,
+        TF_Status* status);
 
 // Execute the operation defined by 'op' and return handles to computed
 // tensors in `retvals`.
@@ -389,19 +389,19 @@ TF_CAPI_EXPORT extern void TFE_ContextAddFunctionDef(
 // TF_FunctionImportFunctionDef) to the context, allowing it to be executed with
 // TFE_Execute by creating an op with the same name as the function.
 TF_CAPI_EXPORT extern void TFE_ContextAddFunction(TFE_Context* ctx,
-                                                  TF_Function* function,
-                                                  TF_Status* status);
+        TF_Function* function,
+        TF_Status* status);
 
 // Removes a function from the context. Once removed, you can no longer
 // TFE_Execute it or TFE_Execute any TFE_Op which has it as an attribute or any
 // other function which calls it as an attribute.
 TF_CAPI_EXPORT extern void TFE_ContextRemoveFunction(TFE_Context* ctx,
-                                                     const char* name,
-                                                     TF_Status* status);
+        const char* name,
+        TF_Status* status);
 
 // Checks whether a function is registered under `name`.
 TF_CAPI_EXPORT unsigned char TFE_ContextHasFunction(TFE_Context* ctx,
-                                                    const char* name);
+        const char* name);
 
 // Enables tracing of RunMetadata on the ops executed from this context.
 TF_CAPI_EXPORT extern void TFE_ContextEnableRunMetadata(TFE_Context* ctx);
@@ -415,8 +415,8 @@ TF_CAPI_EXPORT extern void TFE_ContextDisableRunMetadata(TFE_Context* ctx);
 // If async mode is enabled, this call blocks till all currently pending ops are
 // done.
 TF_CAPI_EXPORT extern void TFE_ContextExportRunMetadata(TFE_Context* ctx,
-                                                        TF_Buffer* buf,
-                                                        TF_Status* status);
+        TF_Buffer* buf,
+        TF_Status* status);
 
 // Some TF ops need a step container to be set to limit the lifetime of some
 // resources (mostly TensorArray and Stack, used in while loop gradients in

@@ -24,111 +24,115 @@ namespace experimental {
 namespace {
 
 class NonSerializableDatasetOp : public UnaryDatasetOpKernel {
- public:
-  explicit NonSerializableDatasetOp(OpKernelConstruction* ctx)
-      : UnaryDatasetOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("output_types", &output_types_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("output_shapes", &output_shapes_));
-  }
-
- protected:
-  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                   DatasetBase** output) override {
-    *output = new Dataset(ctx, input, output_types_, output_shapes_);
-  }
-
- private:
-  class Dataset : public DatasetBase {
-   public:
-    Dataset(OpKernelContext* ctx, const DatasetBase* input,
-            const DataTypeVector& output_types,
-            const std::vector<PartialTensorShape>& output_shapes)
-        : DatasetBase(DatasetContext(ctx)),
-          input_(input),
-          output_types_(output_types),
-          output_shapes_(output_shapes) {
-      input_->Ref();
+public:
+    explicit NonSerializableDatasetOp(OpKernelConstruction* ctx)
+        : UnaryDatasetOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("output_types", &output_types_));
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("output_shapes", &output_shapes_));
     }
 
-    ~Dataset() override { input_->Unref(); }
-
-    std::unique_ptr<IteratorBase> MakeIteratorInternal(
-        const string& prefix) const override {
-      return absl::make_unique<Iterator>(
-          Iterator::Params{this, strings::StrCat(prefix, "::NonSerializable")});
+protected:
+    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                     DatasetBase** output) override {
+        *output = new Dataset(ctx, input, output_types_, output_shapes_);
     }
 
-    const DataTypeVector& output_dtypes() const override {
-      return output_types_;
-    }
-    const std::vector<PartialTensorShape>& output_shapes() const override {
-      return output_shapes_;
-    }
+private:
+    class Dataset : public DatasetBase {
+    public:
+        Dataset(OpKernelContext* ctx, const DatasetBase* input,
+                const DataTypeVector& output_types,
+                const std::vector<PartialTensorShape>& output_shapes)
+            : DatasetBase(DatasetContext(ctx)),
+              input_(input),
+              output_types_(output_types),
+              output_shapes_(output_shapes) {
+            input_->Ref();
+        }
 
-    string DebugString() const override {
-      return "NonSerializableDatasetOp::Dataset";
-    }
+        ~Dataset() override {
+            input_->Unref();
+        }
 
-    Status CheckExternalState() const override {
-      return input_->CheckExternalState();
-    }
+        std::unique_ptr<IteratorBase> MakeIteratorInternal(
+            const string& prefix) const override {
+            return absl::make_unique<Iterator>(
+                       Iterator::Params{this, strings::StrCat(prefix, "::NonSerializable")});
+        }
 
-   protected:
-    Status AsGraphDefInternal(SerializationContext* ctx,
-                              DatasetGraphDefBuilder* b,
-                              Node** output) const override {
-      return errors::Unimplemented(DebugString(),
-                                   " does not support serialization.");
-    }
+        const DataTypeVector& output_dtypes() const override {
+            return output_types_;
+        }
+        const std::vector<PartialTensorShape>& output_shapes() const override {
+            return output_shapes_;
+        }
 
-    int64 Cardinality() const override { return input_->Cardinality(); }
+        string DebugString() const override {
+            return "NonSerializableDatasetOp::Dataset";
+        }
 
-   private:
-    class Iterator : public DatasetIterator<Dataset> {
-     public:
-      explicit Iterator(const Params& params)
-          : DatasetIterator<Dataset>(params) {}
+        Status CheckExternalState() const override {
+            return input_->CheckExternalState();
+        }
 
-      Status Initialize(IteratorContext* ctx) override {
-        return dataset()->input_->MakeIterator(ctx, this, prefix(),
-                                               &input_impl_);
-      }
+    protected:
+        Status AsGraphDefInternal(SerializationContext* ctx,
+                                  DatasetGraphDefBuilder* b,
+                                  Node** output) const override {
+            return errors::Unimplemented(DebugString(),
+                                         " does not support serialization.");
+        }
 
-      Status GetNextInternal(IteratorContext* ctx,
-                             std::vector<Tensor>* out_tensors,
-                             bool* end_of_sequence) override {
-        return input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-      }
+        int64 Cardinality() const override {
+            return input_->Cardinality();
+        }
 
-     protected:
-      std::shared_ptr<model::Node> CreateNode(
-          IteratorContext* ctx, model::Node::Args args) const override {
-        return model::MakeKnownRatioNode(std::move(args), /*ratio=*/1);
-      }
+    private:
+        class Iterator : public DatasetIterator<Dataset> {
+        public:
+            explicit Iterator(const Params& params)
+                : DatasetIterator<Dataset>(params) {}
 
-      Status SaveInternal(SerializationContext* ctx,
-                          IteratorStateWriter* writer) override {
-        TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-        return Status::OK();
-      }
+            Status Initialize(IteratorContext* ctx) override {
+                return dataset()->input_->MakeIterator(ctx, this, prefix(),
+                                                       &input_impl_);
+            }
 
-      Status RestoreInternal(IteratorContext* ctx,
-                             IteratorStateReader* reader) override {
-        TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-        return Status::OK();
-      }
+            Status GetNextInternal(IteratorContext* ctx,
+                                   std::vector<Tensor>* out_tensors,
+                                   bool* end_of_sequence) override {
+                return input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+            }
 
-     private:
-      std::unique_ptr<IteratorBase> input_impl_;
+        protected:
+            std::shared_ptr<model::Node> CreateNode(
+                IteratorContext* ctx, model::Node::Args args) const override {
+                return model::MakeKnownRatioNode(std::move(args), /*ratio=*/1);
+            }
+
+            Status SaveInternal(SerializationContext* ctx,
+                                IteratorStateWriter* writer) override {
+                TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+                return Status::OK();
+            }
+
+            Status RestoreInternal(IteratorContext* ctx,
+                                   IteratorStateReader* reader) override {
+                TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+                return Status::OK();
+            }
+
+        private:
+            std::unique_ptr<IteratorBase> input_impl_;
+        };
+
+        const DatasetBase* input_;
+        const DataTypeVector output_types_;
+        const std::vector<PartialTensorShape> output_shapes_;
     };
 
-    const DatasetBase* input_;
-    const DataTypeVector output_types_;
-    const std::vector<PartialTensorShape> output_shapes_;
-  };
-
-  DataTypeVector output_types_;
-  std::vector<PartialTensorShape> output_shapes_;
+    DataTypeVector output_types_;
+    std::vector<PartialTensorShape> output_shapes_;
 };
 
 REGISTER_KERNEL_BUILDER(Name("NonSerializableDataset").Device(DEVICE_CPU),

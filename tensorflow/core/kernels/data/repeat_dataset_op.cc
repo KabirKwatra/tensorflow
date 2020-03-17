@@ -39,251 +39,253 @@ constexpr char kUninitialized[] = "uninitialized";
 constexpr int64 kKnownRatio = 1;
 
 class RepeatDatasetOp::Dataset : public DatasetBase {
- public:
-  Dataset(OpKernelContext* ctx, int64 count, const DatasetBase* input)
-      : DatasetBase(DatasetContext(ctx)), count_(count), input_(input) {
-    input_->Ref();
-  }
-
-  ~Dataset() override { input_->Unref(); }
-
-  std::unique_ptr<IteratorBase> MakeIteratorInternal(
-      const string& prefix) const override {
-    if (count_ < 0) {
-      return absl::make_unique<ForeverIterator>(ForeverIterator::Params{
-          this, name_utils::IteratorPrefix(kForeverRepeat, prefix)});
-    } else if (count_ == 0) {
-      return absl::make_unique<EmptyIterator>(EmptyIterator::Params{
-          this, name_utils::IteratorPrefix(kEmptyRepeat, prefix)});
-    } else {
-      return absl::make_unique<FiniteIterator>(FiniteIterator::Params{
-          this, name_utils::IteratorPrefix(kFiniteRepeat, prefix)});
-    }
-  }
-
-  const DataTypeVector& output_dtypes() const override {
-    return input_->output_dtypes();
-  }
-  const std::vector<PartialTensorShape>& output_shapes() const override {
-    return input_->output_shapes();
-  }
-
-  string DebugString() const override {
-    return name_utils::DatasetDebugString(RepeatDatasetOp::kDatasetType);
-  }
-
-  int64 Cardinality() const override {
-    int64 n = input_->Cardinality();
-    if (count_ < 0) {
-      if (n == 0) {
-        return 0;
-      }
-      return kInfiniteCardinality;
-    }
-    if (count_ == 0) {
-      return 0;
-    }
-    if (n == kInfiniteCardinality || n == kUnknownCardinality) {
-      return n;
-    }
-    return count_ * n;
-  }
-
-  Status CheckExternalState() const override {
-    return input_->CheckExternalState();
-  }
-
- protected:
-  Status AsGraphDefInternal(SerializationContext* ctx,
-                            DatasetGraphDefBuilder* b,
-                            Node** output) const override {
-    Node* input_graph_node = nullptr;
-    TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
-    Node* count = nullptr;
-    TF_RETURN_IF_ERROR(b->AddScalar(count_, &count));
-    TF_RETURN_IF_ERROR(b->AddDataset(this, {input_graph_node, count}, output));
-    return Status::OK();
-  }
-
- private:
-  class EmptyIterator : public DatasetIterator<Dataset> {
-   public:
-    explicit EmptyIterator(const Params& params)
-        : DatasetIterator<Dataset>(params) {}
-    Status GetNextInternal(IteratorContext* ctx,
-                           std::vector<Tensor>* out_tensors,
-                           bool* end_of_sequence) override {
-      *end_of_sequence = true;
-      return Status::OK();
+public:
+    Dataset(OpKernelContext* ctx, int64 count, const DatasetBase* input)
+        : DatasetBase(DatasetContext(ctx)), count_(count), input_(input) {
+        input_->Ref();
     }
 
-   protected:
-    std::shared_ptr<model::Node> CreateNode(
-        IteratorContext* ctx, model::Node::Args args) const override {
-      return model::MakeKnownRatioNode(std::move(args),
-                                       /*ratio=*/kKnownRatio);
+    ~Dataset() override {
+        input_->Unref();
     }
 
-    Status SaveInternal(SerializationContext* ctx,
-                        IteratorStateWriter* writer) override {
-      return Status::OK();
-    }
-    Status RestoreInternal(IteratorContext* ctx,
-                           IteratorStateReader* reader) override {
-      return Status::OK();
-    }
-  };
-
-  class FiniteIterator : public DatasetIterator<Dataset> {
-   public:
-    explicit FiniteIterator(const Params& params)
-        : DatasetIterator<Dataset>(params), i_(0) {}
-
-    Status Initialize(IteratorContext* ctx) override {
-      return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
-    }
-
-    Status GetNextInternal(IteratorContext* ctx,
-                           std::vector<Tensor>* out_tensors,
-                           bool* end_of_sequence) override {
-      mutex_lock l(mu_);  // TODO(mrry): Make locking less conservative.
-      if (!input_impl_) {
-        *end_of_sequence = true;
-        return Status::OK();
-      }
-      while (i_ < dataset()->count_) {
-        TF_RETURN_IF_ERROR(
-            input_impl_->GetNext(ctx, out_tensors, end_of_sequence));
-        if (!*end_of_sequence) {
-          return Status::OK();
-        }
-        ++i_;
-        TF_RETURN_IF_ERROR(
-            dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_));
-      }
-      *end_of_sequence = true;
-      input_impl_.reset();
-      return Status::OK();
-    }
-
-   protected:
-    std::shared_ptr<model::Node> CreateNode(
-        IteratorContext* ctx, model::Node::Args args) const override {
-      return model::MakeKnownRatioNode(std::move(args),
-                                       /*ratio=*/kKnownRatio);
-    }
-
-    Status SaveInternal(SerializationContext* ctx,
-                        IteratorStateWriter* writer) override {
-      mutex_lock l(mu_);
-      TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kCurIteration), i_));
-      if (!input_impl_) {
-        TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kInputImplEmpty), ""));
-      } else {
-        TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-      }
-      return Status::OK();
-    }
-
-    Status RestoreInternal(IteratorContext* ctx,
-                           IteratorStateReader* reader) override {
-      mutex_lock l(mu_);
-      TF_RETURN_IF_ERROR(reader->ReadScalar(full_name(kCurIteration), &i_));
-      if (!reader->Contains(full_name(kInputImplEmpty))) {
-        TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-      } else {
-        input_impl_.reset();
-      }
-      return Status::OK();
-    }
-
-   private:
-    mutex mu_;
-    int64 i_ TF_GUARDED_BY(mu_);
-    std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
-  };
-
-  class ForeverIterator : public DatasetIterator<Dataset> {
-   public:
-    explicit ForeverIterator(const Params& params)
-        : DatasetIterator<Dataset>(params),
-          input_impl_(nullptr),
-          first_call_(true) {}
-
-    Status Initialize(IteratorContext* ctx) override {
-      mutex_lock l(mu_);
-      return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
-    }
-
-    Status GetNextInternal(IteratorContext* ctx,
-                           std::vector<Tensor>* out_tensors,
-                           bool* end_of_sequence) override {
-      mutex_lock l(mu_);  // TODO(mrry): Make locking less conservative.
-      do {
-        if (!input_impl_) {
-          TF_RETURN_IF_ERROR(dataset()->input_->MakeIterator(
-              ctx, this, prefix(), &input_impl_));
-        }
-        Status s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
-        DCHECK(!*end_of_sequence || out_tensors->empty());
-        if (first_call_ && *end_of_sequence) {
-          // If the first call to GetNext() fails because the end
-          // of sequence has been reached, we terminate the
-          // iteration immediately. (Otherwise, this iterator
-          // would loop infinitely and never produce a value.)
-          input_impl_.reset();
-          return Status::OK();
-        }
-        first_call_ = false;
-        if (!*end_of_sequence) {
-          return s;
+    std::unique_ptr<IteratorBase> MakeIteratorInternal(
+        const string& prefix) const override {
+        if (count_ < 0) {
+            return absl::make_unique<ForeverIterator>(ForeverIterator::Params{
+                this, name_utils::IteratorPrefix(kForeverRepeat, prefix)});
+        } else if (count_ == 0) {
+            return absl::make_unique<EmptyIterator>(EmptyIterator::Params{
+                this, name_utils::IteratorPrefix(kEmptyRepeat, prefix)});
         } else {
-          input_impl_.reset();
-          first_call_ = true;
+            return absl::make_unique<FiniteIterator>(FiniteIterator::Params{
+                this, name_utils::IteratorPrefix(kFiniteRepeat, prefix)});
         }
-      } while (true);
     }
 
-   protected:
-    std::shared_ptr<model::Node> CreateNode(
-        IteratorContext* ctx, model::Node::Args args) const override {
-      return model::MakeKnownRatioNode(std::move(args),
-                                       /*ratio=*/kKnownRatio);
+    const DataTypeVector& output_dtypes() const override {
+        return input_->output_dtypes();
+    }
+    const std::vector<PartialTensorShape>& output_shapes() const override {
+        return input_->output_shapes();
     }
 
-    Status SaveInternal(SerializationContext* ctx,
-                        IteratorStateWriter* writer) override {
-      mutex_lock l(mu_);
-      if (!first_call_)
-        TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
-      else
-        TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kUninitialized), ""));
-      return Status::OK();
+    string DebugString() const override {
+        return name_utils::DatasetDebugString(RepeatDatasetOp::kDatasetType);
     }
 
-    Status RestoreInternal(IteratorContext* ctx,
-                           IteratorStateReader* reader) override {
-      mutex_lock l(mu_);
-      if (reader->Contains(full_name(kUninitialized))) {
-        input_impl_.reset();
-        first_call_ = true;
-      } else {
-        TF_RETURN_IF_ERROR(
-            dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_));
-        TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
-        first_call_ = false;
-      }
-      return Status::OK();
+    int64 Cardinality() const override {
+        int64 n = input_->Cardinality();
+        if (count_ < 0) {
+            if (n == 0) {
+                return 0;
+            }
+            return kInfiniteCardinality;
+        }
+        if (count_ == 0) {
+            return 0;
+        }
+        if (n == kInfiniteCardinality || n == kUnknownCardinality) {
+            return n;
+        }
+        return count_ * n;
     }
 
-   private:
-    mutex mu_;
-    std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
-    bool first_call_ TF_GUARDED_BY(mu_);
-  };
+    Status CheckExternalState() const override {
+        return input_->CheckExternalState();
+    }
 
-  const int64 count_;
-  const DatasetBase* const input_;
+protected:
+    Status AsGraphDefInternal(SerializationContext* ctx,
+                              DatasetGraphDefBuilder* b,
+                              Node** output) const override {
+        Node* input_graph_node = nullptr;
+        TF_RETURN_IF_ERROR(b->AddInputDataset(ctx, input_, &input_graph_node));
+        Node* count = nullptr;
+        TF_RETURN_IF_ERROR(b->AddScalar(count_, &count));
+        TF_RETURN_IF_ERROR(b->AddDataset(this, {input_graph_node, count}, output));
+        return Status::OK();
+    }
+
+private:
+    class EmptyIterator : public DatasetIterator<Dataset> {
+    public:
+        explicit EmptyIterator(const Params& params)
+            : DatasetIterator<Dataset>(params) {}
+        Status GetNextInternal(IteratorContext* ctx,
+                               std::vector<Tensor>* out_tensors,
+                               bool* end_of_sequence) override {
+            *end_of_sequence = true;
+            return Status::OK();
+        }
+
+    protected:
+        std::shared_ptr<model::Node> CreateNode(
+            IteratorContext* ctx, model::Node::Args args) const override {
+            return model::MakeKnownRatioNode(std::move(args),
+                                             /*ratio=*/kKnownRatio);
+        }
+
+        Status SaveInternal(SerializationContext* ctx,
+                            IteratorStateWriter* writer) override {
+            return Status::OK();
+        }
+        Status RestoreInternal(IteratorContext* ctx,
+                               IteratorStateReader* reader) override {
+            return Status::OK();
+        }
+    };
+
+    class FiniteIterator : public DatasetIterator<Dataset> {
+    public:
+        explicit FiniteIterator(const Params& params)
+            : DatasetIterator<Dataset>(params), i_(0) {}
+
+        Status Initialize(IteratorContext* ctx) override {
+            return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
+        }
+
+        Status GetNextInternal(IteratorContext* ctx,
+                               std::vector<Tensor>* out_tensors,
+                               bool* end_of_sequence) override {
+            mutex_lock l(mu_);  // TODO(mrry): Make locking less conservative.
+            if (!input_impl_) {
+                *end_of_sequence = true;
+                return Status::OK();
+            }
+            while (i_ < dataset()->count_) {
+                TF_RETURN_IF_ERROR(
+                    input_impl_->GetNext(ctx, out_tensors, end_of_sequence));
+                if (!*end_of_sequence) {
+                    return Status::OK();
+                }
+                ++i_;
+                TF_RETURN_IF_ERROR(
+                    dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_));
+            }
+            *end_of_sequence = true;
+            input_impl_.reset();
+            return Status::OK();
+        }
+
+    protected:
+        std::shared_ptr<model::Node> CreateNode(
+            IteratorContext* ctx, model::Node::Args args) const override {
+            return model::MakeKnownRatioNode(std::move(args),
+                                             /*ratio=*/kKnownRatio);
+        }
+
+        Status SaveInternal(SerializationContext* ctx,
+                            IteratorStateWriter* writer) override {
+            mutex_lock l(mu_);
+            TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kCurIteration), i_));
+            if (!input_impl_) {
+                TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kInputImplEmpty), ""));
+            } else {
+                TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+            }
+            return Status::OK();
+        }
+
+        Status RestoreInternal(IteratorContext* ctx,
+                               IteratorStateReader* reader) override {
+            mutex_lock l(mu_);
+            TF_RETURN_IF_ERROR(reader->ReadScalar(full_name(kCurIteration), &i_));
+            if (!reader->Contains(full_name(kInputImplEmpty))) {
+                TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+            } else {
+                input_impl_.reset();
+            }
+            return Status::OK();
+        }
+
+    private:
+        mutex mu_;
+        int64 i_ TF_GUARDED_BY(mu_);
+        std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
+    };
+
+    class ForeverIterator : public DatasetIterator<Dataset> {
+    public:
+        explicit ForeverIterator(const Params& params)
+            : DatasetIterator<Dataset>(params),
+              input_impl_(nullptr),
+              first_call_(true) {}
+
+        Status Initialize(IteratorContext* ctx) override {
+            mutex_lock l(mu_);
+            return dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_);
+        }
+
+        Status GetNextInternal(IteratorContext* ctx,
+                               std::vector<Tensor>* out_tensors,
+                               bool* end_of_sequence) override {
+            mutex_lock l(mu_);  // TODO(mrry): Make locking less conservative.
+            do {
+                if (!input_impl_) {
+                    TF_RETURN_IF_ERROR(dataset()->input_->MakeIterator(
+                                           ctx, this, prefix(), &input_impl_));
+                }
+                Status s = input_impl_->GetNext(ctx, out_tensors, end_of_sequence);
+                DCHECK(!*end_of_sequence || out_tensors->empty());
+                if (first_call_ && *end_of_sequence) {
+                    // If the first call to GetNext() fails because the end
+                    // of sequence has been reached, we terminate the
+                    // iteration immediately. (Otherwise, this iterator
+                    // would loop infinitely and never produce a value.)
+                    input_impl_.reset();
+                    return Status::OK();
+                }
+                first_call_ = false;
+                if (!*end_of_sequence) {
+                    return s;
+                } else {
+                    input_impl_.reset();
+                    first_call_ = true;
+                }
+            } while (true);
+        }
+
+    protected:
+        std::shared_ptr<model::Node> CreateNode(
+            IteratorContext* ctx, model::Node::Args args) const override {
+            return model::MakeKnownRatioNode(std::move(args),
+                                             /*ratio=*/kKnownRatio);
+        }
+
+        Status SaveInternal(SerializationContext* ctx,
+                            IteratorStateWriter* writer) override {
+            mutex_lock l(mu_);
+            if (!first_call_)
+                TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+            else
+                TF_RETURN_IF_ERROR(writer->WriteScalar(full_name(kUninitialized), ""));
+            return Status::OK();
+        }
+
+        Status RestoreInternal(IteratorContext* ctx,
+                               IteratorStateReader* reader) override {
+            mutex_lock l(mu_);
+            if (reader->Contains(full_name(kUninitialized))) {
+                input_impl_.reset();
+                first_call_ = true;
+            } else {
+                TF_RETURN_IF_ERROR(
+                    dataset()->input_->MakeIterator(ctx, this, prefix(), &input_impl_));
+                TF_RETURN_IF_ERROR(RestoreInput(ctx, reader, input_impl_));
+                first_call_ = false;
+            }
+            return Status::OK();
+        }
+
+    private:
+        mutex mu_;
+        std::unique_ptr<IteratorBase> input_impl_ TF_GUARDED_BY(mu_);
+        bool first_call_ TF_GUARDED_BY(mu_);
+    };
+
+    const int64 count_;
+    const DatasetBase* const input_;
 };
 
 RepeatDatasetOp::RepeatDatasetOp(OpKernelConstruction* ctx)
@@ -291,11 +293,11 @@ RepeatDatasetOp::RepeatDatasetOp(OpKernelConstruction* ctx)
 
 void RepeatDatasetOp::MakeDataset(OpKernelContext* ctx, DatasetBase* input,
                                   DatasetBase** output) {
-  // Create a new RepeatDatasetOp::Dataset, insert it in the step-local
-  // container, and return it as the output.
-  int64 count;
-  OP_REQUIRES_OK(ctx, ParseScalarArgument<int64>(ctx, kCount, &count));
-  *output = new Dataset(ctx, count, input);
+    // Create a new RepeatDatasetOp::Dataset, insert it in the step-local
+    // container, and return it as the output.
+    int64 count;
+    OP_REQUIRES_OK(ctx, ParseScalarArgument<int64>(ctx, kCount, &count));
+    *output = new Dataset(ctx, count, input);
 }
 
 namespace {
