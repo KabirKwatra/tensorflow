@@ -53,99 +53,99 @@ namespace tensorflow {
 // net/plaque copy in case it should be integrated.
 // NOTE!!!
 class GraphCycles {
-public:
-    GraphCycles();
-    ~GraphCycles();
+ public:
+  GraphCycles();
+  ~GraphCycles();
 
-    // Allocate an unused node id and return it.
-    // The new node has a null pointer for its node data.
-    // All node identifiers passed to other routines in this interface
-    // must have been allocated by NewNode() and not yet deallocated
-    // by RemoveNode().
-    int32 NewNode();
+  // Allocate an unused node id and return it.
+  // The new node has a null pointer for its node data.
+  // All node identifiers passed to other routines in this interface
+  // must have been allocated by NewNode() and not yet deallocated
+  // by RemoveNode().
+  int32 NewNode();
 
-    // Remove "node" from the graph, deleting all edges to and from it.
-    // After this call the identifier "node" it may no longer be used
-    // as an argument to any routine until it has been reallocated with
-    // NewNode().
-    void RemoveNode(int32 node);
+  // Remove "node" from the graph, deleting all edges to and from it.
+  // After this call the identifier "node" it may no longer be used
+  // as an argument to any routine until it has been reallocated with
+  // NewNode().
+  void RemoveNode(int32 node);
 
-    // Attempt to insert an edge from source_node to dest_node.  If the
-    // edge would introduce a cycle, return false without making any
-    // changes. Otherwise add the edge and return true.
-    bool InsertEdge(int32 source_node, int32 dest_node);
+  // Attempt to insert an edge from source_node to dest_node.  If the
+  // edge would introduce a cycle, return false without making any
+  // changes. Otherwise add the edge and return true.
+  bool InsertEdge(int32 source_node, int32 dest_node);
 
-    // Remove any edge that exists from source_node to dest_node.
-    void RemoveEdge(int32 source_node, int32 dest_node);
+  // Remove any edge that exists from source_node to dest_node.
+  void RemoveEdge(int32 source_node, int32 dest_node);
 
-    // Return whether there is an edge directly from source_node to dest_node.
-    bool HasEdge(int32 source_node, int32 dest_node) const;
+  // Return whether there is an edge directly from source_node to dest_node.
+  bool HasEdge(int32 source_node, int32 dest_node) const;
 
-    // Contracts the edge from 'a' to node 'b', merging nodes 'a' and 'b'. One of
-    // the nodes is removed from the graph, and edges to/from it are added to
-    // the remaining one, which is returned. If contracting the edge would create
-    // a cycle, does nothing and return no value.
-    absl::optional<int32> ContractEdge(int32 a, int32 b);
+  // Contracts the edge from 'a' to node 'b', merging nodes 'a' and 'b'. One of
+  // the nodes is removed from the graph, and edges to/from it are added to
+  // the remaining one, which is returned. If contracting the edge would create
+  // a cycle, does nothing and return no value.
+  absl::optional<int32> ContractEdge(int32 a, int32 b);
 
-    // Return true if can contract edge, otherwise return false.
-    bool CanContractEdge(int32 a, int32 b);
+  // Return true if can contract edge, otherwise return false.
+  bool CanContractEdge(int32 a, int32 b);
 
-    // Return whether dest_node is reachable from source_node
-    // by following edges.
-    bool IsReachable(int32 source_node, int32 dest_node) const;
+  // Return whether dest_node is reachable from source_node
+  // by following edges.
+  bool IsReachable(int32 source_node, int32 dest_node) const;
 
-    // A faster non-thread-safe version of IsReachable.
-    bool IsReachableNonConst(int32 source_node, int32 dest_node);
+  // A faster non-thread-safe version of IsReachable.
+  bool IsReachableNonConst(int32 source_node, int32 dest_node);
 
-    // Return or set the node data for a node.  This data is unused
-    // by the implementation.
-    void *GetNodeData(int32 node) const;
-    void SetNodeData(int32 node, void *data);
+  // Return or set the node data for a node.  This data is unused
+  // by the implementation.
+  void* GetNodeData(int32 node) const;
+  void SetNodeData(int32 node, void* data);
 
-    // Find a path from "source" to "dest".  If such a path exists, place the
-    // node IDs of the nodes on the path in the array path[], and return the
-    // number of nodes on the path.  If the path is longer than max_path_len
-    // nodes, only the first max_path_len nodes are placed in path[].  The client
-    // should compare the return value with max_path_len" to see when this
-    // occurs.  If no path exists, return 0.  Any valid path stored in path[]
-    // will start with "source" and end with "dest".  There is no guarantee that
-    // the path is the shortest, but no node will appear twice in the path,
-    // except the source and destination node if they are identical; therefore,
-    // the return value is at most one greater than the number of nodes in the
-    // graph.
-    int FindPath(int32 source, int32 dest, int max_path_len, int32 path[]) const;
+  // Find a path from "source" to "dest".  If such a path exists, place the
+  // node IDs of the nodes on the path in the array path[], and return the
+  // number of nodes on the path.  If the path is longer than max_path_len
+  // nodes, only the first max_path_len nodes are placed in path[].  The client
+  // should compare the return value with max_path_len" to see when this
+  // occurs.  If no path exists, return 0.  Any valid path stored in path[]
+  // will start with "source" and end with "dest".  There is no guarantee that
+  // the path is the shortest, but no node will appear twice in the path,
+  // except the source and destination node if they are identical; therefore,
+  // the return value is at most one greater than the number of nodes in the
+  // graph.
+  int FindPath(int32 source, int32 dest, int max_path_len, int32 path[]) const;
 
-    // Check internal invariants. Crashes on failure, returns true on success.
-    // Expensive: should only be called from graphcycles_test.cc.
-    bool CheckInvariants() const;
+  // Check internal invariants. Crashes on failure, returns true on success.
+  // Expensive: should only be called from graphcycles_test.cc.
+  bool CheckInvariants() const;
 
-    // Warning: Do not use these if iterating over the span and modifying the
-    // GraphCycles at the same time. Instead use SuccessorsCopy/PredecessorsCopy.
-    absl::Span<const int32> Successors(int32 node) const;
-    absl::Span<const int32> Predecessors(int32 node) const;
+  // Warning: Do not use these if iterating over the span and modifying the
+  // GraphCycles at the same time. Instead use SuccessorsCopy/PredecessorsCopy.
+  absl::Span<const int32> Successors(int32 node) const;
+  absl::Span<const int32> Predecessors(int32 node) const;
 
-    // Return a copy of the successors set. This is needed for code using the
-    // collection while modifying the GraphCycles.
-    std::vector<int32> SuccessorsCopy(int32 node) const;
-    // Return a copy of the predecessors set. This is needed for code using the
-    // collection while modifying the GraphCycles.
-    std::vector<int32> PredecessorsCopy(int32 node) const;
+  // Return a copy of the successors set. This is needed for code using the
+  // collection while modifying the GraphCycles.
+  std::vector<int32> SuccessorsCopy(int32 node) const;
+  // Return a copy of the predecessors set. This is needed for code using the
+  // collection while modifying the GraphCycles.
+  std::vector<int32> PredecessorsCopy(int32 node) const;
 
-    // Returns all nodes in post order.
-    //
-    // If there is a path from X to Y then X appears after Y in the
-    // returned vector.
-    std::vector<int32> AllNodesInPostOrder() const;
+  // Returns all nodes in post order.
+  //
+  // If there is a path from X to Y then X appears after Y in the
+  // returned vector.
+  std::vector<int32> AllNodesInPostOrder() const;
 
-    // Returns the graph in graphviz format.
-    string DebugString() const;
+  // Returns the graph in graphviz format.
+  string DebugString() const;
 
-    // ----------------------------------------------------
-    struct Rep;
+  // ----------------------------------------------------
+  struct Rep;
 
-private:
-    Rep *rep_;  // opaque representation
-    TF_DISALLOW_COPY_AND_ASSIGN(GraphCycles);
+ private:
+  Rep* rep_;  // opaque representation
+  TF_DISALLOW_COPY_AND_ASSIGN(GraphCycles);
 };
 
 }  // namespace tensorflow

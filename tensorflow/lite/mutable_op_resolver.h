@@ -28,25 +28,23 @@ namespace tflite {
 namespace op_resolver_hasher {
 template <typename V>
 struct ValueHasher {
-    size_t operator()(const V& v) const {
-        return std::hash<V>()(v);
-    }
+  size_t operator()(const V& v) const { return std::hash<V>()(v); }
 };
 
 template <>
 struct ValueHasher<tflite::BuiltinOperator> {
-    size_t operator()(const tflite::BuiltinOperator& v) const {
-        return std::hash<int>()(static_cast<int>(v));
-    }
+  size_t operator()(const tflite::BuiltinOperator& v) const {
+    return std::hash<int>()(static_cast<int>(v));
+  }
 };
 
 template <typename T>
 struct OperatorKeyHasher {
-    size_t operator()(const T& x) const {
-        size_t a = ValueHasher<typename T::first_type>()(x.first);
-        size_t b = ValueHasher<typename T::second_type>()(x.second);
-        return CombineHashes({a, b});
-    }
+  size_t operator()(const T& x) const {
+    size_t a = ValueHasher<typename T::first_type>()(x.first);
+    size_t b = ValueHasher<typename T::second_type>()(x.second);
+    return CombineHashes({a, b});
+  }
 };
 }  // namespace op_resolver_hasher
 
@@ -57,31 +55,31 @@ struct OperatorKeyHasher {
 //   resolver.AddCustom("CustomOp", Register_CUSTOM_OP());
 //   InterpreterBuilder(model, resolver)(&interpreter);
 class MutableOpResolver : public OpResolver {
-public:
-    const TfLiteRegistration* FindOp(tflite::BuiltinOperator op,
-                                     int version) const override;
-    const TfLiteRegistration* FindOp(const char* op, int version) const override;
-    void AddBuiltin(tflite::BuiltinOperator op,
-                    const TfLiteRegistration* registration, int version = 1);
-    void AddBuiltin(tflite::BuiltinOperator op,
-                    const TfLiteRegistration* registration, int min_version,
-                    int max_version);
-    void AddCustom(const char* name, const TfLiteRegistration* registration,
-                   int version = 1);
-    void AddCustom(const char* name, const TfLiteRegistration* registration,
-                   int min_version, int max_version);
-    void AddAll(const MutableOpResolver& other);
+ public:
+  const TfLiteRegistration* FindOp(tflite::BuiltinOperator op,
+                                   int version) const override;
+  const TfLiteRegistration* FindOp(const char* op, int version) const override;
+  void AddBuiltin(tflite::BuiltinOperator op,
+                  const TfLiteRegistration* registration, int version = 1);
+  void AddBuiltin(tflite::BuiltinOperator op,
+                  const TfLiteRegistration* registration, int min_version,
+                  int max_version);
+  void AddCustom(const char* name, const TfLiteRegistration* registration,
+                 int version = 1);
+  void AddCustom(const char* name, const TfLiteRegistration* registration,
+                 int min_version, int max_version);
+  void AddAll(const MutableOpResolver& other);
 
-private:
-    typedef std::pair<tflite::BuiltinOperator, int> BuiltinOperatorKey;
-    typedef std::pair<std::string, int> CustomOperatorKey;
+ private:
+  typedef std::pair<tflite::BuiltinOperator, int> BuiltinOperatorKey;
+  typedef std::pair<std::string, int> CustomOperatorKey;
 
-    std::unordered_map<BuiltinOperatorKey, TfLiteRegistration,
-        op_resolver_hasher::OperatorKeyHasher<BuiltinOperatorKey> >
-        builtins_;
-    std::unordered_map<CustomOperatorKey, TfLiteRegistration,
-        op_resolver_hasher::OperatorKeyHasher<CustomOperatorKey> >
-        custom_ops_;
+  std::unordered_map<BuiltinOperatorKey, TfLiteRegistration,
+                     op_resolver_hasher::OperatorKeyHasher<BuiltinOperatorKey> >
+      builtins_;
+  std::unordered_map<CustomOperatorKey, TfLiteRegistration,
+                     op_resolver_hasher::OperatorKeyHasher<CustomOperatorKey> >
+      custom_ops_;
 };
 
 }  // namespace tflite
