@@ -25,17 +25,17 @@ from tensorflow.python.util import lazy_loader
 # with copybara is fixed.
 # pylint: disable=g-inconsistent-quotes
 training = lazy_loader.LazyLoader(
-    "training", globals(),
-    "tensorflow.python.keras.engine.training")
+    "training", globals(), "tensorflow.python.keras.engine.training"
+)
 training_v1 = lazy_loader.LazyLoader(
-    "training_v1", globals(),
-    "tensorflow.python.keras.engine.training_v1")
+    "training_v1", globals(), "tensorflow.python.keras.engine.training_v1"
+)
 base_layer = lazy_loader.LazyLoader(
-    "base_layer", globals(),
-    "tensorflow.python.keras.engine.base_layer")
+    "base_layer", globals(), "tensorflow.python.keras.engine.base_layer"
+)
 base_layer_v1 = lazy_loader.LazyLoader(
-    "base_layer_v1", globals(),
-    "tensorflow.python.keras.engine.base_layer_v1")
+    "base_layer_v1", globals(), "tensorflow.python.keras.engine.base_layer_v1"
+)
 
 # pylint: enable=g-inconsistent-quotes
 
@@ -54,8 +54,7 @@ class LayerVersionSelector(object):
 
     def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
         eager_enabled = ops.executing_eagerly_outside_functions()
-        cls = swap_class(cls, base_layer.Layer,
-                         base_layer_v1.Layer, eager_enabled)
+        cls = swap_class(cls, base_layer.Layer, base_layer_v1.Layer, eager_enabled)
         return super(LayerVersionSelector, cls).__new__(cls)
 
 
@@ -71,7 +70,8 @@ def swap_class(cls, v2_cls, v1_cls, eager_enabled):
 
     # Recursively search superclasses to swap in the right Keras class.
     cls.__bases__ = tuple(
-        swap_class(base, v2_cls, v1_cls, eager_enabled) for base in cls.__bases__)
+        swap_class(base, v2_cls, v1_cls, eager_enabled) for base in cls.__bases__
+    )
     return cls
 
 
@@ -81,7 +81,7 @@ def disallow_legacy_graph(cls_name, method_name):
             "Calling `{cls_name}.{method_name}` in graph mode is not supported "
             "when the `{cls_name}` instance was constructed with eager mode "
             "enabled. Please construct your `{cls_name}` instance in graph mode or"
-            " call `{cls_name}.{method_name}` with eager mode enabled.")
-        error_msg = error_msg.format(
-            cls_name=cls_name, method_name=method_name)
+            " call `{cls_name}.{method_name}` with eager mode enabled."
+        )
+        error_msg = error_msg.format(cls_name=cls_name, method_name=method_name)
         raise ValueError(error_msg)
