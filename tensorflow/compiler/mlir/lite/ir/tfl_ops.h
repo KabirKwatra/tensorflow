@@ -38,15 +38,17 @@ namespace mlir {
 namespace TFL {
 
 class TensorFlowLiteDialect : public Dialect {
- public:
-  explicit TensorFlowLiteDialect(MLIRContext *context);
+public:
+    explicit TensorFlowLiteDialect(MLIRContext *context);
 
-  static StringRef getDialectNamespace() { return "tfl"; }
+    static StringRef getDialectNamespace() {
+        return "tfl";
+    }
 
-  // Registered hook to materialize a constant operation from a given attribute
-  // value with the desired resultant type.
-  Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
-                                 Location loc) override;
+    // Registered hook to materialize a constant operation from a given attribute
+    // value with the desired resultant type.
+    Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
+                                   Location loc) override;
 };
 
 #include "tensorflow/compiler/mlir/lite/ir/tfl_ops_interface.h.inc"
