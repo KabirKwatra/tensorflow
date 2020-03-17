@@ -115,19 +115,19 @@ class TensorBoard(callbacks.Callback):
     # pylint: enable=line-too-long
 
     def __init__(
-        self,
-        log_dir="./logs",
-        histogram_freq=0,
-        batch_size=32,
-        write_graph=True,
-        write_grads=False,
-        write_images=False,
-        embeddings_freq=0,
-        embeddings_layer_names=None,
-        embeddings_metadata=None,
-        embeddings_data=None,
-        update_freq="epoch",
-        profile_batch=2,
+            self,
+            log_dir="./logs",
+            histogram_freq=0,
+            batch_size=32,
+            write_graph=True,
+            write_grads=False,
+            write_images=False,
+            embeddings_freq=0,
+            embeddings_layer_names=None,
+            embeddings_metadata=None,
+            embeddings_data=None,
+            update_freq="epoch",
+            profile_batch=2,
     ):
         super(TensorBoard, self).__init__()
         self.log_dir = log_dir
@@ -136,9 +136,7 @@ class TensorBoard(callbacks.Callback):
             logging.warning(
                 UserWarning(
                     "Weight and gradient histograms not supported for eager"
-                    "execution, setting `histogram_freq` to `0`."
-                )
-            )
+                    "execution, setting `histogram_freq` to `0`."))
             self.histogram_freq = 0
         self.merged = None
         self.write_graph = write_graph
@@ -194,18 +192,20 @@ class TensorBoard(callbacks.Callback):
                             if shape[0] > shape[1]:
                                 w_img = array_ops.transpose(w_img)
                                 shape = K.int_shape(w_img)
-                            w_img = array_ops.reshape(w_img, [1, shape[0], shape[1], 1])
+                            w_img = array_ops.reshape(
+                                w_img, [1, shape[0], shape[1], 1])
                         elif len(shape) == 3:  # convnet case
                             if K.image_data_format() == "channels_last":
                                 # switch to channels_first to display
                                 # every kernel as a separate image
-                                w_img = array_ops.transpose(w_img, perm=[2, 0, 1])
+                                w_img = array_ops.transpose(w_img,
+                                                            perm=[2, 0, 1])
                                 shape = K.int_shape(w_img)
                             w_img = array_ops.reshape(
-                                w_img, [shape[0], shape[1], shape[2], 1]
-                            )
+                                w_img, [shape[0], shape[1], shape[2], 1])
                         elif len(shape) == 1:  # bias case
-                            w_img = array_ops.reshape(w_img, [1, shape[0], 1, 1])
+                            w_img = array_ops.reshape(w_img,
+                                                      [1, shape[0], 1, 1])
                         else:
                             # not possible to handle 3D convnets etc.
                             continue
@@ -217,7 +217,8 @@ class TensorBoard(callbacks.Callback):
                 if self.write_grads:
                     for weight in layer.trainable_weights:
                         mapped_weight_name = weight.name.replace(":", "_")
-                        grads = model.optimizer.get_gradients(model.total_loss, weight)
+                        grads = model.optimizer.get_gradients(
+                            model.total_loss, weight)
 
                         def is_indexed_slices(grad):
                             return type(grad).__name__ == "IndexedSlices"
@@ -227,17 +228,16 @@ class TensorBoard(callbacks.Callback):
                             for grad in grads
                         ]
                         tf_summary.histogram(
-                            "{}_grad".format(mapped_weight_name), grads
-                        )
+                            "{}_grad".format(mapped_weight_name), grads)
 
                 if hasattr(layer, "output"):
                     if isinstance(layer.output, list):
                         for i, output in enumerate(layer.output):
                             tf_summary.histogram(
-                                "{}_out_{}".format(layer.name, i), output
-                            )
+                                "{}_out_{}".format(layer.name, i), output)
                     else:
-                        tf_summary.histogram("{}_out".format(layer.name), layer.output)
+                        tf_summary.histogram("{}_out".format(layer.name),
+                                             layer.output)
 
     def set_model(self, model):
         """Sets Keras model and creates summary ops."""
@@ -254,20 +254,17 @@ class TensorBoard(callbacks.Callback):
         if self.embeddings_freq and self.embeddings_data is not None:
             # Avoid circular dependency.
             from tensorflow.python.keras.engine import (
-                training_utils,
-            )  # pylint: disable=g-import-not-at-top
+                training_utils, )  # pylint: disable=g-import-not-at-top
 
             self.embeddings_data = training_utils.standardize_input_data(
-                self.embeddings_data, model.input_names
-            )
+                self.embeddings_data, model.input_names)
 
             # If embedding_layer_names are not provided, get all of the embedding
             # layers from the model.
             embeddings_layer_names = self.embeddings_layer_names
             if not embeddings_layer_names:
                 embeddings_layer_names = [
-                    layer.name
-                    for layer in self.model.layers
+                    layer.name for layer in self.model.layers
                     if type(layer).__name__ == "Embedding"
                 ]
 
@@ -282,16 +279,15 @@ class TensorBoard(callbacks.Callback):
                     embedding_input = self.model.get_layer(layer.name).output
                     embedding_size = np.prod(embedding_input.shape[1:])
                     embedding_input = array_ops.reshape(
-                        embedding_input, (step, int(embedding_size))
-                    )
-                    shape = (self.embeddings_data[0].shape[0], int(embedding_size))
-                    embedding = variables.Variable(
-                        array_ops.zeros(shape), name=layer.name + "_embedding"
-                    )
+                        embedding_input, (step, int(embedding_size)))
+                    shape = (self.embeddings_data[0].shape[0],
+                             int(embedding_size))
+                    embedding = variables.Variable(array_ops.zeros(shape),
+                                                   name=layer.name +
+                                                   "_embedding")
                     embeddings_vars[layer.name] = embedding
                     batch = state_ops.assign(
-                        embedding[batch_id : batch_id + step], embedding_input
-                    )
+                        embedding[batch_id:batch_id + step], embedding_input)
                     self.assign_embeddings.append(batch)
 
             self.saver = saver.Saver(list(embeddings_vars.values()))
@@ -311,8 +307,7 @@ class TensorBoard(callbacks.Callback):
             except ImportError:
                 raise ImportError(
                     "Failed to import TensorBoard. Please make sure that "
-                    'TensorBoard integration is complete."'
-                )
+                    'TensorBoard integration is complete."')
 
             # TODO(psv): Add integration tests to test embedding visualization
             # with TensorBoard callback. We are unable to write a unit test for this
@@ -322,10 +317,8 @@ class TensorBoard(callbacks.Callback):
                 embedding = config.embeddings.add()
                 embedding.tensor_name = tensor.name
 
-                if (
-                    embeddings_metadata is not None
-                    and layer_name in embeddings_metadata
-                ):
+                if (embeddings_metadata is not None
+                        and layer_name in embeddings_metadata):
                     embedding.metadata_path = embeddings_metadata[layer_name]
 
             projector.visualize_embeddings(self.writer, config)
@@ -346,7 +339,8 @@ class TensorBoard(callbacks.Callback):
         logs = logs or {}
         if context.executing_eagerly():
             # use v2 summary ops
-            with self.writer.as_default(), summary_ops_v2.always_record_summaries():
+            with self.writer.as_default(
+            ), summary_ops_v2.always_record_summaries():
                 for name, value in logs.items():
                     if isinstance(value, np.ndarray):
                         value = value.item()
@@ -373,21 +367,17 @@ class TensorBoard(callbacks.Callback):
         self._samples_seen += logs.get("size", 1)
         samples_seen_since = self._samples_seen - self._samples_seen_at_last_write
         if self.update_freq != "epoch" and samples_seen_since >= self.update_freq:
-            batch_logs = {
-                ("batch_" + k): v
-                for k, v in logs.items()
-                if k not in ["batch", "size", "num_steps"]
-            }
+            batch_logs = {("batch_" + k): v
+                          for k, v in logs.items()
+                          if k not in ["batch", "size", "num_steps"]}
             self._write_custom_summaries(self._total_batches_seen, batch_logs)
             self._samples_seen_at_last_write = self._samples_seen
         self._total_batches_seen += 1
         if self._is_profiling:
             profiler.stop()
             self._is_profiling = False
-        elif (
-            not self._is_profiling
-            and self._total_batches_seen == self._profile_batch - 1
-        ):
+        elif (not self._is_profiling
+              and self._total_batches_seen == self._profile_batch - 1):
             profiler.start(self.log_dir)
             self._is_profiling = True
 
@@ -408,8 +398,7 @@ class TensorBoard(callbacks.Callback):
             if self.merged not in self.model.test_function.fetches:
                 self.model.test_function.fetches.append(self.merged)
                 self.model.test_function.fetch_callbacks[
-                    self.merged
-                ] = self._fetch_callback
+                    self.merged] = self._fetch_callback
             # pylint: enable=protected-access
 
     def on_epoch_end(self, epoch, logs=None):
@@ -417,11 +406,9 @@ class TensorBoard(callbacks.Callback):
 
         # don't output batch_size and
         # batch number as TensorBoard summaries
-        logs = {
-            ("epoch_" + k): v
-            for k, v in logs.items()
-            if k not in ["batch", "size", "num_steps"]
-        }
+        logs = {("epoch_" + k): v
+                for k, v in logs.items()
+                if k not in ["batch", "size", "num_steps"]}
         if self.update_freq == "epoch":
             step = epoch
         else:
@@ -438,9 +425,8 @@ class TensorBoard(callbacks.Callback):
             # pylint: enable=protected-access
 
         if self.embeddings_data is None and self.embeddings_freq:
-            raise ValueError(
-                "To visualize embeddings, embeddings_data must " "be provided."
-            )
+            raise ValueError("To visualize embeddings, embeddings_data must "
+                             "be provided.")
 
         if self.embeddings_freq and self.embeddings_data is not None:
             if epoch % self.embeddings_freq == 0:
@@ -465,7 +451,9 @@ class TensorBoard(callbacks.Callback):
                             for idx, model_input in enumerate(self.model.input)
                         }
                     else:
-                        feed_dict = {self.model.input: embeddings_data[0][batch]}
+                        feed_dict = {
+                            self.model.input: embeddings_data[0][batch]
+                        }
 
                     feed_dict.update({self.batch_id: i, self.step: step})
 
@@ -474,8 +462,8 @@ class TensorBoard(callbacks.Callback):
 
                     sess.run(self.assign_embeddings, feed_dict=feed_dict)
                     self.saver.save(
-                        sess, os.path.join(self.log_dir, "keras_embedding.ckpt"), epoch
-                    )
+                        sess, os.path.join(self.log_dir,
+                                           "keras_embedding.ckpt"), epoch)
 
                     i += self.batch_size
 
