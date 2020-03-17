@@ -36,21 +36,19 @@ from tensorflow.python.util import compat
 from tensorflow.python.util import deprecation
 from tensorflow.python.util.tf_export import tf_export
 
-NUMERIC_TYPES = frozenset(
-    [
-        dtypes.float32,
-        dtypes.float64,
-        dtypes.int8,
-        dtypes.int16,
-        dtypes.int32,
-        dtypes.int64,
-        dtypes.uint8,
-        dtypes.qint8,
-        dtypes.qint32,
-        dtypes.quint8,
-        dtypes.complex64,
-    ]
-)
+NUMERIC_TYPES = frozenset([
+    dtypes.float32,
+    dtypes.float64,
+    dtypes.int8,
+    dtypes.int16,
+    dtypes.int32,
+    dtypes.int64,
+    dtypes.uint8,
+    dtypes.qint8,
+    dtypes.qint32,
+    dtypes.quint8,
+    dtypes.complex64,
+])
 
 __all__ = [
     "assert_negative",
@@ -92,9 +90,9 @@ def _assert_static(condition, data):
     """Raises a InvalidArgumentError with as much information as possible."""
     if not condition:
         data_static = [_maybe_constant_value_string(x) for x in data]
-        raise errors.InvalidArgumentError(
-            node_def=None, op=None, message="\n".join(data_static)
-        )
+        raise errors.InvalidArgumentError(node_def=None,
+                                          op=None,
+                                          message="\n".join(data_static))
 
 
 def _shape_and_dtype_str(tensor):
@@ -158,9 +156,7 @@ def _unary_assert_doc(sym, sym_name):
       InvalidArgumentError: if the check can be performed immediately and
         `x {sym}` is False. The check can be performed immediately during
         eager execution or if `x` is statically known.
-    """.format(
-            sym=sym, sym_name=cap_sym_name, opname=opname
-        )
+    """.format(sym=sym, sym_name=cap_sym_name, opname=opname)
         return func
 
     return _decorator
@@ -222,9 +218,7 @@ def _binary_assert_doc(sym):
       InvalidArgumentError: if the check can be performed immediately and
         `x {sym} y` is False. The check can be performed immediately during
         eager execution or if `x` and `y` are statically known.
-    """.format(
-            sym=sym, opname=opname
-        )
+    """.format(sym=sym, opname=opname)
         return func
 
     return _decorator
@@ -267,13 +261,13 @@ def _make_assert_msg_data(sym, x, y, summarize, test_op):
             data.append("Indices of first %d different values:" % num_vals)
             data.append(indices_np[:num_vals])
             data.append("Corresponding x values:")
-            data.append(x_vals.numpy().reshape((-1,))[:num_vals])
+            data.append(x_vals.numpy().reshape((-1, ))[:num_vals])
             data.append("Corresponding y values:")
-            data.append(y_vals.numpy().reshape((-1,))[:num_vals])
+            data.append(y_vals.numpy().reshape((-1, ))[:num_vals])
 
         # reshape((-1,)) is the fastest way to get a flat array view.
-        x_np = x.numpy().reshape((-1,))
-        y_np = y.numpy().reshape((-1,))
+        x_np = x.numpy().reshape((-1, ))
+        y_np = y.numpy().reshape((-1, ))
         x_sum = min(x_np.size, summarize)
         y_sum = min(y_np.size, summarize)
         data.append("First %d elements of x:" % x_sum)
@@ -301,7 +295,7 @@ def _pretty_print(data_item, summarize):
             # Tensor.numpy() returns a scalar for zero-dimensional tensors
             return str(arr)
         else:
-            flat = arr.reshape((-1,))
+            flat = arr.reshape((-1, ))
             lst = [str(x) for x in flat[:summarize]]
             if len(lst) < flat.size:
                 lst.append("...")
@@ -310,9 +304,8 @@ def _pretty_print(data_item, summarize):
         return str(data_item)
 
 
-def _binary_assert(
-    sym, opname, op_func, static_func, x, y, data, summarize, message, name
-):
+def _binary_assert(sym, opname, op_func, static_func, x, y, data, summarize,
+                   message, name):
     """Generic binary elementwise assertion.
 
     Implements the behavior described in _binary_assert_doc() above.
@@ -386,7 +379,9 @@ def _binary_assert(
             if x_static is not None and y_static is not None:
                 condition_static = np.all(static_func(x_static, y_static))
                 _assert_static(condition_static, data)
-            return control_flow_ops.Assert(condition, data, summarize=summarize)
+            return control_flow_ops.Assert(condition,
+                                           data,
+                                           summarize=summarize)
 
 
 @tf_export(
@@ -415,13 +410,12 @@ def assert_proper_iterable(values):
     if isinstance(values, unintentional_iterables):
         raise TypeError(
             'Expected argument "values" to be a "proper" iterable.  Found: %s'
-            % type(values)
-        )
+            % type(values))
 
     if not hasattr(values, "__iter__"):
         raise TypeError(
-            'Expected argument "values" to be iterable.  Found: %s' % type(values)
-        )
+            'Expected argument "values" to be iterable.  Found: %s' %
+            type(values))
 
 
 @tf_export("debugging.assert_negative", v1=[])
@@ -453,15 +447,16 @@ def assert_negative_v2(x, message=None, summarize=None, name=None):
         `x[i] < 0` is False. The check can be performed immediately during eager
         execution or if `x` is statically known.
     """
-    return assert_negative(x=x, message=message, summarize=summarize, name=name)
+    return assert_negative(x=x,
+                           message=message,
+                           summarize=summarize,
+                           name=name)
 
 
 @tf_export(v1=["debugging.assert_negative", "assert_negative"])
 @deprecation.deprecated_endpoints("assert_negative")
 @_unary_assert_doc("< 0", "negative")
-def assert_negative(
-    x, data=None, summarize=None, message=None, name=None
-):  # pylint: disable=missing-docstring
+def assert_negative(x, data=None, summarize=None, message=None, name=None):  # pylint: disable=missing-docstring
     message = message or ""
     with ops.name_scope(name, "assert_negative", [x, data]):
         x = ops.convert_to_tensor(x, name="x")
@@ -509,15 +504,16 @@ def assert_positive_v2(x, message=None, summarize=None, name=None):
         `x[i] > 0` is False. The check can be performed immediately during eager
         execution or if `x` is statically known.
     """
-    return assert_positive(x=x, summarize=summarize, message=message, name=name)
+    return assert_positive(x=x,
+                           summarize=summarize,
+                           message=message,
+                           name=name)
 
 
 @tf_export(v1=["debugging.assert_positive", "assert_positive"])
 @deprecation.deprecated_endpoints("assert_positive")
 @_unary_assert_doc("> 0", "positive")
-def assert_positive(
-    x, data=None, summarize=None, message=None, name=None
-):  # pylint: disable=missing-docstring
+def assert_positive(x, data=None, summarize=None, message=None, name=None):  # pylint: disable=missing-docstring
     message = message or ""
     with ops.name_scope(name, "assert_positive", [x, data]):
         x = ops.convert_to_tensor(x, name="x")
@@ -566,15 +562,16 @@ def assert_non_negative_v2(x, message=None, summarize=None, name=None):
         `x[i] >= 0` is False. The check can be performed immediately during eager
         execution or if `x` is statically known.
     """
-    return assert_non_negative(x=x, summarize=summarize, message=message, name=name)
+    return assert_non_negative(x=x,
+                               summarize=summarize,
+                               message=message,
+                               name=name)
 
 
 @tf_export(v1=["debugging.assert_non_negative", "assert_non_negative"])
 @deprecation.deprecated_endpoints("assert_non_negative")
 @_unary_assert_doc(">= 0", "non-negative")
-def assert_non_negative(
-    x, data=None, summarize=None, message=None, name=None
-):  # pylint: disable=missing-docstring
+def assert_non_negative(x, data=None, summarize=None, message=None, name=None):  # pylint: disable=missing-docstring
     message = message or ""
     with ops.name_scope(name, "assert_non_negative", [x, data]):
         x = ops.convert_to_tensor(x, name="x")
@@ -623,15 +620,16 @@ def assert_non_positive_v2(x, message=None, summarize=None, name=None):
         `x[i] <= 0` is False. The check can be performed immediately during eager
         execution or if `x` is statically known.
     """
-    return assert_non_positive(x=x, summarize=summarize, message=message, name=name)
+    return assert_non_positive(x=x,
+                               summarize=summarize,
+                               message=message,
+                               name=name)
 
 
 @tf_export(v1=["debugging.assert_non_positive", "assert_non_positive"])
 @deprecation.deprecated_endpoints("assert_non_positive")
 @_unary_assert_doc("<= 0", "non-positive")
-def assert_non_positive(
-    x, data=None, summarize=None, message=None, name=None
-):  # pylint: disable=missing-docstring
+def assert_non_positive(x, data=None, summarize=None, message=None, name=None):  # pylint: disable=missing-docstring
     message = message or ""
     with ops.name_scope(name, "assert_non_positive", [x, data]):
         x = ops.convert_to_tensor(x, name="x")
@@ -642,7 +640,8 @@ def assert_non_positive(
                 name = x.name
             data = [
                 message,
-                "Condition x <= 0 did not hold element-wise:" "x (%s) = " % name,
+                "Condition x <= 0 did not hold element-wise:"
+                "x (%s) = " % name,
                 x,
             ]
         zero = ops.convert_to_tensor(0, dtype=x.dtype)
@@ -680,18 +679,21 @@ def assert_equal_v2(x, y, message=None, summarize=None, name=None):
         `x == y` is False. The check can be performed immediately during eager
         execution or if `x` and `y` are statically known.
     """
-    return assert_equal(x=x, y=y, summarize=summarize, message=message, name=name)
+    return assert_equal(x=x,
+                        y=y,
+                        summarize=summarize,
+                        message=message,
+                        name=name)
 
 
 @tf_export(v1=["debugging.assert_equal", "assert_equal"])
 @_binary_assert_doc("==")
-def assert_equal(
-    x, y, data=None, summarize=None, message=None, name=None
-):  # pylint: disable=missing-docstring
+def assert_equal(x, y, data=None, summarize=None, message=None, name=None):  # pylint: disable=missing-docstring
     with ops.name_scope(name, "assert_equal", [x, y, data]):
         # Short-circuit if x and y are the same tensor.
         if x is y:
-            return None if context.executing_eagerly() else control_flow_ops.no_op()
+            return None if context.executing_eagerly(
+            ) else control_flow_ops.no_op()
     return _binary_assert(
         "==",
         "assert_equal",
@@ -740,13 +742,18 @@ def assert_none_equal_v2(x, y, summarize=None, message=None, name=None):
         be performed immediately during eager execution or if `x` and `y` are
         statically known.
     """
-    return assert_none_equal(x=x, y=y, summarize=summarize, message=message, name=name)
+    return assert_none_equal(x=x,
+                             y=y,
+                             summarize=summarize,
+                             message=message,
+                             name=name)
 
 
 @tf_export(v1=["debugging.assert_none_equal", "assert_none_equal"])
 @deprecation.deprecated_endpoints("assert_none_equal")
 @_binary_assert_doc("!=")
-def assert_none_equal(x, y, data=None, summarize=None, message=None, name=None):
+def assert_none_equal(x, y, data=None, summarize=None, message=None,
+                      name=None):
     return _binary_assert(
         "!=",
         "assert_none_equal",
@@ -762,7 +769,13 @@ def assert_none_equal(x, y, data=None, summarize=None, message=None, name=None):
 
 
 @tf_export("debugging.assert_near", v1=[])
-def assert_near_v2(x, y, rtol=None, atol=None, message=None, summarize=None, name=None):
+def assert_near_v2(x,
+                   y,
+                   rtol=None,
+                   atol=None,
+                   message=None,
+                   summarize=None,
+                   name=None):
     """Assert the condition `x` and `y` are close element-wise.
 
     This Op checks that `x[i] - y[i] < atol + rtol * tf.abs(y[i])` holds for every
@@ -809,16 +822,25 @@ def assert_near_v2(x, y, rtol=None, atol=None, message=None, summarize=None, nam
     and even `16bit` data.
     @end_compatibility
     """
-    return assert_near(
-        x=x, y=y, rtol=rtol, atol=atol, summarize=summarize, message=message, name=name
-    )
+    return assert_near(x=x,
+                       y=y,
+                       rtol=rtol,
+                       atol=atol,
+                       summarize=summarize,
+                       message=message,
+                       name=name)
 
 
 @tf_export(v1=["debugging.assert_near", "assert_near"])
 @deprecation.deprecated_endpoints("assert_near")
-def assert_near(
-    x, y, rtol=None, atol=None, data=None, summarize=None, message=None, name=None
-):
+def assert_near(x,
+                y,
+                rtol=None,
+                atol=None,
+                data=None,
+                summarize=None,
+                message=None,
+                name=None):
     """Assert the condition `x` and `y` are close element-wise.
 
     Example of adding a dependency to an operation:
@@ -884,7 +906,8 @@ def assert_near(
         if data is None:
             data = [
                 message,
-                "x and y not equal to tolerance rtol = %s, atol = %s" % (rtol, atol),
+                "x and y not equal to tolerance rtol = %s, atol = %s" %
+                (rtol, atol),
                 "x (%s) = " % x_name,
                 x,
                 "y (%s) = " % y_name,
@@ -928,15 +951,18 @@ def assert_less_v2(x, y, message=None, summarize=None, name=None):
         `x < y` is False. The check can be performed immediately during eager
         execution or if `x` and `y` are statically known.
     """
-    return assert_less(x=x, y=y, summarize=summarize, message=message, name=name)
+    return assert_less(x=x,
+                       y=y,
+                       summarize=summarize,
+                       message=message,
+                       name=name)
 
 
 @tf_export(v1=["debugging.assert_less", "assert_less"])
 @_binary_assert_doc("<")
 def assert_less(x, y, data=None, summarize=None, message=None, name=None):
-    return _binary_assert(
-        "<", "assert_less", math_ops.less, np.less, x, y, data, summarize, message, name
-    )
+    return _binary_assert("<", "assert_less", math_ops.less, np.less, x, y,
+                          data, summarize, message, name)
 
 
 @tf_export("debugging.assert_less_equal", v1=[])
@@ -971,13 +997,18 @@ def assert_less_equal_v2(x, y, message=None, summarize=None, name=None):
         `x <= y` is False. The check can be performed immediately during eager
         execution or if `x` and `y` are statically known.
     """
-    return assert_less_equal(x=x, y=y, summarize=summarize, message=message, name=name)
+    return assert_less_equal(x=x,
+                             y=y,
+                             summarize=summarize,
+                             message=message,
+                             name=name)
 
 
 @tf_export(v1=["debugging.assert_less_equal", "assert_less_equal"])
 @deprecation.deprecated_endpoints("assert_less_equal")
 @_binary_assert_doc("<=")
-def assert_less_equal(x, y, data=None, summarize=None, message=None, name=None):
+def assert_less_equal(x, y, data=None, summarize=None, message=None,
+                      name=None):
     return _binary_assert(
         "<=",
         "assert_less_equal",
@@ -1024,14 +1055,16 @@ def assert_greater_v2(x, y, message=None, summarize=None, name=None):
         `x > y` is False. The check can be performed immediately during eager
         execution or if `x` and `y` are statically known.
     """
-    return assert_greater(x=x, y=y, summarize=summarize, message=message, name=name)
+    return assert_greater(x=x,
+                          y=y,
+                          summarize=summarize,
+                          message=message,
+                          name=name)
 
 
 @tf_export(v1=["debugging.assert_greater", "assert_greater"])
 @_binary_assert_doc(">")
-def assert_greater(
-    x, y, data=None, summarize=None, message=None, name=None
-):  # pylint: disable=missing-docstring
+def assert_greater(x, y, data=None, summarize=None, message=None, name=None):  # pylint: disable=missing-docstring
     return _binary_assert(
         ">",
         "assert_greater",
@@ -1079,15 +1112,22 @@ def assert_greater_equal_v2(x, y, message=None, summarize=None, name=None):
         `x >= y` is False. The check can be performed immediately during eager
         execution or if `x` and `y` are statically known.
     """
-    return assert_greater_equal(
-        x=x, y=y, summarize=summarize, message=message, name=name
-    )
+    return assert_greater_equal(x=x,
+                                y=y,
+                                summarize=summarize,
+                                message=message,
+                                name=name)
 
 
 @tf_export(v1=["debugging.assert_greater_equal", "assert_greater_equal"])
 @deprecation.deprecated_endpoints("assert_greater_equal")
 @_binary_assert_doc(">=")
-def assert_greater_equal(x, y, data=None, summarize=None, message=None, name=None):
+def assert_greater_equal(x,
+                         y,
+                         data=None,
+                         summarize=None,
+                         message=None,
+                         name=None):
     return _binary_assert(
         ">=",
         "assert_greater_equal",
@@ -1102,9 +1142,8 @@ def assert_greater_equal(x, y, data=None, summarize=None, message=None, name=Non
     )
 
 
-def _assert_rank_condition(
-    x, rank, static_condition, dynamic_condition, data, summarize
-):
+def _assert_rank_condition(x, rank, static_condition, dynamic_condition, data,
+                           summarize):
     """Assert `x` has a rank that satisfies a given condition.
 
     Args:
@@ -1135,10 +1174,10 @@ def _assert_rank_condition(
         x_rank_static = x.get_shape().ndims
         if x_rank_static is not None:
             if not static_condition(x_rank_static, rank_static):
-                raise ValueError(
-                    "Static rank condition failed", x_rank_static, rank_static
-                )
-            return control_flow_ops.no_op(name="static_checks_determined_all_ok")
+                raise ValueError("Static rank condition failed", x_rank_static,
+                                 rank_static)
+            return control_flow_ops.no_op(
+                name="static_checks_determined_all_ok")
 
     condition = dynamic_condition(array_ops.rank(x), rank)
 
@@ -1237,16 +1276,15 @@ def assert_rank(x, rank, data=None, summarize=None, message=None, name=None):
             ]
 
         try:
-            assert_op = _assert_rank_condition(
-                x, rank, static_condition, dynamic_condition, data, summarize
-            )
+            assert_op = _assert_rank_condition(x, rank, static_condition,
+                                               dynamic_condition, data,
+                                               summarize)
 
         except ValueError as e:
             if e.args[0] == "Static rank condition failed":
                 raise ValueError(
                     "%s.  Tensor %s must have rank %d.  Received rank %d, shape %s"
-                    % (message, name, e.args[2], e.args[1], x.get_shape())
-                )
+                    % (message, name, e.args[2], e.args[1], x.get_shape()))
             else:
                 raise
 
@@ -1288,7 +1326,12 @@ def assert_rank_at_least_v2(x, rank, message=None, name=None):
 
 @tf_export(v1=["debugging.assert_rank_at_least", "assert_rank_at_least"])
 @deprecation.deprecated_endpoints("assert_rank_at_least")
-def assert_rank_at_least(x, rank, data=None, summarize=None, message=None, name=None):
+def assert_rank_at_least(x,
+                         rank,
+                         data=None,
+                         summarize=None,
+                         message=None,
+                         name=None):
     """Assert `x` has rank equal to `rank` or higher.
 
     Example of adding a dependency to an operation:
@@ -1315,7 +1358,8 @@ def assert_rank_at_least(x, rank, data=None, summarize=None, message=None, name=
     Raises:
       ValueError:  If static checks determine `x` has wrong rank.
     """
-    with ops.name_scope(name, "assert_rank_at_least", (x, rank) + tuple(data or [])):
+    with ops.name_scope(name, "assert_rank_at_least",
+                        (x, rank) + tuple(data or [])):
         x = ops.convert_to_tensor(x, name="x")
         rank = ops.convert_to_tensor(rank, name="rank")
         message = message or ""
@@ -1340,16 +1384,16 @@ def assert_rank_at_least(x, rank, data=None, summarize=None, message=None, name=
             ]
 
         try:
-            assert_op = _assert_rank_condition(
-                x, rank, static_condition, dynamic_condition, data, summarize
-            )
+            assert_op = _assert_rank_condition(x, rank, static_condition,
+                                               dynamic_condition, data,
+                                               summarize)
 
         except ValueError as e:
             if e.args[0] == "Static rank condition failed":
                 raise ValueError(
                     "%s.  Tensor %s must have rank at least %d.  Received rank %d, "
-                    "shape %s" % (message, name, e.args[2], e.args[1], x.get_shape())
-                )
+                    "shape %s" %
+                    (message, name, e.args[2], e.args[1], x.get_shape()))
             else:
                 raise
 
@@ -1365,13 +1409,13 @@ def _dynamic_rank_in(actual_rank, given_ranks):
         return ops.convert_to_tensor(False)
     result = math_ops.equal(given_ranks[0], actual_rank)
     for given_rank in given_ranks[1:]:
-        result = math_ops.logical_or(result, math_ops.equal(given_rank, actual_rank))
+        result = math_ops.logical_or(result,
+                                     math_ops.equal(given_rank, actual_rank))
     return result
 
 
-def _assert_ranks_condition(
-    x, ranks, static_condition, dynamic_condition, data, summarize
-):
+def _assert_ranks_condition(x, ranks, static_condition, dynamic_condition,
+                            data, summarize):
     """Assert `x` has a rank that satisfies a given condition.
 
     Args:
@@ -1405,10 +1449,10 @@ def _assert_ranks_condition(
         x_rank_static = x.get_shape().ndims
         if x_rank_static is not None:
             if not static_condition(x_rank_static, ranks_static):
-                raise ValueError(
-                    "Static rank condition failed", x_rank_static, ranks_static
-                )
-            return control_flow_ops.no_op(name="static_checks_determined_all_ok")
+                raise ValueError("Static rank condition failed", x_rank_static,
+                                 ranks_static)
+            return control_flow_ops.no_op(
+                name="static_checks_determined_all_ok")
 
     condition = dynamic_condition(array_ops.rank(x), ranks)
 
@@ -1418,7 +1462,8 @@ def _assert_ranks_condition(
         if rank_static is None:
             this_data = ["Rank must be a scalar. Received rank: ", rank]
             rank_check = assert_rank(rank, 0, data=this_data)
-            condition = control_flow_ops.with_dependencies([rank_check], condition)
+            condition = control_flow_ops.with_dependencies([rank_check],
+                                                           condition)
 
     return control_flow_ops.Assert(condition, data, summarize=summarize)
 
@@ -1457,7 +1502,12 @@ def assert_rank_in_v2(x, ranks, message=None, name=None):
 
 @tf_export(v1=["debugging.assert_rank_in", "assert_rank_in"])
 @deprecation.deprecated_endpoints("assert_rank_in")
-def assert_rank_in(x, ranks, data=None, summarize=None, message=None, name=None):
+def assert_rank_in(x,
+                   ranks,
+                   data=None,
+                   summarize=None,
+                   message=None,
+                   name=None):
     """Assert `x` has rank in `ranks`.
 
     Example of adding a dependency to an operation:
@@ -1484,11 +1534,11 @@ def assert_rank_in(x, ranks, data=None, summarize=None, message=None, name=None)
     Raises:
       ValueError:  If static checks determine `x` has mismatched rank.
     """
-    with ops.name_scope(
-        name, "assert_rank_in", (x,) + tuple(ranks) + tuple(data or [])
-    ):
+    with ops.name_scope(name, "assert_rank_in",
+                        (x, ) + tuple(ranks) + tuple(data or [])):
         x = ops.convert_to_tensor(x, name="x")
-        ranks = tuple([ops.convert_to_tensor(rank, name="rank") for rank in ranks])
+        ranks = tuple(
+            [ops.convert_to_tensor(rank, name="rank") for rank in ranks])
         message = message or ""
 
         if context.executing_eagerly():
@@ -1498,22 +1548,20 @@ def assert_rank_in(x, ranks, data=None, summarize=None, message=None, name=None)
 
         if data is None:
             data = (
-                [message, "Tensor %s must have rank in" % name]
-                + list(ranks)
-                + ["Received shape: ", array_ops.shape(x)]
-            )
+                [message, "Tensor %s must have rank in" % name] + list(ranks) +
+                ["Received shape: ", array_ops.shape(x)])
 
         try:
-            assert_op = _assert_ranks_condition(
-                x, ranks, _static_rank_in, _dynamic_rank_in, data, summarize
-            )
+            assert_op = _assert_ranks_condition(x, ranks, _static_rank_in,
+                                                _dynamic_rank_in, data,
+                                                summarize)
 
         except ValueError as e:
             if e.args[0] == "Static rank condition failed":
                 raise ValueError(
                     "%s.  Tensor %s must have rank in %s.  Received rank %d, "
-                    "shape %s" % (message, name, e.args[2], e.args[1], x.get_shape())
-                )
+                    "shape %s" %
+                    (message, name, e.args[2], e.args[1], x.get_shape()))
             else:
                 raise
 
@@ -1623,11 +1671,11 @@ def assert_type(tensor, tf_type, message=None, name=None):
         tensor = ops.convert_to_tensor(tensor, name="tensor")
         if tensor.dtype != tf_type:
             if context.executing_eagerly():
-                raise TypeError("%s tensor must be of type %s" % (message, tf_type))
+                raise TypeError("%s tensor must be of type %s" %
+                                (message, tf_type))
             else:
-                raise TypeError(
-                    "%s  %s must be of type %s" % (message, tensor.name, tf_type)
-                )
+                raise TypeError("%s  %s must be of type %s" %
+                                (message, tensor.name, tf_type))
 
         return control_flow_ops.no_op("statically_determined_correct_type")
 
@@ -1660,8 +1708,7 @@ def _dimension_sizes(x):
         return sizes
     has_rank_zero = math_ops.equal(array_ops.rank(x), 0)
     return control_flow_ops.cond(
-        has_rank_zero, lambda: array_ops.constant([1]), lambda: dynamic_shape
-    )
+        has_rank_zero, lambda: array_ops.constant([1]), lambda: dynamic_shape)
 
 
 def _symbolic_dimension_sizes(symbolic_shape):
@@ -1687,12 +1734,16 @@ def _is_symbol_for_any_size(symbol):
 
 
 _TensorDimSizes = collections.namedtuple(
-    "_TensorDimSizes", ["x", "unspecified_dim", "actual_sizes", "symbolic_sizes"]
-)
+    "_TensorDimSizes",
+    ["x", "unspecified_dim", "actual_sizes", "symbolic_sizes"])
 
 
 @tf_export("debugging.assert_shapes", v1=[])
-def assert_shapes_v2(shapes, data=None, summarize=None, message=None, name=None):
+def assert_shapes_v2(shapes,
+                     data=None,
+                     summarize=None,
+                     message=None,
+                     name=None):
     """Assert tensor shapes and dimension size relationships between tensors.
 
     This Op checks that a collection of tensors shape relationships
@@ -1752,7 +1803,11 @@ def assert_shapes_v2(shapes, data=None, summarize=None, message=None, name=None)
     Raises:
       ValueError:  If static checks determine any shape constraint is violated.
     """
-    assert_shapes(shapes, data=data, summarize=summarize, message=message, name=name)
+    assert_shapes(shapes,
+                  data=data,
+                  summarize=summarize,
+                  message=message,
+                  name=name)
 
 
 @tf_export(v1=["debugging.assert_shapes"])
@@ -1824,9 +1879,8 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
     message = message or ""
     with ops.name_scope(name, "assert_shapes", [shapes, data]):
         # Shape specified as None implies no constraint
-        shape_constraints = [
-            (ops.convert_to_tensor(x), s) for x, s in shapes if s is not None
-        ]
+        shape_constraints = [(ops.convert_to_tensor(x), s) for x, s in shapes
+                             if s is not None]
 
         executing_eagerly = context.executing_eagerly()
 
@@ -1838,16 +1892,14 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
         tensor_dim_sizes = []
         for tensor, symbolic_shape in shape_constraints:
             is_iterable = hasattr(symbolic_shape, "__iter__") or hasattr(
-                symbolic_shape, "__getitem__"
-            )  # For Python 2 compat.
+                symbolic_shape, "__getitem__")  # For Python 2 compat.
             if not is_iterable:
                 raise ValueError(
                     "%s.  "
                     "Tensor %s.  Specified shape must be an iterable.  "
                     "An iterable has the attribute `__iter__` or `__getitem__`.  "
-                    "Received specified shape: %s"
-                    % (message, tensor_name(tensor), symbolic_shape)
-                )
+                    "Received specified shape: %s" %
+                    (message, tensor_name(tensor), symbolic_shape))
 
             # We convert this into a tuple to handle strings, lists and numpy arrays
             symbolic_shape_tuple = tuple(symbolic_shape)
@@ -1863,8 +1915,7 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
                         "Tensor %s specified shape index %d.  "
                         "Symbol `...` or `*` for a variable number of "
                         "unspecified dimensions is only allowed as the first entry"
-                        % (message, tensor_name(tensor), i)
-                    )
+                        % (message, tensor_name(tensor), i))
 
                 tensors_specified_innermost = True
 
@@ -1876,12 +1927,9 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
                     tensors_specified_innermost,
                     _dimension_sizes(tensor),
                     _symbolic_dimension_sizes(
-                        symbolic_shape_tuple[1:]
-                        if tensors_specified_innermost
-                        else symbolic_shape_tuple
-                    ),
-                )
-            )
+                        symbolic_shape_tuple[1:] if tensors_specified_innermost
+                        else symbolic_shape_tuple),
+                ))
 
         rank_assertions = []
         for sizes in tensor_dim_sizes:
@@ -1937,7 +1985,8 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
                 else:
                     tensor_dim = i
 
-                if size_symbol in size_specifications or _has_known_value(size_symbol):
+                if size_symbol in size_specifications or _has_known_value(
+                        size_symbol):
                     if _has_known_value(size_symbol):
                         specified_size = int(size_symbol)
                         size_check_message = "Specified explicitly"
@@ -1954,13 +2003,11 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
 
                     actual_size = sizes.actual_sizes[tensor_dim]
                     if _has_known_value(actual_size) and _has_known_value(
-                        specified_size
-                    ):
+                            specified_size):
                         if int(actual_size) != int(specified_size):
                             raise ValueError(
                                 "%s.  %s.  Tensor %s dimension %s must have size %d.  "
-                                "Received size %d, shape %s"
-                                % (
+                                "Received size %d, shape %s" % (
                                     message,
                                     size_check_message,
                                     tensor_name(sizes.x),
@@ -1968,8 +2015,7 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
                                     specified_size,
                                     actual_size,
                                     sizes.x.get_shape(),
-                                )
-                            )
+                                ))
                         # No dynamic assertion needed
                         continue
 
@@ -1990,11 +2036,13 @@ def assert_shapes(shapes, data=None, summarize=None, message=None, name=None):
                             array_ops.shape(sizes.x),
                         ]
                     size_assertions.append(
-                        control_flow_ops.Assert(condition, data_, summarize=summarize)
-                    )
+                        control_flow_ops.Assert(condition,
+                                                data_,
+                                                summarize=summarize))
                 else:
                     size = sizes.actual_sizes[tensor_dim]
-                    size_specifications[size_symbol] = (size, sizes.x, tensor_dim)
+                    size_specifications[size_symbol] = (size, sizes.x,
+                                                        tensor_dim)
 
         with ops.control_dependencies(rank_assertions):
             shapes_assertion = control_flow_ops.group(size_assertions)
@@ -2018,9 +2066,8 @@ def _get_diff_for_monotonic_comparison(x):
     s_len = array_ops.shape(x) - 1
 
     def diff():
-        return array_ops.strided_slice(x, [1], [1] + s_len) - array_ops.strided_slice(
-            x, [0], s_len
-        )
+        return array_ops.strided_slice(
+            x, [1], [1] + s_len) - array_ops.strided_slice(x, [0], s_len)
 
     return control_flow_ops.cond(is_shorter_than_two, short_result, diff)
 
@@ -2055,9 +2102,13 @@ def is_numeric_tensor(tensor):
 
 @tf_export(
     "math.is_non_decreasing",
-    v1=["math.is_non_decreasing", "debugging.is_non_decreasing", "is_non_decreasing"],
+    v1=[
+        "math.is_non_decreasing", "debugging.is_non_decreasing",
+        "is_non_decreasing"
+    ],
 )
-@deprecation.deprecated_endpoints("debugging.is_non_decreasing", "is_non_decreasing")
+@deprecation.deprecated_endpoints("debugging.is_non_decreasing",
+                                  "is_non_decreasing")
 def is_non_decreasing(x, name=None):
     """Returns `True` if `x` is non-decreasing.
 
@@ -2099,9 +2150,8 @@ def is_non_decreasing(x, name=None):
         "is_strictly_increasing",
     ],
 )
-@deprecation.deprecated_endpoints(
-    "debugging.is_strictly_increasing", "is_strictly_increasing"
-)
+@deprecation.deprecated_endpoints("debugging.is_strictly_increasing",
+                                  "is_strictly_increasing")
 def is_strictly_increasing(x, name=None):
     """Returns `True` if `x` is strictly increasing.
 
@@ -2172,19 +2222,17 @@ def _assert_same_base_type(items, expected_type=None):
                 item_type = item.dtype.base_dtype
                 if not expected_type:
                     expected_type = item_type
-                    original_item_str = (
-                        item.name if hasattr(item, "name") else str(item)
-                    )
+                    original_item_str = (item.name if hasattr(item, "name")
+                                         else str(item))
                 elif expected_type != item_type:
                     raise ValueError(
-                        "%s, type=%s, must be of the same type (%s)%s."
-                        % (
+                        "%s, type=%s, must be of the same type (%s)%s." % (
                             item.name if hasattr(item, "name") else str(item),
                             item_type,
                             expected_type,
-                            (" as %s" % original_item_str) if original_item_str else "",
-                        )
-                    )
+                            (" as %s" %
+                             original_item_str) if original_item_str else "",
+                        ))
         return expected_type  # Should be unreachable
     else:
         return expected_type
@@ -2273,14 +2321,14 @@ def assert_scalar(tensor, name=None, message=None):
         shape = tensor.get_shape()
         if shape.ndims != 0:
             if context.executing_eagerly():
-                raise ValueError(
-                    "%sExpected scalar shape, saw shape: %s." % (message or "", shape,)
-                )
+                raise ValueError("%sExpected scalar shape, saw shape: %s." % (
+                    message or "",
+                    shape,
+                ))
             else:
                 raise ValueError(
-                    "%sExpected scalar shape for %s, saw shape: %s."
-                    % (message or "", tensor.name, shape)
-                )
+                    "%sExpected scalar shape for %s, saw shape: %s." %
+                    (message or "", tensor.name, shape))
         return tensor
 
 
