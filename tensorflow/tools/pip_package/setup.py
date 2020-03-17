@@ -40,31 +40,31 @@ from setuptools import setup
 from setuptools.command.install import install as InstallCommandBase
 from setuptools.dist import Distribution
 
-DOCLINES = __doc__.split('\n')
+DOCLINES = __doc__.split("\n")
 
 # This version string is semver compatible, but incompatible with pip.
 # For pip, we will remove all '-' characters from this string, and use the
 # result for pip.
 # Also update tensorflow/tensorflow.bzl and
 # tensorflow/core/public/version.h
-_VERSION = '2.1.0'
+_VERSION = "2.1.0"
 
 REQUIRED_PACKAGES = [
-    'absl-py >= 0.7.0',
-    'astunparse == 1.6.3',
+    "absl-py >= 0.7.0",
+    "astunparse == 1.6.3",
     'backports.weakref >= 1.0rc1;python_version<"3.4"',
     'enum34 >= 1.1.6;python_version<"3.4"',
-    'gast == 0.3.3',
-    'google_pasta >= 0.1.8',
-    'h5py >= 2.10.0, < 2.11.0',
-    'keras_preprocessing >= 1.1.0',
-    'numpy >= 1.16.0, < 2.0',
-    'opt_einsum >= 2.3.2',
-    'protobuf >= 3.8.0',
-    'tensorboard >= 2.1.0, < 2.2.0',
-    'tensorflow_estimator >= 2.1.0, < 2.2.0',
-    'termcolor >= 1.1.0',
-    'wrapt >= 1.11.1',
+    "gast == 0.3.3",
+    "google_pasta >= 0.1.8",
+    "h5py >= 2.10.0, < 2.11.0",
+    "keras_preprocessing >= 1.1.0",
+    "numpy >= 1.16.0, < 2.0",
+    "opt_einsum >= 2.3.2",
+    "protobuf >= 3.8.0",
+    "tensorboard >= 2.1.0, < 2.2.0",
+    "tensorflow_estimator >= 2.1.0, < 2.2.0",
+    "termcolor >= 1.1.0",
+    "wrapt >= 1.11.1",
     # python3 requires wheel 0.26
     'wheel >= 0.26;python_version>="3"',
     'wheel;python_version<"3"',
@@ -72,68 +72,68 @@ REQUIRED_PACKAGES = [
     'mock >= 2.0.0;python_version<"3"',
     # functools comes with python3, need to install the backport for python2
     'functools32 >= 3.2.3;python_version<"3"',
-    'six >= 1.12.0',
+    "six >= 1.12.0",
     # scipy < 1.4.1 causes segfaults due to pybind11
     # Latest scipy pip for py2 is scipy==1.2.2
     'scipy == 1.4.1;python_version>="3"',
     'scipy == 1.2.2;python_version<"3"',
 ]
 
-if sys.byteorder == 'little':
+if sys.byteorder == "little":
     # grpcio does not build correctly on big-endian machines due to lack of
     # BoringSSL support.
     # See https://github.com/tensorflow/tensorflow/issues/17882.
-    REQUIRED_PACKAGES.append('grpcio >= 1.8.6')
+    REQUIRED_PACKAGES.append("grpcio >= 1.8.6")
 
-project_name = 'tensorflow'
-if '--project_name' in sys.argv:
-    project_name_idx = sys.argv.index('--project_name')
+project_name = "tensorflow"
+if "--project_name" in sys.argv:
+    project_name_idx = sys.argv.index("--project_name")
     project_name = sys.argv[project_name_idx + 1]
-    sys.argv.remove('--project_name')
+    sys.argv.remove("--project_name")
     sys.argv.pop(project_name_idx)
 
 # tf-nightly should depend on tb-nightly
-if 'tf_nightly' in project_name:
+if "tf_nightly" in project_name:
     for i, pkg in enumerate(REQUIRED_PACKAGES):
-        if 'tensorboard' in pkg:
-            REQUIRED_PACKAGES[i] = 'tb-nightly >= 2.2.0a0, < 2.3.0a0'
-        elif 'tensorflow_estimator' in pkg and '2.0' in project_name:
-            REQUIRED_PACKAGES[i] = 'tensorflow-estimator-2.0-preview'
-        elif 'tensorflow_estimator' in pkg:
-            REQUIRED_PACKAGES[i] = 'tf-estimator-nightly'
+        if "tensorboard" in pkg:
+            REQUIRED_PACKAGES[i] = "tb-nightly >= 2.2.0a0, < 2.3.0a0"
+        elif "tensorflow_estimator" in pkg and "2.0" in project_name:
+            REQUIRED_PACKAGES[i] = "tensorflow-estimator-2.0-preview"
+        elif "tensorflow_estimator" in pkg:
+            REQUIRED_PACKAGES[i] = "tf-estimator-nightly"
 
 # pylint: disable=line-too-long
 CONSOLE_SCRIPTS = [
-    'toco_from_protos = tensorflow.lite.toco.python.toco_from_protos:main',
-    'tflite_convert = tensorflow.lite.python.tflite_convert:main',
-    'toco = tensorflow.lite.python.tflite_convert:main',
-    'saved_model_cli = tensorflow.python.tools.saved_model_cli:main',
+    "toco_from_protos = tensorflow.lite.toco.python.toco_from_protos:main",
+    "tflite_convert = tensorflow.lite.python.tflite_convert:main",
+    "toco = tensorflow.lite.python.tflite_convert:main",
+    "saved_model_cli = tensorflow.python.tools.saved_model_cli:main",
     # We need to keep the TensorBoard command, even though the console script
     # is now declared by the tensorboard pip package. If we remove the
     # TensorBoard command, pip will inappropriately remove it during install,
     # even though the command is not removed, just moved to a different wheel.
-    'tensorboard = tensorboard.main:run_main',
-    'tf_upgrade_v2 = tensorflow.tools.compatibility.tf_upgrade_v2_main:main',
-    'estimator_ckpt_converter = tensorflow_estimator.python.estimator.tools.checkpoint_converter:main',
+    "tensorboard = tensorboard.main:run_main",
+    "tf_upgrade_v2 = tensorflow.tools.compatibility.tf_upgrade_v2_main:main",
+    "estimator_ckpt_converter = tensorflow_estimator.python.estimator.tools.checkpoint_converter:main",
 ]
 # pylint: enable=line-too-long
 
 # Only keep freeze_graph console script in 1.X.
-if _VERSION.startswith('1.') and '_2.0' not in project_name:
+if _VERSION.startswith("1.") and "_2.0" not in project_name:
     CONSOLE_SCRIPTS.append(
-        'freeze_graph = tensorflow.python.tools.freeze_graph:run_main')
+        "freeze_graph = tensorflow.python.tools.freeze_graph:run_main"
+    )
 
 # remove the tensorboard console script if building tf_nightly
-if 'tf_nightly' in project_name:
-    CONSOLE_SCRIPTS.remove('tensorboard = tensorboard.main:run_main')
+if "tf_nightly" in project_name:
+    CONSOLE_SCRIPTS.remove("tensorboard = tensorboard.main:run_main")
 
 TEST_PACKAGES = [
-    'scipy >= 0.15.1',
+    "scipy >= 0.15.1",
 ]
 
 
 class BinaryDistribution(Distribution):
-
     def has_ext_modules(self):
         return True
 
@@ -143,8 +143,9 @@ class InstallCommand(InstallCommandBase):
 
     def finalize_options(self):
         ret = InstallCommandBase.finalize_options(self)
-        self.install_headers = os.path.join(self.install_platlib, 'tensorflow',
-                                            'include')
+        self.install_headers = os.path.join(
+            self.install_platlib, "tensorflow", "include"
+        )
         self.install_lib = self.install_platlib
         return ret
 
@@ -156,15 +157,15 @@ class InstallHeaders(Command):
     the same directory. But we need the files to be in a specific directory
     hierarchy for -I <include_dir> to work correctly.
     """
-    description = 'install C/C++ header files'
 
-    user_options = [('install-dir=', 'd',
-                     'directory to install header files to'),
-                    ('force', 'f',
-                     'force installation (overwrite existing files)'),
-                    ]
+    description = "install C/C++ header files"
 
-    boolean_options = ['force']
+    user_options = [
+        ("install-dir=", "d", "directory to install header files to"),
+        ("force", "f", "force installation (overwrite existing files)"),
+    ]
+
+    boolean_options = ["force"]
 
     def initialize_options(self):
         self.install_dir = None
@@ -172,15 +173,15 @@ class InstallHeaders(Command):
         self.outfiles = []
 
     def finalize_options(self):
-        self.set_undefined_options('install',
-                                   ('install_headers', 'install_dir'),
-                                   ('force', 'force'))
+        self.set_undefined_options(
+            "install", ("install_headers", "install_dir"), ("force", "force")
+        )
 
     def mkdir_and_copy_file(self, header):
         install_dir = os.path.join(self.install_dir, os.path.dirname(header))
         # Get rid of some extra intervening directories so we can have fewer
         # directories for -I
-        install_dir = re.sub('/google/protobuf_archive/src', '', install_dir)
+        install_dir = re.sub("/google/protobuf_archive/src", "", install_dir)
 
         # Copy external code headers into tensorflow/include.
         # A symlink would do, but the wheel file that gets created ignores
@@ -188,12 +189,12 @@ class InstallHeaders(Command):
         # NOTE(keveman): Figure out how to customize bdist_wheel package so
         # we can do the symlink.
         external_header_locations = [
-            'tensorflow/include/external/eigen_archive/',
-            'tensorflow/include/external/com_google_absl/',
+            "tensorflow/include/external/eigen_archive/",
+            "tensorflow/include/external/com_google_absl/",
         ]
         for location in external_header_locations:
             if location in install_dir:
-                extra_dir = install_dir.replace(location, '')
+                extra_dir = install_dir.replace(location, "")
                 if not os.path.exists(extra_dir):
                     self.mkpath(extra_dir)
                 self.copy_file(header, extra_dir)
@@ -227,89 +228,77 @@ def find_files(pattern, root):
 
 
 so_lib_paths = [
-    i for i in os.listdir('.')
-    if os.path.isdir(i) and fnmatch.fnmatch(i, '_solib_*')
+    i for i in os.listdir(".") if os.path.isdir(i) and fnmatch.fnmatch(i, "_solib_*")
 ]
 
 matches = []
 for path in so_lib_paths:
-    matches.extend(
-        ['../' + x for x in find_files('*', path) if '.py' not in x]
-    )
+    matches.extend(["../" + x for x in find_files("*", path) if ".py" not in x])
 
-if os.name == 'nt':
-    EXTENSION_NAME = 'python/_pywrap_tensorflow_internal.pyd'
+if os.name == "nt":
+    EXTENSION_NAME = "python/_pywrap_tensorflow_internal.pyd"
 else:
-    EXTENSION_NAME = 'python/_pywrap_tensorflow_internal.so'
+    EXTENSION_NAME = "python/_pywrap_tensorflow_internal.so"
 
 headers = (
-    list(find_files('*.proto', 'tensorflow/compiler')) +
-    list(find_files('*.proto', 'tensorflow/core')) +
-    list(find_files('*.proto', 'tensorflow/python')) +
-    list(find_files('*.h', 'tensorflow/c')) +
-    list(find_files('*.h', 'tensorflow/cc')) +
-    list(find_files('*.h', 'tensorflow/compiler')) +
-    list(find_files('*.h', 'tensorflow/core')) +
-    list(find_files('*.h', 'tensorflow/python')) +
-    list(find_files('*.h', 'tensorflow/stream_executor')) +
-    list(find_files('*.h', 'google/com_google_protobuf/src')) +
-    list(find_files('*.inc', 'google/com_google_protobuf/src')) +
-    list(find_files('*', 'third_party/eigen3')) + list(
-        find_files('*.h', 'tensorflow/include/external/com_google_absl')) +
-    list(
-        find_files('*.inc', 'tensorflow/include/external/com_google_absl'))
-    + list(find_files('*', 'tensorflow/include/external/eigen_archive')))
+    list(find_files("*.proto", "tensorflow/compiler"))
+    + list(find_files("*.proto", "tensorflow/core"))
+    + list(find_files("*.proto", "tensorflow/python"))
+    + list(find_files("*.h", "tensorflow/c"))
+    + list(find_files("*.h", "tensorflow/cc"))
+    + list(find_files("*.h", "tensorflow/compiler"))
+    + list(find_files("*.h", "tensorflow/core"))
+    + list(find_files("*.h", "tensorflow/python"))
+    + list(find_files("*.h", "tensorflow/stream_executor"))
+    + list(find_files("*.h", "google/com_google_protobuf/src"))
+    + list(find_files("*.inc", "google/com_google_protobuf/src"))
+    + list(find_files("*", "third_party/eigen3"))
+    + list(find_files("*.h", "tensorflow/include/external/com_google_absl"))
+    + list(find_files("*.inc", "tensorflow/include/external/com_google_absl"))
+    + list(find_files("*", "tensorflow/include/external/eigen_archive"))
+)
 
 setup(
     name=project_name,
-    version=_VERSION.replace('-', ''),
+    version=_VERSION.replace("-", ""),
     description=DOCLINES[0],
-    long_description='\n'.join(DOCLINES[2:]),
-    url='https://www.tensorflow.org/',
-    download_url='https://github.com/tensorflow/tensorflow/tags',
-    author='Google Inc.',
-    author_email='packages@tensorflow.org',
+    long_description="\n".join(DOCLINES[2:]),
+    url="https://www.tensorflow.org/",
+    download_url="https://github.com/tensorflow/tensorflow/tags",
+    author="Google Inc.",
+    author_email="packages@tensorflow.org",
     # Contained modules and scripts.
     packages=find_packages(),
-    entry_points={
-        'console_scripts': CONSOLE_SCRIPTS,
-    },
+    entry_points={"console_scripts": CONSOLE_SCRIPTS,},
     headers=headers,
     install_requires=REQUIRED_PACKAGES,
     tests_require=REQUIRED_PACKAGES + TEST_PACKAGES,
     # Add in any packaged data.
     include_package_data=True,
-    package_data={
-        'tensorflow': [
-            EXTENSION_NAME,
-        ] + matches,
-    },
+    package_data={"tensorflow": [EXTENSION_NAME,] + matches,},
     zip_safe=False,
     distclass=BinaryDistribution,
-    cmdclass={
-        'install_headers': InstallHeaders,
-        'install': InstallCommand,
-    },
+    cmdclass={"install_headers": InstallHeaders, "install": InstallCommand,},
     # PyPI package information.
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Education',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3 :: Only',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Mathematics',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Software Development',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules',
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Mathematics",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Software Development",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    license='Apache 2.0',
-    keywords='tensorflow tensor machine learning',
+    license="Apache 2.0",
+    keywords="tensorflow tensor machine learning",
 )
