@@ -71,9 +71,8 @@ try:
 except ImportError:
     issparse = None
 
-_keras_api_gauge = monitoring.BoolGauge(
-    "/tensorflow/api/keras/model_v1", "keras model v1 usage", "method"
-)
+_keras_api_gauge = monitoring.BoolGauge("/tensorflow/api/keras/model_v1",
+                                        "keras model v1 usage", "method")
 
 
 class Model(training_lib.Model):
@@ -147,10 +146,8 @@ class Model(training_lib.Model):
         # predict on a model without compiling it.
         self._distribution_strategy = None
         self._compile_time_distribution_strategy = None
-        if (
-            ops.executing_eagerly_outside_functions()
-            and distribution_strategy_context.has_strategy()
-        ):
+        if (ops.executing_eagerly_outside_functions()
+                and distribution_strategy_context.has_strategy()):
             self._set_strategy(distribution_strategy_context.get_strategy())
 
         # This flag is used to track if the user is using the deprecated path of
@@ -159,7 +156,8 @@ class Model(training_lib.Model):
         self._compile_distribution = False
 
         self._run_eagerly = None
-        self._experimental_run_tf_function = ops.executing_eagerly_outside_functions()
+        self._experimental_run_tf_function = ops.executing_eagerly_outside_functions(
+        )
 
         self._v1_compile_was_called = False
 
@@ -176,9 +174,8 @@ class Model(training_lib.Model):
         Returns:
             A flat list of Numpy arrays.
         """
-        strategy = (
-            self._distribution_strategy or self._compile_time_distribution_strategy
-        )
+        strategy = (self._distribution_strategy
+                    or self._compile_time_distribution_strategy)
         if strategy:
             with strategy.scope():
                 return network.Network.get_weights(self)
@@ -230,29 +227,27 @@ class Model(training_lib.Model):
             ValueError: If `skip_mismatch` is set to `True` when `by_name` is
               `False`.
         """
-        if distributed_training_utils.is_tpu_strategy(self._distribution_strategy):
+        if distributed_training_utils.is_tpu_strategy(
+                self._distribution_strategy):
             if self._distribution_strategy.extended.steps_per_run > 1 and (
-                not network._is_hdf5_filepath(filepath)
-            ):  # pylint: disable=protected-access
+                    not network._is_hdf5_filepath(filepath)):  # pylint: disable=protected-access
                 raise ValueError(
                     "Load weights is not yet supported with TPUStrategy "
-                    "with steps_per_run greater than 1."
-                )
-        return super(Model, self).load_weights(filepath, by_name, skip_mismatch)
+                    "with steps_per_run greater than 1.")
+        return super(Model, self).load_weights(filepath, by_name,
+                                               skip_mismatch)
 
     @trackable.no_automatic_dependency_tracking
-    def compile(
-        self,
-        optimizer="rmsprop",
-        loss=None,
-        metrics=None,
-        loss_weights=None,
-        sample_weight_mode=None,
-        weighted_metrics=None,
-        target_tensors=None,
-        distribute=None,
-        **kwargs
-    ):
+    def compile(self,
+                optimizer="rmsprop",
+                loss=None,
+                metrics=None,
+                loss_weights=None,
+                sample_weight_mode=None,
+                weighted_metrics=None,
+                target_tensors=None,
+                distribute=None,
+                **kwargs):
         """Configures the model for training.
 
         Arguments:
@@ -310,8 +305,7 @@ class Model(training_lib.Model):
         """
         self._run_eagerly = kwargs.pop("run_eagerly", None)
         self._experimental_run_tf_function = kwargs.pop(
-            "experimental_run_tf_function", True
-        )
+            "experimental_run_tf_function", True)
         self._v1_compile_was_called = True
 
         # Prepare Session arguments (legacy).
@@ -319,9 +313,8 @@ class Model(training_lib.Model):
         allowed_kwargs = {"feed_dict", "fetches", "options", "run_metadata"}
         unknown_kwargs = set(kwargs.keys()) - allowed_kwargs
         if unknown_kwargs:
-            raise TypeError(
-                "Invalid keyword argument(s) in `compile`: %s" % (unknown_kwargs,)
-            )
+            raise TypeError("Invalid keyword argument(s) in `compile`: %s" %
+                            (unknown_kwargs, ))
         self._function_kwargs = kwargs
         if self._function_kwargs:
             self._experimental_run_tf_function = False
@@ -329,19 +322,16 @@ class Model(training_lib.Model):
                 raise ValueError(
                     "Session keyword arguments are not supported "
                     "when `run_eagerly=True`. You passed the following "
-                    "Session arguments: %s" % (self._function_kwargs,)
-                )
+                    "Session arguments: %s" % (self._function_kwargs, ))
 
         self._set_optimizer(optimizer)
         is_any_keras_optimizer_v1 = any(
-            (
-                isinstance(opt, optimizers.Optimizer)
-                and not isinstance(opt, optimizers.TFOptimizer)
-            )
-            for opt in nest.flatten(self.optimizer)
-        )
+            (isinstance(opt, optimizers.Optimizer)
+             and not isinstance(opt, optimizers.TFOptimizer))
+            for opt in nest.flatten(self.optimizer))
 
-        if is_any_keras_optimizer_v1 and ops.executing_eagerly_outside_functions():
+        if is_any_keras_optimizer_v1 and ops.executing_eagerly_outside_functions(
+        ):
             raise ValueError(
                 "`tf.compat.v1.keras` Optimizer (",
                 optimizer,
@@ -351,9 +341,8 @@ class Model(training_lib.Model):
                 "execution.",
             )
 
-        if (
-            target_tensors is not None
-        ) or not ops.executing_eagerly_outside_functions():
+        if (target_tensors is
+                not None) or not ops.executing_eagerly_outside_functions():
             # Fallback out of things that aren't supported with v2 loops
             self._experimental_run_tf_function = False
 
@@ -361,12 +350,10 @@ class Model(training_lib.Model):
             if tf2.enabled() or self._experimental_run_tf_function:
                 raise ValueError(
                     "Distribute argument in compile is not available in TF 2.0 please "
-                    "create the model under the distribution strategy scope."
-                )
+                    "create the model under the distribution strategy scope.")
             logging.warning(
                 "Distribute argument in compile is deprecated please "
-                "create the model under the distribution strategy scope."
-            )
+                "create the model under the distribution strategy scope.")
             self._distribution_strategy = distribute
             self._compile_distribution = True
         else:
@@ -377,27 +364,26 @@ class Model(training_lib.Model):
                 # with distribution strategy and use the default compilation path.
                 if distribution_strategy_context.in_cross_replica_context():
                     self._distribution_strategy = (
-                        distribution_strategy_context.get_strategy()
-                    )
+                        distribution_strategy_context.get_strategy())
 
         if not self._experimental_run_tf_function:
             self._validate_compile_param_for_distribution_strategy(
-                self.run_eagerly, sample_weight_mode, target_tensors, weighted_metrics
-            )
+                self.run_eagerly, sample_weight_mode, target_tensors,
+                weighted_metrics)
         # We've disabled automatic dependency tracking for this method, but do want
         # to add a checkpoint dependency on the optimizer if it's trackable.
         if isinstance(self.optimizer, trackable.Trackable):
-            self._track_trackable(self.optimizer, name="optimizer", overwrite=True)
+            self._track_trackable(self.optimizer,
+                                  name="optimizer",
+                                  overwrite=True)
         self.loss = loss or {}
         self.loss_weights = loss_weights
         self.sample_weight_mode = sample_weight_mode
         self._compile_metrics = metrics or []
         self._compile_weighted_metrics = weighted_metrics
         if self.run_eagerly and target_tensors is not None:
-            raise ValueError(
-                "target_tensors argument is not supported when "
-                "running a model eagerly."
-            )
+            raise ValueError("target_tensors argument is not supported when "
+                             "running a model eagerly.")
 
         # _training_endpoints contains a list of _TrainingEndpoint object, which has
         # all the model output/target/loss and related metadata.
@@ -413,10 +399,12 @@ class Model(training_lib.Model):
         # Clear any `_eager_losses` that was added.
         self._clear_losses()
 
-        if not context.executing_eagerly() and self._distribution_strategy is not None:
+        if not context.executing_eagerly(
+        ) and self._distribution_strategy is not None:
             # Ensures a Session is created and configured correctly for Distribution
             # Strategy.
-            K.configure_and_create_distributed_session(self._distribution_strategy)
+            K.configure_and_create_distributed_session(
+                self._distribution_strategy)
         # Initialize model metric attributes.
         self._init_metric_attributes()
         if not self.built or not self.inputs or not self.outputs:
@@ -429,24 +417,25 @@ class Model(training_lib.Model):
 
         # Prepare list of loss functions, same size of model outputs.
         self.loss_functions = training_utils.prepare_loss_functions(
-            self.loss, self.output_names
-        )
+            self.loss, self.output_names)
 
-        target_tensors = self._process_target_tensor_for_compile(target_tensors)
+        target_tensors = self._process_target_tensor_for_compile(
+            target_tensors)
 
-        for o, n, l, t in zip(
-            self.outputs, self.output_names, self.loss_functions, target_tensors
-        ):
+        for o, n, l, t in zip(self.outputs, self.output_names,
+                              self.loss_functions, target_tensors):
             endpoint = _TrainingEndpoint(o, n, l)
             endpoint.create_training_target(t, run_eagerly=self.run_eagerly)
             self._training_endpoints.append(endpoint)
 
         # Prepare list loss weights, same size of model outputs.
-        training_utils.prepare_loss_weights(self._training_endpoints, loss_weights)
+        training_utils.prepare_loss_weights(self._training_endpoints,
+                                            loss_weights)
 
         # Initialization for Eager mode execution.
         if self.run_eagerly:
-            self._compile_eagerly(metrics, weighted_metrics, sample_weight_mode)
+            self._compile_eagerly(metrics, weighted_metrics,
+                                  sample_weight_mode)
             return
 
         with K.get_graph().as_default():
@@ -466,8 +455,7 @@ class Model(training_lib.Model):
 
             # Prepare sample weight modes. List with the same length as model outputs.
             training_utils.prepare_sample_weight_modes(
-                self._training_endpoints, sample_weight_mode
-            )
+                self._training_endpoints, sample_weight_mode)
 
             # Creates the model loss and weighted metrics sub-graphs.
             self._compile_weights_loss_and_weighted_metrics()
@@ -495,8 +483,7 @@ class Model(training_lib.Model):
                             "to the following.\n"
                             "with strategy.scope():\n"
                             "  model=_create_model()\n"
-                            "  model.compile(...)" % (v, strategy)
-                        )
+                            "  model.compile(...)" % (v, strategy))
 
     @trackable.no_automatic_dependency_tracking
     def _init_distributed_function_cache_if_not_compiled(self):
@@ -523,13 +510,10 @@ class Model(training_lib.Model):
         if self._is_compiled:
             # Add output loss metric names to the metric names list.
             if len(self._training_endpoints) > 1:
-                metrics_names.extend(
-                    [
-                        e.loss_name()
-                        for e in self._training_endpoints
-                        if not e.should_skip_target()
-                    ]
-                )
+                metrics_names.extend([
+                    e.loss_name() for e in self._training_endpoints
+                    if not e.should_skip_target()
+                ])
 
         # Add all metric names.
         metrics_names += [m.name for m in self.metrics]
@@ -551,8 +535,8 @@ class Model(training_lib.Model):
         """
         if self._run_eagerly is True and not context.executing_eagerly():
             raise ValueError(
-                "You can only set `run_eagerly=True` if eager execution " "is enabled."
-            )
+                "You can only set `run_eagerly=True` if eager execution "
+                "is enabled.")
         if not self.dynamic:
             if self._run_eagerly is None:
                 # Respect `tf.config.experimental_run_functions_eagerly` unless
@@ -562,21 +546,17 @@ class Model(training_lib.Model):
                 return self._run_eagerly
         else:
             if not context.executing_eagerly():
-                raise ValueError(
-                    "Your model contains layers that can only be "
-                    "successfully run in eager execution (layers "
-                    "constructed with `dynamic=True`). "
-                    "You must enable eager execution with "
-                    "`tf.enable_eager_execution()`."
-                )
+                raise ValueError("Your model contains layers that can only be "
+                                 "successfully run in eager execution (layers "
+                                 "constructed with `dynamic=True`). "
+                                 "You must enable eager execution with "
+                                 "`tf.enable_eager_execution()`.")
             if self._run_eagerly is False:
                 # TODO(fchollet): consider using py_func to enable this.
-                raise ValueError(
-                    "Your model contains layers that can only be "
-                    "successfully run in eager execution (layers "
-                    "constructed with `dynamic=True`). "
-                    "You cannot set `run_eagerly=False`."
-                )
+                raise ValueError("Your model contains layers that can only be "
+                                 "successfully run in eager execution (layers "
+                                 "constructed with `dynamic=True`). "
+                                 "You cannot set `run_eagerly=False`.")
             return context.executing_eagerly()
 
     @run_eagerly.setter
@@ -588,24 +568,25 @@ class Model(training_lib.Model):
         # TODO(kaftan) or TODO(scottzhu): This check should eventually be nicely
         #  integrated into the data adapters in the v2 loop. We can't do this yet
         #  because we currently have to fall back for unhandled data types.
-        if isinstance(inputs, (iterator_ops.Iterator, iterator_ops.OwnedIterator)):
+        if isinstance(inputs,
+                      (iterator_ops.Iterator, iterator_ops.OwnedIterator)):
             raise ValueError(
                 "For performance reasons Keras `fit`, `evaluate` and"
                 "`predict` accept tf.data `Datasets` as input but not "
                 "iterators that have been manually generated from "
                 "Datasets by users. Please directly pass in the "
                 "original `Dataset` object instead of passing in "
-                "`iter(dataset)`."
-            )
+                "`iter(dataset)`.")
 
         # Case 1: distribution strategy.
         if self._distribution_strategy:
             if self._in_multi_worker_mode():
                 return training_distributed.DistributionMultiWorkerTrainingLoop(
-                    training_distributed.DistributionSingleWorkerTrainingLoop()
-                )
+                    training_distributed.DistributionSingleWorkerTrainingLoop(
+                    ))
             else:
-                return training_distributed.DistributionSingleWorkerTrainingLoop()
+                return training_distributed.DistributionSingleWorkerTrainingLoop(
+                )
 
         # Case 2: generator-like. Input is Python generator, or Sequence object,
         # or a non-distributed Dataset or iterator in eager execution.
@@ -622,28 +603,26 @@ class Model(training_lib.Model):
         else:
             return training_arrays.ArrayLikeTrainingLoop()
 
-    def fit(
-        self,
-        x=None,
-        y=None,
-        batch_size=None,
-        epochs=1,
-        verbose=1,
-        callbacks=None,
-        validation_split=0.0,
-        validation_data=None,
-        shuffle=True,
-        class_weight=None,
-        sample_weight=None,
-        initial_epoch=0,
-        steps_per_epoch=None,
-        validation_steps=None,
-        validation_freq=1,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        **kwargs
-    ):
+    def fit(self,
+            x=None,
+            y=None,
+            batch_size=None,
+            epochs=1,
+            verbose=1,
+            callbacks=None,
+            validation_split=0.0,
+            validation_data=None,
+            shuffle=True,
+            class_weight=None,
+            sample_weight=None,
+            initial_epoch=0,
+            steps_per_epoch=None,
+            validation_steps=None,
+            validation_freq=1,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            **kwargs):
         """Trains the model for a fixed number of epochs (iterations on a dataset).
 
         Arguments:
@@ -794,8 +773,7 @@ class Model(training_lib.Model):
         # Legacy support
         if "nb_epoch" in kwargs:
             logging.warning(
-                "The `nb_epoch` argument in `fit` has been renamed `epochs`."
-            )
+                "The `nb_epoch` argument in `fit` has been renamed `epochs`.")
             epochs = kwargs.pop("nb_epoch")
         if kwargs:
             raise TypeError("Unrecognized keyword arguments: " + str(kwargs))
@@ -826,17 +804,17 @@ class Model(training_lib.Model):
         )
 
     def evaluate(
-        self,
-        x=None,
-        y=None,
-        batch_size=None,
-        verbose=1,
-        sample_weight=None,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
+            self,
+            x=None,
+            y=None,
+            batch_size=None,
+            verbose=1,
+            sample_weight=None,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
     ):
         """Returns the loss value & metrics values for the model in test mode.
 
@@ -934,15 +912,15 @@ class Model(training_lib.Model):
         )
 
     def predict(
-        self,
-        x,
-        batch_size=None,
-        verbose=0,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
+            self,
+            x,
+            batch_size=None,
+            verbose=0,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
     ):
         """Generates output predictions for the input samples.
 
@@ -1020,13 +998,14 @@ class Model(training_lib.Model):
 
         # Reset metrics on all the distributed (cloned) models.
         if self._distribution_strategy:
-            distributed_training_utils._reset_metrics(
-                self
-            )  # pylint: disable=protected-access
+            distributed_training_utils._reset_metrics(self)  # pylint: disable=protected-access
 
-    def train_on_batch(
-        self, x, y=None, sample_weight=None, class_weight=None, reset_metrics=True
-    ):
+    def train_on_batch(self,
+                       x,
+                       y=None,
+                       sample_weight=None,
+                       class_weight=None,
+                       reset_metrics=True):
         """Runs a single gradient update on a single batch of data.
 
         Arguments:
@@ -1074,14 +1053,11 @@ class Model(training_lib.Model):
         # If at this point we are in the replica context, then it is okay to execute
         # the Eager code path.  The expected way to get here is to call `fit` that
         # calls `train_on_batch` on each replica.
-        if (
-            self._distribution_strategy
-            and distribution_strategy_context.in_cross_replica_context()
-        ):
+        if (self._distribution_strategy
+                and distribution_strategy_context.in_cross_replica_context()):
             raise NotImplementedError(
                 "`train_on_batch` is not supported for models "
-                "distributed with tf.distribute.Strategy."
-            )
+                "distributed with tf.distribute.Strategy.")
         # Validate and standardize user data.
         x, y, sample_weights = self._standardize_user_data(
             x,
@@ -1103,14 +1079,9 @@ class Model(training_lib.Model):
                 sample_weights=sample_weights,
                 output_loss_metrics=self._output_loss_metrics,
             )
-            outputs = (
-                output_dict["total_loss"]
-                + output_dict["output_losses"]
-                + output_dict["metrics"]
-            )
-            outputs = [
-                _non_none_constant_value(v) for v in outputs
-            ]  # pylint: disable=protected-access
+            outputs = (output_dict["total_loss"] +
+                       output_dict["output_losses"] + output_dict["metrics"])
+            outputs = [_non_none_constant_value(v) for v in outputs]  # pylint: disable=protected-access
         else:
             x = training_utils.ModelInputs(x).as_list()
             ins = x + list(y or []) + list(sample_weights or [])
@@ -1170,18 +1141,17 @@ class Model(training_lib.Model):
         self._assert_compile_was_called()
         self._check_call_args("test_on_batch")
 
-        if (
-            self._distribution_strategy
-            and distribution_strategy_context.in_cross_replica_context()
-        ):
+        if (self._distribution_strategy
+                and distribution_strategy_context.in_cross_replica_context()):
             raise NotImplementedError(
                 "`test_on_batch` is not supported for models "
-                "distributed with tf.distribute.Strategy."
-            )
+                "distributed with tf.distribute.Strategy.")
         # Validate and standardize user data.
         x, y, sample_weights = self._standardize_user_data(
-            x, y, sample_weight=sample_weight, extract_tensors_from_dataset=True
-        )
+            x,
+            y,
+            sample_weight=sample_weight,
+            extract_tensors_from_dataset=True)
 
         # If `self._distribution_strategy` is True, then we are in a replica context
         # at this point.
@@ -1193,14 +1163,9 @@ class Model(training_lib.Model):
                 sample_weights=sample_weights,
                 output_loss_metrics=self._output_loss_metrics,
             )
-            outputs = (
-                output_dict["total_loss"]
-                + output_dict["output_losses"]
-                + output_dict["metrics"]
-            )
-            outputs = [
-                _non_none_constant_value(v) for v in outputs
-            ]  # pylint: disable=protected-access
+            outputs = (output_dict["total_loss"] +
+                       output_dict["output_losses"] + output_dict["metrics"])
+            outputs = [_non_none_constant_value(v) for v in outputs]  # pylint: disable=protected-access
         else:
             x = training_utils.ModelInputs(x).as_list()
             inputs = x + list(y or []) + list(sample_weights or [])
@@ -1236,16 +1201,14 @@ class Model(training_lib.Model):
         """
         self._check_call_args("predict_on_batch")
 
-        if (
-            self._distribution_strategy
-            and distribution_strategy_context.in_cross_replica_context()
-        ):
+        if (self._distribution_strategy
+                and distribution_strategy_context.in_cross_replica_context()):
             raise NotImplementedError(
                 "`predict_on_batch` is not supported for models distributed with"
-                " tf.distribute.Strategy."
-            )
+                " tf.distribute.Strategy.")
         # Validate and standardize user data.
-        inputs, _, _ = self._standardize_user_data(x, extract_tensors_from_dataset=True)
+        inputs, _, _ = self._standardize_user_data(
+            x, extract_tensors_from_dataset=True)
         # If `self._distribution_strategy` is True, then we are in a replica context
         # at this point.
         if self.run_eagerly or self._distribution_strategy:
@@ -1264,23 +1227,24 @@ class Model(training_lib.Model):
             return outputs[0]
         return outputs
 
-    @deprecation.deprecated(None, "Please use Model.fit, which supports generators.")
+    @deprecation.deprecated(None,
+                            "Please use Model.fit, which supports generators.")
     def fit_generator(
-        self,
-        generator,
-        steps_per_epoch=None,
-        epochs=1,
-        verbose=1,
-        callbacks=None,
-        validation_data=None,
-        validation_steps=None,
-        validation_freq=1,
-        class_weight=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        shuffle=True,
-        initial_epoch=0,
+            self,
+            generator,
+            steps_per_epoch=None,
+            epochs=1,
+            verbose=1,
+            callbacks=None,
+            validation_data=None,
+            validation_steps=None,
+            validation_freq=1,
+            class_weight=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            shuffle=True,
+            initial_epoch=0,
     ):
         """Fits the model on data yielded batch-by-batch by a Python generator.
 
@@ -1306,17 +1270,16 @@ class Model(training_lib.Model):
         )
 
     @deprecation.deprecated(
-        None, "Please use Model.evaluate, which supports generators."
-    )
+        None, "Please use Model.evaluate, which supports generators.")
     def evaluate_generator(
-        self,
-        generator,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        verbose=0,
+            self,
+            generator,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            verbose=0,
     ):
         """Evaluates the model on a data generator.
 
@@ -1337,17 +1300,16 @@ class Model(training_lib.Model):
         )
 
     @deprecation.deprecated(
-        None, "Please use Model.predict, which supports generators."
-    )
+        None, "Please use Model.predict, which supports generators.")
     def predict_generator(
-        self,
-        generator,
-        steps=None,
-        callbacks=None,
-        max_queue_size=10,
-        workers=1,
-        use_multiprocessing=False,
-        verbose=0,
+            self,
+            generator,
+            steps=None,
+            callbacks=None,
+            max_queue_size=10,
+            workers=1,
+            use_multiprocessing=False,
+            verbose=0,
     ):
         """Generates predictions for the input samples from a data generator.
 
@@ -1370,7 +1332,7 @@ class Model(training_lib.Model):
         # Always allow first arg, regardless of arg name.
         fullargspec = self._call_full_argspec
         if fullargspec.defaults:
-            positional_args = fullargspec.args[: -len(fullargspec.defaults)]
+            positional_args = fullargspec.args[:-len(fullargspec.defaults)]
         else:
             positional_args = fullargspec.args
         if "training" in positional_args:
@@ -1380,10 +1342,10 @@ class Model(training_lib.Model):
         if len(positional_args) > 2:
             extra_args = positional_args[2:]
             raise ValueError(
-                "Models passed to `" + method_name + "` can only have `training` "
+                "Models passed to `" + method_name +
+                "` can only have `training` "
                 "and the first argument in `call` as positional arguments, "
-                "found: " + str(extra_args) + "."
-            )
+                "found: " + str(extra_args) + ".")
 
     def _set_optimizer(self, optimizer):
         """Sets self.optimizer.
@@ -1400,8 +1362,7 @@ class Model(training_lib.Model):
             self.optimizer = optimizers.get(optimizer)
 
         if self._dtype_policy.loss_scale is not None and not isinstance(
-            self.optimizer, loss_scale_optimizer.LossScaleOptimizer
-        ):
+                self.optimizer, loss_scale_optimizer.LossScaleOptimizer):
             if isinstance(self.optimizer, list):
                 raise ValueError(
                     "When a dtype policy with a loss scale is used, you "
@@ -1414,30 +1375,25 @@ class Model(training_lib.Model):
                     '"optimizer" must be an instance of '
                     "tf.keras.optimizers.Optimizer when a dype policy "
                     "with a loss scale  used, but got: %s. Using policy: "
-                    "%s" % (self.optimizer, self._dtype_policy)
-                )
+                    "%s" % (self.optimizer, self._dtype_policy))
             self.optimizer = loss_scale_optimizer.LossScaleOptimizer(
-                self.optimizer, self._dtype_policy.loss_scale
-            )
-        if (
-            isinstance(self.optimizer, loss_scale_optimizer.LossScaleOptimizer)
-            and self._dtype_policy.loss_scale
-            and self.optimizer.loss_scale != self._dtype_policy.loss_scale
-        ):
+                self.optimizer, self._dtype_policy.loss_scale)
+        if (isinstance(self.optimizer, loss_scale_optimizer.LossScaleOptimizer)
+                and self._dtype_policy.loss_scale and
+                self.optimizer.loss_scale != self._dtype_policy.loss_scale):
             logging.warning(
                 "LossScale of LossScaleOptimizer passed to compile (%s) "
                 "is not the same as the dtype policy's loss scale (%s). "
                 "Because the dtype policy has a loss scale, you should "
                 "pass an optimizer that is not wrapped with a "
-                "LossScaleOptimizer,"
-                % (self.optimizer.loss_scale, self._dtype_policy.loss_scale)
-            )
+                "LossScaleOptimizer," %
+                (self.optimizer.loss_scale, self._dtype_policy.loss_scale))
 
-    def _prepare_validation_data(self, validation_data, batch_size, validation_steps):
+    def _prepare_validation_data(self, validation_data, batch_size,
+                                 validation_steps):
         """Unpack and check the validation data."""
         val_x, val_y, val_sample_weights = training_utils.unpack_validation_data(
-            validation_data
-        )
+            validation_data)
         return self._standardize_user_data(
             val_x,
             val_y,
@@ -1448,34 +1404,31 @@ class Model(training_lib.Model):
         )
 
     def _validate_compile_param_for_distribution_strategy(
-        self, run_eagerly, sample_weight_mode, target_tensors, weighted_metrics
-    ):
+            self, run_eagerly, sample_weight_mode, target_tensors,
+            weighted_metrics):
         # Validate that arguments passed by the user to `compile` are supported by
         # tf.distribute.Strategy.
         if self._distribution_strategy:
             if sample_weight_mode:
                 raise NotImplementedError(
                     "sample_weight_mode is not supported with "
-                    "tf.distribute.Strategy."
-                )
+                    "tf.distribute.Strategy.")
             if weighted_metrics:
                 raise NotImplementedError(
-                    "weighted_metrics is not supported with " "tf.distribute.Strategy."
-                )
+                    "weighted_metrics is not supported with "
+                    "tf.distribute.Strategy.")
             if target_tensors:
-                raise ValueError(
-                    "target_tensors is not supported with " "tf.distribute.Strategy."
-                )
+                raise ValueError("target_tensors is not supported with "
+                                 "tf.distribute.Strategy.")
 
             if run_eagerly:
                 raise ValueError(
                     "We currently do not support enabling `run_eagerly` with "
-                    "distribution strategy."
-                )
+                    "distribution strategy.")
 
-            if distributed_training_utils.is_distributing_by_cloning(self) and (
-                not self.built or not self.inputs or not self.outputs
-            ):
+            if distributed_training_utils.is_distributing_by_cloning(
+                    self) and (not self.built or not self.inputs
+                               or not self.outputs):
                 raise ValueError(
                     "We currently do not support distribution strategy with a "
                     "`Sequential` model that is created without `input_shape`/"
@@ -1488,29 +1441,25 @@ class Model(training_lib.Model):
             # as placeholder for each output.
             return [None for _ in self.output_names]
 
-        if target_tensors is not None and not (
-            isinstance(target_tensors, list) and target_tensors == []
-        ):  # pylint: disable=g-explicit-bool-comparison
+        if target_tensors is not None and not (isinstance(
+                target_tensors, list) and target_tensors == []):  # pylint: disable=g-explicit-bool-comparison
             if isinstance(target_tensors, list):
                 if len(target_tensors) != len(self.outputs):
                     raise ValueError(
                         "When passing a list as `target_tensors`, "
                         "it should have one entry per model output. "
                         "The model has %s outputs, but you passed target_tensors=%s"
-                        % (len(self.outputs), target_tensors)
-                    )
+                        % (len(self.outputs), target_tensors))
             elif isinstance(target_tensors, dict):
-                unexpected_target_tensor_names = set(target_tensors.keys()).difference(
-                    self.output_names
-                )
+                unexpected_target_tensor_names = set(
+                    target_tensors.keys()).difference(self.output_names)
                 if unexpected_target_tensor_names:
                     raise ValueError(
                         'Unknown entry in `target_tensors` dictionary: "{name}". '
                         "Only expected the following keys: {keys}".format(
                             name=unexpected_target_tensor_names,
                             keys=str(self.output_names),
-                        )
-                    )
+                        ))
                 tmp_target_tensors = []
                 for name in self.output_names:
                     tmp_target_tensors.append(target_tensors.get(name, None))
@@ -1532,9 +1481,8 @@ class Model(training_lib.Model):
 
     def _compile_eagerly(self, metrics, weighted_metrics, sample_weight_mode):
         # Prepare sample weight modes. List with the same length as model outputs.
-        training_utils.prepare_sample_weight_modes(
-            self._training_endpoints, sample_weight_mode
-        )
+        training_utils.prepare_sample_weight_modes(self._training_endpoints,
+                                                   sample_weight_mode)
         # Prepare sample weights.
         self._prepare_sample_weights()
         # Save all metric attributes per output of the model.
@@ -1570,9 +1518,8 @@ class Model(training_lib.Model):
             return
         if sample_weights and any(s is not None for s in sample_weights):
             for endpoint in self._training_endpoints:
-                endpoint.sample_weight_mode = (
-                    endpoint.sample_weight_mode or "samplewise"
-                )
+                endpoint.sample_weight_mode = (endpoint.sample_weight_mode
+                                               or "samplewise")
         else:
             for endpoint in self._training_endpoints:
                 endpoint.sample_weight_mode = None
@@ -1580,7 +1527,8 @@ class Model(training_lib.Model):
     def _recompile_weights_loss_and_weighted_metrics(self):
         if not self._is_compiled:
             return False
-        recompile = any([e.sample_weights_mismatch() for e in self._training_endpoints])
+        recompile = any(
+            [e.sample_weights_mismatch() for e in self._training_endpoints])
 
         if recompile:
             self._compile_weights_loss_and_weighted_metrics()
@@ -1656,8 +1604,7 @@ class Model(training_lib.Model):
         if self.run_eagerly:
             raise TypeError(
                 "total loss can not be computed when compiled with "
-                "run_eagerly = True."
-            )
+                "run_eagerly = True.")
         loss_list = []
         with K.name_scope("loss"):
             for endpoint, mask in zip(self._training_endpoints, masks):
@@ -1683,8 +1630,7 @@ class Model(training_lib.Model):
                                 _,
                                 sample_weight,
                             ) = tf_losses_utils.squeeze_or_expand_dimensions(
-                                mask, sample_weight=sample_weight
-                            )
+                                mask, sample_weight=sample_weight)
                             sample_weight *= mask
 
                     if hasattr(loss_fn, "reduction"):
@@ -1700,22 +1646,20 @@ class Model(training_lib.Model):
                         # compile use cases.
                         if loss_reduction == losses_utils.ReductionV2.AUTO:
                             loss_reduction = (
-                                losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE
-                            )
+                                losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE)
 
                         # Compute the stateless loss value.
                         output_loss = losses_utils.reduce_weighted_loss(
-                            weighted_losses, reduction=loss_reduction
-                        )
+                            weighted_losses, reduction=loss_reduction)
                     else:
                         # Compute the stateless loss value for a custom loss class.
                         # Here we assume that the class takes care of loss reduction
                         # because if this class returns a vector value we cannot
                         # differentiate between use case where a custom optimizer
                         # expects a vector loss value vs unreduced per-sample loss value.
-                        output_loss = loss_fn(
-                            y_true, y_pred, sample_weight=sample_weight
-                        )
+                        output_loss = loss_fn(y_true,
+                                              y_pred,
+                                              sample_weight=sample_weight)
                         loss_reduction = losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE
 
                 if len(self.outputs) > 1:
@@ -1725,24 +1669,23 @@ class Model(training_lib.Model):
                 # Scale output loss for distribution. For custom losses we assume
                 # reduction was mean.
                 if loss_reduction == losses_utils.ReductionV2.SUM_OVER_BATCH_SIZE:
-                    output_loss = losses_utils.scale_loss_for_distribution(output_loss)
+                    output_loss = losses_utils.scale_loss_for_distribution(
+                        output_loss)
 
                 loss_list.append(loss_weight * output_loss)
             if not loss_list and not self.losses:
-                raise ValueError(
-                    "The model cannot be compiled "
-                    "because it has no loss to optimize."
-                )
+                raise ValueError("The model cannot be compiled "
+                                 "because it has no loss to optimize.")
 
             # Add regularization penalties and other layer-specific losses.
-            custom_losses = self.get_losses_for(None) + self.get_losses_for(self.inputs)
+            custom_losses = self.get_losses_for(None) + self.get_losses_for(
+                self.inputs)
             if custom_losses:
                 total_custom_loss = math_ops.add_n(
-                    losses_utils.cast_losses_to_common_dtype(custom_losses)
-                )
+                    losses_utils.cast_losses_to_common_dtype(custom_losses))
                 loss_list.append(
-                    losses_utils.scale_loss_for_distribution(total_custom_loss)
-                )
+                    losses_utils.scale_loss_for_distribution(
+                        total_custom_loss))
 
             loss_list = losses_utils.cast_losses_to_common_dtype(loss_list)
             if loss_list:
@@ -1768,9 +1711,11 @@ class Model(training_lib.Model):
 
     @trackable.no_automatic_dependency_tracking
     def _make_callback_model(self, grouped_model):
-        first_replicated_model = self._distribution_strategy.unwrap(grouped_model)[0]
+        first_replicated_model = self._distribution_strategy.unwrap(
+            grouped_model)[0]
         # We initialize the callback model with the first replicated model.
-        self._replicated_model = DistributedCallbackModel(first_replicated_model)
+        self._replicated_model = DistributedCallbackModel(
+            first_replicated_model)
         self._replicated_model.set_original_model(self)
 
     def _validate_or_infer_batch_size(self, batch_size, steps, x):
@@ -1794,34 +1739,30 @@ class Model(training_lib.Model):
           The validated batch_size, auto-inferred from the first layer if not
           provided.
         """
-        if isinstance(
-            x, (dataset_ops.DatasetV1, dataset_ops.DatasetV2, data_utils.Sequence)
-        ) or tf_inspect.isgenerator(x):
+        if isinstance(x, (dataset_ops.DatasetV1, dataset_ops.DatasetV2,
+                          data_utils.Sequence)) or tf_inspect.isgenerator(x):
             if batch_size is not None:
                 raise ValueError(
                     "The `batch_size` argument must not be specified for the given "
                     "input type. Received input: {}, batch_size: {}".format(
-                        x, batch_size
-                    )
-                )
+                        x, batch_size))
             return
 
         # Avoids the override in Sequential.layers which filters Input layers.
         # (Which are often the very layers that we're after.)
-        layers = trackable_layer_utils.filter_empty_layer_containers(self._layers)
+        layers = trackable_layer_utils.filter_empty_layer_containers(
+            self._layers)
         first_layer = next(layers, None)
         if first_layer:
             # The per-replica static batch size.
-            static_batch_size = training_utils.get_static_batch_size(first_layer)
+            static_batch_size = training_utils.get_static_batch_size(
+                first_layer)
             if static_batch_size is not None:
 
                 # Determine number of times the user-supplied batch size will be split.
-                if (
-                    self._distribution_strategy
-                    and distributed_training_utils.global_batch_size_supported(
-                        self._distribution_strategy
-                    )
-                ):
+                if (self._distribution_strategy and
+                        distributed_training_utils.global_batch_size_supported(
+                            self._distribution_strategy)):
                     num_splits_for_ds = self._distribution_strategy.num_replicas_in_sync
                 else:
                     num_splits_for_ds = 1
@@ -1832,9 +1773,7 @@ class Model(training_lib.Model):
                         raise ValueError(
                             "The `batch_size` argument ({}) must be divisible "
                             "the by number of replicas ({})".format(
-                                batch_size, num_splits_for_ds
-                            )
-                        )
+                                batch_size, num_splits_for_ds))
                     per_replica_batch_size = batch_size // num_splits_for_ds
 
                     if per_replica_batch_size != static_batch_size:
@@ -1842,13 +1781,11 @@ class Model(training_lib.Model):
                             "The `batch_size` argument value {} is "
                             "incompatible with the specified batch size of "
                             "your Input Layer: {}".format(
-                                per_replica_batch_size, static_batch_size
-                            )
-                        )
+                                per_replica_batch_size, static_batch_size))
 
                 # Check Dataset/Iterator batch size is consistent with InputLayer.
                 if isinstance(
-                    x,
+                        x,
                     (
                         dataset_ops.DatasetV2,
                         iterator_ops.Iterator,
@@ -1856,16 +1793,14 @@ class Model(training_lib.Model):
                     ),
                 ):
                     ds_batch_size = tensor_shape.as_dimension(
-                        nest.flatten(dataset_ops.get_legacy_output_shapes(x))[0][0]
-                    ).value
+                        nest.flatten(dataset_ops.get_legacy_output_shapes(x))
+                        [0][0]).value
                     if ds_batch_size is not None:
                         if ds_batch_size % num_splits_for_ds != 0:
                             raise ValueError(
                                 "The batch output shape of your `Dataset` {} "
-                                "cannot be divisible by number of replicas {}".format(
-                                    ds_batch_size, num_splits_for_ds
-                                )
-                            )
+                                "cannot be divisible by number of replicas {}".
+                                format(ds_batch_size, num_splits_for_ds))
 
                         ds_per_replica_batch_size = ds_batch_size // num_splits_for_ds
                         if ds_per_replica_batch_size != static_batch_size:
@@ -1873,9 +1808,8 @@ class Model(training_lib.Model):
                                 "The batch output shape of your `Dataset` is "
                                 "{}, which is incompatible with the specified "
                                 "batch size of your Input Layer: {}".format(
-                                    ds_per_replica_batch_size, static_batch_size
-                                )
-                            )
+                                    ds_per_replica_batch_size,
+                                    static_batch_size))
 
                 # Set inferred batch size from the InputLayer.
                 if steps is None:
@@ -1894,13 +1828,12 @@ class Model(training_lib.Model):
                 raise ValueError(
                     "Provided sample weights must have same length as the "
                     "number of outputs. Expected: {}, got: {}.".format(
-                        len(self._training_endpoints), len(sample_weights)
-                    )
-                )
+                        len(self._training_endpoints), len(sample_weights)))
         else:
             sample_weights = [None] * len(self._training_endpoints)
         for endpoint, weight in zip(self._training_endpoints, sample_weights):
-            endpoint.populate_sample_weight(weight, endpoint.sample_weight_mode)
+            endpoint.populate_sample_weight(weight,
+                                            endpoint.sample_weight_mode)
 
     def _cache_output_metric_attributes(self, metrics, weighted_metrics):
         """Caches metric name and function attributes for every model output."""
@@ -1911,8 +1844,7 @@ class Model(training_lib.Model):
             else:
                 output_shapes.append(output.shape.as_list())
         self._per_output_metrics = training_utils.collect_per_output_metric_info(
-            metrics, self.output_names, output_shapes, self.loss_functions
-        )
+            metrics, self.output_names, output_shapes, self.loss_functions)
         self._per_output_weighted_metrics = training_utils.collect_per_output_metric_info(
             weighted_metrics,
             self.output_names,
@@ -1937,7 +1869,8 @@ class Model(training_lib.Model):
           string, name of the model's unique metric name
         """
         if len(self.output_names) > 1:
-            metric_name = "%s_%s" % (self.output_names[output_index], metric_name)
+            metric_name = "%s_%s" % (self.output_names[output_index],
+                                     metric_name)
         j = 1
         base_metric_name = metric_name
         while metric_name in self.metrics_names:
@@ -1965,7 +1898,8 @@ class Model(training_lib.Model):
         """
         updated_metrics_dict = collections.OrderedDict()
         for metric_name, metric_fn in metrics_dict.items():
-            metric_name = self._add_unique_metric_name(metric_name, output_index)
+            metric_name = self._add_unique_metric_name(metric_name,
+                                                       output_index)
 
             # Update the name on the metric class to be the unique generated name.
             metric_fn._name = metric_name  # pylint: disable=protected-access
@@ -1982,17 +1916,14 @@ class Model(training_lib.Model):
             if endpoint.should_skip_target():
                 updated_per_output_metrics.append(self._per_output_metrics[i])
                 updated_per_output_weighted_metrics.append(
-                    self._per_output_weighted_metrics[i]
-                )
+                    self._per_output_weighted_metrics[i])
                 continue
             updated_per_output_metrics.append(
-                self._set_per_output_metric_attributes(self._per_output_metrics[i], i)
-            )
+                self._set_per_output_metric_attributes(
+                    self._per_output_metrics[i], i))
             updated_per_output_weighted_metrics.append(
                 self._set_per_output_metric_attributes(
-                    self._per_output_weighted_metrics[i], i
-                )
-            )
+                    self._per_output_weighted_metrics[i], i))
 
         # Create a metric wrapper for each output loss. This computes mean of an
         # output loss across mini-batches (irrespective of how we reduce within a
@@ -2001,15 +1932,17 @@ class Model(training_lib.Model):
             for endpoint in self._training_endpoints:
                 if not endpoint.should_skip_target():
                     endpoint.output_loss_metric = metrics_module.Mean(
-                        name=endpoint.loss_name()
-                    )
+                        name=endpoint.loss_name())
 
         self._per_output_metrics = updated_per_output_metrics
         self._per_output_weighted_metrics = updated_per_output_weighted_metrics
 
-    def _handle_per_output_metrics(
-        self, metrics_dict, y_true, y_pred, mask, weights=None
-    ):
+    def _handle_per_output_metrics(self,
+                                   metrics_dict,
+                                   y_true,
+                                   y_pred,
+                                   mask,
+                                   weights=None):
         """Calls metric functions for a single output.
 
         Arguments:
@@ -2026,20 +1959,19 @@ class Model(training_lib.Model):
         for metric_name, metric_fn in metrics_dict.items():
             with K.name_scope(metric_name):
                 metric_result = training_utils.call_metric_function(
-                    metric_fn, y_true, y_pred, weights=weights, mask=mask
-                )
+                    metric_fn, y_true, y_pred, weights=weights, mask=mask)
                 metric_results.append(metric_result)
         return metric_results
 
     def _handle_metrics(
-        self,
-        outputs,
-        targets=None,
-        skip_target_masks=None,
-        sample_weights=None,
-        masks=None,
-        return_weighted_metrics=False,
-        return_weighted_and_unweighted_metrics=False,
+            self,
+            outputs,
+            targets=None,
+            skip_target_masks=None,
+            sample_weights=None,
+            masks=None,
+            return_weighted_metrics=False,
+            return_weighted_and_unweighted_metrics=False,
     ):
         """Handles calling metric functions.
 
@@ -2074,15 +2006,12 @@ class Model(training_lib.Model):
                 target = targets[i] if targets else None
                 output_mask = masks[i] if masks else None
 
-                if (
-                    return_weighted_and_unweighted_metrics
-                    or not return_weighted_metrics
-                ):
+                if (return_weighted_and_unweighted_metrics
+                        or not return_weighted_metrics):
                     metric_results.extend(
                         self._handle_per_output_metrics(
-                            self._per_output_metrics[i], target, output, output_mask
-                        )
-                    )
+                            self._per_output_metrics[i], target, output,
+                            output_mask))
                 if return_weighted_and_unweighted_metrics or return_weighted_metrics:
                     metric_results.extend(
                         self._handle_per_output_metrics(
@@ -2090,9 +2019,9 @@ class Model(training_lib.Model):
                             target,
                             output,
                             output_mask,
-                            weights=sample_weights[i] if sample_weights else None,
-                        )
-                    )
+                            weights=sample_weights[i]
+                            if sample_weights else None,
+                        ))
         return metric_results
 
     def _check_trainable_weights_consistency(self):
@@ -2107,7 +2036,8 @@ class Model(training_lib.Model):
         if not hasattr(self, "_collected_trainable_weights"):
             return
 
-        if len(self.trainable_weights) != len(self._collected_trainable_weights):
+        if len(self.trainable_weights) != len(
+                self._collected_trainable_weights):
             logging.log_first_n(
                 logging.WARN,
                 "Discrepancy between trainable weights and collected"
@@ -2120,9 +2050,8 @@ class Model(training_lib.Model):
         has_recompiled = self._recompile_weights_loss_and_weighted_metrics()
         self._check_trainable_weights_consistency()
         if isinstance(self.optimizer, list):
-            raise ValueError(
-                "The `optimizer` in `compile` should be a single " "optimizer."
-            )
+            raise ValueError("The `optimizer` in `compile` should be a single "
+                             "optimizer.")
         # If we have re-compiled the loss/weighted metric sub-graphs then create
         # train function even if one exists already. This is because
         # `_feed_sample_weights` list has been updated on re-compile.
@@ -2139,8 +2068,8 @@ class Model(training_lib.Model):
                 with K.name_scope("training"):
                     # Training updates
                     updates = self.optimizer.get_updates(
-                        params=self._collected_trainable_weights, loss=self.total_loss
-                    )
+                        params=self._collected_trainable_weights,
+                        loss=self.total_loss)
                     # Unconditional updates
                     updates += self.get_updates_for(None)
                     # Conditional updates relevant to this model
@@ -2148,20 +2077,16 @@ class Model(training_lib.Model):
 
                 metrics = self._get_training_eval_metrics()
                 metrics_tensors = [
-                    m._call_result
-                    for m in metrics
+                    m._call_result for m in metrics
                     if hasattr(m, "_call_result")  # pylint: disable=protected-access
                 ]
 
             with K.name_scope("training"):
                 # Gets loss and metrics. Updates weights at each call.
-                fn = K.function(
-                    inputs,
-                    [self.total_loss] + metrics_tensors,
-                    updates=updates,
-                    name="train_function",
-                    **self._function_kwargs
-                )
+                fn = K.function(inputs, [self.total_loss] + metrics_tensors,
+                                updates=updates,
+                                name="train_function",
+                                **self._function_kwargs)
                 setattr(self, "train_function", fn)
 
             # Restore the current trainable state
@@ -2178,8 +2103,7 @@ class Model(training_lib.Model):
             with K.get_graph().as_default():
                 metrics = self._get_training_eval_metrics()
                 metrics_tensors = [
-                    m._call_result
-                    for m in metrics
+                    m._call_result for m in metrics
                     if hasattr(m, "_call_result")  # pylint: disable=protected-access
                 ]
 
@@ -2187,13 +2111,10 @@ class Model(training_lib.Model):
                 updates = self.state_updates
                 # Return loss and metrics, no gradient updates.
                 # Does update the network states.
-                fn = K.function(
-                    inputs,
-                    [self.total_loss] + metrics_tensors,
-                    updates=updates,
-                    name="test_function",
-                    **self._function_kwargs
-                )
+                fn = K.function(inputs, [self.total_loss] + metrics_tensors,
+                                updates=updates,
+                                name="test_function",
+                                **self._function_kwargs)
                 setattr(self, "test_function", fn)
 
     def _make_predict_function(self):
@@ -2205,13 +2126,11 @@ class Model(training_lib.Model):
             # Does update the network states.
             kwargs = getattr(self, "_function_kwargs", {})
             with K.name_scope(ModeKeys.PREDICT):
-                self.predict_function = K.function(
-                    inputs,
-                    self.outputs,
-                    updates=self.state_updates,
-                    name="predict_function",
-                    **kwargs
-                )
+                self.predict_function = K.function(inputs,
+                                                   self.outputs,
+                                                   updates=self.state_updates,
+                                                   name="predict_function",
+                                                   **kwargs)
 
     def _make_execution_function(self, mode):
         if mode == ModeKeys.TRAIN:
@@ -2225,16 +2144,16 @@ class Model(training_lib.Model):
             return self.predict_function
 
     def _distribution_standardize_user_data(
-        self,
-        x,
-        y=None,
-        sample_weight=None,
-        class_weight=None,
-        batch_size=None,
-        validation_split=0,
-        shuffle=False,
-        epochs=1,
-        allow_partial_batch=False,
+            self,
+            x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
+            batch_size=None,
+            validation_split=0,
+            shuffle=False,
+            epochs=1,
+            allow_partial_batch=False,
     ):
         """Runs validation checks on input and target data passed by the user.
 
@@ -2269,17 +2188,14 @@ class Model(training_lib.Model):
         if class_weight:
             raise NotImplementedError(
                 "`class_weight` is currently not supported "
-                "when using tf.distribute.Strategy."
-            )
+                "when using tf.distribute.Strategy.")
 
-        if (
-            sample_weight is not None
-            and sample_weight.all()
-            and distributed_training_utils.is_tpu_strategy(self._distribution_strategy)
-        ):
+        if (sample_weight is not None and sample_weight.all()
+                and distributed_training_utils.is_tpu_strategy(
+                    self._distribution_strategy)):
             raise NotImplementedError(
-                "`sample_weight` is currently not supported " "when using TPUStrategy."
-            )
+                "`sample_weight` is currently not supported "
+                "when using TPUStrategy.")
 
         # Validates `steps` and `shuffle` arguments right at the beginning
         # since we use it to construct the dataset object.
@@ -2305,7 +2221,8 @@ class Model(training_lib.Model):
                 if y is not None:
                     y = training_utils.list_to_tuple(y)
                     if sample_weight is not None:
-                        sample_weight = training_utils.list_to_tuple(sample_weight)
+                        sample_weight = training_utils.list_to_tuple(
+                            sample_weight)
                         in_tuple = (x, y, sample_weight)
                     else:
                         in_tuple = (x, y)
@@ -2313,8 +2230,7 @@ class Model(training_lib.Model):
                     in_tuple = x
 
                 ds = strategy.extended.experimental_make_numpy_dataset(
-                    in_tuple, session=session
-                )
+                    in_tuple, session=session)
                 if shuffle:
                     # We want a buffer size that is larger than the batch size provided by
                     # the user and provides sufficient randomness. Note that larger
@@ -2328,16 +2244,13 @@ class Model(training_lib.Model):
                 # input shape which is required for TPUs.
                 drop_remainder = (
                     not allow_partial_batch
-                    and strategy.extended.experimental_require_static_shapes
-                )
+                    and strategy.extended.experimental_require_static_shapes)
 
                 # TODO(b/131720208): We still drop remainder here if number of examples
                 # is divisible by batch size, as sometimes dynamic padder will time out
                 # with keras.metrics.CategoricalAccuracy() metric.
-                if (
-                    distributed_training_utils.is_tpu_strategy(strategy)
-                    and not drop_remainder
-                ):
+                if (distributed_training_utils.is_tpu_strategy(strategy)
+                        and not drop_remainder):
                     dataset_size = first_x_value.shape[0]
                     if dataset_size % batch_size == 0:
                         drop_remainder = True
@@ -2345,24 +2258,23 @@ class Model(training_lib.Model):
                 x = ds.batch(batch_size, drop_remainder=drop_remainder)
             else:
                 assert isinstance(x, dataset_ops.DatasetV2)
-                training_utils.validate_dataset_input(
-                    x, y, sample_weight, validation_split
-                )
+                training_utils.validate_dataset_input(x, y, sample_weight,
+                                                      validation_split)
         return x
 
     def _standardize_user_data(
-        self,
-        x,
-        y=None,
-        sample_weight=None,
-        class_weight=None,
-        batch_size=None,
-        check_steps=False,
-        steps_name="steps",
-        steps=None,
-        validation_split=0,
-        shuffle=False,
-        extract_tensors_from_dataset=False,
+            self,
+            x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
+            batch_size=None,
+            check_steps=False,
+            steps_name="steps",
+            steps=None,
+            validation_split=0,
+            shuffle=False,
+            extract_tensors_from_dataset=False,
     ):
         """Runs validation checks on input and target data passed by the user.
 
@@ -2426,19 +2338,23 @@ class Model(training_lib.Model):
             # Graph mode dataset. We'll pass the dataset as-is (unless
             # `extract_tensors_from_dataset` is True, in which case we extract
             # the tensors from the dataset and we output them.
-            training_utils.validate_dataset_input(x, y, sample_weight, validation_split)
+            training_utils.validate_dataset_input(x, y, sample_weight,
+                                                  validation_split)
             if shuffle:
                 training_utils.verify_dataset_shuffled(x)
 
             is_dataset = True
             if extract_tensors_from_dataset:
                 # We do this for `train_on_batch`/etc.
-                x, y, sample_weight = training_utils.extract_tensors_from_dataset(x)
+                x, y, sample_weight = training_utils.extract_tensors_from_dataset(
+                    x)
         elif isinstance(x, iterator_ops.Iterator):
             # Graph mode iterator. We extract the symbolic tensors.
-            training_utils.validate_dataset_input(x, y, sample_weight, validation_split)
+            training_utils.validate_dataset_input(x, y, sample_weight,
+                                                  validation_split)
             iterator = x
-            x, y, sample_weight = training_utils.unpack_iterator_input(iterator)
+            x, y, sample_weight = training_utils.unpack_iterator_input(
+                iterator)
             is_dataset = True
         else:
             is_dataset = False
@@ -2449,7 +2365,8 @@ class Model(training_lib.Model):
 
         # First, we build the model on the fly if necessary.
         if not self.inputs:
-            all_inputs, y_input, dict_inputs = self._build_model_with_inputs(x, y)
+            all_inputs, y_input, dict_inputs = self._build_model_with_inputs(
+                x, y)
             is_build_called = True
         else:
             all_inputs = []
@@ -2476,13 +2393,9 @@ class Model(training_lib.Model):
         # self.run_eagerly is not free to compute, so we want to reuse the value.
         run_eagerly = self.run_eagerly
 
-        if (
-            not run_eagerly
-            and is_build_called
-            and is_compile_called
-            and not is_dataset
-            and any(_is_symbolic_tensor(v) for v in all_inputs)
-        ):
+        if (not run_eagerly and is_build_called and is_compile_called
+                and not is_dataset
+                and any(_is_symbolic_tensor(v) for v in all_inputs)):
             return [], [], None
 
         return self._standardize_tensors(
@@ -2497,15 +2410,15 @@ class Model(training_lib.Model):
         )
 
     def _standardize_tensors(
-        self,
-        x,
-        y,
-        sample_weight,
-        run_eagerly,
-        dict_inputs,
-        is_dataset,
-        class_weight=None,
-        batch_size=None,
+            self,
+            x,
+            y,
+            sample_weight,
+            run_eagerly,
+            dict_inputs,
+            is_dataset,
+            class_weight=None,
+            batch_size=None,
     ):
         if run_eagerly:
             # In eager mode, do not do shape validation
@@ -2546,7 +2459,8 @@ class Model(training_lib.Model):
                 x_shapes = x_shapes[0]
         else:
             flat_inputs = nest.flatten(x, expand_composites=False)
-            flat_expected_inputs = nest.flatten(self.inputs, expand_composites=False)
+            flat_expected_inputs = nest.flatten(self.inputs,
+                                                expand_composites=False)
             converted_x = []
             for (a, b) in zip(flat_inputs, flat_expected_inputs):
                 converted_x.append(_convert_scipy_sparse_tensor(a, b))
@@ -2566,7 +2480,8 @@ class Model(training_lib.Model):
             x_shapes = nest.map_structure(_type_spec_from_value, x)
 
         flat_inputs = nest.flatten(x_shapes, expand_composites=False)
-        flat_expected_inputs = nest.flatten(self.inputs, expand_composites=False)
+        flat_expected_inputs = nest.flatten(self.inputs,
+                                            expand_composites=False)
         for (a, b) in zip(flat_inputs, flat_expected_inputs):
             nest.assert_same_structure(a, b, expand_composites=True)
 
@@ -2574,8 +2489,7 @@ class Model(training_lib.Model):
             # Prepare self._sample_weight_modes. List with the same length as
             # model outputs.
             training_utils.prepare_sample_weight_modes(
-                self._training_endpoints, self.sample_weight_mode
-            )
+                self._training_endpoints, self.sample_weight_mode)
             feed_output_names = self._feed_output_names
             feed_sample_weight_modes = self._sample_weight_modes
             if not self._is_graph_network:
@@ -2597,17 +2511,14 @@ class Model(training_lib.Model):
             # Generate sample-wise weight values given the `sample_weight` and
             # `class_weight` arguments.
             sample_weights = training_utils.standardize_sample_weights(
-                sample_weight, feed_output_names
-            )
+                sample_weight, feed_output_names)
             class_weights = training_utils.standardize_class_weights(
-                class_weight, feed_output_names
-            )
+                class_weight, feed_output_names)
 
             sample_weights = [
                 training_utils.standardize_weights(ref, sw, cw, mode)
                 for (ref, sw, cw, mode) in zip(
-                    y, sample_weights, class_weights, feed_sample_weight_modes
-                )
+                    y, sample_weights, class_weights, feed_sample_weight_modes)
             ]
             # Check that all arrays have the same length.
             if not self._distribution_strategy:
@@ -2615,12 +2526,13 @@ class Model(training_lib.Model):
                 if self._is_graph_network and not run_eagerly:
                     # Additional checks to avoid users mistakenly using improper loss fns.
                     training_utils.check_loss_and_target_compatibility(
-                        y, self._feed_loss_fns, feed_output_shapes
-                    )
+                        y, self._feed_loss_fns, feed_output_shapes)
 
             sample_weights, _, _ = training_utils.handle_partial_sample_weights(
-                y, sample_weights, feed_sample_weight_modes, check_all_flat=True
-            )
+                y,
+                sample_weights,
+                feed_sample_weight_modes,
+                check_all_flat=True)
         else:
             y = []
             sample_weights = None
@@ -2629,19 +2541,15 @@ class Model(training_lib.Model):
             # Check that for stateful networks, number of samples is a multiple
             # of the static batch size.
             if x[0].shape[0] % batch_size != 0:
-                raise ValueError(
-                    "In a stateful network, "
-                    "you should only pass inputs with "
-                    "a number of samples that can be "
-                    "divided by the batch size. Found: "
-                    + str(x[0].shape[0])
-                    + " samples"
-                )
+                raise ValueError("In a stateful network, "
+                                 "you should only pass inputs with "
+                                 "a number of samples that can be "
+                                 "divided by the batch size. Found: " +
+                                 str(x[0].shape[0]) + " samples")
 
         # If dictionary inputs were provided, we return a dictionary as well.
         if dict_inputs and not isinstance(
-            x, (dataset_ops.DatasetV1, dataset_ops.DatasetV2)
-        ):
+                x, (dataset_ops.DatasetV1, dataset_ops.DatasetV2)):
             x = dict(zip(feed_input_names, x))
         return x, y, sample_weights
 
@@ -2655,7 +2563,8 @@ class Model(training_lib.Model):
         # iterator and only one batch of samples is required, we fetch the data
         # tensors from the iterator and then standardize them.
         if isinstance(inputs, (dataset_ops.DatasetV1, dataset_ops.DatasetV2)):
-            inputs, targets, _ = training_utils.extract_tensors_from_dataset(inputs)
+            inputs, targets, _ = training_utils.extract_tensors_from_dataset(
+                inputs)
         # We type-check that `inputs` and `targets` are either single arrays
         # or lists of arrays, and extract a flat list of inputs from the passed
         # structure.
@@ -2676,7 +2585,8 @@ class Model(training_lib.Model):
         # users should explicitly add composite tensor inputs to their subclassed
         # models.
         for input_tensor in processed_inputs:
-            if composite_tensor_utils.is_composite_or_composite_value(input_tensor):
+            if composite_tensor_utils.is_composite_or_composite_value(
+                    input_tensor):
                 # TODO(b/132691975): Document subclass-model CT input handling.
                 raise ValueError(
                     "All SparseTensor and RaggedTensor inputs must be explicitly "
@@ -2685,19 +2595,20 @@ class Model(training_lib.Model):
                     "add a keras.Input() as your first Layer. For subclassed models, "
                     "please call self._set_inputs() on your input set, which you can "
                     "create using keras.Input() for each input to your model."
-                    % (input_tensor,)
-                )
+                    % (input_tensor, ))
         # Build the model using the retrieved inputs (value or symbolic).
         # If values are generated from a dataset, then in symbolic-mode
         # placeholders will be created to match the value shapes.
         if isinstance(
-            orig_inputs,
-            (dataset_ops.DatasetV1, dataset_ops.DatasetV2, iterator_ops.Iterator),
+                orig_inputs,
+            (dataset_ops.DatasetV1, dataset_ops.DatasetV2,
+             iterator_ops.Iterator),
         ):
             if not self.inputs:
                 # For subclassed models, a robust input spec is not available so we
                 # must cast to the model dtype.
-                inputs = training_utils.cast_if_floating_dtype(inputs, self.dtype)
+                inputs = training_utils.cast_if_floating_dtype(
+                    inputs, self.dtype)
 
             def create_tensor_spec(t):
                 return tensor_spec.TensorSpec(t.shape, t.dtype)
@@ -2710,16 +2621,17 @@ class Model(training_lib.Model):
         self._set_inputs(cast_inputs)
         return processed_inputs, targets, is_dict_inputs
 
-    def _compile_from_inputs(self, all_inputs, target, orig_inputs, orig_target):
+    def _compile_from_inputs(self, all_inputs, target, orig_inputs,
+                             orig_target):
         if target is not None:
             # We need to use `y` to set the model targets.
             if training_utils.has_tensors(target):
                 target = training_utils.cast_if_floating_dtype_and_mismatch(
-                    target, self.outputs
-                )
-            training_utils.validate_input_types(
-                target, orig_target, allow_dict=False, field_name="target"
-            )
+                    target, self.outputs)
+            training_utils.validate_input_types(target,
+                                                orig_target,
+                                                allow_dict=False,
+                                                field_name="target")
             if isinstance(target, (list, tuple)):
                 all_inputs += list(target)
             else:
@@ -2731,11 +2643,12 @@ class Model(training_lib.Model):
                 raise ValueError(
                     "Do not pass inputs that mix Numpy arrays and "
                     "TensorFlow tensors. "
-                    "You passed: x=" + str(orig_inputs) + "; y=" + str(orig_target)
-                )
+                    "You passed: x=" + str(orig_inputs) + "; y=" +
+                    str(orig_target))
         is_dataset = isinstance(
             orig_inputs,
-            (dataset_ops.DatasetV1, dataset_ops.DatasetV2, iterator_ops.Iterator),
+            (dataset_ops.DatasetV1, dataset_ops.DatasetV2,
+             iterator_ops.Iterator),
         )
         if is_dataset or context.executing_eagerly():
             target_tensors = None
@@ -2795,7 +2708,8 @@ class Model(training_lib.Model):
             if self._expects_training_arg:
                 # In V2 mode, feeding `training=None` is not allowed because any value
                 # explicitly passed by the user is respected, even `None`.`
-                if training is None and not ops.executing_eagerly_outside_functions():
+                if training is None and not ops.executing_eagerly_outside_functions(
+                ):
                     training = K.learning_phase()
                 if training is not None:
                     kwargs["training"] = training
@@ -2816,20 +2730,19 @@ class Model(training_lib.Model):
 
         if self.__class__.__name__ == "Sequential" and not self.built:
             if tensor_util.is_tensor(inputs):
-                input_shape = (None,) + tuple(inputs.shape.as_list()[1:])
+                input_shape = (None, ) + tuple(inputs.shape.as_list()[1:])
             elif isinstance(inputs, tensor_shape.TensorShape):
-                input_shape = (None,) + tuple(inputs.as_list()[1:])
+                input_shape = (None, ) + tuple(inputs.as_list()[1:])
             elif isinstance(inputs, dict):
                 # We assert that the first layer is a FeatureLayer.
                 if not training_utils.is_feature_layer(self.layers[0]):
                     raise ValueError(
                         "Passing a dictionary input to a Sequential Model "
                         "which doesn't have FeatureLayer as the first layer"
-                        " is an error."
-                    )
-                input_shape = (None,)
+                        " is an error.")
+                input_shape = (None, )
             else:
-                input_shape = (None,) + tuple(inputs.shape[1:])
+                input_shape = (None, ) + tuple(inputs.shape[1:])
             self._build_input_shape = input_shape
 
         # Cast inputs to the compute dtype. This is primarily used
@@ -2840,7 +2753,8 @@ class Model(training_lib.Model):
         # provided, or by creating a placeholder if Numpy data was provided).
         model_inputs = training_utils.ModelInputs(inputs)
         inputs = model_inputs.get_symbolic_inputs()
-        self.inputs = model_inputs.get_symbolic_inputs(return_single_as_list=True)
+        self.inputs = model_inputs.get_symbolic_inputs(
+            return_single_as_list=True)
         self.input_names = model_inputs.get_input_names()
 
         self._feed_inputs = []
@@ -2870,40 +2784,35 @@ class Model(training_lib.Model):
     def _targets(self):
         """The output target tensors for the model."""
         return [
-            e.training_target.target
-            for e in self._training_endpoints
+            e.training_target.target for e in self._training_endpoints
             if e.has_training_target()
         ]
 
     @property
     def _feed_targets(self):
         return [
-            e.training_target.target
-            for e in self._training_endpoints
+            e.training_target.target for e in self._training_endpoints
             if e.has_feedable_training_target()
         ]
 
     @property
     def _feed_output_names(self):
         return [
-            e.output_name
-            for e in self._training_endpoints
+            e.output_name for e in self._training_endpoints
             if e.has_feedable_training_target()
         ]
 
     @property
     def _feed_output_shapes(self):
         return [
-            e.feed_output_shape
-            for e in self._training_endpoints
+            e.feed_output_shape for e in self._training_endpoints
             if e.has_feedable_training_target()
         ]
 
     @property
     def _feed_loss_fns(self):
         return [
-            e.loss_fn
-            for e in self._training_endpoints
+            e.loss_fn for e in self._training_endpoints
             if e.has_feedable_training_target()
         ]
 
@@ -2915,8 +2824,7 @@ class Model(training_lib.Model):
     def _output_loss_metrics(self):
         if hasattr(self, "_training_endpoints"):
             return [
-                e.output_loss_metric
-                for e in self._training_endpoints
+                e.output_loss_metric for e in self._training_endpoints
                 if e.output_loss_metric is not None
             ]
         return None
@@ -2932,8 +2840,7 @@ class Model(training_lib.Model):
     @property
     def _feed_sample_weights(self):
         return [
-            e.sample_weight
-            for e in self._training_endpoints
+            e.sample_weight for e in self._training_endpoints
             if e.sample_weight is not None
         ]
 
@@ -2954,8 +2861,7 @@ class Model(training_lib.Model):
         """
         if self._training_state is not None:
             return self._training_state.maybe_load_initial_epoch_from_ckpt(
-                initial_epoch, mode
-            )
+                initial_epoch, mode)
         return initial_epoch
 
     def _get_training_eval_metrics(self):
@@ -2975,11 +2881,9 @@ class Model(training_lib.Model):
         # model is compiled
         # (i.e. whether the model is built and its inputs/outputs are set).
         if not self._compile_was_called:
-            raise RuntimeError(
-                "You must compile your model before "
-                "training/testing. "
-                "Use `model.compile(optimizer, loss)`."
-            )
+            raise RuntimeError("You must compile your model before "
+                               "training/testing. "
+                               "Use `model.compile(optimizer, loss)`.")
 
     def _in_multi_worker_mode(self):
         """Method to infer if this `Model` is working in multi-worker settings.
@@ -2998,9 +2902,7 @@ class Model(training_lib.Model):
           Whether this model indicates it's working in multi-worker settings.
         """
         strategy = self._get_distribution_strategy()
-        return (
-            strategy and strategy.extended._in_multi_worker_mode()
-        )  # pylint: disable=protected-access
+        return (strategy and strategy.extended._in_multi_worker_mode())  # pylint: disable=protected-access
 
     def _get_distribution_strategy(self):
         # If the model was compiled under the scope of a `tf.distribute.Strategy',
@@ -3045,9 +2947,9 @@ class DistributedCallbackModel(Model):
         self._original_model = orig_model
 
     def save_weights(self, filepath, overwrite=True, save_format=None):
-        self._replicated_model.save_weights(
-            filepath, overwrite=overwrite, save_format=save_format
-        )
+        self._replicated_model.save_weights(filepath,
+                                            overwrite=overwrite,
+                                            save_format=save_format)
 
     def save(self, filepath, overwrite=True, include_optimizer=True):
         # save weights from the distributed model to the original model
@@ -3055,7 +2957,9 @@ class DistributedCallbackModel(Model):
         self._original_model.set_weights(distributed_model_weights)
         # TODO(anjalisridhar): Do we need to save the original model here?
         # Saving the first replicated model works as well.
-        self._original_model.save(filepath, overwrite=True, include_optimizer=False)
+        self._original_model.save(filepath,
+                                  overwrite=True,
+                                  include_optimizer=False)
 
     def load_weights(self, filepath, by_name=False):
         self._original_model.load_weights(filepath, by_name=False)
@@ -3074,8 +2978,7 @@ class DistributedCallbackModel(Model):
             logging.warning(
                 "You are accessing attribute " + item + " of the "
                 "DistributedCallbackModel that may not have been set "
-                "correctly."
-            )
+                "correctly.")
         return super(DistributedCallbackModel, self).__getattr__(item)
 
 
@@ -3090,15 +2993,15 @@ class _TrainingEndpoint(object):
     """
 
     def __init__(
-        self,
-        output,
-        output_name,
-        loss_fn,
-        loss_weight=None,
-        training_target=None,
-        output_loss_metric=None,
-        sample_weight=None,
-        sample_weight_mode=None,
+            self,
+            output,
+            output_name,
+            loss_fn,
+            loss_weight=None,
+            training_target=None,
+            output_loss_metric=None,
+            sample_weight=None,
+            sample_weight_mode=None,
     ):
         """Initialize the _TrainingEndpoint.
 
@@ -3177,14 +3080,13 @@ class _TrainingEndpoint(object):
         if self.has_training_target():
             raise ValueError(
                 "The training_target field for the _TrainingEndpoint "
-                "instance has already been populated"
-            )
+                "instance has already been populated")
         if run_eagerly:
             # When run_eagerly, the target tensor is ignored, and the None placeholder
             # is created instead.
-            self.training_target = _TrainingTarget(
-                None, feedable=True, skip_target_weights=False
-            )
+            self.training_target = _TrainingTarget(None,
+                                                   feedable=True,
+                                                   skip_target_weights=False)
             return
 
         if self.should_skip_target():
@@ -3199,8 +3101,7 @@ class _TrainingEndpoint(object):
 
             if target is None:
                 target_dtype = losses.LABEL_DTYPES_FOR_LOSSES.get(
-                    self.loss_fn, K.dtype(self.output)
-                )
+                    self.loss_fn, K.dtype(self.output))
 
                 target = K.placeholder(
                     ndim=len(self.shape),
@@ -3210,8 +3111,9 @@ class _TrainingEndpoint(object):
                 )
 
             self.training_target = _TrainingTarget(
-                target, feedable=feedable, skip_target_weights=skip_target_weights
-            )
+                target,
+                feedable=feedable,
+                skip_target_weights=skip_target_weights)
 
     @property
     def output_loss_metric(self):
@@ -3241,21 +3143,16 @@ class _TrainingEndpoint(object):
         return self._loss_fn is None
 
     def should_skip_target_weights(self):
-        return (
-            self.should_skip_target()
-            or self.training_target is None
-            or self.training_target.skip_target_weights
-        )
+        return (self.should_skip_target() or self.training_target is None
+                or self.training_target.skip_target_weights)
 
     def has_training_target(self):
         return self.training_target is not None
 
     def has_feedable_training_target(self):
-        return (
-            not self.should_skip_target()
-            and self.training_target is not None
-            and self.training_target.feedable
-        )
+        return (not self.should_skip_target()
+                and self.training_target is not None
+                and self.training_target.feedable)
 
     def loss_name(self):
         if self._loss_fn is not None:
@@ -3268,20 +3165,17 @@ class _TrainingEndpoint(object):
         if not self.has_feedable_training_target():
             return None
 
-        if (
-            (
-                isinstance(self.loss_fn, losses.LossFunctionWrapper)
-                and self.loss_fn.fn == losses.sparse_categorical_crossentropy
-            )
-        ) or (isinstance(self.loss_fn, losses.SparseCategoricalCrossentropy)):
+        if ((isinstance(self.loss_fn, losses.LossFunctionWrapper)
+             and self.loss_fn.fn == losses.sparse_categorical_crossentropy)
+            ) or (isinstance(self.loss_fn,
+                             losses.SparseCategoricalCrossentropy)):
             if K.image_data_format() == "channels_first":
                 return (self.shape[0], 1) + self.shape[2:]
             else:
-                return self.shape[:-1] + (1,)
+                return self.shape[:-1] + (1, )
         elif not isinstance(self.loss_fn, losses.Loss) or (
-            isinstance(self.loss_fn, losses.LossFunctionWrapper)
-            and (getattr(losses, self.loss_fn.fn.__name__, None) is None)
-        ):
+                isinstance(self.loss_fn, losses.LossFunctionWrapper) and
+            (getattr(losses, self.loss_fn.fn.__name__, None) is None)):
             # If the given loss is not an instance of the `Loss` class (custom
             # class) or if the loss function that is wrapped is not in the
             # `losses` module, then it is a user-defined loss and we make no
@@ -3294,17 +3188,15 @@ class _TrainingEndpoint(object):
         """Check if the sample weight and the mode match or not."""
         # If there is a mismatch between sample weight mode and the placeholders
         # created, then recompile the sub-graphs that depend on sample weights.
-        return (self.sample_weight_mode is not None and self.sample_weight is None) or (
-            self.sample_weight_mode is None and self.sample_weight is not None
-        )
+        return (self.sample_weight_mode is not None and self.sample_weight is
+                None) or (self.sample_weight_mode is None
+                          and self.sample_weight is not None)
 
     def populate_sample_weight(self, sample_weight, sample_weight_mode):
         """Populate the sample weight and based on the sample weight mode."""
-        if sample_weight is None and (
-            self.should_skip_target_weights()
-            or sample_weight_mode is None
-            or context.executing_eagerly()
-        ):
+        if sample_weight is None and (self.should_skip_target_weights()
+                                      or sample_weight_mode is None
+                                      or context.executing_eagerly()):
             self._sample_weight = None
             return
 
@@ -3321,8 +3213,7 @@ class _TrainingEndpoint(object):
             if not sample_weight.shape.is_compatible_with(shape):
                 raise ValueError(
                     "Received sample weight with shape {}. Expected shape "
-                    "{}.".format(sample_weight.shape, shape)
-                )
+                    "{}.".format(sample_weight.shape, shape))
             self._sample_weight = sample_weight
         else:
             self._sample_weight = array_ops.placeholder_with_default(
@@ -3393,16 +3284,14 @@ def _convert_scipy_sparse_tensor(value, expected_input):
                 raise ValueError(
                     "A SciPy sparse matrix was passed to a model "
                     "that expects dense inputs. Please densify your "
-                    "inputs first, such as by calling `x.toarray()."
-                )
+                    "inputs first, such as by calling `x.toarray().")
             return value.toarray()
         else:
             sparse_coo = value.tocoo()
             row, col = sparse_coo.row, sparse_coo.col
             data, shape = sparse_coo.data, sparse_coo.shape
             indices = np.concatenate(
-                (np.expand_dims(row, 1), np.expand_dims(col, 1)), 1
-            )
+                (np.expand_dims(row, 1), np.expand_dims(col, 1)), 1)
             return sparse_tensor.SparseTensor(indices, data, shape)
     else:
         return value

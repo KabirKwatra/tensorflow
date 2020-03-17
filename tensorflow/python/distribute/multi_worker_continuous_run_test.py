@@ -48,7 +48,8 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             local_device = "/device:GPU:0"
 
         def worker_step_fn():
-            strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy()
+            strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy(
+            )
             # Make sure the processeses are in sync after updating the cluster
             multi_process_runner.barrier().wait()
 
@@ -59,7 +60,9 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             def run_reduce():
                 with ops.device(local_device):
                     t_in = array_ops.ones(tensor_shape) * worker_id
-                    return strategy.reduce(reduce_util.ReduceOp.MEAN, t_in, axis=None)
+                    return strategy.reduce(reduce_util.ReduceOp.MEAN,
+                                           t_in,
+                                           axis=None)
 
             t_out = run_reduce()
             # Element values from the workers are
@@ -74,14 +77,14 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
                 # Set virtual GPU with memory limit of 64MB so that multiple worker
                 # processes can share the physical GPU
                 config.set_logical_device_configuration(
-                    gpus[0], [context.LogicalDeviceConfiguration(64)]
-                )
+                    gpus[0], [context.LogicalDeviceConfiguration(64)])
             for _ in range(100):
                 worker_step_fn()
 
         multi_process_runner.run(
             worker_fn,
-            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS),
+            cluster_spec=test_base.create_cluster_spec(
+                num_workers=NUM_WORKERS),
         )
 
 
