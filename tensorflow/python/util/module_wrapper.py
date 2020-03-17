@@ -26,7 +26,6 @@ from tensorflow.python.util import tf_inspect
 from tensorflow.python.util import tf_stack
 from tensorflow.tools.compatibility import all_renames_v2
 
-
 _PER_MODULE_WARNING_LIMIT = 1
 
 
@@ -80,8 +79,12 @@ class TFModuleWrapper(types.ModuleType):
     """Wrapper for TF modules to support deprecation messages and lazyloading."""
 
     def __init__(  # pylint: disable=super-on-old-class
-        self, wrapped, module_name, public_apis=None, deprecation=True, has_lite=False
-    ):  # pylint: enable=super-on-old-class
+            self,
+            wrapped,
+            module_name,
+            public_apis=None,
+            deprecation=True,
+            has_lite=False):  # pylint: enable=super-on-old-class
         super(TFModuleWrapper, self).__init__(wrapped.__name__)
         # A cache for all members which do not print deprecations (any more).
         self._tfmw_attr_map = {}
@@ -95,15 +98,15 @@ class TFModuleWrapper(types.ModuleType):
         self._tfmw_has_lite = has_lite
         # Set __all__ so that import * work for lazy loaded modules
         if self._tfmw_public_apis:
-            self._tfmw_wrapped_module.__all__ = list(self._tfmw_public_apis.keys())
+            self._tfmw_wrapped_module.__all__ = list(
+                self._tfmw_public_apis.keys())
             self.__all__ = list(self._tfmw_public_apis.keys())
         else:
             if hasattr(self._tfmw_wrapped_module, "__all__"):
                 self.__all__ = self._tfmw_wrapped_module.__all__
             else:
                 self._tfmw_wrapped_module.__all__ = [
-                    attr
-                    for attr in dir(self._tfmw_wrapped_module)
+                    attr for attr in dir(self._tfmw_wrapped_module)
                     if not attr.startswith("_")
                 ]
                 self.__all__ = self._tfmw_wrapped_module.__all__
@@ -114,10 +117,8 @@ class TFModuleWrapper(types.ModuleType):
 
     def _tfmw_add_deprecation_warning(self, name, attr):
         """Print deprecation warning for attr with given name if necessary."""
-        if (
-            self._tfmw_warning_count < _PER_MODULE_WARNING_LIMIT
-            and name not in self._tfmw_deprecated_checked
-        ):
+        if (self._tfmw_warning_count < _PER_MODULE_WARNING_LIMIT
+                and name not in self._tfmw_deprecated_checked):
 
             self._tfmw_deprecated_checked.add(name)
 
@@ -184,10 +185,8 @@ class TFModuleWrapper(types.ModuleType):
 
             # Print deprecations, only cache functions after deprecation warnings have
             # stopped.
-            if not (
-                self._tfmw_print_deprecation_warnings
-                and self._tfmw_add_deprecation_warning(name, attr)
-            ):
+            if not (self._tfmw_print_deprecation_warnings
+                    and self._tfmw_add_deprecation_warning(name, attr)):
                 attr_map[name] = attr
             return attr
 
@@ -221,15 +220,10 @@ class TFModuleWrapper(types.ModuleType):
         if self._tfmw_public_apis:
             return list(
                 set(self._tfmw_public_apis.keys()).union(
-                    set(
-                        [
-                            attr
-                            for attr in dir(self._tfmw_wrapped_module)
-                            if not attr.startswith("_")
-                        ]
-                    )
-                )
-            )
+                    set([
+                        attr for attr in dir(self._tfmw_wrapped_module)
+                        if not attr.startswith("_")
+                    ])))
         else:
             return dir(self._tfmw_wrapped_module)
 
@@ -243,4 +237,4 @@ class TFModuleWrapper(types.ModuleType):
         return self._tfmw_wrapped_module.__repr__()
 
     def __reduce__(self):
-        return importlib.import_module, (self.__name__,)
+        return importlib.import_module, (self.__name__, )

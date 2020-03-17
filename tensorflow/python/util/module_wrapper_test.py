@@ -71,13 +71,13 @@ class LazyLoadingWrapperTest(test.TestCase):
     def testLazyLoad(self):
         module = MockModule("test")
         apis = {"cmd": ("", "cmd"), "ABCMeta": ("abc", "ABCMeta")}
-        wrapped_module = module_wrapper.TFModuleWrapper(
-            module, "test", public_apis=apis, deprecation=False
-        )
+        wrapped_module = module_wrapper.TFModuleWrapper(module,
+                                                        "test",
+                                                        public_apis=apis,
+                                                        deprecation=False)
         import cmd as _cmd  # pylint: disable=g-import-not-at-top
         from abc import (
-            ABCMeta as _ABCMeta,
-        )  # pylint: disable=g-import-not-at-top, g-importing-member
+            ABCMeta as _ABCMeta, )  # pylint: disable=g-import-not-at-top, g-importing-member
 
         self.assertEqual(wrapped_module.cmd, _cmd)
         self.assertEqual(wrapped_module.ABCMeta, _ABCMeta)
@@ -86,9 +86,10 @@ class LazyLoadingWrapperTest(test.TestCase):
         # Test that we can override and add fields to the wrapped module.
         module = MockModule("test")
         apis = {"cmd": ("", "cmd")}
-        wrapped_module = module_wrapper.TFModuleWrapper(
-            module, "test", public_apis=apis, deprecation=False
-        )
+        wrapped_module = module_wrapper.TFModuleWrapper(module,
+                                                        "test",
+                                                        public_apis=apis,
+                                                        deprecation=False)
         import cmd as _cmd  # pylint: disable=g-import-not-at-top
 
         self.assertEqual(wrapped_module.cmd, _cmd)
@@ -101,9 +102,10 @@ class LazyLoadingWrapperTest(test.TestCase):
         # Test that we can override and add fields to the wrapped module.
         module = MockModule("test")
         apis = {"cmd": ("", "cmd")}
-        wrapped_module = module_wrapper.TFModuleWrapper(
-            module, "test", public_apis=apis, deprecation=False
-        )
+        wrapped_module = module_wrapper.TFModuleWrapper(module,
+                                                        "test",
+                                                        public_apis=apis,
+                                                        deprecation=False)
         import cmd as _cmd  # pylint: disable=g-import-not-at-top
 
         # At first cmd key does not exist in __dict__
@@ -120,9 +122,10 @@ class LazyLoadingWrapperTest(test.TestCase):
         module = MockModule("test")
         module._should_not_be_public = 5
         apis = {"cmd": ("", "cmd")}
-        wrapped_module = module_wrapper.TFModuleWrapper(
-            module, "test", public_apis=apis, deprecation=False
-        )
+        wrapped_module = module_wrapper.TFModuleWrapper(module,
+                                                        "test",
+                                                        public_apis=apis,
+                                                        deprecation=False)
         setattr(wrapped_module, "hello", 1)
         self.assertIn("hello", wrapped_module.__all__)
         self.assertIn("cmd", wrapped_module.__all__)
@@ -135,9 +138,11 @@ class LazyLoadingWrapperTest(test.TestCase):
         module.lite = 5
         import cmd as _cmd  # pylint: disable=g-import-not-at-top
 
-        wrapped_module = module_wrapper.TFModuleWrapper(
-            module, "test", public_apis=apis, deprecation=False, has_lite=True
-        )
+        wrapped_module = module_wrapper.TFModuleWrapper(module,
+                                                        "test",
+                                                        public_apis=apis,
+                                                        deprecation=False,
+                                                        has_lite=True)
         self.assertEqual(wrapped_module.lite, _cmd)
 
 
