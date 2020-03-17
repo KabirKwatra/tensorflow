@@ -36,12 +36,11 @@ from tensorflow.python.platform import test
 
 _DATA_TYPES = [dtypes.half, dtypes.float32, dtypes.float64]
 # TODO(b/143684500): Eigen to support complex sqrt
-if (not test_util.IsBuiltWithNvcc() and not test.is_built_with_rocm()):
+if not test_util.IsBuiltWithNvcc() and not test.is_built_with_rocm():
     _DATA_TYPES += [dtypes.complex64, dtypes.complex128]
 
 
 class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
-
     def doTestBasic(self, use_resource=False, use_callable_params=False):
         num_updates = 4  # number of ADADELTA steps to perform
         for dtype in _DATA_TYPES:
@@ -51,9 +50,11 @@ class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
                     var1_init = [3.0, 4.0]
                     if use_resource:
                         var0 = resource_variable_ops.ResourceVariable(
-                            var0_init, dtype=dtype)
+                            var0_init, dtype=dtype
+                        )
                         var1 = resource_variable_ops.ResourceVariable(
-                            var1_init, dtype=dtype)
+                            var1_init, dtype=dtype
+                        )
                     else:
                         var0 = variables.Variable(var0_init, dtype=dtype)
                         var1 = variables.Variable(var1_init, dtype=dtype)
@@ -70,13 +71,16 @@ class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
                         adadelta_opt = adadelta.Adadelta(
                             learning_rate=lambda: lr,  # pylint: disable=cell-var-from-loop
                             rho=lambda: rho,  # pylint: disable=cell-var-from-loop
-                            epsilon=epsilon)  # pylint: disable=cell-var-from-loop
+                            epsilon=epsilon,
+                        )  # pylint: disable=cell-var-from-loop
                     else:
                         adadelta_opt = adadelta.Adadelta(
-                            learning_rate=lr, rho=rho, epsilon=epsilon)
+                            learning_rate=lr, rho=rho, epsilon=epsilon
+                        )
                     if not context.executing_eagerly():
                         adadelta_update = adadelta_opt.apply_gradients(
-                            zip([grads, grads], [var0, var1]))
+                            zip([grads, grads], [var0, var1])
+                        )
                         self.evaluate(variables.global_variables_initializer())
 
                         # Assign slots
@@ -85,15 +89,13 @@ class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
                         slot[0] = adadelta_opt.get_slot(var0, "accum_grad")
                         self.assertEqual(slot[0].shape, var0.shape)
 
-                        slot_update[0] = adadelta_opt.get_slot(
-                            var0, "accum_var")
+                        slot_update[0] = adadelta_opt.get_slot(var0, "accum_var")
                         self.assertEqual(slot_update[0].shape, var0.shape)
 
                         slot[1] = adadelta_opt.get_slot(var1, "accum_grad")
                         self.assertEqual(slot[1].shape, var1.shape)
 
-                        slot_update[1] = adadelta_opt.get_slot(
-                            var1, "accum_var")
+                        slot_update[1] = adadelta_opt.get_slot(var1, "accum_var")
                         self.assertEqual(slot_update[1].shape, var1.shape)
 
                     # Fetch params to validate initial values
@@ -108,15 +110,19 @@ class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
                             self.evaluate(adadelta_update)
                         else:
                             adadelta_opt.apply_gradients(
-                                zip([grads, grads], [var0, var1]))
+                                zip([grads, grads], [var0, var1])
+                            )
 
                         # Perform initial update without previous accum values
-                        accum = accum * rho + (grad**2) * (1 - rho)
+                        accum = accum * rho + (grad ** 2) * (1 - rho)
                         update[step] = (
-                            np.sqrt(accum_update + epsilon) *
-                            (1. / np.sqrt(accum + epsilon)) * grad)
-                        accum_update = (
-                            accum_update * rho + (update[step]**2) * (1.0 - rho))
+                            np.sqrt(accum_update + epsilon)
+                            * (1.0 / np.sqrt(accum + epsilon))
+                            * grad
+                        )
+                        accum_update = accum_update * rho + (update[step] ** 2) * (
+                            1.0 - rho
+                        )
                         tot_update += update[step] * lr
 
                         if not context.executing_eagerly():
@@ -124,34 +130,46 @@ class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
                             # TODO(lxuechen): This is hard to test in eager mode
                             for slot_idx in range(2):
                                 self.assertAllCloseAccordingToType(
-                                    np.array([accum, accum],
-                                             dtype=dtype.as_numpy_dtype(0)),
+                                    np.array(
+                                        [accum, accum], dtype=dtype.as_numpy_dtype(0)
+                                    ),
                                     self.evaluate(slot[slot_idx]),
-                                    rtol=1e-5)
+                                    rtol=1e-5,
+                                )
 
                                 self.assertAllCloseAccordingToType(
                                     np.array(
                                         [accum_update, accum_update],
-                                        dtype=dtype.as_numpy_dtype(0)),
+                                        dtype=dtype.as_numpy_dtype(0),
+                                    ),
                                     self.evaluate(slot_update[slot_idx]),
-                                    rtol=1e-5)
+                                    rtol=1e-5,
+                                )
 
                             # Check that the parameters have been updated
                             self.assertAllCloseAccordingToType(
                                 np.array(
-                                    [var0_init[0] - tot_update,
-                                        var0_init[1] - tot_update],
-                                    dtype=dtype.as_numpy_dtype(0)),
+                                    [
+                                        var0_init[0] - tot_update,
+                                        var0_init[1] - tot_update,
+                                    ],
+                                    dtype=dtype.as_numpy_dtype(0),
+                                ),
                                 self.evaluate(var0),
-                                rtol=1e-5)
+                                rtol=1e-5,
+                            )
 
                             self.assertAllCloseAccordingToType(
                                 np.array(
-                                    [var1_init[0] - tot_update,
-                                        var1_init[1] - tot_update],
-                                    dtype=dtype.as_numpy_dtype(0)),
+                                    [
+                                        var1_init[0] - tot_update,
+                                        var1_init[1] - tot_update,
+                                    ],
+                                    dtype=dtype.as_numpy_dtype(0),
+                                ),
                                 self.evaluate(var1),
-                                rtol=1e-5)
+                                rtol=1e-5,
+                            )
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testResourceBasic(self):
@@ -165,32 +183,30 @@ class AdadeltaOptimizerTest(test.TestCase, parameterized.TestCase):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
         with ops.Graph().as_default():
             for dtype in _DATA_TYPES:
-                var0 = resource_variable_ops.ResourceVariable(
-                    [[1.0, 2.0]], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([[1.0, 2.0]], dtype=dtype)
                 x = constant_op.constant([[4.0], [5.0]], dtype=dtype)
 
                 def loss():
-                    pred = math_ops.matmul(embedding_ops.embedding_lookup(
-                        [var0], [0]), x)  # pylint: disable=cell-var-from-loop
+                    pred = math_ops.matmul(
+                        embedding_ops.embedding_lookup([var0], [0]), x
+                    )  # pylint: disable=cell-var-from-loop
                     return pred * pred
 
                 sgd_op = adadelta.Adadelta(1.0, 1.0, 1.0).minimize(
-                    loss, var_list=[var0])
+                    loss, var_list=[var0]
+                )
                 self.evaluate(variables.global_variables_initializer())
                 # Fetch params to validate initial values
-                self.assertAllCloseAccordingToType(
-                    [[1.0, 2.0]], self.evaluate(var0))
+                self.assertAllCloseAccordingToType([[1.0, 2.0]], self.evaluate(var0))
                 # Run 1 step of sgd
                 self.evaluate(sgd_op)
                 # Validate updated params
-                self.assertAllCloseAccordingToType(
-                    [[-111, -138]], self.evaluate(var0))
+                self.assertAllCloseAccordingToType([[-111, -138]], self.evaluate(var0))
 
     def testConstructAdadeltaWithLR(self):
-        opt = adadelta.Adadelta(lr=1.0, rho=0.9, epsilon=1.)
-        opt_2 = adadelta.Adadelta(
-            learning_rate=0.1, rho=0.9, epsilon=1., lr=1.0)
-        opt_3 = adadelta.Adadelta(learning_rate=0.1, rho=0.9, epsilon=1.)
+        opt = adadelta.Adadelta(lr=1.0, rho=0.9, epsilon=1.0)
+        opt_2 = adadelta.Adadelta(learning_rate=0.1, rho=0.9, epsilon=1.0, lr=1.0)
+        opt_3 = adadelta.Adadelta(learning_rate=0.1, rho=0.9, epsilon=1.0)
         self.assertIsInstance(opt.lr, variables.Variable)
         self.assertIsInstance(opt_2.lr, variables.Variable)
         self.assertIsInstance(opt_3.lr, variables.Variable)

@@ -64,22 +64,21 @@ from tensorflow.python.training import training_util
 
 _DATA_TYPES = [dtypes.half, dtypes.float32, dtypes.float64]
 # TODO(b/141710709): complex support in NVCC and ROCM.
-if (not test_util.IsBuiltWithNvcc() and not test.is_built_with_rocm()):
+if not test_util.IsBuiltWithNvcc() and not test.is_built_with_rocm():
     _DATA_TYPES += [dtypes.complex64, dtypes.complex128]
 
 
 class OptimizerTest(test.TestCase, parameterized.TestCase):
-
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testBasic(self):
         for dtype in _DATA_TYPES:
             with test_util.use_gpu():
-                var0 = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype)
-                var1 = resource_variable_ops.ResourceVariable(
-                    [3.0, 4.0], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtype)
+                var1 = resource_variable_ops.ResourceVariable([3.0, 4.0], dtype=dtype)
 
-                def loss(): return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
+                def loss():
+                    return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
+
                 sgd = gradient_descent.SGD(3.0)
 
                 self.evaluate(variables.global_variables_initializer())
@@ -91,17 +90,15 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                 self.evaluate(variables.global_variables_initializer())
                 self.evaluate(opt_op)
                 # Validate updated params
-                self.assertAllClose([-14., -13.], self.evaluate(var0))
-                self.assertAllClose([-6., -5.], self.evaluate(var1))
+                self.assertAllClose([-14.0, -13.0], self.evaluate(var0))
+                self.assertAllClose([-6.0, -5.0], self.evaluate(var1))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testAdaptiveLearningRate(self):
         for dtype in _DATA_TYPES:
             with self.test_session():
-                var0 = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype)
-                var1 = resource_variable_ops.ResourceVariable(
-                    [3.0, 4.0], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtype)
+                var1 = resource_variable_ops.ResourceVariable([3.0, 4.0], dtype=dtype)
 
                 def loss():
                     return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
@@ -118,9 +115,9 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                 self.evaluate(opt_op)
                 # Validate updated params
                 # var0 = [1., 2.] - 1.0 * [5, 5]
-                self.assertAllClose([-4., -3.], self.evaluate(var0))
+                self.assertAllClose([-4.0, -3.0], self.evaluate(var0))
                 # var1 = [3., 4.] - 1.0 * [3, 3]
-                self.assertAllClose([0., 1.], self.evaluate(var1))
+                self.assertAllClose([0.0, 1.0], self.evaluate(var1))
 
                 sgd.learning_rate = 0.5
                 if context.executing_eagerly():
@@ -134,19 +131,23 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                 self.assertAllClose([-1.5, -0.5], self.evaluate(var1))
 
                 sgd.learning_rate = learning_rate_schedule.InverseTimeDecay(
-                    0.5, decay_steps=1.0, decay_rate=0.5)
+                    0.5, decay_steps=1.0, decay_rate=0.5
+                )
                 if context.executing_eagerly():
                     sgd.minimize(loss, [var0, var1])
                 else:
                     self.evaluate(opt_op)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testPrecomputedGradient(self):
         for dtype in _DATA_TYPES:
             with test_util.use_gpu():
                 var0 = variables.Variable([1.0, 2.0], dtype=dtype)
                 var1 = variables.Variable([3.0, 4.0], dtype=dtype)
-                def loss(): return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
+
+                def loss():
+                    return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
+
                 grad_loss = constant_op.constant([42, -42], dtype=dtype)
                 sgd = gradient_descent.SGD(3.0)
 
@@ -155,77 +156,77 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                 self.assertAllClose([1.0, 2.0], self.evaluate(var0))
                 self.assertAllClose([3.0, 4.0], self.evaluate(var1))
                 # Run 1 step of sgd through optimizer
-                opt_op = sgd.minimize(
-                    loss, var_list=[var0, var1], grad_loss=grad_loss)
+                opt_op = sgd.minimize(loss, var_list=[var0, var1], grad_loss=grad_loss)
                 self.evaluate(variables.global_variables_initializer())
                 self.evaluate(opt_op)
                 # Validate updated params
-                self.assertAllClose([1.0 - 3 * 5 * 42.0, 2.0 - 3 * 5 * (-42.0)],
-                                    self.evaluate(var0))
-                self.assertAllClose([3.0 - 3 * 3 * 42.0, 4.0 - 3 * 3 * (-42.0)],
-                                    self.evaluate(var1))
+                self.assertAllClose(
+                    [1.0 - 3 * 5 * 42.0, 2.0 - 3 * 5 * (-42.0)], self.evaluate(var0)
+                )
+                self.assertAllClose(
+                    [3.0 - 3 * 3 * 42.0, 4.0 - 3 * 3 * (-42.0)], self.evaluate(var1)
+                )
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testNoGradients(self):
         for dtype in _DATA_TYPES:
             with test_util.use_gpu():
-                var0 = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype)
-                var1 = resource_variable_ops.ResourceVariable(
-                    [3.0, 4.0], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtype)
+                var1 = resource_variable_ops.ResourceVariable([3.0, 4.0], dtype=dtype)
 
-                def loss(): return 5 * var0  # pylint: disable=cell-var-from-loop
+                def loss():
+                    return 5 * var0  # pylint: disable=cell-var-from-loop
+
                 sgd_op = gradient_descent.SGD(3.0)
-                with self.assertRaisesRegexp(ValueError, 'No gradients'):
+                with self.assertRaisesRegexp(ValueError, "No gradients"):
                     # var1 has no gradient
                     sgd_op.minimize(loss, var_list=[var1])
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testNoGradientsForAnyVariables_Minimize(self):
         for dtype in _DATA_TYPES:
             with test_util.use_gpu():
-                var0 = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype)
-                var1 = resource_variable_ops.ResourceVariable(
-                    [3.0, 4.0], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtype)
+                var1 = resource_variable_ops.ResourceVariable([3.0, 4.0], dtype=dtype)
 
-                def loss(): return constant_op.constant(5.0)
+                def loss():
+                    return constant_op.constant(5.0)
 
                 sgd_op = gradient_descent.SGD(3.0)
-                with self.assertRaisesRegexp(ValueError,
-                                             'No gradients provided for any variable'):
+                with self.assertRaisesRegexp(
+                    ValueError, "No gradients provided for any variable"
+                ):
                     sgd_op.minimize(loss, var_list=[var0, var1])
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testNoGradientsForAnyVariables_ApplyGradients(self):
         for dtype in _DATA_TYPES:
             with test_util.use_gpu():
-                var0 = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype)
-                var1 = resource_variable_ops.ResourceVariable(
-                    [3.0, 4.0], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtype)
+                var1 = resource_variable_ops.ResourceVariable([3.0, 4.0], dtype=dtype)
                 sgd_op = gradient_descent.SGD(3.0)
-                with self.assertRaisesRegexp(ValueError,
-                                             'No gradients provided for any variable'):
+                with self.assertRaisesRegexp(
+                    ValueError, "No gradients provided for any variable"
+                ):
                     sgd_op.apply_gradients([(None, var0), (None, var1)])
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testGradientsAsVariables(self):
         for i, dtype in enumerate(_DATA_TYPES):
             with test_util.use_gpu():
-                var0 = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype)
-                var1 = resource_variable_ops.ResourceVariable(
-                    [3.0, 4.0], dtype=dtype)
+                var0 = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtype)
+                var1 = resource_variable_ops.ResourceVariable([3.0, 4.0], dtype=dtype)
 
-                def loss(): return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
+                def loss():
+                    return 5 * var0 + 3 * var1  # pylint: disable=cell-var-from-loop
 
                 sgd = gradient_descent.SGD(3.0)
                 grads_and_vars = sgd._compute_gradients(loss, [var0, var1])
                 # Convert gradients to tf.Variables
                 converted_grads = [
                     resource_variable_ops.ResourceVariable(
-                        array_ops.zeros([2], dtype), name='c_%d_%d' % (i, j))
+                        array_ops.zeros([2], dtype), name="c_%d_%d" % (i, j)
+                    )
                     for j, gv in enumerate(grads_and_vars)
                 ]
                 convert_ops = [
@@ -241,18 +242,17 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                 self.assertAllClose([3.0, 4.0], self.evaluate(var1))
 
                 # Run 1 step of sgd through optimizer
-                converted_grads_and_vars = list(
-                    zip(converted_grads, [var0, var1]))
+                converted_grads_and_vars = list(zip(converted_grads, [var0, var1]))
                 opt_op = sgd.apply_gradients(converted_grads_and_vars)
                 self.evaluate(variables.global_variables_initializer())
                 self.evaluate(convert_ops)
                 self.evaluate(opt_op)
 
                 # Validate updated params
-                self.assertAllClose([-14., -13.], self.evaluate(var0))
-                self.assertAllClose([-6., -5.], self.evaluate(var1))
+                self.assertAllClose([-14.0, -13.0], self.evaluate(var0))
+                self.assertAllClose([-6.0, -5.0], self.evaluate(var1))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testComputeGradientsWithTensors(self):
         with test_util.use_gpu():
             x = ops.convert_to_tensor_v2(1.0)
@@ -270,17 +270,21 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             with self.assertRaises(NotImplementedError):
                 sgd.apply_gradients(grads_and_vars)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testConstraint(self):
-        def constraint_01(x): return clip_ops.clip_by_value(x, -0.1, 0.)
-        def constraint_0(x): return clip_ops.clip_by_value(x, 0., 1.)
-        with test_util.use_gpu():
-            var0 = variables.Variable([1.0, 2.0],
-                                      constraint=constraint_01)
-            var1 = variables.Variable([3.0, 4.0],
-                                      constraint=constraint_0)
+        def constraint_01(x):
+            return clip_ops.clip_by_value(x, -0.1, 0.0)
 
-            def loss(): return 5 * var0 + 3 * var1
+        def constraint_0(x):
+            return clip_ops.clip_by_value(x, 0.0, 1.0)
+
+        with test_util.use_gpu():
+            var0 = variables.Variable([1.0, 2.0], constraint=constraint_01)
+            var1 = variables.Variable([3.0, 4.0], constraint=constraint_0)
+
+            def loss():
+                return 5 * var0 + 3 * var1
+
             sgd = gradient_descent.SGD(3.0)
 
             self.evaluate(variables.global_variables_initializer())
@@ -293,44 +297,47 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             self.evaluate(opt_op)
             # Validate updated params
             self.assertAllClose([-0.1, -0.1], self.evaluate(var0))
-            self.assertAllClose([0., 0.], self.evaluate(var1))
+            self.assertAllClose([0.0, 0.0], self.evaluate(var1))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testIterationWithoutMinimize(self):
         with test_util.use_gpu():
             sgd = gradient_descent.SGD(3.0)
             self.evaluate(sgd.iterations.initializer)
             self.assertEqual(0, self.evaluate(sgd.iterations))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testConfig(self):
         with test_util.use_gpu():
             opt = gradient_descent.SGD(learning_rate=1.0)
             config = opt.get_config()
             opt2 = gradient_descent.SGD.from_config(config)
-            lr = opt._get_hyper('learning_rate')
-            lr2 = opt2._get_hyper('learning_rate')
+            lr = opt._get_hyper("learning_rate")
+            lr2 = opt2._get_hyper("learning_rate")
             self.evaluate(variables.global_variables_initializer())
             # assert both are equal float values.
             self.assertEqual(self.evaluate(lr), self.evaluate(lr2))
             var0 = variables.Variable([[1.0], [2.0]], dtype=dtypes.float32)
-            def loss(): return 3 * var0
+
+            def loss():
+                return 3 * var0
+
             # learning rate variable created when calling minimize.
             opt.minimize(loss, [var0])
             opt3 = gradient_descent.SGD.from_config(config)
-            lr3 = opt3._get_hyper('learning_rate')
+            lr3 = opt3._get_hyper("learning_rate")
             self.evaluate(variables.global_variables_initializer())
             self.assertEqual(self.evaluate(lr), self.evaluate(lr3))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testConfigWithLearningRateDecay(self):
         with test_util.use_gpu():
             var0 = variables.Variable([[1.0], [2.0]], dtype=dtypes.float32)
             for decay_schedule in [
                 learning_rate_schedule.InverseTimeDecay(
-                    0.5, decay_steps=1.0, decay_rate=0.1),
-                learning_rate_schedule.PiecewiseConstantDecay(
-                    [5], [1., .5])
+                    0.5, decay_steps=1.0, decay_rate=0.1
+                ),
+                learning_rate_schedule.PiecewiseConstantDecay([5], [1.0, 0.5]),
             ]:
                 step = 10
                 opt = gradient_descent.SGD(decay_schedule)
@@ -338,70 +345,85 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
                 opt2 = gradient_descent.SGD.from_config(config)
                 # assert both are equal float values.
                 self.assertAllEqual(
-                    decay_schedule(step),
-                    opt._get_hyper('learning_rate')(step))
+                    decay_schedule(step), opt._get_hyper("learning_rate")(step)
+                )
                 self.assertAllEqual(
-                    decay_schedule(step),
-                    opt2._get_hyper('learning_rate')(step))
+                    decay_schedule(step), opt2._get_hyper("learning_rate")(step)
+                )
 
-                def loss(): return 3 * var0
+                def loss():
+                    return 3 * var0
+
                 # learning rate variable is created when calling minimize.
                 opt.minimize(loss, [var0])
                 self.evaluate(variables.global_variables_initializer())
                 config = opt.get_config()
                 opt3 = gradient_descent.SGD.from_config(config)
                 self.assertAllEqual(
-                    self.evaluate(opt._get_hyper('learning_rate')(step)),
-                    opt3._get_hyper('learning_rate')(step))
+                    self.evaluate(opt._get_hyper("learning_rate")(step)),
+                    opt3._get_hyper("learning_rate")(step),
+                )
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testGradClipValue(self):
         with test_util.use_gpu():
             var = resource_variable_ops.ResourceVariable([1.0, 2.0])
-            def loss(): return 3 * var
+
+            def loss():
+                return 3 * var
+
             opt = gradient_descent.SGD(learning_rate=1.0, clipvalue=1.0)
             opt_op = opt.minimize(loss, [var])
             self.evaluate(variables.global_variables_initializer())
             self.evaluate(opt_op)
-            self.assertAllClose([0., 1.], self.evaluate(var))
+            self.assertAllClose([0.0, 1.0], self.evaluate(var))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testGradClipNorm(self):
         with test_util.use_gpu():
             var = resource_variable_ops.ResourceVariable([1.0])
-            def loss(): return 3 * var
+
+            def loss():
+                return 3 * var
+
             opt = gradient_descent.SGD(learning_rate=1.0, clipnorm=1.0)
             opt_op = opt.minimize(loss, [var])
             self.evaluate(variables.global_variables_initializer())
             self.evaluate(opt_op)
-            self.assertAllClose([0.], self.evaluate(var))
+            self.assertAllClose([0.0], self.evaluate(var))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testInvalidClipNorm(self):
-        with self.assertRaisesRegexp(ValueError, '>= 0'):
+        with self.assertRaisesRegexp(ValueError, ">= 0"):
             gradient_descent.SGD(learning_rate=1.0, clipnorm=-1.0)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testInvalidKwargs(self):
-        with self.assertRaisesRegexp(TypeError, 'Unexpected keyword argument'):
+        with self.assertRaisesRegexp(TypeError, "Unexpected keyword argument"):
             gradient_descent.SGD(learning_rate=1.0, invalidkwargs=1.0)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testWeights(self):
         with test_util.use_gpu():
             opt1 = adam.Adam(learning_rate=1.0)
-            var1 = resource_variable_ops.ResourceVariable([1.0, 2.0],
-                                                          dtype=dtypes.float32)
+            var1 = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0], dtype=dtypes.float32
+            )
 
-            def loss1(): return 3 * var1
+            def loss1():
+                return 3 * var1
+
             opt_op_1 = opt1.minimize(loss1, [var1])
             self.evaluate(variables.global_variables_initializer())
             config = opt1.get_config()
             opt2 = adam.Adam.from_config(config)
-            var2 = resource_variable_ops.ResourceVariable([1.0, 2.0],
-                                                          dtype=dtypes.float32)
+            var2 = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0], dtype=dtypes.float32
+            )
 
-            def loss2(): return 3 * var2
+            def loss2():
+                return 3 * var2
+
             opt_op_2 = opt2.minimize(loss2, [var2])
             weights = opt1.get_weights()
 
@@ -413,42 +435,54 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             self.assertEqual(1, self.evaluate(opt1.iterations))
             self.assertEqual(1, self.evaluate(opt2.iterations))
 
-            var3 = resource_variable_ops.ResourceVariable([1.0, 2.0, 3.0],
-                                                          dtype=dtypes.float32)
-            var4 = resource_variable_ops.ResourceVariable([4.0, 5.0, 6.0],
-                                                          dtype=dtypes.float32)
+            var3 = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0, 3.0], dtype=dtypes.float32
+            )
+            var4 = resource_variable_ops.ResourceVariable(
+                [4.0, 5.0, 6.0], dtype=dtypes.float32
+            )
 
-            def loss3(): return 3 * var3 + 5 * var4
+            def loss3():
+                return 3 * var3 + 5 * var4
+
             opt_op_3 = opt1.minimize(loss3, [var3, var4])
 
             # Assert set_weights with ValueError since weight list does not match.
             self.evaluate(variables.global_variables_initializer())
             weights = opt1.get_weights()
-            with self.assertRaisesRegexp(ValueError, 'but the optimizer was'):
+            with self.assertRaisesRegexp(ValueError, "but the optimizer was"):
                 opt2.set_weights(weights)
 
             # Assert set_weights and variables get updated to same value.
-            var5 = resource_variable_ops.ResourceVariable([1.0, 2.0, 3.0],
-                                                          dtype=dtypes.float32)
-            var6 = resource_variable_ops.ResourceVariable([4.0, 5.0, 6.0],
-                                                          dtype=dtypes.float32)
+            var5 = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0, 3.0], dtype=dtypes.float32
+            )
+            var6 = resource_variable_ops.ResourceVariable(
+                [4.0, 5.0, 6.0], dtype=dtypes.float32
+            )
 
-            def loss4(): return 3 * var5 + 5 * var6
+            def loss4():
+                return 3 * var5 + 5 * var6
+
             opt_op_4 = opt2.minimize(loss4, [var5, var6])
             self.evaluate(variables.global_variables_initializer())
             opt2.set_weights(weights)
             self.evaluate([opt_op_3, opt_op_4])
             self.assertAllClose(
-                self.evaluate([var3, var4]), self.evaluate([var5, var6]))
+                self.evaluate([var3, var4]), self.evaluate([var5, var6])
+            )
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testGettingHyperParameters(self):
         with self.test_session():
             opt = adam.Adam(learning_rate=1.0)
-            var = resource_variable_ops.ResourceVariable([1.0, 2.0],
-                                                         dtype=dtypes.float32)
+            var = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0], dtype=dtypes.float32
+            )
 
-            def loss(): return 3 * var
+            def loss():
+                return 3 * var
+
             opt_op = opt.minimize(loss, [var])
             self.evaluate(variables.global_variables_initializer())
             self.evaluate(opt_op)
@@ -467,22 +501,25 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             with self.assertRaises(AttributeError):
                 opt.not_an_attr += 3
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testGettingHyperParametersWithLrInConstructor(self):
         with self.test_session():
             opt = gradient_descent.SGD(lr=3.0)
-            var = resource_variable_ops.ResourceVariable([1.0, 2.0],
-                                                         dtype=dtypes.float32)
+            var = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0], dtype=dtypes.float32
+            )
 
-            def loss(): return 3 * var
+            def loss():
+                return 3 * var
+
             opt_op = opt.minimize(loss, [var])
             self.evaluate(variables.global_variables_initializer())
             self.evaluate(opt_op)
 
+            self.assertIsInstance(opt.lr, resource_variable_ops.ResourceVariable)
             self.assertIsInstance(
-                opt.lr, resource_variable_ops.ResourceVariable)
-            self.assertIsInstance(opt.learning_rate,
-                                  resource_variable_ops.ResourceVariable)
+                opt.learning_rate, resource_variable_ops.ResourceVariable
+            )
 
             lr = self.evaluate(opt.lr)
             self.assertEqual(3.0, lr)
@@ -495,21 +532,21 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             lr = self.evaluate(opt.lr)
             self.assertEqual(4.0, lr)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testOptimizerWithKerasModel(self):
-        a = input_layer.Input(shape=(3,), name='input_a')
-        b = input_layer.Input(shape=(3,), name='input_b')
+        a = input_layer.Input(shape=(3,), name="input_a")
+        b = input_layer.Input(shape=(3,), name="input_b")
 
-        dense = core.Dense(4, name='dense')
+        dense = core.Dense(4, name="dense")
         c = dense(a)
         d = dense(b)
-        e = core.Dropout(0.5, name='dropout')(c)
+        e = core.Dropout(0.5, name="dropout")(c)
 
         model = training.Model([a, b], [d, e])
 
         optimizer = gradient_descent.SGD(learning_rate=0.001)
-        loss = 'mse'
-        model.compile(optimizer, loss, metrics=['mae'])
+        loss = "mse"
+        model.compile(optimizer, loss, metrics=["mae"])
 
         input_a_np = np.random.random((10, 3))
         input_b_np = np.random.random((10, 3))
@@ -517,26 +554,27 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
         output_d_np = np.random.random((10, 4))
         output_e_np = np.random.random((10, 4))
 
-        model.fit([input_a_np, input_b_np], [output_d_np, output_e_np],
-                  epochs=1,
-                  batch_size=5)
+        model.fit(
+            [input_a_np, input_b_np], [output_d_np, output_e_np], epochs=1, batch_size=5
+        )
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testOptimizerWithCallbacks(self):
         np.random.seed(1331)
         input_np = np.random.random((10, 3))
         output_np = np.random.random((10, 4))
-        a = input_layer.Input(shape=(3,), name='input_a')
+        a = input_layer.Input(shape=(3,), name="input_a")
         model = sequential.Sequential()
-        model.add(core.Dense(4, kernel_initializer='zeros', name='dense'))
-        model.add(core.Dropout(0.5, name='dropout'))
+        model.add(core.Dense(4, kernel_initializer="zeros", name="dense"))
+        model.add(core.Dropout(0.5, name="dropout"))
         model(a)
         optimizer = gradient_descent.SGD(learning_rate=0.1)
-        model.compile(optimizer, loss='mse', metrics=['mae'])
+        model.compile(optimizer, loss="mse", metrics=["mae"])
         # This does not reduce the LR after the first epoch (due to low delta).
         cbks = [
             callbacks.ReduceLROnPlateau(
-                monitor='val_loss', factor=0.1, min_delta=0, patience=1, cooldown=5)
+                monitor="val_loss", factor=0.1, min_delta=0, patience=1, cooldown=5
+            )
         ]
         model.fit(
             input_np,
@@ -545,18 +583,17 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             validation_data=(input_np, output_np),
             callbacks=cbks,
             epochs=2,
-            verbose=0)
+            verbose=0,
+        )
         self.assertAllClose(
-            float(backend.get_value(model.optimizer.lr)), 0.1, atol=1e-4)
+            float(backend.get_value(model.optimizer.lr)), 0.1, atol=1e-4
+        )
 
         # This should reduce the LR after the first epoch (due to high delta).
         cbks = [
             callbacks.ReduceLROnPlateau(
-                monitor='val_loss',
-                factor=0.1,
-                min_delta=10,
-                patience=1,
-                cooldown=5)
+                monitor="val_loss", factor=0.1, min_delta=10, patience=1, cooldown=5
+            )
         ]
         model.fit(
             input_np,
@@ -565,26 +602,30 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             validation_data=(input_np, output_np),
             callbacks=cbks,
             epochs=2,
-            verbose=2)
+            verbose=2,
+        )
         self.assertAllClose(
-            float(backend.get_value(model.optimizer.lr)), 0.01, atol=1e-4)
+            float(backend.get_value(model.optimizer.lr)), 0.01, atol=1e-4
+        )
 
     def testOptimizerSetIterations(self):
         global_step = training_util.get_or_create_global_step()
         opt = adam.Adam(learning_rate=1.0)
         opt.iterations = global_step
-        var = resource_variable_ops.ResourceVariable([1.0, 2.0],
-                                                     dtype=dtypes.float32)
+        var = resource_variable_ops.ResourceVariable([1.0, 2.0], dtype=dtypes.float32)
         self.evaluate(variables.global_variables_initializer())
         init_step_value = self.evaluate(global_step)
-        def loss(): return 3 * var
+
+        def loss():
+            return 3 * var
+
         opt_op = opt.minimize(loss, [var])
         self.evaluate(variables.global_variables_initializer())
         self.evaluate(opt_op)
         new_step_value = self.evaluate(global_step)
         self.assertEqual(new_step_value, init_step_value + 1)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testOptimizerWithCallableVarList(self):
         train_samples = 20
         input_dim = 1
@@ -593,91 +634,95 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
             train_samples=train_samples,
             test_samples=10,
             input_shape=(input_dim,),
-            num_classes=num_classes)
+            num_classes=num_classes,
+        )
         y = np_utils.to_categorical(y)
 
         num_hidden = 1
         model = testing_utils.get_small_sequential_mlp(
-            num_hidden=num_hidden, num_classes=num_classes)
+            num_hidden=num_hidden, num_classes=num_classes
+        )
         opt = adam.Adam()
 
-        def loss(): return losses.mean_squared_error(model(x), y)
-        def var_list(): return model.trainable_weights
+        def loss():
+            return losses.mean_squared_error(model(x), y)
+
+        def var_list():
+            return model.trainable_weights
 
         with self.assertRaisesRegexp(
-                ValueError, 'Weights for model .* have not yet been created'):
+            ValueError, "Weights for model .* have not yet been created"
+        ):
             var_list()
         train_op = opt.minimize(loss, var_list)
         if not context.executing_eagerly():
             self.evaluate(variables.global_variables_initializer())
-            self.assertEqual(
-                [[0.]], self.evaluate(opt.get_slot(var_list()[0], 'm')))
+            self.assertEqual([[0.0]], self.evaluate(opt.get_slot(var_list()[0], "m")))
             self.evaluate(train_op)
-        self.assertNotEqual(
-            [[0.]], self.evaluate(opt.get_slot(var_list()[0], 'm')))
+        self.assertNotEqual([[0.0]], self.evaluate(opt.get_slot(var_list()[0], "m")))
         self.assertLen(var_list(), 4)
 
     def testVarKey(self):
         with ops.get_default_graph().as_default():
-            a = variables.Variable([1., 2.], name='var')
-            b = variables.Variable([1.], name='var')
+            a = variables.Variable([1.0, 2.0], name="var")
+            b = variables.Variable([1.0], name="var")
             self.assertTrue(a._in_graph_mode)
             self.assertTrue(b._in_graph_mode)
             var_key = optimizer_v2._var_key(a)
-            self.assertEqual('var', var_key)
+            self.assertEqual("var", var_key)
             var_key = optimizer_v2._var_key(b)
-            self.assertEqual('var_1', var_key)
+            self.assertEqual("var_1", var_key)
 
     def testVarName(self):
         with ops.get_default_graph().as_default():
-            var = variables.Variable([1., 2.], name='var')
-            loss = var + 1.
+            var = variables.Variable([1.0, 2.0], name="var")
+            loss = var + 1.0
             opt = adam.Adam()
             opt.get_updates(loss, [var])
             opt_vars = opt.variables()
             self.assertLen(opt_vars, 3)
-            self.assertEqual('Adam/iter:0', opt_vars[0].name)
-            self.assertEqual('Adam/var/m:0', opt_vars[1].name)
-            var_2 = variables.Variable([1., 2.], name='var_2')
-            loss = var_2 + 1.
-            with backend.name_scope('outter'):
+            self.assertEqual("Adam/iter:0", opt_vars[0].name)
+            self.assertEqual("Adam/var/m:0", opt_vars[1].name)
+            var_2 = variables.Variable([1.0, 2.0], name="var_2")
+            loss = var_2 + 1.0
+            with backend.name_scope("outter"):
                 opt.get_updates(loss, [var_2])
             opt_vars = opt.variables()
             self.assertLen(opt_vars, 5)
-            self.assertEqual('outter/Adam/var_2/m:0', opt_vars[3].name)
+            self.assertEqual("outter/Adam/var_2/m:0", opt_vars[3].name)
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testEmptyVarList(self):
-        opt = gradient_descent.SGD(1.)
-        opt.minimize(lambda: constant_op.constant(1.), [])
+        opt = gradient_descent.SGD(1.0)
+        opt.minimize(lambda: constant_op.constant(1.0), [])
         opt.apply_gradients([])
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testAggregationTrue(self):
         # Test that all_reduce_sum_gradients=True works without distributed
         # strategy.
-        var = resource_variable_ops.ResourceVariable([1., 2.])
+        var = resource_variable_ops.ResourceVariable([1.0, 2.0])
         opt = gradient_descent.SGD(3.0)
 
         self.evaluate(variables.global_variables_initializer())
-        self.assertAllClose([1., 2.], self.evaluate(var))
-        opt_op = opt.apply_gradients([([0.1, 0.1], var)],
-                                     all_reduce_sum_gradients=True)
+        self.assertAllClose([1.0, 2.0], self.evaluate(var))
+        opt_op = opt.apply_gradients([([0.1, 0.1], var)], all_reduce_sum_gradients=True)
         self.evaluate(variables.global_variables_initializer())
         self.evaluate(opt_op)
         self.assertAllClose([0.7, 1.7], self.evaluate(var))
 
-    @combinations.generate(combinations.combine(mode=['graph', 'eager']))
+    @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testAggregationFalse(self):
         # Test that all_reduce_sum_gradients=False works without distributed
         # strategy.
-        var = resource_variable_ops.ResourceVariable([1., 2.])
+        var = resource_variable_ops.ResourceVariable([1.0, 2.0])
         opt = gradient_descent.SGD(3.0)
 
         self.evaluate(variables.global_variables_initializer())
-        self.assertAllClose([1., 2.], self.evaluate(var))
-        opt_op = opt.apply_gradients([([0.1, 0.1], var)],
-                                     all_reduce_sum_gradients=False)
+        self.assertAllClose([1.0, 2.0], self.evaluate(var))
+        opt_op = opt.apply_gradients(
+            [([0.1, 0.1], var)], all_reduce_sum_gradients=False
+        )
         self.evaluate(variables.global_variables_initializer())
         self.evaluate(opt_op)
         self.assertAllClose([0.7, 1.7], self.evaluate(var))
@@ -685,11 +730,9 @@ class OptimizerTest(test.TestCase, parameterized.TestCase):
 
 @keras_parameterized.run_all_keras_modes
 class OptimizersCompatibilityTest(keras_parameterized.TestCase):
-
     def _testOptimizersCompatibility(self, opt_v1, opt_v2, test_weights=True):
         if context.executing_eagerly():
-            self.skipTest(
-                'v1 optimizer does not run in eager mode')
+            self.skipTest("v1 optimizer does not run in eager mode")
         np.random.seed(1331)
         with test_util.use_gpu():
             train_samples = 20
@@ -699,27 +742,32 @@ class OptimizersCompatibilityTest(keras_parameterized.TestCase):
                 train_samples=train_samples,
                 test_samples=10,
                 input_shape=(input_dim,),
-                num_classes=num_classes)
+                num_classes=num_classes,
+            )
             y = np_utils.to_categorical(y)
 
             num_hidden = 5
             model_v1 = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_v1.compile(
                 opt_v1,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
             model_v1.fit(x, y, batch_size=5, epochs=1)
 
             model_v2 = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_v2.set_weights(model_v1.get_weights())
             model_v2.compile(
                 opt_v2,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
             if not ops.executing_eagerly_outside_functions():
                 model_v2._make_train_function()
             if test_weights:
@@ -727,10 +775,12 @@ class OptimizersCompatibilityTest(keras_parameterized.TestCase):
 
             hist_1 = model_v1.fit(x, y, batch_size=5, epochs=1, shuffle=False)
             hist_2 = model_v2.fit(x, y, batch_size=5, epochs=1, shuffle=False)
-            self.assertAllClose(model_v1.get_weights(), model_v2.get_weights(),
-                                rtol=1e-5, atol=1e-5)
-            self.assertAllClose(hist_1.history['loss'], hist_2.history['loss'],
-                                rtol=1e-5, atol=1e-5)
+            self.assertAllClose(
+                model_v1.get_weights(), model_v2.get_weights(), rtol=1e-5, atol=1e-5
+            )
+            self.assertAllClose(
+                hist_1.history["loss"], hist_2.history["loss"], rtol=1e-5, atol=1e-5
+            )
 
     def testAdadeltaCompatibility(self):
         opt_v1 = optimizers.Adadelta(lr=0.01)
@@ -774,8 +824,7 @@ class OptimizersCompatibilityTest(keras_parameterized.TestCase):
 
     def testNumericEquivalenceForNesterovMomentum(self):
         if context.executing_eagerly():
-            self.skipTest(
-                'v1 optimizer does not run in eager mode')
+            self.skipTest("v1 optimizer does not run in eager mode")
         np.random.seed(1331)
         with test_util.use_gpu():
             train_samples = 20
@@ -785,62 +834,62 @@ class OptimizersCompatibilityTest(keras_parameterized.TestCase):
                 train_samples=train_samples,
                 test_samples=10,
                 input_shape=(input_dim,),
-                num_classes=num_classes)
+                num_classes=num_classes,
+            )
             y = np_utils.to_categorical(y)
 
             num_hidden = 5
             model_k_v1 = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_k_v2 = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_k_v2.set_weights(model_k_v1.get_weights())
             model_tf = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_tf.set_weights(model_k_v2.get_weights())
 
             opt_k_v1 = optimizers.SGD(momentum=0.9, nesterov=True)
             opt_k_v2 = gradient_descent.SGD(momentum=0.9, nesterov=True)
             opt_tf = momentum.MomentumOptimizer(
-                learning_rate=0.01, momentum=0.9, use_nesterov=True)
+                learning_rate=0.01, momentum=0.9, use_nesterov=True
+            )
 
             model_k_v1.compile(
                 opt_k_v1,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
             model_k_v2.compile(
                 opt_k_v2,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
             model_tf.compile(
                 opt_tf,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
 
-            hist_k_v1 = model_k_v1.fit(
-                x, y, batch_size=5, epochs=10, shuffle=False)
-            hist_k_v2 = model_k_v2.fit(
-                x, y, batch_size=5, epochs=10, shuffle=False)
-            hist_tf = model_tf.fit(
-                x, y, batch_size=5, epochs=10, shuffle=False)
+            hist_k_v1 = model_k_v1.fit(x, y, batch_size=5, epochs=10, shuffle=False)
+            hist_k_v2 = model_k_v2.fit(x, y, batch_size=5, epochs=10, shuffle=False)
+            hist_tf = model_tf.fit(x, y, batch_size=5, epochs=10, shuffle=False)
 
-            self.assertAllClose(model_k_v1.get_weights(),
-                                model_tf.get_weights())
-            self.assertAllClose(model_k_v1.get_weights(),
-                                model_k_v2.get_weights())
+            self.assertAllClose(model_k_v1.get_weights(), model_tf.get_weights())
+            self.assertAllClose(model_k_v1.get_weights(), model_k_v2.get_weights())
             self.assertAllClose(opt_k_v1.get_weights(), opt_k_v2.get_weights())
-            self.assertAllClose(
-                hist_k_v1.history['loss'], hist_tf.history['loss'])
-            self.assertAllClose(
-                hist_k_v1.history['loss'], hist_k_v2.history['loss'])
+            self.assertAllClose(hist_k_v1.history["loss"], hist_tf.history["loss"])
+            self.assertAllClose(hist_k_v1.history["loss"], hist_k_v2.history["loss"])
 
     def testNumericEquivalenceForAmsgrad(self):
-        self.skipTest('b/150382655')
+        self.skipTest("b/150382655")
         if context.executing_eagerly():
-            self.skipTest(
-                'v1 optimizer does not run in eager mode')
+            self.skipTest("v1 optimizer does not run in eager mode")
         np.random.seed(1331)
         with test_util.use_gpu():
             train_samples = 20
@@ -850,14 +899,17 @@ class OptimizersCompatibilityTest(keras_parameterized.TestCase):
                 train_samples=train_samples,
                 test_samples=10,
                 input_shape=(input_dim,),
-                num_classes=num_classes)
+                num_classes=num_classes,
+            )
             y = np_utils.to_categorical(y)
 
             num_hidden = 5
             model_k_v1 = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_k_v2 = testing_utils.get_small_sequential_mlp(
-                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim)
+                num_hidden=num_hidden, num_classes=num_classes, input_dim=input_dim
+            )
             model_k_v2.set_weights(model_k_v1.get_weights())
 
             opt_k_v1 = optimizers.Adam(amsgrad=True)
@@ -865,37 +917,37 @@ class OptimizersCompatibilityTest(keras_parameterized.TestCase):
 
             model_k_v1.compile(
                 opt_k_v1,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
             model_k_v2.compile(
                 opt_k_v2,
-                loss='categorical_crossentropy',
+                loss="categorical_crossentropy",
                 metrics=[],
-                run_eagerly=testing_utils.should_run_eagerly())
+                run_eagerly=testing_utils.should_run_eagerly(),
+            )
 
-            hist_k_v1 = model_k_v1.fit(
-                x, y, batch_size=5, epochs=10, shuffle=False)
-            hist_k_v2 = model_k_v2.fit(
-                x, y, batch_size=5, epochs=10, shuffle=False)
+            hist_k_v1 = model_k_v1.fit(x, y, batch_size=5, epochs=10, shuffle=False)
+            hist_k_v2 = model_k_v2.fit(x, y, batch_size=5, epochs=10, shuffle=False)
 
-            self.assertAllClose(model_k_v1.get_weights(),
-                                model_k_v2.get_weights())
+            self.assertAllClose(model_k_v1.get_weights(), model_k_v2.get_weights())
             self.assertAllClose(opt_k_v1.get_weights(), opt_k_v2.get_weights())
-            self.assertAllClose(
-                hist_k_v1.history['loss'], hist_k_v2.history['loss'])
+            self.assertAllClose(hist_k_v1.history["loss"], hist_k_v2.history["loss"])
 
 
 # Note: These tests are kept in a separate class to avoid bugs in some
 # distributions of Python that break AutoGraph which is used by tf.function.
 class OptimizerWithFunctionTest(test.TestCase):
-
     def testBasic(self):
         with context.eager_mode():
-            var = resource_variable_ops.ResourceVariable([1.0, 2.0],
-                                                         dtype=dtypes.float32)
+            var = resource_variable_ops.ResourceVariable(
+                [1.0, 2.0], dtype=dtypes.float32
+            )
 
-            def loss(): return 3 * var
+            def loss():
+                return 3 * var
+
             opt = adam.Adam(learning_rate=1.0)
 
             @def_function.function
@@ -903,36 +955,41 @@ class OptimizerWithFunctionTest(test.TestCase):
                 opt.minimize(loss, [var])
                 return var
 
-            self.assertAllClose([0., 1.], fn(), atol=1e-4)
-            self.assertAllClose([-1, 0.], fn(), atol=1e-4)
+            self.assertAllClose([0.0, 1.0], fn(), atol=1e-4)
+            self.assertAllClose([-1, 0.0], fn(), atol=1e-4)
 
     def testVarKeyWithVarCreatedInEager(self):
         with context.eager_mode():
-            a = variables.Variable([1., 2.], name='var')
-            b = variables.Variable([1.], name='var')
+            a = variables.Variable([1.0, 2.0], name="var")
+            b = variables.Variable([1.0], name="var")
 
             @test_util.also_run_as_tf_function
             def var_key_test():
                 self.assertFalse(a._in_graph_mode)
                 self.assertFalse(b._in_graph_mode)
                 var_key_a = optimizer_v2._var_key(a)
-                self.assertStartsWith(var_key_a, 'var_')
+                self.assertStartsWith(var_key_a, "var_")
                 var_key_b = optimizer_v2._var_key(b)
-                self.assertStartsWith(var_key_b, 'var_')
+                self.assertStartsWith(var_key_b, "var_")
                 self.assertNotEquals(var_key_a, var_key_b)
 
             var_key_test()
 
     def testLearningRateDecayUsedInTwoFunctions(self):
         with context.eager_mode():
-            a = variables.Variable([1., 2.], name='var')
-            b = variables.Variable([1.], name='var')
+            a = variables.Variable([1.0, 2.0], name="var")
+            b = variables.Variable([1.0], name="var")
 
             learning_rate_decay = learning_rate_schedule.InverseTimeDecay(
-                0.5, decay_steps=1.0, decay_rate=0.5)
+                0.5, decay_steps=1.0, decay_rate=0.5
+            )
             opt = adam.Adam(learning_rate=learning_rate_decay)
-            def loss_a(): return 3 * a
-            def loss_b(): return 2 * b
+
+            def loss_a():
+                return 3 * a
+
+            def loss_b():
+                return 2 * b
 
             @def_function.function
             def fn_a():
@@ -949,27 +1006,27 @@ class OptimizerWithFunctionTest(test.TestCase):
 
 
 _NUM_LEARNERS = 50
-APPLY_SCOPE = 'debug_apply'
+APPLY_SCOPE = "debug_apply"
 WHITELIST = [
     # optimizer_v2._deduplicate_indexed_slices contains an indexed slice:
     #   array_ops.shape(unique_indices)[0]
     # which winds up expanding to [0:1:1] thereby creating three constants
     # to represent the indices.
-    ('embeddings/strided_slice/stack', 'Const'),
+    ("embeddings/strided_slice/stack", "Const"),
 ]
 
 
 def get_inputs(op):
     op_inputs = list(op.inputs) + op.control_inputs
     names = [i.name for i in op_inputs]
-    op_inputs = [getattr(i, 'op', i) for i in op_inputs]
+    op_inputs = [getattr(i, "op", i) for i in op_inputs]
     return op_inputs, names
 
 
 def strip_name(node):
-    if 'Placeholder' in node.op:
+    if "Placeholder" in node.op:
         return
-    node.name = ''
+    node.name = ""
 
 
 def topological_sort(graph):
@@ -1000,8 +1057,11 @@ def topological_sort(graph):
 
     # Check correctness.
     if len(result) != len(graph_ops):
-        raise ValueError('Sort result has {} ops, source graph has {}.'
-                         .format(len(result), len(graph_ops)))
+        raise ValueError(
+            "Sort result has {} ops, source graph has {}.".format(
+                len(result), len(graph_ops)
+            )
+        )
 
     sort_check_seen = set()
     for op in result:
@@ -1077,20 +1137,22 @@ def identify_redundant_ops(graph):
         # Certain ops are simply not worth eliminating, and are instead simply
         # ignored.
         name, op_type = op_defs[0].name, op_defs[0].type
-        if any(whitelisted_scope in name and op_type == whitelisted_type
-               for whitelisted_scope, whitelisted_type in WHITELIST):
+        if any(
+            whitelisted_scope in name and op_type == whitelisted_type
+            for whitelisted_scope, whitelisted_type in WHITELIST
+        ):
             continue
 
         num_duplicates += len(op_defs)
         traceback = []
         for level in op_defs[0].traceback:
-            traceback.append('  {} {}:{}'.format(level[0], level[2], level[1]))
+            traceback.append("  {} {}:{}".format(level[0], level[2], level[1]))
 
         duplicate_types.append(
-            '# Example name: {}\n# Op creation stack:\n{}\n{}'.format(
-                op_defs[0].name,
-                '\n'.join(traceback),
-                standard_def))
+            "# Example name: {}\n# Op creation stack:\n{}\n{}".format(
+                op_defs[0].name, "\n".join(traceback), standard_def
+            )
+        )
 
     return num_duplicates, duplicate_types
 
@@ -1142,27 +1204,24 @@ def make_model():
 
 
 COEFFICIENT_PARAMS = (
-    ('Adadelta', adadelta.Adadelta, None),
-    ('Adagrad', adagrad.Adagrad, None),
-    ('Adam', adam.Adam, None),
-    ('Adam_amdgrad', adam.Adam, dict(amsgrad=True)),
-    ('Adamax', adamax.Adamax, None),
-    ('Ftrl', ftrl.Ftrl, None),
-    ('Ftrl_l2_shrinkage', ftrl.Ftrl,
-     dict(l2_shrinkage_regularization_strength=0.1)),
-    ('SGD', gradient_descent.SGD, None),
-    ('SGD_momentum', gradient_descent.SGD, dict(momentum=0.5)),
-    ('Nadam', nadam.Nadam, None),
-    ('RMSprop', rmsprop.RMSprop, None),
-    ('RMSprop_centered', rmsprop.RMSprop, dict(centered=True)),
-    ('RMSprop_momentum', rmsprop.RMSprop, dict(momentum=0.5)),
-    ('RMSprop_momentum_centered', rmsprop.RMSprop,
-     dict(momentum=0.5, centered=True)),
+    ("Adadelta", adadelta.Adadelta, None),
+    ("Adagrad", adagrad.Adagrad, None),
+    ("Adam", adam.Adam, None),
+    ("Adam_amdgrad", adam.Adam, dict(amsgrad=True)),
+    ("Adamax", adamax.Adamax, None),
+    ("Ftrl", ftrl.Ftrl, None),
+    ("Ftrl_l2_shrinkage", ftrl.Ftrl, dict(l2_shrinkage_regularization_strength=0.1)),
+    ("SGD", gradient_descent.SGD, None),
+    ("SGD_momentum", gradient_descent.SGD, dict(momentum=0.5)),
+    ("Nadam", nadam.Nadam, None),
+    ("RMSprop", rmsprop.RMSprop, None),
+    ("RMSprop_centered", rmsprop.RMSprop, dict(centered=True)),
+    ("RMSprop_momentum", rmsprop.RMSprop, dict(momentum=0.5)),
+    ("RMSprop_momentum_centered", rmsprop.RMSprop, dict(momentum=0.5, centered=True)),
 )
 
 
 class OptimizerCoefficientTest(keras_parameterized.TestCase):
-
     @parameterized.named_parameters(*COEFFICIENT_PARAMS)
     def test_duplicate_ops(self, optimizer_class, init_kwargs=None):
         init_kwargs = init_kwargs or {}
@@ -1172,8 +1231,7 @@ class OptimizerCoefficientTest(keras_parameterized.TestCase):
         with graph.as_default():
             model = make_model()
             trainable_variables = model.trainable_variables
-            grads = optimizer.get_gradients(
-                model.outputs[0], trainable_variables)
+            grads = optimizer.get_gradients(model.outputs[0], trainable_variables)
 
             with backend.name_scope(APPLY_SCOPE):
                 optimizer.apply_gradients(zip(grads, trainable_variables))
@@ -1182,25 +1240,34 @@ class OptimizerCoefficientTest(keras_parameterized.TestCase):
         if num_duplicates:
             # Avoid spamming logs.
             if len(duplicate_types) > 3:
-                duplicate_types = duplicate_types[:3] + ['...']
+                duplicate_types = duplicate_types[:3] + ["..."]
 
             num_total = len(graph.get_operations())
-            raise ValueError('{} of {} ({:.1f}%) ops were duplicates:\n\n{}'.format(
-                num_duplicates, num_total, num_duplicates / num_total * 100,
-                '\n'.join(duplicate_types)))
+            raise ValueError(
+                "{} of {} ({:.1f}%) ops were duplicates:\n\n{}".format(
+                    num_duplicates,
+                    num_total,
+                    num_duplicates / num_total * 100,
+                    "\n".join(duplicate_types),
+                )
+            )
 
     @parameterized.named_parameters(*COEFFICIENT_PARAMS)
     def test_subclass_compat(self, optimizer_class, init_kwargs=None):
         """Ensure that subclassed optimizers without apply_state still work."""
 
         class SubclassedOptimizer(optimizer_class):
-
-            def _resource_apply_dense(self, grad, var):  # pylint: disable=useless-super-delegation
+            def _resource_apply_dense(
+                self, grad, var
+            ):  # pylint: disable=useless-super-delegation
                 return super(SubclassedOptimizer, self)._resource_apply_dense(grad, var)
 
-            def _resource_apply_sparse(self, grad, var, indices):  # pylint: disable=useless-super-delegation
+            def _resource_apply_sparse(
+                self, grad, var, indices
+            ):  # pylint: disable=useless-super-delegation
                 return super(SubclassedOptimizer, self)._resource_apply_sparse(
-                    grad, var, indices)
+                    grad, var, indices
+                )
 
         init_kwargs = init_kwargs or {}
         optimizer = SubclassedOptimizer(**init_kwargs)
@@ -1209,12 +1276,11 @@ class OptimizerCoefficientTest(keras_parameterized.TestCase):
         with graph.as_default():
             model = make_model()
             trainable_variables = model.trainable_variables
-            grads = optimizer.get_gradients(
-                model.outputs[0], trainable_variables)
+            grads = optimizer.get_gradients(model.outputs[0], trainable_variables)
 
             with backend.name_scope(APPLY_SCOPE):
                 optimizer.apply_gradients(zip(grads, trainable_variables))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
