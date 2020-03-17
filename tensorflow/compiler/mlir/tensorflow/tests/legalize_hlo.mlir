@@ -549,4 +549,3 @@ func @tanh_unranked(%arg0: tensor<*xf32>) -> tensor<*xf32> {
 // CHECK-SAME:                        [[VAL_78:%.*]]: tensor<*xf32>) -> tensor<*xf32> {
 // CHECK:           [[VAL_79:%.*]] = "tf.Tanh"([[VAL_78]]) : (tensor<*xf32>) -> tensor<*xf32>
 // CHECK:           return [[VAL_79]] : tensor<*xf32>
-

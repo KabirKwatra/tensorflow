@@ -156,7 +156,7 @@ def _unary_assert_doc(sym, sym_name):
 
     Raises:
       InvalidArgumentError: if the check can be performed immediately and
-        `x {sym}` is False. The check can be performed immediately during 
+        `x {sym}` is False. The check can be performed immediately during
         eager execution or if `x` is statically known.
     """.format(
             sym=sym, sym_name=cap_sym_name, opname=opname
@@ -220,7 +220,7 @@ def _binary_assert_doc(sym):
 
     Raises:
       InvalidArgumentError: if the check can be performed immediately and
-        `x {sym} y` is False. The check can be performed immediately during 
+        `x {sym} y` is False. The check can be performed immediately during
         eager execution or if `x` and `y` are statically known.
     """.format(
             sym=sym, opname=opname
@@ -1703,7 +1703,7 @@ def assert_shapes_v2(shapes, data=None, summarize=None, message=None, name=None)
     >>> n = 10
     >>> q = 3
     >>> d = 7
-    >>> x = tf.zeros([n,q]) 
+    >>> x = tf.zeros([n,q])
     >>> y = tf.ones([n,d])
     >>> param = tf.Variable([1.0, 2.0, 3.0])
     >>> scalar = 1.0
@@ -1715,7 +1715,7 @@ def assert_shapes_v2(shapes, data=None, summarize=None, message=None, name=None)
     ... ])
 
     >>> tf.debugging.assert_shapes([
-    ...   (x, ('N', 'D')), 
+    ...   (x, ('N', 'D')),
     ...   (y, ('N', 'D'))
     ... ])
     Traceback (most recent call last):

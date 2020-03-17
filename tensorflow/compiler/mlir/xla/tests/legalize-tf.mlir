@@ -3754,4 +3754,3 @@ func @batchmatmulv2_dynamic(%arg0: tensor<?x4x2xf32>, %arg1: tensor<?x2x4xf32>) 
   %0 = "tf.BatchMatMulV2"(%arg0, %arg1) {T = f32, adj_x = false, adj_y = false, device = ""} : (tensor<?x4x2xf32>, tensor<?x2x4xf32>) -> tensor<?x4x4xf32>
   return %0 : tensor<?x4x4xf32>
 }
-
