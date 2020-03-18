@@ -874,7 +874,7 @@ index 91b35a0..b547df0 100644
 @@ -21,4 +21,13 @@ static void cpuinfo_get_current_core(benchmark::State& state) {
  }
  BENCHMARK(cpuinfo_get_current_core)->Unit(benchmark::kNanosecond);
- 
+
 +static void cpuinfo_get_current_uarch_index(benchmark::State& state) {
 +	cpuinfo_initialize();
 +	while (state.KeepRunning()) {
@@ -890,7 +890,7 @@ index d69d19a..dc86c9c 100644
 --- a/cmake/DownloadGoogleTest.cmake
 +++ b/cmake/DownloadGoogleTest.cmake
 @@ -4,8 +4,8 @@ PROJECT(googletest-download NONE)
- 
+
  INCLUDE(ExternalProject)
  ExternalProject_Add(googletest
 -	URL https://github.com/google/googletest/archive/release-1.8.0.zip
@@ -930,7 +930,7 @@ index 9938d2b..e4d2d0c 100644
 @@ -34,10 +34,6 @@
  	#define CPUINFO_ARCH_PPC64 1
  #endif
- 
+
 -#if defined(__pnacl__)
 -	#define CPUINFO_ARCH_PNACL 1
 -#endif
@@ -941,7 +941,7 @@ index 9938d2b..e4d2d0c 100644
 @@ -80,10 +76,6 @@
  	#define CPUINFO_ARCH_PPC64 0
  #endif
- 
+
 -#ifndef CPUINFO_ARCH_PNACL
 -	#define CPUINFO_ARCH_PNACL 0
 -#endif
@@ -959,9 +959,9 @@ index 9938d2b..e4d2d0c 100644
 +	 * Processors are variants of AMD cores.
 +	 */
 +	cpuinfo_vendor_hygon    = 16,
- 
+
  	/* Active vendors of embedded CPUs */
- 
+
 @@ -401,6 +399,8 @@ enum cpuinfo_uarch {
  	cpuinfo_uarch_cortex_a35   = 0x00300335,
  	/** ARM Cortex-A53. */
@@ -979,23 +979,23 @@ index 9938d2b..e4d2d0c 100644
 +	cpuinfo_uarch_lightning = 0x00700109,
 +	/** Apple A13 processor (little cores). */
 +	cpuinfo_uarch_thunder   = 0x0070010A,
- 
+
  	/** Cavium ThunderX. */
  	cpuinfo_uarch_thunderx = 0x00800100,
 @@ -494,6 +498,9 @@ enum cpuinfo_uarch {
- 
+
  	/** Applied Micro X-Gene. */
  	cpuinfo_uarch_xgene = 0x00B00100,
 +
 +	/* Hygon Dhyana (a modification of AMD Zen for Chinese market). */
 +	cpuinfo_uarch_dhyana = 0x01000100,
  };
- 
+
  struct cpuinfo_processor {
 @@ -613,6 +620,22 @@ struct cpuinfo_package {
  	uint32_t cluster_count;
  };
- 
+
 +struct cpuinfo_uarch_info {
 +	/** Type of CPU microarchitecture */
 +	enum cpuinfo_uarch uarch;
@@ -1042,7 +1042,7 @@ index 9938d2b..e4d2d0c 100644
 @@ -1752,9 +1778,31 @@ uint32_t CPUINFO_ABI cpuinfo_get_l4_caches_count(void);
   */
  uint32_t CPUINFO_ABI cpuinfo_get_max_cache_size(void);
- 
+
 +/**
 + * Identify the logical processor that executes the current thread.
 + *
@@ -1058,7 +1058,7 @@ index 9938d2b..e4d2d0c 100644
 + * Callers should treat the result as only a hint, and be prepared to handle NULL return value.
 + */
  const struct cpuinfo_core* CPUINFO_ABI cpuinfo_get_current_core(void);
- 
+
 +/**
 + * Identify the microarchitecture index of the core that executes the current thread.
 + * If the system does not support such identification, the function return 0.
@@ -1078,24 +1078,24 @@ index b180d80..0cc5d4e 100644
 @@ -1,9 +1,16 @@
 +#include <stdbool.h>
  #include <stddef.h>
- 
+
  #include <cpuinfo.h>
  #include <cpuinfo/internal-api.h>
  #include <cpuinfo/log.h>
- 
+
 +#ifdef __linux__
 +	#include <linux/api.h>
 +
 +	#include <unistd.h>
 +	#include <sys/syscall.h>
 +#endif
- 
+
  bool cpuinfo_is_initialized = false;
- 
+
 @@ -20,235 +27,347 @@ uint32_t cpuinfo_packages_count = 0;
  uint32_t cpuinfo_cache_count[cpuinfo_cache_level_max] = { 0 };
  uint32_t cpuinfo_max_cache_size = 0;
- 
+
 +#if CPUINFO_ARCH_ARM || CPUINFO_ARCH_ARM64
 +	struct cpuinfo_uarch_info* cpuinfo_uarchs = NULL;
 +	uint32_t cpuinfo_uarchs_count = 0;
@@ -1112,7 +1112,7 @@ index b180d80..0cc5d4e 100644
 +	#endif
 +#endif
 +
- 
+
  const struct cpuinfo_processor* cpuinfo_get_processors(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1120,7 +1120,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_processors;
  }
- 
+
  const struct cpuinfo_core* cpuinfo_get_cores(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1128,7 +1128,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cores;
  }
- 
+
  const struct cpuinfo_cluster* cpuinfo_get_clusters(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1136,7 +1136,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_clusters;
  }
- 
+
  const struct cpuinfo_package* cpuinfo_get_packages(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1144,7 +1144,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_packages;
  }
- 
+
 -const struct cpuinfo_processor* cpuinfo_get_processor(uint32_t index) {
 +const struct cpuinfo_uarch_info* cpuinfo_get_uarchs() {
  	if (!cpuinfo_is_initialized) {
@@ -1169,7 +1169,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_processors[index];
  }
- 
+
  const struct cpuinfo_core* cpuinfo_get_core(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1183,7 +1183,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_cores[index];
  }
- 
+
  const struct cpuinfo_cluster* cpuinfo_get_cluster(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1197,7 +1197,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_clusters[index];
  }
- 
+
  const struct cpuinfo_package* cpuinfo_get_package(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1211,7 +1211,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_packages[index];
  }
- 
+
 -uint32_t cpuinfo_get_processors_count(void) {
 +const struct cpuinfo_uarch_info* cpuinfo_get_uarch(uint32_t index) {
  	if (!cpuinfo_is_initialized) {
@@ -1236,7 +1236,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_processors_count;
  }
- 
+
  uint32_t cpuinfo_get_cores_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1244,7 +1244,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cores_count;
  }
- 
+
  uint32_t cpuinfo_get_clusters_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1252,7 +1252,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_clusters_count;
  }
- 
+
  uint32_t cpuinfo_get_packages_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1260,7 +1260,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_packages_count;
  }
- 
+
 -const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l1i_caches(void) {
 +uint32_t cpuinfo_get_uarchs_count(void) {
  	if (!cpuinfo_is_initialized) {
@@ -1279,7 +1279,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache[cpuinfo_cache_level_1i];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l1d_caches(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1287,7 +1287,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache[cpuinfo_cache_level_1d];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l2_caches(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1295,7 +1295,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache[cpuinfo_cache_level_2];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l3_caches(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1303,7 +1303,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache[cpuinfo_cache_level_3];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l4_caches(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1311,7 +1311,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache[cpuinfo_cache_level_4];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l1i_cache(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1325,7 +1325,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_cache[cpuinfo_cache_level_1i][index];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l1d_cache(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1339,7 +1339,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_cache[cpuinfo_cache_level_1d][index];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l2_cache(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1353,7 +1353,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_cache[cpuinfo_cache_level_2][index];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l3_cache(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1367,7 +1367,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_cache[cpuinfo_cache_level_3][index];
  }
- 
+
  const struct cpuinfo_cache* CPUINFO_ABI cpuinfo_get_l4_cache(uint32_t index) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1381,7 +1381,7 @@ index b180d80..0cc5d4e 100644
  	}
 +	return &cpuinfo_cache[cpuinfo_cache_level_4][index];
  }
- 
+
  uint32_t CPUINFO_ABI cpuinfo_get_l1i_caches_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1389,7 +1389,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache_count[cpuinfo_cache_level_1i];
  }
- 
+
  uint32_t CPUINFO_ABI cpuinfo_get_l1d_caches_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1397,7 +1397,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache_count[cpuinfo_cache_level_1d];
  }
- 
+
  uint32_t CPUINFO_ABI cpuinfo_get_l2_caches_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1405,7 +1405,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache_count[cpuinfo_cache_level_2];
  }
- 
+
  uint32_t CPUINFO_ABI cpuinfo_get_l3_caches_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1413,7 +1413,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache_count[cpuinfo_cache_level_3];
  }
- 
+
  uint32_t CPUINFO_ABI cpuinfo_get_l4_caches_count(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1421,7 +1421,7 @@ index b180d80..0cc5d4e 100644
  	}
  	return cpuinfo_cache_count[cpuinfo_cache_level_4];
  }
- 
+
  uint32_t CPUINFO_ABI cpuinfo_get_max_cache_size(void) {
 -	if (!cpuinfo_is_initialized) {
 +	if CPUINFO_UNLIKELY(!cpuinfo_is_initialized) {
@@ -1544,13 +1544,13 @@ index f0c432c..6272abf 100644
 +	const struct cpuinfo_processor** linux_cpu_to_processor_map = NULL;
 +	const struct cpuinfo_core** linux_cpu_to_core_map = NULL;
 +	uint32_t* linux_cpu_to_uarch_index_map = NULL;
- 
+
  	const uint32_t max_processors_count = cpuinfo_linux_get_max_processors_count();
  	cpuinfo_log_debug("system maximum processors count: %"PRIu32, max_processors_count);
 @@ -400,6 +402,18 @@ void cpuinfo_arm_linux_init(void) {
  		}
  	}
- 
+
 +	uint32_t uarchs_count = 0;
 +	enum cpuinfo_uarch last_uarch;
 +	for (uint32_t i = 0; i < arm_linux_processors_count; i++) {
@@ -1569,7 +1569,7 @@ index f0c432c..6272abf 100644
 @@ -432,6 +446,13 @@ void cpuinfo_arm_linux_init(void) {
  		goto cleanup;
  	}
- 
+
 +	uarchs = calloc(uarchs_count, sizeof(struct cpuinfo_uarch_info));
 +	if (uarchs == NULL) {
 +		cpuinfo_log_error("failed to allocate %zu bytes for descriptions of %"PRIu32" microarchitectures",
@@ -1583,7 +1583,7 @@ index f0c432c..6272abf 100644
 @@ -446,6 +467,15 @@ void cpuinfo_arm_linux_init(void) {
  		goto cleanup;
  	}
- 
+
 +	if (uarchs_count > 1) {
 +		linux_cpu_to_uarch_index_map = calloc(arm_linux_processors_count, sizeof(uint32_t));
 +		if (linux_cpu_to_uarch_index_map == NULL) {
@@ -1599,7 +1599,7 @@ index f0c432c..6272abf 100644
 @@ -460,6 +490,22 @@ void cpuinfo_arm_linux_init(void) {
  		goto cleanup;
  	}
- 
+
 +	uint32_t uarchs_index = 0;
 +	for (uint32_t i = 0; i < arm_linux_processors_count; i++) {
 +		if (bitmask_all(arm_linux_processors[i].flags, CPUINFO_LINUX_FLAG_VALID)) {
@@ -1622,7 +1622,7 @@ index f0c432c..6272abf 100644
 @@ -499,6 +545,11 @@ void cpuinfo_arm_linux_init(void) {
  		cores[i].midr = arm_linux_processors[i].midr;
  		linux_cpu_to_core_map[arm_linux_processors[i].system_processor_id] = &cores[i];
- 
+
 +		if (linux_cpu_to_uarch_index_map != NULL) {
 +			linux_cpu_to_uarch_index_map[arm_linux_processors[i].system_processor_id] =
 +				arm_linux_processors[i].uarch_index;
@@ -1633,7 +1633,7 @@ index f0c432c..6272abf 100644
  			arm_linux_processors[i].uarch,
 @@ -658,12 +709,11 @@ void cpuinfo_arm_linux_init(void) {
  	}
- 
+
  	/* Commit */
 -	cpuinfo_linux_cpu_to_processor_map = linux_cpu_to_processor_map;
 -	cpuinfo_linux_cpu_to_core_map = linux_cpu_to_core_map;
@@ -1656,16 +1656,16 @@ index f0c432c..6272abf 100644
  	cpuinfo_cache_count[cpuinfo_cache_level_3]  = l3_count;
 -
  	cpuinfo_max_cache_size = cpuinfo_arm_compute_max_cache_size(&processors[0]);
- 
+
 +	cpuinfo_linux_cpu_max = arm_linux_processors_count;
 +	cpuinfo_linux_cpu_to_processor_map = linux_cpu_to_processor_map;
 +	cpuinfo_linux_cpu_to_core_map = linux_cpu_to_core_map;
 +	cpuinfo_linux_cpu_to_uarch_index_map = linux_cpu_to_uarch_index_map;
 +
  	__sync_synchronize();
- 
+
  	cpuinfo_is_initialized = true;
- 
+
 -	linux_cpu_to_processor_map = NULL;
 -	linux_cpu_to_core_map = NULL;
  	processors = NULL;
@@ -1676,7 +1676,7 @@ index f0c432c..6272abf 100644
 +	linux_cpu_to_processor_map = NULL;
 +	linux_cpu_to_core_map = NULL;
 +	linux_cpu_to_uarch_index_map = NULL;
- 
+
  cleanup:
  	free(arm_linux_processors);
 -	free(linux_cpu_to_processor_map);
@@ -1700,7 +1700,7 @@ index e64cc18..bd27259 100644
 @@ -14,6 +14,16 @@
  #include <cpuinfo/internal-api.h>
  #include <cpuinfo/log.h>
- 
+
 +/* Polyfill recent CPUFAMILY_ARM_* values for older SDKs */
 +#ifndef CPUFAMILY_ARM_MONSOON_MISTRAL
 +	#define CPUFAMILY_ARM_MONSOON_MISTRAL   0xE81E7EF6
@@ -1711,7 +1711,7 @@ index e64cc18..bd27259 100644
 +#ifndef CPUFAMILY_ARM_LIGHTNING_THUNDER
 +	#define CPUFAMILY_ARM_LIGHTNING_THUNDER 0x462504D2
 +#endif
- 
+
  struct cpuinfo_arm_isa cpuinfo_isa = {
  #if CPUINFO_ARCH_ARM
 @@ -82,37 +92,34 @@ static enum cpuinfo_uarch decode_uarch(uint32_t cpu_family, uint32_t cpu_subtype
@@ -1741,7 +1741,7 @@ index e64cc18..bd27259 100644
  			/* Use hw.cpusubtype for detection */
  			break;
  	}
- 
+
 -	switch (cpu_subtype) {
 -		case CPU_SUBTYPE_ARM_V7:
 -			return cpuinfo_uarch_cortex_a8;
@@ -1767,7 +1767,7 @@ index e64cc18..bd27259 100644
 +		return cpuinfo_uarch_unknown;
 +	#endif
  }
- 
+
  static void decode_package_name(char* package_name) {
 @@ -244,6 +251,7 @@ void cpuinfo_arm_mach_init(void) {
  	struct cpuinfo_core* cores = NULL;
@@ -1802,7 +1802,7 @@ index e64cc18..bd27259 100644
 +			#endif
  			cpuinfo_isa.fp16arith = true;
  	}
- 
+
 @@ -379,10 +378,22 @@ void cpuinfo_arm_mach_init(void) {
  			num_clusters * sizeof(struct cpuinfo_cluster), num_clusters);
  		goto cleanup;
@@ -1837,7 +1837,7 @@ index e64cc18..bd27259 100644
  		}
 @@ -542,26 +555,25 @@ void cpuinfo_arm_mach_init(void) {
  	}
- 
+
  	/* Commit changes */
 -	cpuinfo_cache[cpuinfo_cache_level_1i] = l1i;
 -	cpuinfo_cache[cpuinfo_cache_level_1d] = l1d;
@@ -1858,7 +1858,7 @@ index e64cc18..bd27259 100644
 +	cpuinfo_cache[cpuinfo_cache_level_1d] = l1d;
 +	cpuinfo_cache[cpuinfo_cache_level_2]  = l2;
 +	cpuinfo_cache[cpuinfo_cache_level_3]  = l3;
- 
+
  	cpuinfo_processors_count = mach_topology.threads;
  	cpuinfo_cores_count = mach_topology.cores;
  	cpuinfo_clusters_count = num_clusters;
@@ -1870,7 +1870,7 @@ index e64cc18..bd27259 100644
 +	cpuinfo_cache_count[cpuinfo_cache_level_2]  = l2_count;
 +	cpuinfo_cache_count[cpuinfo_cache_level_3]  = l3_count;
  	cpuinfo_max_cache_size = cpuinfo_compute_max_cache_size(&processors[0]);
- 
+
  	__sync_synchronize();
 @@ -572,6 +584,7 @@ void cpuinfo_arm_mach_init(void) {
  	cores = NULL;
@@ -1878,7 +1878,7 @@ index e64cc18..bd27259 100644
  	packages = NULL;
 +	uarchs = NULL;
  	l1i = l1d = l2 = l3 = NULL;
- 
+
  cleanup:
 @@ -579,6 +592,7 @@ cleanup:
  	free(cores);
@@ -1921,7 +1921,7 @@ index 6ba746e..b2b404d 100644
 +++ b/src/cpuinfo/common.h
 @@ -12,29 +12,29 @@
  #define CPUINFO_COUNT_OF(array) (sizeof(array) / sizeof(0[array]))
- 
+
  #if defined(__GNUC__)
 -  #define CPUINFO_LIKELY(condition) (__builtin_expect(!!(condition), 1))
 -  #define CPUINFO_UNLIKELY(condition) (__builtin_expect(!!(condition), 0))
@@ -1933,7 +1933,7 @@ index 6ba746e..b2b404d 100644
 +	#define CPUINFO_LIKELY(condition) (!!(condition))
 +	#define CPUINFO_UNLIKELY(condition) (!!(condition))
  #endif
- 
+
  #ifndef CPUINFO_INTERNAL
 -  #if defined(__ELF__)
 -    #define CPUINFO_INTERNAL __attribute__((__visibility__("internal")))
@@ -1950,7 +1950,7 @@ index 6ba746e..b2b404d 100644
 +		#define CPUINFO_INTERNAL
 +	#endif
  #endif
- 
+
  #ifndef CPUINFO_PRIVATE
 -  #if defined(__ELF__)
 -    #define CPUINFO_PRIVATE __attribute__((__visibility__("hidden")))
@@ -1973,7 +1973,7 @@ index f12c48d..c6eed0b 100644
 +++ b/src/cpuinfo/internal-api.h
 @@ -21,11 +21,13 @@ enum cpuinfo_cache_level {
  };
- 
+
  extern CPUINFO_INTERNAL bool cpuinfo_is_initialized;
 +
  extern CPUINFO_INTERNAL struct cpuinfo_processor* cpuinfo_processors;
@@ -1988,7 +1988,7 @@ index f12c48d..c6eed0b 100644
 @@ -33,6 +35,19 @@ extern CPUINFO_INTERNAL uint32_t cpuinfo_packages_count;
  extern CPUINFO_INTERNAL uint32_t cpuinfo_cache_count[cpuinfo_cache_level_max];
  extern CPUINFO_INTERNAL uint32_t cpuinfo_max_cache_size;
- 
+
 +#if CPUINFO_ARCH_ARM || CPUINFO_ARCH_ARM64
 +	extern CPUINFO_INTERNAL struct cpuinfo_uarch_info* cpuinfo_uarchs;
 +	extern CPUINFO_INTERNAL uint32_t cpuinfo_uarchs_count;
@@ -2061,7 +2061,7 @@ index 5f5e76d..213c2d8 100644
  	uint32_t max_base_index, uint32_t max_extended_index,
  	enum cpuinfo_vendor vendor, enum cpuinfo_uarch uarch);
 -CPUINFO_INTERNAL struct cpuinfo_x86_isa cpuinfo_x86_nacl_detect_isa(void);
- 
+
  CPUINFO_INTERNAL void cpuinfo_x86_detect_topology(
  	uint32_t max_base_index,
 diff --git a/src/x86/cache/init.c b/src/x86/cache/init.c
@@ -2071,7 +2071,7 @@ index d581016..dd1f1ea 100644
 @@ -65,7 +65,7 @@ iterate_descriptors:
  			}
  		}
- 
+
 -		if (vendor != cpuinfo_vendor_amd && max_base_index >= 4) {
 +		if (vendor != cpuinfo_vendor_amd && vendor != cpuinfo_vendor_hygon && max_base_index >= 4) {
  			struct cpuid_regs leaf4;
@@ -2084,7 +2084,7 @@ index 829ec21..9e9e013 100644
 @@ -67,18 +67,13 @@
  	}
  #endif
- 
+
 -/*
 - * This instruction may be not supported by Native Client validator,
 - * make sure it doesn't appear in the binary
@@ -2115,11 +2115,11 @@ index d736578..244359c 100644
 --- a/src/x86/init.c
 +++ b/src/x86/init.c
 @@ -61,12 +61,8 @@ void cpuinfo_x86_init_processor(struct cpuinfo_x86_processor* processor) {
- 
+
  		cpuinfo_x86_detect_topology(max_base_index, max_extended_index, leaf1, &processor->topology);
- 
+
 -		#ifdef __native_client__
--			cpuinfo_isa = cpuinfo_x86_nacl_detect_isa();			
+-			cpuinfo_isa = cpuinfo_x86_nacl_detect_isa();
 -		#else
 -			cpuinfo_isa = cpuinfo_x86_detect_isa(leaf1, leaf0x80000001,
 -				max_base_index, max_extended_index, vendor, uarch);
@@ -2155,7 +2155,7 @@ index c096336..f565789 100644
 +++ b/src/x86/linux/init.c
 @@ -569,9 +569,6 @@ void cpuinfo_x86_linux_init(void) {
  	}
- 
+
  	/* Commit changes */
 -	cpuinfo_linux_cpu_to_processor_map = linux_cpu_to_processor_map;
 -	cpuinfo_linux_cpu_to_core_map = linux_cpu_to_core_map;
@@ -2169,7 +2169,7 @@ index c096336..f565789 100644
  	cpuinfo_cache_count[cpuinfo_cache_level_4]  = l4_count;
 -
  	cpuinfo_max_cache_size = cpuinfo_compute_max_cache_size(&processors[0]);
- 
+
 +	cpuinfo_global_uarch = (struct cpuinfo_uarch_info) {
 +		.uarch = x86_processor.uarch,
 +		.cpuid = x86_processor.cpuid,
@@ -2182,9 +2182,9 @@ index c096336..f565789 100644
 +	cpuinfo_linux_cpu_to_core_map = linux_cpu_to_core_map;
 +
  	__sync_synchronize();
- 
+
  	cpuinfo_is_initialized = true;
- 
+
 -	linux_cpu_to_processor_map = NULL;
 -	linux_cpu_to_core_map = NULL;
  	processors = NULL;
@@ -2194,7 +2194,7 @@ index c096336..f565789 100644
  	l1i = l1d = l2 = l3 = l4 = NULL;
 +	linux_cpu_to_processor_map = NULL;
 +	linux_cpu_to_core_map = NULL;
- 
+
  cleanup:
 -	free(linux_cpu_to_processor_map);
 -	free(linux_cpu_to_core_map);
@@ -2214,7 +2214,7 @@ index ae2be33..b44d3ad 100644
 +++ b/src/x86/mach/init.c
 @@ -305,30 +305,34 @@ void cpuinfo_x86_mach_init(void) {
  	}
- 
+
  	/* Commit changes */
 +	cpuinfo_processors = processors;
 +	cpuinfo_cores = cores;
@@ -2225,7 +2225,7 @@ index ae2be33..b44d3ad 100644
  	cpuinfo_cache[cpuinfo_cache_level_2]  = l2;
  	cpuinfo_cache[cpuinfo_cache_level_3]  = l3;
  	cpuinfo_cache[cpuinfo_cache_level_4]  = l4;
- 
+
 -	cpuinfo_processors = processors;
 -	cpuinfo_cores = cores;
 -	cpuinfo_clusters = clusters;
@@ -2247,7 +2247,7 @@ index ae2be33..b44d3ad 100644
 -	cpuinfo_packages_count = mach_topology.packages;
 -
  	cpuinfo_max_cache_size = cpuinfo_compute_max_cache_size(&processors[0]);
- 
+
 +	cpuinfo_global_uarch = (struct cpuinfo_uarch_info) {
 +		.uarch = x86_processor.uarch,
 +		.cpuid = x86_processor.cpuid,
@@ -2256,7 +2256,7 @@ index ae2be33..b44d3ad 100644
 +	};
 +
  	__sync_synchronize();
- 
+
  	cpuinfo_is_initialized = true;
 diff --git a/src/x86/nacl/isa.c b/src/x86/nacl/isa.c
 deleted file mode 100644
@@ -2599,7 +2599,7 @@ index ba72d8a..ecaa762 100644
  							return cpuinfo_uarch_bonnell;
  						case 0x27: // Medfield
  						case 0x35: // Cloverview
--						case 0x36: // Cedarview, Centerton 
+-						case 0x36: // Cedarview, Centerton
 +						case 0x36: // Cedarview, Centerton
  							return cpuinfo_uarch_saltwell;
  						case 0x37: // Bay Trail
@@ -2616,7 +2616,7 @@ index ba72d8a..ecaa762 100644
  						case 0x38: // Godavari
  						case 0x30: // Kaveri
  							return cpuinfo_uarch_steamroller;
--						case 0x60: // Carrizo 
+-						case 0x60: // Carrizo
 +						case 0x60: // Carrizo
  						case 0x65: // Bristol Ridge
  						case 0x70: // Stoney Ridge
@@ -2652,7 +2652,7 @@ index 3f3c753..2bba90d 100644
 @@ -26,6 +26,11 @@
  #define auls UINT32_C(0x736C7561)
  #define VIA  UINT32_C(0x20414956)
- 
+
 +/* Hygon vendor string: "HygonGenuine" */
 +#define Hygo UINT32_C(0x6F677948)
 +#define nGen UINT32_C(0x6E65476E)
@@ -2681,7 +2681,7 @@ index 7a2090e..2c7e3cd 100644
 @@ -417,9 +417,6 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
  	for (uint32_t i = 0; i < processors_count; i++) {
  		const uint32_t apic_id = processors[i].apic_id;
- 
+
 -		//linux_cpu_to_processor_map[x86_linux_processors[i].linux_id] = processors + processor_index;
 -		//linux_cpu_to_core_map[x86_linux_processors[i].linux_id] = cores + core_index;
 -
@@ -2689,8 +2689,8 @@ index 7a2090e..2c7e3cd 100644
  			const uint32_t l1i_id = apic_id & ~bit_mask(x86_processor.cache.l1i.apic_bits);
  			processors[i].cache.l1i = &l1i[l1i_index];
 @@ -549,30 +546,34 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
- 
- 
+
+
  	/* Commit changes */
 +	cpuinfo_processors = processors;
 +	cpuinfo_cores = cores;
@@ -2701,7 +2701,7 @@ index 7a2090e..2c7e3cd 100644
  	cpuinfo_cache[cpuinfo_cache_level_2]  = l2;
  	cpuinfo_cache[cpuinfo_cache_level_3]  = l3;
  	cpuinfo_cache[cpuinfo_cache_level_4]  = l4;
- 
+
 -	cpuinfo_processors = processors;
 -	cpuinfo_cores = cores;
 -	cpuinfo_clusters = clusters;
@@ -2723,7 +2723,7 @@ index 7a2090e..2c7e3cd 100644
 -	cpuinfo_packages_count = packages_count;
 -
  	cpuinfo_max_cache_size = cpuinfo_compute_max_cache_size(&processors[0]);
- 
+
 +	cpuinfo_global_uarch = (struct cpuinfo_uarch_info) {
 +		.uarch = x86_processor.uarch,
 +		.cpuid = x86_processor.cpuid,
@@ -2732,7 +2732,7 @@ index 7a2090e..2c7e3cd 100644
 +	};
 +
  	MemoryBarrier();
- 
+
  	cpuinfo_is_initialized = true;
 diff --git a/test/arm-cache.cc b/test/arm-cache.cc
 index 8373f7c..7d2e4a4 100644
@@ -2746,7 +2746,7 @@ index 8373f7c..7d2e4a4 100644
 +		cpuinfo_uarch_cortex_a55r0, 4, UINT32_C(0x518F803C),
  		&chipset, 1, 8,
  		&little_l1i, &little_l1d, &little_l2, &little_l3);
- 
+
 @@ -910,7 +910,7 @@ TEST(SAMSUNG, exynos_9810) {
  	struct cpuinfo_cache little_l2 = { 0 };
  	struct cpuinfo_cache little_l3 = { 0 };
@@ -2755,15 +2755,15 @@ index 8373f7c..7d2e4a4 100644
 +		cpuinfo_uarch_cortex_a55r0, 4, UINT32_C(0x410FD051),
  		&chipset, 1, 8,
  		&little_l1i, &little_l1d, &little_l2, &little_l3);
- 
+
 diff --git a/test/get-current.cc b/test/get-current.cc
 index 4a80cab..f410b12 100644
 --- a/test/get-current.cc
 +++ b/test/get-current.cc
 @@ -3,34 +3,36 @@
  #include <cpuinfo.h>
- 
- 
+
+
 -TEST(CURRENT_PROCESSOR, not_null) {
 -	ASSERT_TRUE(cpuinfo_initialize());
 -
@@ -2772,7 +2772,7 @@ index 4a80cab..f410b12 100644
 -
  TEST(CURRENT_PROCESSOR, within_bounds) {
  	ASSERT_TRUE(cpuinfo_initialize());
- 
+
  	const struct cpuinfo_processor* current_processor = cpuinfo_get_current_processor();
 +	if (current_processor == nullptr) {
 +		GTEST_SKIP();
@@ -2783,7 +2783,7 @@ index 4a80cab..f410b12 100644
  	ASSERT_GE(current_processor, processors_begin);
  	ASSERT_LT(current_processor, processors_end);
  }
- 
+
 -TEST(CURRENT_CORE, not_null) {
 -	ASSERT_TRUE(cpuinfo_initialize());
 -
@@ -2792,7 +2792,7 @@ index 4a80cab..f410b12 100644
 -
  TEST(CURRENT_CORE, within_bounds) {
  	ASSERT_TRUE(cpuinfo_initialize());
- 
+
  	const struct cpuinfo_core* current_core = cpuinfo_get_current_core();
 +	if (current_core == nullptr) {
 +		GTEST_SKIP();
@@ -2816,7 +2816,7 @@ index 941cb97..718eb96 100644
 @@ -678,6 +678,72 @@ TEST(PACKAGE, consistent_cluster) {
  	cpuinfo_deinitialize();
  }
- 
+
 +TEST(UARCHS_COUNT, within_bounds) {
 +	ASSERT_TRUE(cpuinfo_initialize());
 +	EXPECT_NE(0, cpuinfo_get_uarchs_count());
@@ -3004,13 +3004,13 @@ index 7fa5187..7963c00 100644
  		const struct cpuinfo_processor* processor = cpuinfo_get_processor(i);
 -    printf("\t%"PRIu32"", i);
 +		printf("\t%"PRIu32"", i);
- 
+
 -    #if defined(__linux__)
 -      printf(" (%"PRId32")", processor->linux_id);
 -    #endif
 +		#if defined(__linux__)
 +			printf(" (%"PRId32")", processor->linux_id);
 +		#endif
- 
+
  		#if CPUINFO_ARCH_X86 || CPUINFO_ARCH_X86_64
  			printf(": APIC ID 0x%08"PRIx32"\n", processor->apic_id);
