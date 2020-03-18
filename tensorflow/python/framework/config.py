@@ -23,7 +23,7 @@ from tensorflow.python.util import deprecation
 from tensorflow.python.util.tf_export import tf_export
 
 
-@tf_export('config.threading.get_intra_op_parallelism_threads')
+@tf_export("config.threading.get_intra_op_parallelism_threads")
 def get_intra_op_parallelism_threads():
     """Get number of threads used within an individual op for parallelism.
 
@@ -37,7 +37,7 @@ def get_intra_op_parallelism_threads():
     return context.context().intra_op_parallelism_threads
 
 
-@tf_export('config.threading.set_intra_op_parallelism_threads')
+@tf_export("config.threading.set_intra_op_parallelism_threads")
 def set_intra_op_parallelism_threads(num_threads):
     """Set number of threads used within an individual op for parallelism.
 
@@ -51,7 +51,7 @@ def set_intra_op_parallelism_threads(num_threads):
     context.context().intra_op_parallelism_threads = num_threads
 
 
-@tf_export('config.threading.get_inter_op_parallelism_threads')
+@tf_export("config.threading.get_inter_op_parallelism_threads")
 def get_inter_op_parallelism_threads():
     """Get number of threads used for parallelism between independent operations.
 
@@ -64,7 +64,7 @@ def get_inter_op_parallelism_threads():
     return context.context().inter_op_parallelism_threads
 
 
-@tf_export('config.threading.set_inter_op_parallelism_threads')
+@tf_export("config.threading.set_inter_op_parallelism_threads")
 def set_inter_op_parallelism_threads(num_threads):
     """Set number of threads used for parallelism between independent operations.
 
@@ -77,7 +77,7 @@ def set_inter_op_parallelism_threads(num_threads):
     context.context().inter_op_parallelism_threads = num_threads
 
 
-@tf_export('config.optimizer.get_jit')
+@tf_export("config.optimizer.get_jit")
 def get_optimizer_jit():
     """Get if JIT compilation is enabled.
 
@@ -91,7 +91,7 @@ def get_optimizer_jit():
     return context.context().optimizer_jit
 
 
-@tf_export('config.optimizer.set_jit')
+@tf_export("config.optimizer.set_jit")
 def set_optimizer_jit(enabled):
     """Set if JIT compilation is enabled.
 
@@ -105,7 +105,7 @@ def set_optimizer_jit(enabled):
     context.context().optimizer_jit = enabled
 
 
-@tf_export('config.optimizer.get_experimental_options')
+@tf_export("config.optimizer.get_experimental_options")
 def get_optimizer_experimental_options():
     """Get experimental optimizer options.
 
@@ -121,7 +121,7 @@ def get_optimizer_experimental_options():
     return context.context().get_optimizer_experimental_options()
 
 
-@tf_export('config.optimizer.set_experimental_options')
+@tf_export("config.optimizer.set_experimental_options")
 def set_optimizer_experimental_options(options):
     """Set experimental optimizer options.
 
@@ -163,7 +163,7 @@ def set_optimizer_experimental_options(options):
     context.context().set_optimizer_experimental_options(options)
 
 
-@tf_export('config.get_soft_device_placement')
+@tf_export("config.get_soft_device_placement")
 def get_soft_device_placement():
     """Get if soft device placement is enabled.
 
@@ -178,7 +178,7 @@ def get_soft_device_placement():
     return context.context().soft_device_placement
 
 
-@tf_export('config.set_soft_device_placement')
+@tf_export("config.set_soft_device_placement")
 def set_soft_device_placement(enabled):
     """Set if soft device placement is enabled.
 
@@ -193,7 +193,7 @@ def set_soft_device_placement(enabled):
     context.context().soft_device_placement = enabled
 
 
-@tf_export('config.experimental.get_device_policy')
+@tf_export("config.experimental.get_device_policy")
 def get_device_policy():
     """Gets the current device policy.
 
@@ -208,18 +208,18 @@ def get_device_policy():
     """
     device_policy = context.context().device_policy
     if device_policy == context.DEVICE_PLACEMENT_SILENT:
-        return 'silent'
+        return "silent"
     elif device_policy == context.DEVICE_PLACEMENT_SILENT_FOR_INT32:
-        return 'silent_for_int32'
+        return "silent_for_int32"
     elif device_policy == context.DEVICE_PLACEMENT_WARN:
-        return 'warn'
+        return "warn"
     elif device_policy == context.DEVICE_PLACEMENT_EXPLICIT:
-        return 'explicit'
+        return "explicit"
     else:
-        raise ValueError('Not a valid device policy: %r' % device_policy)
+        raise ValueError("Not a valid device policy: %r" % device_policy)
 
 
-@tf_export('config.experimental.set_device_policy')
+@tf_export("config.experimental.set_device_policy")
 def set_device_policy(device_policy):
     """Sets the current thread device policy.
 
@@ -248,21 +248,21 @@ def set_device_policy(device_policy):
     Raises:
         ValueError: If an invalid `device_policy` is passed.
     """
-    if device_policy == 'silent':
+    if device_policy == "silent":
         context.context().device_policy = context.DEVICE_PLACEMENT_SILENT
-    elif device_policy == 'silent_for_int32':
+    elif device_policy == "silent_for_int32":
         context.context().device_policy = context.DEVICE_PLACEMENT_SILENT_FOR_INT32
-    elif device_policy == 'warn':
+    elif device_policy == "warn":
         context.context().device_policy = context.DEVICE_PLACEMENT_WARN
-    elif device_policy == 'explicit':
+    elif device_policy == "explicit":
         context.context().device_policy = context.DEVICE_PLACEMENT_EXPLICIT
     elif device_policy is None:
         context.context().device_policy = None
     else:
-        raise ValueError('Not a valid device policy: %r' % device_policy)
+        raise ValueError("Not a valid device policy: %r" % device_policy)
 
 
-@tf_export('config.experimental.get_synchronous_execution')
+@tf_export("config.experimental.get_synchronous_execution")
 def get_synchronous_execution():
     """Gets whether operations are executed synchronously or asynchronously.
 
@@ -275,7 +275,7 @@ def get_synchronous_execution():
     return context.context().execution_mode == context.SYNC
 
 
-@tf_export('config.experimental.set_synchronous_execution')
+@tf_export("config.experimental.set_synchronous_execution")
 def set_synchronous_execution(enable):
     """Specifies whether operations are executed synchronously or asynchronously.
 
@@ -300,10 +300,8 @@ def set_synchronous_execution(enable):
         context.context().execution_mode = context.ASYNC
 
 
-@tf_export('config.list_physical_devices',
-           'config.experimental.list_physical_devices')
-@deprecation.deprecated_endpoints(
-    'config.experimental.list_physical_devices')
+@tf_export("config.list_physical_devices", "config.experimental.list_physical_devices")
+@deprecation.deprecated_endpoints("config.experimental.list_physical_devices")
 def list_physical_devices(device_type=None):
     """Return a list of physical devices visible to the host runtime.
 
@@ -335,10 +333,8 @@ def list_physical_devices(device_type=None):
     return context.context().list_physical_devices(device_type)
 
 
-@tf_export('config.list_logical_devices',
-           'config.experimental.list_logical_devices')
-@deprecation.deprecated_endpoints(
-    'config.experimental.list_logical_devices')
+@tf_export("config.list_logical_devices", "config.experimental.list_logical_devices")
+@deprecation.deprecated_endpoints("config.experimental.list_logical_devices")
 def list_logical_devices(device_type=None):
     """Return a list of logical devices created by runtime.
 
@@ -372,10 +368,8 @@ def list_logical_devices(device_type=None):
     return context.context().list_logical_devices(device_type=device_type)
 
 
-@tf_export('config.get_visible_devices',
-           'config.experimental.get_visible_devices')
-@deprecation.deprecated_endpoints(
-    'config.experimental.get_visible_devices')
+@tf_export("config.get_visible_devices", "config.experimental.get_visible_devices")
+@deprecation.deprecated_endpoints("config.experimental.get_visible_devices")
 def get_visible_devices(device_type=None):
     """Get the list of visible physical devices.
 
@@ -406,10 +400,8 @@ def get_visible_devices(device_type=None):
     return context.context().get_visible_devices(device_type)
 
 
-@tf_export('config.set_visible_devices',
-           'config.experimental.set_visible_devices')
-@deprecation.deprecated_endpoints(
-    'config.experimental.set_visible_devices')
+@tf_export("config.set_visible_devices", "config.experimental.set_visible_devices")
+@deprecation.deprecated_endpoints("config.experimental.set_visible_devices")
 def set_visible_devices(devices, device_type=None):
     """Set the list of visible devices.
 
@@ -443,7 +435,7 @@ def set_visible_devices(devices, device_type=None):
     context.context().set_visible_devices(devices, device_type)
 
 
-@tf_export('config.experimental.get_memory_growth')
+@tf_export("config.experimental.get_memory_growth")
 def get_memory_growth(device):
     """Get if memory growth is enabled for a `PhysicalDevice`.
 
@@ -472,7 +464,7 @@ def get_memory_growth(device):
     return context.context().get_memory_growth(device)
 
 
-@tf_export('config.experimental.set_memory_growth')
+@tf_export("config.experimental.set_memory_growth")
 def set_memory_growth(device, enable):
     """Set if memory growth should be enabled for a `PhysicalDevice`.
 
@@ -500,10 +492,13 @@ def set_memory_growth(device, enable):
     context.context().set_memory_growth(device, enable)
 
 
-@tf_export('config.get_logical_device_configuration',
-           'config.experimental.get_virtual_device_configuration')
+@tf_export(
+    "config.get_logical_device_configuration",
+    "config.experimental.get_virtual_device_configuration",
+)
 @deprecation.deprecated_endpoints(
-    'config.experimental.get_virtual_device_configuration')
+    "config.experimental.get_virtual_device_configuration"
+)
 def get_logical_device_configuration(device):
     """Get the virtual device configuration for a `tf.config.PhysicalDevice`.
 
@@ -541,10 +536,13 @@ def get_logical_device_configuration(device):
     return context.context().get_logical_device_configuration(device)
 
 
-@tf_export('config.set_logical_device_configuration',
-           'config.experimental.set_virtual_device_configuration')
+@tf_export(
+    "config.set_logical_device_configuration",
+    "config.experimental.set_virtual_device_configuration",
+)
 @deprecation.deprecated_endpoints(
-    'config.experimental.set_virtual_device_configuration')
+    "config.experimental.set_virtual_device_configuration"
+)
 def set_logical_device_configuration(device, logical_devices):
     """Set the logical device configuration for a `tf.config.PhysicalDevice`.
 
@@ -609,7 +607,7 @@ def set_logical_device_configuration(device, logical_devices):
     context.context().set_logical_device_configuration(device, logical_devices)
 
 
-@tf_export('config.experimental.enable_mlir_bridge')
+@tf_export("config.experimental.enable_mlir_bridge")
 def enable_mlir_bridge():
     """Enables experimental MLIR-Based TensorFlow Compiler Bridge.
 
@@ -626,7 +624,7 @@ def enable_mlir_bridge():
     context.context().enable_mlir_bridge = True
 
 
-@tf_export('config.experimental.enable_mlir_graph_optimization')
+@tf_export("config.experimental.enable_mlir_graph_optimization")
 def enable_mlir_graph_optimization():
     """Enables experimental MLIR-Based TensorFlow Compiler Optimizations.
 
@@ -643,13 +641,13 @@ def enable_mlir_graph_optimization():
     context.context().enable_mlir_graph_optimization = True
 
 
-@tf_export('config.experimental.disable_mlir_bridge')
+@tf_export("config.experimental.disable_mlir_bridge")
 def disable_mlir_bridge():
     """Disables experimental MLIR-Based TensorFlow Compiler Bridge."""
     context.context().enable_mlir_bridge = False
 
 
-@tf_export('config.experimental.disable_mlir_graph_optimization')
+@tf_export("config.experimental.disable_mlir_graph_optimization")
 def disable_mlir_graph_optimization():
     """Disables experimental MLIR-Based TensorFlow Compiler Optimizations."""
     context.context().enable_mlir_graph_optimization = False

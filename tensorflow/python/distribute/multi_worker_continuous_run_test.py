@@ -42,10 +42,9 @@ NUM_WORKERS = 5
 
 # TODO(b/143286947): expand the test to cover fault tolerance and elasticity
 class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
-
     def setUp(self):
-        self._gpus = config.list_physical_devices('GPU')
-        self._local_device = '/device:GPU:0' if self._gpus else '/device:CPU:0'
+        self._gpus = config.list_physical_devices("GPU")
+        self._local_device = "/device:GPU:0" if self._gpus else "/device:CPU:0"
         super(MultiWorkerContinuousRunTest, self).setUp()
 
     def _maybe_setup_gpus(self):
@@ -53,9 +52,10 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             # Set virtual GPU with memory limit of 64MB so that multiple worker
             # processes can share the physical GPU
             config.set_logical_device_configuration(
-                self._gpus[0], [context.LogicalDeviceConfiguration(64)])
+                self._gpus[0], [context.LogicalDeviceConfiguration(64)]
+            )
 
-    @combinations.generate(combinations.combine(mode=['eager']))
+    @combinations.generate(combinations.combine(mode=["eager"]))
     def testAllReduceContinuousRun(self, mode):
         tensor_shape = [2, 2]
 
@@ -79,18 +79,18 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
 
         def worker_fn():
             self._maybe_setup_gpus()
-            tf_config = json.loads(os.environ['TF_CONFIG'])
-            worker_id = tf_config['task']['index']
+            tf_config = json.loads(os.environ["TF_CONFIG"])
+            worker_id = tf_config["task"]["index"]
             for _ in range(20):
                 worker_step_fn(worker_id)
 
         multi_process_runner.run(
             worker_fn,
-            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS))
+            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS),
+        )
 
-    @combinations.generate(combinations.combine(mode=['eager']))
+    @combinations.generate(combinations.combine(mode=["eager"]))
     def testVariableInitializationWithChangingShape(self, mode):
-
         def worker_step_fn(worker_id, num_dims):
             strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy()
             # Make sure the processeses are in sync after updating the cluster
@@ -100,10 +100,14 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             def variable_fn():
                 with ops.device(self._local_device):
                     # The initial value will be broadcasted from worker 0 to others.
-                    initial_value = (array_ops.ones(tensor_shape) if worker_id == 0 else
-                                     array_ops.zeros(tensor_shape))
+                    initial_value = (
+                        array_ops.ones(tensor_shape)
+                        if worker_id == 0
+                        else array_ops.zeros(tensor_shape)
+                    )
                     var = variable_scope.get_variable(
-                        name='x', initializer=initial_value)
+                        name="x", initializer=initial_value
+                    )
                     return array_ops.identity(var)
 
             t_out = strategy.extended.call_for_each_replica(variable_fn)
@@ -112,15 +116,16 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
 
         def worker_fn():
             self._maybe_setup_gpus()
-            tf_config = json.loads(os.environ['TF_CONFIG'])
-            worker_id = tf_config['task']['index']
+            tf_config = json.loads(os.environ["TF_CONFIG"])
+            worker_id = tf_config["task"]["index"]
             for i in range(20):
                 worker_step_fn(worker_id, num_dims=(i + 1))
 
         multi_process_runner.run(
             worker_fn,
-            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS))
+            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     multi_process_runner.test_main(barrier_parties=NUM_WORKERS)
