@@ -51,15 +51,15 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             # Set virtual GPU with memory limit of 64MB so that multiple worker
             # processes can share the physical GPU
             config.set_logical_device_configuration(
-                self._gpus[0], [context.LogicalDeviceConfiguration(64)]
-            )
+                self._gpus[0], [context.LogicalDeviceConfiguration(64)])
 
     @combinations.generate(combinations.combine(mode=["eager"]))
     def testAllReduceContinuousRun(self, mode):
         tensor_shape = [2, 2]
 
         def worker_step_fn(worker_id):
-            strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy()
+            strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy(
+            )
             # Make sure the processeses are in sync after updating the cluster
             multi_process_runner.barrier().wait()
 
@@ -67,7 +67,9 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             def run_reduce():
                 with ops.device(self._local_device):
                     t_in = array_ops.ones(tensor_shape) * worker_id
-                    return strategy.reduce(reduce_util.ReduceOp.MEAN, t_in, axis=None)
+                    return strategy.reduce(reduce_util.ReduceOp.MEAN,
+                                           t_in,
+                                           axis=None)
 
             t_out = run_reduce()
             # Element values from the workers are
@@ -85,13 +87,15 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
 
         multi_process_runner.run(
             worker_fn,
-            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS),
+            cluster_spec=test_base.create_cluster_spec(
+                num_workers=NUM_WORKERS),
         )
 
     @combinations.generate(combinations.combine(mode=["eager"]))
     def testVariableInitializationWithChangingShape(self, mode):
         def worker_step_fn(worker_id, num_dims):
-            strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy()
+            strategy = collective_all_reduce_strategy.CollectiveAllReduceStrategy(
+            )
             # Make sure the processeses are in sync after updating the cluster
             multi_process_runner.barrier().wait()
             tensor_shape = [2] * num_dims
@@ -99,14 +103,11 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
             def variable_fn():
                 with ops.device(self._local_device):
                     # The initial value will be broadcasted from worker 0 to others.
-                    initial_value = (
-                        array_ops.ones(tensor_shape)
-                        if worker_id == 0
-                        else array_ops.zeros(tensor_shape)
-                    )
+                    initial_value = (array_ops.ones(tensor_shape)
+                                     if worker_id == 0 else
+                                     array_ops.zeros(tensor_shape))
                     var = variable_scope.get_variable(
-                        name="x", initializer=initial_value
-                    )
+                        name="x", initializer=initial_value)
                     return array_ops.identity(var)
 
             t_out = strategy.extended.call_for_each_replica(variable_fn)
@@ -122,7 +123,8 @@ class MultiWorkerContinuousRunTest(test.TestCase, parameterized.TestCase):
 
         multi_process_runner.run(
             worker_fn,
-            cluster_spec=test_base.create_cluster_spec(num_workers=NUM_WORKERS),
+            cluster_spec=test_base.create_cluster_spec(
+                num_workers=NUM_WORKERS),
         )
 
 

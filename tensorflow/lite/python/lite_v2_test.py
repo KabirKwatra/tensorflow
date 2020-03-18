@@ -55,7 +55,8 @@ from tensorflow.python.training.tracking import tracking
 
 
 class TestModels(test_util.TensorFlowTestCase, parameterized.TestCase):
-    def _evaluateTFLiteModel(self, tflite_model, input_data, input_shapes=None):
+    def _evaluateTFLiteModel(self, tflite_model, input_data,
+                             input_shapes=None):
         """Evaluates the model on the `input_data`.
 
         Args:
@@ -73,8 +74,8 @@ class TestModels(test_util.TensorFlowTestCase, parameterized.TestCase):
         if input_shapes:
             for idx, (shape_signature, final_shape) in enumerate(input_shapes):
                 self.assertTrue(
-                    (input_details[idx]["shape_signature"] == shape_signature).all()
-                )
+                    (input_details[idx]["shape_signature"] == shape_signature
+                     ).all())
                 interpreter.resize_tensor_input(idx, final_shape)
         interpreter.allocate_tensors()
 
@@ -83,7 +84,10 @@ class TestModels(test_util.TensorFlowTestCase, parameterized.TestCase):
         for input_tensor, tensor_data in zip(input_details, input_data):
             interpreter.set_tensor(input_tensor["index"], tensor_data.numpy())
         interpreter.invoke()
-        return [interpreter.get_tensor(details["index"]) for details in output_details]
+        return [
+            interpreter.get_tensor(details["index"])
+            for details in output_details
+        ]
 
     def _getSimpleVariableModel(self):
         root = tracking.AutoTrackable()
@@ -132,7 +136,8 @@ class FromConcreteFunctionTest(TestModels):
         self.assertIn("call get_concrete_function", str(error.exception))
 
     @parameterized.named_parameters(
-        ("EnableMlirConverter", True), ("DisableMlirConverter", False)  # enable mlir
+        ("EnableMlirConverter", True),
+        ("DisableMlirConverter", False)  # enable mlir
     )  # disable mlir
     @test_util.run_v2_only
     def testFloat(self, enable_mlir):
@@ -141,7 +146,8 @@ class FromConcreteFunctionTest(TestModels):
         concrete_func = root.f.get_concrete_function(input_data)
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = enable_mlir
         tflite_model = converter.convert()
 
@@ -157,7 +163,8 @@ class FromConcreteFunctionTest(TestModels):
         concrete_func = root.f.get_concrete_function(input_data)
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         tflite_model = converter.convert()
 
         # Check values from converted model.
@@ -173,7 +180,8 @@ class FromConcreteFunctionTest(TestModels):
         concrete_func = root.add.get_concrete_function(input_data)
 
         # Convert model and ensure model is not None.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         tflite_model = converter.convert()
 
         # Check values from converted model.
@@ -190,23 +198,21 @@ class FromConcreteFunctionTest(TestModels):
         sub_func = root.sub.get_concrete_function(input_data)
 
         # Try converting multiple functions.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([add_func, sub_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [add_func, sub_func])
         with self.assertRaises(ValueError) as error:
             _ = converter.convert()
-        self.assertIn(
-            "can only convert a single ConcreteFunction", str(error.exception)
-        )
+        self.assertIn("can only convert a single ConcreteFunction",
+                      str(error.exception))
 
     def _getCalibrationQuantizeModel(self):
         np.random.seed(0)
 
         root = tracking.AutoTrackable()
 
-        @def_function.function(
-            input_signature=[
-                tensor_spec.TensorSpec(shape=[1, 5, 5, 3], dtype=dtypes.float32)
-            ]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[1, 5, 5, 3], dtype=dtypes.float32)
+        ])
         def func(inp):
             conv = nn_ops.conv2d(
                 inp,
@@ -219,7 +225,10 @@ class FromConcreteFunctionTest(TestModels):
 
         def calibration_gen():
             for _ in range(5):
-                yield [np.random.uniform(-1, 1, size=(1, 5, 5, 3)).astype(np.float32)]
+                yield [
+                    np.random.uniform(-1, 1,
+                                      size=(1, 5, 5, 3)).astype(np.float32)
+                ]
 
         root.f = func
         to_save = root.f.get_concrete_function()
@@ -229,12 +238,14 @@ class FromConcreteFunctionTest(TestModels):
         func, calibration_gen = self._getCalibrationQuantizeModel()
 
         # Convert float model.
-        float_converter = lite.TFLiteConverterV2.from_concrete_functions([func])
+        float_converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [func])
         float_tflite = float_converter.convert()
         self.assertTrue(float_tflite)
 
         # Convert quantized model.
-        quantized_converter = lite.TFLiteConverterV2.from_concrete_functions([func])
+        quantized_converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [func])
         quantized_converter.optimizations = [lite.Optimize.DEFAULT]
         quantized_converter.representative_dataset = calibration_gen
         quantized_tflite = quantized_converter.convert()
@@ -257,13 +268,15 @@ class FromConcreteFunctionTest(TestModels):
         func, calibration_gen = self._getCalibrationQuantizeModel()
 
         # Convert float model.
-        float_converter = lite.TFLiteConverterV2.from_concrete_functions([func])
+        float_converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [func])
         float_tflite = float_converter.convert()
         self.assertTrue(float_tflite)
 
         # Convert model by specifying target spec (instead of optimizations), since
         # when targeting an integer only backend, quantization is mandatory.
-        quantized_converter = lite.TFLiteConverterV2.from_concrete_functions([func])
+        quantized_converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [func])
         quantized_converter.target_spec.supported_ops = [
             lite.OpsSet.TFLITE_BUILTINS_INT8
         ]
@@ -302,26 +315,24 @@ class FromConcreteFunctionTest(TestModels):
                     trainable=False,
                 )
                 self.max_var = self.add_weight(
-                    "max", initializer=keras.initializers.Constant(6.0), trainable=False
-                )
+                    "max",
+                    initializer=keras.initializers.Constant(6.0),
+                    trainable=False)
 
             def call(self, inputs):
                 x = array_ops.fake_quant_with_min_max_vars(
-                    inputs, self.min_var, self.max_var
-                )
+                    inputs, self.min_var, self.max_var)
 
                 w_fq = array_ops.fake_quant_with_min_max_vars(
-                    self.w, self.min_var, self.max_var
-                )
+                    self.w, self.min_var, self.max_var)
                 x = math_ops.matmul(x, w_fq)
 
                 x = array_ops.fake_quant_with_min_max_vars(
-                    x, self.min_var, self.max_var
-                )
+                    x, self.min_var, self.max_var)
 
                 return x
 
-        return keras.Sequential(QLinear(3, input_shape=(2,)))
+        return keras.Sequential(QLinear(3, input_shape=(2, )))
 
     @test_util.run_v2_only
     def testTrainingTimeQuantizeConversion(self):
@@ -340,14 +351,16 @@ class FromConcreteFunctionTest(TestModels):
         self.assertLess(len(quantized_tflite), len(float_tflite))
 
         interpreter = Interpreter(model_content=quantized_tflite)
-        self.assertEqual(np.float32, interpreter.get_input_details()[0]["dtype"])
+        self.assertEqual(np.float32,
+                         interpreter.get_input_details()[0]["dtype"])
 
     @test_util.run_v2_only
     def testNewQuantizer(self):
         """Test the model quantized by the new converter."""
         func, calibration_gen = self._getCalibrationQuantizeModel()
 
-        quantized_converter = lite.TFLiteConverterV2.from_concrete_functions([func])
+        quantized_converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [func])
         quantized_converter.target_spec.supported_ops = [
             lite.OpsSet.TFLITE_BUILTINS_INT8
         ]
@@ -363,21 +376,20 @@ class FromConcreteFunctionTest(TestModels):
 
         for _ in range(5):
             input_data = constant_op.constant(
-                np.random.uniform(-1, 1, size=(1, 5, 5, 3)).astype(np.float32)
-            )
+                np.random.uniform(-1, 1, size=(1, 5, 5, 3)).astype(np.float32))
             old_value = self._evaluateTFLiteModel(old_tflite, [input_data])
             new_value = self._evaluateTFLiteModel(new_tflite, [input_data])
             np.testing.assert_almost_equal(old_value, new_value, 1)
 
     @parameterized.named_parameters(
-        ("EnableMlirConverter", True), ("DisableMlirConverter", False)  # enable mlir
+        ("EnableMlirConverter", True),
+        ("DisableMlirConverter", False)  # enable mlir
     )  # disable mlir
     @test_util.run_v2_only
     def testEmbeddings(self, enable_mlir):
         """Test model with embeddings."""
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((20)), dtype=np.int32)
-        )
+            np.array(np.random.random_sample((20)), dtype=np.int32))
 
         class EmbeddingModel(keras.Model):
             def __init__(self):
@@ -387,13 +399,12 @@ class FromConcreteFunctionTest(TestModels):
                     shape=(2000, 300),
                     dtype=dtypes.float32,
                     initializer=init_ops.random_normal_initializer(
-                        mean=0.0, stddev=300 ** (-0.5)
-                    ),
+                        mean=0.0, stddev=300**(-0.5)),
                 )
 
-            @def_function.function(
-                input_signature=[tensor_spec.TensorSpec(shape=(20), dtype=dtypes.int32)]
-            )
+            @def_function.function(input_signature=[
+                tensor_spec.TensorSpec(shape=(20), dtype=dtypes.int32)
+            ])
             def func(self, x):
                 return array_ops.gather(self.shared_weights, x)
 
@@ -402,14 +413,16 @@ class FromConcreteFunctionTest(TestModels):
         concrete_func = root.func.get_concrete_function()
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = enable_mlir
         tflite_model = converter.convert()
 
         # Check values from converted model.
         expected_value = root.func(input_data)
         actual_value = self._evaluateTFLiteModel(tflite_model, [input_data])
-        np.testing.assert_almost_equal(expected_value.numpy(), actual_value[0], 5)
+        np.testing.assert_almost_equal(expected_value.numpy(), actual_value[0],
+                                       5)
 
     @test_util.run_v2_only
     def testGraphDebugInfo(self):
@@ -421,7 +434,8 @@ class FromConcreteFunctionTest(TestModels):
         concrete_func = root.f.get_concrete_function(input_data)
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.convert()
         self._assertValidDebugInfo(converter._debug_info)
 
@@ -429,15 +443,16 @@ class FromConcreteFunctionTest(TestModels):
 class FromSavedModelTest(TestModels):
     def _createV1SavedModel(self, shape):
         """Create a simple SavedModel."""
-        saved_model_dir = os.path.join(self.get_temp_dir(), "simple_savedmodel")
+        saved_model_dir = os.path.join(self.get_temp_dir(),
+                                       "simple_savedmodel")
         with ops.Graph().as_default():
             with session.Session() as sess:
-                in_tensor_1 = array_ops.placeholder(
-                    shape=shape, dtype=dtypes.float32, name="inputB"
-                )
-                in_tensor_2 = array_ops.placeholder(
-                    shape=shape, dtype=dtypes.float32, name="inputA"
-                )
+                in_tensor_1 = array_ops.placeholder(shape=shape,
+                                                    dtype=dtypes.float32,
+                                                    name="inputB")
+                in_tensor_2 = array_ops.placeholder(shape=shape,
+                                                    dtype=dtypes.float32,
+                                                    name="inputA")
                 variable_node = variables.Variable(1.0, name="variable_node")
                 out_tensor = in_tensor_1 + in_tensor_2 * variable_node
                 inputs = {"x": in_tensor_1, "y": in_tensor_2}
@@ -453,7 +468,8 @@ class FromSavedModelTest(TestModels):
             saved_model_dir = self._createV1SavedModel(shape=[1, 16, 16, 3])
 
             # Convert model and ensure model is not None.
-            converter = lite.TFLiteConverterV2.from_saved_model(saved_model_dir)
+            converter = lite.TFLiteConverterV2.from_saved_model(
+                saved_model_dir)
             tflite_model = converter.convert()
             self.assertTrue(tflite_model)
 
@@ -464,19 +480,22 @@ class FromSavedModelTest(TestModels):
             self.assertLen(input_details, 2)
             self.assertEqual("inputA", input_details[0]["name"])
             self.assertEqual(np.float32, input_details[0]["dtype"])
-            self.assertTrue(([1, 16, 16, 3] == input_details[0]["shape"]).all())
+            self.assertTrue(([1, 16, 16,
+                              3] == input_details[0]["shape"]).all())
             self.assertEqual((0.0, 0.0), input_details[0]["quantization"])
 
             self.assertEqual("inputB", input_details[1]["name"])
             self.assertEqual(np.float32, input_details[1]["dtype"])
-            self.assertTrue(([1, 16, 16, 3] == input_details[1]["shape"]).all())
+            self.assertTrue(([1, 16, 16,
+                              3] == input_details[1]["shape"]).all())
             self.assertEqual((0.0, 0.0), input_details[1]["quantization"])
 
             output_details = interpreter.get_output_details()
             self.assertLen(output_details, 1)
             self.assertEqual("add", output_details[0]["name"])
             self.assertEqual(np.float32, output_details[0]["dtype"])
-            self.assertTrue(([1, 16, 16, 3] == output_details[0]["shape"]).all())
+            self.assertTrue(([1, 16, 16,
+                              3] == output_details[0]["shape"]).all())
             self.assertEqual((0.0, 0.0), output_details[0]["quantization"])
 
     @test_util.run_v2_only
@@ -531,12 +550,12 @@ class FromSavedModelTest(TestModels):
         # Convert model with invalid `signature_keys`.
         with self.assertRaises(ValueError) as error:
             _ = lite.TFLiteConverterV2.from_saved_model(
-                save_dir, signature_keys=["INVALID"]
-            )
+                save_dir, signature_keys=["INVALID"])
         self.assertIn("Invalid signature key 'INVALID'", str(error.exception))
 
         # Convert model with empty `signature_keys`.
-        converter = lite.TFLiteConverterV2.from_saved_model(save_dir, signature_keys=[])
+        converter = lite.TFLiteConverterV2.from_saved_model(save_dir,
+                                                            signature_keys=[])
         tflite_model = converter.convert()
 
         # Check values from converted model.
@@ -575,9 +594,10 @@ class FromSavedModelTest(TestModels):
         x = np.array([[1.0], [2.0]])
         y = np.array([[2.0], [4.0]])
 
-        model = keras.models.Sequential(
-            [keras.layers.Dropout(0.2), keras.layers.Dense(1),]
-        )
+        model = keras.models.Sequential([
+            keras.layers.Dropout(0.2),
+            keras.layers.Dense(1),
+        ])
         model.compile(optimizer="sgd", loss="mean_squared_error")
         model.fit(x, y, epochs=1)
 
@@ -620,9 +640,10 @@ class FromKerasModelTest(TestModels):
         x = np.array([[1.0], [2.0]])
         y = np.array([[2.0], [4.0]])
 
-        model = keras.models.Sequential(
-            [keras.layers.Dropout(0.2), keras.layers.Dense(units=1, input_shape=[1])]
-        )
+        model = keras.models.Sequential([
+            keras.layers.Dropout(0.2),
+            keras.layers.Dense(units=1, input_shape=[1])
+        ])
         model.compile(optimizer="sgd", loss="mean_squared_error")
         model.fit(x, y, epochs=1)
 
@@ -647,22 +668,24 @@ class FromKerasModelTest(TestModels):
         output_c_np = np.random.random((10, 3))
         output_d_np = np.random.random((10, 2))
 
-        input_a = keras.layers.Input(shape=(3,), name="input_a")
-        input_b = keras.layers.Input(shape=(3,), name="input_b")
+        input_a = keras.layers.Input(shape=(3, ), name="input_a")
+        input_b = keras.layers.Input(shape=(3, ), name="input_b")
 
         dense = keras.layers.Dense(8, name="dense_1")
         interm_a = dense(input_a)
         interm_b = dense(input_b)
         merged = keras.layers.concatenate([interm_a, interm_b], name="merge")
 
-        output_c = keras.layers.Dense(3, activation="softmax", name="dense_2")(merged)
-        output_d = keras.layers.Dense(2, activation="softmax", name="dense_3")(merged)
+        output_c = keras.layers.Dense(3, activation="softmax",
+                                      name="dense_2")(merged)
+        output_d = keras.layers.Dense(2, activation="softmax",
+                                      name="dense_3")(merged)
 
-        model = keras.models.Model(
-            inputs=[input_a, input_b], outputs=[output_c, output_d]
-        )
+        model = keras.models.Model(inputs=[input_a, input_b],
+                                   outputs=[output_c, output_d])
         model.compile(optimizer="sgd", loss="mean_squared_error")
-        model.fit([input_a_np, input_b_np], [output_c_np, output_d_np], epochs=1)
+        model.fit([input_a_np, input_b_np], [output_c_np, output_d_np],
+                  epochs=1)
 
         # Convert model and ensure model is not None.
         converter = lite.TFLiteConverterV2.from_keras_model(model)
@@ -681,7 +704,8 @@ class FromKerasModelTest(TestModels):
         # Create a simple Keras model.
         x = [-1, 0, 1, 2, 3, 4]
         y = [-3, -1, 1, 3, 5, 7]
-        model = keras.models.Sequential([keras.layers.Dense(units=1, input_shape=[1])])
+        model = keras.models.Sequential(
+            [keras.layers.Dense(units=1, input_shape=[1])])
         model.compile(optimizer="sgd", loss="mean_squared_error")
         model.fit(x, y, epochs=1)
         converter = lite.TFLiteConverterV2.from_keras_model(model)
@@ -697,7 +721,8 @@ class ControlFlowTest(TestModels):
             "b": constant_op.constant(True),
         }
 
-        weights = variables.Variable([[0.1, 0.2], [0.3, 0.4]], dtype=dtypes.float32)
+        weights = variables.Variable([[0.1, 0.2], [0.3, 0.4]],
+                                     dtype=dtypes.float32)
 
         def true_fn(x):
             return math_ops.matmul(x, weights)
@@ -705,52 +730,51 @@ class ControlFlowTest(TestModels):
         def false_fn(x):
             return math_ops.add(x, weights)
 
-        @def_function.function(
-            input_signature=[
-                tensor_spec.TensorSpec(shape=[1, 2], dtype=dtypes.float32),
-                tensor_spec.TensorSpec(shape=(), dtype=dtypes.bool),
-            ]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[1, 2], dtype=dtypes.float32),
+            tensor_spec.TensorSpec(shape=(), dtype=dtypes.bool),
+        ])
         def model(x, b):
-            return control_flow_ops.cond(
-                b, true_fn=lambda: true_fn(x), false_fn=lambda: false_fn(x)
-            )
+            return control_flow_ops.cond(b,
+                                         true_fn=lambda: true_fn(x),
+                                         false_fn=lambda: false_fn(x))
 
         concrete_func = model.get_concrete_function()
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = True
         tflite_model = converter.convert()
 
         # Check values from converted model.
         expected_value = concrete_func(**input_data)
         actual_value = self._evaluateTFLiteModel(
-            tflite_model, [input_data["x"], input_data["b"]]
-        )[0]
+            tflite_model, [input_data["x"], input_data["b"]])[0]
         np.testing.assert_almost_equal(expected_value.numpy(), actual_value)
 
     @test_util.run_v2_only
     def testStaticRnn(self):
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((3, 10)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((3, 10)), dtype=np.float32))
 
         cell = rnn_cell_impl.LSTMCell(10)
 
-        @def_function.function(
-            input_signature=[
-                tensor_spec.TensorSpec(shape=[3, 10], dtype=dtypes.float32)
-            ]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[3, 10], dtype=dtypes.float32)
+        ])
         def model(x):
             seq = array_ops.split(x, 3, 0)
-            return rnn.static_rnn(cell, seq, dtype=dtypes.float32, sequence_length=[1])
+            return rnn.static_rnn(cell,
+                                  seq,
+                                  dtype=dtypes.float32,
+                                  sequence_length=[1])
 
         concrete_func = model.get_concrete_function()
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = True
         tflite_model = converter.convert()
 
@@ -764,7 +788,8 @@ class ControlFlowTest(TestModels):
     def testWhileLoop(self):
         input_data = constant_op.constant([1.0, 2.0, 3.0, 4.0], shape=[2, 2])
 
-        weights = variables.Variable([[0.1, 0.2], [0.3, 0.4]], dtype=dtypes.float32)
+        weights = variables.Variable([[0.1, 0.2], [0.3, 0.4]],
+                                     dtype=dtypes.float32)
 
         def condition(x):
             return math_ops.reduce_sum(x) < 100
@@ -772,16 +797,17 @@ class ControlFlowTest(TestModels):
         def body(x):
             return math_ops.add(x, weights)
 
-        @def_function.function(
-            input_signature=[tensor_spec.TensorSpec(shape=[2, 2], dtype=dtypes.float32)]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[2, 2], dtype=dtypes.float32)
+        ])
         def model(x):
             return control_flow_ops.while_loop(condition, body, [x])
 
         concrete_func = model.get_concrete_function()
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = True
         tflite_model = converter.convert()
 
@@ -793,23 +819,21 @@ class ControlFlowTest(TestModels):
     @test_util.run_v2_only
     def testDynamicRnn(self):
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((3, 10, 10)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((3, 10, 10)), dtype=np.float32))
 
         cell = rnn_cell_impl.LSTMCell(10)
 
-        @def_function.function(
-            input_signature=[
-                tensor_spec.TensorSpec(shape=[3, 10, 10], dtype=dtypes.float32)
-            ]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[3, 10, 10], dtype=dtypes.float32)
+        ])
         def model(x):
             return rnn.dynamic_rnn(cell, x, dtype=dtypes.float32)
 
         concrete_func = model.get_concrete_function()
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = True
         tflite_model = converter.convert()
 
@@ -833,8 +857,7 @@ class ControlFlowTest(TestModels):
         # This relies on TFLiteConverter to rewrite unknown batch size to 1. The
         # model will fail if resizing the input to non-1 batch size.
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((1, 10, 10)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((1, 10, 10)), dtype=np.float32))
         rnn_obj = rnn_layer(units=10, input_shape=(10, 10))
         model = keras.models.Sequential([rnn_obj])
 
@@ -856,8 +879,7 @@ class ControlFlowTest(TestModels):
     @test_util.run_v2_only
     def testKerasRNNMultiBatches(self, rnn_layer):
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((4, 10, 10)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((4, 10, 10)), dtype=np.float32))
         # Specify a fixed batch size(4) for the test model.
         x = keras.layers.Input(batch_shape=(4, 10, 10))
         y = rnn_layer(units=10, input_shape=(10, 10))(x)
@@ -876,14 +898,12 @@ class ControlFlowTest(TestModels):
     @test_util.run_v2_only
     def testKerasBidirectionalRNN(self):
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((1, 10, 10)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((1, 10, 10)), dtype=np.float32))
         model = keras.models.Sequential()
         model.add(
-            keras.layers.Bidirectional(
-                recurrent_v2.LSTM(units=10, return_sequences=True), input_shape=(10, 10)
-            )
-        )
+            keras.layers.Bidirectional(recurrent_v2.LSTM(
+                units=10, return_sequences=True),
+                                       input_shape=(10, 10)))
         model.add(keras.layers.Bidirectional(recurrent_v2.LSTM(units=10)))
         model.add(keras.layers.Dense(5))
         model.add(keras.layers.Activation("softmax"))
@@ -905,8 +925,7 @@ class GrapplerTest(TestModels):
         # Constant folding handles the tf.broadcast_to operation which was not
         # supported by the TFLite at the time this test was added.
         input_data = constant_op.constant(
-            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], shape=[3, 3]
-        )
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], shape=[3, 3])
 
         @def_function.function
         def func(x):
@@ -919,7 +938,8 @@ class GrapplerTest(TestModels):
         concrete_func = root.f.get_concrete_function(input_data)
 
         # Convert model.
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         tflite_model = converter.convert()
 
         # Check values from converted model.
@@ -931,7 +951,8 @@ class GrapplerTest(TestModels):
         converter.experimental_new_converter = True
         converter.optimizations = [lite.Optimize.DEFAULT]
         hybrid_tflite_model = converter.convert()
-        actual_value = self._evaluateTFLiteModel(hybrid_tflite_model, [input_data])
+        actual_value = self._evaluateTFLiteModel(hybrid_tflite_model,
+                                                 [input_data])
         np.testing.assert_almost_equal(expected_value.numpy(), actual_value[0])
 
 
@@ -939,14 +960,11 @@ class UnknownShapes(TestModels):
     @test_util.run_v2_only
     def testMatMul(self):
         input_data = constant_op.constant(
-            np.array(np.random.random_sample((10, 4)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((10, 4)), dtype=np.float32))
 
-        @def_function.function(
-            input_signature=[
-                tensor_spec.TensorSpec(shape=[None, 4], dtype=dtypes.float32)
-            ]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[None, 4], dtype=dtypes.float32)
+        ])
         def model(in_tensor):
             shape = array_ops.shape_v2(in_tensor)
             fill = array_ops.transpose_v2(array_ops.fill(shape, 1.0))
@@ -954,40 +972,40 @@ class UnknownShapes(TestModels):
 
         concrete_func = model.get_concrete_function()
 
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = True
         tflite_model = converter.convert()
 
         # Check values from converted model.
         expected_value = concrete_func(input_data)
-        actual_value = self._evaluateTFLiteModel(
-            tflite_model, [input_data], input_shapes=[([-1, 4], [10, 4])]
-        )
-        np.testing.assert_almost_equal(
-            expected_value.numpy(), actual_value[0], decimal=6
-        )
+        actual_value = self._evaluateTFLiteModel(tflite_model, [input_data],
+                                                 input_shapes=[([-1,
+                                                                 4], [10, 4])])
+        np.testing.assert_almost_equal(expected_value.numpy(),
+                                       actual_value[0],
+                                       decimal=6)
 
     def testBatchMatMul(self):
         self.skipTest("BatchMatMulV2 does not support unknown batch size.")
         input_data_1 = constant_op.constant(
-            np.array(np.random.random_sample((1, 256, 256)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((1, 256, 256)), dtype=np.float32))
         input_data_2 = constant_op.constant(
-            np.array(np.random.random_sample((1, 256, 256)), dtype=np.float32)
-        )
+            np.array(np.random.random_sample((1, 256, 256)), dtype=np.float32))
 
-        @def_function.function(
-            input_signature=[
-                tensor_spec.TensorSpec(shape=[None, 256, 256], dtype=dtypes.float32),
-                tensor_spec.TensorSpec(shape=[None, 256, 256], dtype=dtypes.float32),
-            ]
-        )
+        @def_function.function(input_signature=[
+            tensor_spec.TensorSpec(shape=[None, 256, 256],
+                                   dtype=dtypes.float32),
+            tensor_spec.TensorSpec(shape=[None, 256, 256],
+                                   dtype=dtypes.float32),
+        ])
         def model(in_tensor_1, in_tensor_2):
             return math_ops.matmul(in_tensor_1, in_tensor_2)
 
         concrete_func = model.get_concrete_function()
 
-        converter = lite.TFLiteConverterV2.from_concrete_functions([concrete_func])
+        converter = lite.TFLiteConverterV2.from_concrete_functions(
+            [concrete_func])
         converter.experimental_new_converter = True
         tflite_model = converter.convert()
 

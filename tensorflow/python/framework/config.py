@@ -250,7 +250,8 @@ def set_device_policy(device_policy):
     if device_policy == "silent":
         context.context().device_policy = context.DEVICE_PLACEMENT_SILENT
     elif device_policy == "silent_for_int32":
-        context.context().device_policy = context.DEVICE_PLACEMENT_SILENT_FOR_INT32
+        context.context(
+        ).device_policy = context.DEVICE_PLACEMENT_SILENT_FOR_INT32
     elif device_policy == "warn":
         context.context().device_policy = context.DEVICE_PLACEMENT_WARN
     elif device_policy == "explicit":
@@ -299,7 +300,8 @@ def set_synchronous_execution(enable):
         context.context().execution_mode = context.ASYNC
 
 
-@tf_export("config.list_physical_devices", "config.experimental.list_physical_devices")
+@tf_export("config.list_physical_devices",
+           "config.experimental.list_physical_devices")
 @deprecation.deprecated_endpoints("config.experimental.list_physical_devices")
 def list_physical_devices(device_type=None):
     """Return a list of physical devices visible to the host runtime.
@@ -332,7 +334,8 @@ def list_physical_devices(device_type=None):
     return context.context().list_physical_devices(device_type)
 
 
-@tf_export("config.list_logical_devices", "config.experimental.list_logical_devices")
+@tf_export("config.list_logical_devices",
+           "config.experimental.list_logical_devices")
 @deprecation.deprecated_endpoints("config.experimental.list_logical_devices")
 def list_logical_devices(device_type=None):
     """Return a list of logical devices created by runtime.
@@ -367,7 +370,8 @@ def list_logical_devices(device_type=None):
     return context.context().list_logical_devices(device_type=device_type)
 
 
-@tf_export("config.get_visible_devices", "config.experimental.get_visible_devices")
+@tf_export("config.get_visible_devices",
+           "config.experimental.get_visible_devices")
 @deprecation.deprecated_endpoints("config.experimental.get_visible_devices")
 def get_visible_devices(device_type=None):
     """Get the list of visible physical devices.
@@ -399,7 +403,8 @@ def get_visible_devices(device_type=None):
     return context.context().get_visible_devices(device_type)
 
 
-@tf_export("config.set_visible_devices", "config.experimental.set_visible_devices")
+@tf_export("config.set_visible_devices",
+           "config.experimental.set_visible_devices")
 @deprecation.deprecated_endpoints("config.experimental.set_visible_devices")
 def set_visible_devices(devices, device_type=None):
     """Set the list of visible devices.
@@ -496,8 +501,7 @@ def set_memory_growth(device, enable):
     "config.experimental.get_virtual_device_configuration",
 )
 @deprecation.deprecated_endpoints(
-    "config.experimental.get_virtual_device_configuration"
-)
+    "config.experimental.get_virtual_device_configuration")
 def get_logical_device_configuration(device):
     """Get the virtual device configuration for a `tf.config.PhysicalDevice`.
 
@@ -540,8 +544,7 @@ def get_logical_device_configuration(device):
     "config.experimental.set_virtual_device_configuration",
 )
 @deprecation.deprecated_endpoints(
-    "config.experimental.set_virtual_device_configuration"
-)
+    "config.experimental.set_virtual_device_configuration")
 def set_logical_device_configuration(device, logical_devices):
     """Set the logical device configuration for a `tf.config.PhysicalDevice`.
 
