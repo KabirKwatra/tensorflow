@@ -24,15 +24,17 @@ namespace TF {
 // Bundle generic MLIR graph optimization passes (some derived from TF Grappler
 // graph optimizers) into a single MLIR optimization pass.
 class MlirGraphOptimizationPass : public ::tensorflow::MlirOptimizationPass {
- public:
-  llvm::StringRef name() const override { return "graph_optimization"; }
+public:
+    llvm::StringRef name() const override {
+        return "graph_optimization";
+    }
 
-  bool IsEnabled(const ::tensorflow::ConfigProto& config_proto) const override {
-    return config_proto.experimental().enable_mlir_graph_optimization();
-  }
+    bool IsEnabled(const ::tensorflow::ConfigProto& config_proto) const override {
+        return config_proto.experimental().enable_mlir_graph_optimization();
+    }
 
-  ::tensorflow::Status Run(const ::tensorflow::ConfigProto& config_proto,
-                           ModuleOp module) override;
+    ::tensorflow::Status Run(const ::tensorflow::ConfigProto& config_proto,
+                             ModuleOp module) override;
 };
 
 }  // namespace TF

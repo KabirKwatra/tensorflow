@@ -46,8 +46,8 @@ TfLiteStatus GetSortedFileNames(
 
 inline TfLiteStatus GetSortedFileNames(const std::string& directory,
                                        std::vector<std::string>* result) {
-  return GetSortedFileNames(directory, result,
-                            std::unordered_set<std::string>());
+    return GetSortedFileNames(directory, result,
+                              std::unordered_set<std::string>());
 }
 
 Interpreter::TfLiteDelegatePtr CreateNNAPIDelegate();
