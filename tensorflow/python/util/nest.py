@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """## Functions for working with arbitrarily nested sequences of elements.
 
 This module can perform operations on nested structures. A nested structure is a
@@ -37,7 +36,6 @@ should be recursive.
 Example structures: `((3, 4), 5, (6, 7, (9, 10), 8))`, `(np.array(0),
   (np.array([3, 4]), tf.constant([3, 4])))`
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -48,9 +46,9 @@ import six as _six
 import wrapt as _wrapt
 
 from tensorflow.python import _pywrap_utils
+from tensorflow.python.platform import tf_logging
 from tensorflow.python.util.compat import collections_abc as _collections_abc
 from tensorflow.python.util.tf_export import tf_export
-from tensorflow.python.platform import tf_logging
 
 
 _SHALLOW_TREE_HAS_INVALID_KEYS = (
