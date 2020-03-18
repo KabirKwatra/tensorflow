@@ -20,7 +20,6 @@ import org.tensorflow.lite.TensorFlowLite;
 
 /** {@link Delegate} for NNAPI inference. */
 public class NnApiDelegate implements Delegate, AutoCloseable {
-
   private static final long INVALID_DELEGATE_HANDLE = 0;
 
   private long delegateHandle;
@@ -111,17 +110,12 @@ public class NnApiDelegate implements Delegate, AutoCloseable {
   public NnApiDelegate(Options options) {
     // Ensure the native TensorFlow Lite libraries are available.
     TensorFlowLite.init();
-    delegateHandle =
-        createDelegate(
-            options.executionPreference,
-            options.acceleratorName,
-            options.cacheDir,
-            options.modelToken,
-            options.maxDelegatedPartitions != null ? options.maxDelegatedPartitions : -1,
-            /*overrideDisallowCpu=*/ options.useNnapiCpu != null,
-            /*disallowCpuValue=*/ options.useNnapiCpu != null
-                ? !options.useNnapiCpu.booleanValue()
-                : false);
+    delegateHandle = createDelegate(options.executionPreference, options.acceleratorName,
+        options.cacheDir, options.modelToken,
+        options.maxDelegatedPartitions != null ? options.maxDelegatedPartitions : -1,
+        /*overrideDisallowCpu=*/options.useNnapiCpu != null,
+        /*disallowCpuValue=*/options.useNnapiCpu != null ? !options.useNnapiCpu.booleanValue()
+                                                         : false);
   }
 
   public NnApiDelegate() {
@@ -179,13 +173,8 @@ public class NnApiDelegate implements Delegate, AutoCloseable {
   }
 
   //
-  private static native long createDelegate(
-      int preference,
-      String deviceName,
-      String cacheDir,
-      String modelToken,
-      int maxDelegatedPartitions,
-      boolean overrideDisallowCpu,
+  private static native long createDelegate(int preference, String deviceName, String cacheDir,
+      String modelToken, int maxDelegatedPartitions, boolean overrideDisallowCpu,
       boolean disallowCpuValue);
 
   private static native void deleteDelegate(long delegateHandle);

@@ -15,28 +15,29 @@ limitations under the License.
 #include "tensorflow/lite/tools/evaluation/evaluation_delegate_provider.h"
 
 #include <gtest/gtest.h>
+
 #include "tensorflow/lite/tools/evaluation/proto/evaluation_stages.pb.h"
 
 namespace tflite {
 namespace evaluation {
 namespace {
 TEST(EvaluationDelegateProviderTest, ParseStringToDelegateType) {
-    EXPECT_EQ(TfliteInferenceParams::NNAPI, ParseStringToDelegateType("nnapi"));
-    EXPECT_EQ(TfliteInferenceParams::GPU, ParseStringToDelegateType("gpu"));
-    EXPECT_EQ(TfliteInferenceParams::HEXAGON,
-              ParseStringToDelegateType("hexagon"));
-    EXPECT_EQ(TfliteInferenceParams::XNNPACK,
-              ParseStringToDelegateType("xnnpack"));
+  EXPECT_EQ(TfliteInferenceParams::NNAPI, ParseStringToDelegateType("nnapi"));
+  EXPECT_EQ(TfliteInferenceParams::GPU, ParseStringToDelegateType("gpu"));
+  EXPECT_EQ(TfliteInferenceParams::HEXAGON,
+            ParseStringToDelegateType("hexagon"));
+  EXPECT_EQ(TfliteInferenceParams::XNNPACK,
+            ParseStringToDelegateType("xnnpack"));
 
-    EXPECT_EQ(TfliteInferenceParams::NONE, ParseStringToDelegateType("Gpu"));
-    EXPECT_EQ(TfliteInferenceParams::NONE, ParseStringToDelegateType("Testing"));
+  EXPECT_EQ(TfliteInferenceParams::NONE, ParseStringToDelegateType("Gpu"));
+  EXPECT_EQ(TfliteInferenceParams::NONE, ParseStringToDelegateType("Testing"));
 }
 
 TEST(EvaluationDelegateProviderTest, CreateTfLiteDelegate) {
-    TfliteInferenceParams params;
-    params.set_delegate(TfliteInferenceParams::NONE);
-    // A NONE delegate type will return a nullptr TfLite delegate ptr.
-    EXPECT_TRUE(!CreateTfLiteDelegate(params));
+  TfliteInferenceParams params;
+  params.set_delegate(TfliteInferenceParams::NONE);
+  // A NONE delegate type will return a nullptr TfLite delegate ptr.
+  EXPECT_TRUE(!CreateTfLiteDelegate(params));
 }
 
 }  // namespace

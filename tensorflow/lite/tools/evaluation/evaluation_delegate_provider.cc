@@ -26,54 +26,54 @@ constexpr char kXnnpackDelegate[] = "xnnpack";
 
 TfliteInferenceParams::Delegate ParseStringToDelegateType(
     const std::string& val) {
-    if (val == kNnapiDelegate) return TfliteInferenceParams::NNAPI;
-    if (val == kGpuDelegate) return TfliteInferenceParams::GPU;
-    if (val == kHexagonDelegate) return TfliteInferenceParams::HEXAGON;
-    if (val == kXnnpackDelegate) return TfliteInferenceParams::XNNPACK;
-    return TfliteInferenceParams::NONE;
+  if (val == kNnapiDelegate) return TfliteInferenceParams::NNAPI;
+  if (val == kGpuDelegate) return TfliteInferenceParams::GPU;
+  if (val == kHexagonDelegate) return TfliteInferenceParams::HEXAGON;
+  if (val == kXnnpackDelegate) return TfliteInferenceParams::XNNPACK;
+  return TfliteInferenceParams::NONE;
 }
 
 TfLiteDelegatePtr CreateTfLiteDelegate(const TfliteInferenceParams& params,
                                        std::string* error_msg) {
-    const auto type = params.delegate();
+  const auto type = params.delegate();
 
-    switch (type) {
+  switch (type) {
     case TfliteInferenceParams::NNAPI: {
-        auto p = CreateNNAPIDelegate();
-        if (!p && error_msg) *error_msg = "NNAPI not supported";
-        return p;
+      auto p = CreateNNAPIDelegate();
+      if (!p && error_msg) *error_msg = "NNAPI not supported";
+      return p;
     }
     case TfliteInferenceParams::GPU: {
-        auto p = CreateGPUDelegate();
-        if (!p && error_msg) *error_msg = "GPU delegate not supported.";
-        return p;
+      auto p = CreateGPUDelegate();
+      if (!p && error_msg) *error_msg = "GPU delegate not supported.";
+      return p;
     }
     case TfliteInferenceParams::HEXAGON: {
-        auto p = CreateHexagonDelegate(/*library_directory_path=*/"",
-                 /*profiling=*/false);
-        if (!p && error_msg) {
-            *error_msg =
-                "Hexagon delegate is not supported on the platform or required "
-                "libraries are missing.";
-        }
-        return p;
+      auto p = CreateHexagonDelegate(/*library_directory_path=*/"",
+                                     /*profiling=*/false);
+      if (!p && error_msg) {
+        *error_msg =
+            "Hexagon delegate is not supported on the platform or required "
+            "libraries are missing.";
+      }
+      return p;
     }
     case TfliteInferenceParams::XNNPACK: {
-        auto p = CreateXNNPACKDelegate(params.num_threads());
-        if (!p && error_msg) *error_msg = "XNNPACK delegate not supported.";
-        return p;
+      auto p = CreateXNNPACKDelegate(params.num_threads());
+      if (!p && error_msg) *error_msg = "XNNPACK delegate not supported.";
+      return p;
     }
     case TfliteInferenceParams::NONE:
-        if (error_msg) *error_msg = "No delegate type is specified.";
-        return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
+      if (error_msg) *error_msg = "No delegate type is specified.";
+      return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
     default:
-        if (error_msg) {
-            *error_msg = "Creation of delegate type: " +
-                         TfliteInferenceParams::Delegate_Name(type) +
-                         " not supported yet.";
-        }
-        return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
-    }
+      if (error_msg) {
+        *error_msg = "Creation of delegate type: " +
+                     TfliteInferenceParams::Delegate_Name(type) +
+                     " not supported yet.";
+      }
+      return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
+  }
 }
 
 }  // namespace evaluation
