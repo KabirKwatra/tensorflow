@@ -29,8 +29,9 @@ class CondBranchFuncGraph(func_graph.FuncGraph):
 
     def __init__(self, *args, **kwargs):
         super(CondBranchFuncGraph, self).__init__(*args, **kwargs)
-        func_graph.override_func_graph_name_scope(self,
-                                                  self.outer_graph.get_name_scope())
+        func_graph.override_func_graph_name_scope(
+            self, self.outer_graph.get_name_scope()
+        )
 
 
 class WhileCondFuncGraph(func_graph.FuncGraph):
@@ -41,8 +42,9 @@ class WhileCondFuncGraph(func_graph.FuncGraph):
 
     def __init__(self, *args, **kwargs):
         super(WhileCondFuncGraph, self).__init__(*args, **kwargs)
-        func_graph.override_func_graph_name_scope(self,
-                                                  self.outer_graph.get_name_scope())
+        func_graph.override_func_graph_name_scope(
+            self, self.outer_graph.get_name_scope()
+        )
 
 
 class WhileBodyFuncGraph(func_graph.FuncGraph):
@@ -53,5 +55,6 @@ class WhileBodyFuncGraph(func_graph.FuncGraph):
 
     def __init__(self, *args, **kwargs):
         super(WhileBodyFuncGraph, self).__init__(*args, **kwargs)
-        func_graph.override_func_graph_name_scope(self,
-                                                  self.outer_graph.get_name_scope())
+        func_graph.override_func_graph_name_scope(
+            self, self.outer_graph.get_name_scope()
+        )
