@@ -22,36 +22,36 @@ from tensorflow.python.framework import func_graph
 
 
 class CondBranchFuncGraph(func_graph.FuncGraph):
-  """FuncGraph for branches of tf.cond().
+    """FuncGraph for branches of tf.cond().
 
-  This is used to distinguish cond branches from other functions.
-  """
+    This is used to distinguish cond branches from other functions.
+    """
 
-  def __init__(self, *args, **kwargs):
-    super(CondBranchFuncGraph, self).__init__(*args, **kwargs)
-    func_graph.override_func_graph_name_scope(self,
-                                              self.outer_graph.get_name_scope())
+    def __init__(self, *args, **kwargs):
+        super(CondBranchFuncGraph, self).__init__(*args, **kwargs)
+        func_graph.override_func_graph_name_scope(self,
+                                                  self.outer_graph.get_name_scope())
 
 
 class WhileCondFuncGraph(func_graph.FuncGraph):
-  """FuncGraph for the condition of tf.while_loop().
+    """FuncGraph for the condition of tf.while_loop().
 
-  This is used to distinguish while conditions from other functions.
-  """
+    This is used to distinguish while conditions from other functions.
+    """
 
-  def __init__(self, *args, **kwargs):
-    super(WhileCondFuncGraph, self).__init__(*args, **kwargs)
-    func_graph.override_func_graph_name_scope(self,
-                                              self.outer_graph.get_name_scope())
+    def __init__(self, *args, **kwargs):
+        super(WhileCondFuncGraph, self).__init__(*args, **kwargs)
+        func_graph.override_func_graph_name_scope(self,
+                                                  self.outer_graph.get_name_scope())
 
 
 class WhileBodyFuncGraph(func_graph.FuncGraph):
-  """FuncGraph for the body of tf.while_loop().
+    """FuncGraph for the body of tf.while_loop().
 
-  This is used to distinguish while bodies from other functions.
-  """
+    This is used to distinguish while bodies from other functions.
+    """
 
-  def __init__(self, *args, **kwargs):
-    super(WhileBodyFuncGraph, self).__init__(*args, **kwargs)
-    func_graph.override_func_graph_name_scope(self,
-                                              self.outer_graph.get_name_scope())
+    def __init__(self, *args, **kwargs):
+        super(WhileBodyFuncGraph, self).__init__(*args, **kwargs)
+        func_graph.override_func_graph_name_scope(self,
+                                                  self.outer_graph.get_name_scope())
