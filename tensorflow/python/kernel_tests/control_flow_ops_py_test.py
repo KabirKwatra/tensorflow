@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 # pylint: disable=g-long-lambda
 """Tests for tensorflow.ops.control_flow_ops."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -26,10 +24,11 @@ import re
 import sys
 import time
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 from six.moves import xrange  # pylint: disable=redefined-builtin
 
+import tensorflow.python.ops.tensor_array_grad
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python import tf2
 from tensorflow.python.client import device_lib
@@ -76,17 +75,14 @@ from tensorflow.python.ops import tensor_array_ops
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables
 from tensorflow.python.ops import while_v2  # pylint: disable=unused-import
-
-# pylint: disable=unused-import
 from tensorflow.python.ops.ragged import ragged_factory_ops
 from tensorflow.python.ops.ragged import ragged_tensor
-import tensorflow.python.ops.tensor_array_grad
-
-# pylint: enable=unused-import
 from tensorflow.python.platform import test
 from tensorflow.python.training import adam
 from tensorflow.python.training import gradient_descent
 from tensorflow.python.util import nest
+# pylint: disable=unused-import
+# pylint: enable=unused-import
 
 
 def check_consumers(graph):
