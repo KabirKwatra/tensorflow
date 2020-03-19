@@ -27,24 +27,25 @@ class ParameterizedCompressionUtilsTest
       public ::testing::WithParamInterface<std::vector<Tensor>> {};
 
 TEST_P(ParameterizedCompressionUtilsTest, RoundTrip) {
-  std::vector<Tensor> element = GetParam();
-  CompressedElement compressed;
-  TF_ASSERT_OK(Compress(element, &compressed));
-  std::vector<Tensor> round_trip_element;
-  TF_ASSERT_OK(Uncompress(compressed, &round_trip_element));
-  TF_EXPECT_OK(
-      ExpectEqual(element, round_trip_element, /*compare_order=*/true));
+    std::vector<Tensor> element = GetParam();
+    CompressedElement compressed;
+    TF_ASSERT_OK(Compress(element, &compressed));
+    std::vector<Tensor> round_trip_element;
+    TF_ASSERT_OK(Uncompress(compressed, &round_trip_element));
+    TF_EXPECT_OK(
+        ExpectEqual(element, round_trip_element, /*compare_order=*/true));
 }
 
 std::vector<std::vector<Tensor>> TestCases() {
-  return {
-      CreateTensors<int64>(TensorShape{1}, {{1}}),             // int64
-      CreateTensors<int64>(TensorShape{1}, {{1}, {2}}),        // multiple int64
-      CreateTensors<tstring>(TensorShape{1}, {{"a"}, {"b"}}),  // tstring
-      {CreateTensor<tstring>(TensorShape{1}, {"a"}),
-       CreateTensor<int64>(TensorShape{1}, {1})},  // mixed tstring/int64
-      {},                                          // empty
-  };
+    return {
+        CreateTensors<int64>(TensorShape{1}, {{1}}),             // int64
+        CreateTensors<int64>(TensorShape{1}, {{1}, {2}}),        // multiple int64
+        CreateTensors<tstring>(TensorShape{1}, {{"a"}, {"b"}}),  // tstring
+        {   CreateTensor<tstring>(TensorShape{1}, {"a"}),
+            CreateTensor<int64>(TensorShape{1}, {1})
+        },  // mixed tstring/int64
+        {},                                          // empty
+    };
 }
 
 INSTANTIATE_TEST_SUITE_P(Instantiation, ParameterizedCompressionUtilsTest,
