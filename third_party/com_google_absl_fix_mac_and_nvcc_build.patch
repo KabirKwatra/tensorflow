@@ -31,7 +31,7 @@
      return ABSL_ASSERT(i < size()), ptr_[i];
 +#endif
    }
- 
+
    // string_view::at()
 @@ -292,25 +299,46 @@
    // and an exception of type `std::out_of_range` will be thrown on invalid
@@ -50,7 +50,7 @@
                    ptr_[i]);
 +#endif
    }
- 
+
    // string_view::front()
    //
    // Returns the first element of a `string_view`.
@@ -64,7 +64,7 @@
      return ABSL_ASSERT(!empty()), ptr_[0];
 +#endif
    }
- 
+
    // string_view::back()
    //
    // Returns the last element of a `string_view`.
@@ -78,11 +78,11 @@
      return ABSL_ASSERT(!empty()), ptr_[size() - 1];
 +#endif
    }
- 
+
    // string_view::data()
 @@ -519,7 +547,14 @@
        (std::numeric_limits<difference_type>::max)();
- 
+
    static constexpr size_type CheckLengthInternal(size_type len) {
 +#if defined(__NVCC__) && (__CUDACC_VER_MAJOR__ < 10 || (__CUDACC_VER_MAJOR__ == 10 && __CUDACC_VER_MINOR__ < 2))
 +    // An NVCC bug treats the original return expression as a non-constant,
@@ -93,14 +93,14 @@
      return (void)ABSL_ASSERT(len <= kMaxSize), len;
 +#endif
    }
- 
+
    static constexpr size_type StrlenInternal(const char* str) {
 --- ./absl/container/internal/compressed_tuple.h	2020-03-04 12:57:37.000000000 -0800
 +++ ./absl/container/internal/compressed_tuple.h.fixed	2019-06-20 11:54:01.000000000 -0700
 @@ -32,7 +32,6 @@ Revert to commit 43ef2148c0936ebf7cb4be6b19927a9d9d145b8f as commit e9324d926a9189e222741fce6e676f0944661a72 includes a change not compatible with CUDA on Windows.
  #ifndef ABSL_CONTAINER_INTERNAL_COMPRESSED_TUPLE_H_
  #define ABSL_CONTAINER_INTERNAL_COMPRESSED_TUPLE_H_
- 
+
 -#include <initializer_list>
  #include <tuple>
  #include <type_traits>
@@ -108,7 +108,7 @@
 @@ -77,110 +76,61 @@
  #endif
  }
- 
+
 -// We can't use EBCO on other CompressedTuples because that would mean that we
 -// derive from multiple Storage<> instantiations with the same I parameter,
 -// and potentially from multiple identical Storage<> instantiations.  So anytime
@@ -122,7 +122,7 @@
 -         !std::is_base_of<uses_inheritance, T>::value;
 +  return std::is_class<T>::value && std::is_empty<T>::value && !IsFinal<T>();
  }
- 
+
  // The storage class provides two specializations:
  //  - For empty classes, it stores T as a base class.
  //  - For everything else, it stores T as a member.
@@ -147,7 +147,7 @@
    constexpr const T&& get() const&& { return absl::move(*this).value; }
    T&& get() && { return std::move(*this).value; }
  };
- 
+
 -template <typename T, size_t I>
 -struct ABSL_INTERNAL_COMPRESSED_TUPLE_DECLSPEC Storage<T, I, true> : T {
 +template <typename D, size_t I>
@@ -166,11 +166,11 @@
    constexpr const T&& get() const&& { return absl::move(*this); }
    T&& get() && { return std::move(*this); }
  };
- 
+
 -template <typename D, typename I, bool ShouldAnyUseBase>
 +template <typename D, typename I>
  struct ABSL_INTERNAL_COMPRESSED_TUPLE_DECLSPEC CompressedTupleImpl;
- 
+
 -template <typename... Ts, size_t... I, bool ShouldAnyUseBase>
 -struct ABSL_INTERNAL_COMPRESSED_TUPLE_DECLSPEC CompressedTupleImpl<
 -    CompressedTuple<Ts...>, absl::index_sequence<I...>, ShouldAnyUseBase>
@@ -205,7 +205,7 @@
 +  explicit constexpr CompressedTupleImpl(Ts&&... args)
 +      : Storage<CompressedTuple<Ts...>, I>(absl::forward<Ts>(args))... {}
  };
- 
+
 -std::false_type Or(std::initializer_list<std::false_type>);
 -std::true_type Or(std::initializer_list<bool>);
 -
@@ -223,7 +223,7 @@
 -      std::is_constructible<T, V&&>>::type;
 -
  }  // namespace internal_compressed_tuple
- 
+
  // Helper class to perform the Empty Base Class Optimization.
  // Ts can contain classes and non-classes, empty or not. For the ones that
  // are empty classes, we perform the CompressedTuple. If all types in Ts are
@@ -244,7 +244,7 @@
   private:
    template <int I>
    using ElemT = internal_compressed_tuple::ElemT<CompressedTuple, I>;
- 
+
 -  template <int I>
 -  using StorageT = internal_compressed_tuple::Storage<ElemT<I>, I>;
 -
@@ -274,26 +274,26 @@
 -                                             absl::forward<Vs>(base)...) {}
 +  explicit constexpr CompressedTuple(Ts... base)
 +      : CompressedTuple::CompressedTupleImpl(absl::forward<Ts>(base)...) {}
- 
+
    template <int I>
    ElemT<I>& get() & {
 -    return internal_compressed_tuple::Storage<ElemT<I>, I>::get();
 +    return internal_compressed_tuple::Storage<CompressedTuple, I>::get();
    }
- 
+
    template <int I>
    constexpr const ElemT<I>& get() const& {
 -    return StorageT<I>::get();
 +    return internal_compressed_tuple::Storage<CompressedTuple, I>::get();
    }
- 
+
    template <int I>
    ElemT<I>&& get() && {
 -    return std::move(*this).StorageT<I>::get();
 +    return std::move(*this)
 +        .internal_compressed_tuple::template Storage<CompressedTuple, I>::get();
    }
- 
+
    template <int I>
    constexpr const ElemT<I>&& get() const&& {
 -    return absl::move(*this).StorageT<I>::get();
@@ -301,4 +301,3 @@
 +        .internal_compressed_tuple::template Storage<CompressedTuple, I>::get();
    }
  };
- 
