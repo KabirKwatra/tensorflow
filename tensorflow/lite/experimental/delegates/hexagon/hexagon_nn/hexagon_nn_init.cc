@@ -30,26 +30,22 @@ extern "C" {
 static const int kHexagonNNVersion = 136193;
 #pragma weak remote_handle_control  // Declare it as a weak symbol
 void hexagon_nn_global_init() {
-    rpcmem_init();
-    // Non-domains QoS invocation
-    struct remote_rpc_control_latency data;
-    data.enable = 1;
-    if (remote_handle_control) {  // Check if API is available before invoking
-        remote_handle_control(DSPRPC_CONTROL_LATENCY, (void*)&data, sizeof(data));
-    }
+  rpcmem_init();
+  // Non-domains QoS invocation
+  struct remote_rpc_control_latency data;
+  data.enable = 1;
+  if (remote_handle_control) {  // Check if API is available before invoking
+    remote_handle_control(DSPRPC_CONTROL_LATENCY, (void*)&data, sizeof(data));
+  }
 }
 
-void hexagon_nn_global_teardown() {
-    rpcmem_deinit();
-}
+void hexagon_nn_global_teardown() { rpcmem_deinit(); }
 
 bool hexagon_nn_is_device_supported() {
-    return tflite::delegates::getsoc_model().mode != UNSPECIFIED_MODE;
+  return tflite::delegates::getsoc_model().mode != UNSPECIFIED_MODE;
 }
 
-int hexagon_nn_hexagon_interface_version() {
-    return kHexagonNNVersion;
-}
+int hexagon_nn_hexagon_interface_version() { return kHexagonNNVersion; }
 
 #ifdef __cplusplus
 }
