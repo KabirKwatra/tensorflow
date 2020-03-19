@@ -20,7 +20,9 @@ from __future__ import print_function
 
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python.client import session as session_lib
-from tensorflow.python.distribute.cluster_resolver.tpu_cluster_resolver import TPUClusterResolver
+from tensorflow.python.distribute.cluster_resolver.tpu_cluster_resolver import (
+    TPUClusterResolver,
+)
 from tensorflow.python.eager import context
 from tensorflow.python.eager import function
 from tensorflow.python.framework import device
@@ -55,21 +57,21 @@ def initialize_tpu_system(cluster_resolver=None):
         # If no cluster resolver is specified, and running eagerly, execute the init
         # ops in the current device scope.
         if context.executing_eagerly():
-            curr_device = device.DeviceSpec.from_string(
-                context.context().device_name)
+            curr_device = device.DeviceSpec.from_string(context.context().device_name)
             if curr_device.job is not None:
                 job = "{}/replica:0/task:0".format(curr_device.job)
 
         cluster_resolver = TPUClusterResolver("")
     assert isinstance(cluster_resolver, TPUClusterResolver)
 
-    tpu_name = compat.as_text(
-        cluster_resolver._tpu)  # pylint: disable=protected-access
+    tpu_name = compat.as_text(cluster_resolver._tpu)  # pylint: disable=protected-access
     if tpu_name in _INITIALIZED_TPU_SYSTEMS:
         logging.warning(
             "TPU system %s has already been initialized. "
             "Reinitializing the TPU can cause previously created "
-            "variables on TPU to be lost.", tpu_name)
+            "variables on TPU to be lost.",
+            tpu_name,
+        )
 
     logging.info("Initializing the TPU system: %s", tpu_name)
 
@@ -90,12 +92,15 @@ def initialize_tpu_system(cluster_resolver=None):
             # in infeed. In TF2, we don't need to do this because infeed is no longer
             # used, so user can recover from TPU compilation failures more smoothly.
             return tpu.initialize_system(
-                job=job, compilation_failure_closes_chips=False)
+                job=job, compilation_failure_closes_chips=False
+            )
 
         # The TPU_SYSTEM device must match the device used in tpu.initialize_system
         # exactly, otherwise you can get errors if there are multiple TPU_SYSTEM
         # devices available.
-        with ops.device(tpu._tpu_system_device_name(job)):  # pylint: disable=protected-access
+        with ops.device(
+            tpu._tpu_system_device_name(job)
+        ):  # pylint: disable=protected-access
             output = _tpu_init_fn()
 
         # Clear out the eager context caches since the memory is invalid now.
@@ -119,8 +124,9 @@ def initialize_tpu_system(cluster_resolver=None):
             with session_lib.Session(config=session_config, target=master) as sess:
                 serialized_topology = sess.run(tpu.initialize_system())
     else:
-        raise RuntimeError("initialize_tpu_system is not supported within "
-                           "tf.functions.")
+        raise RuntimeError(
+            "initialize_tpu_system is not supported within " "tf.functions."
+        )
 
     logging.info("Finished initializing TPU system.")
     tpu_topology = topology.Topology(serialized=serialized_topology)
@@ -150,19 +156,19 @@ def shutdown_tpu_system(cluster_resolver=None):
         # If no cluster resolver is specified, and running eagerly, execute the init
         # ops in the current device scope.
         if context.executing_eagerly():
-            curr_device = device.DeviceSpec.from_string(
-                context.context().device_name)
+            curr_device = device.DeviceSpec.from_string(context.context().device_name)
             if curr_device.job is not None:
                 job = "{}/replica:0/task:0".format(curr_device.job)
 
         cluster_resolver = TPUClusterResolver("")
     assert isinstance(cluster_resolver, TPUClusterResolver)
 
-    tpu_name = compat.as_text(
-        cluster_resolver._tpu)  # pylint: disable=protected-access
+    tpu_name = compat.as_text(cluster_resolver._tpu)  # pylint: disable=protected-access
     if tpu_name not in _INITIALIZED_TPU_SYSTEMS:
-        logging.warning("You are shutting down a TPU system %s that has not been "
-                        "initialized." % tpu_name)
+        logging.warning(
+            "You are shutting down a TPU system %s that has not been "
+            "initialized." % tpu_name
+        )
 
     logging.info("Shutting down the TPU system: %s", tpu_name)
 
@@ -184,7 +190,9 @@ def shutdown_tpu_system(cluster_resolver=None):
         # The TPU_SYSTEM device must match the device used in tpu.shutdown_system
         # exactly, otherwise you can get errors if there are multiple TPU_SYSTEM
         # devices available.
-        with ops.device(tpu._tpu_system_device_name(job)):  # pylint: disable=protected-access
+        with ops.device(
+            tpu._tpu_system_device_name(job)
+        ):  # pylint: disable=protected-access
             _tpu_shutdown_fn()
 
         # Clear out the eager context caches since the memory is invalid now.
@@ -202,8 +210,9 @@ def shutdown_tpu_system(cluster_resolver=None):
             with session_lib.Session(config=session_config, target=master) as sess:
                 sess.run(tpu.shutdown_system())
     else:
-        raise RuntimeError("initialize_tpu_system is not supported within "
-                           "tf.functions.")
+        raise RuntimeError(
+            "initialize_tpu_system is not supported within " "tf.functions."
+        )
 
     logging.info("Finished shutting down TPU system.")
     if tpu_name in _INITIALIZED_TPU_SYSTEMS:

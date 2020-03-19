@@ -37,7 +37,9 @@ from tensorflow.python.distribute import distributed_file_utils
 from tensorflow.python.distribute import multi_worker_util
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.distribute import multi_worker_training_state as training_state
+from tensorflow.python.keras.distribute import (
+    multi_worker_training_state as training_state,
+)
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.keras.utils import version_utils
@@ -62,16 +64,18 @@ except ImportError:
     requests = None
 
 
-def configure_callbacks(callbacks,
-                        model,
-                        do_validation=False,
-                        batch_size=None,
-                        epochs=None,
-                        steps_per_epoch=None,
-                        samples=None,
-                        verbose=1,
-                        count_mode='steps',
-                        mode=ModeKeys.TRAIN):
+def configure_callbacks(
+    callbacks,
+    model,
+    do_validation=False,
+    batch_size=None,
+    epochs=None,
+    steps_per_epoch=None,
+    samples=None,
+    verbose=1,
+    count_mode="steps",
+    mode=ModeKeys.TRAIN,
+):
     """Configures callbacks for use in various training loops.
 
     Arguments:
@@ -118,21 +122,24 @@ def configure_callbacks(callbacks,
         steps_per_epoch=steps_per_epoch,
         samples=samples,
         verbose=verbose,
-        mode=mode)
+        mode=mode,
+    )
 
     callback_list.model.stop_training = False
     return callback_list
 
 
-def set_callback_parameters(callback_list,
-                            model,
-                            do_validation=False,
-                            batch_size=None,
-                            epochs=None,
-                            steps_per_epoch=None,
-                            samples=None,
-                            verbose=1,
-                            mode=ModeKeys.TRAIN):
+def set_callback_parameters(
+    callback_list,
+    model,
+    do_validation=False,
+    batch_size=None,
+    epochs=None,
+    steps_per_epoch=None,
+    samples=None,
+    verbose=1,
+    mode=ModeKeys.TRAIN,
+):
     """Sets callback parameters.
 
     Arguments:
@@ -159,45 +166,47 @@ def set_callback_parameters(callback_list,
     if mode != ModeKeys.PREDICT:
         callback_metrics = copy.copy(metric_names)
         if do_validation:
-            callback_metrics += ['val_' + n for n in metric_names]
+            callback_metrics += ["val_" + n for n in metric_names]
     callback_params = {
-        'batch_size': batch_size,
-        'epochs': epochs,
-        'steps': steps_per_epoch,
-        'samples': samples,
-        'verbose': verbose,
-        'do_validation': do_validation,
-        'metrics': callback_metrics,
+        "batch_size": batch_size,
+        "epochs": epochs,
+        "steps": steps_per_epoch,
+        "samples": samples,
+        "verbose": verbose,
+        "do_validation": do_validation,
+        "metrics": callback_metrics,
     }
     callback_list.set_params(callback_params)
 
 
 def _is_generator_like(data):
     """Checks if data is a generator, Sequence, or Iterator."""
-    return (hasattr(data, 'next') or hasattr(data, '__next__') or isinstance(
-        data, (Sequence, iterator_ops.Iterator, iterator_ops.OwnedIterator)))
+    return (
+        hasattr(data, "next")
+        or hasattr(data, "__next__")
+        or isinstance(
+            data, (Sequence, iterator_ops.Iterator, iterator_ops.OwnedIterator)
+        )
+    )
 
 
-def make_logs(model, logs, outputs, mode, prefix=''):
+def make_logs(model, logs, outputs, mode, prefix=""):
     """Computes logs for sending to `on_batch_end` methods."""
     metric_names = model.metrics_names
     if mode in {ModeKeys.TRAIN, ModeKeys.TEST} and metric_names:
         for label, output in zip(metric_names, outputs):
             logs[prefix + label] = output
     else:
-        logs['outputs'] = outputs
+        logs["outputs"] = outputs
     return logs
 
 
 class CallbackList(object):
     """Container abstracting a list of callbacks."""
 
-    def __init__(self,
-                 callbacks=None,
-                 add_history=False,
-                 add_progbar=False,
-                 model=None,
-                 **params):
+    def __init__(
+        self, callbacks=None, add_history=False, add_progbar=False, model=None, **params
+    ):
         """Creates a container for `Callbacks`.
 
         Arguments:
@@ -226,11 +235,14 @@ class CallbackList(object):
         # will cause async eager to block on each batch.
         # pylint: disable=protected-access
         self._should_call_train_batch_hooks = any(
-            cb._implements_train_batch_hooks() for cb in self.callbacks)
+            cb._implements_train_batch_hooks() for cb in self.callbacks
+        )
         self._should_call_test_batch_hooks = any(
-            cb._implements_test_batch_hooks() for cb in self.callbacks)
+            cb._implements_test_batch_hooks() for cb in self.callbacks
+        )
         self._should_call_predict_batch_hooks = any(
-            cb._implements_predict_batch_hooks() for cb in self.callbacks)
+            cb._implements_predict_batch_hooks() for cb in self.callbacks
+        )
         # pylint: enable=protected-access
 
     def _add_default_callbacks(self, add_history, add_progbar):
@@ -245,7 +257,7 @@ class CallbackList(object):
                 self._history = cb
 
         if self._progbar is None and add_progbar:
-            self._progbar = ProgbarLogger(count_mode='steps')
+            self._progbar = ProgbarLogger(count_mode="steps")
             self.callbacks.append(self._progbar)
 
         if self._history is None and add_history:
@@ -253,9 +265,10 @@ class CallbackList(object):
             self.callbacks.append(self._history)
 
     def _reset_batch_timing(self):
-        self._delta_t_batch = 0.
+        self._delta_t_batch = 0.0
         self._delta_ts = collections.defaultdict(
-            lambda: collections.deque([], maxlen=self._queue_length))
+            lambda: collections.deque([], maxlen=self._queue_length)
+        )
 
     def _process_logs(self, logs):
         """Turns tensors into numpy arrays or Python scalars."""
@@ -282,10 +295,10 @@ class CallbackList(object):
         """Helper function for all batch_{begin | end} methods."""
         if not self.callbacks:
             return
-        hook_name = 'on_{mode}_batch_{hook}'.format(mode=mode, hook=hook)
-        if hook == 'begin':
+        hook_name = "on_{mode}_batch_{hook}".format(mode=mode, hook=hook)
+        if hook == "begin":
             self._t_enter_batch = time.time()
-        if hook == 'end':
+        if hook == "end":
             # Batch is ending, calculate batch time.
             self._delta_t_batch = time.time() - self._t_enter_batch
 
@@ -297,12 +310,17 @@ class CallbackList(object):
         self._delta_ts[hook_name].append(time.time() - t_before_callbacks)
 
         delta_t_median = np.median(self._delta_ts[hook_name])
-        if (self._delta_t_batch > 0. and
-                delta_t_median > 0.95 * self._delta_t_batch and delta_t_median > 0.1):
+        if (
+            self._delta_t_batch > 0.0
+            and delta_t_median > 0.95 * self._delta_t_batch
+            and delta_t_median > 0.1
+        ):
             logging.warning(
-                'Method (%s) is slow compared '
-                'to the batch update (%f). Check your callbacks.', hook_name,
-                delta_t_median)
+                "Method (%s) is slow compared "
+                "to the batch update (%f). Check your callbacks.",
+                hook_name,
+                delta_t_median,
+            )
 
     def _call_begin_hook(self, mode):
         """Helper function for on_{train|test|predict}_begin methods."""
@@ -325,12 +343,12 @@ class CallbackList(object):
     def on_batch_begin(self, batch, logs=None):
         if self._should_call_train_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.TRAIN, 'begin', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.TRAIN, "begin", batch, logs=logs)
 
     def on_batch_end(self, batch, logs=None):
         if self._should_call_train_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.TRAIN, 'end', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.TRAIN, "end", batch, logs=logs)
 
     def on_epoch_begin(self, epoch, logs=None):
         """Calls the `on_epoch_begin` methods of its callbacks.
@@ -374,7 +392,7 @@ class CallbackList(object):
         # when verbose != 1
         if self._should_call_train_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.TRAIN, 'begin', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.TRAIN, "begin", batch, logs=logs)
 
     def on_train_batch_end(self, batch, logs=None):
         """Calls the `on_train_batch_end` methods of its callbacks.
@@ -385,7 +403,7 @@ class CallbackList(object):
         """
         if self._should_call_train_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.TRAIN, 'end', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.TRAIN, "end", batch, logs=logs)
 
     def on_test_batch_begin(self, batch, logs=None):
         """Calls the `on_test_batch_begin` methods of its callbacks.
@@ -397,7 +415,7 @@ class CallbackList(object):
         """
         if self._should_call_test_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.TEST, 'begin', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.TEST, "begin", batch, logs=logs)
 
     def on_test_batch_end(self, batch, logs=None):
         """Calls the `on_test_batch_end` methods of its callbacks.
@@ -408,7 +426,7 @@ class CallbackList(object):
         """
         if self._should_call_test_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.TEST, 'end', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.TEST, "end", batch, logs=logs)
 
     def on_predict_batch_begin(self, batch, logs=None):
         """Calls the `on_predict_batch_begin` methods of its callbacks.
@@ -420,7 +438,7 @@ class CallbackList(object):
         """
         if self._should_call_predict_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.PREDICT, 'begin', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.PREDICT, "begin", batch, logs=logs)
 
     def on_predict_batch_end(self, batch, logs=None):
         """Calls the `on_predict_batch_end` methods of its callbacks.
@@ -431,7 +449,7 @@ class CallbackList(object):
         """
         if self._should_call_predict_batch_hooks:
             logs = self._process_logs(logs)
-            self._call_batch_hook(ModeKeys.PREDICT, 'end', batch, logs=logs)
+            self._call_batch_hook(ModeKeys.PREDICT, "end", batch, logs=logs)
 
     def on_train_begin(self, logs=None):
         """Calls the `on_train_begin` methods of its callbacks.
@@ -503,7 +521,7 @@ class CallbackList(object):
         return iter(self.callbacks)
 
 
-@keras_export('keras.callbacks.Callback')
+@keras_export("keras.callbacks.Callback")
 class Callback(object):
     """Abstract base class used to build new callbacks.
 
@@ -736,23 +754,27 @@ class Callback(object):
 
     def _implements_train_batch_hooks(self):
         """Determines if this Callback should be called for each train batch."""
-        return (not generic_utils.is_default(self.on_batch_begin) or
-                not generic_utils.is_default(self.on_batch_end) or
-                not generic_utils.is_default(self.on_train_batch_begin) or
-                not generic_utils.is_default(self.on_train_batch_end))
+        return (
+            not generic_utils.is_default(self.on_batch_begin)
+            or not generic_utils.is_default(self.on_batch_end)
+            or not generic_utils.is_default(self.on_train_batch_begin)
+            or not generic_utils.is_default(self.on_train_batch_end)
+        )
 
     def _implements_test_batch_hooks(self):
         """Determines if this Callback should be called for each test batch."""
-        return (not generic_utils.is_default(self.on_test_batch_begin) or
-                not generic_utils.is_default(self.on_test_batch_end))
+        return not generic_utils.is_default(
+            self.on_test_batch_begin
+        ) or not generic_utils.is_default(self.on_test_batch_end)
 
     def _implements_predict_batch_hooks(self):
         """Determines if this Callback should be called for each predict batch."""
-        return (not generic_utils.is_default(self.on_predict_batch_begin) or
-                not generic_utils.is_default(self.on_predict_batch_end))
+        return not generic_utils.is_default(
+            self.on_predict_batch_begin
+        ) or not generic_utils.is_default(self.on_predict_batch_end)
 
 
-@keras_export('keras.callbacks.BaseLogger')
+@keras_export("keras.callbacks.BaseLogger")
 class BaseLogger(Callback):
     """Callback that accumulates epoch averages of metrics.
 
@@ -775,10 +797,10 @@ class BaseLogger(Callback):
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
-        batch_size = logs.get('size', 0)
+        batch_size = logs.get("size", 0)
         # In case of distribution strategy we can potentially run multiple steps
         # at the same time, we should account for that in the `seen` calculation.
-        num_steps = logs.get('num_steps', 1)
+        num_steps = logs.get("num_steps", 1)
         self.seen += batch_size * num_steps
 
         for k, v in logs.items():
@@ -792,7 +814,7 @@ class BaseLogger(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if logs is not None:
-            for k in self.params['metrics']:
+            for k in self.params["metrics"]:
                 if k in self.totals:
                     # Make value available to next callbacks.
                     if k in self.stateful_metrics:
@@ -801,21 +823,21 @@ class BaseLogger(Callback):
                         logs[k] = self.totals[k] / self.seen
 
 
-@keras_export('keras.callbacks.TerminateOnNaN')
+@keras_export("keras.callbacks.TerminateOnNaN")
 class TerminateOnNaN(Callback):
     """Callback that terminates training when a NaN loss is encountered.
     """
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
-        loss = logs.get('loss')
+        loss = logs.get("loss")
         if loss is not None:
             if np.isnan(loss) or np.isinf(loss):
-                print('Batch %d: Invalid loss, terminating training' % (batch))
+                print("Batch %d: Invalid loss, terminating training" % (batch))
                 self.model.stop_training = True
 
 
-@keras_export('keras.callbacks.ProgbarLogger')
+@keras_export("keras.callbacks.ProgbarLogger")
 class ProgbarLogger(Callback):
     """Callback that prints metrics to stdout.
 
@@ -833,17 +855,16 @@ class ProgbarLogger(Callback):
         ValueError: In case of invalid `count_mode`.
     """
 
-    def __init__(self, count_mode='samples', stateful_metrics=None):
+    def __init__(self, count_mode="samples", stateful_metrics=None):
         super(ProgbarLogger, self).__init__()
-        if count_mode == 'samples':
+        if count_mode == "samples":
             self.use_steps = False
-        elif count_mode == 'steps':
+        elif count_mode == "steps":
             self.use_steps = True
         else:
-            raise ValueError('Unknown `count_mode`: ' + str(count_mode))
+            raise ValueError("Unknown `count_mode`: " + str(count_mode))
         # Defaults to all Model's metrics except for loss.
-        self.stateful_metrics = set(
-            stateful_metrics) if stateful_metrics else None
+        self.stateful_metrics = set(stateful_metrics) if stateful_metrics else None
 
         self.seen = 0
         self.progbar = None
@@ -854,12 +875,12 @@ class ProgbarLogger(Callback):
         self._called_in_fit = False
 
     def set_params(self, params):
-        self.verbose = params['verbose']
-        self.epochs = params['epochs']
-        if self.use_steps and 'steps' in params:
-            self.target = params['steps']
-        elif not self.use_steps and 'samples' in params:
-            self.target = params['samples']
+        self.verbose = params["verbose"]
+        self.epochs = params["epochs"]
+        if self.use_steps and "steps" in params:
+            self.target = params["steps"]
+        elif not self.use_steps and "samples" in params:
+            self.target = params["samples"]
         else:
             # Will be inferred at the end of the first epoch.
             self.target = None
@@ -878,7 +899,7 @@ class ProgbarLogger(Callback):
     def on_epoch_begin(self, epoch, logs=None):
         self._reset_progbar()
         if self.verbose and self.epochs > 1:
-            print('Epoch %d/%d' % (epoch + 1, self.epochs))
+            print("Epoch %d/%d" % (epoch + 1, self.epochs))
 
     def on_train_batch_end(self, batch, logs=None):
         self._batch_update_progbar(logs)
@@ -908,8 +929,7 @@ class ProgbarLogger(Callback):
         """Updates the progbar."""
         if self.stateful_metrics is None:
             if self.model:
-                self.stateful_metrics = (
-                    set(m.name for m in self.model.metrics))
+                self.stateful_metrics = set(m.name for m in self.model.metrics)
             else:
                 self.stateful_metrics = set()
 
@@ -918,12 +938,13 @@ class ProgbarLogger(Callback):
                 target=self.target,
                 verbose=self.verbose,
                 stateful_metrics=self.stateful_metrics,
-                unit_name='step' if self.use_steps else 'sample')
+                unit_name="step" if self.use_steps else "sample",
+            )
 
         logs = copy.copy(logs) if logs else {}
-        batch_size = logs.pop('size', 0)
-        num_steps = logs.pop('num_steps', 1)  # DistStrat can run >1 steps.
-        logs.pop('batch', None)
+        batch_size = logs.pop("size", 0)
+        num_steps = logs.pop("num_steps", 1)  # DistStrat can run >1 steps.
+        logs.pop("batch", None)
         add_seen = num_steps if self.use_steps else num_steps * batch_size
         self.seen += add_seen
         self.progbar.update(self.seen, list(logs.items()), finalize=False)
@@ -936,7 +957,7 @@ class ProgbarLogger(Callback):
         self.progbar.update(self.seen, list(logs.items()), finalize=True)
 
 
-@keras_export('keras.callbacks.History')
+@keras_export("keras.callbacks.History")
 class History(Callback):
     """Callback that records events into a `History` object.
 
@@ -963,7 +984,7 @@ class History(Callback):
         self.model.history = self
 
 
-@keras_export('keras.callbacks.ModelCheckpoint')
+@keras_export("keras.callbacks.ModelCheckpoint")
 class ModelCheckpoint(Callback):
     """Callback to save the Keras model or model weights at some frequency.
 
@@ -1035,15 +1056,17 @@ class ModelCheckpoint(Callback):
           is `period`.
     """
 
-    def __init__(self,
-                 filepath,
-                 monitor='val_loss',
-                 verbose=0,
-                 save_best_only=False,
-                 save_weights_only=False,
-                 mode='auto',
-                 save_freq='epoch',
-                 **kwargs):
+    def __init__(
+        self,
+        filepath,
+        monitor="val_loss",
+        verbose=0,
+        save_best_only=False,
+        save_weights_only=False,
+        mode="auto",
+        save_freq="epoch",
+        **kwargs
+    ):
         super(ModelCheckpoint, self).__init__()
         self.monitor = monitor
         self.verbose = verbose
@@ -1057,45 +1080,49 @@ class ModelCheckpoint(Callback):
         # Deprecated field `load_weights_on_restart` is for loading the checkpoint
         # file from `filepath` at the start of `model.fit()`
         # TODO(rchao): Remove the arg during next breaking release.
-        if 'load_weights_on_restart' in kwargs:
-            self.load_weights_on_restart = kwargs['load_weights_on_restart']
-            logging.warning('`load_weights_on_restart` argument is deprecated. '
-                            'Please use `model.load_weights()` for loading weights '
-                            'before the start of `model.fit()`.')
+        if "load_weights_on_restart" in kwargs:
+            self.load_weights_on_restart = kwargs["load_weights_on_restart"]
+            logging.warning(
+                "`load_weights_on_restart` argument is deprecated. "
+                "Please use `model.load_weights()` for loading weights "
+                "before the start of `model.fit()`."
+            )
         else:
             self.load_weights_on_restart = False
 
         # Deprecated field `period` is for the number of epochs between which
         # the model is saved.
-        if 'period' in kwargs:
-            self.period = kwargs['period']
-            logging.warning('`period` argument is deprecated. Please use `save_freq` '
-                            'to specify the frequency in number of batches seen.')
+        if "period" in kwargs:
+            self.period = kwargs["period"]
+            logging.warning(
+                "`period` argument is deprecated. Please use `save_freq` "
+                "to specify the frequency in number of batches seen."
+            )
         else:
             self.period = 1
 
-        if mode not in ['auto', 'min', 'max']:
-            logging.warning('ModelCheckpoint mode %s is unknown, '
-                            'fallback to auto mode.', mode)
-            mode = 'auto'
+        if mode not in ["auto", "min", "max"]:
+            logging.warning(
+                "ModelCheckpoint mode %s is unknown, " "fallback to auto mode.", mode
+            )
+            mode = "auto"
 
-        if mode == 'min':
+        if mode == "min":
             self.monitor_op = np.less
             self.best = np.Inf
-        elif mode == 'max':
+        elif mode == "max":
             self.monitor_op = np.greater
             self.best = -np.Inf
         else:
-            if 'acc' in self.monitor or self.monitor.startswith('fmeasure'):
+            if "acc" in self.monitor or self.monitor.startswith("fmeasure"):
                 self.monitor_op = np.greater
                 self.best = -np.Inf
             else:
                 self.monitor_op = np.less
                 self.best = np.Inf
 
-        if self.save_freq != 'epoch' and not isinstance(self.save_freq, int):
-            raise ValueError(
-                'Unrecognized save_freq: {}'.format(self.save_freq))
+        if self.save_freq != "epoch" and not isinstance(self.save_freq, int):
+            raise ValueError("Unrecognized save_freq: {}".format(self.save_freq))
 
         # Only the chief worker writes model checkpoints, but all workers
         # restore checkpoint at on_train_begin().
@@ -1104,9 +1131,12 @@ class ModelCheckpoint(Callback):
     def set_model(self, model):
         self.model = model
         # Use name matching rather than `isinstance` to avoid circular dependencies.
-        if (not self.save_weights_only and
-            not model._is_graph_network and  # pylint: disable=protected-access
-                model.__class__.__name__ != 'Sequential'):
+        if (
+            not self.save_weights_only
+            and not model._is_graph_network
+            and model.__class__.__name__  # pylint: disable=protected-access
+            != "Sequential"
+        ):
             self.save_weights_only = True
 
     def on_train_begin(self, logs=None):
@@ -1114,8 +1144,9 @@ class ModelCheckpoint(Callback):
         if self.model._in_multi_worker_mode():
             # MultiWorkerTrainingState is used to manage the training state needed
             # for preemption-recovery of a worker in multi-worker training.
-            self.model._training_state = (
-                training_state.MultiWorkerTrainingState(self.model, self.filepath))
+            self.model._training_state = training_state.MultiWorkerTrainingState(
+                self.model, self.filepath
+            )
             self._training_state = self.model._training_state
             if self._training_state.restore():
                 # If the training state needs to be and is successfully restored,
@@ -1126,27 +1157,34 @@ class ModelCheckpoint(Callback):
         # If this is not multi worker training, restoring is not needed, or
         # restoring failed, check if it should load weights on restart.
         if self.load_weights_on_restart:
-            if (not self.model._in_multi_worker_mode() or
-                    multi_worker_util.should_load_checkpoint()):
-                filepath_to_load = (
-                    self._get_most_recently_modified_file_matching_pattern(
-                        self.filepath))
-                if (filepath_to_load is not None and
-                        training_state.checkpoint_exists(filepath_to_load)):
+            if (
+                not self.model._in_multi_worker_mode()
+                or multi_worker_util.should_load_checkpoint()
+            ):
+                filepath_to_load = self._get_most_recently_modified_file_matching_pattern(
+                    self.filepath
+                )
+                if filepath_to_load is not None and training_state.checkpoint_exists(
+                    filepath_to_load
+                ):
                     try:
                         # `filepath` may contain placeholders such as `{epoch:02d}`, and
                         # thus it attempts to load the most recently modified file with file
                         # name matching the pattern.
                         self.model.load_weights(filepath_to_load)
                     except (IOError, ValueError) as e:
-                        raise ValueError('Error loading file from {}. Reason: {}'.format(
-                            filepath_to_load, e))
+                        raise ValueError(
+                            "Error loading file from {}. Reason: {}".format(
+                                filepath_to_load, e
+                            )
+                        )
 
     def on_train_end(self, logs=None):
         # pylint: disable=protected-access
         if self.model._in_multi_worker_mode():
             if self.model.stop_training or getattr(
-                    self.model, '_successful_loop_finish', False):
+                self.model, "_successful_loop_finish", False
+            ):
                 # In multi-worker training, on successful exit of training, delete the
                 # training state backup file that was saved for the purpose of worker
                 # recovery.
@@ -1170,7 +1208,7 @@ class ModelCheckpoint(Callback):
     def on_epoch_end(self, epoch, logs=None):
         self.epochs_since_last_save += 1
         # pylint: disable=protected-access
-        if self.save_freq == 'epoch':
+        if self.save_freq == "epoch":
             if self.model._in_multi_worker_mode():
                 # Exclude training state variables in user-requested checkpoint file.
                 with self._training_state.untrack_vars():
@@ -1192,8 +1230,10 @@ class ModelCheckpoint(Callback):
         """
         logs = logs or {}
 
-        if isinstance(self.save_freq,
-                      int) or self.epochs_since_last_save >= self.period:
+        if (
+            isinstance(self.save_freq, int)
+            or self.epochs_since_last_save >= self.period
+        ):
             self.epochs_since_last_save = 0
             filepath = self._get_file_path(epoch, logs)
 
@@ -1201,28 +1241,40 @@ class ModelCheckpoint(Callback):
                 if self.save_best_only:
                     current = logs.get(self.monitor)
                     if current is None:
-                        logging.warning('Can save best model only with %s available, '
-                                        'skipping.', self.monitor)
+                        logging.warning(
+                            "Can save best model only with %s available, " "skipping.",
+                            self.monitor,
+                        )
                     else:
                         if self.monitor_op(current, self.best):
                             if self.verbose > 0:
-                                print('\nEpoch %05d: %s improved from %0.5f to %0.5f,'
-                                      ' saving model to %s' % (epoch + 1, self.monitor,
-                                                               self.best, current, filepath))
+                                print(
+                                    "\nEpoch %05d: %s improved from %0.5f to %0.5f,"
+                                    " saving model to %s"
+                                    % (
+                                        epoch + 1,
+                                        self.monitor,
+                                        self.best,
+                                        current,
+                                        filepath,
+                                    )
+                                )
                             self.best = current
                             if self.save_weights_only:
-                                self.model.save_weights(
-                                    filepath, overwrite=True)
+                                self.model.save_weights(filepath, overwrite=True)
                             else:
                                 self.model.save(filepath, overwrite=True)
                         else:
                             if self.verbose > 0:
-                                print('\nEpoch %05d: %s did not improve from %0.5f' %
-                                      (epoch + 1, self.monitor, self.best))
+                                print(
+                                    "\nEpoch %05d: %s did not improve from %0.5f"
+                                    % (epoch + 1, self.monitor, self.best)
+                                )
                 else:
                     if self.verbose > 0:
-                        print('\nEpoch %05d: saving model to %s' %
-                              (epoch + 1, filepath))
+                        print(
+                            "\nEpoch %05d: saving model to %s" % (epoch + 1, filepath)
+                        )
                     if self.save_weights_only:
                         self.model.save_weights(filepath, overwrite=True)
                     else:
@@ -1231,24 +1283,30 @@ class ModelCheckpoint(Callback):
                 self._maybe_remove_file()
             except IOError as e:
                 # `e.errno` appears to be `None` so checking the content of `e.args[0]`.
-                if 'is a directory' in six.ensure_str(e.args[0]):
-                    raise IOError('Please specify a non-directory filepath for '
-                                  'ModelCheckpoint. Filepath used is an existing '
-                                  'directory: {}'.format(filepath))
+                if "is a directory" in six.ensure_str(e.args[0]):
+                    raise IOError(
+                        "Please specify a non-directory filepath for "
+                        "ModelCheckpoint. Filepath used is an existing "
+                        "directory: {}".format(filepath)
+                    )
 
     def _get_file_path(self, epoch, logs):
         """Returns the file path for checkpoint."""
         # pylint: disable=protected-access
-        if not self.model._in_multi_worker_mode(
-        ) or multi_worker_util.should_save_checkpoint():
+        if (
+            not self.model._in_multi_worker_mode()
+            or multi_worker_util.should_save_checkpoint()
+        ):
             try:
                 # `filepath` may contain placeholders such as `{epoch:02d}` and
                 # `{mape:.2f}`. A mismatch between logged metrics and the path's
                 # placeholders can cause formatting to fail.
                 return self.filepath.format(epoch=epoch + 1, **logs)
             except KeyError as e:
-                raise KeyError('Failed to format this callback filepath: "{}". '
-                               'Reason: {}'.format(self.filepath, e))
+                raise KeyError(
+                    'Failed to format this callback filepath: "{}". '
+                    "Reason: {}".format(self.filepath, e)
+                )
         else:
             # If this is multi-worker training, and this worker should not
             # save checkpoint, we use a temp filepath to store a dummy checkpoint, so
@@ -1258,15 +1316,17 @@ class ModelCheckpoint(Callback):
             # that.
             self._temp_file_dir = tempfile.mkdtemp()
             extension = os.path.splitext(self.filepath)[1]
-            return os.path.join(self._temp_file_dir, 'temp' + extension)
+            return os.path.join(self._temp_file_dir, "temp" + extension)
 
     def _maybe_remove_file(self):
         # Remove the checkpoint directory in multi-worker training where this worker
         # should not checkpoint. It is a dummy directory previously saved for sync
         # distributed training.
 
-        if (self.model._in_multi_worker_mode() and  # pylint: disable=protected-access
-                not multi_worker_util.should_save_checkpoint()):
+        if (
+            self.model._in_multi_worker_mode()
+            and not multi_worker_util.should_save_checkpoint()  # pylint: disable=protected-access
+        ):
             file_io.delete_recursively(self._temp_file_dir)
             del self._temp_file_dir
 
@@ -1318,14 +1378,14 @@ class ModelCheckpoint(Callback):
         """
         dir_name = os.path.dirname(pattern)
         base_name = os.path.basename(pattern)
-        base_name_regex = '^' + re.sub(r'{.*}', r'.*', base_name) + '$'
+        base_name_regex = "^" + re.sub(r"{.*}", r".*", base_name) + "$"
 
         # If tf.train.latest_checkpoint tells us there exists a latest checkpoint,
         # use that as it is more robust than `os.path.getmtime()`.
-        latest_tf_checkpoint = checkpoint_management.latest_checkpoint(
-            dir_name)
+        latest_tf_checkpoint = checkpoint_management.latest_checkpoint(dir_name)
         if latest_tf_checkpoint is not None and re.match(
-                base_name_regex, os.path.basename(latest_tf_checkpoint)):
+            base_name_regex, os.path.basename(latest_tf_checkpoint)
+        ):
             return latest_tf_checkpoint
 
         latest_mod_time = 0
@@ -1339,8 +1399,10 @@ class ModelCheckpoint(Callback):
                 if re.match(base_name_regex, file_name):
                     file_path = os.path.join(dir_name, file_name)
                     mod_time = os.path.getmtime(file_path)
-                    if (file_path_with_largest_file_name is None or
-                            file_path > file_path_with_largest_file_name):
+                    if (
+                        file_path_with_largest_file_name is None
+                        or file_path > file_path_with_largest_file_name
+                    ):
                         file_path_with_largest_file_name = file_path
                     if mod_time > latest_mod_time:
                         latest_mod_time = mod_time
@@ -1367,7 +1429,7 @@ class ModelCheckpoint(Callback):
         return isinstance(self.save_freq, int)
 
 
-@keras_export('keras.callbacks.EarlyStopping')
+@keras_export("keras.callbacks.EarlyStopping")
 class EarlyStopping(Callback):
     """Stop training when a monitored metric has stopped improving.
 
@@ -1395,14 +1457,16 @@ class EarlyStopping(Callback):
     4
     """
 
-    def __init__(self,
-                 monitor='val_loss',
-                 min_delta=0,
-                 patience=0,
-                 verbose=0,
-                 mode='auto',
-                 baseline=None,
-                 restore_best_weights=False):
+    def __init__(
+        self,
+        monitor="val_loss",
+        min_delta=0,
+        patience=0,
+        verbose=0,
+        mode="auto",
+        baseline=None,
+        restore_best_weights=False,
+    ):
         """Initialize an EarlyStopping callback.
 
         Arguments:
@@ -1441,17 +1505,18 @@ class EarlyStopping(Callback):
         self.restore_best_weights = restore_best_weights
         self.best_weights = None
 
-        if mode not in ['auto', 'min', 'max']:
-            logging.warning('EarlyStopping mode %s is unknown, '
-                            'fallback to auto mode.', mode)
-            mode = 'auto'
+        if mode not in ["auto", "min", "max"]:
+            logging.warning(
+                "EarlyStopping mode %s is unknown, " "fallback to auto mode.", mode
+            )
+            mode = "auto"
 
-        if mode == 'min':
+        if mode == "min":
             self.monitor_op = np.less
-        elif mode == 'max':
+        elif mode == "max":
             self.monitor_op = np.greater
         else:
-            if 'acc' in self.monitor:
+            if "acc" in self.monitor:
                 self.monitor_op = np.greater
             else:
                 self.monitor_op = np.less
@@ -1486,25 +1551,27 @@ class EarlyStopping(Callback):
                 self.model.stop_training = True
                 if self.restore_best_weights:
                     if self.verbose > 0:
-                        print(
-                            'Restoring model weights from the end of the best epoch.')
+                        print("Restoring model weights from the end of the best epoch.")
                     self.model.set_weights(self.best_weights)
 
     def on_train_end(self, logs=None):
         if self.stopped_epoch > 0 and self.verbose > 0:
-            print('Epoch %05d: early stopping' % (self.stopped_epoch + 1))
+            print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
 
     def get_monitor_value(self, logs):
         logs = logs or {}
         monitor_value = logs.get(self.monitor)
         if monitor_value is None:
-            logging.warning('Early stopping conditioned on metric `%s` '
-                            'which is not available. Available metrics are: %s',
-                            self.monitor, ','.join(list(logs.keys())))
+            logging.warning(
+                "Early stopping conditioned on metric `%s` "
+                "which is not available. Available metrics are: %s",
+                self.monitor,
+                ",".join(list(logs.keys())),
+            )
         return monitor_value
 
 
-@keras_export('keras.callbacks.RemoteMonitor')
+@keras_export("keras.callbacks.RemoteMonitor")
 class RemoteMonitor(Callback):
     """Callback used to stream events to a server.
 
@@ -1526,12 +1593,14 @@ class RemoteMonitor(Callback):
             sent as application/json.
     """
 
-    def __init__(self,
-                 root='http://localhost:9000',
-                 path='/publish/epoch/end/',
-                 field='data',
-                 headers=None,
-                 send_as_json=False):
+    def __init__(
+        self,
+        root="http://localhost:9000",
+        path="/publish/epoch/end/",
+        field="data",
+        headers=None,
+        send_as_json=False,
+    ):
         super(RemoteMonitor, self).__init__()
 
         self.root = root
@@ -1542,10 +1611,10 @@ class RemoteMonitor(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if requests is None:
-            raise ImportError('RemoteMonitor requires the `requests` library.')
+            raise ImportError("RemoteMonitor requires the `requests` library.")
         logs = logs or {}
         send = {}
-        send['epoch'] = epoch
+        send["epoch"] = epoch
         for k, v in logs.items():
             # np.ndarray and np.generic are not scalar types
             # therefore we must unwrap their scalar values and
@@ -1556,18 +1625,21 @@ class RemoteMonitor(Callback):
                 send[k] = v
         try:
             if self.send_as_json:
-                requests.post(self.root + self.path,
-                              json=send, headers=self.headers)
+                requests.post(self.root + self.path, json=send, headers=self.headers)
             else:
                 requests.post(
-                    self.root + self.path, {self.field: json.dumps(send)},
-                    headers=self.headers)
+                    self.root + self.path,
+                    {self.field: json.dumps(send)},
+                    headers=self.headers,
+                )
         except requests.exceptions.RequestException:
-            logging.warning('Warning: could not reach RemoteMonitor '
-                            'root server at ' + str(self.root))
+            logging.warning(
+                "Warning: could not reach RemoteMonitor "
+                "root server at " + str(self.root)
+            )
 
 
-@keras_export('keras.callbacks.LearningRateScheduler')
+@keras_export("keras.callbacks.LearningRateScheduler")
 class LearningRateScheduler(Callback):
     """Learning rate scheduler.
 
@@ -1612,7 +1684,7 @@ class LearningRateScheduler(Callback):
         self.verbose = verbose
 
     def on_epoch_begin(self, epoch, logs=None):
-        if not hasattr(self.model.optimizer, 'lr'):
+        if not hasattr(self.model.optimizer, "lr"):
             raise ValueError('Optimizer must have a "lr" attribute.')
         try:  # new API
             lr = float(K.get_value(self.model.optimizer.lr))
@@ -1620,21 +1692,24 @@ class LearningRateScheduler(Callback):
         except TypeError:  # Support for old API for backward compatibility
             lr = self.schedule(epoch)
         if not isinstance(lr, (ops.Tensor, float, np.float32, np.float64)):
-            raise ValueError('The output of the "schedule" function '
-                             'should be float.')
+            raise ValueError(
+                'The output of the "schedule" function ' "should be float."
+            )
         if isinstance(lr, ops.Tensor) and not lr.dtype.is_floating:
-            raise ValueError('The dtype of Tensor should be float')
+            raise ValueError("The dtype of Tensor should be float")
         K.set_value(self.model.optimizer.lr, K.get_value(lr))
         if self.verbose > 0:
-            print('\nEpoch %05d: LearningRateScheduler reducing learning '
-                  'rate to %s.' % (epoch + 1, lr))
+            print(
+                "\nEpoch %05d: LearningRateScheduler reducing learning "
+                "rate to %s." % (epoch + 1, lr)
+            )
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        logs['lr'] = K.get_value(self.model.optimizer.lr)
+        logs["lr"] = K.get_value(self.model.optimizer.lr)
 
 
-@keras_export('keras.callbacks.TensorBoard', v1=[])
+@keras_export("keras.callbacks.TensorBoard", v1=[])
 class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
     # pylint: disable=line-too-long
     """Enable visualizations for TensorBoard.
@@ -1716,16 +1791,18 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
 
     # pylint: enable=line-too-long
 
-    def __init__(self,
-                 log_dir='logs',
-                 histogram_freq=0,
-                 write_graph=True,
-                 write_images=False,
-                 update_freq='epoch',
-                 profile_batch=2,
-                 embeddings_freq=0,
-                 embeddings_metadata=None,
-                 **kwargs):
+    def __init__(
+        self,
+        log_dir="logs",
+        histogram_freq=0,
+        write_graph=True,
+        write_images=False,
+        update_freq="epoch",
+        profile_batch=2,
+        embeddings_freq=0,
+        embeddings_metadata=None,
+        **kwargs
+    ):
         super(TensorBoard, self).__init__()
         self._validate_kwargs(kwargs)
 
@@ -1733,7 +1810,7 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
         self.histogram_freq = histogram_freq
         self.write_graph = write_graph
         self.write_images = write_images
-        self.update_freq = 1 if update_freq == 'batch' else update_freq
+        self.update_freq = 1 if update_freq == "batch" else update_freq
         self.embeddings_freq = embeddings_freq
         self.embeddings_metadata = embeddings_metadata
         self._init_profile_batch(profile_batch)
@@ -1749,40 +1826,53 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
 
     def _validate_kwargs(self, kwargs):
         """Handle arguments were supported in V1."""
-        if kwargs.get('write_grads', False):
-            logging.warning('`write_grads` will be ignored in TensorFlow 2.0 '
-                            'for the `TensorBoard` Callback.')
-        if kwargs.get('batch_size', False):
-            logging.warning('`batch_size` is no longer needed in the '
-                            '`TensorBoard` Callback and will be ignored '
-                            'in TensorFlow 2.0.')
-        if kwargs.get('embeddings_layer_names', False):
-            logging.warning('`embeddings_layer_names` is not supported in '
-                            'TensorFlow 2.0. Instead, all `Embedding` layers '
-                            'will be visualized.')
-        if kwargs.get('embeddings_data', False):
-            logging.warning('`embeddings_data` is not supported in TensorFlow '
-                            '2.0. Instead, all `Embedding` variables will be '
-                            'visualized.')
+        if kwargs.get("write_grads", False):
+            logging.warning(
+                "`write_grads` will be ignored in TensorFlow 2.0 "
+                "for the `TensorBoard` Callback."
+            )
+        if kwargs.get("batch_size", False):
+            logging.warning(
+                "`batch_size` is no longer needed in the "
+                "`TensorBoard` Callback and will be ignored "
+                "in TensorFlow 2.0."
+            )
+        if kwargs.get("embeddings_layer_names", False):
+            logging.warning(
+                "`embeddings_layer_names` is not supported in "
+                "TensorFlow 2.0. Instead, all `Embedding` layers "
+                "will be visualized."
+            )
+        if kwargs.get("embeddings_data", False):
+            logging.warning(
+                "`embeddings_data` is not supported in TensorFlow "
+                "2.0. Instead, all `Embedding` variables will be "
+                "visualized."
+            )
 
         unrecognized_kwargs = set(kwargs.keys()) - {
-            'write_grads', 'embeddings_layer_names', 'embeddings_data', 'batch_size'
+            "write_grads",
+            "embeddings_layer_names",
+            "embeddings_data",
+            "batch_size",
         }
 
         # Only allow kwargs that were supported in V1.
         if unrecognized_kwargs:
-            raise ValueError('Unrecognized arguments in `TensorBoard` '
-                             'Callback: ' + str(unrecognized_kwargs))
+            raise ValueError(
+                "Unrecognized arguments in `TensorBoard` "
+                "Callback: " + str(unrecognized_kwargs)
+            )
 
     def set_model(self, model):
         """Sets Keras model and writes graph if specified."""
         self.model = model
         self._log_write_dir = self._get_log_write_dir()
 
-        self._train_dir = os.path.join(self._log_write_dir, 'train')
+        self._train_dir = os.path.join(self._log_write_dir, "train")
         self._train_step = self.model._train_counter  # pylint: disable=protected-access
 
-        self._val_dir = os.path.join(self._log_write_dir, 'validation')
+        self._val_dir = os.path.join(self._log_write_dir, "validation")
         self._val_step = self.model._test_counter  # pylint: disable=protected-access
 
         self._writers = {}  # Resets writers.
@@ -1794,27 +1884,29 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
 
     @property
     def _train_writer(self):
-        if 'train' not in self._writers:
-            self._writers['train'] = summary_ops_v2.create_file_writer_v2(
-                self._train_dir)
-        return self._writers['train']
+        if "train" not in self._writers:
+            self._writers["train"] = summary_ops_v2.create_file_writer_v2(
+                self._train_dir
+            )
+        return self._writers["train"]
 
     @property
     def _val_writer(self):
-        if 'val' not in self._writers:
-            self._writers['val'] = summary_ops_v2.create_file_writer_v2(
-                self._val_dir)
-        return self._writers['val']
+        if "val" not in self._writers:
+            self._writers["val"] = summary_ops_v2.create_file_writer_v2(self._val_dir)
+        return self._writers["val"]
 
     def _get_log_write_dir(self):
         """For multi-worker, only chief should write, others write to '/tmp'."""
-        return distributed_file_utils.write_dirpath(self.log_dir,
-                                                    self.model.distribute_strategy)
+        return distributed_file_utils.write_dirpath(
+            self.log_dir, self.model.distribute_strategy
+        )
 
     def _delete_tmp_write_dir(self):
         """Deletes tmp write directories for multi-worker."""
-        distributed_file_utils.remove_temp_dirpath(self.log_dir,
-                                                   self.model.distribute_strategy)
+        distributed_file_utils.remove_temp_dirpath(
+            self.log_dir, self.model.distribute_strategy
+        )
 
     def _write_keras_model_graph(self):
         """Writes Keras graph networks to TensorBoard."""
@@ -1824,20 +1916,25 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
                     summary_ops_v2.graph(K.get_graph(), step=0)
 
                 summary_writable = (
-                    self.model._is_graph_network or  # pylint: disable=protected-access
-                    self.model.__class__.__name__ == 'Sequential')  # pylint: disable=protected-access
+                    self.model._is_graph_network
+                    or self.model.__class__.__name__  # pylint: disable=protected-access
+                    == "Sequential"
+                )  # pylint: disable=protected-access
                 if summary_writable:
-                    summary_ops_v2.keras_model('keras', self.model, step=0)
+                    summary_ops_v2.keras_model("keras", self.model, step=0)
 
     def _configure_embeddings(self):
         """Configure the Projector for embeddings."""
         # TODO(omalleyt): Add integration tests.
         from tensorflow.python.keras.layers import embeddings
+
         try:
             from tensorboard.plugins import projector
         except ImportError:
-            raise ImportError('Failed to import TensorBoard. Please make sure that '
-                              'TensorBoard integration is complete."')
+            raise ImportError(
+                "Failed to import TensorBoard. Please make sure that "
+                'TensorBoard integration is complete."'
+            )
         config = projector.ProjectorConfig()
         for layer in self.model.layers:
             if isinstance(layer, embeddings.Embedding):
@@ -1850,12 +1947,15 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
                     else:
                         if layer.name in embedding.metadata_path:
                             embedding.metadata_path = self.embeddings_metadata.pop(
-                                layer.name)
+                                layer.name
+                            )
 
         if self.embeddings_metadata:
-            raise ValueError('Unrecognized `Embedding` layer names passed to '
-                             '`keras.callbacks.TensorBoard` `embeddings_metadata` '
-                             'argument: ' + str(self.embeddings_metadata.keys()))
+            raise ValueError(
+                "Unrecognized `Embedding` layer names passed to "
+                "`keras.callbacks.TensorBoard` `embeddings_metadata` "
+                "argument: " + str(self.embeddings_metadata.keys())
+            )
 
         class DummyWriter(object):
             """Dummy writer to conform to `Projector` API."""
@@ -1871,21 +1971,27 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
 
     def _push_writer(self, writer, step):
         """Sets the default writer for custom batch-level summaries."""
-        if self.update_freq == 'epoch':
+        if self.update_freq == "epoch":
             return
 
-        summary_state = summary_ops_v2._summary_state  # pylint: disable=protected-access
-        self._prev_summary_state.append({
-            'is_recording': summary_state.is_recording,
-            'writer': summary_state.writer,
-            'step': summary_state.step
-        })
+        summary_state = (
+            summary_ops_v2._summary_state
+        )  # pylint: disable=protected-access
+        self._prev_summary_state.append(
+            {
+                "is_recording": summary_state.is_recording,
+                "writer": summary_state.writer,
+                "step": summary_state.step,
+            }
+        )
 
-        if self.update_freq == 'epoch':
+        if self.update_freq == "epoch":
             should_record = False
             writer = None
         else:
-            def should_record(): return math_ops.equal(step % self.update_freq, 0)
+
+            def should_record():
+                return math_ops.equal(step % self.update_freq, 0)
 
         summary_state.is_recording = should_record
         summary_state.writer = writer
@@ -1894,15 +2000,17 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
 
     def _pop_writer(self):
         """Pops the current writer."""
-        if self.update_freq == 'epoch':
+        if self.update_freq == "epoch":
             return
 
         prev_state = self._prev_summary_state.pop()
 
-        summary_state = summary_ops_v2._summary_state  # pylint: disable=protected-access
-        summary_state.is_recording = prev_state['is_recording']
-        summary_state.writer = prev_state['writer']
-        summary_ops_v2.set_step(prev_state['step'])
+        summary_state = (
+            summary_ops_v2._summary_state
+        )  # pylint: disable=protected-access
+        summary_state.is_recording = prev_state["is_recording"]
+        summary_state.writer = prev_state["writer"]
+        summary_ops_v2.set_step(prev_state["step"])
 
     def _close_writers(self):
         for writer in self._writers.values():
@@ -1926,13 +2034,14 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
 
         """
         profile_batch_error_message = (
-            'profile_batch must be a non-negative integer or 2-tuple of positive '
-            'integers. A pair of positive integers signifies a range of batches '
-            'to profile. Found: {}'.format(profile_batch))
+            "profile_batch must be a non-negative integer or 2-tuple of positive "
+            "integers. A pair of positive integers signifies a range of batches "
+            "to profile. Found: {}".format(profile_batch)
+        )
 
         # Support legacy way of specifying "start,stop" or "start" as str.
         if isinstance(profile_batch, six.string_types):
-            profile_batch = str(profile_batch).split(',')
+            profile_batch = str(profile_batch).split(",")
             profile_batch = nest.map_structure(int, profile_batch)
 
         if isinstance(profile_batch, int):
@@ -1952,8 +2061,7 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
         self._is_tracing = False
 
         # Setting `profile_batch=0` disables profiling.
-        self._should_trace = not (
-            self._start_batch == 0 and self._stop_batch == 0)
+        self._should_trace = not (self._start_batch == 0 and self._stop_batch == 0)
 
     def on_train_begin(self, logs=None):
         self._push_writer(self._train_writer, self._train_step)
@@ -2014,8 +2122,7 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
         with self._train_writer.as_default():
             with summary_ops_v2.always_record_summaries():
                 # TODO(b/126388999): Remove step info in the summary name.
-                summary_ops_v2.trace_export(
-                    name='batch_%d' % batch, step=batch)
+                summary_ops_v2.trace_export(name="batch_%d" % batch, step=batch)
         profiler.stop()
         self._is_tracing = False
 
@@ -2029,22 +2136,19 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
         if not logs:
             return
 
-        train_logs = {k: v for k,
-                      v in logs.items() if not k.startswith('val_')}
-        val_logs = {k: v for k, v in logs.items() if k.startswith('val_')}
+        train_logs = {k: v for k, v in logs.items() if not k.startswith("val_")}
+        val_logs = {k: v for k, v in logs.items() if k.startswith("val_")}
 
         with summary_ops_v2.always_record_summaries():
             if train_logs:
                 with self._train_writer.as_default():
                     for name, value in train_logs.items():
-                        summary_ops_v2.scalar(
-                            'epoch_' + name, value, step=epoch)
+                        summary_ops_v2.scalar("epoch_" + name, value, step=epoch)
             if val_logs:
                 with self._val_writer.as_default():
                     for name, value in val_logs.items():
                         name = name[4:]  # Remove 'val_' prefix.
-                        summary_ops_v2.scalar(
-                            'epoch_' + name, value, step=epoch)
+                        summary_ops_v2.scalar("epoch_" + name, value, step=epoch)
 
     def _log_weights(self, epoch):
         """Logs the weights of the Model to TensorBoard."""
@@ -2052,12 +2156,10 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
             with summary_ops_v2.always_record_summaries():
                 for layer in self.model.layers:
                     for weight in layer.weights:
-                        weight_name = weight.name.replace(':', '_')
-                        summary_ops_v2.histogram(
-                            weight_name, weight, step=epoch)
+                        weight_name = weight.name.replace(":", "_")
+                        summary_ops_v2.histogram(weight_name, weight, step=epoch)
                         if self.write_images:
-                            self._log_weight_as_image(
-                                weight, weight_name, epoch)
+                            self._log_weight_as_image(weight, weight_name, epoch)
                 self._train_writer.flush()
 
     def _log_weight_as_image(self, weight, weight_name, epoch):
@@ -2072,7 +2174,7 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
                 shape = K.int_shape(w_img)
             w_img = array_ops.reshape(w_img, [1, shape[0], shape[1], 1])
         elif len(shape) == 3:  # ConvNet case
-            if K.image_data_format() == 'channels_last':
+            if K.image_data_format() == "channels_last":
                 # Switch to channels_first to display every kernel as a separate
                 # image.
                 w_img = array_ops.transpose(w_img, perm=[2, 0, 1])
@@ -2085,15 +2187,16 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
             summary_ops_v2.image(weight_name, w_img, step=epoch)
 
     def _log_embeddings(self, epoch):
-        embeddings_ckpt = os.path.join(self._log_write_dir, 'train',
-                                       'keras_embedding.ckpt-{}'.format(epoch))
+        embeddings_ckpt = os.path.join(
+            self._log_write_dir, "train", "keras_embedding.ckpt-{}".format(epoch)
+        )
         self.model.save_weights(embeddings_ckpt)
 
     def _implements_train_batch_hooks(self):
         return not (self._start_batch == 0 and self._stop_batch == 0)
 
 
-@keras_export('keras.callbacks.ReduceLROnPlateau')
+@keras_export("keras.callbacks.ReduceLROnPlateau")
 class ReduceLROnPlateau(Callback):
     """Reduce learning rate when a metric has stopped improving.
 
@@ -2129,26 +2232,29 @@ class ReduceLROnPlateau(Callback):
         min_lr: lower bound on the learning rate.
     """
 
-    def __init__(self,
-                 monitor='val_loss',
-                 factor=0.1,
-                 patience=10,
-                 verbose=0,
-                 mode='auto',
-                 min_delta=1e-4,
-                 cooldown=0,
-                 min_lr=0,
-                 **kwargs):
+    def __init__(
+        self,
+        monitor="val_loss",
+        factor=0.1,
+        patience=10,
+        verbose=0,
+        mode="auto",
+        min_delta=1e-4,
+        cooldown=0,
+        min_lr=0,
+        **kwargs
+    ):
         super(ReduceLROnPlateau, self).__init__()
 
         self.monitor = monitor
         if factor >= 1.0:
-            raise ValueError(
-                'ReduceLROnPlateau ' 'does not support a factor >= 1.0.')
-        if 'epsilon' in kwargs:
-            min_delta = kwargs.pop('epsilon')
-            logging.warning('`epsilon` argument is deprecated and '
-                            'will be removed, use `min_delta` instead.')
+            raise ValueError("ReduceLROnPlateau " "does not support a factor >= 1.0.")
+        if "epsilon" in kwargs:
+            min_delta = kwargs.pop("epsilon")
+            logging.warning(
+                "`epsilon` argument is deprecated and "
+                "will be removed, use `min_delta` instead."
+            )
         self.factor = factor
         self.min_lr = min_lr
         self.min_delta = min_delta
@@ -2165,12 +2271,14 @@ class ReduceLROnPlateau(Callback):
     def _reset(self):
         """Resets wait counter and cooldown counter.
         """
-        if self.mode not in ['auto', 'min', 'max']:
-            logging.warning('Learning Rate Plateau Reducing mode %s is unknown, '
-                            'fallback to auto mode.', self.mode)
-            self.mode = 'auto'
-        if (self.mode == 'min' or
-                (self.mode == 'auto' and 'acc' not in self.monitor)):
+        if self.mode not in ["auto", "min", "max"]:
+            logging.warning(
+                "Learning Rate Plateau Reducing mode %s is unknown, "
+                "fallback to auto mode.",
+                self.mode,
+            )
+            self.mode = "auto"
+        if self.mode == "min" or (self.mode == "auto" and "acc" not in self.monitor):
             self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
             self.best = np.Inf
         else:
@@ -2184,12 +2292,15 @@ class ReduceLROnPlateau(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        logs['lr'] = K.get_value(self.model.optimizer.lr)
+        logs["lr"] = K.get_value(self.model.optimizer.lr)
         current = logs.get(self.monitor)
         if current is None:
-            logging.warning('Reduce LR on plateau conditioned on metric `%s` '
-                            'which is not available. Available metrics are: %s',
-                            self.monitor, ','.join(list(logs.keys())))
+            logging.warning(
+                "Reduce LR on plateau conditioned on metric `%s` "
+                "which is not available. Available metrics are: %s",
+                self.monitor,
+                ",".join(list(logs.keys())),
+            )
 
         else:
             if self.in_cooldown():
@@ -2208,8 +2319,10 @@ class ReduceLROnPlateau(Callback):
                         new_lr = max(new_lr, self.min_lr)
                         K.set_value(self.model.optimizer.lr, new_lr)
                         if self.verbose > 0:
-                            print('\nEpoch %05d: ReduceLROnPlateau reducing learning '
-                                  'rate to %s.' % (epoch + 1, new_lr))
+                            print(
+                                "\nEpoch %05d: ReduceLROnPlateau reducing learning "
+                                "rate to %s." % (epoch + 1, new_lr)
+                            )
                         self.cooldown_counter = self.cooldown
                         self.wait = 0
 
@@ -2217,7 +2330,7 @@ class ReduceLROnPlateau(Callback):
         return self.cooldown_counter > 0
 
 
-@keras_export('keras.callbacks.CSVLogger')
+@keras_export("keras.callbacks.CSVLogger")
 class CSVLogger(Callback):
     """Callback that streams epoch results to a csv file.
 
@@ -2238,7 +2351,7 @@ class CSVLogger(Callback):
             training). False: overwrite existing file,
     """
 
-    def __init__(self, filename, separator=',', append=False):
+    def __init__(self, filename, separator=",", append=False):
         self.sep = separator
         self.filename = filename
         self.append = append
@@ -2246,24 +2359,24 @@ class CSVLogger(Callback):
         self.keys = None
         self.append_header = True
         if six.PY2:
-            self.file_flags = 'b'
+            self.file_flags = "b"
             self._open_args = {}
         else:
-            self.file_flags = ''
-            self._open_args = {'newline': '\n'}
+            self.file_flags = ""
+            self._open_args = {"newline": "\n"}
         super(CSVLogger, self).__init__()
 
     def on_train_begin(self, logs=None):
         if self.append:
             if file_io.file_exists(self.filename):
-                with open(self.filename, 'r' + self.file_flags) as f:
+                with open(self.filename, "r" + self.file_flags) as f:
                     self.append_header = not bool(len(f.readline()))
-            mode = 'a'
+            mode = "a"
         else:
-            mode = 'w'
-        self.csv_file = io.open(self.filename,
-                                mode + self.file_flags,
-                                **self._open_args)
+            mode = "w"
+        self.csv_file = io.open(
+            self.filename, mode + self.file_flags, **self._open_args
+        )
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
@@ -2273,7 +2386,7 @@ class CSVLogger(Callback):
             if isinstance(k, six.string_types):
                 return k
             elif isinstance(k, collections_abc.Iterable) and not is_zero_dim_ndarray:
-                return '"[%s]"' % (', '.join(map(str, k)))
+                return '"[%s]"' % (", ".join(map(str, k)))
             else:
                 return k
 
@@ -2282,26 +2395,24 @@ class CSVLogger(Callback):
 
         if self.model.stop_training:
             # We set NA so that csv parsers do not fail for this last epoch.
-            logs = dict([(k, logs[k]) if k in logs else (k, 'NA')
-                         for k in self.keys])
+            logs = dict([(k, logs[k]) if k in logs else (k, "NA") for k in self.keys])
 
         if not self.writer:
 
             class CustomDialect(csv.excel):
                 delimiter = self.sep
 
-            fieldnames = ['epoch'] + self.keys
+            fieldnames = ["epoch"] + self.keys
             if six.PY2:
                 fieldnames = [unicode(x) for x in fieldnames]
 
             self.writer = csv.DictWriter(
-                self.csv_file,
-                fieldnames=fieldnames,
-                dialect=CustomDialect)
+                self.csv_file, fieldnames=fieldnames, dialect=CustomDialect
+            )
             if self.append_header:
                 self.writer.writeheader()
 
-        row_dict = collections.OrderedDict({'epoch': epoch})
+        row_dict = collections.OrderedDict({"epoch": epoch})
         row_dict.update((key, handle_value(logs[key])) for key in self.keys)
         self.writer.writerow(row_dict)
         self.csv_file.flush()
@@ -2311,7 +2422,7 @@ class CSVLogger(Callback):
         self.writer = None
 
 
-@keras_export('keras.callbacks.LambdaCallback')
+@keras_export("keras.callbacks.LambdaCallback")
 class LambdaCallback(Callback):
     r"""Callback for creating simple, custom callbacks on-the-fly.
 
@@ -2364,14 +2475,16 @@ class LambdaCallback(Callback):
     ```
     """
 
-    def __init__(self,
-                 on_epoch_begin=None,
-                 on_epoch_end=None,
-                 on_batch_begin=None,
-                 on_batch_end=None,
-                 on_train_begin=None,
-                 on_train_end=None,
-                 **kwargs):
+    def __init__(
+        self,
+        on_epoch_begin=None,
+        on_epoch_end=None,
+        on_batch_begin=None,
+        on_batch_end=None,
+        on_train_begin=None,
+        on_train_end=None,
+        **kwargs
+    ):
         super(LambdaCallback, self).__init__()
         self.__dict__.update(kwargs)
         if on_epoch_begin is not None:
