@@ -23,11 +23,13 @@ from tensorflow.lite.testing.zip_test_utils import make_zip_of_tests
 from tensorflow.lite.testing.zip_test_utils import register_make_test_function
 
 
-def make_binary_op_tests(options,
-                         binary_operator,
-                         allow_fully_quantize=False,
-                         expected_tf_failures=0,
-                         test_parameters=None):
+def make_binary_op_tests(
+    options,
+    binary_operator,
+    allow_fully_quantize=False,
+    expected_tf_failures=0,
+    test_parameters=None,
+):
     """Make a set of tests to do binary ops with and without broadcast."""
 
     if test_parameters is None:
@@ -118,25 +120,25 @@ def make_binary_op_tests(options,
     # allow_fully_quantize is True.
     if not allow_fully_quantize:
         test_parameters = [
-            test_parameter for test_parameter in test_parameters
+            test_parameter
+            for test_parameter in test_parameters
             if True not in test_parameter["fully_quantize"]
         ]
 
     def build_graph(parameters):
         """Builds the graph given the current parameters."""
         input1 = tf.compat.v1.placeholder(
-            dtype=parameters["dtype"],
-            name="input1",
-            shape=parameters["input_shape_1"])
+            dtype=parameters["dtype"], name="input1", shape=parameters["input_shape_1"]
+        )
         input2 = tf.compat.v1.placeholder(
-            dtype=parameters["dtype"],
-            name="input2",
-            shape=parameters["input_shape_2"])
+            dtype=parameters["dtype"], name="input2", shape=parameters["input_shape_2"]
+        )
         out = binary_operator(input1, input2)
         # TODO(karimnosseir): Update condition after moving to new converter.
-        if parameters["activation"] and (not options.use_experimental_converter or
-                                         (parameters["dtype"] != tf.int32 and
-                                          parameters["dtype"] != tf.int64)):
+        if parameters["activation"] and (
+            not options.use_experimental_converter
+            or (parameters["dtype"] != tf.int32 and parameters["dtype"] != tf.int64)
+        ):
             out = tf.nn.relu(out)
         return [input1, input2], [out]
 
@@ -147,29 +149,33 @@ def make_binary_op_tests(options,
                 parameters["dtype"],
                 parameters["input_shape_1"],
                 min_value=-1,
-                max_value=1)
+                max_value=1,
+            )
             input2 = create_tensor_data(
                 parameters["dtype"],
                 parameters["input_shape_2"],
                 min_value=-1,
-                max_value=1)
+                max_value=1,
+            )
         else:
-            input1 = create_tensor_data(parameters["dtype"],
-                                        parameters["input_shape_1"])
-            input2 = create_tensor_data(parameters["dtype"],
-                                        parameters["input_shape_2"])
-        return [input1, input2], sess.run(
-            outputs, feed_dict={
-                inputs[0]: input1,
-                inputs[1]: input2
-            })
+            input1 = create_tensor_data(
+                parameters["dtype"], parameters["input_shape_1"]
+            )
+            input2 = create_tensor_data(
+                parameters["dtype"], parameters["input_shape_2"]
+            )
+        return (
+            [input1, input2],
+            sess.run(outputs, feed_dict={inputs[0]: input1, inputs[1]: input2}),
+        )
 
     make_zip_of_tests(
         options,
         test_parameters,
         build_graph,
         build_inputs,
-        expected_tf_failures=expected_tf_failures)
+        expected_tf_failures=expected_tf_failures,
+    )
 
 
 def make_binary_op_tests_func(binary_operator):
@@ -200,10 +206,8 @@ def make_sub_tests(options):
         },
     ]
     make_binary_op_tests(
-        options,
-        tf.subtract,
-        allow_fully_quantize=True,
-        test_parameters=test_parameters)
+        options, tf.subtract, allow_fully_quantize=True, test_parameters=test_parameters
+    )
 
 
 @register_make_test_function()
