@@ -22,40 +22,40 @@ namespace mlir {
 namespace TFL {
 
 void ConvertTFLQuantOpsToMlirQuantOps(FuncOp func) {
-    OpBuilder b(func);
-    func.walk([&](Operation* op) {
-        b.setInsertionPoint(op);
-        if (auto dq = llvm::dyn_cast<DequantizeOp>(op)) {
-            auto dcast = b.create<quant::DequantizeCastOp>(
-                             dq.getLoc(), dq.output().getType(), dq.input());
-            dq.output().replaceAllUsesWith(dcast);
-            dq.erase();
-        } else if (auto q = llvm::dyn_cast<QuantizeOp>(op)) {
-            auto qcast = b.create<quant::QuantizeCastOp>(
-                             q.getLoc(), q.output().getType(), q.input());
-            q.output().replaceAllUsesWith(qcast);
-            q.erase();
-        }
-    });
+  OpBuilder b(func);
+  func.walk([&](Operation* op) {
+    b.setInsertionPoint(op);
+    if (auto dq = llvm::dyn_cast<DequantizeOp>(op)) {
+      auto dcast = b.create<quant::DequantizeCastOp>(
+          dq.getLoc(), dq.output().getType(), dq.input());
+      dq.output().replaceAllUsesWith(dcast);
+      dq.erase();
+    } else if (auto q = llvm::dyn_cast<QuantizeOp>(op)) {
+      auto qcast = b.create<quant::QuantizeCastOp>(
+          q.getLoc(), q.output().getType(), q.input());
+      q.output().replaceAllUsesWith(qcast);
+      q.erase();
+    }
+  });
 }
 
 void ConvertMlirQuantOpsToTFLQuantOps(FuncOp func) {
-    OpBuilder b(func);
-    func.walk([&](Operation* op) {
-        b.setInsertionPoint(op);
-        if (auto dq = llvm::dyn_cast<quant::DequantizeCastOp>(op)) {
-            auto dcast = b.create<DequantizeOp>(dq.getLoc(), dq.getResult().getType(),
-                                                dq.arg());
-            dq.getResult().replaceAllUsesWith(dcast);
-            dq.erase();
-        } else if (auto q = llvm::dyn_cast<quant::QuantizeCastOp>(op)) {
-            auto out_type = q.getResult().getType();
-            auto qcast = b.create<QuantizeOp>(q.getLoc(), out_type, q.arg(),
-                                              TypeAttr::get(out_type));
-            q.getResult().replaceAllUsesWith(qcast);
-            q.erase();
-        }
-    });
+  OpBuilder b(func);
+  func.walk([&](Operation* op) {
+    b.setInsertionPoint(op);
+    if (auto dq = llvm::dyn_cast<quant::DequantizeCastOp>(op)) {
+      auto dcast = b.create<DequantizeOp>(dq.getLoc(), dq.getResult().getType(),
+                                          dq.arg());
+      dq.getResult().replaceAllUsesWith(dcast);
+      dq.erase();
+    } else if (auto q = llvm::dyn_cast<quant::QuantizeCastOp>(op)) {
+      auto out_type = q.getResult().getType();
+      auto qcast = b.create<QuantizeOp>(q.getLoc(), out_type, q.arg(),
+                                        TypeAttr::get(out_type));
+      q.getResult().replaceAllUsesWith(qcast);
+      q.erase();
+    }
+  });
 }
 
 }  // namespace TFL
