@@ -20,14 +20,11 @@ from __future__ import print_function
 import os
 
 from tensorflow.python.distribute.cluster_resolver.slurm_cluster_resolver import (
-    expand_hostlist,
-)
+    expand_hostlist, )
 from tensorflow.python.distribute.cluster_resolver.slurm_cluster_resolver import (
-    expand_tasks_per_node,
-)
+    expand_tasks_per_node, )
 from tensorflow.python.distribute.cluster_resolver.slurm_cluster_resolver import (
-    SlurmClusterResolver,
-)
+    SlurmClusterResolver, )
 from tensorflow.python.platform import test
 from tensorflow.python.training import server_lib
 
@@ -48,21 +45,20 @@ class SlurmClusterResolverTest(test.TestCase):
         self.assertEqual(expand_tasks_per_node("2"), [2])
         self.assertEqual(expand_tasks_per_node("2,1,3"), [2, 1, 3])
         self.assertEqual(expand_tasks_per_node("3(x2),2,1"), [3, 3, 2, 1])
-        self.assertEqual(
-            expand_tasks_per_node("3(x2),2,11(x4)"), [3, 3, 2, 11, 11, 11, 11]
-        )
-        self.assertEqual(
-            expand_tasks_per_node("13(x10)"), [13, 13, 13, 13, 13, 13, 13, 13, 13, 13]
-        )
+        self.assertEqual(expand_tasks_per_node("3(x2),2,11(x4)"),
+                         [3, 3, 2, 11, 11, 11, 11])
+        self.assertEqual(expand_tasks_per_node("13(x10)"),
+                         [13, 13, 13, 13, 13, 13, 13, 13, 13, 13])
 
     def _verifyClusterSpecEquality(self, cluster_spec, expected_proto):
         self.assertProtoEquals(expected_proto, cluster_spec.as_cluster_def())
         self.assertProtoEquals(
-            expected_proto, server_lib.ClusterSpec(cluster_spec).as_cluster_def()
-        )
+            expected_proto,
+            server_lib.ClusterSpec(cluster_spec).as_cluster_def())
         self.assertProtoEquals(
             expected_proto,
-            server_lib.ClusterSpec(cluster_spec.as_cluster_def()).as_cluster_def(),
+            server_lib.ClusterSpec(
+                cluster_spec.as_cluster_def()).as_cluster_def(),
         )
         self.assertProtoEquals(
             expected_proto,
@@ -106,7 +102,10 @@ class SlurmClusterResolverTest(test.TestCase):
     )
     def testSimpleSuccessfulRetrieval(self):
         slurm_cluster_resolver = SlurmClusterResolver(
-            jobs={"ps": 1, "worker": 2},
+            jobs={
+                "ps": 1,
+                "worker": 2
+            },
             port_base=8888,
             tasks_per_node=1,
             gpus_per_node=1,
@@ -132,7 +131,10 @@ class SlurmClusterResolverTest(test.TestCase):
     )
     def testSimpleMasterRetrieval(self):
         slurm_cluster_resolver = SlurmClusterResolver(
-            jobs={"ps": 1, "worker": 2},
+            jobs={
+                "ps": 1,
+                "worker": 2
+            },
             port_base=8888,
             tasks_per_node=1,
             gpus_per_node=1,
@@ -145,7 +147,8 @@ class SlurmClusterResolverTest(test.TestCase):
         self.assertEqual(slurm_cluster_resolver.master(), "grpc://t02n43:8888")
 
         slurm_cluster_resolver.rpc_layer = "ab"
-        self.assertEqual(slurm_cluster_resolver.master("ps", 0), "ab://t02n13:8888")
+        self.assertEqual(slurm_cluster_resolver.master("ps", 0),
+                         "ab://t02n13:8888")
         self.assertEqual(
             slurm_cluster_resolver.master("ps", 0, rpc_layer="test"),
             "test://t02n13:8888",
@@ -162,7 +165,10 @@ class SlurmClusterResolverTest(test.TestCase):
     )
     def testTaskPerNodeNotSetRetrieval(self):
         slurm_cluster_resolver = SlurmClusterResolver(
-            jobs={"ps": 1, "worker": 2},
+            jobs={
+                "ps": 1,
+                "worker": 2
+            },
             port_base=8888,
             gpus_per_node=1,
             gpus_per_task=1,
@@ -189,7 +195,10 @@ class SlurmClusterResolverTest(test.TestCase):
     )
     def testMultiTaskPerNodeRetrieval(self):
         slurm_cluster_resolver = SlurmClusterResolver(
-            jobs={"ps": 1, "worker": 4},
+            jobs={
+                "ps": 1,
+                "worker": 4
+            },
             port_base=8888,
             gpus_per_node=2,
             gpus_per_task=1,
@@ -220,7 +229,10 @@ class SlurmClusterResolverTest(test.TestCase):
     )
     def testMultipleGpusPerTaskRetrieval(self):
         slurm_cluster_resolver = SlurmClusterResolver(
-            jobs={"ps": 1, "worker": 4},
+            jobs={
+                "ps": 1,
+                "worker": 4
+            },
             port_base=8888,
             gpus_per_node=4,
             gpus_per_task=2,

@@ -33,8 +33,7 @@ try:
 except ImportError:
     logging.debug(
         "Falling back to TensorFlow client; we recommended you install the Cloud "
-        "TPU client directly with pip install cloud-tpu-client."
-    )
+        "TPU client directly with pip install cloud-tpu-client.")
     from tensorflow.python.tpu.client import client
 
 
@@ -43,10 +42,10 @@ def is_running_in_gce():
 
 
 _TPU_DEVICE_REGEX = re.compile(
-    r".*task:(?P<host_id>\d+)/.*device:TPU:(?P<core_id>\d+)$"
-)
+    r".*task:(?P<host_id>\d+)/.*device:TPU:(?P<core_id>\d+)$")
 _TPU_CONN_RETRIES = 120
-DeviceDetails = collections.namedtuple("DeviceDetails", ["device_map", "total_cores"])
+DeviceDetails = collections.namedtuple("DeviceDetails",
+                                       ["device_map", "total_cores"])
 
 
 @tf_export("distribute.cluster_resolver.TPUClusterResolver")
@@ -89,25 +88,27 @@ class TPUClusterResolver(cluster_resolver.ClusterResolver):
     @staticmethod
     def _verify_and_return_same_core_count(device_dict):
         """Verifies that every device in device_dict has the same # of cores."""
-        num_cores_per_host_set = {len(core_ids) for core_ids in device_dict.values()}
+        num_cores_per_host_set = {
+            len(core_ids)
+            for core_ids in device_dict.values()
+        }
         if len(num_cores_per_host_set) != 1:
             raise RuntimeError(
                 "TPU cores on each device is not the same. This "
-                "should never happen. Devices: {}".format(device_dict)
-            )
+                "should never happen. Devices: {}".format(device_dict))
         return num_cores_per_host_set.pop()
 
     def __init__(
-        self,
-        tpu=None,
-        zone=None,
-        project=None,
-        job_name="worker",
-        coordinator_name=None,
-        coordinator_address=None,
-        credentials="default",
-        service=None,
-        discovery_url=None,
+            self,
+            tpu=None,
+            zone=None,
+            project=None,
+            job_name="worker",
+            coordinator_name=None,
+            coordinator_address=None,
+            credentials="default",
+            service=None,
+            discovery_url=None,
     ):
         """Creates a new TPUClusterResolver object.
 
@@ -230,8 +231,9 @@ class TPUClusterResolver(cluster_resolver.ClusterResolver):
         cluster_spec = self.cluster_spec()
         cluster_def = cluster_spec.as_cluster_def() if cluster_spec else None
         tpu_system_metadata = tpu_system_metadata_lib._query_tpu_system_metadata(  # pylint: disable=protected-access
-            self.master(), cluster_def=cluster_def, query_topology=False
-        )
+            self.master(),
+            cluster_def=cluster_def,
+            query_topology=False)
 
     def cluster_spec(self):
         """Returns a ClusterSpec object based on the latest TPU information.
@@ -269,7 +271,8 @@ class TPUClusterResolver(cluster_resolver.ClusterResolver):
 
         return server_lib.ClusterSpec(cluster_spec)
 
-    def num_accelerators(self, task_type=None, task_id=None, config_proto=None):
+    def num_accelerators(self, task_type=None, task_id=None,
+                         config_proto=None):
         """Returns the number of TPU cores per worker.
 
         Connects to the master and list all the devices present in the master,
@@ -292,30 +295,26 @@ class TPUClusterResolver(cluster_resolver.ClusterResolver):
             try:
                 device_details = TPUClusterResolver._get_device_dict_and_cores(
                     cluster_resolver.get_accelerator_devices(
-                        self.master(), config_proto=config_proto
-                    )
-                )
+                        self.master(), config_proto=config_proto))
                 break
             except errors.DeadlineExceededError:
                 error_message = (
                     "Failed to connect to master. The TPU might not be "
                     "ready (e.g. still scheduling) or the master "
-                    "address is incorrect: got (%s)" % self.master()
-                )
+                    "address is incorrect: got (%s)" % self.master())
                 if retry_count <= _TPU_CONN_RETRIES:
                     logging.warning(error_message)
-                    logging.warning(
-                        "Retrying (%d/%d)...", retry_count, _TPU_CONN_RETRIES
-                    )
+                    logging.warning("Retrying (%d/%d)...", retry_count,
+                                    _TPU_CONN_RETRIES)
                     retry_count += 1
                 else:
                     raise RuntimeError(error_message)
 
         if device_details.total_cores:
             return {
-                "TPU": TPUClusterResolver._verify_and_return_same_core_count(
-                    device_details.device_map
-                )
+                "TPU":
+                TPUClusterResolver._verify_and_return_same_core_count(
+                    device_details.device_map)
             }
         return {"TPU": 0}
 
@@ -326,9 +325,10 @@ class TPUClusterResolver(cluster_resolver.ClusterResolver):
 
     def _start_local_server(self):
         address = compat.as_text(self._cloud_tpu_client.get_local_ip())
-        self._server = server_lib.Server(
-            {"local": ["0.0.0.0:0"]}, protocol="grpc", config=None, start=True
-        )
+        self._server = server_lib.Server({"local": ["0.0.0.0:0"]},
+                                         protocol="grpc",
+                                         config=None,
+                                         start=True)
         # self._server.target is of the form: grpc://ipaddress:port
         target = compat.as_bytes(self._server.target)
         splits = target.split(compat.as_bytes(":"))
