@@ -23,14 +23,14 @@
 #                 the latest commit
 
 # Current script directory
-SCRIPT_DIR=$( cd ${0%/*} && pwd -P )
-source "${SCRIPT_DIR}/builds/builds_common.sh"
+SCRIPT_DIR=$( cd "${0%/*}" && pwd -P )
+source "$SCRIPT_DIR/builds/builds_common.sh"
 
 ROOT_DIR=$( cd "$SCRIPT_DIR/../../.." && pwd -P )
 
 # Helper functions
 die() {
-  echo $@
+  echo "$@"
   exit 1
 }
 
@@ -46,7 +46,7 @@ num_cpus() {
     die "ERROR: Unable to determine the number of CPUs"
   fi
 
-  echo ${N_CPUS}
+  echo "$N_CPUS"
 }
 
 # Helper functions for examining changed files in the last non-merge git
@@ -62,7 +62,7 @@ get_last_non_merge_git_commit() {
 # git commit.
 # Usage: get_changed_files_in_last_non_merge_git_commit
 get_changed_files_in_last_non_merge_git_commit() {
-  git diff-tree --no-commit-id --name-only -r $(get_last_non_merge_git_commit)
+  git diff-tree --no-commit-id --name-only -r "$(get_last_non_merge_git_commit)"
 }
 
 # List Python files changed in the last non-merge git commit that still exist,
@@ -75,13 +75,13 @@ get_py_files_to_check() {
 
     # Do not include files removed in the last non-merge commit.
     PY_FILES=""
-    for PY_FILE in ${CHANGED_PY_FILES}; do
+    for PY_FILE in "$CHANGED_PY_FILES"; do
       if [[ -f "${PY_FILE}" ]]; then
-        PY_FILES="${PY_FILES} ${PY_FILE}"
+        PY_FILES="$PY_FILES $PY_FILE"
       fi
     done
 
-    echo "${PY_FILES}"
+    echo "$PY_FILES"
   else
     find tensorflow -name '*.py'
   fi
@@ -115,7 +115,7 @@ do_pylint() {
 "^tensorflow/python/autograph/.*_py3_test\.py.*\[E0001.*syntax-error "\
 "^tensorflow/python/keras/preprocessing/image\.py.*\[E0240.*Inconsistent method resolution "
 
-  echo "ERROR_WHITELIST=\"${ERROR_WHITELIST}\""
+  echo "ERROR_WHITELIST=\"$ERROR_WHITELIST\""
 
   if [[ $# != "0" ]]  && [[ $# != "1" ]]; then
     echo "Invalid syntax when invoking do_pylint"
@@ -150,16 +150,16 @@ do_pylint() {
     return 0
   fi
 
-  PYLINTRC_FILE="${SCRIPT_DIR}/pylintrc"
+  PYLINTRC_FILE="$SCRIPT_DIR/pylintrc"
 
   if [[ ! -f "${PYLINTRC_FILE}" ]]; then
-    die "ERROR: Cannot find pylint rc file at ${PYLINTRC_FILE}"
+    die "ERROR: Cannot find pylint rc file at $PYLINTRC_FILE"
   fi
 
-  NUM_SRC_FILES=$(echo ${PYTHON_SRC_FILES} | wc -w)
+  NUM_SRC_FILES=$(echo "$PYTHON_SRC_FILES" | wc -w)
   NUM_CPUS=$(num_cpus)
 
-  echo "Running pylint on ${NUM_SRC_FILES} files with ${NUM_CPUS} "\
+  echo "Running pylint on $NUM_SRC_FILES files with $NUM_CPUS "\
 "parallel jobs..."
   echo ""
 
@@ -168,13 +168,13 @@ do_pylint() {
   ERRORS_FILE="$(mktemp)_pylint_errors.log"
   NONWL_ERRORS_FILE="$(mktemp)_pylint_nonwl_errors.log"
 
-  rm -rf ${OUTPUT_FILE}
-  rm -rf ${ERRORS_FILE}
-  rm -rf ${NONWL_ERRORS_FILE}
-  touch ${NONWL_ERRORS_FILE}
+  rm -rf "$OUTPUT_FILE"
+  rm -rf "$ERRORS_FILE"
+  rm -rf "$NONWL_ERRORS_FILE"
+  touch "$NONWL_ERRORS_FILE"
 
-  ${PYLINT_BIN} --rcfile="${PYLINTRC_FILE}" --output-format=parseable \
-      --jobs=${NUM_CPUS} ${PYTHON_SRC_FILES} > ${OUTPUT_FILE} 2>&1
+  "$PYLINT_BIN" --rcfile="$PYLINTRC_FILE" --output-format=parseable \
+      --jobs="$NUM_CPUS" "$PYTHON_SRC_FILES" > "$OUTPUT_FILE" 2>&1
   PYLINT_END_TIME=$(date +'%s')
 
   echo ""
@@ -191,30 +191,30 @@ do_pylint() {
   # C0326 bad-whitespace
   # W0611 unused-import
   # W0622 redefined-builtin
-  grep -E '(\[E|\[W0311|\[W0312|\[C0330|\[C0301|\[C0326|\[W0611|\[W0622)' ${OUTPUT_FILE} > ${ERRORS_FILE}
+  grep -E '(\[E|\[W0311|\[W0312|\[C0330|\[C0301|\[C0326|\[W0611|\[W0622)' "$OUTPUT_FILE" > "$ERRORS_FILE"
 
   N_ERRORS=0
   while read -r LINE; do
     IS_WHITELISTED=0
-    for WL_REGEX in ${ERROR_WHITELIST}; do
-      if echo ${LINE} | grep -q "${WL_REGEX}"; then
+    for WL_REGEX in "$ERROR_WHITELIST"; do
+      if echo "$LINE" | grep -q "$WL_REGEX"; then
         echo "Found a whitelisted error:"
-        echo "  ${LINE}"
+        echo "  $LINE"
         IS_WHITELISTED=1
       fi
     done
 
     if [[ ${IS_WHITELISTED} == "0" ]]; then
-      echo "${LINE}" >> ${NONWL_ERRORS_FILE}
-      echo "" >> ${NONWL_ERRORS_FILE}
+      echo "$LINE" >> "$NONWL_ERRORS_FILE"
+      echo "" >> "$NONWL_ERRORS_FILE"
       ((N_ERRORS++))
     fi
-  done <${ERRORS_FILE}
+  done <"$ERRORS_FILE"
 
   echo ""
   if [[ ${N_ERRORS} != 0 ]]; then
-    echo "FAIL: Found ${N_ERRORS} non-whitelisted pylint errors:"
-    cat "${NONWL_ERRORS_FILE}"
+    echo "FAIL: Found $N_ERRORS non-whitelisted pylint errors:"
+    cat "$NONWL_ERRORS_FILE"
     return 1
   else
     echo "PASS: No non-whitelisted pylint errors were found."
@@ -230,16 +230,16 @@ do_pep8() {
   #                  last non-merge git commit.
 
   PEP8_BIN="/usr/local/bin/pep8"
-  PEP8_CONFIG_FILE="${SCRIPT_DIR}/pep8"
+  PEP8_CONFIG_FILE="$SCRIPT_DIR/pep8"
 
   if [[ "$1" == "--incremental" ]]; then
     PYTHON_SRC_FILES=$(get_py_files_to_check --incremental)
-    NUM_PYTHON_SRC_FILES=$(echo ${PYTHON_SRC_FILES} | wc -w)
+    NUM_PYTHON_SRC_FILES=$(echo "$PYTHON_SRC_FILES" | wc -w)
 
-    echo "do_pep8 will perform checks on only the ${NUM_PYTHON_SRC_FILES} "\
+    echo "do_pep8 will perform checks on only the $NUM_PYTHON_SRC_FILES "\
 "Python file(s) changed in the last non-merge git commit due to the "\
 "--incremental flag:"
-    echo "${PYTHON_SRC_FILES}"
+    echo "$PYTHON_SRC_FILES"
     echo ""
   else
     PYTHON_SRC_FILES=$(get_py_files_to_check)
@@ -251,22 +251,22 @@ do_pep8() {
   fi
 
   if [[ ! -f "${PEP8_CONFIG_FILE}" ]]; then
-    die "ERROR: Cannot find pep8 config file at ${PEP8_CONFIG_FILE}"
+    die "ERROR: Cannot find pep8 config file at $PEP8_CONFIG_FILE"
   fi
-  echo "See \"${PEP8_CONFIG_FILE}\" for pep8 config( e.g., ignored errors)"
+  echo "See \"$PEP8_CONFIG_FILE\" for pep8 config( e.g., ignored errors)"
 
-  NUM_SRC_FILES=$(echo ${PYTHON_SRC_FILES} | wc -w)
+  NUM_SRC_FILES=$(echo "$PYTHON_SRC_FILES" | wc -w)
 
-  echo "Running pep8 on ${NUM_SRC_FILES} files"
+  echo "Running pep8 on $NUM_SRC_FILES files"
   echo ""
 
   PEP8_START_TIME=$(date +'%s')
   PEP8_OUTPUT_FILE="$(mktemp)_pep8_output.log"
 
-  rm -rf ${PEP8_OUTPUT_FILE}
+  rm -rf "$PEP8_OUTPUT_FILE"
 
-  ${PEP8_BIN} --config="${PEP8_CONFIG_FILE}" --statistics \
-      ${PYTHON_SRC_FILES} 2>&1 | tee ${PEP8_OUTPUT_FILE}
+  "$PEP8_BIN" --config="$PEP8_CONFIG_FILE" --statistics \
+      "$PYTHON_SRC_FILES" 2>&1 | tee "$PEP8_OUTPUT_FILE"
   PEP8_END_TIME=$(date +'%s')
 
   echo ""
@@ -285,18 +285,18 @@ do_pep8() {
 
 do_buildifier(){
   BUILD_FILES=$(find tensorflow -name 'BUILD*')
-  NUM_BUILD_FILES=$(echo ${BUILD_FILES} | wc -w)
+  NUM_BUILD_FILES=$(echo "$BUILD_FILES" | wc -w)
 
-  echo "Running do_buildifier on ${NUM_BUILD_FILES} files"
+  echo "Running do_buildifier on $NUM_BUILD_FILES files"
   echo ""
 
   BUILDIFIER_START_TIME=$(date +'%s')
   BUILDIFIER_OUTPUT_FILE="$(mktemp)_buildifier_output.log"
 
-  rm -rf ${BUILDIFIER_OUTPUT_FILE}
+  rm -rf "$BUILDIFIER_OUTPUT_FILE"
 
   buildifier -v -mode=check \
-    ${BUILD_FILES} 2>&1 | tee ${BUILDIFIER_OUTPUT_FILE}
+    "$BUILD_FILES" 2>&1 | tee "$BUILDIFIER_OUTPUT_FILE"
   BUILDIFIER_END_TIME=$(date +'%s')
 
   echo ""
@@ -306,7 +306,7 @@ do_buildifier(){
   if [[ -s ${BUILDIFIER_OUTPUT_FILE} ]]; then
     echo "FAIL: buildifier found errors and/or warnings in above BUILD files."
     echo "buildifier suggested the following changes:"
-    buildifier -v -mode=diff -diff_command=diff ${BUILD_FILES}
+    buildifier -v -mode=diff -diff_command=diff "$BUILD_FILES"
     echo "Please fix manually or run buildifier <file> to auto-fix."
     return 1
   else
@@ -327,36 +327,36 @@ do_external_licenses_check(){
   EXTRA_LICENSES_FILE="$(mktemp)_extra_licenses.log"
   TMP_FILE="$(mktemp)_tmp.log"
 
-  echo "Getting external dependencies for ${BUILD_TARGET}"
- bazel cquery "attr('licenses', 'notice', deps(${BUILD_TARGET}))" --keep_going > "${TMP_FILE}" 2>&1
- cat "${TMP_FILE}" \
+  echo "Getting external dependencies for $BUILD_TARGET"
+ bazel cquery "attr('licenses', 'notice', deps($BUILD_TARGET))" --keep_going > "$TMP_FILE" 2>&1
+ cat "$TMP_FILE" \
   | grep -e "^\/\/" -e "^@" \
   | grep -E -v "^//tensorflow" \
   | sed -e 's|:.*||' \
   | sort \
   | uniq 2>&1 \
-  | tee ${EXTERNAL_DEPENDENCIES_FILE}
+  | tee "$EXTERNAL_DEPENDENCIES_FILE"
 
   echo
-  echo "Getting list of external licenses mentioned in ${LICENSES_TARGET}."
-  bazel cquery "deps(${LICENSES_TARGET})" --keep_going > "${TMP_FILE}" 2>&1
- cat "${TMP_FILE}" \
+  echo "Getting list of external licenses mentioned in $LICENSES_TARGET."
+  bazel cquery "deps($LICENSES_TARGET)" --keep_going > "$TMP_FILE" 2>&1
+ cat "$TMP_FILE" \
   | grep -e "^\/\/" -e "^@" \
   | grep -E -v "^//tensorflow" \
   | sed -e 's|:.*||' \
   | sort \
   | uniq 2>&1 \
-  | tee ${LICENSES_FILE}
+  | tee "$LICENSES_FILE"
 
   echo
-  comm -1 -3 ${EXTERNAL_DEPENDENCIES_FILE}  ${LICENSES_FILE} 2>&1 | tee ${EXTRA_LICENSES_FILE}
+  comm -1 -3 "$EXTERNAL_DEPENDENCIES_FILE"  "$LICENSES_FILE" 2>&1 | tee "$EXTRA_LICENSES_FILE"
   echo
-  comm -2 -3 ${EXTERNAL_DEPENDENCIES_FILE}  ${LICENSES_FILE} 2>&1 | tee ${MISSING_LICENSES_FILE}
+  comm -2 -3 "$EXTERNAL_DEPENDENCIES_FILE"  "$LICENSES_FILE" 2>&1 | tee "$MISSING_LICENSES_FILE"
 
   EXTERNAL_LICENSES_CHECK_END_TIME=$(date +'%s')
 
   # Blacklist
-  echo ${MISSING_LICENSES_FILE}
+  echo "$MISSING_LICENSES_FILE"
   grep \
     -e "@bazel_tools//third_party/" \
     -e "@bazel_tools//tools" \
@@ -366,11 +366,11 @@ do_external_licenses_check(){
     -e "@com_github_googlecloudplatform_google_cloud_cpp//google" \
     -e "@com_github_grpc_grpc//src/compiler" \
     -e "@platforms//os" \
-    -v ${MISSING_LICENSES_FILE} > temp.txt
-  mv temp.txt ${MISSING_LICENSES_FILE}
+    -v "$MISSING_LICENSES_FILE" > temp.txt
+  mv temp.txt "$MISSING_LICENSES_FILE"
 
   # Whitelist
-  echo ${EXTRA_LICENSE_FILE}
+  echo "$EXTRA_LICENSE_FILE"
   grep \
     -e "//third_party/mkl" \
     -e "//third_party/mkl_dnn" \
@@ -383,8 +383,8 @@ do_external_licenses_check(){
     -e "@com_github_googlecloudplatform_google_cloud_cpp//" \
     -e "@embedded_jdk//" \
     -e "^//$" \
-    -v ${EXTRA_LICENSES_FILE} > temp.txt
-  mv temp.txt ${EXTRA_LICENSES_FILE}
+    -v "$EXTRA_LICENSES_FILE" > temp.txt
+  mv temp.txt "$EXTRA_LICENSES_FILE"
 
 
 
@@ -396,24 +396,24 @@ do_external_licenses_check(){
     echo "FAIL: mismatch in packaged licenses and external dependencies"
     if [[ -s ${MISSING_LICENSES_FILE} ]] ; then
       echo "Missing the licenses for the following external dependencies:"
-      cat ${MISSING_LICENSES_FILE}
-      echo "Please add the license(s) to ${LICENSES_TARGET}."
+      cat "$MISSING_LICENSES_FILE"
+      echo "Please add the license(s) to $LICENSES_TARGET."
     fi
     if [[ -s ${EXTRA_LICENSES_FILE} ]] ; then
-      echo "Please remove the licenses for the following external dependencies from target ${LICENSES_TARGET}."
-      cat ${EXTRA_LICENSES_FILE}
+      echo "Please remove the licenses for the following external dependencies from target $LICENSES_TARGET."
+      cat "$EXTRA_LICENSES_FILE"
     fi
-    rm -rf ${EXTERNAL_DEPENDENCIES_FILE}
-    rm -rf ${LICENSES_FILE}
-    rm -rf ${MISSING_LICENSES_FILE}
-    rm -rf ${EXTRA_LICENSES_FILE}
+    rm -rf "$EXTERNAL_DEPENDENCIES_FILE"
+    rm -rf "$LICENSES_FILE"
+    rm -rf "$MISSING_LICENSES_FILE"
+    rm -rf "$EXTRA_LICENSES_FILE"
     return 1
   else
     echo "PASS: all external licenses included."
-    rm -rf ${EXTERNAL_DEPENDENCIES_FILE}
-    rm -rf ${LICENSES_FILE}
-    rm -rf ${MISSING_LICENSES_FILE}
-    rm -rf ${EXTRA_LICENSES_FILE}
+    rm -rf "$EXTERNAL_DEPENDENCIES_FILE"
+    rm -rf "$LICENSES_FILE"
+    rm -rf "$MISSING_LICENSES_FILE"
+    rm -rf "$EXTRA_LICENSES_FILE"
     return 0
   fi
 }
@@ -446,12 +446,12 @@ do_java_package_licenses_check() {
 cmd_status(){
   if [[ $? != 0 ]]; then
     echo ""
-    echo "FAIL: ${BUILD_CMD}"
+    echo "FAIL: $BUILD_CMD"
     echo "  $1 See lines above for details."
     return 1
   else
     echo ""
-    echo "PASS: ${BUILD_CMD}"
+    echo "PASS: $BUILD_CMD"
     return 0
   fi
 }
@@ -462,12 +462,12 @@ cmd_status(){
 # out by default in TF WORKSPACE file.
 do_bazel_nobuild() {
   BUILD_TARGET="//tensorflow/..."
-  BUILD_TARGET="${BUILD_TARGET} -//tensorflow/lite/delegates/gpu/..."
-  BUILD_TARGET="${BUILD_TARGET} -//tensorflow/lite/java/demo/app/..."
-  BUILD_TARGET="${BUILD_TARGET} -//tensorflow/lite/schema/..."
-  BUILD_CMD="bazel build --nobuild ${BAZEL_FLAGS} -- ${BUILD_TARGET}"
+  BUILD_TARGET="$BUILD_TARGET -//tensorflow/lite/delegates/gpu/..."
+  BUILD_TARGET="$BUILD_TARGET -//tensorflow/lite/java/demo/app/..."
+  BUILD_TARGET="$BUILD_TARGET -//tensorflow/lite/schema/..."
+  BUILD_CMD="bazel build --nobuild $BAZEL_FLAGS -- $BUILD_TARGET"
 
-  ${BUILD_CMD}
+  "$BUILD_CMD"
 
   cmd_status \
     "This is due to invalid BUILD files."
@@ -481,11 +481,11 @@ do_bazel_deps_query() {
   # TODO(mikecase): Remove TF Lite exclusion from this list. Exclusion is
   # necessary since the @androidsdk WORKSPACE dependency is commented out by
   # default in TF WORKSPACE file.
-  local BUILD_TARGET="${BUILD_TARGET}"' - kind("android_*", //tensorflow/...)'
+  local BUILD_TARGET="$BUILD_TARGET"' - kind("android_*", //tensorflow/...)'
 
   # We've set the flag noimplicit_deps as a workaround for
   # https://github.com/bazelbuild/bazel/issues/10544
-  bazel query ${BAZEL_FLAGS} --noimplicit_deps -- "deps($BUILD_TARGET)" > /dev/null
+  bazel query "$BAZEL_FLAGS" --noimplicit_deps -- "deps($BUILD_TARGET)" > /dev/null
 
   cmd_status \
     "This is due to invalid BUILD files."
@@ -510,13 +510,13 @@ get_clang_files_to_check() {
 
     # Do not include files removed in the last non-merge commit.
     CLANG_FILES=""
-    for CLANG_FILE in ${CHANGED_CLANG_FILES}; do
+    for CLANG_FILE in "$CHANGED_CLANG_FILES"; do
       if [[ -f "${CLANG_FILE}" ]]; then
-        CLANG_FILES="${CLANG_FILES} ${CLANG_FILE}"
+        CLANG_FILES="$CLANG_FILES $CLANG_FILE"
       fi
     done
 
-    echo "${CLANG_FILES}"
+    echo "$CLANG_FILES"
   else
     find tensorflow -name '*.h' -o -name '*.cc'
   fi
@@ -550,16 +550,16 @@ do_clang_format_check() {
   CLANG_FORMAT=${CLANG_FORMAT:-clang-format-3.8}
 
   success=1
-  for filename in $CLANG_SRC_FILES; do
-    $CLANG_FORMAT --style=google $filename | diff $filename - > /dev/null
+  for filename in "$CLANG_SRC_FILES"; do
+    "$CLANG_FORMAT" --style=google "$filename" | diff "$filename" - > /dev/null
     if [ ! $? -eq 0 ]; then
       success=0
-      echo File $filename is not properly formatted with "clang-format "\
+      echo File "$filename" is not properly formatted with "clang-format "\
 "--style=google"
     fi
   done
 
-  if [ $success == 0 ]; then
+  if [ "$success" == 0 ]; then
     echo Clang format check fails.
     exit 1
   fi
@@ -588,19 +588,19 @@ _check_no_deps() {
   EXTRA_FLAG="$3"
 
   TMP_FILE="$(mktemp)_tmp.log"
-  echo "Checking ${TARGET} does not depend on ${DISALLOWED_DEP} ..."
-  bazel cquery ${EXTRA_FLAG} "somepath(${TARGET}, ${DISALLOWED_DEP})" --keep_going> "${TMP_FILE}" 2>&1
-  if cat "${TMP_FILE}" | grep "Empty query results"; then
+  echo "Checking $TARGET does not depend on $DISALLOWED_DEP ..."
+  bazel cquery "$EXTRA_FLAG" "somepath($TARGET, $DISALLOWED_DEP)" --keep_going> "$TMP_FILE" 2>&1
+  if cat "$TMP_FILE" | grep "Empty query results"; then
       echo "Success."
   else
-      cat "${TMP_FILE}"
+      cat "$TMP_FILE"
       echo
-      echo "ERROR: Found path from ${TARGET} to disallowed dependency ${DISALLOWED_DEP}."
+      echo "ERROR: Found path from $TARGET to disallowed dependency $DISALLOWED_DEP."
       echo "See above for path."
-      rm "${TMP_FILE}"
+      rm "$TMP_FILE"
       exit 1
   fi
-  rm "${TMP_FILE}"
+  rm "$TMP_FILE"
 }
 
 _do_pip_no_cuda_deps_check() {
@@ -615,7 +615,7 @@ _do_pip_no_cuda_deps_check() {
         "@local_config_tensorrt//:tensorrt")
   for cuda_dep in "${DISALLOWED_CUDA_DEPS[@]}"
   do
-   _check_no_deps "//tensorflow/tools/pip_package:build_pip_package" "${cuda_dep}" "${EXTRA_FLAG}"
+   _check_no_deps "//tensorflow/tools/pip_package:build_pip_package" "$cuda_dep" "$EXTRA_FLAG"
    RESULT=$?
 
    if [[ ${RESULT} != "0" ]]; then
@@ -635,9 +635,9 @@ do_pip_no_cuda_deps_check_windows() {
 do_configure_test() {
   for WITH_CUDA in 1 0
   do
-    export TF_NEED_CUDA=${WITH_CUDA}
+    export TF_NEED_CUDA="$WITH_CUDA"
     export CUDNN_INSTALL_PATH="/usr/local/cudnn"
-    export PYTHON_BIN_PATH=$(which python)
+    export PYTHON_BIN_PATH="$(which python)"
     yes "" | ./configure
 
     RESULT=$?
@@ -655,7 +655,7 @@ INCREMENTAL_FLAG=""
 DEFAULT_BAZEL_CONFIGS=""
 
 # Parse command-line arguments
-BAZEL_FLAGS=${DEFAULT_BAZEL_CONFIGS}
+BAZEL_FLAGS=$DEFAULT_BAZEL_CONFIGS
 for arg in "$@"; do
   if [[ "${arg}" == "--pep8" ]]; then
     # Only run pep8 test if "--pep8" option supplied
@@ -664,7 +664,7 @@ for arg in "$@"; do
   elif [[ "${arg}" == "--incremental" ]]; then
     INCREMENTAL_FLAG="--incremental"
   else
-    BAZEL_FLAGS="${BAZEL_FLAGS} ${arg}"
+    BAZEL_FLAGS="$BAZEL_FLAGS $arg"
   fi
 done
 
@@ -680,13 +680,13 @@ while [[ ${COUNTER} -lt "${#SANITY_STEPS[@]}" ]]; do
   ((INDEX++))
 
   echo ""
-  echo "=== Sanity check step ${INDEX} of ${#SANITY_STEPS[@]}: "\
+  echo "=== Sanity check step $INDEX of ${#SANITY_STEPS[@]}: "\
 "${SANITY_STEPS[COUNTER]} (${SANITY_STEPS_DESC[COUNTER]}) ==="
   echo ""
 
   # subshell: don't leak variables or changes of working directory
   (
-  ${SANITY_STEPS[COUNTER]} ${INCREMENTAL_FLAG}
+  "${SANITY_STEPS[COUNTER]}" "$INCREMENTAL_FLAG"
   )
   RESULT=$?
 
@@ -696,7 +696,7 @@ while [[ ${COUNTER} -lt "${#SANITY_STEPS[@]}" ]]; do
     ((PASS_COUNTER++))
   fi
 
-  STEP_EXIT_CODES+=(${RESULT})
+  STEP_EXIT_CODES+=("$RESULT")
 
   echo ""
   ((COUNTER++))
@@ -709,23 +709,23 @@ while [[ ${COUNTER} -lt "${#SANITY_STEPS[@]}" ]]; do
   INDEX=COUNTER
   ((INDEX++))
 
-  echo "${INDEX}. ${SANITY_STEPS[COUNTER]}: ${SANITY_STEPS_DESC[COUNTER]}"
+  echo "$INDEX. ${SANITY_STEPS[COUNTER]}: ${SANITY_STEPS_DESC[COUNTER]}"
   if [[ ${STEP_EXIT_CODES[COUNTER]} == "0" ]]; then
-    printf "  ${COLOR_GREEN}PASS${COLOR_NC}\n"
+    printf "  ${COLOR_GREEN}PASS$COLOR_NC\n"
   else
-    printf "  ${COLOR_RED}FAIL${COLOR_NC}\n"
+    printf "  ${COLOR_RED}FAIL$COLOR_NC\n"
   fi
 
   ((COUNTER++))
 done
 
 echo
-echo "${FAIL_COUNTER} failed; ${PASS_COUNTER} passed."
+echo "$FAIL_COUNTER failed; $PASS_COUNTER passed."
 
 echo
 if [[ ${FAIL_COUNTER} == "0" ]]; then
-  printf "Sanity checks ${COLOR_GREEN}PASSED${COLOR_NC}\n"
+  printf "Sanity checks ${COLOR_GREEN}PASSED$COLOR_NC\n"
 else
-  printf "Sanity checks ${COLOR_RED}FAILED${COLOR_NC}\n"
+  printf "Sanity checks ${COLOR_RED}FAILED$COLOR_NC\n"
   exit 1
 fi
