@@ -26,34 +26,34 @@ function real_path() {
 }
 
 function cp_external() {
-  local src_dir=$1
-  local dest_dir=$2
+  local src_dir="$1"
+  local dest_dir="$2"
 
   pushd .
   cd "$src_dir"
-  for f in `find . ! -type d ! -name '*.py' ! -path '*local_config_cuda*' ! -path '*local_config_tensorrt*' ! -path '*local_config_syslibs*' ! -path '*org_tensorflow*' ! -path '*llvm-project/llvm/*'`; do
-    mkdir -p "${dest_dir}/$(dirname ${f})"
-    cp "${f}" "${dest_dir}/$(dirname ${f})/"
+  for f in "$(find . ! -type d ! -name '*.py' ! -path '*local_config_cuda*' ! -path '*local_config_tensorrt*' ! -path '*local_config_syslibs*' ! -path '*org_tensorflow*' ! -path '*llvm-project/llvm/*')"; do
+    mkdir -p "$dest_dir/$(dirname "$f")"
+    cp "$f" "$dest_dir/$(dirname "$f")/"
   done
   popd
 
-  mkdir -p "${dest_dir}/local_config_cuda/cuda/cuda/"
-  cp "${src_dir}/local_config_cuda/cuda/cuda/cuda_config.h" "${dest_dir}/local_config_cuda/cuda/cuda/"
+  mkdir -p "$dest_dir/local_config_cuda/cuda/cuda/"
+  cp "$src_dir/local_config_cuda/cuda/cuda/cuda_config.h" "$dest_dir/local_config_cuda/cuda/cuda/"
 }
 
 function copy_xla_aot_runtime_sources() {
-  local src_dir=$1
-  local dst_dir=$2
+  local src_dir="$1"
+  local dst_dir="$2"
 
   local srcs_txt="tensorflow/tools/pip_package/xla_compiled_cpu_runtime_srcs.txt"
 
-  if [ ! -f "${src_dir}/${srcs_txt}" ]; then
-    echo Could not find source list file "${src_dir}/${srcs_txt}". 1>&2
+  if [ ! -f "$src_dir/$srcs_txt" ]; then
+    echo Could not find source list file "$src_dir/$srcs_txt". 1>&2
     return 0
   fi
 
-  pushd $src_dir
-  for file in $(cat "${srcs_txt}")
+  pushd "$src_dir"
+  for file in "$(cat "$srcs_txt")"
   do
     # Sometimes $file has a prefix bazel-out/host/ we want to remove.
     prefix=${file%%tensorflow/*}  # Find the location of "tensorflow/*"
@@ -61,28 +61,28 @@ function copy_xla_aot_runtime_sources() {
     if [ ! -z "$candidate_file" ]; then
       file=$candidate_file
     fi
-    dn=$(dirname $file)
+    dn=$(dirname "$file")
     if test -f "$file"; then
-      mkdir -p "${dst_dir}/${dn}"
-      cp $file "${dst_dir}/${file}"
+      mkdir -p "$dst_dir/$dn"
+      cp "$file" "$dst_dir/$file"
     else
-      echo "Missing xla source file: ${file}" 1>&2
+      echo "Missing xla source file: $file" 1>&2
     fi
   done
-  cp tensorflow/tools/pip_package/xla_build/CMakeLists.txt "${dst_dir}"
+  cp tensorflow/tools/pip_package/xla_build/CMakeLists.txt "$dst_dir"
   popd
 }
 
 function move_to_root_if_exists () {
   arg_to_move="$1"
-  if [ -e "${arg_to_move}" ]; then
-    mv ${arg_to_move} ./
+  if [ -e "$arg_to_move" ]; then
+    mv "$arg_to_move" ./
   fi
 }
 
 function reorganize_includes() {
   TMPDIR="${1%/}"
-  pushd "${TMPDIR}/tensorflow/include/"
+  pushd "$TMPDIR/tensorflow/include/"
 
   move_to_root_if_exists external/com_google_absl/absl
 
@@ -115,10 +115,10 @@ function prepare_src() {
 
   TMPDIR="${1%/}"
   mkdir -p "$TMPDIR"
-  EXTERNAL_INCLUDES="${TMPDIR}/tensorflow/include/external"
-  XLA_AOT_RUNTIME_SOURCES="${TMPDIR}/tensorflow/xla_aot_runtime_src"
+  EXTERNAL_INCLUDES="$TMPDIR/tensorflow/include/external"
+  XLA_AOT_RUNTIME_SOURCES="$TMPDIR/tensorflow/xla_aot_runtime_src"
 
-  echo $(date) : "=== Preparing sources in dir: ${TMPDIR}"
+  echo "$(date)" : "=== Preparing sources in dir: $TMPDIR"
 
   if [ ! -d bazel-bin/tensorflow ]; then
     echo "Could not find bazel-bin.  Did you run from the root of the build tree?"
@@ -134,16 +134,16 @@ function prepare_src() {
     # runfiles structure after unzip the python binary
     cp \
       bazel-bin/tensorflow/tools/pip_package/simple_console_for_window_unzip/runfiles/org_tensorflow/LICENSE \
-      "${TMPDIR}"
+      "$TMPDIR"
     cp -R \
       bazel-bin/tensorflow/tools/pip_package/simple_console_for_window_unzip/runfiles/org_tensorflow/tensorflow \
-      "${TMPDIR}"
+      "$TMPDIR"
     cp_external \
       bazel-bin/tensorflow/tools/pip_package/simple_console_for_window_unzip/runfiles \
-      "${EXTERNAL_INCLUDES}/"
+      "$EXTERNAL_INCLUDES/"
     copy_xla_aot_runtime_sources \
       bazel-bin/tensorflow/tools/pip_package/simple_console_for_window_unzip/runfiles/org_tensorflow \
-      "${XLA_AOT_RUNTIME_SOURCES}/"
+      "$XLA_AOT_RUNTIME_SOURCES/"
     RUNFILES=bazel-bin/tensorflow/tools/pip_package/simple_console_for_window_unzip/runfiles/org_tensorflow
   else
     RUNFILES=bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow
@@ -151,75 +151,75 @@ function prepare_src() {
       # Old-style runfiles structure (--legacy_external_runfiles).
       cp \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/LICENSE \
-        "${TMPDIR}"
+        "$TMPDIR"
       cp -R \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/tensorflow \
-        "${TMPDIR}"
+        "$TMPDIR"
       cp_external \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/external \
-        "${EXTERNAL_INCLUDES}"
+        "$EXTERNAL_INCLUDES"
       copy_xla_aot_runtime_sources \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow \
-        "${XLA_AOT_RUNTIME_SOURCES}"
+        "$XLA_AOT_RUNTIME_SOURCES"
       # Copy MKL libs over so they can be loaded at runtime
-      so_lib_dir=$(ls $RUNFILES | grep solib) || true
-      if [ -n "${so_lib_dir}" ]; then
-        mkl_so_dir=$(ls ${RUNFILES}/${so_lib_dir} | grep mkl) || true
-        if [ -n "${mkl_so_dir}" ]; then
-          mkdir "${TMPDIR}/${so_lib_dir}"
-          cp -R ${RUNFILES}/${so_lib_dir}/${mkl_so_dir} "${TMPDIR}/${so_lib_dir}"
+      so_lib_dir=$(ls "$RUNFILES" | grep solib) || true
+      if [ -n "$so_lib_dir" ]; then
+        mkl_so_dir=$(ls "$RUNFILES/$so_lib_dir" | grep mkl) || true
+        if [ -n "$mkl_so_dir" ]; then
+          mkdir "$TMPDIR/$so_lib_dir"
+          cp -R "$RUNFILES/$so_lib_dir/$mkl_so_dir" "$TMPDIR/$so_lib_dir"
         fi
       fi
     else
       # New-style runfiles structure (--nolegacy_external_runfiles).
       cp \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/LICENSE \
-        "${TMPDIR}"
+        "$TMPDIR"
       cp -R \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/tensorflow \
-        "${TMPDIR}"
+        "$TMPDIR"
       cp_external \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles \
-        "${EXTERNAL_INCLUDES}"
+        "$EXTERNAL_INCLUDES"
       copy_xla_aot_runtime_sources \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow \
-        "${XLA_AOT_RUNTIME_SOURCES}"
+        "$XLA_AOT_RUNTIME_SOURCES"
       # Copy MKL libs over so they can be loaded at runtime
-      so_lib_dir=$(ls $RUNFILES | grep solib) || true
-      if [ -n "${so_lib_dir}" ]; then
-        mkl_so_dir=$(ls ${RUNFILES}/${so_lib_dir} | grep mkl) || true
-        if [ -n "${mkl_so_dir}" ]; then
-          mkdir "${TMPDIR}/${so_lib_dir}"
-          cp -R ${RUNFILES}/${so_lib_dir}/${mkl_so_dir} "${TMPDIR}/${so_lib_dir}"
+      so_lib_dir=$(ls "$RUNFILES" | grep solib) || true
+      if [ -n "$so_lib_dir" ]; then
+        mkl_so_dir=$(ls "$RUNFILES/$so_lib_dir" | grep mkl) || true
+        if [ -n "$mkl_so_dir" ]; then
+          mkdir "$TMPDIR/$so_lib_dir"
+          cp -R "$RUNFILES/$so_lib_dir/$mkl_so_dir" "$TMPDIR/$so_lib_dir"
         fi
       fi
     fi
   fi
 
-  mkdir -p ${TMPDIR}/third_party
-  cp -R $RUNFILES/third_party/eigen3 ${TMPDIR}/third_party
+  mkdir -p "$TMPDIR"/third_party
+  cp -R "$RUNFILES"/third_party/eigen3 "$TMPDIR"/third_party
 
-  reorganize_includes "${TMPDIR}"
+  reorganize_includes "$TMPDIR"
 
-  cp tensorflow/tools/pip_package/MANIFEST.in ${TMPDIR}
-  cp tensorflow/tools/pip_package/README ${TMPDIR}/README.md
-  cp tensorflow/tools/pip_package/setup.py ${TMPDIR}
+  cp tensorflow/tools/pip_package/MANIFEST.in "$TMPDIR"
+  cp tensorflow/tools/pip_package/README "$TMPDIR"/README.md
+  cp tensorflow/tools/pip_package/setup.py "$TMPDIR"
 
-  rm -f ${TMPDIR}/tensorflow/libtensorflow_framework.so
-  rm -f ${TMPDIR}/tensorflow/libtensorflow_framework.so.[0-9].*
+  rm -f "$TMPDIR"/tensorflow/libtensorflow_framework.so
+  rm -f "$TMPDIR"/tensorflow/libtensorflow_framework.so.[0-9].*
 
   # TODO(annarev): copy over API files from tensorflow/api/_vN to tensorflow/
   #   except tensorflow/api/_vN/lite/.
 
   # Copy over keras API folder to the root directory
   # so that autocomplete works as expected for all keras subimports.
-  if [ -d "${TMPDIR}/tensorflow/_api/v1/" ]
+  if [ -d "$TMPDIR/tensorflow/_api/v1/" ]
   then
-    cp -r ${TMPDIR}/tensorflow/python/keras/api/_v1/keras/ ${TMPDIR}/tensorflow/keras/
-    sed -i'.original' -e 's/.python.keras.api._v1/tensorflow/g' ${TMPDIR}/tensorflow/__init__.py
+    cp -r "$TMPDIR"/tensorflow/python/keras/api/_v1/keras/ "$TMPDIR"/tensorflow/keras/
+    sed -i'.original' -e 's/.python.keras.api._v1/tensorflow/g' "$TMPDIR"/tensorflow/__init__.py
   else
-    cp -r ${TMPDIR}/tensorflow/python/keras/api/_v2/keras/ ${TMPDIR}/tensorflow/keras/
-    sed -i'.original' -e 's/.python.keras.api._v2/tensorflow/g' ${TMPDIR}/tensorflow/__init__.py
+    cp -r "$TMPDIR"/tensorflow/python/keras/api/_v2/keras/ "$TMPDIR"/tensorflow/keras/
+    sed -i'.original' -e 's/.python.keras.api._v2/tensorflow/g' "$TMPDIR"/tensorflow/__init__.py
   fi
 }
 
@@ -239,15 +239,15 @@ function build_wheel() {
     source tools/python_bin_path.sh
   fi
 
-  pushd ${TMPDIR} > /dev/null
+  pushd "$TMPDIR" > /dev/null
 
   rm -f MANIFEST
-  echo $(date) : "=== Building wheel"
-  "${PYTHON_BIN_PATH:-python}" setup.py bdist_wheel ${PKG_NAME_FLAG} >/dev/null
-  mkdir -p ${DEST}
-  cp dist/* ${DEST}
+  echo "$(date)" : "=== Building wheel"
+  "${PYTHON_BIN_PATH:-python}" setup.py bdist_wheel "$PKG_NAME_FLAG" >/dev/null
+  mkdir -p "$DEST"
+  cp dist/* "$DEST"
   popd > /dev/null
-  echo $(date) : "=== Output wheel file is in: ${DEST}"
+  echo "$(date)" : "=== Output wheel file is in: $DEST"
 }
 
 function usage() {
@@ -305,13 +305,13 @@ function main() {
       PROJECT_NAME="$1"
     elif [[ "$1" == "--src" ]]; then
       shift
-      SRCDIR="$(real_path $1)"
+      SRCDIR="$(real_path "$1")"
       CLEANSRC=0
     elif [[ "$1" == "--dst" ]]; then
       shift
-      DSTDIR="$(real_path $1)"
+      DSTDIR="$(real_path "$1")"
     else
-      DSTDIR="$(real_path $1)"
+      DSTDIR="$(real_path "$1")"
     fi
     shift
 
@@ -345,7 +345,7 @@ function main() {
   fi
 
   if [[ -n ${PROJECT_NAME} ]]; then
-    PKG_NAME_FLAG="--project_name ${PROJECT_NAME}"
+    PKG_NAME_FLAG="--project_name $PROJECT_NAME"
   elif [[ ${NIGHTLY_BUILD} == "1" && ${GPU_BUILD} == "1" ]]; then
     PKG_NAME_FLAG="--project_name tf_nightly_gpu"
   elif [[ ${NIGHTLY_BUILD} == "1" && ${GPUDIRECT_BUILD} == "1" ]]; then
@@ -369,7 +369,7 @@ function main() {
   build_wheel "$SRCDIR" "$DSTDIR" "$PKG_NAME_FLAG"
 
   if [[ $CLEANSRC -ne 0 ]]; then
-    rm -rf "${TMPDIR}"
+    rm -rf "$TMPDIR"
   fi
 }
 
