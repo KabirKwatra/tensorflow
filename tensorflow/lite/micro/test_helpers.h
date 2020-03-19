@@ -53,7 +53,7 @@ const Tensor* CreateMissingQuantizationFlatbufferTensor(int size);
 
 // Creates a vector of flatbuffer buffers.
 const flatbuffers::Vector<flatbuffers::Offset<Buffer>>*
-CreateFlatbufferBuffers();
+        CreateFlatbufferBuffers();
 
 // Performs a simple string comparison without requiring standard C library.
 int TestStrcmp(const char* a, const char* b);
@@ -97,10 +97,10 @@ TfLiteTensor CreateQuantizedTensor(const float* input, T* quantized,
                                    TfLiteIntArray* dims, float scale,
                                    int zero_point, const char* name,
                                    bool is_variable = false) {
-  int input_size = ElementCount(*dims);
-  tflite::AsymmetricQuantize(input, quantized, input_size, scale, zero_point);
-  return CreateQuantizedTensor(quantized, dims, scale, zero_point, name,
-                               is_variable);
+    int input_size = ElementCount(*dims);
+    tflite::AsymmetricQuantize(input, quantized, input_size, scale, zero_point);
+    return CreateQuantizedTensor(quantized, dims, scale, zero_point, name,
+                                 is_variable);
 }
 
 TfLiteTensor CreateQuantizedBiasTensor(const float* data, int32_t* quantized,
