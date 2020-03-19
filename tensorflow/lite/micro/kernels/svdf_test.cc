@@ -91,35 +91,35 @@ static float svdf_golden_output_rank_1[] = {
 
 static float svdf_golden_output_rank_2[] = {
     -0.09623547, -0.10193135, 0.11083051,  -0.0347917,
-        0.1141196,   0.12965347,  -0.12652366, 0.01007236,
+    0.1141196,   0.12965347,  -0.12652366, 0.01007236,
 
-        -0.16396809, -0.21247184, 0.11259045,  -0.04156673,
-        0.10132131,  -0.06143532, -0.00924693, 0.10084561,
+    -0.16396809, -0.21247184, 0.11259045,  -0.04156673,
+    0.10132131,  -0.06143532, -0.00924693, 0.10084561,
 
-        0.01257364,  0.0506071,   -0.19287863, -0.07162561,
-        -0.02033747, 0.22673416,  0.15487903,  0.02525555,
+    0.01257364,  0.0506071,   -0.19287863, -0.07162561,
+    -0.02033747, 0.22673416,  0.15487903,  0.02525555,
 
-        -0.1411963,  -0.37054959, 0.01774767,  0.05867489,
-        0.09607603,  -0.0141301,  -0.08995658, 0.12867066,
+    -0.1411963,  -0.37054959, 0.01774767,  0.05867489,
+    0.09607603,  -0.0141301,  -0.08995658, 0.12867066,
 
-        -0.27142537, -0.16955489, 0.18521598,  -0.12528358,
-        0.00331409,  0.11167502,  0.02218599,  -0.07309391,
+    -0.27142537, -0.16955489, 0.18521598,  -0.12528358,
+    0.00331409,  0.11167502,  0.02218599,  -0.07309391,
 
-        0.09593632,  -0.28361851, -0.0773851,  0.17199151,
-        -0.00075242, 0.33691186,  -0.1536046,  0.16572715,
+    0.09593632,  -0.28361851, -0.0773851,  0.17199151,
+    -0.00075242, 0.33691186,  -0.1536046,  0.16572715,
 
-        -0.27916506, -0.27626723, 0.42615682,  0.3225764,
-        -0.37472126, -0.55655634, -0.05013514, 0.289112,
+    -0.27916506, -0.27626723, 0.42615682,  0.3225764,
+    -0.37472126, -0.55655634, -0.05013514, 0.289112,
 
-        -0.24418658, 0.07540751,  -0.1940318,  -0.08911639,
-        0.00732617,  0.46737891,  0.26449674,  0.24888524,
+    -0.24418658, 0.07540751,  -0.1940318,  -0.08911639,
+    0.00732617,  0.46737891,  0.26449674,  0.24888524,
 
-        -0.17225097, -0.54660404, -0.38795233, 0.08389944,
-        0.07736043,  -0.28260678, 0.15666828,  1.14949894,
+    -0.17225097, -0.54660404, -0.38795233, 0.08389944,
+    0.07736043,  -0.28260678, 0.15666828,  1.14949894,
 
-        -0.57454878, -0.64704704, 0.73235172,  -0.34616736,
-        0.21120001,  -0.22927976, 0.02455296,  -0.35906726,
-    };
+    -0.57454878, -0.64704704, 0.73235172,  -0.34616736,
+    0.21120001,  -0.22927976, 0.02455296,  -0.35906726,
+};
 
 void ValidateSVDFGoldens(const int batch_size, const int num_units,
                          const int input_size, const int rank,
@@ -127,64 +127,64 @@ void ValidateSVDFGoldens(const int batch_size, const int num_units,
                          float* golden_input_data,
                          const int golden_input_data_size, float* output_data,
                          float* expected_output, float tolerance = 1e-5f) {
-    TfLiteContext context;
-    PopulateContext(tensors, tensor_count, micro_test::reporter, &context);
+  TfLiteContext context;
+  PopulateContext(tensors, tensor_count, micro_test::reporter, &context);
 
-    ::tflite::ops::micro::AllOpsResolver resolver;
-    const TfLiteRegistration* registration =
-        resolver.FindOp(tflite::BuiltinOperator_SVDF, 1);
-    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+  ::tflite::ops::micro::AllOpsResolver resolver;
+  const TfLiteRegistration* registration =
+      resolver.FindOp(tflite::BuiltinOperator_SVDF, 1);
+  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
 
-    TfLiteSVDFParams params;
-    params.rank = rank;
-    params.activation = kTfLiteActNone;
+  TfLiteSVDFParams params;
+  params.rank = rank;
+  params.activation = kTfLiteActNone;
 
-    void* user_data = nullptr;
-    if (registration->init) {
-        user_data = registration->init(&context, nullptr, 0);
+  void* user_data = nullptr;
+  if (registration->init) {
+    user_data = registration->init(&context, nullptr, 0);
+  }
+
+  // Bias is an optional tensor:
+  int inputs_array_data[] = {5, 0, 1, 2, kTfLiteOptionalTensor, 3};
+  TfLiteIntArray* inputs_array = IntArrayFromInts(inputs_array_data);
+
+  int outputs_array_data[] = {1, 4};
+  TfLiteIntArray* outputs_array = IntArrayFromInts(outputs_array_data);
+
+  TfLiteNode node;
+  node.inputs = inputs_array;
+  node.outputs = outputs_array;
+  node.user_data = user_data;
+  node.builtin_data = reinterpret_cast<void*>(&params);
+  node.custom_initial_data = nullptr;
+  node.custom_initial_data_size = 0;
+  node.delegate = nullptr;
+  if (registration->prepare) {
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(&context, &node));
+  }
+  TF_LITE_MICRO_EXPECT_NE(nullptr, registration->invoke);
+
+  int input_sequence_size =
+      golden_input_data_size / sizeof(float) / (input_size * batch_size);
+  for (int i = 0; i < input_sequence_size; ++i) {
+    float* input_batch_start = golden_input_data + i * input_size * batch_size;
+    float* input_batch_end = input_batch_start + input_size * batch_size;
+
+    PopulateFloatTensor(&tensors[0], input_batch_start, input_batch_end);
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(&context, &node));
+
+    int output_idx = 0;
+    int golden_idx = i * batch_size * num_units;
+    for (int j = golden_idx; j < golden_idx + batch_size * num_units; ++j) {
+      TF_LITE_MICRO_EXPECT_NEAR(expected_output[j], output_data[output_idx],
+                                tolerance);
+      output_idx++;
     }
+  }
 
-    // Bias is an optional tensor:
-    int inputs_array_data[] = {5, 0, 1, 2, kTfLiteOptionalTensor, 3};
-    TfLiteIntArray* inputs_array = IntArrayFromInts(inputs_array_data);
-
-    int outputs_array_data[] = {1, 4};
-    TfLiteIntArray* outputs_array = IntArrayFromInts(outputs_array_data);
-
-    TfLiteNode node;
-    node.inputs = inputs_array;
-    node.outputs = outputs_array;
-    node.user_data = user_data;
-    node.builtin_data = reinterpret_cast<void*>(&params);
-    node.custom_initial_data = nullptr;
-    node.custom_initial_data_size = 0;
-    node.delegate = nullptr;
-    if (registration->prepare) {
-        TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(&context, &node));
-    }
-    TF_LITE_MICRO_EXPECT_NE(nullptr, registration->invoke);
-
-    int input_sequence_size =
-        golden_input_data_size / sizeof(float) / (input_size * batch_size);
-    for (int i = 0; i < input_sequence_size; ++i) {
-        float* input_batch_start = golden_input_data + i * input_size * batch_size;
-        float* input_batch_end = input_batch_start + input_size * batch_size;
-
-        PopulateFloatTensor(&tensors[0], input_batch_start, input_batch_end);
-        TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(&context, &node));
-
-        int output_idx = 0;
-        int golden_idx = i * batch_size * num_units;
-        for (int j = golden_idx; j < golden_idx + batch_size * num_units; ++j) {
-            TF_LITE_MICRO_EXPECT_NEAR(expected_output[j], output_data[output_idx],
-                                      tolerance);
-            output_idx++;
-        }
-    }
-
-    if (registration->free) {
-        registration->free(&context, user_data);
-    }
+  if (registration->free) {
+    registration->free(&context, user_data);
+  }
 }
 
 void ValidateIntegerSVDFGoldens(const int batch_size, const int num_units,
@@ -193,66 +193,66 @@ void ValidateIntegerSVDFGoldens(const int batch_size, const int num_units,
                                 int8_t* golden_input_data,
                                 const int golden_input_data_size,
                                 int8_t* output_data, int8_t* expected_output) {
-    TfLiteContext context;
-    PopulateContext(tensors, tensor_count, micro_test::reporter, &context);
+  TfLiteContext context;
+  PopulateContext(tensors, tensor_count, micro_test::reporter, &context);
 
-    ::tflite::ops::micro::AllOpsResolver resolver;
-    const TfLiteRegistration* registration =
-        resolver.FindOp(tflite::BuiltinOperator_SVDF, 1);
-    TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
+  ::tflite::ops::micro::AllOpsResolver resolver;
+  const TfLiteRegistration* registration =
+      resolver.FindOp(tflite::BuiltinOperator_SVDF, 1);
+  TF_LITE_MICRO_EXPECT_NE(nullptr, registration);
 
-    TfLiteSVDFParams params;
-    params.rank = rank;
-    params.activation = kTfLiteActRelu;
+  TfLiteSVDFParams params;
+  params.rank = rank;
+  params.activation = kTfLiteActRelu;
 
-    void* user_data = nullptr;
-    if (registration->init) {
-        user_data = registration->init(&context, nullptr, 0);
+  void* user_data = nullptr;
+  if (registration->init) {
+    user_data = registration->init(&context, nullptr, 0);
+  }
+
+  int inputs_array_data[] = {5, 0, 1, 2, 3, 4};
+  TfLiteIntArray* inputs_array = IntArrayFromInts(inputs_array_data);
+
+  int outputs_array_data[] = {1, 5};
+  TfLiteIntArray* outputs_array = IntArrayFromInts(outputs_array_data);
+
+  TfLiteNode node;
+  node.inputs = inputs_array;
+  node.outputs = outputs_array;
+  node.user_data = user_data;
+  node.builtin_data = reinterpret_cast<void*>(&params);
+  node.custom_initial_data = nullptr;
+  node.custom_initial_data_size = 0;
+  node.delegate = nullptr;
+
+  if (registration->prepare) {
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(&context, &node));
+  }
+  TF_LITE_MICRO_EXPECT_NE(nullptr, registration->invoke);
+
+  int input_sequence_size =
+      golden_input_data_size / sizeof(int8_t) / (input_size * batch_size);
+  for (int i = 0; i < input_sequence_size; ++i) {
+    int8_t* input_batch_start = golden_input_data + i * input_size * batch_size;
+    int8_t* input_batch_end = input_batch_start + input_size * batch_size;
+    int8_t* tensor_data = tensors[0].data.int8;
+    while (input_batch_start != input_batch_end) {
+      *tensor_data++ = *input_batch_start++;
     }
 
-    int inputs_array_data[] = {5, 0, 1, 2, 3, 4};
-    TfLiteIntArray* inputs_array = IntArrayFromInts(inputs_array_data);
+    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(&context, &node));
 
-    int outputs_array_data[] = {1, 5};
-    TfLiteIntArray* outputs_array = IntArrayFromInts(outputs_array_data);
-
-    TfLiteNode node;
-    node.inputs = inputs_array;
-    node.outputs = outputs_array;
-    node.user_data = user_data;
-    node.builtin_data = reinterpret_cast<void*>(&params);
-    node.custom_initial_data = nullptr;
-    node.custom_initial_data_size = 0;
-    node.delegate = nullptr;
-
-    if (registration->prepare) {
-        TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->prepare(&context, &node));
+    int output_idx = 0;
+    int golden_idx = i * batch_size * num_units;
+    for (int j = golden_idx; j < golden_idx + batch_size * num_units; ++j) {
+      TF_LITE_MICRO_EXPECT_NEAR(expected_output[j], output_data[output_idx], 1);
+      output_idx++;
     }
-    TF_LITE_MICRO_EXPECT_NE(nullptr, registration->invoke);
+  }
 
-    int input_sequence_size =
-        golden_input_data_size / sizeof(int8_t) / (input_size * batch_size);
-    for (int i = 0; i < input_sequence_size; ++i) {
-        int8_t* input_batch_start = golden_input_data + i * input_size * batch_size;
-        int8_t* input_batch_end = input_batch_start + input_size * batch_size;
-        int8_t* tensor_data = tensors[0].data.int8;
-        while (input_batch_start != input_batch_end) {
-            *tensor_data++ = *input_batch_start++;
-        }
-
-        TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, registration->invoke(&context, &node));
-
-        int output_idx = 0;
-        int golden_idx = i * batch_size * num_units;
-        for (int j = golden_idx; j < golden_idx + batch_size * num_units; ++j) {
-            TF_LITE_MICRO_EXPECT_NEAR(expected_output[j], output_data[output_idx], 1);
-            output_idx++;
-        }
-    }
-
-    if (registration->free) {
-        registration->free(&context, user_data);
-    }
+  if (registration->free) {
+    registration->free(&context, user_data);
+  }
 }
 
 void TestSVDF(const int batch_size, const int num_units, const int input_size,
@@ -262,41 +262,40 @@ void TestSVDF(const int batch_size, const int num_units, const int input_size,
               float* output_data, float* golden_input_data,
               int golden_input_data_size, float* expected_output,
               float tolerance = 1e-5f) {
-    const int num_filters = num_units * rank;
+  const int num_filters = num_units * rank;
 
-    const int input_dims_arg[] = {2, batch_size, input_size};
-    TfLiteIntArray* input_dims = IntArrayFromInts(input_dims_arg);
+  const int input_dims_arg[] = {2, batch_size, input_size};
+  TfLiteIntArray* input_dims = IntArrayFromInts(input_dims_arg);
 
-    const int weights_feature_dims_args[] = {2, num_filters, input_size};
-    TfLiteIntArray* weights_feature_dims =
-        IntArrayFromInts(weights_feature_dims_args);
+  const int weights_feature_dims_args[] = {2, num_filters, input_size};
+  TfLiteIntArray* weights_feature_dims =
+      IntArrayFromInts(weights_feature_dims_args);
 
-    const int weights_time_dims_args[] = {2, num_filters, memory_size};
-    TfLiteIntArray* weights_time_dims = IntArrayFromInts(weights_time_dims_args);
+  const int weights_time_dims_args[] = {2, num_filters, memory_size};
+  TfLiteIntArray* weights_time_dims = IntArrayFromInts(weights_time_dims_args);
 
-    const int activation_state_dims_args[] = {2, batch_size,
-                                              memory_size * num_filters
-                                             };
-    TfLiteIntArray* activation_state_dims =
-        IntArrayFromInts(activation_state_dims_args);
+  const int activation_state_dims_args[] = {2, batch_size,
+                                            memory_size * num_filters};
+  TfLiteIntArray* activation_state_dims =
+      IntArrayFromInts(activation_state_dims_args);
 
-    const int output_dims_args[] = {2, batch_size, num_units};
-    TfLiteIntArray* output_dims = IntArrayFromInts(output_dims_args);
+  const int output_dims_args[] = {2, batch_size, num_units};
+  TfLiteIntArray* output_dims = IntArrayFromInts(output_dims_args);
 
-    const int tensor_count = 5;  // 4 inputs, 1 output
-    TfLiteTensor tensors[] = {
-        CreateFloatTensor(input_data, input_dims, "input"),
-        CreateFloatTensor(weights_feature_data, weights_feature_dims,
-                          "weights_feature"),
-        CreateFloatTensor(weights_time_data, weights_time_dims, "weights_time"),
-        CreateFloatTensor(activation_state_data, activation_state_dims,
-                          "activation_state", true /* is_variable */),
-        CreateFloatTensor(output_data, output_dims, "output"),
-    };
+  const int tensor_count = 5;  // 4 inputs, 1 output
+  TfLiteTensor tensors[] = {
+      CreateFloatTensor(input_data, input_dims, "input"),
+      CreateFloatTensor(weights_feature_data, weights_feature_dims,
+                        "weights_feature"),
+      CreateFloatTensor(weights_time_data, weights_time_dims, "weights_time"),
+      CreateFloatTensor(activation_state_data, activation_state_dims,
+                        "activation_state", true /* is_variable */),
+      CreateFloatTensor(output_data, output_dims, "output"),
+  };
 
-    ValidateSVDFGoldens(batch_size, num_units, input_size, rank, tensors,
-                        tensor_count, golden_input_data, golden_input_data_size,
-                        output_data, expected_output, tolerance);
+  ValidateSVDFGoldens(batch_size, num_units, input_size, rank, tensors,
+                      tensor_count, golden_input_data, golden_input_data_size,
+                      output_data, expected_output, tolerance);
 }
 
 inline void TestIntegerSVDF(
@@ -308,97 +307,89 @@ inline void TestIntegerSVDF(
     int16_t* activation_state_data, float activation_scale, int8_t* output_data,
     float output_scale, int8_t* golden_input_data, int golden_input_data_size,
     int8_t* expected_output) {
-    const int num_filters = num_units * rank;
+  const int num_filters = num_units * rank;
 
-    const int input_dims_arg[] = {2, batch_size, input_size};
-    TfLiteIntArray* input_dims = IntArrayFromInts(input_dims_arg);
+  const int input_dims_arg[] = {2, batch_size, input_size};
+  TfLiteIntArray* input_dims = IntArrayFromInts(input_dims_arg);
 
-    const int weights_feature_dims_args[] = {2, num_filters, input_size};
-    TfLiteIntArray* weights_feature_dims =
-        IntArrayFromInts(weights_feature_dims_args);
+  const int weights_feature_dims_args[] = {2, num_filters, input_size};
+  TfLiteIntArray* weights_feature_dims =
+      IntArrayFromInts(weights_feature_dims_args);
 
-    const int weights_time_dims_args[] = {2, num_filters, memory_size};
-    TfLiteIntArray* weights_time_dims = IntArrayFromInts(weights_time_dims_args);
+  const int weights_time_dims_args[] = {2, num_filters, memory_size};
+  TfLiteIntArray* weights_time_dims = IntArrayFromInts(weights_time_dims_args);
 
-    const int bias_dims_data[] = {1, num_units};
-    TfLiteIntArray* bias_dims = IntArrayFromInts(bias_dims_data);
+  const int bias_dims_data[] = {1, num_units};
+  TfLiteIntArray* bias_dims = IntArrayFromInts(bias_dims_data);
 
-    const int activation_state_dims_args[] = {2, batch_size,
-                                              memory_size * num_filters
-                                             };
-    TfLiteIntArray* activation_state_dims =
-        IntArrayFromInts(activation_state_dims_args);
+  const int activation_state_dims_args[] = {2, batch_size,
+                                            memory_size * num_filters};
+  TfLiteIntArray* activation_state_dims =
+      IntArrayFromInts(activation_state_dims_args);
 
-    const int output_dims_args[] = {2, batch_size, num_units};
-    TfLiteIntArray* output_dims = IntArrayFromInts(output_dims_args);
+  const int output_dims_args[] = {2, batch_size, num_units};
+  TfLiteIntArray* output_dims = IntArrayFromInts(output_dims_args);
 
-    // Tensor size is higher due to workarounds in micro buffer usage
-    // (b/132070898) and re-working scale calculations (b/146029510).
-    const int tensor_count = 6;  // 5 inputs, 1 output
+  // Tensor size is higher due to workarounds in micro buffer usage
+  // (b/132070898) and re-working scale calculations (b/146029510).
+  const int tensor_count = 6;  // 5 inputs, 1 output
 
-    TfLiteTensor tensors[] = {
-        CreateQuantizedTensor(input_data, input_dims, input_scale,
-                              0 /* zero-point */, "input"),
-        CreateQuantizedTensor(weights_feature_data, weights_feature_dims,
-                              weights_feature_scale, 0 /* zero-point */,
-                              "weights_feature"),
-        CreateQuantizedTensor(weights_time_data, weights_time_dims,
-                              weights_time_scale, 0 /* zero-point */,
-                              "weights_time"),
-        CreateQuantized32Tensor(bias_data, bias_dims, "bias", bias_scale),
-        CreateQuantizedTensor(activation_state_data, activation_state_dims,
-                              activation_scale, 0 /* zero-point */,
-                              "activation_state", true /* is_variable */),
-        CreateQuantizedTensor(output_data, output_dims, output_scale,
-                              0 /* zero-point */, "output")
-    };
+  TfLiteTensor tensors[] = {
+      CreateQuantizedTensor(input_data, input_dims, input_scale,
+                            0 /* zero-point */, "input"),
+      CreateQuantizedTensor(weights_feature_data, weights_feature_dims,
+                            weights_feature_scale, 0 /* zero-point */,
+                            "weights_feature"),
+      CreateQuantizedTensor(weights_time_data, weights_time_dims,
+                            weights_time_scale, 0 /* zero-point */,
+                            "weights_time"),
+      CreateQuantized32Tensor(bias_data, bias_dims, "bias", bias_scale),
+      CreateQuantizedTensor(activation_state_data, activation_state_dims,
+                            activation_scale, 0 /* zero-point */,
+                            "activation_state", true /* is_variable */),
+      CreateQuantizedTensor(output_data, output_dims, output_scale,
+                            0 /* zero-point */, "output")};
 
-    // TODO(b/147839421): Affine Quantization Params should be set on tensor
-    // creation.
-    int zero_points[] = {1, 0};
+  // TODO(b/147839421): Affine Quantization Params should be set on tensor
+  // creation.
+  int zero_points[] = {1, 0};
 
-    // Input quant params:
-    float input_scales[] = {1, input_scale};
-    TfLiteAffineQuantization input_quant = {FloatArrayFromFloats(input_scales),
-                                            IntArrayFromInts(zero_points)
-                                           };
-    tensors[0].quantization = {kTfLiteAffineQuantization, &input_quant};
+  // Input quant params:
+  float input_scales[] = {1, input_scale};
+  TfLiteAffineQuantization input_quant = {FloatArrayFromFloats(input_scales),
+                                          IntArrayFromInts(zero_points)};
+  tensors[0].quantization = {kTfLiteAffineQuantization, &input_quant};
 
-    // Weights features quant params:
-    float weights_features_scales[] = {1, weights_feature_scale};
-    TfLiteAffineQuantization weights_feature_quant = {
-        FloatArrayFromFloats(weights_features_scales),
-        IntArrayFromInts(zero_points)
-    };
-    tensors[1].quantization = {kTfLiteAffineQuantization, &weights_feature_quant};
+  // Weights features quant params:
+  float weights_features_scales[] = {1, weights_feature_scale};
+  TfLiteAffineQuantization weights_feature_quant = {
+      FloatArrayFromFloats(weights_features_scales),
+      IntArrayFromInts(zero_points)};
+  tensors[1].quantization = {kTfLiteAffineQuantization, &weights_feature_quant};
 
-    // Weights time quant params:
-    float weights_time_scales[] = {1, weights_time_scale};
-    TfLiteAffineQuantization weights_time_quant = {
-        FloatArrayFromFloats(weights_time_scales), IntArrayFromInts(zero_points)
-    };
-    tensors[2].quantization = {kTfLiteAffineQuantization, &weights_time_quant};
+  // Weights time quant params:
+  float weights_time_scales[] = {1, weights_time_scale};
+  TfLiteAffineQuantization weights_time_quant = {
+      FloatArrayFromFloats(weights_time_scales), IntArrayFromInts(zero_points)};
+  tensors[2].quantization = {kTfLiteAffineQuantization, &weights_time_quant};
 
-    // Activation state quant params:
-    float activation_state_scales[] = {1, activation_scale};
-    TfLiteAffineQuantization activation_state_quant = {
-        FloatArrayFromFloats(activation_state_scales),
-        IntArrayFromInts(zero_points)
-    };
-    tensors[4].quantization = {kTfLiteAffineQuantization,
-                               &activation_state_quant
-                              };
+  // Activation state quant params:
+  float activation_state_scales[] = {1, activation_scale};
+  TfLiteAffineQuantization activation_state_quant = {
+      FloatArrayFromFloats(activation_state_scales),
+      IntArrayFromInts(zero_points)};
+  tensors[4].quantization = {kTfLiteAffineQuantization,
+                             &activation_state_quant};
 
-    // Output quant params:
-    float output_scales[] = {1, output_scale};
-    TfLiteAffineQuantization output_quant = {FloatArrayFromFloats(output_scales),
-                                             IntArrayFromInts(zero_points)
-                                            };
-    tensors[5].quantization = {kTfLiteAffineQuantization, &output_quant};
+  // Output quant params:
+  float output_scales[] = {1, output_scale};
+  TfLiteAffineQuantization output_quant = {FloatArrayFromFloats(output_scales),
+                                           IntArrayFromInts(zero_points)};
+  tensors[5].quantization = {kTfLiteAffineQuantization, &output_quant};
 
-    ValidateIntegerSVDFGoldens(
-        batch_size, num_units, input_size, rank, tensors, tensor_count,
-        golden_input_data, golden_input_data_size, output_data, expected_output);
+  ValidateIntegerSVDFGoldens(
+      batch_size, num_units, input_size, rank, tensors, tensor_count,
+      golden_input_data, golden_input_data_size, output_data, expected_output);
 }  // namespace
 
 }  // namespace
@@ -408,187 +399,182 @@ inline void TestIntegerSVDF(
 TF_LITE_MICRO_TESTS_BEGIN
 
 TF_LITE_MICRO_TEST(BlackBoxTestRank1) {
-    constexpr int batch_size = 2;
-    constexpr int num_units = 4;
-    constexpr int input_size = 3;
-    constexpr int memory_size = 10;
-    constexpr int rank = 1;
-    constexpr int num_filters = num_units * rank;
+  constexpr int batch_size = 2;
+  constexpr int num_units = 4;
+  constexpr int input_size = 3;
+  constexpr int memory_size = 10;
+  constexpr int rank = 1;
+  constexpr int num_filters = num_units * rank;
 
-    float weights_feature_data[] = {-0.31930989, -0.36118156, 0.0079667,
-                                    0.37613347,  0.22197971,  0.12416199,
-                                    0.27901134,  0.27557442,  0.3905206,
-                                    -0.36137494, -0.06634006, -0.10640851
-                                   };
+  float weights_feature_data[] = {-0.31930989, -0.36118156, 0.0079667,
+                                  0.37613347,  0.22197971,  0.12416199,
+                                  0.27901134,  0.27557442,  0.3905206,
+                                  -0.36137494, -0.06634006, -0.10640851};
 
-    float weights_time_data[] = {
-        -0.31930989, 0.37613347,  0.27901134,  -0.36137494, -0.36118156,
-            0.22197971,  0.27557442,  -0.06634006, 0.0079667,   0.12416199,
+  float weights_time_data[] = {
+      -0.31930989, 0.37613347,  0.27901134,  -0.36137494, -0.36118156,
+      0.22197971,  0.27557442,  -0.06634006, 0.0079667,   0.12416199,
 
-            0.3905206,   -0.10640851, -0.0976817,  0.15294972,  0.39635518,
-            -0.02702999, 0.39296314,  0.15785322,  0.21931258,  0.31053296,
+      0.3905206,   -0.10640851, -0.0976817,  0.15294972,  0.39635518,
+      -0.02702999, 0.39296314,  0.15785322,  0.21931258,  0.31053296,
 
-            -0.36916667, 0.38031587,  -0.21580373, 0.27072677,  0.23622236,
-            0.34936687,  0.18174365,  0.35907319,  -0.17493086, 0.324846,
+      -0.36916667, 0.38031587,  -0.21580373, 0.27072677,  0.23622236,
+      0.34936687,  0.18174365,  0.35907319,  -0.17493086, 0.324846,
 
-            -0.10781813, 0.27201805,  0.14324132,  -0.23681851, -0.27115166,
-            -0.01580888, -0.14943552, 0.15465137,  0.09784451,  -0.0337657
-        };
+      -0.10781813, 0.27201805,  0.14324132,  -0.23681851, -0.27115166,
+      -0.01580888, -0.14943552, 0.15465137,  0.09784451,  -0.0337657};
 
-    const int input_size_dims_count = batch_size * input_size;
-    float input_data[input_size_dims_count];
+  const int input_size_dims_count = batch_size * input_size;
+  float input_data[input_size_dims_count];
 
-    const int activation_state_dims_count =
-        batch_size * memory_size * num_filters;
-    float activation_state_data[activation_state_dims_count];
+  const int activation_state_dims_count =
+      batch_size * memory_size * num_filters;
+  float activation_state_data[activation_state_dims_count];
 
-    const int scratch_dims_count = batch_size * num_filters;
-    float scratch_data[scratch_dims_count];
+  const int scratch_dims_count = batch_size * num_filters;
+  float scratch_data[scratch_dims_count];
 
-    const int output_dims_count = batch_size * num_units;
-    float output_data[output_dims_count];
+  const int output_dims_count = batch_size * num_units;
+  float output_data[output_dims_count];
 
-    tflite::testing::TestSVDF(
-        batch_size, num_units, input_size, memory_size, rank, input_data,
-        weights_feature_data, weights_time_data, activation_state_data,
-        scratch_data, output_data, tflite::testing::svdf_input,
-        sizeof(tflite::testing::svdf_input),
-        tflite::testing::svdf_golden_output_rank_1);
+  tflite::testing::TestSVDF(
+      batch_size, num_units, input_size, memory_size, rank, input_data,
+      weights_feature_data, weights_time_data, activation_state_data,
+      scratch_data, output_data, tflite::testing::svdf_input,
+      sizeof(tflite::testing::svdf_input),
+      tflite::testing::svdf_golden_output_rank_1);
 }
 
 TF_LITE_MICRO_TEST(BlackBoxTestRank2) {
-    constexpr int batch_size = 2;
-    constexpr int num_units = 4;
-    constexpr int input_size = 3;
-    constexpr int memory_size = 10;
-    constexpr int rank = 2;
-    constexpr int num_filters = num_units * rank;
+  constexpr int batch_size = 2;
+  constexpr int num_units = 4;
+  constexpr int input_size = 3;
+  constexpr int memory_size = 10;
+  constexpr int rank = 2;
+  constexpr int num_filters = num_units * rank;
 
-    float weights_feature_data[] = {
-        -0.31930989, 0.0079667,   0.39296314,  0.37613347, 0.12416199,
-            0.15785322,  0.27901134,  0.3905206,   0.21931258, -0.36137494,
-            -0.10640851, 0.31053296,  -0.36118156, -0.0976817, -0.36916667,
-            0.22197971,  0.15294972,  0.38031587,  0.27557442, 0.39635518,
-            -0.21580373, -0.06634006, -0.02702999, 0.27072677
-        };
+  float weights_feature_data[] = {
+      -0.31930989, 0.0079667,   0.39296314,  0.37613347, 0.12416199,
+      0.15785322,  0.27901134,  0.3905206,   0.21931258, -0.36137494,
+      -0.10640851, 0.31053296,  -0.36118156, -0.0976817, -0.36916667,
+      0.22197971,  0.15294972,  0.38031587,  0.27557442, 0.39635518,
+      -0.21580373, -0.06634006, -0.02702999, 0.27072677};
 
-    float weights_time_data[] = {
-        -0.31930989, 0.37613347,  0.27901134,  -0.36137494, -0.36118156,
-            0.22197971,  0.27557442,  -0.06634006, 0.0079667,   0.12416199,
+  float weights_time_data[] = {
+      -0.31930989, 0.37613347,  0.27901134,  -0.36137494, -0.36118156,
+      0.22197971,  0.27557442,  -0.06634006, 0.0079667,   0.12416199,
 
-            0.3905206,   -0.10640851, -0.0976817,  0.15294972,  0.39635518,
-            -0.02702999, 0.39296314,  0.15785322,  0.21931258,  0.31053296,
+      0.3905206,   -0.10640851, -0.0976817,  0.15294972,  0.39635518,
+      -0.02702999, 0.39296314,  0.15785322,  0.21931258,  0.31053296,
 
-            -0.36916667, 0.38031587,  -0.21580373, 0.27072677,  0.23622236,
-            0.34936687,  0.18174365,  0.35907319,  -0.17493086, 0.324846,
+      -0.36916667, 0.38031587,  -0.21580373, 0.27072677,  0.23622236,
+      0.34936687,  0.18174365,  0.35907319,  -0.17493086, 0.324846,
 
-            -0.10781813, 0.27201805,  0.14324132,  -0.23681851, -0.27115166,
-            -0.01580888, -0.14943552, 0.15465137,  0.09784451,  -0.0337657,
+      -0.10781813, 0.27201805,  0.14324132,  -0.23681851, -0.27115166,
+      -0.01580888, -0.14943552, 0.15465137,  0.09784451,  -0.0337657,
 
-            -0.14884081, 0.19931212,  -0.36002168, 0.34663299,  -0.11405486,
-            0.12672701,  0.39463779,  -0.07886535, -0.06384811, 0.08249187,
+      -0.14884081, 0.19931212,  -0.36002168, 0.34663299,  -0.11405486,
+      0.12672701,  0.39463779,  -0.07886535, -0.06384811, 0.08249187,
 
-            -0.26816407, -0.19905911, 0.29211238,  0.31264046,  -0.28664589,
-            0.05698794,  0.11613581,  0.14078894,  0.02187902,  -0.21781836,
+      -0.26816407, -0.19905911, 0.29211238,  0.31264046,  -0.28664589,
+      0.05698794,  0.11613581,  0.14078894,  0.02187902,  -0.21781836,
 
-            -0.15567942, 0.08693647,  -0.38256618, 0.36580828,  -0.22922277,
-            -0.0226903,  0.12878349,  -0.28122205, -0.10850525, -0.11955214,
+      -0.15567942, 0.08693647,  -0.38256618, 0.36580828,  -0.22922277,
+      -0.0226903,  0.12878349,  -0.28122205, -0.10850525, -0.11955214,
 
-            0.27179423,  -0.04710215, 0.31069002,  0.22672787,  0.09580326,
-            0.08682203,  0.1258215,   0.1851041,   0.29228821,  0.12366763
-        };
+      0.27179423,  -0.04710215, 0.31069002,  0.22672787,  0.09580326,
+      0.08682203,  0.1258215,   0.1851041,   0.29228821,  0.12366763};
 
-    const int input_size_dims_count = batch_size * input_size;
-    float input_data[input_size_dims_count];
+  const int input_size_dims_count = batch_size * input_size;
+  float input_data[input_size_dims_count];
 
-    const int activation_state_dims_count =
-        batch_size * memory_size * num_filters;
-    float activation_state_data[activation_state_dims_count];
-    const int scratch_dims_count = batch_size * num_filters;
-    float scratch_data[scratch_dims_count];
+  const int activation_state_dims_count =
+      batch_size * memory_size * num_filters;
+  float activation_state_data[activation_state_dims_count];
+  const int scratch_dims_count = batch_size * num_filters;
+  float scratch_data[scratch_dims_count];
 
-    const int output_dims_count = batch_size * num_units;
-    float output_data[output_dims_count];
+  const int output_dims_count = batch_size * num_units;
+  float output_data[output_dims_count];
 
-    tflite::testing::TestSVDF(
-        batch_size, num_units, input_size, memory_size, rank, input_data,
-        weights_feature_data, weights_time_data, activation_state_data,
-        scratch_data, output_data, tflite::testing::svdf_input,
-        sizeof(tflite::testing::svdf_input),
-        tflite::testing::svdf_golden_output_rank_2);
+  tflite::testing::TestSVDF(
+      batch_size, num_units, input_size, memory_size, rank, input_data,
+      weights_feature_data, weights_time_data, activation_state_data,
+      scratch_data, output_data, tflite::testing::svdf_input,
+      sizeof(tflite::testing::svdf_input),
+      tflite::testing::svdf_golden_output_rank_2);
 }
 
 TF_LITE_MICRO_TEST(BlackBoxTestIntegerRank1) {
-    constexpr int batch_size = 2;
-    constexpr int num_units = 4;
-    constexpr int input_size = 3;
-    constexpr int memory_size = 10;
-    constexpr int rank = 1;
-    constexpr int num_filters = num_units * rank;
+  constexpr int batch_size = 2;
+  constexpr int num_units = 4;
+  constexpr int input_size = 3;
+  constexpr int memory_size = 10;
+  constexpr int rank = 1;
+  constexpr int num_filters = num_units * rank;
 
-    int8_t weights_feature_data[] = {-81, -92, 2,   96,  57,  32,
-                                     71,  70,  100, -92, -17, -27
-                                    };
-    const int weights_feature_dims_count = num_filters * input_size;
+  int8_t weights_feature_data[] = {-81, -92, 2,   96,  57,  32,
+                                   71,  70,  100, -92, -17, -27};
+  const int weights_feature_dims_count = num_filters * input_size;
 
-    int16_t weights_time_data[] = {
-        -10464, 12324, 9142,  -11842, -11836, 7273,  9029,  -2175, 260,   4067,
-            12795,  -3488, -3202, 5011,   12987,  -887,  12875, 5171,  7185,  10174,
-            -12098, 12461, -7072, 8870,   7739,   11447, 5954,  11765, -5733, 10643,
-            -3534,  8912,  4693,  -7761,  -8886,  -519,  -4898, 5067,  3205,  -1107,
-        };
-    const int weights_time_dims_count = num_filters * memory_size;
+  int16_t weights_time_data[] = {
+      -10464, 12324, 9142,  -11842, -11836, 7273,  9029,  -2175, 260,   4067,
+      12795,  -3488, -3202, 5011,   12987,  -887,  12875, 5171,  7185,  10174,
+      -12098, 12461, -7072, 8870,   7739,   11447, 5954,  11765, -5733, 10643,
+      -3534,  8912,  4693,  -7761,  -8886,  -519,  -4898, 5067,  3205,  -1107,
+  };
+  const int weights_time_dims_count = num_filters * memory_size;
 
-    int32_t bias_data[] = {-409707, 641518, 1662434, -113372};
+  int32_t bias_data[] = {-409707, 641518, 1662434, -113372};
 
-    int8_t input_sequences_data[] = {
-        64, 25,   34,   23,  68, -99, 16, -59,  -114, 46,  47, 94,
-        18, -128, -96,  -73, 16, 96,  64, 25,   34,   23,  68, -99,
-        16, -59,  -114, 46,  47, 94,  18, -128, -96,  -73, 16, 96,
-        64, 25,   34,   23,  68, -99, 16, -59,  -114, 46,  47, 94,
-        18, -128, -96,  -73, 16, 96,  64, 25,   34,   23,  68, -99,
-        16, -59,  -114, 46,  47, 94,  18, -128, -96,  -73, 16, 96,
-    };
+  int8_t input_sequences_data[] = {
+      64, 25,   34,   23,  68, -99, 16, -59,  -114, 46,  47, 94,
+      18, -128, -96,  -73, 16, 96,  64, 25,   34,   23,  68, -99,
+      16, -59,  -114, 46,  47, 94,  18, -128, -96,  -73, 16, 96,
+      64, 25,   34,   23,  68, -99, 16, -59,  -114, 46,  47, 94,
+      18, -128, -96,  -73, 16, 96,  64, 25,   34,   23,  68, -99,
+      16, -59,  -114, 46,  47, 94,  18, -128, -96,  -73, 16, 96,
+  };
 
-    int8_t expected_output[] = {
-        -9,  24,  31,   1,   -10, 10,  -3,  0,   2,   4,   -44, -7,  -10,  32,
-            52,  1,   12,   -17, 9,   -8,  7,   16,  -11, -8,  -26, 29,  28,   16,
-            -23, 26,  30,   -6,  -8,  -25, -86, -5,  -44, 59,  81,  15,  62,   -16,
-            -37, 3,   27,   14,  34,  -10, 1,   24,  -25, 23,  31,  61,  67,   11,
-            -64, -65, -128, -25, -53, 59,  127, 20,  20,  -29, -20, -15, -28,  0,
-            8,   -27, 54,   61,  -67, 38,  38,  64,  115, 0,   -44, -75, -128, -20,
-            -19, 93,  101,  35,  -5,  -56, 30,  -18, -40, -9,  -8,  -31,
-        };
+  int8_t expected_output[] = {
+      -9,  24,  31,   1,   -10, 10,  -3,  0,   2,   4,   -44, -7,  -10,  32,
+      52,  1,   12,   -17, 9,   -8,  7,   16,  -11, -8,  -26, 29,  28,   16,
+      -23, 26,  30,   -6,  -8,  -25, -86, -5,  -44, 59,  81,  15,  62,   -16,
+      -37, 3,   27,   14,  34,  -10, 1,   24,  -25, 23,  31,  61,  67,   11,
+      -64, -65, -128, -25, -53, 59,  127, 20,  20,  -29, -20, -15, -28,  0,
+      8,   -27, 54,   61,  -67, 38,  38,  64,  115, 0,   -44, -75, -128, -20,
+      -19, 93,  101,  35,  -5,  -56, 30,  -18, -40, -9,  -8,  -31,
+  };
 
-    const int input_size_dims_count = batch_size * input_size;
-    int8_t input_data[input_size_dims_count];
+  const int input_size_dims_count = batch_size * input_size;
+  int8_t input_data[input_size_dims_count];
 
-    const int activation_state_dims_count =
-        batch_size * memory_size * num_filters;
-    int16_t activation_state_data[activation_state_dims_count];
+  const int activation_state_dims_count =
+      batch_size * memory_size * num_filters;
+  int16_t activation_state_data[activation_state_dims_count];
 
-    const int scratch_dims_count = batch_size * num_filters;
-    int32_t scratch_data[scratch_dims_count];
+  const int scratch_dims_count = batch_size * num_filters;
+  int32_t scratch_data[scratch_dims_count];
 
-    const int scratch_output_dims_count = batch_size * num_units;
-    int32_t scratch_output_data[scratch_output_dims_count];
+  const int scratch_output_dims_count = batch_size * num_units;
+  int32_t scratch_output_data[scratch_output_dims_count];
 
-    const int output_dims_count = batch_size * num_units;
-    int8_t output_data[output_dims_count];
+  const int output_dims_count = batch_size * num_units;
+  int8_t output_data[output_dims_count];
 
-    float input_scale = 1.f / INT8_MAX;             // Range is [-1, 1]
-    float weights_feature_scale = 0.5f / INT8_MAX;  // Range is [-0.5, 0.5]
-    float weights_time_scale = 1.f / INT16_MAX;     // Range is [-1, 1]
-    float activation_scale = 16.f / INT16_MAX;      // Range is [-16, 16]
-    float bias_scale = 512.f / INT32_MAX;           // Range is [-512, 512]
-    float output_scale = 0.5f / INT8_MAX;           // Range is [-0.5, 0.5]
+  float input_scale = 1.f / INT8_MAX;             // Range is [-1, 1]
+  float weights_feature_scale = 0.5f / INT8_MAX;  // Range is [-0.5, 0.5]
+  float weights_time_scale = 1.f / INT16_MAX;     // Range is [-1, 1]
+  float activation_scale = 16.f / INT16_MAX;      // Range is [-16, 16]
+  float bias_scale = 512.f / INT32_MAX;           // Range is [-512, 512]
+  float output_scale = 0.5f / INT8_MAX;           // Range is [-0.5, 0.5]
 
-    tflite::testing::TestIntegerSVDF(
-        batch_size, num_units, input_size, memory_size, rank, input_data,
-        input_scale, weights_feature_data, weights_feature_scale,
-        weights_time_data, weights_time_scale, bias_data, bias_scale,
-        activation_state_data, activation_scale, output_data, output_scale,
-        input_sequences_data, sizeof(input_sequences_data), expected_output);
+  tflite::testing::TestIntegerSVDF(
+      batch_size, num_units, input_size, memory_size, rank, input_data,
+      input_scale, weights_feature_data, weights_feature_scale,
+      weights_time_data, weights_time_scale, bias_data, bias_scale,
+      activation_state_data, activation_scale, output_data, output_scale,
+      input_sequences_data, sizeof(input_sequences_data), expected_output);
 }
 
 TF_LITE_MICRO_TESTS_END
