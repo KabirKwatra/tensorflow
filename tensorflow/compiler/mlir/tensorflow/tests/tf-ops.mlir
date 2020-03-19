@@ -2495,4 +2495,3 @@ func @testDataFormatVecPermuteInvalid3dInput(%x: tensor<4x2x2xi32>) {
   %0 = "tf.DataFormatVecPermute"(%x): (tensor<4x2x2xi32>) -> tensor<4x2x2xi32>
   return
 }
-
