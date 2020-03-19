@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Utility functions for reading/writing graphs."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import os.path
 
 from google.protobuf import text_format
+
 from tensorflow.python.framework import ops
 from tensorflow.python.lib.io import file_io
 from tensorflow.python.util.tf_export import tf_export
