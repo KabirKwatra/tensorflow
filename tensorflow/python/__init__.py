@@ -25,6 +25,41 @@ from __future__ import print_function
 import tensorflow as tf
 """
 
+from tensorflow.python.compiler.mlir import mlir
+from tensorflow.python.compiler.xla import xla
+from tensorflow.python.compiler.xla import jit
+from tensorflow.python.dlpack.dlpack import to_dlpack
+from tensorflow.python.dlpack.dlpack import from_dlpack
+from tensorflow.python.ops import gen_debug_ops
+from tensorflow.python.debug.lib import dumping_callback
+from tensorflow.python.debug.lib import check_numerics_callback
+from tensorflow.python.ops import rnn_cell
+from tensorflow.python.ops import rnn
+from tensorflow.python import tf2 as _tf2
+from tensorflow.python.eager import monitoring as _monitoring
+from tensorflow.python.framework.ops import enable_eager_execution
+from tensorflow.python.eager.def_function import function
+from tensorflow.python.eager.remote import connect_to_remote_host
+from tensorflow.python.eager.context import executing_eagerly
+from tensorflow.python.util.tf_export import tf_export
+from tensorflow.python.util.all_util import make_all
+from tensorflow.python.compat import v2_compat
+from tensorflow.python.platform import test
+from tensorflow.python.platform import sysconfig
+from tensorflow.python.platform import resource_loader
+from tensorflow.python.platform import tf_logging as logging
+from tensorflow.python.platform import gfile
+from tensorflow.python.platform import flags
+from tensorflow.python.platform import app
+from tensorflow.python.lib.io import python_io
+from tensorflow.python.training import quantize_training as _quantize_training
+from tensorflow.python.training import training as train
+from tensorflow.python.ops import gen_tpu_ops
+from tensorflow.python.ops import gen_sendrecv_ops
+from tensorflow.python.ops import gen_rnn_ops
+from tensorflow.python.ops import gen_cudnn_rnn_ops
+from tensorflow.python.ops import gen_boosted_trees_ops
+from tensorflow.python.ops import gen_audio_ops
 import ctypes
 import importlib
 import sys
@@ -114,67 +149,31 @@ from tensorflow.python.util import compat
 ragged.__doc__ += _ragged_ops.ragged_dispatch.ragged_op_list()
 
 # Import to make sure the ops are registered.
-from tensorflow.python.ops import gen_audio_ops
-from tensorflow.python.ops import gen_boosted_trees_ops
-from tensorflow.python.ops import gen_cudnn_rnn_ops
-from tensorflow.python.ops import gen_rnn_ops
-from tensorflow.python.ops import gen_sendrecv_ops
-from tensorflow.python.ops import gen_tpu_ops
 
 # Import the names from python/training.py as train.Name.
-from tensorflow.python.training import training as train
-from tensorflow.python.training import quantize_training as _quantize_training
 
 # Sub-package for performing i/o directly instead of via ops in a graph.
-from tensorflow.python.lib.io import python_io
 
 # Make some application and test modules available.
-from tensorflow.python.platform import app
-from tensorflow.python.platform import flags
-from tensorflow.python.platform import gfile
-from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.platform import resource_loader
-from tensorflow.python.platform import sysconfig
-from tensorflow.python.platform import test
 
-from tensorflow.python.compat import v2_compat
-
-from tensorflow.python.util.all_util import make_all
-from tensorflow.python.util.tf_export import tf_export
 
 # Eager execution
-from tensorflow.python.eager.context import executing_eagerly
-from tensorflow.python.eager.remote import connect_to_remote_host
-from tensorflow.python.eager.def_function import function
-from tensorflow.python.framework.ops import enable_eager_execution
 
 # Check whether TF2_BEHAVIOR is turned on.
-from tensorflow.python.eager import monitoring as _monitoring
-from tensorflow.python import tf2 as _tf2
 _tf2_gauge = _monitoring.BoolGauge('/tensorflow/api/tf2_enable',
                                    'Environment variable TF2_BEHAVIOR is set".')
 _tf2_gauge.get_cell().set(_tf2.enabled())
 
 # Necessary for the symbols in this module to be taken into account by
 # the namespace management system (API decorators).
-from tensorflow.python.ops import rnn
-from tensorflow.python.ops import rnn_cell
 
 # TensorFlow Debugger (tfdbg).
-from tensorflow.python.debug.lib import check_numerics_callback
-from tensorflow.python.debug.lib import dumping_callback
-from tensorflow.python.ops import gen_debug_ops
 
 # DLPack
-from tensorflow.python.dlpack.dlpack import from_dlpack
-from tensorflow.python.dlpack.dlpack import to_dlpack
 
 # XLA JIT compiler APIs.
-from tensorflow.python.compiler.xla import jit
-from tensorflow.python.compiler.xla import xla
 
 # MLIR APIs.
-from tensorflow.python.compiler.mlir import mlir
 
 # Required due to `rnn` and `rnn_cell` not being imported in `nn` directly
 # (due to a circular dependency issue: rnn depends on layers).
