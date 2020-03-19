@@ -22,29 +22,31 @@ namespace {
 // Returns DSO handle or null if loading the DSO fails.
 void* GetDsoHandle() {
 #ifdef PLATFORM_GOOGLE
-  return nullptr;
+    return nullptr;
 #else
-  static auto handle = []() -> void* {
-    auto handle_or = stream_executor::internal::DsoLoader::GetCufftDsoHandle();
-    if (!handle_or.ok()) return nullptr;
-    return handle_or.ValueOrDie();
-  }();
-  return handle;
+    static auto handle = []() -> void* {
+        auto handle_or = stream_executor::internal::DsoLoader::GetCufftDsoHandle();
+        if (!handle_or.ok()) return nullptr;
+        return handle_or.ValueOrDie();
+    }();
+    return handle;
 #endif
 }
 
 template <typename T>
 T LoadSymbol(const char* symbol_name) {
-  void* symbol = nullptr;
-  if (auto handle = GetDsoHandle()) {
-    stream_executor::port::Env::Default()
+    void* symbol = nullptr;
+    if (auto handle = GetDsoHandle()) {
+        stream_executor::port::Env::Default()
         ->GetSymbolFromLibrary(handle, symbol_name, &symbol)
         .IgnoreError();
-  }
-  return reinterpret_cast<T>(symbol);
+    }
+    return reinterpret_cast<T>(symbol);
 }
 
-cufftResult GetSymbolNotFoundError() { return CUFFT_INTERNAL_ERROR; }
+cufftResult GetSymbolNotFoundError() {
+    return CUFFT_INTERNAL_ERROR;
+}
 }  // namespace
 
 #if CUFFT_VERSION < 10000

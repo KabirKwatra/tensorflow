@@ -22,28 +22,28 @@ limitations under the License.
 
 namespace {
 void* GetDsoHandle() {
-  static auto handle = []() -> void* {
-    auto handle_or =
+    static auto handle = []() -> void* {
+        auto handle_or =
         stream_executor::internal::DsoLoader::GetCudaRuntimeDsoHandle();
-    if (!handle_or.ok()) {
-      LOG(INFO) << "Ignore above cudart dlerror if you do not have a GPU set "
-                   "up on your machine.";
-      return nullptr;
-    }
-    return handle_or.ValueOrDie();
-  }();
-  return handle;
+        if (!handle_or.ok()) {
+            LOG(INFO) << "Ignore above cudart dlerror if you do not have a GPU set "
+                      "up on your machine.";
+            return nullptr;
+        }
+        return handle_or.ValueOrDie();
+    }();
+    return handle;
 }
 
 template <typename T>
 T LoadSymbol(const char* symbol_name) {
-  void* symbol = nullptr;
-  auto env = stream_executor::port::Env::Default();
-  env->GetSymbolFromLibrary(GetDsoHandle(), symbol_name, &symbol).IgnoreError();
-  return reinterpret_cast<T>(symbol);
+    void* symbol = nullptr;
+    auto env = stream_executor::port::Env::Default();
+    env->GetSymbolFromLibrary(GetDsoHandle(), symbol_name, &symbol).IgnoreError();
+    return reinterpret_cast<T>(symbol);
 }
 cudaError_t GetSymbolNotFoundError() {
-  return cudaErrorSharedObjectSymbolNotFound;
+    return cudaErrorSharedObjectSymbolNotFound;
 }
 }  // namespace
 
@@ -70,73 +70,73 @@ cudaError_t GetSymbolNotFoundError() {
 extern "C" {
 
 // Following are private symbols in libcudart that got inserted by nvcc.
-extern void CUDARTAPI __cudaRegisterFunction(
-    void **fatCubinHandle, const char *hostFun, char *deviceFun,
-    const char *deviceName, int thread_limit, uint3 *tid, uint3 *bid,
-    dim3 *bDim, dim3 *gDim, int *wSize) {
-  using FuncPtr = void(CUDARTAPI *)(void **fatCubinHandle, const char *hostFun,
-                                    char *deviceFun, const char *deviceName,
-                                    int thread_limit, uint3 *tid, uint3 *bid,
-                                    dim3 *bDim, dim3 *gDim, int *wSize);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterFunction");
-  if (!func_ptr) return;
-  func_ptr(fatCubinHandle, hostFun, deviceFun, deviceName, thread_limit, tid,
-           bid, bDim, gDim, wSize);
-}
+    extern void CUDARTAPI __cudaRegisterFunction(
+        void **fatCubinHandle, const char *hostFun, char *deviceFun,
+        const char *deviceName, int thread_limit, uint3 *tid, uint3 *bid,
+        dim3 *bDim, dim3 *gDim, int *wSize) {
+        using FuncPtr = void(CUDARTAPI *)(void **fatCubinHandle, const char *hostFun,
+                                          char *deviceFun, const char *deviceName,
+                                          int thread_limit, uint3 *tid, uint3 *bid,
+                                          dim3 *bDim, dim3 *gDim, int *wSize);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterFunction");
+        if (!func_ptr) return;
+        func_ptr(fatCubinHandle, hostFun, deviceFun, deviceName, thread_limit, tid,
+                 bid, bDim, gDim, wSize);
+    }
 
-extern void CUDARTAPI __cudaUnregisterFatBinary(void **fatCubinHandle) {
-  using FuncPtr = void(CUDARTAPI *)(void **fatCubinHandle);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaUnregisterFatBinary");
-  if (!func_ptr) return;
-  func_ptr(fatCubinHandle);
-}
+    extern void CUDARTAPI __cudaUnregisterFatBinary(void **fatCubinHandle) {
+        using FuncPtr = void(CUDARTAPI *)(void **fatCubinHandle);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaUnregisterFatBinary");
+        if (!func_ptr) return;
+        func_ptr(fatCubinHandle);
+    }
 
-extern void CUDARTAPI __cudaRegisterVar(void **fatCubinHandle, char *hostVar,
-                                        char *deviceAddress,
-                                        const char *deviceName, int ext,
-                                        size_t size, int constant, int global) {
-  using FuncPtr = void(CUDARTAPI *)(
-      void **fatCubinHandle, char *hostVar, char *deviceAddress,
-      const char *deviceName, int ext, size_t size, int constant, int global);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterVar");
-  if (!func_ptr) return;
-  func_ptr(fatCubinHandle, hostVar, deviceAddress, deviceName, ext, size,
-           constant, global);
-}
+    extern void CUDARTAPI __cudaRegisterVar(void **fatCubinHandle, char *hostVar,
+                                            char *deviceAddress,
+                                            const char *deviceName, int ext,
+                                            size_t size, int constant, int global) {
+        using FuncPtr = void(CUDARTAPI *)(
+                            void **fatCubinHandle, char *hostVar, char *deviceAddress,
+                            const char *deviceName, int ext, size_t size, int constant, int global);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterVar");
+        if (!func_ptr) return;
+        func_ptr(fatCubinHandle, hostVar, deviceAddress, deviceName, ext, size,
+                 constant, global);
+    }
 
-extern void **CUDARTAPI __cudaRegisterFatBinary(void *fatCubin) {
-  using FuncPtr = void **(CUDARTAPI *)(void *fatCubin);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterFatBinary");
-  if (!func_ptr) return nullptr;
-  return (void **)func_ptr(fatCubin);
-}
+    extern void **CUDARTAPI __cudaRegisterFatBinary(void *fatCubin) {
+        using FuncPtr = void **(CUDARTAPI *)(void *fatCubin);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterFatBinary");
+        if (!func_ptr) return nullptr;
+        return (void **)func_ptr(fatCubin);
+    }
 
-extern cudaError_t CUDARTAPI __cudaPopCallConfiguration(dim3 *gridDim,
-                                                        dim3 *blockDim,
-                                                        size_t *sharedMem,
-                                                        void *stream) {
-  using FuncPtr = cudaError_t(CUDARTAPI *)(dim3 * gridDim, dim3 * blockDim,
-                                           size_t * sharedMem, void *stream);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaPopCallConfiguration");
-  if (!func_ptr) return GetSymbolNotFoundError();
-  return func_ptr(gridDim, blockDim, sharedMem, stream);
-}
+    extern cudaError_t CUDARTAPI __cudaPopCallConfiguration(dim3 *gridDim,
+            dim3 *blockDim,
+            size_t *sharedMem,
+            void *stream) {
+        using FuncPtr = cudaError_t(CUDARTAPI *)(dim3 * gridDim, dim3 * blockDim,
+                        size_t * sharedMem, void *stream);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaPopCallConfiguration");
+        if (!func_ptr) return GetSymbolNotFoundError();
+        return func_ptr(gridDim, blockDim, sharedMem, stream);
+    }
 
-extern __host__ __device__ unsigned CUDARTAPI __cudaPushCallConfiguration(
-    dim3 gridDim, dim3 blockDim, size_t sharedMem = 0, void *stream = 0) {
-  using FuncPtr = unsigned(CUDARTAPI *)(dim3 gridDim, dim3 blockDim,
-                                        size_t sharedMem, void *stream);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaPushCallConfiguration");
-  if (!func_ptr) return 0;
-  return func_ptr(gridDim, blockDim, sharedMem, stream);
-}
+    extern __host__ __device__ unsigned CUDARTAPI __cudaPushCallConfiguration(
+        dim3 gridDim, dim3 blockDim, size_t sharedMem = 0, void *stream = 0) {
+        using FuncPtr = unsigned(CUDARTAPI *)(dim3 gridDim, dim3 blockDim,
+                                              size_t sharedMem, void *stream);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaPushCallConfiguration");
+        if (!func_ptr) return 0;
+        return func_ptr(gridDim, blockDim, sharedMem, stream);
+    }
 
 #if CUDART_VERSION >= 10010
-extern void CUDARTAPI __cudaRegisterFatBinaryEnd(void **fatCubinHandle) {
-  using FuncPtr = void(CUDARTAPI *)(void **fatCubinHandle);
-  static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterFatBinaryEnd");
-  if (!func_ptr) return;
-  func_ptr(fatCubinHandle);
-}
+    extern void CUDARTAPI __cudaRegisterFatBinaryEnd(void **fatCubinHandle) {
+        using FuncPtr = void(CUDARTAPI *)(void **fatCubinHandle);
+        static auto func_ptr = LoadSymbol<FuncPtr>("__cudaRegisterFatBinaryEnd");
+        if (!func_ptr) return;
+        func_ptr(fatCubinHandle);
+    }
 #endif
 }  // extern "C"
