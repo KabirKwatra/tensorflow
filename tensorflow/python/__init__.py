@@ -146,13 +146,11 @@ ragged.__doc__ += _ragged_ops.ragged_dispatch.ragged_op_list()
 
 # Make some application and test modules available.
 
-
 # Eager execution
 
 # Check whether TF2_BEHAVIOR is turned on.
 _tf2_gauge = _monitoring.BoolGauge(
-    "/tensorflow/api/tf2_enable", 'Environment variable TF2_BEHAVIOR is set".'
-)
+    "/tensorflow/api/tf2_enable", 'Environment variable TF2_BEHAVIOR is set".')
 _tf2_gauge.get_cell().set(_tf2.enabled())
 
 # Necessary for the symbols in this module to be taken into account by
@@ -200,15 +198,13 @@ tf_export(v1=["TensorInfo"])(TensorInfo)
 # pylint: enable=undefined-variable
 
 # Special dunders that we choose to export:
-_exported_dunders = set(
-    [
-        "__version__",
-        "__git_version__",
-        "__compiler_version__",
-        "__cxx11_abi_flag__",
-        "__monolithic_build__",
-    ]
-)
+_exported_dunders = set([
+    "__version__",
+    "__git_version__",
+    "__compiler_version__",
+    "__cxx11_abi_flag__",
+    "__monolithic_build__",
+])
 
 # Expose symbols minus dunders, unless they are whitelisted above.
 # This is necessary to export our dunders.
