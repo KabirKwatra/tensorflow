@@ -20,8 +20,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR=${SCRIPT_DIR}/../../../../..
-cd ${ROOT_DIR}
+ROOT_DIR=$SCRIPT_DIR/../../../../..
+cd "$ROOT_DIR"
 pwd
 
 make -f tensorflow/lite/micro/tools/make/Makefile \
@@ -32,26 +32,26 @@ make -f tensorflow/lite/micro/tools/make/Makefile \
 # pipeline and reduces duplication associated with setting up the docker
 # environment.
 
-echo "Starting to run micro tests at `date`"
+echo "Starting to run micro tests at $(date)"
 
-echo "Running Arduino tests at `date`"
+echo "Running Arduino tests at $(date)"
 tensorflow/lite/micro/tools/ci_build/test_arduino.sh
 
 # TODO(b/151695791): reenable once the root cause is fixed.
 #echo "Running bluepill tests at `date`"
 #tensorflow/lite/micro/tools/ci_build/test_bluepill.sh
 
-echo "Running mbed tests at `date`"
+echo "Running mbed tests at $(date)"
 tensorflow/lite/micro/tools/ci_build/test_mbed.sh PRESUBMIT
 
-echo "Running Sparkfun tests at `date`"
+echo "Running Sparkfun tests at $(date)"
 tensorflow/lite/micro/tools/ci_build/test_sparkfun.sh
 
-echo "Running x86 tests at `date`"
+echo "Running x86 tests at $(date)"
 tensorflow/lite/micro/tools/ci_build/test_x86.sh
 
 # TODO(b/149597202): Disabled until we can get Docker running inside Docker.
 #echo "Running stm32f4 tests at `date`"
 #tensorflow/lite/micro/tools/ci_build/test_stm32f4.sh
 
-echo "Finished all micro tests at `date`"
+echo "Finished all micro tests at $(date)"
