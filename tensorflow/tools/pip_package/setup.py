@@ -120,8 +120,7 @@ CONSOLE_SCRIPTS = [
 # Only keep freeze_graph console script in 1.X.
 if _VERSION.startswith("1.") and "_2.0" not in project_name:
     CONSOLE_SCRIPTS.append(
-        "freeze_graph = tensorflow.python.tools.freeze_graph:run_main"
-    )
+        "freeze_graph = tensorflow.python.tools.freeze_graph:run_main")
 
 # remove the tensorboard console script if building tf_nightly
 if "tf_nightly" in project_name:
@@ -142,9 +141,8 @@ class InstallCommand(InstallCommandBase):
 
     def finalize_options(self):
         ret = InstallCommandBase.finalize_options(self)
-        self.install_headers = os.path.join(
-            self.install_platlib, "tensorflow", "include"
-        )
+        self.install_headers = os.path.join(self.install_platlib, "tensorflow",
+                                            "include")
         self.install_lib = self.install_platlib
         return ret
 
@@ -172,9 +170,9 @@ class InstallHeaders(Command):
         self.outfiles = []
 
     def finalize_options(self):
-        self.set_undefined_options(
-            "install", ("install_headers", "install_dir"), ("force", "force")
-        )
+        self.set_undefined_options("install",
+                                   ("install_headers", "install_dir"),
+                                   ("force", "force"))
 
     def mkdir_and_copy_file(self, header):
         install_dir = os.path.join(self.install_dir, os.path.dirname(header))
@@ -227,12 +225,14 @@ def find_files(pattern, root):
 
 
 so_lib_paths = [
-    i for i in os.listdir(".") if os.path.isdir(i) and fnmatch.fnmatch(i, "_solib_*")
+    i for i in os.listdir(".")
+    if os.path.isdir(i) and fnmatch.fnmatch(i, "_solib_*")
 ]
 
 matches = []
 for path in so_lib_paths:
-    matches.extend(["../" + x for x in find_files("*", path) if ".py" not in x])
+    matches.extend(
+        ["../" + x for x in find_files("*", path) if ".py" not in x])
 
 if os.name == "nt":
     EXTENSION_NAME = "python/_pywrap_tensorflow_internal.pyd"
@@ -240,22 +240,21 @@ else:
     EXTENSION_NAME = "python/_pywrap_tensorflow_internal.so"
 
 headers = (
-    list(find_files("*.proto", "tensorflow/compiler"))
-    + list(find_files("*.proto", "tensorflow/core"))
-    + list(find_files("*.proto", "tensorflow/python"))
-    + list(find_files("*.h", "tensorflow/c"))
-    + list(find_files("*.h", "tensorflow/cc"))
-    + list(find_files("*.h", "tensorflow/compiler"))
-    + list(find_files("*.h", "tensorflow/core"))
-    + list(find_files("*.h", "tensorflow/python"))
-    + list(find_files("*.h", "tensorflow/stream_executor"))
-    + list(find_files("*.h", "google/com_google_protobuf/src"))
-    + list(find_files("*.inc", "google/com_google_protobuf/src"))
-    + list(find_files("*", "third_party/eigen3"))
-    + list(find_files("*.h", "tensorflow/include/external/com_google_absl"))
-    + list(find_files("*.inc", "tensorflow/include/external/com_google_absl"))
-    + list(find_files("*", "tensorflow/include/external/eigen_archive"))
-)
+    list(find_files("*.proto", "tensorflow/compiler")) +
+    list(find_files("*.proto", "tensorflow/core")) +
+    list(find_files("*.proto", "tensorflow/python")) +
+    list(find_files("*.h", "tensorflow/c")) +
+    list(find_files("*.h", "tensorflow/cc")) +
+    list(find_files("*.h", "tensorflow/compiler")) +
+    list(find_files("*.h", "tensorflow/core")) +
+    list(find_files("*.h", "tensorflow/python")) +
+    list(find_files("*.h", "tensorflow/stream_executor")) +
+    list(find_files("*.h", "google/com_google_protobuf/src")) +
+    list(find_files("*.inc", "google/com_google_protobuf/src")) +
+    list(find_files("*", "third_party/eigen3")) +
+    list(find_files("*.h", "tensorflow/include/external/com_google_absl")) +
+    list(find_files("*.inc", "tensorflow/include/external/com_google_absl")) +
+    list(find_files("*", "tensorflow/include/external/eigen_archive")))
 
 setup(
     name=project_name,
@@ -268,16 +267,25 @@ setup(
     author_email="packages@tensorflow.org",
     # Contained modules and scripts.
     packages=find_packages(),
-    entry_points={"console_scripts": CONSOLE_SCRIPTS,},
+    entry_points={
+        "console_scripts": CONSOLE_SCRIPTS,
+    },
     headers=headers,
     install_requires=REQUIRED_PACKAGES,
     tests_require=REQUIRED_PACKAGES + TEST_PACKAGES,
     # Add in any packaged data.
     include_package_data=True,
-    package_data={"tensorflow": [EXTENSION_NAME,] + matches,},
+    package_data={
+        "tensorflow": [
+            EXTENSION_NAME,
+        ] + matches,
+    },
     zip_safe=False,
     distclass=BinaryDistribution,
-    cmdclass={"install_headers": InstallHeaders, "install": InstallCommand,},
+    cmdclass={
+        "install_headers": InstallHeaders,
+        "install": InstallCommand,
+    },
     # PyPI package information.
     classifiers=[
         "Development Status :: 5 - Production/Stable",
