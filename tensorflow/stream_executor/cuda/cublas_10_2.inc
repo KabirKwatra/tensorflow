@@ -118,7 +118,7 @@ cublasGetLoggerCallback(cublasLogCallback *userCallback) {
   return func_ptr(userCallback);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSetVector (int n, int elemSize, const void *x, 
+cublasStatus_t CUBLASWINAPI cublasSetVector (int n, int elemSize, const void *x,
                                              int incx, void *devicePtr, int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(int, int, const void *, int, void *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSetVector");
@@ -126,7 +126,7 @@ cublasStatus_t CUBLASWINAPI cublasSetVector (int n, int elemSize, const void *x,
   return func_ptr(n, elemSize, x, incx, devicePtr, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasGetVector (int n, int elemSize, const void *x, 
+cublasStatus_t CUBLASWINAPI cublasGetVector (int n, int elemSize, const void *x,
                                              int incx, void *y, int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(int, int, const void *, int, void *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasGetVector");
@@ -134,8 +134,8 @@ cublasStatus_t CUBLASWINAPI cublasGetVector (int n, int elemSize, const void *x,
   return func_ptr(n, elemSize, x, incx, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSetMatrix (int rows, int cols, int elemSize, 
-                                             const void *A, int lda, void *B, 
+cublasStatus_t CUBLASWINAPI cublasSetMatrix (int rows, int cols, int elemSize,
+                                             const void *A, int lda, void *B,
                                              int ldb) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(int, int, int, const void *, int, void *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSetMatrix");
@@ -143,7 +143,7 @@ cublasStatus_t CUBLASWINAPI cublasSetMatrix (int rows, int cols, int elemSize,
   return func_ptr(rows, cols, elemSize, A, lda, B, ldb);
 }
 
-cublasStatus_t CUBLASWINAPI cublasGetMatrix (int rows, int cols, int elemSize, 
+cublasStatus_t CUBLASWINAPI cublasGetMatrix (int rows, int cols, int elemSize,
                                              const void *A, int lda, void *B,
                                              int ldb) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(int, int, int, const void *, int, void *, int);
@@ -152,8 +152,8 @@ cublasStatus_t CUBLASWINAPI cublasGetMatrix (int rows, int cols, int elemSize,
   return func_ptr(rows, cols, elemSize, A, lda, B, ldb);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSetVectorAsync (int n, int elemSize, 
-                                                  const void *hostPtr, int incx, 
+cublasStatus_t CUBLASWINAPI cublasSetVectorAsync (int n, int elemSize,
+                                                  const void *hostPtr, int incx,
                                                   void *devicePtr, int incy,
                                                   cudaStream_t stream) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(int, int, const void *, int, void *, int, cudaStream_t);
@@ -197,11 +197,11 @@ void CUBLASWINAPI cublasXerbla (const char *srName, int info) {
   return func_ptr(srName, info);
 }
 
-cublasStatus_t CUBLASWINAPI cublasNrm2Ex(cublasHandle_t handle, 
-                                                     int n, 
-                                                     const void *x, 
+cublasStatus_t CUBLASWINAPI cublasNrm2Ex(cublasHandle_t handle,
+                                                     int n,
+                                                     const void *x,
                                                      cudaDataType xType,
-                                                     int incx, 
+                                                     int incx,
                                                      void *result,
                                                      cudaDataType resultType,
                                                      cudaDataType executionType) {
@@ -211,10 +211,10 @@ cublasStatus_t CUBLASWINAPI cublasNrm2Ex(cublasHandle_t handle,
   return func_ptr(handle, n, x, xType, incx, result, resultType, executionType);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSnrm2_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     const float *x, 
-                                                     int incx, 
+cublasStatus_t CUBLASWINAPI cublasSnrm2_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     const float *x,
+                                                     int incx,
                                                      float *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, int, float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSnrm2_v2");
@@ -222,10 +222,10 @@ cublasStatus_t CUBLASWINAPI cublasSnrm2_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDnrm2_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     const double *x, 
-                                                     int incx, 
+cublasStatus_t CUBLASWINAPI cublasDnrm2_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     const double *x,
+                                                     int incx,
                                                      double *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, int, double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDnrm2_v2");
@@ -233,10 +233,10 @@ cublasStatus_t CUBLASWINAPI cublasDnrm2_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasScnrm2_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasScnrm2_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
                                                       float *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasScnrm2_v2");
@@ -244,10 +244,10 @@ cublasStatus_t CUBLASWINAPI cublasScnrm2_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDznrm2_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasDznrm2_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
                                                       double *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDznrm2_v2");
@@ -256,11 +256,11 @@ cublasStatus_t CUBLASWINAPI cublasDznrm2_v2(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDotEx (cublasHandle_t handle,
-                                                     int n, 
+                                                     int n,
                                                      const void *x,
-                                                     cudaDataType xType, 
-                                                     int incx, 
-                                                     const void *y, 
+                                                     cudaDataType xType,
+                                                     int incx,
+                                                     const void *y,
                                                      cudaDataType yType,
                                                      int incy,
                                                      void *result,
@@ -273,11 +273,11 @@ cublasStatus_t CUBLASWINAPI cublasDotEx (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDotcEx (cublasHandle_t handle,
-                                                     int n, 
+                                                     int n,
                                                      const void *x,
-                                                     cudaDataType xType, 
-                                                     int incx, 
-                                                     const void *y, 
+                                                     cudaDataType xType,
+                                                     int incx,
+                                                     const void *y,
                                                      cudaDataType yType,
                                                      int incy,
                                                      void *result,
@@ -290,10 +290,10 @@ cublasStatus_t CUBLASWINAPI cublasDotcEx (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasSdot_v2 (cublasHandle_t handle,
-                                                     int n, 
-                                                     const float *x, 
-                                                     int incx, 
-                                                     const float *y, 
+                                                     int n,
+                                                     const float *x,
+                                                     int incx,
+                                                     const float *y,
                                                      int incy,
                                                      float *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, int, const float *, int, float *);
@@ -303,9 +303,9 @@ cublasStatus_t CUBLASWINAPI cublasSdot_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDdot_v2 (cublasHandle_t handle,
-                                                     int n, 
-                                                     const double *x, 
-                                                     int incx, 
+                                                     int n,
+                                                     const double *x,
+                                                     int incx,
                                                      const double *y,
                                                      int incy,
                                                      double *result) {
@@ -316,10 +316,10 @@ cublasStatus_t CUBLASWINAPI cublasDdot_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCdotu_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
-                                                      const cuComplex *y, 
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
+                                                      const cuComplex *y,
                                                       int incy,
                                                       cuComplex *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, const cuComplex *, int, cuComplex *);
@@ -329,10 +329,10 @@ cublasStatus_t CUBLASWINAPI cublasCdotu_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCdotc_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
-                                                      const cuComplex *y, 
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
+                                                      const cuComplex *y,
                                                       int incy,
                                                       cuComplex *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, const cuComplex *, int, cuComplex *);
@@ -342,10 +342,10 @@ cublasStatus_t CUBLASWINAPI cublasCdotc_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZdotu_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
-                                                      const cuDoubleComplex *y, 
+                                                      int n,
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
+                                                      const cuDoubleComplex *y,
                                                       int incy,
                                                       cuDoubleComplex *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex *);
@@ -355,10 +355,10 @@ cublasStatus_t CUBLASWINAPI cublasZdotu_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZdotc_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
+                                                      int n,
+                                                      const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *y, 
+                                                      const cuDoubleComplex *y,
                                                       int incy,
                                                       cuDoubleComplex *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex *);
@@ -367,11 +367,11 @@ cublasStatus_t CUBLASWINAPI cublasZdotc_v2 (cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasScalEx(cublasHandle_t handle, 
-                                                     int n, 
+cublasStatus_t CUBLASWINAPI cublasScalEx(cublasHandle_t handle,
+                                                     int n,
                                                      const void *alpha,  /* host or device pointer */
                                                      cudaDataType alphaType,
-                                                     void *x, 
+                                                     void *x,
                                                      cudaDataType xType,
                                                      int incx,
                                                      cudaDataType executionType) {
@@ -381,10 +381,10 @@ cublasStatus_t CUBLASWINAPI cublasScalEx(cublasHandle_t handle,
   return func_ptr(handle, n, alpha, alphaType, x, xType, incx, executionType);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSscal_v2(cublasHandle_t handle, 
-                                                     int n, 
+cublasStatus_t CUBLASWINAPI cublasSscal_v2(cublasHandle_t handle,
+                                                     int n,
                                                      const float *alpha,  /* host or device pointer */
-                                                     float *x, 
+                                                     float *x,
                                                      int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSscal_v2");
@@ -392,10 +392,10 @@ cublasStatus_t CUBLASWINAPI cublasSscal_v2(cublasHandle_t handle,
   return func_ptr(handle, n, alpha, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDscal_v2(cublasHandle_t handle, 
-                                                     int n, 
+cublasStatus_t CUBLASWINAPI cublasDscal_v2(cublasHandle_t handle,
+                                                     int n,
                                                      const double *alpha,  /* host or device pointer */
-                                                     double *x, 
+                                                     double *x,
                                                      int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDscal_v2");
@@ -403,10 +403,10 @@ cublasStatus_t CUBLASWINAPI cublasDscal_v2(cublasHandle_t handle,
   return func_ptr(handle, n, alpha, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCscal_v2(cublasHandle_t handle, 
-                                                     int n, 
+cublasStatus_t CUBLASWINAPI cublasCscal_v2(cublasHandle_t handle,
+                                                     int n,
                                                      const cuComplex *alpha, /* host or device pointer */
-                                                     cuComplex *x, 
+                                                     cuComplex *x,
                                                      int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCscal_v2");
@@ -414,10 +414,10 @@ cublasStatus_t CUBLASWINAPI cublasCscal_v2(cublasHandle_t handle,
   return func_ptr(handle, n, alpha, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCsscal_v2(cublasHandle_t handle, 
-                                                      int n, 
+cublasStatus_t CUBLASWINAPI cublasCsscal_v2(cublasHandle_t handle,
+                                                      int n,
                                                       const float *alpha, /* host or device pointer */
-                                                      cuComplex *x, 
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCsscal_v2");
@@ -425,10 +425,10 @@ cublasStatus_t CUBLASWINAPI cublasCsscal_v2(cublasHandle_t handle,
   return func_ptr(handle, n, alpha, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZscal_v2(cublasHandle_t handle, 
-                                                     int n, 
+cublasStatus_t CUBLASWINAPI cublasZscal_v2(cublasHandle_t handle,
+                                                     int n,
                                                      const cuDoubleComplex *alpha, /* host or device pointer */
-                                                     cuDoubleComplex *x, 
+                                                     cuDoubleComplex *x,
                                                      int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZscal_v2");
@@ -436,10 +436,10 @@ cublasStatus_t CUBLASWINAPI cublasZscal_v2(cublasHandle_t handle,
   return func_ptr(handle, n, alpha, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZdscal_v2(cublasHandle_t handle, 
-                                                      int n, 
+cublasStatus_t CUBLASWINAPI cublasZdscal_v2(cublasHandle_t handle,
+                                                      int n,
                                                       const double *alpha, /* host or device pointer */
-                                                      cuDoubleComplex *x, 
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZdscal_v2");
@@ -465,11 +465,11 @@ cublasStatus_t CUBLASWINAPI cublasAxpyEx (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasSaxpy_v2 (cublasHandle_t handle,
-                                                      int n, 
+                                                      int n,
                                                       const float *alpha, /* host or device pointer */
-                                                      const float *x, 
-                                                      int incx, 
-                                                      float *y, 
+                                                      const float *x,
+                                                      int incx,
+                                                      float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSaxpy_v2");
@@ -478,11 +478,11 @@ cublasStatus_t CUBLASWINAPI cublasSaxpy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDaxpy_v2 (cublasHandle_t handle,
-                                                      int n, 
+                                                      int n,
                                                       const double *alpha, /* host or device pointer */
-                                                      const double *x, 
-                                                      int incx, 
-                                                      double *y, 
+                                                      const double *x,
+                                                      int incx,
+                                                      double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDaxpy_v2");
@@ -491,11 +491,11 @@ cublasStatus_t CUBLASWINAPI cublasDaxpy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCaxpy_v2 (cublasHandle_t handle,
-                                                      int n, 
+                                                      int n,
                                                       const cuComplex *alpha, /* host or device pointer */
-                                                      const cuComplex *x, 
-                                                      int incx, 
-                                                      cuComplex *y, 
+                                                      const cuComplex *x,
+                                                      int incx,
+                                                      cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCaxpy_v2");
@@ -504,11 +504,11 @@ cublasStatus_t CUBLASWINAPI cublasCaxpy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZaxpy_v2 (cublasHandle_t handle,
-                                                      int n, 
+                                                      int n,
                                                       const cuDoubleComplex *alpha, /* host or device pointer */
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
-                                                      cuDoubleComplex *y, 
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
+                                                      cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZaxpy_v2");
@@ -529,10 +529,10 @@ cublasStatus_t CUBLASWINAPI cublasCopyEx(cublasHandle_t handle, int n,
 }
 
 cublasStatus_t CUBLASWINAPI cublasScopy_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const float *x, 
-                                                      int incx, 
-                                                      float *y, 
+                                                      int n,
+                                                      const float *x,
+                                                      int incx,
+                                                      float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasScopy_v2");
@@ -541,10 +541,10 @@ cublasStatus_t CUBLASWINAPI cublasScopy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDcopy_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const double *x, 
-                                                      int incx, 
-                                                      double *y, 
+                                                      int n,
+                                                      const double *x,
+                                                      int incx,
+                                                      double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDcopy_v2");
@@ -553,9 +553,9 @@ cublasStatus_t CUBLASWINAPI cublasDcopy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCcopy_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, cuComplex *, int);
@@ -565,9 +565,9 @@ cublasStatus_t CUBLASWINAPI cublasCcopy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZcopy_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
+                                                      int n,
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
@@ -577,10 +577,10 @@ cublasStatus_t CUBLASWINAPI cublasZcopy_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasSswap_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      float *x, 
-                                                      int incx, 
-                                                      float *y, 
+                                                      int n,
+                                                      float *x,
+                                                      int incx,
+                                                      float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSswap_v2");
@@ -589,10 +589,10 @@ cublasStatus_t CUBLASWINAPI cublasSswap_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDswap_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      double *x, 
-                                                      int incx, 
-                                                      double *y, 
+                                                      int n,
+                                                      double *x,
+                                                      int incx,
+                                                      double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDswap_v2");
@@ -601,9 +601,9 @@ cublasStatus_t CUBLASWINAPI cublasDswap_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCswap_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      cuComplex *x, 
-                                                      int incx, 
+                                                      int n,
+                                                      cuComplex *x,
+                                                      int incx,
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, cuComplex *, int, cuComplex *, int);
@@ -613,9 +613,9 @@ cublasStatus_t CUBLASWINAPI cublasCswap_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZswap_v2 (cublasHandle_t handle,
-                                                      int n, 
-                                                      cuDoubleComplex *x, 
-                                                      int incx, 
+                                                      int n,
+                                                      cuDoubleComplex *x,
+                                                      int incx,
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, cuDoubleComplex *, int, cuDoubleComplex *, int);
@@ -635,10 +635,10 @@ cublasStatus_t CUBLASWINAPI cublasSwapEx(cublasHandle_t handle, int n, void *x,
   return func_ptr(handle, n, x, xType, incx, y, yType, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIsamax_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const float *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIsamax_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const float *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIsamax_v2");
@@ -646,10 +646,10 @@ cublasStatus_t CUBLASWINAPI cublasIsamax_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIdamax_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const double *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIdamax_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const double *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIdamax_v2");
@@ -657,10 +657,10 @@ cublasStatus_t CUBLASWINAPI cublasIdamax_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIcamax_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIcamax_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIcamax_v2");
@@ -668,10 +668,10 @@ cublasStatus_t CUBLASWINAPI cublasIcamax_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIzamax_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIzamax_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIzamax_v2");
@@ -690,10 +690,10 @@ cublasStatus_t CUBLASWINAPI cublasIamaxEx(
   return func_ptr(handle, n, x, xType, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIsamin_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const float *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIsamin_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const float *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIsamin_v2");
@@ -701,10 +701,10 @@ cublasStatus_t CUBLASWINAPI cublasIsamin_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIdamin_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const double *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIdamin_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const double *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIdamin_v2");
@@ -712,10 +712,10 @@ cublasStatus_t CUBLASWINAPI cublasIdamin_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIcamin_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIcamin_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIcamin_v2");
@@ -723,10 +723,10 @@ cublasStatus_t CUBLASWINAPI cublasIcamin_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasIzamin_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasIzamin_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
                                                       int *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, int *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasIzamin_v2");
@@ -757,10 +757,10 @@ cublasStatus_t CUBLASWINAPI cublasAsumEx(
   return func_ptr(handle, n, x, xType, incx, result, resultType, executiontype);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSasum_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     const float *x, 
-                                                     int incx, 
+cublasStatus_t CUBLASWINAPI cublasSasum_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     const float *x,
+                                                     int incx,
                                                      float *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const float *, int, float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSasum_v2");
@@ -768,10 +768,10 @@ cublasStatus_t CUBLASWINAPI cublasSasum_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDasum_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     const double *x, 
-                                                     int incx, 
+cublasStatus_t CUBLASWINAPI cublasDasum_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     const double *x,
+                                                     int incx,
                                                      double *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const double *, int, double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDasum_v2");
@@ -779,10 +779,10 @@ cublasStatus_t CUBLASWINAPI cublasDasum_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasScasum_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasScasum_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuComplex *x,
+                                                      int incx,
                                                       float *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuComplex *, int, float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasScasum_v2");
@@ -790,10 +790,10 @@ cublasStatus_t CUBLASWINAPI cublasScasum_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDzasum_v2(cublasHandle_t handle, 
-                                                      int n, 
-                                                      const cuDoubleComplex *x, 
-                                                      int incx, 
+cublasStatus_t CUBLASWINAPI cublasDzasum_v2(cublasHandle_t handle,
+                                                      int n,
+                                                      const cuDoubleComplex *x,
+                                                      int incx,
                                                       double *result) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, const cuDoubleComplex *, int, double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDzasum_v2");
@@ -801,12 +801,12 @@ cublasStatus_t CUBLASWINAPI cublasDzasum_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, result);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSrot_v2 (cublasHandle_t handle, 
-                                                     int n, 
-                                                     float *x, 
-                                                     int incx, 
-                                                     float *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasSrot_v2 (cublasHandle_t handle,
+                                                     int n,
+                                                     float *x,
+                                                     int incx,
+                                                     float *y,
+                                                     int incy,
                                                      const float *c,  /* host or device pointer */
                                                      const float *s) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, float *, int, float *, int, const float *, const float *);
@@ -815,12 +815,12 @@ cublasStatus_t CUBLASWINAPI cublasSrot_v2 (cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDrot_v2 (cublasHandle_t handle, 
-                                                     int n, 
-                                                     double *x, 
-                                                     int incx, 
-                                                     double *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasDrot_v2 (cublasHandle_t handle,
+                                                     int n,
+                                                     double *x,
+                                                     int incx,
+                                                     double *y,
+                                                     int incy,
                                                      const double *c,  /* host or device pointer */
                                                      const double *s) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, double *, int, double *, int, const double *, const double *);
@@ -829,12 +829,12 @@ cublasStatus_t CUBLASWINAPI cublasDrot_v2 (cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCrot_v2 (cublasHandle_t handle, 
-                                                     int n, 
-                                                     cuComplex *x, 
-                                                     int incx, 
-                                                     cuComplex *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasCrot_v2 (cublasHandle_t handle,
+                                                     int n,
+                                                     cuComplex *x,
+                                                     int incx,
+                                                     cuComplex *y,
+                                                     int incy,
                                                      const float *c,      /* host or device pointer */
                                                      const cuComplex *s) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, cuComplex *, int, cuComplex *, int, const float *, const cuComplex *);
@@ -843,12 +843,12 @@ cublasStatus_t CUBLASWINAPI cublasCrot_v2 (cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCsrot_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     cuComplex *x, 
-                                                     int incx, 
-                                                     cuComplex *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasCsrot_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     cuComplex *x,
+                                                     int incx,
+                                                     cuComplex *y,
+                                                     int incy,
                                                      const float *c,  /* host or device pointer */
                                                      const float *s) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, cuComplex *, int, cuComplex *, int, const float *, const float *);
@@ -857,12 +857,12 @@ cublasStatus_t CUBLASWINAPI cublasCsrot_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZrot_v2 (cublasHandle_t handle, 
-                                                     int n, 
-                                                     cuDoubleComplex *x, 
-                                                     int incx, 
-                                                     cuDoubleComplex *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasZrot_v2 (cublasHandle_t handle,
+                                                     int n,
+                                                     cuDoubleComplex *x,
+                                                     int incx,
+                                                     cuDoubleComplex *y,
+                                                     int incy,
                                                      const double *c,            /* host or device pointer */
                                                      const cuDoubleComplex *s) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, cuDoubleComplex *, int, cuDoubleComplex *, int, const double *, const cuDoubleComplex *);
@@ -871,12 +871,12 @@ cublasStatus_t CUBLASWINAPI cublasZrot_v2 (cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZdrot_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     cuDoubleComplex *x, 
-                                                     int incx, 
-                                                     cuDoubleComplex *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasZdrot_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     cuDoubleComplex *x,
+                                                     int incx,
+                                                     cuDoubleComplex *y,
+                                                     int incy,
                                                      const double *c,  /* host or device pointer */
                                                      const double *s) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, cuDoubleComplex *, int, cuDoubleComplex *, int, const double *, const double *);
@@ -899,7 +899,7 @@ cublasRotEx(cublasHandle_t handle, int n, void *x, cudaDataType xType, int incx,
                   executiontype);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSrotg_v2(cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasSrotg_v2(cublasHandle_t handle,
                                                      float *a,   /* host or device pointer */
                                                      float *b,   /* host or device pointer */
                                                      float *c,   /* host or device pointer */
@@ -910,7 +910,7 @@ cublasStatus_t CUBLASWINAPI cublasSrotg_v2(cublasHandle_t handle,
   return func_ptr(handle, a, b, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDrotg_v2(cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasDrotg_v2(cublasHandle_t handle,
                                                      double *a,  /* host or device pointer */
                                                      double *b,  /* host or device pointer */
                                                      double *c,  /* host or device pointer */
@@ -921,7 +921,7 @@ cublasStatus_t CUBLASWINAPI cublasDrotg_v2(cublasHandle_t handle,
   return func_ptr(handle, a, b, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCrotg_v2(cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasCrotg_v2(cublasHandle_t handle,
                                                      cuComplex *a,  /* host or device pointer */
                                                      cuComplex *b,  /* host or device pointer */
                                                      float *c,      /* host or device pointer */
@@ -932,7 +932,7 @@ cublasStatus_t CUBLASWINAPI cublasCrotg_v2(cublasHandle_t handle,
   return func_ptr(handle, a, b, c, s);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZrotg_v2(cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasZrotg_v2(cublasHandle_t handle,
                                                      cuDoubleComplex *a,  /* host or device pointer */
                                                      cuDoubleComplex *b,  /* host or device pointer */
                                                      double *c,           /* host or device pointer */
@@ -959,12 +959,12 @@ cublasStatus_t CUBLASWINAPI cublasRotgEx(cublasHandle_t handle,
   return func_ptr(handle, a, b, abType, c, s, csType, executiontype);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSrotm_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     float *x, 
-                                                     int incx, 
-                                                     float *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasSrotm_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     float *x,
+                                                     int incx,
+                                                     float *y,
+                                                     int incy,
                                                      const float* param) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, float *, int, float *, int, const float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSrotm_v2");
@@ -972,12 +972,12 @@ cublasStatus_t CUBLASWINAPI cublasSrotm_v2(cublasHandle_t handle,
   return func_ptr(handle, n, x, incx, y, incy, param);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDrotm_v2(cublasHandle_t handle, 
-                                                     int n, 
-                                                     double *x, 
-                                                     int incx, 
-                                                     double *y, 
-                                                     int incy, 
+cublasStatus_t CUBLASWINAPI cublasDrotm_v2(cublasHandle_t handle,
+                                                     int n,
+                                                     double *x,
+                                                     int incx,
+                                                     double *y,
+                                                     int incy,
                                                      const double* param) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, int, double *, int, double *, int, const double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDrotm_v2");
@@ -999,7 +999,7 @@ cublasRotmEx(cublasHandle_t handle, int n, void *x, cudaDataType xType,
                   executiontype);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSrotmg_v2(cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasSrotmg_v2(cublasHandle_t handle,
                                                       float *d1,        /* host or device pointer */
                                                       float *d2,        /* host or device pointer */
                                                       float *x1,        /* host or device pointer */
@@ -1011,11 +1011,11 @@ cublasStatus_t CUBLASWINAPI cublasSrotmg_v2(cublasHandle_t handle,
   return func_ptr(handle, d1, d2, x1, y1, param);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDrotmg_v2(cublasHandle_t handle, 
-                                                      double *d1,        /* host or device pointer */  
-                                                      double *d2,        /* host or device pointer */  
-                                                      double *x1,        /* host or device pointer */  
-                                                      const double *y1,  /* host or device pointer */  
+cublasStatus_t CUBLASWINAPI cublasDrotmg_v2(cublasHandle_t handle,
+                                                      double *d1,        /* host or device pointer */
+                                                      double *d2,        /* host or device pointer */
+                                                      double *x1,        /* host or device pointer */
+                                                      const double *y1,  /* host or device pointer */
                                                       double *param) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, double *, double *, double *, const double *, double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDrotmg_v2");
@@ -1040,17 +1040,17 @@ cublasRotmgEx(cublasHandle_t handle, void *d1,     /* host or device pointer */
                   paramType, executiontype);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSgemv_v2 (cublasHandle_t handle, 
-                                                      cublasOperation_t trans, 
-                                                      int m, 
-                                                      int n, 
+cublasStatus_t CUBLASWINAPI cublasSgemv_v2 (cublasHandle_t handle,
+                                                      cublasOperation_t trans,
+                                                      int m,
+                                                      int n,
                                                       const float *alpha, /* host or device pointer */
-                                                      const float *A, 
-                                                      int lda, 
-                                                      const float *x, 
-                                                      int incx, 
+                                                      const float *A,
+                                                      int lda,
+                                                      const float *x,
+                                                      int incx,
                                                       const float *beta,  /* host or device pointer */
-                                                      float *y, 
+                                                      float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSgemv_v2");
@@ -1058,17 +1058,17 @@ cublasStatus_t CUBLASWINAPI cublasSgemv_v2 (cublasHandle_t handle,
   return func_ptr(handle, trans, m, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDgemv_v2 (cublasHandle_t handle, 
-                                                      cublasOperation_t trans, 
+cublasStatus_t CUBLASWINAPI cublasDgemv_v2 (cublasHandle_t handle,
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
-                                                      const double *alpha, /* host or device pointer */ 
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *A,
                                                       int lda,
                                                       const double *x,
                                                       int incx,
                                                       const double *beta, /* host or device pointer */
-                                                      double *y, 
+                                                      double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDgemv_v2");
@@ -1077,15 +1077,15 @@ cublasStatus_t CUBLASWINAPI cublasDgemv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCgemv_v2 (cublasHandle_t handle,
-                                                      cublasOperation_t trans, 
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */ 
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
-                                                      const cuComplex *x, 
+                                                      const cuComplex *x,
                                                       int incx,
-                                                      const cuComplex *beta, /* host or device pointer */ 
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -1095,15 +1095,15 @@ cublasStatus_t CUBLASWINAPI cublasCgemv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZgemv_v2 (cublasHandle_t handle,
-                                                      cublasOperation_t trans, 
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *A,
-                                                      int lda, 
-                                                      const cuDoubleComplex *x, 
+                                                      int lda,
+                                                      const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -1112,18 +1112,18 @@ cublasStatus_t CUBLASWINAPI cublasZgemv_v2 (cublasHandle_t handle,
   return func_ptr(handle, trans, m, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSgbmv_v2 (cublasHandle_t handle, 
-                                                      cublasOperation_t trans, 
+cublasStatus_t CUBLASWINAPI cublasSgbmv_v2 (cublasHandle_t handle,
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
                                                       int kl,
-                                                      int ku, 
-                                                      const float *alpha, /* host or device pointer */  
-                                                      const float *A, 
-                                                      int lda, 
+                                                      int ku,
+                                                      const float *alpha, /* host or device pointer */
+                                                      const float *A,
+                                                      int lda,
                                                       const float *x,
                                                       int incx,
-                                                      const float *beta, /* host or device pointer */  
+                                                      const float *beta, /* host or device pointer */
                                                       float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -1133,17 +1133,17 @@ cublasStatus_t CUBLASWINAPI cublasSgbmv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDgbmv_v2 (cublasHandle_t handle,
-                                                      cublasOperation_t trans, 
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
                                                       int kl,
-                                                      int ku, 
-                                                      const double *alpha, /* host or device pointer */ 
+                                                      int ku,
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *A,
-                                                      int lda, 
+                                                      int lda,
                                                       const double *x,
                                                       int incx,
-                                                      const double *beta, /* host or device pointer */ 
+                                                      const double *beta, /* host or device pointer */
                                                       double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -1153,17 +1153,17 @@ cublasStatus_t CUBLASWINAPI cublasDgbmv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCgbmv_v2 (cublasHandle_t handle,
-                                                      cublasOperation_t trans, 
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
                                                       int kl,
-                                                      int ku, 
-                                                      const cuComplex *alpha, /* host or device pointer */ 
+                                                      int ku,
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
-                                                      int lda, 
+                                                      int lda,
                                                       const cuComplex *x,
                                                       int incx,
-                                                      const cuComplex *beta, /* host or device pointer */ 
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -1173,17 +1173,17 @@ cublasStatus_t CUBLASWINAPI cublasCgbmv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZgbmv_v2 (cublasHandle_t handle,
-                                                      cublasOperation_t trans, 
+                                                      cublasOperation_t trans,
                                                       int m,
                                                       int n,
                                                       int kl,
-                                                      int ku, 
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */ 
+                                                      int ku,
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *A,
-                                                      int lda, 
+                                                      int lda,
                                                       const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */ 
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, int, int, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -1193,13 +1193,13 @@ cublasStatus_t CUBLASWINAPI cublasZgbmv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasStrmv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const float *A, 
-                                                      int lda, 
-                                                      float *x, 
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const float *A,
+                                                      int lda,
+                                                      float *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStrmv_v2");
@@ -1207,14 +1207,14 @@ cublasStatus_t CUBLASWINAPI cublasStrmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtrmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const double *A, 
-                                                      int lda, 
-                                                      double *x, 
+cublasStatus_t CUBLASWINAPI cublasDtrmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const double *A,
+                                                      int lda,
+                                                      double *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtrmv_v2");
@@ -1222,14 +1222,14 @@ cublasStatus_t CUBLASWINAPI cublasDtrmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtrmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuComplex *A, 
-                                                      int lda, 
-                                                      cuComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasCtrmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuComplex *A,
+                                                      int lda,
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtrmv_v2");
@@ -1237,14 +1237,14 @@ cublasStatus_t CUBLASWINAPI cublasCtrmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtrmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuDoubleComplex *A, 
-                                                      int lda, 
-                                                      cuDoubleComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasZtrmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuDoubleComplex *A,
+                                                      int lda,
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtrmv_v2");
@@ -1252,15 +1252,15 @@ cublasStatus_t CUBLASWINAPI cublasZtrmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStbmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const float *A, 
-                                                      int lda, 
-                                                      float *x, 
+cublasStatus_t CUBLASWINAPI cublasStbmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const float *A,
+                                                      int lda,
+                                                      float *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStbmv_v2");
@@ -1268,15 +1268,15 @@ cublasStatus_t CUBLASWINAPI cublasStbmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtbmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const double *A, 
-                                                      int lda, 
-                                                      double *x, 
+cublasStatus_t CUBLASWINAPI cublasDtbmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const double *A,
+                                                      int lda,
+                                                      double *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtbmv_v2");
@@ -1284,15 +1284,15 @@ cublasStatus_t CUBLASWINAPI cublasDtbmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtbmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const cuComplex *A, 
-                                                      int lda, 
-                                                      cuComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasCtbmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const cuComplex *A,
+                                                      int lda,
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtbmv_v2");
@@ -1300,15 +1300,15 @@ cublasStatus_t CUBLASWINAPI cublasCtbmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtbmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const cuDoubleComplex *A, 
-                                                      int lda, 
-                                                      cuDoubleComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasZtbmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const cuDoubleComplex *A,
+                                                      int lda,
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtbmv_v2");
@@ -1316,13 +1316,13 @@ cublasStatus_t CUBLASWINAPI cublasZtbmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStpmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const float *AP, 
-                                                      float *x, 
+cublasStatus_t CUBLASWINAPI cublasStpmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const float *AP,
+                                                      float *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const float *, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStpmv_v2");
@@ -1330,13 +1330,13 @@ cublasStatus_t CUBLASWINAPI cublasStpmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtpmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const double *AP, 
-                                                      double *x, 
+cublasStatus_t CUBLASWINAPI cublasDtpmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const double *AP,
+                                                      double *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const double *, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtpmv_v2");
@@ -1344,13 +1344,13 @@ cublasStatus_t CUBLASWINAPI cublasDtpmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtpmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuComplex *AP, 
-                                                      cuComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasCtpmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuComplex *AP,
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuComplex *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtpmv_v2");
@@ -1358,13 +1358,13 @@ cublasStatus_t CUBLASWINAPI cublasCtpmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtpmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuDoubleComplex *AP, 
-                                                      cuDoubleComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasZtpmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuDoubleComplex *AP,
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtpmv_v2");
@@ -1372,14 +1372,14 @@ cublasStatus_t CUBLASWINAPI cublasZtpmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStrsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const float *A, 
-                                                      int lda, 
-                                                      float *x, 
+cublasStatus_t CUBLASWINAPI cublasStrsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const float *A,
+                                                      int lda,
+                                                      float *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStrsv_v2");
@@ -1387,14 +1387,14 @@ cublasStatus_t CUBLASWINAPI cublasStrsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtrsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const double *A, 
-                                                      int lda, 
-                                                      double *x, 
+cublasStatus_t CUBLASWINAPI cublasDtrsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const double *A,
+                                                      int lda,
+                                                      double *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtrsv_v2");
@@ -1402,14 +1402,14 @@ cublasStatus_t CUBLASWINAPI cublasDtrsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtrsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuComplex *A, 
-                                                      int lda, 
-                                                      cuComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasCtrsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuComplex *A,
+                                                      int lda,
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtrsv_v2");
@@ -1417,14 +1417,14 @@ cublasStatus_t CUBLASWINAPI cublasCtrsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtrsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuDoubleComplex *A, 
-                                                      int lda, 
-                                                      cuDoubleComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasZtrsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuDoubleComplex *A,
+                                                      int lda,
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtrsv_v2");
@@ -1432,13 +1432,13 @@ cublasStatus_t CUBLASWINAPI cublasZtrsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStpsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const float *AP, 
-                                                      float *x, 
+cublasStatus_t CUBLASWINAPI cublasStpsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const float *AP,
+                                                      float *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const float *, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStpsv_v2");
@@ -1446,13 +1446,13 @@ cublasStatus_t CUBLASWINAPI cublasStpsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtpsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const double *AP, 
-                                                      double *x, 
+cublasStatus_t CUBLASWINAPI cublasDtpsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const double *AP,
+                                                      double *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const double *, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtpsv_v2");
@@ -1460,13 +1460,13 @@ cublasStatus_t CUBLASWINAPI cublasDtpsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtpsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuComplex *AP, 
-                                                      cuComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasCtpsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuComplex *AP,
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuComplex *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtpsv_v2");
@@ -1474,13 +1474,13 @@ cublasStatus_t CUBLASWINAPI cublasCtpsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtpsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      const cuDoubleComplex *AP, 
-                                                      cuDoubleComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasZtpsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      const cuDoubleComplex *AP,
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtpsv_v2");
@@ -1488,15 +1488,15 @@ cublasStatus_t CUBLASWINAPI cublasZtpsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, AP, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStbsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const float *A, 
-                                                      int lda, 
-                                                      float *x, 
+cublasStatus_t CUBLASWINAPI cublasStbsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const float *A,
+                                                      int lda,
+                                                      float *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStbsv_v2");
@@ -1504,15 +1504,15 @@ cublasStatus_t CUBLASWINAPI cublasStbsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtbsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const double *A, 
-                                                      int lda, 
-                                                      double *x, 
+cublasStatus_t CUBLASWINAPI cublasDtbsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const double *A,
+                                                      int lda,
+                                                      double *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtbsv_v2");
@@ -1520,15 +1520,15 @@ cublasStatus_t CUBLASWINAPI cublasDtbsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtbsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const cuComplex *A, 
-                                                      int lda, 
-                                                      cuComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasCtbsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const cuComplex *A,
+                                                      int lda,
+                                                      cuComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtbsv_v2");
@@ -1536,15 +1536,15 @@ cublasStatus_t CUBLASWINAPI cublasCtbsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtbsv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      cublasDiagType_t diag, 
-                                                      int n, 
-                                                      int k, 
-                                                      const cuDoubleComplex *A, 
-                                                      int lda, 
-                                                      cuDoubleComplex *x, 
+cublasStatus_t CUBLASWINAPI cublasZtbsv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      cublasDiagType_t diag,
+                                                      int n,
+                                                      int k,
+                                                      const cuDoubleComplex *A,
+                                                      int lda,
+                                                      cuDoubleComplex *x,
                                                       int incx) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtbsv_v2");
@@ -1552,15 +1552,15 @@ cublasStatus_t CUBLASWINAPI cublasZtbsv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSsymv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
+cublasStatus_t CUBLASWINAPI cublasSsymv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
                                                       int n,
-                                                      const float *alpha, /* host or device pointer */ 
+                                                      const float *alpha, /* host or device pointer */
                                                       const float *A,
                                                       int lda,
                                                       const float *x,
                                                       int incx,
-                                                      const float *beta, /* host or device pointer */ 
+                                                      const float *beta, /* host or device pointer */
                                                       float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -1570,14 +1570,14 @@ cublasStatus_t CUBLASWINAPI cublasSsymv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDsymv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
+                                                      cublasFillMode_t uplo,
                                                       int n,
-                                                      const double *alpha, /* host or device pointer */ 
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *A,
                                                       int lda,
                                                       const double *x,
                                                       int incx,
-                                                      const double *beta, /* host or device pointer */ 
+                                                      const double *beta, /* host or device pointer */
                                                       double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -1587,14 +1587,14 @@ cublasStatus_t CUBLASWINAPI cublasDsymv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCsymv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
+                                                      cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */ 
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
                                                       const cuComplex *x,
                                                       int incx,
-                                                      const cuComplex *beta, /* host or device pointer */ 
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -1603,15 +1603,15 @@ cublasStatus_t CUBLASWINAPI cublasCsymv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZsymv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
+cublasStatus_t CUBLASWINAPI cublasZsymv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuDoubleComplex *alpha,  /* host or device pointer */ 
+                                                      const cuDoubleComplex *alpha,  /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
                                                       const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *beta,   /* host or device pointer */ 
+                                                      const cuDoubleComplex *beta,   /* host or device pointer */
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -1621,14 +1621,14 @@ cublasStatus_t CUBLASWINAPI cublasZsymv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasChemv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
+                                                      cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */ 
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
                                                       const cuComplex *x,
                                                       int incx,
-                                                      const cuComplex *beta, /* host or device pointer */ 
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -1637,15 +1637,15 @@ cublasStatus_t CUBLASWINAPI cublasChemv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZhemv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
+cublasStatus_t CUBLASWINAPI cublasZhemv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuDoubleComplex *alpha,  /* host or device pointer */ 
+                                                      const cuDoubleComplex *alpha,  /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
                                                       const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *beta,   /* host or device pointer */ 
+                                                      const cuDoubleComplex *beta,   /* host or device pointer */
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -1655,15 +1655,15 @@ cublasStatus_t CUBLASWINAPI cublasZhemv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasSsbmv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
+                                                      cublasFillMode_t uplo,
                                                       int n,
                                                       int k,
-                                                      const float *alpha,   /* host or device pointer */ 
+                                                      const float *alpha,   /* host or device pointer */
                                                       const float *A,
                                                       int lda,
-                                                      const float *x, 
+                                                      const float *x,
                                                       int incx,
-                                                      const float *beta,  /* host or device pointer */ 
+                                                      const float *beta,  /* host or device pointer */
                                                       float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -1672,16 +1672,16 @@ cublasStatus_t CUBLASWINAPI cublasSsbmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, k, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDsbmv_v2 (cublasHandle_t handle, 
-                                                      cublasFillMode_t uplo, 
+cublasStatus_t CUBLASWINAPI cublasDsbmv_v2 (cublasHandle_t handle,
+                                                      cublasFillMode_t uplo,
                                                       int n,
                                                       int k,
-                                                      const double *alpha,   /* host or device pointer */ 
+                                                      const double *alpha,   /* host or device pointer */
                                                       const double *A,
                                                       int lda,
-                                                      const double *x, 
+                                                      const double *x,
                                                       int incx,
-                                                      const double *beta,   /* host or device pointer */ 
+                                                      const double *beta,   /* host or device pointer */
                                                       double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -1691,15 +1691,15 @@ cublasStatus_t CUBLASWINAPI cublasDsbmv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasChbmv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
+                                                      cublasFillMode_t uplo,
                                                       int n,
                                                       int k,
-                                                      const cuComplex *alpha, /* host or device pointer */ 
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
-                                                      const cuComplex *x, 
+                                                      const cuComplex *x,
                                                       int incx,
-                                                      const cuComplex *beta, /* host or device pointer */ 
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -1709,15 +1709,15 @@ cublasStatus_t CUBLASWINAPI cublasChbmv_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZhbmv_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
+                                                      cublasFillMode_t uplo,
                                                       int n,
                                                       int k,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
-                                                      const cuDoubleComplex *x, 
+                                                      const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */ 
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -1726,14 +1726,14 @@ cublasStatus_t CUBLASWINAPI cublasZhbmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, k, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSspmv_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasSspmv_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
-                                                      int n, 
-                                                      const float *alpha,  /* host or device pointer */                                           
+                                                      int n,
+                                                      const float *alpha,  /* host or device pointer */
                                                       const float *AP,
                                                       const float *x,
                                                       int incx,
-                                                      const float *beta,   /* host or device pointer */  
+                                                      const float *beta,   /* host or device pointer */
                                                       float *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const float *, const float *, const float *, int, const float *, float *, int);
@@ -1742,14 +1742,14 @@ cublasStatus_t CUBLASWINAPI cublasSspmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, alpha, AP, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDspmv_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasDspmv_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const double *alpha, /* host or device pointer */  
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *AP,
                                                       const double *x,
                                                       int incx,
-                                                      const double *beta,  /* host or device pointer */  
+                                                      const double *beta,  /* host or device pointer */
                                                       double *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const double *, const double *, const double *, int, const double *, double *, int);
@@ -1758,14 +1758,14 @@ cublasStatus_t CUBLASWINAPI cublasDspmv_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, alpha, AP, x, incx, beta, y, incy);
 }
 
-cublasStatus_t CUBLASWINAPI cublasChpmv_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasChpmv_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *AP,
                                                       const cuComplex *x,
                                                       int incx,
-                                                      const cuComplex *beta, /* host or device pointer */  
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, const cuComplex *, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -1777,12 +1777,12 @@ cublasStatus_t CUBLASWINAPI cublasChpmv_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasZhpmv_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *AP,
                                                       const cuDoubleComplex *x,
                                                       int incx,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
-                                                      cuDoubleComplex *y, 
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
+                                                      cuDoubleComplex *y,
                                                       int incy) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuDoubleComplex *, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZhpmv_v2");
@@ -1793,7 +1793,7 @@ cublasStatus_t CUBLASWINAPI cublasZhpmv_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasSger_v2 (cublasHandle_t handle,
                                                      int m,
                                                      int n,
-                                                     const float *alpha, /* host or device pointer */  
+                                                     const float *alpha, /* host or device pointer */
                                                      const float *x,
                                                      int incx,
                                                      const float *y,
@@ -1806,10 +1806,10 @@ cublasStatus_t CUBLASWINAPI cublasSger_v2 (cublasHandle_t handle,
   return func_ptr(handle, m, n, alpha, x, incx, y, incy, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDger_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasDger_v2 (cublasHandle_t handle,
                                                      int m,
                                                      int n,
-                                                     const double *alpha, /* host or device pointer */   
+                                                     const double *alpha, /* host or device pointer */
                                                      const double *x,
                                                      int incx,
                                                      const double *y,
@@ -1822,10 +1822,10 @@ cublasStatus_t CUBLASWINAPI cublasDger_v2 (cublasHandle_t handle,
   return func_ptr(handle, m, n, alpha, x, incx, y, incy, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCgeru_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasCgeru_v2 (cublasHandle_t handle,
                                                       int m,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *x,
                                                       int incx,
                                                       const cuComplex *y,
@@ -1841,7 +1841,7 @@ cublasStatus_t CUBLASWINAPI cublasCgeru_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasCgerc_v2 (cublasHandle_t handle,
                                                       int m,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *x,
                                                       int incx,
                                                       const cuComplex *y,
@@ -1854,10 +1854,10 @@ cublasStatus_t CUBLASWINAPI cublasCgerc_v2 (cublasHandle_t handle,
   return func_ptr(handle, m, n, alpha, x, incx, y, incy, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZgeru_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasZgeru_v2 (cublasHandle_t handle,
                                                       int m,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *x,
                                                       int incx,
                                                       const cuDoubleComplex *y,
@@ -1873,7 +1873,7 @@ cublasStatus_t CUBLASWINAPI cublasZgeru_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasZgerc_v2 (cublasHandle_t handle,
                                                       int m,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *x,
                                                       int incx,
                                                       const cuDoubleComplex *y,
@@ -1889,10 +1889,10 @@ cublasStatus_t CUBLASWINAPI cublasZgerc_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasSsyr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const float *alpha, /* host or device pointer */  
+                                                     const float *alpha, /* host or device pointer */
                                                      const float *x,
                                                      int incx,
-                                                     float *A, 
+                                                     float *A,
                                                      int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const float *, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSsyr_v2");
@@ -1903,10 +1903,10 @@ cublasStatus_t CUBLASWINAPI cublasSsyr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasDsyr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const double *alpha, /* host or device pointer */  
+                                                     const double *alpha, /* host or device pointer */
                                                      const double *x,
                                                      int incx,
-                                                     double *A, 
+                                                     double *A,
                                                      int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const double *, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDsyr_v2");
@@ -1917,10 +1917,10 @@ cublasStatus_t CUBLASWINAPI cublasDsyr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasCsyr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const cuComplex *alpha, /* host or device pointer */  
+                                                     const cuComplex *alpha, /* host or device pointer */
                                                      const cuComplex *x,
                                                      int incx,
-                                                     cuComplex *A, 
+                                                     cuComplex *A,
                                                      int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCsyr_v2");
@@ -1931,10 +1931,10 @@ cublasStatus_t CUBLASWINAPI cublasCsyr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasZsyr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                     const cuDoubleComplex *alpha, /* host or device pointer */
                                                      const cuDoubleComplex *x,
                                                      int incx,
-                                                     cuDoubleComplex *A, 
+                                                     cuDoubleComplex *A,
                                                      int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuDoubleComplex *, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZsyr_v2");
@@ -1945,10 +1945,10 @@ cublasStatus_t CUBLASWINAPI cublasZsyr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasCher_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const float *alpha, /* host or device pointer */  
+                                                     const float *alpha, /* host or device pointer */
                                                      const cuComplex *x,
                                                      int incx,
-                                                     cuComplex *A, 
+                                                     cuComplex *A,
                                                      int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const float *, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCher_v2");
@@ -1959,10 +1959,10 @@ cublasStatus_t CUBLASWINAPI cublasCher_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasZher_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const double *alpha, /* host or device pointer */  
+                                                     const double *alpha, /* host or device pointer */
                                                      const cuDoubleComplex *x,
                                                      int incx,
-                                                     cuDoubleComplex *A, 
+                                                     cuDoubleComplex *A,
                                                      int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const double *, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZher_v2");
@@ -1973,7 +1973,7 @@ cublasStatus_t CUBLASWINAPI cublasZher_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasSspr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const float *alpha, /* host or device pointer */  
+                                                     const float *alpha, /* host or device pointer */
                                                      const float *x,
                                                      int incx,
                                                      float *AP) {
@@ -1986,7 +1986,7 @@ cublasStatus_t CUBLASWINAPI cublasSspr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasDspr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const double *alpha, /* host or device pointer */  
+                                                     const double *alpha, /* host or device pointer */
                                                      const double *x,
                                                      int incx,
                                                      double *AP) {
@@ -1999,7 +1999,7 @@ cublasStatus_t CUBLASWINAPI cublasDspr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasChpr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const float *alpha, /* host or device pointer */  
+                                                     const float *alpha, /* host or device pointer */
                                                      const cuComplex *x,
                                                      int incx,
                                                      cuComplex *AP) {
@@ -2012,7 +2012,7 @@ cublasStatus_t CUBLASWINAPI cublasChpr_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasZhpr_v2 (cublasHandle_t handle,
                                                      cublasFillMode_t uplo,
                                                      int n,
-                                                     const double *alpha, /* host or device pointer */  
+                                                     const double *alpha, /* host or device pointer */
                                                      const cuDoubleComplex *x,
                                                      int incx,
                                                      cuDoubleComplex *AP) {
@@ -2024,8 +2024,8 @@ cublasStatus_t CUBLASWINAPI cublasZhpr_v2 (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasSsyr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
-                                                      int n, 
-                                                      const float *alpha, /* host or device pointer */  
+                                                      int n,
+                                                      const float *alpha, /* host or device pointer */
                                                       const float *x,
                                                       int incx,
                                                       const float *y,
@@ -2040,8 +2040,8 @@ cublasStatus_t CUBLASWINAPI cublasSsyr2_v2 (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasDsyr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
-                                                      int n, 
-                                                      const double *alpha, /* host or device pointer */  
+                                                      int n,
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *x,
                                                       int incx,
                                                       const double *y,
@@ -2055,13 +2055,13 @@ cublasStatus_t CUBLASWINAPI cublasDsyr2_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCsyr2_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, int n, 
-                                                      const cuComplex *alpha,  /* host or device pointer */  
+                                                      cublasFillMode_t uplo, int n,
+                                                      const cuComplex *alpha,  /* host or device pointer */
                                                       const cuComplex *x,
-                                                      int incx, 
+                                                      int incx,
                                                       const cuComplex *y,
-                                                      int incy, 
-                                                      cuComplex *A, 
+                                                      int incy,
+                                                      cuComplex *A,
                                                       int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCsyr2_v2");
@@ -2071,8 +2071,8 @@ cublasStatus_t CUBLASWINAPI cublasCsyr2_v2 (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasZsyr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
-                                                      int n, 
-                                                      const cuDoubleComplex *alpha,  /* host or device pointer */  
+                                                      int n,
+                                                      const cuDoubleComplex *alpha,  /* host or device pointer */
                                                       const cuDoubleComplex *x,
                                                       int incx,
                                                       const cuDoubleComplex *y,
@@ -2086,13 +2086,13 @@ cublasStatus_t CUBLASWINAPI cublasZsyr2_v2 (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCher2_v2 (cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, int n, 
-                                                      const cuComplex *alpha,  /* host or device pointer */  
+                                                      cublasFillMode_t uplo, int n,
+                                                      const cuComplex *alpha,  /* host or device pointer */
                                                       const cuComplex *x,
-                                                      int incx, 
+                                                      int incx,
                                                       const cuComplex *y,
-                                                      int incy, 
-                                                      cuComplex *A, 
+                                                      int incy,
+                                                      cuComplex *A,
                                                       int lda) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCher2_v2");
@@ -2102,8 +2102,8 @@ cublasStatus_t CUBLASWINAPI cublasCher2_v2 (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasZher2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
-                                                      int n, 
-                                                      const cuDoubleComplex *alpha,  /* host or device pointer */  
+                                                      int n,
+                                                      const cuDoubleComplex *alpha,  /* host or device pointer */
                                                       const cuDoubleComplex *x,
                                                       int incx,
                                                       const cuDoubleComplex *y,
@@ -2119,7 +2119,7 @@ cublasStatus_t CUBLASWINAPI cublasZher2_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasSspr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const float *alpha,  /* host or device pointer */  
+                                                      const float *alpha,  /* host or device pointer */
                                                       const float *x,
                                                       int incx,
                                                       const float *y,
@@ -2134,9 +2134,9 @@ cublasStatus_t CUBLASWINAPI cublasSspr2_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasDspr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const double *alpha,  /* host or device pointer */  
+                                                      const double *alpha,  /* host or device pointer */
                                                       const double *x,
-                                                      int incx, 
+                                                      int incx,
                                                       const double *y,
                                                       int incy,
                                                       double *AP) {
@@ -2149,7 +2149,7 @@ cublasStatus_t CUBLASWINAPI cublasDspr2_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasChpr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *x,
                                                       int incx,
                                                       const cuComplex *y,
@@ -2164,7 +2164,7 @@ cublasStatus_t CUBLASWINAPI cublasChpr2_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasZhpr2_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *x,
                                                       int incx,
                                                       const cuDoubleComplex *y,
@@ -2176,18 +2176,18 @@ cublasStatus_t CUBLASWINAPI cublasZhpr2_v2 (cublasHandle_t handle,
   return func_ptr(handle, uplo, n, alpha, x, incx, y, incy, AP);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSgemm_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasSgemm_v2 (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const float *alpha, /* host or device pointer */  
-                                                      const float *A, 
+                                                      const float *alpha, /* host or device pointer */
+                                                      const float *A,
                                                       int lda,
                                                       const float *B,
-                                                      int ldb, 
-                                                      const float *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const float *beta, /* host or device pointer */
                                                       float *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -2196,18 +2196,18 @@ cublasStatus_t CUBLASWINAPI cublasSgemm_v2 (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDgemm_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasDgemm_v2 (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const double *alpha, /* host or device pointer */  
-                                                      const double *A, 
+                                                      const double *alpha, /* host or device pointer */
+                                                      const double *A,
                                                       int lda,
                                                       const double *B,
-                                                      int ldb, 
-                                                      const double *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const double *beta, /* host or device pointer */
                                                       double *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -2216,18 +2216,18 @@ cublasStatus_t CUBLASWINAPI cublasDgemm_v2 (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCgemm_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasCgemm_v2 (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const cuComplex *alpha, /* host or device pointer */  
-                                                      const cuComplex *A, 
+                                                      const cuComplex *alpha, /* host or device pointer */
+                                                      const cuComplex *A,
                                                       int lda,
                                                       const cuComplex *B,
-                                                      int ldb, 
-                                                      const cuComplex *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -2236,18 +2236,18 @@ cublasStatus_t CUBLASWINAPI cublasCgemm_v2 (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCgemm3m  (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasCgemm3m  (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const cuComplex *alpha, /* host or device pointer */  
-                                                      const cuComplex *A, 
+                                                      const cuComplex *alpha, /* host or device pointer */
+                                                      const cuComplex *A,
                                                       int lda,
                                                       const cuComplex *B,
-                                                      int ldb, 
-                                                      const cuComplex *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -2256,19 +2256,19 @@ cublasStatus_t CUBLASWINAPI cublasCgemm3m  (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCgemm3mEx (cublasHandle_t handle, 
-                                                     cublasOperation_t transa, cublasOperation_t transb,  
-                                                     int m, int n, int k, 
-                                                     const cuComplex *alpha, 
-                                                     const void *A, 
-                                                     cudaDataType Atype, 
-                                                     int lda, 
-                                                     const void *B, 
-                                                     cudaDataType Btype, 
+cublasStatus_t CUBLASWINAPI cublasCgemm3mEx (cublasHandle_t handle,
+                                                     cublasOperation_t transa, cublasOperation_t transb,
+                                                     int m, int n, int k,
+                                                     const cuComplex *alpha,
+                                                     const void *A,
+                                                     cudaDataType Atype,
+                                                     int lda,
+                                                     const void *B,
+                                                     cudaDataType Btype,
                                                      int ldb,
-                                                     const cuComplex *beta, 
-                                                     void *C, 
-                                                     cudaDataType Ctype, 
+                                                     const cuComplex *beta,
+                                                     void *C,
+                                                     cudaDataType Ctype,
                                                      int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const cuComplex *, const void *, cudaDataType, int, const void *, cudaDataType, int, const cuComplex *, void *, cudaDataType, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCgemm3mEx");
@@ -2276,18 +2276,18 @@ cublasStatus_t CUBLASWINAPI cublasCgemm3mEx (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, Atype, lda, B, Btype, ldb, beta, C, Ctype, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZgemm_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasZgemm_v2 (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
-                                                      const cuDoubleComplex *A, 
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
+                                                      const cuDoubleComplex *A,
                                                       int lda,
                                                       const cuDoubleComplex *B,
-                                                      int ldb, 
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -2296,18 +2296,18 @@ cublasStatus_t CUBLASWINAPI cublasZgemm_v2 (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZgemm3m  (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasZgemm3m  (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
-                                                      const cuDoubleComplex *A, 
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
+                                                      const cuDoubleComplex *A,
                                                       int lda,
                                                       const cuDoubleComplex *B,
-                                                      int ldb, 
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -2316,20 +2316,20 @@ cublasStatus_t CUBLASWINAPI cublasZgemm3m  (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasSgemmEx  (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasSgemmEx  (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const float *alpha, /* host or device pointer */  
-                                                      const void *A, 
+                                                      const float *alpha, /* host or device pointer */
+                                                      const void *A,
                                                       cudaDataType Atype,
                                                       int lda,
                                                       const void *B,
                                                       cudaDataType Btype,
-                                                      int ldb, 
-                                                      const float *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const float *beta, /* host or device pointer */
                                                       void *C,
                                                       cudaDataType Ctype,
                                                       int ldc) {
@@ -2339,20 +2339,20 @@ cublasStatus_t CUBLASWINAPI cublasSgemmEx  (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, Atype, lda, B, Btype, ldb, beta, C, Ctype, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasGemmEx  (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasGemmEx  (cublasHandle_t handle,
                                                       cublasOperation_t transa,
-                                                      cublasOperation_t transb, 
+                                                      cublasOperation_t transb,
                                                       int m,
                                                       int n,
                                                       int k,
-                                                      const void *alpha, /* host or device pointer */  
-                                                      const void *A, 
+                                                      const void *alpha, /* host or device pointer */
+                                                      const void *A,
                                                       cudaDataType Atype,
                                                       int lda,
                                                       const void *B,
                                                       cudaDataType Btype,
-                                                      int ldb, 
-                                                      const void *beta, /* host or device pointer */  
+                                                      int ldb,
+                                                      const void *beta, /* host or device pointer */
                                                       void *C,
                                                       cudaDataType Ctype,
                                                       int ldc,
@@ -2364,19 +2364,19 @@ cublasStatus_t CUBLASWINAPI cublasGemmEx  (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, Atype, lda, B, Btype, ldb, beta, C, Ctype, ldc, computeType, algo);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCgemmEx (cublasHandle_t handle, 
-                                                     cublasOperation_t transa, cublasOperation_t transb,  
-                                                     int m, int n, int k, 
-                                                     const cuComplex *alpha, 
-                                                     const void *A, 
-                                                     cudaDataType Atype, 
-                                                     int lda, 
-                                                     const void *B, 
-                                                     cudaDataType Btype, 
+cublasStatus_t CUBLASWINAPI cublasCgemmEx (cublasHandle_t handle,
+                                                     cublasOperation_t transa, cublasOperation_t transb,
+                                                     int m, int n, int k,
+                                                     const cuComplex *alpha,
+                                                     const void *A,
+                                                     cudaDataType Atype,
+                                                     int lda,
+                                                     const void *B,
+                                                     cudaDataType Btype,
                                                      int ldb,
-                                                     const cuComplex *beta, 
-                                                     void *C, 
-                                                     cudaDataType Ctype, 
+                                                     const cuComplex *beta,
+                                                     void *C,
+                                                     cudaDataType Ctype,
                                                      int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, int, const cuComplex *, const void *, cudaDataType, int, const void *, cudaDataType, int, const cuComplex *, void *, cudaDataType, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCgemmEx");
@@ -2384,10 +2384,10 @@ cublasStatus_t CUBLASWINAPI cublasCgemmEx (cublasHandle_t handle,
   return func_ptr(handle, transa, transb, m, n, k, alpha, A, Atype, lda, B, Btype, ldb, beta, C, Ctype, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasUint8gemmBias (cublasHandle_t handle, 
-                                                           cublasOperation_t transa, cublasOperation_t transb, cublasOperation_t transc,  
-                                                           int m, int n, int k, 
-                                                           const unsigned char *A, int A_bias, int lda, 
+cublasStatus_t CUBLASWINAPI cublasUint8gemmBias (cublasHandle_t handle,
+                                                           cublasOperation_t transa, cublasOperation_t transb, cublasOperation_t transc,
+                                                           int m, int n, int k,
+                                                           const unsigned char *A, int A_bias, int lda,
                                                            const unsigned char *B, int B_bias, int ldb,
                                                                  unsigned char *C, int C_bias, int ldc,
                                                            int C_mult, int C_shift) {
@@ -2402,10 +2402,10 @@ cublasStatus_t CUBLASWINAPI cublasSsyrk_v2 (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const float *alpha, /* host or device pointer */  
+                                                      const float *alpha, /* host or device pointer */
                                                       const float *A,
                                                       int lda,
-                                                      const float *beta, /* host or device pointer */  
+                                                      const float *beta, /* host or device pointer */
                                                       float *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const float *, const float *, int, const float *, float *, int);
@@ -2419,10 +2419,10 @@ cublasStatus_t CUBLASWINAPI cublasDsyrk_v2 (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const double *alpha,  /* host or device pointer */  
+                                                      const double *alpha,  /* host or device pointer */
                                                       const double *A,
                                                       int lda,
-                                                      const double *beta,  /* host or device pointer */  
+                                                      const double *beta,  /* host or device pointer */
                                                       double *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const double *, const double *, int, const double *, double *, int);
@@ -2436,10 +2436,10 @@ cublasStatus_t CUBLASWINAPI cublasCsyrk_v2 (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
-                                                      const cuComplex *beta, /* host or device pointer */  
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -2453,11 +2453,11 @@ cublasStatus_t CUBLASWINAPI cublasZsyrk_v2 (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
-                                                      cuDoubleComplex *C, 
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
+                                                      cuDoubleComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZsyrk_v2");
@@ -2470,13 +2470,13 @@ cublasStatus_t CUBLASWINAPI cublasCsyrkEx ( cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const cuComplex *alpha, /* host or device pointer */  
-                                                      const void *A, 
-                                                      cudaDataType Atype, 
+                                                      const cuComplex *alpha, /* host or device pointer */
+                                                      const void *A,
+                                                      cudaDataType Atype,
                                                       int lda,
-                                                      const cuComplex *beta, /* host or device pointer */  
-                                                      void *C, 
-                                                      cudaDataType Ctype, 
+                                                      const cuComplex *beta, /* host or device pointer */
+                                                      void *C,
+                                                      cudaDataType Ctype,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const void *, cudaDataType, int, const cuComplex *, void *, cudaDataType, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCsyrkEx");
@@ -2485,17 +2485,17 @@ cublasStatus_t CUBLASWINAPI cublasCsyrkEx ( cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCsyrk3mEx(cublasHandle_t handle,
-                                                      cublasFillMode_t uplo, 
-                                                      cublasOperation_t trans, 
-                                                      int n, 
+                                                      cublasFillMode_t uplo,
+                                                      cublasOperation_t trans,
+                                                      int n,
                                                       int k,
-                                                      const cuComplex *alpha, 
-                                                      const void *A, 
-                                                      cudaDataType Atype, 
+                                                      const cuComplex *alpha,
+                                                      const void *A,
+                                                      cudaDataType Atype,
                                                       int lda,
-                                                      const cuComplex *beta, 
-                                                      void *C, 
-                                                      cudaDataType Ctype, 
+                                                      const cuComplex *beta,
+                                                      void *C,
+                                                      cudaDataType Ctype,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const void *, cudaDataType, int, const cuComplex *, void *, cudaDataType, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCsyrk3mEx");
@@ -2508,10 +2508,10 @@ cublasStatus_t CUBLASWINAPI cublasCherk_v2 (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const float *alpha,  /* host or device pointer */  
+                                                      const float *alpha,  /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
-                                                      const float *beta,   /* host or device pointer */  
+                                                      const float *beta,   /* host or device pointer */
                                                       cuComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const float *, const cuComplex *, int, const float *, cuComplex *, int);
@@ -2525,10 +2525,10 @@ cublasStatus_t CUBLASWINAPI cublasZherk_v2 (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const double *alpha,  /* host or device pointer */  
+                                                      const double *alpha,  /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
-                                                      const double *beta,  /* host or device pointer */  
+                                                      const double *beta,  /* host or device pointer */
                                                       cuDoubleComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const double *, const cuDoubleComplex *, int, const double *, cuDoubleComplex *, int);
@@ -2542,11 +2542,11 @@ cublasStatus_t CUBLASWINAPI cublasCherkEx  (cublasHandle_t handle,
                                                       cublasOperation_t trans,
                                                       int n,
                                                       int k,
-                                                      const float *alpha,  /* host or device pointer */  
-                                                      const void *A, 
+                                                      const float *alpha,  /* host or device pointer */
+                                                      const void *A,
                                                       cudaDataType Atype,
                                                       int lda,
-                                                      const float *beta,   /* host or device pointer */  
+                                                      const float *beta,   /* host or device pointer */
                                                       void *C,
                                                       cudaDataType Ctype,
                                                       int ldc) {
@@ -2557,16 +2557,16 @@ cublasStatus_t CUBLASWINAPI cublasCherkEx  (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCherk3mEx (cublasHandle_t handle,
-                                                       cublasFillMode_t uplo, 
-                                                       cublasOperation_t trans, 
-                                                       int n, 
+                                                       cublasFillMode_t uplo,
+                                                       cublasOperation_t trans,
+                                                       int n,
                                                        int k,
-                                                       const float *alpha, 
-                                                       const void *A, cudaDataType Atype, 
+                                                       const float *alpha,
+                                                       const void *A, cudaDataType Atype,
                                                        int lda,
-                                                       const float *beta, 
-                                                       void *C, 
-                                                       cudaDataType Ctype, 
+                                                       const float *beta,
+                                                       void *C,
+                                                       cudaDataType Ctype,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const float *, const void *, cudaDataType, int, const float *, void *, cudaDataType, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCherk3mEx");
@@ -2579,12 +2579,12 @@ cublasStatus_t CUBLASWINAPI cublasSsyr2k_v2 (cublasHandle_t handle,
                                                        cublasOperation_t trans,
                                                        int n,
                                                        int k,
-                                                       const float *alpha, /* host or device pointer */  
+                                                       const float *alpha, /* host or device pointer */
                                                        const float *A,
                                                        int lda,
                                                        const float *B,
                                                        int ldb,
-                                                       const float *beta, /* host or device pointer */  
+                                                       const float *beta, /* host or device pointer */
                                                        float *C,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -2598,12 +2598,12 @@ cublasStatus_t CUBLASWINAPI cublasDsyr2k_v2 (cublasHandle_t handle,
                                                        cublasOperation_t trans,
                                                        int n,
                                                        int k,
-                                                       const double *alpha, /* host or device pointer */  
+                                                       const double *alpha, /* host or device pointer */
                                                        const double *A,
                                                        int lda,
                                                        const double *B,
                                                        int ldb,
-                                                       const double *beta, /* host or device pointer */  
+                                                       const double *beta, /* host or device pointer */
                                                        double *C,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -2617,12 +2617,12 @@ cublasStatus_t CUBLASWINAPI cublasCsyr2k_v2 (cublasHandle_t handle,
                                                        cublasOperation_t trans,
                                                        int n,
                                                        int k,
-                                                       const cuComplex *alpha, /* host or device pointer */  
+                                                       const cuComplex *alpha, /* host or device pointer */
                                                        const cuComplex *A,
                                                        int lda,
                                                        const cuComplex *B,
                                                        int ldb,
-                                                       const cuComplex *beta, /* host or device pointer */  
+                                                       const cuComplex *beta, /* host or device pointer */
                                                        cuComplex *C,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -2636,12 +2636,12 @@ cublasStatus_t CUBLASWINAPI cublasZsyr2k_v2 (cublasHandle_t handle,
                                                        cublasOperation_t trans,
                                                        int n,
                                                        int k,
-                                                       const cuDoubleComplex *alpha,  /* host or device pointer */  
+                                                       const cuDoubleComplex *alpha,  /* host or device pointer */
                                                        const cuDoubleComplex *A,
                                                        int lda,
                                                        const cuDoubleComplex *B,
                                                        int ldb,
-                                                       const cuDoubleComplex *beta,  /* host or device pointer */  
+                                                       const cuDoubleComplex *beta,  /* host or device pointer */
                                                        cuDoubleComplex *C,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -2655,12 +2655,12 @@ cublasStatus_t CUBLASWINAPI cublasCher2k_v2 (cublasHandle_t handle,
                                                        cublasOperation_t trans,
                                                        int n,
                                                        int k,
-                                                       const cuComplex *alpha, /* host or device pointer */  
+                                                       const cuComplex *alpha, /* host or device pointer */
                                                        const cuComplex *A,
                                                        int lda,
                                                        const cuComplex *B,
                                                        int ldb,
-                                                       const float *beta,   /* host or device pointer */  
+                                                       const float *beta,   /* host or device pointer */
                                                        cuComplex *C,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const float *, cuComplex *, int);
@@ -2671,15 +2671,15 @@ cublasStatus_t CUBLASWINAPI cublasCher2k_v2 (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasZher2k_v2 (cublasHandle_t handle,
                                                        cublasFillMode_t uplo,
-                                                       cublasOperation_t trans, 
+                                                       cublasOperation_t trans,
                                                        int n,
                                                        int k,
-                                                       const cuDoubleComplex *alpha, /* host or device pointer */  
-                                                       const cuDoubleComplex *A, 
+                                                       const cuDoubleComplex *alpha, /* host or device pointer */
+                                                       const cuDoubleComplex *A,
                                                        int lda,
                                                        const cuDoubleComplex *B,
                                                        int ldb,
-                                                       const double *beta, /* host or device pointer */  
+                                                       const double *beta, /* host or device pointer */
                                                        cuDoubleComplex *C,
                                                        int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const double *, cuDoubleComplex *, int);
@@ -2693,12 +2693,12 @@ cublasStatus_t CUBLASWINAPI cublasSsyrkx (cublasHandle_t handle,
                                                     cublasOperation_t trans,
                                                     int n,
                                                     int k,
-                                                    const float *alpha, /* host or device pointer */ 
+                                                    const float *alpha, /* host or device pointer */
                                                     const float *A,
                                                     int lda,
                                                     const float *B,
                                                     int ldb,
-                                                    const float *beta, /* host or device pointer */ 
+                                                    const float *beta, /* host or device pointer */
                                                     float *C,
                                                     int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -2712,12 +2712,12 @@ cublasStatus_t CUBLASWINAPI cublasDsyrkx (cublasHandle_t handle,
                                                     cublasOperation_t trans,
                                                     int n,
                                                     int k,
-                                                    const double *alpha, /* host or device pointer */ 
+                                                    const double *alpha, /* host or device pointer */
                                                     const double *A,
                                                     int lda,
                                                     const double *B,
                                                     int ldb,
-                                                    const double *beta, /* host or device pointer */ 
+                                                    const double *beta, /* host or device pointer */
                                                     double *C,
                                                     int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -2731,13 +2731,13 @@ cublasStatus_t CUBLASWINAPI cublasCsyrkx (cublasHandle_t handle,
                                                     cublasOperation_t trans,
                                                     int n,
                                                     int k,
-                                                    const cuComplex *alpha, /* host or device pointer */ 
+                                                    const cuComplex *alpha, /* host or device pointer */
                                                     const cuComplex *A,
                                                     int lda,
                                                     const cuComplex *B,
                                                     int ldb,
-                                                    const cuComplex *beta, /* host or device pointer */ 
-                                                    cuComplex *C, 
+                                                    const cuComplex *beta, /* host or device pointer */
+                                                    cuComplex *C,
                                                     int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCsyrkx");
@@ -2746,17 +2746,17 @@ cublasStatus_t CUBLASWINAPI cublasCsyrkx (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZsyrkx (cublasHandle_t handle,
-                                                    cublasFillMode_t uplo, 
+                                                    cublasFillMode_t uplo,
                                                     cublasOperation_t trans,
                                                     int n,
                                                     int k,
-                                                    const cuDoubleComplex *alpha, /* host or device pointer */ 
+                                                    const cuDoubleComplex *alpha, /* host or device pointer */
                                                     const cuDoubleComplex *A,
                                                     int lda,
                                                     const cuDoubleComplex *B,
                                                     int ldb,
-                                                    const cuDoubleComplex *beta, /* host or device pointer */ 
-                                                    cuDoubleComplex *C, 
+                                                    const cuDoubleComplex *beta, /* host or device pointer */
+                                                    cuDoubleComplex *C,
                                                     int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZsyrkx");
@@ -2769,12 +2769,12 @@ cublasStatus_t CUBLASWINAPI cublasCherkx (cublasHandle_t handle,
                                                     cublasOperation_t trans,
                                                     int n,
                                                     int k,
-                                                    const cuComplex *alpha, /* host or device pointer */ 
+                                                    const cuComplex *alpha, /* host or device pointer */
                                                     const cuComplex *A,
                                                     int lda,
                                                     const cuComplex *B,
                                                     int ldb,
-                                                    const float *beta, /* host or device pointer */ 
+                                                    const float *beta, /* host or device pointer */
                                                     cuComplex *C,
                                                     int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const float *, cuComplex *, int);
@@ -2788,12 +2788,12 @@ cublasStatus_t CUBLASWINAPI cublasZherkx (cublasHandle_t handle,
                                                     cublasOperation_t trans,
                                                     int n,
                                                     int k,
-                                                    const cuDoubleComplex *alpha, /* host or device pointer */ 
+                                                    const cuDoubleComplex *alpha, /* host or device pointer */
                                                     const cuDoubleComplex *A,
                                                     int lda,
                                                     const cuDoubleComplex *B,
                                                     int ldb,
-                                                    const double *beta, /* host or device pointer */ 
+                                                    const double *beta, /* host or device pointer */
                                                     cuDoubleComplex *C,
                                                     int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const double *, cuDoubleComplex *, int);
@@ -2807,12 +2807,12 @@ cublasStatus_t CUBLASWINAPI cublasSsymm_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int m,
                                                       int n,
-                                                      const float *alpha, /* host or device pointer */  
+                                                      const float *alpha, /* host or device pointer */
                                                       const float *A,
                                                       int lda,
                                                       const float *B,
                                                       int ldb,
-                                                      const float *beta, /* host or device pointer */  
+                                                      const float *beta, /* host or device pointer */
                                                       float *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, int, int, const float *, const float *, int, const float *, int, const float *, float *, int);
@@ -2824,14 +2824,14 @@ cublasStatus_t CUBLASWINAPI cublasSsymm_v2 (cublasHandle_t handle,
 cublasStatus_t CUBLASWINAPI cublasDsymm_v2 (cublasHandle_t handle,
                                                       cublasSideMode_t side,
                                                       cublasFillMode_t uplo,
-                                                      int m, 
+                                                      int m,
                                                       int n,
-                                                      const double *alpha, /* host or device pointer */  
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *A,
                                                       int lda,
                                                       const double *B,
                                                       int ldb,
-                                                      const double *beta, /* host or device pointer */  
+                                                      const double *beta, /* host or device pointer */
                                                       double *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, int, int, const double *, const double *, int, const double *, int, const double *, double *, int);
@@ -2845,12 +2845,12 @@ cublasStatus_t CUBLASWINAPI cublasCsymm_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int m,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
                                                       const cuComplex *B,
                                                       int ldb,
-                                                      const cuComplex *beta, /* host or device pointer */  
+                                                      const cuComplex *beta, /* host or device pointer */
                                                       cuComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
@@ -2864,12 +2864,12 @@ cublasStatus_t CUBLASWINAPI cublasZsymm_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int m,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
                                                       const cuDoubleComplex *B,
                                                       int ldb,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -2883,13 +2883,13 @@ cublasStatus_t CUBLASWINAPI cublasChemm_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int m,
                                                       int n,
-                                                      const cuComplex *alpha, /* host or device pointer */  
+                                                      const cuComplex *alpha, /* host or device pointer */
                                                       const cuComplex *A,
                                                       int lda,
                                                       const cuComplex *B,
                                                       int ldb,
-                                                      const cuComplex *beta, /* host or device pointer */  
-                                                      cuComplex *C, 
+                                                      const cuComplex *beta, /* host or device pointer */
+                                                      cuComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, int, const cuComplex *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasChemm_v2");
@@ -2902,12 +2902,12 @@ cublasStatus_t CUBLASWINAPI cublasZhemm_v2 (cublasHandle_t handle,
                                                       cublasFillMode_t uplo,
                                                       int m,
                                                       int n,
-                                                      const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                      const cuDoubleComplex *alpha, /* host or device pointer */
                                                       const cuDoubleComplex *A,
                                                       int lda,
                                                       const cuDoubleComplex *B,
                                                       int ldb,
-                                                      const cuDoubleComplex *beta, /* host or device pointer */  
+                                                      const cuDoubleComplex *beta, /* host or device pointer */
                                                       cuDoubleComplex *C,
                                                       int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, int, const cuDoubleComplex *, cuDoubleComplex *, int);
@@ -2916,14 +2916,14 @@ cublasStatus_t CUBLASWINAPI cublasZhemm_v2 (cublasHandle_t handle,
   return func_ptr(handle, side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStrsm_v2 (cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasStrsm_v2 (cublasHandle_t handle,
                                                       cublasSideMode_t side,
                                                       cublasFillMode_t uplo,
                                                       cublasOperation_t trans,
                                                       cublasDiagType_t diag,
                                                       int m,
                                                       int n,
-                                                      const float *alpha, /* host or device pointer */  
+                                                      const float *alpha, /* host or device pointer */
                                                       const float *A,
                                                       int lda,
                                                       float *B,
@@ -2941,9 +2941,9 @@ cublasStatus_t CUBLASWINAPI cublasDtrsm_v2 (cublasHandle_t handle,
                                                       cublasDiagType_t diag,
                                                       int m,
                                                       int n,
-                                                      const double *alpha, /* host or device pointer */  
-                                                      const double *A, 
-                                                      int lda, 
+                                                      const double *alpha, /* host or device pointer */
+                                                      const double *A,
+                                                      int lda,
                                                       double *B,
                                                       int ldb) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, cublasFillMode_t, cublasOperation_t, cublasDiagType_t, int, int, const double *, const double *, int, double *, int);
@@ -2959,7 +2959,7 @@ cublasStatus_t CUBLASWINAPI cublasCtrsm_v2(cublasHandle_t handle,
                                                      cublasDiagType_t diag,
                                                      int m,
                                                      int n,
-                                                     const cuComplex *alpha, /* host or device pointer */  
+                                                     const cuComplex *alpha, /* host or device pointer */
                                                      const cuComplex *A,
                                                      int lda,
                                                      cuComplex *B,
@@ -2970,15 +2970,15 @@ cublasStatus_t CUBLASWINAPI cublasCtrsm_v2(cublasHandle_t handle,
   return func_ptr(handle, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtrsm_v2(cublasHandle_t handle, 
+cublasStatus_t CUBLASWINAPI cublasZtrsm_v2(cublasHandle_t handle,
                                                      cublasSideMode_t side,
                                                      cublasFillMode_t uplo,
                                                      cublasOperation_t trans,
                                                      cublasDiagType_t diag,
                                                      int m,
                                                      int n,
-                                                     const cuDoubleComplex *alpha, /* host or device pointer */  
-                                                     const cuDoubleComplex *A,                                        
+                                                     const cuDoubleComplex *alpha, /* host or device pointer */
+                                                     const cuDoubleComplex *A,
                                                      int lda,
                                                      cuDoubleComplex *B,
                                                      int ldb) {
@@ -2995,9 +2995,9 @@ cublasStatus_t CUBLASWINAPI cublasStrmm_v2 (cublasHandle_t handle,
                                                       cublasDiagType_t diag,
                                                       int m,
                                                       int n,
-                                                      const float *alpha, /* host or device pointer */  
+                                                      const float *alpha, /* host or device pointer */
                                                       const float *A,
-                                                      int lda, 
+                                                      int lda,
                                                       const float *B,
                                                       int ldb,
                                                       float *C,
@@ -3015,7 +3015,7 @@ cublasStatus_t CUBLASWINAPI cublasDtrmm_v2 (cublasHandle_t handle,
                                                       cublasDiagType_t diag,
                                                       int m,
                                                       int n,
-                                                      const double *alpha, /* host or device pointer */  
+                                                      const double *alpha, /* host or device pointer */
                                                       const double *A,
                                                       int lda,
                                                       const double *B,
@@ -3035,7 +3035,7 @@ cublasStatus_t CUBLASWINAPI cublasCtrmm_v2(cublasHandle_t handle,
                                                      cublasDiagType_t diag,
                                                      int m,
                                                      int n,
-                                                     const cuComplex *alpha, /* host or device pointer */  
+                                                     const cuComplex *alpha, /* host or device pointer */
                                                      const cuComplex *A,
                                                      int lda,
                                                      const cuComplex *B,
@@ -3048,13 +3048,13 @@ cublasStatus_t CUBLASWINAPI cublasCtrmm_v2(cublasHandle_t handle,
   return func_ptr(handle, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtrmm_v2(cublasHandle_t handle, cublasSideMode_t side, 
+cublasStatus_t CUBLASWINAPI cublasZtrmm_v2(cublasHandle_t handle, cublasSideMode_t side,
                                                      cublasFillMode_t uplo,
                                                      cublasOperation_t trans,
                                                      cublasDiagType_t diag,
                                                      int m,
                                                      int n,
-                                                     const cuDoubleComplex *alpha, /* host or device pointer */  
+                                                     const cuDoubleComplex *alpha, /* host or device pointer */
                                                      const cuDoubleComplex *A,
                                                      int lda,
                                                      const cuDoubleComplex *B,
@@ -3190,7 +3190,7 @@ cublasStatus_t CUBLASWINAPI cublasGemmStridedBatchedEx(
 
 cublasStatus_t CUBLASWINAPI cublasSgemmStridedBatched (cublasHandle_t handle,
                                                                  cublasOperation_t transa,
-                                                                 cublasOperation_t transb, 
+                                                                 cublasOperation_t transb,
                                                                  int m,
                                                                  int n,
                                                                  int k,
@@ -3214,16 +3214,16 @@ cublasStatus_t CUBLASWINAPI cublasSgemmStridedBatched (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasDgemmStridedBatched (cublasHandle_t handle,
                                                                  cublasOperation_t transa,
-                                                                 cublasOperation_t transb, 
+                                                                 cublasOperation_t transb,
                                                                  int m,
                                                                  int n,
                                                                  int k,
                                                                  const double *alpha,  /* host or device pointer */
-                                                                 const double *A, 
+                                                                 const double *A,
                                                                  int lda,
                                                                  long long int strideA,   /* purposely signed */
                                                                  const double *B,
-                                                                 int ldb, 
+                                                                 int ldb,
                                                                  long long int strideB,
                                                                  const double *beta,   /* host or device pointer */
                                                                  double *C,
@@ -3238,16 +3238,16 @@ cublasStatus_t CUBLASWINAPI cublasDgemmStridedBatched (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasCgemmStridedBatched (cublasHandle_t handle,
                                                                  cublasOperation_t transa,
-                                                                 cublasOperation_t transb, 
+                                                                 cublasOperation_t transb,
                                                                  int m,
                                                                  int n,
                                                                  int k,
                                                                  const cuComplex *alpha,  /* host or device pointer */
-                                                                 const cuComplex *A, 
+                                                                 const cuComplex *A,
                                                                  int lda,
                                                                  long long int strideA,   /* purposely signed */
                                                                  const cuComplex *B,
-                                                                 int ldb, 
+                                                                 int ldb,
                                                                  long long int strideB,
                                                                  const cuComplex *beta,   /* host or device pointer */
                                                                  cuComplex *C,
@@ -3262,16 +3262,16 @@ cublasStatus_t CUBLASWINAPI cublasCgemmStridedBatched (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasCgemm3mStridedBatched (cublasHandle_t handle,
                                                                  cublasOperation_t transa,
-                                                                 cublasOperation_t transb, 
+                                                                 cublasOperation_t transb,
                                                                  int m,
                                                                  int n,
                                                                  int k,
                                                                  const cuComplex *alpha,  /* host or device pointer */
-                                                                 const cuComplex *A, 
+                                                                 const cuComplex *A,
                                                                  int lda,
                                                                  long long int strideA,   /* purposely signed */
                                                                  const cuComplex *B,
-                                                                 int ldb, 
+                                                                 int ldb,
                                                                  long long int strideB,
                                                                  const cuComplex *beta,   /* host or device pointer */
                                                                  cuComplex *C,
@@ -3286,16 +3286,16 @@ cublasStatus_t CUBLASWINAPI cublasCgemm3mStridedBatched (cublasHandle_t handle,
 
 cublasStatus_t CUBLASWINAPI cublasZgemmStridedBatched (cublasHandle_t handle,
                                                                  cublasOperation_t transa,
-                                                                 cublasOperation_t transb, 
+                                                                 cublasOperation_t transb,
                                                                  int m,
                                                                  int n,
                                                                  int k,
                                                                  const cuDoubleComplex *alpha,  /* host or device pointer */
-                                                                 const cuDoubleComplex *A, 
+                                                                 const cuDoubleComplex *A,
                                                                  int lda,
                                                                  long long int strideA,   /* purposely signed */
                                                                  const cuDoubleComplex *B,
-                                                                 int ldb, 
+                                                                 int ldb,
                                                                  long long int strideB,
                                                                  const cuDoubleComplex *beta,   /* host or device poi */
                                                                  cuDoubleComplex *C,
@@ -3309,17 +3309,17 @@ cublasStatus_t CUBLASWINAPI cublasZgemmStridedBatched (cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasSgeam(cublasHandle_t handle,
-                                                  cublasOperation_t transa, 
+                                                  cublasOperation_t transa,
                                                   cublasOperation_t transb,
-                                                  int m, 
+                                                  int m,
                                                   int n,
-                                                  const float *alpha, /* host or device pointer */ 
-                                                  const float *A, 
+                                                  const float *alpha, /* host or device pointer */
+                                                  const float *A,
                                                   int lda,
-                                                  const float *beta , /* host or device pointer */ 
-                                                  const float *B, 
+                                                  const float *beta , /* host or device pointer */
+                                                  const float *B,
                                                   int ldb,
-                                                  float *C, 
+                                                  float *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, const float *, const float *, int, const float *, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSgeam");
@@ -3328,17 +3328,17 @@ cublasStatus_t CUBLASWINAPI cublasSgeam(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDgeam(cublasHandle_t handle,
-                                                  cublasOperation_t transa, 
+                                                  cublasOperation_t transa,
                                                   cublasOperation_t transb,
-                                                  int m, 
+                                                  int m,
                                                   int n,
-                                                  const double *alpha, /* host or device pointer */ 
-                                                  const double *A, 
+                                                  const double *alpha, /* host or device pointer */
+                                                  const double *A,
                                                   int lda,
-                                                  const double *beta, /* host or device pointer */ 
-                                                  const double *B, 
+                                                  const double *beta, /* host or device pointer */
+                                                  const double *B,
                                                   int ldb,
-                                                  double *C, 
+                                                  double *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, const double *, const double *, int, const double *, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDgeam");
@@ -3347,17 +3347,17 @@ cublasStatus_t CUBLASWINAPI cublasDgeam(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCgeam(cublasHandle_t handle,
-                                                  cublasOperation_t transa, 
+                                                  cublasOperation_t transa,
                                                   cublasOperation_t transb,
-                                                  int m, 
+                                                  int m,
                                                   int n,
-                                                  const cuComplex *alpha, /* host or device pointer */ 
-                                                  const cuComplex *A, 
+                                                  const cuComplex *alpha, /* host or device pointer */
+                                                  const cuComplex *A,
                                                   int lda,
-                                                  const cuComplex *beta, /* host or device pointer */  
-                                                  const cuComplex *B, 
+                                                  const cuComplex *beta, /* host or device pointer */
+                                                  const cuComplex *B,
                                                   int ldb,
-                                                  cuComplex *C, 
+                                                  cuComplex *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, const cuComplex *, const cuComplex *, int, const cuComplex *, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCgeam");
@@ -3366,17 +3366,17 @@ cublasStatus_t CUBLASWINAPI cublasCgeam(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZgeam(cublasHandle_t handle,
-                                                  cublasOperation_t transa, 
+                                                  cublasOperation_t transa,
                                                   cublasOperation_t transb,
-                                                  int m, 
+                                                  int m,
                                                   int n,
-                                                  const cuDoubleComplex *alpha, /* host or device pointer */ 
-                                                  const cuDoubleComplex *A, 
+                                                  const cuDoubleComplex *alpha, /* host or device pointer */
+                                                  const cuDoubleComplex *A,
                                                   int lda,
-                                                  const cuDoubleComplex *beta, /* host or device pointer */  
-                                                  const cuDoubleComplex *B, 
+                                                  const cuDoubleComplex *beta, /* host or device pointer */
+                                                  const cuDoubleComplex *B,
                                                   int ldb,
-                                                  cuDoubleComplex *C, 
+                                                  cuDoubleComplex *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasOperation_t, cublasOperation_t, int, int, const cuDoubleComplex *, const cuDoubleComplex *, int, const cuDoubleComplex *, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZgeam");
@@ -3755,14 +3755,14 @@ cublasZgelsBatched(cublasHandle_t handle, cublasOperation_t trans, int m, int n,
 }
 
 cublasStatus_t CUBLASWINAPI cublasSdgmm(cublasHandle_t handle,
-                                                  cublasSideMode_t mode, 
-                                                  int m, 
+                                                  cublasSideMode_t mode,
+                                                  int m,
                                                   int n,
-                                                  const float *A, 
+                                                  const float *A,
                                                   int lda,
-                                                  const float *x, 
+                                                  const float *x,
                                                   int incx,
-                                                  float *C, 
+                                                  float *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, int, int, const float *, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSdgmm");
@@ -3771,14 +3771,14 @@ cublasStatus_t CUBLASWINAPI cublasSdgmm(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasDdgmm(cublasHandle_t handle,
-                                                  cublasSideMode_t mode, 
-                                                  int m, 
+                                                  cublasSideMode_t mode,
+                                                  int m,
                                                   int n,
-                                                  const double *A, 
+                                                  const double *A,
                                                   int lda,
-                                                  const double *x, 
+                                                  const double *x,
                                                   int incx,
-                                                  double *C, 
+                                                  double *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, int, int, const double *, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDdgmm");
@@ -3787,14 +3787,14 @@ cublasStatus_t CUBLASWINAPI cublasDdgmm(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasCdgmm(cublasHandle_t handle,
-                                                  cublasSideMode_t mode, 
-                                                  int m, 
+                                                  cublasSideMode_t mode,
+                                                  int m,
                                                   int n,
-                                                  const cuComplex *A, 
+                                                  const cuComplex *A,
                                                   int lda,
-                                                  const cuComplex *x, 
+                                                  const cuComplex *x,
                                                   int incx,
-                                                  cuComplex *C, 
+                                                  cuComplex *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, int, int, const cuComplex *, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCdgmm");
@@ -3803,14 +3803,14 @@ cublasStatus_t CUBLASWINAPI cublasCdgmm(cublasHandle_t handle,
 }
 
 cublasStatus_t CUBLASWINAPI cublasZdgmm(cublasHandle_t handle,
-                                                  cublasSideMode_t mode, 
-                                                  int m, 
+                                                  cublasSideMode_t mode,
+                                                  int m,
                                                   int n,
-                                                  const cuDoubleComplex *A, 
+                                                  const cuDoubleComplex *A,
                                                   int lda,
-                                                  const cuDoubleComplex *x, 
+                                                  const cuDoubleComplex *x,
                                                   int incx,
-                                                  cuDoubleComplex *C, 
+                                                  cuDoubleComplex *C,
                                                   int ldc) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasSideMode_t, int, int, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZdgmm");
@@ -3818,11 +3818,11 @@ cublasStatus_t CUBLASWINAPI cublasZdgmm(cublasHandle_t handle,
   return func_ptr(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStpttr ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasStpttr ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const float *AP,
-                                                     float *A,  
+                                                     float *A,
                                                      int lda ) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const float *, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStpttr");
@@ -3830,11 +3830,11 @@ cublasStatus_t CUBLASWINAPI cublasStpttr ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, AP, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtpttr ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasDtpttr ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const double *AP,
-                                                     double *A,  
+                                                     double *A,
                                                      int lda ) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const double *, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtpttr");
@@ -3842,11 +3842,11 @@ cublasStatus_t CUBLASWINAPI cublasDtpttr ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, AP, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtpttr ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasCtpttr ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const cuComplex *AP,
-                                                     cuComplex *A,  
+                                                     cuComplex *A,
                                                      int lda ) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuComplex *, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtpttr");
@@ -3854,11 +3854,11 @@ cublasStatus_t CUBLASWINAPI cublasCtpttr ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, AP, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtpttr ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasZtpttr ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const cuDoubleComplex *AP,
-                                                     cuDoubleComplex *A,  
+                                                     cuDoubleComplex *A,
                                                      int lda ) {
   using FuncPtr = cublasStatus_t (CUBLASWINAPI *)(cublasHandle_t, cublasFillMode_t, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtpttr");
@@ -3866,9 +3866,9 @@ cublasStatus_t CUBLASWINAPI cublasZtpttr ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, AP, A, lda);
 }
 
-cublasStatus_t CUBLASWINAPI cublasStrttp ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasStrttp ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const float *A,
                                                      int lda,
                                                      float *AP ) {
@@ -3878,9 +3878,9 @@ cublasStatus_t CUBLASWINAPI cublasStrttp ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, A, lda, AP);
 }
 
-cublasStatus_t CUBLASWINAPI cublasDtrttp ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasDtrttp ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const double *A,
                                                      int lda,
                                                      double *AP ) {
@@ -3890,9 +3890,9 @@ cublasStatus_t CUBLASWINAPI cublasDtrttp ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, A, lda, AP);
 }
 
-cublasStatus_t CUBLASWINAPI cublasCtrttp ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasCtrttp ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const cuComplex *A,
                                                      int lda,
                                                      cuComplex *AP ) {
@@ -3902,9 +3902,9 @@ cublasStatus_t CUBLASWINAPI cublasCtrttp ( cublasHandle_t handle,
   return func_ptr(handle, uplo, n, A, lda, AP);
 }
 
-cublasStatus_t CUBLASWINAPI cublasZtrttp ( cublasHandle_t handle, 
-                                                     cublasFillMode_t uplo, 
-                                                     int n,                                     
+cublasStatus_t CUBLASWINAPI cublasZtrttp ( cublasHandle_t handle,
+                                                     cublasFillMode_t uplo,
+                                                     int n,
                                                      const cuDoubleComplex *A,
                                                      int lda,
                                                      cuDoubleComplex *AP ) {
@@ -3991,7 +3991,7 @@ double CUBLASWINAPI cublasDznrm2 (int n, const cuDoubleComplex *x, int incx) {
   return func_ptr(n, x, incx);
 }
 
-float CUBLASWINAPI cublasSdot (int n, const float *x, int incx, const float *y, 
+float CUBLASWINAPI cublasSdot (int n, const float *x, int incx, const float *y,
                                int incy) {
   using FuncPtr = float (CUBLASWINAPI *)(int, const float *, int, const float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSdot");
@@ -3999,7 +3999,7 @@ float CUBLASWINAPI cublasSdot (int n, const float *x, int incx, const float *y,
   return func_ptr(n, x, incx, y, incy);
 }
 
-double CUBLASWINAPI cublasDdot (int n, const double *x, int incx, const double *y, 
+double CUBLASWINAPI cublasDdot (int n, const double *x, int incx, const double *y,
                                int incy) {
   using FuncPtr = double (CUBLASWINAPI *)(int, const double *, int, const double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDdot");
@@ -4007,7 +4007,7 @@ double CUBLASWINAPI cublasDdot (int n, const double *x, int incx, const double *
   return func_ptr(n, x, incx, y, incy);
 }
 
-cuComplex CUBLASWINAPI cublasCdotu (int n, const cuComplex *x, int incx, const cuComplex *y, 
+cuComplex CUBLASWINAPI cublasCdotu (int n, const cuComplex *x, int incx, const cuComplex *y,
                                int incy) {
   using FuncPtr = cuComplex (CUBLASWINAPI *)(int, const cuComplex *, int, const cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCdotu");
@@ -4015,7 +4015,7 @@ cuComplex CUBLASWINAPI cublasCdotu (int n, const cuComplex *x, int incx, const c
   return func_ptr(n, x, incx, y, incy);
 }
 
-cuComplex CUBLASWINAPI cublasCdotc (int n, const cuComplex *x, int incx, const cuComplex *y, 
+cuComplex CUBLASWINAPI cublasCdotc (int n, const cuComplex *x, int incx, const cuComplex *y,
                                int incy) {
   using FuncPtr = cuComplex (CUBLASWINAPI *)(int, const cuComplex *, int, const cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCdotc");
@@ -4023,7 +4023,7 @@ cuComplex CUBLASWINAPI cublasCdotc (int n, const cuComplex *x, int incx, const c
   return func_ptr(n, x, incx, y, incy);
 }
 
-cuDoubleComplex CUBLASWINAPI cublasZdotu (int n, const cuDoubleComplex *x, int incx, const cuDoubleComplex *y, 
+cuDoubleComplex CUBLASWINAPI cublasZdotu (int n, const cuDoubleComplex *x, int incx, const cuDoubleComplex *y,
                                int incy) {
   using FuncPtr = cuDoubleComplex (CUBLASWINAPI *)(int, const cuDoubleComplex *, int, const cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZdotu");
@@ -4031,7 +4031,7 @@ cuDoubleComplex CUBLASWINAPI cublasZdotu (int n, const cuDoubleComplex *x, int i
   return func_ptr(n, x, incx, y, incy);
 }
 
-cuDoubleComplex CUBLASWINAPI cublasZdotc (int n, const cuDoubleComplex *x, int incx, const cuDoubleComplex *y, 
+cuDoubleComplex CUBLASWINAPI cublasZdotc (int n, const cuDoubleComplex *x, int incx, const cuDoubleComplex *y,
                                int incy) {
   using FuncPtr = cuDoubleComplex (CUBLASWINAPI *)(int, const cuDoubleComplex *, int, const cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZdotc");
@@ -4081,7 +4081,7 @@ void CUBLASWINAPI cublasZdscal (int n, double alpha, cuDoubleComplex *x, int inc
   return func_ptr(n, alpha, x, incx);
 }
 
-void CUBLASWINAPI cublasSaxpy (int n, float alpha, const float *x, int incx, 
+void CUBLASWINAPI cublasSaxpy (int n, float alpha, const float *x, int incx,
                                float *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(int, float, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSaxpy");
@@ -4089,7 +4089,7 @@ void CUBLASWINAPI cublasSaxpy (int n, float alpha, const float *x, int incx,
   return func_ptr(n, alpha, x, incx, y, incy);
 }
 
-void CUBLASWINAPI cublasDaxpy (int n, double alpha, const double *x, 
+void CUBLASWINAPI cublasDaxpy (int n, double alpha, const double *x,
                                int incx, double *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(int, double, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDaxpy");
@@ -4097,7 +4097,7 @@ void CUBLASWINAPI cublasDaxpy (int n, double alpha, const double *x,
   return func_ptr(n, alpha, x, incx, y, incy);
 }
 
-void CUBLASWINAPI cublasCaxpy (int n, cuComplex alpha, const cuComplex *x, 
+void CUBLASWINAPI cublasCaxpy (int n, cuComplex alpha, const cuComplex *x,
                                int incx, cuComplex *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(int, cuComplex, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCaxpy");
@@ -4105,7 +4105,7 @@ void CUBLASWINAPI cublasCaxpy (int n, cuComplex alpha, const cuComplex *x,
   return func_ptr(n, alpha, x, incx, y, incy);
 }
 
-void CUBLASWINAPI cublasZaxpy (int n, cuDoubleComplex alpha, const cuDoubleComplex *x, 
+void CUBLASWINAPI cublasZaxpy (int n, cuDoubleComplex alpha, const cuDoubleComplex *x,
                                int incx, cuDoubleComplex *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(int, cuDoubleComplex, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZaxpy");
@@ -4113,7 +4113,7 @@ void CUBLASWINAPI cublasZaxpy (int n, cuDoubleComplex alpha, const cuDoubleCompl
   return func_ptr(n, alpha, x, incx, y, incy);
 }
 
-void CUBLASWINAPI cublasScopy (int n, const float *x, int incx, float *y, 
+void CUBLASWINAPI cublasScopy (int n, const float *x, int incx, float *y,
                                int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasScopy");
@@ -4121,7 +4121,7 @@ void CUBLASWINAPI cublasScopy (int n, const float *x, int incx, float *y,
   return func_ptr(n, x, incx, y, incy);
 }
 
-void CUBLASWINAPI cublasDcopy (int n, const double *x, int incx, double *y, 
+void CUBLASWINAPI cublasDcopy (int n, const double *x, int incx, double *y,
                                int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDcopy");
@@ -4257,7 +4257,7 @@ double CUBLASWINAPI cublasDzasum (int n, const cuDoubleComplex *x, int incx) {
   return func_ptr(n, x, incx);
 }
 
-void CUBLASWINAPI cublasSrot (int n, float *x, int incx, float *y, int incy, 
+void CUBLASWINAPI cublasSrot (int n, float *x, int incx, float *y, int incy,
                               float sc, float ss) {
   using FuncPtr = void (CUBLASWINAPI *)(int, float *, int, float *, int, float, float);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSrot");
@@ -4265,7 +4265,7 @@ void CUBLASWINAPI cublasSrot (int n, float *x, int incx, float *y, int incy,
   return func_ptr(n, x, incx, y, incy, sc, ss);
 }
 
-void CUBLASWINAPI cublasDrot (int n, double *x, int incx, double *y, int incy, 
+void CUBLASWINAPI cublasDrot (int n, double *x, int incx, double *y, int incy,
                               double sc, double ss) {
   using FuncPtr = void (CUBLASWINAPI *)(int, double *, int, double *, int, double, double);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDrot");
@@ -4273,7 +4273,7 @@ void CUBLASWINAPI cublasDrot (int n, double *x, int incx, double *y, int incy,
   return func_ptr(n, x, incx, y, incy, sc, ss);
 }
 
-void CUBLASWINAPI cublasCrot (int n, cuComplex *x, int incx, cuComplex *y, 
+void CUBLASWINAPI cublasCrot (int n, cuComplex *x, int incx, cuComplex *y,
                               int incy, float c, cuComplex s) {
   using FuncPtr = void (CUBLASWINAPI *)(int, cuComplex *, int, cuComplex *, int, float, cuComplex);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCrot");
@@ -4281,8 +4281,8 @@ void CUBLASWINAPI cublasCrot (int n, cuComplex *x, int incx, cuComplex *y,
   return func_ptr(n, x, incx, y, incy, c, s);
 }
 
-void CUBLASWINAPI cublasZrot (int n, cuDoubleComplex *x, int incx, 
-                              cuDoubleComplex *y, int incy, double sc, 
+void CUBLASWINAPI cublasZrot (int n, cuDoubleComplex *x, int incx,
+                              cuDoubleComplex *y, int incy, double sc,
                               cuDoubleComplex cs) {
   using FuncPtr = void (CUBLASWINAPI *)(int, cuDoubleComplex *, int, cuDoubleComplex *, int, double, cuDoubleComplex);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZrot");
@@ -4298,7 +4298,7 @@ void CUBLASWINAPI cublasCsrot (int n, cuComplex *x, int incx, cuComplex *y,
   return func_ptr(n, x, incx, y, incy, c, s);
 }
 
-void CUBLASWINAPI cublasZdrot (int n, cuDoubleComplex *x, int incx, 
+void CUBLASWINAPI cublasZdrot (int n, cuDoubleComplex *x, int incx,
                                cuDoubleComplex *y, int incy, double c, double s) {
   using FuncPtr = void (CUBLASWINAPI *)(int, cuDoubleComplex *, int, cuDoubleComplex *, int, double, double);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZdrot");
@@ -4336,7 +4336,7 @@ void CUBLASWINAPI cublasZrotg (cuDoubleComplex *ca, cuDoubleComplex cb, double *
   return func_ptr(ca, cb, sc, cs);
 }
 
-void CUBLASWINAPI cublasSrotm(int n, float *x, int incx, float *y, int incy, 
+void CUBLASWINAPI cublasSrotm(int n, float *x, int incx, float *y, int incy,
                               const float* sparam) {
   using FuncPtr = void (CUBLASWINAPI *)(int, float *, int, float *, int, const float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSrotm");
@@ -4344,7 +4344,7 @@ void CUBLASWINAPI cublasSrotm(int n, float *x, int incx, float *y, int incy,
   return func_ptr(n, x, incx, y, incy, sparam);
 }
 
-void CUBLASWINAPI cublasDrotm(int n, double *x, int incx, double *y, int incy, 
+void CUBLASWINAPI cublasDrotm(int n, double *x, int incx, double *y, int incy,
                               const double* sparam) {
   using FuncPtr = void (CUBLASWINAPI *)(int, double *, int, double *, int, const double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDrotm");
@@ -4352,7 +4352,7 @@ void CUBLASWINAPI cublasDrotm(int n, double *x, int incx, double *y, int incy,
   return func_ptr(n, x, incx, y, incy, sparam);
 }
 
-void CUBLASWINAPI cublasSrotmg (float *sd1, float *sd2, float *sx1, 
+void CUBLASWINAPI cublasSrotmg (float *sd1, float *sd2, float *sx1,
                                 const float *sy1, float* sparam) {
   using FuncPtr = void (CUBLASWINAPI *)(float *, float *, float *, const float *, float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSrotmg");
@@ -4360,7 +4360,7 @@ void CUBLASWINAPI cublasSrotmg (float *sd1, float *sd2, float *sx1,
   return func_ptr(sd1, sd2, sx1, sy1, sparam);
 }
 
-void CUBLASWINAPI cublasDrotmg (double *sd1, double *sd2, double *sx1, 
+void CUBLASWINAPI cublasDrotmg (double *sd1, double *sd2, double *sx1,
                                 const double *sy1, double* sparam) {
   using FuncPtr = void (CUBLASWINAPI *)(double *, double *, double *, const double *, double *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDrotmg");
@@ -4404,9 +4404,9 @@ void CUBLASWINAPI cublasZgemv (char trans, int m, int n, cuDoubleComplex alpha,
   return func_ptr(trans, m, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasSgbmv (char trans, int m, int n, int kl, int ku, 
-                               float alpha, const float *A, int lda, 
-                               const float *x, int incx, float beta, float *y, 
+void CUBLASWINAPI cublasSgbmv (char trans, int m, int n, int kl, int ku,
+                               float alpha, const float *A, int lda,
+                               const float *x, int incx, float beta, float *y,
                                int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, int, int, float, const float *, int, const float *, int, float, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSgbmv");
@@ -4414,9 +4414,9 @@ void CUBLASWINAPI cublasSgbmv (char trans, int m, int n, int kl, int ku,
   return func_ptr(trans, m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasDgbmv (char trans, int m, int n, int kl, int ku, 
-                               double alpha, const double *A, int lda, 
-                               const double *x, int incx, double beta, double *y, 
+void CUBLASWINAPI cublasDgbmv (char trans, int m, int n, int kl, int ku,
+                               double alpha, const double *A, int lda,
+                               const double *x, int incx, double beta, double *y,
                                int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, int, int, double, const double *, int, const double *, int, double, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDgbmv");
@@ -4424,9 +4424,9 @@ void CUBLASWINAPI cublasDgbmv (char trans, int m, int n, int kl, int ku,
   return func_ptr(trans, m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasCgbmv (char trans, int m, int n, int kl, int ku, 
-                               cuComplex alpha, const cuComplex *A, int lda, 
-                               const cuComplex *x, int incx, cuComplex beta, cuComplex *y, 
+void CUBLASWINAPI cublasCgbmv (char trans, int m, int n, int kl, int ku,
+                               cuComplex alpha, const cuComplex *A, int lda,
+                               const cuComplex *x, int incx, cuComplex beta, cuComplex *y,
                                int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, int, int, cuComplex, const cuComplex *, int, const cuComplex *, int, cuComplex, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCgbmv");
@@ -4434,9 +4434,9 @@ void CUBLASWINAPI cublasCgbmv (char trans, int m, int n, int kl, int ku,
   return func_ptr(trans, m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasZgbmv (char trans, int m, int n, int kl, int ku, 
-                               cuDoubleComplex alpha, const cuDoubleComplex *A, int lda, 
-                               const cuDoubleComplex *x, int incx, cuDoubleComplex beta, cuDoubleComplex *y, 
+void CUBLASWINAPI cublasZgbmv (char trans, int m, int n, int kl, int ku,
+                               cuDoubleComplex alpha, const cuDoubleComplex *A, int lda,
+                               const cuDoubleComplex *x, int incx, cuDoubleComplex beta, cuDoubleComplex *y,
                                int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, int, int, cuDoubleComplex, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZgbmv");
@@ -4444,7 +4444,7 @@ void CUBLASWINAPI cublasZgbmv (char trans, int m, int n, int kl, int ku,
   return func_ptr(trans, m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasStrmv (char uplo, char trans, char diag, int n, 
+void CUBLASWINAPI cublasStrmv (char uplo, char trans, char diag, int n,
                                const float *A, int lda, float *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStrmv");
@@ -4452,7 +4452,7 @@ void CUBLASWINAPI cublasStrmv (char uplo, char trans, char diag, int n,
   return func_ptr(uplo, trans, diag, n, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasDtrmv (char uplo, char trans, char diag, int n, 
+void CUBLASWINAPI cublasDtrmv (char uplo, char trans, char diag, int n,
                                const double *A, int lda, double *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtrmv");
@@ -4460,7 +4460,7 @@ void CUBLASWINAPI cublasDtrmv (char uplo, char trans, char diag, int n,
   return func_ptr(uplo, trans, diag, n, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasCtrmv (char uplo, char trans, char diag, int n, 
+void CUBLASWINAPI cublasCtrmv (char uplo, char trans, char diag, int n,
                                const cuComplex *A, int lda, cuComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtrmv");
@@ -4468,7 +4468,7 @@ void CUBLASWINAPI cublasCtrmv (char uplo, char trans, char diag, int n,
   return func_ptr(uplo, trans, diag, n, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasZtrmv (char uplo, char trans, char diag, int n, 
+void CUBLASWINAPI cublasZtrmv (char uplo, char trans, char diag, int n,
                                const cuDoubleComplex *A, int lda, cuDoubleComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtrmv");
@@ -4476,7 +4476,7 @@ void CUBLASWINAPI cublasZtrmv (char uplo, char trans, char diag, int n,
   return func_ptr(uplo, trans, diag, n, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasStbmv (char uplo, char trans, char diag, int n, int k, 
+void CUBLASWINAPI cublasStbmv (char uplo, char trans, char diag, int n, int k,
                                const float *A, int lda, float *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStbmv");
@@ -4484,7 +4484,7 @@ void CUBLASWINAPI cublasStbmv (char uplo, char trans, char diag, int n, int k,
   return func_ptr(uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasDtbmv (char uplo, char trans, char diag, int n, int k, 
+void CUBLASWINAPI cublasDtbmv (char uplo, char trans, char diag, int n, int k,
                                const double *A, int lda, double *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtbmv");
@@ -4492,7 +4492,7 @@ void CUBLASWINAPI cublasDtbmv (char uplo, char trans, char diag, int n, int k,
   return func_ptr(uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasCtbmv (char uplo, char trans, char diag, int n, int k, 
+void CUBLASWINAPI cublasCtbmv (char uplo, char trans, char diag, int n, int k,
                                const cuComplex *A, int lda, cuComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtbmv");
@@ -4500,7 +4500,7 @@ void CUBLASWINAPI cublasCtbmv (char uplo, char trans, char diag, int n, int k,
   return func_ptr(uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasZtbmv (char uplo, char trans, char diag, int n, int k, 
+void CUBLASWINAPI cublasZtbmv (char uplo, char trans, char diag, int n, int k,
                                const cuDoubleComplex *A, int lda, cuDoubleComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtbmv");
@@ -4557,7 +4557,7 @@ void CUBLASWINAPI cublasCtrsv(char uplo, char trans, char diag, int n, const cuC
   return func_ptr(uplo, trans, diag, n, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasZtrsv(char uplo, char trans, char diag, int n, const cuDoubleComplex *A, int lda, 
+void CUBLASWINAPI cublasZtrsv(char uplo, char trans, char diag, int n, const cuDoubleComplex *A, int lda,
                               cuDoubleComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtrsv");
@@ -4565,7 +4565,7 @@ void CUBLASWINAPI cublasZtrsv(char uplo, char trans, char diag, int n, const cuD
   return func_ptr(uplo, trans, diag, n, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasStpsv(char uplo, char trans, char diag, int n, const float *AP, 
+void CUBLASWINAPI cublasStpsv(char uplo, char trans, char diag, int n, const float *AP,
                               float *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const float *, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStpsv");
@@ -4587,7 +4587,7 @@ void CUBLASWINAPI cublasCtpsv(char uplo, char trans, char diag, int n, const cuC
   return func_ptr(uplo, trans, diag, n, AP, x, incx);
 }
 
-void CUBLASWINAPI cublasZtpsv(char uplo, char trans, char diag, int n, const cuDoubleComplex *AP, 
+void CUBLASWINAPI cublasZtpsv(char uplo, char trans, char diag, int n, const cuDoubleComplex *AP,
                               cuDoubleComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, const cuDoubleComplex *, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtpsv");
@@ -4595,8 +4595,8 @@ void CUBLASWINAPI cublasZtpsv(char uplo, char trans, char diag, int n, const cuD
   return func_ptr(uplo, trans, diag, n, AP, x, incx);
 }
 
-void CUBLASWINAPI cublasStbsv(char uplo, char trans, 
-                              char diag, int n, int k, const float *A, 
+void CUBLASWINAPI cublasStbsv(char uplo, char trans,
+                              char diag, int n, int k, const float *A,
                               int lda, float *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasStbsv");
@@ -4604,8 +4604,8 @@ void CUBLASWINAPI cublasStbsv(char uplo, char trans,
   return func_ptr(uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasDtbsv(char uplo, char trans, 
-                              char diag, int n, int k, const double *A, 
+void CUBLASWINAPI cublasDtbsv(char uplo, char trans,
+                              char diag, int n, int k, const double *A,
                               int lda, double *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDtbsv");
@@ -4613,8 +4613,8 @@ void CUBLASWINAPI cublasDtbsv(char uplo, char trans,
   return func_ptr(uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasCtbsv(char uplo, char trans, 
-                              char diag, int n, int k, const cuComplex *A, 
+void CUBLASWINAPI cublasCtbsv(char uplo, char trans,
+                              char diag, int n, int k, const cuComplex *A,
                               int lda, cuComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCtbsv");
@@ -4622,8 +4622,8 @@ void CUBLASWINAPI cublasCtbsv(char uplo, char trans,
   return func_ptr(uplo, trans, diag, n, k, A, lda, x, incx);
 }
 
-void CUBLASWINAPI cublasZtbsv(char uplo, char trans, 
-                              char diag, int n, int k, const cuDoubleComplex *A, 
+void CUBLASWINAPI cublasZtbsv(char uplo, char trans,
+                              char diag, int n, int k, const cuDoubleComplex *A,
                               int lda, cuDoubleComplex *x, int incx) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, char, int, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZtbsv");
@@ -4632,7 +4632,7 @@ void CUBLASWINAPI cublasZtbsv(char uplo, char trans,
 }
 
 void CUBLASWINAPI cublasSsymv (char uplo, int n, float alpha, const float *A,
-                               int lda, const float *x, int incx, float beta, 
+                               int lda, const float *x, int incx, float beta,
                                float *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, float, const float *, int, const float *, int, float, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSsymv");
@@ -4641,7 +4641,7 @@ void CUBLASWINAPI cublasSsymv (char uplo, int n, float alpha, const float *A,
 }
 
 void CUBLASWINAPI cublasDsymv (char uplo, int n, double alpha, const double *A,
-                               int lda, const double *x, int incx, double beta, 
+                               int lda, const double *x, int incx, double beta,
                                double *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, double, const double *, int, const double *, int, double, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDsymv");
@@ -4650,7 +4650,7 @@ void CUBLASWINAPI cublasDsymv (char uplo, int n, double alpha, const double *A,
 }
 
 void CUBLASWINAPI cublasChemv (char uplo, int n, cuComplex alpha, const cuComplex *A,
-                               int lda, const cuComplex *x, int incx, cuComplex beta, 
+                               int lda, const cuComplex *x, int incx, cuComplex beta,
                                cuComplex *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, cuComplex, const cuComplex *, int, const cuComplex *, int, cuComplex, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasChemv");
@@ -4659,7 +4659,7 @@ void CUBLASWINAPI cublasChemv (char uplo, int n, cuComplex alpha, const cuComple
 }
 
 void CUBLASWINAPI cublasZhemv (char uplo, int n, cuDoubleComplex alpha, const cuDoubleComplex *A,
-                               int lda, const cuDoubleComplex *x, int incx, cuDoubleComplex beta, 
+                               int lda, const cuDoubleComplex *x, int incx, cuDoubleComplex beta,
                                cuDoubleComplex *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, cuDoubleComplex, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZhemv");
@@ -4667,8 +4667,8 @@ void CUBLASWINAPI cublasZhemv (char uplo, int n, cuDoubleComplex alpha, const cu
   return func_ptr(uplo, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasSsbmv (char uplo, int n, int k, float alpha, 
-                               const float *A, int lda, const float *x, int incx, 
+void CUBLASWINAPI cublasSsbmv (char uplo, int n, int k, float alpha,
+                               const float *A, int lda, const float *x, int incx,
                                float beta, float *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, float, const float *, int, const float *, int, float, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSsbmv");
@@ -4676,8 +4676,8 @@ void CUBLASWINAPI cublasSsbmv (char uplo, int n, int k, float alpha,
   return func_ptr(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasDsbmv (char uplo, int n, int k, double alpha, 
-                               const double *A, int lda, const double *x, int incx, 
+void CUBLASWINAPI cublasDsbmv (char uplo, int n, int k, double alpha,
+                               const double *A, int lda, const double *x, int incx,
                                double beta, double *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, double, const double *, int, const double *, int, double, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDsbmv");
@@ -4685,8 +4685,8 @@ void CUBLASWINAPI cublasDsbmv (char uplo, int n, int k, double alpha,
   return func_ptr(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasChbmv (char uplo, int n, int k, cuComplex alpha, 
-                               const cuComplex *A, int lda, const cuComplex *x, int incx, 
+void CUBLASWINAPI cublasChbmv (char uplo, int n, int k, cuComplex alpha,
+                               const cuComplex *A, int lda, const cuComplex *x, int incx,
                                cuComplex beta, cuComplex *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, cuComplex, const cuComplex *, int, const cuComplex *, int, cuComplex, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasChbmv");
@@ -4694,8 +4694,8 @@ void CUBLASWINAPI cublasChbmv (char uplo, int n, int k, cuComplex alpha,
   return func_ptr(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-void CUBLASWINAPI cublasZhbmv (char uplo, int n, int k, cuDoubleComplex alpha, 
-                               const cuDoubleComplex *A, int lda, const cuDoubleComplex *x, int incx, 
+void CUBLASWINAPI cublasZhbmv (char uplo, int n, int k, cuDoubleComplex alpha,
+                               const cuDoubleComplex *A, int lda, const cuDoubleComplex *x, int incx,
                                cuDoubleComplex beta, cuDoubleComplex *y, int incy) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, int, cuDoubleComplex, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZhbmv");
@@ -4807,7 +4807,7 @@ void CUBLASWINAPI cublasDsyr (char uplo, int n, double alpha, const double *x,
   return func_ptr(uplo, n, alpha, x, incx, A, lda);
 }
 
-void CUBLASWINAPI cublasCher (char uplo, int n, float alpha, 
+void CUBLASWINAPI cublasCher (char uplo, int n, float alpha,
                               const cuComplex *x, int incx, cuComplex *A, int lda) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, float, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCher");
@@ -4815,7 +4815,7 @@ void CUBLASWINAPI cublasCher (char uplo, int n, float alpha,
   return func_ptr(uplo, n, alpha, x, incx, A, lda);
 }
 
-void CUBLASWINAPI cublasZher (char uplo, int n, double alpha, 
+void CUBLASWINAPI cublasZher (char uplo, int n, double alpha,
                               const cuDoubleComplex *x, int incx, cuDoubleComplex *A, int lda) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, double, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZher");
@@ -4855,8 +4855,8 @@ void CUBLASWINAPI cublasZhpr (char uplo, int n, double alpha, const cuDoubleComp
   return func_ptr(uplo, n, alpha, x, incx, AP);
 }
 
-void CUBLASWINAPI cublasSsyr2 (char uplo, int n, float alpha, const float *x, 
-                               int incx, const float *y, int incy, float *A, 
+void CUBLASWINAPI cublasSsyr2 (char uplo, int n, float alpha, const float *x,
+                               int incx, const float *y, int incy, float *A,
                                int lda) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, float, const float *, int, const float *, int, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSsyr2");
@@ -4864,8 +4864,8 @@ void CUBLASWINAPI cublasSsyr2 (char uplo, int n, float alpha, const float *x,
   return func_ptr(uplo, n, alpha, x, incx, y, incy, A, lda);
 }
 
-void CUBLASWINAPI cublasDsyr2 (char uplo, int n, double alpha, const double *x, 
-                               int incx, const double *y, int incy, double *A, 
+void CUBLASWINAPI cublasDsyr2 (char uplo, int n, double alpha, const double *x,
+                               int incx, const double *y, int incy, double *A,
                                int lda) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, double, const double *, int, const double *, int, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDsyr2");
@@ -4873,8 +4873,8 @@ void CUBLASWINAPI cublasDsyr2 (char uplo, int n, double alpha, const double *x,
   return func_ptr(uplo, n, alpha, x, incx, y, incy, A, lda);
 }
 
-void CUBLASWINAPI cublasCher2 (char uplo, int n, cuComplex alpha, const cuComplex *x, 
-                               int incx, const cuComplex *y, int incy, cuComplex *A, 
+void CUBLASWINAPI cublasCher2 (char uplo, int n, cuComplex alpha, const cuComplex *x,
+                               int incx, const cuComplex *y, int incy, cuComplex *A,
                                int lda) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, cuComplex, const cuComplex *, int, const cuComplex *, int, cuComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasCher2");
@@ -4882,8 +4882,8 @@ void CUBLASWINAPI cublasCher2 (char uplo, int n, cuComplex alpha, const cuComple
   return func_ptr(uplo, n, alpha, x, incx, y, incy, A, lda);
 }
 
-void CUBLASWINAPI cublasZher2 (char uplo, int n, cuDoubleComplex alpha, const cuDoubleComplex *x, 
-                               int incx, const cuDoubleComplex *y, int incy, cuDoubleComplex *A, 
+void CUBLASWINAPI cublasZher2 (char uplo, int n, cuDoubleComplex alpha, const cuDoubleComplex *x,
+                               int incx, const cuDoubleComplex *y, int incy, cuDoubleComplex *A,
                                int lda) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, cuDoubleComplex, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasZher2");
@@ -4891,7 +4891,7 @@ void CUBLASWINAPI cublasZher2 (char uplo, int n, cuDoubleComplex alpha, const cu
   return func_ptr(uplo, n, alpha, x, incx, y, incy, A, lda);
 }
 
-void CUBLASWINAPI cublasSspr2 (char uplo, int n, float alpha, const float *x, 
+void CUBLASWINAPI cublasSspr2 (char uplo, int n, float alpha, const float *x,
                                int incx, const float *y, int incy, float *AP) {
   using FuncPtr = void (CUBLASWINAPI *)(char, int, float, const float *, int, const float *, int, float *);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSspr2");
@@ -4926,9 +4926,9 @@ void CUBLASWINAPI cublasZhpr2 (char uplo, int n, cuDoubleComplex alpha,
   return func_ptr(uplo, n, alpha, x, incx, y, incy, AP);
 }
 
-void CUBLASWINAPI cublasSgemm (char transa, char transb, int m, int n, int k, 
-                               float alpha, const float *A, int lda, 
-                               const float *B, int ldb, float beta, float *C, 
+void CUBLASWINAPI cublasSgemm (char transa, char transb, int m, int n, int k,
+                               float alpha, const float *A, int lda,
+                               const float *B, int ldb, float beta, float *C,
                                int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, int, float, const float *, int, const float *, int, float, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSgemm");
@@ -4937,8 +4937,8 @@ void CUBLASWINAPI cublasSgemm (char transa, char transb, int m, int n, int k,
 }
 
 void CUBLASWINAPI cublasDgemm (char transa, char transb, int m, int n, int k,
-                               double alpha, const double *A, int lda, 
-                               const double *B, int ldb, double beta, double *C, 
+                               double alpha, const double *A, int lda,
+                               const double *B, int ldb, double beta, double *C,
                                int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, int, double, const double *, int, const double *, int, double, double *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasDgemm");
@@ -4946,7 +4946,7 @@ void CUBLASWINAPI cublasDgemm (char transa, char transb, int m, int n, int k,
   return func_ptr(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasCgemm (char transa, char transb, int m, int n, int k, 
+void CUBLASWINAPI cublasCgemm (char transa, char transb, int m, int n, int k,
                                cuComplex alpha, const cuComplex *A, int lda,
                                const cuComplex *B, int ldb, cuComplex beta,
                                cuComplex *C, int ldc) {
@@ -4968,8 +4968,8 @@ void CUBLASWINAPI cublasZgemm (char transa, char transb, int m, int n,
   return func_ptr(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasSsyrk (char uplo, char trans, int n, int k, float alpha, 
-                               const float *A, int lda, float beta, float *C, 
+void CUBLASWINAPI cublasSsyrk (char uplo, char trans, int n, int k, float alpha,
+                               const float *A, int lda, float beta, float *C,
                                int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, float, const float *, int, float, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSsyrk");
@@ -5026,8 +5026,8 @@ void CUBLASWINAPI cublasZherk (char uplo, char trans, int n, int k,
   return func_ptr(uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasSsyr2k (char uplo, char trans, int n, int k, float alpha, 
-                                const float *A, int lda, const float *B, int ldb, 
+void CUBLASWINAPI cublasSsyr2k (char uplo, char trans, int n, int k, float alpha,
+                                const float *A, int lda, const float *B, int ldb,
                                 float beta, float *C, int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, float, const float *, int, const float *, int, float, float *, int);
   static auto func_ptr = LoadSymbol<FuncPtr>("cublasSsyr2k");
@@ -5085,7 +5085,7 @@ void CUBLASWINAPI cublasZher2k (char uplo, char trans, int n, int k,
   return func_ptr(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasSsymm (char side, char uplo, int m, int n, float alpha, 
+void CUBLASWINAPI cublasSsymm (char side, char uplo, int m, int n, float alpha,
                                const float *A, int lda, const float *B, int ldb,
                                float beta, float *C, int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, float, const float *, int, const float *, int, float, float *, int);
@@ -5094,7 +5094,7 @@ void CUBLASWINAPI cublasSsymm (char side, char uplo, int m, int n, float alpha,
   return func_ptr(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasDsymm (char side, char uplo, int m, int n, double alpha, 
+void CUBLASWINAPI cublasDsymm (char side, char uplo, int m, int n, double alpha,
                                const double *A, int lda, const double *B, int ldb,
                                double beta, double *C, int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, double, const double *, int, const double *, int, double, double *, int);
@@ -5103,7 +5103,7 @@ void CUBLASWINAPI cublasDsymm (char side, char uplo, int m, int n, double alpha,
   return func_ptr(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasCsymm (char side, char uplo, int m, int n, cuComplex alpha, 
+void CUBLASWINAPI cublasCsymm (char side, char uplo, int m, int n, cuComplex alpha,
                                const cuComplex *A, int lda, const cuComplex *B, int ldb,
                                cuComplex beta, cuComplex *C, int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, cuComplex, const cuComplex *, int, const cuComplex *, int, cuComplex, cuComplex *, int);
@@ -5112,7 +5112,7 @@ void CUBLASWINAPI cublasCsymm (char side, char uplo, int m, int n, cuComplex alp
   return func_ptr(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-void CUBLASWINAPI cublasZsymm (char side, char uplo, int m, int n, cuDoubleComplex alpha, 
+void CUBLASWINAPI cublasZsymm (char side, char uplo, int m, int n, cuDoubleComplex alpha,
                                const cuDoubleComplex *A, int lda, const cuDoubleComplex *B, int ldb,
                                cuDoubleComplex beta, cuDoubleComplex *C, int ldc) {
   using FuncPtr = void (CUBLASWINAPI *)(char, char, int, int, cuDoubleComplex, const cuDoubleComplex *, int, const cuDoubleComplex *, int, cuDoubleComplex, cuDoubleComplex *, int);
