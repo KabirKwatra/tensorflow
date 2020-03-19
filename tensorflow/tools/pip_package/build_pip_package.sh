@@ -14,10 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 
-
 set -e
 
-function is_absolute {
+function is_absolute() {
   [[ "$1" = /* ]] || [[ "$1" =~ ^[a-zA-Z]:[/\\].* ]]
 }
 
@@ -53,11 +52,10 @@ function copy_xla_aot_runtime_sources() {
   fi
 
   pushd "$src_dir"
-  for file in "$(cat "$srcs_txt")"
-  do
+  for file in "$(cat "$srcs_txt")"; do
     # Sometimes $file has a prefix bazel-out/host/ we want to remove.
-    prefix=${file%%tensorflow/*}  # Find the location of "tensorflow/*"
-    candidate_file=${file#$prefix}  # Remove the prefix
+    prefix=${file%%tensorflow/*}   # Find the location of "tensorflow/*"
+    candidate_file=${file#$prefix} # Remove the prefix
     if [ ! -z "$candidate_file" ]; then
       file=$candidate_file
     fi
@@ -73,7 +71,7 @@ function copy_xla_aot_runtime_sources() {
   popd
 }
 
-function move_to_root_if_exists () {
+function move_to_root_if_exists() {
   arg_to_move="$1"
   if [ -e "$arg_to_move" ]; then
     mv "$arg_to_move" ./
@@ -108,7 +106,7 @@ function is_windows() {
 }
 
 function prepare_src() {
-  if [ $# -lt 1 ] ; then
+  if [ $# -lt 1 ]; then
     echo "No destination dir provided"
     exit 1
   fi
@@ -213,8 +211,7 @@ function prepare_src() {
 
   # Copy over keras API folder to the root directory
   # so that autocomplete works as expected for all keras subimports.
-  if [ -d "$TMPDIR/tensorflow/_api/v1/" ]
-  then
+  if [ -d "$TMPDIR/tensorflow/_api/v1/" ]; then
     cp -r "$TMPDIR"/tensorflow/python/keras/api/_v1/keras/ "$TMPDIR"/tensorflow/keras/
     sed -i'.original' -e 's/.python.keras.api._v1/tensorflow/g' "$TMPDIR"/tensorflow/__init__.py
   else
@@ -224,7 +221,7 @@ function prepare_src() {
 }
 
 function build_wheel() {
-  if [ $# -lt 2 ] ; then
+  if [ $# -lt 2 ]; then
     echo "No src and dest dir provided"
     exit 1
   fi
@@ -239,14 +236,14 @@ function build_wheel() {
     source tools/python_bin_path.sh
   fi
 
-  pushd "$TMPDIR" > /dev/null
+  pushd "$TMPDIR" >/dev/null
 
   rm -f MANIFEST
   echo "$(date)" : "=== Building wheel"
   "${PYTHON_BIN_PATH:-python}" setup.py bdist_wheel "$PKG_NAME_FLAG" >/dev/null
   mkdir -p "$DEST"
   cp dist/* "$DEST"
-  popd > /dev/null
+  popd >/dev/null
   echo "$(date)" : "=== Output wheel file is in: $DEST"
 }
 
@@ -320,7 +317,7 @@ function main() {
     fi
   done
 
-  if [[ $(( GPU_BUILD + CPU_BUILD + GPUDIRECT_BUILD + ROCM_BUILD )) -gt "1" ]]; then
+  if [[ $((GPU_BUILD + CPU_BUILD + GPUDIRECT_BUILD + ROCM_BUILD)) -gt "1" ]]; then
     echo "Only one of [--gpu, --cpu, --gpudirect, --rocm] may be provided."
     usage
     exit 1
@@ -340,8 +337,8 @@ function main() {
   prepare_src "$SRCDIR"
 
   if [[ -z "$DSTDIR" ]]; then
-      # only want to prepare sources
-      exit
+    # only want to prepare sources
+    exit
   fi
 
   if [[ -n ${PROJECT_NAME} ]]; then
