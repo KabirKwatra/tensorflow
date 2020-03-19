@@ -31,8 +31,12 @@ using UniformQuantizedType = mlir::quant::UniformQuantizedType;
 // The base class that all the quantization related OpTrait implements.
 template <typename ConcreteType, template <typename> class TraitType>
 struct QuantizationSpecTraitBase : public TraitBase<ConcreteType, TraitType> {
-  static bool IsBias(int index) { return false; }
-  static bool IsQuantizable() { return true; }
+    static bool IsBias(int index) {
+        return false;
+    }
+    static bool IsQuantizable() {
+        return true;
+    }
 };
 
 // This class provides the API for TFL ops that requires same input and output
@@ -44,7 +48,7 @@ struct QuantizationSpecTraitBase : public TraitBase<ConcreteType, TraitType> {
 template <typename ConcreteType>
 class SameOperandsAndResultsScale
     : public QuantizationSpecTraitBase<ConcreteType,
-                                       SameOperandsAndResultsScale> {};
+      SameOperandsAndResultsScale> {};
 
 // This class provides the API for TFL ops that has a fixed output value range.
 // This is used as a trait like this:
@@ -59,28 +63,28 @@ class SameOperandsAndResultsScale
 template <unsigned BitWidth, int ZeroPoint, int ScaleMantissa, int ScaleExp,
           int64_t StorageTypeMin, int64_t StorageTypeMax, bool Sign>
 class FixedResultUniformScale {
- public:
-  template <typename ConcreteType>
-  class Impl
-      : public QuantizationSpecTraitBase<
-            ConcreteType, FixedResultUniformScale<
-                              BitWidth, ZeroPoint, ScaleMantissa, ScaleExp,
-                              StorageTypeMin, StorageTypeMax, Sign>::Impl> {
-   public:
-    QuantizedType GetResultQuantizedType(int index) {
-      auto op = this->getOperation();
-      auto result_type =
-          op->getResult(index).getType().template cast<ShapedType>();
-      if (!result_type.getElementType().template isa<FloatType>()) return {};
-      Builder builder(op->getContext());
-      IntegerType storage_type = builder.getIntegerType(BitWidth);
-      const double scale = static_cast<double>(ScaleMantissa) *
-                           ::pow(10.0, static_cast<double>(ScaleExp));
-      return UniformQuantizedType::getChecked(
-          Sign, storage_type, result_type.getElementType(), scale, ZeroPoint,
-          StorageTypeMin, StorageTypeMax, builder.getUnknownLoc());
-    }
-  };
+public:
+    template <typename ConcreteType>
+    class Impl
+        : public QuantizationSpecTraitBase<
+          ConcreteType, FixedResultUniformScale<
+          BitWidth, ZeroPoint, ScaleMantissa, ScaleExp,
+          StorageTypeMin, StorageTypeMax, Sign>::Impl> {
+    public:
+        QuantizedType GetResultQuantizedType(int index) {
+            auto op = this->getOperation();
+            auto result_type =
+                op->getResult(index).getType().template cast<ShapedType>();
+            if (!result_type.getElementType().template isa<FloatType>()) return {};
+            Builder builder(op->getContext());
+            IntegerType storage_type = builder.getIntegerType(BitWidth);
+            const double scale = static_cast<double>(ScaleMantissa) *
+                                 ::pow(10.0, static_cast<double>(ScaleExp));
+            return UniformQuantizedType::getChecked(
+                       Sign, storage_type, result_type.getElementType(), scale, ZeroPoint,
+                       StorageTypeMin, StorageTypeMax, builder.getUnknownLoc());
+        }
+    };
 };
 
 // This class provides the API for TFL ops that has input as bias. This is used
@@ -92,20 +96,22 @@ class FixedResultUniformScale {
 // TODO(fengliuai): supports a configurable accumulator bit width.
 template <int Bias, int... Operands>
 class AccumulatorUniformScale {
- public:
-  template <typename ConcreteType>
-  class Impl
-      : public QuantizationSpecTraitBase<
-            ConcreteType, AccumulatorUniformScale<Bias, Operands...>::Impl> {
-   public:
-    // Whether the index-th operand is a bias.
-    static bool IsBias(int index) { return index == Bias; }
+public:
+    template <typename ConcreteType>
+    class Impl
+        : public QuantizationSpecTraitBase<
+          ConcreteType, AccumulatorUniformScale<Bias, Operands...>::Impl> {
+    public:
+        // Whether the index-th operand is a bias.
+        static bool IsBias(int index) {
+            return index == Bias;
+        }
 
-    // Returns the indexes of all the non-bias operands.
-    static std::vector<int> GetAllNonBiasOperands() {
-      return std::vector<int>({Operands...});
-    }
-  };
+        // Returns the indexes of all the non-bias operands.
+        static std::vector<int> GetAllNonBiasOperands() {
+            return std::vector<int>({Operands...});
+        }
+    };
 };
 
 // The trait to specify the operand index of the coefficient for an affine op
@@ -117,15 +123,19 @@ class AccumulatorUniformScale {
 //
 template <int QuantDim, int OperandIndex = 1>
 class AffineOpCoefficient {
- public:
-  template <typename ConcreteType>
-  class Impl
-      : public TraitBase<ConcreteType,
-                         AffineOpCoefficient<QuantDim, OperandIndex>::Impl> {
-   public:
-    static int GetCoefficientOperandIndex() { return OperandIndex; }
-    static int GetQuantizationDim() { return QuantDim; }
-  };
+public:
+    template <typename ConcreteType>
+    class Impl
+        : public TraitBase<ConcreteType,
+          AffineOpCoefficient<QuantDim, OperandIndex>::Impl> {
+    public:
+        static int GetCoefficientOperandIndex() {
+            return OperandIndex;
+        }
+        static int GetQuantizationDim() {
+            return QuantDim;
+        }
+    };
 };
 
 // This class provides the API for TFL ops that shouldn't be quantized. This is
