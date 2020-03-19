@@ -13,16 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for remote execution."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import random
 
-from absl.testing import parameterized
 import numpy as np
 import six
+from absl.testing import parameterized
 
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (

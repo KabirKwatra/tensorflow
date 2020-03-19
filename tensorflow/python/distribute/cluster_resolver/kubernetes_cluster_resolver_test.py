@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for K8sClusterResolver."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
