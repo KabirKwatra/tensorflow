@@ -28,14 +28,14 @@ namespace tflite {
 // use certain kernel libraries, such as Gemmlowp, RUY, etc., to implement TF
 // Lite operators.
 class TfLiteInternalBackendContext {
-public:
-    virtual ~TfLiteInternalBackendContext() {}
+ public:
+  virtual ~TfLiteInternalBackendContext() {}
 
-    // Set the maximum number of threads that could be used for parallelizing
-    // TfLite computation.
-    virtual void SetMaxNumThreads(int max_num_threads) = 0;
+  // Set the maximum number of threads that could be used for parallelizing
+  // TfLite computation.
+  virtual void SetMaxNumThreads(int max_num_threads) = 0;
 
-    virtual void ClearCaches() = 0;
+  virtual void ClearCaches() = 0;
 };
 
 // This TfLiteExternalContext-derived class is the default
@@ -77,26 +77,26 @@ public:
 // See, e.g., TFLiteInterpreter destructor clears caches in the case of a
 // shared ExternalCpuBackendContext.
 class ExternalCpuBackendContext : public TfLiteExternalContext {
-public:
-    ExternalCpuBackendContext();
-    ~ExternalCpuBackendContext() {}
+ public:
+  ExternalCpuBackendContext();
+  ~ExternalCpuBackendContext() {}
 
-    void set_internal_backend_context(
-        std::unique_ptr<TfLiteInternalBackendContext> internal_backend_context) {
-        internal_backend_context_ = std::move(internal_backend_context);
-    }
+  void set_internal_backend_context(
+      std::unique_ptr<TfLiteInternalBackendContext> internal_backend_context) {
+    internal_backend_context_ = std::move(internal_backend_context);
+  }
 
-    TfLiteInternalBackendContext* internal_backend_context() const {
-        return internal_backend_context_.get();
-    }
+  TfLiteInternalBackendContext* internal_backend_context() const {
+    return internal_backend_context_.get();
+  }
 
-private:
-    // Note the actual internal backend context object is lazily initialized.
-    std::unique_ptr<TfLiteInternalBackendContext> internal_backend_context_;
+ private:
+  // Note the actual internal backend context object is lazily initialized.
+  std::unique_ptr<TfLiteInternalBackendContext> internal_backend_context_;
 
-    ExternalCpuBackendContext(const ExternalCpuBackendContext&) = delete;
-    ExternalCpuBackendContext& operator=(const ExternalCpuBackendContext&) =
-        delete;
+  ExternalCpuBackendContext(const ExternalCpuBackendContext&) = delete;
+  ExternalCpuBackendContext& operator=(const ExternalCpuBackendContext&) =
+      delete;
 };
 
 }  // namespace tflite

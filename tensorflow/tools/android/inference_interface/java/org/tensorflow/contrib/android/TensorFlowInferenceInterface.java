@@ -91,11 +91,8 @@ public class TensorFlowInferenceInterface {
       byte[] graphDef = new byte[is.available()];
       final int numBytesRead = is.read(graphDef);
       if (numBytesRead != graphDef.length) {
-        throw new IOException(
-            "read error: read only "
-                + numBytesRead
-                + " of the graph, expected to read "
-                + graphDef.length);
+        throw new IOException("read error: read only " + numBytesRead
+            + " of the graph, expected to read " + graphDef.length);
       }
 
       if (VERSION.SDK_INT >= 18) {
@@ -230,13 +227,9 @@ public class TensorFlowInferenceInterface {
     } catch (RuntimeException e) {
       // Ideally the exception would have been let through, but since this interface predates the
       // TensorFlow Java API, must return -1.
-      Log.e(
-          TAG,
-          "Failed to run TensorFlow inference with inputs:["
-              + TextUtils.join(", ", feedNames)
-              + "], outputs:["
-              + TextUtils.join(", ", fetchNames)
-              + "]");
+      Log.e(TAG,
+          "Failed to run TensorFlow inference with inputs:[" + TextUtils.join(", ", feedNames)
+              + "], outputs:[" + TextUtils.join(", ", fetchNames) + "]");
       throw e;
     } finally {
       // Always release the feeds (to save resources) and reset the runner, this run is
@@ -541,10 +534,8 @@ public class TensorFlowInferenceInterface {
         System.loadLibrary("tensorflow_inference");
         Log.i(TAG, "Successfully loaded TensorFlow native methods (RunStats error may be ignored)");
       } catch (UnsatisfiedLinkError e2) {
-        throw new RuntimeException(
-            "Native TF methods not found; check that the correct native"
-                + " libraries are present in the APK: "
-                + e2);
+        throw new RuntimeException("Native TF methods not found; check that the correct native"
+            + " libraries are present in the APK: " + e2);
       }
     }
   }
@@ -567,8 +558,7 @@ public class TensorFlowInferenceInterface {
     }
 
     final long endMs = System.currentTimeMillis();
-    Log.i(
-        TAG,
+    Log.i(TAG,
         "Model load took " + (endMs - startMs) + "ms, TensorFlow version: " + TensorFlow.version());
   }
 

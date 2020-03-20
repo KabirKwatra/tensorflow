@@ -16,9 +16,9 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_DATA_SERVICE_CREDENTIALS_FACTORY_H_
 #define TENSORFLOW_CORE_DATA_SERVICE_CREDENTIALS_FACTORY_H_
 
+#include "absl/strings/string_view.h"
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/security/credentials.h"
-#include "absl/strings/string_view.h"
 #include "tensorflow/core/lib/core/status.h"
 
 namespace tensorflow {
@@ -27,40 +27,40 @@ namespace data {
 // Credential factory implementations should be threadsafe since all callers
 // to `GetCredentials` will get the same instance of `CredentialsFactory`.
 class CredentialsFactory {
-public:
-    virtual ~CredentialsFactory() = default;
+ public:
+  virtual ~CredentialsFactory() = default;
 
-    // Returns a protocol name for the credentials factory. This is the string to
-    // look up with `GetCredentials` to find the registered credentials factory.
-    virtual std::string Protocol() = 0;
+  // Returns a protocol name for the credentials factory. This is the string to
+  // look up with `GetCredentials` to find the registered credentials factory.
+  virtual std::string Protocol() = 0;
 
-    // Stores server credentials to `*out`.
-    virtual Status CreateServerCredentials(
-        std::shared_ptr<grpc::ServerCredentials>* out) = 0;
+  // Stores server credentials to `*out`.
+  virtual Status CreateServerCredentials(
+      std::shared_ptr<grpc::ServerCredentials>* out) = 0;
 
-    // Stores client credentials to `*out`.
-    virtual Status CreateClientCredentials(
-        std::shared_ptr<grpc::ChannelCredentials>* out) = 0;
+  // Stores client credentials to `*out`.
+  virtual Status CreateClientCredentials(
+      std::shared_ptr<grpc::ChannelCredentials>* out) = 0;
 
-    // Registers a credentials factory.
-    static void Register(CredentialsFactory* factory);
+  // Registers a credentials factory.
+  static void Register(CredentialsFactory* factory);
 
-    // Creates server credentials using the credentials factory registered as
-    // `protocol`, and stores them to `*out`.
-    static Status CreateServerCredentials(
-        absl::string_view protocol,
-        std::shared_ptr<grpc::ServerCredentials>* out);
+  // Creates server credentials using the credentials factory registered as
+  // `protocol`, and stores them to `*out`.
+  static Status CreateServerCredentials(
+      absl::string_view protocol,
+      std::shared_ptr<grpc::ServerCredentials>* out);
 
-    // Creates client credentials using the credentials factory registered as
-    // `protocol`, and stores them to `*out`.
-    static Status CreateClientCredentials(
-        absl::string_view protocol,
-        std::shared_ptr<grpc::ChannelCredentials>* out);
+  // Creates client credentials using the credentials factory registered as
+  // `protocol`, and stores them to `*out`.
+  static Status CreateClientCredentials(
+      absl::string_view protocol,
+      std::shared_ptr<grpc::ChannelCredentials>* out);
 
-private:
-    // Gets the credentials factory registered via `Register` for the specified
-    // protocol, and stores it to `*out`.
-    static Status Get(const absl::string_view protocol, CredentialsFactory** out);
+ private:
+  // Gets the credentials factory registered via `Register` for the specified
+  // protocol, and stores it to `*out`.
+  static Status Get(const absl::string_view protocol, CredentialsFactory** out);
 };
 
 }  // namespace data
