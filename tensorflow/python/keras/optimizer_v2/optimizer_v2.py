@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Version 2 of class Optimizer."""
 # pylint: disable=g-bad-name
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
