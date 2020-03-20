@@ -28,7 +28,6 @@ from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.util import compat
 from tensorflow.python.util import object_identity
 
-
 UnliftableError = op_selector.UnliftableError
 
 
@@ -40,23 +39,20 @@ def _as_operation(op_or_tensor):
 
 def _constant_inputs(op_or_tensor):
     return all(
-        _as_operation(i).type == u"Const" and not _as_operation(i).control_inputs
-        for i in op_selector.graph_inputs(_as_operation(op_or_tensor))
-    )
+        _as_operation(i).type == u"Const"
+        and not _as_operation(i).control_inputs
+        for i in op_selector.graph_inputs(_as_operation(op_or_tensor)))
 
 
 # Represents an input to `copied_op` which must be updated once
 # `old_graph_tensor` has been copied.
 _InputMutation = collections.namedtuple(
-    "_InputMutation", ["copied_op", "input_index", "old_graph_tensor"]
-)
-
+    "_InputMutation", ["copied_op", "input_index", "old_graph_tensor"])
 
 # Represents a control input to `copied_op` which must be added once
 # `old_graph_op` has been copied.
-_ControlMutation = collections.namedtuple(
-    "_ControlMutation", ["copied_op", "old_graph_op"]
-)
+_ControlMutation = collections.namedtuple("_ControlMutation",
+                                          ["copied_op", "old_graph_op"])
 
 
 def _copy_non_source(op, graph, op_map, base_graph):
@@ -101,8 +97,7 @@ def _copy_non_source(op, graph, op_map, base_graph):
                     copied_op=None,
                     input_index=input_index,
                     old_graph_tensor=original_input,
-                )
-            )
+                ))
         copied_inputs.append(copied_input)
 
     copied_control_inputs = []
@@ -110,15 +105,16 @@ def _copy_non_source(op, graph, op_map, base_graph):
         copied_control_input = op_map.get(original_control_input, None)
         if copied_control_input is None:
             control_mutations.append(
-                _ControlMutation(copied_op=None, old_graph_op=original_control_input)
-            )
+                _ControlMutation(copied_op=None,
+                                 old_graph_op=original_control_input))
         else:
             copied_control_inputs.append(copied_control_input)
 
     # Don't copy over nodes with _tpu_replicate attribute. This attributed is used
     # to signal that the op was built inside a tpu_replicate context; if we're
     # lifting it to another graph we're similarly lifting it into another context.
-    with ops.control_dependencies(copied_control_inputs), ops.device(op.device):
+    with ops.control_dependencies(copied_control_inputs), ops.device(
+            op.device):
         # pylint: disable=protected-access
         f = base_graph._functions.get(op.type, None)
         if f is not None and compat.as_str(f.name) not in graph._functions:
@@ -133,7 +129,8 @@ def _copy_non_source(op, graph, op_map, base_graph):
             attrs={
                 key: value
                 for key, value in op.node_def.attr.items()
-                if not key.startswith("_class") and not key.startswith("_tpu_replicate")
+                if not key.startswith("_class")
+                and not key.startswith("_tpu_replicate")
             },  # b/128981532.
             name=op.name,
         )
@@ -142,12 +139,19 @@ def _copy_non_source(op, graph, op_map, base_graph):
         op_map[o] = copied_op.outputs[i]
 
     return (
-        [mutation._replace(copied_op=copied_op) for mutation in input_mutations],
-        [mutation._replace(copied_op=copied_op) for mutation in control_mutations],
+        [
+            mutation._replace(copied_op=copied_op)
+            for mutation in input_mutations
+        ],
+        [
+            mutation._replace(copied_op=copied_op)
+            for mutation in control_mutations
+        ],
     )
 
 
-def _copy_source(s, graph, op_map, handle_captures, inverse_captures, base_graph):
+def _copy_source(s, graph, op_map, handle_captures, inverse_captures,
+                 base_graph):
     """Create a source in a graph based on a Tensor from a different graph.
 
     This function creates a placeholder analog of `s` in a graph with the
@@ -178,30 +182,30 @@ def _copy_source(s, graph, op_map, handle_captures, inverse_captures, base_graph
         # Copy the default value to the graph.
         default_value = s.op.inputs[0]
         unavailable_inputs, unavailable_control_inputs = _copy_non_source(
-            op=default_value.op, graph=graph, op_map=op_map, base_graph=base_graph
-        )
+            op=default_value.op,
+            graph=graph,
+            op_map=op_map,
+            base_graph=base_graph)
         if unavailable_inputs or unavailable_control_inputs:
             raise AssertionError(
                 "Could not copy source node {} because it has inputs.".format(
-                    default_value
-                )
-            )
+                    default_value))
 
         with ops.device(s.op.device):
             copied_placeholder = array_ops.placeholder_with_default(
-                input=op_map[default_value], shape=s.shape, name=s.op.name
-            )
+                input=op_map[default_value], shape=s.shape, name=s.op.name)
     else:
         with ops.device(s.op.device):
-            copied_placeholder = array_ops.placeholder(
-                dtype=s.dtype, shape=s.shape, name=s.op.name
-            )
+            copied_placeholder = array_ops.placeholder(dtype=s.dtype,
+                                                       shape=s.shape,
+                                                       name=s.op.name)
 
     base_handle = resource_variable_ops.get_resource_handle_data(s)
     if base_handle.shape_and_type:
         resource_variable_ops._set_handle_shapes_and_types(  # pylint: disable=protected-access
-            copied_placeholder, base_handle, graph_mode=True
-        )
+            copied_placeholder,
+            base_handle,
+            graph_mode=True)
 
     op_map[s] = copied_placeholder
     # Add an entry for the op of the source tensor so that if there are any nodes
@@ -210,14 +214,14 @@ def _copy_source(s, graph, op_map, handle_captures, inverse_captures, base_graph
 
 
 def lift_to_graph(
-    tensors,
-    graph,
-    sources=None,
-    disallowed_placeholders=None,
-    add_sources=False,
-    handle_captures=False,
-    base_graph=None,
-    op_map=None,
+        tensors,
+        graph,
+        sources=None,
+        disallowed_placeholders=None,
+        add_sources=False,
+        handle_captures=False,
+        base_graph=None,
+        op_map=None,
 ):
     """Copies the tensor and all its inputs recursively to the outer graph.
 
@@ -268,15 +272,15 @@ def lift_to_graph(
                 visited_ops=visited_ops,
                 op_outputs=op_outputs,
                 add_sources=add_sources,
-            )
-        )
+            ))
 
     # Try to topologically sort the nodes we've extracted. Now we know how many of
     # their outputs are part of this subgraph.
     ops_to_copy = []
     marked_ops = set([])
     ops_to_visit = [
-        _as_operation(t) for t in init_tensors if not op_outputs[_as_operation(t)]
+        _as_operation(t) for t in init_tensors
+        if not op_outputs[_as_operation(t)]
     ]
     unvisited_ops = set(ops_to_visit)
     while unvisited_ops:
@@ -292,7 +296,8 @@ def lift_to_graph(
                 if inp.type == "TPUReplicateMetadata":
                     continue
                 unvisited_ops.add(inp)
-                if all(x in marked_ops for x in op_outputs[inp]) and inp not in sources:
+                if all(x in marked_ops
+                       for x in op_outputs[inp]) and inp not in sources:
                     ops_to_visit.append(inp)
         unvisited_ops.difference_update(marked_ops)
         if unvisited_ops:
@@ -307,8 +312,7 @@ def lift_to_graph(
     inverse_captures = object_identity.ObjectIdentityDictionary()
     internal_captures = []
     if isinstance(base_graph, func_graph.FuncGraph) and isinstance(
-        graph, func_graph.FuncGraph
-    ):
+            graph, func_graph.FuncGraph):
         captures = base_graph.captures
         for external_capture, internal_capture in captures:
             inverse_captures[internal_capture] = external_capture
@@ -351,8 +355,7 @@ def lift_to_graph(
             if op in source_ops or op in op_map:
                 continue
             new_input_mutations, new_control_mutations = _copy_non_source(
-                op=op, graph=graph, op_map=op_map, base_graph=base_graph
-            )
+                op=op, graph=graph, op_map=op_map, base_graph=base_graph)
             input_mutations.extend(new_input_mutations)
             control_mutations.extend(new_control_mutations)
 
@@ -363,14 +366,14 @@ def lift_to_graph(
         with graph._mutation_lock():
             for mutation in input_mutations:
                 mutation.copied_op._update_input(
-                    mutation.input_index, op_map[mutation.old_graph_tensor]
-                )
+                    mutation.input_index, op_map[mutation.old_graph_tensor])
             for mutation in control_mutations:
                 # Don't lift the TPUReplicateMetadata nodes out of the function, because
                 # it has no registered kernels.
                 if mutation.old_graph_op.type == "TPUReplicateMetadata":
                     continue
-                mutation.copied_op._add_control_input(op_map[mutation.old_graph_op])
+                mutation.copied_op._add_control_input(
+                    op_map[mutation.old_graph_op])
         # pylint: enable=protected-access
 
         return op_map

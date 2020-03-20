@@ -40,14 +40,12 @@ class StatelessRandomOpsTest(xla_test.XLATestCase):
         # Stateless values should be equal iff the seeds are equal (roughly)
         with self.session(), self.test_scope():
             seed_t = array_ops.placeholder(dtypes.int32, shape=[2])
-            seeds = [
-                (x, y) for x in range(5) for y in range(5)
-            ] * 3  # pylint: disable=g-complex-comprehension
+            seeds = [(x, y) for x in range(5) for y in range(5)] * 3  # pylint: disable=g-complex-comprehension
             for stateless_op in [
-                stateless.stateless_random_uniform,
-                stateless.stateless_random_normal,
+                    stateless.stateless_random_uniform,
+                    stateless.stateless_random_normal,
             ]:
-                for shape in (), (3,), (2, 5):
+                for shape in (), (3, ), (2, 5):
                     for dtype in self._random_types():
                         # Skip bfloat16. The result of bfloat16 is truncated from 32-bit
                         # result. With different seeds, the 32-bit results are different,
@@ -55,10 +53,8 @@ class StatelessRandomOpsTest(xla_test.XLATestCase):
                         if dtype == dtypes.bfloat16:
                             continue
                         pure = stateless_op(shape, seed=seed_t, dtype=dtype)
-                        values = [
-                            (seed, pure.eval(feed_dict={seed_t: seed}))
-                            for seed in seeds
-                        ]
+                        values = [(seed, pure.eval(feed_dict={seed_t: seed}))
+                                  for seed in seeds]
                         for s0, v0 in values:
                             for s1, v1 in values:
                                 self.assertEqual(s0 == s1, np.all(v0 == v1))
@@ -70,9 +66,10 @@ class StatelessRandomOpsTest(xla_test.XLATestCase):
                 if dtype.is_integer:
                     maxval = 100
                 seed_t = array_ops.placeholder(dtypes.int32, shape=[2])
-                x = stateless.stateless_random_uniform(
-                    shape=[1000], seed=seed_t, maxval=maxval, dtype=dtype
-                )
+                x = stateless.stateless_random_uniform(shape=[1000],
+                                                       seed=seed_t,
+                                                       maxval=maxval,
+                                                       dtype=dtype)
                 y = sess.run(x, {seed_t: [0x12345678, 0xABCDEF1]})
                 self.assertTrue(np.all(y >= 0))
                 self.assertTrue(np.all(y < maxval))
@@ -86,9 +83,10 @@ class StatelessRandomOpsTest(xla_test.XLATestCase):
                 maxval = 1
                 if dtype.is_integer:
                     maxval = 100
-                x = stateless.stateless_random_uniform(
-                    shape=[n], seed=seed_t, maxval=maxval, dtype=dtype
-                )
+                x = stateless.stateless_random_uniform(shape=[n],
+                                                       seed=seed_t,
+                                                       maxval=maxval,
+                                                       dtype=dtype)
                 y = sess.run(x, {seed_t: [565656, 121212]})
                 # Convert y to float and normalize its value to range [0, 1) when
                 # maxval != 1.
@@ -103,9 +101,9 @@ class StatelessRandomOpsTest(xla_test.XLATestCase):
         with self.session() as sess, self.test_scope():
             for dtype in self._random_types():
                 seed_t = array_ops.placeholder(dtypes.int32, shape=[2])
-                x = stateless.stateless_random_normal(
-                    shape=[10000], seed=seed_t, dtype=dtype
-                )
+                x = stateless.stateless_random_normal(shape=[10000],
+                                                      seed=seed_t,
+                                                      dtype=dtype)
                 y = sess.run(x, {seed_t: [0x12345678, 0xABCDEF1]})
                 self.assertTrue(np.all(np.isfinite(y)))
 
@@ -115,25 +113,24 @@ class StatelessRandomOpsTest(xla_test.XLATestCase):
             for dtype in self._random_types():
                 seed_t = array_ops.placeholder(dtypes.int32, shape=[2])
                 n = 1000
-                x = stateless.stateless_random_normal(
-                    shape=[n], seed=seed_t, dtype=dtype
-                )
+                x = stateless.stateless_random_normal(shape=[n],
+                                                      seed=seed_t,
+                                                      dtype=dtype)
                 y = sess.run(x, {seed_t: [25252, 314159]})
                 # The constant 2.492 is the 5% critical value for the Anderson-Darling
                 # test where the mean and variance are known. This test is probabilistic
                 # so to avoid flakiness the seed is fixed.
                 self.assertLess(
-                    random_test_util.anderson_darling(y.astype(float)), 2.492
-                )
+                    random_test_util.anderson_darling(y.astype(float)), 2.492)
 
     def testTruncatedNormal(self):
         for dtype in self._random_types():
             with self.session() as sess, self.test_scope():
                 seed_t = array_ops.placeholder(dtypes.int32, shape=[2])
                 n = 10000000
-                x = stateless.stateless_truncated_normal(
-                    shape=[n], seed=seed_t, dtype=dtype
-                )
+                x = stateless.stateless_truncated_normal(shape=[n],
+                                                         seed=seed_t,
+                                                         dtype=dtype)
                 y = sess.run(x, {seed_t: [0x12345678, 0xABCDEF1]})
                 random_test_util.test_truncated_normal(
                     self.assertEqual,
