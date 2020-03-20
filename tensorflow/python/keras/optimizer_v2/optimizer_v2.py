@@ -68,8 +68,8 @@ def _deduplicate_indexed_slices(values, indices):
     """
     unique_indices, new_index_positions = array_ops.unique(indices)
     summed_values = math_ops.unsorted_segment_sum(
-        values, new_index_positions, array_ops.shape(unique_indices)[0]
-    )
+        values, new_index_positions,
+        array_ops.shape(unique_indices)[0])
     return (summed_values, unique_indices)
 
 
@@ -264,12 +264,12 @@ class OptimizerV2(trackable.Trackable):
         allowed_kwargs = {"clipnorm", "clipvalue", "lr", "decay"}
         for k in kwargs:
             if k not in allowed_kwargs:
-                raise TypeError(
-                    "Unexpected keyword argument " "passed to optimizer: " + str(k)
-                )
+                raise TypeError("Unexpected keyword argument "
+                                "passed to optimizer: " + str(k))
             # checks that all keyword arguments are non-negative.
             if kwargs[k] is not None and kwargs[k] < 0:
-                raise ValueError("Expected {} >= 0, received: {}".format(k, kwargs[k]))
+                raise ValueError("Expected {} >= 0, received: {}".format(
+                    k, kwargs[k]))
 
         self._use_locking = True
         self._init_set_name(name)
@@ -296,14 +296,11 @@ class OptimizerV2(trackable.Trackable):
         # Set the gradient clipping properties
         self.clipnorm = kwargs.pop("clipnorm", None)
         self.clipvalue = kwargs.pop("clipvalue", None)
-        if (
-            self.clipnorm is not None or self.clipvalue is not None
-        ) and distribute_ctx.has_strategy():
-            raise ValueError(
-                "Gradient clipping in the optimizer "
-                "(by setting clipnorm or clipvalue) is currently "
-                "unsupported when using a distribution strategy."
-            )
+        if (self.clipnorm is not None or
+                self.clipvalue is not None) and distribute_ctx.has_strategy():
+            raise ValueError("Gradient clipping in the optimizer "
+                             "(by setting clipnorm or clipvalue) is currently "
+                             "unsupported when using a distribution strategy.")
 
         self._hypers_created = False
 
@@ -333,9 +330,9 @@ class OptimizerV2(trackable.Trackable):
           ValueError: If some of the variables are not `Variable` objects.
 
         """
-        grads_and_vars = self._compute_gradients(
-            loss, var_list=var_list, grad_loss=grad_loss
-        )
+        grads_and_vars = self._compute_gradients(loss,
+                                                 var_list=var_list,
+                                                 grad_loss=grad_loss)
 
         return self.apply_gradients(grads_and_vars, name=name)
 
@@ -346,8 +343,7 @@ class OptimizerV2(trackable.Trackable):
                 raise ValueError(
                     "Gradient clipping in the optimizer "
                     "(by setting clipnorm or clipvalue) is currently "
-                    "unsupported when using a distribution strategy."
-                )
+                    "unsupported when using a distribution strategy.")
             grads = [
                 None if g is None else clip_ops.clip_by_norm(g, self.clipnorm)
                 for g in grads
@@ -357,11 +353,11 @@ class OptimizerV2(trackable.Trackable):
                 raise ValueError(
                     "Gradient clipping in the optimizer "
                     "(by setting clipnorm or clipvalue) is currently "
-                    "unsupported when using a distribution strategy."
-                )
+                    "unsupported when using a distribution strategy.")
             v = self.clipvalue
             grads = [
-                None if g is None else clip_ops.clip_by_value(g, -v, v) for g in grads
+                None if g is None else clip_ops.clip_by_value(g, -v, v)
+                for g in grads
             ]
         return grads
 
@@ -404,13 +400,10 @@ class OptimizerV2(trackable.Trackable):
             grads = self._clip_gradients(grads)
 
         grads_and_vars = list(zip(grads, var_list))
-        self._assert_valid_dtypes(
-            [
-                v
-                for g, v in grads_and_vars
-                if g is not None and v.dtype != dtypes.resource
-            ]
-        )
+        self._assert_valid_dtypes([
+            v for g, v in grads_and_vars
+            if g is not None and v.dtype != dtypes.resource
+        ])
 
         return grads_and_vars
 
@@ -430,8 +423,7 @@ class OptimizerV2(trackable.Trackable):
         """
         params = nest.flatten(params)
         with backend.get_graph().as_default(), backend.name_scope(
-            self._name + "/gradients"
-        ):
+                self._name + "/gradients"):
             grads = gradients.gradients(loss, params)
             for grad, param in zip(grads, params):
                 if grad is None:
@@ -440,12 +432,14 @@ class OptimizerV2(trackable.Trackable):
                         "Please make sure that all of your ops have a "
                         "gradient defined (i.e. are differentiable). "
                         "Common ops without gradient: "
-                        "K.argmax, K.round, K.eval.".format(param)
-                    )
+                        "K.argmax, K.round, K.eval.".format(param))
             grads = self._clip_gradients(grads)
         return grads
 
-    def apply_gradients(self, grads_and_vars, name=None, all_reduce_sum_gradients=True):
+    def apply_gradients(self,
+                        grads_and_vars,
+                        name=None,
+                        all_reduce_sum_gradients=True):
         """Apply gradients to variables.
 
         This is the second part of `minimize()`. It returns an `Operation` that
@@ -500,8 +494,7 @@ class OptimizerV2(trackable.Trackable):
                 raise RuntimeError(
                     "`apply_gradients() cannot be called in cross-replica context. "
                     "Use `tf.distribute.Strategy.run` to enter replica "
-                    "context."
-                )
+                    "context.")
 
             apply_state = self._prepare(var_list)
             if all_reduce_sum_gradients:
@@ -509,9 +502,12 @@ class OptimizerV2(trackable.Trackable):
                 var_list = [v for _, v in grads_and_vars]
                 grads_and_vars = list(zip(reduced_grads, var_list))
             return distribute_ctx.get_replica_context().merge_call(
-                functools.partial(self._distributed_apply, apply_state=apply_state),
-                args=(grads_and_vars,),
-                kwargs={"name": name,},
+                functools.partial(self._distributed_apply,
+                                  apply_state=apply_state),
+                args=(grads_and_vars, ),
+                kwargs={
+                    "name": name,
+                },
             )
 
     def _aggregate_gradients(self, grads_and_vars):
@@ -528,8 +524,7 @@ class OptimizerV2(trackable.Trackable):
 
         def all_reduce_fn(distribution, grads_and_vars):
             return distribution.extended.batch_reduce_to(
-                ds_reduce_util.ReduceOp.SUM, grads_and_vars
-            )
+                ds_reduce_util.ReduceOp.SUM, grads_and_vars)
 
         # We switch to a cross-replica context since there is a bug which causes
         # IndexedSlices to be converted to dense tensors when all-reduced in a
@@ -538,8 +533,7 @@ class OptimizerV2(trackable.Trackable):
         # is fixed.
         if filtered_grads_and_vars:
             reduced = distribute_ctx.get_replica_context().merge_call(
-                all_reduce_fn, args=(filtered_grads_and_vars,)
-            )
+                all_reduce_fn, args=(filtered_grads_and_vars, ))
         else:
             reduced = []
         # Copy 'reduced' but add None gradients back in
@@ -554,7 +548,8 @@ class OptimizerV2(trackable.Trackable):
         assert reduced_pos == len(reduced), "Failed to add all gradients"
         return reduced_with_nones
 
-    def _distributed_apply(self, distribution, grads_and_vars, name, apply_state):
+    def _distributed_apply(self, distribution, grads_and_vars, name,
+                           apply_state):
         """`apply_gradients` using a `DistributionStrategy`."""
 
         def apply_grad_to_update_var(var, grad):
@@ -571,8 +566,7 @@ class OptimizerV2(trackable.Trackable):
                 if "apply_state" in self._sparse_apply_args:
                     apply_kwargs["apply_state"] = apply_state
                 return self._resource_apply_sparse_duplicate_indices(
-                    grad.values, var, grad.indices, **apply_kwargs
-                )
+                    grad.values, var, grad.indices, **apply_kwargs)
 
             if "apply_state" in self._dense_apply_args:
                 apply_kwargs["apply_state"] = apply_state
@@ -599,28 +593,25 @@ class OptimizerV2(trackable.Trackable):
                 # delays. See b/136304694.
                 with distribution.extended.colocate_vars_with(var):
                     with ops.name_scope(
-                        "update"
-                        if eagerly_outside_functions
-                        else "update_" + var.op.name,
-                        skip_on_eager=True,
+                            "update" if eagerly_outside_functions else
+                            "update_" + var.op.name,
+                            skip_on_eager=True,
                     ):
                         update_ops.extend(
                             distribution.extended.update(
-                                var, apply_grad_to_update_var, args=(grad,), group=False
-                            )
-                        )
+                                var,
+                                apply_grad_to_update_var,
+                                args=(grad, ),
+                                group=False))
 
             any_symbolic = any(
                 isinstance(i, ops.Operation) or tf_utils.is_symbolic_tensor(i)
-                for i in update_ops
-            )
+                for i in update_ops)
             if not context.executing_eagerly() or any_symbolic:
                 # If the current context is graph mode or any of the update ops are
                 # symbolic then the step update should be carried out under a graph
                 # context. (eager updates execute immediately)
-                with ops._get_graph_from_inputs(
-                    update_ops
-                ).as_default():  # pylint: disable=protected-access
+                with ops._get_graph_from_inputs(update_ops).as_default():  # pylint: disable=protected-access
                     with ops.control_dependencies(update_ops):
                         return self._iterations.assign_add(1).op
 
@@ -629,13 +620,10 @@ class OptimizerV2(trackable.Trackable):
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
         grads_and_vars = list(zip(grads, params))
-        self._assert_valid_dtypes(
-            [
-                v
-                for g, v in grads_and_vars
-                if g is not None and v.dtype != dtypes.resource
-            ]
-        )
+        self._assert_valid_dtypes([
+            v for g, v in grads_and_vars
+            if g is not None and v.dtype != dtypes.resource
+        ])
         return [self.apply_gradients(grads_and_vars)]
 
     def _set_hyper(self, name, value):
@@ -646,19 +634,16 @@ class OptimizerV2(trackable.Trackable):
             self._hyper[name] = value
         else:
             prev_value = self._hyper[name]
-            if (
-                callable(prev_value)
-                or isinstance(
+            if (callable(prev_value) or isinstance(
                     prev_value,
-                    (
-                        ops.Tensor,
-                        int,
-                        float,
-                        learning_rate_schedule.LearningRateSchedule,
-                    ),
-                )
-                or isinstance(value, learning_rate_schedule.LearningRateSchedule)
-            ):
+                (
+                    ops.Tensor,
+                    int,
+                    float,
+                    learning_rate_schedule.LearningRateSchedule,
+                ),
+            ) or isinstance(value,
+                            learning_rate_schedule.LearningRateSchedule)):
                 self._hyper[name] = value
             else:
                 backend.set_value(self._hyper[name], value)
@@ -716,11 +701,12 @@ class OptimizerV2(trackable.Trackable):
         slot_dict = self._slots.setdefault(var_key, {})
         weight = slot_dict.get(slot_name, None)
         if weight is None:
-            if isinstance(initializer, six.string_types) or callable(initializer):
+            if isinstance(initializer,
+                          six.string_types) or callable(initializer):
                 initializer = initializers.get(initializer)
-                initial_value = functools.partial(
-                    initializer, shape=var.shape, dtype=var.dtype
-                )
+                initial_value = functools.partial(initializer,
+                                                  shape=var.shape,
+                                                  dtype=var.dtype)
             else:
                 initial_value = initializer
             strategy = distribute_ctx.get_strategy()
@@ -730,24 +716,21 @@ class OptimizerV2(trackable.Trackable):
                     "tf.distribute.Strategy ({}), which is different from the scope "
                     "used for the original variable ({}). Make sure the slot "
                     "variables are created under the same strategy scope. This may "
-                    "happen if you're restoring from a checkpoint outside the scope".format(
-                        strategy, var
-                    )
-                )
+                    "happen if you're restoring from a checkpoint outside the scope"
+                    .format(strategy, var))
 
             with strategy.extended.colocate_vars_with(var):
                 weight = tf_variables.Variable(
-                    name="%s/%s"
-                    % (var._shared_name, slot_name),  # pylint: disable=protected-access
+                    name="%s/%s" % (var._shared_name, slot_name),  # pylint: disable=protected-access
                     dtype=var.dtype,
                     trainable=False,
                     initial_value=initial_value,
                 )
             backend.track_variable(weight)
             slot_dict[slot_name] = weight
-            self._restore_slot_variable(
-                slot_name=slot_name, variable=var, slot_variable=weight
-            )
+            self._restore_slot_variable(slot_name=slot_name,
+                                        variable=var,
+                                        slot_variable=weight)
             self._weights.append(weight)
         return weight
 
@@ -791,9 +774,9 @@ class OptimizerV2(trackable.Trackable):
             return
         # Iterate hyper values deterministically.
         for name, value in sorted(self._hyper.items()):
-            if isinstance(value, (ops.Tensor, tf_variables.Variable)) or callable(
-                value
-            ):
+            if isinstance(
+                    value,
+                (ops.Tensor, tf_variables.Variable)) or callable(value):
                 continue
             else:
                 self._hyper[name] = self.add_weight(
@@ -801,7 +784,8 @@ class OptimizerV2(trackable.Trackable):
                     shape=[],
                     trainable=False,
                     initializer=value,
-                    aggregation=tf_variables.VariableAggregation.ONLY_FIRST_REPLICA,
+                    aggregation=tf_variables.VariableAggregation.
+                    ONLY_FIRST_REPLICA,
                 )
         self._hypers_created = True
 
@@ -814,7 +798,8 @@ class OptimizerV2(trackable.Trackable):
                 shape=[],
                 dtype=dtypes.int64,
                 trainable=False,
-                aggregation=tf_variables.VariableAggregation.ONLY_FIRST_REPLICA,
+                aggregation=tf_variables.VariableAggregation.
+                ONLY_FIRST_REPLICA,
             )
             self._weights.append(self._iterations)
         return self._iterations
@@ -824,8 +809,7 @@ class OptimizerV2(trackable.Trackable):
         if self._iterations is not None:
             raise RuntimeError(
                 "Cannot set `iterations` to a new Variable after "
-                "the Optimizer weights have been created"
-            )
+                "the Optimizer weights have been created")
         self._iterations = variable
         self._weights.append(self._iterations)
 
@@ -882,8 +866,7 @@ class OptimizerV2(trackable.Trackable):
         if "learning_rate" in config:
             if isinstance(config["learning_rate"], dict):
                 config["learning_rate"] = learning_rate_schedule.deserialize(
-                    config["learning_rate"], custom_objects=custom_objects
-                )
+                    config["learning_rate"], custom_objects=custom_objects)
         return cls(**config)
 
     def _serialize_hyperparameter(self, hyperparameter_name):
@@ -969,38 +952,32 @@ class OptimizerV2(trackable.Trackable):
         params = self.weights
         if len(params) != len(weights):
             raise ValueError(
-                "You called `set_weights(weights)` on optimizer "
-                + self._name
-                + " with a  weight list of length "
-                + str(len(weights))
-                + ", but the optimizer was expecting "
-                + str(len(params))
-                + " weights. Provided weights: "
-                + str(weights)[:50]
-                + "..."
-            )
+                "You called `set_weights(weights)` on optimizer " +
+                self._name + " with a  weight list of length " +
+                str(len(weights)) + ", but the optimizer was expecting " +
+                str(len(params)) + " weights. Provided weights: " +
+                str(weights)[:50] + "...")
         if not params:
             return
         weight_value_tuples = []
         param_values = backend.batch_get_value(params)
         for pv, p, w in zip(param_values, params, weights):
             if pv.shape != w.shape:
-                raise ValueError(
-                    "Optimizer weight shape " + str(pv.shape) + " not compatible with "
-                    "provided weight shape " + str(w.shape)
-                )
+                raise ValueError("Optimizer weight shape " + str(pv.shape) +
+                                 " not compatible with "
+                                 "provided weight shape " + str(w.shape))
             weight_value_tuples.append((p, w))
         backend.batch_set_value(weight_value_tuples)
 
     def add_weight(
-        self,
-        name,
-        shape,
-        dtype=None,
-        initializer="zeros",
-        trainable=None,
-        synchronization=tf_variables.VariableSynchronization.AUTO,
-        aggregation=tf_variables.VariableAggregation.NONE,
+            self,
+            name,
+            shape,
+            dtype=None,
+            initializer="zeros",
+            trainable=None,
+            synchronization=tf_variables.VariableSynchronization.AUTO,
+            aggregation=tf_variables.VariableAggregation.NONE,
     ):
 
         if dtype is None:
@@ -1014,8 +991,7 @@ class OptimizerV2(trackable.Trackable):
                     "Synchronization value can be set to "
                     "VariableSynchronization.ON_READ only for non-trainable variables. "
                     "You have specified trainable=True and "
-                    "synchronization=VariableSynchronization.ON_READ."
-                )
+                    "synchronization=VariableSynchronization.ON_READ.")
             else:
                 # Set trainable to be false when variable is to be synced on read.
                 trainable = False
@@ -1060,10 +1036,8 @@ class OptimizerV2(trackable.Trackable):
         for t in tensors:
             dtype = t.dtype.base_dtype
             if dtype not in valid_dtypes:
-                raise ValueError(
-                    "Invalid type %r for %s, expected: %s."
-                    % (dtype, t.name, [v for v in valid_dtypes])
-                )
+                raise ValueError("Invalid type %r for %s, expected: %s." %
+                                 (dtype, t.name, [v for v in valid_dtypes]))
 
     def _valid_dtypes(self):
         """Valid types for loss, variables and gradients.
@@ -1073,16 +1047,14 @@ class OptimizerV2(trackable.Trackable):
         Returns:
           Valid types for loss, variables and gradients.
         """
-        return set(
-            [
-                dtypes.float16,
-                dtypes.bfloat16,
-                dtypes.float32,
-                dtypes.float64,
-                dtypes.complex64,
-                dtypes.complex128,
-            ]
-        )
+        return set([
+            dtypes.float16,
+            dtypes.bfloat16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.complex64,
+            dtypes.complex128,
+        ])
 
     def _call_if_callable(self, param):
         """Call the function if param is callable."""
@@ -1102,7 +1074,8 @@ class OptimizerV2(trackable.Trackable):
         """
         raise NotImplementedError("Must be implemented in subclasses.")
 
-    def _resource_apply_sparse_duplicate_indices(self, grad, handle, indices, **kwargs):
+    def _resource_apply_sparse_duplicate_indices(self, grad, handle, indices,
+                                                 **kwargs):
         """Add ops to apply sparse gradients to `handle`, with repeated indices.
 
         Optimizers which override this method must deal with repeated indices. See
@@ -1125,11 +1098,9 @@ class OptimizerV2(trackable.Trackable):
           An `Operation` which updates the value of the variable.
         """
         summed_grad, unique_indices = _deduplicate_indexed_slices(
-            values=grad, indices=indices
-        )
-        return self._resource_apply_sparse(
-            summed_grad, handle, unique_indices, **kwargs
-        )
+            values=grad, indices=indices)
+        return self._resource_apply_sparse(summed_grad, handle, unique_indices,
+                                           **kwargs)
 
     def _resource_apply_sparse(self, grad, handle, indices, apply_state):
         """Add ops to apply sparse gradients to the variable `handle`.
@@ -1154,14 +1125,12 @@ class OptimizerV2(trackable.Trackable):
 
     def _resource_scatter_add(self, x, i, v):
         with ops.control_dependencies(
-            [resource_variable_ops.resource_scatter_add(x.handle, i, v)]
-        ):
+            [resource_variable_ops.resource_scatter_add(x.handle, i, v)]):
             return x.value()
 
     def _resource_scatter_update(self, x, i, v):
         with ops.control_dependencies(
-            [resource_variable_ops.resource_scatter_update(x.handle, i, v)]
-        ):
+            [resource_variable_ops.resource_scatter_update(x.handle, i, v)]):
             return x.value()
 
     @property
@@ -1181,20 +1150,17 @@ class OptimizerV2(trackable.Trackable):
     def _restore_slot_variable(self, slot_name, variable, slot_variable):
         """Restore a newly created slot variable's value."""
         variable_key = _var_key(variable)
-        deferred_restorations = self._deferred_slot_restorations.get(slot_name, {}).pop(
-            variable_key, []
-        )
+        deferred_restorations = self._deferred_slot_restorations.get(
+            slot_name, {}).pop(variable_key, [])
         # Iterate over restores, highest restore UID first to minimize the number
         # of assignments.
-        deferred_restorations.sort(
-            key=lambda position: position.restore_uid, reverse=True
-        )
+        deferred_restorations.sort(key=lambda position: position.restore_uid,
+                                   reverse=True)
         for checkpoint_position in deferred_restorations:
             checkpoint_position.restore(slot_variable)
 
-    def _create_or_restore_slot_variable(
-        self, slot_variable_position, slot_name, variable
-    ):
+    def _create_or_restore_slot_variable(self, slot_variable_position,
+                                         slot_name, variable):
         """Restore a slot variable's value, possibly creating it.
 
         Called when a variable which has an associated slot variable is created or
@@ -1217,26 +1183,22 @@ class OptimizerV2(trackable.Trackable):
         variable_key = _var_key(variable)
         slot_dict = self._slots.get(variable_key, {})
         slot_variable = slot_dict.get(slot_name, None)
-        if (
-            slot_variable is None
-            and context.executing_eagerly()
-            and slot_variable_position.is_simple_variable()
-            # Defer slot variable creation if there is an active variable creator
-            # scope. Generally we'd like to eagerly create/restore slot variables
-            # when possible, but this may mean that scopes intended to catch
-            # `variable` also catch its eagerly created slot variable
-            # unintentionally (specifically make_template would add a dependency on
-            # a slot variable if not for this case). Deferring is mostly harmless
-            # (aside from double initialization), and makes variable creator scopes
-            # behave the same way they do when graph building.
-            and not ops.get_default_graph()._variable_creator_stack
-        ):  # pylint: disable=protected-access
+        if (slot_variable is None and context.executing_eagerly()
+                and slot_variable_position.is_simple_variable()
+                # Defer slot variable creation if there is an active variable creator
+                # scope. Generally we'd like to eagerly create/restore slot variables
+                # when possible, but this may mean that scopes intended to catch
+                # `variable` also catch its eagerly created slot variable
+                # unintentionally (specifically make_template would add a dependency on
+                # a slot variable if not for this case). Deferring is mostly harmless
+                # (aside from double initialization), and makes variable creator scopes
+                # behave the same way they do when graph building.
+                and not ops.get_default_graph()._variable_creator_stack):  # pylint: disable=protected-access
             initializer = trackable.CheckpointInitialValue(
-                checkpoint_position=slot_variable_position
-            )
-            slot_variable = self.add_slot(
-                var=variable, initializer=initializer, slot_name=slot_name
-            )
+                checkpoint_position=slot_variable_position)
+            slot_variable = self.add_slot(var=variable,
+                                          initializer=initializer,
+                                          slot_name=slot_name)
             # Slot variables are not owned by any one object (because we don't want to
             # save the slot variable if the optimizer is saved without the non-slot
             # variable, or if the non-slot variable is saved without the optimizer;
@@ -1253,9 +1215,9 @@ class OptimizerV2(trackable.Trackable):
             # normally. We keep a list rather than the one with the highest restore
             # UID in case slot variables have their own dependencies, in which case
             # those could differ between restores.
-            self._deferred_slot_restorations.setdefault(slot_name, {}).setdefault(
-                variable_key, []
-            ).append(slot_variable_position)
+            self._deferred_slot_restorations.setdefault(
+                slot_name, {}).setdefault(variable_key,
+                                          []).append(slot_variable_position)
 
 
 def _filter_grads(grads_and_vars):
@@ -1272,13 +1234,12 @@ def _filter_grads(grads_and_vars):
             filtered.append((grad, var))
     filtered = tuple(filtered)
     if not filtered:
-        raise ValueError(
-            "No gradients provided for any variable: %s."
-            % ([v.name for _, v in grads_and_vars],)
-        )
+        raise ValueError("No gradients provided for any variable: %s." %
+                         ([v.name for _, v in grads_and_vars], ))
     if vars_with_empty_grads:
         logging.warning(
-            ("Gradients do not exist for variables %s when minimizing the loss."),
+            ("Gradients do not exist for variables %s when minimizing the loss."
+             ),
             ([v.name for v in vars_with_empty_grads]),
         )
     return filtered
@@ -1335,8 +1296,7 @@ class RestoredOptimizer(OptimizerV2):
         raise NotImplementedError(
             "Restoring functional Optimizers from SavedModels is not currently "
             "supported. Please file a feature request if this limitation bothers "
-            "you."
-        )
+            "you.")
 
 
 revived_types.register_revived_type(

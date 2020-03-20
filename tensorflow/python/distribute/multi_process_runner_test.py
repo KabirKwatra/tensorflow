@@ -58,9 +58,9 @@ class MultiProcessRunnerTest(test.TestCase):
     def test_multi_process_runner(self):
         mpr_result = multi_process_runner.run(
             proc_func_that_adds_task_type_in_return_data,
-            multi_worker_test_base.create_cluster_spec(
-                num_workers=2, num_ps=3, has_eval=1
-            ),
+            multi_worker_test_base.create_cluster_spec(num_workers=2,
+                                                       num_ps=3,
+                                                       has_eval=1),
             args=(self, 3),
         )
 
@@ -75,7 +75,8 @@ class MultiProcessRunnerTest(test.TestCase):
     def test_multi_process_runner_error_propagates_from_subprocesses(self):
         runner = multi_process_runner.MultiProcessRunner(
             proc_func_that_errors,
-            multi_worker_test_base.create_cluster_spec(num_workers=1, num_ps=1),
+            multi_worker_test_base.create_cluster_spec(num_workers=1,
+                                                       num_ps=1),
             max_run_time=20,
         )
         runner.start()
@@ -83,16 +84,15 @@ class MultiProcessRunnerTest(test.TestCase):
             runner.join()
 
     def test_multi_process_runner_queue_emptied_between_runs(self):
-        cluster_spec = multi_worker_test_base.create_cluster_spec(num_workers=2)
+        cluster_spec = multi_worker_test_base.create_cluster_spec(
+            num_workers=2)
         return_value = multi_process_runner.run(
-            proc_func_that_adds_simple_return_data, cluster_spec
-        ).return_value
+            proc_func_that_adds_simple_return_data, cluster_spec).return_value
         self.assertTrue(return_value)
         self.assertEqual(return_value[0], "dummy_data")
         self.assertEqual(return_value[1], "dummy_data")
-        return_value = multi_process_runner.run(
-            proc_func_that_does_nothing, cluster_spec
-        ).return_value
+        return_value = multi_process_runner.run(proc_func_that_does_nothing,
+                                                cluster_spec).return_value
         self.assertFalse(return_value)
 
     def test_multi_process_runner_args_passed_correctly(self):
@@ -100,7 +100,9 @@ class MultiProcessRunnerTest(test.TestCase):
             proc_func_that_return_args_and_kwargs,
             multi_worker_test_base.create_cluster_spec(num_workers=1),
             args=("a", "b"),
-            kwargs={"c_k": "c_v"},
+            kwargs={
+                "c_k": "c_v"
+            },
         ).return_value
         self.assertEqual(return_value[0][0], "a")
         self.assertEqual(return_value[0][1], "b")
@@ -118,8 +120,10 @@ class MultiProcessRunnerTest(test.TestCase):
         )
         std_stream_results = mpr_result.stdout
         return_value = mpr_result.return_value
-        self.assertIn("[worker-0]:    This is something printed.\n", std_stream_results)
-        self.assertIn("[worker-1]:    This is something printed.\n", std_stream_results)
+        self.assertIn("[worker-0]:    This is something printed.\n",
+                      std_stream_results)
+        self.assertIn("[worker-1]:    This is something printed.\n",
+                      std_stream_results)
         self.assertIn("This is returned data.", return_value)
 
     def test_process_that_exits(self):
@@ -153,15 +157,13 @@ class MultiProcessRunnerTest(test.TestCase):
             # If the signal was fired, another message would be added to internal
             # queue, so verifying it's empty.
             multi_process_runner._resource(
-                multi_process_runner.PROCESS_STATUS_QUEUE
-            ).get(block=False)
+                multi_process_runner.PROCESS_STATUS_QUEUE).get(block=False)
 
     def test_termination(self):
         def proc_func():
             for i in range(0, 10):
-                print(
-                    "index {}, iteration {}".format(self._worker_idx(), i), flush=True
-                )
+                print("index {}, iteration {}".format(self._worker_idx(), i),
+                      flush=True)
                 time.sleep(1)
 
         mpr = multi_process_runner.MultiProcessRunner(
@@ -176,17 +178,20 @@ class MultiProcessRunnerTest(test.TestCase):
 
         # Worker 0 is terminated in the middle, so it should not have iteration 9
         # printed.
-        self.assertIn("[worker-0]:    index 0, iteration 0\n", std_stream_results)
-        self.assertNotIn("[worker-0]:    index 0, iteration 9\n", std_stream_results)
-        self.assertIn("[worker-1]:    index 1, iteration 0\n", std_stream_results)
-        self.assertIn("[worker-1]:    index 1, iteration 9\n", std_stream_results)
+        self.assertIn("[worker-0]:    index 0, iteration 0\n",
+                      std_stream_results)
+        self.assertNotIn("[worker-0]:    index 0, iteration 9\n",
+                         std_stream_results)
+        self.assertIn("[worker-1]:    index 1, iteration 0\n",
+                      std_stream_results)
+        self.assertIn("[worker-1]:    index 1, iteration 9\n",
+                      std_stream_results)
 
     def test_termination_and_start_single_process(self):
         def proc_func():
             for i in range(0, 10):
-                print(
-                    "index {}, iteration {}".format(self._worker_idx(), i), flush=True
-                )
+                print("index {}, iteration {}".format(self._worker_idx(), i),
+                      flush=True)
                 time.sleep(1)
 
         mpr = multi_process_runner.MultiProcessRunner(
@@ -204,11 +209,13 @@ class MultiProcessRunnerTest(test.TestCase):
         # should still have iteration 9 printed. Moreover, iteration 0 of worker 0
         # should happen twice.
         self.assertLen(
-            [s for s in std_stream_results if "index 0, iteration 0" in s], 2
-        )
-        self.assertIn("[worker-0]:    index 0, iteration 9\n", std_stream_results)
-        self.assertIn("[worker-1]:    index 1, iteration 0\n", std_stream_results)
-        self.assertIn("[worker-1]:    index 1, iteration 9\n", std_stream_results)
+            [s for s in std_stream_results if "index 0, iteration 0" in s], 2)
+        self.assertIn("[worker-0]:    index 0, iteration 9\n",
+                      std_stream_results)
+        self.assertIn("[worker-1]:    index 1, iteration 0\n",
+                      std_stream_results)
+        self.assertIn("[worker-1]:    index 1, iteration 9\n",
+                      std_stream_results)
 
     def test_streaming(self):
         def proc_func():
@@ -221,17 +228,18 @@ class MultiProcessRunnerTest(test.TestCase):
                 )
                 print(
                     "(print) {}-{}, i: {}".format(
-                        multi_worker_test_base.get_task_type(), self._worker_idx(), i
-                    ),
+                        multi_worker_test_base.get_task_type(),
+                        self._worker_idx(), i),
                     flush=True,
                 )
                 time.sleep(1)
 
         mpr = multi_process_runner.MultiProcessRunner(
             proc_func,
-            multi_worker_test_base.create_cluster_spec(
-                has_chief=True, num_workers=2, num_ps=2, has_eval=True
-            ),
+            multi_worker_test_base.create_cluster_spec(has_chief=True,
+                                                       num_workers=2,
+                                                       num_ps=2,
+                                                       has_eval=True),
             list_stdout=True,
         )
         mpr._dependence_on_chief = False
@@ -246,47 +254,30 @@ class MultiProcessRunnerTest(test.TestCase):
         for job in ["chief", "evaluator"]:
             for iteration in range(5):
                 self.assertTrue(
-                    any(
-                        "(logging) {}-0, i: {}".format(job, iteration) in line
-                        for line in list_to_assert
-                    )
-                )
+                    any("(logging) {}-0, i: {}".format(job, iteration) in line
+                        for line in list_to_assert))
                 self.assertTrue(
-                    any(
-                        "(print) {}-0, i: {}".format(job, iteration) in line
-                        for line in list_to_assert
-                    )
-                )
+                    any("(print) {}-0, i: {}".format(job, iteration) in line
+                        for line in list_to_assert))
 
         for job in ["worker", "ps"]:
             for iteration in range(5):
                 for task in range(3):
                     self.assertTrue(
-                        any(
-                            "(logging) {}-{}, i: {}".format(job, task, iteration)
-                            in line
-                            for line in list_to_assert
-                        )
-                    )
+                        any("(logging) {}-{}, i: {}".format(
+                            job, task, iteration) in line
+                            for line in list_to_assert))
                     self.assertTrue(
-                        any(
-                            "(print) {}-{}, i: {}".format(job, task, iteration) in line
-                            for line in list_to_assert
-                        )
-                    )
+                        any("(print) {}-{}, i: {}".format(
+                            job, task, iteration) in line
+                            for line in list_to_assert))
                 task = 3
                 self.assertFalse(
-                    any(
-                        "(logging) {}-{}, i: {}".format(job, task, iteration) in line
-                        for line in list_to_assert
-                    )
-                )
+                    any("(logging) {}-{}, i: {}".format(job, task, iteration)
+                        in line for line in list_to_assert))
                 self.assertFalse(
-                    any(
-                        "(print) {}-{}, i: {}".format(job, task, iteration) in line
-                        for line in list_to_assert
-                    )
-                )
+                    any("(print) {}-{}, i: {}".format(job, task, iteration) in
+                        line for line in list_to_assert))
 
 
 if __name__ == "__main__":
