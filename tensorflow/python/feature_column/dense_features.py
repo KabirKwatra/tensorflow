@@ -65,9 +65,12 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
     ```
     """
 
-    def __init__(
-        self, feature_columns, trainable=True, name=None, partitioner=None, **kwargs
-    ):
+    def __init__(self,
+                 feature_columns,
+                 trainable=True,
+                 name=None,
+                 partitioner=None,
+                 **kwargs):
         """Constructs a DenseFeatures layer.
 
         Args:
@@ -86,14 +89,13 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
         Raises:
           ValueError: if an item in `feature_columns` is not a `DenseColumn`.
         """
-        super(DenseFeatures, self).__init__(
-            feature_columns=feature_columns,
-            trainable=trainable,
-            name=name,
-            partitioner=partitioner,
-            expected_column_type=fc.DenseColumn,
-            **kwargs
-        )
+        super(DenseFeatures,
+              self).__init__(feature_columns=feature_columns,
+                             trainable=trainable,
+                             name=name,
+                             partitioner=partitioner,
+                             expected_column_type=fc.DenseColumn,
+                             **kwargs)
 
     @property
     def _is_feature_layer(self):
@@ -152,21 +154,19 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
         if training is None:
             training = backend.learning_phase()
         if not isinstance(features, dict):
-            raise ValueError(
-                "We expected a dictionary here. Instead we got: ", features
-            )
+            raise ValueError("We expected a dictionary here. Instead we got: ",
+                             features)
         transformation_cache = fc.FeatureTransformationCache(features)
         output_tensors = []
         for column in self._feature_columns:
             with ops.name_scope(column.name):
                 try:
-                    tensor = column.get_dense_tensor(
-                        transformation_cache, self._state_manager, training=training
-                    )
+                    tensor = column.get_dense_tensor(transformation_cache,
+                                                     self._state_manager,
+                                                     training=training)
                 except TypeError:
-                    tensor = column.get_dense_tensor(
-                        transformation_cache, self._state_manager
-                    )
+                    tensor = column.get_dense_tensor(transformation_cache,
+                                                     self._state_manager)
                 processed_tensors = self._process_dense_tensor(column, tensor)
                 if cols_to_output_tensors is not None:
                     cols_to_output_tensors[column] = processed_tensors
