@@ -24,58 +24,58 @@ LoggingOpResolver::LoggingOpResolver(
     const BuiltinOpsSet& builtin_ops_to_replace,
     const CustomOpsSet& custom_ops_to_replace, const OpResolver& base_resolver,
     KernelEvalFuncPtr logging_eval_fn) {
-    for (const auto& op_and_version : builtin_ops_to_replace) {
-        const TfLiteRegistration* base_registration =
-            base_resolver.FindOp(op_and_version.first, op_and_version.second);
-        BuiltinOperatorKey key = op_and_version;
-        builtin_op_evalfn_map_[key] = base_registration->invoke;
-        auto logging_registration =
-            absl::make_unique<TfLiteRegistration>(*base_registration);
-        logging_registration->invoke = logging_eval_fn;
-        builtin_op_registration_map_[key] = std::move(logging_registration);
-    }
-    for (const auto& op_and_version : custom_ops_to_replace) {
-        const TfLiteRegistration* base_registration = base_resolver.FindOp(
-                    op_and_version.first.c_str(), op_and_version.second);
-        CustomOperatorKey key = op_and_version;
-        custom_op_evalfn_map_[key] = base_registration->invoke;
-        auto logging_registration =
-            absl::make_unique<TfLiteRegistration>(*base_registration);
-        logging_registration->invoke = logging_eval_fn;
-        custom_op_registration_map_[key] = std::move(logging_registration);
-    }
+  for (const auto& op_and_version : builtin_ops_to_replace) {
+    const TfLiteRegistration* base_registration =
+        base_resolver.FindOp(op_and_version.first, op_and_version.second);
+    BuiltinOperatorKey key = op_and_version;
+    builtin_op_evalfn_map_[key] = base_registration->invoke;
+    auto logging_registration =
+        absl::make_unique<TfLiteRegistration>(*base_registration);
+    logging_registration->invoke = logging_eval_fn;
+    builtin_op_registration_map_[key] = std::move(logging_registration);
+  }
+  for (const auto& op_and_version : custom_ops_to_replace) {
+    const TfLiteRegistration* base_registration = base_resolver.FindOp(
+        op_and_version.first.c_str(), op_and_version.second);
+    CustomOperatorKey key = op_and_version;
+    custom_op_evalfn_map_[key] = base_registration->invoke;
+    auto logging_registration =
+        absl::make_unique<TfLiteRegistration>(*base_registration);
+    logging_registration->invoke = logging_eval_fn;
+    custom_op_registration_map_[key] = std::move(logging_registration);
+  }
 }
 
 const TfLiteRegistration* LoggingOpResolver::FindOp(BuiltinOperator op,
-        int version) const {
-    BuiltinOperatorKey key = {op, version};
-    if (builtin_op_registration_map_.find(key) !=
-            builtin_op_registration_map_.end()) {
-        return builtin_op_registration_map_.at(key).get();
-    }
+                                                    int version) const {
+  BuiltinOperatorKey key = {op, version};
+  if (builtin_op_registration_map_.find(key) !=
+      builtin_op_registration_map_.end()) {
+    return builtin_op_registration_map_.at(key).get();
+  }
 
-    return nullptr;
+  return nullptr;
 }
 
 KernelEvalFuncPtr LoggingOpResolver::GetWrappedKernelInvoke(BuiltinOperator op,
-        int version) const {
-    return builtin_op_evalfn_map_.at({op, version});
+                                                            int version) const {
+  return builtin_op_evalfn_map_.at({op, version});
 }
 
 const TfLiteRegistration* LoggingOpResolver::FindOp(const char* op,
-        int version) const {
-    CustomOperatorKey key = {op, version};
-    if (custom_op_registration_map_.find(key) !=
-            custom_op_registration_map_.end()) {
-        return custom_op_registration_map_.at(key).get();
-    }
+                                                    int version) const {
+  CustomOperatorKey key = {op, version};
+  if (custom_op_registration_map_.find(key) !=
+      custom_op_registration_map_.end()) {
+    return custom_op_registration_map_.at(key).get();
+  }
 
-    return nullptr;
+  return nullptr;
 }
 
 KernelEvalFuncPtr LoggingOpResolver::GetWrappedKernelInvoke(const char* op,
-        int version) const {
-    return custom_op_evalfn_map_.at({op, version});
+                                                            int version) const {
+  return custom_op_evalfn_map_.at({op, version});
 }
 
 }  // namespace calibration

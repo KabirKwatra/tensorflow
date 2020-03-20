@@ -27,35 +27,35 @@ namespace evaluation {
 // Ideally EvaluationStages should obtain access to initializer/input objects
 // via Get/Set methods on pointers, and not take ownership unless necessary.
 class EvaluationStage {
-public:
-    // Initializes an EvaluationStage, including verifying the
-    // EvaluationStageConfig. Returns kTfLiteError if initialization failed,
-    // kTfLiteOk otherwise.
-    //
-    // Sub-classes are responsible for ensuring required class members are defined
-    // via Get/Set methods.
-    virtual TfLiteStatus Init() = 0;
+ public:
+  // Initializes an EvaluationStage, including verifying the
+  // EvaluationStageConfig. Returns kTfLiteError if initialization failed,
+  // kTfLiteOk otherwise.
+  //
+  // Sub-classes are responsible for ensuring required class members are defined
+  // via Get/Set methods.
+  virtual TfLiteStatus Init() = 0;
 
-    // An individual run of the EvaluationStage. This is where the task to be
-    // evaluated takes place. Returns kTfLiteError if there was a failure,
-    // kTfLiteOk otherwise.
-    //
-    // Sub-classes are responsible for ensuring they have access to required
-    // inputs via Get/Set methods.
-    virtual TfLiteStatus Run() = 0;
+  // An individual run of the EvaluationStage. This is where the task to be
+  // evaluated takes place. Returns kTfLiteError if there was a failure,
+  // kTfLiteOk otherwise.
+  //
+  // Sub-classes are responsible for ensuring they have access to required
+  // inputs via Get/Set methods.
+  virtual TfLiteStatus Run() = 0;
 
-    // Returns the latest metrics based on all Run() calls made so far.
-    virtual EvaluationStageMetrics LatestMetrics() = 0;
+  // Returns the latest metrics based on all Run() calls made so far.
+  virtual EvaluationStageMetrics LatestMetrics() = 0;
 
-    virtual ~EvaluationStage() = default;
+  virtual ~EvaluationStage() = default;
 
-protected:
-    // Constructs an EvaluationStage.
-    // Each subclass constructor must invoke this constructor.
-    explicit EvaluationStage(const EvaluationStageConfig& config)
-        : config_(config) {}
+ protected:
+  // Constructs an EvaluationStage.
+  // Each subclass constructor must invoke this constructor.
+  explicit EvaluationStage(const EvaluationStageConfig& config)
+      : config_(config) {}
 
-    EvaluationStageConfig config_;
+  EvaluationStageConfig config_;
 };
 
 }  // namespace evaluation

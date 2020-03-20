@@ -25,34 +25,28 @@ using ::testing::ElementsAreArray;
 
 template <typename T>
 class MatrixDiagOpModel : public SingleOpModel {
-public:
-    explicit MatrixDiagOpModel(const TensorData& input) {
-        input_ = AddInput(input);
-        output_ = AddOutput({input.type, {}});
+ public:
+  explicit MatrixDiagOpModel(const TensorData& input) {
+    input_ = AddInput(input);
+    output_ = AddOutput({input.type, {}});
 
-        SetBuiltinOp(BuiltinOperator_MATRIX_DIAG, BuiltinOptions_MatrixDiagOptions,
-                     CreateMatrixDiagOptions(builder_).Union());
-        BuildInterpreter({GetShape(input_)});
-    }
+    SetBuiltinOp(BuiltinOperator_MATRIX_DIAG, BuiltinOptions_MatrixDiagOptions,
+                 CreateMatrixDiagOptions(builder_).Union());
+    BuildInterpreter({GetShape(input_)});
+  }
 
-    int input() {
-        return input_;
-    }
+  int input() { return input_; }
 
-    std::vector<T> GetOutput() {
-        return ExtractVector<T>(output_);
-    }
-    std::vector<int> GetOutputShape() {
-        return GetTensorShape(output_);
-    }
-    TfLiteType GetOutputType() {
-        TfLiteTensor* t = interpreter_->tensor(output_);
-        return t->type;
-    }
+  std::vector<T> GetOutput() { return ExtractVector<T>(output_); }
+  std::vector<int> GetOutputShape() { return GetTensorShape(output_); }
+  TfLiteType GetOutputType() {
+    TfLiteTensor* t = interpreter_->tensor(output_);
+    return t->type;
+  }
 
-private:
-    int input_;
-    int output_;
+ private:
+  int input_;
+  int output_;
 };
 
 // Use the machinery of TYPED_TEST_SUITE to test all supported types.
@@ -64,46 +58,46 @@ class MatrixDiagOpTest : public ::testing::Test {};
 
 using TypesUnderTest =
     ::testing::Types<TypeUnion<int32_t>, TypeUnion<float>, TypeUnion<int16_t>,
-    TypeUnion<int8_t>, TypeUnion<uint8_t>>;
+                     TypeUnion<int8_t>, TypeUnion<uint8_t>>;
 TYPED_TEST_SUITE(MatrixDiagOpTest, TypesUnderTest);
 
 TYPED_TEST(MatrixDiagOpTest, ThreeByThreeDiag) {
-    MatrixDiagOpModel<typename TypeParam::ScalarType> model(
-    {TypeParam::tensor_type, {3}});
-    model.template PopulateTensor<typename TypeParam::ScalarType>(model.input(),
-    {1, 2, 3});
-    model.Invoke();
-    EXPECT_THAT(model.GetOutputShape(), ElementsAre(3, 3));
-    EXPECT_THAT(model.GetOutput(), ElementsAreArray({1, 0, 0,  //
-                0, 2, 0,  //
-                0, 0, 3}));
-    EXPECT_THAT(model.GetOutputType(), TypeParam::tflite_type);
+  MatrixDiagOpModel<typename TypeParam::ScalarType> model(
+      {TypeParam::tensor_type, {3}});
+  model.template PopulateTensor<typename TypeParam::ScalarType>(model.input(),
+                                                                {1, 2, 3});
+  model.Invoke();
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(3, 3));
+  EXPECT_THAT(model.GetOutput(), ElementsAreArray({1, 0, 0,  //
+                                                   0, 2, 0,  //
+                                                   0, 0, 3}));
+  EXPECT_THAT(model.GetOutputType(), TypeParam::tflite_type);
 }
 
 // Additional special cases.
 TEST(MatrixDiagTest, Int32TestTwoDimDiag) {
-    MatrixDiagOpModel<int32_t> model({TensorType_INT32, {2, 4}});
-    model.PopulateTensor<int32_t>(model.input(), {1, 2, 3, 4, 5, 6, 7, 8});
-    model.Invoke();
-    EXPECT_THAT(model.GetOutputShape(), ElementsAre(2, 4, 4));
-    EXPECT_THAT(model.GetOutput(), ElementsAreArray({1, 0, 0, 0,  //
-                0, 2, 0, 0,  //
-                0, 0, 3, 0,  //
-                0, 0, 0, 4,  //
-                5, 0, 0, 0,  //
-                0, 6, 0, 0,  //
-                0, 0, 7, 0,  //
-                0, 0, 0, 8}));
-    EXPECT_THAT(model.GetOutputType(), TfLiteType::kTfLiteInt32);
+  MatrixDiagOpModel<int32_t> model({TensorType_INT32, {2, 4}});
+  model.PopulateTensor<int32_t>(model.input(), {1, 2, 3, 4, 5, 6, 7, 8});
+  model.Invoke();
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(2, 4, 4));
+  EXPECT_THAT(model.GetOutput(), ElementsAreArray({1, 0, 0, 0,  //
+                                                   0, 2, 0, 0,  //
+                                                   0, 0, 3, 0,  //
+                                                   0, 0, 0, 4,  //
+                                                   5, 0, 0, 0,  //
+                                                   0, 6, 0, 0,  //
+                                                   0, 0, 7, 0,  //
+                                                   0, 0, 0, 8}));
+  EXPECT_THAT(model.GetOutputType(), TfLiteType::kTfLiteInt32);
 }
 
 TEST(MatrixDiagTest, DegenerateCase) {
-    MatrixDiagOpModel<uint8_t> model({TensorType_UINT8, {1}});
-    model.PopulateTensor<uint8_t>(model.input(), {1});
-    model.Invoke();
-    EXPECT_THAT(model.GetOutputShape(), ElementsAre(1, 1));
-    EXPECT_THAT(model.GetOutput(), ElementsAreArray({1}));
-    EXPECT_THAT(model.GetOutputType(), TfLiteType::kTfLiteUInt8);
+  MatrixDiagOpModel<uint8_t> model({TensorType_UINT8, {1}});
+  model.PopulateTensor<uint8_t>(model.input(), {1});
+  model.Invoke();
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(1, 1));
+  EXPECT_THAT(model.GetOutput(), ElementsAreArray({1}));
+  EXPECT_THAT(model.GetOutputType(), TfLiteType::kTfLiteUInt8);
 }
 
 }  // namespace
