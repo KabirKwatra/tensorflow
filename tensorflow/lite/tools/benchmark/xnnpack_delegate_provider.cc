@@ -23,46 +23,43 @@ namespace tflite {
 namespace benchmark {
 
 class XnnpackDelegateProvider : public DelegateProvider {
-public:
-    std::vector<Flag> CreateFlags(BenchmarkParams* params) const final;
+ public:
+  std::vector<Flag> CreateFlags(BenchmarkParams* params) const final;
 
-    void AddParams(BenchmarkParams* params) const final;
+  void AddParams(BenchmarkParams* params) const final;
 
-    void LogParams(const BenchmarkParams& params) const final;
+  void LogParams(const BenchmarkParams& params) const final;
 
-    TfLiteDelegatePtr CreateTfLiteDelegate(
-        const BenchmarkParams& params) const final;
+  TfLiteDelegatePtr CreateTfLiteDelegate(
+      const BenchmarkParams& params) const final;
 
-    std::string GetName() const final {
-        return "XNNPACK";
-    }
+  std::string GetName() const final { return "XNNPACK"; }
 };
 REGISTER_DELEGATE_PROVIDER(XnnpackDelegateProvider);
 
 std::vector<Flag> XnnpackDelegateProvider::CreateFlags(
     BenchmarkParams* params) const {
-    std::vector<Flag> flags = {
-        CreateFlag<bool>("use_xnnpack", params, "use XNNPack")
-    };
-    return flags;
+  std::vector<Flag> flags = {
+      CreateFlag<bool>("use_xnnpack", params, "use XNNPack")};
+  return flags;
 }
 
 void XnnpackDelegateProvider::AddParams(BenchmarkParams* params) const {
-    params->AddParam("use_xnnpack", BenchmarkParam::Create<bool>(false));
+  params->AddParam("use_xnnpack", BenchmarkParam::Create<bool>(false));
 }
 
 void XnnpackDelegateProvider::LogParams(const BenchmarkParams& params) const {
-    TFLITE_LOG(INFO) << "Use xnnpack : [" << params.Get<bool>("use_xnnpack")
-                     << "]";
+  TFLITE_LOG(INFO) << "Use xnnpack : [" << params.Get<bool>("use_xnnpack")
+                   << "]";
 }
 
 TfLiteDelegatePtr XnnpackDelegateProvider::CreateTfLiteDelegate(
     const BenchmarkParams& params) const {
-    if (params.Get<bool>("use_xnnpack")) {
-        return evaluation::CreateXNNPACKDelegate(
-                   params.Get<int32_t>("num_threads"));
-    }
-    return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
+  if (params.Get<bool>("use_xnnpack")) {
+    return evaluation::CreateXNNPACKDelegate(
+        params.Get<int32_t>("num_threads"));
+  }
+  return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
 }
 
 }  // namespace benchmark

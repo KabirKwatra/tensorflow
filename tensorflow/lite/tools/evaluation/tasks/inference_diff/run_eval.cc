@@ -37,75 +37,75 @@ bool EvaluateModel(const std::string& model_file_path,
                    const std::string& delegate, int num_runs,
                    const std::string& output_file_path,
                    int num_interpreter_threads) {
-    // Initialize evaluation stage.
-    EvaluationStageConfig eval_config;
-    eval_config.set_name("inference_profiling");
-    auto* inference_params =
-        eval_config.mutable_specification()->mutable_tflite_inference_params();
-    inference_params->set_model_file_path(model_file_path);
-    inference_params->set_num_threads(num_interpreter_threads);
-    // This ensures that latency measurement isn't hampered by the time spent in
-    // generating random data.
-    inference_params->set_invocations_per_run(3);
-    inference_params->set_delegate(ParseStringToDelegateType(delegate));
-    if (!delegate.empty() &&
-            inference_params->delegate() == TfliteInferenceParams::NONE) {
-        LOG(WARNING) << "Unsupported TFLite delegate: " << delegate;
-        return false;
-    }
-    InferenceProfilerStage eval(eval_config);
-    if (eval.Init() != kTfLiteOk) return false;
+  // Initialize evaluation stage.
+  EvaluationStageConfig eval_config;
+  eval_config.set_name("inference_profiling");
+  auto* inference_params =
+      eval_config.mutable_specification()->mutable_tflite_inference_params();
+  inference_params->set_model_file_path(model_file_path);
+  inference_params->set_num_threads(num_interpreter_threads);
+  // This ensures that latency measurement isn't hampered by the time spent in
+  // generating random data.
+  inference_params->set_invocations_per_run(3);
+  inference_params->set_delegate(ParseStringToDelegateType(delegate));
+  if (!delegate.empty() &&
+      inference_params->delegate() == TfliteInferenceParams::NONE) {
+    LOG(WARNING) << "Unsupported TFLite delegate: " << delegate;
+    return false;
+  }
+  InferenceProfilerStage eval(eval_config);
+  if (eval.Init() != kTfLiteOk) return false;
 
-    // Run inference & check diff for specified number of runs.
-    for (int i = 0; i < num_runs; ++i) {
-        if (eval.Run() != kTfLiteOk) return false;
-    }
+  // Run inference & check diff for specified number of runs.
+  for (int i = 0; i < num_runs; ++i) {
+    if (eval.Run() != kTfLiteOk) return false;
+  }
 
-    // Output latency & diff metrics.
-    std::ofstream metrics_ofile;
-    metrics_ofile.open(output_file_path, std::ios::out);
-    metrics_ofile << eval.LatestMetrics().DebugString();
-    metrics_ofile.close();
-    return true;
+  // Output latency & diff metrics.
+  std::ofstream metrics_ofile;
+  metrics_ofile.open(output_file_path, std::ios::out);
+  metrics_ofile << eval.LatestMetrics().DebugString();
+  metrics_ofile.close();
+  return true;
 }
 
 int Main(int argc, char* argv[]) {
-    // Command Line Flags.
-    std::string model_file_path;
-    std::string output_file_path;
-    std::string delegate;
-    int num_runs = 50;
-    int num_interpreter_threads = 1;
-    std::vector<tflite::Flag> flag_list = {
-        tflite::Flag::CreateFlag(kModelFileFlag, &model_file_path,
-                                 "Path to test tflite model file."),
-        tflite::Flag::CreateFlag(kOutputFilePathFlag, &output_file_path,
-                                 "File to output metrics proto to."),
-        tflite::Flag::CreateFlag(kNumRunsFlag, &num_runs,
-                                 "Number of runs of test & reference inference "
-                                 "each. Default value: 50"),
-        tflite::Flag::CreateFlag(
-            kInterpreterThreadsFlag, &num_interpreter_threads,
-            "Number of interpreter threads to use for test inference."),
-        tflite::Flag::CreateFlag(
-            kDelegateFlag, &delegate,
-            "Delegate to use for test inference, if available. "
-            "Must be one of {'nnapi', 'gpu', 'hexagon'}"),
-    };
-    tflite::Flags::Parse(&argc, const_cast<const char**>(argv), flag_list);
+  // Command Line Flags.
+  std::string model_file_path;
+  std::string output_file_path;
+  std::string delegate;
+  int num_runs = 50;
+  int num_interpreter_threads = 1;
+  std::vector<tflite::Flag> flag_list = {
+      tflite::Flag::CreateFlag(kModelFileFlag, &model_file_path,
+                               "Path to test tflite model file."),
+      tflite::Flag::CreateFlag(kOutputFilePathFlag, &output_file_path,
+                               "File to output metrics proto to."),
+      tflite::Flag::CreateFlag(kNumRunsFlag, &num_runs,
+                               "Number of runs of test & reference inference "
+                               "each. Default value: 50"),
+      tflite::Flag::CreateFlag(
+          kInterpreterThreadsFlag, &num_interpreter_threads,
+          "Number of interpreter threads to use for test inference."),
+      tflite::Flag::CreateFlag(
+          kDelegateFlag, &delegate,
+          "Delegate to use for test inference, if available. "
+          "Must be one of {'nnapi', 'gpu', 'hexagon'}"),
+  };
+  tflite::Flags::Parse(&argc, const_cast<const char**>(argv), flag_list);
 
-    if (!EvaluateModel(model_file_path, delegate, num_runs, output_file_path,
-                       num_interpreter_threads)) {
-        LOG(ERROR) << "Could not evaluate model!";
-        return EXIT_FAILURE;
-    }
+  if (!EvaluateModel(model_file_path, delegate, num_runs, output_file_path,
+                     num_interpreter_threads)) {
+    LOG(ERROR) << "Could not evaluate model!";
+    return EXIT_FAILURE;
+  }
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
 
 }  // namespace evaluation
 }  // namespace tflite
 
 int main(int argc, char* argv[]) {
-    return tflite::evaluation::Main(argc, argv);
+  return tflite::evaluation::Main(argc, argv);
 }
