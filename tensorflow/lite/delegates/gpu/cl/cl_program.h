@@ -30,17 +30,17 @@ namespace gpu {
 namespace cl {
 
 enum class CompilerOptions {
-  // ADRENO_FULL_SIMD_LINE:
-  //   Adreno can have 2 sizes for SIMD size.
-  //   On Adreno 4xx/5xx it is 32/64, on Adreno6xx it is 64/128.
-  //   Some our algorithms actually rely on exact size, for example on full
-  //   SIMD size, so we need this define.
-  //   This define is actually -qcom-accelerate-16-bit, but it controls SIMD
-  //   size.
-  ADRENO_FULL_SIMD_LINE,
-  ADRENO_MORE_WAVES,
-  POWERVR_FP16,
-  CL_OPT_DISABLE
+    // ADRENO_FULL_SIMD_LINE:
+    //   Adreno can have 2 sizes for SIMD size.
+    //   On Adreno 4xx/5xx it is 32/64, on Adreno6xx it is 64/128.
+    //   Some our algorithms actually rely on exact size, for example on full
+    //   SIMD size, so we need this define.
+    //   This define is actually -qcom-accelerate-16-bit, but it controls SIMD
+    //   size.
+    ADRENO_FULL_SIMD_LINE,
+    ADRENO_MORE_WAVES,
+    POWERVR_FP16,
+    CL_OPT_DISABLE
 };
 
 std::string CompilerOptionsToString(
@@ -48,35 +48,39 @@ std::string CompilerOptionsToString(
     const std::vector<CompilerOptions>& compiler_options);
 
 class CLProgram {
- public:
-  CLProgram() {}
-  CLProgram(cl_program program, cl_device_id device_id);
+public:
+    CLProgram() {}
+    CLProgram(cl_program program, cl_device_id device_id);
 
-  // Move only
-  CLProgram(CLProgram&& program);
-  CLProgram& operator=(CLProgram&& program);
-  CLProgram(const CLProgram&) = delete;
-  CLProgram& operator=(const CLProgram&) = delete;
+    // Move only
+    CLProgram(CLProgram&& program);
+    CLProgram& operator=(CLProgram&& program);
+    CLProgram(const CLProgram&) = delete;
+    CLProgram& operator=(const CLProgram&) = delete;
 
-  ~CLProgram();
+    ~CLProgram();
 
-  cl_program program() const { return program_; }
+    cl_program program() const {
+        return program_;
+    }
 
-  // Return the cl_device_id associated with the program object.
-  // This can be the device associated with context on which the program object
-  // has been created or can be device that was specified when a program object
-  // was created using clCreateProgramWithBinary.
-  cl_device_id GetDeviceId() const { return device_id_; }
+    // Return the cl_device_id associated with the program object.
+    // This can be the device associated with context on which the program object
+    // has been created or can be device that was specified when a program object
+    // was created using clCreateProgramWithBinary.
+    cl_device_id GetDeviceId() const {
+        return device_id_;
+    }
 
-  Status GetBinary(std::vector<uint8_t>* result) const;
+    Status GetBinary(std::vector<uint8_t>* result) const;
 
- private:
-  void Release();
+private:
+    void Release();
 
-  cl_program program_ = nullptr;
+    cl_program program_ = nullptr;
 
-  // reference
-  cl_device_id device_id_ = nullptr;
+    // reference
+    cl_device_id device_id_ = nullptr;
 };
 
 Status CreateCLProgram(const std::string& code,

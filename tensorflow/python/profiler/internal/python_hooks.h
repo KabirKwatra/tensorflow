@@ -29,21 +29,21 @@ namespace py = ::pybind11;
 
 // Singleton for tracing python function calls.
 class PythonHooks {
- public:
-  static PythonHooks* GetSingleton();
+public:
+    static PythonHooks* GetSingleton();
 
-  void Start();
-  void Stop();
-  void Finalize();
-  void ProfileSlow(const py::object& frame, const string& event,
-                   const py::object& arg);
-  void ProfileFast(PyFrameObject* frame, int what, PyObject* arg);
+    void Start();
+    void Stop();
+    void Finalize();
+    void ProfileSlow(const py::object& frame, const string& event,
+                     const py::object& arg);
+    void ProfileFast(PyFrameObject* frame, int what, PyObject* arg);
 
- private:
-  void SetProfilerInAllThreads();
-  void ClearProfilerInAllThreads();
+private:
+    void SetProfilerInAllThreads();
+    void ClearProfilerInAllThreads();
 
-  absl::flat_hash_map<int64, std::vector<std::unique_ptr<TraceMe>>> tracemes_;
+    absl::flat_hash_map<int64, std::vector<std::unique_ptr<TraceMe>>> tracemes_;
 };
 
 }  // namespace profiler

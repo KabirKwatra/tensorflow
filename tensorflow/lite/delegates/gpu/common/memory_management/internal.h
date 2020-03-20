@@ -34,12 +34,12 @@ const size_t kNotAssigned = std::numeric_limits<size_t>::max();
 // they are sorted.
 template <typename TensorSizeT>
 struct TensorUsageWithIndex {
-  const TensorUsageRecord<TensorSizeT>* usage_record;
-  size_t idx;
+    const TensorUsageRecord<TensorSizeT>* usage_record;
+    size_t idx;
 
-  TensorUsageWithIndex(const TensorUsageRecord<TensorSizeT>* usage_record,
-                       size_t idx)
-      : usage_record(usage_record), idx(idx) {}
+    TensorUsageWithIndex(const TensorUsageRecord<TensorSizeT>* usage_record,
+                         size_t idx)
+        : usage_record(usage_record), idx(idx) {}
 };
 
 bool CompareBySize(const TensorUsageWithIndex<size_t>& first,
@@ -67,32 +67,32 @@ size_t AbsDiffInElements(const uint3& first_size, const uint3& second_size);
 
 template <typename ObjectSizeT>
 struct PoolRecord {
-  PoolRecord(ObjectSizeT size, size_t obj_id)
-      : object_size(size), object_id(obj_id) {}
+    PoolRecord(ObjectSizeT size, size_t obj_id)
+        : object_size(size), object_id(obj_id) {}
 
-  // Objects in pool are ordered by size.
-  bool operator<(const PoolRecord& other) const {
-    return (object_size < other.object_size) ||
-           (object_size == other.object_size && object_id < other.object_id);
-  }
+    // Objects in pool are ordered by size.
+    bool operator<(const PoolRecord& other) const {
+        return (object_size < other.object_size) ||
+               (object_size == other.object_size && object_id < other.object_id);
+    }
 
-  ObjectSizeT object_size;
-  size_t object_id;
+    ObjectSizeT object_size;
+    size_t object_id;
 };
 
 struct QueueRecord {
-  QueueRecord(TaskId task_id, size_t obj_id)
-      : last_task(task_id), object_id(obj_id) {}
+    QueueRecord(TaskId task_id, size_t obj_id)
+        : last_task(task_id), object_id(obj_id) {}
 
-  // Objects in queue are ordered by last_task.
-  bool operator<(const QueueRecord& other) const {
-    return (last_task > other.last_task) ||
-           (last_task == other.last_task && object_id > other.object_id);
-  }
+    // Objects in queue are ordered by last_task.
+    bool operator<(const QueueRecord& other) const {
+        return (last_task > other.last_task) ||
+               (last_task == other.last_task && object_id > other.object_id);
+    }
 
-  // Last task, where shared object is used.
-  TaskId last_task;
-  size_t object_id;
+    // Last task, where shared object is used.
+    TaskId last_task;
+    size_t object_id;
 };
 
 // Returns a vector that contains TaskProfile for each task.

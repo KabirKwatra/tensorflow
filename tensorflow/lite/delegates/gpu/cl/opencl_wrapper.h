@@ -51,14 +51,14 @@ typedef cl_int(CL_API_CALL *PFN_clCreateSubDevices)(
     cl_uint /* num_devices */, cl_device_id * /* out_devices */,
     cl_uint * /* num_devices_ret */) CL_API_SUFFIX__VERSION_1_2;
 typedef cl_int(CL_API_CALL *PFN_clRetainDevice)(cl_device_id /* device */)
-    CL_API_SUFFIX__VERSION_1_2;
+CL_API_SUFFIX__VERSION_1_2;
 typedef cl_int(CL_API_CALL *PFN_clReleaseDevice)(cl_device_id /* device */)
-    CL_API_SUFFIX__VERSION_1_2;
+CL_API_SUFFIX__VERSION_1_2;
 typedef cl_context(CL_API_CALL *PFN_clCreateContext)(
     const cl_context_properties * /* properties */, cl_uint /* num_devices */,
     const cl_device_id * /* devices */,
     void(CL_CALLBACK * /* pfn_notify */)(const char *, const void *, size_t,
-                                         void *),
+            void *),
     void * /* user_data */,
     cl_int * /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0;
 typedef cl_context(CL_API_CALL *PFN_clCreateContextFromType)(
@@ -69,9 +69,9 @@ typedef cl_context(CL_API_CALL *PFN_clCreateContextFromType)(
     void * /* user_data */,
     cl_int * /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clRetainContext)(cl_context /* context */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clReleaseContext)(cl_context /* context */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clGetContextInfo)(
     cl_context /* context */, cl_context_info /* param_name */,
     size_t /* param_value_size */, void * /* param_value */,
@@ -109,9 +109,9 @@ typedef cl_mem(CL_API_CALL *PFN_clCreatePipe)(
     const cl_pipe_properties * /* properties */,
     cl_int * /* errcode_ret */) CL_API_SUFFIX__VERSION_2_0;
 typedef cl_int(CL_API_CALL *PFN_clRetainMemObject)(cl_mem /* memobj */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clReleaseMemObject)(cl_mem /* memobj */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clGetSupportedImageFormats)(
     cl_context /* context */, cl_mem_flags /* flags */,
     cl_mem_object_type /* image_type */, cl_uint /* num_entries */,
@@ -138,16 +138,16 @@ typedef void *(CL_API_CALL *PFN_clSVMAlloc)(
     cl_context /* context */, cl_svm_mem_flags /* flags */, size_t /* size */,
     cl_uint /* alignment */)CL_API_SUFFIX__VERSION_2_0;
 typedef void(CL_API_CALL *PFN_clSVMFree)(cl_context /* context */,
-                                         void * /* svm_pointer */)
-    CL_API_SUFFIX__VERSION_2_0;
+        void * /* svm_pointer */)
+CL_API_SUFFIX__VERSION_2_0;
 typedef cl_sampler(CL_API_CALL *PFN_clCreateSamplerWithProperties)(
     cl_context /* context */,
     const cl_sampler_properties * /* normalized_coords */,
     cl_int * /* errcode_ret */) CL_API_SUFFIX__VERSION_2_0;
 typedef cl_int(CL_API_CALL *PFN_clRetainSampler)(cl_sampler /* sampler */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clReleaseSampler)(cl_sampler /* sampler */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clGetSamplerInfo)(
     cl_sampler /* sampler */, cl_sampler_info /* param_name */,
     size_t /* param_value_size */, void * /* param_value */,
@@ -166,14 +166,14 @@ typedef cl_program(CL_API_CALL *PFN_clCreateProgramWithBuiltInKernels)(
     const cl_device_id * /* device_list */, const char * /* kernel_names */,
     cl_int * /* errcode_ret */) CL_API_SUFFIX__VERSION_1_2;
 typedef cl_int(CL_API_CALL *PFN_clRetainProgram)(cl_program /* program */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clReleaseProgram)(cl_program /* program */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clBuildProgram)(
     cl_program /* program */, cl_uint /* num_devices */,
     const cl_device_id * /* device_list */, const char * /* options */,
     void(CL_CALLBACK * /* pfn_notify */)(cl_program /* program */,
-                                         void * /* user_data */),
+            void * /* user_data */),
     void * /* user_data */) CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clCompileProgram)(
     cl_program /* program */, cl_uint /* num_devices */,
@@ -181,14 +181,14 @@ typedef cl_int(CL_API_CALL *PFN_clCompileProgram)(
     cl_uint /* num_input_headers */, const cl_program * /* input_headers */,
     const char ** /* header_include_names */,
     void(CL_CALLBACK * /* pfn_notify */)(cl_program /* program */,
-                                         void * /* user_data */),
+            void * /* user_data */),
     void * /* user_data */) CL_API_SUFFIX__VERSION_1_2;
 typedef cl_program(CL_API_CALL *PFN_clLinkProgram)(
     cl_context /* context */, cl_uint /* num_devices */,
     const cl_device_id * /* device_list */, const char * /* options */,
     cl_uint /* num_input_programs */, const cl_program * /* input_programs */,
     void(CL_CALLBACK * /* pfn_notify */)(cl_program /* program */,
-                                         void * /* user_data */),
+            void * /* user_data */),
     void * /* user_data */,
     cl_int * /* errcode_ret */) CL_API_SUFFIX__VERSION_1_2;
 typedef cl_int(CL_API_CALL *PFN_clUnloadPlatformCompiler)(
@@ -210,9 +210,9 @@ typedef cl_int(CL_API_CALL *PFN_clCreateKernelsInProgram)(
     cl_kernel * /* kernels */,
     cl_uint * /* num_kernels_ret */) CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clRetainKernel)(cl_kernel /* kernel */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clReleaseKernel)(cl_kernel /* kernel */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clSetKernelArg)(
     cl_kernel /* kernel */, cl_uint /* arg_index */, size_t /* arg_size */,
     const void * /* arg_value */) CL_API_SUFFIX__VERSION_1_0;
@@ -245,12 +245,12 @@ typedef cl_int(CL_API_CALL *PFN_clGetEventInfo)(
     size_t /* param_value_size */, void * /* param_value */,
     size_t * /* param_value_size_ret */) CL_API_SUFFIX__VERSION_1_0;
 typedef cl_event(CL_API_CALL *PFN_clCreateUserEvent)(cl_context /* context */,
-                                                     cl_int * /* errcode_ret */)
-    CL_API_SUFFIX__VERSION_1_1;
+        cl_int * /* errcode_ret */)
+CL_API_SUFFIX__VERSION_1_1;
 typedef cl_int(CL_API_CALL *PFN_clRetainEvent)(cl_event /* event */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clReleaseEvent)(cl_event /* event */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clSetUserEventStatus)(
     cl_event /* event */,
     cl_int /* execution_status */) CL_API_SUFFIX__VERSION_1_1;
@@ -263,9 +263,9 @@ typedef cl_int(CL_API_CALL *PFN_clGetEventProfilingInfo)(
     size_t /* param_value_size */, void * /* param_value */,
     size_t * /* param_value_size_ret */) CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clFlush)(cl_command_queue /* command_queue */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clFinish)(cl_command_queue /* command_queue */)
-    CL_API_SUFFIX__VERSION_1_0;
+CL_API_SUFFIX__VERSION_1_0;
 typedef cl_int(CL_API_CALL *PFN_clEnqueueReadBuffer)(
     cl_command_queue /* command_queue */, cl_mem /* buffer */,
     cl_bool /* blocking_read */, size_t /* offset */, size_t /* size */,
@@ -413,9 +413,9 @@ typedef cl_int(CL_API_CALL *PFN_clEnqueueSVMFree)(
     cl_command_queue /* command_queue */, cl_uint /* num_svm_pointers */,
     void *[] /* svm_pointers[] */,
     void(CL_CALLBACK * /*pfn_free_func*/)(cl_command_queue /* queue */,
-                                          cl_uint /* num_svm_pointers */,
-                                          void *[] /* svm_pointers[] */,
-                                          void * /* user_data */),
+            cl_uint /* num_svm_pointers */,
+            void *[] /* svm_pointers[] */,
+            void * /* user_data */),
     void * /* user_data */, cl_uint /* num_events_in_wait_list */,
     const cl_event * /* event_wait_list */,
     cl_event * /* event */) CL_API_SUFFIX__VERSION_2_0;
@@ -480,7 +480,7 @@ typedef cl_int(CL_API_CALL *PFN_clEnqueueTask)(
 
 // OpenGL sharing
 typedef cl_mem(CL_API_CALL *PFN_clCreateFromGLBuffer)(cl_context, cl_mem_flags,
-                                                      cl_GLuint, int *);
+        cl_GLuint, int *);
 typedef cl_mem(CL_API_CALL *PFN_clCreateFromGLTexture)(
     cl_context /* context */, cl_mem_flags /* flags */, cl_GLenum /* target */,
     cl_GLint /* miplevel */, cl_GLuint /* texture */,
@@ -535,7 +535,7 @@ extern PFN_clRetainContext clRetainContext;
 extern PFN_clReleaseContext clReleaseContext;
 extern PFN_clGetContextInfo clGetContextInfo;
 extern PFN_clCreateCommandQueueWithProperties
-    clCreateCommandQueueWithProperties;
+clCreateCommandQueueWithProperties;
 extern PFN_clRetainCommandQueue clRetainCommandQueue;
 extern PFN_clReleaseCommandQueue clReleaseCommandQueue;
 extern PFN_clGetCommandQueueInfo clGetCommandQueueInfo;
@@ -614,7 +614,7 @@ extern PFN_clEnqueueSVMMemFill clEnqueueSVMMemFill;
 extern PFN_clEnqueueSVMMap clEnqueueSVMMap;
 extern PFN_clEnqueueSVMUnmap clEnqueueSVMUnmap;
 extern PFN_clGetExtensionFunctionAddressForPlatform
-    clGetExtensionFunctionAddressForPlatform;
+clGetExtensionFunctionAddressForPlatform;
 extern PFN_clCreateImage2D clCreateImage2D;
 extern PFN_clCreateImage3D clCreateImage3D;
 extern PFN_clEnqueueMarker clEnqueueMarker;

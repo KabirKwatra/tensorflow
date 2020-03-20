@@ -41,16 +41,16 @@ constexpr char kMapGraphDefFile[] = "map_graph_def.pbtxt";
 }  // namespace
 
 Status map_test_case(GraphDefTestCase* test_case) {
-  std::string filepath = io::JoinPath(kTestdataDir, kMapGraphDefFile);
-  GraphDef graph_def;
-  TF_RETURN_IF_ERROR(ReadTextProto(Env::Default(), filepath, &graph_def));
-  int num_elements = 10;
-  std::vector<std::vector<Tensor>> outputs(num_elements);
-  for (int i = 0; i < num_elements; ++i) {
-    outputs[i] = CreateTensors<int64>(TensorShape{}, {{i * i}});
-  }
-  *test_case = {"MapGraph", graph_def, outputs};
-  return Status::OK();
+    std::string filepath = io::JoinPath(kTestdataDir, kMapGraphDefFile);
+    GraphDef graph_def;
+    TF_RETURN_IF_ERROR(ReadTextProto(Env::Default(), filepath, &graph_def));
+    int num_elements = 10;
+    std::vector<std::vector<Tensor>> outputs(num_elements);
+    for (int i = 0; i < num_elements; ++i) {
+        outputs[i] = CreateTensors<int64>(TensorShape{}, {{i * i}});
+    }
+    *test_case = {"MapGraph", graph_def, outputs};
+    return Status::OK();
 }
 
 }  // namespace test_util

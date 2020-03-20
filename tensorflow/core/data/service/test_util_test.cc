@@ -25,31 +25,31 @@ namespace data {
 namespace test_util {
 
 TEST(TestUtil, MapTestCase) {
-  GraphDefTestCase test_case;
-  TF_ASSERT_OK(map_test_case(&test_case));
-  standalone::Dataset::Params params;
-  std::unique_ptr<standalone::Dataset> dataset;
-  TF_ASSERT_OK(
-      standalone::Dataset::FromGraph(params, test_case.graph_def, &dataset));
+    GraphDefTestCase test_case;
+    TF_ASSERT_OK(map_test_case(&test_case));
+    standalone::Dataset::Params params;
+    std::unique_ptr<standalone::Dataset> dataset;
+    TF_ASSERT_OK(
+        standalone::Dataset::FromGraph(params, test_case.graph_def, &dataset));
 
-  std::unique_ptr<standalone::Iterator> iterator;
-  TF_ASSERT_OK(dataset->MakeIterator(&iterator));
+    std::unique_ptr<standalone::Iterator> iterator;
+    TF_ASSERT_OK(dataset->MakeIterator(&iterator));
 
-  bool end_of_input = false;
+    bool end_of_input = false;
 
-  std::vector<std::vector<Tensor>> result;
-  while (!end_of_input) {
-    std::vector<tensorflow::Tensor> outputs;
-    TF_ASSERT_OK(iterator->GetNext(&outputs, &end_of_input));
-    if (!end_of_input) {
-      result.push_back(outputs);
+    std::vector<std::vector<Tensor>> result;
+    while (!end_of_input) {
+        std::vector<tensorflow::Tensor> outputs;
+        TF_ASSERT_OK(iterator->GetNext(&outputs, &end_of_input));
+        if (!end_of_input) {
+            result.push_back(outputs);
+        }
     }
-  }
-  ASSERT_EQ(result.size(), test_case.output.size());
-  for (int i = 0; i < result.size(); ++i) {
-    TF_EXPECT_OK(DatasetOpsTestBase::ExpectEqual(result[i], test_case.output[i],
-                                                 /*compare_order=*/true));
-  }
+    ASSERT_EQ(result.size(), test_case.output.size());
+    for (int i = 0; i < result.size(); ++i) {
+        TF_EXPECT_OK(DatasetOpsTestBase::ExpectEqual(result[i], test_case.output[i],
+                     /*compare_order=*/true));
+    }
 }
 
 }  // namespace test_util

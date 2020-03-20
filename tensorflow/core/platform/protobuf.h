@@ -60,18 +60,18 @@ bool ParseProtoUnlimited(protobuf::MessageLite* proto, const void* serialized,
                          size_t size);
 inline bool ParseProtoUnlimited(protobuf::MessageLite* proto,
                                 const tstring& serialized) {
-  return ParseProtoUnlimited(proto, serialized.data(), serialized.size());
+    return ParseProtoUnlimited(proto, serialized.data(), serialized.size());
 }
 
 // Returns the string value for the value of a string or bytes protobuf field.
 inline const std::string& ProtobufStringToString(const std::string& s) {
-  return s;
+    return s;
 }
 
 // Set <dest> to <src>. Swapping is allowed, as <src> does not need to be
 // preserved.
 inline void SetProtobufStringSwapAllowed(std::string* src, std::string* dest) {
-  *dest = std::move(*src);
+    *dest = std::move(*src);
 }
 
 #if defined(TENSORFLOW_PROTOBUF_USES_CORD)
@@ -80,42 +80,42 @@ inline void SetProtobufStringSwapAllowed(std::string* src, std::string* dest) {
 // in core/platform/protobuf.h, so the generation code doesn't need to determine
 // if the type is Cord or string at generation time.
 inline std::string ProtobufStringToString(const Cord& s) {
-  return s.ToString();
+    return s.ToString();
 }
 inline void SetProtobufStringSwapAllowed(std::string* src, Cord* dest) {
-  dest->CopyFrom(*src);
+    dest->CopyFrom(*src);
 }
 #endif  // defined(TENSORFLOW_PROTOBUF_USES_CORD)
 
 inline bool SerializeToTString(const protobuf::MessageLite& proto,
                                tstring* output) {
-  size_t size = proto.ByteSizeLong();
-  output->resize_uninitialized(size);
-  return proto.SerializeToArray(output->data(), static_cast<int>(size));
+    size_t size = proto.ByteSizeLong();
+    output->resize_uninitialized(size);
+    return proto.SerializeToArray(output->data(), static_cast<int>(size));
 }
 
 inline bool ParseFromTString(const tstring& input,
                              protobuf::MessageLite* proto) {
-  return proto->ParseFromArray(input.data(), static_cast<int>(input.size()));
+    return proto->ParseFromArray(input.data(), static_cast<int>(input.size()));
 }
 
 // Analogue to StringOutputStream for tstring.
 class TStringOutputStream : public protobuf::io::ZeroCopyOutputStream {
- public:
-  explicit TStringOutputStream(tstring* target);
-  ~TStringOutputStream() override = default;
+public:
+    explicit TStringOutputStream(tstring* target);
+    ~TStringOutputStream() override = default;
 
-  TStringOutputStream(const TStringOutputStream&) = delete;
-  void operator=(const TStringOutputStream&) = delete;
+    TStringOutputStream(const TStringOutputStream&) = delete;
+    void operator=(const TStringOutputStream&) = delete;
 
-  bool Next(void** data, int* size) override;
-  void BackUp(int count) override;
-  int64_t ByteCount() const override;
+    bool Next(void** data, int* size) override;
+    void BackUp(int count) override;
+    int64_t ByteCount() const override;
 
- private:
-  static const int kMinimumSize = 16;
+private:
+    static const int kMinimumSize = 16;
 
-  tstring* target_;
+    tstring* target_;
 };
 
 }  // namespace tensorflow

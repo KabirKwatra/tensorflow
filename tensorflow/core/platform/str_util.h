@@ -104,7 +104,7 @@ std::string StringReplace(StringPiece s, StringPiece oldsub, StringPiece newsub,
 // Join functionality
 template <typename T>
 std::string Join(const T& s, const char* sep) {
-  return absl::StrJoin(s, sep);
+    return absl::StrJoin(s, sep);
 }
 
 // A variant of Join where for each element of "s", f(&dest_string, elem)
@@ -112,41 +112,45 @@ std::string Join(const T& s, const char* sep) {
 //   [](string* result, ElemType elem)
 template <typename T, typename Formatter>
 std::string Join(const T& s, const char* sep, Formatter f) {
-  return absl::StrJoin(s, sep, f);
+    return absl::StrJoin(s, sep, f);
 }
 
 struct AllowEmpty {
-  bool operator()(StringPiece sp) const { return true; }
+    bool operator()(StringPiece sp) const {
+        return true;
+    }
 };
 struct SkipEmpty {
-  bool operator()(StringPiece sp) const { return !sp.empty(); }
+    bool operator()(StringPiece sp) const {
+        return !sp.empty();
+    }
 };
 struct SkipWhitespace {
-  bool operator()(StringPiece sp) const {
-    return !absl::StripTrailingAsciiWhitespace(sp).empty();
-  }
+    bool operator()(StringPiece sp) const {
+        return !absl::StripTrailingAsciiWhitespace(sp).empty();
+    }
 };
 
 // Split strings using any of the supplied delimiters. For example:
 // Split("a,b.c,d", ".,") would return {"a", "b", "c", "d"}.
 inline std::vector<string> Split(StringPiece text, StringPiece delims) {
-  return text.empty() ? std::vector<string>()
-                      : absl::StrSplit(text, absl::ByAnyChar(delims));
+    return text.empty() ? std::vector<string>()
+           : absl::StrSplit(text, absl::ByAnyChar(delims));
 }
 
 template <typename Predicate>
 std::vector<string> Split(StringPiece text, StringPiece delims, Predicate p) {
-  return text.empty() ? std::vector<string>()
-                      : absl::StrSplit(text, absl::ByAnyChar(delims), p);
+    return text.empty() ? std::vector<string>()
+           : absl::StrSplit(text, absl::ByAnyChar(delims), p);
 }
 
 inline std::vector<string> Split(StringPiece text, char delim) {
-  return text.empty() ? std::vector<string>() : absl::StrSplit(text, delim);
+    return text.empty() ? std::vector<string>() : absl::StrSplit(text, delim);
 }
 
 template <typename Predicate>
 std::vector<string> Split(StringPiece text, char delim, Predicate p) {
-  return text.empty() ? std::vector<string>() : absl::StrSplit(text, delim, p);
+    return text.empty() ? std::vector<string>() : absl::StrSplit(text, delim, p);
 }
 
 // StartsWith()

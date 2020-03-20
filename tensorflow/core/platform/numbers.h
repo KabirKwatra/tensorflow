@@ -124,27 +124,27 @@ bool safe_strtof(StringPiece str, float* value);
 bool safe_strtod(StringPiece str, double* value);
 
 inline bool ProtoParseNumeric(StringPiece s, int32* value) {
-  return safe_strto32(s, value);
+    return safe_strto32(s, value);
 }
 
 inline bool ProtoParseNumeric(StringPiece s, uint32* value) {
-  return safe_strtou32(s, value);
+    return safe_strtou32(s, value);
 }
 
 inline bool ProtoParseNumeric(StringPiece s, int64* value) {
-  return safe_strto64(s, value);
+    return safe_strto64(s, value);
 }
 
 inline bool ProtoParseNumeric(StringPiece s, uint64* value) {
-  return safe_strtou64(s, value);
+    return safe_strtou64(s, value);
 }
 
 inline bool ProtoParseNumeric(StringPiece s, float* value) {
-  return safe_strtof(s, value);
+    return safe_strtof(s, value);
 }
 
 inline bool ProtoParseNumeric(StringPiece s, double* value) {
-  return safe_strtod(s, value);
+    return safe_strtod(s, value);
 }
 
 // Convert strings to number of type T.
@@ -152,7 +152,7 @@ inline bool ProtoParseNumeric(StringPiece s, double* value) {
 // Values may be rounded on over- and underflow.
 template <typename T>
 bool SafeStringToNumeric(StringPiece s, T* value) {
-  return ProtoParseNumeric(s, value);
+    return ProtoParseNumeric(s, value);
 }
 
 // Converts from an int64 to a human readable string representing the
