@@ -122,7 +122,6 @@ Example of building model using FeatureColumns, this can be used in a
 NOTE: Functions prefixed with "_" indicate experimental or private parts of
 the API subject to change, and should not be relied upon!
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -142,9 +141,6 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor as sparse_tensor_lib
 from tensorflow.python.framework import tensor_shape
-
-# TODO(b/118385027): Dependency on keras can be problematic if Keras moves out
-# of the main repo.
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.engine import training as keras_training
 from tensorflow.python.keras.engine.base_layer import Layer
@@ -172,6 +168,8 @@ from tensorflow.python.util import deprecation
 from tensorflow.python.util import nest
 from tensorflow.python.util.compat import collections_abc
 from tensorflow.python.util.tf_export import tf_export
+# TODO(b/118385027): Dependency on keras can be problematic if Keras moves out
+# of the main repo.
 
 
 _FEATURE_COLUMN_DEPRECATION_DATE = None

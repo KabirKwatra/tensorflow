@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """A layer that produces a dense `Tensor` based on given `feature_columns`."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
