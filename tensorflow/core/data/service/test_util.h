@@ -23,13 +23,13 @@ namespace data {
 namespace test_util {
 
 struct GraphDefTestCase {
-    // Name for the test case.
-    string name;
-    // A dataset graph.
-    GraphDef graph_def;
-    // The expected output from iterating over the dataset represented by the
-    // graph.
-    std::vector<std::vector<Tensor>> output;
+  // Name for the test case.
+  string name;
+  // A dataset graph.
+  GraphDef graph_def;
+  // The expected output from iterating over the dataset represented by the
+  // graph.
+  std::vector<std::vector<Tensor>> output;
 };
 
 // Fills in the input test_case pointer with test case data representing the

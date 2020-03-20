@@ -52,10 +52,10 @@ limitations under the License.
 ///             ComputeTaskDescriptors, which can be fused into a single GPU task.
 - (::tflite::gpu::Status)
     compileModelWithDevice:(id<MTLDevice>)device
-    taskDescriptors:
-    (const std::vector<::tflite::gpu::metal::ComputeTaskDescriptorPtr>&)taskDescriptors
-    outputBufferIDs:(const std::vector<::tflite::gpu::ValueId>&)outputBufferIDs
-    runtimeOptions:(const ::tflite::gpu::metal::RuntimeOptions&)options;
+           taskDescriptors:
+               (const std::vector<::tflite::gpu::metal::ComputeTaskDescriptorPtr>&)taskDescriptors
+           outputBufferIDs:(const std::vector<::tflite::gpu::ValueId>&)outputBufferIDs
+            runtimeOptions:(const ::tflite::gpu::metal::RuntimeOptions&)options;
 
 /// Creates intermediate buffers. The model is ready to be used after this call.
 /// @param inputDimensions Used to create resources: shaders, buffers.
@@ -65,9 +65,9 @@ limitations under the License.
 ///             compileModelWithDevice() must be made with the proper device parameter set.
 - (::tflite::gpu::Status)
     setInputDimensions:(const std::map<::tflite::gpu::ValueId, ::tflite::gpu::BHWC>&)inputDimensions
-    outputDimensions:(std::map<::tflite::gpu::ValueId, ::tflite::gpu::BHWC>*)outputDimensions
-    taskDescriptors:
-    (const std::vector<::tflite::gpu::metal::ComputeTaskDescriptorPtr>&)taskDescriptors;
+      outputDimensions:(std::map<::tflite::gpu::ValueId, ::tflite::gpu::BHWC>*)outputDimensions
+       taskDescriptors:
+           (const std::vector<::tflite::gpu::metal::ComputeTaskDescriptorPtr>&)taskDescriptors;
 
 /// Inserts all GPU compute tasks into the command encoder.
 /// @param inputOutputBuffers Must be created and passed into the method with pairs ID:buffer
@@ -79,8 +79,8 @@ limitations under the License.
 /// @discussion No GPU synchronization functions are used inside. All GPU resources must be created
 ///             with the same device which has been used in compileModelWithDevice() method.
 - (void)encodeWithEncoder:(id<MTLComputeCommandEncoder>)commandEncoder
-    inputOutputBuffers:(const std::map<::tflite::gpu::ValueId, id<MTLBuffer>>&)inputOutputBuffers
-    encoderBlock:(id<MTLComputeCommandEncoder> (^)(bool isLast))encoderBlock;
+       inputOutputBuffers:(const std::map<::tflite::gpu::ValueId, id<MTLBuffer>>&)inputOutputBuffers
+             encoderBlock:(id<MTLComputeCommandEncoder> (^)(bool isLast))encoderBlock;
 
 @end
 

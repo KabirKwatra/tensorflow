@@ -43,38 +43,38 @@ OffsetsAssignment ObjectsToOffsets(
     const ObjectsAssignment<size_t>& obj_assignment);
 
 enum class MemoryStrategy {
-    // Naive strategy is to allocate each object separately.
-    // Can be useful for debugging to see all intermediate outputs.
-    NAIVE,
+  // Naive strategy is to allocate each object separately.
+  // Can be useful for debugging to see all intermediate outputs.
+  NAIVE,
 
-    // Equality strategy allows to reuse the same part of memory for several
-    // tensors with the same size, but non-intersecting usage intervals.
-    EQUALITY,
+  // Equality strategy allows to reuse the same part of memory for several
+  // tensors with the same size, but non-intersecting usage intervals.
+  EQUALITY,
 
-    // Greedy strategy uses greedy algorithm, iterating through all the tensors in
-    // order of their first_task, to reuse memory from tensors, that
-    // won't be used anymore, for new ones.
-    GREEDY_IN_ORDER,
+  // Greedy strategy uses greedy algorithm, iterating through all the tensors in
+  // order of their first_task, to reuse memory from tensors, that
+  // won't be used anymore, for new ones.
+  GREEDY_IN_ORDER,
 
-    // Greedy by size strategy uses greedy algorithm, iterating through all the
-    // tasks in non-increasing of their breadth, and calculating allocations for
-    // tensors used in these tasks. By breadth of the task we understand sum of
-    // sizes of all tensors in its TaskProfile.
-    GREEDY_BY_BREADTH,
+  // Greedy by size strategy uses greedy algorithm, iterating through all the
+  // tasks in non-increasing of their breadth, and calculating allocations for
+  // tensors used in these tasks. By breadth of the task we understand sum of
+  // sizes of all tensors in its TaskProfile.
+  GREEDY_BY_BREADTH,
 
-    // Greedy by size strategy uses greedy algorithm, iterating through all the
-    // tensors in non-increasing of their size, to reuse memory from tensors, that
-    // won't be used anymore, for new ones.
-    GREEDY_BY_SIZE,
+  // Greedy by size strategy uses greedy algorithm, iterating through all the
+  // tensors in non-increasing of their size, to reuse memory from tensors, that
+  // won't be used anymore, for new ones.
+  GREEDY_BY_SIZE,
 
-    // Choose greedy strategy from several fast algorithms, that provides best
-    // memory allocation for the given usage records.
-    GREEDY_BEST,
+  // Choose greedy strategy from several fast algorithms, that provides best
+  // memory allocation for the given usage records.
+  GREEDY_BEST,
 
-    // Mincostflow strategy consists of building auxiliary flow graph and solving
-    // the minimum-cost flow problem in it. In the end edges with zero residual
-    // capacity determine assignment of shared objects to tensors.
-    MINCOSTFLOW,
+  // Mincostflow strategy consists of building auxiliary flow graph and solving
+  // the minimum-cost flow problem in it. In the end edges with zero residual
+  // capacity determine assignment of shared objects to tensors.
+  MINCOSTFLOW,
 };
 
 // Chooses greedy algorithm with the lowest memory consumption for given usage
@@ -94,16 +94,16 @@ Status AssignObjectsToTensors(
     const std::vector<TensorUsageRecord<TensorSizeT>>& usage_records,
     MemoryStrategy strategy, ObjectsAssignment<TensorSizeT>* assignment,
     const UsageGraph* reallocation_graph = nullptr) {
-    switch (strategy) {
+  switch (strategy) {
     case MemoryStrategy::NAIVE:
-        return NaiveAssignment(usage_records, assignment);
+      return NaiveAssignment(usage_records, assignment);
     case MemoryStrategy::EQUALITY:
-        return EqualityAssignment(usage_records, assignment);
+      return EqualityAssignment(usage_records, assignment);
     default:
-        return InternalError(
-                   "MemoryStrategy is not supported with current tensor size type.");
-    }
-    return OkStatus();
+      return InternalError(
+          "MemoryStrategy is not supported with current tensor size type.");
+  }
+  return OkStatus();
 }
 
 template <>

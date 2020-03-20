@@ -19,9 +19,9 @@ limitations under the License.
 #include <sstream>
 
 #include "absl/strings/str_join.h"
-#include "tensorflow/core/platform/status.h"
 #include "tensorflow/core/platform/logging.h"
 #include "tensorflow/core/platform/macros.h"
+#include "tensorflow/core/platform/status.h"
 #include "tensorflow/core/platform/str_util.h"
 #include "tensorflow/core/platform/strcat.h"
 
@@ -45,14 +45,14 @@ namespace internal {
 // able to completely remove PrepareForStrCat().
 template <typename T>
 typename std::enable_if<!std::is_constructible<strings::AlphaNum, T>::value,
-         std::string>::type
+                        std::string>::type
 PrepareForStrCat(const T& t) {
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
+  std::stringstream ss;
+  ss << t;
+  return ss.str();
 }
 inline const strings::AlphaNum& PrepareForStrCat(const strings::AlphaNum& a) {
-    return a;
+  return a;
 }
 
 }  // namespace internal
@@ -62,9 +62,9 @@ inline const strings::AlphaNum& PrepareForStrCat(const strings::AlphaNum& a) {
 // to be several layers of additional context.
 template <typename... Args>
 void AppendToMessage(::tensorflow::Status* status, Args... args) {
-    *status = ::tensorflow::Status(
-                  status->code(),
-                  ::tensorflow::strings::StrCat(status->error_message(), "\n\t", args...));
+  *status = ::tensorflow::Status(
+      status->code(),
+      ::tensorflow::strings::StrCat(status->error_message(), "\n\t", args...));
 }
 
 // For propagating errors when calling a function.
@@ -127,32 +127,32 @@ DECLARE_ERROR(Unauthenticated, UNAUTHENTICATED)
 // tensorflow/python/client/session.py
 // LINT.IfChange
 inline std::string FormatNodeNameForError(const std::string& name) {
-    return strings::StrCat("{{node ", name, "}}");
+  return strings::StrCat("{{node ", name, "}}");
 }
 // LINT.ThenChange(//tensorflow/python/client/session.py)
 template <typename T>
 std::string FormatNodeNamesForError(const T& names) {
-    return absl::StrJoin(
-    names, ", ", [](std::string* output, const std::string& s) {
+  return absl::StrJoin(
+      names, ", ", [](std::string* output, const std::string& s) {
         ::tensorflow::strings::StrAppend(output, FormatNodeNameForError(s));
-    });
+      });
 }
 // LINT.IfChange
 inline std::string FormatColocationNodeForError(const std::string& name) {
-    return strings::StrCat("{{colocation_node ", name, "}}");
+  return strings::StrCat("{{colocation_node ", name, "}}");
 }
 // LINT.ThenChange(//tensorflow/python/framework/error_interpolation.py)
 template <typename T>
 std::string FormatColocationNodeForError(const T& names) {
-    return absl::StrJoin(names, ", ",
-    [](std::string* output, const std::string& s) {
-        ::tensorflow::strings::StrAppend(
-            output, FormatColocationNodeForError(s));
-    });
+  return absl::StrJoin(names, ", ",
+                       [](std::string* output, const std::string& s) {
+                         ::tensorflow::strings::StrAppend(
+                             output, FormatColocationNodeForError(s));
+                       });
 }
 
 inline std::string FormatFunctionForError(const std::string& name) {
-    return strings::StrCat("{{function_node ", name, "}}");
+  return strings::StrCat("{{function_node ", name, "}}");
 }
 
 // The CanonicalCode() for non-errors.

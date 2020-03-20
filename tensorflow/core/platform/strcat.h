@@ -59,95 +59,89 @@ namespace tensorflow {
 namespace strings {
 
 enum PadSpec {
-    kNoPad = 1,
-    kZeroPad2,
-    kZeroPad3,
-    kZeroPad4,
-    kZeroPad5,
-    kZeroPad6,
-    kZeroPad7,
-    kZeroPad8,
-    kZeroPad9,
-    kZeroPad10,
-    kZeroPad11,
-    kZeroPad12,
-    kZeroPad13,
-    kZeroPad14,
-    kZeroPad15,
-    kZeroPad16
+  kNoPad = 1,
+  kZeroPad2,
+  kZeroPad3,
+  kZeroPad4,
+  kZeroPad5,
+  kZeroPad6,
+  kZeroPad7,
+  kZeroPad8,
+  kZeroPad9,
+  kZeroPad10,
+  kZeroPad11,
+  kZeroPad12,
+  kZeroPad13,
+  kZeroPad14,
+  kZeroPad15,
+  kZeroPad16
 };
 
 struct Hex {
-    uint64 value;
-    enum PadSpec spec;
-    template <class Int>
-    explicit Hex(Int v, PadSpec s = kNoPad) : spec(s) {
-        // Prevent sign-extension by casting integers to
-        // their unsigned counterparts.
-        static_assert(
-            sizeof(v) == 1 || sizeof(v) == 2 || sizeof(v) == 4 || sizeof(v) == 8,
-            "Unknown integer type");
-        value = sizeof(v) == 1
+  uint64 value;
+  enum PadSpec spec;
+  template <class Int>
+  explicit Hex(Int v, PadSpec s = kNoPad) : spec(s) {
+    // Prevent sign-extension by casting integers to
+    // their unsigned counterparts.
+    static_assert(
+        sizeof(v) == 1 || sizeof(v) == 2 || sizeof(v) == 4 || sizeof(v) == 8,
+        "Unknown integer type");
+    value = sizeof(v) == 1
                 ? static_cast<uint8>(v)
                 : sizeof(v) == 2 ? static_cast<uint16>(v)
-                : sizeof(v) == 4 ? static_cast<uint32>(v)
-                : static_cast<uint64>(v);
-    }
+                                 : sizeof(v) == 4 ? static_cast<uint32>(v)
+                                                  : static_cast<uint64>(v);
+  }
 };
 
 class AlphaNum {
-public:
-    // No bool ctor -- bools convert to an integral type.
-    // A bool ctor would also convert incoming pointers (bletch).
+ public:
+  // No bool ctor -- bools convert to an integral type.
+  // A bool ctor would also convert incoming pointers (bletch).
 
-    AlphaNum(int i32)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FastInt32ToBufferLeft(i32, digits_)) {}
-    AlphaNum(unsigned int u32)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FastUInt32ToBufferLeft(u32, digits_)) {}
-    AlphaNum(long x)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FastInt64ToBufferLeft(x, digits_)) {}
-    AlphaNum(unsigned long x)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FastUInt64ToBufferLeft(x, digits_)) {}
-    AlphaNum(long long int i64)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FastInt64ToBufferLeft(i64, digits_)) {}
-    AlphaNum(unsigned long long int u64)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FastUInt64ToBufferLeft(u64, digits_)) {}
+  AlphaNum(int i32)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FastInt32ToBufferLeft(i32, digits_)) {}
+  AlphaNum(unsigned int u32)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FastUInt32ToBufferLeft(u32, digits_)) {}
+  AlphaNum(long x)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FastInt64ToBufferLeft(x, digits_)) {}
+  AlphaNum(unsigned long x)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FastUInt64ToBufferLeft(x, digits_)) {}
+  AlphaNum(long long int i64)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FastInt64ToBufferLeft(i64, digits_)) {}
+  AlphaNum(unsigned long long int u64)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FastUInt64ToBufferLeft(u64, digits_)) {}
 
-    AlphaNum(float f)  // NOLINT(runtime/explicit)
-        : piece_(digits_, FloatToBuffer(f, digits_)) {}
-    AlphaNum(double f)  // NOLINT(runtime/explicit)
-        : piece_(digits_, DoubleToBuffer(f, digits_)) {}
+  AlphaNum(float f)  // NOLINT(runtime/explicit)
+      : piece_(digits_, FloatToBuffer(f, digits_)) {}
+  AlphaNum(double f)  // NOLINT(runtime/explicit)
+      : piece_(digits_, DoubleToBuffer(f, digits_)) {}
 
-    AlphaNum(Hex hex);               // NOLINT(runtime/explicit)
+  AlphaNum(Hex hex);  // NOLINT(runtime/explicit)
 
-    AlphaNum(const char *c_str) : piece_(c_str) {}   // NOLINT(runtime/explicit)
-    AlphaNum(const StringPiece &pc) : piece_(pc) {}  // NOLINT(runtime/explicit)
-    AlphaNum(const tensorflow::string &str)          // NOLINT(runtime/explicit)
-        : piece_(str) {}
-    AlphaNum(const tensorflow::tstring &str)  // NOLINT(runtime/explicit)
-        : piece_(str) {}
-    template <typename A>
-    AlphaNum(const std::basic_string<char, std::char_traits<char>, A> &str)
-        : piece_(str) {}  // NOLINT(runtime/explicit)
+  AlphaNum(const char* c_str) : piece_(c_str) {}   // NOLINT(runtime/explicit)
+  AlphaNum(const StringPiece& pc) : piece_(pc) {}  // NOLINT(runtime/explicit)
+  AlphaNum(const tensorflow::string& str)          // NOLINT(runtime/explicit)
+      : piece_(str) {}
+  AlphaNum(const tensorflow::tstring& str)  // NOLINT(runtime/explicit)
+      : piece_(str) {}
+  template <typename A>
+  AlphaNum(const std::basic_string<char, std::char_traits<char>, A>& str)
+      : piece_(str) {}  // NOLINT(runtime/explicit)
 
-    StringPiece::size_type size() const {
-        return piece_.size();
-    }
-    const char *data() const {
-        return piece_.data();
-    }
-    StringPiece Piece() const {
-        return piece_;
-    }
+  StringPiece::size_type size() const { return piece_.size(); }
+  const char* data() const { return piece_.data(); }
+  StringPiece Piece() const { return piece_; }
 
-private:
-    StringPiece piece_;
-    char digits_[kFastToBufferSize];
+ private:
+  StringPiece piece_;
+  char digits_[kFastToBufferSize];
 
-    // Use ":" not ':'
-    AlphaNum(char c);  // NOLINT(runtime/explicit)
+  // Use ":" not ':'
+  AlphaNum(char c);  // NOLINT(runtime/explicit)
 
-    TF_DISALLOW_COPY_AND_ASSIGN(AlphaNum);
+  TF_DISALLOW_COPY_AND_ASSIGN(AlphaNum);
 };
 
 // ----------------------------------------------------------------------
@@ -174,33 +168,33 @@ private:
 // ----------------------------------------------------------------------
 
 // For performance reasons, we have specializations for <= 4 args.
-std::string StrCat(const AlphaNum &a) TF_MUST_USE_RESULT;
-std::string StrCat(const AlphaNum &a, const AlphaNum &b) TF_MUST_USE_RESULT;
-std::string StrCat(const AlphaNum &a, const AlphaNum &b,
-                   const AlphaNum &c) TF_MUST_USE_RESULT;
-std::string StrCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                   const AlphaNum &d) TF_MUST_USE_RESULT;
+std::string StrCat(const AlphaNum& a) TF_MUST_USE_RESULT;
+std::string StrCat(const AlphaNum& a, const AlphaNum& b) TF_MUST_USE_RESULT;
+std::string StrCat(const AlphaNum& a, const AlphaNum& b,
+                   const AlphaNum& c) TF_MUST_USE_RESULT;
+std::string StrCat(const AlphaNum& a, const AlphaNum& b, const AlphaNum& c,
+                   const AlphaNum& d) TF_MUST_USE_RESULT;
 
 namespace internal {
 
 // Do not call directly - this is not part of the public API.
 std::string CatPieces(std::initializer_list<StringPiece> pieces);
-void AppendPieces(std::string *dest, std::initializer_list<StringPiece> pieces);
+void AppendPieces(std::string* dest, std::initializer_list<StringPiece> pieces);
 
 }  // namespace internal
 
 // Support 5 or more arguments
 template <typename... AV>
-std::string StrCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                   const AlphaNum &d, const AlphaNum &e,
-                   const AV &... args) TF_MUST_USE_RESULT;
+std::string StrCat(const AlphaNum& a, const AlphaNum& b, const AlphaNum& c,
+                   const AlphaNum& d, const AlphaNum& e,
+                   const AV&... args) TF_MUST_USE_RESULT;
 
 template <typename... AV>
-std::string StrCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                   const AlphaNum &d, const AlphaNum &e, const AV &... args) {
-    return internal::CatPieces({a.Piece(), b.Piece(), c.Piece(), d.Piece(),
-                                e.Piece(),
-                                static_cast<const AlphaNum &>(args).Piece()...});
+std::string StrCat(const AlphaNum& a, const AlphaNum& b, const AlphaNum& c,
+                   const AlphaNum& d, const AlphaNum& e, const AV&... args) {
+  return internal::CatPieces({a.Piece(), b.Piece(), c.Piece(), d.Piece(),
+                              e.Piece(),
+                              static_cast<const AlphaNum&>(args).Piece()...});
 }
 
 // ----------------------------------------------------------------------
@@ -224,22 +218,21 @@ std::string StrCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
 //    worked around as consecutive calls to StrAppend are quite efficient.
 // ----------------------------------------------------------------------
 
-void StrAppend(std::string *dest, const AlphaNum &a);
-void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b);
-void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b,
-               const AlphaNum &c);
-void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b,
-               const AlphaNum &c, const AlphaNum &d);
+void StrAppend(std::string* dest, const AlphaNum& a);
+void StrAppend(std::string* dest, const AlphaNum& a, const AlphaNum& b);
+void StrAppend(std::string* dest, const AlphaNum& a, const AlphaNum& b,
+               const AlphaNum& c);
+void StrAppend(std::string* dest, const AlphaNum& a, const AlphaNum& b,
+               const AlphaNum& c, const AlphaNum& d);
 
 // Support 5 or more arguments
 template <typename... AV>
-inline void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b,
-                      const AlphaNum &c, const AlphaNum &d, const AlphaNum &e,
-                      const AV &... args) {
-    internal::AppendPieces(dest,
-    {   a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
-        static_cast<const AlphaNum &>(args).Piece()...
-    });
+inline void StrAppend(std::string* dest, const AlphaNum& a, const AlphaNum& b,
+                      const AlphaNum& c, const AlphaNum& d, const AlphaNum& e,
+                      const AV&... args) {
+  internal::AppendPieces(dest,
+                         {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
+                          static_cast<const AlphaNum&>(args).Piece()...});
 }
 
 }  // namespace strings

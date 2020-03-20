@@ -35,7 +35,7 @@ void AssignRefCounted(StringPiece src, core::RefCounted* obj, std::string* out);
 
 // Copy contents of src to dst[0,src.size()-1].
 inline void CopyToArray(const std::string& src, char* dst) {
-    memcpy(dst, src.data(), src.size());
+  memcpy(dst, src.data(), src.size());
 }
 
 // Copy subrange [pos:(pos + n)) from src to dst. If pos >= src.size() the
@@ -43,8 +43,8 @@ inline void CopyToArray(const std::string& src, char* dst) {
 // copied.
 inline void CopySubrangeToArray(const std::string& src, size_t pos, size_t n,
                                 char* dst) {
-    if (pos >= src.size()) return;
-    memcpy(dst, src.data() + pos, std::min(n, src.size() - pos));
+  if (pos >= src.size()) return;
+  memcpy(dst, src.data() + pos, std::min(n, src.size() - pos));
 }
 
 // Store encoding of strings[0..n-1] in *out.
@@ -61,17 +61,17 @@ void CopyFromArray(std::string* s, const char* base, size_t bytes);
 // Normal usage consists of zero or more calls to Append() and a single call to
 // Finalize().
 class StringListEncoder {
-public:
-    virtual ~StringListEncoder() = default;
+ public:
+  virtual ~StringListEncoder() = default;
 
-    // Encodes the given protocol buffer. This may not be called after Finalize().
-    virtual void Append(const protobuf::MessageLite& m) = 0;
+  // Encodes the given protocol buffer. This may not be called after Finalize().
+  virtual void Append(const protobuf::MessageLite& m) = 0;
 
-    // Encodes the given string. This may not be called after Finalize().
-    virtual void Append(const std::string& s) = 0;
+  // Encodes the given string. This may not be called after Finalize().
+  virtual void Append(const std::string& s) = 0;
 
-    // Signals end of the encoding process. No other calls are allowed after this.
-    virtual void Finalize() = 0;
+  // Signals end of the encoding process. No other calls are allowed after this.
+  virtual void Finalize() = 0;
 };
 
 // Decodes a string into sequences of strings (which may represent serialized
@@ -80,17 +80,17 @@ public:
 // size returned a call to Data() is expected and will return the actual
 // string.
 class StringListDecoder {
-public:
-    virtual ~StringListDecoder() = default;
+ public:
+  virtual ~StringListDecoder() = default;
 
-    // Populates the given vector with the lengths of each string in the sequence
-    // being decoded. Upon returning the vector is guaranteed to contain as many
-    // elements as there are strings in the sequence.
-    virtual bool ReadSizes(std::vector<uint32>* sizes) = 0;
+  // Populates the given vector with the lengths of each string in the sequence
+  // being decoded. Upon returning the vector is guaranteed to contain as many
+  // elements as there are strings in the sequence.
+  virtual bool ReadSizes(std::vector<uint32>* sizes) = 0;
 
-    // Returns a pointer to the next string in the sequence, then prepares for the
-    // next call by advancing 'size' characters in the sequence.
-    virtual const char* Data(uint32 size) = 0;
+  // Returns a pointer to the next string in the sequence, then prepares for the
+  // next call by advancing 'size' characters in the sequence.
+  virtual const char* Data(uint32 size) = 0;
 };
 
 std::unique_ptr<StringListEncoder> NewStringListEncoder(string* out);
@@ -103,15 +103,13 @@ std::unique_ptr<StringListDecoder> NewStringListDecoder(const string& in);
 void AssignRefCounted(StringPiece src, core::RefCounted* obj, Cord* out);
 
 // TODO(kmensah): Macro guard this with a check for Cord support.
-inline void CopyToArray(const Cord& src, char* dst) {
-    src.CopyToArray(dst);
-}
+inline void CopyToArray(const Cord& src, char* dst) { src.CopyToArray(dst); }
 
 // Copy n bytes of src to dst. If pos >= src.size() the result is empty.
 // If pos + n > src.size() the subrange [pos, size()) is copied.
 inline void CopySubrangeToArray(const Cord& src, int64 pos, int64 n,
                                 char* dst) {
-    src.Subcord(pos, n).CopyToArray(dst);
+  src.Subcord(pos, n).CopyToArray(dst);
 }
 
 // Store encoding of strings[0..n-1] in *out.

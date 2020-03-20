@@ -34,111 +34,109 @@ namespace gpu {
 namespace cl {
 
 struct ProfilingInfo {
-    struct DispatchInfo {
-        std::string label;
-        absl::Duration duration;
-    };
+  struct DispatchInfo {
+    std::string label;
+    absl::Duration duration;
+  };
 
-    std::vector<DispatchInfo> dispatches;
+  std::vector<DispatchInfo> dispatches;
 
-    absl::Duration GetTotalTime() const;
+  absl::Duration GetTotalTime() const;
 
-    // Returns report (string of lines delimited by \n)
-    // This method uses GPU counters and measure GPU time only.
-    // Report has next structure:
-    // Per kernel timing(K kernels):
-    //   conv2d 3.2ms
-    //   ...
-    // --------------------
-    // Accumulated time per operation type:
-    //   conv2d - 14.5ms
-    //   ....
-    // --------------------
-    // Ideal total time: 23.4ms // Total time for all kernels
-    std::string GetDetailedReport() const;
+  // Returns report (string of lines delimited by \n)
+  // This method uses GPU counters and measure GPU time only.
+  // Report has next structure:
+  // Per kernel timing(K kernels):
+  //   conv2d 3.2ms
+  //   ...
+  // --------------------
+  // Accumulated time per operation type:
+  //   conv2d - 14.5ms
+  //   ....
+  // --------------------
+  // Ideal total time: 23.4ms // Total time for all kernels
+  std::string GetDetailedReport() const;
 };
 
 // A wrapper around opencl command queue
 class CLCommandQueue {
-public:
-    CLCommandQueue() {}
-    CLCommandQueue(cl_command_queue queue, bool has_ownership);
+ public:
+  CLCommandQueue() {}
+  CLCommandQueue(cl_command_queue queue, bool has_ownership);
 
-    // Move only
-    CLCommandQueue(CLCommandQueue&& queue);
-    CLCommandQueue& operator=(CLCommandQueue&& queue);
-    CLCommandQueue(const CLCommandQueue&) = delete;
-    CLCommandQueue& operator=(const CLCommandQueue&) = delete;
+  // Move only
+  CLCommandQueue(CLCommandQueue&& queue);
+  CLCommandQueue& operator=(CLCommandQueue&& queue);
+  CLCommandQueue(const CLCommandQueue&) = delete;
+  CLCommandQueue& operator=(const CLCommandQueue&) = delete;
 
-    virtual ~CLCommandQueue();
+  virtual ~CLCommandQueue();
 
-    cl_command_queue queue() const {
-        return queue_;
-    }
+  cl_command_queue queue() const { return queue_; }
 
-    virtual Status DispatchImplicit(const CLKernel& kernel, int3 grid,
-                                    int3 work_group_size);
+  virtual Status DispatchImplicit(const CLKernel& kernel, int3 grid,
+                                  int3 work_group_size);
 
-    Status EnqueueEvent(CLEvent* event);
+  Status EnqueueEvent(CLEvent* event);
 
-    Status DispatchImplicit(const CLKernel& kernel, int3 grid,
-                            int3 work_group_size, CLEvent* event);
+  Status DispatchImplicit(const CLKernel& kernel, int3 grid,
+                          int3 work_group_size, CLEvent* event);
 
-    Status EnqueueWriteImage(cl_mem memory, int3 region, const void* data);
-    Status EnqueueReadImage(cl_mem memory, int3 region, void* data);
+  Status EnqueueWriteImage(cl_mem memory, int3 region, const void* data);
+  Status EnqueueReadImage(cl_mem memory, int3 region, void* data);
 
-    Status EnqueueWriteBuffer(cl_mem memory, size_t size_in_bytes,
-                              const void* data);
-    Status EnqueueReadBuffer(cl_mem memory, size_t size_in_bytes, void* data);
+  Status EnqueueWriteBuffer(cl_mem memory, size_t size_in_bytes,
+                            const void* data);
+  Status EnqueueReadBuffer(cl_mem memory, size_t size_in_bytes, void* data);
 
-    Status WaitForCompletion();
+  Status WaitForCompletion();
 
-protected:
-    void Release();
+ protected:
+  void Release();
 
-    cl_command_queue queue_ = nullptr;
-    bool has_ownership_ = false;
+  cl_command_queue queue_ = nullptr;
+  bool has_ownership_ = false;
 };
 
 class ProfilingCommandQueue : public CLCommandQueue {
-public:
-    ProfilingCommandQueue() {}
-    explicit ProfilingCommandQueue(cl_command_queue queue);
+ public:
+  ProfilingCommandQueue() {}
+  explicit ProfilingCommandQueue(cl_command_queue queue);
 
-    // Move only
-    ProfilingCommandQueue(ProfilingCommandQueue&& queue);
-    ProfilingCommandQueue& operator=(ProfilingCommandQueue&& queue);
-    ProfilingCommandQueue(const ProfilingCommandQueue&) = delete;
-    ProfilingCommandQueue& operator=(const ProfilingCommandQueue&) = delete;
+  // Move only
+  ProfilingCommandQueue(ProfilingCommandQueue&& queue);
+  ProfilingCommandQueue& operator=(ProfilingCommandQueue&& queue);
+  ProfilingCommandQueue(const ProfilingCommandQueue&) = delete;
+  ProfilingCommandQueue& operator=(const ProfilingCommandQueue&) = delete;
 
-    Status DispatchImplicit(const CLKernel& kernel, int3 grid,
-                            int3 work_group_size) override;
+  Status DispatchImplicit(const CLKernel& kernel, int3 grid,
+                          int3 work_group_size) override;
 
-    // will write index for fastest work_group among work_group_sizes
-    Status GetBestWorkGroupIndex(const CLKernel& kernel,
-                                 const DeviceInfo& device_info, const int3& grid,
-                                 const std::vector<int3>& work_group_sizes,
-                                 int* index);
+  // will write index for fastest work_group among work_group_sizes
+  Status GetBestWorkGroupIndex(const CLKernel& kernel,
+                               const DeviceInfo& device_info, const int3& grid,
+                               const std::vector<int3>& work_group_sizes,
+                               int* index);
 
-    // call ResetMeasurements() to start new seriese of measurements
-    void ResetMeasurements();
+  // call ResetMeasurements() to start new seriese of measurements
+  void ResetMeasurements();
 
-    double GetQueueExecutionTimeMs() const;
+  double GetQueueExecutionTimeMs() const;
 
-    // Difference from GetQueueExecutionTimeMs is that this number doesn't include
-    // time between kernels(kernels launches or preparing) on GPU. Usually, this
-    // time should be 5-10% better than GetQueueExecutionTimeMs, because 5-10%
-    // spend on something else(maybe kernels launches or preparing)
-    double GetSumOfEventsTimeMs() const;
+  // Difference from GetQueueExecutionTimeMs is that this number doesn't include
+  // time between kernels(kernels launches or preparing) on GPU. Usually, this
+  // time should be 5-10% better than GetQueueExecutionTimeMs, because 5-10%
+  // spend on something else(maybe kernels launches or preparing)
+  double GetSumOfEventsTimeMs() const;
 
-    // This label will be used for all subsequent dispatches.
-    void SetEventsLabel(const std::string& name);
+  // This label will be used for all subsequent dispatches.
+  void SetEventsLabel(const std::string& name);
 
-    ProfilingInfo GetProfilingInfo() const;
+  ProfilingInfo GetProfilingInfo() const;
 
-private:
-    std::vector<CLEvent> events_;
-    std::string current_label_;
+ private:
+  std::vector<CLEvent> events_;
+  std::string current_label_;
 };
 
 Status CreateCLCommandQueue(const CLDevice& device, const CLContext& context,

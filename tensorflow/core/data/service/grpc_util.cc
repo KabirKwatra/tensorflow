@@ -23,13 +23,13 @@ namespace data {
 namespace grpc_util {
 
 Status WrapError(const std::string& message, const grpc::Status& status) {
-    if (status.ok()) {
-        return errors::Internal("Expected a non-ok grpc status. Wrapping message: ",
-                                message);
-    } else {
-        return Status(static_cast<tensorflow::error::Code>(status.error_code()),
-                      absl::StrCat(message, ": ", status.error_message()));
-    }
+  if (status.ok()) {
+    return errors::Internal("Expected a non-ok grpc status. Wrapping message: ",
+                            message);
+  } else {
+    return Status(static_cast<tensorflow::error::Code>(status.error_code()),
+                  absl::StrCat(message, ": ", status.error_message()));
+  }
 }
 
 }  // namespace grpc_util

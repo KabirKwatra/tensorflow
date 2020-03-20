@@ -31,53 +31,47 @@ namespace gl {
 //
 // GlSync is moveable but not copyable.
 class GlSync {
-public:
-    static Status NewSync(GlSync* gl_sync) {
-        GLsync sync;
-        RETURN_IF_ERROR(TFLITE_GPU_CALL_GL(glFenceSync, &sync,
-                                           GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
-        *gl_sync = GlSync(sync);
-        return OkStatus();
+ public:
+  static Status NewSync(GlSync* gl_sync) {
+    GLsync sync;
+    RETURN_IF_ERROR(TFLITE_GPU_CALL_GL(glFenceSync, &sync,
+                                       GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
+    *gl_sync = GlSync(sync);
+    return OkStatus();
+  }
+
+  // Creates invalid object.
+  GlSync() : GlSync(nullptr) {}
+
+  // Move-only
+  GlSync(GlSync&& sync) : sync_(sync.sync_) { sync.sync_ = nullptr; }
+
+  GlSync& operator=(GlSync&& sync) {
+    if (this != &sync) {
+      Invalidate();
+      std::swap(sync_, sync.sync_);
     }
+    return *this;
+  }
 
-    // Creates invalid object.
-    GlSync() : GlSync(nullptr) {}
+  GlSync(const GlSync&) = delete;
+  GlSync& operator=(const GlSync&) = delete;
 
-    // Move-only
-    GlSync(GlSync&& sync) : sync_(sync.sync_) {
-        sync.sync_ = nullptr;
+  ~GlSync() { Invalidate(); }
+
+  const GLsync sync() const { return sync_; }
+
+ private:
+  explicit GlSync(GLsync sync) : sync_(sync) {}
+
+  void Invalidate() {
+    if (sync_) {
+      glDeleteSync(sync_);
+      sync_ = nullptr;
     }
+  }
 
-    GlSync& operator=(GlSync&& sync) {
-        if (this != &sync) {
-            Invalidate();
-            std::swap(sync_, sync.sync_);
-        }
-        return *this;
-    }
-
-    GlSync(const GlSync&) = delete;
-    GlSync& operator=(const GlSync&) = delete;
-
-    ~GlSync() {
-        Invalidate();
-    }
-
-    const GLsync sync() const {
-        return sync_;
-    }
-
-private:
-    explicit GlSync(GLsync sync) : sync_(sync) {}
-
-    void Invalidate() {
-        if (sync_) {
-            glDeleteSync(sync_);
-            sync_ = nullptr;
-        }
-    }
-
-    GLsync sync_;
+  GLsync sync_;
 };
 
 // Waits until GPU is done with processing.
@@ -93,14 +87,14 @@ Status GlActiveSyncWait();
 // and CPU. The instance remains invalid if persistent buffer OpenGL extension
 // is not supported by the device.
 class GlShaderSync {
-public:
-    static Status NewSync(GlShaderSync* gl_sync);
-    GlShaderSync() {}
-    Status Wait();
+ public:
+  static Status NewSync(GlShaderSync* gl_sync);
+  GlShaderSync() {}
+  Status Wait();
 
-private:
-    GlProgram flag_program_;
-    GlPersistentBuffer flag_buffer_;
+ private:
+  GlProgram flag_program_;
+  GlPersistentBuffer flag_buffer_;
 };
 
 }  // namespace gl
