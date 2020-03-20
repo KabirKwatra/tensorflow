@@ -32,7 +32,7 @@ namespace gpu {
 namespace metal {
 
 std::string GetResizeBilinearCode(bool half_pixel_centers) {
-  std::string code = R"(
+    std::string code = R"(
     #include <metal_stdlib>
     using namespace metal;
     $0
@@ -42,12 +42,12 @@ std::string GetResizeBilinearCode(bool half_pixel_centers) {
       if (int(gid.x) >= size.z || int(gid.y) >= size.w) {
         return;
       })";
-  if (half_pixel_centers) {
-    code += "const float2 tex_coord = (float2(gid.xy) + 0.5f) * scale - 0.5f;";
-  } else {
-    code += "const float2 tex_coord = float2(gid.xy) * scale;";
-  }
-  code += R"(
+    if (half_pixel_centers) {
+        code += "const float2 tex_coord = (float2(gid.xy) + 0.5f) * scale - 0.5f;";
+    } else {
+        code += "const float2 tex_coord = float2(gid.xy) * scale;";
+    }
+    code += R"(
       const float2 tex_coord_floor = floor(tex_coord);
       const int2 itex_coord_floor = int2(tex_coord_floor);
       const int2 borders = size.xy - int2(1, 1);
@@ -71,11 +71,11 @@ std::string GetResizeBilinearCode(bool half_pixel_centers) {
       output_buffer[linear_index] = value;
     }
   )";
-  return code;
+    return code;
 }
 
 std::string GetResizeNearestCode() {
-  return R"(
+    return R"(
     #include <metal_stdlib>
     using namespace metal;
     $0
@@ -96,70 +96,73 @@ std::string GetResizeNearestCode() {
 }
 
 std::vector<ComputeTaskDescriptorPtr> Resize(int id, ValueId input_id,
-                                             ValueId output_id,
-                                             const Resize2DAttributes& attr) {
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  switch (attr.type) {
+        ValueId output_id,
+        const Resize2DAttributes& attr) {
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    switch (attr.type) {
     case SamplingType::BILINEAR:
-      desc->shader_source = GetResizeBilinearCode(attr.half_pixel_centers);
-      break;
+        desc->shader_source = GetResizeBilinearCode(attr.half_pixel_centers);
+        break;
     case SamplingType::NEAREST:
-      desc->shader_source = GetResizeNearestCode();
-      break;
+        desc->shader_source = GetResizeNearestCode();
+        break;
     default:
-      // Unknown sampling type
-      return {};
-  }
+        // Unknown sampling type
+        return {};
+    }
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+    };
 
-  desc->output_buffer = {
-      output_id, "device FLT4* output_buffer",
-      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-        return CalculateOutputShape(buffers.find(input_id)->second, attr);
-      }};
+    desc->output_buffer = {
+        output_id, "device FLT4* output_buffer",
+        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+            return CalculateOutputShape(buffers.find(input_id)->second, attr);
+        }
+    };
 
-  desc->uniform_buffers = {
-      {"constant int4& size",
-       [input_id, output_id](const std::map<ValueId, BHWC>& buffers) {
-         const auto& dimension = buffers.find(input_id)->second;
-         const auto& output_dimension = buffers.find(output_id)->second;
-         std::vector<int> sizes = {
-             dimension.w,
-             dimension.h,
-             output_dimension.w,
-             output_dimension.h,
-         };
-         return GetByteBuffer(sizes);
-       }},
-      {"constant float2& scale",
-       [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
-         const auto& input_dimensions = buffers.find(input_id)->second;
-         const auto& output_dimensions = buffers.find(output_id)->second;
-         std::vector<float> sizes = {
-             CalculateResizeScale(input_dimensions.w, output_dimensions.w,
-                                  attr),
-             CalculateResizeScale(input_dimensions.h, output_dimensions.h,
-                                  attr),
-         };
-         return GetByteBuffer(sizes);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant int4& size",
+            [input_id, output_id](const std::map<ValueId, BHWC>& buffers) {
+                const auto& dimension = buffers.find(input_id)->second;
+                const auto& output_dimension = buffers.find(output_id)->second;
+                std::vector<int> sizes = {
+                    dimension.w,
+                    dimension.h,
+                    output_dimension.w,
+                    output_dimension.h,
+                };
+                return GetByteBuffer(sizes);
+            }
+        },
+        {   "constant float2& scale",
+            [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
+                const auto& input_dimensions = buffers.find(input_id)->second;
+                const auto& output_dimensions = buffers.find(output_id)->second;
+                std::vector<float> sizes = {
+                    CalculateResizeScale(input_dimensions.w, output_dimensions.w,
+                                         attr),
+                    CalculateResizeScale(input_dimensions.h, output_dimensions.h,
+                                         attr),
+                };
+                return GetByteBuffer(sizes);
+            }
+        },
+    };
 
-  desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
-    const uint3 groups_size{16, 16, 1};
-    const auto& dst_dim = buffers.find(output_id)->second;
-    int groups_x = IntegralDivideRoundUp(dst_dim.w, groups_size.x);
-    int groups_y = IntegralDivideRoundUp(dst_dim.h, groups_size.y);
-    const int dst_layers = IntegralDivideRoundUp(dst_dim.c, 4);
-    int groups_z = IntegralDivideRoundUp(dst_layers, groups_size.z);
-    return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
-  };
-  return {desc};
+    desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
+        const uint3 groups_size{16, 16, 1};
+        const auto& dst_dim = buffers.find(output_id)->second;
+        int groups_x = IntegralDivideRoundUp(dst_dim.w, groups_size.x);
+        int groups_y = IntegralDivideRoundUp(dst_dim.h, groups_size.y);
+        const int dst_layers = IntegralDivideRoundUp(dst_dim.c, 4);
+        int groups_z = IntegralDivideRoundUp(dst_layers, groups_size.z);
+        return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
+    };
+    return {desc};
 }
 
 }  // namespace metal
