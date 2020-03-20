@@ -42,110 +42,110 @@ ABSL_CONST_INIT extern const int32 kCuptiDriverApiPlaneId;
 
 // Interesting event types (i.e., TraceMe names).
 enum HostEventType {
-    kFirstHostEventType = 0,
-    kUnknownHostEventType = kFirstHostEventType,
-    kTraceContext,
-    kSessionRun,
-    kFunctionRun,
-    kRunGraph,
-    kEagerKernelExecute,
-    kExecutorStateProcess,
-    kExecutorDoneCallback,
-    kMemoryAllocation,
-    kMemoryDeallocation,
-    // Performance counter related.
-    kRemotePerf,
-    // tf.data captured function events.
-    kTfDataCapturedFunctionRun,
-    kTfDataCapturedFunctionRunWithBorrowedArgs,
-    kTfDataCapturedFunctionRunInstantiated,
-    kTfDataCapturedFunctionRunAsync,
-    // Functional ops.
-    kCallOp,
-    kParallelForOp,
-    kForeverOp,
-    kNumericalGradientOpEvalRight,
-    kNumericalGradientOpEvalLeft,
-    kSymbolicGradientOp,
-    kRemoteCallOp,
-    kIfOp,
-    kCaseOp,
-    kWhileOpEvalCond,
-    kWhileOpStartBody,
-    kForOp,
-    kPartitionedCallOp,
-    // XLA related.
-    kLocalExecutableExecuteOnLocalDevice,
-    kLocalExecutableExecute,
-    // tf.data related.
-    kIteratorGetNextOp,
-    // Virtual events for grouping.
-    kHostTrainingLoopIteration,
-    kAsyncExecutorTraceContext,
-    // GPU related.
-    kKernelLaunch,
-    kKernelExecute,
-    kLastHostEventType = kKernelExecute,
+  kFirstHostEventType = 0,
+  kUnknownHostEventType = kFirstHostEventType,
+  kTraceContext,
+  kSessionRun,
+  kFunctionRun,
+  kRunGraph,
+  kEagerKernelExecute,
+  kExecutorStateProcess,
+  kExecutorDoneCallback,
+  kMemoryAllocation,
+  kMemoryDeallocation,
+  // Performance counter related.
+  kRemotePerf,
+  // tf.data captured function events.
+  kTfDataCapturedFunctionRun,
+  kTfDataCapturedFunctionRunWithBorrowedArgs,
+  kTfDataCapturedFunctionRunInstantiated,
+  kTfDataCapturedFunctionRunAsync,
+  // Functional ops.
+  kCallOp,
+  kParallelForOp,
+  kForeverOp,
+  kNumericalGradientOpEvalRight,
+  kNumericalGradientOpEvalLeft,
+  kSymbolicGradientOp,
+  kRemoteCallOp,
+  kIfOp,
+  kCaseOp,
+  kWhileOpEvalCond,
+  kWhileOpStartBody,
+  kForOp,
+  kPartitionedCallOp,
+  // XLA related.
+  kLocalExecutableExecuteOnLocalDevice,
+  kLocalExecutableExecute,
+  // tf.data related.
+  kIteratorGetNextOp,
+  // Virtual events for grouping.
+  kHostTrainingLoopIteration,
+  kAsyncExecutorTraceContext,
+  // GPU related.
+  kKernelLaunch,
+  kKernelExecute,
+  kLastHostEventType = kKernelExecute,
 };
 
 enum StatType {
-    kFirstStatType = 0,
-    kUnknownStatType = kFirstStatType,
-    // TraceMe arguments.
-    kStepId,
-    kParentStepId,
-    kFunctionStepId,
-    kDeviceOrdinal,
-    kChipOrdinal,
-    kNodeOrdinal,
-    kModelId,
-    kQueueAddr,
-    kRequestId,
-    kRunId,
-    kGraphType,
-    kStepNum,
-    kIterNum,
-    kIndexOnHost,
-    kAllocatorName,
-    kBytesReserved,
-    kBytesAllocated,
-    kBytesAvailable,
-    kFragmentation,
-    kPeakBytesInUse,
-    kRequestedBytes,
-    kTensorShapes,
-    // Device trace arguments.
-    kDeviceId,
-    kContextId,
-    kCorrelationId,
-    kMemcpyDetails,
-    kMemallocDetails,
-    kKernelAnnotation,
-    kKernelDetails,
-    kStream,
-    // Stats added when processing traces.
-    kGroupId,
-    kStepName,
-    kLevel0,
-    kTfOp,
-    kHloOp,
-    kHloModule,
-    kEquation,
-    // Performance counter related.
-    kRawValue,
-    kScaledValue,
-    kThreadId,
-    // XLA metadata map related.
-    kSelfDurationPs,
-    kMinDurationPs,
-    // Device capability related.
-    kDevCapClockRateKHz,
-    kDevCapCoreCount,
-    kDevCapMemoryBandwidth,
-    kDevCapMemorySize,
-    kDevCapComputeCapMajor,
-    kDevCapComputeCapMinor,
-    kLastStatType = kDevCapComputeCapMinor,
+  kFirstStatType = 0,
+  kUnknownStatType = kFirstStatType,
+  // TraceMe arguments.
+  kStepId,
+  kParentStepId,
+  kFunctionStepId,
+  kDeviceOrdinal,
+  kChipOrdinal,
+  kNodeOrdinal,
+  kModelId,
+  kQueueAddr,
+  kRequestId,
+  kRunId,
+  kGraphType,
+  kStepNum,
+  kIterNum,
+  kIndexOnHost,
+  kAllocatorName,
+  kBytesReserved,
+  kBytesAllocated,
+  kBytesAvailable,
+  kFragmentation,
+  kPeakBytesInUse,
+  kRequestedBytes,
+  kTensorShapes,
+  // Device trace arguments.
+  kDeviceId,
+  kContextId,
+  kCorrelationId,
+  kMemcpyDetails,
+  kMemallocDetails,
+  kKernelAnnotation,
+  kKernelDetails,
+  kStream,
+  // Stats added when processing traces.
+  kGroupId,
+  kStepName,
+  kLevel0,
+  kTfOp,
+  kHloOp,
+  kHloModule,
+  kEquation,
+  // Performance counter related.
+  kRawValue,
+  kScaledValue,
+  kThreadId,
+  // XLA metadata map related.
+  kSelfDurationPs,
+  kMinDurationPs,
+  // Device capability related.
+  kDevCapClockRateKHz,
+  kDevCapCoreCount,
+  kDevCapMemoryBandwidth,
+  kDevCapMemorySize,
+  kDevCapComputeCapMajor,
+  kDevCapComputeCapMinor,
+  kLastStatType = kDevCapComputeCapMinor,
 };
 
 absl::string_view GetHostEventTypeStr(HostEventType event_type);
@@ -154,7 +154,7 @@ bool IsHostEventType(HostEventType event_type, absl::string_view event_name);
 
 inline bool IsHostEventType(HostEventType event_type,
                             absl::string_view event_name) {
-    return GetHostEventTypeStr(event_type) == event_name;
+  return GetHostEventTypeStr(event_type) == event_name;
 }
 
 absl::optional<int64> FindHostEventType(absl::string_view event_name);
@@ -164,15 +164,15 @@ absl::string_view GetStatTypeStr(StatType stat_type);
 bool IsStatType(StatType stat_type, absl::string_view stat_name);
 
 inline bool IsStatType(StatType stat_type, absl::string_view stat_name) {
-    return GetStatTypeStr(stat_type) == stat_name;
+  return GetStatTypeStr(stat_type) == stat_name;
 }
 
 absl::optional<int64> FindStatType(absl::string_view stat_name);
 
 // Returns true if the given stat shouldn't be shown in the trace viewer.
 inline bool IsInternalStat(absl::optional<int64> stat_type) {
-    return stat_type == StatType::kKernelDetails ||
-           stat_type == StatType::kLevel0;
+  return stat_type == StatType::kKernelDetails ||
+         stat_type == StatType::kLevel0;
 }
 
 }  // namespace profiler

@@ -39,12 +39,12 @@ bool IsEinsumTensorCoreEligible(absl::string_view equation);
 
 // Less than comparator for Kernel Reports.
 struct KernelReportLessThanComparator {
-    bool operator()(const KernelReport& lhs, const KernelReport& rhs);
+  bool operator()(const KernelReport& lhs, const KernelReport& rhs);
 };
 
 // Equal to comparator for Kernel Reports.
 struct KernelReportEqualToComparator {
-    bool operator()(const KernelReport& lhs, const KernelReport& rhs);
+  bool operator()(const KernelReport& lhs, const KernelReport& rhs);
 };
 
 // Sorts kernel reorts by total duration descendingly.
