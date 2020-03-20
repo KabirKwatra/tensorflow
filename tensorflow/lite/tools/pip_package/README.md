@@ -11,6 +11,7 @@ To build a binary wheel run this script:
 sudo apt install swig libjpeg-dev zlib1g-dev python3-dev python3-numpy
 sh tensorflow/lite/tools/pip_package/build_pip_package.sh
 ```
+
 That will print out some output and a .whl file. You can then install that
 
 ```sh
@@ -55,12 +56,11 @@ from tflite_runtime.interpreter import Interpreter
 interpreter = Interpreter(model_path="foo.tflite")
 ```
 
-This currently works to build on Linux machines including Raspberry Pi. In
-the future, cross compilation to smaller SOCs like Raspberry Pi from
-bigger host will be supported.
+This currently works to build on Linux machines including Raspberry Pi. In the
+future, cross compilation to smaller SOCs like Raspberry Pi from bigger host
+will be supported.
 
 ## Caveats
 
-* You cannot use TensorFlow Select ops, only TensorFlow Lite builtins.
-* Currently custom ops and delegates cannot be registered.
-
+- You cannot use TensorFlow Select ops, only TensorFlow Lite builtins.
+- Currently custom ops and delegates cannot be registered.
