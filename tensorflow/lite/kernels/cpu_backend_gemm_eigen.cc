@@ -39,39 +39,39 @@ void GemmImplUsingEigen::Run(
     const MatrixParams<float>& rhs_params, const float* rhs_data,
     const MatrixParams<float>& dst_params, float* dst_data,
     const GemmParams<float, float>& params, CpuBackendContext* /* context */) {
-  // This code assumes specific storage orders, encoded in these Eigen types.
-  // These assumptions have been checked by TF_LITE_ASSERT's in the public
-  // Gemm entry point already, before the implementation gets to this point.
-  using EigenMatrixMapRowMajorConst =
-      Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
-                                     Eigen::RowMajor>>;
-  using EigenMatrixMapColMajorConst =
-      Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
-                                     Eigen::ColMajor>>;
-  using EigenMatrixMapColMajorMutable = Eigen::Map<
-      Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>>;
+    // This code assumes specific storage orders, encoded in these Eigen types.
+    // These assumptions have been checked by TF_LITE_ASSERT's in the public
+    // Gemm entry point already, before the implementation gets to this point.
+    using EigenMatrixMapRowMajorConst =
+        Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+        Eigen::RowMajor>>;
+    using EigenMatrixMapColMajorConst =
+        Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+        Eigen::ColMajor>>;
+    using EigenMatrixMapColMajorMutable = Eigen::Map<
+                                          Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>>;
 
-  EigenMatrixMapRowMajorConst eigen_lhs(lhs_data, lhs_params.rows,
-                                        lhs_params.cols);
-  EigenMatrixMapColMajorConst eigen_rhs(rhs_data, rhs_params.rows,
-                                        rhs_params.cols);
-  EigenMatrixMapColMajorMutable eigen_dst(dst_data, dst_params.rows,
-                                          dst_params.cols);
+    EigenMatrixMapRowMajorConst eigen_lhs(lhs_data, lhs_params.rows,
+                                          lhs_params.cols);
+    EigenMatrixMapColMajorConst eigen_rhs(rhs_data, rhs_params.rows,
+                                          rhs_params.cols);
+    EigenMatrixMapColMajorMutable eigen_dst(dst_data, dst_params.rows,
+                                            dst_params.cols);
 
-  if (rhs_params.cols == 1) {
-    eigen_dst.col(0).noalias() = eigen_lhs * eigen_rhs.col(0);
-  } else if (lhs_params.rows == 1) {
-    eigen_dst.row(0).noalias() = eigen_lhs.row(0) * eigen_rhs;
-  } else {
-    eigen_dst.noalias() = eigen_lhs * eigen_rhs;
-  }
+    if (rhs_params.cols == 1) {
+        eigen_dst.col(0).noalias() = eigen_lhs * eigen_rhs.col(0);
+    } else if (lhs_params.rows == 1) {
+        eigen_dst.row(0).noalias() = eigen_lhs.row(0) * eigen_rhs;
+    } else {
+        eigen_dst.noalias() = eigen_lhs * eigen_rhs;
+    }
 
-  if (params.bias) {
-    BiasAndClamp(params.clamp_min, params.clamp_max, dst_params.rows,
-                 params.bias, dst_params.rows * dst_params.cols, dst_data);
-  } else {
-    eigen_dst = eigen_dst.cwiseMin(params.clamp_max).cwiseMax(params.clamp_min);
-  }
+    if (params.bias) {
+        BiasAndClamp(params.clamp_min, params.clamp_max, dst_params.rows,
+                     params.bias, dst_params.rows * dst_params.cols, dst_data);
+    } else {
+        eigen_dst = eigen_dst.cwiseMin(params.clamp_max).cwiseMax(params.clamp_min);
+    }
 }
 
 }  // namespace detail
