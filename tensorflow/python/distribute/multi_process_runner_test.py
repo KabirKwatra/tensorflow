@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for `multi_process_runner`."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,6 +20,7 @@ from __future__ import print_function
 import json
 import os
 import time
+
 from absl import logging
 from six.moves import queue as Queue
 

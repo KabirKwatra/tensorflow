@@ -13,10 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Multi-process runner for testing purpose."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import collections
 import contextlib
 import json
@@ -25,8 +25,9 @@ import signal
 import sys
 import threading
 import time
-from absl import logging
+
 import six
+from absl import logging
 from six.moves import queue as Queue
 
 from tensorflow.python import tf2
