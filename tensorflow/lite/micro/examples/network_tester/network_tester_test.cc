@@ -29,75 +29,75 @@ uint8_t tensor_arena[TENSOR_ARENA_SIZE];
 
 #ifdef NUM_BYTES_TO_PRINT
 inline void print_output_data(TfLiteTensor* output) {
-    int num_bytes_to_print =
-        (output->bytes < NUM_BYTES_TO_PRINT) ? output->bytes : NUM_BYTES_TO_PRINT;
+  int num_bytes_to_print =
+      (output->bytes < NUM_BYTES_TO_PRINT) ? output->bytes : NUM_BYTES_TO_PRINT;
 
-    int dims_size = output->dims->size;
-    printf("dims: {%d,", dims_size);
-    for (int i = 0; i < output->dims->size - 1; ++i) {
-        printf("%d,", output->dims->data[i]);
-    }
-    printf("%d}\n", output->dims->data[dims_size - 1]);
+  int dims_size = output->dims->size;
+  printf("dims: {%d,", dims_size);
+  for (int i = 0; i < output->dims->size - 1; ++i) {
+    printf("%d,", output->dims->data[i]);
+  }
+  printf("%d}\n", output->dims->data[dims_size - 1]);
 
-    printf("data_address: %p\n", output->data.raw);
-    printf("data:\n{");
-    for (int i = 0; i < num_bytes_to_print - 1; ++i) {
-        if (i % 16 == 0) {
-            printf("\n");
-        }
-        printf("0x%02x,", output->data.uint8[i]);
+  printf("data_address: %p\n", output->data.raw);
+  printf("data:\n{");
+  for (int i = 0; i < num_bytes_to_print - 1; ++i) {
+    if (i % 16 == 0) {
+      printf("\n");
     }
-    printf("0x%02x\n}\n", output->data.uint8[num_bytes_to_print - 1]);
+    printf("0x%02x,", output->data.uint8[i]);
+  }
+  printf("0x%02x\n}\n", output->data.uint8[num_bytes_to_print - 1]);
 }
 #endif
 
 TF_LITE_MICRO_TESTS_BEGIN
 
 TF_LITE_MICRO_TEST(TestInvoke) {
-    tflite::MicroErrorReporter micro_error_reporter;
-    tflite::ErrorReporter* error_reporter = &micro_error_reporter;
+  tflite::MicroErrorReporter micro_error_reporter;
+  tflite::ErrorReporter* error_reporter = &micro_error_reporter;
 
-    const tflite::Model* model = ::tflite::GetModel(network_model);
-    if (model->version() != TFLITE_SCHEMA_VERSION) {
-        TF_LITE_REPORT_ERROR(error_reporter,
-                             "Model provided is schema version %d not equal "
-                             "to supported version %d.\n",
-                             model->version(), TFLITE_SCHEMA_VERSION);
-        return 1;
-    }
+  const tflite::Model* model = ::tflite::GetModel(network_model);
+  if (model->version() != TFLITE_SCHEMA_VERSION) {
+    TF_LITE_REPORT_ERROR(error_reporter,
+                         "Model provided is schema version %d not equal "
+                         "to supported version %d.\n",
+                         model->version(), TFLITE_SCHEMA_VERSION);
+    return 1;
+  }
 
-    tflite::ops::micro::AllOpsResolver resolver;
+  tflite::ops::micro::AllOpsResolver resolver;
 
-    tflite::MicroInterpreter interpreter(model, resolver, tensor_arena,
-                                         TENSOR_ARENA_SIZE, error_reporter);
+  tflite::MicroInterpreter interpreter(model, resolver, tensor_arena,
+                                       TENSOR_ARENA_SIZE, error_reporter);
 
-    TfLiteStatus allocate_status = interpreter.AllocateTensors();
-    if (allocate_status != kTfLiteOk) {
-        TF_LITE_REPORT_ERROR(error_reporter, "Tensor allocation failed\n");
-    }
-    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, allocate_status);
+  TfLiteStatus allocate_status = interpreter.AllocateTensors();
+  if (allocate_status != kTfLiteOk) {
+    TF_LITE_REPORT_ERROR(error_reporter, "Tensor allocation failed\n");
+  }
+  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, allocate_status);
 
-    TfLiteTensor* input = interpreter.input(0);
-    memcpy(input->data.uint8, input_data, input->bytes);
+  TfLiteTensor* input = interpreter.input(0);
+  memcpy(input->data.uint8, input_data, input->bytes);
 
-    TfLiteStatus invoke_status = interpreter.Invoke();
-    if (invoke_status != kTfLiteOk) {
-        TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed\n");
-    }
-    TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, invoke_status);
+  TfLiteStatus invoke_status = interpreter.Invoke();
+  if (invoke_status != kTfLiteOk) {
+    TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed\n");
+  }
+  TF_LITE_MICRO_EXPECT_EQ(kTfLiteOk, invoke_status);
 
-    TfLiteTensor* output = interpreter.output(0);
+  TfLiteTensor* output = interpreter.output(0);
 
 #ifdef NUM_BYTES_TO_PRINT
-    print_output_data(output);
+  print_output_data(output);
 #endif
 
 #ifndef NO_COMPARE_OUTPUT_DATA
-    for (int i = 0; i < output->bytes; ++i) {
-        TF_LITE_MICRO_EXPECT_EQ(output->data.uint8[i], expected_output_data[i]);
-    }
+  for (int i = 0; i < output->bytes; ++i) {
+    TF_LITE_MICRO_EXPECT_EQ(output->data.uint8[i], expected_output_data[i]);
+  }
 #endif
-    TF_LITE_REPORT_ERROR(error_reporter, "Ran successfully\n");
+  TF_LITE_REPORT_ERROR(error_reporter, "Ran successfully\n");
 }
 
 TF_LITE_MICRO_TESTS_END
