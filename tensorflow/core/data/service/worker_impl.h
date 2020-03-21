@@ -28,51 +28,51 @@ namespace data {
 
 // A TensorFlow DataService serves dataset elements over RPC.
 class DataServiceWorkerImpl {
-public:
-    explicit DataServiceWorkerImpl(const std::string& master_address,
-                                   const std::string& protocol);
-    virtual ~DataServiceWorkerImpl() {}
+ public:
+  explicit DataServiceWorkerImpl(const std::string& master_address,
+                                 const std::string& protocol);
+  virtual ~DataServiceWorkerImpl() {}
 
-    // Starts the worker. The worker needs to know its own address so that it can
-    // register with the master.
-    void Start(const std::string& worker_address);
+  // Starts the worker. The worker needs to know its own address so that it can
+  // register with the master.
+  void Start(const std::string& worker_address);
 
-    // See worker.proto for API documentation.
+  // See worker.proto for API documentation.
 
-    /// Master-facing API.
-    Status ProcessTask(const ProcessTaskRequest* request,
-                       ProcessTaskResponse* response);
+  /// Master-facing API.
+  Status ProcessTask(const ProcessTaskRequest* request,
+                     ProcessTaskResponse* response);
 
-    /// Client-facing API.
-    Status GetElement(const GetElementRequest* request,
-                      GetElementResponse* response);
+  /// Client-facing API.
+  Status GetElement(const GetElementRequest* request,
+                    GetElementResponse* response);
 
-private:
-    // Registers the worker with the master.
-    Status Register();
-    // Creates an iterator to process a task.
-    Status ProcessTaskInternal(const TaskDef& task);
+ private:
+  // Registers the worker with the master.
+  Status Register();
+  // Creates an iterator to process a task.
+  Status ProcessTaskInternal(const TaskDef& task);
 
-    typedef struct Task {
-        int64 id;
-        // TODO(aaudibert): Have standalone::Iterator own a reference to
-        // standalone::Dataset so that we don't need to store the dataset here.
-        std::unique_ptr<standalone::Dataset> dataset;
-        std::unique_ptr<standalone::Iterator> iterator;
-    } Task;
+  typedef struct Task {
+    int64 id;
+    // TODO(aaudibert): Have standalone::Iterator own a reference to
+    // standalone::Dataset so that we don't need to store the dataset here.
+    std::unique_ptr<standalone::Dataset> dataset;
+    std::unique_ptr<standalone::Iterator> iterator;
+  } Task;
 
-    const std::string master_address_;
-    // Protocol for communicating with the master.
-    const std::string protocol_;
-    // The worker's own address.
-    std::string worker_address_;
+  const std::string master_address_;
+  // Protocol for communicating with the master.
+  const std::string protocol_;
+  // The worker's own address.
+  std::string worker_address_;
 
-    mutex mu_;
-    std::unique_ptr<MasterService::Stub> master_stub_ TF_GUARDED_BY(mu_);
-    // Information about tasks, keyed by task ids.
-    absl::flat_hash_map<int64, Task> tasks_ TF_GUARDED_BY(mu_);
+  mutex mu_;
+  std::unique_ptr<MasterService::Stub> master_stub_ TF_GUARDED_BY(mu_);
+  // Information about tasks, keyed by task ids.
+  absl::flat_hash_map<int64, Task> tasks_ TF_GUARDED_BY(mu_);
 
-    TF_DISALLOW_COPY_AND_ASSIGN(DataServiceWorkerImpl);
+  TF_DISALLOW_COPY_AND_ASSIGN(DataServiceWorkerImpl);
 };
 
 }  // namespace data

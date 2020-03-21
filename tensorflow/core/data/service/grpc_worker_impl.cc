@@ -29,13 +29,13 @@ GrpcWorkerImpl::GrpcWorkerImpl(ServerBuilder* server_builder,
                                const std::string& master_address,
                                const std::string& protocol)
     : impl_(master_address, protocol) {
-    server_builder->RegisterService(this);
-    LOG(INFO) << "GrpcWorkerImpl: master address is " << master_address;
-    VLOG(1) << "Registered data service worker";
+  server_builder->RegisterService(this);
+  LOG(INFO) << "GrpcWorkerImpl: master address is " << master_address;
+  VLOG(1) << "Registered data service worker";
 }
 
 void GrpcWorkerImpl::Start(const std::string& worker_address) {
-    impl_.Start(worker_address);
+  impl_.Start(worker_address);
 }
 
 #define HANDLER(method)                                         \

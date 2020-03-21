@@ -25,37 +25,37 @@ namespace data {
 
 // A grpc server for the dataset service.
 class GrpcDataServer {
-public:
-    // Constructs a dataset server with the specified port. If the port is 0, the
-    // server will find an available port in `Start()`. The chosen port can be
-    // found in the output of `Target()`.
-    //
-    // master_address is only needed for worker data servers.
-    explicit GrpcDataServer(int requested_port, const std::string& protocol,
-                            bool is_master, const std::string& master_address);
+ public:
+  // Constructs a dataset server with the specified port. If the port is 0, the
+  // server will find an available port in `Start()`. The chosen port can be
+  // found in the output of `Target()`.
+  //
+  // master_address is only needed for worker data servers.
+  explicit GrpcDataServer(int requested_port, const std::string& protocol,
+                          bool is_master, const std::string& master_address);
 
-    // Starts the server running asynchronously.
-    Status Start();
+  // Starts the server running asynchronously.
+  Status Start();
 
-    // Stops the server. This will block until all outstanding requests complete.
-    void Stop();
+  // Stops the server. This will block until all outstanding requests complete.
+  void Stop();
 
-    // Blocks until the server stops.
-    void Join();
+  // Blocks until the server stops.
+  void Join();
 
-    // Returns the target string for the server. Only valid after calling Start().
-    std::string Target();
+  // Returns the target string for the server. Only valid after calling Start().
+  std::string Target();
 
-private:
-    const int requested_port_;
-    const std::string protocol_;
-    const bool is_master_;
-    const std::string master_address_;
+ private:
+  const int requested_port_;
+  const std::string protocol_;
+  const bool is_master_;
+  const std::string master_address_;
 
-    int bound_port_;
+  int bound_port_;
 
-    std::unique_ptr<grpc::Service> service_;
-    std::unique_ptr<grpc::Server> server_;
+  std::unique_ptr<grpc::Service> service_;
+  std::unique_ptr<grpc::Server> server_;
 };
 
 // Creates a master dataset server and stores it in `*out_server`.

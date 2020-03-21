@@ -17,11 +17,11 @@ limitations under the License.
 #include <unordered_map>
 #include <vector>
 
+#include "tensorflow/core/platform/logging.h"
 #include "tensorflow/lite/toco/graph_transformations/graph_transformations.h"
 #include "tensorflow/lite/toco/graph_transformations/quantization_util.h"
 #include "tensorflow/lite/toco/model.h"
 #include "tensorflow/lite/toco/tooling_util.h"
-#include "tensorflow/core/platform/logging.h"
 
 namespace toco {
 
@@ -30,72 +30,72 @@ namespace {
 bool ChangeArrayDataType(GraphTransformation* transformation, Array* array,
                          ArrayDataType new_data_type,
                          const MinMax* new_minmax) {
-    // Ensure the array ends up in the new type (if it hasn't yet been quantized).
-    bool data_type_changed = array->final_data_type != new_data_type;
-    array->final_data_type = new_data_type;
+  // Ensure the array ends up in the new type (if it hasn't yet been quantized).
+  bool data_type_changed = array->final_data_type != new_data_type;
+  array->final_data_type = new_data_type;
 
-    if (array->minmax && array->quantization_params && data_type_changed) {
-        // The array is already quantized and has min/max info.
-        // As we are changing the data type we need to fix up the existing min/max
-        // to the new data type range.
+  if (array->minmax && array->quantization_params && data_type_changed) {
+    // The array is already quantized and has min/max info.
+    // As we are changing the data type we need to fix up the existing min/max
+    // to the new data type range.
 
-        double old_quantized_min, old_quantized_max;
-        CHECK(GetQuantizedDataTypeNumericalRange(
-                  array->data_type, &old_quantized_min, &old_quantized_max))
-                << "Existing data type is not quantized: "
-                << ArrayDataTypeName(array->data_type);
-        double new_quantized_min, new_quantized_max;
-        CHECK(GetQuantizedDataTypeNumericalRange(new_data_type, &new_quantized_min,
-                &new_quantized_max))
-                << "New data type is not quantized: "
-                << ArrayDataTypeName(new_data_type);
+    double old_quantized_min, old_quantized_max;
+    CHECK(GetQuantizedDataTypeNumericalRange(
+        array->data_type, &old_quantized_min, &old_quantized_max))
+        << "Existing data type is not quantized: "
+        << ArrayDataTypeName(array->data_type);
+    double new_quantized_min, new_quantized_max;
+    CHECK(GetQuantizedDataTypeNumericalRange(new_data_type, &new_quantized_min,
+                                             &new_quantized_max))
+        << "New data type is not quantized: "
+        << ArrayDataTypeName(new_data_type);
 
-        // Compute new minmax values.
-        double min = (old_quantized_min - array->quantization_params->zero_point) *
-                     array->quantization_params->scale;
-        double max =
-            (old_quantized_max + 1 - array->quantization_params->zero_point) *
-            array->quantization_params->scale;
-        max = max - 1.0 / (new_quantized_max + 1);
+    // Compute new minmax values.
+    double min = (old_quantized_min - array->quantization_params->zero_point) *
+                 array->quantization_params->scale;
+    double max =
+        (old_quantized_max + 1 - array->quantization_params->zero_point) *
+        array->quantization_params->scale;
+    max = max - 1.0 / (new_quantized_max + 1);
 
-        auto& array_minmax = array->GetOrCreateMinMax();
-        transformation->AddMessageF(
-            "Rescaling min/max from %g,%g (%s) to %g,%g (%s)", array_minmax.min,
-            array_minmax.max, ArrayDataTypeName(array->data_type), min, max,
-            ArrayDataTypeName(new_data_type));
-        array_minmax.min = min;
-        array_minmax.max = max;
-        ChooseQuantizationParamsForArrayAndQuantizedDataType(
-            *array, new_data_type, array->quantization_params.get());
-        // Directly change the type as the array was already quantized.
-        array->data_type = new_data_type;
-        return true;
-    }
+    auto& array_minmax = array->GetOrCreateMinMax();
+    transformation->AddMessageF(
+        "Rescaling min/max from %g,%g (%s) to %g,%g (%s)", array_minmax.min,
+        array_minmax.max, ArrayDataTypeName(array->data_type), min, max,
+        ArrayDataTypeName(new_data_type));
+    array_minmax.min = min;
+    array_minmax.max = max;
+    ChooseQuantizationParamsForArrayAndQuantizedDataType(
+        *array, new_data_type, array->quantization_params.get());
+    // Directly change the type as the array was already quantized.
+    array->data_type = new_data_type;
+    return true;
+  }
 
-    // Array has not yet been quantized so we can just set the final data type
-    // and assign the new min/max value (if provided).
-    if (!array->quantization_params && !array->minmax && new_minmax) {
-        transformation->AddMessageF("Forcing new minmax to %g,%g (%s)",
-                                    new_minmax->min, new_minmax->max,
-                                    ArrayDataTypeName(new_data_type));
-        auto& array_minmax = array->GetOrCreateMinMax();
-        array_minmax.min = new_minmax->min;
-        array_minmax.max = new_minmax->max;
-        return true;
-    }
+  // Array has not yet been quantized so we can just set the final data type
+  // and assign the new min/max value (if provided).
+  if (!array->quantization_params && !array->minmax && new_minmax) {
+    transformation->AddMessageF("Forcing new minmax to %g,%g (%s)",
+                                new_minmax->min, new_minmax->max,
+                                ArrayDataTypeName(new_data_type));
+    auto& array_minmax = array->GetOrCreateMinMax();
+    array_minmax.min = new_minmax->min;
+    array_minmax.max = new_minmax->max;
+    return true;
+  }
 
-    return data_type_changed;
+  return data_type_changed;
 }
 
 // Returns true if the op blocks our backward recursive data type propagation.
 bool DoesOpBlockBackwardPropagation(const Operator& op) {
-    switch (op.type) {
+  switch (op.type) {
     case OperatorType::kConcatenation:
     case OperatorType::kConcat:
     case OperatorType::kConcatV2:
-        // Concat shouldn't block propagation, but we do expect that all inputs
-        // have the same range.
-        return false;
+      // Concat shouldn't block propagation, but we do expect that all inputs
+      // have the same range.
+      return false;
     case OperatorType::kDequantize:
     // Dequantize ops are inserted between the value we care about and the
     // FakeQuant so make sure we move across them.
@@ -109,130 +109,130 @@ bool DoesOpBlockBackwardPropagation(const Operator& op) {
     case OperatorType::kRelu:
     case OperatorType::kRelu1:
     case OperatorType::kRelu6:
-        // Relus only clamp the output. If min/max of parent is unknown, just
-        // prop the range backward. This only happens for cases where activations
-        // are not fused to avoid a default being set on the RELU input and
-        // propagating forward to the RELU output.
-        return false;
+      // Relus only clamp the output. If min/max of parent is unknown, just
+      // prop the range backward. This only happens for cases where activations
+      // are not fused to avoid a default being set on the RELU input and
+      // propagating forward to the RELU output.
+      return false;
     default:
-        return true;
-    }
+      return true;
+  }
 }
 
 // Returns true if the input of an op blocks our backward recursive data type
 // propagation.
 bool DoesOpInputBlockBackwardPropagation(const Operator& op, int input_index) {
-    switch (op.type) {
+  switch (op.type) {
     case OperatorType::kSelect:
-        return input_index == 0;
+      return input_index == 0;
     case OperatorType::kGather:
-        // Ignore gather indices.
-        return input_index != 0;
-        break;
+      // Ignore gather indices.
+      return input_index != 0;
+      break;
     case OperatorType::kReshape:
     case OperatorType::kTranspose:
-        // Ignore reshape/transpose shapes/dimensions.
-        return input_index != 0;
+      // Ignore reshape/transpose shapes/dimensions.
+      return input_index != 0;
     case OperatorType::kTile:
-        // Ignore tile multiples.
-        return input_index != 0;
+      // Ignore tile multiples.
+      return input_index != 0;
     default:
-        return false;
-    }
+      return false;
+  }
 }
 
 // Propagates the data type up into the input arrays if they are model inputs
 // that may need their type changed. May act recursively if the inputs are
 // produced by ops that we can move over (such as Dequantize).
 bool RecursivelyBackwardPropagateDataType(GraphTransformation* transformation,
-        Model* model, Operator* op,
-        ArrayDataType new_data_type,
-        const MinMax& new_minmax) {
-    bool did_change = false;
-    for (int input_index = 0; input_index < op->inputs.size(); ++input_index) {
-        const auto& input = op->inputs[input_index];
-        auto& input_array = model->GetArray(input);
+                                          Model* model, Operator* op,
+                                          ArrayDataType new_data_type,
+                                          const MinMax& new_minmax) {
+  bool did_change = false;
+  for (int input_index = 0; input_index < op->inputs.size(); ++input_index) {
+    const auto& input = op->inputs[input_index];
+    auto& input_array = model->GetArray(input);
 
-        // Prevent moving into constant param args that we don't want to modify.
-        if (DoesOpInputBlockBackwardPropagation(*op, input_index)) {
-            continue;
-        }
-
-        bool array_did_change = ChangeArrayDataType(transformation, &input_array,
-                                new_data_type, &new_minmax);
-        if (array_did_change) {
-            transformation->AddMessageF(
-                "Adjusting input final data type of array %s from %s to %s", input,
-                ArrayDataTypeName(input_array.final_data_type),
-                ArrayDataTypeName(new_data_type));
-        }
-        did_change |= array_did_change;
-
-        // Walk up into all ops producing the inputs to this op.
-        for (auto& producing_op : model->operators) {
-            if (!DoesOpBlockBackwardPropagation(*producing_op)) {
-                for (const auto& output : producing_op->outputs) {
-                    if (input == output) {
-                        did_change |= RecursivelyBackwardPropagateDataType(
-                                          transformation, model, producing_op.get(), new_data_type,
-                                          new_minmax);
-                    }
-                }
-            }
-        }
+    // Prevent moving into constant param args that we don't want to modify.
+    if (DoesOpInputBlockBackwardPropagation(*op, input_index)) {
+      continue;
     }
-    return did_change;
+
+    bool array_did_change = ChangeArrayDataType(transformation, &input_array,
+                                                new_data_type, &new_minmax);
+    if (array_did_change) {
+      transformation->AddMessageF(
+          "Adjusting input final data type of array %s from %s to %s", input,
+          ArrayDataTypeName(input_array.final_data_type),
+          ArrayDataTypeName(new_data_type));
+    }
+    did_change |= array_did_change;
+
+    // Walk up into all ops producing the inputs to this op.
+    for (auto& producing_op : model->operators) {
+      if (!DoesOpBlockBackwardPropagation(*producing_op)) {
+        for (const auto& output : producing_op->outputs) {
+          if (input == output) {
+            did_change |= RecursivelyBackwardPropagateDataType(
+                transformation, model, producing_op.get(), new_data_type,
+                new_minmax);
+          }
+        }
+      }
+    }
+  }
+  return did_change;
 }
 
 // Returns true if the op blocks our forward recursive data type propagation.
 bool DoesOpBlockForwardPropagation(const Operator& op) {
-    switch (op.type) {
+  switch (op.type) {
     case OperatorType::kFakeQuant:
-        // Always stop at another FakeQuant, as it will likely have different
-        // parameters.
-        return true;
+      // Always stop at another FakeQuant, as it will likely have different
+      // parameters.
+      return true;
     default:
-        return false;
-    }
+      return false;
+  }
 }
 
 // Recurses down the graph setting the data type of all arrays until an operator
 // that blocks propagation (like another FakeQuant) or a final_data_type is
 // already specified.
 bool RecursivelyForwardPropagateDataType(GraphTransformation* transformation,
-        Model* model, Operator* op,
-        ArrayDataType new_data_type) {
-    bool did_change = false;
-    for (const auto& output : op->outputs) {
-        auto& output_array = model->GetArray(output);
-        if (output_array.final_data_type == new_data_type) {
-            // Final data type is already - skip.
-            continue;
-        }
-
-        if (output_array.final_data_type == ArrayDataType::kNone ||
-                output_array.final_data_type != new_data_type) {
-            transformation->AddMessageF(
-                "Adjusting output final data type of array %s from %s to %s", output,
-                ArrayDataTypeName(output_array.final_data_type),
-                ArrayDataTypeName(new_data_type));
-            did_change |= ChangeArrayDataType(transformation, &output_array,
-                                              new_data_type, nullptr);
-
-            // Walk down into all ops consuming the output of this op.
-            for (auto& consuming_op : model->operators) {
-                if (!DoesOpBlockForwardPropagation(*consuming_op)) {
-                    for (const auto& input : consuming_op->inputs) {
-                        if (input == output) {
-                            did_change |= RecursivelyForwardPropagateDataType(
-                                              transformation, model, consuming_op.get(), new_data_type);
-                        }
-                    }
-                }
-            }
-        }
+                                         Model* model, Operator* op,
+                                         ArrayDataType new_data_type) {
+  bool did_change = false;
+  for (const auto& output : op->outputs) {
+    auto& output_array = model->GetArray(output);
+    if (output_array.final_data_type == new_data_type) {
+      // Final data type is already - skip.
+      continue;
     }
-    return did_change;
+
+    if (output_array.final_data_type == ArrayDataType::kNone ||
+        output_array.final_data_type != new_data_type) {
+      transformation->AddMessageF(
+          "Adjusting output final data type of array %s from %s to %s", output,
+          ArrayDataTypeName(output_array.final_data_type),
+          ArrayDataTypeName(new_data_type));
+      did_change |= ChangeArrayDataType(transformation, &output_array,
+                                        new_data_type, nullptr);
+
+      // Walk down into all ops consuming the output of this op.
+      for (auto& consuming_op : model->operators) {
+        if (!DoesOpBlockForwardPropagation(*consuming_op)) {
+          for (const auto& input : consuming_op->inputs) {
+            if (input == output) {
+              did_change |= RecursivelyForwardPropagateDataType(
+                  transformation, model, consuming_op.get(), new_data_type);
+            }
+          }
+        }
+      }
+    }
+  }
+  return did_change;
 }
 
 }  // namespace
@@ -278,44 +278,44 @@ bool RecursivelyForwardPropagateDataType(GraphTransformation* transformation,
 // In general you should not copy this style of transformation and stick to
 // local-only changes as seen in the other transformations.
 ::tensorflow::Status PropagateFakeQuantNumBits::Run(Model* model,
-        std::size_t op_index,
-        bool* modified) {
-    *modified = false;
-    auto it = model->operators.begin() + op_index;
-    auto* op = it->get();
-    if (op->type != OperatorType::kFakeQuant) {
-        return ::tensorflow::Status::OK();
-    }
-    auto* fakequant_op = static_cast<FakeQuantOperator*>(op);
-
-    ArrayDataType quantized_data_type = ArrayDataType::kNone;
-    if (!InferQuantizedDataTypeFromFakeQuant(*fakequant_op,
-            &quantized_data_type)) {
-        AddMessageF("FakeQuant op %s num_bits=%d is out of range, ignoring",
-                    LogName(*op), fakequant_op->num_bits);
-        return ::tensorflow::Status::OK();
-    }
-    const auto& final_minmax = *fakequant_op->minmax;
-
-    AddMessageF(
-        "Beginning propagation of fake quant %s num_bits=%d min=%g max=%g to %s",
-        LogName(*op), fakequant_op->num_bits, final_minmax.min, final_minmax.max,
-        ArrayDataTypeName(quantized_data_type));
-
-    bool did_change = false;
-
-    // Propagate the FakeQuant information backward up the graph.
-    // This will possibly adjust input arrays or constant types (like Gather).
-    did_change |= RecursivelyBackwardPropagateDataType(
-                      this, model, op, quantized_data_type, final_minmax);
-
-    // Propagate the FakeQuant information forward down the graph.
-    // This will possibly adjust output arrays.
-    did_change |=
-        RecursivelyForwardPropagateDataType(this, model, op, quantized_data_type);
-
-    *modified = did_change;
+                                                    std::size_t op_index,
+                                                    bool* modified) {
+  *modified = false;
+  auto it = model->operators.begin() + op_index;
+  auto* op = it->get();
+  if (op->type != OperatorType::kFakeQuant) {
     return ::tensorflow::Status::OK();
+  }
+  auto* fakequant_op = static_cast<FakeQuantOperator*>(op);
+
+  ArrayDataType quantized_data_type = ArrayDataType::kNone;
+  if (!InferQuantizedDataTypeFromFakeQuant(*fakequant_op,
+                                           &quantized_data_type)) {
+    AddMessageF("FakeQuant op %s num_bits=%d is out of range, ignoring",
+                LogName(*op), fakequant_op->num_bits);
+    return ::tensorflow::Status::OK();
+  }
+  const auto& final_minmax = *fakequant_op->minmax;
+
+  AddMessageF(
+      "Beginning propagation of fake quant %s num_bits=%d min=%g max=%g to %s",
+      LogName(*op), fakequant_op->num_bits, final_minmax.min, final_minmax.max,
+      ArrayDataTypeName(quantized_data_type));
+
+  bool did_change = false;
+
+  // Propagate the FakeQuant information backward up the graph.
+  // This will possibly adjust input arrays or constant types (like Gather).
+  did_change |= RecursivelyBackwardPropagateDataType(
+      this, model, op, quantized_data_type, final_minmax);
+
+  // Propagate the FakeQuant information forward down the graph.
+  // This will possibly adjust output arrays.
+  did_change |=
+      RecursivelyForwardPropagateDataType(this, model, op, quantized_data_type);
+
+  *modified = did_change;
+  return ::tensorflow::Status::OK();
 }
 
 }  // namespace toco

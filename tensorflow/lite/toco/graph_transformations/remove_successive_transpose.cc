@@ -25,71 +25,71 @@ namespace {
 
 bool TransformsToIdentity(std::vector<int> const& perm1,
                           std::vector<int> const& perm2) {
-    if (perm2.size() != perm1.size() || perm1.empty()) {
-        return false;
+  if (perm2.size() != perm1.size() || perm1.empty()) {
+    return false;
+  }
+  // perm1 is the order of the indices after first transpose. When perm1 is
+  // reordered according to perm2, if the result is simple increasing sequence
+  // i.e., range(0, perm1.size()), then the two transposes cancel each other.
+  for (int i = 0; i < perm1.size(); ++i) {
+    if (perm1[i] < 0 || perm1[i] >= perm1.size() || perm2[i] < 0 ||
+        perm2[i] >= perm1.size()) {
+      return false;
     }
-    // perm1 is the order of the indices after first transpose. When perm1 is
-    // reordered according to perm2, if the result is simple increasing sequence
-    // i.e., range(0, perm1.size()), then the two transposes cancel each other.
-    for (int i = 0; i < perm1.size(); ++i) {
-        if (perm1[i] < 0 || perm1[i] >= perm1.size() || perm2[i] < 0 ||
-                perm2[i] >= perm1.size()) {
-            return false;
-        }
-        if (perm1[perm2[i]] != i) {
-            return false;
-        }
+    if (perm1[perm2[i]] != i) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 void ReplaceOpInputsWith(Model* model, const string& lookfor,
                          const string& replacewith) {
-    for (const auto& op : model->operators) {
-        for (int i = 0; i < op->inputs.size(); ++i) {
-            if (op->inputs[i] == lookfor) {
-                op->inputs[i] = replacewith;
-            }
-        }
+  for (const auto& op : model->operators) {
+    for (int i = 0; i < op->inputs.size(); ++i) {
+      if (op->inputs[i] == lookfor) {
+        op->inputs[i] = replacewith;
+      }
     }
+  }
 }
 
 }  // namespace
 
 ::tensorflow::Status RemoveSuccessiveTranspose::Run(Model* model,
-        std::size_t op_index,
-        bool* modified) {
-    *modified = false;
-    auto op = model->operators.begin() + op_index;
-    if (op->get()->type != OperatorType::kTranspose) {
-        return ::tensorflow::Status::OK();
-    }
-
-    TransposeOperator* t_op = static_cast<TransposeOperator*>(op->get());
-    if (CountOpsWithInput(*model, t_op->outputs[0]) != 1) {
-        return ::tensorflow::Status::OK();
-    }
-    Operator* next = GetOpWithInput(*model, t_op->outputs[0]);
-    if (!next || next->type != OperatorType::kTranspose) {
-        return ::tensorflow::Status::OK();
-    }
-
-    TransposeOperator* t_next = static_cast<TransposeOperator*>(next);
-    if (!CountOpsWithInput(*model, t_next->outputs[0])) {
-        return ::tensorflow::Status::OK();
-    }
-
-    if (TransformsToIdentity(t_op->perm, t_next->perm)) {
-        // Find the input tensor that uses the results of transpose t_next, then
-        // make it point to the input of t_op, effectively isolating both the
-        // transposes from the graph.
-        ReplaceOpInputsWith(model, t_next->outputs[0], t_op->inputs[0]);
-        DeleteOpAndArrays(model, t_next);
-        DeleteOpAndArrays(model, t_op);
-        *modified = true;
-    }
-
+                                                    std::size_t op_index,
+                                                    bool* modified) {
+  *modified = false;
+  auto op = model->operators.begin() + op_index;
+  if (op->get()->type != OperatorType::kTranspose) {
     return ::tensorflow::Status::OK();
+  }
+
+  TransposeOperator* t_op = static_cast<TransposeOperator*>(op->get());
+  if (CountOpsWithInput(*model, t_op->outputs[0]) != 1) {
+    return ::tensorflow::Status::OK();
+  }
+  Operator* next = GetOpWithInput(*model, t_op->outputs[0]);
+  if (!next || next->type != OperatorType::kTranspose) {
+    return ::tensorflow::Status::OK();
+  }
+
+  TransposeOperator* t_next = static_cast<TransposeOperator*>(next);
+  if (!CountOpsWithInput(*model, t_next->outputs[0])) {
+    return ::tensorflow::Status::OK();
+  }
+
+  if (TransformsToIdentity(t_op->perm, t_next->perm)) {
+    // Find the input tensor that uses the results of transpose t_next, then
+    // make it point to the input of t_op, effectively isolating both the
+    // transposes from the graph.
+    ReplaceOpInputsWith(model, t_next->outputs[0], t_op->inputs[0]);
+    DeleteOpAndArrays(model, t_next);
+    DeleteOpAndArrays(model, t_op);
+    *modified = true;
+  }
+
+  return ::tensorflow::Status::OK();
 }
 
 }  // namespace toco
