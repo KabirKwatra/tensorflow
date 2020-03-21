@@ -32,63 +32,63 @@ namespace profiler {
 KernelStatsDb ConvertDeviceTraceXPlaneToKernelStatsDb(
     const XPlane& device_trace,
     const std::function<void(const XEventVisitor&, KernelReport*)>&
-    on_kernel_fn) {
-    KernelStatsDb result;
-    XPlaneVisitor plane = CreateTfXPlaneVisitor(&device_trace);
-    plane.ForEachLine([&](const XLineVisitor& line) {
-        if (IsDerivedThreadId(line.Id())) {
-            return;
+        on_kernel_fn) {
+  KernelStatsDb result;
+  XPlaneVisitor plane = CreateTfXPlaneVisitor(&device_trace);
+  plane.ForEachLine([&](const XLineVisitor& line) {
+    if (IsDerivedThreadId(line.Id())) {
+      return;
+    }
+    line.ForEachEvent([&](const XEventVisitor& event) {
+      absl::string_view tf_op_fullname;
+      KernelReport kernel;
+
+      absl::string_view equation;
+      event.ForEachStat([&](const tensorflow::profiler::XStatVisitor& stat) {
+        if (stat.Type() == StatType::kLevel0) {
+          tf_op_fullname = stat.StrValue();
+        } else if (stat.Type() == StatType::kKernelDetails) {
+          kernel.set_name(event.Name().data(), event.Name().size());
+          bool using_tensor_cores = IsKernelUsingTensorCore(event.Name());
+          kernel.set_is_kernel_using_tensor_core(using_tensor_cores);
+          kernel.set_total_duration_ns(event.DurationNs());
+          kernel.set_min_duration_ns(event.DurationNs());
+          kernel.set_max_duration_ns(event.DurationNs());
+          ParseKernelLaunchParams(stat.StrValue(), &kernel);
+        } else if (stat.Type() == StatType::kEquation) {
+          equation = stat.StrValue();
         }
-        line.ForEachEvent([&](const XEventVisitor& event) {
-            absl::string_view tf_op_fullname;
-            KernelReport kernel;
+      });
 
-            absl::string_view equation;
-            event.ForEachStat([&](const tensorflow::profiler::XStatVisitor& stat) {
-                if (stat.Type() == StatType::kLevel0) {
-                    tf_op_fullname = stat.StrValue();
-                } else if (stat.Type() == StatType::kKernelDetails) {
-                    kernel.set_name(event.Name().data(), event.Name().size());
-                    bool using_tensor_cores = IsKernelUsingTensorCore(event.Name());
-                    kernel.set_is_kernel_using_tensor_core(using_tensor_cores);
-                    kernel.set_total_duration_ns(event.DurationNs());
-                    kernel.set_min_duration_ns(event.DurationNs());
-                    kernel.set_max_duration_ns(event.DurationNs());
-                    ParseKernelLaunchParams(stat.StrValue(), &kernel);
-                } else if (stat.Type() == StatType::kEquation) {
-                    equation = stat.StrValue();
-                }
-            });
+      if (!tf_op_fullname.empty()) {
+        tensorflow::profiler::TfOp tf_op = ParseTfOpFullname(tf_op_fullname);
 
-            if (!tf_op_fullname.empty()) {
-                tensorflow::profiler::TfOp tf_op = ParseTfOpFullname(tf_op_fullname);
+        if (kernel.total_duration_ns()) {
+          kernel.set_op_name(tf_op.name.data(), tf_op.name.size());
+          bool tensor_core_eligible = IsEinsumTensorCoreEligible(equation) ||
+                                      IsOpTensorCoreEligible(kernel.op_name());
 
-                if (kernel.total_duration_ns()) {
-                    kernel.set_op_name(tf_op.name.data(), tf_op.name.size());
-                    bool tensor_core_eligible = IsEinsumTensorCoreEligible(equation) ||
-                                                IsOpTensorCoreEligible(kernel.op_name());
+          if (!tensor_core_eligible && kernel.is_kernel_using_tensor_core()) {
+            VLOG(1) << "Detected new Op using TensorCores: " << kernel.op_name()
+                    << std::endl;
+            tensor_core_eligible = true;
+          }
 
-                    if (!tensor_core_eligible && kernel.is_kernel_using_tensor_core()) {
-                        VLOG(1) << "Detected new Op using TensorCores: " << kernel.op_name()
-                                << std::endl;
-                        tensor_core_eligible = true;
-                    }
+          kernel.set_is_op_tensor_core_eligible(tensor_core_eligible);
+        }
+      }
 
-                    kernel.set_is_op_tensor_core_eligible(tensor_core_eligible);
-                }
-            }
+      if (on_kernel_fn) {
+        on_kernel_fn(event, &kernel);
+      }
 
-            if (on_kernel_fn) {
-                on_kernel_fn(event, &kernel);
-            }
-
-            if (kernel.total_duration_ns()) {
-                *result.add_reports() = kernel;
-            }
-        });
+      if (kernel.total_duration_ns()) {
+        *result.add_reports() = kernel;
+      }
     });
+  });
 
-    return result;
+  return result;
 }
 
 }  // namespace profiler
