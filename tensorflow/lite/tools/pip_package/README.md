@@ -57,12 +57,11 @@ from tflite_runtime.interpreter import Interpreter
 interpreter = Interpreter(model_path="foo.tflite")
 ```
 
-This currently works to build on Linux machines including Raspberry Pi. In
-the future, cross compilation to smaller SOCs like Raspberry Pi from
-bigger host will be supported.
+This currently works to build on Linux machines including Raspberry Pi. In the
+future, cross compilation to smaller SOCs like Raspberry Pi from bigger host
+will be supported.
 
 ## Caveats
 
-* You cannot use TensorFlow Select ops, only TensorFlow Lite builtins.
-* Currently custom ops and delegates cannot be registered.
-
+- You cannot use TensorFlow Select ops, only TensorFlow Lite builtins.
+- Currently custom ops and delegates cannot be registered.
