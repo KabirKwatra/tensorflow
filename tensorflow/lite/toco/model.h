@@ -36,152 +36,152 @@ namespace toco {
 using tflite::QuantizationParams;
 
 enum class OperatorType : uint8 {
-  kNone,
-  // General-purpose neural network operators.
-  kAdd,
-  kAddN,
-  kAveragePool,
-  kBatchMatMul,
-  kBatchNormalization,
-  kCeil,
-  kConv,
-  kConcatenation,
-  kCos,
-  kDepthwiseConv,
-  kDepthToSpace,
-  kSpaceToDepth,
-  kDequantize,
-  kDiv,
-  kExp,
-  kExpandDims,
-  kFill,
-  kFloorDiv,
-  kFloorMod,
-  kFullyConnected,
-  kL2Normalization,
-  kL2Pool,
-  kLstmCell,
-  kUnidirectionalSequenceLstm,
-  kLocalResponseNormalization,
-  kLog,
-  kLogistic,
-  kMaxPool,
-  kFakeQuant,
-  kMul,
-  kOneHot,
-  kRandomUniform,
-  kRange,
-  kRank,
-  kRelu,
-  kRelu1,
-  kRelu6,
-  kPRelu,
-  kHardSwish,
-  kSoftmax,
-  kLogSoftmax,
-  kSub,
-  kTanh,
-  kTransposeConv,
-  kCast,
-  kFloor,
-  kRound,
-  kGather,
-  kResizeBilinear,
-  kSin,
-  kSpaceToBatchND,
-  kPack,
-  kBatchToSpaceND,
-  kPad,
-  kPadV2,
-  kReduceProd,  // Reduction product
-  kStridedSlice,
-  kSlice,
-  kSqueeze,
-  kMean,
-  kArgMax,
-  // The SVDF Op is a decomposition of a densely connected Op into
-  // low rank filters. For details:
-  // https://research.google.com/pubs/pub43813.html
-  kSvdf,
-  // Special operators used for importing TensorFlow nodes.
-  // The general intent is to have some graph transformation either
-  // drop them or rewrite them as general-purpose operators.
-  kAll,
-  kAssert,
-  kConcat,
-  kConcatV2,
-  kGreater,
-  kGreaterEqual,
-  kIdentity,
-  kLess,
-  kLessEqual,
-  kReduceMax,  //  Reduction Max
-  kMaximum,    //  Element-wise Maximum
-  kReduceMin,  //  Reduction Min
-  kMinimum,    //  Element-wise Minimum
-  kMatMul,
-  kMerge,
-  kNeg,
-  kReshape,
-  kRsqrt,
-  kShape,
-  kSplit,
-  kSplitV,
-  kSqrt,
-  kSquare,
-  kSquaredDifference,
-  kSum,
-  kSwitch,
-  kTile,
-  kTranspose,
-  kTopK_V2,
-  kDynamicPartition,
-  kDynamicStitch,
-  // An unsupported TF operation. It's only needed to be able to represent TF
-  // graph internally and is expected to be dropped by graph transformations.
-  kUnsupported,
-  // Finally, TensorFlow uses different conventions for axes ordering,
-  // see AxesOrder, and this cannot always be resolved at the time of importing
-  // nodes, as TensorFlow parameters may be constant-expression subgraphs
-  // instead of being given as plain constant arrays. So we need to insert
-  // special nodes in the graph to shuffle axes.
-  kReorderAxes,
-  kSegmentSum,
-  kSelect,
-  kSelectV2,
-  kSparseToDense,
-  kEqual,
-  kNotEqual,
-  kPow,
-  kArgMin,
-  kAny,
-  kLogicalAnd,
-  kLogicalNot,
-  kLogicalOr,
-  kCTCBeamSearchDecoder,
-  kUnpack,
-  kZerosLike,
-  kResizeNearestNeighbor,
-  kLeakyRelu,
-  kAbs,
-  kMirrorPad,
-  kUnique,
-  kUnidirectionalSequenceRnn,
-  kBidirectionalSequenceLstm,
-  kReverseV2,
-  kBidirectionalSequenceRnn,
-  kGatherNd,
-  kWhere,
-  kElu,
-  kReverseSequence,
-  kMatrixDiag,
-  kMatrixSetDiag,
-  kMatrixDiagV2,
-  kMatrixSetDiagV2,
-  kMatrixDiagV3,
-  kMatrixSetDiagV3,
-  // Debugging operators.
-  kNumericVerify
+    kNone,
+    // General-purpose neural network operators.
+    kAdd,
+    kAddN,
+    kAveragePool,
+    kBatchMatMul,
+    kBatchNormalization,
+    kCeil,
+    kConv,
+    kConcatenation,
+    kCos,
+    kDepthwiseConv,
+    kDepthToSpace,
+    kSpaceToDepth,
+    kDequantize,
+    kDiv,
+    kExp,
+    kExpandDims,
+    kFill,
+    kFloorDiv,
+    kFloorMod,
+    kFullyConnected,
+    kL2Normalization,
+    kL2Pool,
+    kLstmCell,
+    kUnidirectionalSequenceLstm,
+    kLocalResponseNormalization,
+    kLog,
+    kLogistic,
+    kMaxPool,
+    kFakeQuant,
+    kMul,
+    kOneHot,
+    kRandomUniform,
+    kRange,
+    kRank,
+    kRelu,
+    kRelu1,
+    kRelu6,
+    kPRelu,
+    kHardSwish,
+    kSoftmax,
+    kLogSoftmax,
+    kSub,
+    kTanh,
+    kTransposeConv,
+    kCast,
+    kFloor,
+    kRound,
+    kGather,
+    kResizeBilinear,
+    kSin,
+    kSpaceToBatchND,
+    kPack,
+    kBatchToSpaceND,
+    kPad,
+    kPadV2,
+    kReduceProd,  // Reduction product
+    kStridedSlice,
+    kSlice,
+    kSqueeze,
+    kMean,
+    kArgMax,
+    // The SVDF Op is a decomposition of a densely connected Op into
+    // low rank filters. For details:
+    // https://research.google.com/pubs/pub43813.html
+    kSvdf,
+    // Special operators used for importing TensorFlow nodes.
+    // The general intent is to have some graph transformation either
+    // drop them or rewrite them as general-purpose operators.
+    kAll,
+    kAssert,
+    kConcat,
+    kConcatV2,
+    kGreater,
+    kGreaterEqual,
+    kIdentity,
+    kLess,
+    kLessEqual,
+    kReduceMax,  //  Reduction Max
+    kMaximum,    //  Element-wise Maximum
+    kReduceMin,  //  Reduction Min
+    kMinimum,    //  Element-wise Minimum
+    kMatMul,
+    kMerge,
+    kNeg,
+    kReshape,
+    kRsqrt,
+    kShape,
+    kSplit,
+    kSplitV,
+    kSqrt,
+    kSquare,
+    kSquaredDifference,
+    kSum,
+    kSwitch,
+    kTile,
+    kTranspose,
+    kTopK_V2,
+    kDynamicPartition,
+    kDynamicStitch,
+    // An unsupported TF operation. It's only needed to be able to represent TF
+    // graph internally and is expected to be dropped by graph transformations.
+    kUnsupported,
+    // Finally, TensorFlow uses different conventions for axes ordering,
+    // see AxesOrder, and this cannot always be resolved at the time of importing
+    // nodes, as TensorFlow parameters may be constant-expression subgraphs
+    // instead of being given as plain constant arrays. So we need to insert
+    // special nodes in the graph to shuffle axes.
+    kReorderAxes,
+    kSegmentSum,
+    kSelect,
+    kSelectV2,
+    kSparseToDense,
+    kEqual,
+    kNotEqual,
+    kPow,
+    kArgMin,
+    kAny,
+    kLogicalAnd,
+    kLogicalNot,
+    kLogicalOr,
+    kCTCBeamSearchDecoder,
+    kUnpack,
+    kZerosLike,
+    kResizeNearestNeighbor,
+    kLeakyRelu,
+    kAbs,
+    kMirrorPad,
+    kUnique,
+    kUnidirectionalSequenceRnn,
+    kBidirectionalSequenceLstm,
+    kReverseV2,
+    kBidirectionalSequenceRnn,
+    kGatherNd,
+    kWhere,
+    kElu,
+    kReverseSequence,
+    kMatrixDiag,
+    kMatrixSetDiag,
+    kMatrixDiagV2,
+    kMatrixSetDiagV2,
+    kMatrixDiagV3,
+    kMatrixSetDiagV3,
+    // Debugging operators.
+    kNumericVerify
 };
 
 // Helper to deal with TensorFlow arrays using a different ordering of
@@ -191,15 +191,15 @@ enum class OperatorType : uint8 {
 // we should have associative arrays mapping symbolic axes identifiers (like
 // "output_depth") to dimensions. We would then not need this anymore.
 enum class AxesOrder {
-  kOneAxis,  // one-dimensional array, one unique axis.
-  kCR,       // column-major matrix storage order. Our standard.
-  kRC,       // row-major matrix storage order. TensorFlow default.
-  kOHWI,     // Our standard for conv weights
-  kHWIO,     // TensorFlow conv weights
-  k1HWO,     // Our standard for DepthwiseConv weights
-  kHWIM,     // TensorFlow DepthwiseConv weights
-  kNHWC,     // TensorFlow activations
-  kHWOI,     // TensorFlow back-prop conv weights
+    kOneAxis,  // one-dimensional array, one unique axis.
+    kCR,       // column-major matrix storage order. Our standard.
+    kRC,       // row-major matrix storage order. TensorFlow default.
+    kOHWI,     // Our standard for conv weights
+    kHWIO,     // TensorFlow conv weights
+    k1HWO,     // Our standard for DepthwiseConv weights
+    kHWIM,     // TensorFlow DepthwiseConv weights
+    kNHWC,     // TensorFlow activations
+    kHWOI,     // TensorFlow back-prop conv weights
 };
 
 // The type of the scalars in an array.
@@ -220,20 +220,20 @@ enum class AxesOrder {
 // may be involved only in debug-only subgraphs that we may not be interested
 // in actually supporting).
 enum class ArrayDataType : uint8 {
-  kNone,  // 0
-  kBool,
-  kFloat,
-  kInt8,
-  kUint8,
-  kInt16,  // 5
-  kUint16,
-  kInt32,
-  kUint32,
-  kInt64,
-  kUint64,  // 10
-  kString,
-  kComplex64,
-  kFloat16,
+    kNone,  // 0
+    kBool,
+    kFloat,
+    kInt8,
+    kUint8,
+    kInt16,  // 5
+    kUint16,
+    kInt32,
+    kUint32,
+    kInt64,
+    kUint64,  // 10
+    kString,
+    kComplex64,
+    kFloat16,
 };
 
 // Compile-time logic to map ArrayDataType to the corresponding C++ scalar type
@@ -241,55 +241,55 @@ template <ArrayDataType A>
 struct DataTypeImpl {};
 template <>
 struct DataTypeImpl<ArrayDataType::kNone> {
-  typedef int Type;
+    typedef int Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kBool> {
-  typedef bool Type;
+    typedef bool Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kFloat> {
-  typedef float Type;
+    typedef float Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kInt8> {
-  typedef int8 Type;
+    typedef int8 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kUint8> {
-  typedef uint8 Type;
+    typedef uint8 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kInt16> {
-  typedef int16 Type;
+    typedef int16 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kUint16> {
-  typedef uint16 Type;
+    typedef uint16 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kInt32> {
-  typedef int32 Type;
+    typedef int32 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kUint32> {
-  typedef uint32 Type;
+    typedef uint32 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kInt64> {
-  typedef int64 Type;
+    typedef int64 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kUint64> {
-  typedef uint64 Type;
+    typedef uint64 Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kString> {
-  typedef string Type;
+    typedef string Type;
 };
 template <>
 struct DataTypeImpl<ArrayDataType::kComplex64> {
-  typedef std::complex<float> Type;
+    typedef std::complex<float> Type;
 };
 
 template <ArrayDataType A>
@@ -297,129 +297,139 @@ using DataType = typename DataTypeImpl<A>::Type;
 
 // Base class for type-specific buffer types.
 struct GenericBuffer {
-  // Non-default-constructible: only ArrayDataType-specific subclass
-  // objects may be constructed.
-  GenericBuffer() = delete;
-  // Non-copyable-or-movable: we should only store pointers-to-Buffer
-  // in containers, not Operators themselves, so there should be no
-  // copy or move.
-  GenericBuffer(const GenericBuffer&) = delete;
-  GenericBuffer(const GenericBuffer&&) = delete;
+    // Non-default-constructible: only ArrayDataType-specific subclass
+    // objects may be constructed.
+    GenericBuffer() = delete;
+    // Non-copyable-or-movable: we should only store pointers-to-Buffer
+    // in containers, not Operators themselves, so there should be no
+    // copy or move.
+    GenericBuffer(const GenericBuffer&) = delete;
+    GenericBuffer(const GenericBuffer&&) = delete;
 
-  // We need a virtual destructor so we can store pointers-to-Buffer
-  // in containers and have the containers call the right subclass destructor.
-  virtual ~GenericBuffer() {}
+    // We need a virtual destructor so we can store pointers-to-Buffer
+    // in containers and have the containers call the right subclass destructor.
+    virtual ~GenericBuffer() {}
 
-  virtual int Length() const = 0;
+    virtual int Length() const = 0;
 
-  const ArrayDataType type;
+    const ArrayDataType type;
 
- protected:
-  // Constructor used by subclasses for specific ArrayDataType's.
-  explicit GenericBuffer(ArrayDataType t) : type(t) {}
+protected:
+    // Constructor used by subclasses for specific ArrayDataType's.
+    explicit GenericBuffer(ArrayDataType t) : type(t) {}
 };
 
 // Type-specific buffer, containing type-specific storage.
 template <ArrayDataType A>
 struct Buffer : GenericBuffer {
-  Buffer() : GenericBuffer(A) {}
+    Buffer() : GenericBuffer(A) {}
 
-  int Length() const override { return data.size(); }
+    int Length() const override {
+        return data.size();
+    }
 
-  std::vector<DataType<A>> data;
+    std::vector<DataType<A>> data;
 };
 
 class Shape {
- public:
-  // For Shape, we stick to half-way encapsulation for now:
-  // we hide the raw dims_ member, but expose it raw by accessors
-  // because from some brainstorming, it's not at all easy to
-  // anticipate which flavor of more hermetic encapsulation would
-  // actually buy us future-proof-ness without being needlessly
-  // cumbersome.
-  Shape() {}
-  Shape(std::initializer_list<int> dim_list) : dims_(dim_list) {}
+public:
+    // For Shape, we stick to half-way encapsulation for now:
+    // we hide the raw dims_ member, but expose it raw by accessors
+    // because from some brainstorming, it's not at all easy to
+    // anticipate which flavor of more hermetic encapsulation would
+    // actually buy us future-proof-ness without being needlessly
+    // cumbersome.
+    Shape() {}
+    Shape(std::initializer_list<int> dim_list) : dims_(dim_list) {}
 
-  void ReplaceDims(std::initializer_list<int> dim_list) {
-    dims_ = std::vector<int>(dim_list);
-  }
+    void ReplaceDims(std::initializer_list<int> dim_list) {
+        dims_ = std::vector<int>(dim_list);
+    }
 
-  const std::vector<int>& dims() const { return dims_; }
-  std::vector<int>* mutable_dims() { return &dims_; }
-  const int dimensions_count() const { return dims_.size(); }
+    const std::vector<int>& dims() const {
+        return dims_;
+    }
+    std::vector<int>* mutable_dims() {
+        return &dims_;
+    }
+    const int dimensions_count() const {
+        return dims_.size();
+    }
 
-  // We still have that one convenience accessor to avoid
-  // the awkward double bracket issue:  shape.dims()[i].
-  int dims(int i) const {
-    // Always check for out-of-bounds accesses, even in optimized builds where
-    // standard assertions are disabled. Out-of-bounds access here is a common
-    // occurrence.
-    CHECK_GE(i, 0);
-    CHECK_GT(dims_.size(), i);
-    return dims_[i];
-  }
+    // We still have that one convenience accessor to avoid
+    // the awkward double bracket issue:  shape.dims()[i].
+    int dims(int i) const {
+        // Always check for out-of-bounds accesses, even in optimized builds where
+        // standard assertions are disabled. Out-of-bounds access here is a common
+        // occurrence.
+        CHECK_GE(i, 0);
+        CHECK_GT(dims_.size(), i);
+        return dims_[i];
+    }
 
-  bool operator==(const Shape& comp) const {
-    return (this->dims_ == comp.dims());
-  }
+    bool operator==(const Shape& comp) const {
+        return (this->dims_ == comp.dims());
+    }
 
-  bool operator!=(const Shape& comp) const { return !((*this) == comp); }
+    bool operator!=(const Shape& comp) const {
+        return !((*this) == comp);
+    }
 
- private:
-  std::vector<int> dims_;
+private:
+    std::vector<int> dims_;
 };
 
 // Base class for all operator classes.
 struct Operator {
-  // Non-default-constructible: only OperatorType-specific subclass
-  // objects may be constructed.
-  Operator() = delete;
-  // Non-copyable-or-movable: we should only store pointers-to-Operator
-  // in containers, not Operators themselves, so there should be no
-  // copy or move.
-  Operator(const Operator&) = delete;
-  Operator(const Operator&&) = delete;
+    // Non-default-constructible: only OperatorType-specific subclass
+    // objects may be constructed.
+    Operator() = delete;
+    // Non-copyable-or-movable: we should only store pointers-to-Operator
+    // in containers, not Operators themselves, so there should be no
+    // copy or move.
+    Operator(const Operator&) = delete;
+    Operator(const Operator&&) = delete;
 
-  // We need a virtual destructor so we can store pointers-to-Operator
-  // in containers and have the containers call the right subclass destructor.
-  virtual ~Operator() {}
+    // We need a virtual destructor so we can store pointers-to-Operator
+    // in containers and have the containers call the right subclass destructor.
+    virtual ~Operator() {}
 
-  // The specific type of operator. Corresponds 1:1 to subclasses.
-  const OperatorType type;
+    // The specific type of operator. Corresponds 1:1 to subclasses.
+    const OperatorType type;
 
-  // The activation function that may be fused into this operator,
-  // or None if no activation function is fused.
-  FusedActivationFunctionType fused_activation_function;
+    // The activation function that may be fused into this operator,
+    // or None if no activation function is fused.
+    FusedActivationFunctionType fused_activation_function;
 
-  // Input arrays: either activation arrays or constant array parameters.
-  // We refer to them by their name, not by their address; the mapping of
-  // names to addresses is given by the Model, which owns both Operator's and
-  // Array's. Thus, an Operator on its own doesn't contain much information,
-  // it is meant to be used in conjunction with the Model that owns it.
-  std::vector<string> inputs;
+    // Input arrays: either activation arrays or constant array parameters.
+    // We refer to them by their name, not by their address; the mapping of
+    // names to addresses is given by the Model, which owns both Operator's and
+    // Array's. Thus, an Operator on its own doesn't contain much information,
+    // it is meant to be used in conjunction with the Model that owns it.
+    std::vector<string> inputs;
 
-  // Output activation arrays. Same comments as for inputs apply here too.
-  std::vector<string> outputs;
+    // Output activation arrays. Same comments as for inputs apply here too.
+    std::vector<string> outputs;
 
-  // If true, the operator has more outputs than are listed in the 'outputs'
-  // member. These need to be resolved by some graph transformation.
-  // This flag is only here to indicate that an operator should not be
-  // discarded as unused, even if from its 'outputs' member alone it
-  // looks unused.
-  bool unresolved_outputs = false;
+    // If true, the operator has more outputs than are listed in the 'outputs'
+    // member. These need to be resolved by some graph transformation.
+    // This flag is only here to indicate that an operator should not be
+    // discarded as unused, even if from its 'outputs' member alone it
+    // looks unused.
+    bool unresolved_outputs = false;
 
-  // A serialized tensorflow::NodeDef string.
-  // The field is filled only when importing from TensorFlow.
-  // It's guaranteed to be filled for `TensorFlowUnsupportedOperator`.
-  // It's not guaranteed to be filled for other ops. Ops created by graph
-  // transformations won't have TensorFlow NodeDef.
-  string tensorflow_node_def;
+    // A serialized tensorflow::NodeDef string.
+    // The field is filled only when importing from TensorFlow.
+    // It's guaranteed to be filled for `TensorFlowUnsupportedOperator`.
+    // It's not guaranteed to be filled for other ops. Ops created by graph
+    // transformations won't have TensorFlow NodeDef.
+    string tensorflow_node_def;
 
- protected:
-  // Constructor used by subclasses for specific OperatorType's.
-  explicit Operator(OperatorType t)
-      : type(t),
-        fused_activation_function(FusedActivationFunctionType::kNone) {}
+protected:
+    // Constructor used by subclasses for specific OperatorType's.
+    explicit Operator(OperatorType t)
+        : type(t),
+          fused_activation_function(FusedActivationFunctionType::kNone) {}
 };
 
 // Padding types for Conv-like operators. This is how padding is typically
@@ -432,25 +442,25 @@ enum class PaddingType { kNone, kSame, kValid };
 // a number of padding rows and columns, which we call the padding height and
 // width respectively.
 struct FixedPadding {
-  int width = 0;
-  int height = 0;
+    int width = 0;
+    int height = 0;
 };
 
 // "Universal" padding struct containing both a generic PaddingType (as
 // represented in a model file), and a FixedPadding (as needed for inference).
 // The latter is resolved during the PropagateFixedSizes pass.
 struct Padding {
-  FixedPadding& GetOrCreateFixedPadding() {
-    if (!fixed) {
-      FixedPadding* ptr = new FixedPadding;
-      fixed = std::unique_ptr<FixedPadding>(ptr);
+    FixedPadding& GetOrCreateFixedPadding() {
+        if (!fixed) {
+            FixedPadding* ptr = new FixedPadding;
+            fixed = std::unique_ptr<FixedPadding>(ptr);
+        }
+        return *fixed;
     }
-    return *fixed;
-  }
 
-  Padding() : type(PaddingType::kNone) {}
-  PaddingType type;
-  std::unique_ptr<FixedPadding> fixed;
+    Padding() : type(PaddingType::kNone) {}
+    PaddingType type;
+    std::unique_ptr<FixedPadding> fixed;
 };
 
 // "Convolutional" layer, as represented in model files.
@@ -469,15 +479,15 @@ struct Padding {
 //
 // TensorFlow equivalent: Conv2D
 struct ConvOperator : Operator {
-  ConvOperator() : Operator(OperatorType::kConv) {}
-  Padding padding;
-  int stride_width = 0;
-  int stride_height = 0;
-  // A dilation_rate of 0 is invalid and this field is an optional attribute.
-  // Thus initializing it to 1 to allow default conv behavior when the
-  // attribute is not present.
-  int dilation_width_factor = 1;
-  int dilation_height_factor = 1;
+    ConvOperator() : Operator(OperatorType::kConv) {}
+    Padding padding;
+    int stride_width = 0;
+    int stride_height = 0;
+    // A dilation_rate of 0 is invalid and this field is an optional attribute.
+    // Thus initializing it to 1 to allow default conv behavior when the
+    // attribute is not present.
+    int dilation_width_factor = 1;
+    int dilation_height_factor = 1;
 };
 
 // CTCBeamSearchDecoder operator:
@@ -495,11 +505,11 @@ struct ConvOperator : Operator {
 //
 // TensorFlow equivalent: CTCBeamSearchDecoder
 struct CTCBeamSearchDecoderOperator : Operator {
-  CTCBeamSearchDecoderOperator()
-      : Operator(OperatorType::kCTCBeamSearchDecoder) {}
-  int beam_width;
-  int top_paths;
-  bool merge_repeated = true;
+    CTCBeamSearchDecoderOperator()
+        : Operator(OperatorType::kCTCBeamSearchDecoder) {}
+    int beam_width;
+    int top_paths;
+    bool merge_repeated = true;
 };
 
 // Depthwise-separable convolution operator.
@@ -512,16 +522,16 @@ struct CTCBeamSearchDecoderOperator : Operator {
 //
 // TensorFlow equivalent: DepthwiseConv2dNative
 struct DepthwiseConvOperator : Operator {
-  DepthwiseConvOperator() : Operator(OperatorType::kDepthwiseConv) {}
-  Padding padding;
-  int stride_height = 0;
-  int stride_width = 0;
-  int depth_multiplier = 0;
-  // A dilation_rate of 0 is invalid and this field is an optional attribute.
-  // Thus initializing it to 1 to allow default conv behavior when the
-  // attribute is not present.
-  int dilation_width_factor = 1;
-  int dilation_height_factor = 1;
+    DepthwiseConvOperator() : Operator(OperatorType::kDepthwiseConv) {}
+    Padding padding;
+    int stride_height = 0;
+    int stride_width = 0;
+    int depth_multiplier = 0;
+    // A dilation_rate of 0 is invalid and this field is an optional attribute.
+    // Thus initializing it to 1 to allow default conv behavior when the
+    // attribute is not present.
+    int dilation_width_factor = 1;
+    int dilation_height_factor = 1;
 };
 
 // Depth-to-space transform operator.
@@ -531,8 +541,8 @@ struct DepthwiseConvOperator : Operator {
 //
 // TensorFlow equivalent: DepthToSpace
 struct DepthToSpaceOperator : Operator {
-  DepthToSpaceOperator() : Operator(OperatorType::kDepthToSpace) {}
-  int block_size = 0;
+    DepthToSpaceOperator() : Operator(OperatorType::kDepthToSpace) {}
+    int block_size = 0;
 };
 
 // Space-to-depth transform operator.
@@ -542,8 +552,8 @@ struct DepthToSpaceOperator : Operator {
 //
 // TensorFlow equivalent: SpaceToDepth
 struct SpaceToDepthOperator : Operator {
-  SpaceToDepthOperator() : Operator(OperatorType::kSpaceToDepth) {}
-  int block_size = 0;
+    SpaceToDepthOperator() : Operator(OperatorType::kSpaceToDepth) {}
+    int block_size = 0;
 };
 
 // Fully-connected operator.
@@ -557,13 +567,13 @@ struct SpaceToDepthOperator : Operator {
 // TensorFlow equivalent: a pair consisting of a Reshape node reshaping the
 // input activations as a matrix, followed by a MatMul node.
 struct FullyConnectedOperator : Operator {
-  FullyConnectedOperator() : Operator(OperatorType::kFullyConnected) {}
-  FullyConnectedWeightsFormat weights_format =
-      FullyConnectedWeightsFormat::kDefault;
+    FullyConnectedOperator() : Operator(OperatorType::kFullyConnected) {}
+    FullyConnectedWeightsFormat weights_format =
+        FullyConnectedWeightsFormat::kDefault;
 
-  // `keep_num_dims` is supported in the FullyConnected kernel version 5, but
-  // it's never supported by Toco.
-  bool keep_num_dims = false;
+    // `keep_num_dims` is supported in the FullyConnected kernel version 5, but
+    // it's never supported by Toco.
+    bool keep_num_dims = false;
 };
 
 // Dequantization operator, converting a quantized array of integers with
@@ -590,7 +600,7 @@ struct FullyConnectedOperator : Operator {
 //
 // TensorFlow equivalent: Dequantize
 struct DequantizeOperator : Operator {
-  DequantizeOperator() : Operator(OperatorType::kDequantize) {}
+    DequantizeOperator() : Operator(OperatorType::kDequantize) {}
 };
 
 // Numeric verification operator, converting a quantized array of integers with
@@ -605,7 +615,7 @@ struct DequantizeOperator : Operator {
 //
 // TensorFlow equivalent: Dequantize
 struct NumericVerifyOperator : Operator {
-  NumericVerifyOperator() : Operator(OperatorType::kNumericVerify) {}
+    NumericVerifyOperator() : Operator(OperatorType::kNumericVerify) {}
 };
 
 // Batch-normalization operator.
@@ -625,10 +635,10 @@ struct NumericVerifyOperator : Operator {
 //
 // TensorFlow equivalent: a combination of Add and Mul nodes
 struct BatchNormalizationOperator : Operator {
-  BatchNormalizationOperator()
-      : Operator(OperatorType::kBatchNormalization),
-        global_normalization(false) {}
-  bool global_normalization;
+    BatchNormalizationOperator()
+        : Operator(OperatorType::kBatchNormalization),
+          global_normalization(false) {}
+    bool global_normalization;
 };
 
 // L2-normalization operator.
@@ -642,7 +652,7 @@ struct BatchNormalizationOperator : Operator {
 // sub-graphs
 // and replace them by L2NormalizationOperator's. See IdentifyL2Normalization.
 struct L2NormalizationOperator : Operator {
-  L2NormalizationOperator() : Operator(OperatorType::kL2Normalization) {}
+    L2NormalizationOperator() : Operator(OperatorType::kL2Normalization) {}
 };
 
 // LSTM Cell operator.
@@ -660,47 +670,47 @@ struct L2NormalizationOperator : Operator {
 // with a sub-graph of lower-level arithmetic nodes; during tooling, we identify
 // such sub-graphs and replace them with LstmCells. See IdentifyLstmCell().
 struct LstmCellOperator : Operator {
-  enum Inputs {
-    DATA_INPUT = 0,
-    PREV_ACTIV_INPUT = 1,
-    WEIGHTS_INPUT = 2,
-    BIASES_INPUT = 3,
-    PREV_STATE_INPUT = 4,
-    NUM_INPUTS = 5
-  };
-  enum Outputs {
-    ACTIV_OUTPUT = 0,
-    STATE_OUTPUT = 1,
-    CONCAT_TEMP = 2,
-    ACTIV_TEMP = 3,
-    NUM_OUTPUTS = 4
-  };
-  enum KernelType {
-    KERNEL_BASIC = 0,
-    KERNEL_FULL = 1,
-  };
+    enum Inputs {
+        DATA_INPUT = 0,
+        PREV_ACTIV_INPUT = 1,
+        WEIGHTS_INPUT = 2,
+        BIASES_INPUT = 3,
+        PREV_STATE_INPUT = 4,
+        NUM_INPUTS = 5
+    };
+    enum Outputs {
+        ACTIV_OUTPUT = 0,
+        STATE_OUTPUT = 1,
+        CONCAT_TEMP = 2,
+        ACTIV_TEMP = 3,
+        NUM_OUTPUTS = 4
+    };
+    enum KernelType {
+        KERNEL_BASIC = 0,
+        KERNEL_FULL = 1,
+    };
 
-  LstmCellOperator()
-      : Operator(OperatorType::kLstmCell), kernel_type(KERNEL_BASIC) {}
+    LstmCellOperator()
+        : Operator(OperatorType::kLstmCell), kernel_type(KERNEL_BASIC) {}
 
-  KernelType kernel_type;
+    KernelType kernel_type;
 };
 
 struct UnidirectionalSequenceLstmOperator : Operator {
-  UnidirectionalSequenceLstmOperator()
-      : Operator(OperatorType::kUnidirectionalSequenceLstm) {}
+    UnidirectionalSequenceLstmOperator()
+        : Operator(OperatorType::kUnidirectionalSequenceLstm) {}
 };
 
 struct BidirectionalSequenceLstmOperator : Operator {
-  BidirectionalSequenceLstmOperator()
-      : Operator(OperatorType::kBidirectionalSequenceLstm) {}
-  bool merge_outputs;
+    BidirectionalSequenceLstmOperator()
+        : Operator(OperatorType::kBidirectionalSequenceLstm) {}
+    bool merge_outputs;
 };
 
 struct BidirectionalSequenceRnnOperator : Operator {
-  BidirectionalSequenceRnnOperator()
-      : Operator(OperatorType::kBidirectionalSequenceRnn) {}
-  bool merge_outputs;
+    BidirectionalSequenceRnnOperator()
+        : Operator(OperatorType::kBidirectionalSequenceRnn) {}
+    bool merge_outputs;
 };
 
 // Element-wise multiplication operator.
@@ -711,7 +721,7 @@ struct BidirectionalSequenceRnnOperator : Operator {
 //
 // TensorFlow equivalent: Mul
 struct MulOperator : Operator {
-  MulOperator() : Operator(OperatorType::kMul) {}
+    MulOperator() : Operator(OperatorType::kMul) {}
 };
 
 // Element-wise Abs operator:
@@ -722,7 +732,7 @@ struct MulOperator : Operator {
 //
 // TensorFlow equivalent: abs
 struct AbsOperator : Operator {
-  AbsOperator() : Operator(OperatorType::kAbs) {}
+    AbsOperator() : Operator(OperatorType::kAbs) {}
 };
 
 // Element-wise HardSwish operator:
@@ -733,7 +743,7 @@ struct AbsOperator : Operator {
 //
 // TensorFlow equivalent: hard_swish
 struct HardSwishOperator : Operator {
-  HardSwishOperator() : Operator(OperatorType::kHardSwish) {}
+    HardSwishOperator() : Operator(OperatorType::kHardSwish) {}
 };
 
 // Elu
@@ -744,7 +754,7 @@ struct HardSwishOperator : Operator {
 //
 // TensorFlow equivalent: Elu
 struct EluOperator : Operator {
-  EluOperator() : Operator(OperatorType::kElu) {}
+    EluOperator() : Operator(OperatorType::kElu) {}
 };
 
 // Element-wise Relu operator:
@@ -755,7 +765,7 @@ struct EluOperator : Operator {
 //
 // TensorFlow equivalent: Relu
 struct ReluOperator : Operator {
-  ReluOperator() : Operator(OperatorType::kRelu) {}
+    ReluOperator() : Operator(OperatorType::kRelu) {}
 };
 
 // Element-wise Relu1 operator:
@@ -767,7 +777,7 @@ struct ReluOperator : Operator {
 // TensorFlow equivalent: none. We can construct the operator with Minimum
 // and Maximum operations
 struct Relu1Operator : Operator {
-  Relu1Operator() : Operator(OperatorType::kRelu1) {}
+    Relu1Operator() : Operator(OperatorType::kRelu1) {}
 };
 
 // Element-wise Relu6 operator:
@@ -778,7 +788,7 @@ struct Relu1Operator : Operator {
 //
 // TensorFlow equivalent: Relu6
 struct Relu6Operator : Operator {
-  Relu6Operator() : Operator(OperatorType::kRelu6) {}
+    Relu6Operator() : Operator(OperatorType::kRelu6) {}
 };
 
 // PRelu
@@ -790,7 +800,7 @@ struct Relu6Operator : Operator {
 //
 // Equivalent to keras.layers.PReLU.
 struct PReluOperator : Operator {
-  PReluOperator() : Operator(OperatorType::kPRelu) {}
+    PReluOperator() : Operator(OperatorType::kPRelu) {}
 };
 
 // LeakyRelu
@@ -801,9 +811,9 @@ struct PReluOperator : Operator {
 //
 // TensorFlow equivalent: LeakyRelu
 struct LeakyReluOperator : Operator {
-  LeakyReluOperator() : Operator(OperatorType::kLeakyRelu) {}
+    LeakyReluOperator() : Operator(OperatorType::kLeakyRelu) {}
 
-  float alpha = 0.2f;  // 0.2 matches the default value for the TF op attribute.
+    float alpha = 0.2f;  // 0.2 matches the default value for the TF op attribute.
 };
 
 // Element-wise Logistic operator:
@@ -814,7 +824,7 @@ struct LeakyReluOperator : Operator {
 //
 // TensorFlow equivalent: Sigmoid
 struct LogisticOperator : Operator {
-  LogisticOperator() : Operator(OperatorType::kLogistic) {}
+    LogisticOperator() : Operator(OperatorType::kLogistic) {}
 };
 
 // Element-wise natural log operator:
@@ -825,7 +835,7 @@ struct LogisticOperator : Operator {
 //
 // TensorFlow equivalent: Log
 struct LogOperator : Operator {
-  LogOperator() : Operator(OperatorType::kLog) {}
+    LogOperator() : Operator(OperatorType::kLog) {}
 };
 
 // Element-wise Tanh operator:
@@ -836,7 +846,7 @@ struct LogOperator : Operator {
 //
 // TensorFlow equivalent: Tanh
 struct TanhOperator : Operator {
-  TanhOperator() : Operator(OperatorType::kTanh) {}
+    TanhOperator() : Operator(OperatorType::kTanh) {}
 };
 
 // Element-wise Sin operator:
@@ -847,7 +857,7 @@ struct TanhOperator : Operator {
 //
 // TensorFlow equivalent: Sin
 struct SinOperator : Operator {
-  SinOperator() : Operator(OperatorType::kSin) {}
+    SinOperator() : Operator(OperatorType::kSin) {}
 };
 
 // Element-wise addition operator.
@@ -858,7 +868,7 @@ struct SinOperator : Operator {
 //
 // TensorFlow equivalent: Add
 struct AddOperator : Operator {
-  AddOperator() : Operator(OperatorType::kAdd) {}
+    AddOperator() : Operator(OperatorType::kAdd) {}
 };
 
 // Element-wise addition operator for N inputs.
@@ -868,7 +878,7 @@ struct AddOperator : Operator {
 //
 // TensorFlow equivalent: AddN
 struct AddNOperator : Operator {
-  AddNOperator() : Operator(OperatorType::kAddN) {}
+    AddNOperator() : Operator(OperatorType::kAddN) {}
 };
 
 // Concatenation operator: concatenates its inputs
@@ -879,8 +889,8 @@ struct AddNOperator : Operator {
 //
 // TensorFlow equivalent: Concat.
 struct ConcatenationOperator : Operator {
-  ConcatenationOperator() : Operator(OperatorType::kConcatenation) {}
-  int axis = 0;
+    ConcatenationOperator() : Operator(OperatorType::kConcatenation) {}
+    int axis = 0;
 };
 
 // Reordering dimensions. Used only during tooling to transform graphs from
@@ -891,9 +901,9 @@ struct ConcatenationOperator : Operator {
 //
 // TensorFlow equivalent: none. This is only useful to convert between formats.
 struct ReorderAxesOperator : Operator {
-  ReorderAxesOperator() : Operator(OperatorType::kReorderAxes) {}
-  AxesOrder input_axes_order;
-  AxesOrder output_axes_order;
+    ReorderAxesOperator() : Operator(OperatorType::kReorderAxes) {}
+    AxesOrder input_axes_order;
+    AxesOrder output_axes_order;
 };
 
 // Average-pooling operator.
@@ -903,12 +913,12 @@ struct ReorderAxesOperator : Operator {
 //
 // TensorFlow equivalent: AveragePool
 struct AveragePoolOperator : Operator {
-  AveragePoolOperator() : Operator(OperatorType::kAveragePool) {}
-  Padding padding;
-  int stride_height = 0;
-  int stride_width = 0;
-  int kheight = 0;
-  int kwidth = 0;
+    AveragePoolOperator() : Operator(OperatorType::kAveragePool) {}
+    Padding padding;
+    int stride_height = 0;
+    int stride_width = 0;
+    int kheight = 0;
+    int kwidth = 0;
 };
 
 // Local response normalization operator.
@@ -918,13 +928,13 @@ struct AveragePoolOperator : Operator {
 //
 // TensorFlow equivalent: LRN
 struct LocalResponseNormalizationOperator : Operator {
-  LocalResponseNormalizationOperator()
-      : Operator(OperatorType::kLocalResponseNormalization) {}
+    LocalResponseNormalizationOperator()
+        : Operator(OperatorType::kLocalResponseNormalization) {}
 
-  int range = 0;
-  float bias = 0.f;
-  float alpha = 0.f;
-  float beta = 0.f;
+    int range = 0;
+    float bias = 0.f;
+    float alpha = 0.f;
+    float beta = 0.f;
 };
 
 // Max-pooling operator.
@@ -934,12 +944,12 @@ struct LocalResponseNormalizationOperator : Operator {
 //
 // TensorFlow equivalent: MaxPool
 struct MaxPoolOperator : Operator {
-  MaxPoolOperator() : Operator(OperatorType::kMaxPool) {}
-  Padding padding;
-  int stride_height = 0;
-  int stride_width = 0;
-  int kheight = 0;
-  int kwidth = 0;
+    MaxPoolOperator() : Operator(OperatorType::kMaxPool) {}
+    Padding padding;
+    int stride_height = 0;
+    int stride_width = 0;
+    int kheight = 0;
+    int kwidth = 0;
 };
 
 // L2-pooling operator.
@@ -949,12 +959,12 @@ struct MaxPoolOperator : Operator {
 //
 // TensorFlow equivalent: none. Can be shimmed by squaring+avgpool+sqrt.
 struct L2PoolOperator : Operator {
-  L2PoolOperator() : Operator(OperatorType::kL2Pool) {}
-  Padding padding;
-  int stride_height = 0;
-  int stride_width = 0;
-  int kheight = 0;
-  int kwidth = 0;
+    L2PoolOperator() : Operator(OperatorType::kL2Pool) {}
+    Padding padding;
+    int stride_height = 0;
+    int stride_width = 0;
+    int kheight = 0;
+    int kwidth = 0;
 };
 
 // The expected [min, max] range of values in a given array.
@@ -963,16 +973,16 @@ struct L2PoolOperator : Operator {
 // models, see FakeQuantOperator, and is used during quantization to resolve
 // actual quantization parameters (see QuantizationParams).
 struct MinMax {
-  double min = 0.;
-  double max = 0.;
+    double min = 0.;
+    double max = 0.;
 };
 
 inline bool operator==(const MinMax& m1, const MinMax& m2) {
-  return m1.min == m2.min && m1.max == m2.max;
+    return m1.min == m2.min && m1.max == m2.max;
 }
 
 inline bool operator!=(const MinMax& m1, const MinMax& m2) {
-  return m1.min != m2.min || m1.max != m2.max;
+    return m1.min != m2.min || m1.max != m2.max;
 }
 
 // Fake-quantization operator. This does two things:
@@ -990,10 +1000,10 @@ inline bool operator!=(const MinMax& m1, const MinMax& m2) {
 //
 // TensorFlow equivalent: FakeQuantWithMinMaxVars, FakeQuantWithMinMaxArgs.
 struct FakeQuantOperator : Operator {
-  FakeQuantOperator() : Operator(OperatorType::kFakeQuant) {}
-  std::unique_ptr<MinMax> minmax;
-  int num_bits = 8;
-  bool narrow_range = false;
+    FakeQuantOperator() : Operator(OperatorType::kFakeQuant) {}
+    std::unique_ptr<MinMax> minmax;
+    int num_bits = 8;
+    bool narrow_range = false;
 };
 
 // Element-wise division operator.
@@ -1004,7 +1014,7 @@ struct FakeQuantOperator : Operator {
 //
 // TensorFlow equivalent: Div
 struct DivOperator : Operator {
-  DivOperator() : Operator(OperatorType::kDiv) {}
+    DivOperator() : Operator(OperatorType::kDiv) {}
 };
 
 // Element-wise identity (x->x) operator.
@@ -1014,7 +1024,7 @@ struct DivOperator : Operator {
 //
 // TensorFlow equivalent: Identity
 struct TensorFlowIdentityOperator : Operator {
-  TensorFlowIdentityOperator() : Operator(OperatorType::kIdentity) {}
+    TensorFlowIdentityOperator() : Operator(OperatorType::kIdentity) {}
 };
 
 // Batch matrix multiplication operator. This comes from a tf.matmul where one
@@ -1026,9 +1036,9 @@ struct TensorFlowIdentityOperator : Operator {
 //
 // TensorFlow equivalent: MatMul
 struct BatchMatMulOperator : Operator {
-  BatchMatMulOperator() : Operator(OperatorType::kBatchMatMul) {}
-  bool adj_x = false;
-  bool adj_y = false;
+    BatchMatMulOperator() : Operator(OperatorType::kBatchMatMul) {}
+    bool adj_x = false;
+    bool adj_y = false;
 };
 
 // General matrix multiplication operator. We don't want to support general
@@ -1041,9 +1051,9 @@ struct BatchMatMulOperator : Operator {
 //
 // TensorFlow equivalent: MatMul
 struct TensorFlowMatMulOperator : Operator {
-  TensorFlowMatMulOperator() : Operator(OperatorType::kMatMul) {}
-  bool transpose_a = false;
-  bool transpose_b = false;
+    TensorFlowMatMulOperator() : Operator(OperatorType::kMatMul) {}
+    bool transpose_a = false;
+    bool transpose_b = false;
 };
 
 // Padding operator. Pads a tensor with zeros.
@@ -1061,10 +1071,10 @@ struct TensorFlowMatMulOperator : Operator {
 //
 // TensorFlow equivalent: Pad
 struct PadOperator : Operator {
-  PadOperator() : Operator(OperatorType::kPad) {}
+    PadOperator() : Operator(OperatorType::kPad) {}
 
-  std::vector<int> left_padding;
-  std::vector<int> right_padding;
+    std::vector<int> left_padding;
+    std::vector<int> right_padding;
 };
 
 // PaddingV2 operator. Pads a tensor with the given constant value.
@@ -1084,10 +1094,10 @@ struct PadOperator : Operator {
 //
 // TensorFlow equivalent: PadV2
 struct PadV2Operator : Operator {
-  PadV2Operator() : Operator(OperatorType::kPadV2) {}
+    PadV2Operator() : Operator(OperatorType::kPadV2) {}
 
-  std::vector<int> left_padding;
-  std::vector<int> right_padding;
+    std::vector<int> left_padding;
+    std::vector<int> right_padding;
 };
 
 // Strided slice operator.
@@ -1100,71 +1110,71 @@ struct PadV2Operator : Operator {
 //
 // TensorFlow equivalent: StridedSlice
 struct StridedSliceOperator : Operator {
-  StridedSliceOperator() : Operator(OperatorType::kStridedSlice) {}
+    StridedSliceOperator() : Operator(OperatorType::kStridedSlice) {}
 
-  std::vector<int> start_indices;
-  std::vector<int> stop_indices;
-  std::vector<int> strides;
+    std::vector<int> start_indices;
+    std::vector<int> stop_indices;
+    std::vector<int> strides;
 
-  int begin_mask;
-  int ellipsis_mask;
-  int end_mask;
-  int new_axis_mask;
-  int shrink_axis_mask;
+    int begin_mask;
+    int ellipsis_mask;
+    int end_mask;
+    int new_axis_mask;
+    int shrink_axis_mask;
 
-  StridedSliceOperator(const StridedSliceOperator& other)
-      : Operator(OperatorType::kStridedSlice) {
-    inputs = other.inputs;
-    outputs = other.outputs;
+    StridedSliceOperator(const StridedSliceOperator& other)
+        : Operator(OperatorType::kStridedSlice) {
+        inputs = other.inputs;
+        outputs = other.outputs;
 
-    start_indices = other.start_indices;
-    stop_indices = other.stop_indices;
-    strides = other.strides;
+        start_indices = other.start_indices;
+        stop_indices = other.stop_indices;
+        strides = other.strides;
 
-    begin_mask = other.begin_mask;
-    ellipsis_mask = other.ellipsis_mask;
-    end_mask = other.end_mask;
-    new_axis_mask = other.new_axis_mask;
-    shrink_axis_mask = other.shrink_axis_mask;
-  }
-
-  void PadIndices(int dim_count) {
-    // Add indices and mask bits to fully include extra dimensions
-    CHECK_GE(dim_count, start_indices.size());
-    CHECK_EQ(start_indices.size(), stop_indices.size());
-    CHECK_EQ(stop_indices.size(), strides.size());
-
-    for (int i = start_indices.size(); i < dim_count; i++) {
-      start_indices.push_back(0);
-      stop_indices.push_back(0);
-      strides.push_back(1);
-      begin_mask |= 1 << i;
-      end_mask |= 1 << i;
+        begin_mask = other.begin_mask;
+        ellipsis_mask = other.ellipsis_mask;
+        end_mask = other.end_mask;
+        new_axis_mask = other.new_axis_mask;
+        shrink_axis_mask = other.shrink_axis_mask;
     }
-  }
 
-  void ReverseIndices() {
-    CHECK_EQ(start_indices.size(), stop_indices.size());
-    CHECK_EQ(stop_indices.size(), strides.size());
+    void PadIndices(int dim_count) {
+        // Add indices and mask bits to fully include extra dimensions
+        CHECK_GE(dim_count, start_indices.size());
+        CHECK_EQ(start_indices.size(), stop_indices.size());
+        CHECK_EQ(stop_indices.size(), strides.size());
 
-    std::reverse(start_indices.begin(), start_indices.end());
-    std::reverse(stop_indices.begin(), stop_indices.end());
-    std::reverse(strides.begin(), strides.end());
+        for (int i = start_indices.size(); i < dim_count; i++) {
+            start_indices.push_back(0);
+            stop_indices.push_back(0);
+            strides.push_back(1);
+            begin_mask |= 1 << i;
+            end_mask |= 1 << i;
+        }
+    }
 
-    begin_mask = toco::port::ReverseBits32(static_cast<uint32>(begin_mask)) >>
-                 (32 - start_indices.size());
-    ellipsis_mask =
-        toco::port::ReverseBits32(static_cast<uint32>(ellipsis_mask)) >>
-        (32 - start_indices.size());
-    end_mask = toco::port::ReverseBits32(static_cast<uint32>(end_mask)) >>
-               (32 - start_indices.size());
-    new_axis_mask =
-        toco::port::ReverseBits32(static_cast<uint32>(new_axis_mask)) >>
-        (32 - start_indices.size());
-    shrink_axis_mask =
-        toco::port::ReverseBits32(static_cast<uint32>(shrink_axis_mask)) >>
-        (32 - start_indices.size());
-  }
+    void ReverseIndices() {
+        CHECK_EQ(start_indices.size(), stop_indices.size());
+        CHECK_EQ(stop_indices.size(), strides.size());
+
+        std::reverse(start_indices.begin(), start_indices.end());
+        std::reverse(stop_indices.begin(), stop_indices.end());
+        std::reverse(strides.begin(), strides.end());
+
+        begin_mask = toco::port::ReverseBits32(static_cast<uint32>(begin_mask)) >>
+                     (32 - start_indices.size());
+        ellipsis_mask =
+            toco::port::ReverseBits32(static_cast<uint32>(ellipsis_mask)) >>
+            (32 - start_indices.size());
+        end_mask = toco::port::ReverseBits32(static_cast<uint32>(end_mask)) >>
+                   (32 - start_indices.size());
+        new_axis_mask =
+            toco::port::ReverseBits32(static_cast<uint32>(new_axis_mask)) >>
+            (32 - start_indices.size());
+        shrink_axis_mask =
+            toco::port::ReverseBits32(static_cast<uint32>(shrink_axis_mask)) >>
+            (32 - start_indices.size());
+    }
 };
 
 // Reshaping operator, reshaping its input array to a two-dimensional shape
@@ -1178,8 +1188,8 @@ struct StridedSliceOperator : Operator {
 // TensorFlow equivalent: Reshape --- except that we only support a special case
 // here, where the output shape is a matrix (2D) shape.
 struct TensorFlowReshapeOperator : Operator {
-  TensorFlowReshapeOperator() : Operator(OperatorType::kReshape) {}
-  std::vector<int> shape;
+    TensorFlowReshapeOperator() : Operator(OperatorType::kReshape) {}
+    std::vector<int> shape;
 };
 
 // Removes dimensions of size 1 from the shape of a tensor.
@@ -1190,9 +1200,9 @@ struct TensorFlowReshapeOperator : Operator {
 //
 // TensorFlow equivalent: Squeeze
 struct SqueezeOperator : Operator {
-  SqueezeOperator() : Operator(OperatorType::kSqueeze) {}
+    SqueezeOperator() : Operator(OperatorType::kSqueeze) {}
 
-  std::vector<int> squeeze_dims;
+    std::vector<int> squeeze_dims;
 };
 
 // Inputs:
@@ -1207,18 +1217,18 @@ struct SqueezeOperator : Operator {
 //
 // TensorFlow equivalent: Conv2DBackpropInput
 struct TransposeConvOperator : Operator {
-  enum Inputs {
-    OUTPUT_SHAPE = 0,
-    WEIGHTS = 1,
-    DATA_INPUT = 2,
-  };
+    enum Inputs {
+        OUTPUT_SHAPE = 0,
+        WEIGHTS = 1,
+        DATA_INPUT = 2,
+    };
 
-  TransposeConvOperator() : Operator(OperatorType::kTransposeConv) {}
-  Padding padding;
-  int stride_width = 0;
-  int stride_height = 0;
-  // Dilation is possible with transpose convolution, but Tensorflow does not
-  // currently support it, so we omit it.
+    TransposeConvOperator() : Operator(OperatorType::kTransposeConv) {}
+    Padding padding;
+    int stride_width = 0;
+    int stride_height = 0;
+    // Dilation is possible with transpose convolution, but Tensorflow does not
+    // currently support it, so we omit it.
 };
 
 // Given a tensor input, this operation calculates element-wise exponential
@@ -1229,7 +1239,7 @@ struct TransposeConvOperator : Operator {
 //
 // TensorFlow equivalent: Exp
 struct ExpOperator : Operator {
-  ExpOperator() : Operator(OperatorType::kExp) {}
+    ExpOperator() : Operator(OperatorType::kExp) {}
 };
 
 // Given a tensor input, this operation calculates element-wise exponential
@@ -1240,7 +1250,7 @@ struct ExpOperator : Operator {
 //
 // TensorFlow equivalent: Cos
 struct CosOperator : Operator {
-  CosOperator() : Operator(OperatorType::kCos) {}
+    CosOperator() : Operator(OperatorType::kCos) {}
 };
 
 // Given a tensor input, this operation inserts a dimension of 1 at the
@@ -1255,7 +1265,7 @@ struct CosOperator : Operator {
 //
 // TensorFlow equivalent: ExpandDims
 struct ExpandDimsOperator : Operator {
-  ExpandDimsOperator() : Operator(OperatorType::kExpandDims) {}
+    ExpandDimsOperator() : Operator(OperatorType::kExpandDims) {}
 };
 
 // Creates a tensor of shape dims and fills it with the given scalar value.
@@ -1267,7 +1277,7 @@ struct ExpandDimsOperator : Operator {
 //
 // TensorFlow equivalent: Fill
 struct FillOperator : Operator {
-  FillOperator() : Operator(OperatorType::kFill) {}
+    FillOperator() : Operator(OperatorType::kFill) {}
 };
 
 // Element-wise floor division operator.
@@ -1278,7 +1288,7 @@ struct FillOperator : Operator {
 //
 // TensorFlow equivalent: FloorDiv
 struct FloorDivOperator : Operator {
-  FloorDivOperator() : Operator(OperatorType::kFloorDiv) {}
+    FloorDivOperator() : Operator(OperatorType::kFloorDiv) {}
 };
 
 // Element-wise floor mod operator.
@@ -1289,14 +1299,14 @@ struct FloorDivOperator : Operator {
 //
 // TensorFlow equivalent: FloorMod
 struct FloorModOperator : Operator {
-  FloorModOperator() : Operator(OperatorType::kFloorMod) {}
+    FloorModOperator() : Operator(OperatorType::kFloorMod) {}
 };
 
 struct RandomUniformOperator : Operator {
-  RandomUniformOperator() : Operator(OperatorType::kRandomUniform) {}
-  ArrayDataType dtype = ArrayDataType::kNone;
-  int64 seed;
-  int64 seed2;
+    RandomUniformOperator() : Operator(OperatorType::kRandomUniform) {}
+    ArrayDataType dtype = ArrayDataType::kNone;
+    int64 seed;
+    int64 seed2;
 };
 
 // Creates a sequence of numbers that begins at start and extends by increments
@@ -1312,8 +1322,8 @@ struct RandomUniformOperator : Operator {
 //
 // TensorFlow equivalent: Range
 struct RangeOperator : Operator {
-  RangeOperator() : Operator(OperatorType::kRange) {}
-  ArrayDataType dtype = ArrayDataType::kNone;
+    RangeOperator() : Operator(OperatorType::kRange) {}
+    ArrayDataType dtype = ArrayDataType::kNone;
 };
 
 // Rank operator. Extracts the rank of the tensor.
@@ -1325,8 +1335,8 @@ struct RangeOperator : Operator {
 //
 // TensorFlow equivalent: Rank.
 struct TensorFlowRankOperator : Operator {
-  TensorFlowRankOperator() : Operator(OperatorType::kRank) {}
-  ArrayDataType output_data_type = ArrayDataType::kInt32;
+    TensorFlowRankOperator() : Operator(OperatorType::kRank) {}
+    ArrayDataType output_data_type = ArrayDataType::kInt32;
 };
 
 // Element-wise negation (-x) operator.
@@ -1336,7 +1346,7 @@ struct TensorFlowRankOperator : Operator {
 //
 // TensorFlow equivalent: Neg
 struct NegOperator : Operator {
-  NegOperator() : Operator(OperatorType::kNeg) {}
+    NegOperator() : Operator(OperatorType::kNeg) {}
 };
 
 // Element-wise select operator choosing elements from inputs[1] or input[2]
@@ -1348,7 +1358,7 @@ struct NegOperator : Operator {
 //
 //  TensorFlow equivalent: Select
 struct SelectOperator : Operator {
-  SelectOperator() : Operator(OperatorType::kSelect) {}
+    SelectOperator() : Operator(OperatorType::kSelect) {}
 };
 
 // Element-wise reciprocal-square-root (x^-0.5) operator.
@@ -1358,7 +1368,7 @@ struct SelectOperator : Operator {
 //
 // TensorFlow equivalent: Rsqrt
 struct TensorFlowRsqrtOperator : Operator {
-  TensorFlowRsqrtOperator() : Operator(OperatorType::kRsqrt) {}
+    TensorFlowRsqrtOperator() : Operator(OperatorType::kRsqrt) {}
 };
 
 // Stacks a list of rank-R tensors into one rank-(R+1) tensor.
@@ -1372,10 +1382,10 @@ struct TensorFlowRsqrtOperator : Operator {
 //
 // TensorFlow equivalent: Pack
 struct PackOperator : Operator {
-  PackOperator() : Operator(OperatorType::kPack) {}
-  int values_count;
-  int axis = 0;
-  ArrayDataType dtype = ArrayDataType::kNone;
+    PackOperator() : Operator(OperatorType::kPack) {}
+    int values_count;
+    int axis = 0;
+    ArrayDataType dtype = ArrayDataType::kNone;
 };
 
 // Shape operator. Extracts the shape of the tensor.
@@ -1388,8 +1398,8 @@ struct PackOperator : Operator {
 //
 // TensorFlow equivalent: Shape.
 struct TensorFlowShapeOperator : Operator {
-  TensorFlowShapeOperator() : Operator(OperatorType::kShape) {}
-  ArrayDataType output_data_type = ArrayDataType::kInt32;
+    TensorFlowShapeOperator() : Operator(OperatorType::kShape) {}
+    ArrayDataType output_data_type = ArrayDataType::kInt32;
 };
 
 // Element-wise square-root (x^0.5) operator.
@@ -1399,7 +1409,7 @@ struct TensorFlowShapeOperator : Operator {
 //
 // TensorFlow equivalent: Sqrt
 struct TensorFlowSqrtOperator : Operator {
-  TensorFlowSqrtOperator() : Operator(OperatorType::kSqrt) {}
+    TensorFlowSqrtOperator() : Operator(OperatorType::kSqrt) {}
 };
 
 // Element-wise square (x*x) operator.
@@ -1409,7 +1419,7 @@ struct TensorFlowSqrtOperator : Operator {
 //
 // TensorFlow equivalent: Square
 struct TensorFlowSquareOperator : Operator {
-  TensorFlowSquareOperator() : Operator(OperatorType::kSquare) {}
+    TensorFlowSquareOperator() : Operator(OperatorType::kSquare) {}
 };
 
 // Element-wise squared difference ((x-y)*(x-y)) operator.
@@ -1420,7 +1430,7 @@ struct TensorFlowSquareOperator : Operator {
 //
 // TensorFlow equivalent: SquaredDifference
 struct SquaredDifferenceOperator : Operator {
-  SquaredDifferenceOperator() : Operator(OperatorType::kSquaredDifference) {}
+    SquaredDifferenceOperator() : Operator(OperatorType::kSquaredDifference) {}
 };
 
 // Transposes a tensor.
@@ -1433,8 +1443,8 @@ struct SquaredDifferenceOperator : Operator {
 //
 // TensorFlow equivalent: Transpose
 struct TransposeOperator : Operator {
-  TransposeOperator() : Operator(OperatorType::kTranspose) {}
-  std::vector<int> perm;
+    TransposeOperator() : Operator(OperatorType::kTranspose) {}
+    std::vector<int> perm;
 };
 
 // Element-wise subtraction operator.
@@ -1445,7 +1455,7 @@ struct TransposeOperator : Operator {
 //
 // TensorFlow equivalent: Sub
 struct SubOperator : Operator {
-  SubOperator() : Operator(OperatorType::kSub) {}
+    SubOperator() : Operator(OperatorType::kSub) {}
 };
 
 // Sum reduction: computes the sum of all of entries across the axes.
@@ -1455,9 +1465,9 @@ struct SubOperator : Operator {
 //
 // TensorFlow equivalent: Sum
 struct TensorFlowSumOperator : Operator {
-  TensorFlowSumOperator() : Operator(OperatorType::kSum) {}
-  std::vector<int> axis;
-  bool keep_dims = false;
+    TensorFlowSumOperator() : Operator(OperatorType::kSum) {}
+    std::vector<int> axis;
+    bool keep_dims = false;
 };
 
 // Prod reduction: computes the product of all of entries across the axes.
@@ -1467,9 +1477,9 @@ struct TensorFlowSumOperator : Operator {
 //
 // TensorFlow equivalent: Prod
 struct TensorFlowProdOperator : Operator {
-  TensorFlowProdOperator() : Operator(OperatorType::kReduceProd) {}
-  std::vector<int> axis;
-  bool keep_dims = false;
+    TensorFlowProdOperator() : Operator(OperatorType::kReduceProd) {}
+    std::vector<int> axis;
+    bool keep_dims = false;
 };
 
 // TensorFlow Tile equivalent. Refer to TensorFlow documentation for details.
@@ -1478,29 +1488,29 @@ struct TensorFlowProdOperator : Operator {
 //   inputs[0]: required: the input array
 //   inputs[1]: required: int array with length of rank(input[0])
 struct TensorFlowTileOperator : Operator {
-  TensorFlowTileOperator() : Operator(OperatorType::kTile) {}
+    TensorFlowTileOperator() : Operator(OperatorType::kTile) {}
 };
 
 // TensorFlow Slice equivalent. Refer to TensorFlow documentation for details.
 struct SliceOperator : Operator {
-  SliceOperator() : Operator(OperatorType::kSlice) {}
+    SliceOperator() : Operator(OperatorType::kSlice) {}
 
-  std::vector<int> begin;
-  std::vector<int> size;
+    std::vector<int> begin;
+    std::vector<int> size;
 };
 
 // TensorFlow Split equivalent. Refer to TensorFlow documentation for details.
 // Not fully supported, just a placeholder to handle TensorFlow graphs and
 // support graph transformations to other operator types by matching sub-graphs.
 struct TensorFlowSplitOperator : Operator {
-  TensorFlowSplitOperator() : Operator(OperatorType::kSplit) {}
-  int num_split = 0;
+    TensorFlowSplitOperator() : Operator(OperatorType::kSplit) {}
+    int num_split = 0;
 };
 
 // TensorFlow SplitV equivalent. Refer to TensorFlow documentation for details.
 struct TensorFlowSplitVOperator : Operator {
-  TensorFlowSplitVOperator() : Operator(OperatorType::kSplitV) {}
-  int num_split = 0;
+    TensorFlowSplitVOperator() : Operator(OperatorType::kSplitV) {}
+    int num_split = 0;
 };
 
 // TensorFlow Concat equivalent. Refer to TensorFlow documentation for details.
@@ -1510,7 +1520,7 @@ struct TensorFlowSplitVOperator : Operator {
 // dimension then we can change this op into a DepthConcatenation op.
 // Otherwise, we hope for some other graph transformation to drop this node.
 struct TensorFlowConcatOperator : Operator {
-  TensorFlowConcatOperator() : Operator(OperatorType::kConcat) {}
+    TensorFlowConcatOperator() : Operator(OperatorType::kConcat) {}
 };
 
 // TensorFlow ConcatV2 equivalent. Refer to TensorFlow documentation for
@@ -1521,7 +1531,7 @@ struct TensorFlowConcatOperator : Operator {
 // dimension then we can change this op into a DepthConcatenation op.
 // Otherwise, we hope for some other graph transformation to drop this node.
 struct TensorFlowConcatV2Operator : Operator {
-  TensorFlowConcatV2Operator() : Operator(OperatorType::kConcatV2) {}
+    TensorFlowConcatV2Operator() : Operator(OperatorType::kConcatV2) {}
 };
 
 // TensorFlow Merge equivalent. Refer to TensorFlow documentation for details.
@@ -1537,7 +1547,7 @@ struct TensorFlowConcatV2Operator : Operator {
 // control flow that can be resolved at tooling time (independently of input
 // activations).
 struct TensorFlowMergeOperator : Operator {
-  TensorFlowMergeOperator() : Operator(OperatorType::kMerge) {}
+    TensorFlowMergeOperator() : Operator(OperatorType::kMerge) {}
 };
 
 // TensorFlow Switch equivalent. Refer to TensorFlow documentation for details.
@@ -1560,7 +1570,7 @@ struct TensorFlowMergeOperator : Operator {
 // control flow that can be resolved at tooling time (independently of input
 // activations).
 struct TensorFlowSwitchOperator : Operator {
-  TensorFlowSwitchOperator() : Operator(OperatorType::kSwitch) {}
+    TensorFlowSwitchOperator() : Operator(OperatorType::kSwitch) {}
 };
 
 // TensorFlow All equivalent. Refer to TensorFlow documentation for details.
@@ -1569,7 +1579,7 @@ struct TensorFlowSwitchOperator : Operator {
 // Typically, this is only used as an input to an Assert node, so can be
 // removed as an unused node as we drop Assert nodes.
 struct TensorFlowAllOperator : Operator {
-  TensorFlowAllOperator() : Operator(OperatorType::kAll) {}
+    TensorFlowAllOperator() : Operator(OperatorType::kAll) {}
 };
 
 // TensorFlow Assert equivalent. Refer to TensorFlow documentation for details.
@@ -1577,7 +1587,7 @@ struct TensorFlowAllOperator : Operator {
 // support graph transformations to other operator types by matching sub-graphs.
 // Typically, we just drop Assert nodes.
 struct TensorFlowAssertOperator : Operator {
-  TensorFlowAssertOperator() : Operator(OperatorType::kAssert) {}
+    TensorFlowAssertOperator() : Operator(OperatorType::kAssert) {}
 };
 
 // TensorFlow Less equivalent. Refer to TensorFlow documentation for details.
@@ -1586,7 +1596,7 @@ struct TensorFlowAssertOperator : Operator {
 // Typically, this is only used as an input to an Assert node, so can be
 // removed as an unused node as we drop Assert nodes.
 struct TensorFlowLessOperator : Operator {
-  TensorFlowLessOperator() : Operator(OperatorType::kLess) {}
+    TensorFlowLessOperator() : Operator(OperatorType::kLess) {}
 };
 
 // TensorFlow LessEqual equivalent. Refer to TensorFlow documentation for
@@ -1596,7 +1606,7 @@ struct TensorFlowLessOperator : Operator {
 // Typically, this is only used as an input to an Assert node, so can be
 // removed as an unused node as we drop Assert nodes.
 struct TensorFlowLessEqualOperator : Operator {
-  TensorFlowLessEqualOperator() : Operator(OperatorType::kLessEqual) {}
+    TensorFlowLessEqualOperator() : Operator(OperatorType::kLessEqual) {}
 };
 
 // TensorFlow Less equivalent. Refer to TensorFlow documentation for details.
@@ -1605,7 +1615,7 @@ struct TensorFlowLessEqualOperator : Operator {
 // Typically, this is only used as an input to an Assert node, so can be
 // removed as an unused node as we drop Assert nodes.
 struct TensorFlowGreaterOperator : Operator {
-  TensorFlowGreaterOperator() : Operator(OperatorType::kGreater) {}
+    TensorFlowGreaterOperator() : Operator(OperatorType::kGreater) {}
 };
 
 // TensorFlow GreaterEqual equivalent. Refer to TensorFlow documentation for
@@ -1615,7 +1625,7 @@ struct TensorFlowGreaterOperator : Operator {
 // Typically, this is only used as an input to an Assert node, so can be
 // removed as an unused node as we drop Assert nodes.
 struct TensorFlowGreaterEqualOperator : Operator {
-  TensorFlowGreaterEqualOperator() : Operator(OperatorType::kGreaterEqual) {}
+    TensorFlowGreaterEqualOperator() : Operator(OperatorType::kGreaterEqual) {}
 };
 
 // TensorFlow Equal equivalent. Refer to TensorFlow documentation for
@@ -1625,13 +1635,13 @@ struct TensorFlowGreaterEqualOperator : Operator {
 // Typically, this is only used as an input to an Assert node, so can be
 // removed as an unused node as we drop Assert nodes.
 struct TensorFlowEqualOperator : Operator {
-  TensorFlowEqualOperator() : Operator(OperatorType::kEqual) {}
+    TensorFlowEqualOperator() : Operator(OperatorType::kEqual) {}
 };
 
 // TensorFlow Not Equal equivalent. Refer to TensorFlow documentation for
 // details.
 struct TensorFlowNotEqualOperator : Operator {
-  TensorFlowNotEqualOperator() : Operator(OperatorType::kNotEqual) {}
+    TensorFlowNotEqualOperator() : Operator(OperatorType::kNotEqual) {}
 };
 
 // Max reduction: computes the max of all of entries across the axes.
@@ -1641,9 +1651,9 @@ struct TensorFlowNotEqualOperator : Operator {
 //
 // TensorFlow equivalent: Max
 struct TensorFlowMaxOperator : Operator {
-  TensorFlowMaxOperator() : Operator(OperatorType::kReduceMax) {}
-  std::vector<int> axis;
-  bool keep_dims = false;
+    TensorFlowMaxOperator() : Operator(OperatorType::kReduceMax) {}
+    std::vector<int> axis;
+    bool keep_dims = false;
 };
 
 // Min reduction: computes the min of all of entries across the axes.
@@ -1653,9 +1663,9 @@ struct TensorFlowMaxOperator : Operator {
 //
 // TensorFlow equivalent: Min
 struct TensorFlowMinOperator : Operator {
-  TensorFlowMinOperator() : Operator(OperatorType::kReduceMin) {}
-  std::vector<int> axis;
-  bool keep_dims = false;
+    TensorFlowMinOperator() : Operator(OperatorType::kReduceMin) {}
+    std::vector<int> axis;
+    bool keep_dims = false;
 };
 
 // Element-wise maximum operator. Currently it only supports scalar as
@@ -1667,7 +1677,7 @@ struct TensorFlowMinOperator : Operator {
 //
 // TensorFlow equivalent: Maximum
 struct TensorFlowMaximumOperator : Operator {
-  TensorFlowMaximumOperator() : Operator(OperatorType::kMaximum) {}
+    TensorFlowMaximumOperator() : Operator(OperatorType::kMaximum) {}
 };
 
 // Element-wise minimum operator. Currently it only supports scalar as
@@ -1679,25 +1689,25 @@ struct TensorFlowMaximumOperator : Operator {
 //
 // TensorFlow equivalent: Minimum
 struct TensorFlowMinimumOperator : Operator {
-  TensorFlowMinimumOperator() : Operator(OperatorType::kMinimum) {}
+    TensorFlowMinimumOperator() : Operator(OperatorType::kMinimum) {}
 };
 
 // General TF operation, unsupported by tf.mini. Expected to be dropped by
 // graph transformations.
 struct TensorFlowUnsupportedOperator : Operator {
-  TensorFlowUnsupportedOperator() : Operator(OperatorType::kUnsupported) {}
+    TensorFlowUnsupportedOperator() : Operator(OperatorType::kUnsupported) {}
 
-  // The original TF operation type. Used for diagnostic purposes.
-  string tensorflow_op;
-  // A boolean indicating if the unsupported op should be treated as quantized.
-  bool quantized = false;
-  // A boolean indicating if the unsupported op output should allow float values
-  // in quantized mode.
-  bool support_output_type_float_in_quantized_op = false;
-  // Output data types
-  std::vector<ArrayDataType> output_data_types;
-  // Output shapes.
-  std::vector<Shape> output_shapes;
+    // The original TF operation type. Used for diagnostic purposes.
+    string tensorflow_op;
+    // A boolean indicating if the unsupported op should be treated as quantized.
+    bool quantized = false;
+    // A boolean indicating if the unsupported op output should allow float values
+    // in quantized mode.
+    bool support_output_type_float_in_quantized_op = false;
+    // Output data types
+    std::vector<ArrayDataType> output_data_types;
+    // Output shapes.
+    std::vector<Shape> output_shapes;
 };
 
 // Softmax activation function.
@@ -1707,8 +1717,8 @@ struct TensorFlowUnsupportedOperator : Operator {
 //
 // TensorFlow equivalent: Softmax
 struct SoftmaxOperator : Operator {
-  SoftmaxOperator() : Operator(OperatorType::kSoftmax) {}
-  float beta = 0.f;
+    SoftmaxOperator() : Operator(OperatorType::kSoftmax) {}
+    float beta = 0.f;
 };
 
 // LogSoftmax activation function.
@@ -1718,16 +1728,16 @@ struct SoftmaxOperator : Operator {
 //
 // TensorFlow equivalent: LogSoftmax
 struct LogSoftmaxOperator : Operator {
-  LogSoftmaxOperator() : Operator(OperatorType::kLogSoftmax) {}
+    LogSoftmaxOperator() : Operator(OperatorType::kLogSoftmax) {}
 
-  // LogSoftmax can in principal have very large negative output, depending on
-  // the input size.  However, input x_i that is less than x_max-10 is
-  // accumulated as exp(x_i-x_max), which is truncated to zero.
-  //
-  // Since we effectively disregard smallish inputs in the normalizing factor,
-  // we also drop them in the output (set to minimum output), and in doing so
-  // make better use of the quantization range / resolution.
-  static constexpr float kOutputRangeMin = -16.0;
+    // LogSoftmax can in principal have very large negative output, depending on
+    // the input size.  However, input x_i that is less than x_max-10 is
+    // accumulated as exp(x_i-x_max), which is truncated to zero.
+    //
+    // Since we effectively disregard smallish inputs in the normalizing factor,
+    // we also drop them in the output (set to minimum output), and in doing so
+    // make better use of the quantization range / resolution.
+    static constexpr float kOutputRangeMin = -16.0;
 };
 
 // Cast operator.
@@ -1737,9 +1747,9 @@ struct LogSoftmaxOperator : Operator {
 //
 // TensorFlow equivalent: Cast
 struct CastOperator : Operator {
-  CastOperator() : Operator(OperatorType::kCast) {}
-  ArrayDataType src_data_type = ArrayDataType::kNone;
-  ArrayDataType dst_data_type = ArrayDataType::kNone;
+    CastOperator() : Operator(OperatorType::kCast) {}
+    ArrayDataType src_data_type = ArrayDataType::kNone;
+    ArrayDataType dst_data_type = ArrayDataType::kNone;
 };
 
 // Floor operator.
@@ -1749,7 +1759,7 @@ struct CastOperator : Operator {
 //
 // TensorFlow equivalent: Floor
 struct FloorOperator : Operator {
-  FloorOperator() : Operator(OperatorType::kFloor) {}
+    FloorOperator() : Operator(OperatorType::kFloor) {}
 };
 
 // Ceil operator.
@@ -1759,7 +1769,7 @@ struct FloorOperator : Operator {
 //
 // TensorFlow equivalent: Ceil
 struct CeilOperator : Operator {
-  CeilOperator() : Operator(OperatorType::kCeil) {}
+    CeilOperator() : Operator(OperatorType::kCeil) {}
 };
 
 // Round operator.
@@ -1769,7 +1779,7 @@ struct CeilOperator : Operator {
 //
 // TensorFlow equivalent: Round
 struct RoundOperator : Operator {
-  RoundOperator() : Operator(OperatorType::kRound) {}
+    RoundOperator() : Operator(OperatorType::kRound) {}
 };
 
 // Gather operator. It gathers slices from params according to indices.
@@ -1782,15 +1792,15 @@ struct RoundOperator : Operator {
 //
 // TensorFlow equivalent: Gather
 struct GatherOperator : Operator {
-  GatherOperator() : Operator(OperatorType::kGather) {}
-  // Axis is populated explicitly or implicitly from the axis input by
-  // ResolveGatherAttributes. An empty axis indicates that the axis has not yet
-  // be resolved.
-  absl::optional<int> axis;
+    GatherOperator() : Operator(OperatorType::kGather) {}
+    // Axis is populated explicitly or implicitly from the axis input by
+    // ResolveGatherAttributes. An empty axis indicates that the axis has not yet
+    // be resolved.
+    absl::optional<int> axis;
 
-  // This field is not used by the standard TF Lite export but it is still need
-  // for legacy Gather implementations.
-  int input_rank = 0;
+    // This field is not used by the standard TF Lite export but it is still need
+    // for legacy Gather implementations.
+    int input_rank = 0;
 };
 
 // GatherNd operator. It gathers slices from params according to indices.
@@ -1801,7 +1811,7 @@ struct GatherOperator : Operator {
 //
 // TensorFlow equivalent: GatherNd
 struct GatherNdOperator : Operator {
-  GatherNdOperator() : Operator(OperatorType::kGatherNd) {}
+    GatherNdOperator() : Operator(OperatorType::kGatherNd) {}
 };
 
 // ArgMax operator. It returns the index of the maximum value along axis.
@@ -1812,8 +1822,8 @@ struct GatherNdOperator : Operator {
 //
 // TensorFlow equivalent: ArgMax
 struct ArgMaxOperator : Operator {
-  ArgMaxOperator() : Operator(OperatorType::kArgMax) {}
-  ArrayDataType output_data_type = ArrayDataType::kInt64;
+    ArgMaxOperator() : Operator(OperatorType::kArgMax) {}
+    ArrayDataType output_data_type = ArrayDataType::kInt64;
 };
 
 // ArgMin operator. It returns the index of the minimum value along axis.
@@ -1824,8 +1834,8 @@ struct ArgMaxOperator : Operator {
 //
 // TensorFlow equivalent: ArgMin
 struct ArgMinOperator : Operator {
-  ArgMinOperator() : Operator(OperatorType::kArgMin) {}
-  ArrayDataType output_data_type = ArrayDataType::kInt64;
+    ArgMinOperator() : Operator(OperatorType::kArgMin) {}
+    ArrayDataType output_data_type = ArrayDataType::kInt64;
 };
 
 // ResizeBilinear operator. It resizes input images with bilinear interpolation.
@@ -1837,10 +1847,10 @@ struct ArgMinOperator : Operator {
 //
 // TensorFlow equivalent: ResizeBilinear
 struct ResizeBilinearOperator : Operator {
-  ResizeBilinearOperator() : Operator(OperatorType::kResizeBilinear) {}
+    ResizeBilinearOperator() : Operator(OperatorType::kResizeBilinear) {}
 
-  bool align_corners = false;
-  bool half_pixel_centers = false;
+    bool align_corners = false;
+    bool half_pixel_centers = false;
 };
 
 // ResizeNearestNeighborOperator operator. It resizes input images with nearest
@@ -1852,10 +1862,10 @@ struct ResizeBilinearOperator : Operator {
 //
 // TensorFlow equivalent: ResizeNearestNeighbor
 struct ResizeNearestNeighborOperator : Operator {
-  ResizeNearestNeighborOperator()
-      : Operator(OperatorType::kResizeNearestNeighbor) {}
+    ResizeNearestNeighborOperator()
+        : Operator(OperatorType::kResizeNearestNeighbor) {}
 
-  bool align_corners = false;
+    bool align_corners = false;
 };
 
 // SpaceToBatchND operator. It divides spatial dimensions into a grid of
@@ -1869,11 +1879,11 @@ struct ResizeNearestNeighborOperator : Operator {
 //
 // TensorFlow equivalent: SpaceToBatchND
 struct SpaceToBatchNDOperator : Operator {
-  SpaceToBatchNDOperator() : Operator(OperatorType::kSpaceToBatchND) {}
+    SpaceToBatchNDOperator() : Operator(OperatorType::kSpaceToBatchND) {}
 
-  std::vector<int> block_shape;
-  std::vector<int> before_paddings;
-  std::vector<int> after_paddings;
+    std::vector<int> block_shape;
+    std::vector<int> before_paddings;
+    std::vector<int> after_paddings;
 };
 
 // BatchToSpaceND operator. Rearranges data from batch into blocks of
@@ -1886,11 +1896,11 @@ struct SpaceToBatchNDOperator : Operator {
 //
 // TensorFlow equivalent: BatchToSpaceND
 struct BatchToSpaceNDOperator : Operator {
-  BatchToSpaceNDOperator() : Operator(OperatorType::kBatchToSpaceND) {}
+    BatchToSpaceNDOperator() : Operator(OperatorType::kBatchToSpaceND) {}
 
-  std::vector<int> block_shape;
-  std::vector<int> before_crops;
-  std::vector<int> after_crops;
+    std::vector<int> block_shape;
+    std::vector<int> before_crops;
+    std::vector<int> after_crops;
 };
 
 // Mean operator.
@@ -1900,10 +1910,10 @@ struct BatchToSpaceNDOperator : Operator {
 //
 // TensorFlow equivalent: Mean
 struct MeanOperator : Operator {
-  MeanOperator() : Operator(OperatorType::kMean) {}
+    MeanOperator() : Operator(OperatorType::kMean) {}
 
-  std::vector<int> axis;
-  bool keep_dims = false;
+    std::vector<int> axis;
+    bool keep_dims = false;
 };
 
 // Svdf operator:
@@ -1914,8 +1924,8 @@ struct MeanOperator : Operator {
 //   inputs[2]: required: weights_time
 //   inputs[3]: optional: bias
 struct SvdfOperator : Operator {
-  SvdfOperator() : Operator(OperatorType::kSvdf) {}
-  int rank;
+    SvdfOperator() : Operator(OperatorType::kSvdf) {}
+    int rank;
 };
 
 // TopKV2 operator.
@@ -1923,7 +1933,7 @@ struct SvdfOperator : Operator {
 // Inputs:
 //    input tensor and top_k scalar.
 struct TopKV2Operator : Operator {
-  TopKV2Operator() : Operator(OperatorType::kTopK_V2) {}
+    TopKV2Operator() : Operator(OperatorType::kTopK_V2) {}
 };
 
 // DynamicPartition operator:
@@ -1934,8 +1944,8 @@ struct TopKV2Operator : Operator {
 //
 // TensorFlow equivalent: DynamicPartition
 struct DynamicPartitionOperator : Operator {
-  DynamicPartitionOperator() : Operator(OperatorType::kDynamicPartition) {}
-  int num_partitions;
+    DynamicPartitionOperator() : Operator(OperatorType::kDynamicPartition) {}
+    int num_partitions;
 };
 
 // DynamicStitch operator:
@@ -1946,8 +1956,8 @@ struct DynamicPartitionOperator : Operator {
 //
 // TensorFlow equivalent: DynamicStitch/ParallelDynamicStitch
 struct DynamicStitchOperator : Operator {
-  DynamicStitchOperator() : Operator(OperatorType::kDynamicStitch) {}
-  int num_partitions;
+    DynamicStitchOperator() : Operator(OperatorType::kDynamicStitch) {}
+    int num_partitions;
 };
 
 // SparseToDense operator:
@@ -1959,8 +1969,8 @@ struct DynamicStitchOperator : Operator {
 //
 // TensorFlow equivalent: SparseToDense.
 struct SparseToDenseOperator : Operator {
-  SparseToDenseOperator() : Operator(OperatorType::kSparseToDense) {}
-  bool validate_indices;
+    SparseToDenseOperator() : Operator(OperatorType::kSparseToDense) {}
+    bool validate_indices;
 };
 
 // Pow operator:
@@ -1971,7 +1981,7 @@ struct SparseToDenseOperator : Operator {
 //
 // TensorFlow equivalent: Pow.
 struct PowOperator : Operator {
-  PowOperator() : Operator(OperatorType::kPow) {}
+    PowOperator() : Operator(OperatorType::kPow) {}
 };
 
 // Any operator:
@@ -1982,9 +1992,9 @@ struct PowOperator : Operator {
 //
 // TensorFlow equivalent: tf.reduce_any.
 struct TensorFlowAnyOperator : Operator {
-  TensorFlowAnyOperator() : Operator(OperatorType::kAny) {}
-  std::vector<int> axis;
-  bool keep_dims = false;
+    TensorFlowAnyOperator() : Operator(OperatorType::kAny) {}
+    std::vector<int> axis;
+    bool keep_dims = false;
 };
 
 // LogicalAnd operator:
@@ -1995,7 +2005,7 @@ struct TensorFlowAnyOperator : Operator {
 //
 // TensorFlow equivalent: tf.logical_and.
 struct LogicalAndOperator : Operator {
-  LogicalAndOperator() : Operator(OperatorType::kLogicalAnd) {}
+    LogicalAndOperator() : Operator(OperatorType::kLogicalAnd) {}
 };
 
 // LogicalNot operator:
@@ -2005,7 +2015,7 @@ struct LogicalAndOperator : Operator {
 //
 // TensorFlow equivalent: tf.logical_not.
 struct LogicalNotOperator : Operator {
-  LogicalNotOperator() : Operator(OperatorType::kLogicalNot) {}
+    LogicalNotOperator() : Operator(OperatorType::kLogicalNot) {}
 };
 
 // OneHot operator:
@@ -2018,15 +2028,15 @@ struct LogicalNotOperator : Operator {
 //
 // TensorFlow equivalent: OneHot.
 struct OneHotOperator : Operator {
-  enum Inputs {
-    INDICES_INPUT = 0,
-    DEPTH_INPUT = 1,
-    ON_VALUE_INPUT = 2,
-    OFF_VALUE_INPUT = 3,
-  };
+    enum Inputs {
+        INDICES_INPUT = 0,
+        DEPTH_INPUT = 1,
+        ON_VALUE_INPUT = 2,
+        OFF_VALUE_INPUT = 3,
+    };
 
-  OneHotOperator() : Operator(OperatorType::kOneHot) {}
-  int axis = -1;
+    OneHotOperator() : Operator(OperatorType::kOneHot) {}
+    int axis = -1;
 };
 
 // LogicalOr operator:
@@ -2037,7 +2047,7 @@ struct OneHotOperator : Operator {
 //
 // TensorFlow equivalent: LogicalOr.
 struct LogicalOrOperator : Operator {
-  LogicalOrOperator() : Operator(OperatorType::kLogicalOr) {}
+    LogicalOrOperator() : Operator(OperatorType::kLogicalOr) {}
 };
 
 // Unpack operator:
@@ -2048,10 +2058,10 @@ struct LogicalOrOperator : Operator {
 //
 // TensorFlow equivalent: tf.unstack.
 struct UnpackOperator : Operator {
-  UnpackOperator() : Operator(OperatorType::kUnpack) {}
-  int num;
-  int axis;
-  ArrayDataType dtype = ArrayDataType::kNone;
+    UnpackOperator() : Operator(OperatorType::kUnpack) {}
+    int num;
+    int axis;
+    ArrayDataType dtype = ArrayDataType::kNone;
 };
 
 // ZerosLike operator:
@@ -2061,7 +2071,7 @@ struct UnpackOperator : Operator {
 //
 // TensorFlow equivalent: tf.zeros_like
 struct TensorFlowZerosLikeOperator : Operator {
-  TensorFlowZerosLikeOperator() : Operator(OperatorType::kZerosLike) {}
+    TensorFlowZerosLikeOperator() : Operator(OperatorType::kZerosLike) {}
 };
 
 // ReverseV2 operator:
@@ -2071,7 +2081,7 @@ struct TensorFlowZerosLikeOperator : Operator {
 //
 // TensorFlow equivalent: ReverseV2.
 struct ReverseV2Operator : Operator {
-  ReverseV2Operator() : Operator(OperatorType::kReverseV2) {}
+    ReverseV2Operator() : Operator(OperatorType::kReverseV2) {}
 };
 
 enum class MirrorPadMode { kNone, kSymmetric, kReflect };
@@ -2086,9 +2096,9 @@ enum class MirrorPadMode { kNone, kSymmetric, kReflect };
 //
 // TensorFlow equivalent: MirrorPad.
 struct MirrorPadOperator : Operator {
-  MirrorPadOperator() : Operator(OperatorType::kMirrorPad) {}
-  // mode is either SYMMETRIC or REFLECT.
-  MirrorPadMode mode;
+    MirrorPadOperator() : Operator(OperatorType::kMirrorPad) {}
+    // mode is either SYMMETRIC or REFLECT.
+    MirrorPadMode mode;
 };
 
 // ReverseSequence operator:
@@ -2099,9 +2109,9 @@ struct MirrorPadOperator : Operator {
 //
 // TensorFlow equivalent: tf.reverse_sequence.
 struct ReverseSequenceOperator : Operator {
-  ReverseSequenceOperator() : Operator(OperatorType::kReverseSequence) {}
-  int seq_dim;
-  int batch_dim = 0;
+    ReverseSequenceOperator() : Operator(OperatorType::kReverseSequence) {}
+    int seq_dim;
+    int batch_dim = 0;
 };
 
 // Unique Operator:
@@ -2111,15 +2121,15 @@ struct ReverseSequenceOperator : Operator {
 //
 // TensorFlow equivalent: Unique
 struct UniqueOperator : Operator {
-  UniqueOperator() : Operator(OperatorType::kUnique) {}
-  ArrayDataType idx_out_type = ArrayDataType::kInt32;
+    UniqueOperator() : Operator(OperatorType::kUnique) {}
+    ArrayDataType idx_out_type = ArrayDataType::kInt32;
 };
 
 struct UnidirectionalSequenceRnnOperator : Operator {
-  UnidirectionalSequenceRnnOperator()
-      : Operator(OperatorType::kUnidirectionalSequenceRnn) {}
-  bool time_major;
-  FusedActivationFunctionType fused_activation_function;
+    UnidirectionalSequenceRnnOperator()
+        : Operator(OperatorType::kUnidirectionalSequenceRnn) {}
+    bool time_major;
+    FusedActivationFunctionType fused_activation_function;
 };
 
 // Where Operator:
@@ -2131,7 +2141,7 @@ struct UnidirectionalSequenceRnnOperator : Operator {
 //
 //  TensorFlow equivalent: Where
 struct WhereOperator : Operator {
-  WhereOperator() : Operator(OperatorType::kWhere) {}
+    WhereOperator() : Operator(OperatorType::kWhere) {}
 };
 
 // Matrix Diag Operator:
@@ -2139,7 +2149,7 @@ struct WhereOperator : Operator {
 // Inputs: A tensor of values that will be on the diagonal of the returned
 //         tensor.
 struct MatrixDiagOperator : Operator {
-  MatrixDiagOperator() : Operator(OperatorType::kMatrixDiag) {}
+    MatrixDiagOperator() : Operator(OperatorType::kMatrixDiag) {}
 };
 
 // Matrix Diag Operator V2:
@@ -2147,7 +2157,7 @@ struct MatrixDiagOperator : Operator {
 // Not fully supported, contains 4 extra inputs compared to MatrixDiag. Behave
 // like MatrixDiag when default parameters are used.
 struct MatrixDiagV2Operator : Operator {
-  MatrixDiagV2Operator() : Operator(OperatorType::kMatrixDiagV2) {}
+    MatrixDiagV2Operator() : Operator(OperatorType::kMatrixDiagV2) {}
 };
 
 // Matrix Diag Operator V3:
@@ -2159,7 +2169,7 @@ struct MatrixDiagV2Operator : Operator {
 // The alignment in V2 contradicts with the default alignment in V3 so V2 is
 // skipped. (It has never been, and should never be, exposed in the public API.)
 struct MatrixDiagV3Operator : Operator {
-  MatrixDiagV3Operator() : Operator(OperatorType::kMatrixDiagV3) {}
+    MatrixDiagV3Operator() : Operator(OperatorType::kMatrixDiagV3) {}
 };
 
 // Matrix Set Diag Operator:
@@ -2169,7 +2179,7 @@ struct MatrixDiagV3Operator : Operator {
 // of the returned output. Output is rank k+1.
 //         tensor.
 struct MatrixSetDiagOperator : Operator {
-  MatrixSetDiagOperator() : Operator(OperatorType::kMatrixSetDiag) {}
+    MatrixSetDiagOperator() : Operator(OperatorType::kMatrixSetDiag) {}
 };
 
 // Matrix Set Diag Operator V2:
@@ -2177,7 +2187,7 @@ struct MatrixSetDiagOperator : Operator {
 // Not fully supported, contains 1 extra inputs compared to MatrixSetDiag.
 // Behave like MatrixSetDiag when default parameters are used.
 struct MatrixSetDiagV2Operator : Operator {
-  MatrixSetDiagV2Operator() : Operator(OperatorType::kMatrixSetDiagV2) {}
+    MatrixSetDiagV2Operator() : Operator(OperatorType::kMatrixSetDiagV2) {}
 };
 
 // Matrix Set Diag Operator V3:
@@ -2189,11 +2199,11 @@ struct MatrixSetDiagV2Operator : Operator {
 // The alignment in V2 contradicts with the default alignment in V3 so V2 is
 // skipped. (It has never been, and should never be, exposed in the public API.)
 struct MatrixSetDiagV3Operator : Operator {
-  MatrixSetDiagV3Operator() : Operator(OperatorType::kMatrixSetDiagV3) {}
+    MatrixSetDiagV3Operator() : Operator(OperatorType::kMatrixSetDiagV3) {}
 };
 
 struct SegmentSumOperator : Operator {
-  SegmentSumOperator() : Operator(OperatorType::kSegmentSum) {}
+    SegmentSumOperator() : Operator(OperatorType::kSegmentSum) {}
 };
 
 // Alloc's are used for transient arrays only. An Alloc specifies which interval
@@ -2201,276 +2211,292 @@ struct SegmentSumOperator : Operator {
 // be used for the transient array at hand. The 'start' and 'end' values are
 // offsets from the start of the workspace buffer, expressed in bytes.
 struct Alloc {
-  int64 start = 0;
-  int64 end = 0;
+    int64 start = 0;
+    int64 end = 0;
 };
 
 inline bool operator<(const Alloc& a, const Alloc& b) {
-  return a.start < b.start;
+    return a.start < b.start;
 }
 
 // Array represents an array (either a constant parameter array or an
 // activations array) in a Model.
 struct Array {
-  template <ArrayDataType A>
-  const Buffer<A>& GetBuffer() const {
-    DCHECK(buffer);
-    DCHECK(buffer->type == A);
-    return *static_cast<const Buffer<A>*>(buffer.get());
-  }
-  template <ArrayDataType A>
-  Buffer<A>& GetMutableBuffer() {
-    if (!buffer) {
-      Buffer<A>* ptr = new Buffer<A>;
-      buffer = std::unique_ptr<GenericBuffer>(ptr);
+    template <ArrayDataType A>
+    const Buffer<A>& GetBuffer() const {
+        DCHECK(buffer);
+        DCHECK(buffer->type == A);
+        return *static_cast<const Buffer<A>*>(buffer.get());
     }
-    DCHECK(buffer);
-    DCHECK(buffer->type == A);
-    return *static_cast<Buffer<A>*>(buffer.get());
-  }
-  Alloc& GetOrCreateAlloc() {
-    if (!alloc) {
-      alloc = std::unique_ptr<Alloc>(new Alloc);
+    template <ArrayDataType A>
+    Buffer<A>& GetMutableBuffer() {
+        if (!buffer) {
+            Buffer<A>* ptr = new Buffer<A>;
+            buffer = std::unique_ptr<GenericBuffer>(ptr);
+        }
+        DCHECK(buffer);
+        DCHECK(buffer->type == A);
+        return *static_cast<Buffer<A>*>(buffer.get());
     }
-    return *alloc;
-  }
-  MinMax& GetOrCreateMinMax() {
-    if (!minmax) {
-      minmax = std::unique_ptr<MinMax>(new MinMax);
+    Alloc& GetOrCreateAlloc() {
+        if (!alloc) {
+            alloc = std::unique_ptr<Alloc>(new Alloc);
+        }
+        return *alloc;
     }
-    return *minmax;
-  }
-  MinMax& GetMinMax() const {
-    DCHECK(minmax);
-    return *minmax;
-  }
-  QuantizationParams& GetOrCreateQuantizationParams() {
-    if (!quantization_params) {
-      quantization_params =
-          std::unique_ptr<QuantizationParams>(new QuantizationParams);
+    MinMax& GetOrCreateMinMax() {
+        if (!minmax) {
+            minmax = std::unique_ptr<MinMax>(new MinMax);
+        }
+        return *minmax;
     }
-    return *quantization_params;
-  }
-  QuantizationParams& GetQuantizationParams() const {
-    DCHECK(quantization_params);
-    return *quantization_params;
-  }
+    MinMax& GetMinMax() const {
+        DCHECK(minmax);
+        return *minmax;
+    }
+    QuantizationParams& GetOrCreateQuantizationParams() {
+        if (!quantization_params) {
+            quantization_params =
+                std::unique_ptr<QuantizationParams>(new QuantizationParams);
+        }
+        return *quantization_params;
+    }
+    QuantizationParams& GetQuantizationParams() const {
+        DCHECK(quantization_params);
+        return *quantization_params;
+    }
 
-  // The data type of the actual elements of this array, that is:
-  //  - If there is a buffer (see 'buffer' member), it must be of the same
-  //    type.
-  //  - If there is no buffer, meaning that this is a runtime (i.e. activations)
-  //    array, then this specifies the type of elements that there will be
-  //    at runtime.
-  //
-  // Note that this only specifies the storage type of elements; this does
-  // not specify whether these are to be treated as 'real' or 'quantized'
-  // values.
-  // That is decided by whether the 'quantization_params' member is null.
-  ArrayDataType data_type = ArrayDataType::kNone;
-  // The final value that data_type should have at the end of graph
-  // transformations
-  ArrayDataType final_data_type = ArrayDataType::kNone;
-  // The dimensions of this array --- this specifies both sizes and strides
-  // (the storage layout).
-  //
-  // Issues with shape handling that remain include:
-  //   - No way to distinguish between 0-dimensional dims and missing dims.
-  //   - No way to describe dims that may be runtime-variable.
-  //   - Addressing of dims by integer index differs in different graph formats
-  //     (TensorFlow vs. other frameworks vs. what we have informally grown
-  //     within toco).
-  //     This is currently quite messy; see ReorderAxesOperator which is how we
-  //     bridge some of these discrepancies at the moment. This is overdue for
-  //     a redesign; I'm thinking that it would be nice to have more flexible
-  //     dims that allow mapping 1:1, cleanly, dims as they are in various
-  //     formats,
-  //     then explicitly convert between different conventions.
+    // The data type of the actual elements of this array, that is:
+    //  - If there is a buffer (see 'buffer' member), it must be of the same
+    //    type.
+    //  - If there is no buffer, meaning that this is a runtime (i.e. activations)
+    //    array, then this specifies the type of elements that there will be
+    //    at runtime.
+    //
+    // Note that this only specifies the storage type of elements; this does
+    // not specify whether these are to be treated as 'real' or 'quantized'
+    // values.
+    // That is decided by whether the 'quantization_params' member is null.
+    ArrayDataType data_type = ArrayDataType::kNone;
+    // The final value that data_type should have at the end of graph
+    // transformations
+    ArrayDataType final_data_type = ArrayDataType::kNone;
+    // The dimensions of this array --- this specifies both sizes and strides
+    // (the storage layout).
+    //
+    // Issues with shape handling that remain include:
+    //   - No way to distinguish between 0-dimensional dims and missing dims.
+    //   - No way to describe dims that may be runtime-variable.
+    //   - Addressing of dims by integer index differs in different graph formats
+    //     (TensorFlow vs. other frameworks vs. what we have informally grown
+    //     within toco).
+    //     This is currently quite messy; see ReorderAxesOperator which is how we
+    //     bridge some of these discrepancies at the moment. This is overdue for
+    //     a redesign; I'm thinking that it would be nice to have more flexible
+    //     dims that allow mapping 1:1, cleanly, dims as they are in various
+    //     formats,
+    //     then explicitly convert between different conventions.
 
-  // Proto-style accessors
-  bool has_shape() const { return array_shape != nullptr; }
-  const Shape& shape() const {
-    CHECK(has_shape());
-    return *array_shape;
-  }
-  Shape* mutable_shape() {
-    if (!array_shape) {
-      array_shape.reset(new Shape);
+    // Proto-style accessors
+    bool has_shape() const {
+        return array_shape != nullptr;
     }
-    return array_shape.get();
-  }
-  void copy_shape(const Shape& src_shape) { *mutable_shape() = src_shape; }
-  void clear_shape() { array_shape = nullptr; }
+    const Shape& shape() const {
+        CHECK(has_shape());
+        return *array_shape;
+    }
+    Shape* mutable_shape() {
+        if (!array_shape) {
+            array_shape.reset(new Shape);
+        }
+        return array_shape.get();
+    }
+    void copy_shape(const Shape& src_shape) {
+        *mutable_shape() = src_shape;
+    }
+    void clear_shape() {
+        array_shape = nullptr;
+    }
 
-  // The constant buffer backing this array. This is non-null if and only if
-  // this is a constant parameter array. Conversely, this is null for
-  // activations arrays.
-  //
-  // Note that this buffer is pure storage. In the case of quantized values,
-  // it only stores the quantized values, it does not know by itself about the
-  // quantization parameters necessary to interprete these values, that is
-  // in the separate 'quantization_params' field. In fact, this 'buffer' field
-  // does no even know whether values are quantized. It only has a data_type,
-  // which must equal the 'data_type' member here, and which only describes
-  // the storage type of element, does not tell whether they are quantized i.e.
-  // whether they are to be interpreted with quantization_params.
-  std::unique_ptr<GenericBuffer> buffer;
-  // Only for activation arrays (i.e. when 'buffer' is null).
-  // Only for code generation.
-  //
-  // Describes the allocation of this array within the workspace buffer
-  // allocated
-  // for all transient arrays.
-  std::unique_ptr<Alloc> alloc;
-  // Describes the [min, max] range of values
-  // to be assumed when determining quantization_params.
-  //
-  // Only used for quantization. In fact, only used for determining
-  // quantization_params.
-  //
-  // Used for both constant arrays (those having a 'buffer') and non-constant
-  // arrays (activations). Indeed, it is important to use the same min-max range
-  // as was used during training, even if that min-max range is slightly wrong
-  // w.r.t. actual buffer elements. Doing otherwise would defeat the point of
-  // re-training for quantization.
-  std::unique_ptr<MinMax> minmax;
-  // Quantization parameters. The non-null-ness of this pointer is what
-  // defines whether this array is quantized or not.
-  //
-  // If this is non-null, then these quantization parameters are to be used
-  // to assign a meaning as real numbers to the elements of this array.
-  std::unique_ptr<QuantizationParams> quantization_params;
-  // narrow_range is a detail of how toco handles FakeQuant operators with
-  // narrow_range, see
-  // https://www.tensorflow.org/api_docs/python/tf/fake_quant_with_min_max_vars
-  //
-  // For more context about what that is useful for, see the big comment in
-  // graph_transformations/ensure_uint8_weights_safe_for_fast_int8_kernels.cc
-  //
-  // The narrow_range flag applies only to quantized arrays, and changes
-  // their quantization in the following way when it is set to 'true':
-  // 1. The computation of {zero_point, scale} from {min, max} needs to be
-  //    amended so that the real min value will get quantized to
-  //    (min_quantized_value + 1) instead of just (min_quantized_value).
-  //    E.g. for uint8 quantization, the real min value should get quantized to
-  //    the uint8 value 1, not 0.
-  // 2. Quantized values should get clamped to the interval
-  //    [min_quantized_value + 1, max_value]. Equivalently, the
-  //    min_quantized_value should get nudged to (min_quantized_value + 1).
-  // The reason why 1. does not imply 2. is that real values may not belong to
-  // the stated [min, max] interval. Concretely, weights recorded at the last
-  // learning step may not fall in the [min, max] interval recorded over
-  // previous learning steps, as the values evolve across learning steps.
-  //
-  // Rationale why this is directly a field on Array:
-  // - This can't be just a field on FakeQuantOperator, because
-  //   FakeQuantOperators are gone (DropFakeQuant) before we get to using that
-  //   information (Quantize). We need a place to store that bit in the interim.
-  // - This can't be in QuantizationParams because we need to record this
-  //   ahead of quantization, and QuantizationParams are only created during
-  //   quantization.
-  // - This could be in MinMax, but that would be an abuse of what MinMax is
-  //   about, and would break existing code that assumes that a MinMax is just
-  //   a min and a max. Unlike MinMax which is agnostic as to the quantized
-  //   data type, narrow_range refers to values in the quantized data type.
-  bool narrow_range = false;
+    // The constant buffer backing this array. This is non-null if and only if
+    // this is a constant parameter array. Conversely, this is null for
+    // activations arrays.
+    //
+    // Note that this buffer is pure storage. In the case of quantized values,
+    // it only stores the quantized values, it does not know by itself about the
+    // quantization parameters necessary to interprete these values, that is
+    // in the separate 'quantization_params' field. In fact, this 'buffer' field
+    // does no even know whether values are quantized. It only has a data_type,
+    // which must equal the 'data_type' member here, and which only describes
+    // the storage type of element, does not tell whether they are quantized i.e.
+    // whether they are to be interpreted with quantization_params.
+    std::unique_ptr<GenericBuffer> buffer;
+    // Only for activation arrays (i.e. when 'buffer' is null).
+    // Only for code generation.
+    //
+    // Describes the allocation of this array within the workspace buffer
+    // allocated
+    // for all transient arrays.
+    std::unique_ptr<Alloc> alloc;
+    // Describes the [min, max] range of values
+    // to be assumed when determining quantization_params.
+    //
+    // Only used for quantization. In fact, only used for determining
+    // quantization_params.
+    //
+    // Used for both constant arrays (those having a 'buffer') and non-constant
+    // arrays (activations). Indeed, it is important to use the same min-max range
+    // as was used during training, even if that min-max range is slightly wrong
+    // w.r.t. actual buffer elements. Doing otherwise would defeat the point of
+    // re-training for quantization.
+    std::unique_ptr<MinMax> minmax;
+    // Quantization parameters. The non-null-ness of this pointer is what
+    // defines whether this array is quantized or not.
+    //
+    // If this is non-null, then these quantization parameters are to be used
+    // to assign a meaning as real numbers to the elements of this array.
+    std::unique_ptr<QuantizationParams> quantization_params;
+    // narrow_range is a detail of how toco handles FakeQuant operators with
+    // narrow_range, see
+    // https://www.tensorflow.org/api_docs/python/tf/fake_quant_with_min_max_vars
+    //
+    // For more context about what that is useful for, see the big comment in
+    // graph_transformations/ensure_uint8_weights_safe_for_fast_int8_kernels.cc
+    //
+    // The narrow_range flag applies only to quantized arrays, and changes
+    // their quantization in the following way when it is set to 'true':
+    // 1. The computation of {zero_point, scale} from {min, max} needs to be
+    //    amended so that the real min value will get quantized to
+    //    (min_quantized_value + 1) instead of just (min_quantized_value).
+    //    E.g. for uint8 quantization, the real min value should get quantized to
+    //    the uint8 value 1, not 0.
+    // 2. Quantized values should get clamped to the interval
+    //    [min_quantized_value + 1, max_value]. Equivalently, the
+    //    min_quantized_value should get nudged to (min_quantized_value + 1).
+    // The reason why 1. does not imply 2. is that real values may not belong to
+    // the stated [min, max] interval. Concretely, weights recorded at the last
+    // learning step may not fall in the [min, max] interval recorded over
+    // previous learning steps, as the values evolve across learning steps.
+    //
+    // Rationale why this is directly a field on Array:
+    // - This can't be just a field on FakeQuantOperator, because
+    //   FakeQuantOperators are gone (DropFakeQuant) before we get to using that
+    //   information (Quantize). We need a place to store that bit in the interim.
+    // - This can't be in QuantizationParams because we need to record this
+    //   ahead of quantization, and QuantizationParams are only created during
+    //   quantization.
+    // - This could be in MinMax, but that would be an abuse of what MinMax is
+    //   about, and would break existing code that assumes that a MinMax is just
+    //   a min and a max. Unlike MinMax which is agnostic as to the quantized
+    //   data type, narrow_range refers to values in the quantized data type.
+    bool narrow_range = false;
 
- private:
-  std::unique_ptr<Shape> array_shape;
+private:
+    std::unique_ptr<Shape> array_shape;
 };
 
 // Our Model struct, represents an entire model (our "top-level" struct).
 // Owns everything.
 class Model {
- public:
-  using ArrayMap = std::unordered_map<string, std::unique_ptr<Array>>;
+public:
+    using ArrayMap = std::unordered_map<string, std::unique_ptr<Array>>;
 
-  bool HasArray(const string& name) const { return arrays.count(name) > 0; }
-  Array& GetArray(const string& name) const {
-    DCHECK(HasArray(name)) << "Array not found: " << name;
-    return *arrays.at(name);
-  }
-  Array& GetOrCreateArray(const string& name) {
-    // Make sure name is not used by an optional array
-    DCHECK(!optional_arrays.count(name));
-    if (!HasArray(name)) {
-      Array* ptr = new Array;
-      arrays[name] = std::unique_ptr<Array>(ptr);
+    bool HasArray(const string& name) const {
+        return arrays.count(name) > 0;
     }
-    Array& result = GetArray(name);
-    return result;
-  }
-  void CreateOptionalArray(const string& name) {
-    DCHECK(!arrays.count(name) && !optional_arrays.count(name));
-    optional_arrays.insert(name);
-  }
-  bool IsOptionalArray(const string& name) const {
-    return optional_arrays.count(name);
-  }
-
-  // Note that this invalidates all array iterators.
-  void EraseArray(const string& name) { arrays.erase(name); }
-  void EraseArrays(std::function<bool(const string&)> discardable) {
-    for (auto it = arrays.begin(); it != arrays.end();) {
-      if (discardable(it->first)) {
-        it = arrays.erase(it);
-      } else {
-        ++it;
-      }
+    Array& GetArray(const string& name) const {
+        DCHECK(HasArray(name)) << "Array not found: " << name;
+        return *arrays.at(name);
     }
-  }
-  const ArrayMap& GetArrayMap() const { return arrays; }
-  ArrayMap& GetMutableArrayMap() { return arrays; }
+    Array& GetOrCreateArray(const string& name) {
+        // Make sure name is not used by an optional array
+        DCHECK(!optional_arrays.count(name));
+        if (!HasArray(name)) {
+            Array* ptr = new Array;
+            arrays[name] = std::unique_ptr<Array>(ptr);
+        }
+        Array& result = GetArray(name);
+        return result;
+    }
+    void CreateOptionalArray(const string& name) {
+        DCHECK(!arrays.count(name) && !optional_arrays.count(name));
+        optional_arrays.insert(name);
+    }
+    bool IsOptionalArray(const string& name) const {
+        return optional_arrays.count(name);
+    }
 
-  int64 ArithmeticOpsCount() const { return ops_count; }
+    // Note that this invalidates all array iterators.
+    void EraseArray(const string& name) {
+        arrays.erase(name);
+    }
+    void EraseArrays(std::function<bool(const string&)> discardable) {
+        for (auto it = arrays.begin(); it != arrays.end();) {
+            if (discardable(it->first)) {
+                it = arrays.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+    const ArrayMap& GetArrayMap() const {
+        return arrays;
+    }
+    ArrayMap& GetMutableArrayMap() {
+        return arrays;
+    }
 
-  void AddInvalidInputArray(string invalid_input_array) {
-    invalid_input_arrays_.insert(invalid_input_array);
-  }
+    int64 ArithmeticOpsCount() const {
+        return ops_count;
+    }
 
-  const std::unordered_set<string>& GetInvalidInputArrays() const {
-    return invalid_input_arrays_;
-  }
+    void AddInvalidInputArray(string invalid_input_array) {
+        invalid_input_arrays_.insert(invalid_input_array);
+    }
 
-  // Optional arrays are used for optional tensors,
-  // these tensors do not have data, but with reserved names as op inputs.
-  std::set<string> optional_arrays;
+    const std::unordered_set<string>& GetInvalidInputArrays() const {
+        return invalid_input_arrays_;
+    }
 
-  // The list of operators. Notice how it's a list of unique_ptr's, implying
-  // that the Model is what owns Operator's and keeps them alive.
-  std::vector<std::unique_ptr<Operator>> operators;
+    // Optional arrays are used for optional tensors,
+    // these tensors do not have data, but with reserved names as op inputs.
+    std::set<string> optional_arrays;
 
-  // Generic flags, a place where we combine information passed to us via
-  // command-line parameters (e.g. --input_width=N) with information that
-  // we may or may not find in the input model file.
-  ModelFlags flags;
-  // For code-generation only: required size of the transient_data buffer
-  std::size_t transient_data_size = 0;
-  // For code-generation only: required alignment of the transient_data buffer
-  std::size_t transient_data_alignment = 0;
-  // Arithmetic operations performed in the model.
-  int64 ops_count = 0;
+    // The list of operators. Notice how it's a list of unique_ptr's, implying
+    // that the Model is what owns Operator's and keeps them alive.
+    std::vector<std::unique_ptr<Operator>> operators;
 
- private:
-  // The associative array mapping names to Array's.
-  // Notice how it's a container of unique_ptr's, implying
-  // that the Model is what owns Array's and keeps them alive.
-  // The Operator's refer to these Array's by their name strings, not by their
-  // addresses. See Operator::inputs, Operator::outputs.
-  std::unordered_map<string, std::unique_ptr<Array>> arrays;
+    // Generic flags, a place where we combine information passed to us via
+    // command-line parameters (e.g. --input_width=N) with information that
+    // we may or may not find in the input model file.
+    ModelFlags flags;
+    // For code-generation only: required size of the transient_data buffer
+    std::size_t transient_data_size = 0;
+    // For code-generation only: required alignment of the transient_data buffer
+    std::size_t transient_data_alignment = 0;
+    // Arithmetic operations performed in the model.
+    int64 ops_count = 0;
 
-  // Invalid input arrays.
-  std::unordered_set<string> invalid_input_arrays_;
+private:
+    // The associative array mapping names to Array's.
+    // Notice how it's a container of unique_ptr's, implying
+    // that the Model is what owns Array's and keeps them alive.
+    // The Operator's refer to these Array's by their name strings, not by their
+    // addresses. See Operator::inputs, Operator::outputs.
+    std::unordered_map<string, std::unique_ptr<Array>> arrays;
+
+    // Invalid input arrays.
+    std::unordered_set<string> invalid_input_arrays_;
 };
 
 // OperatorSignature contains the information required to making versioning
 // decisions.
 struct OperatorSignature {
-  // The operator.
-  const Operator* op;
+    // The operator.
+    const Operator* op;
 
-  // The model in which the operator resides.
-  const Model* model;
+    // The model in which the operator resides.
+    const Model* model;
 };
 }  // namespace toco
 

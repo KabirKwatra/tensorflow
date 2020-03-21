@@ -28,8 +28,8 @@ using ::grpc::Status;
 GrpcMasterImpl::GrpcMasterImpl(ServerBuilder* server_builder,
                                const std::string& protocol)
     : impl_(protocol) {
-  server_builder->RegisterService(this);
-  VLOG(1) << "Registered data service master";
+    server_builder->RegisterService(this);
+    VLOG(1) << "Registered data service master";
 }
 
 #define HANDLER(method)                                         \

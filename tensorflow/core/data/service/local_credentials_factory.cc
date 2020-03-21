@@ -19,28 +19,30 @@ namespace tensorflow {
 namespace data {
 
 class LocalCredentialsFactory : public CredentialsFactory {
- public:
-  std::string Protocol() override { return "grpc+local"; }
+public:
+    std::string Protocol() override {
+        return "grpc+local";
+    }
 
-  Status CreateServerCredentials(
-      std::shared_ptr<::grpc::ServerCredentials>* out) override {
-    *out = grpc::experimental::LocalServerCredentials(LOCAL_TCP);
-    return Status::OK();
-  }
+    Status CreateServerCredentials(
+        std::shared_ptr<::grpc::ServerCredentials>* out) override {
+        *out = grpc::experimental::LocalServerCredentials(LOCAL_TCP);
+        return Status::OK();
+    }
 
-  Status CreateClientCredentials(
-      std::shared_ptr<::grpc::ChannelCredentials>* out) override {
-    *out = grpc::experimental::LocalCredentials(LOCAL_TCP);
-    return Status::OK();
-  }
+    Status CreateClientCredentials(
+        std::shared_ptr<::grpc::ChannelCredentials>* out) override {
+        *out = grpc::experimental::LocalCredentials(LOCAL_TCP);
+        return Status::OK();
+    }
 };
 
 class LocalCredentialsRegistrar {
- public:
-  LocalCredentialsRegistrar() {
-    auto factory = new LocalCredentialsFactory();
-    CredentialsFactory::Register(factory);
-  }
+public:
+    LocalCredentialsRegistrar() {
+        auto factory = new LocalCredentialsFactory();
+        CredentialsFactory::Register(factory);
+    }
 };
 static LocalCredentialsRegistrar registrar;
 

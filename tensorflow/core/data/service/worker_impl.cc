@@ -45,112 +45,112 @@ auto* tf_data_service_created =
 }  // namespace
 
 DataServiceWorkerImpl::DataServiceWorkerImpl(const std::string& master_address,
-                                             const std::string& protocol)
+        const std::string& protocol)
     : master_address_(master_address), protocol_(protocol) {
-  tf_data_service_created->GetCell()->Set(true);
+    tf_data_service_created->GetCell()->Set(true);
 }
 
 void DataServiceWorkerImpl::Start(const std::string& worker_address) {
-  VLOG(3) << "Starting tf.data service worker at address " << worker_address;
-  mutex_lock l(mu_);
-  worker_address_ = worker_address;
+    VLOG(3) << "Starting tf.data service worker at address " << worker_address;
+    mutex_lock l(mu_);
+    worker_address_ = worker_address;
 
-  Status s = Register();
-  while (!s.ok()) {
-    LOG(WARNING) << "Failed to register with master at " << master_address_
-                 << ": " << s;
-    Env::Default()->SleepForMicroseconds(kHeartbeatIntervalMicros);
-    s = Register();
-  }
+    Status s = Register();
+    while (!s.ok()) {
+        LOG(WARNING) << "Failed to register with master at " << master_address_
+                     << ": " << s;
+        Env::Default()->SleepForMicroseconds(kHeartbeatIntervalMicros);
+        s = Register();
+    }
 }
 
 Status DataServiceWorkerImpl::Register() EXCLUSIVE_LOCKS_REQUIRED(mu_) {
-  VLOG(3) << "Registering with master at " << master_address_;
-  if (!master_stub_) {
-    ::grpc::ChannelArguments args;
-    std::shared_ptr<::grpc::ChannelCredentials> credentials;
-    TF_RETURN_IF_ERROR(
-        CredentialsFactory::CreateClientCredentials(protocol_, &credentials));
-    auto channel =
-        ::grpc::CreateCustomChannel(master_address_, credentials, args);
-    master_stub_ = MasterService::NewStub(channel);
-  }
-  RegisterWorkerRequest req;
-  req.set_worker_address(worker_address_);
-  RegisterWorkerResponse resp;
+    VLOG(3) << "Registering with master at " << master_address_;
+    if (!master_stub_) {
+        ::grpc::ChannelArguments args;
+        std::shared_ptr<::grpc::ChannelCredentials> credentials;
+        TF_RETURN_IF_ERROR(
+            CredentialsFactory::CreateClientCredentials(protocol_, &credentials));
+        auto channel =
+            ::grpc::CreateCustomChannel(master_address_, credentials, args);
+        master_stub_ = MasterService::NewStub(channel);
+    }
+    RegisterWorkerRequest req;
+    req.set_worker_address(worker_address_);
+    RegisterWorkerResponse resp;
 
-  grpc::ClientContext ctx;
-  grpc::Status s = master_stub_->RegisterWorker(&ctx, req, &resp);
-  if (!s.ok()) {
-    return grpc_util::WrapError("Failed to register worker", s);
-  }
-  for (const TaskDef& task : resp.tasks()) {
-    TF_RETURN_IF_ERROR(ProcessTaskInternal(task));
-  }
-  VLOG(3) << "Registered worker with id " << resp.worker_id();
-  return Status::OK();
+    grpc::ClientContext ctx;
+    grpc::Status s = master_stub_->RegisterWorker(&ctx, req, &resp);
+    if (!s.ok()) {
+        return grpc_util::WrapError("Failed to register worker", s);
+    }
+    for (const TaskDef& task : resp.tasks()) {
+        TF_RETURN_IF_ERROR(ProcessTaskInternal(task));
+    }
+    VLOG(3) << "Registered worker with id " << resp.worker_id();
+    return Status::OK();
 }
 
 Status DataServiceWorkerImpl::ProcessTask(const ProcessTaskRequest* request,
-                                          ProcessTaskResponse* response) {
-  mutex_lock l(mu_);
-  const TaskDef& task = request->task();
-  VLOG(3) << "Received request to process task " << task.task_id();
-  return ProcessTaskInternal(task);
+        ProcessTaskResponse* response) {
+    mutex_lock l(mu_);
+    const TaskDef& task = request->task();
+    VLOG(3) << "Received request to process task " << task.task_id();
+    return ProcessTaskInternal(task);
 }
 
 Status DataServiceWorkerImpl::ProcessTaskInternal(const TaskDef& task_def)
-    EXCLUSIVE_LOCKS_REQUIRED(mu_) {
-  standalone::Dataset::Params params;
-  std::unique_ptr<standalone::Dataset> dataset;
-  TF_RETURN_IF_ERROR(standalone::Dataset::FromGraph(
-      params, task_def.dataset().graph(), &dataset));
+EXCLUSIVE_LOCKS_REQUIRED(mu_) {
+    standalone::Dataset::Params params;
+    std::unique_ptr<standalone::Dataset> dataset;
+    TF_RETURN_IF_ERROR(standalone::Dataset::FromGraph(
+                           params, task_def.dataset().graph(), &dataset));
 
-  std::unique_ptr<standalone::Iterator> iterator;
-  TF_RETURN_IF_ERROR(dataset->MakeIterator(&iterator));
+    std::unique_ptr<standalone::Iterator> iterator;
+    TF_RETURN_IF_ERROR(dataset->MakeIterator(&iterator));
 
-  if (tasks_.contains(task_def.task_id())) {
-    return errors::AlreadyExists("A task with id ", task_def.task_id(),
-                                 " already exists.");
-  }
-  Task& task = tasks_[task_def.task_id()];
-  task.id = task_def.task_id();
-  task.dataset = std::move(dataset);
-  task.iterator = std::move(iterator);
-  return Status::OK();
+    if (tasks_.contains(task_def.task_id())) {
+        return errors::AlreadyExists("A task with id ", task_def.task_id(),
+                                     " already exists.");
+    }
+    Task& task = tasks_[task_def.task_id()];
+    task.id = task_def.task_id();
+    task.dataset = std::move(dataset);
+    task.iterator = std::move(iterator);
+    return Status::OK();
 }
 
 Status DataServiceWorkerImpl::GetElement(const GetElementRequest* request,
-                                         GetElementResponse* response) {
-  VLOG(3) << "Received GetElement request for task " << request->task_id();
-  bool end_of_sequence = false;
-  std::vector<tensorflow::Tensor> outputs;
-  {
-    mutex_lock l(mu_);
-    auto it = tasks_.find(request->task_id());
-    if (it == tasks_.end()) {
-      return errors::NotFound("DataServiceWorkerImpl::GetElement failed. ",
-                              "Task id ", request->task_id(), " not found");
+        GetElementResponse* response) {
+    VLOG(3) << "Received GetElement request for task " << request->task_id();
+    bool end_of_sequence = false;
+    std::vector<tensorflow::Tensor> outputs;
+    {
+        mutex_lock l(mu_);
+        auto it = tasks_.find(request->task_id());
+        if (it == tasks_.end()) {
+            return errors::NotFound("DataServiceWorkerImpl::GetElement failed. ",
+                                    "Task id ", request->task_id(), " not found");
+        }
+        std::unique_ptr<standalone::Iterator>& iter = it->second.iterator;
+        if (iter == nullptr) {
+            response->set_end_of_sequence(true);
+            return Status::OK();
+        }
+        TF_RETURN_IF_ERROR(iter->GetNext(&outputs, &end_of_sequence));
+        if (end_of_sequence) {
+            // Release iterator memory and leave a null entry as a tombstone.
+            iter.reset();
+        }
     }
-    std::unique_ptr<standalone::Iterator>& iter = it->second.iterator;
-    if (iter == nullptr) {
-      response->set_end_of_sequence(true);
-      return Status::OK();
-    }
-    TF_RETURN_IF_ERROR(iter->GetNext(&outputs, &end_of_sequence));
-    if (end_of_sequence) {
-      // Release iterator memory and leave a null entry as a tombstone.
-      iter.reset();
-    }
-  }
 
-  if (!end_of_sequence) {
-    TF_RETURN_IF_ERROR(service_util::Compress(
-        outputs, response->mutable_compressed_element()));
-  }
-  response->set_end_of_sequence(end_of_sequence);
+    if (!end_of_sequence) {
+        TF_RETURN_IF_ERROR(service_util::Compress(
+                               outputs, response->mutable_compressed_element()));
+    }
+    response->set_end_of_sequence(end_of_sequence);
 
-  return Status::OK();
+    return Status::OK();
 }
 
 }  // namespace data

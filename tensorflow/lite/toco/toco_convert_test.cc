@@ -22,57 +22,57 @@ namespace toco {
 namespace {
 
 TEST(TocoTest, MissingInputFile) {
-  ParsedTocoFlags toco_flags;
-  ParsedModelFlags model_flags;
-  EXPECT_DEATH(Convert(toco_flags, model_flags).ok(),
-               "Missing required flag --input_file");
+    ParsedTocoFlags toco_flags;
+    ParsedModelFlags model_flags;
+    EXPECT_DEATH(Convert(toco_flags, model_flags).ok(),
+                 "Missing required flag --input_file");
 }
 
 TEST(TocoTest, BadInputFormat) {
-  TocoFlags toco_flags;
-  ModelFlags model_flags;
+    TocoFlags toco_flags;
+    ModelFlags model_flags;
 
-  string input;
-  string output;
+    string input;
+    string output;
 
-  EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
-               "Unhandled input_format='FILE_FORMAT_UNKNOWN'");
+    EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
+                 "Unhandled input_format='FILE_FORMAT_UNKNOWN'");
 }
 
 TEST(TocoTest, MissingOutputArrays) {
-  TocoFlags toco_flags;
-  ModelFlags model_flags;
+    TocoFlags toco_flags;
+    ModelFlags model_flags;
 
-  toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
-  string input;
-  string output;
+    toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
+    string input;
+    string output;
 
-  EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
-               "This model does not define output arrays, so a --output_arrays "
-               "flag must be given on the command-line");
+    EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
+                 "This model does not define output arrays, so a --output_arrays "
+                 "flag must be given on the command-line");
 }
 
 TEST(TocoTest, BadOutputArray) {
-  TocoFlags toco_flags;
-  ModelFlags model_flags;
+    TocoFlags toco_flags;
+    ModelFlags model_flags;
 
-  toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
-  model_flags.add_output_arrays("output1");
-  string input;
-  string output;
+    toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
+    model_flags.add_output_arrays("output1");
+    string input;
+    string output;
 
-  EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
-               "Specified output array .output1. is not produced by any op "
-               "in this graph. Is it a typo");
+    EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
+                 "Specified output array .output1. is not produced by any op "
+                 "in this graph. Is it a typo");
 }
 
 TEST(TocoTest, BadOutputFormat) {
-  TocoFlags toco_flags;
-  ModelFlags model_flags;
+    TocoFlags toco_flags;
+    ModelFlags model_flags;
 
-  toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
-  model_flags.add_output_arrays("output1");
-  string input = R"GraphDef(
+    toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
+    model_flags.add_output_arrays("output1");
+    string input = R"GraphDef(
     node {
       name: "output1"
       input: "input1"
@@ -82,22 +82,22 @@ TEST(TocoTest, BadOutputFormat) {
     }
   )GraphDef";
 
-  string output;
+    string output;
 
-  EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
-               "Unhandled output_format='FILE_FORMAT_UNKNOWN'");
+    EXPECT_DEATH(Convert(input, toco_flags, model_flags, &output).ok(),
+                 "Unhandled output_format='FILE_FORMAT_UNKNOWN'");
 }
 
 TEST(TocoTest, SimpleFloatModel) {
-  TocoFlags toco_flags;
-  ModelFlags model_flags;
+    TocoFlags toco_flags;
+    ModelFlags model_flags;
 
-  toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
-  toco_flags.set_output_format(TENSORFLOW_GRAPHDEF);
+    toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
+    toco_flags.set_output_format(TENSORFLOW_GRAPHDEF);
 
-  // Inputs are automatically selected (but that might not be a good idea).
-  model_flags.add_output_arrays("output1");
-  string input = R"GraphDef(
+    // Inputs are automatically selected (but that might not be a good idea).
+    model_flags.add_output_arrays("output1");
+    string input = R"GraphDef(
     node {
       name: "input1"
       op: "Placeholder"
@@ -117,29 +117,29 @@ TEST(TocoTest, SimpleFloatModel) {
     }
   )GraphDef";
 
-  string output;
-  EXPECT_TRUE(Convert(input, toco_flags, model_flags, &output).ok());
-  EXPECT_TRUE(!output.empty());
+    string output;
+    EXPECT_TRUE(Convert(input, toco_flags, model_flags, &output).ok());
+    EXPECT_TRUE(!output.empty());
 }
 
 TEST(TocoTest, TransientStringTensors) {
-  TocoFlags toco_flags;
-  ModelFlags model_flags;
+    TocoFlags toco_flags;
+    ModelFlags model_flags;
 
-  toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
+    toco_flags.set_input_format(TENSORFLOW_GRAPHDEF);
 
-  // We need to do a couple of things to trigger the transient array
-  // initialization code: output format must support memory planning, and the
-  // input array must have a shape.
-  toco_flags.set_output_format(TFLITE);
+    // We need to do a couple of things to trigger the transient array
+    // initialization code: output format must support memory planning, and the
+    // input array must have a shape.
+    toco_flags.set_output_format(TFLITE);
 
-  toco::InputArray* input_1 = model_flags.add_input_arrays();
-  input_1->set_name("input1");
-  toco::InputArray* indices_1 = model_flags.add_input_arrays();
-  indices_1->set_name("indices1");
+    toco::InputArray* input_1 = model_flags.add_input_arrays();
+    input_1->set_name("input1");
+    toco::InputArray* indices_1 = model_flags.add_input_arrays();
+    indices_1->set_name("indices1");
 
-  model_flags.add_output_arrays("output1");
-  string input = R"GraphDef(
+    model_flags.add_output_arrays("output1");
+    string input = R"GraphDef(
     node {
       name: "input1"
       op: "Placeholder"
@@ -169,18 +169,18 @@ TEST(TocoTest, TransientStringTensors) {
     }
   )GraphDef";
 
-  string output;
+    string output;
 
-  EXPECT_TRUE(Convert(input, toco_flags, model_flags, &output).ok());
-  EXPECT_TRUE(!output.empty());
+    EXPECT_TRUE(Convert(input, toco_flags, model_flags, &output).ok());
+    EXPECT_TRUE(!output.empty());
 }
 
 }  // namespace
 }  // namespace toco
 
 int main(int argc, char** argv) {
-  ::tflite::LogToStderr();
-  ::testing::InitGoogleTest(&argc, argv);
-  ::toco::port::InitGoogleWasDoneElsewhere();
-  return RUN_ALL_TESTS();
+    ::tflite::LogToStderr();
+    ::testing::InitGoogleTest(&argc, argv);
+    ::toco::port::InitGoogleWasDoneElsewhere();
+    return RUN_ALL_TESTS();
 }

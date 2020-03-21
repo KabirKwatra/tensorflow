@@ -33,26 +33,26 @@ namespace data {
 // builder.BuildAndStart()
 //
 class GrpcWorkerImpl : public WorkerService::Service {
- public:
-  explicit GrpcWorkerImpl(grpc::ServerBuilder* server_builder,
-                          const std::string& master_address,
-                          const std::string& protocol);
-  ~GrpcWorkerImpl() override {}
+public:
+    explicit GrpcWorkerImpl(grpc::ServerBuilder* server_builder,
+                            const std::string& master_address,
+                            const std::string& protocol);
+    ~GrpcWorkerImpl() override {}
 
-  void Start(const std::string& worker_address);
+    void Start(const std::string& worker_address);
 
 #define HANDLER(method)                               \
   grpc::Status method(grpc::ServerContext* context,   \
                       const method##Request* request, \
                       method##Response* response) override;
-  HANDLER(ProcessTask);
-  HANDLER(GetElement);
+    HANDLER(ProcessTask);
+    HANDLER(GetElement);
 #undef HANDLER
 
- private:
-  DataServiceWorkerImpl impl_;
+private:
+    DataServiceWorkerImpl impl_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(GrpcWorkerImpl);
+    TF_DISALLOW_COPY_AND_ASSIGN(GrpcWorkerImpl);
 };
 
 }  // namespace data
