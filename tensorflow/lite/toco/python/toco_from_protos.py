@@ -61,7 +61,8 @@ def execute(unused_args):
 
 def main():
     global FLAGS
-    parser = argparse.ArgumentParser(description="Invoke toco using protos as input.")
+    parser = argparse.ArgumentParser(
+        description="Invoke toco using protos as input.")
     parser.add_argument(
         "model_proto_file",
         type=str,
@@ -72,9 +73,9 @@ def main():
         type=str,
         help="File containing serialized proto describing how TOCO should run.",
     )
-    parser.add_argument(
-        "model_input_file", type=str, help="Input model is read from this file."
-    )
+    parser.add_argument("model_input_file",
+                        type=str,
+                        help="Input model is read from this file.")
     parser.add_argument(
         "model_output_file",
         type=str,
@@ -86,16 +87,13 @@ def main():
         default="",
         help=(
             "File containing serialized `GraphDebugInfo` proto that describes "
-            "logging information."
-        ),
+            "logging information."),
     )
     parser.add_argument(
         "--enable_mlir_converter",
         action="store_true",
-        help=(
-            "Boolean indiciating whether to enable MLIR-based conversion "
-            "instead of TOCO conversion. (default False)"
-        ),
+        help=("Boolean indiciating whether to enable MLIR-based conversion "
+              "instead of TOCO conversion. (default False)"),
     )
 
     FLAGS, unparsed = parser.parse_known_args()
