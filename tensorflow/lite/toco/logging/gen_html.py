@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """A utility class to generate the report HTML based on a common template."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
