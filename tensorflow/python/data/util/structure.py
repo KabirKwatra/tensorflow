@@ -54,9 +54,8 @@ def _SparseTensorStructure(dtype, shape):
 @tf_export(v1=["data.experimental.TensorArrayStructure"])
 @deprecation.deprecated(None, "Use `tf.TensorArraySpec` instead.")
 def _TensorArrayStructure(dtype, element_shape, dynamic_size, infer_shape):
-    return tensor_array_ops.TensorArraySpec(
-        element_shape, dtype, dynamic_size, infer_shape
-    )
+    return tensor_array_ops.TensorArraySpec(element_shape, dtype, dynamic_size,
+                                            infer_shape)
 
 
 @tf_export(v1=["data.experimental.RaggedTensorStructure"])
@@ -99,8 +98,7 @@ def normalize_element(element, dtypes=None):
     with ops.name_scope("normalize_element"):
         # Imported here to avoid circular dependency.
         from tensorflow.python.data.ops import (
-            dataset_ops,
-        )  # pylint: disable=g-import-not-at-top
+            dataset_ops, )  # pylint: disable=g-import-not-at-top
 
         for i, (t, dtype) in enumerate(zip(components, flattened_dtypes)):
             try:
@@ -109,22 +107,19 @@ def normalize_element(element, dtypes=None):
                 # TypeError indicates it was not possible to compute a `TypeSpec` for
                 # the value. As a fallback try converting the value to a tensor.
                 normalized_components.append(
-                    ops.convert_to_tensor(t, name="component_%d" % i, dtype=dtype)
-                )
+                    ops.convert_to_tensor(t,
+                                          name="component_%d" % i,
+                                          dtype=dtype))
             else:
                 if isinstance(spec, sparse_tensor.SparseTensorSpec):
                     normalized_components.append(
-                        sparse_tensor.SparseTensor.from_value(t)
-                    )
+                        sparse_tensor.SparseTensor.from_value(t))
                 elif isinstance(spec, ragged_tensor.RaggedTensorSpec):
                     normalized_components.append(
                         ragged_tensor.convert_to_tensor_or_ragged_tensor(
-                            t, name="component_%d" % i
-                        )
-                    )
-                elif isinstance(
-                    spec, (tensor_array_ops.TensorArraySpec, dataset_ops.DatasetSpec)
-                ):
+                            t, name="component_%d" % i))
+                elif isinstance(spec, (tensor_array_ops.TensorArraySpec,
+                                       dataset_ops.DatasetSpec)):
                     normalized_components.append(t)
                 elif isinstance(spec, NoneTensorSpec):
                     normalized_components.append(NoneTensor())
@@ -132,8 +127,9 @@ def normalize_element(element, dtypes=None):
                     normalized_components.append(t)
                 else:
                     normalized_components.append(
-                        ops.convert_to_tensor(t, name="component_%d" % i, dtype=dtype)
-                    )
+                        ops.convert_to_tensor(t,
+                                              name="component_%d" % i,
+                                              dtype=dtype))
     return nest.pack_sequence_as(element, normalized_components)
 
 
@@ -168,11 +164,13 @@ def convert_legacy_structure(output_types, output_shapes, output_classes):
     flat_shapes = nest.flatten(output_shapes)
     flat_classes = nest.flatten(output_classes)
     flat_ret = []
-    for flat_type, flat_shape, flat_class in zip(flat_types, flat_shapes, flat_classes):
+    for flat_type, flat_shape, flat_class in zip(flat_types, flat_shapes,
+                                                 flat_classes):
         if isinstance(flat_class, type_spec.TypeSpec):
             flat_ret.append(flat_class)
         elif issubclass(flat_class, sparse_tensor.SparseTensor):
-            flat_ret.append(sparse_tensor.SparseTensorSpec(flat_shape, flat_type))
+            flat_ret.append(
+                sparse_tensor.SparseTensorSpec(flat_shape, flat_type))
         elif issubclass(flat_class, ops.Tensor):
             flat_ret.append(tensor_spec.TensorSpec(flat_shape, flat_type))
         elif issubclass(flat_class, tensor_array_ops.TensorArray):
@@ -183,15 +181,13 @@ def convert_legacy_structure(output_types, output_shapes, output_classes):
                     flat_type,
                     dynamic_size=tensor_shape.dimension_value(flat_shape[0]),
                     infer_shape=tensor_shape.dimension_value(flat_shape[1]),
-                )
-            )
+                ))
         else:
             # NOTE(mrry): Since legacy structures produced by iterators only
             # comprise Tensors, SparseTensors, and nests, we do not need to
             # support all structure types here.
-            raise TypeError(
-                "Could not build a structure for output class %r" % (flat_class,)
-            )
+            raise TypeError("Could not build a structure for output class %r" %
+                            (flat_class, ))
 
     return nest.pack_sequence_as(output_classes, flat_ret)
 
@@ -219,15 +215,14 @@ def _from_tensor_list_helper(decode_fn, element_spec, tensor_list):
     flat_specs = nest.flatten(element_spec)
     flat_spec_lengths = [len(spec._flat_tensor_specs) for spec in flat_specs]
     if sum(flat_spec_lengths) != len(tensor_list):
-        raise ValueError(
-            "Expected %d tensors but got %d."
-            % (sum(flat_spec_lengths), len(tensor_list))
-        )
+        raise ValueError("Expected %d tensors but got %d." %
+                         (sum(flat_spec_lengths), len(tensor_list)))
 
     i = 0
     flat_ret = []
-    for (component_spec, num_flat_values) in zip(flat_specs, flat_spec_lengths):
-        value = tensor_list[i : i + num_flat_values]
+    for (component_spec, num_flat_values) in zip(flat_specs,
+                                                 flat_spec_lengths):
+        value = tensor_list[i:i + num_flat_values]
         flat_ret.append(decode_fn(component_spec, value))
         i += num_flat_values
     return nest.pack_sequence_as(element_spec, flat_ret)
@@ -278,8 +273,8 @@ def from_tensor_list(element_spec, tensor_list):
     # pylint: disable=protected-access
     # pylint: disable=g-long-lambda
     return _from_tensor_list_helper(
-        lambda spec, value: spec._from_tensor_list(value), element_spec, tensor_list
-    )
+        lambda spec, value: spec._from_tensor_list(value), element_spec,
+        tensor_list)
 
 
 def get_flat_tensor_specs(element_spec):
@@ -354,8 +349,7 @@ def _to_tensor_list_helper(encode_fn, element_spec, element):
         return encode_fn(state, spec, component)
 
     return functools.reduce(
-        reduce_fn, zip(nest.flatten(element_spec), nest.flatten(element)), []
-    )
+        reduce_fn, zip(nest.flatten(element_spec), nest.flatten(element)), [])
 
 
 def to_batched_tensor_list(element_spec, element):
@@ -380,7 +374,8 @@ def to_batched_tensor_list(element_spec, element):
     # pylint: disable=protected-access
     # pylint: disable=g-long-lambda
     return _to_tensor_list_helper(
-        lambda state, spec, component: state + spec._to_batched_tensor_list(component),
+        lambda state, spec, component: state + spec._to_batched_tensor_list(
+            component),
         element_spec,
         element,
     )
@@ -478,11 +473,9 @@ def type_spec_from_value(element, use_fallback=True):
         return ctor([(k, type_spec_from_value(v)) for k, v in element.items()])
 
     if isinstance(element, tuple):
-        if (
-            hasattr(element, "_fields")
-            and isinstance(element._fields, collections.Sequence)
-            and all(isinstance(f, six.string_types) for f in element._fields)
-        ):
+        if (hasattr(element, "_fields")
+                and isinstance(element._fields, collections.Sequence) and all(
+                    isinstance(f, six.string_types) for f in element._fields)):
             if isinstance(element, wrapt.ObjectProxy):
                 element_type = type(element.__wrapped__)
             else:
@@ -501,13 +494,11 @@ def type_spec_from_value(element, use_fallback=True):
                 return spec
         except (ValueError, TypeError) as e:
             logging.vlog(
-                3, "Failed to convert %r to tensor: %s" % (type(element).__name__, e)
-            )
+                3, "Failed to convert %r to tensor: %s" %
+                (type(element).__name__, e))
 
-    raise TypeError(
-        "Could not build a TypeSpec for %r with type %s"
-        % (element, type(element).__name__)
-    )
+    raise TypeError("Could not build a TypeSpec for %r with type %s" %
+                    (element, type(element).__name__))
 
 
 # TODO(b/149584798): Move this to framework and add tests for non-tf.data
@@ -568,4 +559,5 @@ class NoneTensorSpec(type_spec.BatchableTypeSpec):
         return self
 
 
-type_spec.register_type_spec_from_value_converter(type(None), NoneTensorSpec.from_value)
+type_spec.register_type_spec_from_value_converter(type(None),
+                                                  NoneTensorSpec.from_value)
