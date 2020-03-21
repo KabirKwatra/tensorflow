@@ -13,15 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 """Script Language Operators."""
-
 # pylint: disable=g-bad-name
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import threading
-
-# Used by py_util.cc to get tracebacks.
 import traceback  # pylint: disable=unused-import
 import weakref
 
@@ -43,6 +40,7 @@ from tensorflow.python.util import lazy_loader
 from tensorflow.python.util import nest
 from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import tf_export
+# Used by py_util.cc to get tracebacks.
 
 autograph = lazy_loader.LazyLoader(
     "autograph", globals(), "tensorflow.python.autograph.impl.api"
