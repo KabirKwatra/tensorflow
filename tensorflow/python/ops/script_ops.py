@@ -45,8 +45,8 @@ from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import tf_export
 
 autograph = lazy_loader.LazyLoader(
-    "autograph", globals(),
-    "tensorflow.python.autograph.impl.api")
+    "autograph", globals(), "tensorflow.python.autograph.impl.api"
+)
 
 
 # Map from EagerPyFunc token to tuple (tape, eager args, eager outputs);
@@ -107,7 +107,8 @@ class EagerFunc(object):
                 "Only numeric data structures like Tensors or NumPy arrays should "
                 "be returned; to return the value of a variable, make sure to obtain "
                 "the Tensor backing it by calling `.read_value()` on the variable in "
-                "question: %s" % value)
+                "question: %s" % value
+            )
         if value is None and self._is_grad_func:
             # Gradient functions may legitimately return a list that contains
             # both Tensors and Python Nones. Unfortunately this breaks the
@@ -139,15 +140,17 @@ class EagerFunc(object):
             with ops.device(device):
                 if isinstance(ret, (tuple, list)):
                     outputs = [
-                        _maybe_copy_to_context_device(self._convert(x, dtype=dtype),
-                                                      device_name)
+                        _maybe_copy_to_context_device(
+                            self._convert(x, dtype=dtype), device_name
+                        )
                         for (x, dtype) in zip(ret, self._out_dtypes)
                     ]
                 elif ret is None:
                     outputs = None
                 else:
                     outputs = _maybe_copy_to_context_device(
-                        self._convert(ret, dtype=self._out_dtypes[0]), device_name)
+                        self._convert(ret, dtype=self._out_dtypes[0]), device_name
+                    )
         if self._use_tape_cache:
             tape_cache[compat.as_bytes(token)] = (tape, args, outputs)
         return outputs
@@ -273,18 +276,21 @@ _py_funcs = FuncRegistry()
 _pywrap_py_func.initialize_py_trampoline(_py_funcs)
 
 
-def _internal_py_func(func,
-                      inp,
-                      Tout,
-                      stateful=None,
-                      eager=False,
-                      is_grad_func=False,
-                      name=None,
-                      use_tape_cache=True):
+def _internal_py_func(
+    func,
+    inp,
+    Tout,
+    stateful=None,
+    eager=False,
+    is_grad_func=False,
+    name=None,
+    use_tape_cache=True,
+):
     """See documentation for py_func and eager_py_func."""
     if not callable(func):
-        raise ValueError("Expected func to be callable, got func of type {}".format(
-            type(func)))
+        raise ValueError(
+            "Expected func to be callable, got func of type {}".format(type(func))
+        )
 
     original_func = func
     func = autograph.do_not_convert(func)
@@ -296,8 +302,7 @@ def _internal_py_func(func,
         Tout = [Tout]
 
     if eager:
-        func = EagerFunc(func, Tout, is_grad_func,
-                         use_tape_cache=use_tape_cache)
+        func = EagerFunc(func, Tout, is_grad_func, use_tape_cache=use_tape_cache)
 
     # Tying the registered function's lifetime with the current default graph is
     # not reliable. For example, Estimator-based binaries may switch graphs in
@@ -335,23 +340,21 @@ def _internal_py_func(func,
     # Store a reference to the function in the graph to ensure it stays alive
     # as long as the graph lives. When the graph is destroyed, the function
     # is left to the garbage collector for destruction as well.
-    graph._py_funcs_used_in_graph.append(
-        func)  # pylint: disable=protected-access
+    graph._py_funcs_used_in_graph.append(func)  # pylint: disable=protected-access
 
     if eager:
         result = gen_script_ops.eager_py_func(
-            input=inp,
-            token=token,
-            is_async=context.is_async(),
-            Tout=Tout,
-            name=name)
+            input=inp, token=token, is_async=context.is_async(), Tout=Tout, name=name
+        )
     else:
         if stateful:
             result = gen_script_ops.py_func(
-                input=inp, token=token, Tout=Tout, name=name)
+                input=inp, token=token, Tout=Tout, name=name
+            )
         else:
             result = gen_script_ops.py_func_stateless(
-                input=inp, token=token, Tout=Tout, name=name)
+                input=inp, token=token, Tout=Tout, name=name
+            )
     return result if is_list_or_tuple else result[0]
 
 
@@ -363,8 +366,7 @@ def _EagerPyFuncGrad(op, *dy):
     token = op.get_attr("token")
 
     def eagerly_executed_grad(*dy):
-        tape, eager_inputs, eager_outputs = tape_cache.pop(
-            compat.as_bytes(token))
+        tape, eager_inputs, eager_outputs = tape_cache.pop(compat.as_bytes(token))
         return tape.gradient(eager_outputs, eager_inputs, output_gradients=dy)
 
     with ops.control_dependencies(op.outputs):
@@ -373,7 +375,8 @@ def _EagerPyFuncGrad(op, *dy):
             inp=dy,
             Tout=[tensor.dtype for tensor in op.inputs],
             eager=True,
-            is_grad_func=True)
+            is_grad_func=True,
+        )
 
 
 # NOTE(lithuak): this function as a layer of indirection was added with one
@@ -394,7 +397,8 @@ def _eager_py_func(func, inp, Tout, name=None, use_tape_cache=True):
                 Tout=Tout,
                 eager=True,
                 name=name,
-                use_tape_cache=use_tape_cache)
+                use_tape_cache=use_tape_cache,
+            )
 
     return _internal_py_func(
         func=func,
@@ -402,7 +406,8 @@ def _eager_py_func(func, inp, Tout, name=None, use_tape_cache=True):
         Tout=Tout,
         eager=True,
         name=name,
-        use_tape_cache=use_tape_cache)
+        use_tape_cache=use_tape_cache,
+    )
 
 
 @tf_export("py_function")
@@ -485,8 +490,7 @@ def eager_py_func(func, inp, Tout, name=None):
       A list of `Tensor` or a single `Tensor` which `func` computes; an empty list
       if `func` returns None.
     """
-    return _eager_py_func(
-        func=func, inp=inp, Tout=Tout, name=name, use_tape_cache=True)
+    return _eager_py_func(func=func, inp=inp, Tout=Tout, name=name, use_tape_cache=True)
 
 
 def py_func_common(func, inp, Tout, stateful=True, name=None):
@@ -552,21 +556,18 @@ def py_func_common(func, inp, Tout, stateful=True, name=None):
         result = [x if x is None else ops.convert_to_tensor(x) for x in result]
         if len(result) == 1:
             # Mimic the automatic unwrapping in graph-mode py_func
-            result, = result
+            (result,) = result
         return result
 
     if ops.executing_eagerly_outside_functions():
         with ops.device(context.context().host_address_space()):
             return _internal_py_func(
-                func=func,
-                inp=inp,
-                Tout=Tout,
-                stateful=stateful,
-                eager=False,
-                name=name)
+                func=func, inp=inp, Tout=Tout, stateful=stateful, eager=False, name=name
+            )
 
     return _internal_py_func(
-        func=func, inp=inp, Tout=Tout, stateful=stateful, eager=False, name=name)
+        func=func, inp=inp, Tout=Tout, stateful=stateful, eager=False, name=name
+    )
 
 
 @deprecation.deprecated(
@@ -581,7 +582,8 @@ def py_func_common(func, inp, Tout, stateful=True, name=None):
     - tf.numpy_function maintains the semantics of the deprecated tf.py_func
     (it is not differentiable, and manipulates numpy arrays). It drops the
     stateful argument making all functions stateful.
-    """)
+    """,
+)
 @tf_export(v1=["py_func"])
 def py_func(func, inp, Tout, stateful=True, name=None):
     return py_func_common(func, inp, Tout, stateful, name=name)
