@@ -183,14 +183,19 @@ def get_loss_reduction():
       `tf.distribute.ReduceOp` corresponding to the last loss reduction for
       estimator and v1 optimizer use case. `tf.distribute.ReduceOp.SUM` otherwise.
     """
-    if not distribution_strategy_context.get_strategy()._scale_loss_for_estimator:  # pylint: disable=protected-access
+    if (
+        not distribution_strategy_context.get_strategy()._scale_loss_for_estimator
+    ):  # pylint: disable=protected-access
         # If we are not in Estimator context then return 'SUM'. We do not need to
         # scale loss in the optimizer.
         return reduce_util.ReduceOp.SUM
-    last_reduction = ops.get_default_graph(
-    )._last_loss_reduction  # pylint: disable=protected-access
-    if (last_reduction == losses_impl.Reduction.SUM or
-            last_reduction == loss_reduction.ReductionV2.SUM):
+    last_reduction = (
+        ops.get_default_graph()._last_loss_reduction
+    )  # pylint: disable=protected-access
+    if (
+        last_reduction == losses_impl.Reduction.SUM
+        or last_reduction == loss_reduction.ReductionV2.SUM
+    ):
         return reduce_util.ReduceOp.SUM
     return reduce_util.ReduceOp.MEAN
 
@@ -212,20 +217,23 @@ def _require_cross_replica_or_default_context_extended(extended):
     if context.strategy is not strategy:
         _wrong_strategy_scope(strategy, context)
     assert cross_replica is None
-    raise RuntimeError("Method requires being in cross-replica context, use "
-                       "get_replica_context().merge_call()")
+    raise RuntimeError(
+        "Method requires being in cross-replica context, use "
+        "get_replica_context().merge_call()"
+    )
 
 
 def _wrong_strategy_scope(strategy, context):
     # Figure out the right error message.
     if not distribution_strategy_context.has_strategy():
         raise RuntimeError(
-            'Need to be inside "with strategy.scope()" for %s' %
-            (strategy,))
+            'Need to be inside "with strategy.scope()" for %s' % (strategy,)
+        )
     else:
         raise RuntimeError(
-            "Mixing different tf.distribute.Strategy objects: %s is not %s" %
-            (context.strategy, strategy))
+            "Mixing different tf.distribute.Strategy objects: %s is not %s"
+            % (context.strategy, strategy)
+        )
 
 
 def require_replica_context(replica_ctx):
@@ -240,8 +248,9 @@ def require_replica_context(replica_ctx):
         # Two different ReplicaContexts with the same tf.distribute.Strategy.
         raise RuntimeError("Mismatching ReplicaContext.")
     raise RuntimeError(
-        "Mismatching tf.distribute.Strategy objects: %s is not %s." %
-        (context.strategy, replica_ctx.strategy))
+        "Mismatching tf.distribute.Strategy objects: %s is not %s."
+        % (context.strategy, replica_ctx.strategy)
+    )
 
 
 def _require_strategy_scope_strategy(strategy):
@@ -273,13 +282,12 @@ class _CurrentDistributionContext(object):
     Also: overrides the variable creator and optionally the current device.
     """
 
-    def __init__(self,
-                 strategy,
-                 var_creator_scope,
-                 var_scope=None,
-                 default_device=None):
+    def __init__(
+        self, strategy, var_creator_scope, var_scope=None, default_device=None
+    ):
         self._context = distribution_strategy_context._CrossReplicaThreadMode(  # pylint: disable=protected-access
-            strategy)
+            strategy
+        )
         self._var_creator_scope = var_creator_scope
         self._var_scope = var_scope
         if default_device:
@@ -292,7 +300,8 @@ class _CurrentDistributionContext(object):
         # Allow this scope to be entered if this strategy is already in scope.
         if distribution_strategy_context.has_strategy():
             _require_cross_replica_or_default_context_extended(
-                self._context.strategy.extended)
+                self._context.strategy.extended
+            )
             self._same_scope_again_count += 1
         else:
             _push_per_thread_mode(self._context)
@@ -309,32 +318,38 @@ class _CurrentDistributionContext(object):
             return
         if self._device_scope:
             try:
-                self._device_scope.__exit__(
-                    exception_type, exception_value, traceback)
+                self._device_scope.__exit__(exception_type, exception_value, traceback)
             except RuntimeError as e:
                 six.raise_from(
-                    RuntimeError("Device scope nesting error: move call to "
-                                 "tf.distribute.set_strategy() out of `with` scope."),
-                    e)
+                    RuntimeError(
+                        "Device scope nesting error: move call to "
+                        "tf.distribute.set_strategy() out of `with` scope."
+                    ),
+                    e,
+                )
 
         try:
-            self._var_creator_scope.__exit__(
-                exception_type, exception_value, traceback)
+            self._var_creator_scope.__exit__(exception_type, exception_value, traceback)
         except RuntimeError as e:
             six.raise_from(
-                RuntimeError("Variable creator scope nesting error: move call to "
-                             "tf.distribute.set_strategy() out of `with` scope."),
-                e)
+                RuntimeError(
+                    "Variable creator scope nesting error: move call to "
+                    "tf.distribute.set_strategy() out of `with` scope."
+                ),
+                e,
+            )
 
         if self._var_scope:
             try:
-                self._var_scope.__exit__(
-                    exception_type, exception_value, traceback)
+                self._var_scope.__exit__(exception_type, exception_value, traceback)
             except RuntimeError as e:
                 six.raise_from(
-                    RuntimeError("Variable scope nesting error: move call to "
-                                 "tf.distribute.set_strategy() out of `with` scope."),
-                    e)
+                    RuntimeError(
+                        "Variable scope nesting error: move call to "
+                        "tf.distribute.set_strategy() out of `with` scope."
+                    ),
+                    e,
+                )
         _pop_per_thread_mode()
 
 
@@ -349,6 +364,7 @@ class InputReplicationMode(enum.Enum):
       `tf.distribute.Strategy` doesn't manage any state sharing between such
       separate input pipelines.
     """
+
     PER_WORKER = "PER_WORKER"
 
 
@@ -365,10 +381,9 @@ class InputContext(object):
     source etc).
     """
 
-    def __init__(self,
-                 num_input_pipelines=1,
-                 input_pipeline_id=0,
-                 num_replicas_in_sync=1):
+    def __init__(
+        self, num_input_pipelines=1, input_pipeline_id=0, num_replicas_in_sync=1
+    ):
         """Initializes an InputContext object.
 
         Args:
@@ -411,14 +426,17 @@ class InputContext(object):
             `num_replicas_in_sync`.
         """
         if global_batch_size % self._num_replicas_in_sync != 0:
-            raise ValueError("The `global_batch_size` %r is not divisible by "
-                             "`num_replicas_in_sync` %r " %
-                             (global_batch_size, self._num_replicas_in_sync))
+            raise ValueError(
+                "The `global_batch_size` %r is not divisible by "
+                "`num_replicas_in_sync` %r "
+                % (global_batch_size, self._num_replicas_in_sync)
+            )
         return global_batch_size // self._num_replicas_in_sync
 
     def __str__(self):
         return "tf.distribute.InputContext(input pipeline id {}, total: {})".format(
-            self.input_pipeline_id, self.num_input_pipelines)
+            self.input_pipeline_id, self.num_input_pipelines
+        )
 
 
 @tf_export("distribute.experimental.ValueContext", v1=[])
@@ -456,9 +474,7 @@ class ValueContext(object):
 
     """
 
-    def __init__(self,
-                 replica_id_in_sync_group=0,
-                 num_replicas_in_sync=1):
+    def __init__(self, replica_id_in_sync_group=0, num_replicas_in_sync=1):
         """Initializes an ValueContext object.
 
         Args:
@@ -480,17 +496,23 @@ class ValueContext(object):
         return self._replica_id_in_sync_group
 
     def __str__(self):
-        return (("tf.distribute.ValueContext(replica id {}, "
-                 " total replicas in sync: ""{})")
-                .format(self.replica_id_in_sync_group, self.num_replicas_in_sync))
+        return (
+            "tf.distribute.ValueContext(replica id {}, "
+            " total replicas in sync: "
+            "{})"
+        ).format(self.replica_id_in_sync_group, self.num_replicas_in_sync)
 
 
 @tf_export("distribute.RunOptions")
 class RunOptions(
-        collections.namedtuple("RunOptions", [
+    collections.namedtuple(
+        "RunOptions",
+        [
             "experimental_enable_dynamic_batch_size",
             "experimental_bucketizing_dynamic_shape",
-        ])):
+        ],
+    )
+):
     """Run options for `strategy.run`.
 
     This can be used to hold some strategy specific configs.
@@ -507,12 +529,17 @@ class RunOptions(
         which should not have impact on correctness.
     """
 
-    def __new__(cls,
-                experimental_enable_dynamic_batch_size=True,
-                experimental_bucketizing_dynamic_shape=False):
-        return super(RunOptions,
-                     cls).__new__(cls, experimental_enable_dynamic_batch_size,
-                                  experimental_bucketizing_dynamic_shape)
+    def __new__(
+        cls,
+        experimental_enable_dynamic_batch_size=True,
+        experimental_bucketizing_dynamic_shape=False,
+    ):
+        return super(RunOptions, cls).__new__(
+            cls,
+            experimental_enable_dynamic_batch_size,
+            experimental_bucketizing_dynamic_shape,
+        )
+
 
 # ------------------------------------------------------------------------------
 # Base classes for all distribution strategies.
@@ -605,6 +632,7 @@ class StrategyBase(object):
     partitioned variables (where a single variable is split across multiple
     devices) at this time.
     """
+
     # pylint: enable=line-too-long
 
     # TODO(josh11b): Partitioned computations, state; sharding
@@ -622,9 +650,11 @@ class StrategyBase(object):
             # pylint: disable=protected-access
             try:
                 extended._retrace_functions_for_each_device = (
-                    len(extended.worker_devices) > 1)
+                    len(extended.worker_devices) > 1
+                )
                 distribution_strategy_replica_gauge.get_cell("num_replicas").set(
-                    self.num_replicas_in_sync)
+                    self.num_replicas_in_sync
+                )
             except:  # pylint: disable=bare-except
                 # Default for the case where extended.worker_devices can't return
                 # a sensible value.
@@ -669,19 +699,23 @@ class StrategyBase(object):
     @doc_controls.do_not_generate_docs  # DEPRECATED: TF 1.x only
     def make_dataset_iterator(self, dataset):
         """DEPRECATED TF 1.x ONLY."""
-        return self._extended._make_dataset_iterator(dataset)  # pylint: disable=protected-access
+        return self._extended._make_dataset_iterator(
+            dataset
+        )  # pylint: disable=protected-access
 
     @doc_controls.do_not_generate_docs  # DEPRECATED: TF 1.x only
-    def make_input_fn_iterator(self,
-                               input_fn,
-                               replication_mode=InputReplicationMode.PER_WORKER):
+    def make_input_fn_iterator(
+        self, input_fn, replication_mode=InputReplicationMode.PER_WORKER
+    ):
         """DEPRECATED TF 1.x ONLY."""
         if replication_mode != InputReplicationMode.PER_WORKER:
             raise ValueError(
-                "Input replication mode not supported: %r" % replication_mode)
+                "Input replication mode not supported: %r" % replication_mode
+            )
         with self.scope():
             return self.extended._make_input_fn_iterator(  # pylint: disable=protected-access
-                input_fn, replication_mode=replication_mode)
+                input_fn, replication_mode=replication_mode
+            )
 
     def experimental_make_numpy_dataset(self, numpy_input):
         """Makes a `tf.data.Dataset` for input provided via a numpy array.
@@ -708,15 +742,13 @@ class StrategyBase(object):
         Returns:
           A `tf.data.Dataset` representing `numpy_input`.
         """
-        return self.extended.experimental_make_numpy_dataset(
-            numpy_input, session=None)
+        return self.extended.experimental_make_numpy_dataset(numpy_input, session=None)
 
     @doc_controls.do_not_generate_docs  # DEPRECATED: TF 1.x only
     def experimental_run(self, fn, input_iterator=None):
         """DEPRECATED TF 1.x ONLY."""
         with self.scope():
-            args = (input_iterator.get_next(),
-                    ) if input_iterator is not None else ()
+            args = (input_iterator.get_next(),) if input_iterator is not None else ()
         return self.run(fn, args=args)
 
     def experimental_distribute_dataset(self, dataset):
@@ -809,7 +841,9 @@ class StrategyBase(object):
           A "distributed `Dataset`", which acts like a `tf.data.Dataset` except
           it produces "per-replica" values.
         """
-        return self._extended._experimental_distribute_dataset(dataset)  # pylint: disable=protected-access
+        return self._extended._experimental_distribute_dataset(
+            dataset
+        )  # pylint: disable=protected-access
 
     def experimental_distribute_datasets_from_function(self, dataset_fn):
         """Distributes `tf.data.Dataset` instances created by calls to `dataset_fn`.
@@ -879,7 +913,8 @@ class StrategyBase(object):
           it produces "per-replica" values.
         """
         return self._extended._experimental_distribute_datasets_from_function(  # pylint: disable=protected-access
-            dataset_fn)
+            dataset_fn
+        )
 
     def run(self, fn, args=(), kwargs=None, options=None):
         """Run `fn` on each replica, with the given arguments.
@@ -948,13 +983,15 @@ class StrategyBase(object):
 
         if not isinstance(args, (list, tuple)):
             raise ValueError(
-                "positional args must be a list or tuple, got {}".format(type(args)))
+                "positional args must be a list or tuple, got {}".format(type(args))
+            )
 
         with self.scope():
             # tf.distribute supports Eager functions, so AutoGraph should not be
             # applied when when the caller is also in Eager mode.
             fn = autograph.tf_convert(
-                fn, autograph_ctx.control_status_ctx(), convert_by_default=False)
+                fn, autograph_ctx.control_status_ctx(), convert_by_default=False
+            )
             return self._extended.call_for_each_replica(fn, args=args, kwargs=kwargs)
 
     # TODO(b/151224785): Remove deprecated alias.
@@ -1006,14 +1043,19 @@ class StrategyBase(object):
         if isinstance(reduce_op, six.string_types):
             reduce_op = reduce_util.ReduceOp(reduce_op.upper())
         if axis is None:
-            return self._extended._reduce(reduce_op, value)  # pylint: disable=protected-access
+            return self._extended._reduce(
+                reduce_op, value
+            )  # pylint: disable=protected-access
         if reduce_op == reduce_util.ReduceOp.SUM:
-            value = self.run(
-                lambda v: math_ops.reduce_sum(v, axis=axis), args=(value,))
-            return self._extended._reduce(reduce_op, value)  # pylint: disable=protected-access
+            value = self.run(lambda v: math_ops.reduce_sum(v, axis=axis), args=(value,))
+            return self._extended._reduce(
+                reduce_op, value
+            )  # pylint: disable=protected-access
         if reduce_op != reduce_util.ReduceOp.MEAN:
-            raise TypeError("Expected `reduce_op` to be a `tf.distribute.ReduceOp`, "
-                            "not: %r" % reduce_op)
+            raise TypeError(
+                "Expected `reduce_op` to be a `tf.distribute.ReduceOp`, "
+                "not: %r" % reduce_op
+            )
         # TODO(josh11b): Support list/tuple and tensor axis values.
         if not isinstance(axis, six.integer_types):
             raise TypeError("Expected `axis` to be an integer not: %r" % axis)
@@ -1027,13 +1069,15 @@ class StrategyBase(object):
                 if axis < 0:
                     if axis + v.shape.rank < 0:
                         raise ValueError(
-                            "`axis` = %r out of range for `value` with rank %d" %
-                            (axis, v.shape.rank))
+                            "`axis` = %r out of range for `value` with rank %d"
+                            % (axis, v.shape.rank)
+                        )
                     axis += v.shape.rank
                 elif axis >= v.shape.rank:
                     raise ValueError(
-                        "`axis` = %r out of range for `value` with rank %d" %
-                        (axis, v.shape.rank))
+                        "`axis` = %r out of range for `value` with rank %d"
+                        % (axis, v.shape.rank)
+                    )
                 # TF v2 returns `None` for unknown dimensions and an integer for
                 # known dimension, whereas TF v1 returns tensor_shape.Dimension(None)
                 # or tensor_shape.Dimension(integer). `dimension_value` hides this
@@ -1044,14 +1088,19 @@ class StrategyBase(object):
                     # maybe get a fast path for reducing the denominator.
                     # TODO(b/151871486): Remove array_ops.identity after we fallback to
                     # simple reduction if inputs are all on CPU.
-                    return numer, array_ops.identity(
-                        constant_op.constant(dim, dtype=dtypes.int64))
+                    return (
+                        numer,
+                        array_ops.identity(
+                            constant_op.constant(dim, dtype=dtypes.int64)
+                        ),
+                    )
             elif axis < 0:
                 axis = axis + array_ops.rank(v)
             # TODO(b/151871486): Remove array_ops.identity after we fallback to simple
             # reduction if inputs are all on CPU.
             denom = array_ops.identity(
-                array_ops.shape_v2(v, out_type=dtypes.int64)[axis])
+                array_ops.shape_v2(v, out_type=dtypes.int64)[axis]
+            )
             # TODO(josh11b): Should we cast denom to v.dtype here instead of after the
             # reduce is complete?
             return numer, denom
@@ -1059,9 +1108,11 @@ class StrategyBase(object):
         numer, denom = self.run(mean_reduce_helper, args=(value,))
         # TODO(josh11b): Should batch reduce here instead of doing two.
         numer = self._extended._reduce(
-            reduce_util.ReduceOp.SUM, numer)  # pylint: disable=protected-access
+            reduce_util.ReduceOp.SUM, numer
+        )  # pylint: disable=protected-access
         denom = self._extended._reduce(
-            reduce_util.ReduceOp.SUM, denom)  # pylint: disable=protected-access
+            reduce_util.ReduceOp.SUM, denom
+        )  # pylint: disable=protected-access
         denom = math_ops.cast(denom, numer.dtype)
         return math_ops.truediv(numer, denom)
 
@@ -1117,11 +1168,9 @@ class StrategyBase(object):
         return self._extended._num_replicas_in_sync  # pylint: disable=protected-access
 
     @doc_controls.do_not_doc_inheritable  # DEPRECATED: see doc string
-    def configure(self,
-                  session_config=None,
-                  cluster_spec=None,
-                  task_type=None,
-                  task_id=None):
+    def configure(
+        self, session_config=None, cluster_spec=None, task_type=None, task_id=None
+    ):
         # pylint: disable=g-doc-return-or-yield,g-doc-args
         """DEPRECATED: use `update_config_proto` instead.
 
@@ -1134,12 +1183,15 @@ class StrategyBase(object):
         specific strategy.
         """
         return self._extended._configure(  # pylint: disable=protected-access
-            session_config, cluster_spec, task_type, task_id)
+            session_config, cluster_spec, task_type, task_id
+        )
 
     @doc_controls.do_not_generate_docs  # DEPRECATED
     def update_config_proto(self, config_proto):
         """DEPRECATED TF 1.x ONLY."""
-        return self._extended._update_config_proto(config_proto)  # pylint: disable=protected-access
+        return self._extended._update_config_proto(
+            config_proto
+        )  # pylint: disable=protected-access
 
     def __deepcopy__(self, memo):
         # First do a regular deepcopy of `self`.
@@ -1151,7 +1203,8 @@ class StrategyBase(object):
         # One little fix-up: we want `result._extended` to reference `result`
         # instead of `self`.
         result._extended._container_strategy_weakref = weakref.ref(
-            result)  # pylint: disable=protected-access
+            result
+        )  # pylint: disable=protected-access
         return result
 
     def __copy__(self):
@@ -1210,7 +1263,8 @@ class Strategy(StrategyBase):
           Annotated tensor with idential value as `tensor`.
         """
         return self._extended._experimental_assign_to_logical_device(  # pylint: disable=protected-access
-            tensor, logical_device_id)
+            tensor, logical_device_id
+        )
 
     def experimental_split_to_logical_devices(self, tensor, partition_dimensions):
         """Adds annotation that `tensor` will be split across logical devices.
@@ -1273,7 +1327,8 @@ class Strategy(StrategyBase):
           Annotated tensor with idential value as `tensor`.
         """
         return self._extended._experimental_split_to_logical_devices(  # pylint: disable=protected-access
-            tensor, partition_dimensions)
+            tensor, partition_dimensions
+        )
 
     def experimental_replicate_to_logical_devices(self, tensor):
         """Adds annotation that `tensor` will be replicated to all logical devices.
@@ -1322,7 +1377,9 @@ class Strategy(StrategyBase):
         Returns:
           Annotated tensor with idential value as `tensor`.
         """
-        return self._extended._experimental_replicate_to_logical_devices(tensor)  # pylint: disable=protected-access
+        return self._extended._experimental_replicate_to_logical_devices(
+            tensor
+        )  # pylint: disable=protected-access
 
     def experimental_distribute_values_from_function(self, value_fn):
         """Generates `tf.distribute.DistributedValues` from `value_fn`.
@@ -1397,7 +1454,8 @@ class Strategy(StrategyBase):
 
         """
         return self._extended._experimental_distribute_values_from_function(  # pylint: disable=protected-access
-            value_fn)
+            value_fn
+        )
 
 
 # TF v1.x version has additional deprecated APIs
@@ -1437,11 +1495,15 @@ class StrategyV1(StrategyBase):
           An `tf.distribute.InputIterator` which returns inputs for each step of the
           computation.  User should call `initialize` on the returned iterator.
         """
-        return self._extended._make_dataset_iterator(dataset)  # pylint: disable=protected-access
+        return self._extended._make_dataset_iterator(
+            dataset
+        )  # pylint: disable=protected-access
 
-    def make_input_fn_iterator(self,  # pylint: disable=useless-super-delegation
-                               input_fn,
-                               replication_mode=InputReplicationMode.PER_WORKER):
+    def make_input_fn_iterator(
+        self,  # pylint: disable=useless-super-delegation
+        input_fn,
+        replication_mode=InputReplicationMode.PER_WORKER,
+    ):
         """Returns an iterator split across replicas created from an input function.
 
         DEPRECATED: This method is not available in TF 2.x.
@@ -1479,7 +1541,8 @@ class StrategyV1(StrategyBase):
           `strategy.extended.call_for_each_replica()`.
         """
         return super(StrategyV1, self).make_input_fn_iterator(
-            input_fn, replication_mode)
+            input_fn, replication_mode
+        )
 
     def experimental_make_numpy_dataset(self, numpy_input, session=None):
         """Makes a tf.data.Dataset for input provided via a numpy array.
@@ -1510,9 +1573,12 @@ class StrategyV1(StrategyBase):
           A `tf.data.Dataset` representing `numpy_input`.
         """
         return self.extended.experimental_make_numpy_dataset(
-            numpy_input, session=session)
+            numpy_input, session=session
+        )
 
-    def experimental_run(self, fn, input_iterator=None):  # pylint: disable=useless-super-delegation
+    def experimental_run(
+        self, fn, input_iterator=None
+    ):  # pylint: disable=useless-super-delegation
         """Runs ops in `fn` on each replica, with inputs from `input_iterator`.
 
         DEPRECATED: This method is not available in TF 2.x. Please switch
@@ -1544,8 +1610,7 @@ class StrategyV1(StrategyBase):
           `Mirrored` (if the values are kept in sync), or `Tensor` (if running on a
           single replica).
         """
-        return super(StrategyV1, self).experimental_run(
-            fn, input_iterator)
+        return super(StrategyV1, self).experimental_run(fn, input_iterator)
 
     def reduce(self, reduce_op, value, axis=None):
         return super(StrategyV1, self).reduce(reduce_op, value, axis)
@@ -1567,7 +1632,9 @@ class StrategyV1(StrategyBase):
         Returns:
           The updated copy of the `config_proto`.
         """
-        return self._extended._update_config_proto(config_proto)  # pylint: disable=protected-access
+        return self._extended._update_config_proto(
+            config_proto
+        )  # pylint: disable=protected-access
 
 
 # NOTE(josh11b): For any strategy that needs to support tf.compat.v1,
@@ -1781,16 +1848,21 @@ class StrategyExtendedV2(object):
             if not self._allow_variable_partition():
                 if kwargs.pop("partitioner", None) is not None:
                     tf_logging.log_first_n(
-                        tf_logging.WARN, "Partitioned variables are disabled when using "
-                        "current tf.distribute.Strategy.", 1)
+                        tf_logging.WARN,
+                        "Partitioned variables are disabled when using "
+                        "current tf.distribute.Strategy.",
+                        1,
+                    )
             return getter(*args, **kwargs)
 
         return _CurrentDistributionContext(
             strategy,
             variable_scope.variable_creator_scope(creator_with_resource_vars),
             variable_scope.variable_scope(
-                variable_scope.get_variable_scope(),
-                custom_getter=distributed_getter), self._default_device)
+                variable_scope.get_variable_scope(), custom_getter=distributed_getter
+            ),
+            self._default_device,
+        )
 
     def _allow_variable_partition(self):
         return False
@@ -1826,7 +1898,9 @@ class StrategyExtendedV2(object):
         Returns:
           True if `v` was created inside the scope, False if not.
         """
-        return v._distribute_strategy == self._container_strategy_weakref()  # pylint: disable=protected-access
+        return (
+            v._distribute_strategy == self._container_strategy_weakref()
+        )  # pylint: disable=protected-access
 
     def colocate_vars_with(self, colocate_with_variable):
         """Scope that controls which devices variables will be created on.
@@ -1880,17 +1954,22 @@ class StrategyExtendedV2(object):
         pass
 
     def _experimental_assign_to_logical_device(self, tensor, logical_device_id):
-        raise NotImplementedError("This method should be overriden by "
-                                  "sub-classes which support model parallelism.")
+        raise NotImplementedError(
+            "This method should be overriden by "
+            "sub-classes which support model parallelism."
+        )
 
-    def _experimental_split_to_logical_devices(self, tensor,
-                                               partition_dimensions):
-        raise NotImplementedError("This method should be overriden by "
-                                  "sub-classes which support model parallelism.")
+    def _experimental_split_to_logical_devices(self, tensor, partition_dimensions):
+        raise NotImplementedError(
+            "This method should be overriden by "
+            "sub-classes which support model parallelism."
+        )
 
     def _experimental_replicate_to_logical_devices(self, tensor):
-        raise NotImplementedError("This method should be overriden by "
-                                  "sub-classes which support model parallelism.")
+        raise NotImplementedError(
+            "This method should be overriden by "
+            "sub-classes which support model parallelism."
+        )
 
     def _make_dataset_iterator(self, dataset):
         raise NotImplementedError("must be implemented in descendants")
@@ -1910,8 +1989,8 @@ class StrategyExtendedV2(object):
     def _reduce(self, reduce_op, value):
         # Default implementation until we have an implementation for each strategy.
         return self._local_results(
-            self.reduce_to(reduce_op, value,
-                           device_util.current() or "/device:CPU:0"))[0]
+            self.reduce_to(reduce_op, value, device_util.current() or "/device:CPU:0")
+        )[0]
 
     def reduce_to(self, reduce_op, value, destinations, experimental_hints=None):
         """Combine (via e.g. sum or mean) values across replicas.
@@ -1935,8 +2014,10 @@ class StrategyExtendedV2(object):
         assert not isinstance(reduce_op, variable_scope.VariableAggregation)
         if isinstance(reduce_op, six.string_types):
             reduce_op = reduce_util.ReduceOp(reduce_op.upper())
-        assert (reduce_op == reduce_util.ReduceOp.SUM or
-                reduce_op == reduce_util.ReduceOp.MEAN)
+        assert (
+            reduce_op == reduce_util.ReduceOp.SUM
+            or reduce_op == reduce_util.ReduceOp.MEAN
+        )
         if experimental_hints is None:
             experimental_hints = collective_util.Hints()
         return self._reduce_to(reduce_op, value, destinations, experimental_hints)
@@ -1944,10 +2025,9 @@ class StrategyExtendedV2(object):
     def _reduce_to(self, reduce_op, value, destinations, experimental_hints):
         raise NotImplementedError("must be implemented in descendants")
 
-    def batch_reduce_to(self,
-                        reduce_op,
-                        value_destination_pairs,
-                        experimental_hints=None):
+    def batch_reduce_to(
+        self, reduce_op, value_destination_pairs, experimental_hints=None
+    ):
         """Combine multiple `reduce_to` calls into one for faster execution.
 
         Args:
@@ -1967,14 +2047,15 @@ class StrategyExtendedV2(object):
             reduce_op = reduce_util.ReduceOp(reduce_op.upper())
         if experimental_hints is None:
             experimental_hints = collective_util.Hints()
-        return self._batch_reduce_to(reduce_op, value_destination_pairs,
-                                     experimental_hints)
+        return self._batch_reduce_to(
+            reduce_op, value_destination_pairs, experimental_hints
+        )
 
-    def _batch_reduce_to(self, reduce_op, value_destination_pairs,
-                         experimental_hints):
+    def _batch_reduce_to(self, reduce_op, value_destination_pairs, experimental_hints):
         return [
             self.reduce_to(
-                reduce_op, t, destinations=v, experimental_hints=experimental_hints)
+                reduce_op, t, destinations=v, experimental_hints=experimental_hints
+            )
             for t, v in value_destination_pairs
         ]
 
@@ -2019,15 +2100,15 @@ class StrategyExtendedV2(object):
         if kwargs is None:
             kwargs = {}
         fn = autograph.tf_convert(
-            fn, autograph_ctx.control_status_ctx(), convert_by_default=False)
+            fn, autograph_ctx.control_status_ctx(), convert_by_default=False
+        )
         with self._container_strategy().scope():
             return self._update(var, fn, args, kwargs, group)
 
     def _update(self, var, fn, args, kwargs, group):
         raise NotImplementedError("must be implemented in descendants")
 
-    def update_non_slot(
-            self, colocate_with, fn, args=(), kwargs=None, group=True):
+    def update_non_slot(self, colocate_with, fn, args=(), kwargs=None, group=True):
         """Runs `fn(*args, **kwargs)` on `colocate_with` devices.
 
         Args:
@@ -2045,7 +2126,8 @@ class StrategyExtendedV2(object):
         if kwargs is None:
             kwargs = {}
         fn = autograph.tf_convert(
-            fn, autograph_ctx.control_status_ctx(), convert_by_default=False)
+            fn, autograph_ctx.control_status_ctx(), convert_by_default=False
+        )
         with self._container_strategy().scope():
             return self._update_non_slot(colocate_with, fn, args, kwargs, group)
 
@@ -2077,7 +2159,7 @@ class StrategyExtendedV2(object):
         if len(value) != 1 or name is not None:
             return control_flow_ops.group(value, name=name)
         # Special handling for the common case of one op.
-        v, = value
+        (v,) = value
         if hasattr(v, "op"):
             v = v.op
         return v
@@ -2120,11 +2202,9 @@ class StrategyExtendedV2(object):
         """
         raise NotImplementedError("must be implemented in descendants")
 
-    def _configure(self,
-                   session_config=None,
-                   cluster_spec=None,
-                   task_type=None,
-                   task_id=None):
+    def _configure(
+        self, session_config=None, cluster_spec=None, task_type=None, task_id=None
+    ):
         """Configures the strategy class."""
         del session_config, cluster_spec, task_type, task_id
 
@@ -2199,11 +2279,9 @@ class StrategyExtendedV1(StrategyExtendedV2):
     def _broadcast_to(self, tensor, destinations):
         raise NotImplementedError("must be implemented in descendants")
 
-    def experimental_run_steps_on_iterator(self,
-                                           fn,
-                                           iterator,
-                                           iterations=1,
-                                           initial_loop_values=None):
+    def experimental_run_steps_on_iterator(
+        self, fn, iterator, iterations=1, initial_loop_values=None
+    ):
         """DEPRECATED: please use `run` instead.
 
         Run `fn` with input from `iterator` for `iterations` times.
@@ -2243,11 +2321,13 @@ class StrategyExtendedV1(StrategyExtendedV2):
         """
         _require_cross_replica_or_default_context_extended(self)
         with self._container_strategy().scope():
-            return self._experimental_run_steps_on_iterator(fn, iterator, iterations,
-                                                            initial_loop_values)
+            return self._experimental_run_steps_on_iterator(
+                fn, iterator, iterations, initial_loop_values
+            )
 
-    def _experimental_run_steps_on_iterator(self, fn, iterator, iterations,
-                                            initial_loop_values):
+    def _experimental_run_steps_on_iterator(
+        self, fn, iterator, iterations, initial_loop_values
+    ):
         raise NotImplementedError("must be implemented in descendants")
 
     def call_for_each_replica(self, fn, args=(), kwargs=None):
@@ -2374,7 +2454,8 @@ class ReplicaContext(object):
     def __init__(self, strategy, replica_id_in_sync_group):
         self._strategy = strategy
         self._thread_context = distribution_strategy_context._InReplicaThreadMode(  # pylint: disable=protected-access
-            self)
+            self
+        )
         self._replica_id_in_sync_group = replica_id_in_sync_group
         self._summary_recording_distribution_strategy = None
 
@@ -2382,18 +2463,25 @@ class ReplicaContext(object):
         _push_per_thread_mode(self._thread_context)
 
         def replica_id_is_zero():
-            return math_ops.equal(self._replica_id_in_sync_group,
-                                  constant_op.constant(0))
+            return math_ops.equal(
+                self._replica_id_in_sync_group, constant_op.constant(0)
+            )
 
-        summary_state = summary_ops_v2._summary_state  # pylint: disable=protected-access
+        summary_state = (
+            summary_ops_v2._summary_state
+        )  # pylint: disable=protected-access
         self._summary_recording_distribution_strategy = (
-            summary_state.is_recording_distribution_strategy)
+            summary_state.is_recording_distribution_strategy
+        )
         summary_state.is_recording_distribution_strategy = replica_id_is_zero
 
     def __exit__(self, exception_type, exception_value, traceback):
-        summary_state = summary_ops_v2._summary_state  # pylint: disable=protected-access
+        summary_state = (
+            summary_ops_v2._summary_state
+        )  # pylint: disable=protected-access
         summary_state.is_recording_distribution_strategy = (
-            self._summary_recording_distribution_strategy)
+            self._summary_recording_distribution_strategy
+        )
         _pop_per_thread_mode()
 
     def merge_call(self, merge_fn, args=(), kwargs=None):
@@ -2427,13 +2515,15 @@ class ReplicaContext(object):
         if kwargs is None:
             kwargs = {}
         merge_fn = autograph.tf_convert(
-            merge_fn, autograph_ctx.control_status_ctx(), convert_by_default=False)
+            merge_fn, autograph_ctx.control_status_ctx(), convert_by_default=False
+        )
         return self._merge_call(merge_fn, args, kwargs)
 
     def _merge_call(self, merge_fn, args, kwargs):
         """Default implementation for single replica."""
         _push_per_thread_mode(  # thread-local, so not needed with multiple threads
-            distribution_strategy_context._CrossReplicaThreadMode(self._strategy))  # pylint: disable=protected-access
+            distribution_strategy_context._CrossReplicaThreadMode(self._strategy)
+        )  # pylint: disable=protected-access
         try:
             return merge_fn(self._strategy, *args, **kwargs)
         finally:
@@ -2504,9 +2594,10 @@ class ReplicaContext(object):
 
         def batch_all_reduce(strategy, *value_flat):
             return strategy.extended.batch_reduce_to(
-                reduce_op, [(v, _batch_reduce_destination(v))
-                            for v in value_flat],
-                experimental_hints)
+                reduce_op,
+                [(v, _batch_reduce_destination(v)) for v in value_flat],
+                experimental_hints,
+            )
 
         if reduce_op in [reduce_util.ReduceOp.SUM, reduce_util.ReduceOp.MEAN]:
             # TODO(cjfj): Work out why `batch_reduce` doesn't return the correct grad.
@@ -2515,11 +2606,13 @@ class ReplicaContext(object):
                 ys = self.merge_call(batch_all_reduce, args=xs)
                 # The gradient of an all-sum is itself an all-sum (all-mean, likewise).
                 return ys, lambda *dy_s: self.all_reduce(reduce_op, dy_s)
+
             return nest.pack_sequence_as(value, grad_wrapper(*nest.flatten(value)))
         else:
             # TODO(cjfj): Implement gradients for other reductions.
             reduced = nest.pack_sequence_as(
-                value, self.merge_call(batch_all_reduce, args=nest.flatten(value)))
+                value, self.merge_call(batch_all_reduce, args=nest.flatten(value))
+            )
             return nest.map_structure(array_ops.prevent_gradient, reduced)
 
     # TODO(josh11b): Implement `start_all_reduce(method, t)` for efficient
@@ -2553,28 +2646,30 @@ class _DefaultDistributionStrategy(StrategyV1):
 
     def __init__(self):
         if not _creating_default_strategy_singleton:
-            raise RuntimeError("Should only create a single instance of "
-                               "_DefaultDistributionStrategy")
+            raise RuntimeError(
+                "Should only create a single instance of "
+                "_DefaultDistributionStrategy"
+            )
         super(_DefaultDistributionStrategy, self).__init__(
-            _DefaultDistributionExtended(self))
+            _DefaultDistributionExtended(self)
+        )
 
     def __deepcopy__(self, memo):
         del memo
-        raise RuntimeError("Should only create a single instance of "
-                           "_DefaultDistributionStrategy")
+        raise RuntimeError(
+            "Should only create a single instance of " "_DefaultDistributionStrategy"
+        )
 
 
 class _DefaultDistributionContext(object):
     """Context manager setting the default `tf.distribute.Strategy`."""
 
     def __init__(self, strategy):
-
         def creator(next_creator, **kwargs):
             _require_strategy_scope_strategy(strategy)
             return next_creator(**kwargs)
 
-        self._var_creator_scope = variable_scope.variable_creator_scope(
-            creator)
+        self._var_creator_scope = variable_scope.variable_creator_scope(creator)
         self._strategy = strategy
         self._nested_count = 0
 
@@ -2592,12 +2687,16 @@ class _DefaultDistributionContext(object):
         if self._nested_count == 0:
             try:
                 self._var_creator_scope.__exit__(
-                    exception_type, exception_value, traceback)
+                    exception_type, exception_value, traceback
+                )
             except RuntimeError as e:
                 six.raise_from(
-                    RuntimeError("Variable creator scope nesting error: move call to "
-                                 "tf.distribute.set_strategy() out of `with` scope."),
-                    e)
+                    RuntimeError(
+                        "Variable creator scope nesting error: move call to "
+                        "tf.distribute.set_strategy() out of `with` scope."
+                    ),
+                    e,
+                )
 
 
 class _DefaultDistributionExtended(StrategyExtendedV1):
@@ -2631,17 +2730,18 @@ class _DefaultDistributionExtended(StrategyExtendedV1):
     def _make_dataset_iterator(self, dataset):
         return _DefaultDistributionExtended.DefaultInputIterator(dataset)
 
-    def _make_input_fn_iterator(self,
-                                input_fn,
-                                replication_mode=InputReplicationMode.PER_WORKER):
+    def _make_input_fn_iterator(
+        self, input_fn, replication_mode=InputReplicationMode.PER_WORKER
+    ):
         dataset = input_fn(InputContext())
         return _DefaultDistributionExtended.DefaultInputIterator(dataset)
 
     def _experimental_make_numpy_dataset(self, numpy_input, session):
         numpy_flat = nest.flatten(numpy_input)
         vars_flat = tuple(
-            variable_scope.variable(array_ops.zeros(i.shape, i.dtype),
-                                    trainable=False, use_resource=True)
+            variable_scope.variable(
+                array_ops.zeros(i.shape, i.dtype), trainable=False, use_resource=True
+            )
             for i in numpy_flat
         )
         for v, i in zip(vars_flat, numpy_flat):
@@ -2657,8 +2757,9 @@ class _DefaultDistributionExtended(StrategyExtendedV1):
 
     def _call_for_each_replica(self, fn, args, kwargs):
         with ReplicaContext(
-                self._container_strategy(),
-                replica_id_in_sync_group=constant_op.constant(0, dtypes.int32)):
+            self._container_strategy(),
+            replica_id_in_sync_group=constant_op.constant(0, dtypes.int32),
+        ):
             return fn(*args, **kwargs)
 
     def _reduce_to(self, reduce_op, value, destinations, experimental_hints):
@@ -2696,13 +2797,16 @@ class _DefaultDistributionExtended(StrategyExtendedV1):
 
     @property
     def worker_devices(self):
-        raise RuntimeError("worker_devices() method unsupported by default "
-                           "tf.distribute.Strategy.")
+        raise RuntimeError(
+            "worker_devices() method unsupported by default " "tf.distribute.Strategy."
+        )
 
     @property
     def parameter_devices(self):
-        raise RuntimeError("parameter_devices() method unsupported by default "
-                           "tf.distribute.Strategy.")
+        raise RuntimeError(
+            "parameter_devices() method unsupported by default "
+            "tf.distribute.Strategy."
+        )
 
     def non_slot_devices(self, var_list):
         return min(var_list, key=lambda x: x.name)
@@ -2730,8 +2834,7 @@ class _DefaultDistributionExtended(StrategyExtendedV1):
             if eager_context.executing_eagerly():
                 self._iterator = dataset_ops.make_one_shot_iterator(dataset)
             else:
-                self._iterator = dataset_ops.make_initializable_iterator(
-                    dataset)
+                self._iterator = dataset_ops.make_initializable_iterator(dataset)
 
         def get_next(self):
             return self._iterator.get_next()
@@ -2773,7 +2876,8 @@ def _from_proto_fn(v, import_scope=None):
     if distribution_strategy_context.has_strategy():
         raise NotImplementedError(
             "Deserialization of variables is not yet supported when using a "
-            "tf.distribute.Strategy.")
+            "tf.distribute.Strategy."
+        )
     else:
         return _original_from_proto(v, import_scope=import_scope)
 
@@ -2784,19 +2888,29 @@ resource_variable_ops._from_proto_fn = _from_proto_fn
 
 # -------------------------------------------------------------------------------
 # Shorthand for some methods from distribution_strategy_context.
-_push_per_thread_mode = distribution_strategy_context._push_per_thread_mode  # pylint: disable=protected-access
-_get_per_thread_mode = distribution_strategy_context._get_per_thread_mode  # pylint: disable=protected-access
-_pop_per_thread_mode = distribution_strategy_context._pop_per_thread_mode  # pylint: disable=protected-access
+_push_per_thread_mode = (
+    distribution_strategy_context._push_per_thread_mode
+)  # pylint: disable=protected-access
+_get_per_thread_mode = (
+    distribution_strategy_context._get_per_thread_mode
+)  # pylint: disable=protected-access
+_pop_per_thread_mode = (
+    distribution_strategy_context._pop_per_thread_mode
+)  # pylint: disable=protected-access
 _get_default_replica_mode = (
-    distribution_strategy_context._get_default_replica_mode)  # pylint: disable=protected-access
+    distribution_strategy_context._get_default_replica_mode
+)  # pylint: disable=protected-access
 
 
 # ------------------------------------------------------------------------------
 # Metrics to track which distribution strategy is being called
 distribution_strategy_gauge = monitoring.StringGauge(
     "/tensorflow/api/distribution_strategy",
-    "Gauge to track the type of distribution strategy used.", "TFVersion")
+    "Gauge to track the type of distribution strategy used.",
+    "TFVersion",
+)
 distribution_strategy_replica_gauge = monitoring.IntGauge(
     "/tensorflow/api/distribution_strategy/replica",
     "Gauge to track the number of replica each distribution strategy used.",
-    "CountType")
+    "CountType",
+)
