@@ -23,16 +23,16 @@ MAX_WHL_SIZE=550M
 function run_smoke_test() {
   VENV_TMP_DIR=$(mktemp -d)
 
-  "$PYTHON_BIN_PATH" -m virtualenv -p "$PYTHON_BIN_PATH" "$VENV_TMP_DIR" || \
-      die "FAILED: Unable to create virtualenv"
+  "$PYTHON_BIN_PATH" -m virtualenv -p "$PYTHON_BIN_PATH" "$VENV_TMP_DIR" ||
+    die "FAILED: Unable to create virtualenv"
 
-  source "$VENV_TMP_DIR/bin/activate" || \
-      die "FAILED: Unable to activate virtualenv "
+  source "$VENV_TMP_DIR/bin/activate" ||
+    die "FAILED: Unable to activate virtualenv "
 
   # install tensorflow
-  python -m pip install "$WHL_NAME" || \
-      die "pip install (forcing to reinstall tensorflow) FAILED"
-      echo "Successfully installed pip package $WHL_NAME"
+  python -m pip install "$WHL_NAME" ||
+    die "pip install (forcing to reinstall tensorflow) FAILED"
+  echo "Successfully installed pip package $WHL_NAME"
 
   # Test TensorflowFlow imports
   test_tf_imports
@@ -56,7 +56,7 @@ function test_tf_imports() {
   if ! [[ "$RET_VAL" == *'(4,)'* ]]; then
     echo "Unexpected return value: $RET_VALUE"
     echo "PIP test on virtualenv FAILED, will not upload $WHL_NAME package."
-     return 1
+    return 1
   fi
 
   # test basic keras is available
