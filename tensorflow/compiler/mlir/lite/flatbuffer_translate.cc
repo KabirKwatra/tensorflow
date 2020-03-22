@@ -119,60 +119,60 @@ static OwningModuleRef FlatBufferFileToMlirTrans(
     llvm::SourceMgr* source_mgr, MLIRContext* context,
     bool use_external_constant,
     bool experimental_prune_unreachable_nodes_unconditionally) {
-  const llvm::MemoryBuffer* input =
-      source_mgr->getMemoryBuffer(source_mgr->getMainFileID());
-  std::string error;
-  auto loc =
-      mlir::FileLineColLoc::get(input->getBufferIdentifier(), 0, 0, context);
+    const llvm::MemoryBuffer* input =
+        source_mgr->getMemoryBuffer(source_mgr->getMainFileID());
+    std::string error;
+    auto loc =
+        mlir::FileLineColLoc::get(input->getBufferIdentifier(), 0, 0, context);
 
-  // Parses input/output names from command line options.
-  std::vector<std::string> inputs;
-  std::vector<std::string> outputs;
-  // Use output parser since we only have tensor names.
-  if (!tensorflow::ParseOutputArrayInfo(input_arrays_flag, &inputs).ok()) {
-    return emitError(loc, "parsing input array info failed ")
+    // Parses input/output names from command line options.
+    std::vector<std::string> inputs;
+    std::vector<std::string> outputs;
+    // Use output parser since we only have tensor names.
+    if (!tensorflow::ParseOutputArrayInfo(input_arrays_flag, &inputs).ok()) {
+        return emitError(loc, "parsing input array info failed ")
                << input_arrays_flag,
-           nullptr;
-  }
-  if (!tensorflow::ParseOutputArrayInfo(output_arrays_flag, &outputs).ok()) {
-    return emitError(loc, "parsing output array info failed ")
+               nullptr;
+    }
+    if (!tensorflow::ParseOutputArrayInfo(output_arrays_flag, &outputs).ok()) {
+        return emitError(loc, "parsing output array info failed ")
                << output_arrays_flag,
-           nullptr;
-  }
-  return tflite::FlatBufferToMlir(
-      absl::string_view(input->getBufferStart(), input->getBufferSize()),
-      context, loc, use_external_constant, inputs, outputs,
-      experimental_prune_unreachable_nodes_unconditionally);
+               nullptr;
+    }
+    return tflite::FlatBufferToMlir(
+               absl::string_view(input->getBufferStart(), input->getBufferSize()),
+               context, loc, use_external_constant, inputs, outputs,
+               experimental_prune_unreachable_nodes_unconditionally);
 }
 
 static LogicalResult MlirToFlatBufferFileTranslateFunction(
     ModuleOp module, llvm::raw_ostream& output) {
-  std::string serialized_flatbuffer;
-  std::unique_ptr<tensorflow::OpOrArgNameMapper> op_or_arg_name_mapper;
-  if (strip_debug_info) {
-    op_or_arg_name_mapper =
-        std::make_unique<tensorflow::OpOrArgStripNameMapper>();
-  } else {
-    op_or_arg_name_mapper =
-        std::make_unique<tensorflow::OpOrArgLocNameMapper>();
-  }
-  if (tflite::MlirToFlatBufferTranslateFunction(
-          module, &serialized_flatbuffer, emit_builtin_tflite_ops,
-          emit_select_tf_ops, emit_custom_ops, op_or_arg_name_mapper.get()))
-    return mlir::failure();
+    std::string serialized_flatbuffer;
+    std::unique_ptr<tensorflow::OpOrArgNameMapper> op_or_arg_name_mapper;
+    if (strip_debug_info) {
+        op_or_arg_name_mapper =
+            std::make_unique<tensorflow::OpOrArgStripNameMapper>();
+    } else {
+        op_or_arg_name_mapper =
+            std::make_unique<tensorflow::OpOrArgLocNameMapper>();
+    }
+    if (tflite::MlirToFlatBufferTranslateFunction(
+                module, &serialized_flatbuffer, emit_builtin_tflite_ops,
+                emit_select_tf_ops, emit_custom_ops, op_or_arg_name_mapper.get()))
+        return mlir::failure();
 
-  output << serialized_flatbuffer;
-  return success();
+    output << serialized_flatbuffer;
+    return success();
 }
 }  // namespace
 
 static TranslateToMLIRRegistration FlatBufferFileToMlirTransReg(
     "tflite-flatbuffer-to-mlir",
-    [](llvm::SourceMgr& source_mgr, MLIRContext* context) {
-      return FlatBufferFileToMlirTrans(
-          &source_mgr, context, use_external_constant,
-          experimental_prune_unreachable_nodes_unconditionally);
-    });
+[](llvm::SourceMgr& source_mgr, MLIRContext* context) {
+    return FlatBufferFileToMlirTrans(
+               &source_mgr, context, use_external_constant,
+               experimental_prune_unreachable_nodes_unconditionally);
+});
 
 static TranslateFromMLIRRegistration MLIRToFlatBufferTranslate(
     "mlir-to-tflite-flatbuffer", MlirToFlatBufferFileTranslateFunction);

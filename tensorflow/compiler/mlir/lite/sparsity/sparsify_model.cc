@@ -35,47 +35,47 @@ namespace lite {
 TfLiteStatus SparsifyModel(const tflite::ModelT& input_model,
                            flatbuffers::FlatBufferBuilder* builder,
                            tflite::ErrorReporter* error_reporter) {
-  MLIRContext context;
-  StatusScopedDiagnosticHandler statusHandler(&context,
-                                              /*propagate=*/true);
+    MLIRContext context;
+    StatusScopedDiagnosticHandler statusHandler(&context,
+            /*propagate=*/true);
 
-  // Import input_model to a MLIR module
-  flatbuffers::FlatBufferBuilder input_builder;
-  flatbuffers::Offset<tflite::Model> input_model_location =
-      tflite::Model::Pack(input_builder, &input_model);
-  tflite::FinishModelBuffer(input_builder, input_model_location);
+    // Import input_model to a MLIR module
+    flatbuffers::FlatBufferBuilder input_builder;
+    flatbuffers::Offset<tflite::Model> input_model_location =
+        tflite::Model::Pack(input_builder, &input_model);
+    tflite::FinishModelBuffer(input_builder, input_model_location);
 
-  std::string serialized_model(
-      reinterpret_cast<const char*>(input_builder.GetBufferPointer()),
-      input_builder.GetSize());
+    std::string serialized_model(
+        reinterpret_cast<const char*>(input_builder.GetBufferPointer()),
+        input_builder.GetSize());
 
-  OwningModuleRef module = tflite::FlatBufferToMlir(serialized_model, &context,
-                                                    UnknownLoc::get(&context));
-  if (!module) {
-    error_reporter->Report("Couldn't import flatbuffer to MLIR.");
-    return kTfLiteError;
-  }
+    OwningModuleRef module = tflite::FlatBufferToMlir(serialized_model, &context,
+                             UnknownLoc::get(&context));
+    if (!module) {
+        error_reporter->Report("Couldn't import flatbuffer to MLIR.");
+        return kTfLiteError;
+    }
 
-  PassManager pm(module->getContext());
+    PassManager pm(module->getContext());
 
-  if (failed(pm.run(module.get()))) {
-    const std::string& err = statusHandler.ConsumeStatus().error_message();
-    error_reporter->Report("Failed to sparsify: %s", err.c_str());
-    return kTfLiteError;
-  }
+    if (failed(pm.run(module.get()))) {
+        const std::string& err = statusHandler.ConsumeStatus().error_message();
+        error_reporter->Report("Failed to sparsify: %s", err.c_str());
+        return kTfLiteError;
+    }
 
-  // Export the results to the builder
-  std::string result;
-  if (tflite::MlirToFlatBufferTranslateFunction(
-          module.get(), &result, /*emit_builtin_tflite_ops=*/true,
-          /*emit_select_tf_ops=*/true, /*emit_custom_ops=*/true)) {
-    error_reporter->Report("Failed to export MLIR to flatbuffer.");
-    return kTfLiteError;
-  }
-  builder->PushFlatBuffer(reinterpret_cast<const uint8_t*>(result.data()),
-                          result.size());
+    // Export the results to the builder
+    std::string result;
+    if (tflite::MlirToFlatBufferTranslateFunction(
+                module.get(), &result, /*emit_builtin_tflite_ops=*/true,
+                /*emit_select_tf_ops=*/true, /*emit_custom_ops=*/true)) {
+        error_reporter->Report("Failed to export MLIR to flatbuffer.");
+        return kTfLiteError;
+    }
+    builder->PushFlatBuffer(reinterpret_cast<const uint8_t*>(result.data()),
+                            result.size());
 
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 }  // namespace lite
