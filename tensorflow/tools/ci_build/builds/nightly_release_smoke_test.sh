@@ -23,16 +23,16 @@ MAX_WHL_SIZE=550M
 function run_smoke_test() {
   VENV_TMP_DIR=$(mktemp -d)
 
-  ${PYTHON_BIN_PATH} -m virtualenv -p ${PYTHON_BIN_PATH} "${VENV_TMP_DIR}" || \
+  "$PYTHON_BIN_PATH" -m virtualenv -p "$PYTHON_BIN_PATH" "$VENV_TMP_DIR" || \
       die "FAILED: Unable to create virtualenv"
 
-  source "${VENV_TMP_DIR}/bin/activate" || \
+  source "$VENV_TMP_DIR/bin/activate" || \
       die "FAILED: Unable to activate virtualenv "
 
   # install tensorflow
-  python -m pip install ${WHL_NAME} || \
+  python -m pip install "$WHL_NAME" || \
       die "pip install (forcing to reinstall tensorflow) FAILED"
-      echo "Successfully installed pip package ${WHL_NAME}"
+      echo "Successfully installed pip package $WHL_NAME"
 
   # Test TensorflowFlow imports
   test_tf_imports
@@ -43,42 +43,42 @@ function run_smoke_test() {
   RESULT=$?
   # Deactivate from virtualenv.
   deactivate || source deactivate || die "FAILED: Unable to deactivate from existing virtualenv."
-  sudo rm -rf "${KOKORO_GFILE_DIR}/venv"
-  return $RESULT
+  sudo rm -rf "$KOKORO_GFILE_DIR/venv"
+  return "$RESULT"
 }
 
 function test_tf_imports() {
   TMP_DIR=$(mktemp -d)
-  pushd "${TMP_DIR}"
+  pushd "$TMP_DIR"
 
   # test for basic import and perform tf.add operation.
   RET_VAL=$(python -c "import tensorflow as tf; t1=tf.constant([1,2,3,4]); t2=tf.constant([5,6,7,8]); print(tf.add(t1,t2).shape)")
-  if ! [[ ${RET_VAL} == *'(4,)'* ]]; then
-    echo "Unexpected return value: ${RET_VALUE}"
-    echo "PIP test on virtualenv FAILED, will not upload ${WHL_NAME} package."
+  if ! [[ "$RET_VAL" == *'(4,)'* ]]; then
+    echo "Unexpected return value: $RET_VALUE"
+    echo "PIP test on virtualenv FAILED, will not upload $WHL_NAME package."
      return 1
   fi
 
   # test basic keras is available
   RET_VAL=$(python -c "import tensorflow as tf; print(tf.keras.__name__)")
-  if ! [[ ${RET_VAL} == *'tensorflow.keras'* ]]; then
-    echo "Unexpected return value: ${RET_VALUE}"
-    echo "PIP test on virtualenv FAILED, will not upload ${WHL_NAME} package."
+  if ! [[ "$RET_VAL" == *'tensorflow.keras'* ]]; then
+    echo "Unexpected return value: $RET_VALUE"
+    echo "PIP test on virtualenv FAILED, will not upload $WHL_NAME package."
     return 1
   fi
 
   # similar test for estimator
   RET_VAL=$(python -c "import tensorflow as tf; print(tf.estimator.__name__)")
-  if ! [[ ${RET_VAL} == *'tensorflow_estimator.python.estimator.api._v2.estimator'* ]]; then
-    echo "Unexpected return value: ${RET_VALUE}"
-    echo "PIP test on virtualenv FAILED, will not upload ${WHL_NAME} package."
+  if ! [[ "$RET_VAL" == *'tensorflow_estimator.python.estimator.api._v2.estimator'* ]]; then
+    echo "Unexpected return value: $RET_VALUE"
+    echo "PIP test on virtualenv FAILED, will not upload $WHL_NAME package."
     return 1
   fi
 
   RESULT=$?
 
   popd
-  return $RESULT
+  return "$RESULT"
 }
 
 function test_tf_whl_size() {
