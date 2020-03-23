@@ -53,9 +53,9 @@ TfLiteStatus ModifyModelInterface(const string& input_file,
 TfLiteStatus Uint8QuantizeModelInputsOutputs(
     flatbuffers::FlatBufferBuilder* builder, const Model* input_model,
     const std::unordered_map<string, std::pair<float, int32_t>>&
-    input_quant_params,
+        input_quant_params,
     const std::unordered_map<string, std::pair<float, int32_t>>&
-    output_quant_params);
+        output_quant_params);
 
 }  // namespace optimize
 }  // namespace tflite
