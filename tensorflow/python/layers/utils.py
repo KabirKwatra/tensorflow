@@ -63,56 +63,36 @@ def normalize_tuple(value, n, name):
         passed.
     """
     if isinstance(value, int):
-        return (value,) * n
+        return (value, ) * n
     else:
         try:
             value_tuple = tuple(value)
         except TypeError:
-            raise ValueError(
-                "The `"
-                + name
-                + "` argument must be a tuple of "
-                + str(n)
-                + " integers. Received: "
-                + str(value)
-            )
+            raise ValueError("The `" + name +
+                             "` argument must be a tuple of " + str(n) +
+                             " integers. Received: " + str(value))
         if len(value_tuple) != n:
-            raise ValueError(
-                "The `"
-                + name
-                + "` argument must be a tuple of "
-                + str(n)
-                + " integers. Received: "
-                + str(value)
-            )
+            raise ValueError("The `" + name +
+                             "` argument must be a tuple of " + str(n) +
+                             " integers. Received: " + str(value))
         for single_value in value_tuple:
             try:
                 int(single_value)
             except (ValueError, TypeError):
-                raise ValueError(
-                    "The `"
-                    + name
-                    + "` argument must be a tuple of "
-                    + str(n)
-                    + " integers. Received: "
-                    + str(value)
-                    + " "
-                    "including element "
-                    + str(single_value)
-                    + " of type"
-                    + " "
-                    + str(type(single_value))
-                )
+                raise ValueError("The `" + name +
+                                 "` argument must be a tuple of " + str(n) +
+                                 " integers. Received: " + str(value) + " "
+                                 "including element " + str(single_value) +
+                                 " of type" + " " + str(type(single_value)))
         return value_tuple
 
 
 def normalize_data_format(value):
     data_format = value.lower()
     if data_format not in {"channels_first", "channels_last"}:
-        raise ValueError(
-            "The `data_format` argument must be one of "
-            '"channels_first", "channels_last". Received: ' + str(value)
-        )
+        raise ValueError("The `data_format` argument must be one of "
+                         '"channels_first", "channels_last". Received: ' +
+                         str(value))
     return data_format
 
 
@@ -121,8 +101,7 @@ def normalize_padding(value):
     if padding not in {"valid", "same"}:
         raise ValueError(
             'The `padding` argument must be one of "valid", "same". '
-            "Received: " + str(padding)
-        )
+            "Received: " + str(padding))
     return padding
 
 
@@ -218,10 +197,14 @@ def smart_cond(pred, true_fn=None, false_fn=None, name=None):
       TypeError: If `true_fn` or `false_fn` is not callable.
     """
     if isinstance(pred, variables.Variable):
-        return control_flow_ops.cond(
-            pred, true_fn=true_fn, false_fn=false_fn, name=name
-        )
-    return smart_module.smart_cond(pred, true_fn=true_fn, false_fn=false_fn, name=name)
+        return control_flow_ops.cond(pred,
+                                     true_fn=true_fn,
+                                     false_fn=false_fn,
+                                     name=name)
+    return smart_module.smart_cond(pred,
+                                   true_fn=true_fn,
+                                   false_fn=false_fn,
+                                   name=name)
 
 
 def constant_value(pred):

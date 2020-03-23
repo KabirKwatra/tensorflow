@@ -19,7 +19,6 @@ from __future__ import print_function
 
 from tensorflow.python.keras.layers.legacy_rnn import rnn_cell_wrapper_impl
 
-
 DeviceWrapperBase = rnn_cell_wrapper_impl.DeviceWrapperBase
 DropoutWrapperBase = rnn_cell_wrapper_impl.DropoutWrapperBase
 ResidualWrapperBase = rnn_cell_wrapper_impl.ResidualWrapperBase

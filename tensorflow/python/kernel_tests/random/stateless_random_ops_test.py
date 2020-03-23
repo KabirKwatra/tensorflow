@@ -58,14 +58,16 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
         cases = tuple(cases)
         key = 0x3EC8F720, 0x02461E29
         for seed in (7, 17), (11, 5), (2, 3):
-            preseed = invert_philox(key, (seed[0], 0, seed[1], 0)).astype(np.uint64)
+            preseed = invert_philox(key,
+                                    (seed[0], 0, seed[1], 0)).astype(np.uint64)
             preseed = preseed[::2] | preseed[1::2] << 32
             random_seed.set_random_seed(seed[0])
             with test_util.use_gpu():
                 for stateless_op, stateful_op in cases:
                     stateful = stateful_op(seed=seed[1])
                     pure = stateless_op(seed=preseed)
-                    self.assertAllEqual(self.evaluate(stateful), self.evaluate(pure))
+                    self.assertAllEqual(self.evaluate(stateful),
+                                        self.evaluate(pure))
 
     def _test_determinism(self, cases):
         # Stateless values should be equal iff the seeds are equal (roughly)
@@ -76,17 +78,17 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
                 seeds = [(x, y) for x in range(5) for y in range(5)] * 3
                 for stateless_op, _ in cases:
                     pure = stateless_op(seed=seed_t)
-                    values = [
-                        (seed, pure.eval(feed_dict={seed_t: seed})) for seed in seeds
-                    ]
+                    values = [(seed, pure.eval(feed_dict={seed_t: seed}))
+                              for seed in seeds]
                     for s0, v0 in values:
                         for s1, v1 in values:
                             self.assertEqual(s0 == s1, np.all(v0 == v1))
 
-    def _float_cases(self, shape_dtypes=(None,)):
+    def _float_cases(self, shape_dtypes=(None, )):
         float_cases = (
             # Uniform distribution, with and without range
-            (stateless.stateless_random_uniform, random_ops.random_uniform, {}),
+            (stateless.stateless_random_uniform, random_ops.random_uniform, {}
+             ),
             (
                 stateless.stateless_random_uniform,
                 random_ops.random_uniform,
@@ -100,7 +102,8 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
                 dict(mean=2, stddev=3),
             ),
             # Truncated normal distribution, with and without mean+stddev
-            (stateless.stateless_truncated_normal, random_ops.truncated_normal, {}),
+            (stateless.stateless_truncated_normal, random_ops.truncated_normal,
+             {}),
             (
                 stateless.stateless_truncated_normal,
                 random_ops.truncated_normal,
@@ -109,7 +112,7 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
         )
         for dtype in dtypes.float16, dtypes.float32, dtypes.float64:
             for shape_dtype in shape_dtypes:
-                for shape in (), (3,), (2, 5):
+                for shape in (), (3, ), (2, 5):
                     if shape_dtype is not None:
                         shape = constant_op.constant(shape, dtype=shape_dtype)
                     for stateless_op, stateful_op, kwds in float_cases:
@@ -119,15 +122,19 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
                             functools.partial(stateful_op, **kwds),
                         )
 
-    def _int_cases(self, shape_dtypes=(None,)):
+    def _int_cases(self, shape_dtypes=(None, )):
         for shape_dtype in shape_dtypes:
-            for shape in (), (3,), (2, 5):
+            for shape in (), (3, ), (2, 5):
                 if shape_dtype is not None:
                     shape = constant_op.constant(shape, dtype=shape_dtype)
                 for dtype in dtypes.int32, dtypes.int64:
-                    kwds = dict(minval=2, maxval=11111, dtype=dtype, shape=shape)
+                    kwds = dict(minval=2,
+                                maxval=11111,
+                                dtype=dtype,
+                                shape=shape)
                     yield (
-                        functools.partial(stateless.stateless_random_uniform, **kwds),
+                        functools.partial(stateless.stateless_random_uniform,
+                                          **kwds),
                         functools.partial(random_ops.random_uniform, **kwds),
                     )
 
@@ -140,45 +147,49 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
                     [[0.5, 0.5], [0.8, 0.2], [0.25, 0.75]],
                 ):
                     kwds = dict(
-                        logits=constant_op.constant(logits, dtype=logits_dtype),
+                        logits=constant_op.constant(logits,
+                                                    dtype=logits_dtype),
                         num_samples=num_samples,
                         output_dtype=output_dtype,
                     )
                     yield (
-                        functools.partial(stateless.stateless_multinomial, **kwds),
+                        functools.partial(stateless.stateless_multinomial,
+                                          **kwds),
                         functools.partial(random_ops.multinomial, **kwds),
                     )
 
     def _gamma_cases(self):
         for dtype in np.float16, np.float32, np.float64:
-            for alpha in ([[0.5, 1.0, 2.0]], [[0.5, 0.5], [0.8, 0.2], [0.25, 0.75]]):
-                kwds = dict(alpha=constant_op.constant(alpha, dtype=dtype), dtype=dtype)
+            for alpha in ([[0.5, 1.0, 2.0]], [[0.5, 0.5], [0.8, 0.2],
+                                              [0.25, 0.75]]):
+                kwds = dict(alpha=constant_op.constant(alpha, dtype=dtype),
+                            dtype=dtype)
                 yield (
-                    functools.partial(
-                        stateless.stateless_random_gamma,
-                        shape=(10,) + tuple(np.shape(alpha)),
-                        **kwds
-                    ),
-                    functools.partial(random_ops.random_gamma, shape=(10,), **kwds),
+                    functools.partial(stateless.stateless_random_gamma,
+                                      shape=(10, ) + tuple(np.shape(alpha)),
+                                      **kwds),
+                    functools.partial(random_ops.random_gamma,
+                                      shape=(10, ),
+                                      **kwds),
                 )
 
     def _poisson_cases(self):
         for lam_dtype in np.float16, np.float32, np.float64, np.int32, np.int64:
             for out_dtype in np.float16, np.float32, np.float64, np.int32, np.int64:
-                for lam in ([[5.5, 1.0, 2.0]], [[7.5, 10.5], [3.8, 8.2], [1.25, 9.75]]):
+                for lam in ([[5.5, 1.0, 2.0]], [[7.5, 10.5], [3.8, 8.2],
+                                                [1.25, 9.75]]):
                     kwds = dict(
-                        lam=constant_op.constant(lam_dtype(lam), dtype=lam_dtype),
+                        lam=constant_op.constant(lam_dtype(lam),
+                                                 dtype=lam_dtype),
                         dtype=out_dtype,
                     )
                     yield (
-                        functools.partial(
-                            stateless.stateless_random_poisson,
-                            shape=(10,) + tuple(np.shape(lam)),
-                            **kwds
-                        ),
-                        functools.partial(
-                            random_ops.random_poisson, shape=(10,), **kwds
-                        ),
+                        functools.partial(stateless.stateless_random_poisson,
+                                          shape=(10, ) + tuple(np.shape(lam)),
+                                          **kwds),
+                        functools.partial(random_ops.random_poisson,
+                                          shape=(10, ),
+                                          **kwds),
                     )
 
     @test_util.run_deprecated_v1
@@ -204,14 +215,12 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
     @test_util.run_deprecated_v1
     def testDeterminismFloat(self):
         self._test_determinism(
-            self._float_cases(shape_dtypes=(dtypes.int32, dtypes.int64))
-        )
+            self._float_cases(shape_dtypes=(dtypes.int32, dtypes.int64)))
 
     @test_util.run_deprecated_v1
     def testDeterminismInt(self):
         self._test_determinism(
-            self._int_cases(shape_dtypes=(dtypes.int32, dtypes.int64))
-        )
+            self._int_cases(shape_dtypes=(dtypes.int32, dtypes.int64)))
 
     @test_util.run_deprecated_v1
     def testDeterminismMultinomial(self):
@@ -248,7 +257,8 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
     def testFoldIn(self, dtype):
         """Test for `fold_in`."""
         orig_seed = constant_op.constant([1, 2], dtype="int32")
-        seed = stateless.fold_in(orig_seed, constant_op.constant(3, dtype=dtype))
+        seed = stateless.fold_in(orig_seed, constant_op.constant(3,
+                                                                 dtype=dtype))
         new_seeds = []
         new_seeds.append(seed)
         seed = stateless.fold_in(seed, constant_op.constant(4, dtype=dtype))
@@ -264,8 +274,7 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
         """
         shape = [2, 3]
         with self.assertRaisesWithPredicateMatch(
-            ValueError, "minval must be a scalar; got a tensor of shape "
-        ):
+                ValueError, "minval must be a scalar; got a tensor of shape "):
 
             @def_function.function
             def f():
@@ -279,8 +288,7 @@ class StatelessOpsTest(test.TestCase, parameterized.TestCase):
 
             f()
         with self.assertRaisesWithPredicateMatch(
-            ValueError, "maxval must be a scalar; got a tensor of shape "
-        ):
+                ValueError, "maxval must be a scalar; got a tensor of shape "):
 
             @def_function.function
             def f2():

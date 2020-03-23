@@ -26,21 +26,24 @@ from tensorflow.python.platform import test
 
 class ConvUtilsTest(test.TestCase):
     def testConvertDataFormat(self):
-        self.assertEqual("NCDHW", utils.convert_data_format("channels_first", 5))
-        self.assertEqual("NCHW", utils.convert_data_format("channels_first", 4))
+        self.assertEqual("NCDHW",
+                         utils.convert_data_format("channels_first", 5))
+        self.assertEqual("NCHW",
+                         utils.convert_data_format("channels_first", 4))
         self.assertEqual("NCW", utils.convert_data_format("channels_first", 3))
         self.assertEqual("NHWC", utils.convert_data_format("channels_last", 4))
         self.assertEqual("NWC", utils.convert_data_format("channels_last", 3))
-        self.assertEqual("NDHWC", utils.convert_data_format("channels_last", 5))
+        self.assertEqual("NDHWC",
+                         utils.convert_data_format("channels_last", 5))
 
         with self.assertRaises(ValueError):
             utils.convert_data_format("invalid", 2)
 
     def testNormalizeTuple(self):
-        self.assertEqual((2, 2, 2), utils.normalize_tuple(2, n=3, name="strides"))
-        self.assertEqual(
-            (2, 1, 2), utils.normalize_tuple((2, 1, 2), n=3, name="strides")
-        )
+        self.assertEqual((2, 2, 2),
+                         utils.normalize_tuple(2, n=3, name="strides"))
+        self.assertEqual((2, 1, 2),
+                         utils.normalize_tuple((2, 1, 2), n=3, name="strides"))
 
         with self.assertRaises(ValueError):
             utils.normalize_tuple((2, 1), n=3, name="strides")
@@ -49,10 +52,10 @@ class ConvUtilsTest(test.TestCase):
             utils.normalize_tuple(None, n=3, name="strides")
 
     def testNormalizeDataFormat(self):
-        self.assertEqual("channels_last", utils.normalize_data_format("Channels_Last"))
-        self.assertEqual(
-            "channels_first", utils.normalize_data_format("CHANNELS_FIRST")
-        )
+        self.assertEqual("channels_last",
+                         utils.normalize_data_format("Channels_Last"))
+        self.assertEqual("channels_first",
+                         utils.normalize_data_format("CHANNELS_FIRST"))
 
         with self.assertRaises(ValueError):
             utils.normalize_data_format("invalid")
@@ -100,8 +103,10 @@ class ConstantValueTest(test.TestCase):
             return constant_op.constant(32)
 
         # Boolean pred
-        self.assertEqual(5, utils.constant_value(utils.smart_cond(True, f1, f2)))
-        self.assertEqual(32, utils.constant_value(utils.smart_cond(False, f1, f2)))
+        self.assertEqual(5,
+                         utils.constant_value(utils.smart_cond(True, f1, f2)))
+        self.assertEqual(32,
+                         utils.constant_value(utils.smart_cond(False, f1, f2)))
 
         # Integer pred
         self.assertEqual(5, utils.constant_value(utils.smart_cond(1, f1, f2)))

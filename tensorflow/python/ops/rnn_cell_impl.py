@@ -34,7 +34,6 @@ _concat = rnn_cell_impl._concat
 _zero_state_tensors = rnn_cell_impl._zero_state_tensors
 # pylint: disable=protected-access
 
-
 assert_like_rnncell = rnn_cell_impl.assert_like_rnncell
 ASSERT_LIKE_RNNCELL_ERROR_REGEXP = (
     rnn_cell_impl.ASSERT_LIKE_RNNCELL_ERROR_REGEXP

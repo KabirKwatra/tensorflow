@@ -67,9 +67,11 @@ def split(seed, num=2):
       will be determined by `tf.convert_to_tensor`).
     """
     seed = ops.convert_to_tensor(seed)
-    return stateless_random_uniform(
-        shape=[num, 2], seed=seed, dtype=seed.dtype, minval=None, maxval=None
-    )
+    return stateless_random_uniform(shape=[num, 2],
+                                    seed=seed,
+                                    dtype=seed.dtype,
+                                    minval=None,
+                                    maxval=None)
 
 
 @tf_export("random.experimental.stateless_fold_in")
@@ -105,16 +107,21 @@ def fold_in(seed, data):
       the dtype will be determined by `tf.convert_to_tensor`).
     """
     data = ops.convert_to_tensor(data)
-    seed1 = stateless_random_uniform(
-        shape=[], seed=seed, dtype=data.dtype, minval=None, maxval=None
-    )
+    seed1 = stateless_random_uniform(shape=[],
+                                     seed=seed,
+                                     dtype=data.dtype,
+                                     minval=None,
+                                     maxval=None)
     return array_ops.stack([seed1, data])
 
 
 @tf_export("random.stateless_uniform")
-def stateless_random_uniform(
-    shape, seed, minval=0, maxval=None, dtype=dtypes.float32, name=None
-):
+def stateless_random_uniform(shape,
+                             seed,
+                             minval=0,
+                             maxval=None,
+                             dtype=dtypes.float32,
+                             name=None):
     """Outputs deterministic pseudorandom values from a uniform distribution.
 
     This is a stateless version of `tf.random.uniform`: if run twice with the
@@ -171,54 +178,55 @@ def stateless_random_uniform(
     """
     dtype = dtypes.as_dtype(dtype)
     if dtype not in (
-        dtypes.float16,
-        dtypes.bfloat16,
-        dtypes.float32,
-        dtypes.float64,
-        dtypes.int32,
-        dtypes.int64,
-        dtypes.uint32,
-        dtypes.uint64,
+            dtypes.float16,
+            dtypes.bfloat16,
+            dtypes.float32,
+            dtypes.float64,
+            dtypes.int32,
+            dtypes.int64,
+            dtypes.uint32,
+            dtypes.uint64,
     ):
         raise ValueError("Invalid dtype %r" % dtype)
     if dtype.is_integer:
         if (minval is None) != (maxval is None):
             raise ValueError(
                 "For integer dtype {}, minval and maxval must be both "
-                "`None` or both non-`None`.".format(dtype)
-            )
+                "`None` or both non-`None`.".format(dtype))
         if minval is not None and dtype in (dtypes.uint32, dtypes.uint64):
-            raise ValueError("Invalid dtype for bounded uniform integers: %r" % dtype)
+            raise ValueError("Invalid dtype for bounded uniform integers: %r" %
+                             dtype)
     elif maxval is None:
         maxval = 1
-    with ops.name_scope(
-        name, "stateless_random_uniform", [shape, seed, minval, maxval]
-    ) as name:
+    with ops.name_scope(name, "stateless_random_uniform",
+                        [shape, seed, minval, maxval]) as name:
         shape = tensor_util.shape_tensor(shape)
         if dtype.is_integer and minval is None:
             result = gen_stateless_random_ops.stateless_random_uniform_full_int(
-                shape, seed=seed, dtype=dtype, name=name
-            )
+                shape, seed=seed, dtype=dtype, name=name)
         else:
             minval = ops.convert_to_tensor(minval, dtype=dtype, name="min")
             maxval = ops.convert_to_tensor(maxval, dtype=dtype, name="max")
             if dtype.is_integer:
                 result = gen_stateless_random_ops.stateless_random_uniform_int(
-                    shape, seed=seed, minval=minval, maxval=maxval, name=name
-                )
+                    shape, seed=seed, minval=minval, maxval=maxval, name=name)
             else:
                 rnd = gen_stateless_random_ops.stateless_random_uniform(
-                    shape, seed=seed, dtype=dtype
-                )
-                result = math_ops.add(rnd * (maxval - minval), minval, name=name)
+                    shape, seed=seed, dtype=dtype)
+                result = math_ops.add(rnd * (maxval - minval),
+                                      minval,
+                                      name=name)
         tensor_util.maybe_set_static_shape(result, shape)
         return result
 
 
 @tf_export("random.stateless_binomial")
-def stateless_random_binomial(
-    shape, seed, counts, probs, output_dtype=dtypes.int32, name=None
-):
+def stateless_random_binomial(shape,
+                              seed,
+                              counts,
+                              probs,
+                              output_dtype=dtypes.int32,
+                              name=None):
     """Outputs deterministic pseudorandom values from a binomial distribution.
 
     The generated values follow a binomial distribution with specified count and
@@ -268,23 +276,32 @@ def stateless_random_binomial(
         success probs[i].
 
     """
-    with ops.name_scope(
-        name, "stateless_random_binomial", [shape, seed, counts, probs]
-    ) as name:
+    with ops.name_scope(name, "stateless_random_binomial",
+                        [shape, seed, counts, probs]) as name:
         shape = tensor_util.shape_tensor(shape)
-        probs = ops.convert_to_tensor(probs, dtype_hint=dtypes.float32, name="probs")
-        counts = ops.convert_to_tensor(counts, dtype_hint=probs.dtype, name="counts")
+        probs = ops.convert_to_tensor(probs,
+                                      dtype_hint=dtypes.float32,
+                                      name="probs")
+        counts = ops.convert_to_tensor(counts,
+                                       dtype_hint=probs.dtype,
+                                       name="counts")
         result = gen_stateless_random_ops.stateless_random_binomial(
-            shape=shape, seed=seed, counts=counts, probs=probs, dtype=output_dtype
-        )
+            shape=shape,
+            seed=seed,
+            counts=counts,
+            probs=probs,
+            dtype=output_dtype)
         tensor_util.maybe_set_static_shape(result, shape)
         return result
 
 
 @tf_export("random.stateless_gamma")
-def stateless_random_gamma(
-    shape, seed, alpha, beta=None, dtype=dtypes.float32, name=None
-):
+def stateless_random_gamma(shape,
+                           seed,
+                           alpha,
+                           beta=None,
+                           dtype=dtypes.float32,
+                           name=None):
     """Outputs deterministic pseudorandom values from a gamma distribution.
 
     The generated values follow a gamma distribution with specified concentration
@@ -359,24 +376,20 @@ def stateless_random_gamma(
         distribution with concentration alpha[i] and scale beta[i].
 
     """
-    with ops.name_scope(
-        name, "stateless_random_gamma", [shape, seed, alpha, beta]
-    ) as name:
+    with ops.name_scope(name, "stateless_random_gamma",
+                        [shape, seed, alpha, beta]) as name:
         shape = tensor_util.shape_tensor(shape)
         alpha = ops.convert_to_tensor(alpha, dtype=dtype, name="alpha")
-        beta = ops.convert_to_tensor(
-            beta if beta is not None else 1, name="beta", dtype=dtype
-        )
+        beta = ops.convert_to_tensor(beta if beta is not None else 1,
+                                     name="beta",
+                                     dtype=dtype)
         broadcast_shape = array_ops.broadcast_dynamic_shape(
-            array_ops.shape(alpha), array_ops.shape(beta)
-        )
+            array_ops.shape(alpha), array_ops.shape(beta))
         alpha_broadcast = array_ops.broadcast_to(alpha, broadcast_shape)
         result = math_ops.maximum(
             np.finfo(alpha.dtype.as_numpy_dtype).tiny,
             gen_stateless_random_ops.stateless_random_gamma_v2(
-                shape, seed=seed, alpha=alpha_broadcast
-            )
-            / beta,
+                shape, seed=seed, alpha=alpha_broadcast) / beta,
         )
         tensor_util.maybe_set_static_shape(result, shape)
         return result
@@ -431,19 +444,24 @@ def stateless_random_poisson(shape, seed, lam, dtype=dtypes.int32, name=None):
         distribution with rate `lam[i]`.
 
     """
-    with ops.name_scope(name, "stateless_random_poisson", [shape, seed, lam]) as name:
+    with ops.name_scope(name, "stateless_random_poisson",
+                        [shape, seed, lam]) as name:
         shape = tensor_util.shape_tensor(shape)
-        result = gen_stateless_random_ops.stateless_random_poisson(
-            shape, seed=seed, lam=lam, dtype=dtype
-        )
+        result = gen_stateless_random_ops.stateless_random_poisson(shape,
+                                                                   seed=seed,
+                                                                   lam=lam,
+                                                                   dtype=dtype)
         tensor_util.maybe_set_static_shape(result, shape)
         return result
 
 
 @tf_export("random.stateless_normal")
-def stateless_random_normal(
-    shape, seed, mean=0.0, stddev=1.0, dtype=dtypes.float32, name=None
-):
+def stateless_random_normal(shape,
+                            seed,
+                            mean=0.0,
+                            stddev=1.0,
+                            dtype=dtypes.float32,
+                            name=None):
     """Outputs deterministic pseudorandom values from a normal distribution.
 
     This is a stateless version of `tf.random.normal`: if run twice with the
@@ -466,22 +484,25 @@ def stateless_random_normal(
     Returns:
       A tensor of the specified shape filled with random normal values.
     """
-    with ops.name_scope(
-        name, "stateless_random_normal", [shape, seed, mean, stddev]
-    ) as name:
+    with ops.name_scope(name, "stateless_random_normal",
+                        [shape, seed, mean, stddev]) as name:
         shape = tensor_util.shape_tensor(shape)
         mean = ops.convert_to_tensor(mean, dtype=dtype, name="mean")
         stddev = ops.convert_to_tensor(stddev, dtype=dtype, name="stddev")
-        rnd = gen_stateless_random_ops.stateless_random_normal(shape, seed, dtype)
+        rnd = gen_stateless_random_ops.stateless_random_normal(
+            shape, seed, dtype)
         result = math_ops.add(rnd * stddev, mean, name=name)
         tensor_util.maybe_set_static_shape(result, shape)
         return result
 
 
 @tf_export("random.stateless_truncated_normal")
-def stateless_truncated_normal(
-    shape, seed, mean=0.0, stddev=1.0, dtype=dtypes.float32, name=None
-):
+def stateless_truncated_normal(shape,
+                               seed,
+                               mean=0.0,
+                               stddev=1.0,
+                               dtype=dtypes.float32,
+                               name=None):
     """Outputs deterministic pseudorandom values, truncated normally distributed.
 
     This is a stateless version of `tf.random.truncated_normal`: if run twice with
@@ -509,13 +530,13 @@ def stateless_truncated_normal(
     Returns:
       A tensor of the specified shape filled with random truncated normal values.
     """
-    with ops.name_scope(
-        name, "stateless_truncated_normal", [shape, seed, mean, stddev]
-    ) as name:
+    with ops.name_scope(name, "stateless_truncated_normal",
+                        [shape, seed, mean, stddev]) as name:
         shape = tensor_util.shape_tensor(shape)
         mean = ops.convert_to_tensor(mean, dtype=dtype, name="mean")
         stddev = ops.convert_to_tensor(stddev, dtype=dtype, name="stddev")
-        rnd = gen_stateless_random_ops.stateless_truncated_normal(shape, seed, dtype)
+        rnd = gen_stateless_random_ops.stateless_truncated_normal(
+            shape, seed, dtype)
         result = math_ops.add(rnd * stddev, mean, name=name)
         tensor_util.maybe_set_static_shape(result, shape)
         return result
@@ -523,11 +544,12 @@ def stateless_truncated_normal(
 
 @tf_export(v1=["random.stateless_multinomial"])
 @deprecation.deprecated(
-    date=None, instructions="Use `tf.random.stateless_categorical` instead."
-)
-def stateless_multinomial(
-    logits, num_samples, seed, output_dtype=dtypes.int64, name=None
-):
+    date=None, instructions="Use `tf.random.stateless_categorical` instead.")
+def stateless_multinomial(logits,
+                          num_samples,
+                          seed,
+                          output_dtype=dtypes.int64,
+                          name=None):
     """Draws deterministic pseudorandom samples from a multinomial distribution.
 
     This is a stateless version of `tf.random.categorical`: if run twice with the
@@ -558,13 +580,16 @@ def stateless_multinomial(
       The drawn samples of shape `[batch_size, num_samples]`.
     """
     with ops.name_scope(name, "stateless_multinomial", [logits, seed]):
-        return stateless_multinomial_categorical_impl(
-            logits, num_samples, output_dtype, seed
-        )
+        return stateless_multinomial_categorical_impl(logits, num_samples,
+                                                      output_dtype, seed)
 
 
 @tf_export("random.stateless_categorical")
-def stateless_categorical(logits, num_samples, seed, dtype=dtypes.int64, name=None):
+def stateless_categorical(logits,
+                          num_samples,
+                          seed,
+                          dtype=dtypes.int64,
+                          name=None):
     """Draws deterministic pseudorandom samples from a categorical distribution.
 
     This is a stateless version of `tf.categorical`: if run twice with the
@@ -595,12 +620,14 @@ def stateless_categorical(logits, num_samples, seed, dtype=dtypes.int64, name=No
       The drawn samples of shape `[batch_size, num_samples]`.
     """
     with ops.name_scope(name, "stateless_categorical", [logits, seed]):
-        return stateless_multinomial_categorical_impl(logits, num_samples, dtype, seed)
+        return stateless_multinomial_categorical_impl(logits, num_samples,
+                                                      dtype, seed)
 
 
 def stateless_multinomial_categorical_impl(logits, num_samples, dtype, seed):
     """Implementation for stateless multinomial/categorical ops (v1/v2)."""
     logits = ops.convert_to_tensor(logits, name="logits")
-    return gen_stateless_random_ops.stateless_multinomial(
-        logits, num_samples, seed, output_dtype=dtype
-    )
+    return gen_stateless_random_ops.stateless_multinomial(logits,
+                                                          num_samples,
+                                                          seed,
+                                                          output_dtype=dtype)
