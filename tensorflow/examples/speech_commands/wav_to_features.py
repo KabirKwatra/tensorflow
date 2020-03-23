@@ -35,10 +35,10 @@ import argparse
 import os.path
 import sys
 
-import tensorflow as tf
-
 import input_data
 import models
+
+import tensorflow as tf
 from tensorflow.python.platform import gfile
 
 FLAGS = None
