@@ -50,9 +50,7 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 def get_tpu_cluster_resolver():
     resolver = tpu_cluster_resolver.TPUClusterResolver(
-        tpu=FLAGS.tpu,
-        zone=FLAGS.zone,
-        project=FLAGS.project,
+        tpu=FLAGS.tpu, zone=FLAGS.zone, project=FLAGS.project,
     )
     return resolver
 
@@ -65,7 +63,6 @@ def get_tpu_strategy():
 
 
 class TPUStrategyTest(test.TestCase):
-
     def test_multiple_initialize_system(self):
         resolver = get_tpu_cluster_resolver()
         remote.connect_to_cluster(resolver)
@@ -73,8 +70,7 @@ class TPUStrategyTest(test.TestCase):
 
         with test.mock.patch.object(logging, "warning") as mock_log:
             tpu_strategy_util.initialize_tpu_system(resolver)
-            self.assertRegex(str(mock_log.call_args),
-                             "already been initialized")
+            self.assertRegex(str(mock_log.call_args), "already been initialized")
 
     def test_sequential_experimental_runs(self):
         resolver = get_tpu_cluster_resolver()
@@ -82,15 +78,15 @@ class TPUStrategyTest(test.TestCase):
         topology = tpu_strategy_util.initialize_tpu_system(resolver)
         # Computation replicated to all cores.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=2)
-        strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment)
+            topology, num_replicas=2
+        )
+        strategy = tpu_lib.TPUStrategy(resolver, device_assignment=device_assignment)
 
         # Computation on the 1st core.
         device_assignment2 = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1)
-        strategy2 = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment2)
+            topology, num_replicas=1
+        )
+        strategy2 = tpu_lib.TPUStrategy(resolver, device_assignment=device_assignment2)
 
         def computation(x):
             return math_ops.square(x)
@@ -98,12 +94,12 @@ class TPUStrategyTest(test.TestCase):
         @def_function.function
         def train_step():
             outputs = strategy.experimental_local_results(
-                strategy.run(computation, args=([2., 2.],)))
-            outputs2 = strategy2.run(
-                computation, args=([outputs[0]],))
+                strategy.run(computation, args=([2.0, 2.0],))
+            )
+            outputs2 = strategy2.run(computation, args=([outputs[0]],))
             return outputs2
 
-        self.assertAllEqual([[16., 16.]], train_step())
+        self.assertAllEqual([[16.0, 16.0]], train_step())
 
     def test_device_switch_case(self):
         strategy = get_tpu_strategy()
@@ -117,7 +113,6 @@ class TPUStrategyTest(test.TestCase):
 
         @def_function.function
         def run_inference(x):
-
             def do_inference(device, inference_fn, i):
                 with ops.device(device):
                     return inference_fn(x, i)
@@ -126,12 +121,11 @@ class TPUStrategyTest(test.TestCase):
                 0: (lambda: do_inference("/device:TPU:0", inference_fn, 0)),
                 1: (lambda: do_inference("/device:TPU:1", inference_fn, 1)),
             }
-            branch_index = inference_iteration.assign_add(
-                1, use_locking=True) % 2
+            branch_index = inference_iteration.assign_add(1, use_locking=True) % 2
             return control_flow_ops.switch_case(branch_index, branch_fns)
 
-        self.assertAllEqual(2., run_inference(1))  # Use TPU core 0.
-        self.assertAllEqual(3., run_inference(1))  # Use TPU core 1.
+        self.assertAllEqual(2.0, run_inference(1))  # Use TPU core 0.
+        self.assertAllEqual(3.0, run_inference(1))  # Use TPU core 1.
 
     def test_recover_from_compilation_failures(self):
         # TODO(b/148150981): Stop skipping this test once recovery works
@@ -142,19 +136,18 @@ class TPUStrategyTest(test.TestCase):
 
         @def_function.function
         def compilation_failure_run():
-
             def computation():
                 return random_ops.random_gamma([10], [0.5, 1.5])
 
             return strategy.run(computation)
 
-        with self.assertRaisesRegexp(errors.InvalidArgumentError,
-                                     "TPU compilation failed"):
+        with self.assertRaisesRegexp(
+            errors.InvalidArgumentError, "TPU compilation failed"
+        ):
             compilation_failure_run()
 
         @def_function.function
         def good_run():
-
             def computation():
                 return random_ops.random_normal([10])
 
@@ -169,24 +162,26 @@ class TPUStrategyTest(test.TestCase):
         all_core_strategy = tpu_lib.TPUStrategy(resolver)
 
         with all_core_strategy.scope():
-            v = variables.Variable(0.0,
-                                   aggregation=variables.VariableAggregation.MEAN)
+            v = variables.Variable(0.0, aggregation=variables.VariableAggregation.MEAN)
 
         # Computation on the 1st core.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1)
+            topology, num_replicas=1
+        )
         first_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment)
+            resolver, device_assignment=device_assignment
+        )
 
         # Computation on the 2nd core.
         device_assignment2 = device_assignment_lib.DeviceAssignment(
-            topology, [[[0, 0, 0, 1]]])
+            topology, [[[0, 0, 0, 1]]]
+        )
         second_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment2)
+            resolver, device_assignment=device_assignment2
+        )
 
         @def_function.function
         def train_step():
-
             def step_fn():
                 return v + 1.0
 
@@ -196,7 +191,7 @@ class TPUStrategyTest(test.TestCase):
             return r1 + r2
 
         train_step()
-        self.assertAllEqual(2., train_step())
+        self.assertAllEqual(2.0, train_step())
 
     def test_worker_devices_on_subset_cores(self):
         resolver = get_tpu_cluster_resolver()
@@ -205,23 +200,29 @@ class TPUStrategyTest(test.TestCase):
 
         # Strategy for the 1st core.
         device_assignment = device_assignment_lib.DeviceAssignment.build(
-            topology, num_replicas=1)
+            topology, num_replicas=1
+        )
         first_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment)
+            resolver, device_assignment=device_assignment
+        )
 
         # Strategy for the 2nd core.
         device_assignment2 = device_assignment_lib.DeviceAssignment(
-            topology, [[[0, 0, 0, 1]]])
+            topology, [[[0, 0, 0, 1]]]
+        )
         second_core_strategy = tpu_lib.TPUStrategy(
-            resolver, device_assignment=device_assignment2)
+            resolver, device_assignment=device_assignment2
+        )
 
         self.assertLen(first_core_strategy.extended.worker_devices, 1)
-        self.assertEndsWith(first_core_strategy.extended.worker_devices[0],
-                            "device:TPU:0")
+        self.assertEndsWith(
+            first_core_strategy.extended.worker_devices[0], "device:TPU:0"
+        )
 
         self.assertLen(second_core_strategy.extended.worker_devices, 1)
-        self.assertEndsWith(second_core_strategy.extended.worker_devices[0],
-                            "device:TPU:1")
+        self.assertEndsWith(
+            second_core_strategy.extended.worker_devices[0], "device:TPU:1"
+        )
 
     def test_tpu_tf_function_same_device(self):
         with ops.device("/device:TPU:0"):
@@ -232,7 +233,8 @@ class TPUStrategyTest(test.TestCase):
             return a + 1
 
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec([], dtypes.int32)])
+            input_signature=[tensor_spec.TensorSpec([], dtypes.int32)]
+        )
         def foo(x):
             with ops.device("/device:TPU:0"):
                 b = x + get_a_plus_one()
@@ -262,12 +264,10 @@ class TPUStrategyTest(test.TestCase):
         strategy = get_tpu_strategy()
 
         with strategy.scope():
-            v = variables.Variable(
-                0.0, aggregation=variables.VariableAggregation.MEAN)
+            v = variables.Variable(0.0, aggregation=variables.VariableAggregation.MEAN)
 
         @def_function.function
         def train_step():
-
             def step_fn():
                 v.assign_add(1)
 
@@ -282,7 +282,6 @@ class TPUStrategyTest(test.TestCase):
 
         @def_function.function
         def train_step():
-
             def step_fn(prev):
                 s = prev + 1
                 return s
@@ -315,10 +314,8 @@ class TPUStrategyTest(test.TestCase):
     # TODO(b/152251070): Re-enable once modified to work on Cloud TPU.
     def disable_test_using_external_variable_inside_tf_function(self):
         strategy = get_tpu_strategy()
-        dataset = dataset_ops.Dataset.range(
-            10, output_type=dtypes.float32).batch(2)
-        input_iterator = iter(
-            strategy.experimental_distribute_dataset(dataset))
+        dataset = dataset_ops.Dataset.range(10, output_type=dtypes.float32).batch(2)
+        input_iterator = iter(strategy.experimental_distribute_dataset(dataset))
 
         v = variables.Variable(2.0)
 
@@ -326,13 +323,14 @@ class TPUStrategyTest(test.TestCase):
         def train_step(data):
             def computation(inputs):
                 return inputs + v
+
             return strategy.run(computation, args=(data,))
 
-        expected_result = [[x + 2.] for x in range(0, strategy.num_replicas_in_sync)
-                           ]
+        expected_result = [[x + 2.0] for x in range(0, strategy.num_replicas_in_sync)]
         self.assertAllEqual(
             expected_result,
-            strategy.experimental_local_results(train_step(next(input_iterator))))
+            strategy.experimental_local_results(train_step(next(input_iterator))),
+        )
 
     # TODO(b/152251070): Re-enable once modified to work on Cloud TPU.
     def disable_test_keras_metric_outside_strategy_scope_per_replica(self):
@@ -346,8 +344,9 @@ class TPUStrategyTest(test.TestCase):
         def step_fn(i):
             metric.update_state(i)
 
-        with self.assertRaisesRegex(ValueError, "Trying to run metric.update_state "
-                                                "in replica context"):
+        with self.assertRaisesRegex(
+            ValueError, "Trying to run metric.update_state " "in replica context"
+        ):
             with strategy.scope():
                 for i in dataset:
                     strategy.run(step_fn, args=(i,))

@@ -24,26 +24,26 @@ from tensorflow.python.ops import variables
 
 
 def convert_data_format(data_format, ndim):
-    if data_format == 'channels_last':
+    if data_format == "channels_last":
         if ndim == 3:
-            return 'NWC'
+            return "NWC"
         elif ndim == 4:
-            return 'NHWC'
+            return "NHWC"
         elif ndim == 5:
-            return 'NDHWC'
+            return "NDHWC"
         else:
-            raise ValueError('Input rank not supported:', ndim)
-    elif data_format == 'channels_first':
+            raise ValueError("Input rank not supported:", ndim)
+    elif data_format == "channels_first":
         if ndim == 3:
-            return 'NCW'
+            return "NCW"
         elif ndim == 4:
-            return 'NCHW'
+            return "NCHW"
         elif ndim == 5:
-            return 'NCDHW'
+            return "NCDHW"
         else:
-            raise ValueError('Input rank not supported:', ndim)
+            raise ValueError("Input rank not supported:", ndim)
     else:
-        raise ValueError('Invalid data_format:', data_format)
+        raise ValueError("Invalid data_format:", data_format)
 
 
 def normalize_tuple(value, n, name):
@@ -69,37 +69,61 @@ def normalize_tuple(value, n, name):
         try:
             value_tuple = tuple(value)
         except TypeError:
-            raise ValueError('The `' + name + '` argument must be a tuple of ' +
-                             str(n) + ' integers. Received: ' + str(value))
+            raise ValueError(
+                "The `"
+                + name
+                + "` argument must be a tuple of "
+                + str(n)
+                + " integers. Received: "
+                + str(value)
+            )
         if len(value_tuple) != n:
-            raise ValueError('The `' + name + '` argument must be a tuple of ' +
-                             str(n) + ' integers. Received: ' + str(value))
+            raise ValueError(
+                "The `"
+                + name
+                + "` argument must be a tuple of "
+                + str(n)
+                + " integers. Received: "
+                + str(value)
+            )
         for single_value in value_tuple:
             try:
                 int(single_value)
             except (ValueError, TypeError):
-                raise ValueError('The `' + name + '` argument must be a tuple of ' +
-                                 str(n) + ' integers. Received: ' +
-                                 str(value) + ' '
-                                 'including element ' + str(single_value) + ' of type' +
-                                 ' ' + str(type(single_value)))
+                raise ValueError(
+                    "The `"
+                    + name
+                    + "` argument must be a tuple of "
+                    + str(n)
+                    + " integers. Received: "
+                    + str(value)
+                    + " "
+                    "including element "
+                    + str(single_value)
+                    + " of type"
+                    + " "
+                    + str(type(single_value))
+                )
         return value_tuple
 
 
 def normalize_data_format(value):
     data_format = value.lower()
-    if data_format not in {'channels_first', 'channels_last'}:
-        raise ValueError('The `data_format` argument must be one of '
-                         '"channels_first", "channels_last". Received: ' +
-                         str(value))
+    if data_format not in {"channels_first", "channels_last"}:
+        raise ValueError(
+            "The `data_format` argument must be one of "
+            '"channels_first", "channels_last". Received: ' + str(value)
+        )
     return data_format
 
 
 def normalize_padding(value):
     padding = value.lower()
-    if padding not in {'valid', 'same'}:
-        raise ValueError('The `padding` argument must be one of "valid", "same". '
-                         'Received: ' + str(padding))
+    if padding not in {"valid", "same"}:
+        raise ValueError(
+            'The `padding` argument must be one of "valid", "same". '
+            "Received: " + str(padding)
+        )
     return padding
 
 
@@ -118,13 +142,13 @@ def conv_output_length(input_length, filter_size, padding, stride, dilation=1):
     """
     if input_length is None:
         return None
-    assert padding in {'same', 'valid', 'full'}
+    assert padding in {"same", "valid", "full"}
     dilated_filter_size = filter_size + (filter_size - 1) * (dilation - 1)
-    if padding == 'same':
+    if padding == "same":
         output_length = input_length
-    elif padding == 'valid':
+    elif padding == "valid":
         output_length = input_length - dilated_filter_size + 1
-    elif padding == 'full':
+    elif padding == "full":
         output_length = input_length + dilated_filter_size - 1
     return (output_length + stride - 1) // stride
 
@@ -143,12 +167,12 @@ def conv_input_length(output_length, filter_size, padding, stride):
     """
     if output_length is None:
         return None
-    assert padding in {'same', 'valid', 'full'}
-    if padding == 'same':
+    assert padding in {"same", "valid", "full"}
+    if padding == "same":
         pad = filter_size // 2
-    elif padding == 'valid':
+    elif padding == "valid":
         pad = 0
-    elif padding == 'full':
+    elif padding == "full":
         pad = filter_size - 1
     return (output_length - 1) * stride - 2 * pad + filter_size
 
@@ -168,10 +192,10 @@ def deconv_output_length(input_length, filter_size, padding, stride):
     if input_length is None:
         return None
     input_length *= stride
-    if padding == 'valid':
+    if padding == "valid":
         input_length += max(filter_size - stride, 0)
-    elif padding == 'full':
-        input_length -= (stride + filter_size - 2)
+    elif padding == "full":
+        input_length -= stride + filter_size - 2
     return input_length
 
 
@@ -196,9 +220,9 @@ def smart_cond(pred, true_fn=None, false_fn=None, name=None):
     """
     if isinstance(pred, variables.Variable):
         return control_flow_ops.cond(
-            pred, true_fn=true_fn, false_fn=false_fn, name=name)
-    return smart_module.smart_cond(
-        pred, true_fn=true_fn, false_fn=false_fn, name=name)
+            pred, true_fn=true_fn, false_fn=false_fn, name=name
+        )
+    return smart_module.smart_cond(pred, true_fn=true_fn, false_fn=false_fn, name=name)
 
 
 def constant_value(pred):

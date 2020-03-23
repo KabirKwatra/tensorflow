@@ -38,17 +38,19 @@ from tensorflow.python.util import nest
 class DropoutWrapperBase(object):
     """Operator adding dropout to inputs and outputs of the given cell."""
 
-    def __init__(self,
-                 cell,
-                 input_keep_prob=1.0,
-                 output_keep_prob=1.0,
-                 state_keep_prob=1.0,
-                 variational_recurrent=False,
-                 input_size=None,
-                 dtype=None,
-                 seed=None,
-                 dropout_state_filter_visitor=None,
-                 **kwargs):
+    def __init__(
+        self,
+        cell,
+        input_keep_prob=1.0,
+        output_keep_prob=1.0,
+        state_keep_prob=1.0,
+        variational_recurrent=False,
+        input_size=None,
+        dtype=None,
+        seed=None,
+        dropout_state_filter_visitor=None,
+        **kwargs
+    ):
         """Create a cell with added input, state, and/or output dropout.
 
         If `variational_recurrent` is set to `True` (**NOT** the default behavior),
@@ -108,11 +110,13 @@ class DropoutWrapperBase(object):
         """
         super(DropoutWrapperBase, self).__init__(cell, dtype=dtype, **kwargs)
 
-        if (dropout_state_filter_visitor is not None and
-                not callable(dropout_state_filter_visitor)):
+        if dropout_state_filter_visitor is not None and not callable(
+            dropout_state_filter_visitor
+        ):
             raise TypeError("dropout_state_filter_visitor must be callable")
         self._dropout_state_filter = (
-            dropout_state_filter_visitor or _default_dropout_state_filter_visitor)
+            dropout_state_filter_visitor or _default_dropout_state_filter_visitor
+        )
         with ops.name_scope("DropoutWrapperInit"):
 
             def tensor_and_const_value(v):
@@ -120,14 +124,18 @@ class DropoutWrapperBase(object):
                 const_value = tensor_util.constant_value(tensor_value)
                 return (tensor_value, const_value)
 
-            for prob, attr in [(input_keep_prob, "input_keep_prob"),
-                               (state_keep_prob, "state_keep_prob"),
-                               (output_keep_prob, "output_keep_prob")]:
+            for prob, attr in [
+                (input_keep_prob, "input_keep_prob"),
+                (state_keep_prob, "state_keep_prob"),
+                (output_keep_prob, "output_keep_prob"),
+            ]:
                 tensor_prob, const_prob = tensor_and_const_value(prob)
                 if const_prob is not None:
                     if const_prob < 0 or const_prob > 1:
-                        raise ValueError("Parameter %s must be between 0 and 1: %d" %
-                                         (attr, const_prob))
+                        raise ValueError(
+                            "Parameter %s must be between 0 and 1: %d"
+                            % (attr, const_prob)
+                        )
                     setattr(self, "_%s" % attr, float(const_prob))
                 else:
                     setattr(self, "_%s" % attr, tensor_prob)
@@ -144,7 +152,8 @@ class DropoutWrapperBase(object):
         if variational_recurrent:
             if dtype is None:
                 raise ValueError(
-                    "When variational_recurrent=True, dtype must be provided")
+                    "When variational_recurrent=True, dtype must be provided"
+                )
 
             def convert_to_batch_shape(s):
                 # Prepend a 1 for the batch dimension; for recurrent
@@ -156,27 +165,30 @@ class DropoutWrapperBase(object):
                 shape = convert_to_batch_shape(s)
                 return random_ops.random_uniform(shape, seed=inner_seed, dtype=dtype)
 
-            if (not isinstance(self._input_keep_prob, numbers.Real) or
-                    self._input_keep_prob < 1.0):
+            if (
+                not isinstance(self._input_keep_prob, numbers.Real)
+                or self._input_keep_prob < 1.0
+            ):
                 if input_size is None:
                     raise ValueError(
                         "When variational_recurrent=True and input_keep_prob < 1.0 or "
-                        "is unknown, input_size must be provided")
+                        "is unknown, input_size must be provided"
+                    )
                 self._recurrent_input_noise = _enumerated_map_structure_up_to(
                     input_size,
-                    lambda i, s: batch_noise(
-                        s, inner_seed=self._gen_seed("input", i)),
-                    input_size)
+                    lambda i, s: batch_noise(s, inner_seed=self._gen_seed("input", i)),
+                    input_size,
+                )
             self._recurrent_state_noise = _enumerated_map_structure_up_to(
                 cell.state_size,
-                lambda i, s: batch_noise(
-                    s, inner_seed=self._gen_seed("state", i)),
-                cell.state_size)
+                lambda i, s: batch_noise(s, inner_seed=self._gen_seed("state", i)),
+                cell.state_size,
+            )
             self._recurrent_output_noise = _enumerated_map_structure_up_to(
                 cell.output_size,
-                lambda i, s: batch_noise(
-                    s, inner_seed=self._gen_seed("output", i)),
-                cell.output_size)
+                lambda i, s: batch_noise(s, inner_seed=self._gen_seed("output", i)),
+                cell.output_size,
+            )
 
     def _gen_seed(self, salt_prefix, index):
         if self._seed is None:
@@ -206,7 +218,8 @@ class DropoutWrapperBase(object):
             return self.cell.zero_state(batch_size, dtype)
 
     def _variational_recurrent_dropout_value(
-            self, unused_index, value, noise, keep_prob):
+        self, unused_index, value, noise, keep_prob
+    ):
         """Performs dropout given the pre-calculated noise tensor."""
         # uniform [keep_prob, 1.0 + keep_prob)
         random_tensor = keep_prob + noise
@@ -217,12 +230,14 @@ class DropoutWrapperBase(object):
         ret.set_shape(value.get_shape())
         return ret
 
-    def _dropout(self,
-                 values,
-                 salt_prefix,
-                 recurrent_noise,
-                 keep_prob,
-                 shallow_filtered_substructure=None):
+    def _dropout(
+        self,
+        values,
+        salt_prefix,
+        recurrent_noise,
+        keep_prob,
+        shallow_filtered_substructure=None,
+    ):
         """Decides whether to perform standard dropout or recurrent dropout."""
 
         if shallow_filtered_substructure is None:
@@ -235,13 +250,16 @@ class DropoutWrapperBase(object):
             def dropout(i, do_dropout, v):
                 if not isinstance(do_dropout, bool) or do_dropout:
                     return nn_ops.dropout_v2(
-                        v, rate=1. - keep_prob, seed=self._gen_seed(salt_prefix, i))
+                        v, rate=1.0 - keep_prob, seed=self._gen_seed(salt_prefix, i)
+                    )
                 else:
                     return v
 
             return _enumerated_map_structure_up_to(
-                shallow_filtered_substructure, dropout,
-                *[shallow_filtered_substructure, values])
+                shallow_filtered_substructure,
+                dropout,
+                *[shallow_filtered_substructure, values]
+            )
         else:
 
             def dropout(i, do_dropout, v, n):
@@ -251,8 +269,10 @@ class DropoutWrapperBase(object):
                     return v
 
             return _enumerated_map_structure_up_to(
-                shallow_filtered_substructure, dropout,
-                *[shallow_filtered_substructure, values, recurrent_noise])
+                shallow_filtered_substructure,
+                dropout,
+                *[shallow_filtered_substructure, values, recurrent_noise]
+            )
 
     def _call_wrapped_cell(self, inputs, state, cell_call_fn, **kwargs):
         """Runs the wrapped cell and applies dropout.
@@ -275,20 +295,27 @@ class DropoutWrapperBase(object):
             return (not isinstance(p, float)) or p < 1
 
         if _should_dropout(self._input_keep_prob):
-            inputs = self._dropout(inputs, "input", self._recurrent_input_noise,
-                                   self._input_keep_prob)
+            inputs = self._dropout(
+                inputs, "input", self._recurrent_input_noise, self._input_keep_prob
+            )
         output, new_state = cell_call_fn(inputs, state, **kwargs)
         if _should_dropout(self._state_keep_prob):
             # Identify which subsets of the state to perform dropout on and
             # which ones to keep.
             shallow_filtered_substructure = nest.get_traverse_shallow_structure(
-                self._dropout_state_filter, new_state)
-            new_state = self._dropout(new_state, "state", self._recurrent_state_noise,
-                                      self._state_keep_prob,
-                                      shallow_filtered_substructure)
+                self._dropout_state_filter, new_state
+            )
+            new_state = self._dropout(
+                new_state,
+                "state",
+                self._recurrent_state_noise,
+                self._state_keep_prob,
+                shallow_filtered_substructure,
+            )
         if _should_dropout(self._output_keep_prob):
-            output = self._dropout(output, "output", self._recurrent_output_noise,
-                                   self._output_keep_prob)
+            output = self._dropout(
+                output, "output", self._recurrent_output_noise, self._output_keep_prob
+            )
         return output, new_state
 
     def get_config(self):
@@ -303,10 +330,15 @@ class DropoutWrapperBase(object):
         }
         if self._dropout_state_filter != _default_dropout_state_filter_visitor:
             function, function_type, function_module = _serialize_function_to_config(
-                self._dropout_state_filter)
-            config.update({"dropout_fn": function,
-                           "dropout_fn_type": function_type,
-                           "dropout_fn_module": function_module})
+                self._dropout_state_filter
+            )
+            config.update(
+                {
+                    "dropout_fn": function,
+                    "dropout_fn_type": function_type,
+                    "dropout_fn_module": function_module,
+                }
+            )
         base_config = super(DropoutWrapperBase, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
@@ -315,12 +347,17 @@ class DropoutWrapperBase(object):
         if "dropout_fn" in config:
             config = config.copy()
             dropout_state_filter = _parse_config_to_function(
-                config, custom_objects, "dropout_fn", "dropout_fn_type",
-                "dropout_fn_module")
+                config,
+                custom_objects,
+                "dropout_fn",
+                "dropout_fn_type",
+                "dropout_fn_module",
+            )
             config.pop("dropout_fn")
             config["dropout_state_filter_visitor"] = dropout_state_filter
         return super(DropoutWrapperBase, cls).from_config(
-            config, custom_objects=custom_objects)
+            config, custom_objects=custom_objects
+        )
 
 
 class ResidualWrapperBase(object):
@@ -380,19 +417,19 @@ class ResidualWrapperBase(object):
             nest.map_structure(assert_shape_match, inputs, outputs)
             return nest.map_structure(lambda inp, out: inp + out, inputs, outputs)
 
-        res_outputs = (self._residual_fn or default_residual_fn)(
-            inputs, outputs)
+        res_outputs = (self._residual_fn or default_residual_fn)(inputs, outputs)
         return (res_outputs, new_state)
 
     def get_config(self):
         """Returns the config of the residual wrapper."""
         if self._residual_fn is not None:
             function, function_type, function_module = _serialize_function_to_config(
-                self._residual_fn)
+                self._residual_fn
+            )
             config = {
                 "residual_fn": function,
                 "residual_fn_type": function_type,
-                "residual_fn_module": function_module
+                "residual_fn_module": function_module,
             }
         else:
             config = {}
@@ -403,13 +440,17 @@ class ResidualWrapperBase(object):
     def from_config(cls, config, custom_objects=None):
         if "residual_fn" in config:
             config = config.copy()
-            residual_function = _parse_config_to_function(config, custom_objects,
-                                                          "residual_fn",
-                                                          "residual_fn_type",
-                                                          "residual_fn_module")
+            residual_function = _parse_config_to_function(
+                config,
+                custom_objects,
+                "residual_fn",
+                "residual_fn_type",
+                "residual_fn_module",
+            )
             config["residual_fn"] = residual_function
         return super(ResidualWrapperBase, cls).from_config(
-            config, custom_objects=custom_objects)
+            config, custom_objects=custom_objects
+        )
 
 
 class DeviceWrapperBase(object):
@@ -463,14 +504,16 @@ def _serialize_function_to_config(function):
         output_type = "function"
         module = function.__module__
     else:
-        raise ValueError("Unrecognized function type for input: {}".format(
-            type(function)))
+        raise ValueError(
+            "Unrecognized function type for input: {}".format(type(function))
+        )
 
     return output, output_type, module
 
 
-def _parse_config_to_function(config, custom_objects, func_attr_name,
-                              func_type_attr_name, module_attr_name):
+def _parse_config_to_function(
+    config, custom_objects, func_attr_name, func_type_attr_name, module_attr_name
+):
     """Reconstruct the function from the config."""
     globs = globals()
     module = config.pop(module_attr_name, None)
@@ -478,8 +521,11 @@ def _parse_config_to_function(config, custom_objects, func_attr_name,
         globs.update(sys.modules[module].__dict__)
     elif module is not None:
         # Note: we don't know the name of the function if it's a lambda.
-        warnings.warn("{} is not loaded, but a layer uses it. "
-                      "It may cause errors.".format(module), UserWarning)
+        warnings.warn(
+            "{} is not loaded, but a layer uses it. "
+            "It may cause errors.".format(module),
+            UserWarning,
+        )
     if custom_objects:
         globs.update(custom_objects)
     function_type = config.pop(func_type_attr_name)
@@ -488,18 +534,21 @@ def _parse_config_to_function(config, custom_objects, func_attr_name,
         function = generic_utils.deserialize_keras_object(
             config[func_attr_name],
             custom_objects=custom_objects,
-            printable_module_name="function in wrapper")
+            printable_module_name="function in wrapper",
+        )
     elif function_type == "lambda":
         # Unsafe deserialization from bytecode
-        function = generic_utils.func_load(
-            config[func_attr_name], globs=globs)
+        function = generic_utils.func_load(config[func_attr_name], globs=globs)
     else:
         raise TypeError("Unknown function type:", function_type)
     return function
 
 
 def _default_dropout_state_filter_visitor(substate):
-    from tensorflow.python.keras.layers.legacy_rnn.rnn_cell_impl import LSTMStateTuple  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.layers.legacy_rnn.rnn_cell_impl import (
+        LSTMStateTuple,
+    )  # pylint: disable=g-import-not-at-top
+
     if isinstance(substate, LSTMStateTuple):
         # Do not perform dropout on the memory state.
         return LSTMStateTuple(c=False, h=True)
@@ -516,5 +565,4 @@ def _enumerated_map_structure_up_to(shallow_structure, map_fn, *args, **kwargs):
         ix[0] += 1
         return r
 
-    return nest.map_structure_up_to(shallow_structure, enumerated_fn, *args,
-                                    **kwargs)
+    return nest.map_structure_up_to(shallow_structure, enumerated_fn, *args, **kwargs)
