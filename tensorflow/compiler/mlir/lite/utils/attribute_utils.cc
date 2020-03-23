@@ -20,29 +20,29 @@ namespace mlir {
 namespace TFL {
 
 FloatAttr ExtractSingleElementAsFloat(ElementsAttr attr) {
-  if (attr.getType().getNumElements() != 1 ||
-      !attr.getType().getElementType().isa<FloatType>()) {
-    return {};
-  }
-  SmallVector<uint64_t, 8> index(attr.getType().getRank(), 0);
-  return attr.getValue<FloatAttr>(index);
+    if (attr.getType().getNumElements() != 1 ||
+            !attr.getType().getElementType().isa<FloatType>()) {
+        return {};
+    }
+    SmallVector<uint64_t, 8> index(attr.getType().getRank(), 0);
+    return attr.getValue<FloatAttr>(index);
 }
 
 FloatAttr GetSingleElementAsFloatOrSelf(Attribute attr) {
-  if (auto m = attr.dyn_cast_or_null<ElementsAttr>()) {
-    return ExtractSingleElementAsFloat(m);
-  } else {
-    return attr.dyn_cast_or_null<FloatAttr>();
-  }
+    if (auto m = attr.dyn_cast_or_null<ElementsAttr>()) {
+        return ExtractSingleElementAsFloat(m);
+    } else {
+        return attr.dyn_cast_or_null<FloatAttr>();
+    }
 }
 
 IntegerAttr ExtractSingleElementAsInteger(ElementsAttr attr) {
-  if (attr.getType().getNumElements() != 1 ||
-      !attr.getType().getElementType().isSignlessInteger()) {
-    return {};
-  }
-  SmallVector<uint64_t, 8> index(attr.getType().getRank(), 0);
-  return attr.getValue<IntegerAttr>(index);
+    if (attr.getType().getNumElements() != 1 ||
+            !attr.getType().getElementType().isSignlessInteger()) {
+        return {};
+    }
+    SmallVector<uint64_t, 8> index(attr.getType().getRank(), 0);
+    return attr.getValue<IntegerAttr>(index);
 }
 
 }  // namespace TFL

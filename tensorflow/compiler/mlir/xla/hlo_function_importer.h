@@ -41,113 +41,113 @@ class Shape;
 
 // Helper class for importing HloComputations.
 class HloFunctionImporter {
- public:
-  static StatusOr<mlir::FuncOp> ImportFunction(
-      mlir::ModuleOp module, mlir::Builder* builder,
-      std::unordered_map<xla::HloComputation*, mlir::FuncOp>* function_map,
-      xla::HloComputation* computation);
+public:
+    static StatusOr<mlir::FuncOp> ImportFunction(
+        mlir::ModuleOp module, mlir::Builder* builder,
+        std::unordered_map<xla::HloComputation*, mlir::FuncOp>* function_map,
+        xla::HloComputation* computation);
 
- private:
-  HloFunctionImporter(
-      mlir::ModuleOp module, mlir::Builder* builder,
-      std::unordered_map<xla::HloComputation*, mlir::FuncOp>* function_map)
-      : context_(module.getContext()),
-        module_(module),
-        builder_(builder),
-        function_map_(function_map) {}
+private:
+    HloFunctionImporter(
+        mlir::ModuleOp module, mlir::Builder* builder,
+        std::unordered_map<xla::HloComputation*, mlir::FuncOp>* function_map)
+        : context_(module.getContext()),
+          module_(module),
+          builder_(builder),
+          function_map_(function_map) {}
 
-  StatusOr<mlir::FuncOp> ImportFunction(xla::HloComputation* computation);
+    StatusOr<mlir::FuncOp> ImportFunction(xla::HloComputation* computation);
 
-  // Imports the given computation in the specified region.
-  tensorflow::Status ImportComputation(HloComputation* computation,
-                                       mlir::Region* region);
+    // Imports the given computation in the specified region.
+    tensorflow::Status ImportComputation(HloComputation* computation,
+                                         mlir::Region* region);
 
-  // Imports instructions from the given computation in the specified block.
-  // Assumes that the block already has correct arguments populated.
-  tensorflow::Status ImportInstructions(HloComputation* computation,
-                                        mlir::Block* block);
+    // Imports instructions from the given computation in the specified block.
+    // Assumes that the block already has correct arguments populated.
+    tensorflow::Status ImportInstructions(HloComputation* computation,
+                                          mlir::Block* block);
 
-  // Imports an instruction.
-  StatusOr<mlir::Operation*> ImportInstruction(xla::HloInstruction* instruction,
-                                               mlir::OpBuilder* func_builder);
+    // Imports an instruction.
+    StatusOr<mlir::Operation*> ImportInstruction(xla::HloInstruction* instruction,
+            mlir::OpBuilder* func_builder);
 
-  // Gets the MLIR operand values from an HLO Instruction.
-  StatusOr<llvm::SmallVector<mlir::Value, 4>> GetOperands(
-      xla::HloInstruction* instruction);
+    // Gets the MLIR operand values from an HLO Instruction.
+    StatusOr<llvm::SmallVector<mlir::Value, 4>> GetOperands(
+                xla::HloInstruction* instruction);
 
-  // Converts xla Tensor type to the corresponding MLIR type.
-  StatusOr<mlir::RankedTensorType> ConvertTensorType(const xla::Shape& shape);
+    // Converts xla Tensor type to the corresponding MLIR type.
+    StatusOr<mlir::RankedTensorType> ConvertTensorType(const xla::Shape& shape);
 
-  // Returns the output type of an HloInstruction.
-  StatusOr<mlir::Type> GetReturnType(xla::HloInstruction* instruction);
+    // Returns the output type of an HloInstruction.
+    StatusOr<mlir::Type> GetReturnType(xla::HloInstruction* instruction);
 
-  // Takes a list of HloInstructions and generates the list of types used for
-  // input, bypassing tuples to subsets.
-  Status GetMlirTypes(const std::vector<xla::HloInstruction*>& instructions,
-                      llvm::SmallVectorImpl<mlir::Type>* types);
+    // Takes a list of HloInstructions and generates the list of types used for
+    // input, bypassing tuples to subsets.
+    Status GetMlirTypes(const std::vector<xla::HloInstruction*>& instructions,
+                        llvm::SmallVectorImpl<mlir::Type>* types);
 
-  // Returns the Mlir Value for the corresponding HloInstruction.
-  StatusOr<mlir::Value> GetMlirValue(xla::HloInstruction* instruction);
+    // Returns the Mlir Value for the corresponding HloInstruction.
+    StatusOr<mlir::Value> GetMlirValue(xla::HloInstruction* instruction);
 
-  // Converts an XLA PrecisionConfig to the corresponding MLIR attribute.
-  mlir::NamedAttribute ConvertPrecisionConfig(xla::HloInstruction* instruction);
+    // Converts an XLA PrecisionConfig to the corresponding MLIR attribute.
+    mlir::NamedAttribute ConvertPrecisionConfig(xla::HloInstruction* instruction);
 
-  // Converts an XLA ComparisonDirection to the corresponding MLIR attribute.
-  mlir::NamedAttribute ConvertComparisonDirection(
-      xla::HloInstruction* instruction);
+    // Converts an XLA ComparisonDirection to the corresponding MLIR attribute.
+    mlir::NamedAttribute ConvertComparisonDirection(
+        xla::HloInstruction* instruction);
 
-  // Converts the dimensions of an HLO instruction into an MLIR attribute.
-  mlir::DenseIntElementsAttr ConvertDimensions(
-      llvm::ArrayRef<tensorflow::int64> op_dimensions);
+    // Converts the dimensions of an HLO instruction into an MLIR attribute.
+    mlir::DenseIntElementsAttr ConvertDimensions(
+        llvm::ArrayRef<tensorflow::int64> op_dimensions);
 
-  // Converts Array ref to an DenseIntElementsAttr.
-  mlir::DenseIntElementsAttr Convert(llvm::ArrayRef<int64_t> op_dimensions);
+    // Converts Array ref to an DenseIntElementsAttr.
+    mlir::DenseIntElementsAttr Convert(llvm::ArrayRef<int64_t> op_dimensions);
 
-  // Converts Array ref to padding attribute. Input is a flattened list of
-  // padding low and padding high for each of the spatial dimensions.
-  mlir::NamedAttribute ConvertPadding(llvm::ArrayRef<int64_t> padding);
+    // Converts Array ref to padding attribute. Input is a flattened list of
+    // padding low and padding high for each of the spatial dimensions.
+    mlir::NamedAttribute ConvertPadding(llvm::ArrayRef<int64_t> padding);
 
-  // Converts the dot dimensions to attribute.
-  mlir::NamedAttribute ConvertDotDimensionNumbers(
-      const DotDimensionNumbers& dnums);
+    // Converts the dot dimensions to attribute.
+    mlir::NamedAttribute ConvertDotDimensionNumbers(
+        const DotDimensionNumbers& dnums);
 
-  // Converts the conv dimensions to attributes.
-  mlir::NamedAttribute ConvertConvDimensionNumbers(
-      const xla::ConvolutionDimensionNumbers& dnums);
+    // Converts the conv dimensions to attributes.
+    mlir::NamedAttribute ConvertConvDimensionNumbers(
+        const xla::ConvolutionDimensionNumbers& dnums);
 
-  // Converts the gather dimensions to attributes.
-  mlir::NamedAttribute ConvertGatherDimensionNumbers(
-      const xla::GatherDimensionNumbers& dnums);
+    // Converts the gather dimensions to attributes.
+    mlir::NamedAttribute ConvertGatherDimensionNumbers(
+        const xla::GatherDimensionNumbers& dnums);
 
-  // Converts the scatter dimensions to attributes.
-  mlir::NamedAttribute ConvertScatterDimensionNumbers(
-      const xla::ScatterDimensionNumbers& dnums);
+    // Converts the scatter dimensions to attributes.
+    mlir::NamedAttribute ConvertScatterDimensionNumbers(
+        const xla::ScatterDimensionNumbers& dnums);
 
-  // Converts replica groups to attribute
-  mlir::NamedAttribute ConvertReplicaGroups(
-      const std::vector<ReplicaGroup>& replica_groups);
+    // Converts replica groups to attribute
+    mlir::NamedAttribute ConvertReplicaGroups(
+        const std::vector<ReplicaGroup>& replica_groups);
 
-  // Converts channel id to attribute
-  mlir::NamedAttribute ConvertChannelHandle(
-      absl::optional<tensorflow::int64> channel_id);
+    // Converts channel id to attribute
+    mlir::NamedAttribute ConvertChannelHandle(
+        absl::optional<tensorflow::int64> channel_id);
 
-  // Converts channel handle to attribute
-  mlir::NamedAttribute ConvertChannelHandle(const xla::ChannelHandle& channel);
+    // Converts channel handle to attribute
+    mlir::NamedAttribute ConvertChannelHandle(const xla::ChannelHandle& channel);
 
-  // Converts XLA instruction source target pairs to MLIR attribute.
-  mlir::NamedAttribute ConvertSourceTargetPairs(
-      const std::vector<std::pair<tensorflow::int64, tensorflow::int64>>&
-          source_target_pairs);
+    // Converts XLA instruction source target pairs to MLIR attribute.
+    mlir::NamedAttribute ConvertSourceTargetPairs(
+        const std::vector<std::pair<tensorflow::int64, tensorflow::int64>>&
+        source_target_pairs);
 
-  mlir::MLIRContext* context_;
-  mlir::ModuleOp module_;
-  mlir::Builder* builder_;
+    mlir::MLIRContext* context_;
+    mlir::ModuleOp module_;
+    mlir::Builder* builder_;
 
-  // Mapping from HloComputation to the created MLIR function.
-  std::unordered_map<xla::HloComputation*, mlir::FuncOp>* function_map_;
+    // Mapping from HloComputation to the created MLIR function.
+    std::unordered_map<xla::HloComputation*, mlir::FuncOp>* function_map_;
 
-  // Mapping from HloInstructions to the associative MLIR values.
-  std::unordered_map<xla::HloInstruction*, mlir::Value> instruction_value_map_;
+    // Mapping from HloInstructions to the associative MLIR values.
+    std::unordered_map<xla::HloInstruction*, mlir::Value> instruction_value_map_;
 };
 
 }  // namespace xla

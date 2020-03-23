@@ -43,76 +43,78 @@ namespace xla {
 // TODO(hinsu): Support more ops and utility functions to set special attributes
 // like OpMetadata and Sharding.
 class MlirHloBuilder : public XlaBuilder {
- public:
-  // Constructs builder for the given function. New operations are added to the
-  // beginning of the function, if it is non empty and has a block.
-  explicit MlirHloBuilder(mlir::FuncOp func)
-      : XlaBuilder(func.getName().str()),
-        builder_(&func.getBody()),
-        loc_(builder_.getUnknownLoc()) {}
+public:
+    // Constructs builder for the given function. New operations are added to the
+    // beginning of the function, if it is non empty and has a block.
+    explicit MlirHloBuilder(mlir::FuncOp func)
+        : XlaBuilder(func.getName().str()),
+          builder_(&func.getBody()),
+          loc_(builder_.getUnknownLoc()) {}
 
-  // TODO(hinsu): Add a constructor to build a new MLIR function from scratch
-  // and override Build methods.
+    // TODO(hinsu): Add a constructor to build a new MLIR function from scratch
+    // and override Build methods.
 
-  MlirHloBuilder(const MlirHloBuilder&) = delete;
-  MlirHloBuilder& operator=(const MlirHloBuilder&) = delete;
+    MlirHloBuilder(const MlirHloBuilder&) = delete;
+    MlirHloBuilder& operator=(const MlirHloBuilder&) = delete;
 
-  ~MlirHloBuilder() override;
+    ~MlirHloBuilder() override;
 
-  // Wraps the given MLIR value under an XlaOp instance. Note that all HLO
-  // operations returns exactly one result therefore each op has an XlaOp
-  // wrapping result of the op.
-  //
-  // Returns an error if the HLO dialect doesn't support type of the given
-  // value.
-  StatusOr<XlaOp> MakeXlaOp(mlir::Value val);
+    // Wraps the given MLIR value under an XlaOp instance. Note that all HLO
+    // operations returns exactly one result therefore each op has an XlaOp
+    // wrapping result of the op.
+    //
+    // Returns an error if the HLO dialect doesn't support type of the given
+    // value.
+    StatusOr<XlaOp> MakeXlaOp(mlir::Value val);
 
-  // Returns value corresponding to the given op.
-  //
-  // Requires that the op was created by this builder.
-  mlir::Value GetValue(XlaOp op) {
-    void* ptr = reinterpret_cast<void*>(op.handle());
-    return mlir::Value::getFromOpaquePointer(ptr);
-  }
+    // Returns value corresponding to the given op.
+    //
+    // Requires that the op was created by this builder.
+    mlir::Value GetValue(XlaOp op) {
+        void* ptr = reinterpret_cast<void*>(op.handle());
+        return mlir::Value::getFromOpaquePointer(ptr);
+    }
 
-  // Sets location for newly built ops, until reset.
-  void SetLocation(mlir::Location loc) { loc_ = loc; }
+    // Sets location for newly built ops, until reset.
+    void SetLocation(mlir::Location loc) {
+        loc_ = loc;
+    }
 
-  // Update insertion point so that newly built ops are inserted before the
-  // given op in order, until reset.
-  void setInsertionPoint(mlir::Operation* op) {
-    builder_.setInsertionPoint(op);
-  }
+    // Update insertion point so that newly built ops are inserted before the
+    // given op in order, until reset.
+    void setInsertionPoint(mlir::Operation* op) {
+        builder_.setInsertionPoint(op);
+    }
 
-  // Returns the shape of the given op.
-  StatusOr<const Shape*> GetShapePtr(XlaOp op) const override;
+    // Returns the shape of the given op.
+    StatusOr<const Shape*> GetShapePtr(XlaOp op) const override;
 
- private:
-  XlaOp ConstantLiteral(const LiteralSlice& literal) override;
+private:
+    XlaOp ConstantLiteral(const LiteralSlice& literal) override;
 
-  StatusOr<XlaOp> ReshapeInternal(const Shape& shape, XlaOp operand,
-                                  int64 inferred_dimension) override;
+    StatusOr<XlaOp> ReshapeInternal(const Shape& shape, XlaOp operand,
+                                    int64 inferred_dimension) override;
 
-  StatusOr<XlaOp> InDimBroadcast(
-      const Shape& shape, XlaOp operand,
-      absl::Span<const int64> broadcast_dimensions) override;
+    StatusOr<XlaOp> InDimBroadcast(
+        const Shape& shape, XlaOp operand,
+        absl::Span<const int64> broadcast_dimensions) override;
 
-  XlaOp BinaryOpNoBroadcast(
-      HloOpcode binop, const Shape& shape, XlaOp lhs, XlaOp rhs,
-      absl::optional<ComparisonDirection> direction) override;
+    XlaOp BinaryOpNoBroadcast(
+        HloOpcode binop, const Shape& shape, XlaOp lhs, XlaOp rhs,
+        absl::optional<ComparisonDirection> direction) override;
 
-  StatusOr<XlaOp> AddOpWithShape(HloOpcode opcode, const Shape& shape,
-                                 absl::Span<const XlaOp> operands) override;
+    StatusOr<XlaOp> AddOpWithShape(HloOpcode opcode, const Shape& shape,
+                                   absl::Span<const XlaOp> operands) override;
 
-  // Creates HLO dialect op and returns the result as an XlaOp.
-  StatusOr<XlaOp> CreateOp(const std::string& op_name, const Shape& shape,
-                           llvm::ArrayRef<XlaOp> operands,
-                           llvm::ArrayRef<mlir::NamedAttribute> attributes);
+    // Creates HLO dialect op and returns the result as an XlaOp.
+    StatusOr<XlaOp> CreateOp(const std::string& op_name, const Shape& shape,
+                             llvm::ArrayRef<XlaOp> operands,
+                             llvm::ArrayRef<mlir::NamedAttribute> attributes);
 
-  mlir::OpBuilder builder_;
-  mlir::Location loc_;
+    mlir::OpBuilder builder_;
+    mlir::Location loc_;
 
-  absl::flat_hash_map<int64, std::unique_ptr<Shape>> handle_to_shape_;
+    absl::flat_hash_map<int64, std::unique_ptr<Shape>> handle_to_shape_;
 };
 
 }  // namespace xla

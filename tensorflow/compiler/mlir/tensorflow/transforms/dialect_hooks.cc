@@ -37,24 +37,26 @@ namespace {
 // to LLVM style used by MLIR.
 bool DecodeOpaqueTensorHook(const OpaqueElementsAttr input,
                             ElementsAttr& output) {  // NOLINT
-  Builder builder(input.getType().getContext());
-  auto decoded_attr_or = tensorflow::DecodeOpaqueTensor(input, builder);
-  if (!decoded_attr_or.ok()) {
-    VLOG(2) << decoded_attr_or.status().error_message();
-    return true;
-  }
+    Builder builder(input.getType().getContext());
+    auto decoded_attr_or = tensorflow::DecodeOpaqueTensor(input, builder);
+    if (!decoded_attr_or.ok()) {
+        VLOG(2) << decoded_attr_or.status().error_message();
+        return true;
+    }
 
-  output = decoded_attr_or.ValueOrDie();
-  return false;
+    output = decoded_attr_or.ValueOrDie();
+    return false;
 }
 
 // Hooks for the TensorFlow dialect.
 class TensorFlowHooks : public DialectHooks {
- public:
-  DialectConstantFoldHook getConstantFoldHook() {
-    return TF::ConstantFoldFallbackHook;
-  }
-  DialectConstantDecodeHook getDecodeHook() { return DecodeOpaqueTensorHook; }
+public:
+    DialectConstantFoldHook getConstantFoldHook() {
+        return TF::ConstantFoldFallbackHook;
+    }
+    DialectConstantDecodeHook getDecodeHook() {
+        return DecodeOpaqueTensorHook;
+    }
 };
 
 }  // anonymous namespace

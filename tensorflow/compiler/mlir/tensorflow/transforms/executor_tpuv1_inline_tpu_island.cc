@@ -44,48 +44,48 @@ constexpr llvm::StringRef kNestedModule = "_tpu_v1_compat_outlined";
 // This is the end of the TPU bridge in V1 compatibility mode.
 struct TPUBridgeExecutorIslandInlining
     : public ModulePass<TPUBridgeExecutorIslandInlining> {
-  void runOnModule() override;
+    void runOnModule() override;
 };
 
 void TPUBridgeExecutorIslandInlining::runOnModule() {
-  SymbolTable symbol_table(getModule());
-  Operation *nested_module = symbol_table.lookup(kNestedModule);
-  if (!nested_module) return;
+    SymbolTable symbol_table(getModule());
+    Operation *nested_module = symbol_table.lookup(kNestedModule);
+    if (!nested_module) return;
 
-  InlinerInterface inliner(&getContext());
-  auto walk_result = getModule().walk([&](TF::PartitionedCallOp call_op) {
-    if (!call_op.f().getRootReference().startswith(kNestedModule))
-      return WalkResult::advance();
-    // This is a call we need to inline!
-    LLVM_DEBUG(llvm::dbgs()
-               << "Found call to inline: " << *call_op.getOperation() << "\n");
+    InlinerInterface inliner(&getContext());
+    auto walk_result = getModule().walk([&](TF::PartitionedCallOp call_op) {
+        if (!call_op.f().getRootReference().startswith(kNestedModule))
+            return WalkResult::advance();
+        // This is a call we need to inline!
+        LLVM_DEBUG(llvm::dbgs()
+                   << "Found call to inline: " << *call_op.getOperation() << "\n");
 
-    FuncOp called_func = dyn_cast_or_null<FuncOp>(
-        symbol_table.lookupSymbolIn(getModule(), call_op.f()));
+        FuncOp called_func = dyn_cast_or_null<FuncOp>(
+                                 symbol_table.lookupSymbolIn(getModule(), call_op.f()));
 
-    if (failed(inlineCall(inliner,
-                          cast<CallOpInterface>(call_op.getOperation()),
-                          cast<CallableOpInterface>(called_func.getOperation()),
-                          called_func.getCallableRegion(),
-                          /* shouldCloneInlinedRegion = */ false))) {
-      call_op.emitOpError() << "Failed to inline\n";
-      return WalkResult::interrupt();
+        if (failed(inlineCall(inliner,
+                              cast<CallOpInterface>(call_op.getOperation()),
+                              cast<CallableOpInterface>(called_func.getOperation()),
+                              called_func.getCallableRegion(),
+                              /* shouldCloneInlinedRegion = */ false))) {
+            call_op.emitOpError() << "Failed to inline\n";
+            return WalkResult::interrupt();
+        }
+        called_func.erase();
+        call_op.erase();
+        return WalkResult::advance();
+    });
+    if (walk_result.wasInterrupted()) return signalPassFailure();
+    // Move all remaining nested functions back into the parent module.
+    Block &nested_block = nested_module->getRegion(0).front();
+    for (FuncOp func_op :
+            llvm::make_early_inc_range(nested_block.getOps<FuncOp>())) {
+        if (!symbol_table.lookupSymbolIn(getModule(), func_op.getName())) {
+            nested_block.getOperations().remove(func_op.getOperation());
+            symbol_table.insert(func_op.getOperation());
+        }
     }
-    called_func.erase();
-    call_op.erase();
-    return WalkResult::advance();
-  });
-  if (walk_result.wasInterrupted()) return signalPassFailure();
-  // Move all remaining nested functions back into the parent module.
-  Block &nested_block = nested_module->getRegion(0).front();
-  for (FuncOp func_op :
-       llvm::make_early_inc_range(nested_block.getOps<FuncOp>())) {
-    if (!symbol_table.lookupSymbolIn(getModule(), func_op.getName())) {
-      nested_block.getOperations().remove(func_op.getOperation());
-      symbol_table.insert(func_op.getOperation());
-    }
-  }
-  nested_module->erase();
+    nested_module->erase();
 }
 
 PassRegistration<TPUBridgeExecutorIslandInlining> tpu_pass(
@@ -97,7 +97,7 @@ PassRegistration<TPUBridgeExecutorIslandInlining> tpu_pass(
 
 std::unique_ptr<OpPassBase<ModuleOp>>
 CreateTFExecutorTPUV1IslandInliningPass() {
-  return std::make_unique<TPUBridgeExecutorIslandInlining>();
+    return std::make_unique<TPUBridgeExecutorIslandInlining>();
 }
 
 }  // namespace tf_executor

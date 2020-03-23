@@ -42,8 +42,8 @@ namespace TF {
 // tensorflow::BridgeLogger. When enable_inliner is true, enables the inliner
 // pass.
 tensorflow::Status RunBridgeWithStandardPipeline(ModuleOp module,
-                                                 bool enable_logging,
-                                                 bool enable_inliner);
+        bool enable_logging,
+        bool enable_inliner);
 
 }  // namespace TF
 

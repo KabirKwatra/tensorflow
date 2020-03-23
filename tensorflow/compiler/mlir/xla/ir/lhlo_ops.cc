@@ -49,10 +49,10 @@ namespace xla_lhlo {
 
 XlaLhloDialect::XlaLhloDialect(MLIRContext *context)
     : Dialect(getDialectNamespace(), context) {
-  addOperations<
+    addOperations<
 #define GET_OP_LIST
 #include "tensorflow/compiler/mlir/xla/ir/lhlo_ops.cc.inc"
-      >();
+    >();
 }
 
 #define GET_OP_CLASSES
@@ -62,9 +62,9 @@ XlaLhloDialect::XlaLhloDialect(MLIRContext *context)
 
 void FusionOp::build(Builder *builder, OperationState &result,
                      ArrayRef<NamedAttribute> attributes) {
-  result.addAttributes(attributes);
-  Region *bodyRegion = result.addRegion();
-  FusionOp::ensureTerminator(*bodyRegion, *builder, result.location);
+    result.addAttributes(attributes);
+    Region *bodyRegion = result.addRegion();
+    FusionOp::ensureTerminator(*bodyRegion, *builder, result.location);
 }
 
 }  // namespace xla_lhlo

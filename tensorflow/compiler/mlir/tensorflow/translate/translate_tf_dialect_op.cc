@@ -23,44 +23,44 @@ limitations under the License.
 
 namespace mlir {
 static mlir::Operation* ExtractOnlyOp(mlir::ModuleOp module) {
-  mlir::FuncOp fn = module.lookupSymbol<mlir::FuncOp>("main");
-  if (!fn) return nullptr;
+    mlir::FuncOp fn = module.lookupSymbol<mlir::FuncOp>("main");
+    if (!fn) return nullptr;
 
-  if (fn.getBlocks().size() != 1) return nullptr;
+    if (fn.getBlocks().size() != 1) return nullptr;
 
-  // Here, modules with exactly two operations in the only basic block are
-  // supported. The last operation should be a terminator operation and the
-  // other operation is the operation of interest.
-  auto& block = fn.getBlocks().front();
-  if (block.getOperations().size() != 2) return nullptr;
-  if (!block.back().isKnownTerminator()) return nullptr;
+    // Here, modules with exactly two operations in the only basic block are
+    // supported. The last operation should be a terminator operation and the
+    // other operation is the operation of interest.
+    auto& block = fn.getBlocks().front();
+    if (block.getOperations().size() != 2) return nullptr;
+    if (!block.back().isKnownTerminator()) return nullptr;
 
-  return &block.front();
+    return &block.front();
 }
 
 static LogicalResult MlirToTfNodeDef(ModuleOp module,
                                      llvm::raw_ostream& output) {
-  auto* context = module.getContext();
+    auto* context = module.getContext();
 
-  Operation* op = ExtractOnlyOp(module);
-  if (!op) {
-    emitError(UnknownLoc::get(context),
-              "modules with exactly one op other than terminator in a "
-              "'main' function's "
-              "only block are supported");
-    return failure();
-  }
+    Operation* op = ExtractOnlyOp(module);
+    if (!op) {
+        emitError(UnknownLoc::get(context),
+                  "modules with exactly one op other than terminator in a "
+                  "'main' function's "
+                  "only block are supported");
+        return failure();
+    }
 
-  auto node_def_or = tensorflow::ConvertTFDialectOpToNodeDef(
-      op, "node_name", /*ignore_unregistered_attrs=*/false);
-  if (!node_def_or.ok()) {
-    op->emitError("failed to convert to TF NodeDef:")
-        << node_def_or.status().ToString();
-    return failure();
-  }
+    auto node_def_or = tensorflow::ConvertTFDialectOpToNodeDef(
+                           op, "node_name", /*ignore_unregistered_attrs=*/false);
+    if (!node_def_or.ok()) {
+        op->emitError("failed to convert to TF NodeDef:")
+                << node_def_or.status().ToString();
+        return failure();
+    }
 
-  output << node_def_or.ValueOrDie()->DebugString();
-  return success();
+    output << node_def_or.ValueOrDie()->DebugString();
+    return success();
 }
 
 // Test only translation to convert a simple MLIR module with a single TF

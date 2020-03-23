@@ -30,80 +30,80 @@ using xla::StatusOr;
 namespace errors = tensorflow::errors;
 
 mlir::Type ConvertElementType(tflite::TensorType type, mlir::Builder builder) {
-  switch (type) {
+    switch (type) {
     case tflite::TensorType_FLOAT32:
-      return builder.getF32Type();
+        return builder.getF32Type();
     case tflite::TensorType_FLOAT16:
-      return builder.getF16Type();
+        return builder.getF16Type();
     case tflite::TensorType_INT32:
-      return builder.getIntegerType(32);
+        return builder.getIntegerType(32);
     case tflite::TensorType_UINT8:
-      return builder.getIntegerType(8, /*isSigned=*/false);
+        return builder.getIntegerType(8, /*isSigned=*/false);
     case tflite::TensorType_INT64:
-      return builder.getIntegerType(64);
+        return builder.getIntegerType(64);
     case tflite::TensorType_STRING:
-      return mlir::TF::StringType::get(builder.getContext());
+        return mlir::TF::StringType::get(builder.getContext());
     case tflite::TensorType_BOOL:
-      return builder.getI1Type();
+        return builder.getI1Type();
     case tflite::TensorType_INT16:
-      return builder.getIntegerType(16);
+        return builder.getIntegerType(16);
     case tflite::TensorType_COMPLEX64:
-      return mlir::ComplexType::get(builder.getF32Type());
+        return mlir::ComplexType::get(builder.getF32Type());
     case tflite::TensorType_INT8:
-      return builder.getIntegerType(8);
-  }
+        return builder.getIntegerType(8);
+    }
 }
 
 tensorflow::DataType TflTypeToTfType(tflite::TensorType type) {
-  switch (type) {
+    switch (type) {
     case tflite::TensorType_BOOL:
-      return tensorflow::DT_BOOL;
+        return tensorflow::DT_BOOL;
     case tflite::TensorType_COMPLEX64:
-      return tensorflow::DT_COMPLEX64;
+        return tensorflow::DT_COMPLEX64;
     case tflite::TensorType_FLOAT16:
-      return tensorflow::DT_HALF;
+        return tensorflow::DT_HALF;
     case tflite::TensorType_FLOAT32:
-      return tensorflow::DT_FLOAT;
+        return tensorflow::DT_FLOAT;
     case tflite::TensorType_INT8:
-      return tensorflow::DT_INT8;
+        return tensorflow::DT_INT8;
     case tflite::TensorType_INT16:
-      return tensorflow::DT_INT16;
+        return tensorflow::DT_INT16;
     case tflite::TensorType_INT32:
-      return tensorflow::DT_INT32;
+        return tensorflow::DT_INT32;
     case tflite::TensorType_INT64:
-      return tensorflow::DT_INT64;
+        return tensorflow::DT_INT64;
     case tflite::TensorType_STRING:
-      return tensorflow::DT_STRING;
+        return tensorflow::DT_STRING;
     case tflite::TensorType_UINT8:
-      return tensorflow::DT_UINT8;
-  }
+        return tensorflow::DT_UINT8;
+    }
 }
 
 StatusOr<tflite::TensorType> TfTypeToTflType(tensorflow::DataType type) {
-  switch (type) {
+    switch (type) {
     case tensorflow::DT_BOOL:
-      return tflite::TensorType_BOOL;
+        return tflite::TensorType_BOOL;
     case tensorflow::DT_COMPLEX64:
-      return tflite::TensorType_COMPLEX64;
+        return tflite::TensorType_COMPLEX64;
     case tensorflow::DT_HALF:
-      return tflite::TensorType_FLOAT16;
+        return tflite::TensorType_FLOAT16;
     case tensorflow::DT_FLOAT:
-      return tflite::TensorType_FLOAT32;
+        return tflite::TensorType_FLOAT32;
     case tensorflow::DT_INT8:
-      return tflite::TensorType_INT8;
+        return tflite::TensorType_INT8;
     case tensorflow::DT_INT16:
-      return tflite::TensorType_INT16;
+        return tflite::TensorType_INT16;
     case tensorflow::DT_INT32:
-      return tflite::TensorType_INT32;
+        return tflite::TensorType_INT32;
     case tensorflow::DT_INT64:
-      return tflite::TensorType_INT64;
+        return tflite::TensorType_INT64;
     case tensorflow::DT_STRING:
-      return tflite::TensorType_STRING;
+        return tflite::TensorType_STRING;
     case tensorflow::DT_UINT8:
-      return tflite::TensorType_UINT8;
+        return tflite::TensorType_UINT8;
     default:
-      return errors::InvalidArgument("unsupported tensor data type", type);
-  }
+        return errors::InvalidArgument("unsupported tensor data type", type);
+    }
 }
 
 }  // namespace tflite

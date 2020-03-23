@@ -31,8 +31,8 @@ namespace TFL {
 // Returns true if the given TensorFlow op does not have a `data_format`
 // attribute (then default to "NHWC"), or its `data_format` attribute is "NHWC".
 inline bool TFDataFormatIsNHWC(Operation *op) {
-  auto attr = op->getAttrOfType<StringAttr>("data_format");
-  return !attr || attr.getValue() == "NHWC";
+    auto attr = op->getAttrOfType<StringAttr>("data_format");
+    return !attr || attr.getValue() == "NHWC";
 }
 
 // Returns true if the given `op`
@@ -52,19 +52,19 @@ bool TFIntListIsAllOnes(const ArrayAttr &attr);
 // Returns true iff the given value is a float tensor.
 // is "DT_FLOAT".
 inline bool TFTypeIsFloatTensor(Value value) {
-  auto tensorType = value.getType().dyn_cast<TensorType>();
-  if (!tensorType) return false;
-  return tensorType.getElementType().isa<FloatType>();
+    auto tensorType = value.getType().dyn_cast<TensorType>();
+    if (!tensorType) return false;
+    return tensorType.getElementType().isa<FloatType>();
 }
 
 // Returns true iff the given TensorFlow op has a `padding` attribute whose
 // value is "SAME" or "VALID", and writes the attribute to `padding`.
 inline bool TFPaddingIsSameOrValid(Operation *op, StringAttr *padding) {
-  auto padding_attr = op->getAttrOfType<StringAttr>("padding");
-  if (padding_attr.getValue() != "SAME" && padding_attr.getValue() != "VALID")
-    return false;
-  *padding = padding_attr;
-  return true;
+    auto padding_attr = op->getAttrOfType<StringAttr>("padding");
+    if (padding_attr.getValue() != "SAME" && padding_attr.getValue() != "VALID")
+        return false;
+    *padding = padding_attr;
+    return true;
 }
 
 /// Returns whether the given `a` and `b` have broadcast-compatible

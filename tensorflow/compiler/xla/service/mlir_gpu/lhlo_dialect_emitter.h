@@ -38,68 +38,68 @@ namespace mlir_gpu {
 // Implements the DfsHloVisitor interface, emits LHLO computations as MLIR IR
 // functions and transforms them into gpu::Thunk.
 class LhloDialectEmitter : public DfsHloVisitorWithDefault,
-                           private gpu::ThunkEmitter::EmissionContext {
- public:
-  LhloDialectEmitter(xla::mlir_gpu::EmissionContext* emission_context,
-                     const BufferAssignment& assignment,
-                     const se::Platform* platform,
-                     ::mlir::ModuleOp mlir_module);
-  ~LhloDialectEmitter() override = default;
+    private gpu::ThunkEmitter::EmissionContext {
+public:
+    LhloDialectEmitter(xla::mlir_gpu::EmissionContext* emission_context,
+                       const BufferAssignment& assignment,
+                       const se::Platform* platform,
+                       ::mlir::ModuleOp mlir_module);
+    ~LhloDialectEmitter() override = default;
 
-  Status EmitComputation(const HloComputation& computation);
+    Status EmitComputation(const HloComputation& computation);
 
-  // The following methods implement the DfsHloVisitor interface.
-  //
-  // Default action which emits code for most operations. Operations which are
-  // special in some way are handled explicitly in HandleFoo methods.
-  Status DefaultAction(HloInstruction* instr) override;
-  Status HandleBroadcast(HloInstruction* broadcast) override;
-  Status HandleCompare(HloInstruction* compare) override;
-  Status HandleConstant(HloInstruction* constant) override;
-  Status HandleCustomCall(HloInstruction* custom_call) override;
-  Status HandleFusion(HloInstruction* fusion) override;
-  Status HandleIota(HloInstruction* iota) override;
-  Status HandleParameter(HloInstruction* parameter) override;
-  Status HandleReduce(HloInstruction* reduce) override;
-  Status HandleReduceWindow(HloInstruction* reduce_window) override;
-  Status HandleSelectAndScatter(HloInstruction* hlo) override;
-  Status HandleTuple(HloInstruction* tuple) override;
+    // The following methods implement the DfsHloVisitor interface.
+    //
+    // Default action which emits code for most operations. Operations which are
+    // special in some way are handled explicitly in HandleFoo methods.
+    Status DefaultAction(HloInstruction* instr) override;
+    Status HandleBroadcast(HloInstruction* broadcast) override;
+    Status HandleCompare(HloInstruction* compare) override;
+    Status HandleConstant(HloInstruction* constant) override;
+    Status HandleCustomCall(HloInstruction* custom_call) override;
+    Status HandleFusion(HloInstruction* fusion) override;
+    Status HandleIota(HloInstruction* iota) override;
+    Status HandleParameter(HloInstruction* parameter) override;
+    Status HandleReduce(HloInstruction* reduce) override;
+    Status HandleReduceWindow(HloInstruction* reduce_window) override;
+    Status HandleSelectAndScatter(HloInstruction* hlo) override;
+    Status HandleTuple(HloInstruction* tuple) override;
 
-  Status FinishVisit(HloInstruction* root) override;
+    Status FinishVisit(HloInstruction* root) override;
 
-  // Transfers the ownship of thunk_sequence_ out.
-  std::unique_ptr<gpu::ThunkSequence> ConsumeThunkSequence() {
-    return std::move(thunk_sequence_);
-  }
+    // Transfers the ownship of thunk_sequence_ out.
+    std::unique_ptr<gpu::ThunkSequence> ConsumeThunkSequence() {
+        return std::move(thunk_sequence_);
+    }
 
-  const absl::flat_hash_map<const xla::HloInstruction*, ::mlir::FuncOp>&
-  InstructionToFunctionMap() const {
-    return instruction_to_mlir_func_;
-  }
+    const absl::flat_hash_map<const xla::HloInstruction*, ::mlir::FuncOp>&
+    InstructionToFunctionMap() const {
+        return instruction_to_mlir_func_;
+    }
 
- private:
-  StatusOr<::mlir::FuncOp> CreateFunction(const HloInstruction& instr);
-  // Interface required by ThunkEmitter
-  void AddThunkToThunkSequence(std::unique_ptr<gpu::Thunk> thunk) override;
-  StatusOr<BufferAllocation::Slice> MaybeGetAllocationSlice(
-      const HloInstruction& hlo, const ShapeIndex& index) const override;
-  int64 ByteSizeOf(const Shape& shape) const override;
-  const se::Platform* platform() const override;
-  mlir::Location getLocation(const HloInstruction* instr) const;
+private:
+    StatusOr<::mlir::FuncOp> CreateFunction(const HloInstruction& instr);
+    // Interface required by ThunkEmitter
+    void AddThunkToThunkSequence(std::unique_ptr<gpu::Thunk> thunk) override;
+    StatusOr<BufferAllocation::Slice> MaybeGetAllocationSlice(
+        const HloInstruction& hlo, const ShapeIndex& index) const override;
+    int64 ByteSizeOf(const Shape& shape) const override;
+    const se::Platform* platform() const override;
+    mlir::Location getLocation(const HloInstruction* instr) const;
 
-  xla::mlir_gpu::EmissionContext* emission_context_;
-  ::mlir::ModuleOp mlir_module_;
-  ::mlir::Builder builder_;
-  absl::flat_hash_map<const xla::HloInstruction*, ::mlir::FuncOp>
-      instruction_to_mlir_func_;
-  const BufferAssignment& buffer_assignment_;
-  const se::Platform* platform_;
-  // Cached pointer size extracted from the mlir module.
-  unsigned pointer_size_;
-  // The thunk sequence this IrEmitter generates for the input computation.
-  std::unique_ptr<gpu::ThunkSequence> thunk_sequence_;
+    xla::mlir_gpu::EmissionContext* emission_context_;
+    ::mlir::ModuleOp mlir_module_;
+    ::mlir::Builder builder_;
+    absl::flat_hash_map<const xla::HloInstruction*, ::mlir::FuncOp>
+    instruction_to_mlir_func_;
+    const BufferAssignment& buffer_assignment_;
+    const se::Platform* platform_;
+    // Cached pointer size extracted from the mlir module.
+    unsigned pointer_size_;
+    // The thunk sequence this IrEmitter generates for the input computation.
+    std::unique_ptr<gpu::ThunkSequence> thunk_sequence_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(LhloDialectEmitter);
+    TF_DISALLOW_COPY_AND_ASSIGN(LhloDialectEmitter);
 };
 
 }  // namespace mlir_gpu

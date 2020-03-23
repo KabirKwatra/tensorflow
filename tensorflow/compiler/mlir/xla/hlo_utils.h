@@ -37,18 +37,18 @@ mlir::DenseIntElementsAttr CreateDenseIntElementsAttrFromVector(
     llvm::ArrayRef<int64_t> shape = {});
 
 StatusOr<mlir::Type> ConvertPrimitiveTypeToMLIRType(PrimitiveType element_type,
-                                                    mlir::Builder builder);
+        mlir::Builder builder);
 
 template <typename TypeT>
 static StatusOr<TypeT> ConvertTensorShapeToType(const Shape& shape,
-                                                mlir::Builder builder) {
-  auto element_type_or =
-      ConvertPrimitiveTypeToMLIRType(shape.element_type(), builder);
-  if (!element_type_or.ok()) return element_type_or.status();
+        mlir::Builder builder) {
+    auto element_type_or =
+        ConvertPrimitiveTypeToMLIRType(shape.element_type(), builder);
+    if (!element_type_or.ok()) return element_type_or.status();
 
-  auto dimensions = shape.dimensions();
-  llvm::SmallVector<int64_t, 4> array(dimensions.begin(), dimensions.end());
-  return TypeT::get(array, element_type_or.ValueOrDie());
+    auto dimensions = shape.dimensions();
+    llvm::SmallVector<int64_t, 4> array(dimensions.begin(), dimensions.end());
+    return TypeT::get(array, element_type_or.ValueOrDie());
 }
 
 StatusOr<mlir::MemRefType> ConvertTensorShapeToMemRefType(
@@ -57,26 +57,26 @@ StatusOr<mlir::MemRefType> ConvertTensorShapeToMemRefType(
 template <>
 inline StatusOr<mlir::MemRefType> ConvertTensorShapeToType(
     const Shape& shape, mlir::Builder builder) {
-  return ConvertTensorShapeToMemRefType(shape, builder);
+    return ConvertTensorShapeToMemRefType(shape, builder);
 }
 
 template <typename TypeT>
 static StatusOr<mlir::Type> ConvertShapeToType(const Shape& shape,
-                                               mlir::Builder builder) {
-  if (shape.IsTuple()) {
-    llvm::SmallVector<mlir::Type, 4> contents;
-    contents.reserve(shape.tuple_shapes_size());
-    for (const auto& subtype : shape.tuple_shapes()) {
-      TF_ASSIGN_OR_RETURN(auto mlir_subtype,
-                          ConvertShapeToType<TypeT>(subtype, builder));
-      contents.push_back(mlir_subtype);
+        mlir::Builder builder) {
+    if (shape.IsTuple()) {
+        llvm::SmallVector<mlir::Type, 4> contents;
+        contents.reserve(shape.tuple_shapes_size());
+        for (const auto& subtype : shape.tuple_shapes()) {
+            TF_ASSIGN_OR_RETURN(auto mlir_subtype,
+                                ConvertShapeToType<TypeT>(subtype, builder));
+            contents.push_back(mlir_subtype);
+        }
+        return builder.getTupleType(contents);
     }
-    return builder.getTupleType(contents);
-  }
-  if (shape.IsToken()) {
-    return mlir::xla_hlo::TokenType::get(builder.getContext());
-  }
-  return ConvertTensorShapeToType<TypeT>(shape, builder);
+    if (shape.IsToken()) {
+        return mlir::xla_hlo::TokenType::get(builder.getContext());
+    }
+    return ConvertTensorShapeToType<TypeT>(shape, builder);
 }
 
 }  // namespace xla

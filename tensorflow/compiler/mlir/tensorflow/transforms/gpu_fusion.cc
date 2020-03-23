@@ -36,8 +36,8 @@ namespace {
 // This is an ad-hoc pass for now, but should be integrated with some notion
 // of "target" in the MLIR pipeline in the future.
 class GpuOpFusionPass : public FunctionPass<GpuOpFusionPass> {
- public:
-  void runOnFunction() final;
+public:
+    void runOnFunction() final;
 };
 
 //   %y:6 = "tf.FusedBatchNormV3"(%x, %scale, %offset, %mean, %variance)
@@ -58,73 +58,73 @@ class GpuOpFusionPass : public FunctionPass<GpuOpFusionPass> {
 // Also we need some native calls to handle the "hasOneUse" aspects and the
 // optional extra operands for the AddV2 case.
 struct ReluToFusedBatchNorm : public OpRewritePattern<ReluOp> {
-  using OpRewritePattern<ReluOp>::OpRewritePattern;
+    using OpRewritePattern<ReluOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(ReluOp relu_op,
-                                PatternRewriter &rewriter) const override {
-    Operation *relu_input = relu_op.features().getDefiningOp();
-    if (!relu_input) return failure();
-    auto batch_norm = dyn_cast_or_null<FusedBatchNormV3Op>(relu_input);
-    AddV2Op add_op;
-    Value side_input;
-    if (!batch_norm) {
-      // We don't have a FusedBatchNorm as input to the ReLu, but we can get
-      // through an AddV2 as well.
-      add_op = dyn_cast_or_null<AddV2Op>(relu_input);
-      if (!add_op) return failure();
+    LogicalResult matchAndRewrite(ReluOp relu_op,
+                                  PatternRewriter &rewriter) const override {
+        Operation *relu_input = relu_op.features().getDefiningOp();
+        if (!relu_input) return failure();
+        auto batch_norm = dyn_cast_or_null<FusedBatchNormV3Op>(relu_input);
+        AddV2Op add_op;
+        Value side_input;
+        if (!batch_norm) {
+            // We don't have a FusedBatchNorm as input to the ReLu, but we can get
+            // through an AddV2 as well.
+            add_op = dyn_cast_or_null<AddV2Op>(relu_input);
+            if (!add_op) return failure();
 
-      batch_norm =
-          dyn_cast_or_null<FusedBatchNormV3Op>(add_op.x().getDefiningOp());
-      if (batch_norm) {
-        side_input = add_op.y();
-      } else {
-        // Didn't get a FusedBatchNorm on the LHS of the AddV2, try the RHS.
-        batch_norm =
-            dyn_cast_or_null<FusedBatchNormV3Op>(add_op.y().getDefiningOp());
-        if (!batch_norm) return failure();
-        side_input = add_op.x();
-      }
+            batch_norm =
+                dyn_cast_or_null<FusedBatchNormV3Op>(add_op.x().getDefiningOp());
+            if (batch_norm) {
+                side_input = add_op.y();
+            } else {
+                // Didn't get a FusedBatchNorm on the LHS of the AddV2, try the RHS.
+                batch_norm =
+                    dyn_cast_or_null<FusedBatchNormV3Op>(add_op.y().getDefiningOp());
+                if (!batch_norm) return failure();
+                side_input = add_op.x();
+            }
+        }
+        assert(batch_norm);
+        if (batch_norm.is_training()) return failure();
+        if (!batch_norm.y().hasOneUse()) return failure();
+
+        // Build the newly fused operation to replace the batch norm
+        OperationState state(batch_norm.getLoc(),
+                             FusedBatchNormExOp::getOperationName());
+        state.addOperands(batch_norm.getOperands());
+        if (side_input) state.operands.push_back(side_input);
+        state.addTypes(batch_norm.getResultTypes());
+        state.addAttributes(batch_norm.getAttrs());
+        Operation *op = rewriter.createOperation(state);
+        rewriter.replaceOp(batch_norm, op->getResults());
+
+        // Depending on the case, we may fuse the add, the relu, or both.
+        if (!add_op || add_op.z().hasOneUse()) {
+            // We fuse the Relu only if the add has a single use, otherwise we only
+            // fuse the add itself.
+            op->setAttr("activation_mode", rewriter.getStringAttr("Relu"));
+            rewriter.replaceOp(relu_op, op->getResult(0));
+        }
+        if (add_op) {
+            rewriter.replaceOp(add_op, op->getResult(0));
+        }
+
+        return success();
     }
-    assert(batch_norm);
-    if (batch_norm.is_training()) return failure();
-    if (!batch_norm.y().hasOneUse()) return failure();
-
-    // Build the newly fused operation to replace the batch norm
-    OperationState state(batch_norm.getLoc(),
-                         FusedBatchNormExOp::getOperationName());
-    state.addOperands(batch_norm.getOperands());
-    if (side_input) state.operands.push_back(side_input);
-    state.addTypes(batch_norm.getResultTypes());
-    state.addAttributes(batch_norm.getAttrs());
-    Operation *op = rewriter.createOperation(state);
-    rewriter.replaceOp(batch_norm, op->getResults());
-
-    // Depending on the case, we may fuse the add, the relu, or both.
-    if (!add_op || add_op.z().hasOneUse()) {
-      // We fuse the Relu only if the add has a single use, otherwise we only
-      // fuse the add itself.
-      op->setAttr("activation_mode", rewriter.getStringAttr("Relu"));
-      rewriter.replaceOp(relu_op, op->getResult(0));
-    }
-    if (add_op) {
-      rewriter.replaceOp(add_op, op->getResult(0));
-    }
-
-    return success();
-  }
 };
 
 void GpuOpFusionPass::runOnFunction() {
-  FuncOp func = getFunction();
-  OwningRewritePatternList patterns;
-  patterns.insert<ReluToFusedBatchNorm>(&getContext());
-  applyPatternsGreedily(func, patterns);
+    FuncOp func = getFunction();
+    OwningRewritePatternList patterns;
+    patterns.insert<ReluToFusedBatchNorm>(&getContext());
+    applyPatternsGreedily(func, patterns);
 }
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateGpuOpFusionPass() {
-  return std::make_unique<GpuOpFusionPass>();
+    return std::make_unique<GpuOpFusionPass>();
 }
 
 static PassRegistration<GpuOpFusionPass> layout_assignment(

@@ -27,41 +27,55 @@ namespace TFControlFlow {
 
 // TODO(ycao): Implement following verify methods when we know more about their
 // invariant.
-LogicalResult EnterOp::verify() { return success(); }
+LogicalResult EnterOp::verify() {
+    return success();
+}
 
-LogicalResult MergeOp::verify() { return success(); }
+LogicalResult MergeOp::verify() {
+    return success();
+}
 
-LogicalResult NextIterationSourceOp::verify() { return success(); }
+LogicalResult NextIterationSourceOp::verify() {
+    return success();
+}
 
-LogicalResult NextIterationSinkOp::verify() { return success(); }
+LogicalResult NextIterationSinkOp::verify() {
+    return success();
+}
 
-LogicalResult LoopCondOp::verify() { return success(); }
+LogicalResult LoopCondOp::verify() {
+    return success();
+}
 
-LogicalResult SwitchOp::verify() { return success(); }
+LogicalResult SwitchOp::verify() {
+    return success();
+}
 
-LogicalResult ExitOp::verify() { return success(); }
+LogicalResult ExitOp::verify() {
+    return success();
+}
 
 TFControlFlowDialect::TFControlFlowDialect(MLIRContext *context)
     : Dialect(/*name=*/"_tf", context) {
-  addOperations<SwitchOp, MergeOp, EnterOp, NextIterationSourceOp,
-                NextIterationSinkOp, ExitOp, LoopCondOp>();
-  addTypes<TFControlType>();
+    addOperations<SwitchOp, MergeOp, EnterOp, NextIterationSourceOp,
+                  NextIterationSinkOp, ExitOp, LoopCondOp>();
+    addTypes<TFControlType>();
 
-  // We allow unregistered TensorFlow operations in the control dialect.
-  allowUnknownOperations();
+    // We allow unregistered TensorFlow operations in the control dialect.
+    allowUnknownOperations();
 }
 
 // Parses a type registered to this dialect.
 Type TFControlFlowDialect::parseType(DialectAsmParser &parser) const {
-  if (parser.parseKeyword("control", ": unknown TFControl type")) return Type();
+    if (parser.parseKeyword("control", ": unknown TFControl type")) return Type();
 
-  return TFControlType::get(getContext());
+    return TFControlType::get(getContext());
 }
 
 // Prints a type registered to this dialect.
 void TFControlFlowDialect::printType(Type type, DialectAsmPrinter &os) const {
-  assert(type.isa<TFControlType>());
-  os << "control";
+    assert(type.isa<TFControlType>());
+    os << "control";
 }
 
 }  // namespace TFControlFlow

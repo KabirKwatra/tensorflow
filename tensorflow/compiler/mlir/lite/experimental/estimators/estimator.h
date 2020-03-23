@@ -27,30 +27,34 @@ class GPU {};
 
 template <typename Op, typename TargetHardware>
 class TFLiteCostEstimator {
- public:
-  static double GetCost(mlir::Operation* op) {
-    llvm::errs() << "No defined cost function for op: "
-                 << op->getName().getStringRef().str();
-    return 0.0;
-  }
+public:
+    static double GetCost(mlir::Operation* op) {
+        llvm::errs() << "No defined cost function for op: "
+                     << op->getName().getStringRef().str();
+        return 0.0;
+    }
 
-  static bool IsSupported(mlir::Operation* op) {
-    llvm::errs() << "No defined support for op: "
-                 << op->getName().getStringRef().str();
-    return false;
-  }
+    static bool IsSupported(mlir::Operation* op) {
+        llvm::errs() << "No defined support for op: "
+                     << op->getName().getStringRef().str();
+        return false;
+    }
 };
 
 // All ops on CPU are supported.
 // TODO(karimnosseir): Only allow TFL ops in the "TFL_OP" param.
 template <typename TFL_OP>
 class TFLiteCostEstimator<TFL_OP, hardware::CPU> {
- public:
-  // TODO(karimnosseir): Update and use table based method and lookup
-  // cost from a loadable table ?
-  static double GetCost(mlir::Operation* op) { return 0.0; }
+public:
+    // TODO(karimnosseir): Update and use table based method and lookup
+    // cost from a loadable table ?
+    static double GetCost(mlir::Operation* op) {
+        return 0.0;
+    }
 
-  static bool IsSupported(mlir::Operation* op) { return true; }
+    static bool IsSupported(mlir::Operation* op) {
+        return true;
+    }
 };
 
 #endif  // TENSORFLOW_COMPILER_MLIR_LITE_EXPERIMENTAL_ESTIMATORS_ESTIMATOR_H_

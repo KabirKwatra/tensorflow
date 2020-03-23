@@ -28,13 +28,13 @@ using OperationToName = std::function<llvm::StringRef(Operation* op)>;
 // the function. A custom method to get the name from the op is used because
 // different dialect ops might have different ways to assign the name.
 std::unique_ptr<OpPassBase<FuncOp>> CreateImportQuantStatsPass(
-    OperationToName op_to_name, const std::string& stats_str);
+                                     OperationToName op_to_name, const std::string& stats_str);
 
 // Creates an instance pass to import quantization stats to the operations in
 // the function. A custom method to get the name from the op is used because
 // different dialect ops might have different ways to assign the name.
 std::unique_ptr<OpPassBase<FuncOp>>
-CreateImportQuantStatsPassForTFControlDialect(const std::string& stats_str);
+                                 CreateImportQuantStatsPassForTFControlDialect(const std::string& stats_str);
 
 }  // namespace quant
 }  // namespace mlir

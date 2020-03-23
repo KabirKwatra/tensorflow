@@ -36,9 +36,11 @@ class OpBuilder;
 namespace xla_lhlo {
 
 class XlaLhloDialect : public Dialect {
- public:
-  explicit XlaLhloDialect(MLIRContext *context);
-  static StringRef getDialectNamespace() { return "xla_lhlo"; }
+public:
+    explicit XlaLhloDialect(MLIRContext *context);
+    static StringRef getDialectNamespace() {
+        return "xla_lhlo";
+    }
 };
 
 #define GET_OP_CLASSES

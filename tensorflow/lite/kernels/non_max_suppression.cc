@@ -66,100 +66,100 @@ constexpr int kSoftNMSOutputTensorNumSelectedIndices = 2;
 
 TfLiteStatus SetTensorSizes(TfLiteContext* context, TfLiteTensor* tensor,
                             std::initializer_list<int> values) {
-  TfLiteIntArray* size = TfLiteIntArrayCreate(values.size());
-  int index = 0;
-  for (const auto& v : values) {
-    size->data[index++] = v;
-  }
-  return context->ResizeTensor(context, tensor, size);
+    TfLiteIntArray* size = TfLiteIntArrayCreate(values.size());
+    int index = 0;
+    for (const auto& v : values) {
+        size->data[index++] = v;
+    }
+    return context->ResizeTensor(context, tensor, size);
 }
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-  const int num_inputs = NumInputs(node);
-  const bool is_soft_nms = num_inputs == 6;
-  if (num_inputs != 5 && num_inputs != 6) {
-    context->ReportError(context, "Found NMS op with invalid num inputs: %d",
-                         NumInputs(node));
-    return kTfLiteError;
-  }
-
-  // Boxes & Scores.
-  const TfLiteTensor* input_boxes = GetInput(context, node, kInputTensorBoxes);
-  TF_LITE_ENSURE_EQ(context, input_boxes->type, kTfLiteFloat32);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(input_boxes), 2);
-  TF_LITE_ENSURE_EQ(context, SizeOfDimension(input_boxes, 1), 4);
-  const int num_boxes = SizeOfDimension(input_boxes, 0);
-  const TfLiteTensor* input_scores =
-      GetInput(context, node, kInputTensorScores);
-  TF_LITE_ENSURE_EQ(context, input_scores->type, kTfLiteFloat32);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(input_scores), 1);
-  TF_LITE_ENSURE_EQ(context, num_boxes, SizeOfDimension(input_scores, 0));
-
-  // Max output size.
-  const TfLiteTensor* input_max_output_size =
-      GetInput(context, node, kInputTensorMaxOutputSize);
-  TF_LITE_ENSURE_EQ(context, input_max_output_size->type, kTfLiteInt32);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(input_max_output_size), 0);
-  const bool is_max_output_size_const = IsConstantTensor(input_max_output_size);
-  int max_output_size_value = 0;
-  if (is_max_output_size_const) {
-    max_output_size_value = *GetTensorData<int>(input_max_output_size);
-    TF_LITE_ENSURE(context, (max_output_size_value >= 0));
-  }
-
-  // IoU & Score thresholds.
-  const TfLiteTensor* input_iou_threshold =
-      GetInput(context, node, kInputTensorIouThreshold);
-  TF_LITE_ENSURE_EQ(context, input_iou_threshold->type, kTfLiteFloat32);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(input_iou_threshold), 0);
-  const TfLiteTensor* input_score_threshold =
-      GetInput(context, node, kInputTensorScoreThreshold);
-  TF_LITE_ENSURE_EQ(context, input_iou_threshold->type, kTfLiteFloat32);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(input_score_threshold), 0);
-
-  if (is_soft_nms) {
-    const TfLiteTensor* input_sigma =
-        GetInput(context, node, kInputTensorSigma);
-    TF_LITE_ENSURE_EQ(context, input_sigma->type, kTfLiteFloat32);
-    TF_LITE_ENSURE_EQ(context, NumDimensions(input_sigma), 0);
-
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 3);
-    TfLiteTensor* output_selected_indices =
-        GetOutput(context, node, kSoftNMSOutputTensorSelectedIndices);
-    output_selected_indices->type = kTfLiteInt32;
-    TfLiteTensor* output_selected_scores =
-        GetOutput(context, node, kSoftNMSOutputTensorSelectedScores);
-    output_selected_scores->type = kTfLiteFloat32;
-    TfLiteTensor* output_num_selected_indices =
-        GetOutput(context, node, kSoftNMSOutputTensorNumSelectedIndices);
-    output_num_selected_indices->type = kTfLiteInt32;
-    SetTensorSizes(context, output_num_selected_indices, {});
-
-    if (is_max_output_size_const) {
-      SetTensorSizes(context, output_selected_indices, {max_output_size_value});
-      SetTensorSizes(context, output_selected_scores, {max_output_size_value});
-    } else {
-      SetTensorToDynamic(output_selected_indices);
-      SetTensorToDynamic(output_selected_scores);
+    const int num_inputs = NumInputs(node);
+    const bool is_soft_nms = num_inputs == 6;
+    if (num_inputs != 5 && num_inputs != 6) {
+        context->ReportError(context, "Found NMS op with invalid num inputs: %d",
+                             NumInputs(node));
+        return kTfLiteError;
     }
-  } else {
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 2);
-    TfLiteTensor* output_selected_indices =
-        GetOutput(context, node, kNMSOutputTensorSelectedIndices);
-    output_selected_indices->type = kTfLiteInt32;
-    TfLiteTensor* output_num_selected_indices =
-        GetOutput(context, node, kNMSOutputTensorNumSelectedIndices);
-    output_num_selected_indices->type = kTfLiteInt32;
-    SetTensorSizes(context, output_num_selected_indices, {});
 
+    // Boxes & Scores.
+    const TfLiteTensor* input_boxes = GetInput(context, node, kInputTensorBoxes);
+    TF_LITE_ENSURE_EQ(context, input_boxes->type, kTfLiteFloat32);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(input_boxes), 2);
+    TF_LITE_ENSURE_EQ(context, SizeOfDimension(input_boxes, 1), 4);
+    const int num_boxes = SizeOfDimension(input_boxes, 0);
+    const TfLiteTensor* input_scores =
+        GetInput(context, node, kInputTensorScores);
+    TF_LITE_ENSURE_EQ(context, input_scores->type, kTfLiteFloat32);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(input_scores), 1);
+    TF_LITE_ENSURE_EQ(context, num_boxes, SizeOfDimension(input_scores, 0));
+
+    // Max output size.
+    const TfLiteTensor* input_max_output_size =
+        GetInput(context, node, kInputTensorMaxOutputSize);
+    TF_LITE_ENSURE_EQ(context, input_max_output_size->type, kTfLiteInt32);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(input_max_output_size), 0);
+    const bool is_max_output_size_const = IsConstantTensor(input_max_output_size);
+    int max_output_size_value = 0;
     if (is_max_output_size_const) {
-      SetTensorSizes(context, output_selected_indices, {max_output_size_value});
-    } else {
-      SetTensorToDynamic(output_selected_indices);
+        max_output_size_value = *GetTensorData<int>(input_max_output_size);
+        TF_LITE_ENSURE(context, (max_output_size_value >= 0));
     }
-  }
 
-  return kTfLiteOk;
+    // IoU & Score thresholds.
+    const TfLiteTensor* input_iou_threshold =
+        GetInput(context, node, kInputTensorIouThreshold);
+    TF_LITE_ENSURE_EQ(context, input_iou_threshold->type, kTfLiteFloat32);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(input_iou_threshold), 0);
+    const TfLiteTensor* input_score_threshold =
+        GetInput(context, node, kInputTensorScoreThreshold);
+    TF_LITE_ENSURE_EQ(context, input_iou_threshold->type, kTfLiteFloat32);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(input_score_threshold), 0);
+
+    if (is_soft_nms) {
+        const TfLiteTensor* input_sigma =
+            GetInput(context, node, kInputTensorSigma);
+        TF_LITE_ENSURE_EQ(context, input_sigma->type, kTfLiteFloat32);
+        TF_LITE_ENSURE_EQ(context, NumDimensions(input_sigma), 0);
+
+        TF_LITE_ENSURE_EQ(context, NumOutputs(node), 3);
+        TfLiteTensor* output_selected_indices =
+            GetOutput(context, node, kSoftNMSOutputTensorSelectedIndices);
+        output_selected_indices->type = kTfLiteInt32;
+        TfLiteTensor* output_selected_scores =
+            GetOutput(context, node, kSoftNMSOutputTensorSelectedScores);
+        output_selected_scores->type = kTfLiteFloat32;
+        TfLiteTensor* output_num_selected_indices =
+            GetOutput(context, node, kSoftNMSOutputTensorNumSelectedIndices);
+        output_num_selected_indices->type = kTfLiteInt32;
+        SetTensorSizes(context, output_num_selected_indices, {});
+
+        if (is_max_output_size_const) {
+            SetTensorSizes(context, output_selected_indices, {max_output_size_value});
+            SetTensorSizes(context, output_selected_scores, {max_output_size_value});
+        } else {
+            SetTensorToDynamic(output_selected_indices);
+            SetTensorToDynamic(output_selected_scores);
+        }
+    } else {
+        TF_LITE_ENSURE_EQ(context, NumOutputs(node), 2);
+        TfLiteTensor* output_selected_indices =
+            GetOutput(context, node, kNMSOutputTensorSelectedIndices);
+        output_selected_indices->type = kTfLiteInt32;
+        TfLiteTensor* output_num_selected_indices =
+            GetOutput(context, node, kNMSOutputTensorNumSelectedIndices);
+        output_num_selected_indices->type = kTfLiteInt32;
+        SetTensorSizes(context, output_num_selected_indices, {});
+
+        if (is_max_output_size_const) {
+            SetTensorSizes(context, output_selected_indices, {max_output_size_value});
+        } else {
+            SetTensorToDynamic(output_selected_indices);
+        }
+    }
+
+    return kTfLiteOk;
 }
 
 // If num_selected_indices < max_output_size, the output tensor can contain
@@ -173,97 +173,99 @@ void ResetUnusedElementsToZeroes(const int max_output_size,
                                  const int num_selected_indices,
                                  int* selected_indices,
                                  float* selected_scores) {
-  for (int i = num_selected_indices; i < max_output_size; ++i) {
-    selected_indices[i] = 0;
-    if (selected_scores) {
-      selected_scores[i] = 0.0;
+    for (int i = num_selected_indices; i < max_output_size; ++i) {
+        selected_indices[i] = 0;
+        if (selected_scores) {
+            selected_scores[i] = 0.0;
+        }
     }
-  }
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  const bool is_soft_nms = NumInputs(node) == 6;
+    const bool is_soft_nms = NumInputs(node) == 6;
 
-  const TfLiteTensor* input_boxes = GetInput(context, node, kInputTensorBoxes);
-  const int num_boxes = SizeOfDimension(input_boxes, 0);
-  const TfLiteTensor* input_scores =
-      GetInput(context, node, kInputTensorScores);
-  const TfLiteTensor* input_max_output_size =
-      GetInput(context, node, kInputTensorMaxOutputSize);
-  const int max_output_size_value = *GetTensorData<int>(input_max_output_size);
-  TF_LITE_ENSURE(context, (max_output_size_value >= 0));
-  const bool is_max_output_size_const = IsConstantTensor(input_max_output_size);
-  const TfLiteTensor* input_iou_threshold =
-      GetInput(context, node, kInputTensorIouThreshold);
-  const float iou_threshold = *GetTensorData<float>(input_iou_threshold);
-  const TfLiteTensor* input_score_threshold =
-      GetInput(context, node, kInputTensorScoreThreshold);
-  const float score_threshold = *GetTensorData<float>(input_score_threshold);
+    const TfLiteTensor* input_boxes = GetInput(context, node, kInputTensorBoxes);
+    const int num_boxes = SizeOfDimension(input_boxes, 0);
+    const TfLiteTensor* input_scores =
+        GetInput(context, node, kInputTensorScores);
+    const TfLiteTensor* input_max_output_size =
+        GetInput(context, node, kInputTensorMaxOutputSize);
+    const int max_output_size_value = *GetTensorData<int>(input_max_output_size);
+    TF_LITE_ENSURE(context, (max_output_size_value >= 0));
+    const bool is_max_output_size_const = IsConstantTensor(input_max_output_size);
+    const TfLiteTensor* input_iou_threshold =
+        GetInput(context, node, kInputTensorIouThreshold);
+    const float iou_threshold = *GetTensorData<float>(input_iou_threshold);
+    const TfLiteTensor* input_score_threshold =
+        GetInput(context, node, kInputTensorScoreThreshold);
+    const float score_threshold = *GetTensorData<float>(input_score_threshold);
 
-  TfLiteTensor* output_selected_indices = nullptr;
-  TfLiteTensor* output_selected_scores = nullptr;
-  TfLiteTensor* output_num_selected_indices = nullptr;
+    TfLiteTensor* output_selected_indices = nullptr;
+    TfLiteTensor* output_selected_scores = nullptr;
+    TfLiteTensor* output_num_selected_indices = nullptr;
 
-  if (is_soft_nms) {
-    const TfLiteTensor* input_sigma =
-        GetInput(context, node, kInputTensorSigma);
-    const float soft_nms_sigma = *GetTensorData<float>(input_sigma);
-    if (soft_nms_sigma < 0) {
-      context->ReportError(context, "Invalid sigma value for soft NMS: %f",
-                           soft_nms_sigma);
-      return kTfLiteError;
+    if (is_soft_nms) {
+        const TfLiteTensor* input_sigma =
+            GetInput(context, node, kInputTensorSigma);
+        const float soft_nms_sigma = *GetTensorData<float>(input_sigma);
+        if (soft_nms_sigma < 0) {
+            context->ReportError(context, "Invalid sigma value for soft NMS: %f",
+                                 soft_nms_sigma);
+            return kTfLiteError;
+        }
+
+        output_selected_indices =
+            GetOutput(context, node, kSoftNMSOutputTensorSelectedIndices);
+        output_selected_scores =
+            GetOutput(context, node, kSoftNMSOutputTensorSelectedScores);
+        output_num_selected_indices =
+            GetOutput(context, node, kSoftNMSOutputTensorNumSelectedIndices);
+        if (!is_max_output_size_const) {
+            SetTensorSizes(context, output_selected_indices, {max_output_size_value});
+            SetTensorSizes(context, output_selected_scores, {max_output_size_value});
+        }
+        reference_ops::NonMaxSuppression(
+            input_boxes->data.f, num_boxes, input_scores->data.f,
+            max_output_size_value, iou_threshold, score_threshold, soft_nms_sigma,
+            output_selected_indices->data.i32, output_selected_scores->data.f,
+            output_num_selected_indices->data.i32);
+        ResetUnusedElementsToZeroes(
+            max_output_size_value, *output_num_selected_indices->data.i32,
+            output_selected_indices->data.i32, output_selected_scores->data.f);
+    } else {
+        output_selected_indices =
+            GetOutput(context, node, kNMSOutputTensorSelectedIndices);
+        output_num_selected_indices =
+            GetOutput(context, node, kNMSOutputTensorNumSelectedIndices);
+        if (!is_max_output_size_const) {
+            SetTensorSizes(context, output_selected_indices, {max_output_size_value});
+        }
+        reference_ops::NonMaxSuppression(
+            input_boxes->data.f, num_boxes, input_scores->data.f,
+            max_output_size_value, iou_threshold, score_threshold, /**sigma=**/ 0.0,
+            output_selected_indices->data.i32, /**selected_scores=**/ nullptr,
+            output_num_selected_indices->data.i32);
+        ResetUnusedElementsToZeroes(max_output_size_value,
+                                    *output_num_selected_indices->data.i32,
+                                    output_selected_indices->data.i32, nullptr);
     }
 
-    output_selected_indices =
-        GetOutput(context, node, kSoftNMSOutputTensorSelectedIndices);
-    output_selected_scores =
-        GetOutput(context, node, kSoftNMSOutputTensorSelectedScores);
-    output_num_selected_indices =
-        GetOutput(context, node, kSoftNMSOutputTensorNumSelectedIndices);
-    if (!is_max_output_size_const) {
-      SetTensorSizes(context, output_selected_indices, {max_output_size_value});
-      SetTensorSizes(context, output_selected_scores, {max_output_size_value});
-    }
-    reference_ops::NonMaxSuppression(
-        input_boxes->data.f, num_boxes, input_scores->data.f,
-        max_output_size_value, iou_threshold, score_threshold, soft_nms_sigma,
-        output_selected_indices->data.i32, output_selected_scores->data.f,
-        output_num_selected_indices->data.i32);
-    ResetUnusedElementsToZeroes(
-        max_output_size_value, *output_num_selected_indices->data.i32,
-        output_selected_indices->data.i32, output_selected_scores->data.f);
-  } else {
-    output_selected_indices =
-        GetOutput(context, node, kNMSOutputTensorSelectedIndices);
-    output_num_selected_indices =
-        GetOutput(context, node, kNMSOutputTensorNumSelectedIndices);
-    if (!is_max_output_size_const) {
-      SetTensorSizes(context, output_selected_indices, {max_output_size_value});
-    }
-    reference_ops::NonMaxSuppression(
-        input_boxes->data.f, num_boxes, input_scores->data.f,
-        max_output_size_value, iou_threshold, score_threshold, /**sigma=**/ 0.0,
-        output_selected_indices->data.i32, /**selected_scores=**/ nullptr,
-        output_num_selected_indices->data.i32);
-    ResetUnusedElementsToZeroes(max_output_size_value,
-                                *output_num_selected_indices->data.i32,
-                                output_selected_indices->data.i32, nullptr);
-  }
-
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 }  // namespace non_max_suppression
 
 TfLiteRegistration* Register_NON_MAX_SUPPRESSION_V4() {
-  static TfLiteRegistration r = {nullptr, nullptr, non_max_suppression::Prepare,
-                                 non_max_suppression::Eval};
-  return &r;
+    static TfLiteRegistration r = {nullptr, nullptr, non_max_suppression::Prepare,
+                                   non_max_suppression::Eval
+                                  };
+    return &r;
 }
 
 TfLiteRegistration* Register_NON_MAX_SUPPRESSION_V5() {
-  static TfLiteRegistration r = {nullptr, nullptr, non_max_suppression::Prepare,
-                                 non_max_suppression::Eval};
-  return &r;
+    static TfLiteRegistration r = {nullptr, nullptr, non_max_suppression::Prepare,
+                                   non_max_suppression::Eval
+                                  };
+    return &r;
 }
 
 }  // namespace builtin

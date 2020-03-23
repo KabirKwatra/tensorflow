@@ -30,41 +30,41 @@ namespace TFL {
 namespace {
 
 struct DenseToSparse : public FunctionPass<DenseToSparse> {
-  void runOnFunction() override;
+    void runOnFunction() override;
 };
 
 void DenseToSparse::runOnFunction() {
-  FuncOp func = getFunction();
-  OpBuilder builder(func);
+    FuncOp func = getFunction();
+    OpBuilder builder(func);
 
-  func.walk([&](SparseOpInterface sparse_op) {
-    const auto& sparse_operands = sparse_op.GetSparseOperands();
-    for (const int operand : sparse_operands) {
-      auto* op = sparse_op.getOperation();
-      const auto& value = op->getOperand(operand);
-      builder.setInsertionPoint(op);
-      if (auto* inst = value.getDefiningOp()) {
-        // Replace defining op with SparseConst or SparseQConst.
-        // TODO(yunluli): Implement.
-      }
+    func.walk([&](SparseOpInterface sparse_op) {
+        const auto& sparse_operands = sparse_op.GetSparseOperands();
+        for (const int operand : sparse_operands) {
+            auto* op = sparse_op.getOperation();
+            const auto& value = op->getOperand(operand);
+            builder.setInsertionPoint(op);
+            if (auto* inst = value.getDefiningOp()) {
+                // Replace defining op with SparseConst or SparseQConst.
+                // TODO(yunluli): Implement.
+            }
 
-      // TODO(yunluli): Implement.
-      bool needs_densify = false;
+            // TODO(yunluli): Implement.
+            bool needs_densify = false;
 
-      if (needs_densify) {
-        auto densify = builder.create<DensifyOp>(op->getLoc(), value);
-        value.replaceAllUsesWith(densify);
-        densify.setOperand(value);
-      }
-    }
-  });
+            if (needs_densify) {
+                auto densify = builder.create<DensifyOp>(op->getLoc(), value);
+                value.replaceAllUsesWith(densify);
+                densify.setOperand(value);
+            }
+        }
+    });
 }
 
 }  // namespace
 
 // Creates an instance of the TensorFlow Lite dialect DenseToSparse pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreateDenseToSparsePass() {
-  return absl::make_unique<DenseToSparse>();
+    return absl::make_unique<DenseToSparse>();
 }
 
 static PassRegistration<DenseToSparse> pass(

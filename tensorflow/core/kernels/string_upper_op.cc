@@ -29,41 +29,41 @@ limitations under the License.
 namespace tensorflow {
 
 class StringUpperOp : public OpKernel {
- public:
-  explicit StringUpperOp(OpKernelConstruction* context) : OpKernel(context) {
-    OP_REQUIRES_OK(context, context->GetAttr("encoding", &encoding_));
-    OP_REQUIRES(context, encoding_.empty() || encoding_ == "utf-8",
-                errors::InvalidArgument(
-                    "only utf-8 or '' (no encoding) is supported, received ",
-                    encoding_));
-  }
-
-  void Compute(OpKernelContext* ctx) override {
-    const Tensor* input_tensor;
-    OP_REQUIRES_OK(ctx, ctx->input("input", &input_tensor));
-    Tensor* output_tensor;
-    OP_REQUIRES_OK(
-        ctx, ctx->allocate_output(0, input_tensor->shape(), &output_tensor));
-
-    const auto input = input_tensor->flat<tstring>();
-    auto output = output_tensor->flat<tstring>();
-    if (encoding_.empty()) {
-      for (int64 i = 0; i < input.size(); ++i) {
-        StringPiece entry(input(i));
-        output(i) = absl::AsciiStrToUpper(entry);
-      }
-    } else {
-      // The validation of utf-8 has already been done in GetAttr above.
-      for (int64 i = 0; i < input.size(); ++i) {
-        icu::UnicodeString us(input(i).c_str(), "UTF-8");
-        us.toUpper();
-        us.toUTF8String(output(i));
-      }
+public:
+    explicit StringUpperOp(OpKernelConstruction* context) : OpKernel(context) {
+        OP_REQUIRES_OK(context, context->GetAttr("encoding", &encoding_));
+        OP_REQUIRES(context, encoding_.empty() || encoding_ == "utf-8",
+                    errors::InvalidArgument(
+                        "only utf-8 or '' (no encoding) is supported, received ",
+                        encoding_));
     }
-  }
 
- private:
-  string encoding_;
+    void Compute(OpKernelContext* ctx) override {
+        const Tensor* input_tensor;
+        OP_REQUIRES_OK(ctx, ctx->input("input", &input_tensor));
+        Tensor* output_tensor;
+        OP_REQUIRES_OK(
+            ctx, ctx->allocate_output(0, input_tensor->shape(), &output_tensor));
+
+        const auto input = input_tensor->flat<tstring>();
+        auto output = output_tensor->flat<tstring>();
+        if (encoding_.empty()) {
+            for (int64 i = 0; i < input.size(); ++i) {
+                StringPiece entry(input(i));
+                output(i) = absl::AsciiStrToUpper(entry);
+            }
+        } else {
+            // The validation of utf-8 has already been done in GetAttr above.
+            for (int64 i = 0; i < input.size(); ++i) {
+                icu::UnicodeString us(input(i).c_str(), "UTF-8");
+                us.toUpper();
+                us.toUTF8String(output(i));
+            }
+        }
+    }
+
+private:
+    string encoding_;
 };
 
 REGISTER_KERNEL_BUILDER(Name("StringUpper").Device(DEVICE_CPU), StringUpperOp);

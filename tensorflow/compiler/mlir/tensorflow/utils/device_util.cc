@@ -41,19 +41,19 @@ namespace {
 // capability is not found in device description, return an empty dictionary
 // attribute.
 mlir::DictionaryAttr ParseGpuDeviceMetadata(const Device& device,
-                                            mlir::Builder* builder) {
-  // Parse GPU device compute capability from physical device description.
-  static auto* r = new llvm::Regex("compute capability: ([0-9]+)\\.([0-9]+)");
+        mlir::Builder* builder) {
+    // Parse GPU device compute capability from physical device description.
+    static auto* r = new llvm::Regex("compute capability: ([0-9]+)\\.([0-9]+)");
 
-  llvm::SmallVector<llvm::StringRef, 3> cc;
-  if (r->match(device.attributes().physical_device_desc(), &cc)) {
-    return mlir::TF::GpuDeviceMetadata::get(
-        builder->getI32IntegerAttr(std::stoi(cc[1].str())),
-        builder->getI32IntegerAttr(std::stoi(cc[2].str())),
-        builder->getContext());
-  }
+    llvm::SmallVector<llvm::StringRef, 3> cc;
+    if (r->match(device.attributes().physical_device_desc(), &cc)) {
+        return mlir::TF::GpuDeviceMetadata::get(
+                   builder->getI32IntegerAttr(std::stoi(cc[1].str())),
+                   builder->getI32IntegerAttr(std::stoi(cc[2].str())),
+                   builder->getContext());
+    }
 
-  return builder->getDictionaryAttr({});
+    return builder->getDictionaryAttr({});
 }
 
 // Get devices from an array of string attributes.
@@ -62,97 +62,97 @@ mlir::DictionaryAttr ParseGpuDeviceMetadata(const Device& device,
 mlir::LogicalResult GetDevicesFromOp(mlir::Operation* op,
                                      mlir::ArrayAttr array_attr,
                                      mlir::TF::RuntimeDevices* devices) {
-  DeviceNameUtils::ParsedName device;
+    DeviceNameUtils::ParsedName device;
 
-  for (auto& kv : llvm::enumerate(array_attr)) {
-    const int idx = kv.index();
+    for (auto& kv : llvm::enumerate(array_attr)) {
+        const int idx = kv.index();
 
-    auto string_attr = kv.value().dyn_cast<mlir::StringAttr>();
-    if (!string_attr)
-      return op->emitOpError(llvm::formatv(
-          "bad '{0}' attribute at index {1}, not a string", kDevicesAttr, idx));
+        auto string_attr = kv.value().dyn_cast<mlir::StringAttr>();
+        if (!string_attr)
+            return op->emitOpError(llvm::formatv(
+                                       "bad '{0}' attribute at index {1}, not a string", kDevicesAttr, idx));
 
-    if (DeviceNameUtils::ParseFullName(string_attr.getValue().str(), &device)) {
-      devices->AddDevice(device);
-    } else {
-      return op->emitOpError(
-          llvm::formatv("bad '{0}' attribute, '{1}', not a valid device",
-                        kDevicesAttr, string_attr.getValue()));
+        if (DeviceNameUtils::ParseFullName(string_attr.getValue().str(), &device)) {
+            devices->AddDevice(device);
+        } else {
+            return op->emitOpError(
+                       llvm::formatv("bad '{0}' attribute, '{1}', not a valid device",
+                                     kDevicesAttr, string_attr.getValue()));
+        }
     }
-  }
 
-  return mlir::success();
+    return mlir::success();
 }
 
 // Get devices from a dictionary attribute.
 mlir::LogicalResult GetDevicesFromOp(mlir::Operation* op,
                                      mlir::DictionaryAttr dict_attr,
                                      mlir::TF::RuntimeDevices* devices) {
-  DeviceNameUtils::ParsedName device;
+    DeviceNameUtils::ParsedName device;
 
-  // Parse device names and metadata from dictionary attribute.
-  for (auto& kv : dict_attr) {
-    const mlir::Identifier name = kv.first;
-    const mlir::Attribute attr = kv.second;
+    // Parse device names and metadata from dictionary attribute.
+    for (auto& kv : dict_attr) {
+        const mlir::Identifier name = kv.first;
+        const mlir::Attribute attr = kv.second;
 
-    if (!DeviceNameUtils::ParseFullName(name.str(), &device))
-      return op->emitOpError(
-          llvm::formatv("bad '{0}' attribute, '{1}', not a valid device",
-                        kDevicesAttr, name.strref()));
+        if (!DeviceNameUtils::ParseFullName(name.str(), &device))
+            return op->emitOpError(
+                       llvm::formatv("bad '{0}' attribute, '{1}', not a valid device",
+                                     kDevicesAttr, name.strref()));
 
-    if (auto gpu_metadata = attr.dyn_cast<mlir::TF::GpuDeviceMetadata>()) {
-      devices->AddGpuDevice(device, gpu_metadata);
-    } else {
-      devices->AddDevice(device);
+        if (auto gpu_metadata = attr.dyn_cast<mlir::TF::GpuDeviceMetadata>()) {
+            devices->AddGpuDevice(device, gpu_metadata);
+        } else {
+            devices->AddDevice(device);
+        }
     }
-  }
 
-  return mlir::success();
+    return mlir::success();
 }
 
 }  // namespace
 
 void AddDevicesToOp(mlir::Operation* op, const DeviceSet* device_set) {
-  if (!device_set) return;
+    if (!device_set) return;
 
-  mlir::MLIRContext* ctx = op->getContext();
-  mlir::Builder builder(ctx);
+    mlir::MLIRContext* ctx = op->getContext();
+    mlir::Builder builder(ctx);
 
-  // Collect devices with attached metadata.
-  llvm::SmallVector<mlir::NamedAttribute, 8> devices;
-  devices.reserve(device_set->devices().size());
+    // Collect devices with attached metadata.
+    llvm::SmallVector<mlir::NamedAttribute, 8> devices;
+    devices.reserve(device_set->devices().size());
 
-  // For device that do not have any metadata, or if we failed to parse metadata
-  // from the DeviceSet, we add empty dictionary to the `tf.devices` attribute.
-  for (Device* device : device_set->devices()) {
-    string name = DeviceNameUtils::ParsedNameToString(device->parsed_name());
+    // For device that do not have any metadata, or if we failed to parse metadata
+    // from the DeviceSet, we add empty dictionary to the `tf.devices` attribute.
+    for (Device* device : device_set->devices()) {
+        string name = DeviceNameUtils::ParsedNameToString(device->parsed_name());
 
-    if (device->device_type() == DEVICE_GPU) {
-      auto metadata = ParseGpuDeviceMetadata(*device, &builder);
-      devices.push_back(builder.getNamedAttr(name, metadata));
-    } else {
-      auto metadata = builder.getDictionaryAttr({});
-      devices.push_back(builder.getNamedAttr(name, metadata));
+        if (device->device_type() == DEVICE_GPU) {
+            auto metadata = ParseGpuDeviceMetadata(*device, &builder);
+            devices.push_back(builder.getNamedAttr(name, metadata));
+        } else {
+            auto metadata = builder.getDictionaryAttr({});
+            devices.push_back(builder.getNamedAttr(name, metadata));
+        }
     }
-  }
 
-  op->setAttr(kDevicesAttr, builder.getDictionaryAttr(devices));
+    op->setAttr(kDevicesAttr, builder.getDictionaryAttr(devices));
 }
 
 mlir::LogicalResult GetDevicesFromOp(mlir::Operation* op,
                                      mlir::TF::RuntimeDevices* devices) {
-  auto devices_attr = op->getAttr(kDevicesAttr);
-  if (!devices_attr) return mlir::success();
+    auto devices_attr = op->getAttr(kDevicesAttr);
+    if (!devices_attr) return mlir::success();
 
-  if (auto array_attr = devices_attr.dyn_cast<mlir::ArrayAttr>()) {
-    return GetDevicesFromOp(op, array_attr, devices);
+    if (auto array_attr = devices_attr.dyn_cast<mlir::ArrayAttr>()) {
+        return GetDevicesFromOp(op, array_attr, devices);
 
-  } else if (auto dict_attr = devices_attr.dyn_cast<mlir::DictionaryAttr>()) {
-    return GetDevicesFromOp(op, dict_attr, devices);
-  }
+    } else if (auto dict_attr = devices_attr.dyn_cast<mlir::DictionaryAttr>()) {
+        return GetDevicesFromOp(op, dict_attr, devices);
+    }
 
-  return op->emitOpError(
-      llvm::formatv("unsupported '{0}' attribute", kDevicesAttr));
+    return op->emitOpError(
+               llvm::formatv("unsupported '{0}' attribute", kDevicesAttr));
 }
 
 }  // namespace tensorflow

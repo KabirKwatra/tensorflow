@@ -31,41 +31,41 @@ namespace {
 // its value into a readable one. Otherwise, does nothing. This function returns
 // false if the given `op` is a tf.Constant op and we cannot decode its value.
 bool DecodeOpaqueValueInConstantOp(Operation *op) {
-  auto tfOp = dyn_cast<ConstOp>(op);
-  if (!tfOp) return true;
+    auto tfOp = dyn_cast<ConstOp>(op);
+    if (!tfOp) return true;
 
-  auto opaque_attr = tfOp.value().dyn_cast<OpaqueElementsAttr>();
-  // Skip non-opaque values.
-  if (!opaque_attr) return true;
+    auto opaque_attr = tfOp.value().dyn_cast<OpaqueElementsAttr>();
+    // Skip non-opaque values.
+    if (!opaque_attr) return true;
 
-  Builder builder(op->getContext());
+    Builder builder(op->getContext());
 
-  ElementsAttr decoded_attr;
-  if (opaque_attr.decode(decoded_attr)) {
-    op->emitOpError("has undecodable opaque value");
-    return false;
-  }
+    ElementsAttr decoded_attr;
+    if (opaque_attr.decode(decoded_attr)) {
+        op->emitOpError("has undecodable opaque value");
+        return false;
+    }
 
-  op->setAttr("value", decoded_attr);
+    op->setAttr("value", decoded_attr);
 
-  return true;
+    return true;
 }
 
 // A pass to decode opaque constant values into readable ones.
 struct DecodeConstant : public FunctionPass<DecodeConstant> {
-  void runOnFunction() override {
-    auto walk_result = getFunction().walk([](Operation *op) {
-      return DecodeOpaqueValueInConstantOp(op) ? WalkResult::advance()
-                                               : WalkResult::interrupt();
-    });
-    if (walk_result.wasInterrupted()) signalPassFailure();
-  }
+    void runOnFunction() override {
+        auto walk_result = getFunction().walk([](Operation *op) {
+            return DecodeOpaqueValueInConstantOp(op) ? WalkResult::advance()
+                   : WalkResult::interrupt();
+        });
+        if (walk_result.wasInterrupted()) signalPassFailure();
+    }
 };
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateDecodeConstantPass() {
-  return std::make_unique<DecodeConstant>();
+    return std::make_unique<DecodeConstant>();
 }
 
 static PassRegistration<DecodeConstant> pass(

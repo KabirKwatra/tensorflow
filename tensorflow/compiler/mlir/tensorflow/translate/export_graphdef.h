@@ -33,7 +33,7 @@ using stream_executor::port::StatusOr;
 
 // Given an MLIR module, returns a GraphDef.
 StatusOr<std::unique_ptr<GraphDef>> ConvertMlirToGraphdef(
-    mlir::ModuleOp module, const GraphExportConfig& configs);
+                                     mlir::ModuleOp module, const GraphExportConfig& configs);
 
 // Converts an MLIR module to TensorFlow graph and FunctionLibraryDefinition.
 // The "main" function of the module is stored in the graph and the rest of

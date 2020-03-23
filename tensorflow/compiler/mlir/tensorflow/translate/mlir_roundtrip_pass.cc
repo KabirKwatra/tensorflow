@@ -34,54 +34,54 @@ using mlir::MLIRContext;
 static StatusOr<mlir::OwningModuleRef> Import(
     const GraphOptimizationPassOptions& options, const Graph& graph,
     MLIRContext* context) {
-  // TODO(fengliuai): get debug info at runtime.
-  GraphDebugInfo debug_info;
-  GraphImportConfig specs;
-  TF_ASSIGN_OR_RETURN(
-      auto module,
-      ConvertGraphToMlir(graph, debug_info, *options.flib_def, specs, context));
-  mlir::StatusScopedDiagnosticHandler status_handler(context);
-  if (failed(mlir::verify(*module))) {
-    if (VLOG_IS_ON(1)) module->dump();
-    return status_handler.ConsumeStatus();
-  }
-  return module;
+    // TODO(fengliuai): get debug info at runtime.
+    GraphDebugInfo debug_info;
+    GraphImportConfig specs;
+    TF_ASSIGN_OR_RETURN(
+        auto module,
+        ConvertGraphToMlir(graph, debug_info, *options.flib_def, specs, context));
+    mlir::StatusScopedDiagnosticHandler status_handler(context);
+    if (failed(mlir::verify(*module))) {
+        if (VLOG_IS_ON(1)) module->dump();
+        return status_handler.ConsumeStatus();
+    }
+    return module;
 }
 
 static Status Export(mlir::OwningModuleRef module,
                      const GraphOptimizationPassOptions& options,
                      std::unique_ptr<Graph>* graph) {
-  GraphExportConfig confs;
-  return ConvertMlirToGraph(*module, confs, graph, options.flib_def);
+    GraphExportConfig confs;
+    return ConvertMlirToGraph(*module, confs, graph, options.flib_def);
 }
 
 static Status Roundtrip(const GraphOptimizationPassOptions& options,
                         std::unique_ptr<Graph>* graph, MLIRContext* context) {
-  TF_ASSIGN_OR_RETURN(auto module, Import(options, **graph, context));
-  return Export(std::move(module), options, graph);
+    TF_ASSIGN_OR_RETURN(auto module, Import(options, **graph, context));
+    return Export(std::move(module), options, graph);
 }
 
 Status MlirRoundtripPass::Run(const GraphOptimizationPassOptions& options) {
-  MLIRContext context;
-  if (options.graph) return Roundtrip(options, options.graph, &context);
+    MLIRContext context;
+    if (options.graph) return Roundtrip(options, options.graph, &context);
 
-  // If the graph is partitioned, then try and round trip them individually.
-  for (auto& it : *options.partition_graphs) {
-    VLOG(1) << "Roundtripping: " << it.first;
-    // TODO(jpienaar): Roundtrip results in different failures, investigate.
-    TF_RETURN_IF_ERROR(Import(options, *it.second, &context).status());
-  }
-  return Status::OK();
+    // If the graph is partitioned, then try and round trip them individually.
+    for (auto& it : *options.partition_graphs) {
+        VLOG(1) << "Roundtripping: " << it.first;
+        // TODO(jpienaar): Roundtrip results in different failures, investigate.
+        TF_RETURN_IF_ERROR(Import(options, *it.second, &context).status());
+    }
+    return Status::OK();
 }
 
 Status MlirImportPass::Run(const GraphOptimizationPassOptions& options) {
-  MLIRContext context;
-  if (options.graph) {
-    if (!Import(options, **options.graph, &context).ok()) {
-      metrics::IncrementMLIRImportFailureCount();
+    MLIRContext context;
+    if (options.graph) {
+        if (!Import(options, **options.graph, &context).ok()) {
+            metrics::IncrementMLIRImportFailureCount();
+        }
     }
-  }
-  return Status::OK();
+    return Status::OK();
 }
 
 }  // namespace tensorflow

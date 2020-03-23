@@ -33,8 +33,8 @@ limitations under the License.
 
 // NOLINTNEXTLINE
 static llvm::cl::opt<std::string> input_filename(llvm::cl::Positional,
-                                                 llvm::cl::desc("<input file>"),
-                                                 llvm::cl::init("-"));
+        llvm::cl::desc("<input file>"),
+        llvm::cl::init("-"));
 
 // NOLINTNEXTLINE
 static llvm::cl::opt<std::string> output_filename(
@@ -77,82 +77,82 @@ static llvm::cl::opt<std::string> saved_model_exported_names(
     llvm::cl::init(""));
 
 int main(int argc, char** argv) {
-  tensorflow::InitMlir y(&argc, &argv);
+    tensorflow::InitMlir y(&argc, &argv);
 
-  // Add flags for all the registered translations.
-  llvm::cl::opt<const mlir::TranslateFunction*, false, mlir::TranslationParser>
-      requested_translation("", llvm::cl::desc("Translation to perform"));
+    // Add flags for all the registered translations.
+    llvm::cl::opt<const mlir::TranslateFunction*, false, mlir::TranslationParser>
+    requested_translation("", llvm::cl::desc("Translation to perform"));
 
-  llvm::cl::ParseCommandLineOptions(argc, argv, "TF MLIR translation driver\n");
+    llvm::cl::ParseCommandLineOptions(argc, argv, "TF MLIR translation driver\n");
 
-  if (!import_saved_model_object_graph && !import_saved_model_signature_defs &&
-      !requested_translation) {
-    llvm::errs() << "error: need to specify one translation to perform\n";
-    return 1;
-  } else if (import_saved_model_object_graph &&
-             import_saved_model_signature_defs && requested_translation) {
-    llvm::errs()
-        << "error: cannot specify more than one translation to perform\n";
-    return 1;
-  }
-
-  std::string error_message;
-  auto output = mlir::openOutputFile(output_filename, &error_message);
-  if (!output) {
-    llvm::errs() << error_message << "\n";
-    return 1;
-  }
-
-  if (import_saved_model_object_graph) {
-    std::unordered_set<std::string> tags =
-        absl::StrSplit(saved_model_tags, ',');
-    std::vector<std::string> exported_names =
-        absl::StrSplit(saved_model_exported_names, ',', absl::SkipEmpty());
-    mlir::MLIRContext context;
-
-    auto module = tensorflow::SavedModelObjectGraphToMlirImport(
-        input_filename, tags, absl::Span<std::string>(exported_names),
-        &context);
-    if (!module) return 1;
-
-    module->print(output->os());
-  } else if (import_saved_model_signature_defs) {
-    std::unordered_set<std::string> tags =
-        absl::StrSplit(saved_model_tags, ',');
-    mlir::MLIRContext context;
-
-    auto module = tensorflow::SavedModelSignatureDefsToMlirImport(
-        input_filename, tags, &context);
-    if (!module) return 1;
-
-    module->print(output->os());
-  } else {
-    auto input = mlir::openInputFile(input_filename, &error_message);
-
-    if (!input) {
-      llvm::errs() << error_message << "\n";
-      return 1;
-    }
-
-    // Processes the memory buffer with a new MLIRContext.
-    auto processBuffer = [&](std::unique_ptr<llvm::MemoryBuffer> ownedBuffer,
-                             llvm::raw_ostream& os) {
-      llvm::SourceMgr sourceMgr;
-      sourceMgr.AddNewSourceBuffer(std::move(ownedBuffer), llvm::SMLoc());
-      mlir::MLIRContext context;
-      mlir::SourceMgrDiagnosticHandler diagnostic_handler(sourceMgr, &context);
-      return (*requested_translation)(sourceMgr, os, &context);
-    };
-
-    if (splitInputFile) {
-      if (failed(mlir::splitAndProcessBuffer(std::move(input), processBuffer,
-                                             output->os())))
+    if (!import_saved_model_object_graph && !import_saved_model_signature_defs &&
+            !requested_translation) {
+        llvm::errs() << "error: need to specify one translation to perform\n";
         return 1;
-    } else {
-      if (failed(processBuffer(std::move(input), output->os()))) return 1;
+    } else if (import_saved_model_object_graph &&
+               import_saved_model_signature_defs && requested_translation) {
+        llvm::errs()
+                << "error: cannot specify more than one translation to perform\n";
+        return 1;
     }
-  }
 
-  output->keep();
-  return 0;
+    std::string error_message;
+    auto output = mlir::openOutputFile(output_filename, &error_message);
+    if (!output) {
+        llvm::errs() << error_message << "\n";
+        return 1;
+    }
+
+    if (import_saved_model_object_graph) {
+        std::unordered_set<std::string> tags =
+            absl::StrSplit(saved_model_tags, ',');
+        std::vector<std::string> exported_names =
+            absl::StrSplit(saved_model_exported_names, ',', absl::SkipEmpty());
+        mlir::MLIRContext context;
+
+        auto module = tensorflow::SavedModelObjectGraphToMlirImport(
+                          input_filename, tags, absl::Span<std::string>(exported_names),
+                          &context);
+        if (!module) return 1;
+
+        module->print(output->os());
+    } else if (import_saved_model_signature_defs) {
+        std::unordered_set<std::string> tags =
+            absl::StrSplit(saved_model_tags, ',');
+        mlir::MLIRContext context;
+
+        auto module = tensorflow::SavedModelSignatureDefsToMlirImport(
+                          input_filename, tags, &context);
+        if (!module) return 1;
+
+        module->print(output->os());
+    } else {
+        auto input = mlir::openInputFile(input_filename, &error_message);
+
+        if (!input) {
+            llvm::errs() << error_message << "\n";
+            return 1;
+        }
+
+        // Processes the memory buffer with a new MLIRContext.
+        auto processBuffer = [&](std::unique_ptr<llvm::MemoryBuffer> ownedBuffer,
+        llvm::raw_ostream& os) {
+            llvm::SourceMgr sourceMgr;
+            sourceMgr.AddNewSourceBuffer(std::move(ownedBuffer), llvm::SMLoc());
+            mlir::MLIRContext context;
+            mlir::SourceMgrDiagnosticHandler diagnostic_handler(sourceMgr, &context);
+            return (*requested_translation)(sourceMgr, os, &context);
+        };
+
+        if (splitInputFile) {
+            if (failed(mlir::splitAndProcessBuffer(std::move(input), processBuffer,
+                                                   output->os())))
+                return 1;
+        } else {
+            if (failed(processBuffer(std::move(input), output->os()))) return 1;
+        }
+    }
+
+    output->keep();
+    return 0;
 }

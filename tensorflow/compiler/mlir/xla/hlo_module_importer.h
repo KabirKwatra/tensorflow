@@ -37,24 +37,24 @@ class Shape;
 // Importer that takes an HloModule and imports it as an MLIR module in the XLA
 // dialect. HloModuleImporter does not take ownership.
 class HloModuleImporter {
- public:
-  explicit HloModuleImporter(mlir::ModuleOp module)
-      : module_(module), builder_(module.getContext()) {}
+public:
+    explicit HloModuleImporter(mlir::ModuleOp module)
+        : module_(module), builder_(module.getContext()) {}
 
-  // Import the HloModule into the MLIR Module.
-  Status Import(const xla::HloModule& module);
+    // Import the HloModule into the MLIR Module.
+    Status Import(const xla::HloModule& module);
 
-  // Import the HloModuleProto into the MLIR Module.
-  Status Import(const xla::HloModuleProto& module);
+    // Import the HloModuleProto into the MLIR Module.
+    Status Import(const xla::HloModuleProto& module);
 
- private:
-  mlir::ModuleOp module_;
-  mlir::Builder builder_;
+private:
+    mlir::ModuleOp module_;
+    mlir::Builder builder_;
 
-  // Map for tracking which MLIR function map to which HLO Computation. This
-  // tracks functions as they are imported and provides a quick lookup for
-  // functions invoked by control flow related operations (e.g. while, call).
-  std::unordered_map<xla::HloComputation*, mlir::FuncOp> function_map_;
+    // Map for tracking which MLIR function map to which HLO Computation. This
+    // tracks functions as they are imported and provides a quick lookup for
+    // functions invoked by control flow related operations (e.g. while, call).
+    std::unordered_map<xla::HloComputation*, mlir::FuncOp> function_map_;
 };
 
 }  // namespace xla

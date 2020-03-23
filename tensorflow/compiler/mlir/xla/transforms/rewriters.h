@@ -27,7 +27,7 @@ namespace xla_hlo {
 
 // Collection of rewrite patterns for lowering a general dot product.
 void PopulateGeneralDotOpLoweringPatterns(OwningRewritePatternList *patterns,
-                                          MLIRContext *ctx);
+        MLIRContext *ctx);
 
 // Collection of rewrite patterns for lowering complex operations to equivalent
 // float operations.
@@ -43,7 +43,7 @@ void populateHLOToLHLOConversionPattern(MLIRContext *context,
 
 // Collection of rewrite patterns for lowering of HLO to Linalg dialect.
 void populateHLOToLinalgConversionPattern(MLIRContext *context,
-                                          OwningRewritePatternList *patterns);
+        OwningRewritePatternList *patterns);
 
 // Sets up legality definitions for materializing broadcasts.
 void SetupMaterializeBroadcastsLegality(MLIRContext *context,
@@ -52,7 +52,7 @@ void SetupMaterializeBroadcastsLegality(MLIRContext *context,
 // Populates a collection of rewrite patterns for materializing broadcast
 // attributes to equivalent sequences of ops.
 void PopulateMaterializeBroadcastsPatterns(MLIRContext *context,
-                                           OwningRewritePatternList *patterns);
+        OwningRewritePatternList *patterns);
 
 // Populate a collection of conversion patterns for un-fusing
 // batch_norm_inference and batch_norm_training into constituent HLO ops.

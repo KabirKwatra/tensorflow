@@ -48,8 +48,8 @@ StatusOr<llvm::StringRef> GetTensorFlowOpName(llvm::StringRef);
 // "device" attributes are ignored by default. Use attrs_to_ignore to specify
 // any other attributes that should be ignored.
 StatusOr<std::unique_ptr<NodeDef>> GetOperationNodeDef(
-    const absl::flat_hash_set<absl::string_view>& attrs_to_ignore,
-    mlir::Operation* inst, llvm::StringRef name);
+                                    const absl::flat_hash_set<absl::string_view>& attrs_to_ignore,
+                                    mlir::Operation* inst, llvm::StringRef name);
 
 // Converts MLIR attributes with values to their tensorflow equivalent.
 // "name" and "device" attributes are ignored by default. Use attrs_to_ignore to

@@ -41,12 +41,12 @@ namespace TF {
 // cases, we can convert this op to other TF Ops, which in later passes
 // properly convert to TF Lite ops.
 struct ConvertTFEinsumOp : public OpRewritePattern<TF::EinsumOp> {
- public:
-  explicit ConvertTFEinsumOp(MLIRContext* context)
-      : OpRewritePattern<TF::EinsumOp>(context) {}
+public:
+    explicit ConvertTFEinsumOp(MLIRContext* context)
+        : OpRewritePattern<TF::EinsumOp>(context) {}
 
-  LogicalResult matchAndRewrite(TF::EinsumOp op,
-                                PatternRewriter& rewriter) const override;
+    LogicalResult matchAndRewrite(TF::EinsumOp op,
+                                  PatternRewriter& rewriter) const override;
 };
 
 }  // namespace TF

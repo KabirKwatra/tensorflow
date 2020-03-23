@@ -29,23 +29,23 @@ namespace {
 
 struct TestMaterializeBroadcastsPass
     : public FunctionPass<TestMaterializeBroadcastsPass> {
-  void runOnFunction() override {
-    ConversionTarget conversionTarget(getContext());
-    OwningRewritePatternList conversionPatterns;
+    void runOnFunction() override {
+        ConversionTarget conversionTarget(getContext());
+        OwningRewritePatternList conversionPatterns;
 
-    // Consider the xla_hlo dialect legal for tests.
-    conversionTarget.addLegalDialect<XlaHloDialect>();
-    // The conversion uses helpers from the Standard dialect.
-    conversionTarget.addLegalDialect<mlir::StandardOpsDialect>();
+        // Consider the xla_hlo dialect legal for tests.
+        conversionTarget.addLegalDialect<XlaHloDialect>();
+        // The conversion uses helpers from the Standard dialect.
+        conversionTarget.addLegalDialect<mlir::StandardOpsDialect>();
 
-    SetupMaterializeBroadcastsLegality(&getContext(), &conversionTarget);
-    PopulateMaterializeBroadcastsPatterns(&getContext(), &conversionPatterns);
+        SetupMaterializeBroadcastsLegality(&getContext(), &conversionTarget);
+        PopulateMaterializeBroadcastsPatterns(&getContext(), &conversionPatterns);
 
-    if (failed(applyPartialConversion(getFunction(), conversionTarget,
-                                      conversionPatterns))) {
-      return signalPassFailure();
+        if (failed(applyPartialConversion(getFunction(), conversionTarget,
+                                          conversionPatterns))) {
+            return signalPassFailure();
+        }
     }
-  }
 };
 
 }  // namespace
@@ -54,5 +54,5 @@ struct TestMaterializeBroadcastsPass
 }  // namespace mlir
 
 static mlir::PassRegistration<mlir::xla_hlo::TestMaterializeBroadcastsPass>
-    pass("test-xla-materialize-broadcasts",
-         "Test pass for materializing 'broadcast_dimensions' attributes");
+pass("test-xla-materialize-broadcasts",
+     "Test pass for materializing 'broadcast_dimensions' attributes");

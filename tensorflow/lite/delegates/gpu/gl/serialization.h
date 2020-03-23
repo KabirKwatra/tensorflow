@@ -34,48 +34,48 @@ namespace gpu {
 namespace gl {
 
 struct CompiledModelOptions {
-  // If true, a model was compiled with dynamic batch size and therefore,
-  // a user may change BATCH dimension at runtime.
-  bool dynamic_batch = false;
+    // If true, a model was compiled with dynamic batch size and therefore,
+    // a user may change BATCH dimension at runtime.
+    bool dynamic_batch = false;
 };
 
 // Accumulates shaders and programs and stores it in FlatBuffer format.
 class SerializedCompiledModelBuilder {
- public:
-  SerializedCompiledModelBuilder() : builder_(32 * 1024) {}
+public:
+    SerializedCompiledModelBuilder() : builder_(32 * 1024) {}
 
-  void AddShader(const std::string& shader_src);
+    void AddShader(const std::string& shader_src);
 
-  void AddProgram(const std::vector<Variable>& parameters,
-                  const std::vector<Object>& objects,
-                  const uint3& workgroup_size, const uint3& num_workgroups,
-                  size_t shader_index);
+    void AddProgram(const std::vector<Variable>& parameters,
+                    const std::vector<Object>& objects,
+                    const uint3& workgroup_size, const uint3& num_workgroups,
+                    size_t shader_index);
 
-  // Returns serialized data that will stay valid until this object is
-  // destroyed.
-  absl::Span<const uint8_t> Finalize(const CompiledModelOptions& options);
+    // Returns serialized data that will stay valid until this object is
+    // destroyed.
+    absl::Span<const uint8_t> Finalize(const CompiledModelOptions& options);
 
- private:
-  std::vector<flatbuffers::Offset<flatbuffers::String>> shaders_;
-  std::vector<flatbuffers::Offset<data::Program>> programs_;
-  ::flatbuffers::FlatBufferBuilder builder_;
+private:
+    std::vector<flatbuffers::Offset<flatbuffers::String>> shaders_;
+    std::vector<flatbuffers::Offset<data::Program>> programs_;
+    ::flatbuffers::FlatBufferBuilder builder_;
 };
 
 // Handles deserialization events. it is guaranteed that shaders will be called
 // first in the appropriate order and programs come next.
 class DeserializationHandler {
- public:
-  virtual ~DeserializationHandler() = default;
+public:
+    virtual ~DeserializationHandler() = default;
 
-  virtual Status OnShader(absl::Span<const char> shader_src) = 0;
+    virtual Status OnShader(absl::Span<const char> shader_src) = 0;
 
-  virtual Status OnProgram(const std::vector<Variable>& parameters,
-                           const std::vector<Object>& objects,
-                           const uint3& workgroup_size,
-                           const uint3& num_workgroups,
-                           size_t shader_index) = 0;
+    virtual Status OnProgram(const std::vector<Variable>& parameters,
+                             const std::vector<Object>& objects,
+                             const uint3& workgroup_size,
+                             const uint3& num_workgroups,
+                             size_t shader_index) = 0;
 
-  virtual void OnOptions(const CompiledModelOptions& options) = 0;
+    virtual void OnOptions(const CompiledModelOptions& options) = 0;
 };
 
 Status DeserializeCompiledModel(absl::Span<const uint8_t> serialized,

@@ -30,78 +30,80 @@ namespace tf_executor {
 
 // Prunes unreachable operations of a tf_executor.graph operation.
 void PruneGraph(GraphOp graph) {
-  // A graph has a single block which forms a DAG: operations that aren't
-  // reachable from the `fetch` operands can be eliminated.
+    // A graph has a single block which forms a DAG: operations that aren't
+    // reachable from the `fetch` operands can be eliminated.
 
-  llvm::SmallPtrSet<Operation*, 8> reachable_ops;
-  llvm::SmallVector<Operation*, 8> ops_to_visit;
+    llvm::SmallPtrSet<Operation*, 8> reachable_ops;
+    llvm::SmallVector<Operation*, 8> ops_to_visit;
 
-  // Visit an op's operands if it is output of an Operation in same graph.
-  auto visit_op = [&](Operation* op) {
-    for (Value operand : op->getOperands()) {
-      Operation* def = operand.getDefiningOp();
-      if (def && def->getParentOp() == graph &&
-          reachable_ops.insert(def).second) {
-        // Op has not been visited, add to queue to visit later.
-        ops_to_visit.push_back(def);
-      }
+    // Visit an op's operands if it is output of an Operation in same graph.
+    auto visit_op = [&](Operation* op) {
+        for (Value operand : op->getOperands()) {
+            Operation* def = operand.getDefiningOp();
+            if (def && def->getParentOp() == graph &&
+                    reachable_ops.insert(def).second) {
+                // Op has not been visited, add to queue to visit later.
+                ops_to_visit.push_back(def);
+            }
+        }
+    };
+
+    // Visit `fetch` operands.
+    visit_op(graph.GetFetch());
+
+    while (!ops_to_visit.empty()) {
+        Operation* op = ops_to_visit.pop_back_val();
+        if (auto island_op = llvm::dyn_cast<IslandOp>(op)) {
+            // Visit island and island inner ops operands.
+            op->walk([&](Operation* inner_op) {
+                visit_op(inner_op);
+            });
+            continue;
+        } else {
+            // Op is not an island, only visit its operands.
+            visit_op(op);
+        }
+
+        // If op is a `tf_executor.NextIteration.Source`, visit its associated
+        // `tf_executor.NextIteration.Sink` op.
+        if (auto source_op = llvm::dyn_cast<NextIterationSourceOp>(op)) {
+            Operation* sink_op = source_op.GetSink().getOperation();
+            if (reachable_ops.insert(sink_op).second) {
+                ops_to_visit.push_back(sink_op);
+            }
+        }
     }
-  };
 
-  // Visit `fetch` operands.
-  visit_op(graph.GetFetch());
-
-  while (!ops_to_visit.empty()) {
-    Operation* op = ops_to_visit.pop_back_val();
-    if (auto island_op = llvm::dyn_cast<IslandOp>(op)) {
-      // Visit island and island inner ops operands.
-      op->walk([&](Operation* inner_op) { visit_op(inner_op); });
-      continue;
-    } else {
-      // Op is not an island, only visit its operands.
-      visit_op(op);
+    // Erase unreachable ops in reverse order.
+    for (Operation& op : llvm::make_early_inc_range(
+                llvm::drop_begin(llvm::reverse(graph.GetBody()), 1))) {
+        if (reachable_ops.find(&op) == reachable_ops.end()) {
+            op.erase();
+        }
     }
-
-    // If op is a `tf_executor.NextIteration.Source`, visit its associated
-    // `tf_executor.NextIteration.Sink` op.
-    if (auto source_op = llvm::dyn_cast<NextIterationSourceOp>(op)) {
-      Operation* sink_op = source_op.GetSink().getOperation();
-      if (reachable_ops.insert(sink_op).second) {
-        ops_to_visit.push_back(sink_op);
-      }
-    }
-  }
-
-  // Erase unreachable ops in reverse order.
-  for (Operation& op : llvm::make_early_inc_range(
-           llvm::drop_begin(llvm::reverse(graph.GetBody()), 1))) {
-    if (reachable_ops.find(&op) == reachable_ops.end()) {
-      op.erase();
-    }
-  }
 }
 
 namespace {
 
 // This transformation pass prunes a TF graph eliminating dead-nodes.
 struct GraphPruning : public FunctionPass<GraphPruning> {
-  void runOnFunction() override {
-    getFunction().walk([](tf_executor::GraphOp graph) {
-      // For TensorFlow V1.0 compatibility: when importing a graph without
-      // providing feeds/fetches we should not attempt to prune. The best
-      // approximation here is to check if the graph does not have any fetched
-      // values.
-      if (!graph.GetFetch().getNumOperands()) return;
+    void runOnFunction() override {
+        getFunction().walk([](tf_executor::GraphOp graph) {
+            // For TensorFlow V1.0 compatibility: when importing a graph without
+            // providing feeds/fetches we should not attempt to prune. The best
+            // approximation here is to check if the graph does not have any fetched
+            // values.
+            if (!graph.GetFetch().getNumOperands()) return;
 
-      PruneGraph(graph);
-    });
-  }
+            PruneGraph(graph);
+        });
+    }
 };
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateTFExecutorGraphPruningPass() {
-  return std::make_unique<GraphPruning>();
+    return std::make_unique<GraphPruning>();
 }
 
 static PassRegistration<GraphPruning> pass(

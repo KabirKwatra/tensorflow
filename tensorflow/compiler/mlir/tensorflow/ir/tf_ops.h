@@ -40,42 +40,48 @@ namespace mlir {
 namespace TF {
 
 class TensorFlowDialect : public Dialect {
- public:
-  TensorFlowDialect(MLIRContext *context);
+public:
+    TensorFlowDialect(MLIRContext *context);
 
-  static StringRef getDialectNamespace() { return "tf"; }
+    static StringRef getDialectNamespace() {
+        return "tf";
+    }
 
-  // Gradient attribute ("tf.gradient") in the list of NamedAttributes in a
-  // function references to its gradient function. This attribute in TensorFlow
-  // Dialect is used to model TF GradientDef. GetGradientAttrName() returns the
-  // string description of gradient attribute.
-  static StringRef GetGradientAttrName() { return "tf.gradient"; }
+    // Gradient attribute ("tf.gradient") in the list of NamedAttributes in a
+    // function references to its gradient function. This attribute in TensorFlow
+    // Dialect is used to model TF GradientDef. GetGradientAttrName() returns the
+    // string description of gradient attribute.
+    static StringRef GetGradientAttrName() {
+        return "tf.gradient";
+    }
 
-  // This attribute marks if a function is stateful.
-  // Returns the string description of stateful attribute.
-  static StringRef GetStatefulAttrName() { return "tf.signature.is_stateful"; }
+    // This attribute marks if a function is stateful.
+    // Returns the string description of stateful attribute.
+    static StringRef GetStatefulAttrName() {
+        return "tf.signature.is_stateful";
+    }
 
-  // Parse a type registered to this dialect.
-  Type parseType(DialectAsmParser &parser) const override;
+    // Parse a type registered to this dialect.
+    Type parseType(DialectAsmParser &parser) const override;
 
-  // Prints a type registered to this dialect.
-  void printType(Type ty, DialectAsmPrinter &os) const override;
+    // Prints a type registered to this dialect.
+    void printType(Type ty, DialectAsmPrinter &os) const override;
 
-  // Parses resource type with potential subtypes.
-  Type ParseResourceType(DialectAsmParser &parser, Location loc) const;
+    // Parses resource type with potential subtypes.
+    Type ParseResourceType(DialectAsmParser &parser, Location loc) const;
 
-  // Prints resource type with potential subtypes.
-  void PrintResourceType(ResourceType ty, DialectAsmPrinter &os) const;
+    // Prints resource type with potential subtypes.
+    void PrintResourceType(ResourceType ty, DialectAsmPrinter &os) const;
 
-  // Parse and print variant type. It may have subtypes inferred using shape
-  // inference.
-  Type ParseVariantType(DialectAsmParser &parser, Location loc) const;
-  void PrintVariantType(VariantType ty, DialectAsmPrinter &os) const;
+    // Parse and print variant type. It may have subtypes inferred using shape
+    // inference.
+    Type ParseVariantType(DialectAsmParser &parser, Location loc) const;
+    void PrintVariantType(VariantType ty, DialectAsmPrinter &os) const;
 
-  // Registered hook to materialize a constant operation from a given attribute
-  // value with the desired resultant type.
-  Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
-                                 Location loc) override;
+    // Registered hook to materialize a constant operation from a given attribute
+    // value with the desired resultant type.
+    Operation *materializeConstant(OpBuilder &builder, Attribute value, Type type,
+                                   Location loc) override;
 };
 
 // TODO(b/131258166): TensorFlow's mutex.h defines a `mutex_lock` macro, whose

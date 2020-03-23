@@ -40,31 +40,31 @@ namespace {
 // SideEffectAnalysis result. For testing purpose only.
 struct TestSideEffectAnalysis
     : public mlir::FunctionPass<TestSideEffectAnalysis> {
-  void runOnFunction() override {
-    int64_t next_id = 0;
-    llvm::SmallDenseMap<Operation*, int64_t, 8> ids;
-    getFunction().walk([&](Operation* op) {
-      ids[op] = next_id++;
-      op->emitRemark("ID: ") << ids[op];
-    });
-    auto join_ids = [&](const llvm::ArrayRef<Operation*> ops) {
-      llvm::SmallVector<std::string, 8> id_vec;
-      id_vec.reserve(ops.size());
-      for (auto op : ops) id_vec.push_back(std::to_string(ids[op]));
-      return llvm::join(id_vec, ",");
-    };
-    auto& analysis = getAnalysis<TF::SideEffectAnalysis>();
-    getFunction().walk([&](Operation* op) {
-      if (!analysis.DirectControlPredecessors(op).empty()) {
-        op->emitRemark("Predecessors: ")
-            << "{" << join_ids(analysis.DirectControlPredecessors(op)) << "}";
-      }
-      if (!analysis.DirectControlSuccessors(op).empty()) {
-        op->emitRemark("Successors: ")
-            << "{" << join_ids(analysis.DirectControlSuccessors(op)) << "}";
-      }
-    });
-  }
+    void runOnFunction() override {
+        int64_t next_id = 0;
+        llvm::SmallDenseMap<Operation*, int64_t, 8> ids;
+        getFunction().walk([&](Operation* op) {
+            ids[op] = next_id++;
+            op->emitRemark("ID: ") << ids[op];
+        });
+        auto join_ids = [&](const llvm::ArrayRef<Operation*> ops) {
+            llvm::SmallVector<std::string, 8> id_vec;
+            id_vec.reserve(ops.size());
+            for (auto op : ops) id_vec.push_back(std::to_string(ids[op]));
+            return llvm::join(id_vec, ",");
+        };
+        auto& analysis = getAnalysis<TF::SideEffectAnalysis>();
+        getFunction().walk([&](Operation* op) {
+            if (!analysis.DirectControlPredecessors(op).empty()) {
+                op->emitRemark("Predecessors: ")
+                        << "{" << join_ids(analysis.DirectControlPredecessors(op)) << "}";
+            }
+            if (!analysis.DirectControlSuccessors(op).empty()) {
+                op->emitRemark("Successors: ")
+                        << "{" << join_ids(analysis.DirectControlSuccessors(op)) << "}";
+            }
+        });
+    }
 };
 
 static mlir::PassRegistration<TestSideEffectAnalysis> pass(

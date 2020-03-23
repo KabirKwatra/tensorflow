@@ -31,11 +31,11 @@ using stream_executor::port::StatusOr;
 
 // Converts an TensorFlow tensor proto into an MLIR elements attribute.
 StatusOr<mlir::ElementsAttr> ConvertTensorProto(const TensorProto& input_tensor,
-                                                mlir::Builder* builder);
+        mlir::Builder* builder);
 
 // Converts an TensorFlow tensor into an MLIR elements attribute.
 StatusOr<mlir::ElementsAttr> ConvertTensor(const Tensor& input_tensor,
-                                           mlir::Builder* builder);
+        mlir::Builder* builder);
 
 // Converts a shape from MLIR to a TensorFlow tensor shape proto.
 void ConvertToTensorShapeProto(llvm::ArrayRef<int64_t> shape,

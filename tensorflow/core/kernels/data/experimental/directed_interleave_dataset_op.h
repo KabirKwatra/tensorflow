@@ -22,22 +22,22 @@ namespace data {
 namespace experimental {
 
 class DirectedInterleaveDatasetOp : public DatasetOpKernel {
- public:
-  static constexpr const char* const kDatasetType = "DirectedInterleave";
-  static constexpr const char* const kSelectorInputDataset =
-      "selector_input_dataset";
-  static constexpr const char* const kDataInputDatasets = "data_input_datasets";
-  static constexpr const char* const kOutputTypes = "output_types";
-  static constexpr const char* const kOutputShapes = "output_shapes";
-  static constexpr const char* const kNumInputDatasets = "N";
+public:
+    static constexpr const char* const kDatasetType = "DirectedInterleave";
+    static constexpr const char* const kSelectorInputDataset =
+        "selector_input_dataset";
+    static constexpr const char* const kDataInputDatasets = "data_input_datasets";
+    static constexpr const char* const kOutputTypes = "output_types";
+    static constexpr const char* const kOutputShapes = "output_shapes";
+    static constexpr const char* const kNumInputDatasets = "N";
 
-  explicit DirectedInterleaveDatasetOp(OpKernelConstruction* ctx);
+    explicit DirectedInterleaveDatasetOp(OpKernelConstruction* ctx);
 
- protected:
-  void MakeDataset(OpKernelContext* ctx, DatasetBase** output) override;
+protected:
+    void MakeDataset(OpKernelContext* ctx, DatasetBase** output) override;
 
- private:
-  class Dataset;
+private:
+    class Dataset;
 };
 
 }  // namespace experimental

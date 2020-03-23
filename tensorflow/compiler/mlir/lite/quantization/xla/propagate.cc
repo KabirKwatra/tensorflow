@@ -49,26 +49,26 @@ namespace {
 // The propagation results should assign quantization types to all the tensors
 // and the two restrictions are respected.
 struct PropagateQuantPass : public FunctionPass<PropagateQuantPass> {
-  explicit PropagateQuantPass() = default;
-  PropagateQuantPass(const PropagateQuantPass &) {}
+    explicit PropagateQuantPass() = default;
+    PropagateQuantPass(const PropagateQuantPass &) {}
 
-  void runOnFunction() override;
+    void runOnFunction() override;
 };
 
 #include "tensorflow/compiler/mlir/lite/quantization/xla/op_quant_spec.inc"
 
 void PropagateQuantPass::runOnFunction() {
-  FuncOp func = getFunction();
-  // XLA only support uint8/uint16 quantization for now.
-  ApplyQuantizationParamsPropagation(func, /*is_signed*/ false,
-                                     disable_per_channel, GetOpQuantSpec);
+    FuncOp func = getFunction();
+    // XLA only support uint8/uint16 quantization for now.
+    ApplyQuantizationParamsPropagation(func, /*is_signed*/ false,
+                                       disable_per_channel, GetOpQuantSpec);
 }
 
 }  // namespace
 
 // Creates an instance of the xla_hlo dialect quantization propagation pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreatePropagateQuantPass() {
-  return std::make_unique<PropagateQuantPass>();
+    return std::make_unique<PropagateQuantPass>();
 }
 
 static PassRegistration<PropagateQuantPass> pass(

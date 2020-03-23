@@ -31,27 +31,27 @@ limitations under the License.
 namespace xla {
 
 Status HloModuleImporter::Import(const xla::HloModule& module) {
-  // TODO(hinsu): Only import the entry computation here once all HLO ops with
-  // reference to other computation are updated to have a region instead of a
-  // function attribute.
-  for (const auto& computation : module.computations()) {
-    auto result = HloFunctionImporter::ImportFunction(
-        module_, &builder_, &function_map_, computation);
-    TF_RETURN_IF_ERROR(result.status());
-  }
+    // TODO(hinsu): Only import the entry computation here once all HLO ops with
+    // reference to other computation are updated to have a region instead of a
+    // function attribute.
+    for (const auto& computation : module.computations()) {
+        auto result = HloFunctionImporter::ImportFunction(
+                          module_, &builder_, &function_map_, computation);
+        TF_RETURN_IF_ERROR(result.status());
+    }
 
-  return Status::OK();
+    return Status::OK();
 }
 
 Status HloModuleImporter::Import(const xla::HloModuleProto& module_proto) {
-  xla::DebugOptions debug_options;
-  TF_ASSIGN_OR_RETURN(
-      auto module_config,
-      xla::HloModule::CreateModuleConfigFromProto(module_proto, debug_options));
-  TF_ASSIGN_OR_RETURN(auto module, xla::HloModule::CreateFromProto(
-                                       module_proto, module_config));
+    xla::DebugOptions debug_options;
+    TF_ASSIGN_OR_RETURN(
+        auto module_config,
+        xla::HloModule::CreateModuleConfigFromProto(module_proto, debug_options));
+    TF_ASSIGN_OR_RETURN(auto module, xla::HloModule::CreateFromProto(
+                            module_proto, module_config));
 
-  return Import(*module);
+    return Import(*module);
 }
 
 }  // namespace xla

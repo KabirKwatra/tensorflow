@@ -34,64 +34,64 @@ using OpOrVal = llvm::PointerUnion<mlir::Operation*, mlir::Value>;
 
 // Mapper from operation or value to name.
 class OpOrArgNameMapper {
- public:
-  // Returns unique name for the given prefix.
-  llvm::StringRef GetUniqueName(llvm::StringRef prefix);
+public:
+    // Returns unique name for the given prefix.
+    llvm::StringRef GetUniqueName(llvm::StringRef prefix);
 
-  // Returns unique name for the operation or value.
-  llvm::StringRef GetUniqueName(OpOrVal op_or_val);
+    // Returns unique name for the operation or value.
+    llvm::StringRef GetUniqueName(OpOrVal op_or_val);
 
-  // Returns unique name as a string_view for the operation or value.
-  absl::string_view GetUniqueNameView(OpOrVal op_or_val);
+    // Returns unique name as a string_view for the operation or value.
+    absl::string_view GetUniqueNameView(OpOrVal op_or_val);
 
-  // Initializes operation or value to map to name. Returns number of
-  // operations or value already named 'name' which should be 0 else
-  // GetUniqueName could return the same names for different operations or
-  // values.
-  // Note: Its up to the caller to decide the behavior when assigning two
-  // operations or values to the same name.
-  int InitOpName(OpOrVal op_or_val, llvm::StringRef name);
+    // Initializes operation or value to map to name. Returns number of
+    // operations or value already named 'name' which should be 0 else
+    // GetUniqueName could return the same names for different operations or
+    // values.
+    // Note: Its up to the caller to decide the behavior when assigning two
+    // operations or values to the same name.
+    int InitOpName(OpOrVal op_or_val, llvm::StringRef name);
 
-  virtual ~OpOrArgNameMapper();
+    virtual ~OpOrArgNameMapper();
 
- protected:
-  // Returns true if the name is unique. A derived class can override it if the
-  // class maintains uniqueness in a different scope.
-  virtual bool IsUnique(llvm::StringRef name);
+protected:
+    // Returns true if the name is unique. A derived class can override it if the
+    // class maintains uniqueness in a different scope.
+    virtual bool IsUnique(llvm::StringRef name);
 
-  // Returns a constant view of the underlying map.
-  const llvm::DenseMap<OpOrVal, absl::string_view>& GetMap() const {
-    return op_or_val_to_name_;
-  }
+    // Returns a constant view of the underlying map.
+    const llvm::DenseMap<OpOrVal, absl::string_view>& GetMap() const {
+        return op_or_val_to_name_;
+    }
 
- private:
-  // Returns name from the location of the operation or value.
-  virtual std::string GetName(OpOrVal op_or_val) = 0;
+private:
+    // Returns name from the location of the operation or value.
+    virtual std::string GetName(OpOrVal op_or_val) = 0;
 
-  // Maps string name to count. This map is used to help keep track of unique
-  // names for operations or values.
-  llvm::StringMap<int64_t> name_to_count_;
-  // Maps operation or values to name. Value in map is a view of the string
-  // name in `name_to_count_`. Names in `name_to_count_` are never removed.
-  llvm::DenseMap<OpOrVal, absl::string_view> op_or_val_to_name_;
+    // Maps string name to count. This map is used to help keep track of unique
+    // names for operations or values.
+    llvm::StringMap<int64_t> name_to_count_;
+    // Maps operation or values to name. Value in map is a view of the string
+    // name in `name_to_count_`. Names in `name_to_count_` are never removed.
+    llvm::DenseMap<OpOrVal, absl::string_view> op_or_val_to_name_;
 };
 
 // OpOrArgNameMapper that returns, for operations or values not initialized
 // to a specific name, a name based on the location of the operation or
 // value.
 class OpOrArgLocNameMapper : public OpOrArgNameMapper {
- protected:
-  std::string GetName(OpOrVal op_or_val) override;
+protected:
+    std::string GetName(OpOrVal op_or_val) override;
 };
 
 // OpOrArgNameMapper that returns, for operations or values not initialized
 // to a specific name, a short name.
 class OpOrArgStripNameMapper : public OpOrArgNameMapper {
- private:
-  std::string GetName(OpOrVal op_or_val) override;
+private:
+    std::string GetName(OpOrVal op_or_val) override;
 
-  // Number of ops mapped.
-  int count_ = 0;
+    // Number of ops mapped.
+    int count_ = 0;
 };
 
 }  // namespace tensorflow

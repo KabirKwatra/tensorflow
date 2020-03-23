@@ -24,12 +24,12 @@ namespace mlir {
 namespace TFL {
 
 bool IsStatefulOp(Operation* op, std::vector<int>* stateful_operand_indices) {
-  if (auto stateful_op = dyn_cast_or_null<StatefulOpInterface>(op)) {
-    *stateful_operand_indices = stateful_op.GetStatefulOperands();
-    return true;
-  }
+    if (auto stateful_op = dyn_cast_or_null<StatefulOpInterface>(op)) {
+        *stateful_operand_indices = stateful_op.GetStatefulOperands();
+        return true;
+    }
 
-  return false;
+    return false;
 }
 
 }  // namespace TFL

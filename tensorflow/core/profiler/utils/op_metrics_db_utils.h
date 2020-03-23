@@ -31,28 +31,30 @@ namespace profiler {
 // outlives its builder, and that no ops are added to the database outside of
 // the builder.
 class OpMetricsDbBuilder {
- public:
-  // Create with a borrowed op database.
-  // REQUIRED: The op database must be empty.
-  explicit OpMetricsDbBuilder(OpMetricsDb* db);
+public:
+    // Create with a borrowed op database.
+    // REQUIRED: The op database must be empty.
+    explicit OpMetricsDbBuilder(OpMetricsDb* db);
 
- protected:
-  // Looks up the given OP name. If it is already in the database,
-  // return its OpMetrics; otherwise, insert a new one.
-  OpMetrics* LookupOrInsertNewOpMetrics(uint64 hlo_module_id,
-                                        absl::string_view name);
+protected:
+    // Looks up the given OP name. If it is already in the database,
+    // return its OpMetrics; otherwise, insert a new one.
+    OpMetrics* LookupOrInsertNewOpMetrics(uint64 hlo_module_id,
+                                          absl::string_view name);
 
-  OpMetricsDb* db() { return db_; }
+    OpMetricsDb* db() {
+        return db_;
+    }
 
- private:
-  // Map op (hlo_module_id, name) to the corresponding metrics in the op
-  // database.
-  absl::flat_hash_map<uint64 /*hlo_module_id*/,
-                      absl::flat_hash_map<std::string /*name*/, OpMetrics*>>
-      op_metrics_map_;
+private:
+    // Map op (hlo_module_id, name) to the corresponding metrics in the op
+    // database.
+    absl::flat_hash_map<uint64 /*hlo_module_id*/,
+         absl::flat_hash_map<std::string /*name*/, OpMetrics*>>
+         op_metrics_map_;
 
-  // The op database.
-  OpMetricsDb* db_;
+    // The op database.
+    OpMetricsDb* db_;
 };
 
 // Returns the ratio of time that is idle (no op execution) over total time.

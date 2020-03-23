@@ -32,29 +32,29 @@ namespace TF {
 namespace {
 
 class LegalizeHloToTf : public FunctionPass<LegalizeHloToTf> {
- public:
-  LegalizeHloToTf() = default;
-  LegalizeHloToTf(const LegalizeHloToTf &) {}
+public:
+    LegalizeHloToTf() = default;
+    LegalizeHloToTf(const LegalizeHloToTf &) {}
 
-  /// Performs the legalization to the TF dialect.
-  void runOnFunction() override;
+    /// Performs the legalization to the TF dialect.
+    void runOnFunction() override;
 };
 
 #include "tensorflow/compiler/mlir/tensorflow/transforms/generated_legalize_hlo.inc"
 
 /// Performs the lowering to XLA dialect.
 void LegalizeHloToTf::runOnFunction() {
-  MLIRContext &context = getContext();
+    MLIRContext &context = getContext();
 
-  // Add legalization patterns to the list.
-  OwningRewritePatternList patterns;
-  populateWithGenerated(&context, &patterns);
+    // Add legalization patterns to the list.
+    OwningRewritePatternList patterns;
+    populateWithGenerated(&context, &patterns);
 
-  ConversionTarget target(context);
-  target.addLegalDialect<TensorFlowDialect>();
-  target.addLegalOp<CallOp>();
-  if (failed(applyPartialConversion(getFunction(), target, patterns)))
-    signalPassFailure();
+    ConversionTarget target(context);
+    target.addLegalDialect<TensorFlowDialect>();
+    target.addLegalOp<CallOp>();
+    if (failed(applyPartialConversion(getFunction(), target, patterns)))
+        signalPassFailure();
 }
 
 static PassRegistration<LegalizeHloToTf> pass(
@@ -63,7 +63,7 @@ static PassRegistration<LegalizeHloToTf> pass(
 }  // end namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateLegalizeHloToTfPass() {
-  return std::make_unique<LegalizeHloToTf>();
+    return std::make_unique<LegalizeHloToTf>();
 }
 
 }  // end namespace TF

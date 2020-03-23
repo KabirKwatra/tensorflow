@@ -40,58 +40,58 @@ constexpr char kMirroredVariableIndicesAttr[] = "_mirrored_variable_indices";
 // invoked functions whether each input has the same data across replicas.
 struct AnnotateParameterReplication
     : public ModulePass<AnnotateParameterReplication> {
-  void runOnModule() override;
+    void runOnModule() override;
 };
 
 // Returns the first value in the chain of operands, which is not defined by a
 // tf.IdentityOp or a tf.ReadVariableOp.
 Value SkipIdentityAndReadVariable(Value v) {
-  while (auto op = v.getDefiningOp()) {
-    if (!(isa<TF::IdentityOp>(op) || isa<TF::ReadVariableOp>(op))) break;
-    v = op->getOperand(0);
-  }
-  return v;
+    while (auto op = v.getDefiningOp()) {
+        if (!(isa<TF::IdentityOp>(op) || isa<TF::ReadVariableOp>(op))) break;
+        v = op->getOperand(0);
+    }
+    return v;
 }
 
 void AnnotateParameterReplication::runOnModule() {
-  ModuleOp m = getModule();
-  OpBuilder builder(m.getContext());
-  m.walk([&](tf_device::LaunchFuncOp launch_func) {
-    auto replicate = launch_func.getParentOfType<tf_device::ReplicateOp>();
-    if (!replicate) return;
-    auto mirrored_variable_indices_attr =
-        replicate.getAttrOfType<ArrayAttr>(kMirroredVariableIndicesAttr);
-    llvm::SmallDenseSet<int64_t, 8> mirrored_replicate_args;
-    if (mirrored_variable_indices_attr) {
-      for (const auto& mirrored_index : mirrored_variable_indices_attr) {
-        mirrored_replicate_args.insert(
-            mirrored_index.cast<IntegerAttr>().getInt());
-      }
-    }
-    auto func = llvm::cast<FuncOp>(m.lookupSymbol(launch_func.func()));
-    for (auto entry : llvm::enumerate(launch_func.getOperands())) {
-      auto operand = SkipIdentityAndReadVariable(entry.value());
-      auto block_arg = operand.dyn_cast<BlockArgument>();
-      if (block_arg && block_arg.getOwner() == &replicate.GetBody()) {
-        // Only mirrored args of ReplicateOp can be annotated.
-        if (mirrored_replicate_args.count(block_arg.getArgNumber()) == 0) {
-          continue;
+    ModuleOp m = getModule();
+    OpBuilder builder(m.getContext());
+    m.walk([&](tf_device::LaunchFuncOp launch_func) {
+        auto replicate = launch_func.getParentOfType<tf_device::ReplicateOp>();
+        if (!replicate) return;
+        auto mirrored_variable_indices_attr =
+            replicate.getAttrOfType<ArrayAttr>(kMirroredVariableIndicesAttr);
+        llvm::SmallDenseSet<int64_t, 8> mirrored_replicate_args;
+        if (mirrored_variable_indices_attr) {
+            for (const auto& mirrored_index : mirrored_variable_indices_attr) {
+                mirrored_replicate_args.insert(
+                    mirrored_index.cast<IntegerAttr>().getInt());
+            }
         }
-      } else if (!operand.getParentRegion()->isProperAncestor(
-                     &replicate.body())) {
-        // Not a replication-invariant operand.
-        continue;
-      }
-      func.setArgAttr(entry.index(), kReplicationAttr,
-                      builder.getBoolAttr(true));
-    }
-  });
+        auto func = llvm::cast<FuncOp>(m.lookupSymbol(launch_func.func()));
+        for (auto entry : llvm::enumerate(launch_func.getOperands())) {
+            auto operand = SkipIdentityAndReadVariable(entry.value());
+            auto block_arg = operand.dyn_cast<BlockArgument>();
+            if (block_arg && block_arg.getOwner() == &replicate.GetBody()) {
+                // Only mirrored args of ReplicateOp can be annotated.
+                if (mirrored_replicate_args.count(block_arg.getArgNumber()) == 0) {
+                    continue;
+                }
+            } else if (!operand.getParentRegion()->isProperAncestor(
+                           &replicate.body())) {
+                // Not a replication-invariant operand.
+                continue;
+            }
+            func.setArgAttr(entry.index(), kReplicationAttr,
+                            builder.getBoolAttr(true));
+        }
+    });
 }
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<ModuleOp>> CreateAnnotateParameterReplicationPass() {
-  return std::make_unique<AnnotateParameterReplication>();
+    return std::make_unique<AnnotateParameterReplication>();
 }
 
 static PassRegistration<AnnotateParameterReplication> pass(

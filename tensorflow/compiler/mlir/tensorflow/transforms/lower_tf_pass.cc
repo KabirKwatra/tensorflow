@@ -24,13 +24,13 @@ namespace {
 // Lowers some of the TensorFlow operations that can be represented using other
 // TensorFlow operations.
 struct LowerTF : public FunctionPass<LowerTF> {
-  void runOnFunction() override {
-    // Add lowering patterns to the list.
-    OwningRewritePatternList patterns;
-    mlir::TF::PopulateLoweringTFPatterns(&getContext(), &patterns);
+    void runOnFunction() override {
+        // Add lowering patterns to the list.
+        OwningRewritePatternList patterns;
+        mlir::TF::PopulateLoweringTFPatterns(&getContext(), &patterns);
 
-    applyPatternsGreedily(getFunction(), patterns);
-  }
+        applyPatternsGreedily(getFunction(), patterns);
+    }
 };
 
 }  // namespace

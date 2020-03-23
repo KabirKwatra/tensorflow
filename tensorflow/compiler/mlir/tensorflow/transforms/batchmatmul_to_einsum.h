@@ -30,11 +30,11 @@ namespace TF {
 template <typename BatchMatMulOpType>
 class ConvertTFBatchMatMulToEinsumOp
     : public OpRewritePattern<BatchMatMulOpType> {
-  using OpRewritePattern<BatchMatMulOpType>::OpRewritePattern;
+    using OpRewritePattern<BatchMatMulOpType>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(
-      BatchMatMulOpType op,
-      PatternRewriter& rewriter) const override;  // NOLINT
+    LogicalResult matchAndRewrite(
+        BatchMatMulOpType op,
+        PatternRewriter& rewriter) const override;  // NOLINT
 };
 
 }  // namespace TF

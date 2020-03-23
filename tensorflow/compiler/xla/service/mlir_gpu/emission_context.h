@@ -35,52 +35,52 @@ namespace mlir_gpu {
 // EmissionContext uses an RAII pattern, it owns its hlo module and mlir
 // context.
 class EmissionContext {
- public:
-  using ErrorMap =
-      std::unordered_map<const HloInstruction*, std::vector<std::string>>;
+public:
+    using ErrorMap =
+        std::unordered_map<const HloInstruction*, std::vector<std::string>>;
 
-  // Gets an hlo module and sets the default error handler which writes to the
-  // ERROR log and is executed when the instance gets destroyed or
-  // `releaseHloModule()` is called.
-  explicit EmissionContext(std::unique_ptr<HloModule> module);
+    // Gets an hlo module and sets the default error handler which writes to the
+    // ERROR log and is executed when the instance gets destroyed or
+    // `releaseHloModule()` is called.
+    explicit EmissionContext(std::unique_ptr<HloModule> module);
 
-  // Gets an hlo module and an error handler function which is executed when the
-  // instance gets destroyed or `releaseHloModule()` is called.
-  EmissionContext(std::unique_ptr<HloModule> module,
-                  std::function<void(const ErrorMap&, HloModule*)> callback);
+    // Gets an hlo module and an error handler function which is executed when the
+    // instance gets destroyed or `releaseHloModule()` is called.
+    EmissionContext(std::unique_ptr<HloModule> module,
+                    std::function<void(const ErrorMap&, HloModule*)> callback);
 
-  // Handles all the errors according to the error handler function before
-  // getting destroyed.
-  ~EmissionContext();
+    // Handles all the errors according to the error handler function before
+    // getting destroyed.
+    ~EmissionContext();
 
-  // Returns a location constructed from `instr` that then is used by
-  // the diagnostic handler to collect the errors.
-  mlir::Location getLocation(const HloInstruction* instr);
+    // Returns a location constructed from `instr` that then is used by
+    // the diagnostic handler to collect the errors.
+    mlir::Location getLocation(const HloInstruction* instr);
 
-  // Adds an error message associated with provided hlo instruction.
-  void addError(const HloInstruction* hlo_instruction, const string& str);
+    // Adds an error message associated with provided hlo instruction.
+    void addError(const HloInstruction* hlo_instruction, const string& str);
 
-  // Sets a function that handles the errors at the point when the instance
-  // gets destroyed or `releaseHloModule()` is called.
-  void setErrorHandler(
-      std::function<void(const ErrorMap&, HloModule*)> callback);
+    // Sets a function that handles the errors at the point when the instance
+    // gets destroyed or `releaseHloModule()` is called.
+    void setErrorHandler(
+        std::function<void(const ErrorMap&, HloModule*)> callback);
 
-  // Releases hlo module and handles all the errors according to the error
-  // handler function.
-  std::unique_ptr<HloModule> releaseHloModule();
+    // Releases hlo module and handles all the errors according to the error
+    // handler function.
+    std::unique_ptr<HloModule> releaseHloModule();
 
-  HloModule* getHloModule() const;
+    HloModule* getHloModule() const;
 
-  mlir::MLIRContext* getContext();
+    mlir::MLIRContext* getContext();
 
- private:
-  void registerDiagnosticHandler();
-  void callErrorHandlerCallback();
+private:
+    void registerDiagnosticHandler();
+    void callErrorHandlerCallback();
 
-  std::unique_ptr<HloModule> module_;
-  ErrorMap instructions_with_error_;
-  mlir::MLIRContext context_;
-  std::function<void(const ErrorMap&, HloModule*)> error_handler_;
+    std::unique_ptr<HloModule> module_;
+    ErrorMap instructions_with_error_;
+    mlir::MLIRContext context_;
+    std::function<void(const ErrorMap&, HloModule*)> error_handler_;
 };
 
 }  // namespace mlir_gpu

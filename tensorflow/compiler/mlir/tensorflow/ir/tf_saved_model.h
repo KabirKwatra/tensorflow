@@ -25,17 +25,17 @@ namespace mlir {
 namespace tf_saved_model {
 
 class TensorFlowSavedModelDialect : public Dialect {
- public:
-  explicit TensorFlowSavedModelDialect(MLIRContext *context);
-  LogicalResult verifyRegionArgAttribute(Operation *op, unsigned region_index,
-                                         unsigned arg_index,
-                                         NamedAttribute named_attr) override;
-  LogicalResult verifyRegionResultAttribute(Operation *op,
-                                            unsigned region_index,
-                                            unsigned result_index,
-                                            NamedAttribute named_attr) override;
-  LogicalResult verifyOperationAttribute(Operation *op,
-                                         NamedAttribute named_attr) override;
+public:
+    explicit TensorFlowSavedModelDialect(MLIRContext *context);
+    LogicalResult verifyRegionArgAttribute(Operation *op, unsigned region_index,
+                                           unsigned arg_index,
+                                           NamedAttribute named_attr) override;
+    LogicalResult verifyRegionResultAttribute(Operation *op,
+            unsigned region_index,
+            unsigned result_index,
+            NamedAttribute named_attr) override;
+    LogicalResult verifyOperationAttribute(Operation *op,
+                                           NamedAttribute named_attr) override;
 };
 
 // Declares the operations for this dialect using the generated header.
