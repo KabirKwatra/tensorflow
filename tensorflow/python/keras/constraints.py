@@ -73,8 +73,9 @@ class MaxNorm(Constraint):
     @doc_controls.do_not_generate_docs
     def __call__(self, w):
         norms = K.sqrt(
-            math_ops.reduce_sum(math_ops.square(w), axis=self.axis, keepdims=True)
-        )
+            math_ops.reduce_sum(math_ops.square(w),
+                                axis=self.axis,
+                                keepdims=True))
         desired = K.clip(norms, 0, self.max_value)
         return w * (desired / (K.epsilon() + norms))
 
@@ -119,12 +120,9 @@ class UnitNorm(Constraint):
 
     @doc_controls.do_not_generate_docs
     def __call__(self, w):
-        return w / (
-            K.epsilon()
-            + K.sqrt(
-                math_ops.reduce_sum(math_ops.square(w), axis=self.axis, keepdims=True)
-            )
-        )
+        return w / (K.epsilon() + K.sqrt(
+            math_ops.reduce_sum(
+                math_ops.square(w), axis=self.axis, keepdims=True)))
 
     @doc_controls.do_not_generate_docs
     def get_config(self):
@@ -172,12 +170,11 @@ class MinMaxNorm(Constraint):
     @doc_controls.do_not_generate_docs
     def __call__(self, w):
         norms = K.sqrt(
-            math_ops.reduce_sum(math_ops.square(w), axis=self.axis, keepdims=True)
-        )
-        desired = (
-            self.rate * K.clip(norms, self.min_value, self.max_value)
-            + (1 - self.rate) * norms
-        )
+            math_ops.reduce_sum(math_ops.square(w),
+                                axis=self.axis,
+                                keepdims=True))
+        desired = (self.rate * K.clip(norms, self.min_value, self.max_value) +
+                   (1 - self.rate) * norms)
         return w * (desired / (K.epsilon() + norms))
 
     @doc_controls.do_not_generate_docs
@@ -190,9 +187,8 @@ class MinMaxNorm(Constraint):
         }
 
 
-@keras_export(
-    "keras.constraints.RadialConstraint", "keras.constraints.radial_constraint"
-)
+@keras_export("keras.constraints.RadialConstraint",
+              "keras.constraints.radial_constraint")
 class RadialConstraint(Constraint):
     """Constrains `Conv2D` kernel weights to be the same for each radius.
 
@@ -228,16 +224,15 @@ class RadialConstraint(Constraint):
         w_shape = w.shape
         if w_shape.rank is None or w_shape.rank != 4:
             raise ValueError(
-                "The weight tensor must be of rank 4, but is of shape: %s" % w_shape
-            )
+                "The weight tensor must be of rank 4, but is of shape: %s" %
+                w_shape)
 
         height, width, channels, kernels = w_shape
         w = K.reshape(w, (height, width, channels * kernels))
         # TODO(cpeter): Switch map_fn for a faster tf.vectorized_map once K.switch
         # is supported.
-        w = K.map_fn(
-            self._kernel_constraint, K.stack(array_ops.unstack(w, axis=-1), axis=0)
-        )
+        w = K.map_fn(self._kernel_constraint,
+                     K.stack(array_ops.unstack(w, axis=-1), axis=0))
         return K.reshape(
             K.stack(array_ops.unstack(w, axis=0), axis=-1),
             (height, width, channels, kernels),
@@ -252,9 +247,9 @@ class RadialConstraint(Constraint):
 
         kernel_new = K.switch(
             K.cast(math_ops.floormod(kernel_shape, 2), "bool"),
-            lambda: kernel[start - 1 : start, start - 1 : start],
-            lambda: kernel[start - 1 : start, start - 1 : start]
-            + K.zeros((2, 2), dtype=kernel.dtype),  # pylint: disable=g-long-lambda
+            lambda: kernel[start - 1:start, start - 1:start],
+            lambda: kernel[start - 1:start, start - 1:start] + K.zeros(
+                (2, 2), dtype=kernel.dtype),  # pylint: disable=g-long-lambda
         )
         index = K.switch(
             K.cast(math_ops.floormod(kernel_shape, 2), "bool"),
@@ -266,9 +261,9 @@ class RadialConstraint(Constraint):
         def body_fn(i, array):
             return (
                 i + 1,
-                array_ops.pad(
-                    array, padding, constant_values=kernel[start + i, start + i]
-                ),
+                array_ops.pad(array,
+                              padding,
+                              constant_values=kernel[start + i, start + i]),
             )
 
         _, kernel_new = control_flow_ops.while_loop(
@@ -324,6 +319,5 @@ def get(identifier):
     elif callable(identifier):
         return identifier
     else:
-        raise ValueError(
-            "Could not interpret constraint identifier: " + str(identifier)
-        )
+        raise ValueError("Could not interpret constraint identifier: " +
+                         str(identifier))
