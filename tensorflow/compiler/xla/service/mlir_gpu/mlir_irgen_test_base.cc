@@ -22,7 +22,7 @@ limitations under the License.
 
 #include "absl/memory/memory.h"
 #include "llvm/Support/raw_ostream.h"
-#include "mlir/IR/Module.h"  // from @llvm-project
+#include "mlir/IR/Module.h"         // from @llvm-project
 #include "mlir/Pass/PassManager.h"  // from @llvm-project
 #include "tensorflow/compiler/xla/service/hlo_module_config.h"
 #include "tensorflow/compiler/xla/service/mlir_gpu/failover_compiler.h"
@@ -42,127 +42,126 @@ namespace mlir_gpu {
 
 void MlirIrGenTestBase::CompileIr(std::unique_ptr<HloModule> hlo_module,
                                   const MlirCompiler::IRHook& ir_hook) {
-    MlirCompiler* compiler = GetMLIRCompiler();
-    compiler->SetModuleHook(ir_hook);
-    Status status = CompileToExecutable(std::move(hlo_module)).status();
-    compiler->RemoveModuleHook();
-    TF_ASSERT_OK(status);
+  MlirCompiler* compiler = GetMLIRCompiler();
+  compiler->SetModuleHook(ir_hook);
+  Status status = CompileToExecutable(std::move(hlo_module)).status();
+  compiler->RemoveModuleHook();
+  TF_ASSERT_OK(status);
 }
 
 void MlirIrGenTestBase::PatternMatch(const std::string& str,
                                      const std::string& pattern_file) {
-    StatusOr<bool> filecheck_result =
-        RunFileCheckWithPatternFile(str, pattern_file);
-    TF_ASSERT_OK(filecheck_result.status());
-    EXPECT_TRUE(filecheck_result.ValueOrDie());
+  StatusOr<bool> filecheck_result =
+      RunFileCheckWithPatternFile(str, pattern_file);
+  TF_ASSERT_OK(filecheck_result.status());
+  EXPECT_TRUE(filecheck_result.ValueOrDie());
 }
 
 string MlirIrGenTestBase::CompileIr(
     std::unique_ptr<HloModule> hlo_module,
     MlirCompiler::IRHook::LoweringStage printing_stage) {
-    std::string ir;
-    CompileIr(std::move(hlo_module),
-    {   [&ir](mlir::ModuleOp module) -> Status {
-            std::string buffer_string;
-            llvm::raw_string_ostream ostream(buffer_string);
-            module.print(ostream);
-            ostream.flush();
-            ir = buffer_string;
-            return Status::OK();
-        },
-        printing_stage
-    });
-    return ir;
+  std::string ir;
+  CompileIr(std::move(hlo_module),
+            {[&ir](mlir::ModuleOp module) -> Status {
+               std::string buffer_string;
+               llvm::raw_string_ostream ostream(buffer_string);
+               module.print(ostream);
+               ostream.flush();
+               ir = buffer_string;
+               return Status::OK();
+             },
+             printing_stage});
+  return ir;
 }
 
 void MlirIrGenTestBase::CompileAndVerifyIr(
     std::unique_ptr<HloModule> hlo_module, const std::string& pattern_file,
     LoweringStage printing_stage) {
-    std::string ir = CompileIr(std::move(hlo_module), printing_stage);
-    PatternMatch(ir, pattern_file);
+  std::string ir = CompileIr(std::move(hlo_module), printing_stage);
+  PatternMatch(ir, pattern_file);
 }
 
 void MlirIrGenTestBase::CompileAndVerifyIr(const std::string& hlo_text_filename,
-        LoweringStage printing_stage) {
-    std::string hlo_text_absolute_filename =
-        tensorflow::GetDataDependencyFilepath(hlo_text_filename);
-    TF_ASSERT_OK_AND_ASSIGN(auto module,
-                            GetVerifiedHloModule(hlo_text_absolute_filename));
-    CompileAndVerifyIr(std::move(module),
-                       /*pattern_file=*/hlo_text_absolute_filename,
-                       printing_stage);
+                                           LoweringStage printing_stage) {
+  std::string hlo_text_absolute_filename =
+      tensorflow::GetDataDependencyFilepath(hlo_text_filename);
+  TF_ASSERT_OK_AND_ASSIGN(auto module,
+                          GetVerifiedHloModule(hlo_text_absolute_filename));
+  CompileAndVerifyIr(std::move(module),
+                     /*pattern_file=*/hlo_text_absolute_filename,
+                     printing_stage);
 }
 
 MlirCompiler::IRHook MlirIrGenTestBase::getIRHookBreakingLoweringStage(
     LoweringStage breaking_stage) {
-    return {[](mlir::ModuleOp module) -> Status {
+  return {[](mlir::ModuleOp module) -> Status {
             mlir::PassManager pm(module.getContext());
             pm.addPass(::mlir::createInjectErrorsForTestingPass());
             if (failed(pm.run(module))) {
-                return InternalError("InjectErrorsForTestingPass failed.");
+              return InternalError("InjectErrorsForTestingPass failed.");
             }
             return Status::OK();
-        },
-        breaking_stage};
+          },
+          breaking_stage};
 }
 
 StatusOr<string> MlirIrGenTestBase::CompileAndInjectErrors(
     std::unique_ptr<HloModule> hlo_module, LoweringStage breaking_stage) {
-    std::string errors;
-    auto error_handler = [&errors](const EmissionContext::ErrorMap& error_map,
-    HloModule* hlo_module) {
-        errors = "ERRORS FOUND: ";
-        for (auto& err : error_map) {
-            errors += "[" + err.first->ToString() + ": " +
-                      absl::StrJoin(err.second, "; ") + "]";
-        }
-    };
-
-    MlirCompiler* compiler = GetMLIRCompiler();
-    compiler->SetModuleHook(getIRHookBreakingLoweringStage(breaking_stage));
-    compiler->SetErrorHandler(error_handler);
-    Status status = CompileToExecutable(std::move(hlo_module)).status();
-    compiler->RemoveModuleHook();
-    compiler->RemoveErrorHandler();
-
-    if (status.ok()) {
-        return errors;
+  std::string errors;
+  auto error_handler = [&errors](const EmissionContext::ErrorMap& error_map,
+                                 HloModule* hlo_module) {
+    errors = "ERRORS FOUND: ";
+    for (auto& err : error_map) {
+      errors += "[" + err.first->ToString() + ": " +
+                absl::StrJoin(err.second, "; ") + "]";
     }
-    return status;
+  };
+
+  MlirCompiler* compiler = GetMLIRCompiler();
+  compiler->SetModuleHook(getIRHookBreakingLoweringStage(breaking_stage));
+  compiler->SetErrorHandler(error_handler);
+  Status status = CompileToExecutable(std::move(hlo_module)).status();
+  compiler->RemoveModuleHook();
+  compiler->RemoveErrorHandler();
+
+  if (status.ok()) {
+    return errors;
+  }
+  return status;
 }
 
 void MlirIrGenTestBase::CompileAndVerifyErrors(
     const std::string& hlo_text_filename, LoweringStage breaking_stage) {
-    std::string test_srcdir = tensorflow::testing::TensorFlowSrcRoot();
-    std::string hlo_text_absolute_filename =
-        tensorflow::GetDataDependencyFilepath(hlo_text_filename);
-    TF_ASSERT_OK_AND_ASSIGN(auto module,
-                            GetVerifiedHloModule(hlo_text_absolute_filename));
-    TF_ASSERT_OK_AND_ASSIGN(
-        std::string errors,
-        CompileAndInjectErrors(std::move(module), breaking_stage));
-    PatternMatch(errors, /*pattern_file=*/hlo_text_absolute_filename);
+  std::string test_srcdir = tensorflow::testing::TensorFlowSrcRoot();
+  std::string hlo_text_absolute_filename =
+      tensorflow::GetDataDependencyFilepath(hlo_text_filename);
+  TF_ASSERT_OK_AND_ASSIGN(auto module,
+                          GetVerifiedHloModule(hlo_text_absolute_filename));
+  TF_ASSERT_OK_AND_ASSIGN(
+      std::string errors,
+      CompileAndInjectErrors(std::move(module), breaking_stage));
+  PatternMatch(errors, /*pattern_file=*/hlo_text_absolute_filename);
 }
 
 StatusOr<std::unique_ptr<VerifiedHloModule>>
 MlirIrGenTestBase::GetVerifiedHloModule(const std::string& hlo_text_filename) {
-    HloModuleConfig config;
-    config.set_debug_options(GetDebugOptionsForTest());
-    auto module = absl::make_unique<VerifiedHloModule>(
-                      "Module", config, /*verifier_layout_sensitive=*/true,
-                      /*allow_mixed_precision_in_hlo_verifier=*/false,
-                      /*shape_size_function=*/ShapeUtil::ByteSizeOfElements);
-    std::string hlo_text;
-    TF_RETURN_IF_ERROR(tensorflow::ReadFileToString(
-                           tensorflow::Env::Default(), hlo_text_filename, &hlo_text));
-    TF_RETURN_IF_ERROR(module->ParseHloStringAndVerifyModule(hlo_text));
-    return std::move(module);
+  HloModuleConfig config;
+  config.set_debug_options(GetDebugOptionsForTest());
+  auto module = absl::make_unique<VerifiedHloModule>(
+      "Module", config, /*verifier_layout_sensitive=*/true,
+      /*allow_mixed_precision_in_hlo_verifier=*/false,
+      /*shape_size_function=*/ShapeUtil::ByteSizeOfElements);
+  std::string hlo_text;
+  TF_RETURN_IF_ERROR(tensorflow::ReadFileToString(
+      tensorflow::Env::Default(), hlo_text_filename, &hlo_text));
+  TF_RETURN_IF_ERROR(module->ParseHloStringAndVerifyModule(hlo_text));
+  return std::move(module);
 }
 
 MlirCompiler* MlirIrGenTestBase::GetMLIRCompiler() {
-    // TODO(b/137624192): Remove failover once no longer in place.
-    auto* failover = static_cast<FailoverCompiler*>(backend().compiler());
-    return static_cast<MlirCompiler*>(failover->GetPrimary());
+  // TODO(b/137624192): Remove failover once no longer in place.
+  auto* failover = static_cast<FailoverCompiler*>(backend().compiler());
+  return static_cast<MlirCompiler*>(failover->GetPrimary());
 }
 
 }  // namespace mlir_gpu

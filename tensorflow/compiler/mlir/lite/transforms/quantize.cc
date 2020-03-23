@@ -20,16 +20,16 @@ limitations under the License.
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "mlir/Dialect/Quant/QuantTypes.h"  // from @llvm-project
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Builders.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Matchers.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/OperationSupport.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Support/Functional.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"             // from @llvm-project
+#include "mlir/IR/Builders.h"               // from @llvm-project
+#include "mlir/IR/MLIRContext.h"            // from @llvm-project
+#include "mlir/IR/Matchers.h"               // from @llvm-project
+#include "mlir/IR/Module.h"                 // from @llvm-project
+#include "mlir/IR/Operation.h"              // from @llvm-project
+#include "mlir/IR/OperationSupport.h"       // from @llvm-project
+#include "mlir/IR/PatternMatch.h"           // from @llvm-project
+#include "mlir/Pass/Pass.h"                 // from @llvm-project
+#include "mlir/Support/Functional.h"        // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/ir/tfl_ops.h"
 #include "tensorflow/compiler/mlir/lite/quantization/quantization_utils.h"
 #include "tensorflow/compiler/mlir/lite/transforms/passes.h"
@@ -66,39 +66,35 @@ namespace {
 // Full integer quantization rewrite pattern for TFLite.
 struct TFLFullQuantization
     : public quant::QuantizationPattern<TFLFullQuantization, QuantizeOp,
-      DequantizeOp, NumericVerifyOp> {
-    explicit TFLFullQuantization(MLIRContext* ctx, bool verify_numeric,
-                                 float tolerance, bool verify_single_layer)
-        : BaseType(ctx, verify_numeric, tolerance, verify_single_layer) {}
-    static bool AllowHybridOperand() {
-        return false;
-    }
-    static bool AllowHybridResult() {
-        return false;
-    }
+                                        DequantizeOp, NumericVerifyOp> {
+  explicit TFLFullQuantization(MLIRContext* ctx, bool verify_numeric,
+                               float tolerance, bool verify_single_layer)
+      : BaseType(ctx, verify_numeric, tolerance, verify_single_layer) {}
+  static bool AllowHybridOperand() { return false; }
+  static bool AllowHybridResult() { return false; }
 };
 
 // Applies quantization on the model in TFL dialect.
 struct QuantizePass : public FunctionPass<QuantizePass> {
-    void runOnFunction() override;
+  void runOnFunction() override;
 };
 
 #include "tensorflow/compiler/mlir/lite/transforms/generated_quantize.inc"
 
 void QuantizePass::runOnFunction() {
-    OwningRewritePatternList patterns;
-    auto func = getFunction();
-    auto* ctx = func.getContext();
-    TFL::populateWithGenerated(ctx, &patterns);
-    patterns.insert<TFLFullQuantization>(
-        ctx, enable_numeric_verify, error_tolerance, enable_single_layer_verify);
-    applyPatternsGreedily(func, patterns);
+  OwningRewritePatternList patterns;
+  auto func = getFunction();
+  auto* ctx = func.getContext();
+  TFL::populateWithGenerated(ctx, &patterns);
+  patterns.insert<TFLFullQuantization>(
+      ctx, enable_numeric_verify, error_tolerance, enable_single_layer_verify);
+  applyPatternsGreedily(func, patterns);
 }
 }  // namespace
 
 // Creates an instance of the TensorFlow Lite dialect QuantizeTFL pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreateQuantizePass() {
-    return std::make_unique<QuantizePass>();
+  return std::make_unique<QuantizePass>();
 }
 
 static PassRegistration<QuantizePass> pass(

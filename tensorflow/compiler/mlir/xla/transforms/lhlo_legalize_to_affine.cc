@@ -17,13 +17,13 @@ limitations under the License.
 
 #include "absl/memory/memory.h"
 #include "mlir/Dialect/AffineOps/AffineOps.h"  // from @llvm-project
-#include "mlir/Dialect/StandardOps/IR/Ops.h"  // from @llvm-project
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Dialect/StandardOps/IR/Ops.h"   // from @llvm-project
+#include "mlir/IR/Attributes.h"                // from @llvm-project
+#include "mlir/IR/Location.h"                  // from @llvm-project
+#include "mlir/IR/MLIRContext.h"               // from @llvm-project
+#include "mlir/IR/PatternMatch.h"              // from @llvm-project
+#include "mlir/IR/StandardTypes.h"             // from @llvm-project
+#include "mlir/Pass/Pass.h"                    // from @llvm-project
 #include "tensorflow/compiler/mlir/xla/ir/lhlo_ops.h"
 #include "tensorflow/compiler/mlir/xla/transforms/map_xla_to_scalar_op.h"
 
@@ -33,43 +33,43 @@ namespace {
 
 template <typename LhloOpTy>
 struct BinaryOpConverter : public OpRewritePattern<LhloOpTy> {
-    using OpRewritePattern<LhloOpTy>::OpRewritePattern;
+  using OpRewritePattern<LhloOpTy>::OpRewritePattern;
 
-    LogicalResult matchAndRewrite(LhloOpTy op,
-                                  PatternRewriter& rewriter) const override {
-        const auto& lhs = op.lhs();
-        const auto& rhs = op.rhs();
-        const auto& lhs_type = lhs.getType().template cast<MemRefType>();
-        const auto& rhs_type = rhs.getType().template cast<MemRefType>();
-        const auto& element_type = lhs_type.getElementType();
+  LogicalResult matchAndRewrite(LhloOpTy op,
+                                PatternRewriter& rewriter) const override {
+    const auto& lhs = op.lhs();
+    const auto& rhs = op.rhs();
+    const auto& lhs_type = lhs.getType().template cast<MemRefType>();
+    const auto& rhs_type = rhs.getType().template cast<MemRefType>();
+    const auto& element_type = lhs_type.getElementType();
 
-        if (lhs_type.getShape() != rhs_type.getShape()) {
-            return failure();
-        }
-        const auto& shape = lhs_type.getShape();
-        SmallVector<Value, 4> induction_vars;
-        const auto loc = op.getLoc();
-        for (int i = 0; i < shape.size(); ++i) {
-            auto forOp = rewriter.create<AffineForOp>(loc, 0, shape[i]);
-            induction_vars.push_back(forOp.getInductionVar());
-            rewriter.setInsertionPointToStart(forOp.getBody());
-        }
-        auto l = rewriter.create<LoadOp>(loc, lhs, induction_vars);
-        auto r = rewriter.create<LoadOp>(loc, rhs, induction_vars);
-        Value opResult = xla_lhlo::XlaOpToStdScalarOp::map<LhloOpTy>(
-                             op, element_type, {l, r}, &rewriter);
-        if (opResult == nullptr) {
-            return failure();
-        }
-        rewriter.create<StoreOp>(loc, opResult, op.out(), induction_vars);
-        rewriter.eraseOp(op);
-        return success();
+    if (lhs_type.getShape() != rhs_type.getShape()) {
+      return failure();
     }
+    const auto& shape = lhs_type.getShape();
+    SmallVector<Value, 4> induction_vars;
+    const auto loc = op.getLoc();
+    for (int i = 0; i < shape.size(); ++i) {
+      auto forOp = rewriter.create<AffineForOp>(loc, 0, shape[i]);
+      induction_vars.push_back(forOp.getInductionVar());
+      rewriter.setInsertionPointToStart(forOp.getBody());
+    }
+    auto l = rewriter.create<LoadOp>(loc, lhs, induction_vars);
+    auto r = rewriter.create<LoadOp>(loc, rhs, induction_vars);
+    Value opResult = xla_lhlo::XlaOpToStdScalarOp::map<LhloOpTy>(
+        op, element_type, {l, r}, &rewriter);
+    if (opResult == nullptr) {
+      return failure();
+    }
+    rewriter.create<StoreOp>(loc, opResult, op.out(), induction_vars);
+    rewriter.eraseOp(op);
+    return success();
+  }
 };
 
 void populateLHLOToAffineConversionPattern(MLIRContext* context,
-        OwningRewritePatternList* patterns) {
-    // clang-format off
+                                           OwningRewritePatternList* patterns) {
+  // clang-format off
     patterns->insert<
     BinaryOpConverter<xla_lhlo::AddOp>,
                       BinaryOpConverter<xla_lhlo::AndOp>,
@@ -78,22 +78,22 @@ void populateLHLOToAffineConversionPattern(MLIRContext* context,
                       BinaryOpConverter<xla_lhlo::MinOp>,
                       BinaryOpConverter<xla_lhlo::MulOp>,
                       BinaryOpConverter<xla_lhlo::SubOp>>(context);
-    // clang-format on
+  // clang-format on
 }
 
 struct LhloLegalizeToAffine : public FunctionPass<LhloLegalizeToAffine> {
-    void runOnFunction() override {
-        OwningRewritePatternList patterns;
-        auto func = getFunction();
-        populateLHLOToAffineConversionPattern(func.getContext(), &patterns);
-        applyPatternsGreedily(func, patterns);
-    }
+  void runOnFunction() override {
+    OwningRewritePatternList patterns;
+    auto func = getFunction();
+    populateLHLOToAffineConversionPattern(func.getContext(), &patterns);
+    applyPatternsGreedily(func, patterns);
+  }
 };
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> createLegalizeToAffinePass() {
-    return absl::make_unique<LhloLegalizeToAffine>();
+  return absl::make_unique<LhloLegalizeToAffine>();
 }
 
 static PassRegistration<LhloLegalizeToAffine> legalize_pass(

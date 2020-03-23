@@ -19,23 +19,23 @@ limitations under the License.
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"  // from @llvm-project
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Block.h"  // from @llvm-project
-#include "mlir/IR/Builders.h"  // from @llvm-project
-#include "mlir/IR/Function.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Matchers.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/OperationSupport.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/SymbolTable.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
-#include "mlir/IR/Value.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Pass/PassRegistry.h"  // from @llvm-project
-#include "mlir/Support/LLVM.h"  // from @llvm-project
-#include "mlir/Support/LogicalResult.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"               // from @llvm-project
+#include "mlir/IR/Block.h"                    // from @llvm-project
+#include "mlir/IR/Builders.h"                 // from @llvm-project
+#include "mlir/IR/Function.h"                 // from @llvm-project
+#include "mlir/IR/MLIRContext.h"              // from @llvm-project
+#include "mlir/IR/Matchers.h"                 // from @llvm-project
+#include "mlir/IR/Module.h"                   // from @llvm-project
+#include "mlir/IR/Operation.h"                // from @llvm-project
+#include "mlir/IR/OperationSupport.h"         // from @llvm-project
+#include "mlir/IR/StandardTypes.h"            // from @llvm-project
+#include "mlir/IR/SymbolTable.h"              // from @llvm-project
+#include "mlir/IR/Types.h"                    // from @llvm-project
+#include "mlir/IR/Value.h"                    // from @llvm-project
+#include "mlir/Pass/Pass.h"                   // from @llvm-project
+#include "mlir/Pass/PassRegistry.h"           // from @llvm-project
+#include "mlir/Support/LLVM.h"                // from @llvm-project
+#include "mlir/Support/LogicalResult.h"       // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/ir/tfl_ops.h"
 #include "tensorflow/compiler/mlir/lite/utils/stateful_ops_utils.h"
 
@@ -67,52 +67,52 @@ namespace TFL {
 namespace {
 
 struct SplitMergedOperandsPass : public FunctionPass<SplitMergedOperandsPass> {
-    void runOnFunction() override;
+  void runOnFunction() override;
 };
 
 LogicalResult DuplicateValueIfNeeded(Operation* op,
                                      llvm::DenseSet<Value>* values,
                                      OpBuilder* builder) {
-    std::vector<int> stateful_operands_index;
-    if (!IsStatefulOp(op, &stateful_operands_index)) return success();
+  std::vector<int> stateful_operands_index;
+  if (!IsStatefulOp(op, &stateful_operands_index)) return success();
 
-    for (int index : stateful_operands_index) {
-        Value operand = op->getOperand(index);
-        auto inserted_value = values->insert(operand).second;
-        if (inserted_value) continue;
-        // We can only clone the constant op at this point.
-        // Since all ops have been legalized to tflite ops, so we only care about
-        // ConstOp or QConstOp or mlir constant op/
-        Operation* input_op = operand.getDefiningOp();
-        if (input_op == nullptr) return failure();
+  for (int index : stateful_operands_index) {
+    Value operand = op->getOperand(index);
+    auto inserted_value = values->insert(operand).second;
+    if (inserted_value) continue;
+    // We can only clone the constant op at this point.
+    // Since all ops have been legalized to tflite ops, so we only care about
+    // ConstOp or QConstOp or mlir constant op/
+    Operation* input_op = operand.getDefiningOp();
+    if (input_op == nullptr) return failure();
 
-        Attribute attr;
-        if (!matchPattern(input_op, m_Constant(&attr))) {
-            op->emitError()
-                    << "We cannot duplicate the value since it's not constant.\n";
-            return failure();
-        }
-        builder->setInsertionPoint(op);
-        Operation* duplicated_input_op = builder->clone(*input_op);
-
-        // Rewire the inputs.
-        op->setOperand(index, duplicated_input_op->getResult(0));
+    Attribute attr;
+    if (!matchPattern(input_op, m_Constant(&attr))) {
+      op->emitError()
+          << "We cannot duplicate the value since it's not constant.\n";
+      return failure();
     }
-    return success();
+    builder->setInsertionPoint(op);
+    Operation* duplicated_input_op = builder->clone(*input_op);
+
+    // Rewire the inputs.
+    op->setOperand(index, duplicated_input_op->getResult(0));
+  }
+  return success();
 }
 
 void SplitMergedOperandsPass::runOnFunction() {
-    llvm::DenseSet<Value> stateful_values;
-    auto func = getFunction();
-    OpBuilder builder(func);
-    for (auto& bb : func.getBody()) {
-        for (auto& op : bb) {
-            if (failed(DuplicateValueIfNeeded(&op, &stateful_values, &builder))) {
-                func.emitError() << "Failed to duplicate values for the stateful op\n";
-                return signalPassFailure();
-            }
-        }
+  llvm::DenseSet<Value> stateful_values;
+  auto func = getFunction();
+  OpBuilder builder(func);
+  for (auto& bb : func.getBody()) {
+    for (auto& op : bb) {
+      if (failed(DuplicateValueIfNeeded(&op, &stateful_values, &builder))) {
+        func.emitError() << "Failed to duplicate values for the stateful op\n";
+        return signalPassFailure();
+      }
     }
+  }
 }
 
 }  // namespace
@@ -120,7 +120,7 @@ void SplitMergedOperandsPass::runOnFunction() {
 /// Creates an instance of the TensorFlow Lite dialect SplitMergedOperands
 /// pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreateSplitMergedOperandsPass() {
-    return std::make_unique<SplitMergedOperandsPass>();
+  return std::make_unique<SplitMergedOperandsPass>();
 }
 
 static PassRegistration<SplitMergedOperandsPass> pass(

@@ -15,8 +15,8 @@ limitations under the License.
 
 #include "tensorflow/compiler/mlir/tensorflow/utils/convert_tensor.h"
 
-#include "mlir/IR/Builders.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
+#include "mlir/IR/Builders.h"       // from @llvm-project
+#include "mlir/IR/MLIRContext.h"    // from @llvm-project
 #include "mlir/IR/StandardTypes.h"  // from @llvm-project
 #include "tensorflow/compiler/xla/test.h"
 #include "tensorflow/core/lib/core/errors.h"
@@ -27,38 +27,38 @@ namespace tensorflow {
 namespace {
 
 TEST(ConvertTypeToTensorTypeTest, UnrankedTensorType) {
-    mlir::MLIRContext context;
-    mlir::Builder b(&context);
+  mlir::MLIRContext context;
+  mlir::Builder b(&context);
 
-    PartialTensorShape output_shape =
-        ConvertTypeToTensorShape(mlir::UnrankedTensorType::get(b.getF32Type()));
-    EXPECT_TRUE(output_shape.IsIdenticalTo(PartialTensorShape()));
+  PartialTensorShape output_shape =
+      ConvertTypeToTensorShape(mlir::UnrankedTensorType::get(b.getF32Type()));
+  EXPECT_TRUE(output_shape.IsIdenticalTo(PartialTensorShape()));
 }
 
 TEST(ConvertTypeToTensorTypeTest, NonFullyDefinedRankedTensorType) {
-    mlir::MLIRContext context;
-    mlir::Builder b(&context);
+  mlir::MLIRContext context;
+  mlir::Builder b(&context);
 
-    PartialTensorShape output_shape = ConvertTypeToTensorShape(
-                                          mlir::RankedTensorType::get({-1, 2, 3}, b.getF32Type()));
-    EXPECT_TRUE(output_shape.IsIdenticalTo(PartialTensorShape({-1, 2, 3})));
+  PartialTensorShape output_shape = ConvertTypeToTensorShape(
+      mlir::RankedTensorType::get({-1, 2, 3}, b.getF32Type()));
+  EXPECT_TRUE(output_shape.IsIdenticalTo(PartialTensorShape({-1, 2, 3})));
 }
 
 TEST(ConvertTypeToTensorTypeTest, FullyDefinedRankedTensorType) {
-    mlir::MLIRContext context;
-    mlir::Builder b(&context);
+  mlir::MLIRContext context;
+  mlir::Builder b(&context);
 
-    PartialTensorShape output_shape = ConvertTypeToTensorShape(
-                                          mlir::RankedTensorType::get({1, 2, 3}, b.getF32Type()));
-    EXPECT_TRUE(output_shape.IsIdenticalTo(PartialTensorShape({1, 2, 3})));
+  PartialTensorShape output_shape = ConvertTypeToTensorShape(
+      mlir::RankedTensorType::get({1, 2, 3}, b.getF32Type()));
+  EXPECT_TRUE(output_shape.IsIdenticalTo(PartialTensorShape({1, 2, 3})));
 }
 
 TEST(ConvertTypeToTensorTypeTest, ScalarTensorType) {
-    mlir::MLIRContext context;
-    mlir::Builder b(&context);
+  mlir::MLIRContext context;
+  mlir::Builder b(&context);
 
-    PartialTensorShape output_shape = ConvertTypeToTensorShape(b.getF32Type());
-    EXPECT_TRUE(output_shape.IsIdenticalTo(TensorShape()));
+  PartialTensorShape output_shape = ConvertTypeToTensorShape(b.getF32Type());
+  EXPECT_TRUE(output_shape.IsIdenticalTo(TensorShape()));
 }
 
 }  // namespace

@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 #include <gtest/gtest.h>
+
 #include "flatbuffers/flexbuffers.h"  // from @flatbuffers
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
@@ -33,74 +34,74 @@ namespace {
 // A simple test that performs `ADD` if condition is true, and `MUL` otherwise.
 // The computation is: `cond ? a + b : a * b`.
 class SimpleIfTest : public ControlFlowOpTest {
-protected:
-    void SetUp() override {
-        interpreter_->AddSubgraphs(2);
-        builder_->BuildAddSubgraph(interpreter_->subgraph(1));
-        builder_->BuildMulSubgraph(interpreter_->subgraph(2));
-        builder_->BuildIfSubgraph(&interpreter_->primary_subgraph());
+ protected:
+  void SetUp() override {
+    interpreter_->AddSubgraphs(2);
+    builder_->BuildAddSubgraph(interpreter_->subgraph(1));
+    builder_->BuildMulSubgraph(interpreter_->subgraph(2));
+    builder_->BuildIfSubgraph(&interpreter_->primary_subgraph());
 
-        interpreter_->ResizeInputTensor(interpreter_->inputs()[0], {1});
-        interpreter_->ResizeInputTensor(interpreter_->inputs()[1], {2});
-        interpreter_->ResizeInputTensor(interpreter_->inputs()[2], {1, 2});
-        ASSERT_EQ(interpreter_->AllocateTensors(), kTfLiteOk);
+    interpreter_->ResizeInputTensor(interpreter_->inputs()[0], {1});
+    interpreter_->ResizeInputTensor(interpreter_->inputs()[1], {2});
+    interpreter_->ResizeInputTensor(interpreter_->inputs()[2], {1, 2});
+    ASSERT_EQ(interpreter_->AllocateTensors(), kTfLiteOk);
 
-        FillIntTensor(interpreter_->tensor(interpreter_->inputs()[1]), {5, 7});
-        FillIntTensor(interpreter_->tensor(interpreter_->inputs()[2]), {1, 2});
-    }
+    FillIntTensor(interpreter_->tensor(interpreter_->inputs()[1]), {5, 7});
+    FillIntTensor(interpreter_->tensor(interpreter_->inputs()[2]), {1, 2});
+  }
 };
 
 TEST_F(SimpleIfTest, TestIfTrue) {
-    interpreter_->typed_input_tensor<bool>(0)[0] = true;
-    ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
-    TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
-    CheckIntTensor(output, {1, 2}, {6, 9});
+  interpreter_->typed_input_tensor<bool>(0)[0] = true;
+  ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
+  TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
+  CheckIntTensor(output, {1, 2}, {6, 9});
 }
 
 TEST_F(SimpleIfTest, TestIfFalse) {
-    interpreter_->typed_input_tensor<bool>(0)[0] = false;
-    ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
-    TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
-    CheckIntTensor(output, {1, 2}, {5, 14});
+  interpreter_->typed_input_tensor<bool>(0)[0] = false;
+  ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
+  TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
+  CheckIntTensor(output, {1, 2}, {5, 14});
 }
 
 // Test IF op using subgraphs with dynamically sized outputs.
 // The computation is: `cond ? a + b : pad(a, b)`.
 class DynamicSubgraphIfTest : public ControlFlowOpTest {
-protected:
-    void SetUp() override {
-        interpreter_->AddSubgraphs(2);
-        builder_->BuildAddSubgraph(interpreter_->subgraph(1));
-        builder_->BuildPadSubgraph(interpreter_->subgraph(2));
-        builder_->BuildIfSubgraph(&interpreter_->primary_subgraph());
+ protected:
+  void SetUp() override {
+    interpreter_->AddSubgraphs(2);
+    builder_->BuildAddSubgraph(interpreter_->subgraph(1));
+    builder_->BuildPadSubgraph(interpreter_->subgraph(2));
+    builder_->BuildIfSubgraph(&interpreter_->primary_subgraph());
 
-        interpreter_->ResizeInputTensor(interpreter_->inputs()[0], {1});
-        interpreter_->ResizeInputTensor(interpreter_->inputs()[1], {2});
-        interpreter_->ResizeInputTensor(interpreter_->inputs()[2], {1, 2});
-        ASSERT_EQ(interpreter_->AllocateTensors(), kTfLiteOk);
+    interpreter_->ResizeInputTensor(interpreter_->inputs()[0], {1});
+    interpreter_->ResizeInputTensor(interpreter_->inputs()[1], {2});
+    interpreter_->ResizeInputTensor(interpreter_->inputs()[2], {1, 2});
+    ASSERT_EQ(interpreter_->AllocateTensors(), kTfLiteOk);
 
-        FillIntTensor(interpreter_->tensor(interpreter_->inputs()[1]), {5, 7});
-        FillIntTensor(interpreter_->tensor(interpreter_->inputs()[2]), {1, 2});
-    }
+    FillIntTensor(interpreter_->tensor(interpreter_->inputs()[1]), {5, 7});
+    FillIntTensor(interpreter_->tensor(interpreter_->inputs()[2]), {1, 2});
+  }
 };
 
 TEST_F(DynamicSubgraphIfTest, TestIfTrue) {
-    interpreter_->typed_input_tensor<bool>(0)[0] = true;
-    ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
-    TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
-    // Even if the true branch has a static type output, the output of the
-    // if op is dynamic because the other branch has dynamic output.
-    EXPECT_TRUE(IsDynamicTensor(output));
-    CheckIntTensor(output, {1, 2}, {6, 9});
+  interpreter_->typed_input_tensor<bool>(0)[0] = true;
+  ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
+  TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
+  // Even if the true branch has a static type output, the output of the
+  // if op is dynamic because the other branch has dynamic output.
+  EXPECT_TRUE(IsDynamicTensor(output));
+  CheckIntTensor(output, {1, 2}, {6, 9});
 }
 
 TEST_F(DynamicSubgraphIfTest, TestIfFalse) {
-    interpreter_->typed_input_tensor<bool>(0)[0] = false;
-    ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
-    TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
-    // The false branch has dynamic output.
-    EXPECT_TRUE(IsDynamicTensor(output));
-    CheckIntTensor(output, {5}, {0, 5, 7, 0, 0});
+  interpreter_->typed_input_tensor<bool>(0)[0] = false;
+  ASSERT_EQ(interpreter_->Invoke(), kTfLiteOk);
+  TfLiteTensor* output = interpreter_->tensor(interpreter_->outputs()[0]);
+  // The false branch has dynamic output.
+  EXPECT_TRUE(IsDynamicTensor(output));
+  CheckIntTensor(output, {5}, {0, 5, 7, 0, 0});
 }
 
 }  // namespace

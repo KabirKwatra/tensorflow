@@ -16,13 +16,13 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_PLATFORM_DEFAULT_STRONG_HASH_H_
 #define TENSORFLOW_CORE_PLATFORM_DEFAULT_STRONG_HASH_H_
 
-#include "highwayhash/sip_hash.h"  // from @highwayhash
+#include "highwayhash/sip_hash.h"       // from @highwayhash
 #include "highwayhash/state_helpers.h"  // from @highwayhash
 
 namespace tensorflow {
 
 inline uint64 StrongKeyedHash(const uint64 (&key)[2], const string& s) {
-    return highwayhash::StringHasher<highwayhash::SipHashState>()(key, s);
+  return highwayhash::StringHasher<highwayhash::SipHashState>()(key, s);
 }
 
 }  // namespace tensorflow

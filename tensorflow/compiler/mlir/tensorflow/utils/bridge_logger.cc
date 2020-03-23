@@ -18,7 +18,7 @@ limitations under the License.
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Pass/Pass.h"     // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.h"
 
 namespace tensorflow {
@@ -32,24 +32,24 @@ BridgeLoggerConfig::BridgeLoggerConfig(bool print_module_scope,
 inline static void Log(BridgeLoggerConfig::PrintCallbackFn print_callback,
                        mlir::Pass* pass, mlir::Operation* op,
                        llvm::StringRef file_suffix) {
-    std::string name =
-        llvm::formatv("mlir_bridge_{0}_{1}", pass->getName(), file_suffix).str();
+  std::string name =
+      llvm::formatv("mlir_bridge_{0}_{1}", pass->getName(), file_suffix).str();
 
-    std::unique_ptr<llvm::raw_ostream> os;
-    std::string filepath;
-    if (CreateFileForDumping(name, &os, &filepath).ok()) print_callback(*os);
+  std::unique_ptr<llvm::raw_ostream> os;
+  std::string filepath;
+  if (CreateFileForDumping(name, &os, &filepath).ok()) print_callback(*os);
 }
 
 void BridgeLoggerConfig::printBeforeIfEnabled(mlir::Pass* pass,
-        mlir::Operation* operation,
-        PrintCallbackFn print_callback) {
-    Log(print_callback, pass, operation, "before");
+                                              mlir::Operation* operation,
+                                              PrintCallbackFn print_callback) {
+  Log(print_callback, pass, operation, "before");
 }
 
 void BridgeLoggerConfig::printAfterIfEnabled(mlir::Pass* pass,
-        mlir::Operation* operation,
-        PrintCallbackFn print_callback) {
-    Log(print_callback, pass, operation, "after");
+                                             mlir::Operation* operation,
+                                             PrintCallbackFn print_callback) {
+  Log(print_callback, pass, operation, "after");
 }
 
 }  // namespace tensorflow

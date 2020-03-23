@@ -23,9 +23,9 @@ namespace {
 // Returns the shape of the given value if it's ranked; returns llvm::None
 // otherwise.
 llvm::Optional<llvm::ArrayRef<int64_t>> GetShape(mlir::Value value) {
-    auto shaped_type = value.getType().cast<mlir::ShapedType>();
-    if (shaped_type.hasRank()) return shaped_type.getShape();
-    return llvm::None;
+  auto shaped_type = value.getType().cast<mlir::ShapedType>();
+  if (shaped_type.hasRank()) return shaped_type.getShape();
+  return llvm::None;
 }
 }  // namespace
 
@@ -37,12 +37,12 @@ namespace TF {
 
 OperandShapeIterator::OperandShapeIterator(Operation::operand_iterator it)
     : llvm::mapped_iterator<Operation::operand_iterator,
-      llvm::Optional<ArrayRef<int64_t>> (*)(Value)>(
+                            llvm::Optional<ArrayRef<int64_t>> (*)(Value)>(
           it, &GetShape) {}
 
 ResultShapeIterator::ResultShapeIterator(Operation::result_iterator it)
     : llvm::mapped_iterator<Operation::result_iterator,
-      llvm::Optional<ArrayRef<int64_t>> (*)(Value)>(
+                            llvm::Optional<ArrayRef<int64_t>> (*)(Value)>(
           it, &GetShape) {}
 
 //===----------------------------------------------------------------------===//
@@ -50,93 +50,93 @@ ResultShapeIterator::ResultShapeIterator(Operation::result_iterator it)
 //===----------------------------------------------------------------------===//
 
 TensorFlowType TensorFlowRefType::get(Type type) {
-    MLIRContext* ctx = type.getContext();
-    switch (getElementTypeOrSelf(type).getKind()) {
+  MLIRContext* ctx = type.getContext();
+  switch (getElementTypeOrSelf(type).getKind()) {
     case StandardTypes::F16:
-        return HalfRefType::get(ctx);
+      return HalfRefType::get(ctx);
     case StandardTypes::F32:
-        return FloatRefType::get(ctx);
+      return FloatRefType::get(ctx);
     case StandardTypes::F64:
-        return DoubleRefType::get(ctx);
+      return DoubleRefType::get(ctx);
     case StandardTypes::BF16:
-        return Bfloat16RefType::get(ctx);
+      return Bfloat16RefType::get(ctx);
     case StandardTypes::Complex: {
-        const auto& etype = type.cast<ComplexType>().getElementType();
-        switch (getElementTypeOrSelf(etype).getKind()) {
+      const auto& etype = type.cast<ComplexType>().getElementType();
+      switch (getElementTypeOrSelf(etype).getKind()) {
         case StandardTypes::F32:
-            return Complex64RefType::get(ctx);
+          return Complex64RefType::get(ctx);
         case StandardTypes::F64:
-            return Complex128RefType::get(ctx);
+          return Complex128RefType::get(ctx);
         default:
-            llvm_unreachable("unexpected complex type");
-        }
+          llvm_unreachable("unexpected complex type");
+      }
     }
     case StandardTypes::Integer: {
-        const auto& itype = type.cast<IntegerType>();
-        switch (itype.getWidth()) {
+      const auto& itype = type.cast<IntegerType>();
+      switch (itype.getWidth()) {
         case 1:
-            return BoolRefType::get(ctx);
+          return BoolRefType::get(ctx);
         case 8:
-            return itype.isUnsigned() ? TensorFlowType(Uint8RefType::get(ctx))
-                   : Int8RefType::get(ctx);
+          return itype.isUnsigned() ? TensorFlowType(Uint8RefType::get(ctx))
+                                    : Int8RefType::get(ctx);
         case 16:
-            return itype.isUnsigned() ? TensorFlowType(Uint16RefType::get(ctx))
-                   : Int16RefType::get(ctx);
+          return itype.isUnsigned() ? TensorFlowType(Uint16RefType::get(ctx))
+                                    : Int16RefType::get(ctx);
         case 32:
-            return itype.isUnsigned() ? TensorFlowType(Uint32RefType::get(ctx))
-                   : Int32RefType::get(ctx);
+          return itype.isUnsigned() ? TensorFlowType(Uint32RefType::get(ctx))
+                                    : Int32RefType::get(ctx);
         case 64:
-            return itype.isUnsigned() ? TensorFlowType(Uint64RefType::get(ctx))
-                   : Int64RefType::get(ctx);
+          return itype.isUnsigned() ? TensorFlowType(Uint64RefType::get(ctx))
+                                    : Int64RefType::get(ctx);
         default:
-            llvm_unreachable("unexpected integer type");
-        }
+          llvm_unreachable("unexpected integer type");
+      }
     }
 #define HANDLE_TF_TYPE(tftype, enumerant, name) \
   case TensorFlowTypes::enumerant:              \
-return tftype##RefType::get(ctx);
+    return tftype##RefType::get(ctx);
 
 #define HANDLE_TF_REF_TYPE(tftype, enumerant, name)
 // NOLINTNEXTLINE
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_types.def"
     default:
-        llvm_unreachable("unexpected type kind");
-    }
+      llvm_unreachable("unexpected type kind");
+  }
 }
 
 Type TensorFlowRefType::RemoveRef() {
-    MLIRContext* ctx = getContext();
-    switch (getKind()) {
+  MLIRContext* ctx = getContext();
+  switch (getKind()) {
     case TensorFlowTypes::HALF_REF:
-        return mlir::FloatType::getF16(ctx);
+      return mlir::FloatType::getF16(ctx);
     case TensorFlowTypes::FLOAT_REF:
-        return mlir::FloatType::getF32(ctx);
+      return mlir::FloatType::getF32(ctx);
     case TensorFlowTypes::DOUBLE_REF:
-        return mlir::FloatType::getF64(ctx);
+      return mlir::FloatType::getF64(ctx);
     case TensorFlowTypes::BFLOAT16_REF:
-        return mlir::FloatType::getBF16(ctx);
+      return mlir::FloatType::getBF16(ctx);
     case TensorFlowTypes::BOOL_REF:
-        return mlir::IntegerType::get(1, ctx);
+      return mlir::IntegerType::get(1, ctx);
     case TensorFlowTypes::INT8_REF:
-        return mlir::IntegerType::get(8, ctx);
+      return mlir::IntegerType::get(8, ctx);
     case TensorFlowTypes::INT16_REF:
-        return mlir::IntegerType::get(16, ctx);
+      return mlir::IntegerType::get(16, ctx);
     case TensorFlowTypes::INT32_REF:
-        return mlir::IntegerType::get(32, ctx);
+      return mlir::IntegerType::get(32, ctx);
     case TensorFlowTypes::INT64_REF:
-        return mlir::IntegerType::get(64, ctx);
+      return mlir::IntegerType::get(64, ctx);
     case TensorFlowTypes::UINT8_REF:
-        return mlir::IntegerType::get(8, IntegerType::Unsigned, ctx);
+      return mlir::IntegerType::get(8, IntegerType::Unsigned, ctx);
     case TensorFlowTypes::UINT16_REF:
-        return mlir::IntegerType::get(16, IntegerType::Unsigned, ctx);
+      return mlir::IntegerType::get(16, IntegerType::Unsigned, ctx);
     case TensorFlowTypes::UINT32_REF:
-        return mlir::IntegerType::get(32, IntegerType::Unsigned, ctx);
+      return mlir::IntegerType::get(32, IntegerType::Unsigned, ctx);
     case TensorFlowTypes::UINT64_REF:
-        return mlir::IntegerType::get(64, IntegerType::Unsigned, ctx);
+      return mlir::IntegerType::get(64, IntegerType::Unsigned, ctx);
     case TensorFlowTypes::COMPLEX64_REF:
-        return mlir::ComplexType::get(mlir::FloatType::getF32(ctx));
+      return mlir::ComplexType::get(mlir::FloatType::getF32(ctx));
     case TensorFlowTypes::COMPLEX128_REF:
-        return mlir::ComplexType::get(mlir::FloatType::getF64(ctx));
+      return mlir::ComplexType::get(mlir::FloatType::getF64(ctx));
 #define HANDLE_TF_TYPE(tftype, enumerant, name) \
   case TensorFlowTypes::enumerant##_REF:        \
     return tftype##Type::get(ctx);
@@ -145,20 +145,20 @@ Type TensorFlowRefType::RemoveRef() {
 // NOLINTNEXTLINE
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_types.def"
     default:
-        llvm_unreachable("unexpected tensorflow ref type kind");
-    }
+      llvm_unreachable("unexpected tensorflow ref type kind");
+  }
 }
 
 Type TensorFlowTypeWithSubtype::RemoveSubtypes() {
-    MLIRContext* ctx = getContext();
-    switch (getKind()) {
+  MLIRContext* ctx = getContext();
+  switch (getKind()) {
     case TensorFlowTypes::VARIANT:
-        return VariantType::get(ctx);
+      return VariantType::get(ctx);
     case TensorFlowTypes::RESOURCE:
-        return ResourceType::get(ctx);
+      return ResourceType::get(ctx);
     default:
-        llvm_unreachable("unexpected tensorflow type with subtypes kind");
-    }
+      llvm_unreachable("unexpected tensorflow type with subtypes kind");
+  }
 }
 
 }  // namespace TF

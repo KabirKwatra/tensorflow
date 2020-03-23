@@ -20,11 +20,11 @@ limitations under the License.
 #include "llvm/Support/raw_ostream.h"
 #include "mlir/Conversion/LoopToStandard/ConvertLoopToStandard.h"  // from @llvm-project
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Pass/PassManager.h"  // from @llvm-project
+#include "mlir/IR/Location.h"        // from @llvm-project
+#include "mlir/IR/MLIRContext.h"     // from @llvm-project
+#include "mlir/IR/Module.h"          // from @llvm-project
+#include "mlir/Pass/Pass.h"          // from @llvm-project
+#include "mlir/Pass/PassManager.h"   // from @llvm-project
 #include "mlir/Transforms/Passes.h"  // from @llvm-project
 #include "tensorflow/compiler/xla/service/hlo_parser.h"
 #include "tensorflow/compiler/xla/tests/filecheck.h"
@@ -36,55 +36,55 @@ namespace gpu_mlir {
 namespace {
 
 std::string CompileHloConvAndGetMlir(absl::string_view hlo_text) {
-    xla::HloModuleConfig hlo_config;
-    VerifiedHloModule hlo_module(
-        "Conv", hlo_config, /*verifier_layout_sensitive=*/false,
-        /*allow_mixed_precision_in_hlo_verifier=*/true,
-        /*shape_size_function=*/ShapeUtil::ByteSizeOfElements);
-    TF_CHECK_OK(hlo_module.ParseHloStringAndVerifyModule(hlo_text));
-    xla::HloInstruction* conv =
-        hlo_module.entry_computation()->root_instruction();
+  xla::HloModuleConfig hlo_config;
+  VerifiedHloModule hlo_module(
+      "Conv", hlo_config, /*verifier_layout_sensitive=*/false,
+      /*allow_mixed_precision_in_hlo_verifier=*/true,
+      /*shape_size_function=*/ShapeUtil::ByteSizeOfElements);
+  TF_CHECK_OK(hlo_module.ParseHloStringAndVerifyModule(hlo_text));
+  xla::HloInstruction* conv =
+      hlo_module.entry_computation()->root_instruction();
 
-    mlir::MLIRContext context;
-    mlir::OwningModuleRef mlir_module(
-        mlir::ModuleOp::create(mlir::UnknownLoc::get(&context)));
+  mlir::MLIRContext context;
+  mlir::OwningModuleRef mlir_module(
+      mlir::ModuleOp::create(mlir::UnknownLoc::get(&context)));
 
-    mlir::FuncOp function =
-        xla::mlir_gpu::EmitConvolutionForwardAsMlir(conv, "Conv", &context)
-        .ValueOrDie();
+  mlir::FuncOp function =
+      xla::mlir_gpu::EmitConvolutionForwardAsMlir(conv, "Conv", &context)
+          .ValueOrDie();
 
-    mlir_module->push_back(function);
-    mlir_module->verify();
+  mlir_module->push_back(function);
+  mlir_module->verify();
 
-    std::string mlir_text;
-    {
-        llvm::raw_string_ostream strstream(mlir_text);
-        function.print(strstream);
-    }
-    VLOG(1) << mlir_text;
+  std::string mlir_text;
+  {
+    llvm::raw_string_ostream strstream(mlir_text);
+    function.print(strstream);
+  }
+  VLOG(1) << mlir_text;
 
-    {
-        mlir::PassManager pm(mlir_module->getContext());
-        pm.addPass(mlir::createLowerAffinePass());
-        pm.addPass(mlir::createLowerToCFGPass());
-        pm.addPass(mlir::createLowerToLLVMPass());
-        CHECK(mlir::succeeded(pm.run(*mlir_module)));
-    }
+  {
+    mlir::PassManager pm(mlir_module->getContext());
+    pm.addPass(mlir::createLowerAffinePass());
+    pm.addPass(mlir::createLowerToCFGPass());
+    pm.addPass(mlir::createLowerToLLVMPass());
+    CHECK(mlir::succeeded(pm.run(*mlir_module)));
+  }
 
-    return mlir_text;
+  return mlir_text;
 }
 
 // TODO(timshen): integrate this with mlir_gpu's testing infrastructure.
 TEST(ConvEmitterTest, TestDefault) {
-    std::string hlo_text = R"(HloModule TestModule
+  std::string hlo_text = R"(HloModule TestModule
 ENTRY %TestComputation {
   %param_0 = f16[128,4,224,224]{1,3,2,0} parameter(0)
   %param_1 = f16[7,7,64,4]{3,1,0,2} parameter(1)
   ROOT %custom-call.1 = (f16[128,64,112,112]{1,3,2,0}, u8[0]{0}) custom-call(%param_0, %param_1), window={size=7x7 stride=2x2 pad=3_3x3_3}, dim_labels=bf01_01oi->bf01, custom_call_target="__cudnn$convForward", backend_config="{conv_result_scale:1}"
 })";
 
-    std::string expected_mlir_pattern =
-        R"(
+  std::string expected_mlir_pattern =
+      R"(
 CHECK: func @Conv(%arg0: memref<128x112x112x64xf16>, %arg1: memref<128x224x224x4xf16>, %arg2: memref<64x7x7x4xf16>) {
 CHECK-NEXT:   affine.for %arg3 = 0 to 128 {
 CHECK-NEXT:     affine.for %arg4 = 0 to 2 {

@@ -31,62 +31,60 @@ namespace tensorflow {
 // instantiated by the process_function_library_runtime (see
 // FunctionOptimizationPass for details).
 class MlirOptimizationPass {
-public:
-    virtual ~MlirOptimizationPass() = default;
-    virtual llvm::StringRef name() const = 0;
-    virtual bool IsEnabled(const ConfigProto& config_proto) const = 0;
+ public:
+  virtual ~MlirOptimizationPass() = default;
+  virtual llvm::StringRef name() const = 0;
+  virtual bool IsEnabled(const ConfigProto& config_proto) const = 0;
 
-    virtual Status Run(const ConfigProto& config_proto,
-                       mlir::ModuleOp module) = 0;
+  virtual Status Run(const ConfigProto& config_proto,
+                     mlir::ModuleOp module) = 0;
 };
 
 class MlirOptimizationPassRegistry {
-public:
-    struct PassRegistration {
-        int priority;
-        std::unique_ptr<MlirOptimizationPass> pass;
-    };
+ public:
+  struct PassRegistration {
+    int priority;
+    std::unique_ptr<MlirOptimizationPass> pass;
+  };
 
-    struct PriorityComparator {
-        bool operator()(const PassRegistration& x,
-                        const PassRegistration& y) const {
-            return x.priority < y.priority;
-        }
-    };
-
-    using Passes = std::set<PassRegistration, PriorityComparator>;
-
-    // Returns the global registry of MLIR optimization passes.
-    static MlirOptimizationPassRegistry& Global();
-
-    void Add(int priority, std::unique_ptr<MlirOptimizationPass> pass) {
-        passes_.insert({priority, std::move(pass)});
+  struct PriorityComparator {
+    bool operator()(const PassRegistration& x,
+                    const PassRegistration& y) const {
+      return x.priority < y.priority;
     }
+  };
 
-    const Passes& passes() const {
-        return passes_;
-    }
+  using Passes = std::set<PassRegistration, PriorityComparator>;
 
-private:
-    Passes passes_;
+  // Returns the global registry of MLIR optimization passes.
+  static MlirOptimizationPassRegistry& Global();
+
+  void Add(int priority, std::unique_ptr<MlirOptimizationPass> pass) {
+    passes_.insert({priority, std::move(pass)});
+  }
+
+  const Passes& passes() const { return passes_; }
+
+ private:
+  Passes passes_;
 };
 
 // Function optimization pass that runs all MLIR passes registered in
 // MlirOptimizationPassRegistry.
 class MlirFunctionOptimizationPass : public FunctionOptimizationPass {
-public:
-    explicit MlirFunctionOptimizationPass(
-        const MlirOptimizationPassRegistry* registry =
-            &MlirOptimizationPassRegistry::Global())
-        : registry_(registry) {}
+ public:
+  explicit MlirFunctionOptimizationPass(
+      const MlirOptimizationPassRegistry* registry =
+          &MlirOptimizationPassRegistry::Global())
+      : registry_(registry) {}
 
-    Status Run(const DeviceSet& device_set, const ConfigProto& config_proto,
-               std::unique_ptr<Graph>* graph, FunctionLibraryDefinition* flib_def,
-               std::vector<std::string>* control_ret_node_names,
-               bool* control_rets_updated) override;
+  Status Run(const DeviceSet& device_set, const ConfigProto& config_proto,
+             std::unique_ptr<Graph>* graph, FunctionLibraryDefinition* flib_def,
+             std::vector<std::string>* control_ret_node_names,
+             bool* control_rets_updated) override;
 
-private:
-    const MlirOptimizationPassRegistry* registry_;
+ private:
+  const MlirOptimizationPassRegistry* registry_;
 };
 
 // -------------------------------------------------------------------------- //
@@ -99,57 +97,55 @@ private:
 // it raises control flow from Switch/Merge nodes to functional control flow
 // with If/While operations).
 class MlirV1CompatOptimizationPass {
-public:
-    virtual ~MlirV1CompatOptimizationPass() = default;
-    virtual llvm::StringRef name() const = 0;
-    virtual bool IsEnabled(const ConfigProto& config_proto) const = 0;
+ public:
+  virtual ~MlirV1CompatOptimizationPass() = default;
+  virtual llvm::StringRef name() const = 0;
+  virtual bool IsEnabled(const ConfigProto& config_proto) const = 0;
 
-    virtual Status Run(const GraphOptimizationPassOptions& options,
-                       mlir::ModuleOp module) = 0;
+  virtual Status Run(const GraphOptimizationPassOptions& options,
+                     mlir::ModuleOp module) = 0;
 };
 
 class MlirV1CompatOptimizationPassRegistry {
-public:
-    struct PassRegistration {
-        int priority;
-        std::unique_ptr<MlirV1CompatOptimizationPass> pass;
-    };
+ public:
+  struct PassRegistration {
+    int priority;
+    std::unique_ptr<MlirV1CompatOptimizationPass> pass;
+  };
 
-    struct PriorityComparator {
-        bool operator()(const PassRegistration& x,
-                        const PassRegistration& y) const {
-            return x.priority < y.priority;
-        }
-    };
-
-    using Passes = std::set<PassRegistration, PriorityComparator>;
-
-    // Returns the global registry of MLIR optimization passes.
-    static MlirV1CompatOptimizationPassRegistry& Global();
-
-    void Add(int priority, std::unique_ptr<MlirV1CompatOptimizationPass> pass) {
-        passes_.insert({priority, std::move(pass)});
+  struct PriorityComparator {
+    bool operator()(const PassRegistration& x,
+                    const PassRegistration& y) const {
+      return x.priority < y.priority;
     }
+  };
 
-    const Passes& passes() const {
-        return passes_;
-    }
+  using Passes = std::set<PassRegistration, PriorityComparator>;
 
-private:
-    Passes passes_;
+  // Returns the global registry of MLIR optimization passes.
+  static MlirV1CompatOptimizationPassRegistry& Global();
+
+  void Add(int priority, std::unique_ptr<MlirV1CompatOptimizationPass> pass) {
+    passes_.insert({priority, std::move(pass)});
+  }
+
+  const Passes& passes() const { return passes_; }
+
+ private:
+  Passes passes_;
 };
 
 class MlirV1CompatGraphOptimizationPass : public GraphOptimizationPass {
-public:
-    explicit MlirV1CompatGraphOptimizationPass(
-        const MlirV1CompatOptimizationPassRegistry* registry =
-            &MlirV1CompatOptimizationPassRegistry::Global())
-        : registry_(registry) {}
+ public:
+  explicit MlirV1CompatGraphOptimizationPass(
+      const MlirV1CompatOptimizationPassRegistry* registry =
+          &MlirV1CompatOptimizationPassRegistry::Global())
+      : registry_(registry) {}
 
-    Status Run(const GraphOptimizationPassOptions& options) override;
+  Status Run(const GraphOptimizationPassOptions& options) override;
 
-private:
-    const MlirV1CompatOptimizationPassRegistry* registry_;
+ private:
+  const MlirV1CompatOptimizationPassRegistry* registry_;
 };
 
 // -------------------------------------------------------------------------- //
@@ -160,20 +156,20 @@ private:
 namespace mlir_pass_registration {
 
 class MlirOptimizationPassRegistration {
-public:
-    explicit MlirOptimizationPassRegistration(
-        int priority, std::unique_ptr<MlirOptimizationPass> pass) {
-        MlirOptimizationPassRegistry::Global().Add(priority, std::move(pass));
-    }
+ public:
+  explicit MlirOptimizationPassRegistration(
+      int priority, std::unique_ptr<MlirOptimizationPass> pass) {
+    MlirOptimizationPassRegistry::Global().Add(priority, std::move(pass));
+  }
 };
 
 class MlirV1CompatOptimizationPassRegistration {
-public:
-    explicit MlirV1CompatOptimizationPassRegistration(
-        int priority, std::unique_ptr<MlirV1CompatOptimizationPass> pass) {
-        MlirV1CompatOptimizationPassRegistry::Global().Add(priority,
-                std::move(pass));
-    }
+ public:
+  explicit MlirV1CompatOptimizationPassRegistration(
+      int priority, std::unique_ptr<MlirV1CompatOptimizationPass> pass) {
+    MlirV1CompatOptimizationPassRegistry::Global().Add(priority,
+                                                       std::move(pass));
+  }
 };
 
 }  // namespace mlir_pass_registration

@@ -23,14 +23,14 @@ limitations under the License.
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/Support/Casting.h"
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Matchers.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"     // from @llvm-project
+#include "mlir/IR/Location.h"       // from @llvm-project
+#include "mlir/IR/MLIRContext.h"    // from @llvm-project
+#include "mlir/IR/Matchers.h"       // from @llvm-project
+#include "mlir/IR/PatternMatch.h"   // from @llvm-project
 #include "mlir/IR/StandardTypes.h"  // from @llvm-project
 #include "mlir/IR/TypeUtilities.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Pass/Pass.h"         // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.h"
 #include "tensorflow/core/util/matmul_bcast.h"
 
@@ -41,12 +41,12 @@ namespace TF {
 // cases, we can convert this op to other TF Ops, which in later passes
 // properly convert to TF Lite ops.
 struct ConvertTFEinsumOp : public OpRewritePattern<TF::EinsumOp> {
-public:
-    explicit ConvertTFEinsumOp(MLIRContext* context)
-        : OpRewritePattern<TF::EinsumOp>(context) {}
+ public:
+  explicit ConvertTFEinsumOp(MLIRContext* context)
+      : OpRewritePattern<TF::EinsumOp>(context) {}
 
-    LogicalResult matchAndRewrite(TF::EinsumOp op,
-                                  PatternRewriter& rewriter) const override;
+  LogicalResult matchAndRewrite(TF::EinsumOp op,
+                                PatternRewriter& rewriter) const override;
 };
 
 }  // namespace TF

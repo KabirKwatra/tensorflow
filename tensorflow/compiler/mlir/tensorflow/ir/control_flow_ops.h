@@ -23,43 +23,43 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_CONTROL_FLOW_OPS_H_
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_CONTROL_FLOW_OPS_H_
 
-#include "mlir/IR/Dialect.h"  // from @llvm-project
-#include "mlir/IR/OpDefinition.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
+#include "mlir/IR/Dialect.h"              // from @llvm-project
+#include "mlir/IR/OpDefinition.h"         // from @llvm-project
+#include "mlir/IR/Types.h"                // from @llvm-project
 #include "mlir/Interfaces/SideEffects.h"  // from @llvm-project
 
 namespace mlir {
 namespace TFControlFlow {
 
 class TFControlFlowDialect : public Dialect {
-public:
-    explicit TFControlFlowDialect(MLIRContext *context);
+ public:
+  explicit TFControlFlowDialect(MLIRContext* context);
 
-    // Parses a type registered to this dialect.
-    Type parseType(DialectAsmParser &parser) const override;
+  // Parses a type registered to this dialect.
+  Type parseType(DialectAsmParser& parser) const override;
 
-    // Prints a type registered to this dialect.
-    void printType(Type type, DialectAsmPrinter &os) const override;
+  // Prints a type registered to this dialect.
+  void printType(Type type, DialectAsmPrinter& os) const override;
 };
 
 namespace TensorFlowControlTypes {
 enum Kind {
-    Control = Type::FIRST_TENSORFLOW_CONTROL_TYPE,
+  Control = Type::FIRST_TENSORFLOW_CONTROL_TYPE,
 };
 }
 
 class TFControlType : public Type::TypeBase<TFControlType, Type> {
-public:
-    using Base::Base;
+ public:
+  using Base::Base;
 
-    static TFControlType get(MLIRContext *context) {
-        return Base::get(context, TensorFlowControlTypes::Control);
-    }
+  static TFControlType get(MLIRContext* context) {
+    return Base::get(context, TensorFlowControlTypes::Control);
+  }
 
-    // Support method to enable LLVM-style type casting.
-    static bool kindof(unsigned kind) {
-        return kind == TensorFlowControlTypes::Control;
-    }
+  // Support method to enable LLVM-style type casting.
+  static bool kindof(unsigned kind) {
+    return kind == TensorFlowControlTypes::Control;
+  }
 };
 
 // The "_tf.Enter" operation forwards its input to Tensorflow while loop. Each
@@ -85,25 +85,19 @@ public:
 // Note: Additional result corresponds to the control output.
 class EnterOp
     : public Op<EnterOp, OpTrait::AtLeastNOperands<1>::Impl,
-      OpTrait::NResults<2>::Impl, MemoryEffectOpInterface::Trait> {
-public:
-    using Op::Op;
+                OpTrait::NResults<2>::Impl, MemoryEffectOpInterface::Trait> {
+ public:
+  using Op::Op;
 
-    static StringRef getOperationName() {
-        return "_tf.Enter";
-    }
+  static StringRef getOperationName() { return "_tf.Enter"; }
 
-    Value getData() {
-        return getOperand(0);
-    }
-    void setData(Value value) {
-        setOperand(0, value);
-    }
+  Value getData() { return getOperand(0); }
+  void setData(Value value) { setOperand(0, value); }
 
-    LogicalResult verify();
+  LogicalResult verify();
 
-    // EnterOp has no side-effects.
-    void getEffects(SmallVectorImpl<MemoryEffects::EffectInstance> &) {}
+  // EnterOp has no side-effects.
+  void getEffects(SmallVectorImpl<MemoryEffects::EffectInstance>&) {}
 };
 
 // The "_tf.Merge" operation takes a list of input operands and returns a value
@@ -124,15 +118,13 @@ public:
 //
 // Note: Additional result corresponds to the control output.
 class MergeOp : public Op<MergeOp, OpTrait::VariadicOperands,
-    OpTrait::NResults<3>::Impl> {
-public:
-    using Op::Op;
+                          OpTrait::NResults<3>::Impl> {
+ public:
+  using Op::Op;
 
-    static StringRef getOperationName() {
-        return "_tf.Merge";
-    }
+  static StringRef getOperationName() { return "_tf.Merge"; }
 
-    LogicalResult verify();
+  LogicalResult verify();
 };
 
 // The "_tf.NextIteration.source" and "_tf.NextIteration.sink" operations form
@@ -168,34 +160,26 @@ public:
 // Note: Additional result corresponds to the control output.
 class NextIterationSourceOp
     : public Op<NextIterationSourceOp, OpTrait::NResults<2>::Impl> {
-public:
-    using Op::Op;
+ public:
+  using Op::Op;
 
-    static StringRef getOperationName() {
-        return "_tf.NextIteration.source";
-    }
+  static StringRef getOperationName() { return "_tf.NextIteration.source"; }
 
-    LogicalResult verify();
+  LogicalResult verify();
 };
 
 class NextIterationSinkOp
     : public Op<NextIterationSinkOp, OpTrait::AtLeastNOperands<1>::Impl,
-      OpTrait::OneResult> {
-public:
-    using Op::Op;
+                OpTrait::OneResult> {
+ public:
+  using Op::Op;
 
-    static StringRef getOperationName() {
-        return "_tf.NextIteration.sink";
-    }
+  static StringRef getOperationName() { return "_tf.NextIteration.sink"; }
 
-    Value getData() {
-        return getOperand(0);
-    }
-    void setData(Value value) {
-        setOperand(0, value);
-    }
+  Value getData() { return getOperand(0); }
+  void setData(Value value) { setOperand(0, value); }
 
-    LogicalResult verify();
+  LogicalResult verify();
 };
 
 // The "_tf.LoopCond" operation forwards a boolean value as loop condition of
@@ -217,24 +201,18 @@ public:
 // Note: Additional result corresponds to the control output.
 class LoopCondOp
     : public Op<LoopCondOp, OpTrait::AtLeastNOperands<1>::Impl,
-      OpTrait::NResults<2>::Impl, MemoryEffectOpInterface::Trait> {
-public:
-    using Op::Op;
-    static StringRef getOperationName() {
-        return "_tf.LoopCond";
-    }
+                OpTrait::NResults<2>::Impl, MemoryEffectOpInterface::Trait> {
+ public:
+  using Op::Op;
+  static StringRef getOperationName() { return "_tf.LoopCond"; }
 
-    Value getData() {
-        return getOperand(0);
-    }
-    void setData(Value value) {
-        setOperand(0, value);
-    }
+  Value getData() { return getOperand(0); }
+  void setData(Value value) { setOperand(0, value); }
 
-    LogicalResult verify();
+  LogicalResult verify();
 
-    // LoopCondOp has no side-effects.
-    void getEffects(SmallVectorImpl<MemoryEffects::EffectInstance> &) {}
+  // LoopCondOp has no side-effects.
+  void getEffects(SmallVectorImpl<MemoryEffects::EffectInstance>&) {}
 };
 
 // The "_tf.Switch" operation takes a data operand and a boolean predicate
@@ -256,29 +234,19 @@ public:
 //
 // Note: Additional result corresponds to the control output.
 class SwitchOp : public Op<SwitchOp, OpTrait::AtLeastNOperands<2>::Impl,
-    OpTrait::NResults<3>::Impl> {
-public:
-    using Op::Op;
+                           OpTrait::NResults<3>::Impl> {
+ public:
+  using Op::Op;
 
-    static StringRef getOperationName() {
-        return "_tf.Switch";
-    }
+  static StringRef getOperationName() { return "_tf.Switch"; }
 
-    Value getData() {
-        return getOperand(0);
-    }
-    void setData(Value value) {
-        setOperand(0, value);
-    }
+  Value getData() { return getOperand(0); }
+  void setData(Value value) { setOperand(0, value); }
 
-    Value getPredicate() {
-        return getOperand(1);
-    }
-    void setPredicate(Value value) {
-        setOperand(1, value);
-    }
+  Value getPredicate() { return getOperand(1); }
+  void setPredicate(Value value) { setOperand(1, value); }
 
-    LogicalResult verify();
+  LogicalResult verify();
 };
 
 // The "_tf.Exit" operation forwards a value from an while loop to its consumer
@@ -301,24 +269,18 @@ public:
 // Note: Additional result corresponds to the control output.
 class ExitOp
     : public Op<ExitOp, OpTrait::AtLeastNOperands<1>::Impl,
-      OpTrait::NResults<2>::Impl, MemoryEffectOpInterface::Trait> {
-public:
-    using Op::Op;
-    static StringRef getOperationName() {
-        return "_tf.Exit";
-    }
+                OpTrait::NResults<2>::Impl, MemoryEffectOpInterface::Trait> {
+ public:
+  using Op::Op;
+  static StringRef getOperationName() { return "_tf.Exit"; }
 
-    Value getData() {
-        return getOperand(0);
-    }
-    void setData(Value value) {
-        setOperand(0, value);
-    }
+  Value getData() { return getOperand(0); }
+  void setData(Value value) { setOperand(0, value); }
 
-    LogicalResult verify();
+  LogicalResult verify();
 
-    // ExitOp has no side-effects.
-    void getEffects(SmallVectorImpl<MemoryEffects::EffectInstance> &) {}
+  // ExitOp has no side-effects.
+  void getEffects(SmallVectorImpl<MemoryEffects::EffectInstance>&) {}
 };
 
 }  // namespace TFControlFlow

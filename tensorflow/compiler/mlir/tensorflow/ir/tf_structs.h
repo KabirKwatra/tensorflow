@@ -19,11 +19,11 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_TF_STRUCTS_H_
 
 #include "llvm/ADT/StringMap.h"
-#include "mlir/IR/Diagnostics.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
+#include "mlir/IR/Diagnostics.h"    // from @llvm-project
+#include "mlir/IR/Location.h"       // from @llvm-project
+#include "mlir/IR/Operation.h"      // from @llvm-project
 #include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
+#include "mlir/IR/Types.h"          // from @llvm-project
 #include "tensorflow/core/util/device_name_utils.h"
 
 namespace mlir {
@@ -36,33 +36,29 @@ namespace TF {
 // available. It's completely valid to have a device without any metadata
 // attached to it.
 class RuntimeDevices {
-    using DeviceNameUtils = ::tensorflow::DeviceNameUtils;
-    using ParsedName = ::tensorflow::DeviceNameUtils::ParsedName;
+  using DeviceNameUtils = ::tensorflow::DeviceNameUtils;
+  using ParsedName = ::tensorflow::DeviceNameUtils::ParsedName;
 
-public:
-    // Adds a device with and empty metadata. Device can be of any type.
-    void AddDevice(const ParsedName& device);
+ public:
+  // Adds a device with and empty metadata. Device can be of any type.
+  void AddDevice(const ParsedName& device);
 
-    // Adds a GPU device with GPU specific metadata.
-    void AddGpuDevice(const ParsedName& device,
-                      const GpuDeviceMetadata& metadata);
+  // Adds a GPU device with GPU specific metadata.
+  void AddGpuDevice(const ParsedName& device,
+                    const GpuDeviceMetadata& metadata);
 
-    llvm::ArrayRef<ParsedName> device_names() const {
-        return device_names_;
-    }
-    size_t NumDevices() const {
-        return device_names_.size();
-    }
+  llvm::ArrayRef<ParsedName> device_names() const { return device_names_; }
+  size_t NumDevices() const { return device_names_.size(); }
 
-    // Returns GPU device metadata if it is available, otherwise returns None.
-    llvm::Optional<GpuDeviceMetadata> GetGpuDeviceMetadata(
-        const ParsedName& device) const;
+  // Returns GPU device metadata if it is available, otherwise returns None.
+  llvm::Optional<GpuDeviceMetadata> GetGpuDeviceMetadata(
+      const ParsedName& device) const;
 
-private:
-    llvm::SmallVector<ParsedName, 8> device_names_;
-    // TODO(ezhulenev): Add DenseMapInfo<ParsedName> specialization to be able to
-    // use ParsedName as a key in a DenseMap.
-    llvm::StringMap<GpuDeviceMetadata> gpu_metadata_;
+ private:
+  llvm::SmallVector<ParsedName, 8> device_names_;
+  // TODO(ezhulenev): Add DenseMapInfo<ParsedName> specialization to be able to
+  // use ParsedName as a key in a DenseMap.
+  llvm::StringMap<GpuDeviceMetadata> gpu_metadata_;
 };
 
 }  // namespace TF

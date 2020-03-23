@@ -19,10 +19,10 @@ limitations under the License.
 #include <utility>
 
 #include "llvm/Support/ToolOutputFile.h"
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Support/FileUtilities.h"  // from @llvm-project
+#include "mlir/IR/MLIRContext.h"          // from @llvm-project
+#include "mlir/IR/Module.h"               // from @llvm-project
+#include "mlir/Pass/Pass.h"               // from @llvm-project
+#include "mlir/Support/FileUtilities.h"   // from @llvm-project
 #include "mlir/Transforms/ViewOpGraph.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/common/tfl_pass_config.h"
 #include "tensorflow/compiler/mlir/lite/python/tf_tfl_flatbuffer_helpers.h"
@@ -43,49 +43,49 @@ limitations under the License.
 
 namespace tensorflow {
 Status ConvertGraphDefToTFLiteFlatBuffer(const toco::ModelFlags& model_flags,
-        const toco::TocoFlags& toco_flags,
-        const GraphDebugInfo& debug_info,
-        const GraphDef& input,
-        string* result) {
-    mlir::MLIRContext context;
-    GraphImportConfig specs;
-    mlir::TFL::QuantizationSpecs quant_specs;
+                                         const toco::TocoFlags& toco_flags,
+                                         const GraphDebugInfo& debug_info,
+                                         const GraphDef& input,
+                                         string* result) {
+  mlir::MLIRContext context;
+  GraphImportConfig specs;
+  mlir::TFL::QuantizationSpecs quant_specs;
 
-    // Parse input arrays.
-    std::vector<string> node_names;
-    std::vector<string> node_dtypes;
-    std::vector<std::vector<int>> node_shapes;
-    std::vector<double> node_mins;
-    std::vector<double> node_maxs;
+  // Parse input arrays.
+  std::vector<string> node_names;
+  std::vector<string> node_dtypes;
+  std::vector<std::vector<int>> node_shapes;
+  std::vector<double> node_mins;
+  std::vector<double> node_maxs;
 
-    // Populate quantization specs.
-    TF_RETURN_IF_ERROR(internal::PopulateQuantizationSpecs(
-                           model_flags, toco_flags, &quant_specs, &node_names, &node_dtypes,
-                           &node_shapes, &node_mins, &node_maxs));
+  // Populate quantization specs.
+  TF_RETURN_IF_ERROR(internal::PopulateQuantizationSpecs(
+      model_flags, toco_flags, &quant_specs, &node_names, &node_dtypes,
+      &node_shapes, &node_mins, &node_maxs));
 
-    TF_RETURN_IF_ERROR(tensorflow::ParseInputArrayInfo(
-                           node_names, node_dtypes, node_shapes, &specs.inputs));
+  TF_RETURN_IF_ERROR(tensorflow::ParseInputArrayInfo(
+      node_names, node_dtypes, node_shapes, &specs.inputs));
 
-    // Parse output arrays.
-    std::vector<string> output_arrays(model_flags.output_arrays().begin(),
-                                      model_flags.output_arrays().end());
-    TF_RETURN_IF_ERROR(
-        tensorflow::ParseOutputArrayInfo(output_arrays, &specs.outputs));
+  // Parse output arrays.
+  std::vector<string> output_arrays(model_flags.output_arrays().begin(),
+                                    model_flags.output_arrays().end());
+  TF_RETURN_IF_ERROR(
+      tensorflow::ParseOutputArrayInfo(output_arrays, &specs.outputs));
 
-    specs.prune_unused_nodes = true;
-    specs.convert_legacy_fed_inputs = true;
-    specs.graph_as_function = false;
-    specs.upgrade_legacy = true;
-    internal::WarningUnusedFlags(model_flags, toco_flags);
+  specs.prune_unused_nodes = true;
+  specs.convert_legacy_fed_inputs = true;
+  specs.graph_as_function = false;
+  specs.upgrade_legacy = true;
+  internal::WarningUnusedFlags(model_flags, toco_flags);
 
-    // Register all custom ops, including user-specified custom ops.
-    TF_RETURN_IF_ERROR(internal::RegisterAllCustomOps(toco_flags));
+  // Register all custom ops, including user-specified custom ops.
+  TF_RETURN_IF_ERROR(internal::RegisterAllCustomOps(toco_flags));
 
-    TF_ASSIGN_OR_RETURN(
-        auto module, ConvertGraphdefToMlir(input, debug_info, specs, &context));
+  TF_ASSIGN_OR_RETURN(
+      auto module, ConvertGraphdefToMlir(input, debug_info, specs, &context));
 
-    return internal::ConvertMLIRToTFLiteFlatBuffer(toco_flags, std::move(module),
-            quant_specs, result);
+  return internal::ConvertMLIRToTFLiteFlatBuffer(toco_flags, std::move(module),
+                                                 quant_specs, result);
 }
 
 }  // namespace tensorflow

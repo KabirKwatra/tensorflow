@@ -16,12 +16,12 @@ limitations under the License.
 #include <string>
 
 #include "llvm/ADT/ArrayRef.h"
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Builders.h"  // from @llvm-project
-#include "mlir/IR/Dialect.h"  // from @llvm-project
-#include "mlir/IR/DialectHooks.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"          // from @llvm-project
+#include "mlir/IR/Builders.h"            // from @llvm-project
+#include "mlir/IR/Dialect.h"             // from @llvm-project
+#include "mlir/IR/DialectHooks.h"        // from @llvm-project
+#include "mlir/IR/StandardTypes.h"       // from @llvm-project
+#include "mlir/IR/Types.h"               // from @llvm-project
 #include "mlir/Support/LogicalResult.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.h"
 #include "tensorflow/compiler/mlir/tensorflow/transforms/constant_fold.h"
@@ -37,26 +37,24 @@ namespace {
 // to LLVM style used by MLIR.
 bool DecodeOpaqueTensorHook(const OpaqueElementsAttr input,
                             ElementsAttr& output) {  // NOLINT
-    Builder builder(input.getType().getContext());
-    auto decoded_attr_or = tensorflow::DecodeOpaqueTensor(input, builder);
-    if (!decoded_attr_or.ok()) {
-        VLOG(2) << decoded_attr_or.status().error_message();
-        return true;
-    }
+  Builder builder(input.getType().getContext());
+  auto decoded_attr_or = tensorflow::DecodeOpaqueTensor(input, builder);
+  if (!decoded_attr_or.ok()) {
+    VLOG(2) << decoded_attr_or.status().error_message();
+    return true;
+  }
 
-    output = decoded_attr_or.ValueOrDie();
-    return false;
+  output = decoded_attr_or.ValueOrDie();
+  return false;
 }
 
 // Hooks for the TensorFlow dialect.
 class TensorFlowHooks : public DialectHooks {
-public:
-    DialectConstantFoldHook getConstantFoldHook() {
-        return TF::ConstantFoldFallbackHook;
-    }
-    DialectConstantDecodeHook getDecodeHook() {
-        return DecodeOpaqueTensorHook;
-    }
+ public:
+  DialectConstantFoldHook getConstantFoldHook() {
+    return TF::ConstantFoldFallbackHook;
+  }
+  DialectConstantDecodeHook getDecodeHook() { return DecodeOpaqueTensorHook; }
 };
 
 }  // anonymous namespace

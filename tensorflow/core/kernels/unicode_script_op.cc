@@ -13,38 +13,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "unicode/errorcode.h"  // from @icu
-#include "unicode/uscript.h"  // from @icu
 #include "tensorflow/core/framework/op_kernel.h"
+#include "unicode/errorcode.h"  // from @icu
+#include "unicode/uscript.h"    // from @icu
 
 namespace tensorflow {
 
 class UnicodeScriptOp : public OpKernel {
-public:
-    explicit UnicodeScriptOp(OpKernelConstruction* context) : OpKernel(context) {}
+ public:
+  explicit UnicodeScriptOp(OpKernelConstruction* context) : OpKernel(context) {}
 
-    void Compute(OpKernelContext* context) override {
-        const Tensor* input_tensor;
-        OP_REQUIRES_OK(context, context->input("input", &input_tensor));
-        const auto& input_flat = input_tensor->flat<int32>();
+  void Compute(OpKernelContext* context) override {
+    const Tensor* input_tensor;
+    OP_REQUIRES_OK(context, context->input("input", &input_tensor));
+    const auto& input_flat = input_tensor->flat<int32>();
 
-        Tensor* output_tensor = nullptr;
-        OP_REQUIRES_OK(context,
-                       context->allocate_output("output", input_tensor->shape(),
-                                                &output_tensor));
-        auto output_flat = output_tensor->flat<int32>();
+    Tensor* output_tensor = nullptr;
+    OP_REQUIRES_OK(context,
+                   context->allocate_output("output", input_tensor->shape(),
+                                            &output_tensor));
+    auto output_flat = output_tensor->flat<int32>();
 
-        icu::ErrorCode status;
-        for (int i = 0; i < input_flat.size(); i++) {
-            UScriptCode script_code = uscript_getScript(input_flat(i), status);
-            if (status.isSuccess()) {
-                output_flat(i) = script_code;
-            } else {
-                output_flat(i) = -1;
-                status.reset();
-            }
-        }
+    icu::ErrorCode status;
+    for (int i = 0; i < input_flat.size(); i++) {
+      UScriptCode script_code = uscript_getScript(input_flat(i), status);
+      if (status.isSuccess()) {
+        output_flat(i) = script_code;
+      } else {
+        output_flat(i) = -1;
+        status.reset();
+      }
     }
+  }
 };
 
 REGISTER_KERNEL_BUILDER(Name("UnicodeScript").Device(DEVICE_CPU),

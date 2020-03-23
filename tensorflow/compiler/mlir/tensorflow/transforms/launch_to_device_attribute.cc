@@ -42,12 +42,12 @@ limitations under the License.
 //                       tensor<i1>, tensor<f32>, tensor<i32>, tensor<i1>
 //   }
 
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Block.h"  // from @llvm-project
-#include "mlir/IR/Dialect.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/Visitors.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"          // from @llvm-project
+#include "mlir/IR/Block.h"               // from @llvm-project
+#include "mlir/IR/Dialect.h"             // from @llvm-project
+#include "mlir/IR/Operation.h"           // from @llvm-project
+#include "mlir/IR/Visitors.h"            // from @llvm-project
+#include "mlir/Pass/Pass.h"              // from @llvm-project
 #include "mlir/Support/LogicalResult.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_device.h"
 
@@ -58,72 +58,72 @@ constexpr char kDeviceAttr[] = "device";
 
 struct LaunchToDeviceAttributePass
     : public FunctionPass<LaunchToDeviceAttributePass> {
-    void runOnFunction() override;
+  void runOnFunction() override;
 };
 
 LogicalResult HoistOpsAndAnnotateWithDevice(const Dialect* tf_dialect,
-        tf_device::LaunchOp launch) {
-    // Forward launch inner op results to launch op results.
-    launch.replaceAllUsesWith(launch.GetBody().getTerminator()->getOperands());
+                                            tf_device::LaunchOp launch) {
+  // Forward launch inner op results to launch op results.
+  launch.replaceAllUsesWith(launch.GetBody().getTerminator()->getOperands());
 
-    // For all inner ops of the TensorFlow dialect, assign the launch device as a
-    // `device` attribute.
-    auto body = launch.GetBody().without_terminator();
-    for (Operation& op : body) {
-        if (op.getDialect() != tf_dialect)
-            return launch.emitOpError() << "must contain only 'tf' dialect ops";
+  // For all inner ops of the TensorFlow dialect, assign the launch device as a
+  // `device` attribute.
+  auto body = launch.GetBody().without_terminator();
+  for (Operation& op : body) {
+    if (op.getDialect() != tf_dialect)
+      return launch.emitOpError() << "must contain only 'tf' dialect ops";
 
-        auto device_attr = op.getAttr(kDeviceAttr);
-        if (!device_attr) {
-            op.setAttr(kDeviceAttr, launch.deviceAttr());
-            continue;
-        }
-
-        if (auto device_str_attr = device_attr.dyn_cast<StringAttr>()) {
-            if (launch.device() != device_str_attr.getValue())
-                return launch.emitOpError()
-                       << "inner 'tf' dialect op has conflicting 'device' attribute, "
-                       "got '"
-                       << device_str_attr.getValue() << "' but expected '"
-                       << launch.device() << "'";
-        } else {
-            return launch.emitOpError()
-                   << "inner 'tf' dialect op has bad 'device' attribute";
-        }
+    auto device_attr = op.getAttr(kDeviceAttr);
+    if (!device_attr) {
+      op.setAttr(kDeviceAttr, launch.deviceAttr());
+      continue;
     }
 
-    // Move all inner ops of the launch to the block containing the launch.
-    Operation* launch_op = launch.getOperation();
-    launch_op->getBlock()->getOperations().splice(
-        launch_op->getIterator(), launch.GetBody().getOperations(), body.begin(),
-        body.end());
+    if (auto device_str_attr = device_attr.dyn_cast<StringAttr>()) {
+      if (launch.device() != device_str_attr.getValue())
+        return launch.emitOpError()
+               << "inner 'tf' dialect op has conflicting 'device' attribute, "
+                  "got '"
+               << device_str_attr.getValue() << "' but expected '"
+               << launch.device() << "'";
+    } else {
+      return launch.emitOpError()
+             << "inner 'tf' dialect op has bad 'device' attribute";
+    }
+  }
 
-    launch.erase();
+  // Move all inner ops of the launch to the block containing the launch.
+  Operation* launch_op = launch.getOperation();
+  launch_op->getBlock()->getOperations().splice(
+      launch_op->getIterator(), launch.GetBody().getOperations(), body.begin(),
+      body.end());
 
-    return success();
+  launch.erase();
+
+  return success();
 }
 
 void LaunchToDeviceAttributePass::runOnFunction() {
-    const Dialect* tf_dialect = getContext().getRegisteredDialect("tf");
-    if (!tf_dialect) {
-        signalPassFailure();
-        getFunction().emitError() << "'tf' dialect is not registered";
-    }
+  const Dialect* tf_dialect = getContext().getRegisteredDialect("tf");
+  if (!tf_dialect) {
+    signalPassFailure();
+    getFunction().emitError() << "'tf' dialect is not registered";
+  }
 
-    auto result = getFunction().walk([&](tf_device::LaunchOp launch) {
-        if (failed(HoistOpsAndAnnotateWithDevice(tf_dialect, launch)))
-            return WalkResult::interrupt();
+  auto result = getFunction().walk([&](tf_device::LaunchOp launch) {
+    if (failed(HoistOpsAndAnnotateWithDevice(tf_dialect, launch)))
+      return WalkResult::interrupt();
 
-        return WalkResult::advance();
-    });
+    return WalkResult::advance();
+  });
 
-    if (result.wasInterrupted()) return signalPassFailure();
+  if (result.wasInterrupted()) return signalPassFailure();
 }
 
 }  // anonymous namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateLaunchToDeviceAttributePass() {
-    return std::make_unique<LaunchToDeviceAttributePass>();
+  return std::make_unique<LaunchToDeviceAttributePass>();
 }
 
 static PassRegistration<LaunchToDeviceAttributePass> pass(

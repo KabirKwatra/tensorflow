@@ -22,9 +22,9 @@ limitations under the License.
 // eliminating control dependencies, and results in the code being in the
 // canonical TensorFlow dialect.
 
-#include "mlir/IR/Builders.h"  // from @llvm-project
+#include "mlir/IR/Builders.h"   // from @llvm-project
 #include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Pass/Pass.h"     // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/control_flow_ops.h"
 #include "tensorflow/compiler/mlir/tensorflow/transforms/passes.h"
 
@@ -33,22 +33,22 @@ namespace TFControlFlow {
 
 namespace {
 struct RaiseTFControlFlow : public FunctionPass<RaiseTFControlFlow> {
-    void runOnFunction() {
-        // First start by recognizing loops and reconstructing a loop tree.
-        buildLoopNests();
+  void runOnFunction() {
+    // First start by recognizing loops and reconstructing a loop tree.
+    buildLoopNests();
 
-        // Next, transform Switch/Merge and other control flow ops into proper
-        // conditional control flow.
-        buildConditionals();
+    // Next, transform Switch/Merge and other control flow ops into proper
+    // conditional control flow.
+    buildConditionals();
 
-        // Now that we have proper conditional control flow ops, the control edges
-        // can be dropped, and the underscores removed from operation names.
-        rewriteOps();
-    }
+    // Now that we have proper conditional control flow ops, the control edges
+    // can be dropped, and the underscores removed from operation names.
+    rewriteOps();
+  }
 
-    void buildLoopNests();
-    void buildConditionals();
-    void rewriteOps();
+  void buildLoopNests();
+  void buildConditionals();
+  void rewriteOps();
 };
 
 //===----------------------------------------------------------------------===//
@@ -56,7 +56,7 @@ struct RaiseTFControlFlow : public FunctionPass<RaiseTFControlFlow> {
 //===----------------------------------------------------------------------===//
 
 void RaiseTFControlFlow::buildLoopNests() {
-    // TODO(clattner)
+  // TODO(clattner)
 }
 
 //===----------------------------------------------------------------------===//
@@ -64,89 +64,89 @@ void RaiseTFControlFlow::buildLoopNests() {
 //===----------------------------------------------------------------------===//
 
 void RaiseTFControlFlow::buildConditionals() {
-    // TODO.
+  // TODO.
 }
 
 //===----------------------------------------------------------------------===//
 // Final rewrite from TF Control Flow form to canonical TensorFlow form
 //===----------------------------------------------------------------------===//
 
-static bool isUnderscoredTFOp(Operation &op) {
-    return op.getName().getStringRef().startswith("_tf.");
+static bool isUnderscoredTFOp(Operation& op) {
+  return op.getName().getStringRef().startswith("_tf.");
 }
 
 // Drop control edges, and remove underscores from operation names.
 void RaiseTFControlFlow::rewriteOps() {
-    auto function = getFunction();
-    OpBuilder builder(function.getBody());
+  auto function = getFunction();
+  OpBuilder builder(function.getBody());
 
-    // On the first pass, create replacement operations for every one we are going
-    // to replace, updating anything that uses the normal results with the newly
-    // created operation.
-    for (auto &bb : function) {
-        for (auto &op : bb) {
-            // Ignore any operations that we aren't looking for.
-            if (!isUnderscoredTFOp(op)) continue;
+  // On the first pass, create replacement operations for every one we are going
+  // to replace, updating anything that uses the normal results with the newly
+  // created operation.
+  for (auto& bb : function) {
+    for (auto& op : bb) {
+      // Ignore any operations that we aren't looking for.
+      if (!isUnderscoredTFOp(op)) continue;
 
-            // We always insert the replacement operation next to the operation it
-            // is replacing.
-            builder.setInsertionPoint(&op);
+      // We always insert the replacement operation next to the operation it
+      // is replacing.
+      builder.setInsertionPoint(&op);
 
-            // Drop the leading _ off the name.
-            OperationState result(op.getLoc(),
-                                  op.getName().getStringRef().drop_front());
+      // Drop the leading _ off the name.
+      OperationState result(op.getLoc(),
+                            op.getName().getStringRef().drop_front());
 
-            // Add an operand for each non-control input we find.  Control values
-            // aren't necessary any more since the order within a block encodes the
-            // same information.
-            for (auto &operand : op.getOpOperands()) {
-                if (!operand.get().getType().isa<TFControlType>())
-                    result.operands.push_back(operand.get());
+      // Add an operand for each non-control input we find.  Control values
+      // aren't necessary any more since the order within a block encodes the
+      // same information.
+      for (auto& operand : op.getOpOperands()) {
+        if (!operand.get().getType().isa<TFControlType>())
+          result.operands.push_back(operand.get());
 
-                // Drop all operands from the old operation, eliminating any
-                // inter-dependencies after this pass.
-                operand.drop();
-            }
+        // Drop all operands from the old operation, eliminating any
+        // inter-dependencies after this pass.
+        operand.drop();
+      }
 
-            // Add a result type for each non-control result we find.
-            bool sawControlResult = false;
-            for (auto opResult : op.getResults()) {
-                if (opResult.getType().isa<TFControlType>()) {
-                    sawControlResult = true;
-                } else {
-                    // We assume all control inputs are at the end of the result list.
-                    assert(!sawControlResult && "all control results must be last");
-                    (void)sawControlResult;
-                    result.types.push_back(opResult.getType());
-                }
-            }
-
-            result.attributes.append(op.getAttrs().begin(), op.getAttrs().end());
-
-            // Create the replacement operation.
-            auto *replacement = builder.createOperation(result);
-
-            // We know that all the control results are last, so we can just rewrite
-            // the first results.
-            for (unsigned i = 0, e = result.types.size(); i != e; ++i)
-                op.getResult(i).replaceAllUsesWith(replacement->getResult(i));
+      // Add a result type for each non-control result we find.
+      bool sawControlResult = false;
+      for (auto opResult : op.getResults()) {
+        if (opResult.getType().isa<TFControlType>()) {
+          sawControlResult = true;
+        } else {
+          // We assume all control inputs are at the end of the result list.
+          assert(!sawControlResult && "all control results must be last");
+          (void)sawControlResult;
+          result.types.push_back(opResult.getType());
         }
-    }
+      }
 
-    // In the second pass, we can safely remove all of the old operations, because
-    // we know that all inter-dependencies are dropped.
-    for (auto &bb : function) {
-        // Advance the iterator so we don't invalidate it when we remove an
-        // operation later in the loop.
-        for (auto &op : llvm::make_early_inc_range(bb))
-            if (isUnderscoredTFOp(op)) op.erase();
+      result.attributes.append(op.getAttrs().begin(), op.getAttrs().end());
+
+      // Create the replacement operation.
+      auto* replacement = builder.createOperation(result);
+
+      // We know that all the control results are last, so we can just rewrite
+      // the first results.
+      for (unsigned i = 0, e = result.types.size(); i != e; ++i)
+        op.getResult(i).replaceAllUsesWith(replacement->getResult(i));
     }
+  }
+
+  // In the second pass, we can safely remove all of the old operations, because
+  // we know that all inter-dependencies are dropped.
+  for (auto& bb : function) {
+    // Advance the iterator so we don't invalidate it when we remove an
+    // operation later in the loop.
+    for (auto& op : llvm::make_early_inc_range(bb))
+      if (isUnderscoredTFOp(op)) op.erase();
+  }
 }
 
 }  // namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateRaiseTFControlFlowPass() {
-    return std::make_unique<RaiseTFControlFlow>();
+  return std::make_unique<RaiseTFControlFlow>();
 }
 
 static PassRegistration<RaiseTFControlFlow> pass(

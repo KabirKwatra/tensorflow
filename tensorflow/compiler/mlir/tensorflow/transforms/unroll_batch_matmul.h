@@ -17,8 +17,8 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_TRANSFORMS_UNROLL_BATCH_MATMUL_H_
 
 #include "llvm/ADT/ArrayRef.h"
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
+#include "mlir/IR/Location.h"       // from @llvm-project
+#include "mlir/IR/PatternMatch.h"   // from @llvm-project
 #include "mlir/IR/TypeUtilities.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.h"
 #include "tensorflow/core/util/matmul_bcast.h"
@@ -31,26 +31,26 @@ namespace TF {
 // tf.Slice, tf.MatMul, tf.Pack, and tf.Reshape ops.
 template <typename BatchMatMulOpType>
 class ConvertTFBatchMatMulOp : public OpRewritePattern<BatchMatMulOpType> {
-    using OpRewritePattern<BatchMatMulOpType>::OpRewritePattern;
+  using OpRewritePattern<BatchMatMulOpType>::OpRewritePattern;
 
-    static TF::ReshapeOp createReshapeOp(Value value, ArrayRef<int64_t> shape,
-                                         Type element_type, Location loc,
-                                         PatternRewriter& rewriter);
+  static TF::ReshapeOp createReshapeOp(Value value, ArrayRef<int64_t> shape,
+                                       Type element_type, Location loc,
+                                       PatternRewriter& rewriter);
 
-    static std::vector<Value> sliceInput(Value value, int batch_size,
-                                         Location loc, PatternRewriter& rewriter);
+  static std::vector<Value> sliceInput(Value value, int batch_size,
+                                       Location loc, PatternRewriter& rewriter);
 
-    static TF::TransposeOp createTransposeOp(Value value, Location loc,
-            PatternRewriter& rewriter);
+  static TF::TransposeOp createTransposeOp(Value value, Location loc,
+                                           PatternRewriter& rewriter);
 
-    static TF::PackOp createMatMulOps(const std::vector<Value>& sliced_lhs,
-                                      const std::vector<Value>& sliced_rhs,
-                                      const tensorflow::MatMulBCast& bcast,
-                                      int rows, int cols, Type element_type,
-                                      Location loc, PatternRewriter& rewriter);
+  static TF::PackOp createMatMulOps(const std::vector<Value>& sliced_lhs,
+                                    const std::vector<Value>& sliced_rhs,
+                                    const tensorflow::MatMulBCast& bcast,
+                                    int rows, int cols, Type element_type,
+                                    Location loc, PatternRewriter& rewriter);
 
-    LogicalResult matchAndRewrite(BatchMatMulOpType op,
-                                  PatternRewriter& rewriter) const override;
+  LogicalResult matchAndRewrite(BatchMatMulOpType op,
+                                PatternRewriter& rewriter) const override;
 };
 
 }  // namespace TF

@@ -17,10 +17,10 @@ limitations under the License.
 #include <utility>
 
 #include "llvm/Support/ToolOutputFile.h"
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Support/FileUtilities.h"  // from @llvm-project
+#include "mlir/IR/MLIRContext.h"          // from @llvm-project
+#include "mlir/IR/Module.h"               // from @llvm-project
+#include "mlir/Pass/Pass.h"               // from @llvm-project
+#include "mlir/Support/FileUtilities.h"   // from @llvm-project
 #include "mlir/Transforms/ViewOpGraph.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/common/tfl_pass_config.h"
 #include "tensorflow/compiler/mlir/lite/python/tf_tfl_flatbuffer_helpers.h"
@@ -46,33 +46,33 @@ Status ConvertSavedModelToTFLiteFlatBuffer(
     const string& saved_model_dir, bool saved_model_v1,
     const string& saved_model_tags, const string& saved_model_exported_names,
     string* result) {
-    mlir::MLIRContext context;
-    mlir::TFL::QuantizationSpecs quant_specs;
+  mlir::MLIRContext context;
+  mlir::TFL::QuantizationSpecs quant_specs;
 
-    // Parse input arrays.
-    std::vector<string> node_names;
-    std::vector<string> node_dtypes;
-    std::vector<std::vector<int>> node_shapes;
-    std::vector<double> node_mins;
-    std::vector<double> node_maxs;
+  // Parse input arrays.
+  std::vector<string> node_names;
+  std::vector<string> node_dtypes;
+  std::vector<std::vector<int>> node_shapes;
+  std::vector<double> node_mins;
+  std::vector<double> node_maxs;
 
-    // Populate quantization specs.
-    TF_RETURN_IF_ERROR(internal::PopulateQuantizationSpecs(
-                           model_flags, toco_flags, &quant_specs, &node_names, &node_dtypes,
-                           &node_shapes, &node_mins, &node_maxs));
+  // Populate quantization specs.
+  TF_RETURN_IF_ERROR(internal::PopulateQuantizationSpecs(
+      model_flags, toco_flags, &quant_specs, &node_names, &node_dtypes,
+      &node_shapes, &node_mins, &node_maxs));
 
-    internal::WarningUnusedFlags(model_flags, toco_flags);
+  internal::WarningUnusedFlags(model_flags, toco_flags);
 
-    // Register all custom ops, including user-specified custom ops.
-    TF_RETURN_IF_ERROR(internal::RegisterAllCustomOps(toco_flags));
+  // Register all custom ops, including user-specified custom ops.
+  TF_RETURN_IF_ERROR(internal::RegisterAllCustomOps(toco_flags));
 
-    const bool import_saved_model = !saved_model_v1;
-    TF_ASSIGN_OR_RETURN(
-        auto module,
-        ImportSavedModel(import_saved_model, saved_model_v1, saved_model_dir,
-                         saved_model_tags, saved_model_exported_names, &context));
-    return internal::ConvertMLIRToTFLiteFlatBuffer(toco_flags, std::move(module),
-            quant_specs, result);
+  const bool import_saved_model = !saved_model_v1;
+  TF_ASSIGN_OR_RETURN(
+      auto module,
+      ImportSavedModel(import_saved_model, saved_model_v1, saved_model_dir,
+                       saved_model_tags, saved_model_exported_names, &context));
+  return internal::ConvertMLIRToTFLiteFlatBuffer(toco_flags, std::move(module),
+                                                 quant_specs, result);
 }
 
 }  // namespace tensorflow

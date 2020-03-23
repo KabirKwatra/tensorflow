@@ -19,16 +19,16 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_MLIR_XLA_IR_LHLO_OPS_H_
 
 #include "llvm/ADT/StringRef.h"
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Dialect.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/OpDefinition.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"           // from @llvm-project
+#include "mlir/IR/Dialect.h"              // from @llvm-project
+#include "mlir/IR/Location.h"             // from @llvm-project
+#include "mlir/IR/MLIRContext.h"          // from @llvm-project
+#include "mlir/IR/OpDefinition.h"         // from @llvm-project
+#include "mlir/IR/Operation.h"            // from @llvm-project
+#include "mlir/IR/StandardTypes.h"        // from @llvm-project
+#include "mlir/IR/Types.h"                // from @llvm-project
 #include "mlir/Interfaces/SideEffects.h"  // from @llvm-project
-#include "mlir/Support/Functional.h"  // from @llvm-project
+#include "mlir/Support/Functional.h"      // from @llvm-project
 
 namespace mlir {
 class OpBuilder;
@@ -36,11 +36,9 @@ class OpBuilder;
 namespace xla_lhlo {
 
 class XlaLhloDialect : public Dialect {
-public:
-    explicit XlaLhloDialect(MLIRContext *context);
-    static StringRef getDialectNamespace() {
-        return "xla_lhlo";
-    }
+ public:
+  explicit XlaLhloDialect(MLIRContext* context);
+  static StringRef getDialectNamespace() { return "xla_lhlo"; }
 };
 
 #define GET_OP_CLASSES

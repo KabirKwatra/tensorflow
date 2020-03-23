@@ -17,18 +17,18 @@ limitations under the License.
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/ToolOutputFile.h"
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Pass/PassManager.h"  // from @llvm-project
+#include "mlir/Pass/Pass.h"              // from @llvm-project
+#include "mlir/Pass/PassManager.h"       // from @llvm-project
 #include "mlir/Support/FileUtilities.h"  // from @llvm-project
-#include "mlir/Support/MlirOptMain.h"  // from @llvm-project
+#include "mlir/Support/MlirOptMain.h"    // from @llvm-project
 #include "tensorflow/compiler/mlir/init_mlir.h"
 #include "tensorflow/core/platform/init_main.h"
 #include "tensorflow/core/platform/logging.h"
 
 // NOLINTNEXTLINE
 static llvm::cl::opt<std::string> input_filename(llvm::cl::Positional,
-        llvm::cl::desc("<input file>"),
-        llvm::cl::init("-"));
+                                                 llvm::cl::desc("<input file>"),
+                                                 llvm::cl::init("-"));
 
 // NOLINTNEXTLINE
 static llvm::cl::opt<std::string> output_filename(
@@ -55,30 +55,30 @@ static llvm::cl::opt<bool> verify_passes(
     llvm::cl::desc("Run the verifier after each transformation pass"),
     llvm::cl::init(true));
 
-int main(int argc, char **argv) {
-    tensorflow::InitMlir y(&argc, &argv);
+int main(int argc, char** argv) {
+  tensorflow::InitMlir y(&argc, &argv);
 
-    // Register any pass manager command line options.
-    mlir::registerPassManagerCLOptions();
+  // Register any pass manager command line options.
+  mlir::registerPassManagerCLOptions();
 
-    // Parse pass names in main to ensure static initialization completed.
-    mlir::PassPipelineCLParser pass_pipeline("", "Compiler passes to run");
+  // Parse pass names in main to ensure static initialization completed.
+  mlir::PassPipelineCLParser pass_pipeline("", "Compiler passes to run");
 
-    llvm::cl::ParseCommandLineOptions(argc, argv,
-                                      "TF MLIR modular optimizer driver\n");
+  llvm::cl::ParseCommandLineOptions(argc, argv,
+                                    "TF MLIR modular optimizer driver\n");
 
-    // Set up the input file.
-    std::string error_message;
-    auto file = mlir::openInputFile(input_filename, &error_message);
-    QCHECK(file) << error_message;
+  // Set up the input file.
+  std::string error_message;
+  auto file = mlir::openInputFile(input_filename, &error_message);
+  QCHECK(file) << error_message;
 
-    auto output = mlir::openOutputFile(output_filename, &error_message);
-    QCHECK(output) << error_message;
+  auto output = mlir::openOutputFile(output_filename, &error_message);
+  QCHECK(output) << error_message;
 
-    if (failed(mlir::MlirOptMain(output->os(), std::move(file), pass_pipeline,
-                                 split_input_file, verify_diagnostics,
-                                 verify_passes)))
-        return 1;
-    output->keep();
-    return 0;
+  if (failed(mlir::MlirOptMain(output->os(), std::move(file), pass_pipeline,
+                               split_input_file, verify_diagnostics,
+                               verify_passes)))
+    return 1;
+  output->keep();
+  return 0;
 }

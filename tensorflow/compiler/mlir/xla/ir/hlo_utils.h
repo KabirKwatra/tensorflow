@@ -16,9 +16,9 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_XLA_IR_HLO_UTILS_H_
 #define TENSORFLOW_COMPILER_MLIR_XLA_IR_HLO_UTILS_H_
 
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Builders.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"     // from @llvm-project
+#include "mlir/IR/Builders.h"       // from @llvm-project
+#include "mlir/IR/PatternMatch.h"   // from @llvm-project
 #include "mlir/IR/StandardTypes.h"  // from @llvm-project
 #include "mlir/IR/TypeUtilities.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/xla/convert_op_folder.h"
@@ -31,26 +31,26 @@ namespace xla {
 // If `allow_empty` is true, then null can be returned to mean that the
 // broadcast is an "identity".
 mlir::DenseIntElementsAttr getBroadcastDimensionsAttr(mlir::Builder* b,
-        mlir::Value x,
-        mlir::Value y,
-        bool allow_empty = true);
+                                                      mlir::Value x,
+                                                      mlir::Value y,
+                                                      bool allow_empty = true);
 
 /// Get a constant splat for the given value type.
 template <typename T>
 static ElementsAttr getSplat(Builder* b, Value val, T constant) {
-    auto valType = val.getType().cast<TensorType>();
-    auto valElementType = getElementTypeOrSelf(val.getType());
+  auto valType = val.getType().cast<TensorType>();
+  auto valElementType = getElementTypeOrSelf(val.getType());
 
-    // Handle integer elements.
-    Attribute elementAttr;
-    if (valElementType.isSignlessInteger())
-        elementAttr = b->getIntegerAttr(valElementType, constant);
-    else if (valElementType.isa<FloatType>())
-        elementAttr = b->getFloatAttr(valElementType, constant);
-    else
-        llvm_unreachable("unhandled element type");
+  // Handle integer elements.
+  Attribute elementAttr;
+  if (valElementType.isSignlessInteger())
+    elementAttr = b->getIntegerAttr(valElementType, constant);
+  else if (valElementType.isa<FloatType>())
+    elementAttr = b->getFloatAttr(valElementType, constant);
+  else
+    llvm_unreachable("unhandled element type");
 
-    return DenseElementsAttr::get(valType, elementAttr);
+  return DenseElementsAttr::get(valType, elementAttr);
 }
 
 // Returns DenseElementsAttr of rank zero with the given element type and the

@@ -16,7 +16,7 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_TENSORFLOW_TRANSFORMS_DECOMPOSE_RESOURCE_OPS_H_
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_TRANSFORMS_DECOMPOSE_RESOURCE_OPS_H_
 
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
+#include "mlir/IR/MLIRContext.h"   // from @llvm-project
 #include "mlir/IR/PatternMatch.h"  // from @llvm-project
 
 namespace mlir {
@@ -28,8 +28,8 @@ namespace TF {
 // NOTE: These patterns do not support `use_locking=true` for a lot of resource
 // operations. So decomposition may not be correct outside of backends like XLA,
 // which automatically locks all resource variables.
-void PopulateDecomposeResourceOpsPatterns(MLIRContext *context,
-        OwningRewritePatternList *patterns);
+void PopulateDecomposeResourceOpsPatterns(MLIRContext* context,
+                                          OwningRewritePatternList* patterns);
 
 }  // namespace TF
 }  // namespace mlir

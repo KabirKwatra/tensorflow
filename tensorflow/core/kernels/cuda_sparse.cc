@@ -23,7 +23,6 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#include "third_party/gpus/cuda/include/cusparse.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_event_mgr.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/types.h"
@@ -37,6 +36,7 @@ limitations under the License.
 #include "tensorflow/core/platform/mutex.h"
 #include "tensorflow/core/platform/stream_executor.h"
 #include "tensorflow/core/platform/types.h"
+#include "third_party/gpus/cuda/include/cusparse.h"
 
 // TODO(rmlarsen,penporn): Investigate using newer kernels in CUDA 10.1+.
 
@@ -47,88 +47,86 @@ namespace {
 // TODO: reuse with cuda_solvers
 template <typename T>
 struct CudaComplexT {
-    typedef T type;
+  typedef T type;
 };
 template <>
 struct CudaComplexT<std::complex<float>> {
-    typedef cuComplex type;
+  typedef cuComplex type;
 };
 template <>
 struct CudaComplexT<std::complex<double>> {
-    typedef cuDoubleComplex type;
+  typedef cuDoubleComplex type;
 };
 // Converts pointers of std::complex<> to pointers of
 // cuComplex/cuDoubleComplex. No type conversion for non-complex types.
 template <typename T>
 inline const typename CudaComplexT<T>::type* AsCudaComplex(const T* p) {
-    return reinterpret_cast<const typename CudaComplexT<T>::type*>(p);
+  return reinterpret_cast<const typename CudaComplexT<T>::type*>(p);
 }
 template <typename T>
 inline typename CudaComplexT<T>::type* AsCudaComplex(T* p) {
-    return reinterpret_cast<typename CudaComplexT<T>::type*>(p);
+  return reinterpret_cast<typename CudaComplexT<T>::type*>(p);
 }
 
 // A set of initialized handles to the underlying Cuda libraries used by
 // GpuSparse. We maintain one such set of handles per unique stream.
 class CudaSparseHandles {
-public:
-    explicit CudaSparseHandles(cudaStream_t stream)
-        : initialized_(false), stream_(stream) {}
+ public:
+  explicit CudaSparseHandles(cudaStream_t stream)
+      : initialized_(false), stream_(stream) {}
 
-    CudaSparseHandles(CudaSparseHandles&& rhs)
-        : initialized_(rhs.initialized_),
-          stream_(std::move(rhs.stream_)),
-          cusparse_handle_(rhs.cusparse_handle_) {
-        rhs.initialized_ = false;
+  CudaSparseHandles(CudaSparseHandles&& rhs)
+      : initialized_(rhs.initialized_),
+        stream_(std::move(rhs.stream_)),
+        cusparse_handle_(rhs.cusparse_handle_) {
+    rhs.initialized_ = false;
+  }
+
+  CudaSparseHandles& operator=(CudaSparseHandles&& rhs) {
+    if (this == &rhs) return *this;
+    Release();
+    stream_ = std::move(rhs.stream_);
+    cusparse_handle_ = std::move(rhs.cusparse_handle_);
+    initialized_ = rhs.initialized_;
+    rhs.initialized_ = false;
+    return *this;
+  }
+
+  ~CudaSparseHandles() { Release(); }
+
+  Status Initialize() {
+    if (initialized_) return Status::OK();
+    TF_RETURN_IF_GPUSPARSE_ERROR(cusparseCreate(&cusparse_handle_));
+    TF_RETURN_IF_GPUSPARSE_ERROR(cusparseSetStream(cusparse_handle_, stream_));
+    initialized_ = true;
+    return Status::OK();
+  }
+
+  cusparseHandle_t& handle() {
+    DCHECK(initialized_);
+    return cusparse_handle_;
+  }
+
+  const cusparseHandle_t& handle() const {
+    DCHECK(initialized_);
+    return cusparse_handle_;
+  }
+
+ private:
+  void Release() {
+    if (initialized_) {
+      // This should never return anything other than success
+      auto err = cusparseDestroy(cusparse_handle_);
+      DCHECK(err == CUSPARSE_STATUS_SUCCESS)
+          << "Failed to destroy cuSparse instance.";
+      initialized_ = false;
     }
+  }
+  bool initialized_;
+  cudaStream_t stream_;
+  cusparseHandle_t cusparse_handle_;
 
-    CudaSparseHandles& operator=(CudaSparseHandles&& rhs) {
-        if (this == &rhs) return *this;
-        Release();
-        stream_ = std::move(rhs.stream_);
-        cusparse_handle_ = std::move(rhs.cusparse_handle_);
-        initialized_ = rhs.initialized_;
-        rhs.initialized_ = false;
-        return *this;
-    }
-
-    ~CudaSparseHandles() {
-        Release();
-    }
-
-    Status Initialize() {
-        if (initialized_) return Status::OK();
-        TF_RETURN_IF_GPUSPARSE_ERROR(cusparseCreate(&cusparse_handle_));
-        TF_RETURN_IF_GPUSPARSE_ERROR(cusparseSetStream(cusparse_handle_, stream_));
-        initialized_ = true;
-        return Status::OK();
-    }
-
-    cusparseHandle_t& handle() {
-        DCHECK(initialized_);
-        return cusparse_handle_;
-    }
-
-    const cusparseHandle_t& handle() const {
-        DCHECK(initialized_);
-        return cusparse_handle_;
-    }
-
-private:
-    void Release() {
-        if (initialized_) {
-            // This should never return anything other than success
-            auto err = cusparseDestroy(cusparse_handle_);
-            DCHECK(err == CUSPARSE_STATUS_SUCCESS)
-                    << "Failed to destroy cuSparse instance.";
-            initialized_ = false;
-        }
-    }
-    bool initialized_;
-    cudaStream_t stream_;
-    cusparseHandle_t cusparse_handle_;
-
-    TF_DISALLOW_COPY_AND_ASSIGN(CudaSparseHandles);
+  TF_DISALLOW_COPY_AND_ASSIGN(CudaSparseHandles);
 };
 
 // TODO(ebrevdo): Replace global mutex guarding CudaSparseHandles
@@ -145,40 +143,40 @@ using HandleMap = std::unordered_map<cudaStream_t, CudaSparseHandles>;
 // Returns a singleton map used for storing initialized handles for each unique
 // cuda stream.
 HandleMap* GetHandleMapSingleton() {
-    static HandleMap* cm = new HandleMap;
-    return cm;
+  static HandleMap* cm = new HandleMap;
+  return cm;
 }
 
 }  // namespace
 
 GpuSparse::GpuSparse(OpKernelContext* context)
     : initialized_(false), context_(context) {
-    auto cuda_stream_ptr =
-        reinterpret_cast<const cudaStream_t*>(context->op_device_context()
-                ->stream()
-                ->implementation()
-                ->GpuStreamMemberHack());
-    DCHECK(cuda_stream_ptr);
-    gpu_stream_ = *cuda_stream_ptr;
+  auto cuda_stream_ptr =
+      reinterpret_cast<const cudaStream_t*>(context->op_device_context()
+                                                ->stream()
+                                                ->implementation()
+                                                ->GpuStreamMemberHack());
+  DCHECK(cuda_stream_ptr);
+  gpu_stream_ = *cuda_stream_ptr;
 }
 
 Status GpuSparse::Initialize() {
-    HandleMap* handle_map = GetHandleMapSingleton();
-    DCHECK(handle_map);
-    mutex_lock lock(handle_map_mutex);
-    auto it = handle_map->find(gpu_stream_);
-    if (it == handle_map->end()) {
-        LOG(INFO) << "Creating CudaSparse handles for stream " << gpu_stream_;
-        // Previously unseen Cuda stream. Initialize a set of Cuda sparse library
-        // handles for it.
-        CudaSparseHandles new_handles(gpu_stream_);
-        TF_RETURN_IF_ERROR(new_handles.Initialize());
-        it = handle_map->insert(std::make_pair(gpu_stream_, std::move(new_handles)))
+  HandleMap* handle_map = GetHandleMapSingleton();
+  DCHECK(handle_map);
+  mutex_lock lock(handle_map_mutex);
+  auto it = handle_map->find(gpu_stream_);
+  if (it == handle_map->end()) {
+    LOG(INFO) << "Creating CudaSparse handles for stream " << gpu_stream_;
+    // Previously unseen Cuda stream. Initialize a set of Cuda sparse library
+    // handles for it.
+    CudaSparseHandles new_handles(gpu_stream_);
+    TF_RETURN_IF_ERROR(new_handles.Initialize());
+    it = handle_map->insert(std::make_pair(gpu_stream_, std::move(new_handles)))
              .first;
-    }
-    gpusparse_handle_ = &it->second.handle();
-    initialized_ = true;
-    return Status::OK();
+  }
+  gpusparse_handle_ = &it->second.handle();
+  initialized_ = true;
+  return Status::OK();
 }
 
 // Macro that specializes a sparse method for all 4 standard
@@ -207,10 +205,10 @@ static inline Status Gtsv2Impl(SparseFn op, cusparseHandle_t cusparse_handle,
                                int m, int n, const Scalar* dl, const Scalar* d,
                                const Scalar* du, Scalar* B, int ldb,
                                void* pBuffer) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, AsCudaComplex(dl),
-                                    AsCudaComplex(d), AsCudaComplex(du),
-                                    AsCudaComplex(B), ldb, pBuffer));
-    return Status::OK();
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, AsCudaComplex(dl),
+                                  AsCudaComplex(d), AsCudaComplex(du),
+                                  AsCudaComplex(B), ldb, pBuffer));
+  return Status::OK();
 }
 
 #define GTSV2_INSTANCE(Scalar, sparse_prefix)                                \
@@ -239,15 +237,15 @@ TF_CALL_LAPACK_TYPES(GTSV2_NO_PIVOT_INSTANCE);
 
 template <typename Scalar, typename SparseFn>
 static inline Status Gtsv2BufferSizeExtImpl(SparseFn op,
-        cusparseHandle_t cusparse_handle,
-        int m, int n, const Scalar* dl,
-        const Scalar* d, const Scalar* du,
-        const Scalar* B, int ldb,
-        size_t* bufferSizeInBytes) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, AsCudaComplex(dl),
-                                    AsCudaComplex(d), AsCudaComplex(du),
-                                    AsCudaComplex(B), ldb, bufferSizeInBytes));
-    return Status::OK();
+                                            cusparseHandle_t cusparse_handle,
+                                            int m, int n, const Scalar* dl,
+                                            const Scalar* d, const Scalar* du,
+                                            const Scalar* B, int ldb,
+                                            size_t* bufferSizeInBytes) {
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, AsCudaComplex(dl),
+                                  AsCudaComplex(d), AsCudaComplex(du),
+                                  AsCudaComplex(B), ldb, bufferSizeInBytes));
+  return Status::OK();
 }
 
 #define GTSV2_BUFFER_SIZE_INSTANCE(Scalar, sparse_prefix)                     \
@@ -278,15 +276,15 @@ TF_CALL_LAPACK_TYPES(GTSV2_NO_PIVOT_BUFFER_SIZE_INSTANCE);
 
 template <typename Scalar, typename SparseFn>
 static inline Status Gtsv2StridedBatchImpl(SparseFn op,
-        cusparseHandle_t cusparse_handle,
-        int m, const Scalar* dl,
-        const Scalar* d, const Scalar* du,
-        Scalar* x, int batchCount,
-        int batchStride, void* pBuffer) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(
-                                     cusparse_handle, m, AsCudaComplex(dl), AsCudaComplex(d),
-                                     AsCudaComplex(du), AsCudaComplex(x), batchCount, batchStride, pBuffer));
-    return Status::OK();
+                                           cusparseHandle_t cusparse_handle,
+                                           int m, const Scalar* dl,
+                                           const Scalar* d, const Scalar* du,
+                                           Scalar* x, int batchCount,
+                                           int batchStride, void* pBuffer) {
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(
+      cusparse_handle, m, AsCudaComplex(dl), AsCudaComplex(d),
+      AsCudaComplex(du), AsCudaComplex(x), batchCount, batchStride, pBuffer));
+  return Status::OK();
 }
 
 #define GTSV2_STRIDED_BATCH_INSTANCE(Scalar, sparse_prefix)                   \
@@ -307,11 +305,11 @@ static inline Status Gtsv2StridedBatchBufferSizeImpl(
     SparseFn op, cusparseHandle_t cusparse_handle, int m, const Scalar* dl,
     const Scalar* d, const Scalar* du, const Scalar* x, int batchCount,
     int batchStride, size_t* bufferSizeInBytes) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, AsCudaComplex(dl),
-                                    AsCudaComplex(d), AsCudaComplex(du),
-                                    AsCudaComplex(x), batchCount, batchStride,
-                                    bufferSizeInBytes));
-    return Status::OK();
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, AsCudaComplex(dl),
+                                  AsCudaComplex(d), AsCudaComplex(du),
+                                  AsCudaComplex(x), batchCount, batchStride,
+                                  bufferSizeInBytes));
+  return Status::OK();
 }
 
 #define GTSV2_STRIDED_BATCH_BUFFER_SIZE_INSTANCE(Scalar, sparse_prefix) \
@@ -331,34 +329,34 @@ TF_CALL_LAPACK_TYPES(GTSV2_STRIDED_BATCH_BUFFER_SIZE_INSTANCE);
 
 Status GpuSparse::Coo2csr(const int* cooRowInd, int nnz, int m,
                           int* csrRowPtr) const {
-    // cusparseStatus_t CUSPARSEAPI cusparseXcoo2csr(cusparseHandle_t handle,
-    //                                               const int *cooRowInd,
-    //                                               int nnz,
-    //                                               int m,
-    //                                               int *csrSortedRowPtr,
-    //                                               cusparseIndexBase_t
-    //                                               idxBase);
-    DCHECK(initialized_);
-    TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcoo2csr(*gpusparse_handle_, cooRowInd,
-                                 nnz, m, csrRowPtr,
-                                 CUSPARSE_INDEX_BASE_ZERO));
-    return Status::OK();
+  // cusparseStatus_t CUSPARSEAPI cusparseXcoo2csr(cusparseHandle_t handle,
+  //                                               const int *cooRowInd,
+  //                                               int nnz,
+  //                                               int m,
+  //                                               int *csrSortedRowPtr,
+  //                                               cusparseIndexBase_t
+  //                                               idxBase);
+  DCHECK(initialized_);
+  TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcoo2csr(*gpusparse_handle_, cooRowInd,
+                                                nnz, m, csrRowPtr,
+                                                CUSPARSE_INDEX_BASE_ZERO));
+  return Status::OK();
 }
 
 Status GpuSparse::Csr2coo(const int* csrRowPtr, int nnz, int m,
                           int* cooRowInd) const {
-    // cusparseStatus_t CUSPARSEAPI cusparseXcsr2coo(cusparseHandle_t handle,
-    //                                               const int *csrRowPtr,
-    //                                               int nnz,
-    //                                               int m,
-    //                                               int *cooRowInd,
-    //                                               cusparseIndexBase_t
-    //                                               idxBase);
-    DCHECK(initialized_);
-    TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcsr2coo(*gpusparse_handle_, csrRowPtr,
-                                 nnz, m, cooRowInd,
-                                 CUSPARSE_INDEX_BASE_ZERO));
-    return Status::OK();
+  // cusparseStatus_t CUSPARSEAPI cusparseXcsr2coo(cusparseHandle_t handle,
+  //                                               const int *csrRowPtr,
+  //                                               int nnz,
+  //                                               int m,
+  //                                               int *cooRowInd,
+  //                                               cusparseIndexBase_t
+  //                                               idxBase);
+  DCHECK(initialized_);
+  TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcsr2coo(*gpusparse_handle_, csrRowPtr,
+                                                nnz, m, cooRowInd,
+                                                CUSPARSE_INDEX_BASE_ZERO));
+  return Status::OK();
 }
 
 Status GpuSparse::CsrgeamNnz(int m, int n, const cusparseMatDescr_t descrA,
@@ -369,13 +367,13 @@ Status GpuSparse::CsrgeamNnz(int m, int n, const cusparseMatDescr_t descrA,
                              const int* csrSortedColIndB,
                              const cusparseMatDescr_t descrC,
                              int* csrSortedRowPtrC, int* nnzTotalDevHostPtr) {
-    DCHECK(initialized_);
-    DCHECK(nnzTotalDevHostPtr != nullptr);
-    TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcsrgeamNnz(
-                                     *gpusparse_handle_, m, n, descrA, nnzA, csrSortedRowPtrA,
-                                     csrSortedColIndA, descrB, nnzB, csrSortedRowPtrB, csrSortedColIndB,
-                                     descrC, csrSortedRowPtrC, nnzTotalDevHostPtr));
-    return Status::OK();
+  DCHECK(initialized_);
+  DCHECK(nnzTotalDevHostPtr != nullptr);
+  TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcsrgeamNnz(
+      *gpusparse_handle_, m, n, descrA, nnzA, csrSortedRowPtrA,
+      csrSortedColIndA, descrB, nnzB, csrSortedRowPtrB, csrSortedColIndB,
+      descrC, csrSortedRowPtrC, nnzTotalDevHostPtr));
+  return Status::OK();
 }
 
 template <typename Scalar, typename SparseFnT>
@@ -386,18 +384,18 @@ static inline Status CsrmmImpl(
     const Scalar* csrSortedValA, const int* csrSortedRowPtrA,
     const int* csrSortedColIndA, const Scalar* B, int ldb,
     const Scalar* beta_host, Scalar* C, int ldc) {
-    // cusparseStatus_t CUSPARSEAPI cusparseScsrmm2(
-    //     cusparseHandle_t handle, cusparseOperation_t transA,
-    //     cusparseOperation_t transB, int m, int n, int k, int nnz,
-    //     const float* alpha, const cusparseMatDescr_t descrA,
-    //     const float* csrSortedValA, const int* csrSortedRowPtrA,
-    //     const int* csrSortedColIndA, const float* B, int ldb, const float*
-    //     beta, float* C, int ldc);
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(
-                                     cusparse_handle, transA, transB, m, n, k, nnz, AsCudaComplex(alpha_host),
-                                     descrA, AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
-                                     AsCudaComplex(B), ldb, AsCudaComplex(beta_host), AsCudaComplex(C), ldc));
-    return Status::OK();
+  // cusparseStatus_t CUSPARSEAPI cusparseScsrmm2(
+  //     cusparseHandle_t handle, cusparseOperation_t transA,
+  //     cusparseOperation_t transB, int m, int n, int k, int nnz,
+  //     const float* alpha, const cusparseMatDescr_t descrA,
+  //     const float* csrSortedValA, const int* csrSortedRowPtrA,
+  //     const int* csrSortedColIndA, const float* B, int ldb, const float*
+  //     beta, float* C, int ldc);
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(
+      cusparse_handle, transA, transB, m, n, k, nnz, AsCudaComplex(alpha_host),
+      descrA, AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
+      AsCudaComplex(B), ldb, AsCudaComplex(beta_host), AsCudaComplex(C), ldc));
+  return Status::OK();
 }
 
 #define CSRMM_INSTANCE(Scalar, sparse_prefix)                                \
@@ -425,11 +423,11 @@ static inline Status CsrmvImpl(
     const cusparseMatDescr_t descrA, const Scalar* csrSortedValA,
     const int* csrSortedRowPtrA, const int* csrSortedColIndA, const Scalar* x,
     const Scalar* beta_host, Scalar* y) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(
-        op(cusparse_handle, transA, m, n, nnz, AsCudaComplex(alpha_host), descrA,
-           AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
-           AsCudaComplex(x), AsCudaComplex(beta_host), AsCudaComplex(y)));
-    return Status::OK();
+  TF_RETURN_IF_GPUSPARSE_ERROR(
+      op(cusparse_handle, transA, m, n, nnz, AsCudaComplex(alpha_host), descrA,
+         AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
+         AsCudaComplex(x), AsCudaComplex(beta_host), AsCudaComplex(y)));
+  return Status::OK();
 }
 
 // TODO(ebrevdo,rmlarsen): Use csrmv_mp for all cases when available in CUDA 9.
@@ -467,13 +465,13 @@ static inline Status CsrgeamImpl(
     const int* csrSortedRowPtrB, const int* csrSortedColIndB,
     const cusparseMatDescr_t descrC, Scalar* csrSortedValC,
     int* csrSortedRowPtrC, int* csrSortedColIndC) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(
-        op(cusparse_handle, m, n, AsCudaComplex(alpha), descrA, nnzA,
-           AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
-           AsCudaComplex(beta), descrB, nnzB, AsCudaComplex(csrSortedValB),
-           csrSortedRowPtrB, csrSortedColIndB, descrC,
-           AsCudaComplex(csrSortedValC), csrSortedRowPtrC, csrSortedColIndC));
-    return Status::OK();
+  TF_RETURN_IF_GPUSPARSE_ERROR(
+      op(cusparse_handle, m, n, AsCudaComplex(alpha), descrA, nnzA,
+         AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
+         AsCudaComplex(beta), descrB, nnzB, AsCudaComplex(csrSortedValB),
+         csrSortedRowPtrB, csrSortedColIndB, descrC,
+         AsCudaComplex(csrSortedValC), csrSortedRowPtrC, csrSortedColIndC));
+  return Status::OK();
 }
 
 #define CSRGEAM_INSTANCE(Scalar, sparse_prefix)                               \
@@ -504,13 +502,13 @@ Status GpuSparse::CsrgemmNnz(
     const int* csrSortedRowPtrB, const int* csrSortedColIndB,
     const cusparseMatDescr_t descrC, int* csrSortedRowPtrC,
     int* nnzTotalDevHostPtr) {
-    DCHECK(initialized_);
-    DCHECK(nnzTotalDevHostPtr != nullptr);
-    TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcsrgemmNnz(
-                                     *gpusparse_handle_, transA, transB, m, k, n, descrA, nnzA,
-                                     csrSortedRowPtrA, csrSortedColIndA, descrB, nnzB, csrSortedRowPtrB,
-                                     csrSortedColIndB, descrC, csrSortedRowPtrC, nnzTotalDevHostPtr));
-    return Status::OK();
+  DCHECK(initialized_);
+  DCHECK(nnzTotalDevHostPtr != nullptr);
+  TF_RETURN_IF_GPUSPARSE_ERROR(cusparseXcsrgemmNnz(
+      *gpusparse_handle_, transA, transB, m, k, n, descrA, nnzA,
+      csrSortedRowPtrA, csrSortedColIndA, descrB, nnzB, csrSortedRowPtrB,
+      csrSortedColIndB, descrC, csrSortedRowPtrC, nnzTotalDevHostPtr));
+  return Status::OK();
 }
 
 template <typename Scalar, typename SparseFnT>
@@ -523,13 +521,13 @@ static inline Status CsrgemmImpl(
     const int* csrSortedRowPtrB, const int* csrSortedColIndB,
     const cusparseMatDescr_t descrC, Scalar* csrSortedValC,
     int* csrSortedRowPtrC, int* csrSortedColIndC) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(
-        op(cusparse_handle, transA, transB, m, k, n, descrA, nnzA,
-           AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
-           descrB, nnzB, AsCudaComplex(csrSortedValB), csrSortedRowPtrB,
-           csrSortedColIndB, descrC, AsCudaComplex(csrSortedValC),
-           csrSortedRowPtrC, csrSortedColIndC));
-    return Status::OK();
+  TF_RETURN_IF_GPUSPARSE_ERROR(
+      op(cusparse_handle, transA, transB, m, k, n, descrA, nnzA,
+         AsCudaComplex(csrSortedValA), csrSortedRowPtrA, csrSortedColIndA,
+         descrB, nnzB, AsCudaComplex(csrSortedValB), csrSortedRowPtrB,
+         csrSortedColIndB, descrC, AsCudaComplex(csrSortedValC),
+         csrSortedRowPtrC, csrSortedColIndC));
+  return Status::OK();
 }
 
 #define CSRGEMM_INSTANCE(Scalar, sparse_prefix)                               \
@@ -561,27 +559,27 @@ static inline Status Csru2csrImpl(SparseFnT op, BufferSizeFnT buffer_size_op,
                                   const cusparseMatDescr_t descrA,
                                   Scalar* csrVal, const int* csrRowPtr,
                                   int* csrColInd) {
-    GpuSparseCsrSortingConversionInfo info;
-    TF_RETURN_IF_ERROR(info.Initialize());
+  GpuSparseCsrSortingConversionInfo info;
+  TF_RETURN_IF_ERROR(info.Initialize());
 
-    size_t pBufferSizeInBytes = 0;
+  size_t pBufferSizeInBytes = 0;
 
-    TF_RETURN_IF_GPUSPARSE_ERROR(
-        buffer_size_op(cusparse_handle, m, n, nnz, AsCudaComplex(csrVal),
-                       csrRowPtr, csrColInd, info.info(), &pBufferSizeInBytes));
+  TF_RETURN_IF_GPUSPARSE_ERROR(
+      buffer_size_op(cusparse_handle, m, n, nnz, AsCudaComplex(csrVal),
+                     csrRowPtr, csrColInd, info.info(), &pBufferSizeInBytes));
 
-    Tensor pBuffer_t;
-    TF_RETURN_IF_ERROR(context->allocate_temp(
-                           DT_INT8, TensorShape({static_cast<int64>(pBufferSizeInBytes)}),
-                           &pBuffer_t));
-    auto pBuffer = pBuffer_t.flat<int8>();
-    DCHECK(pBuffer.data() != nullptr);
+  Tensor pBuffer_t;
+  TF_RETURN_IF_ERROR(context->allocate_temp(
+      DT_INT8, TensorShape({static_cast<int64>(pBufferSizeInBytes)}),
+      &pBuffer_t));
+  auto pBuffer = pBuffer_t.flat<int8>();
+  DCHECK(pBuffer.data() != nullptr);
 
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, nnz, descrA,
-                                    AsCudaComplex(csrVal), csrRowPtr, csrColInd,
-                                    info.info(), pBuffer.data()));
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, nnz, descrA,
+                                  AsCudaComplex(csrVal), csrRowPtr, csrColInd,
+                                  info.info(), pBuffer.data()));
 
-    return Status::OK();
+  return Status::OK();
 }
 
 #define CSRU2CSR_INSTANCE(Scalar, sparse_prefix)                              \
@@ -605,11 +603,11 @@ static inline Status Csr2cscImpl(SparseFnT op, OpKernelContext* context,
                                  const int* csrRowPtr, const int* csrColInd,
                                  Scalar* cscVal, int* cscRowInd, int* cscColPtr,
                                  const cusparseAction_t copyValues) {
-    TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, nnz,
-                                    AsCudaComplex(csrVal), csrRowPtr, csrColInd,
-                                    AsCudaComplex(cscVal), cscRowInd, cscColPtr,
-                                    copyValues, CUSPARSE_INDEX_BASE_ZERO));
-    return Status::OK();
+  TF_RETURN_IF_GPUSPARSE_ERROR(op(cusparse_handle, m, n, nnz,
+                                  AsCudaComplex(csrVal), csrRowPtr, csrColInd,
+                                  AsCudaComplex(cscVal), cscRowInd, cscColPtr,
+                                  copyValues, CUSPARSE_INDEX_BASE_ZERO));
+  return Status::OK();
 }
 
 #define CSR2CSC_INSTANCE(Scalar, sparse_prefix)                              \

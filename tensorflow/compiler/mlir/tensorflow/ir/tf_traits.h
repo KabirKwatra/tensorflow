@@ -18,9 +18,9 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_TF_TRAITS_H_
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_IR_TF_TRAITS_H_
 
-#include "mlir/IR/OpDefinition.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/TypeUtilities.h"  // from @llvm-project
+#include "mlir/IR/OpDefinition.h"        // from @llvm-project
+#include "mlir/IR/StandardTypes.h"       // from @llvm-project
+#include "mlir/IR/TypeUtilities.h"       // from @llvm-project
 #include "mlir/Support/LogicalResult.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_types.h"
 
@@ -30,10 +30,10 @@ namespace TF {
 
 // Verifies if 'ref_type' is a REF type corresponding to 'type'.
 static inline LogicalResult VerifyRefTypeMatch(mlir::Type type,
-        mlir::Type maybe_ref_type) {
-    if (auto ref_type = maybe_ref_type.dyn_cast<mlir::TF::TensorFlowRefType>())
-        return success(ref_type.RemoveRef().getKind() == type.getKind());
-    return failure();
+                                               mlir::Type maybe_ref_type) {
+  if (auto ref_type = maybe_ref_type.dyn_cast<mlir::TF::TensorFlowRefType>())
+    return success(ref_type.RemoveRef().getKind() == type.getKind());
+  return failure();
 }
 
 // This class provides verification for ops that are known to have the same
@@ -42,30 +42,30 @@ static inline LogicalResult VerifyRefTypeMatch(mlir::Type type,
 template <typename ConcreteType>
 class OperandsSameAsResultsTypeOrRef
     : public TraitBase<ConcreteType, OperandsSameAsResultsTypeOrRef> {
-public:
-    static LogicalResult verifyTrait(Operation* op) {
-        LogicalResult shapeMatch = impl::verifySameOperandsAndResultShape(op);
-        if (failed(shapeMatch)) return shapeMatch;
+ public:
+  static LogicalResult verifyTrait(Operation* op) {
+    LogicalResult shapeMatch = impl::verifySameOperandsAndResultShape(op);
+    if (failed(shapeMatch)) return shapeMatch;
 
-        auto type = getElementTypeOrSelf(op->getResult(0).getType());
+    auto type = getElementTypeOrSelf(op->getResult(0).getType());
 
-        // Verify that the first result type is same as the rest of the results.
-        // We skip the comparison against itself.
-        for (auto resultType : llvm::drop_begin(op->getResultTypes(), 1)) {
-            resultType = getElementTypeOrSelf(resultType);
-            if (resultType != type)
-                return op->emitOpError() << "requires the same type for all results";
-        }
-
-        for (auto opType : op->getOperandTypes()) {
-            opType = getElementTypeOrSelf(opType);
-            if (opType != type && failed(VerifyRefTypeMatch(type, opType))) {
-                return op->emitError() << "requires all operands to be either same "
-                       "as or ref type of results";
-            }
-        }
-        return success();
+    // Verify that the first result type is same as the rest of the results.
+    // We skip the comparison against itself.
+    for (auto resultType : llvm::drop_begin(op->getResultTypes(), 1)) {
+      resultType = getElementTypeOrSelf(resultType);
+      if (resultType != type)
+        return op->emitOpError() << "requires the same type for all results";
     }
+
+    for (auto opType : op->getOperandTypes()) {
+      opType = getElementTypeOrSelf(opType);
+      if (opType != type && failed(VerifyRefTypeMatch(type, opType))) {
+        return op->emitError() << "requires all operands to be either same "
+                                  "as or ref type of results";
+      }
+    }
+    return success();
+  }
 };
 
 // Layout agnostic operations do not depend on the operands data layout (data

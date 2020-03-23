@@ -28,31 +28,31 @@ limitations under the License.
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/FormatVariadic.h"
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Builders.h"  // from @llvm-project
-#include "mlir/IR/Dialect.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/OpDefinition.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"        // from @llvm-project
+#include "mlir/IR/Builders.h"          // from @llvm-project
+#include "mlir/IR/Dialect.h"           // from @llvm-project
+#include "mlir/IR/Location.h"          // from @llvm-project
+#include "mlir/IR/MLIRContext.h"       // from @llvm-project
+#include "mlir/IR/OpDefinition.h"      // from @llvm-project
 #include "mlir/IR/OpImplementation.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
+#include "mlir/IR/Operation.h"         // from @llvm-project
 #include "mlir/IR/OperationSupport.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/TypeUtilities.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
-#include "mlir/IR/Value.h"  // from @llvm-project
+#include "mlir/IR/PatternMatch.h"      // from @llvm-project
+#include "mlir/IR/StandardTypes.h"     // from @llvm-project
+#include "mlir/IR/TypeUtilities.h"     // from @llvm-project
+#include "mlir/IR/Types.h"             // from @llvm-project
+#include "mlir/IR/Value.h"             // from @llvm-project
 #include "tensorflow/compiler/mlir/xla/ir/lhlo_ops.h.inc"
 
 namespace mlir {
 namespace xla_lhlo {
 
-XlaLhloDialect::XlaLhloDialect(MLIRContext *context)
+XlaLhloDialect::XlaLhloDialect(MLIRContext* context)
     : Dialect(getDialectNamespace(), context) {
-    addOperations<
+  addOperations<
 #define GET_OP_LIST
 #include "tensorflow/compiler/mlir/xla/ir/lhlo_ops.cc.inc"
-    >();
+      >();
 }
 
 #define GET_OP_CLASSES
@@ -60,11 +60,11 @@ XlaLhloDialect::XlaLhloDialect(MLIRContext *context)
 
 // TODO(cheshire): Support folding, reuse code from hlo_ops.cc.
 
-void FusionOp::build(Builder *builder, OperationState &result,
+void FusionOp::build(Builder* builder, OperationState& result,
                      ArrayRef<NamedAttribute> attributes) {
-    result.addAttributes(attributes);
-    Region *bodyRegion = result.addRegion();
-    FusionOp::ensureTerminator(*bodyRegion, *builder, result.location);
+  result.addAttributes(attributes);
+  Region* bodyRegion = result.addRegion();
+  FusionOp::ensureTerminator(*bodyRegion, *builder, result.location);
 }
 
 }  // namespace xla_lhlo

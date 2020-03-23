@@ -19,12 +19,12 @@ limitations under the License.
 #include <unordered_set>
 
 #include "llvm/Support/raw_ostream.h"
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/Parser.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"          // from @llvm-project
+#include "mlir/IR/Module.h"              // from @llvm-project
+#include "mlir/Parser.h"                 // from @llvm-project
+#include "mlir/Pass/Pass.h"              // from @llvm-project
 #include "mlir/Support/FileUtilities.h"  // from @llvm-project
-#include "mlir/Transforms/Passes.h"  // from @llvm-project
+#include "mlir/Transforms/Passes.h"      // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/flatbuffer_translate.h"
 #include "tensorflow/compiler/mlir/lite/quantization/quantization_config.h"
 #include "tensorflow/compiler/mlir/lite/transforms/passes.h"
@@ -41,7 +41,7 @@ limitations under the License.
 namespace mlir {
 /// Create a pass to convert from the TFExecutor to the TF control dialect.
 std::unique_ptr<OpPassBase<FuncOp>>
-                                 CreateTFExecutorToControlDialectConversion();
+CreateTFExecutorToControlDialectConversion();
 }  // namespace mlir
 
 namespace tensorflow {
@@ -58,47 +58,47 @@ StatusOr<OwningModuleRef> LoadFromGraphdefOrMlirSource(
     absl::string_view input_dtypes, absl::string_view input_shapes,
     absl::string_view output_arrays, bool prune_unused_nodes,
     llvm::SourceMgr* source_mgr, MLIRContext* context) {
-    // Set up the input file.
-    std::string error_message;
-    auto file = mlir::openInputFile(input_filename, &error_message);
-    if (!file) {
-        llvm::errs() << error_message << "\n";
-        return errors::InvalidArgument("fail to open input file");
-    }
+  // Set up the input file.
+  std::string error_message;
+  auto file = mlir::openInputFile(input_filename, &error_message);
+  if (!file) {
+    llvm::errs() << error_message << "\n";
+    return errors::InvalidArgument("fail to open input file");
+  }
 
-    if (input_mlir) {
-        source_mgr->AddNewSourceBuffer(std::move(file), llvm::SMLoc());
-        return OwningModuleRef(mlir::parseSourceFile(*source_mgr, context));
-    }
+  if (input_mlir) {
+    source_mgr->AddNewSourceBuffer(std::move(file), llvm::SMLoc());
+    return OwningModuleRef(mlir::parseSourceFile(*source_mgr, context));
+  }
 
-    for (const auto& tf_opdefs_string : extra_tf_opdefs) {
-        tensorflow::OpDef opdef;
-        if (!tensorflow::protobuf::TextFormat::ParseFromString(tf_opdefs_string,
-                &opdef)) {
-            LOG(ERROR) << "OpDef parsing failed for: " << tf_opdefs_string;
-            return errors::InvalidArgument("fail to parse extra OpDef");
-        }
-        // Register extra opdefs.
-        // TODO(b/133770952): Support shape functions.
-        tensorflow::OpRegistry::Global()->Register(
+  for (const auto& tf_opdefs_string : extra_tf_opdefs) {
+    tensorflow::OpDef opdef;
+    if (!tensorflow::protobuf::TextFormat::ParseFromString(tf_opdefs_string,
+                                                           &opdef)) {
+      LOG(ERROR) << "OpDef parsing failed for: " << tf_opdefs_string;
+      return errors::InvalidArgument("fail to parse extra OpDef");
+    }
+    // Register extra opdefs.
+    // TODO(b/133770952): Support shape functions.
+    tensorflow::OpRegistry::Global()->Register(
         [opdef](tensorflow::OpRegistrationData* op_reg_data) -> Status {
-            *op_reg_data = tensorflow::OpRegistrationData(opdef);
-            return Status::OK();
+          *op_reg_data = tensorflow::OpRegistrationData(opdef);
+          return Status::OK();
         });
-    }
+  }
 
-    if (use_splatted_constant) {
-        return tensorflow::GraphdefToSplattedMlirTranslateFunction(
-                   file->getBuffer(), debug_info_file, input_arrays, input_dtypes,
-                   input_shapes, output_arrays, /*control_output_arrays=*/"",
-                   prune_unused_nodes, /*convert_legacy_fed_inputs=*/true,
-                   /*graph_as_function=*/false, /*upgrade_legacy=*/true, context);
-    }
-    return tensorflow::GraphdefToMlirTranslateFunction(
-               file->getBuffer(), debug_info_file, input_arrays, input_dtypes,
-               input_shapes, output_arrays, /*control_output_arrays=*/"",
-               prune_unused_nodes, /*convert_legacy_fed_inputs=*/true,
-               /*graph_as_function=*/false, /*upgrade_legacy=*/true, context);
+  if (use_splatted_constant) {
+    return tensorflow::GraphdefToSplattedMlirTranslateFunction(
+        file->getBuffer(), debug_info_file, input_arrays, input_dtypes,
+        input_shapes, output_arrays, /*control_output_arrays=*/"",
+        prune_unused_nodes, /*convert_legacy_fed_inputs=*/true,
+        /*graph_as_function=*/false, /*upgrade_legacy=*/true, context);
+  }
+  return tensorflow::GraphdefToMlirTranslateFunction(
+      file->getBuffer(), debug_info_file, input_arrays, input_dtypes,
+      input_shapes, output_arrays, /*control_output_arrays=*/"",
+      prune_unused_nodes, /*convert_legacy_fed_inputs=*/true,
+      /*graph_as_function=*/false, /*upgrade_legacy=*/true, context);
 }
 
 Status ConvertTFExecutorToTFLOrFlatbuffer(
@@ -106,90 +106,90 @@ Status ConvertTFExecutorToTFLOrFlatbuffer(
     bool emit_select_tf_ops, bool emit_custom_ops,
     const mlir::TFL::QuantizationSpecs& quant_specs, std::string* result,
     mlir::PassManager* pass_manager) {
-    mlir::StatusScopedDiagnosticHandler statusHandler(module.getContext(),
-            /*propagate=*/true);
-    if (failed(pass_manager->run(module))) {
-        return statusHandler.ConsumeStatus();
-    }
+  mlir::StatusScopedDiagnosticHandler statusHandler(module.getContext(),
+                                                    /*propagate=*/true);
+  if (failed(pass_manager->run(module))) {
+    return statusHandler.ConsumeStatus();
+  }
 
-    if (export_to_mlir) {
-        llvm::raw_string_ostream os(*result);
-        module.print(os);
-        return Status::OK();
-    }
-
-    // Write MLIR TFLite dialect into FlatBuffer
-    if (!quant_specs.RunWeightQuantization()) {
-        if (tflite::MlirToFlatBufferTranslateFunction(
-                    module, result, emit_builtin_tflite_ops, emit_select_tf_ops,
-                    emit_custom_ops)) {
-            return statusHandler.ConsumeStatus();
-        }
-    } else {
-        // Post-training weight quantization path. Once MLIR has support for this,
-        // we can remove this else statement.
-        std::string pre_quantized_result;
-        if (tflite::MlirToFlatBufferTranslateFunction(
-                    module, &pre_quantized_result, emit_builtin_tflite_ops,
-                    emit_select_tf_ops, emit_custom_ops)) {
-            return statusHandler.ConsumeStatus();
-        }
-        flatbuffers::FlatBufferBuilder q_builder(/*initial_size=*/10240);
-        const uint8_t* buffer =
-            reinterpret_cast<const uint8_t*>(pre_quantized_result.c_str());
-        const ::tflite::Model* input_model = ::tflite::GetModel(buffer);
-
-        ::tflite::optimize::BufferType quantized_type;
-        if (quant_specs.inference_type == tensorflow::DT_QINT8) {
-            quantized_type = ::tflite::optimize::BufferType::QUANTIZED_INT8;
-        } else if (quant_specs.inference_type == tensorflow::DT_HALF) {
-            quantized_type = ::tflite::optimize::BufferType::QUANTIZED_FLOAT16;
-        } else {
-            return errors::InvalidArgument("Quantized type not supported");
-        }
-        if (::tflite::optimize::QuantizeWeights(&q_builder, input_model,
-                                                quantized_type) != kTfLiteOk) {
-            return errors::InvalidArgument("Quantize weights transformation failed.");
-        }
-        const uint8_t* q_buffer = q_builder.GetBufferPointer();
-        *result =
-            string(reinterpret_cast<const char*>(q_buffer), q_builder.GetSize());
-    }
-
+  if (export_to_mlir) {
+    llvm::raw_string_ostream os(*result);
+    module.print(os);
     return Status::OK();
+  }
+
+  // Write MLIR TFLite dialect into FlatBuffer
+  if (!quant_specs.RunWeightQuantization()) {
+    if (tflite::MlirToFlatBufferTranslateFunction(
+            module, result, emit_builtin_tflite_ops, emit_select_tf_ops,
+            emit_custom_ops)) {
+      return statusHandler.ConsumeStatus();
+    }
+  } else {
+    // Post-training weight quantization path. Once MLIR has support for this,
+    // we can remove this else statement.
+    std::string pre_quantized_result;
+    if (tflite::MlirToFlatBufferTranslateFunction(
+            module, &pre_quantized_result, emit_builtin_tflite_ops,
+            emit_select_tf_ops, emit_custom_ops)) {
+      return statusHandler.ConsumeStatus();
+    }
+    flatbuffers::FlatBufferBuilder q_builder(/*initial_size=*/10240);
+    const uint8_t* buffer =
+        reinterpret_cast<const uint8_t*>(pre_quantized_result.c_str());
+    const ::tflite::Model* input_model = ::tflite::GetModel(buffer);
+
+    ::tflite::optimize::BufferType quantized_type;
+    if (quant_specs.inference_type == tensorflow::DT_QINT8) {
+      quantized_type = ::tflite::optimize::BufferType::QUANTIZED_INT8;
+    } else if (quant_specs.inference_type == tensorflow::DT_HALF) {
+      quantized_type = ::tflite::optimize::BufferType::QUANTIZED_FLOAT16;
+    } else {
+      return errors::InvalidArgument("Quantized type not supported");
+    }
+    if (::tflite::optimize::QuantizeWeights(&q_builder, input_model,
+                                            quantized_type) != kTfLiteOk) {
+      return errors::InvalidArgument("Quantize weights transformation failed.");
+    }
+    const uint8_t* q_buffer = q_builder.GetBufferPointer();
+    *result =
+        string(reinterpret_cast<const char*>(q_buffer), q_builder.GetSize());
+  }
+
+  return Status::OK();
 }
 
 StatusOr<mlir::OwningModuleRef> ImportSavedModel(
     bool import_saved_model, bool import_saved_model_v1,
     const std::string& input_filename, const std::string& saved_model_tags,
     const std::string& saved_model_exported_names, mlir::MLIRContext* context) {
-    if (import_saved_model) {
-        std::unordered_set<std::string> tags =
-            absl::StrSplit(saved_model_tags, ',');
-        std::vector<std::string> exported_names =
-            absl::StrSplit(saved_model_exported_names, ',', absl::SkipEmpty());
+  if (import_saved_model) {
+    std::unordered_set<std::string> tags =
+        absl::StrSplit(saved_model_tags, ',');
+    std::vector<std::string> exported_names =
+        absl::StrSplit(saved_model_exported_names, ',', absl::SkipEmpty());
 
-        auto module = tensorflow::SavedModelObjectGraphToMlirImport(
-                          input_filename, tags, absl::Span<std::string>(exported_names), context);
-        if (!module)
-            return tensorflow::errors::InvalidArgument("fail to open input file");
+    auto module = tensorflow::SavedModelObjectGraphToMlirImport(
+        input_filename, tags, absl::Span<std::string>(exported_names), context);
+    if (!module)
+      return tensorflow::errors::InvalidArgument("fail to open input file");
 
-        return module;
-    } else if (import_saved_model_v1) {
-        std::unordered_set<std::string> tags =
-            absl::StrSplit(saved_model_tags, ',');
+    return module;
+  } else if (import_saved_model_v1) {
+    std::unordered_set<std::string> tags =
+        absl::StrSplit(saved_model_tags, ',');
 
-        auto module = tensorflow::SavedModelSignatureDefsToMlirImport(
-                          input_filename, tags, context);
+    auto module = tensorflow::SavedModelSignatureDefsToMlirImport(
+        input_filename, tags, context);
 
-        if (!module)
-            return tensorflow::errors::InvalidArgument("fail to open input file");
+    if (!module)
+      return tensorflow::errors::InvalidArgument("fail to open input file");
 
-        return module;
-    } else {
-        return tensorflow::errors::InvalidArgument(
-                   "Should be either saved model v1 or v2");
-    }
+    return module;
+  } else {
+    return tensorflow::errors::InvalidArgument(
+        "Should be either saved model v1 or v2");
+  }
 }
 
 }  // namespace tensorflow

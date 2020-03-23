@@ -19,8 +19,8 @@ limitations under the License.
 #include "absl/container/flat_hash_set.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
+#include "mlir/IR/Module.h"       // from @llvm-project
+#include "mlir/IR/Operation.h"    // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/translate/mlir_roundtrip_flags.h"
 #include "tensorflow/core/framework/function.h"
 #include "tensorflow/core/framework/graph.pb.h"
@@ -33,7 +33,7 @@ using stream_executor::port::StatusOr;
 
 // Given an MLIR module, returns a GraphDef.
 StatusOr<std::unique_ptr<GraphDef>> ConvertMlirToGraphdef(
-                                     mlir::ModuleOp module, const GraphExportConfig& configs);
+    mlir::ModuleOp module, const GraphExportConfig& configs);
 
 // Converts an MLIR module to TensorFlow graph and FunctionLibraryDefinition.
 // The "main" function of the module is stored in the graph and the rest of

@@ -16,11 +16,11 @@ limitations under the License.
 #include "tensorflow/compiler/mlir/xla/hlo_module_importer.h"
 
 #include "mlir/Dialect/StandardOps/IR/Ops.h"  // from @llvm-project
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/Location.h"  // from @llvm-project
-#include "mlir/IR/OperationSupport.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"               // from @llvm-project
+#include "mlir/IR/Location.h"                 // from @llvm-project
+#include "mlir/IR/OperationSupport.h"         // from @llvm-project
+#include "mlir/IR/StandardTypes.h"            // from @llvm-project
+#include "mlir/IR/Types.h"                    // from @llvm-project
 #include "tensorflow/compiler/mlir/xla/hlo_function_importer.h"
 #include "tensorflow/compiler/mlir/xla/ir/hlo_ops.h"
 #include "tensorflow/compiler/xla/service/hlo_computation.h"
@@ -31,27 +31,27 @@ limitations under the License.
 namespace xla {
 
 Status HloModuleImporter::Import(const xla::HloModule& module) {
-    // TODO(hinsu): Only import the entry computation here once all HLO ops with
-    // reference to other computation are updated to have a region instead of a
-    // function attribute.
-    for (const auto& computation : module.computations()) {
-        auto result = HloFunctionImporter::ImportFunction(
-                          module_, &builder_, &function_map_, computation);
-        TF_RETURN_IF_ERROR(result.status());
-    }
+  // TODO(hinsu): Only import the entry computation here once all HLO ops with
+  // reference to other computation are updated to have a region instead of a
+  // function attribute.
+  for (const auto& computation : module.computations()) {
+    auto result = HloFunctionImporter::ImportFunction(
+        module_, &builder_, &function_map_, computation);
+    TF_RETURN_IF_ERROR(result.status());
+  }
 
-    return Status::OK();
+  return Status::OK();
 }
 
 Status HloModuleImporter::Import(const xla::HloModuleProto& module_proto) {
-    xla::DebugOptions debug_options;
-    TF_ASSIGN_OR_RETURN(
-        auto module_config,
-        xla::HloModule::CreateModuleConfigFromProto(module_proto, debug_options));
-    TF_ASSIGN_OR_RETURN(auto module, xla::HloModule::CreateFromProto(
-                            module_proto, module_config));
+  xla::DebugOptions debug_options;
+  TF_ASSIGN_OR_RETURN(
+      auto module_config,
+      xla::HloModule::CreateModuleConfigFromProto(module_proto, debug_options));
+  TF_ASSIGN_OR_RETURN(auto module, xla::HloModule::CreateFromProto(
+                                       module_proto, module_config));
 
-    return Import(*module);
+  return Import(*module);
 }
 
 }  // namespace xla

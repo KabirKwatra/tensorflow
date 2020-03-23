@@ -23,24 +23,24 @@ namespace tensorflow {
 namespace profiler {
 
 enum class DeviceType {
-    kUnspecified,
-    kCpu,
-    kGpu,
-    kTpu,
+  kUnspecified,
+  kCpu,
+  kGpu,
+  kTpu,
 };
 
 struct ProfilerOptions {
-    // DeviceType::kUnspecified: All registered device profiler will be enabled.
-    // DeviceType::kCpu: only CPU will be profiled.
-    // DeviceType::kGpu: only CPU/GPU will be profiled.
-    // DeviceType::kTpu: only CPU/TPU will be profiled.
-    DeviceType device_type = DeviceType::kUnspecified;
+  // DeviceType::kUnspecified: All registered device profiler will be enabled.
+  // DeviceType::kCpu: only CPU will be profiled.
+  // DeviceType::kGpu: only CPU/GPU will be profiled.
+  // DeviceType::kTpu: only CPU/TPU will be profiled.
+  DeviceType device_type = DeviceType::kUnspecified;
 
-    // Inexpensive ops are not traced by default.
-    int host_tracer_level = 2;
+  // Inexpensive ops are not traced by default.
+  int host_tracer_level = 2;
 
-    // Whether to enable python function calls tracer.
-    bool enable_python_tracer = false;
+  // Whether to enable python function calls tracer.
+  bool enable_python_tracer = false;
 };
 
 // Interface for tensorflow profiler plugins.
@@ -52,27 +52,27 @@ struct ProfilerOptions {
 // ProfileSession is go/thread-safe and synchronizes access to ProfilerInterface
 // instances.
 class ProfilerInterface {
-public:
-    virtual ~ProfilerInterface() = default;
+ public:
+  virtual ~ProfilerInterface() = default;
 
-    // Starts profiling.
-    virtual Status Start() = 0;
+  // Starts profiling.
+  virtual Status Start() = 0;
 
-    // Stops profiling.
-    virtual Status Stop() = 0;
+  // Stops profiling.
+  virtual Status Stop() = 0;
 
-    // Saves collected profile data into run_metadata.
-    // After this or the overload below are called once, subsequent calls might
-    // return empty data.
-    virtual Status CollectData(RunMetadata* run_metadata) = 0;
+  // Saves collected profile data into run_metadata.
+  // After this or the overload below are called once, subsequent calls might
+  // return empty data.
+  virtual Status CollectData(RunMetadata* run_metadata) = 0;
 
-    // Saves collected profile data into XSpace.
-    // After this or the overload above are called once, subsequent calls might
-    // return empty data.
-    virtual Status CollectData(XSpace* space) = 0;
+  // Saves collected profile data into XSpace.
+  // After this or the overload above are called once, subsequent calls might
+  // return empty data.
+  virtual Status CollectData(XSpace* space) = 0;
 
-    // Which device this ProfilerInterface is used for.
-    virtual DeviceType GetDeviceType() = 0;
+  // Which device this ProfilerInterface is used for.
+  virtual DeviceType GetDeviceType() = 0;
 };
 
 }  // namespace profiler

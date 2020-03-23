@@ -31,7 +31,7 @@ Shape TypeToShape(mlir::Type type);
 // XLA shape with optional layout info.
 typedef llvm::function_ref<xla::StatusOr<xla::Shape>(
     const tensorflow::TensorShape&, tensorflow::DataType)>
-CustomShapeRepresentationFn;
+    CustomShapeRepresentationFn;
 
 // Compute an XLA shape based in given MLIR type and an
 // CustomShapeRepresentationFn, which allows setting custom layout in returned

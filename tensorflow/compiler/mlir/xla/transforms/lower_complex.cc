@@ -23,13 +23,13 @@ limitations under the License.
 #include <numeric>
 
 #include "llvm/ADT/STLExtras.h"
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
-#include "mlir/IR/TypeUtilities.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"      // from @llvm-project
+#include "mlir/IR/MLIRContext.h"     // from @llvm-project
+#include "mlir/IR/Operation.h"       // from @llvm-project
+#include "mlir/IR/PatternMatch.h"    // from @llvm-project
+#include "mlir/IR/TypeUtilities.h"   // from @llvm-project
+#include "mlir/IR/Types.h"           // from @llvm-project
+#include "mlir/Pass/Pass.h"          // from @llvm-project
 #include "mlir/Pass/PassRegistry.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/xla/ir/hlo_ops.h"
 #include "tensorflow/compiler/mlir/xla/ir/hlo_utils.h"
@@ -41,11 +41,11 @@ using mlir::PassRegistration;
 
 namespace {
 class LowerComplex : public FunctionPass<LowerComplex> {
-public:
-    explicit LowerComplex() : FunctionPass<LowerComplex>() {}
+ public:
+  explicit LowerComplex() : FunctionPass<LowerComplex>() {}
 
-    /// Performs the lowering to XLA dialect.
-    void runOnFunction() override;
+  /// Performs the lowering to XLA dialect.
+  void runOnFunction() override;
 };
 }  // end anonymous namespace
 
@@ -59,18 +59,18 @@ namespace {
 
 void PopulateComplexLoweringPatterns(MLIRContext* context,
                                      OwningRewritePatternList* patterns) {
-    populateWithGenerated(context, patterns);
+  populateWithGenerated(context, patterns);
 }
 }  // end namespace xla
 }  // end namespace mlir
 
 // Lowers the complex operations that can be represented using other operations.
 void LowerComplex::runOnFunction() {
-    // Add lowering patterns to the list.
-    OwningRewritePatternList patterns;
-    mlir::xla::PopulateComplexLoweringPatterns(&getContext(), &patterns);
+  // Add lowering patterns to the list.
+  OwningRewritePatternList patterns;
+  mlir::xla::PopulateComplexLoweringPatterns(&getContext(), &patterns);
 
-    applyPatternsGreedily(getFunction(), patterns);
+  applyPatternsGreedily(getFunction(), patterns);
 }
 
 static PassRegistration<LowerComplex> pass(

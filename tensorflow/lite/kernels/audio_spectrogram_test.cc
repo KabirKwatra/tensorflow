@@ -13,11 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include <gtest/gtest.h>
+
 #include <functional>
 #include <memory>
 #include <vector>
 
-#include <gtest/gtest.h>
 #include "flatbuffers/flexbuffers.h"  // from @flatbuffers
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/register.h"
@@ -36,85 +37,78 @@ using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 
 class BaseAudioSpectrogramOpModel : public SingleOpModel {
-public:
-    BaseAudioSpectrogramOpModel(const TensorData& input1,
-                                const TensorData& output, int window_size,
-                                int stride, bool magnitude_squared) {
-        input1_ = AddInput(input1);
-        output_ = AddOutput(output);
+ public:
+  BaseAudioSpectrogramOpModel(const TensorData& input1,
+                              const TensorData& output, int window_size,
+                              int stride, bool magnitude_squared) {
+    input1_ = AddInput(input1);
+    output_ = AddOutput(output);
 
-        flexbuffers::Builder fbb;
-        fbb.Map([&]() {
-            fbb.Int("window_size", window_size);
-            fbb.Int("stride", stride);
-            fbb.Bool("magnitude_squared", magnitude_squared);
-        });
-        fbb.Finish();
-        SetCustomOp("AudioSpectrogram", fbb.GetBuffer(),
-                    Register_AUDIO_SPECTROGRAM);
-        BuildInterpreter({GetShape(input1_)});
-    }
+    flexbuffers::Builder fbb;
+    fbb.Map([&]() {
+      fbb.Int("window_size", window_size);
+      fbb.Int("stride", stride);
+      fbb.Bool("magnitude_squared", magnitude_squared);
+    });
+    fbb.Finish();
+    SetCustomOp("AudioSpectrogram", fbb.GetBuffer(),
+                Register_AUDIO_SPECTROGRAM);
+    BuildInterpreter({GetShape(input1_)});
+  }
 
-    int input1() {
-        return input1_;
-    }
-    std::vector<float> GetOutput() {
-        return ExtractVector<float>(output_);
-    }
-    std::vector<int> GetOutputShape() {
-        return GetTensorShape(output_);
-    }
+  int input1() { return input1_; }
+  std::vector<float> GetOutput() { return ExtractVector<float>(output_); }
+  std::vector<int> GetOutputShape() { return GetTensorShape(output_); }
 
-protected:
-    int input1_;
-    int output_;
+ protected:
+  int input1_;
+  int output_;
 };
 
 TEST(BaseAudioSpectrogramOpModel, NonSquaredTest) {
-    BaseAudioSpectrogramOpModel m({TensorType_FLOAT32, {8, 1}},
-    {TensorType_FLOAT32, {}}, 8, 1, false);
-    m.PopulateTensor<float>(m.input1(),
-    {-1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f});
+  BaseAudioSpectrogramOpModel m({TensorType_FLOAT32, {8, 1}},
+                                {TensorType_FLOAT32, {}}, 8, 1, false);
+  m.PopulateTensor<float>(m.input1(),
+                          {-1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f});
 
-    m.Invoke();
+  m.Invoke();
 
-    std::vector<int> output_shape = m.GetOutputShape();
-    EXPECT_EQ(3, output_shape.size());
-    EXPECT_THAT(output_shape, ElementsAre(1, 1, 5));
+  std::vector<int> output_shape = m.GetOutputShape();
+  EXPECT_EQ(3, output_shape.size());
+  EXPECT_THAT(output_shape, ElementsAre(1, 1, 5));
 
-    EXPECT_THAT(m.GetOutput(), ElementsAreArray(ArrayFloatNear(
-    {0.0f, 1.0f, 2.0f, 1.0f, 0.0f}, 1e-3)));
+  EXPECT_THAT(m.GetOutput(), ElementsAreArray(ArrayFloatNear(
+                                 {0.0f, 1.0f, 2.0f, 1.0f, 0.0f}, 1e-3)));
 }
 
 TEST(SpectrogramOpTest, SquaredTest) {
-    BaseAudioSpectrogramOpModel m({TensorType_FLOAT32, {8, 1}},
-    {TensorType_FLOAT32, {}}, 8, 1, true);
-    m.PopulateTensor<float>(m.input1(),
-    {-1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f});
+  BaseAudioSpectrogramOpModel m({TensorType_FLOAT32, {8, 1}},
+                                {TensorType_FLOAT32, {}}, 8, 1, true);
+  m.PopulateTensor<float>(m.input1(),
+                          {-1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f});
 
-    m.Invoke();
+  m.Invoke();
 
-    std::vector<int> output_shape = m.GetOutputShape();
-    EXPECT_EQ(3, output_shape.size());
-    EXPECT_THAT(output_shape, ElementsAre(1, 1, 5));
+  std::vector<int> output_shape = m.GetOutputShape();
+  EXPECT_EQ(3, output_shape.size());
+  EXPECT_THAT(output_shape, ElementsAre(1, 1, 5));
 
-    EXPECT_THAT(m.GetOutput(), ElementsAreArray(ArrayFloatNear(
-    {0.f, 1.f, 4.f, 1.f, 0.f}, 1e-3)));
+  EXPECT_THAT(m.GetOutput(), ElementsAreArray(ArrayFloatNear(
+                                 {0.f, 1.f, 4.f, 1.f, 0.f}, 1e-3)));
 }
 
 TEST(SpectrogramOpTest, StrideTest) {
-    BaseAudioSpectrogramOpModel m({TensorType_FLOAT32, {10, 1}},
-    {TensorType_FLOAT32, {}}, 8, 2, true);
-    m.PopulateTensor<float>(m.input1(), {-1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
-                                         1.0f, 0.0f, 1.0f, 0.0f
-                                        });
+  BaseAudioSpectrogramOpModel m({TensorType_FLOAT32, {10, 1}},
+                                {TensorType_FLOAT32, {}}, 8, 2, true);
+  m.PopulateTensor<float>(m.input1(), {-1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+                                       1.0f, 0.0f, 1.0f, 0.0f});
 
-    m.Invoke();
+  m.Invoke();
 
-    std::vector<int> output_shape = m.GetOutputShape();
-    EXPECT_THAT(output_shape, ElementsAre(1, 2, 5));
-    EXPECT_THAT(m.GetOutput(), ElementsAreArray(ArrayFloatNear(
-    {0, 1, 4, 1, 0, 1, 2, 1, 2, 1}, 1e-3)));
+  std::vector<int> output_shape = m.GetOutputShape();
+  EXPECT_THAT(output_shape, ElementsAre(1, 2, 5));
+  EXPECT_THAT(m.GetOutput(), ElementsAreArray(ArrayFloatNear(
+                                 {0, 1, 4, 1, 0, 1, 2, 1, 2, 1}, 1e-3)));
 }
 
 }  // namespace

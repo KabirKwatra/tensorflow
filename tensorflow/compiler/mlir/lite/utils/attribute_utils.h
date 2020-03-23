@@ -26,7 +26,7 @@ namespace TFL {
 
 // Returns true if none of the three attributes are empty.
 inline bool HasAll3Attrs(Attribute a, Attribute b, Attribute c) {
-    return a != Attribute() && b != Attribute() && c != Attribute();
+  return a != Attribute() && b != Attribute() && c != Attribute();
 }
 
 // Returns the single float element from an ElementsAttr. Returns empty
