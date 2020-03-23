@@ -24,63 +24,67 @@ StatusScopedDiagnosticHandler::StatusScopedDiagnosticHandler(
     : SourceMgrDiagnosticHandler(source_mgr_, context, diag_stream_),
       diag_stream_(diag_str_),
       propagate_(propagate) {
-  setHandler([this](Diagnostic& diag) { return this->handler(&diag); });
+    setHandler([this](Diagnostic& diag) {
+        return this->handler(&diag);
+    });
 }
 
 StatusScopedDiagnosticHandler::~StatusScopedDiagnosticHandler() {
-  // Verify errors were consumed and re-register old handler.
-  bool all_errors_produced_were_consumed = ok();
-  DCHECK(all_errors_produced_were_consumed) << "Error status not consumed:\n"
-                                            << diag_str_;
+    // Verify errors were consumed and re-register old handler.
+    bool all_errors_produced_were_consumed = ok();
+    DCHECK(all_errors_produced_were_consumed) << "Error status not consumed:\n"
+            << diag_str_;
 }
 
-bool StatusScopedDiagnosticHandler::ok() const { return diag_str_.empty(); }
+bool StatusScopedDiagnosticHandler::ok() const {
+    return diag_str_.empty();
+}
 
 Status StatusScopedDiagnosticHandler::ConsumeStatus() {
-  if (ok()) return Status::OK();
+    if (ok()) return Status::OK();
 
-  // TODO(jpienaar) This should be combining status with one previously built
-  // up.
-  Status s = tensorflow::errors::Unknown(diag_str_);
-  diag_str_.clear();
-  return s;
+    // TODO(jpienaar) This should be combining status with one previously built
+    // up.
+    Status s = tensorflow::errors::Unknown(diag_str_);
+    diag_str_.clear();
+    return s;
 }
 
 Status StatusScopedDiagnosticHandler::Combine(Status status) {
-  if (status.ok()) return ConsumeStatus();
+    if (status.ok()) return ConsumeStatus();
 
-  // status is not-OK here, so if there was no diagnostics reported
-  // additionally then return this error.
-  if (ok()) return status;
+    // status is not-OK here, so if there was no diagnostics reported
+    // additionally then return this error.
+    if (ok()) return status;
 
-  // Append the diagnostics reported to the status. This repeats the behavior of
-  // TensorFlow's AppendToMessage without the additional formatting inserted
-  // there.
-  status = ::tensorflow::Status(
-      status.code(), absl::StrCat(status.error_message(), diag_str_));
-  diag_str_.clear();
-  return status;
+    // Append the diagnostics reported to the status. This repeats the behavior of
+    // TensorFlow's AppendToMessage without the additional formatting inserted
+    // there.
+    status = ::tensorflow::Status(
+                 status.code(), absl::StrCat(status.error_message(), diag_str_));
+    diag_str_.clear();
+    return status;
 }
 
 LogicalResult StatusScopedDiagnosticHandler::handler(Diagnostic* diag) {
-  // Non-error diagnostic are ignored when VLOG isn't enabled.
-  if (diag->getSeverity() != DiagnosticSeverity::Error && VLOG_IS_ON(1))
-    return success();
+    // Non-error diagnostic are ignored when VLOG isn't enabled.
+    if (diag->getSeverity() != DiagnosticSeverity::Error && VLOG_IS_ON(1))
+        return success();
 
-  size_t current_diag_str_size_ = diag_str_.size();
+    size_t current_diag_str_size_ = diag_str_.size();
 
-  // Emit the diagnostic and flush the stream.
-  emitDiagnostic(*diag);
-  diag_stream_.flush();
+    // Emit the diagnostic and flush the stream.
+    emitDiagnostic(*diag);
+    diag_stream_.flush();
 
-  // Emit non-errors to VLOG instead of the internal status.
-  if (diag->getSeverity() != DiagnosticSeverity::Error) {
-    VLOG(1) << diag_str_.substr(current_diag_str_size_);
-    diag_str_.resize(current_diag_str_size_);
-  }
+    // Emit non-errors to VLOG instead of the internal status.
+    if (diag->getSeverity() != DiagnosticSeverity::Error) {
+        VLOG(1) << diag_str_.substr(current_diag_str_size_);
+        diag_str_.resize(current_diag_str_size_);
+    }
 
-  // Return failure to signal propagation if necessary.
-  return failure(propagate_);
+    // Return failure to signal propagation if necessary.
+    return failure(propagate_);
 }
 
 }  // namespace mlir
