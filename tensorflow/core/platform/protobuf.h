@@ -26,19 +26,19 @@ limitations under the License.
 // refer to all protobuf APIs.
 
 #ifndef TENSORFLOW_LITE_PROTOS
-#include "google/protobuf/io/tokenizer.h"
-#include "google/protobuf/descriptor.pb.h"
 #include "google/protobuf/descriptor.h"
+#include "google/protobuf/descriptor.pb.h"
 #include "google/protobuf/dynamic_message.h"
+#include "google/protobuf/io/tokenizer.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/json_util.h"
 #include "google/protobuf/util/type_resolver_util.h"
 #endif
 
+#include "google/protobuf/arena.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
-#include "google/protobuf/arena.h"
 #include "google/protobuf/map.h"
 #include "google/protobuf/repeated_field.h"
 
@@ -60,18 +60,18 @@ bool ParseProtoUnlimited(protobuf::MessageLite* proto, const void* serialized,
                          size_t size);
 inline bool ParseProtoUnlimited(protobuf::MessageLite* proto,
                                 const tstring& serialized) {
-    return ParseProtoUnlimited(proto, serialized.data(), serialized.size());
+  return ParseProtoUnlimited(proto, serialized.data(), serialized.size());
 }
 
 // Returns the string value for the value of a string or bytes protobuf field.
 inline const std::string& ProtobufStringToString(const std::string& s) {
-    return s;
+  return s;
 }
 
 // Set <dest> to <src>. Swapping is allowed, as <src> does not need to be
 // preserved.
 inline void SetProtobufStringSwapAllowed(std::string* src, std::string* dest) {
-    *dest = std::move(*src);
+  *dest = std::move(*src);
 }
 
 #if defined(TENSORFLOW_PROTOBUF_USES_CORD)
@@ -80,43 +80,43 @@ inline void SetProtobufStringSwapAllowed(std::string* src, std::string* dest) {
 // in core/platform/protobuf.h, so the generation code doesn't need to determine
 // if the type is Cord or string at generation time.
 inline std::string ProtobufStringToString(const Cord& s) {
-    return s.ToString();
+  return s.ToString();
 }
 inline void SetProtobufStringSwapAllowed(std::string* src, Cord* dest) {
-    dest->CopyFrom(*src);
+  dest->CopyFrom(*src);
 }
 #endif  // defined(TENSORFLOW_PROTOBUF_USES_CORD)
 
 inline bool SerializeToTString(const protobuf::MessageLite& proto,
                                tstring* output) {
-    size_t size = proto.ByteSizeLong();
-    output->resize_uninitialized(size);
-    return proto.SerializeWithCachedSizesToArray(
-               reinterpret_cast<uint8*>(output->data()));
+  size_t size = proto.ByteSizeLong();
+  output->resize_uninitialized(size);
+  return proto.SerializeWithCachedSizesToArray(
+      reinterpret_cast<uint8*>(output->data()));
 }
 
 inline bool ParseFromTString(const tstring& input,
                              protobuf::MessageLite* proto) {
-    return proto->ParseFromArray(input.data(), static_cast<int>(input.size()));
+  return proto->ParseFromArray(input.data(), static_cast<int>(input.size()));
 }
 
 // Analogue to StringOutputStream for tstring.
 class TStringOutputStream : public protobuf::io::ZeroCopyOutputStream {
-public:
-    explicit TStringOutputStream(tstring* target);
-    ~TStringOutputStream() override = default;
+ public:
+  explicit TStringOutputStream(tstring* target);
+  ~TStringOutputStream() override = default;
 
-    TStringOutputStream(const TStringOutputStream&) = delete;
-    void operator=(const TStringOutputStream&) = delete;
+  TStringOutputStream(const TStringOutputStream&) = delete;
+  void operator=(const TStringOutputStream&) = delete;
 
-    bool Next(void** data, int* size) override;
-    void BackUp(int count) override;
-    int64_t ByteCount() const override;
+  bool Next(void** data, int* size) override;
+  void BackUp(int count) override;
+  int64_t ByteCount() const override;
 
-private:
-    static const int kMinimumSize = 16;
+ private:
+  static const int kMinimumSize = 16;
 
-    tstring* target_;
+  tstring* target_;
 };
 
 }  // namespace tensorflow
