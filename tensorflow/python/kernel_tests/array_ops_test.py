@@ -21,8 +21,8 @@ import re
 import time
 import unittest
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python.client import session
