@@ -45,15 +45,15 @@ FLAGS = None
 
 
 def wav_to_features(
-    sample_rate,
-    clip_duration_ms,
-    window_size_ms,
-    window_stride_ms,
-    feature_bin_count,
-    quantize,
-    preprocess,
-    input_wav,
-    output_c_file,
+        sample_rate,
+        clip_duration_ms,
+        window_size_ms,
+        window_stride_ms,
+        feature_bin_count,
+        quantize,
+        preprocess,
+        input_wav,
+        output_c_file,
 ):
     """Converts an audio file into its corresponding feature map.
 
@@ -81,11 +81,11 @@ def wav_to_features(
         feature_bin_count,
         preprocess,
     )
-    audio_processor = input_data.AudioProcessor(
-        None, None, 0, 0, "", 0, 0, model_settings, None
-    )
+    audio_processor = input_data.AudioProcessor(None, None, 0, 0, "", 0, 0,
+                                                model_settings, None)
 
-    results = audio_processor.get_features_for_wav(input_wav, model_settings, sess)
+    results = audio_processor.get_features_for_wav(input_wav, model_settings,
+                                                   sess)
     features = results[0]
 
     variable_base = os.path.splitext(os.path.basename(input_wav).lower())[0]
@@ -93,7 +93,8 @@ def wav_to_features(
     # Save a C source file containing the feature data as an array.
     with gfile.GFile(output_c_file, "w") as f:
         f.write("/* File automatically created by\n")
-        f.write(" * tensorflow/examples/speech_commands/wav_to_features.py \\\n")
+        f.write(
+            " * tensorflow/examples/speech_commands/wav_to_features.py \\\n")
         f.write(" * --sample_rate=%d \\\n" % sample_rate)
         f.write(" * --clip_duration_ms=%d \\\n" % clip_duration_ms)
         f.write(" * --window_size_ms=%d \\\n" % window_size_ms)
@@ -105,24 +106,19 @@ def wav_to_features(
         f.write(' * --input_wav="%s" \\\n' % input_wav)
         f.write(' * --output_c_file="%s" \\\n' % output_c_file)
         f.write(" */\n\n")
-        f.write(
-            "const int g_%s_width = %d;\n"
-            % (variable_base, model_settings["fingerprint_width"])
-        )
-        f.write(
-            "const int g_%s_height = %d;\n"
-            % (variable_base, model_settings["spectrogram_length"])
-        )
+        f.write("const int g_%s_width = %d;\n" %
+                (variable_base, model_settings["fingerprint_width"]))
+        f.write("const int g_%s_height = %d;\n" %
+                (variable_base, model_settings["spectrogram_length"]))
         if quantize:
-            features_min, features_max = input_data.get_features_range(model_settings)
+            features_min, features_max = input_data.get_features_range(
+                model_settings)
             f.write("const unsigned char g_%s_data[] = {" % variable_base)
             i = 0
             for value in features.flatten():
                 quantized_value = int(
-                    round(
-                        (255 * (value - features_min)) / (features_max - features_min)
-                    )
-                )
+                    round((255 * (value - features_min)) /
+                          (features_max - features_min)))
                 if quantized_value < 0:
                     quantized_value = 0
                 if quantized_value > 255:
@@ -201,16 +197,19 @@ if __name__ == "__main__":
         "--preprocess",
         type=str,
         default="mfcc",
-        help='Spectrogram processing mode. Can be "mfcc", "average", or "micro"',
+        help=
+        'Spectrogram processing mode. Can be "mfcc", "average", or "micro"',
     )
-    parser.add_argument(
-        "--input_wav", type=str, default=None, help="Path to the audio WAV file to read"
-    )
+    parser.add_argument("--input_wav",
+                        type=str,
+                        default=None,
+                        help="Path to the audio WAV file to read")
     parser.add_argument(
         "--output_c_file",
         type=str,
         default=None,
-        help="Where to save the generated C source file containing the features",
+        help=
+        "Where to save the generated C source file containing the features",
     )
 
     FLAGS, unparsed = parser.parse_known_args()
