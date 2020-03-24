@@ -39,68 +39,68 @@ namespace tflite {
 // initialize, prepare and invoke it based on the TFLite subgraph to be
 // delegated.
 class HexagonDelegateKernel {
- public:
-  enum class HexagonKernelState {
-    HEALTHY = 0,
-    FAST_RPC_SETUP_FAILED = 1,
-    FAILED_TO_INIT_GRAPH = 2,
-    FAILED_TO_PREPARE_GRAPH = 3,
-    MULTIPLE_INPUTS = 4,
-    INPUT_RANK_NOT_SUPPORTED = 5,
-    MULTIPLE_OUTPUTS = 6,
-    FAILED_TO_EXECUTE_GRAPH = 7,
-  };
+public:
+    enum class HexagonKernelState {
+        HEALTHY = 0,
+        FAST_RPC_SETUP_FAILED = 1,
+        FAILED_TO_INIT_GRAPH = 2,
+        FAILED_TO_PREPARE_GRAPH = 3,
+        MULTIPLE_INPUTS = 4,
+        INPUT_RANK_NOT_SUPPORTED = 5,
+        MULTIPLE_OUTPUTS = 6,
+        FAILED_TO_EXECUTE_GRAPH = 7,
+    };
 
-  // Initialize the Hexagon graph and add required nodes.
-  TfLiteStatus Init(TfLiteContext* context, const TfLiteDelegateParams* params);
+    // Initialize the Hexagon graph and add required nodes.
+    TfLiteStatus Init(TfLiteContext* context, const TfLiteDelegateParams* params);
 
-  // Prepare the Hexagon graph with hexagon_nn_prepare.
-  TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node);
+    // Prepare the Hexagon graph with hexagon_nn_prepare.
+    TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node);
 
-  // Allocate Hexagon tensordefs for graph I/O & execute it.
-  TfLiteStatus Invoke(TfLiteContext* context, TfLiteNode* node);
+    // Allocate Hexagon tensordefs for graph I/O & execute it.
+    TfLiteStatus Invoke(TfLiteContext* context, TfLiteNode* node);
 
-  ~HexagonDelegateKernel();
+    ~HexagonDelegateKernel();
 
-  // Sets the environment required for Hexagon execution: DSP attributes,
-  // rpcmem, etc.
-  static void InitState();
+    // Sets the environment required for Hexagon execution: DSP attributes,
+    // rpcmem, etc.
+    static void InitState();
 
-  // Teardown the environment initialized in InitState.
-  static void Teardown();
+    // Teardown the environment initialized in InitState.
+    static void Teardown();
 
- private:
-  // Builds the Hexagon graph based on delegated TFLite subgraph.
-  TfLiteStatus BuildGraph(TfLiteContext* context,
-                          const TfLiteIntArray* input_tensors,
-                          const TfLiteIntArray* output_tensors);
+private:
+    // Builds the Hexagon graph based on delegated TFLite subgraph.
+    TfLiteStatus BuildGraph(TfLiteContext* context,
+                            const TfLiteIntArray* input_tensors,
+                            const TfLiteIntArray* output_tensors);
 
-  void ReportError(TfLiteContext* context, HexagonKernelState state,
-                   const std::string& msg);
+    void ReportError(TfLiteContext* context, HexagonKernelState state,
+                     const std::string& msg);
 
-  void PrintLog();
+    void PrintLog();
 
-  // Prints performance information about the graph including cycles per node.
-  // If 'profiler' is not nullptr data will be added to it.
-  void PrintPerformanceData(Profiler* profiler);
+    // Prints performance information about the graph including cycles per node.
+    // If 'profiler' is not nullptr data will be added to it.
+    void PrintPerformanceData(Profiler* profiler);
 
-  // Print debugging information about the graph constructed.
-  // Amount of information can be increased with debug level.
-  void PrintDebuggingGraph();
+    // Print debugging information about the graph constructed.
+    // Amount of information can be increased with debug level.
+    void PrintDebuggingGraph();
 
-  HexagonKernelState state_ = HexagonKernelState::HEALTHY;
-  const HexagonNN* hexagon_nn_ = nullptr;  // Not owned.
-  std::unique_ptr<delegates::hexagon::GraphBuilder> builder_;
-  hexagon_nn_nn_id graph_id_ = -1;
-  // Indices of nodes in the delegated TfLite subgraph.
-  std::vector<int> nodes_;
-  ::TfLiteHexagonDelegateOptions params_;
+    HexagonKernelState state_ = HexagonKernelState::HEALTHY;
+    const HexagonNN* hexagon_nn_ = nullptr;  // Not owned.
+    std::unique_ptr<delegates::hexagon::GraphBuilder> builder_;
+    hexagon_nn_nn_id graph_id_ = -1;
+    // Indices of nodes in the delegated TfLite subgraph.
+    std::vector<int> nodes_;
+    ::TfLiteHexagonDelegateOptions params_;
 
-  // Used to support int8 TFLite *input* tensors.
-  // This vector, for every node-input, contains:
-  // 1. Pointer to Uint8 version if tensor is non-constant & type is Int8.
-  // 2. nullptr otherwise.
-  std::vector<TfLiteTensor*> int8_to_uint8_tensors_;
+    // Used to support int8 TFLite *input* tensors.
+    // This vector, for every node-input, contains:
+    // 1. Pointer to Uint8 version if tensor is non-constant & type is Int8.
+    // 2. nullptr otherwise.
+    std::vector<TfLiteTensor*> int8_to_uint8_tensors_;
 };
 
 }  // namespace tflite

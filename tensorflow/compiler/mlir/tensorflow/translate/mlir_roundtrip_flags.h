@@ -27,47 +27,47 @@ limitations under the License.
 namespace tensorflow {
 
 struct ArrayInfo {
-  // The node type when the input node is imported. Typically needs to be
-  // specified when passing arbitrary nodes (some node attributes are removed).
-  DataType imported_dtype;
+    // The node type when the input node is imported. Typically needs to be
+    // specified when passing arbitrary nodes (some node attributes are removed).
+    DataType imported_dtype;
 
-  // Node "shape" attribute value.
-  TensorShapeProto shape;
+    // Node "shape" attribute value.
+    TensorShapeProto shape;
 };
 
 struct GraphImportConfig {
-  using InputArrays =
-      llvm::MapVector<string, ArrayInfo, llvm::StringMap<unsigned>>;
-  // Maps input node names to node data types and shapes.
-  InputArrays inputs;
-  // name:index strings for the data outputs.
-  std::vector<string> outputs;
-  // name strings for the control outputs.
-  std::vector<string> control_outputs;
-  // Setting prune_unused_nodes to true, would prune unreachable nodes if
-  // output_arrays is specified.
-  bool prune_unused_nodes = false;
-  // If true, inputs of type LegacyFedInput are replaced with Placeholder ops.
-  // LegacyFedInput ops have two outputs unlike Placeholder which has only one
-  // output, so if both outputs of the LegacyFedInput ops are used then returns
-  // an error.
-  bool convert_legacy_fed_inputs = false;
-  // If true, the main graph will be treated as a function.
-  bool graph_as_function = false;
-  // If true, upgrade legacy features of the graph (for instance, functionalize
-  // control-flow).
-  bool upgrade_legacy = false;
+    using InputArrays =
+        llvm::MapVector<string, ArrayInfo, llvm::StringMap<unsigned>>;
+    // Maps input node names to node data types and shapes.
+    InputArrays inputs;
+    // name:index strings for the data outputs.
+    std::vector<string> outputs;
+    // name strings for the control outputs.
+    std::vector<string> control_outputs;
+    // Setting prune_unused_nodes to true, would prune unreachable nodes if
+    // output_arrays is specified.
+    bool prune_unused_nodes = false;
+    // If true, inputs of type LegacyFedInput are replaced with Placeholder ops.
+    // LegacyFedInput ops have two outputs unlike Placeholder which has only one
+    // output, so if both outputs of the LegacyFedInput ops are used then returns
+    // an error.
+    bool convert_legacy_fed_inputs = false;
+    // If true, the main graph will be treated as a function.
+    bool graph_as_function = false;
+    // If true, upgrade legacy features of the graph (for instance, functionalize
+    // control-flow).
+    bool upgrade_legacy = false;
 };
 
 struct GraphExportConfig {
-  // Whether to export shape attribute for the NodeDefs in the GraphDef.
-  bool export_shapes = true;
-  // Whether to export library field in the GraphDef.
-  bool export_library = true;
-  // Whether to export debug original node name in the GraphDef.
-  bool export_debug_info = true;
-  // If true, the main graph will be treated as a function.
-  bool graph_as_function = false;
+    // Whether to export shape attribute for the NodeDefs in the GraphDef.
+    bool export_shapes = true;
+    // Whether to export library field in the GraphDef.
+    bool export_library = true;
+    // Whether to export debug original node name in the GraphDef.
+    bool export_debug_info = true;
+    // If true, the main graph will be treated as a function.
+    bool graph_as_function = false;
 };
 
 // Parses the command line flag strings to the specification of nodes in
