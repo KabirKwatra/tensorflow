@@ -17,7 +17,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.data.experimental.ops.distribute_options import ExternalStatePolicy
+from tensorflow.python.data.experimental.ops.distribute_options import (
+    ExternalStatePolicy,
+)
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.util import nest
 from tensorflow.python.framework import ops
@@ -52,8 +54,10 @@ class _AutoShardDataset(dataset_ops.UnaryDataset):
             num_workers=num_workers,
             index=index,
             auto_shard_policy=int(
-                input_dataset.options().experimental_distribute.auto_shard_policy),
-            **self._flat_structure)
+                input_dataset.options().experimental_distribute.auto_shard_policy
+            ),
+            **self._flat_structure
+        )
         super(_AutoShardDataset, self).__init__(input_dataset, variant_tensor)
 
     @property
@@ -61,9 +65,12 @@ class _AutoShardDataset(dataset_ops.UnaryDataset):
         return self._element_spec
 
 
-def _AutoShardDatasetV1(input_dataset, num_workers, index):  # pylint: disable=invalid-name
+def _AutoShardDatasetV1(
+    input_dataset, num_workers, index
+):  # pylint: disable=invalid-name
     return dataset_ops.DatasetV1Adapter(
-        _AutoShardDataset(input_dataset, num_workers, index))
+        _AutoShardDataset(input_dataset, num_workers, index)
+    )
 
 
 class _RebatchDataset(dataset_ops.UnaryDataset):
@@ -74,7 +81,6 @@ class _RebatchDataset(dataset_ops.UnaryDataset):
     """
 
     def __init__(self, input_dataset, num_replicas, use_fallback=True):
-
         def recalculate_batch_size(output_shape):
             """Recalculates the output_shape after dividing it by num_replicas."""
             # If the output shape is unknown, we set the batch dimension to unknown.
@@ -82,10 +88,12 @@ class _RebatchDataset(dataset_ops.UnaryDataset):
                 return None
 
             if len(output_shape) < 1:
-                raise ValueError("Expected a dataset whose elements have rank >= 1 "
-                                 "but found a dataset whose elements are scalars. "
-                                 "You can fix the issue by adding the `batch` "
-                                 "transformation to the dataset.")
+                raise ValueError(
+                    "Expected a dataset whose elements have rank >= 1 "
+                    "but found a dataset whose elements are scalars. "
+                    "You can fix the issue by adding the `batch` "
+                    "transformation to the dataset."
+                )
             output_dims = [d.value for d in output_shape.dims]
 
             if output_dims[0] is not None and output_dims[0] % num_replicas == 0:
@@ -97,18 +105,19 @@ class _RebatchDataset(dataset_ops.UnaryDataset):
 
         def rebatch(type_spec):
             # pylint: disable=protected-access
-            batch_size = recalculate_batch_size(
-                type_spec._to_legacy_output_shapes())
+            batch_size = recalculate_batch_size(type_spec._to_legacy_output_shapes())
             return type_spec._unbatch()._batch(batch_size)
             # pylint: enable=protected-access
 
         self._element_spec = nest.map_structure(
-            rebatch, dataset_ops.get_structure(input_dataset))
+            rebatch, dataset_ops.get_structure(input_dataset)
+        )
         input_dataset = dataset_ops.normalize_to_dense(input_dataset)
         variant_tensor = ged_ops.rebatch_dataset(
             input_dataset._variant_tensor,  # pylint: disable=protected-access
             num_replicas=num_replicas,
-            **self._flat_structure)
+            **self._flat_structure
+        )
         super(_RebatchDataset, self).__init__(input_dataset, variant_tensor)
 
     @property
@@ -157,8 +166,8 @@ def replicate(dataset, devices):
         if policy is None:
             policy = ExternalStatePolicy.WARN
         graph_def = dataset._as_serialized_graph(
-            strip_device_assignment=True,
-            external_state_policy=policy)
+            strip_device_assignment=True, external_state_policy=policy
+        )
     for device in devices:
         ds = _RemoteDataset(graph_def, device, dataset.element_spec)
         datasets[device] = ds
