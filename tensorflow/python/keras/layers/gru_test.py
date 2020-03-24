@@ -34,7 +34,6 @@ from tensorflow.python.platform import test
 
 @keras_parameterized.run_all_keras_modes
 class GRULayerTest(keras_parameterized.TestCase):
-
     def test_return_sequences_GRU(self):
         num_samples = 2
         timesteps = 3
@@ -42,25 +41,24 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={'units': units,
-                    'return_sequences': True},
-            input_shape=(num_samples, timesteps, embedding_dim))
+            kwargs={"units": units, "return_sequences": True},
+            input_shape=(num_samples, timesteps, embedding_dim),
+        )
 
     @tf_test_util.run_v2_only
     def test_float64_GRU(self):
         if test.is_built_with_rocm():
-            self.skipTest('Double type is yet not supported in ROCm')
+            self.skipTest("Double type is yet not supported in ROCm")
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={'units': units,
-                    'return_sequences': True,
-                    'dtype': 'float64'},
+            kwargs={"units": units, "return_sequences": True, "dtype": "float64"},
             input_shape=(num_samples, timesteps, embedding_dim),
-            input_dtype='float64')
+            input_dtype="float64",
+        )
 
     def test_dynamic_behavior_GRU(self):
         num_samples = 2
@@ -70,10 +68,7 @@ class GRULayerTest(keras_parameterized.TestCase):
         layer = keras.layers.GRU(units, input_shape=(None, embedding_dim))
         model = keras.models.Sequential()
         model.add(layer)
-        model.compile(
-            'rmsprop',
-            'mse',
-            run_eagerly=testing_utils.should_run_eagerly())
+        model.compile("rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly())
         x = np.random.random((num_samples, timesteps, embedding_dim))
         y = np.random.random((num_samples, units))
         model.train_on_batch(x, y)
@@ -85,10 +80,9 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={'units': units,
-                    'dropout': 0.1,
-                    'recurrent_dropout': 0.1},
-            input_shape=(num_samples, timesteps, embedding_dim))
+            kwargs={"units": units, "dropout": 0.1, "recurrent_dropout": 0.1},
+            input_shape=(num_samples, timesteps, embedding_dim),
+        )
 
     def test_recurrent_dropout_with_implementation_restriction(self):
         layer = keras.layers.GRU(2, recurrent_dropout=0.1, implementation=2)
@@ -103,9 +97,9 @@ class GRULayerTest(keras_parameterized.TestCase):
         units = 2
         testing_utils.layer_test(
             keras.layers.GRU,
-            kwargs={'units': units,
-                    'implementation': implementation_mode},
-            input_shape=(num_samples, timesteps, embedding_dim))
+            kwargs={"units": units, "implementation": implementation_mode},
+            input_shape=(num_samples, timesteps, embedding_dim),
+        )
 
     def test_reset_after_GRU(self):
         num_samples = 2
@@ -117,24 +111,23 @@ class GRULayerTest(keras_parameterized.TestCase):
             train_samples=num_samples,
             test_samples=0,
             input_shape=(timesteps, embedding_dim),
-            num_classes=units)
+            num_classes=units,
+        )
         y_train = np_utils.to_categorical(y_train, units)
 
         inputs = keras.layers.Input(shape=[timesteps, embedding_dim])
-        gru_layer = keras.layers.GRU(units,
-                                     reset_after=True)
+        gru_layer = keras.layers.GRU(units, reset_after=True)
         output = gru_layer(inputs)
         gru_model = keras.models.Model(inputs, output)
         gru_model.compile(
-            'rmsprop',
-            'mse',
-            run_eagerly=testing_utils.should_run_eagerly())
+            "rmsprop", "mse", run_eagerly=testing_utils.should_run_eagerly()
+        )
         gru_model.fit(x_train, y_train)
         gru_model.predict(x_train)
 
     def test_with_masking_layer_GRU(self):
         if test.is_built_with_rocm():
-            self.skipTest('MIOpen only supports packed input output')
+            self.skipTest("MIOpen only supports packed input output")
         layer_class = keras.layers.GRU
         inputs = np.random.random((2, 3, 4))
         targets = np.abs(np.random.random((2, 3, 5)))
@@ -143,14 +136,15 @@ class GRULayerTest(keras_parameterized.TestCase):
         model.add(keras.layers.Masking(input_shape=(3, 4)))
         model.add(layer_class(units=5, return_sequences=True, unroll=False))
         model.compile(
-            loss='categorical_crossentropy',
-            optimizer='rmsprop',
-            run_eagerly=testing_utils.should_run_eagerly())
+            loss="categorical_crossentropy",
+            optimizer="rmsprop",
+            run_eagerly=testing_utils.should_run_eagerly(),
+        )
         model.fit(inputs, targets, epochs=1, batch_size=2, verbose=1)
 
     def test_statefulness_GRU(self):
         if test.is_built_with_rocm():
-            self.skipTest('MIOpen only supports packed input output')
+            self.skipTest("MIOpen only supports packed input output")
         num_samples = 2
         timesteps = 3
         embedding_dim = 4
@@ -164,20 +158,21 @@ class GRULayerTest(keras_parameterized.TestCase):
                 embedding_dim,
                 mask_zero=True,
                 input_length=timesteps,
-                batch_input_shape=(num_samples, timesteps)))
-        layer = layer_class(
-            units, return_sequences=False, stateful=True, weights=None)
+                batch_input_shape=(num_samples, timesteps),
+            )
+        )
+        layer = layer_class(units, return_sequences=False, stateful=True, weights=None)
         model.add(layer)
         model.compile(
-            optimizer='sgd',
-            loss='mse',
-            run_eagerly=testing_utils.should_run_eagerly())
+            optimizer="sgd", loss="mse", run_eagerly=testing_utils.should_run_eagerly()
+        )
         out1 = model.predict(np.ones((num_samples, timesteps)))
         self.assertEqual(out1.shape, (num_samples, units))
 
         # train once so that the states change
         model.train_on_batch(
-            np.ones((num_samples, timesteps)), np.ones((num_samples, units)))
+            np.ones((num_samples, timesteps)), np.ones((num_samples, units))
+        )
         out2 = model.predict(np.ones((num_samples, timesteps)))
 
         # if the state is not reset, output should be different
@@ -219,15 +214,14 @@ class GRULayerTest(keras_parameterized.TestCase):
         batch_size = 4
         cell = keras.layers.GRUCell(20)
         initial_state = cell.get_initial_state(
-            batch_size=batch_size, dtype=dtypes.float32)
-        _, state = cell(
-            np.ones((batch_size, 20), dtype=np.float32), initial_state)
+            batch_size=batch_size, dtype=dtypes.float32
+        )
+        _, state = cell(np.ones((batch_size, 20), dtype=np.float32), initial_state)
         self.assertEqual(state.shape, initial_state.shape)
 
 
-@combinations.generate(combinations.combine(mode=['graph', 'eager']))
+@combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class GRULayerGenericTest(test.TestCase):
-
     def test_constraints_GRU(self):
         embedding_dim = 4
         layer_class = keras.layers.GRU
@@ -241,7 +235,8 @@ class GRULayerGenericTest(test.TestCase):
             input_shape=(None, embedding_dim),
             kernel_constraint=k_constraint,
             recurrent_constraint=r_constraint,
-            bias_constraint=b_constraint)
+            bias_constraint=b_constraint,
+        )
         layer.build((None, None, embedding_dim))
         self.assertEqual(layer.cell.kernel.constraint, k_constraint)
         self.assertEqual(layer.cell.recurrent_kernel.constraint, r_constraint)
@@ -264,8 +259,9 @@ class GRULayerGenericTest(test.TestCase):
             input_shape=(None, embedding_dim),
             kernel_regularizer=keras.regularizers.l1(0.01),
             recurrent_regularizer=keras.regularizers.l1(0.01),
-            bias_regularizer='l2',
-            activity_regularizer='l1')
+            bias_regularizer="l2",
+            activity_regularizer="l1",
+        )
         layer.build((None, None, 2))
         self.assertEqual(len(layer.losses), 3)
 
@@ -277,5 +273,5 @@ class GRULayerGenericTest(test.TestCase):
             self.assertEqual(len(layer.get_losses_for(x)), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
