@@ -34,8 +34,8 @@ namespace gpu {
 namespace metal {
 namespace {
 std::string GetKernelWinograd4x4To36() {
-    std::string c;
-    c += R"(
+  std::string c;
+  c += R"(
 #include <metal_stdlib>
 using namespace metal;
 

@@ -27,68 +27,68 @@ extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_tensorflow_lite_InterpreterTest_getNativeHandleForDelegate(
     JNIEnv* env, jclass clazz) {
-    // A simple op which outputs a tensor with values of 7.
-    static TfLiteRegistration registration = {
-        .init = nullptr,
-        .free = nullptr,
-        .prepare =
-        [](TfLiteContext* context, TfLiteNode* node) {
+  // A simple op which outputs a tensor with values of 7.
+  static TfLiteRegistration registration = {
+      .init = nullptr,
+      .free = nullptr,
+      .prepare =
+          [](TfLiteContext* context, TfLiteNode* node) {
             const TfLiteTensor* input = tflite::GetInput(context, node, 0);
             TfLiteTensor* output = tflite::GetOutput(context, node, 0);
             TfLiteIntArray* output_dims = TfLiteIntArrayCopy(input->dims);
             output->type = kTfLiteFloat32;
             return context->ResizeTensor(context, output, output_dims);
-        },
-        .invoke =
-        [](TfLiteContext* context, TfLiteNode* node) {
+          },
+      .invoke =
+          [](TfLiteContext* context, TfLiteNode* node) {
             TfLiteTensor* output = tflite::GetOutput(context, node, 0);
             std::fill(output->data.f,
                       output->data.f + tflite::NumElements(output), 7.0f);
             return kTfLiteOk;
-        },
-        .profiling_string = nullptr,
-        .builtin_code = 0,
-        .custom_name = "",
-        .version = 1,
-    };
-    static TfLiteDelegate delegate = {
-        .data_ = nullptr,
-        .Prepare = [](TfLiteContext* context,
-                      TfLiteDelegate* delegate) -> TfLiteStatus {
-            TfLiteIntArray* execution_plan;
-            TF_LITE_ENSURE_STATUS(
-                context->GetExecutionPlan(context, &execution_plan));
-            context->ReplaceNodeSubsetsWithDelegateKernels(
-                context, registration, execution_plan, delegate);
-            // Now bind delegate buffer handles for all tensors.
-            for (size_t i = 0; i < context->tensors_size; ++i) {
-                context->tensors[i].delegate = delegate;
-                context->tensors[i].buffer_handle = static_cast<int>(i);
-            }
-            return kTfLiteOk;
-        },
-        .CopyFromBufferHandle = nullptr,
-        .CopyToBufferHandle = nullptr,
-        .FreeBufferHandle = nullptr,
-        .flags = kTfLiteDelegateFlagsAllowDynamicTensors,
-    };
-    return reinterpret_cast<jlong>(&delegate);
+          },
+      .profiling_string = nullptr,
+      .builtin_code = 0,
+      .custom_name = "",
+      .version = 1,
+  };
+  static TfLiteDelegate delegate = {
+      .data_ = nullptr,
+      .Prepare = [](TfLiteContext* context,
+                    TfLiteDelegate* delegate) -> TfLiteStatus {
+        TfLiteIntArray* execution_plan;
+        TF_LITE_ENSURE_STATUS(
+            context->GetExecutionPlan(context, &execution_plan));
+        context->ReplaceNodeSubsetsWithDelegateKernels(
+            context, registration, execution_plan, delegate);
+        // Now bind delegate buffer handles for all tensors.
+        for (size_t i = 0; i < context->tensors_size; ++i) {
+          context->tensors[i].delegate = delegate;
+          context->tensors[i].buffer_handle = static_cast<int>(i);
+        }
+        return kTfLiteOk;
+      },
+      .CopyFromBufferHandle = nullptr,
+      .CopyToBufferHandle = nullptr,
+      .FreeBufferHandle = nullptr,
+      .flags = kTfLiteDelegateFlagsAllowDynamicTensors,
+  };
+  return reinterpret_cast<jlong>(&delegate);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_tensorflow_lite_InterpreterTest_getNativeHandleForInvalidDelegate(
     JNIEnv* env, jclass clazz) {
-    // A simple delegate that fails during preparation.
-    static TfLiteDelegate delegate = {
-        .data_ = nullptr,
-        .Prepare = [](TfLiteContext* context, TfLiteDelegate* delegate)
-        -> TfLiteStatus { return kTfLiteError; },
-        .CopyFromBufferHandle = nullptr,
-        .CopyToBufferHandle = nullptr,
-        .FreeBufferHandle = nullptr,
-        .flags = kTfLiteDelegateFlagsNone,
-    };
-    return reinterpret_cast<jlong>(&delegate);
+  // A simple delegate that fails during preparation.
+  static TfLiteDelegate delegate = {
+      .data_ = nullptr,
+      .Prepare = [](TfLiteContext* context, TfLiteDelegate* delegate)
+          -> TfLiteStatus { return kTfLiteError; },
+      .CopyFromBufferHandle = nullptr,
+      .CopyToBufferHandle = nullptr,
+      .FreeBufferHandle = nullptr,
+      .flags = kTfLiteDelegateFlagsNone,
+  };
+  return reinterpret_cast<jlong>(&delegate);
 }
 
 #ifdef __cplusplus
