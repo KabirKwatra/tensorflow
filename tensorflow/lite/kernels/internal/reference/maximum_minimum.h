@@ -28,34 +28,34 @@ void MaximumMinimumBroadcastSlow(const RuntimeShape& unextended_input1_shape,
                                  const T* input2_data,
                                  const RuntimeShape& unextended_output_shape,
                                  T* output_data, Op op) {
-    // Uses element-wise calculation if broadcast is not required.
-    if (unextended_input1_shape == unextended_input2_shape) {
-        const int flat_size =
-            MatchingElementsSize(unextended_input1_shape, unextended_input2_shape,
-                                 unextended_output_shape);
-        for (int i = 0; i < flat_size; ++i) {
-            output_data[i] = op(input1_data[i], input2_data[i]);
-        }
-    } else {
-        TFLITE_DCHECK_LE(unextended_input1_shape.DimensionsCount(), N);
-        TFLITE_DCHECK_LE(unextended_input2_shape.DimensionsCount(), N);
-        TFLITE_DCHECK_LE(unextended_output_shape.DimensionsCount(), N);
-
-        NdArrayDesc<N> desc1;
-        NdArrayDesc<N> desc2;
-        NdArrayDesc<N> output_desc;
-        NdArrayDescsForElementwiseBroadcast(
-            unextended_input1_shape, unextended_input2_shape, &desc1, &desc2);
-        CopyDimsToDesc(RuntimeShape::ExtendedShape(N, unextended_output_shape),
-                       &output_desc);
-
-        auto maxmin_func = [&](int indexes[N]) {
-            output_data[SubscriptToIndex(output_desc, indexes)] =
-                op(input1_data[SubscriptToIndex(desc1, indexes)],
-                   input2_data[SubscriptToIndex(desc2, indexes)]);
-        };
-        NDOpsHelper<N>(output_desc, maxmin_func);
+  // Uses element-wise calculation if broadcast is not required.
+  if (unextended_input1_shape == unextended_input2_shape) {
+    const int flat_size =
+        MatchingElementsSize(unextended_input1_shape, unextended_input2_shape,
+                             unextended_output_shape);
+    for (int i = 0; i < flat_size; ++i) {
+      output_data[i] = op(input1_data[i], input2_data[i]);
     }
+  } else {
+    TFLITE_DCHECK_LE(unextended_input1_shape.DimensionsCount(), N);
+    TFLITE_DCHECK_LE(unextended_input2_shape.DimensionsCount(), N);
+    TFLITE_DCHECK_LE(unextended_output_shape.DimensionsCount(), N);
+
+    NdArrayDesc<N> desc1;
+    NdArrayDesc<N> desc2;
+    NdArrayDesc<N> output_desc;
+    NdArrayDescsForElementwiseBroadcast(
+        unextended_input1_shape, unextended_input2_shape, &desc1, &desc2);
+    CopyDimsToDesc(RuntimeShape::ExtendedShape(N, unextended_output_shape),
+                   &output_desc);
+
+    auto maxmin_func = [&](int indexes[N]) {
+      output_data[SubscriptToIndex(output_desc, indexes)] =
+          op(input1_data[SubscriptToIndex(desc1, indexes)],
+             input2_data[SubscriptToIndex(desc2, indexes)]);
+    };
+    NDOpsHelper<N>(output_desc, maxmin_func);
+  }
 }
 
 }  // namespace reference_ops
