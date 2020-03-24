@@ -14,12 +14,12 @@
 # ==============================================================================
 # Tests for this file live in python/kernel_tests/array_ops_test.py
 """Support for manipulating tensors."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import numbers
+
 import numpy as np
 
 from tensorflow.python.eager import context
@@ -31,14 +31,9 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.framework import tensor_util
-
-# 'Constant' gets imported in the module 'array_ops'.
 from tensorflow.python.framework.constant_op import constant
 from tensorflow.python.ops import gen_array_ops
 from tensorflow.python.ops import gen_math_ops
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_array_ops import *
 from tensorflow.python.ops.gen_array_ops import (
     reverse_v2 as reverse,
@@ -48,6 +43,9 @@ from tensorflow.python.util import dispatch
 from tensorflow.python.util import nest
 from tensorflow.python.util import tf_decorator
 from tensorflow.python.util.tf_export import tf_export
+# 'Constant' gets imported in the module 'array_ops'.
+# go/tf-wildcard-import
+# pylint: disable=wildcard-import
 
 # pylint: enable=wildcard-import
 

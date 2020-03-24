@@ -12,13 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
-
 """Optimizer that implements cross-shard gradient reduction for TPU."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 
 from tensorflow.python.framework import ops
 from tensorflow.python.ops.losses import losses
