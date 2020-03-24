@@ -24,7 +24,6 @@ within Google's AI organization, it comes with strong support for machine
 learning and deep learning and the flexible numerical computation core is used
 across many other scientific domains.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
