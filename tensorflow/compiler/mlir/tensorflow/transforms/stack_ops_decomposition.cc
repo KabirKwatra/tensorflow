@@ -86,24 +86,24 @@ namespace cutil = TF::collection_ops_util;
 // The pass also works across control flow and functional calls.
 struct StackOpsDecompositionPass
     : public ModulePass<StackOpsDecompositionPass> {
-  void runOnModule() override;
+    void runOnModule() override;
 };
 
 // Returns the type of the local variable for the stack size.
 Type GetSizeVarType(OpBuilder builder) {
-  auto size_type = cutil::GetSizeType(builder);
-  return RankedTensorType::get(
-      {}, TF::ResourceType::get(ArrayRef<TensorType>{size_type},
-                                builder.getContext()));
+    auto size_type = cutil::GetSizeType(builder);
+    return RankedTensorType::get(
+               {}, TF::ResourceType::get(ArrayRef<TensorType> {size_type},
+                                     builder.getContext()));
 }
 
 // Returns the aliasing argument number of a fucntion return value if it simply
 // forwards the argument. Otherwise, returns -1.
 int64_t FindAliasedInput(FuncOp func, int64_t return_index) {
-  Value return_val = func.front().getTerminator()->getOperand(return_index);
-  auto maybe_arg = return_val.dyn_cast<BlockArgument>();
-  if (!maybe_arg) return -1;
-  return maybe_arg.getArgNumber();
+    Value return_val = func.front().getTerminator()->getOperand(return_index);
+    auto maybe_arg = return_val.dyn_cast<BlockArgument>();
+    if (!maybe_arg) return -1;
+    return maybe_arg.getArgNumber();
 }
 
 // Changes the function signature that has stacks in the arguments. A stack
@@ -121,35 +121,35 @@ void ModifyFunctionSignature(
     llvm::function_ref<llvm::Optional<Type>(int64_t)> arg_to_stack_type,
     llvm::function_ref<void(ArrayRef<BlockArgument>)> handle_new_size_vars =
         nullptr) {
-  auto new_input_types = llvm::to_vector<8>(func.getType().getInputs());
-  auto size_var_type = GetSizeVarType(OpBuilder(func));
-  int64_t original_arg_count = new_input_types.size();
-  for (int64_t i = 0; i < original_arg_count; ++i) {
-    auto stack_type = arg_to_stack_type(i);
-    if (!stack_type.hasValue()) continue;
-    func.getArgument(i).setType(*stack_type);
-    new_input_types[i] = *stack_type;
-    auto size_arg = func.front().addArgument(size_var_type);
-    new_input_types.push_back(size_arg.getType());
-    if (stack_var_to_size_var) {
-      (*stack_var_to_size_var)[func.getArgument(i)] = size_arg;
+    auto new_input_types = llvm::to_vector<8>(func.getType().getInputs());
+    auto size_var_type = GetSizeVarType(OpBuilder(func));
+    int64_t original_arg_count = new_input_types.size();
+    for (int64_t i = 0; i < original_arg_count; ++i) {
+        auto stack_type = arg_to_stack_type(i);
+        if (!stack_type.hasValue()) continue;
+        func.getArgument(i).setType(*stack_type);
+        new_input_types[i] = *stack_type;
+        auto size_arg = func.front().addArgument(size_var_type);
+        new_input_types.push_back(size_arg.getType());
+        if (stack_var_to_size_var) {
+            (*stack_var_to_size_var)[func.getArgument(i)] = size_arg;
+        }
     }
-  }
-  if (handle_new_size_vars) {
-    handle_new_size_vars(func.getArguments().drop_front(original_arg_count));
-  }
-  func.setType(FunctionType::get(
-      new_input_types,
-      llvm::to_vector<8>(func.front().getTerminator()->getOperandTypes()),
-      func.getContext()));
+    if (handle_new_size_vars) {
+        handle_new_size_vars(func.getArguments().drop_front(original_arg_count));
+    }
+    func.setType(FunctionType::get(
+                     new_input_types,
+                     llvm::to_vector<8>(func.front().getTerminator()->getOperandTypes()),
+                     func.getContext()));
 }
 
 // Contains cached information for decomposed callee functions for (stateful)
 // partitioned call ops.
 struct PartitionedCallStackOpsInfo {
-  bool signature_change;
-  FuncOp decomposed_callee;
-  llvm::SmallDenseMap<int64_t, int64_t> stack_var_arg_to_size_arg;
+    bool signature_change;
+    FuncOp decomposed_callee;
+    llvm::SmallDenseMap<int64_t, int64_t> stack_var_arg_to_size_arg;
 };
 
 LogicalResult DecomposeStackOpsInternal(
@@ -162,75 +162,75 @@ LogicalResult HandleWhileOp(
     TF::WhileOp while_op, ModuleOp module,
     const llvm::SmallDenseMap<Value, Value>& data_var_to_size_var,
     llvm::SmallDenseMap<FuncOp, PartitionedCallStackOpsInfo>*
-        decomposed_partitioned_call_callees) {
-  auto body = module.lookupSymbol<FuncOp>(while_op.body());
-  llvm::SmallDenseMap<Value, Value> body_map;
-  auto find_arg_stack_type = [&](int64_t index) -> llvm::Optional<Type> {
-    auto it = data_var_to_size_var.find(while_op.getOperand(index));
-    if (it == data_var_to_size_var.end()) return llvm::None;
-    return it->getFirst().getType();
-  };
-  auto add_size_vars_to_return = [&](ArrayRef<BlockArgument> new_args) {
-    if (new_args.empty()) return;
-    auto body_ret = body.front().getTerminator();
-    auto new_body_returns = llvm::to_vector<8>(body_ret->getOperands());
-    for (auto arg : new_args) new_body_returns.push_back(arg);
-    OpBuilder(body_ret).create<ReturnOp>(body_ret->getLoc(), new_body_returns);
-    body_ret->erase();
-  };
-  // Handle body.
-  ModifyFunctionSignature(body, &body_map, find_arg_stack_type,
-                          add_size_vars_to_return);
-  const bool signature_change = !body_map.empty();
-  if (failed(DecomposeStackOpsInternal(&body.front(), module, &body_map,
-                                       decomposed_partitioned_call_callees))) {
-    return failure();
-  }
-  // Cond should not change stacks in the arguments, so use an empty map.
-  auto cond = module.lookupSymbol<FuncOp>(while_op.cond());
-  ModifyFunctionSignature(cond, nullptr, find_arg_stack_type);
-  llvm::SmallDenseMap<Value, Value> empty_map;
-  if (failed(DecomposeStackOpsInternal(&cond.front(), module, &empty_map,
-                                       decomposed_partitioned_call_callees))) {
-    return failure();
-  }
-  if (!signature_change) return success();
-  // Create the new while op.
-  auto new_while_operands = llvm::to_vector<8>(while_op.getOperands());
-  auto new_output_shapes =
-      llvm::to_vector<8>(while_op.output_shapes().getValue());
-  OpBuilder builder(while_op);
-  assert(while_op.getNumOperands() == while_op.getNumResults());
-  for (int64_t i = 0; i < while_op.getNumResults(); ++i) {
-    auto it = data_var_to_size_var.find(while_op.getOperand(i));
-    if (it == data_var_to_size_var.end()) continue;
-    new_while_operands.push_back(it->getSecond());
-    if (!new_output_shapes.empty()) {
-      // Size is a scalar shape.
-      tensorflow::TensorShapeProto shape_proto;
-      new_output_shapes.push_back(builder.getStringAttr(
-          tensorflow::mangling_util::MangleShape(shape_proto)));
+    decomposed_partitioned_call_callees) {
+    auto body = module.lookupSymbol<FuncOp>(while_op.body());
+    llvm::SmallDenseMap<Value, Value> body_map;
+    auto find_arg_stack_type = [&](int64_t index) -> llvm::Optional<Type> {
+        auto it = data_var_to_size_var.find(while_op.getOperand(index));
+        if (it == data_var_to_size_var.end()) return llvm::None;
+        return it->getFirst().getType();
+    };
+    auto add_size_vars_to_return = [&](ArrayRef<BlockArgument> new_args) {
+        if (new_args.empty()) return;
+        auto body_ret = body.front().getTerminator();
+        auto new_body_returns = llvm::to_vector<8>(body_ret->getOperands());
+        for (auto arg : new_args) new_body_returns.push_back(arg);
+        OpBuilder(body_ret).create<ReturnOp>(body_ret->getLoc(), new_body_returns);
+        body_ret->erase();
+    };
+    // Handle body.
+    ModifyFunctionSignature(body, &body_map, find_arg_stack_type,
+                            add_size_vars_to_return);
+    const bool signature_change = !body_map.empty();
+    if (failed(DecomposeStackOpsInternal(&body.front(), module, &body_map,
+                                         decomposed_partitioned_call_callees))) {
+        return failure();
     }
-  }
-  auto new_while =
-      builder.create<TF::WhileOp>(while_op.getLoc(), body.getType().getInputs(),
-                                  new_while_operands, while_op.getAttrs());
-  new_while.setAttr("output_shapes", builder.getArrayAttr(new_output_shapes));
-  for (int64_t i = 0; i < while_op.getNumResults(); ++i) {
-    if (!getElementTypeOrSelf(while_op.getOperand(i).getType())
-             .isa<TF::ResourceType>()) {
-      continue;
+    // Cond should not change stacks in the arguments, so use an empty map.
+    auto cond = module.lookupSymbol<FuncOp>(while_op.cond());
+    ModifyFunctionSignature(cond, nullptr, find_arg_stack_type);
+    llvm::SmallDenseMap<Value, Value> empty_map;
+    if (failed(DecomposeStackOpsInternal(&cond.front(), module, &empty_map,
+                                         decomposed_partitioned_call_callees))) {
+        return failure();
     }
-    int64_t aliased_input = FindAliasedInput(body, i);
-    if (aliased_input == i) {
-      // Replace aliased stack output uses with input.
-      while_op.getResult(i).replaceAllUsesWith(while_op.getOperand(i));
+    if (!signature_change) return success();
+    // Create the new while op.
+    auto new_while_operands = llvm::to_vector<8>(while_op.getOperands());
+    auto new_output_shapes =
+        llvm::to_vector<8>(while_op.output_shapes().getValue());
+    OpBuilder builder(while_op);
+    assert(while_op.getNumOperands() == while_op.getNumResults());
+    for (int64_t i = 0; i < while_op.getNumResults(); ++i) {
+        auto it = data_var_to_size_var.find(while_op.getOperand(i));
+        if (it == data_var_to_size_var.end()) continue;
+        new_while_operands.push_back(it->getSecond());
+        if (!new_output_shapes.empty()) {
+            // Size is a scalar shape.
+            tensorflow::TensorShapeProto shape_proto;
+            new_output_shapes.push_back(builder.getStringAttr(
+                                            tensorflow::mangling_util::MangleShape(shape_proto)));
+        }
     }
-  }
-  while_op.replaceAllUsesWith(
-      new_while.getResults().take_front(while_op.getNumResults()));
-  while_op.erase();
-  return success();
+    auto new_while =
+        builder.create<TF::WhileOp>(while_op.getLoc(), body.getType().getInputs(),
+                                    new_while_operands, while_op.getAttrs());
+    new_while.setAttr("output_shapes", builder.getArrayAttr(new_output_shapes));
+    for (int64_t i = 0; i < while_op.getNumResults(); ++i) {
+        if (!getElementTypeOrSelf(while_op.getOperand(i).getType())
+                .isa<TF::ResourceType>()) {
+            continue;
+        }
+        int64_t aliased_input = FindAliasedInput(body, i);
+        if (aliased_input == i) {
+            // Replace aliased stack output uses with input.
+            while_op.getResult(i).replaceAllUsesWith(while_op.getOperand(i));
+        }
+    }
+    while_op.replaceAllUsesWith(
+        new_while.getResults().take_front(while_op.getNumResults()));
+    while_op.erase();
+    return success();
 }
 
 // Handles stack usage by a tf.If. It will convert the branch function
@@ -239,52 +239,52 @@ LogicalResult HandleIfOp(
     TF::IfOp if_op, ModuleOp module,
     const llvm::SmallDenseMap<Value, Value>& data_var_to_size_var,
     llvm::SmallDenseMap<FuncOp, PartitionedCallStackOpsInfo>*
-        decomposed_partitioned_call_callees) {
-  auto then_branch = module.lookupSymbol<FuncOp>(if_op.then_branch());
-  auto else_branch = module.lookupSymbol<FuncOp>(if_op.else_branch());
-  llvm::SmallDenseMap<Value, Value> then_map;
-  llvm::SmallDenseMap<Value, Value> else_map;
+    decomposed_partitioned_call_callees) {
+    auto then_branch = module.lookupSymbol<FuncOp>(if_op.then_branch());
+    auto else_branch = module.lookupSymbol<FuncOp>(if_op.else_branch());
+    llvm::SmallDenseMap<Value, Value> then_map;
+    llvm::SmallDenseMap<Value, Value> else_map;
 
-  auto find_arg_stack_type = [&](int64_t index) -> llvm::Optional<Type> {
-    auto it = data_var_to_size_var.find(if_op.getOperand(index + 1));
-    if (it == data_var_to_size_var.end()) return llvm::None;
-    return it->getFirst().getType();
-  };
-  ModifyFunctionSignature(then_branch, &then_map, find_arg_stack_type);
-  ModifyFunctionSignature(else_branch, &else_map, find_arg_stack_type);
-  const bool signature_change = !then_map.empty() || !else_map.empty();
-  if (failed(DecomposeStackOpsInternal(&then_branch.front(), module, &then_map,
-                                       decomposed_partitioned_call_callees)) ||
-      failed(DecomposeStackOpsInternal(&else_branch.front(), module, &else_map,
-                                       decomposed_partitioned_call_callees))) {
-    return failure();
-  }
-  if (!signature_change) return success();
-  auto new_if_operands = llvm::to_vector<8>(if_op.getOperands());
-  for (auto operand : if_op.getOperands()) {
-    auto it = data_var_to_size_var.find(operand);
-    if (it == data_var_to_size_var.end()) continue;
-    new_if_operands.push_back(it->getSecond());
-  }
-  auto new_if = OpBuilder(if_op).create<TF::IfOp>(
-      if_op.getLoc(), then_branch.getType().getResults(), new_if_operands,
-      if_op.getAttrs());
-  for (auto result : if_op.getResults()) {
-    if (!getElementTypeOrSelf(result.getType()).isa<TF::ResourceType>()) {
-      continue;
+    auto find_arg_stack_type = [&](int64_t index) -> llvm::Optional<Type> {
+        auto it = data_var_to_size_var.find(if_op.getOperand(index + 1));
+        if (it == data_var_to_size_var.end()) return llvm::None;
+        return it->getFirst().getType();
+    };
+    ModifyFunctionSignature(then_branch, &then_map, find_arg_stack_type);
+    ModifyFunctionSignature(else_branch, &else_map, find_arg_stack_type);
+    const bool signature_change = !then_map.empty() || !else_map.empty();
+    if (failed(DecomposeStackOpsInternal(&then_branch.front(), module, &then_map,
+                                         decomposed_partitioned_call_callees)) ||
+            failed(DecomposeStackOpsInternal(&else_branch.front(), module, &else_map,
+                    decomposed_partitioned_call_callees))) {
+        return failure();
     }
-    int64_t then_aliased_input =
-        FindAliasedInput(then_branch, result.getResultNumber());
-    int64_t else_aliased_input =
-        FindAliasedInput(else_branch, result.getResultNumber());
-    if (then_aliased_input >= 0 && then_aliased_input == else_aliased_input) {
-      // Replace aliased stack output uses with input.
-      result.replaceAllUsesWith(if_op.getOperand(then_aliased_input + 1));
+    if (!signature_change) return success();
+    auto new_if_operands = llvm::to_vector<8>(if_op.getOperands());
+    for (auto operand : if_op.getOperands()) {
+        auto it = data_var_to_size_var.find(operand);
+        if (it == data_var_to_size_var.end()) continue;
+        new_if_operands.push_back(it->getSecond());
     }
-  }
-  if_op.replaceAllUsesWith(new_if);
-  if_op.erase();
-  return success();
+    auto new_if = OpBuilder(if_op).create<TF::IfOp>(
+                      if_op.getLoc(), then_branch.getType().getResults(), new_if_operands,
+                      if_op.getAttrs());
+    for (auto result : if_op.getResults()) {
+        if (!getElementTypeOrSelf(result.getType()).isa<TF::ResourceType>()) {
+            continue;
+        }
+        int64_t then_aliased_input =
+            FindAliasedInput(then_branch, result.getResultNumber());
+        int64_t else_aliased_input =
+            FindAliasedInput(else_branch, result.getResultNumber());
+        if (then_aliased_input >= 0 && then_aliased_input == else_aliased_input) {
+            // Replace aliased stack output uses with input.
+            result.replaceAllUsesWith(if_op.getOperand(then_aliased_input + 1));
+        }
+    }
+    if_op.replaceAllUsesWith(new_if);
+    if_op.erase();
+    return success();
 }
 
 // Handles stack usage by a tf.StatefulPartitionedCall or a tf.PartitionedCall.
@@ -296,187 +296,187 @@ LogicalResult HandlePartitionedCallOp(
     CallOp call, FuncOp callee, ModuleOp module,
     const llvm::SmallDenseMap<Value, Value>& data_var_to_size_var,
     llvm::SmallDenseMap<FuncOp, PartitionedCallStackOpsInfo>*
-        decomposed_partitioned_call_callees) {
-  auto emplace_res = decomposed_partitioned_call_callees->try_emplace(
-      callee, PartitionedCallStackOpsInfo());
-  auto& info = emplace_res.first->getSecond();
-  // Recreate the call op with info.
-  auto recreate_caller = [&] {
-    auto new_operands = llvm::to_vector<8>(call.getOperands());
-    for (int64_t i = 0; i < call.getNumOperands(); ++i) {
-      auto arg_it = info.stack_var_arg_to_size_arg.find(i);
-      if (arg_it == info.stack_var_arg_to_size_arg.end()) continue;
-      auto it = data_var_to_size_var.find(call.getOperand(i));
-      if (it == data_var_to_size_var.end()) {
-        call.emitOpError("unknown stack");
+    decomposed_partitioned_call_callees) {
+    auto emplace_res = decomposed_partitioned_call_callees->try_emplace(
+                           callee, PartitionedCallStackOpsInfo());
+    auto& info = emplace_res.first->getSecond();
+    // Recreate the call op with info.
+    auto recreate_caller = [&] {
+        auto new_operands = llvm::to_vector<8>(call.getOperands());
+        for (int64_t i = 0; i < call.getNumOperands(); ++i) {
+            auto arg_it = info.stack_var_arg_to_size_arg.find(i);
+            if (arg_it == info.stack_var_arg_to_size_arg.end()) continue;
+            auto it = data_var_to_size_var.find(call.getOperand(i));
+            if (it == data_var_to_size_var.end()) {
+                call.emitOpError("unknown stack");
+                return failure();
+            }
+            assert(arg_it->second == new_operands.size());
+            new_operands.push_back(it->getSecond());
+        }
+        OpBuilder builder(call);
+        auto new_call = builder.create<CallOp>(
+                            call.getLoc(), info.decomposed_callee.getType().getResults(),
+                            new_operands, call.getAttrs());
+        new_call.setAttr(
+            "f", builder.getSymbolRefAttr(
+                const_cast<FuncOp&>(info.decomposed_callee).getName()));
+        for (int64_t i = 0; i < call.getNumResults(); ++i) {
+            auto result = call.getResult(i);
+            if (!getElementTypeOrSelf(result.getType())
+                    .template isa<TF::ResourceType>()) {
+                continue;
+            }
+            int64_t aliased_input = FindAliasedInput(info.decomposed_callee, i);
+            if (aliased_input >= 0) {
+                // Replace aliased stack output uses with input.
+                result.replaceAllUsesWith(call.getOperand(aliased_input));
+            }
+        }
+        call.replaceAllUsesWith(new_call);
+        call.erase();
+        return success();
+    };
+    if (!emplace_res.second) {
+        // This callee was handled before.
+        if (!info.signature_change) return success();
+        return recreate_caller();
+    }
+    llvm::SmallDenseMap<Value, Value> callee_map;
+    auto callee_clone = callee.clone();
+    auto find_arg_stack_type = [&](int64_t index) -> llvm::Optional<Type> {
+        auto it = data_var_to_size_var.find(call.getOperand(index));
+        if (it == data_var_to_size_var.end()) return llvm::None;
+        return it->getFirst().getType();
+    };
+    ModifyFunctionSignature(callee_clone, &callee_map, find_arg_stack_type);
+    if (callee_map.empty()) {
+        // Signature is not modified. We do not need the clone.
+        info.signature_change = false;
+        callee_clone.erase();
+    } else {
+        info.signature_change = true;
+        info.decomposed_callee = callee_clone;
+        for (auto& entry : callee_map) {
+            info.stack_var_arg_to_size_arg
+            [entry.getFirst().cast<BlockArgument>().getArgNumber()] =
+                entry.getSecond().cast<BlockArgument>().getArgNumber();
+        }
+        // Add the clone with a new name.
+        auto name_base = llvm::join(
+                             std::vector<std::string> {callee.getName().str(), "stack_decomposed"},
+                             "_");
+        auto name = name_base;
+        {
+            int64_t counter = 0;
+            while (module.lookupSymbol(name)) {
+                name = llvm::formatv("{0}_{1}", name_base, counter++).str();
+            }
+        }
+        callee_clone.setName(name);
+        SymbolTable(module).insert(callee_clone);
+        callee = callee_clone;
+    }
+    if (failed(DecomposeStackOpsInternal(&callee.front(), module, &callee_map,
+                                         decomposed_partitioned_call_callees))) {
         return failure();
-      }
-      assert(arg_it->second == new_operands.size());
-      new_operands.push_back(it->getSecond());
     }
-    OpBuilder builder(call);
-    auto new_call = builder.create<CallOp>(
-        call.getLoc(), info.decomposed_callee.getType().getResults(),
-        new_operands, call.getAttrs());
-    new_call.setAttr(
-        "f", builder.getSymbolRefAttr(
-                 const_cast<FuncOp&>(info.decomposed_callee).getName()));
-    for (int64_t i = 0; i < call.getNumResults(); ++i) {
-      auto result = call.getResult(i);
-      if (!getElementTypeOrSelf(result.getType())
-               .template isa<TF::ResourceType>()) {
-        continue;
-      }
-      int64_t aliased_input = FindAliasedInput(info.decomposed_callee, i);
-      if (aliased_input >= 0) {
-        // Replace aliased stack output uses with input.
-        result.replaceAllUsesWith(call.getOperand(aliased_input));
-      }
-    }
-    call.replaceAllUsesWith(new_call);
-    call.erase();
+    if (info.signature_change) return recreate_caller();
     return success();
-  };
-  if (!emplace_res.second) {
-    // This callee was handled before.
-    if (!info.signature_change) return success();
-    return recreate_caller();
-  }
-  llvm::SmallDenseMap<Value, Value> callee_map;
-  auto callee_clone = callee.clone();
-  auto find_arg_stack_type = [&](int64_t index) -> llvm::Optional<Type> {
-    auto it = data_var_to_size_var.find(call.getOperand(index));
-    if (it == data_var_to_size_var.end()) return llvm::None;
-    return it->getFirst().getType();
-  };
-  ModifyFunctionSignature(callee_clone, &callee_map, find_arg_stack_type);
-  if (callee_map.empty()) {
-    // Signature is not modified. We do not need the clone.
-    info.signature_change = false;
-    callee_clone.erase();
-  } else {
-    info.signature_change = true;
-    info.decomposed_callee = callee_clone;
-    for (auto& entry : callee_map) {
-      info.stack_var_arg_to_size_arg
-          [entry.getFirst().cast<BlockArgument>().getArgNumber()] =
-          entry.getSecond().cast<BlockArgument>().getArgNumber();
-    }
-    // Add the clone with a new name.
-    auto name_base = llvm::join(
-        std::vector<std::string>{callee.getName().str(), "stack_decomposed"},
-        "_");
-    auto name = name_base;
-    {
-      int64_t counter = 0;
-      while (module.lookupSymbol(name)) {
-        name = llvm::formatv("{0}_{1}", name_base, counter++).str();
-      }
-    }
-    callee_clone.setName(name);
-    SymbolTable(module).insert(callee_clone);
-    callee = callee_clone;
-  }
-  if (failed(DecomposeStackOpsInternal(&callee.front(), module, &callee_map,
-                                       decomposed_partitioned_call_callees))) {
-    return failure();
-  }
-  if (info.signature_change) return recreate_caller();
-  return success();
 }
 
 LogicalResult HandleStackV2Op(
     TF::StackV2Op stack, ModuleOp module,
     llvm::SmallDenseMap<Value, Value>* data_var_to_size_var) {
-  // Create a buffer variable and a size variable to replace the stack.
-  auto elem_type = cutil::GetElementTypeFromAccess(
-      stack.handle(), module, [](Operation* user) -> llvm::Optional<Type> {
+    // Create a buffer variable and a size variable to replace the stack.
+    auto elem_type = cutil::GetElementTypeFromAccess(
+    stack.handle(), module, [](Operation* user) -> llvm::Optional<Type> {
         auto push = llvm::dyn_cast<TF::StackPushV2Op>(user);
         if (!push) return llvm::None;
         return push.elem().getType();
-      });
-  if (!elem_type.hasValue()) {
-    return stack.emitOpError("cannot infer element shape of stack");
-  }
-  OpBuilder builder(stack);
-  Value buffer;
-  if (failed(cutil::CreateInitBufferValue(
-          elem_type->getShape(), stack.max_size(), stack,
-          elem_type->getElementType(), builder, &buffer))) {
-    return failure();
-  }
-  auto size_var_type = GetSizeVarType(builder);
-  auto var_type = RankedTensorType::get(
-      {}, TF::ResourceType::get(
-              ArrayRef<TensorType>{buffer.getType().cast<TensorType>()},
-              stack.getContext()));
-  auto local_var = builder.create<TF::MlirLocalVarOp>(
-      stack.getLoc(), ArrayRef<Type>{var_type}, ArrayRef<Value>{},
-      ArrayRef<NamedAttribute>{});
-  auto local_size_var = builder.create<TF::MlirLocalVarOp>(
-      stack.getLoc(), ArrayRef<Type>{size_var_type}, ArrayRef<Value>{},
-      ArrayRef<NamedAttribute>{});
-  // Zero-initialize the local vars.
-  cutil::WriteLocalVariable(local_size_var,
-                            cutil::GetR1Const({0LL}, builder, stack.getLoc()),
-                            builder, stack.getLoc());
-  cutil::WriteLocalVariable(local_var, buffer, builder, stack.getLoc());
-  stack.handle().replaceAllUsesWith(local_var);
-  (*data_var_to_size_var)[local_var] = local_size_var;
-  stack.erase();
-  return success();
+    });
+    if (!elem_type.hasValue()) {
+        return stack.emitOpError("cannot infer element shape of stack");
+    }
+    OpBuilder builder(stack);
+    Value buffer;
+    if (failed(cutil::CreateInitBufferValue(
+                   elem_type->getShape(), stack.max_size(), stack,
+                   elem_type->getElementType(), builder, &buffer))) {
+        return failure();
+    }
+    auto size_var_type = GetSizeVarType(builder);
+    auto var_type = RankedTensorType::get(
+                        {}, TF::ResourceType::get(
+                            ArrayRef<TensorType> {buffer.getType().cast<TensorType>()},
+                            stack.getContext()));
+    auto local_var = builder.create<TF::MlirLocalVarOp>(
+                         stack.getLoc(), ArrayRef<Type> {var_type}, ArrayRef<Value> {},
+                         ArrayRef<NamedAttribute> {});
+    auto local_size_var = builder.create<TF::MlirLocalVarOp>(
+                              stack.getLoc(), ArrayRef<Type> {size_var_type}, ArrayRef<Value> {},
+                              ArrayRef<NamedAttribute> {});
+    // Zero-initialize the local vars.
+    cutil::WriteLocalVariable(local_size_var,
+                              cutil::GetR1Const({0LL}, builder, stack.getLoc()),
+                              builder, stack.getLoc());
+    cutil::WriteLocalVariable(local_var, buffer, builder, stack.getLoc());
+    stack.handle().replaceAllUsesWith(local_var);
+    (*data_var_to_size_var)[local_var] = local_size_var;
+    stack.erase();
+    return success();
 }
 
 LogicalResult HandleStackPushV2Op(
     TF::StackPushV2Op push,
     llvm::SmallDenseMap<Value, Value>* data_var_to_size_var) {
-  auto it = data_var_to_size_var->find(push.handle());
-  if (it == data_var_to_size_var->end()) {
-    return push.emitOpError("unknown stack");
-  }
-  // Push output simply forward the input element.
-  push.replaceAllUsesWith(push.elem());
-  OpBuilder builder(push);
-  // Read the current buffer and size.
-  auto stack_val =
-      cutil::ReadLocalVariable(push.handle(), builder, push.getLoc());
-  auto index =
-      cutil::ReadLocalVariable(it->getSecond(), builder, push.getLoc());
-  stack_val =
-      cutil::SetElement(index, stack_val, push.elem(), builder, push.getLoc());
-  // Assign the new buffer and size.
-  cutil::WriteLocalVariable(push.handle(), stack_val, builder, push.getLoc());
-  index = builder.create<TF::AddV2Op>(
-      push.getLoc(), ArrayRef<Type>{index.getType()},
-      ArrayRef<Value>{index, cutil::GetR1Const({1}, builder, push.getLoc())},
-      ArrayRef<NamedAttribute>{});
-  cutil::WriteLocalVariable(it->getSecond(), index, builder, push.getLoc());
-  push.erase();
-  return success();
+    auto it = data_var_to_size_var->find(push.handle());
+    if (it == data_var_to_size_var->end()) {
+        return push.emitOpError("unknown stack");
+    }
+    // Push output simply forward the input element.
+    push.replaceAllUsesWith(push.elem());
+    OpBuilder builder(push);
+    // Read the current buffer and size.
+    auto stack_val =
+        cutil::ReadLocalVariable(push.handle(), builder, push.getLoc());
+    auto index =
+        cutil::ReadLocalVariable(it->getSecond(), builder, push.getLoc());
+    stack_val =
+        cutil::SetElement(index, stack_val, push.elem(), builder, push.getLoc());
+    // Assign the new buffer and size.
+    cutil::WriteLocalVariable(push.handle(), stack_val, builder, push.getLoc());
+    index = builder.create<TF::AddV2Op>(
+                push.getLoc(), ArrayRef<Type> {index.getType()},
+                ArrayRef<Value> {index, cutil::GetR1Const({1}, builder, push.getLoc())},
+                ArrayRef<NamedAttribute> {});
+    cutil::WriteLocalVariable(it->getSecond(), index, builder, push.getLoc());
+    push.erase();
+    return success();
 }
 
 LogicalResult HandleStackPopV2Op(
     TF::StackPopV2Op pop,
     llvm::SmallDenseMap<Value, Value>* data_var_to_size_var) {
-  auto it = data_var_to_size_var->find(pop.handle());
-  if (it == data_var_to_size_var->end()) {
-    return pop.emitOpError("unknown stack");
-  }
-  OpBuilder builder(pop);
-  // Read the current buffer and size.
-  auto stack_val =
-      cutil::ReadLocalVariable(pop.handle(), builder, pop.getLoc());
-  auto size = cutil::ReadLocalVariable(it->getSecond(), builder, pop.getLoc());
-  auto new_size = builder.create<TF::SubOp>(
-      pop.getLoc(), ArrayRef<Type>{size.getType()},
-      ArrayRef<Value>{size, cutil::GetR1Const({1}, builder, pop.getLoc())},
-      ArrayRef<NamedAttribute>{});
-  auto pop_val = cutil::GetElement(new_size, stack_val, builder, pop.getLoc());
-  pop.replaceAllUsesWith(pop_val);
-  // Update the size.
-  cutil::WriteLocalVariable(it->getSecond(), new_size, builder, pop.getLoc());
-  pop.erase();
-  return success();
+    auto it = data_var_to_size_var->find(pop.handle());
+    if (it == data_var_to_size_var->end()) {
+        return pop.emitOpError("unknown stack");
+    }
+    OpBuilder builder(pop);
+    // Read the current buffer and size.
+    auto stack_val =
+        cutil::ReadLocalVariable(pop.handle(), builder, pop.getLoc());
+    auto size = cutil::ReadLocalVariable(it->getSecond(), builder, pop.getLoc());
+    auto new_size = builder.create<TF::SubOp>(
+                        pop.getLoc(), ArrayRef<Type> {size.getType()},
+                        ArrayRef<Value> {size, cutil::GetR1Const({1}, builder, pop.getLoc())},
+                        ArrayRef<NamedAttribute> {});
+    auto pop_val = cutil::GetElement(new_size, stack_val, builder, pop.getLoc());
+    pop.replaceAllUsesWith(pop_val);
+    // Update the size.
+    cutil::WriteLocalVariable(it->getSecond(), new_size, builder, pop.getLoc());
+    pop.erase();
+    return success();
 }
 
 // Decomposes stack ops on a region and recursively decomposes called functions.
@@ -488,76 +488,76 @@ LogicalResult DecomposeStackOpsInternal(
     Block* block, ModuleOp module,
     llvm::SmallDenseMap<Value, Value>* data_var_to_size_var,
     llvm::SmallDenseMap<FuncOp, PartitionedCallStackOpsInfo>*
-        decomposed_partitioned_call_callees) {
-  for (auto& op : llvm::make_early_inc_range(block->getOperations())) {
-    if (llvm::isa<TF::IdentityOp>(&op) || llvm::isa<TF::IdentityNOp>(&op)) {
-      // Removes identity nodes in the block. The device computation does not
-      // need such nodes to carry information.
-      op.replaceAllUsesWith(op.getOperands());
-      op.erase();
-    } else if (auto stack = llvm::dyn_cast<TF::StackV2Op>(&op)) {
-      if (failed(HandleStackV2Op(stack, module, data_var_to_size_var))) {
-        return failure();
-      }
-    } else if (auto push = llvm::dyn_cast<TF::StackPushV2Op>(&op)) {
-      if (failed(HandleStackPushV2Op(push, data_var_to_size_var))) {
-        return failure();
-      }
-    } else if (auto pop = llvm::dyn_cast<TF::StackPopV2Op>(&op)) {
-      if (failed(HandleStackPopV2Op(pop, data_var_to_size_var))) {
-        return failure();
-      }
-    } else if (auto close = llvm::dyn_cast<TF::StackCloseV2Op>(&op)) {
-      data_var_to_size_var->erase(close.handle());
-      close.erase();
-    } else if (auto while_op = llvm::dyn_cast<TF::WhileOp>(&op)) {
-      if (failed(HandleWhileOp(while_op, module, *data_var_to_size_var,
-                               decomposed_partitioned_call_callees))) {
-        return failure();
-      }
-    } else if (auto if_op = llvm::dyn_cast<TF::IfOp>(&op)) {
-      if (failed(HandleIfOp(if_op, module, *data_var_to_size_var,
-                            decomposed_partitioned_call_callees))) {
-        return failure();
-      }
-    } else if (auto pcall = llvm::dyn_cast<TF::PartitionedCallOp>(&op)) {
-      if (!pcall.f().isa<FlatSymbolRefAttr>()) {
-        return pcall.emitOpError(
-            "stack decomposition does not support call with nested references");
-      }
-      if (failed(HandlePartitionedCallOp(
-              pcall, module.lookupSymbol<FuncOp>(pcall.f().getRootReference()),
-              module, *data_var_to_size_var,
-              decomposed_partitioned_call_callees))) {
-        return failure();
-      }
-    } else if (auto spcall =
-                   llvm::dyn_cast<TF::StatefulPartitionedCallOp>(&op)) {
-      if (failed(HandlePartitionedCallOp(
-              spcall, module.lookupSymbol<FuncOp>(spcall.f()), module,
-              *data_var_to_size_var, decomposed_partitioned_call_callees))) {
-        return failure();
-      }
+    decomposed_partitioned_call_callees) {
+    for (auto& op : llvm::make_early_inc_range(block->getOperations())) {
+        if (llvm::isa<TF::IdentityOp>(&op) || llvm::isa<TF::IdentityNOp>(&op)) {
+            // Removes identity nodes in the block. The device computation does not
+            // need such nodes to carry information.
+            op.replaceAllUsesWith(op.getOperands());
+            op.erase();
+        } else if (auto stack = llvm::dyn_cast<TF::StackV2Op>(&op)) {
+            if (failed(HandleStackV2Op(stack, module, data_var_to_size_var))) {
+                return failure();
+            }
+        } else if (auto push = llvm::dyn_cast<TF::StackPushV2Op>(&op)) {
+            if (failed(HandleStackPushV2Op(push, data_var_to_size_var))) {
+                return failure();
+            }
+        } else if (auto pop = llvm::dyn_cast<TF::StackPopV2Op>(&op)) {
+            if (failed(HandleStackPopV2Op(pop, data_var_to_size_var))) {
+                return failure();
+            }
+        } else if (auto close = llvm::dyn_cast<TF::StackCloseV2Op>(&op)) {
+            data_var_to_size_var->erase(close.handle());
+            close.erase();
+        } else if (auto while_op = llvm::dyn_cast<TF::WhileOp>(&op)) {
+            if (failed(HandleWhileOp(while_op, module, *data_var_to_size_var,
+                                     decomposed_partitioned_call_callees))) {
+                return failure();
+            }
+        } else if (auto if_op = llvm::dyn_cast<TF::IfOp>(&op)) {
+            if (failed(HandleIfOp(if_op, module, *data_var_to_size_var,
+                                  decomposed_partitioned_call_callees))) {
+                return failure();
+            }
+        } else if (auto pcall = llvm::dyn_cast<TF::PartitionedCallOp>(&op)) {
+            if (!pcall.f().isa<FlatSymbolRefAttr>()) {
+                return pcall.emitOpError(
+                           "stack decomposition does not support call with nested references");
+            }
+            if (failed(HandlePartitionedCallOp(
+                           pcall, module.lookupSymbol<FuncOp>(pcall.f().getRootReference()),
+                           module, *data_var_to_size_var,
+                           decomposed_partitioned_call_callees))) {
+                return failure();
+            }
+        } else if (auto spcall =
+                       llvm::dyn_cast<TF::StatefulPartitionedCallOp>(&op)) {
+            if (failed(HandlePartitionedCallOp(
+                           spcall, module.lookupSymbol<FuncOp>(spcall.f()), module,
+                           *data_var_to_size_var, decomposed_partitioned_call_callees))) {
+                return failure();
+            }
+        }
     }
-  }
-  return success();
+    return success();
 }
 
 LogicalResult DecomposeStackOps(Block* block, ModuleOp module) {
-  llvm::SmallDenseMap<Value, Value> data_var_to_size_var;
-  llvm::SmallDenseMap<FuncOp, PartitionedCallStackOpsInfo>
-      decomposed_partitioned_call_callees;
-  return DecomposeStackOpsInternal(block, module, &data_var_to_size_var,
-                                   &decomposed_partitioned_call_callees);
+    llvm::SmallDenseMap<Value, Value> data_var_to_size_var;
+    llvm::SmallDenseMap<FuncOp, PartitionedCallStackOpsInfo>
+    decomposed_partitioned_call_callees;
+    return DecomposeStackOpsInternal(block, module, &data_var_to_size_var,
+                                     &decomposed_partitioned_call_callees);
 }
 
 void StackOpsDecompositionPass::runOnModule() {
-  auto module = getModule();
-  auto main = module.lookupSymbol<FuncOp>("main");
-  if (!main) return;
-  if (failed(DecomposeStackOps(&main.front(), module))) {
-    signalPassFailure();
-  }
+    auto module = getModule();
+    auto main = module.lookupSymbol<FuncOp>("main");
+    if (!main) return;
+    if (failed(DecomposeStackOps(&main.front(), module))) {
+        signalPassFailure();
+    }
 }
 
 static PassRegistration<StackOpsDecompositionPass> pass(
@@ -569,7 +569,7 @@ static PassRegistration<StackOpsDecompositionPass> pass(
 
 namespace TF {
 std::unique_ptr<OpPassBase<ModuleOp>> CreateStackOpsDecompositionPass() {
-  return std::make_unique<StackOpsDecompositionPass>();
+    return std::make_unique<StackOpsDecompositionPass>();
 }
 
 }  // namespace TF
