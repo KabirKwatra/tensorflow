@@ -53,8 +53,6 @@ from tensorflow.python.keras.saving.saved_model import layer_serialization
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.keras.utils import tf_utils
-
-# A module that only depends on `keras.layers` import these from here.
 from tensorflow.python.keras.utils.generic_utils import (
     to_snake_case,
 )  # pylint: disable=unused-import
@@ -77,6 +75,7 @@ from tensorflow.python.util import nest
 from tensorflow.python.util import object_identity
 from tensorflow.python.util import tf_inspect
 from tensorflow.tools.docs import doc_controls
+# A module that only depends on `keras.layers` import these from here.
 
 
 # pylint: disable=g-classes-have-attributes
