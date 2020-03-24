@@ -31,11 +31,11 @@ class CrossShardOptimizer(optimizer.Optimizer):
     """An optimizer that averages gradients across TPU shards."""
 
     def __init__(
-        self,
-        opt,
-        reduction=losses.Reduction.MEAN,
-        name="CrossShardOptimizer",
-        group_assignment=None,
+            self,
+            opt,
+            reduction=losses.Reduction.MEAN,
+            name="CrossShardOptimizer",
+            group_assignment=None,
     ):
         """Construct a new cross-shard optimizer.
 
@@ -61,8 +61,7 @@ class CrossShardOptimizer(optimizer.Optimizer):
                 "If you are using TPUEstimator, you may instead sum your gradients "
                 "with: grads = [tf.compat.v1.tpu.cross_replica_sum(g) for g in grads]"
                 ". If you want to average your gradients, rescale your loss with: "
-                "loss /= global_batch_size"
-            )
+                "loss /= global_batch_size")
 
         super(CrossShardOptimizer, self).__init__(False, name)
         self._opt = opt
@@ -85,15 +84,11 @@ class CrossShardOptimizer(optimizer.Optimizer):
         """
         if not group_assignment:
             return None
-        if not (
-            isinstance(group_assignment, list)
-            and all(isinstance(i, list) for i in group_assignment)
-        ):
+        if not (isinstance(group_assignment, list)
+                and all(isinstance(i, list) for i in group_assignment)):
             raise ValueError(
                 "group_assignment must be a list of list. Got {}".format(
-                    group_assignment
-                )
-            )
+                    group_assignment))
 
         replica_ids = set()
         for g in group_assignment:
@@ -103,8 +98,8 @@ class CrossShardOptimizer(optimizer.Optimizer):
         if set(range(num_shards)) != replica_ids:
             raise ValueError(
                 "group_assignment must be a permutation of range({0})."
-                " Got group_assignment={1}".format(num_shards, group_assignment)
-            )
+                " Got group_assignment={1}".format(num_shards,
+                                                   group_assignment))
 
         subgroup_size_list = [len(group) for group in group_assignment]
         if all(subgroup_size_list[0] == size for size in subgroup_size_list):
@@ -112,8 +107,8 @@ class CrossShardOptimizer(optimizer.Optimizer):
         else:
             raise ValueError(
                 "The size of each subgroup in group_assignment must "
-                "be equal. Got group_assignment={}".format(self._group_assignment)
-            )
+                "be equal. Got group_assignment={}".format(
+                    self._group_assignment))
 
     def compute_gradients(self, loss, var_list=None, **kwargs):
         """Compute gradients of "loss" for the variables in "var_list".
@@ -152,13 +147,11 @@ class CrossShardOptimizer(optimizer.Optimizer):
         if num_shards is None:
             logging.warning(
                 "CrossShardOptimizer should be used within a tpu_shard_context, but "
-                "got unset number_of_shards. Assuming 1."
-            )
+                "got unset number_of_shards. Assuming 1.")
             num_shards = 1
 
         subgroup_size = self._verify_and_get_subgroup_size(
-            self._group_assignment, num_shards
-        )
+            self._group_assignment, num_shards)
 
         if num_shards > 1 and self._reduction == losses.Reduction.MEAN:
             if self._group_assignment:
@@ -197,9 +190,11 @@ class CrossShardOptimizer(optimizer.Optimizer):
             else:
                 with ops.colocate_with(grad):
                     summed_grads_and_vars.append(
-                        (tpu_ops.cross_replica_sum(grad, self._group_assignment), var)
-                    )
-        return self._opt.apply_gradients(summed_grads_and_vars, global_step, name)
+                        (tpu_ops.cross_replica_sum(grad,
+                                                   self._group_assignment),
+                         var))
+        return self._opt.apply_gradients(summed_grads_and_vars, global_step,
+                                         name)
 
     def get_slot(self, *args, **kwargs):
         """Return a slot named "name" created for "var" by the Optimizer.

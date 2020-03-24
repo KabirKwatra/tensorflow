@@ -33,22 +33,28 @@ class EinsumOpTest(xla_test.XLATestCase):
         """Verifies that unary 'op' produces 'expected' when fed input 'inp'."""
         with self.session() as session:
             with self.test_scope():
-                pinp = array_ops.placeholder(
-                    dtypes.as_dtype(inp.dtype), inp.shape, name="a"
-                )
+                pinp = array_ops.placeholder(dtypes.as_dtype(inp.dtype),
+                                             inp.shape,
+                                             name="a")
                 output = op(pinp)
             result = session.run(output, {pinp: inp})
             self.assertEqual(output.dtype, expected.dtype)
-            self.assertAllCloseAccordingToType(
-                expected, result, rtol=1e-3, atol=1e-5, bfloat16_rtol=0.03
-            )
+            self.assertAllCloseAccordingToType(expected,
+                                               result,
+                                               rtol=1e-3,
+                                               atol=1e-5,
+                                               bfloat16_rtol=0.03)
 
     def _testBinary(self, op, a, b, expected):
         """Verifies that binary 'op' produces 'expected' when fed 'a' and 'b'."""
         with self.session() as session:
             with self.test_scope():
-                pa = array_ops.placeholder(dtypes.as_dtype(a.dtype), a.shape, name="a")
-                pb = array_ops.placeholder(dtypes.as_dtype(b.dtype), b.shape, name="b")
+                pa = array_ops.placeholder(dtypes.as_dtype(a.dtype),
+                                           a.shape,
+                                           name="a")
+                pb = array_ops.placeholder(dtypes.as_dtype(b.dtype),
+                                           b.shape,
+                                           name="b")
                 output = op(pa, pb)
             result = session.run(output, {pa: a, pb: b})
             self.assertAllCloseAccordingToType(result, expected, rtol=1e-3)
@@ -85,7 +91,8 @@ class EinsumOpTest(xla_test.XLATestCase):
             self._testUnary(
                 lambda x: special_math_ops.einsum("ijk->kji", x),
                 np.array([[[1, 3], [2, 5], [6, 8]]], dtype=dtype),
-                expected=np.array([[[1], [2], [6]], [[3], [5], [8]]], dtype=dtype),
+                expected=np.array([[[1], [2], [6]], [[3], [5], [8]]],
+                                  dtype=dtype),
             )
 
 
