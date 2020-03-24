@@ -34,78 +34,78 @@ namespace concatenation {
 
 // This file has two implementation of Concatenation.
 enum KernelType {
-  kReference,
-  kGenericOptimized,
+    kReference,
+    kGenericOptimized,
 };
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-  auto* params =
-      reinterpret_cast<TfLiteConcatenationParams*>(node->builtin_data);
-  int axis = params->axis;
-  int num_inputs = node->inputs->size;
+    auto* params =
+        reinterpret_cast<TfLiteConcatenationParams*>(node->builtin_data);
+    int axis = params->axis;
+    int num_inputs = node->inputs->size;
 
-  // The number of dimensions of the input tensors must match, and all
-  // dimensions except 'axis' must be equal.
-  const TfLiteTensor* t0 = GetInput(context, node, 0);
-  TfLiteType input_type = t0->type;
-  if (axis < 0) axis += t0->dims->size;
-  TF_LITE_ENSURE(context, axis >= 0);
-  TF_LITE_ENSURE(context, axis < t0->dims->size);
+    // The number of dimensions of the input tensors must match, and all
+    // dimensions except 'axis' must be equal.
+    const TfLiteTensor* t0 = GetInput(context, node, 0);
+    TfLiteType input_type = t0->type;
+    if (axis < 0) axis += t0->dims->size;
+    TF_LITE_ENSURE(context, axis >= 0);
+    TF_LITE_ENSURE(context, axis < t0->dims->size);
 
-  // TODO(ahentz): These are limitations of our implementation that could be
-  // removed with a bit of effort.
-  TF_LITE_ENSURE_EQ(context, params->activation, kTfLiteActNone);
-  TF_LITE_ENSURE(context,
-                 input_type == kTfLiteFloat32 || input_type == kTfLiteUInt8 ||
-                     input_type == kTfLiteInt8 || input_type == kTfLiteInt16 ||
-                     input_type == kTfLiteInt32 || input_type == kTfLiteInt64);
+    // TODO(ahentz): These are limitations of our implementation that could be
+    // removed with a bit of effort.
+    TF_LITE_ENSURE_EQ(context, params->activation, kTfLiteActNone);
+    TF_LITE_ENSURE(context,
+                   input_type == kTfLiteFloat32 || input_type == kTfLiteUInt8 ||
+                   input_type == kTfLiteInt8 || input_type == kTfLiteInt16 ||
+                   input_type == kTfLiteInt32 || input_type == kTfLiteInt64);
 
-  // Output dimensions will match input dimensions, except 'axis', which
-  // will be the sum of inputs
-  int sum_axis = t0->dims->data[axis];
-  for (int i = 1; i < num_inputs; ++i) {
-    const TfLiteTensor* t = GetInput(context, node, i);
-    TF_LITE_ENSURE_EQ(context, t->dims->size, t0->dims->size);
-    TF_LITE_ENSURE_EQ(context, t->type, input_type);
+    // Output dimensions will match input dimensions, except 'axis', which
+    // will be the sum of inputs
+    int sum_axis = t0->dims->data[axis];
+    for (int i = 1; i < num_inputs; ++i) {
+        const TfLiteTensor* t = GetInput(context, node, i);
+        TF_LITE_ENSURE_EQ(context, t->dims->size, t0->dims->size);
+        TF_LITE_ENSURE_EQ(context, t->type, input_type);
+        for (int d = 0; d < t0->dims->size; ++d) {
+            if (d == axis) {
+                sum_axis += t->dims->data[axis];
+            } else {
+                TF_LITE_ENSURE_EQ(context, t->dims->data[d], t0->dims->data[d]);
+            }
+        }
+    }
+
+    TfLiteIntArray* output_size = TfLiteIntArrayCreate(t0->dims->size);
     for (int d = 0; d < t0->dims->size; ++d) {
-      if (d == axis) {
-        sum_axis += t->dims->data[axis];
-      } else {
-        TF_LITE_ENSURE_EQ(context, t->dims->data[d], t0->dims->data[d]);
-      }
+        output_size->data[d] = (d == axis) ? sum_axis : t0->dims->data[d];
     }
-  }
 
-  TfLiteIntArray* output_size = TfLiteIntArrayCreate(t0->dims->size);
-  for (int d = 0; d < t0->dims->size; ++d) {
-    output_size->data[d] = (d == axis) ? sum_axis : t0->dims->data[d];
-  }
+    TfLiteTensor* output = GetOutput(context, node, 0);
+    TF_LITE_ENSURE_EQ(context, output->type, input_type);
 
-  TfLiteTensor* output = GetOutput(context, node, 0);
-  TF_LITE_ENSURE_EQ(context, output->type, input_type);
-
-  if (input_type == kTfLiteInt8) {
-    // Make sure there is no re-scaling needed for Int8 quantized kernel. This
-    // is a restriction we introduced to Int8 kernels.
-    VectorOfTensors<int8_t> all_inputs(*context, *node->inputs);
-    for (int i = 0; i < node->inputs->size; ++i) {
-      const TfLiteTensor* t = GetInput(context, node, i);
-      TF_LITE_ENSURE_EQ(context, t->params.scale, output->params.scale);
-      TF_LITE_ENSURE_EQ(context, t->params.zero_point,
-                        output->params.zero_point);
+    if (input_type == kTfLiteInt8) {
+        // Make sure there is no re-scaling needed for Int8 quantized kernel. This
+        // is a restriction we introduced to Int8 kernels.
+        VectorOfTensors<int8_t> all_inputs(*context, *node->inputs);
+        for (int i = 0; i < node->inputs->size; ++i) {
+            const TfLiteTensor* t = GetInput(context, node, i);
+            TF_LITE_ENSURE_EQ(context, t->params.scale, output->params.scale);
+            TF_LITE_ENSURE_EQ(context, t->params.zero_point,
+                              output->params.zero_point);
+        }
     }
-  }
 
-  return context->ResizeTensor(context, output, output_size);
+    return context->ResizeTensor(context, output, output_size);
 }
 
 template <KernelType kernel_type>
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  auto* params =
-      reinterpret_cast<TfLiteConcatenationParams*>(node->builtin_data);
-  int axis = params->axis;
-  TfLiteTensor* output = GetOutput(context, node, 0);
-  if (axis < 0) axis += output->dims->size;
+    auto* params =
+        reinterpret_cast<TfLiteConcatenationParams*>(node->builtin_data);
+    int axis = params->axis;
+    TfLiteTensor* output = GetOutput(context, node, 0);
+    if (axis < 0) axis += output->dims->size;
 
 // TODO(ahentz): Creating 'all_inputs' below is not very efficient. We should
 // allocate and populate these during Prepare().
@@ -149,35 +149,35 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
     }                                                             \
   }
 
-  switch (output->type) {  // Already know in/outtypes are same.
+    switch (output->type) {  // Already know in/outtypes are same.
     case kTfLiteFloat32:
-      TF_LITE_CONCATENATION(float);
-      break;
+        TF_LITE_CONCATENATION(float);
+        break;
     case kTfLiteInt32:
-      TF_LITE_CONCATENATION(int32);
-      break;
+        TF_LITE_CONCATENATION(int32);
+        break;
     case kTfLiteUInt8:
-      TF_LITE_CONCATENATION_QUANTIZED();
-      break;
+        TF_LITE_CONCATENATION_QUANTIZED();
+        break;
     case kTfLiteInt8:
-      TF_LITE_CONCATENATION(int8_t);
-      break;
+        TF_LITE_CONCATENATION(int8_t);
+        break;
     case kTfLiteInt64:
-      TF_LITE_CONCATENATION(int64_t);
-      break;
+        TF_LITE_CONCATENATION(int64_t);
+        break;
     case kTfLiteInt16:
-      TF_LITE_CONCATENATION(int16_t);
-      break;
+        TF_LITE_CONCATENATION(int16_t);
+        break;
     default:
-      context->ReportError(context, "Type '%s' is not supported currently.",
-                           TfLiteTypeGetName(output->type));
-      return kTfLiteError;
-  }
+        context->ReportError(context, "Type '%s' is not supported currently.",
+                             TfLiteTypeGetName(output->type));
+        return kTfLiteError;
+    }
 
 #undef TF_LITE_CONCATENATION_QUANTIZED
 #undef TF_LITE_CONCATENATION
 
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 #undef TF_LITE_MACRO_DISPATCH
@@ -185,23 +185,25 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
 }  // namespace concatenation
 
 TfLiteRegistration* Register_CONCATENATION_REF() {
-  static TfLiteRegistration r = {
-      nullptr, nullptr, concatenation::Prepare,
-      concatenation::Eval<concatenation::kReference>};
-  return &r;
+    static TfLiteRegistration r = {
+        nullptr, nullptr, concatenation::Prepare,
+        concatenation::Eval<concatenation::kReference>
+    };
+    return &r;
 }
 
 TfLiteRegistration* Register_CONCATENATION_GENERIC_OPT() {
-  static TfLiteRegistration r = {
-      nullptr, nullptr, concatenation::Prepare,
-      concatenation::Eval<concatenation::kGenericOptimized>};
-  return &r;
+    static TfLiteRegistration r = {
+        nullptr, nullptr, concatenation::Prepare,
+        concatenation::Eval<concatenation::kGenericOptimized>
+    };
+    return &r;
 }
 
 TfLiteRegistration* Register_CONCATENATION() {
-  // TODO(ahentz): It turns out the two versions of Concatenation are almost
-  // identical, so we should consider removing one.
-  return Register_CONCATENATION_GENERIC_OPT();
+    // TODO(ahentz): It turns out the two versions of Concatenation are almost
+    // identical, so we should consider removing one.
+    return Register_CONCATENATION_GENERIC_OPT();
 }
 
 }  // namespace builtin
