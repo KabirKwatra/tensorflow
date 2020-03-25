@@ -28,7 +28,7 @@ function run_build () {
   # Build a unique cache silo string.
   UBUNTU_VERSION=$(lsb_release -a | grep Release | awk '{print $2}')
   IMAGE_VERSION=$(cat /VERSION)
-  CACHE_SILO_VAL="gpu-py3-ubuntu-16-${UBUNTU_VERSION}-${IMAGE_VERSION}"
+  CACHE_SILO_VAL="gpu-py3-ubuntu-16-$UBUNTU_VERSION-$IMAGE_VERSION"
 
   # Run configure.
   # Do not run configure.py when doing remote build & test:
@@ -65,26 +65,26 @@ function run_build () {
   # we can build them.
   # TODO(klimek): Stop using action_env for things that are only needed during
   # setup - we're artificially poisoning the cache.
-  "${BAZEL_WRAPPER_PATH}" \
+  "$BAZEL_WRAPPER_PATH" \
     test \
     --config=rbe \
-    --python_path="${PYTHON_BIN_PATH}" \
-    --action_env=PATH="${ACTION_PATH}" \
-    --action_env=PYTHON_BIN_PATH="${PYTHON_BIN_PATH}" \
-    --action_env=TF2_BEHAVIOR="${TF2_BEHAVIOR}" \
+    --python_path="$PYTHON_BIN_PATH" \
+    --action_env=PATH="$ACTION_PATH" \
+    --action_env=PYTHON_BIN_PATH="$PYTHON_BIN_PATH" \
+    --action_env=TF2_BEHAVIOR="$TF2_BEHAVIOR" \
     --action_env=REMOTE_GPU_TESTING=1 \
-    --action_env=TF_CUDA_COMPUTE_CAPABILITIES="${TF_CUDA_COMPUTE_CAPABILITIES}" \
-    --action_env=TF_CUDA_CONFIG_REPO="${TF_CUDA_CONFIG_REPO}" \
+    --action_env=TF_CUDA_COMPUTE_CAPABILITIES="$TF_CUDA_COMPUTE_CAPABILITIES" \
+    --action_env=TF_CUDA_CONFIG_REPO="$TF_CUDA_CONFIG_REPO" \
     --action_env=TF_CUDA_VERSION=10 \
     --action_env=TF_CUDNN_VERSION=7 \
     --action_env=TF_NEED_TENSORRT=0 \
-    --action_env=TF_TENSORRT_CONFIG_REPO="${TF_TENSORRT_CONFIG_REPO}" \
+    --action_env=TF_TENSORRT_CONFIG_REPO="$TF_TENSORRT_CONFIG_REPO" \
     --action_env=TF_NEED_CUDA=1 \
-    --action_env=TF_PYTHON_CONFIG_REPO="${TF_PYTHON_CONFIG_REPO}" \
-    --action_env=TF_NCCL_CONFIG_REPO="${TF_NCCL_CONFIG_REPO}" \
+    --action_env=TF_PYTHON_CONFIG_REPO="$TF_PYTHON_CONFIG_REPO" \
+    --action_env=TF_NCCL_CONFIG_REPO="$TF_NCCL_CONFIG_REPO" \
     --test_env=LD_LIBRARY_PATH \
-    --test_tag_filters="${tag_filters}" \
-    --build_tag_filters="${tag_filters}" \
+    --test_tag_filters="$tag_filters" \
+    --build_tag_filters="$tag_filters" \
     --test_lang_filters=cc,py \
     --define=with_default_optimizations=true \
     --define=framework_shared_object=true \
@@ -99,24 +99,24 @@ function run_build () {
     --linkopt=-lrt \
     --linkopt=-lm \
     --distinct_host_configuration=false \
-    --remote_default_exec_properties=build=${CACHE_SILO_VAL} \
-    --crosstool_top="${TF_CUDA_CONFIG_REPO}//crosstool:toolchain" \
+    --remote_default_exec_properties=build="$CACHE_SILO_VAL" \
+    --crosstool_top="$TF_CUDA_CONFIG_REPO//crosstool:toolchain" \
     --host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8 \
     --javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8 \
     --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 \
     --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 \
-    --extra_toolchains="${TF_CUDA_CONFIG_REPO}//crosstool:toolchain-linux-x86_64" \
-    --extra_execution_platforms="${TF_RBE_PLATFORM}" \
-    --host_platform="${TF_RBE_PLATFORM}" \
+    --extra_toolchains="$TF_CUDA_CONFIG_REPO//crosstool:toolchain-linux-x86_64" \
+    --extra_execution_platforms="$TF_RBE_PLATFORM" \
+    --host_platform="$TF_RBE_PLATFORM" \
     --local_test_jobs=4 \
     --remote_timeout=3600 \
-    --platforms="${TF_RBE_PLATFORM}" \
+    --platforms="$TF_RBE_PLATFORM" \
     -- \
-    ${DEFAULT_BAZEL_TARGETS} -//tensorflow/lite/...
+    "$DEFAULT_BAZEL_TARGETS" -//tensorflow/lite/...
 
   # Copy log to output to be available to GitHub
   ls -la "$(bazel info output_base)/java.log"
-  cp "$(bazel info output_base)/java.log" "${KOKORO_ARTIFACTS_DIR}/"
+  cp "$(bazel info output_base)/java.log" "$KOKORO_ARTIFACTS_DIR/"
 }
 
 source tensorflow/tools/ci_build/release/common.sh
