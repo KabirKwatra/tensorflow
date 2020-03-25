@@ -32,71 +32,77 @@ HostPlatform::HostPlatform() : name_("Host") {}
 
 HostPlatform::~HostPlatform() {}
 
-Platform::Id HostPlatform::id() const { return kHostPlatformId; }
-
-int HostPlatform::VisibleDeviceCount() const {
-  return std::thread::hardware_concurrency();
+Platform::Id HostPlatform::id() const {
+    return kHostPlatformId;
 }
 
-const std::string& HostPlatform::Name() const { return name_; }
+int HostPlatform::VisibleDeviceCount() const {
+    return std::thread::hardware_concurrency();
+}
+
+const std::string& HostPlatform::Name() const {
+    return name_;
+}
 
 port::StatusOr<std::unique_ptr<DeviceDescription>>
 HostPlatform::DescriptionForDevice(int ordinal) const {
-  return HostExecutor::CreateDeviceDescription(ordinal);
+    return HostExecutor::CreateDeviceDescription(ordinal);
 }
 
 port::StatusOr<StreamExecutor*> HostPlatform::ExecutorForDevice(int ordinal) {
-  StreamExecutorConfig config;
-  config.ordinal = ordinal;
-  config.plugin_config = PluginConfig();
-  config.device_options = DeviceOptions::Default();
-  return GetExecutor(config);
+    StreamExecutorConfig config;
+    config.ordinal = ordinal;
+    config.plugin_config = PluginConfig();
+    config.device_options = DeviceOptions::Default();
+    return GetExecutor(config);
 }
 
 port::StatusOr<StreamExecutor*> HostPlatform::ExecutorForDeviceWithPluginConfig(
     int device_ordinal, const PluginConfig& plugin_config) {
-  StreamExecutorConfig config;
-  config.ordinal = device_ordinal;
-  config.plugin_config = plugin_config;
-  config.device_options = DeviceOptions::Default();
-  return GetExecutor(config);
+    StreamExecutorConfig config;
+    config.ordinal = device_ordinal;
+    config.plugin_config = plugin_config;
+    config.device_options = DeviceOptions::Default();
+    return GetExecutor(config);
 }
 
 port::StatusOr<StreamExecutor*> HostPlatform::GetExecutor(
     const StreamExecutorConfig& config) {
-  return executor_cache_.GetOrCreate(
-      config, [&]() { return GetUncachedExecutor(config); });
+    return executor_cache_.GetOrCreate(
+    config, [&]() {
+        return GetUncachedExecutor(config);
+    });
 }
 
 port::StatusOr<std::unique_ptr<StreamExecutor>>
 HostPlatform::GetUncachedExecutor(const StreamExecutorConfig& config) {
-  auto executor = absl::make_unique<StreamExecutor>(
-      this, absl::make_unique<HostExecutor>(config.plugin_config),
-      config.ordinal);
-  auto init_status = executor->Init(config.device_options);
-  if (!init_status.ok()) {
-    return port::Status(
-        port::error::INTERNAL,
-        absl::StrFormat(
-            "failed initializing StreamExecutor for device ordinal %d: %s",
-            config.ordinal, init_status.ToString().c_str()));
-  }
+    auto executor = absl::make_unique<StreamExecutor>(
+                        this, absl::make_unique<HostExecutor>(config.plugin_config),
+                        config.ordinal);
+    auto init_status = executor->Init(config.device_options);
+    if (!init_status.ok()) {
+        return port::Status(
+                   port::error::INTERNAL,
+                   absl::StrFormat(
+                       "failed initializing StreamExecutor for device ordinal %d: %s",
+                       config.ordinal, init_status.ToString().c_str()));
+    }
 
-  return std::move(executor);
+    return std::move(executor);
 }
 
 void HostPlatform::RegisterTraceListener(
     std::unique_ptr<TraceListener> listener) {
-  LOG(FATAL) << "not yet implemented: register host trace listener";
+    LOG(FATAL) << "not yet implemented: register host trace listener";
 }
 
 void HostPlatform::UnregisterTraceListener(TraceListener* listener) {
-  LOG(FATAL) << "not yet implemented: unregister host trace listener";
+    LOG(FATAL) << "not yet implemented: unregister host trace listener";
 }
 
 static void InitializeHostPlatform() {
-  std::unique_ptr<Platform> platform(new host::HostPlatform);
-  SE_CHECK_OK(MultiPlatformManager::RegisterPlatform(std::move(platform)));
+    std::unique_ptr<Platform> platform(new host::HostPlatform);
+    SE_CHECK_OK(MultiPlatformManager::RegisterPlatform(std::move(platform)));
 }
 
 }  // namespace host
