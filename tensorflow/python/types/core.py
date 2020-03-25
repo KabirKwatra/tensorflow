@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
 # TODO(mdan): Consider adding ABC once the dependence on isinstance is reduced.
 # TODO(mdan): Add type annotations.
 

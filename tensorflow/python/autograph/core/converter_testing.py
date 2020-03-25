@@ -43,9 +43,8 @@ def whitelist(entity):
     if "test_whitelisted_call" not in sys.modules:
         whitelisted_mod = imp.new_module("test_whitelisted_call")
         sys.modules["test_whitelisted_call"] = whitelisted_mod
-        config.CONVERSION_RULES = (
-            config.DoNotConvert("test_whitelisted_call"),
-        ) + config.CONVERSION_RULES
+        config.CONVERSION_RULES = (config.DoNotConvert(
+            "test_whitelisted_call"), ) + config.CONVERSION_RULES
 
     entity.__module__ = "test_whitelisted_call"
 
@@ -86,9 +85,14 @@ class TestCase(test.TestCase):
         source = None
 
         self.dynamic_calls = []
+
         # See api.converted_call
 
-        def converted_call(f, args, kwargs, unused_opts=None, unused_function_ctx=None):
+        def converted_call(f,
+                           args,
+                           kwargs,
+                           unused_opts=None,
+                           unused_function_ctx=None):
             """Mock version of api.converted_call."""
             self.dynamic_calls.append((args, kwargs))
             if kwargs is None:
@@ -96,14 +100,14 @@ class TestCase(test.TestCase):
             return f(*args, **kwargs)
 
         try:
-            result, source, source_map = loader.load_ast(node, include_source_map=True)
+            result, source, source_map = loader.load_ast(
+                node, include_source_map=True)
             # TODO(mdan): Move the unparsing from converter into pyct and reuse here.
 
             # TODO(mdan): Move this into self.prepare()
             result.tf = self.make_fake_mod("fake_tf", *symbols)
-            fake_ag = self.make_fake_mod(
-                "fake_ag", converted_call, converter.ConversionOptions
-            )
+            fake_ag = self.make_fake_mod("fake_ag", converted_call,
+                                         converter.ConversionOptions)
             fake_ag.__dict__.update(operators.__dict__)
             fake_ag.__dict__.update(special_functions.__dict__)
             fake_ag.ConversionOptions = converter.ConversionOptions
@@ -117,7 +121,8 @@ class TestCase(test.TestCase):
             yield result
         except Exception:  # pylint:disable=broad-except
             if source is None:
-                print("Offending AST:\n%s" % pretty_printer.fmt(node, color=False))
+                print("Offending AST:\n%s" %
+                      pretty_printer.fmt(node, color=False))
             else:
                 print("Offending source code:\n%s" % source)
             raise
@@ -128,7 +133,7 @@ class TestCase(test.TestCase):
         node, ctx = self.prepare(entity, namespace)
 
         if not isinstance(converter_module, (list, tuple)):
-            converter_module = (converter_module,)
+            converter_module = (converter_module, )
         for i, m in enumerate(converter_module):
             node = converter.standard_analysis(node, ctx, is_initial=not i)
             node = m.transform(node, ctx)
@@ -145,7 +150,8 @@ class TestCase(test.TestCase):
                 # This is a bit of a hack, but works for things like tf.int32
                 setattr(fake_mod, s.name, s)
             else:
-                raise ValueError("can not attach %s - what should be its name?" % s)
+                raise ValueError(
+                    "can not attach %s - what should be its name?" % s)
         return fake_mod
 
     def attach_namespace(self, module, **ns):
@@ -156,7 +162,8 @@ class TestCase(test.TestCase):
         namespace["ConversionOptions"] = converter.ConversionOptions
 
         future_features = ("print_function", "division")
-        node, source = parser.parse_entity(test_fn, future_features=future_features)
+        node, source = parser.parse_entity(test_fn,
+                                           future_features=future_features)
         namer = naming.Namer(namespace)
         program_ctx = converter.ProgramContext(
             options=converter.ConversionOptions(recursive=recursive),
@@ -168,7 +175,8 @@ class TestCase(test.TestCase):
             future_features=future_features,
             namespace=namespace,
         )
-        ctx = converter.EntityContext(namer, entity_info, program_ctx, "test_fn")
+        ctx = converter.EntityContext(namer, entity_info, program_ctx,
+                                      "test_fn")
         origin_info.resolve_entity(node, source, test_fn)
         node = converter.standard_analysis(node, ctx, is_initial=True)
         return node, ctx

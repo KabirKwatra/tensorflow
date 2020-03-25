@@ -25,7 +25,7 @@ class NamerTest(test.TestCase):
     def test_new_symbol_tracks_names(self):
         namer = naming.Namer({})
         self.assertEqual("temp", namer.new_symbol("temp", set()))
-        self.assertItemsEqual(("temp",), namer.generated_names)
+        self.assertItemsEqual(("temp", ), namer.generated_names)
 
     def test_new_symbol_avoids_duplicates(self):
         namer = naming.Namer({})
@@ -38,7 +38,7 @@ class NamerTest(test.TestCase):
         # temp is reserved in the global namespace
         self.assertEqual("temp_1", namer.new_symbol("temp", set()))
         # temp_2 is reserved in the local namespace
-        self.assertEqual("temp_3", namer.new_symbol("temp", set(("temp_2",))))
+        self.assertEqual("temp_3", namer.new_symbol("temp", set(("temp_2", ))))
         self.assertItemsEqual(("temp_1", "temp_3"), namer.generated_names)
 
 

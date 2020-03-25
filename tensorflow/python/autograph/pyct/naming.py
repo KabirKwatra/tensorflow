@@ -47,11 +47,9 @@ class Namer(object):
             n = 0
         new_name = name_root
 
-        while (
-            new_name in self.global_namespace
-            or new_name in all_reserved_locals
-            or new_name in self.generated_names
-        ):
+        while (new_name in self.global_namespace
+               or new_name in all_reserved_locals
+               or new_name in self.generated_names):
             n += 1
             new_name = "%s_%d" % (name_root, n)
 
