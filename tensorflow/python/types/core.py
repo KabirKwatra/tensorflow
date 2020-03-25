@@ -24,37 +24,37 @@ from __future__ import print_function
 
 
 class Tensor(object):
-  """The base class of all dense Tensor objects.
+    """The base class of all dense Tensor objects.
 
-  A dense tensor has a static data type (dtype), and may have a static rank and
-  shape. Tensor objects are immutable. Mutable objects may be backed by a Tensor
-  which holds the unique handle that identifies the mutable object.
-  """
+    A dense tensor has a static data type (dtype), and may have a static rank and
+    shape. Tensor objects are immutable. Mutable objects may be backed by a Tensor
+    which holds the unique handle that identifies the mutable object.
+    """
 
-  @property
-  def dtype(self):
-    pass
+    @property
+    def dtype(self):
+        pass
 
-  @property
-  def shape(self):
-    pass
+    @property
+    def shape(self):
+        pass
 
 
 class Symbol(Tensor):
-  """Symbolic "graph" Tensor.
+    """Symbolic "graph" Tensor.
 
-  These objects represent the output of an op definition and do not carry a
-  value.
-  """
-  pass
+    These objects represent the output of an op definition and do not carry a
+    value.
+    """
+    pass
 
 
 class Value(Tensor):
-  """Tensor that can be associated with a value (aka "eager tensor").
+    """Tensor that can be associated with a value (aka "eager tensor").
 
-  These objects represent the (usually future) output of executing an op
-  immediately.
-  """
+    These objects represent the (usually future) output of executing an op
+    immediately.
+    """
 
-  def numpy(self):
-    pass
+    def numpy(self):
+        pass

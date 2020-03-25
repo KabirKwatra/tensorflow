@@ -41,134 +41,138 @@ from tensorflow.python.platform import test
 
 
 def whitelist(entity):
-  if 'test_whitelisted_call' not in sys.modules:
-    whitelisted_mod = imp.new_module('test_whitelisted_call')
-    sys.modules['test_whitelisted_call'] = whitelisted_mod
-    config.CONVERSION_RULES = ((config.DoNotConvert('test_whitelisted_call'),) +
-                               config.CONVERSION_RULES)
+    if 'test_whitelisted_call' not in sys.modules:
+        whitelisted_mod = imp.new_module('test_whitelisted_call')
+        sys.modules['test_whitelisted_call'] = whitelisted_mod
+        config.CONVERSION_RULES = ((config.DoNotConvert('test_whitelisted_call'),) +
+                                   config.CONVERSION_RULES)
 
-  entity.__module__ = 'test_whitelisted_call'
+    entity.__module__ = 'test_whitelisted_call'
 
 
 def is_inside_generated_code():
-  """Tests whether the caller is generated code. Implementation-specific."""
-  frame = inspect.currentframe()
-  try:
-    frame = frame.f_back
+    """Tests whether the caller is generated code. Implementation-specific."""
+    frame = inspect.currentframe()
+    try:
+        frame = frame.f_back
 
-    internal_stack_functions = ('converted_call', '_call_unconverted')
-    # Walk up the stack until we're out of the internal functions.
-    while (frame is not None and
-           frame.f_code.co_name in internal_stack_functions):
-      frame = frame.f_back
-    if frame is None:
-      return False
+        internal_stack_functions = ('converted_call', '_call_unconverted')
+        # Walk up the stack until we're out of the internal functions.
+        while (frame is not None and
+               frame.f_code.co_name in internal_stack_functions):
+            frame = frame.f_back
+        if frame is None:
+            return False
 
-    return 'ag__' in frame.f_locals
-  finally:
-    del frame
+        return 'ag__' in frame.f_locals
+    finally:
+        del frame
 
 
 class TestCase(test.TestCase):
-  """Base class for unit tests in this module. Contains relevant utilities."""
+    """Base class for unit tests in this module. Contains relevant utilities."""
 
-  @contextlib.contextmanager
-  def assertPrints(self, expected_result):
-    try:
-      out_capturer = six.StringIO()
-      sys.stdout = out_capturer
-      yield
-      self.assertEqual(out_capturer.getvalue(), expected_result)
-    finally:
-      sys.stdout = sys.__stdout__
+    @contextlib.contextmanager
+    def assertPrints(self, expected_result):
+        try:
+            out_capturer = six.StringIO()
+            sys.stdout = out_capturer
+            yield
+            self.assertEqual(out_capturer.getvalue(), expected_result)
+        finally:
+            sys.stdout = sys.__stdout__
 
-  @contextlib.contextmanager
-  def compiled(self, node, namespace, symbols=()):
-    source = None
+    @contextlib.contextmanager
+    def compiled(self, node, namespace, symbols=()):
+        source = None
 
-    self.dynamic_calls = []
-    # See api.converted_call
-    def converted_call(
-        f, args, kwargs, unused_opts=None, unused_function_ctx=None):
-      """Mock version of api.converted_call."""
-      self.dynamic_calls.append((args, kwargs))
-      if kwargs is None:
-        kwargs = {}
-      return f(*args, **kwargs)
+        self.dynamic_calls = []
+        # See api.converted_call
 
-    try:
-      result, source, source_map = loader.load_ast(
-          node, include_source_map=True)
-      # TODO(mdan): Move the unparsing from converter into pyct and reuse here.
+        def converted_call(
+                f, args, kwargs, unused_opts=None, unused_function_ctx=None):
+            """Mock version of api.converted_call."""
+            self.dynamic_calls.append((args, kwargs))
+            if kwargs is None:
+                kwargs = {}
+            return f(*args, **kwargs)
 
-      # TODO(mdan): Move this into self.prepare()
-      result.tf = self.make_fake_mod('fake_tf', *symbols)
-      fake_ag = self.make_fake_mod('fake_ag', converted_call,
-                                   converter.ConversionOptions)
-      fake_ag.__dict__.update(operators.__dict__)
-      fake_ag.__dict__.update(special_functions.__dict__)
-      fake_ag.ConversionOptions = converter.ConversionOptions
-      fake_ag.Feature = converter.Feature
-      fake_ag.utils = utils
-      fake_ag.FunctionScope = function_wrappers.FunctionScope
-      result.ag__ = fake_ag
-      result.ag_source_map__ = source_map
-      for k, v in namespace.items():
-        result.__dict__[k] = v
-      yield result
-    except Exception:  # pylint:disable=broad-except
-      if source is None:
-        print('Offending AST:\n%s' % pretty_printer.fmt(node, color=False))
-      else:
-        print('Offending source code:\n%s' % source)
-      raise
+        try:
+            result, source, source_map = loader.load_ast(
+                node, include_source_map=True)
+            # TODO(mdan): Move the unparsing from converter into pyct and reuse here.
 
-  @contextlib.contextmanager
-  def converted(self, entity, converter_module, namespace, tf_symbols=()):
+            # TODO(mdan): Move this into self.prepare()
+            result.tf = self.make_fake_mod('fake_tf', *symbols)
+            fake_ag = self.make_fake_mod('fake_ag', converted_call,
+                                         converter.ConversionOptions)
+            fake_ag.__dict__.update(operators.__dict__)
+            fake_ag.__dict__.update(special_functions.__dict__)
+            fake_ag.ConversionOptions = converter.ConversionOptions
+            fake_ag.Feature = converter.Feature
+            fake_ag.utils = utils
+            fake_ag.FunctionScope = function_wrappers.FunctionScope
+            result.ag__ = fake_ag
+            result.ag_source_map__ = source_map
+            for k, v in namespace.items():
+                result.__dict__[k] = v
+            yield result
+        except Exception:  # pylint:disable=broad-except
+            if source is None:
+                print('Offending AST:\n%s' %
+                      pretty_printer.fmt(node, color=False))
+            else:
+                print('Offending source code:\n%s' % source)
+            raise
 
-    node, ctx = self.prepare(entity, namespace)
+    @contextlib.contextmanager
+    def converted(self, entity, converter_module, namespace, tf_symbols=()):
 
-    if not isinstance(converter_module, (list, tuple)):
-      converter_module = (converter_module,)
-    for i, m in enumerate(converter_module):
-      node = converter.standard_analysis(node, ctx, is_initial=not i)
-      node = m.transform(node, ctx)
+        node, ctx = self.prepare(entity, namespace)
 
-    with self.compiled(node, namespace, tf_symbols) as result:
-      yield result
+        if not isinstance(converter_module, (list, tuple)):
+            converter_module = (converter_module,)
+        for i, m in enumerate(converter_module):
+            node = converter.standard_analysis(node, ctx, is_initial=not i)
+            node = m.transform(node, ctx)
 
-  def make_fake_mod(self, name, *symbols):
-    fake_mod = imp.new_module(name)
-    for s in symbols:
-      if hasattr(s, '__name__'):
-        setattr(fake_mod, s.__name__, s)
-      elif hasattr(s, 'name'):
-        # This is a bit of a hack, but works for things like tf.int32
-        setattr(fake_mod, s.name, s)
-      else:
-        raise ValueError('can not attach %s - what should be its name?' % s)
-    return fake_mod
+        with self.compiled(node, namespace, tf_symbols) as result:
+            yield result
 
-  def attach_namespace(self, module, **ns):
-    for k, v in ns.items():
-      setattr(module, k, v)
+    def make_fake_mod(self, name, *symbols):
+        fake_mod = imp.new_module(name)
+        for s in symbols:
+            if hasattr(s, '__name__'):
+                setattr(fake_mod, s.__name__, s)
+            elif hasattr(s, 'name'):
+                # This is a bit of a hack, but works for things like tf.int32
+                setattr(fake_mod, s.name, s)
+            else:
+                raise ValueError(
+                    'can not attach %s - what should be its name?' % s)
+        return fake_mod
 
-  def prepare(self, test_fn, namespace, recursive=True):
-    namespace['ConversionOptions'] = converter.ConversionOptions
+    def attach_namespace(self, module, **ns):
+        for k, v in ns.items():
+            setattr(module, k, v)
 
-    future_features = ('print_function', 'division')
-    node, source = parser.parse_entity(test_fn, future_features=future_features)
-    namer = naming.Namer(namespace)
-    program_ctx = converter.ProgramContext(
-        options=converter.ConversionOptions(recursive=recursive),
-        autograph_module=None)
-    entity_info = transformer.EntityInfo(
-        source_code=source,
-        source_file='<fragment>',
-        future_features=future_features,
-        namespace=namespace)
-    ctx = converter.EntityContext(
-        namer, entity_info, program_ctx, 'test_fn')
-    origin_info.resolve_entity(node, source, test_fn)
-    node = converter.standard_analysis(node, ctx, is_initial=True)
-    return node, ctx
+    def prepare(self, test_fn, namespace, recursive=True):
+        namespace['ConversionOptions'] = converter.ConversionOptions
+
+        future_features = ('print_function', 'division')
+        node, source = parser.parse_entity(
+            test_fn, future_features=future_features)
+        namer = naming.Namer(namespace)
+        program_ctx = converter.ProgramContext(
+            options=converter.ConversionOptions(recursive=recursive),
+            autograph_module=None)
+        entity_info = transformer.EntityInfo(
+            source_code=source,
+            source_file='<fragment>',
+            future_features=future_features,
+            namespace=namespace)
+        ctx = converter.EntityContext(
+            namer, entity_info, program_ctx, 'test_fn')
+        origin_info.resolve_entity(node, source, test_fn)
+        node = converter.standard_analysis(node, ctx, is_initial=True)
+        return node, ctx
