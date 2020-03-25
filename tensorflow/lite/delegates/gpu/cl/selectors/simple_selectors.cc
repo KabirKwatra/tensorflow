@@ -48,187 +48,187 @@ namespace cl {
 
 void SelectLSTM(const OperationDef& op_def,
                 std::unique_ptr<GPUOperation>* ptr) {
-    LSTM operation = CreateLSTM(op_def);
-    *ptr = absl::make_unique<LSTM>(std::move(operation));
+  LSTM operation = CreateLSTM(op_def);
+  *ptr = absl::make_unique<LSTM>(std::move(operation));
 }
 
 void SelectReLU(const CreationContext& creation_context,
                 const ReLUAttributes& attr, const OperationDef& op_def,
                 std::unique_ptr<GPUOperation>* ptr) {
-    ReLU relu = CreateReLU(creation_context, op_def, attr);
-    *ptr = absl::make_unique<ReLU>(std::move(relu));
+  ReLU relu = CreateReLU(creation_context, op_def, attr);
+  *ptr = absl::make_unique<ReLU>(std::move(relu));
 }
 
 absl::Status SelectPReLU(const PReLUAttributes& attr,
                          const CreationContext& creation_context,
                          const OperationDef& op_def,
                          std::unique_ptr<GPUOperation>* ptr) {
-    PReLU operation;
-    RETURN_IF_ERROR(CreatePReLU(creation_context, op_def, attr, &operation));
-    *ptr = absl::make_unique<PReLU>(std::move(operation));
-    return absl::OkStatus();
+  PReLU operation;
+  RETURN_IF_ERROR(CreatePReLU(creation_context, op_def, attr, &operation));
+  *ptr = absl::make_unique<PReLU>(std::move(operation));
+  return absl::OkStatus();
 }
 
 void SelectPooling(const Pooling2DAttributes& attr, const OperationDef& op_def,
                    std::unique_ptr<GPUOperation>* ptr) {
-    Pooling pooling = CreatePooling(op_def, attr);
-    *ptr = absl::make_unique<Pooling>(std::move(pooling));
+  Pooling pooling = CreatePooling(op_def, attr);
+  *ptr = absl::make_unique<Pooling>(std::move(pooling));
 }
 
 void SelectMaxUnpooling(const MaxUnpooling2DAttributes& attr,
                         const OperationDef& op_def,
                         std::unique_ptr<GPUOperation>* ptr) {
-    MaxUnpooling operation = CreateMaxUnpooling(op_def, attr);
-    *ptr = absl::make_unique<MaxUnpooling>(std::move(operation));
+  MaxUnpooling operation = CreateMaxUnpooling(op_def, attr);
+  *ptr = absl::make_unique<MaxUnpooling>(std::move(operation));
 }
 
 void SelectAdd(const OperationDef& op_def, const std::vector<int>& channels,
                int dst_channels, std::unique_ptr<GPUOperation>* ptr) {
-    Add operation = CreateAdd(op_def, channels, dst_channels);
-    *ptr = absl::make_unique<Add>(std::move(operation));
+  Add operation = CreateAdd(op_def, channels, dst_channels);
+  *ptr = absl::make_unique<Add>(std::move(operation));
 }
 
 absl::Status SelectResize(const Resize2DAttributes& attr,
                           const OperationDef& op_def,
                           std::unique_ptr<GPUOperation>* ptr) {
-    Resize operation = CreateResize(op_def, attr);
-    *ptr = absl::make_unique<Resize>(std::move(operation));
-    return absl::OkStatus();
+  Resize operation = CreateResize(op_def, attr);
+  *ptr = absl::make_unique<Resize>(std::move(operation));
+  return absl::OkStatus();
 }
 
 absl::Status SelectConcat(const ConcatAttributes& attr,
                           const std::vector<int>& channels,
                           const OperationDef& op_def,
                           std::unique_ptr<GPUOperation>* ptr) {
-    switch (attr.axis) {
+  switch (attr.axis) {
     case Axis::CHANNELS: {
-        ConcatZ operation = CreateConcatZ(op_def, channels);
-        *ptr = absl::make_unique<ConcatZ>(std::move(operation));
-        return absl::OkStatus();
+      ConcatZ operation = CreateConcatZ(op_def, channels);
+      *ptr = absl::make_unique<ConcatZ>(std::move(operation));
+      return absl::OkStatus();
     }
     case Axis::WIDTH:
     case Axis::HEIGHT: {
-        ConcatXY operation = CreateConcatXY(op_def, attr, channels.size());
-        *ptr = absl::make_unique<ConcatXY>(std::move(operation));
-        return absl::OkStatus();
+      ConcatXY operation = CreateConcatXY(op_def, attr, channels.size());
+      *ptr = absl::make_unique<ConcatXY>(std::move(operation));
+      return absl::OkStatus();
     }
     default:
-        return absl::UnimplementedError("No concat for this axis.");
-    }
+      return absl::UnimplementedError("No concat for this axis.");
+  }
 }
 
 void SelectReshape(int src_channels, int dst_channels,
                    const OperationDef& op_def,
                    std::unique_ptr<GPUOperation>* ptr) {
-    if (src_channels % 4 == 0 && dst_channels % 4 == 0) {
-        Reshapex4 operation = CreateReshapex4(op_def);
-        *ptr = absl::make_unique<Reshapex4>(std::move(operation));
-    } else {
-        Reshape operation = CreateReshape(op_def);
-        *ptr = absl::make_unique<Reshape>(std::move(operation));
-    }
+  if (src_channels % 4 == 0 && dst_channels % 4 == 0) {
+    Reshapex4 operation = CreateReshapex4(op_def);
+    *ptr = absl::make_unique<Reshapex4>(std::move(operation));
+  } else {
+    Reshape operation = CreateReshape(op_def);
+    *ptr = absl::make_unique<Reshape>(std::move(operation));
+  }
 }
 
 void SelectSpaceToDepth(const SpaceToDepthAttributes& attr,
                         const OperationDef& op_def,
                         std::unique_ptr<GPUOperation>* ptr) {
-    SpaceToDepth operation = CreateSpaceToDepth(op_def, attr);
-    *ptr = absl::make_unique<SpaceToDepth>(std::move(operation));
+  SpaceToDepth operation = CreateSpaceToDepth(op_def, attr);
+  *ptr = absl::make_unique<SpaceToDepth>(std::move(operation));
 }
 
 void SelectPadding(const PadAttributes& attr, const OperationDef& op_def,
                    std::unique_ptr<GPUOperation>* ptr) {
-    Padding operation = CreatePadding(op_def, attr);
-    *ptr = absl::make_unique<Padding>(std::move(operation));
+  Padding operation = CreatePadding(op_def, attr);
+  *ptr = absl::make_unique<Padding>(std::move(operation));
 }
 
 void SelectStridedSlice(const SliceAttributes& attr, const OperationDef& op_def,
                         std::unique_ptr<GPUOperation>* ptr) {
-    StridedSlice operation = CreateStridedSlice(op_def, attr);
-    *ptr = absl::make_unique<StridedSlice>(std::move(operation));
+  StridedSlice operation = CreateStridedSlice(op_def, attr);
+  *ptr = absl::make_unique<StridedSlice>(std::move(operation));
 }
 
 absl::Status SelectMean(const MeanAttributes& attr, const OperationDef& op_def,
                         std::unique_ptr<GPUOperation>* ptr) {
-    if (attr.dims != std::set<Axis>({Axis::HEIGHT, Axis::WIDTH})) {
-        return absl::UnimplementedError("Mean operation supports only HW plane");
-    }
-    Mean operation = CreateMean(op_def);
-    *ptr = absl::make_unique<Mean>(std::move(operation));
-    return absl::OkStatus();
+  if (attr.dims != std::set<Axis>({Axis::HEIGHT, Axis::WIDTH})) {
+    return absl::UnimplementedError("Mean operation supports only HW plane");
+  }
+  Mean operation = CreateMean(op_def);
+  *ptr = absl::make_unique<Mean>(std::move(operation));
+  return absl::OkStatus();
 }
 
 absl::Status SelectMultiplyScalar(const MultiplyAttributes& attr,
                                   const CreationContext& creation_context,
                                   const OperationDef& op_def,
                                   std::unique_ptr<GPUOperation>* ptr) {
-    MultiplyAdd operation;
-    RETURN_IF_ERROR(
-        CreateMultiplyAdd(creation_context, op_def, attr, &operation));
-    *ptr = absl::make_unique<MultiplyAdd>(std::move(operation));
-    return absl::OkStatus();
+  MultiplyAdd operation;
+  RETURN_IF_ERROR(
+      CreateMultiplyAdd(creation_context, op_def, attr, &operation));
+  *ptr = absl::make_unique<MultiplyAdd>(std::move(operation));
+  return absl::OkStatus();
 }
 
 absl::Status SelectBroadcastAdd(const AddAttributes& attr,
                                 const CreationContext& creation_context,
                                 const OperationDef& op_def,
                                 std::unique_ptr<GPUOperation>* ptr) {
-    MultiplyAdd operation;
-    RETURN_IF_ERROR(
-        CreateMultiplyAdd(creation_context, op_def, attr, &operation));
-    *ptr = absl::make_unique<MultiplyAdd>(std::move(operation));
-    return absl::OkStatus();
+  MultiplyAdd operation;
+  RETURN_IF_ERROR(
+      CreateMultiplyAdd(creation_context, op_def, attr, &operation));
+  *ptr = absl::make_unique<MultiplyAdd>(std::move(operation));
+  return absl::OkStatus();
 }
 
 void SelectSoftmax(const BHWC& shape, const OperationDef& op_def,
                    std::unique_ptr<GPUOperation>* ptr) {
-    if (shape.w == 1 && shape.h == 1) {
-        Softmax1x1 operation = CreateSoftmax1x1(op_def);
-        *ptr = absl::make_unique<Softmax1x1>(std::move(operation));
-    } else {
-        Softmax operation = CreateSoftmax(op_def);
-        *ptr = absl::make_unique<Softmax>(std::move(operation));
-    }
+  if (shape.w == 1 && shape.h == 1) {
+    Softmax1x1 operation = CreateSoftmax1x1(op_def);
+    *ptr = absl::make_unique<Softmax1x1>(std::move(operation));
+  } else {
+    Softmax operation = CreateSoftmax(op_def);
+    *ptr = absl::make_unique<Softmax>(std::move(operation));
+  }
 }
 
 void SelectTranspose(const TransposeAttributes& attr,
                      const OperationDef& op_def,
                      std::unique_ptr<GPUOperation>* ptr) {
-    Transpose operation = CreateTranspose(op_def, attr);
-    *ptr = absl::make_unique<Transpose>(std::move(operation));
+  Transpose operation = CreateTranspose(op_def, attr);
+  *ptr = absl::make_unique<Transpose>(std::move(operation));
 }
 
 absl::Status SelectWinograd4x4To36(const CreationContext& creation_context,
                                    const Padding2D& padding,
                                    const OperationDef& op_def,
                                    std::unique_ptr<GPUOperation>* ptr) {
-    Winograd4x4To36 operation;
-    RETURN_IF_ERROR(
-        CreateWinograd4x4To36(creation_context, op_def, padding, &operation));
-    *ptr = absl::make_unique<Winograd4x4To36>(std::move(operation));
-    return absl::OkStatus();
+  Winograd4x4To36 operation;
+  RETURN_IF_ERROR(
+      CreateWinograd4x4To36(creation_context, op_def, padding, &operation));
+  *ptr = absl::make_unique<Winograd4x4To36>(std::move(operation));
+  return absl::OkStatus();
 }
 
 absl::Status SelectWinograd36To4x4(
     const CreationContext& creation_context, const OperationDef& op_def,
     const tflite::gpu::Tensor<Linear, DataType::FLOAT32>& biases,
     std::unique_ptr<GPUOperation>* ptr) {
-    Winograd36To4x4 operation;
-    RETURN_IF_ERROR(
-        CreateWinograd36To4x4(creation_context, op_def, biases, &operation));
-    *ptr = absl::make_unique<Winograd36To4x4>(std::move(operation));
-    return absl::OkStatus();
+  Winograd36To4x4 operation;
+  RETURN_IF_ERROR(
+      CreateWinograd36To4x4(creation_context, op_def, biases, &operation));
+  *ptr = absl::make_unique<Winograd36To4x4>(std::move(operation));
+  return absl::OkStatus();
 }
 
 absl::Status SelectQuantizeAndDequantize(
     const QuantizeAndDequantizeAttributes& attr,
     const CreationContext& creation_context, const OperationDef& op_def,
     std::unique_ptr<GPUOperation>* ptr) {
-    QuantizeAndDequantize operation;
-    RETURN_IF_ERROR(
-        CreateQuantizeAndDequantize(creation_context, op_def, attr, &operation));
-    *ptr = absl::make_unique<QuantizeAndDequantize>(std::move(operation));
-    return absl::OkStatus();
+  QuantizeAndDequantize operation;
+  RETURN_IF_ERROR(
+      CreateQuantizeAndDequantize(creation_context, op_def, attr, &operation));
+  *ptr = absl::make_unique<QuantizeAndDequantize>(std::move(operation));
+  return absl::OkStatus();
 }
 
 }  // namespace cl

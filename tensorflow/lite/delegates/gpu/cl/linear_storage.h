@@ -37,10 +37,10 @@ namespace cl {
 enum class LinearStorageType { BUFFER, TEXTURE_2D };
 
 struct LinearStorageCreateInfo {
-    LinearStorageType storage_type;
-    DataType data_type;
-    std::string name;      // optional
-    int aligned_size = 0;  // optional, to pad with zeroes
+  LinearStorageType storage_type;
+  DataType data_type;
+  std::string name;      // optional
+  int aligned_size = 0;  // optional, to pad with zeroes
 };
 
 LinearStorageType DeduceLinearStorageType(
@@ -49,42 +49,38 @@ LinearStorageType DeduceLinearStorageType(
 // Represent GPU 1D-array of FLT4(float4/half4) values
 // Can use inside texture2d or buffer
 class LinearStorage {
-public:
-    LinearStorage() {}
+ public:
+  LinearStorage() {}
 
-    // Move only
-    LinearStorage(LinearStorage&& storage);
-    LinearStorage& operator=(LinearStorage&& storage);
-    LinearStorage(const LinearStorage&) = delete;
-    LinearStorage& operator=(const LinearStorage&) = delete;
+  // Move only
+  LinearStorage(LinearStorage&& storage);
+  LinearStorage& operator=(LinearStorage&& storage);
+  LinearStorage(const LinearStorage&) = delete;
+  LinearStorage& operator=(const LinearStorage&) = delete;
 
-    void SetName(const std::string& name) {
-        name_ = name;
-    }
-    cl_mem GetMemoryPtr() const {
-        return memory_;
-    }
-    std::string ReadLinearFLT4(const std::string& z_coord) const;
-    std::string GetDeclaration() const;
+  void SetName(const std::string& name) { name_ = name; }
+  cl_mem GetMemoryPtr() const { return memory_; }
+  std::string ReadLinearFLT4(const std::string& z_coord) const;
+  std::string GetDeclaration() const;
 
-private:
-    friend absl::Status CreateTextureLinearStorage(int size, DataType data_type,
-            void* data, CLContext* context,
-            LinearStorage* result);
-    friend absl::Status CreateBufferLinearStorage(int size, DataType data_type,
-            void* data, CLContext* context,
-            LinearStorage* result);
+ private:
+  friend absl::Status CreateTextureLinearStorage(int size, DataType data_type,
+                                                 void* data, CLContext* context,
+                                                 LinearStorage* result);
+  friend absl::Status CreateBufferLinearStorage(int size, DataType data_type,
+                                                void* data, CLContext* context,
+                                                LinearStorage* result);
 
-    LinearStorage(int depth, LinearStorageType storage_type, DataType data_type);
+  LinearStorage(int depth, LinearStorageType storage_type, DataType data_type);
 
-    Texture2D texture_storage_;
-    Buffer buffer_storage_;
-    cl_mem memory_ = nullptr;  // Just a reference to texture_storage_ or
-    // buffer_storage_ memory, not an owner
-    int depth_;
-    std::string name_;
-    LinearStorageType storage_type_;
-    DataType data_type_;
+  Texture2D texture_storage_;
+  Buffer buffer_storage_;
+  cl_mem memory_ = nullptr;  // Just a reference to texture_storage_ or
+  // buffer_storage_ memory, not an owner
+  int depth_;
+  std::string name_;
+  LinearStorageType storage_type_;
+  DataType data_type_;
 };
 
 absl::Status CreateBufferLinearStorage(int size, DataType data_type, void* data,
@@ -103,22 +99,22 @@ template <DataType T>
 absl::Status CreateLinearStorage(const LinearStorageCreateInfo& creation_info,
                                  const tflite::gpu::Tensor<Linear, T>& tensor,
                                  CLContext* context, LinearStorage* result) {
-    int size = creation_info.aligned_size != 0 ? creation_info.aligned_size
-               : tensor.shape.v;
-    const int depth = IntegralDivideRoundUp(size, 4);
-    if (creation_info.data_type == DataType::FLOAT32) {
-        std::vector<float4> gpu_data(depth);
-        CopyLinearFLT4(tensor, absl::MakeSpan(gpu_data));
-        RETURN_IF_ERROR(CreateLinearStorage(creation_info, depth, gpu_data.data(),
-                                            context, result));
-    } else {
-        std::vector<half4> gpu_data(depth);
-        CopyLinearFLT4(tensor, absl::MakeSpan(gpu_data));
-        RETURN_IF_ERROR(CreateLinearStorage(creation_info, depth, gpu_data.data(),
-                                            context, result));
-    }
-    result->SetName(creation_info.name);
-    return absl::OkStatus();
+  int size = creation_info.aligned_size != 0 ? creation_info.aligned_size
+                                             : tensor.shape.v;
+  const int depth = IntegralDivideRoundUp(size, 4);
+  if (creation_info.data_type == DataType::FLOAT32) {
+    std::vector<float4> gpu_data(depth);
+    CopyLinearFLT4(tensor, absl::MakeSpan(gpu_data));
+    RETURN_IF_ERROR(CreateLinearStorage(creation_info, depth, gpu_data.data(),
+                                        context, result));
+  } else {
+    std::vector<half4> gpu_data(depth);
+    CopyLinearFLT4(tensor, absl::MakeSpan(gpu_data));
+    RETURN_IF_ERROR(CreateLinearStorage(creation_info, depth, gpu_data.data(),
+                                        context, result));
+  }
+  result->SetName(creation_info.name);
+  return absl::OkStatus();
 }
 
 }  // namespace cl

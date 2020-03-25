@@ -32,63 +32,63 @@ namespace gpu {
 namespace cl {
 
 class MultiplyAdd : public ElementwiseOperation {
-public:
-    // Move only
-    MultiplyAdd() = default;
-    MultiplyAdd(MultiplyAdd&& operation);
-    MultiplyAdd& operator=(MultiplyAdd&& operation);
-    MultiplyAdd(const MultiplyAdd&) = delete;
-    MultiplyAdd& operator=(const MultiplyAdd&) = delete;
+ public:
+  // Move only
+  MultiplyAdd() = default;
+  MultiplyAdd(MultiplyAdd&& operation);
+  MultiplyAdd& operator=(MultiplyAdd&& operation);
+  MultiplyAdd(const MultiplyAdd&) = delete;
+  MultiplyAdd& operator=(const MultiplyAdd&) = delete;
 
-    absl::Status UploadMul(const MultiplyAttributes& attr,
-                           CalculationsPrecision scalar_precision,
-                           CLContext* context);
-    absl::Status UploadAdd(const AddAttributes& attr,
-                           CalculationsPrecision scalar_precision,
-                           CLContext* context);
+  absl::Status UploadMul(const MultiplyAttributes& attr,
+                         CalculationsPrecision scalar_precision,
+                         CLContext* context);
+  absl::Status UploadAdd(const AddAttributes& attr,
+                         CalculationsPrecision scalar_precision,
+                         CLContext* context);
 
-    template <DataType T>
-    absl::Status UploadMul(const tflite::gpu::Tensor<Linear, T>& mul,
-                           CLContext* context);
+  template <DataType T>
+  absl::Status UploadMul(const tflite::gpu::Tensor<Linear, T>& mul,
+                         CLContext* context);
 
-    template <DataType T>
-    absl::Status UploadAdd(const tflite::gpu::Tensor<Linear, T>& add,
-                           CLContext* context);
+  template <DataType T>
+  absl::Status UploadAdd(const tflite::gpu::Tensor<Linear, T>& add,
+                         CLContext* context);
 
-    void SetLinkIndex(int index) override;
-    std::string GetCoreCode(const LinkingContext& context) const override;
+  void SetLinkIndex(int index) override;
+  std::string GetCoreCode(const LinkingContext& context) const override;
 
-    std::string GetArgsDeclaration() const override;
-    absl::Status BindArguments(CLKernel* kernel) override;
+  std::string GetArgsDeclaration() const override;
+  absl::Status BindArguments(CLKernel* kernel) override;
 
-    friend absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
-                                          const OperationDef& definition,
-                                          const MultiplyAttributes& attr,
-                                          MultiplyAdd* result);
+  friend absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
+                                        const OperationDef& definition,
+                                        const MultiplyAttributes& attr,
+                                        MultiplyAdd* result);
 
-    friend absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
-                                          const OperationDef& definition,
-                                          const AddAttributes& attr,
-                                          MultiplyAdd* result);
+  friend absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
+                                        const OperationDef& definition,
+                                        const AddAttributes& attr,
+                                        MultiplyAdd* result);
 
-    friend absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
-                                          const OperationDef& definition,
-                                          const MultiplyAttributes& mul_attr,
-                                          const AddAttributes& add_attr,
-                                          MultiplyAdd* result);
+  friend absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
+                                        const OperationDef& definition,
+                                        const MultiplyAttributes& mul_attr,
+                                        const AddAttributes& add_attr,
+                                        MultiplyAdd* result);
 
-private:
-    explicit MultiplyAdd(const OperationDef& definition)
-        : ElementwiseOperation(definition),
-          use_mul_vec_(false),
-          use_add_vec_(false) {}
+ private:
+  explicit MultiplyAdd(const OperationDef& definition)
+      : ElementwiseOperation(definition),
+        use_mul_vec_(false),
+        use_add_vec_(false) {}
 
-    LinearStorage mul_vec_;
-    LinearStorage add_vec_;
-    bool use_mul_vec_;
-    bool use_add_vec_;
-    FLT scalar_mul_;
-    FLT scalar_add_;
+  LinearStorage mul_vec_;
+  LinearStorage add_vec_;
+  bool use_mul_vec_;
+  bool use_add_vec_;
+  FLT scalar_mul_;
+  FLT scalar_add_;
 };
 
 absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
@@ -109,25 +109,25 @@ absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
 template <DataType T>
 absl::Status MultiplyAdd::UploadMul(const tflite::gpu::Tensor<Linear, T>& mul,
                                     CLContext* context) {
-    LinearStorageCreateInfo create_info;
-    create_info.storage_type =
-        DeduceLinearStorageType(definition_.GetPrimaryStorageType());
-    create_info.data_type = definition_.GetDataType();
-    RETURN_IF_ERROR(CreateLinearStorage(create_info, mul, context, &mul_vec_));
-    use_mul_vec_ = true;
-    return absl::OkStatus();
+  LinearStorageCreateInfo create_info;
+  create_info.storage_type =
+      DeduceLinearStorageType(definition_.GetPrimaryStorageType());
+  create_info.data_type = definition_.GetDataType();
+  RETURN_IF_ERROR(CreateLinearStorage(create_info, mul, context, &mul_vec_));
+  use_mul_vec_ = true;
+  return absl::OkStatus();
 }
 
 template <DataType T>
 absl::Status MultiplyAdd::UploadAdd(const tflite::gpu::Tensor<Linear, T>& add,
                                     CLContext* context) {
-    LinearStorageCreateInfo create_info;
-    create_info.storage_type =
-        DeduceLinearStorageType(definition_.GetPrimaryStorageType());
-    create_info.data_type = definition_.GetDataType();
-    RETURN_IF_ERROR(CreateLinearStorage(create_info, add, context, &add_vec_));
-    use_add_vec_ = true;
-    return absl::OkStatus();
+  LinearStorageCreateInfo create_info;
+  create_info.storage_type =
+      DeduceLinearStorageType(definition_.GetPrimaryStorageType());
+  create_info.data_type = definition_.GetDataType();
+  RETURN_IF_ERROR(CreateLinearStorage(create_info, add, context, &add_vec_));
+  use_add_vec_ = true;
+  return absl::OkStatus();
 }
 
 }  // namespace cl
