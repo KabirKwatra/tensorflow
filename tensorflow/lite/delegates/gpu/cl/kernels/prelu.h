@@ -33,33 +33,33 @@ namespace gpu {
 namespace cl {
 
 class PReLU : public ElementwiseOperation {
- public:
-  PReLU() = default;
-  // Move only
-  PReLU(PReLU&& operation);
-  PReLU& operator=(PReLU&& operation);
-  PReLU(const PReLU&) = delete;
-  PReLU& operator=(const PReLU&) = delete;
+public:
+    PReLU() = default;
+    // Move only
+    PReLU(PReLU&& operation);
+    PReLU& operator=(PReLU&& operation);
+    PReLU(const PReLU&) = delete;
+    PReLU& operator=(const PReLU&) = delete;
 
-  void SetLinkIndex(int index) override;
-  std::string GetCoreCode(const LinkingContext& context) const override;
-  std::string GetArgsDeclaration() const override;
-  absl::Status BindArguments(CLKernel* kernel) override;
+    void SetLinkIndex(int index) override;
+    std::string GetCoreCode(const LinkingContext& context) const override;
+    std::string GetArgsDeclaration() const override;
+    absl::Status BindArguments(CLKernel* kernel) override;
 
-  friend absl::Status CreatePReLU(const CreationContext& creation_context,
-                                  const OperationDef& definition,
-                                  const PReLUAttributes& attr, PReLU* result);
+    friend absl::Status CreatePReLU(const CreationContext& creation_context,
+                                    const OperationDef& definition,
+                                    const PReLUAttributes& attr, PReLU* result);
 
- private:
-  PReLU(const OperationDef& definition, const PReLUAttributes& attr,
-        CalculationsPrecision scalar_precision);
+private:
+    PReLU(const OperationDef& definition, const PReLUAttributes& attr,
+          CalculationsPrecision scalar_precision);
 
-  template <DataType T>
-  absl::Status UploadParameters(
-      const tflite::gpu::Tensor<Linear, T>& parameters, CLContext* context);
+    template <DataType T>
+    absl::Status UploadParameters(
+        const tflite::gpu::Tensor<Linear, T>& parameters, CLContext* context);
 
-  FLT clip_;
-  LinearStorage alpha_;
+    FLT clip_;
+    LinearStorage alpha_;
 };
 
 absl::Status CreatePReLU(const CreationContext& creation_context,
@@ -69,13 +69,13 @@ absl::Status CreatePReLU(const CreationContext& creation_context,
 template <DataType T>
 absl::Status PReLU::UploadParameters(
     const tflite::gpu::Tensor<Linear, T>& parameters, CLContext* context) {
-  LinearStorageCreateInfo create_info;
-  create_info.storage_type =
-      DeduceLinearStorageType(definition_.GetPrimaryStorageType());
-  create_info.data_type = definition_.GetPrimaryDataType();
-  RETURN_IF_ERROR(
-      CreateLinearStorage(create_info, parameters, context, &alpha_));
-  return absl::OkStatus();
+    LinearStorageCreateInfo create_info;
+    create_info.storage_type =
+        DeduceLinearStorageType(definition_.GetPrimaryStorageType());
+    create_info.data_type = definition_.GetPrimaryDataType();
+    RETURN_IF_ERROR(
+        CreateLinearStorage(create_info, parameters, context, &alpha_));
+    return absl::OkStatus();
 }
 
 }  // namespace cl

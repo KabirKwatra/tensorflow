@@ -36,128 +36,128 @@ MultiplyAdd::MultiplyAdd(MultiplyAdd&& operation)
       scalar_add_(std::move(operation.scalar_add_)) {}
 
 MultiplyAdd& MultiplyAdd::operator=(MultiplyAdd&& operation) {
-  if (this != &operation) {
-    mul_vec_ = std::move(operation.mul_vec_);
-    add_vec_ = std::move(operation.add_vec_);
-    use_mul_vec_ = operation.use_mul_vec_;
-    use_add_vec_ = operation.use_add_vec_;
-    scalar_mul_ = std::move(operation.scalar_mul_);
-    scalar_add_ = std::move(operation.scalar_add_);
-    ElementwiseOperation::operator=(std::move(operation));
-  }
-  return *this;
+    if (this != &operation) {
+        mul_vec_ = std::move(operation.mul_vec_);
+        add_vec_ = std::move(operation.add_vec_);
+        use_mul_vec_ = operation.use_mul_vec_;
+        use_add_vec_ = operation.use_add_vec_;
+        scalar_mul_ = std::move(operation.scalar_mul_);
+        scalar_add_ = std::move(operation.scalar_add_);
+        ElementwiseOperation::operator=(std::move(operation));
+    }
+    return *this;
 }
 
 void MultiplyAdd::SetLinkIndex(int index) {
-  scalar_mul_.SetName(absl::StrCat("mad_scalar_mul_", index));
-  scalar_add_.SetName(absl::StrCat("mad_scalar_add_", index));
-  mul_vec_.SetName(absl::StrCat("mad_mul_", index));
-  add_vec_.SetName(absl::StrCat("mad_add_", index));
+    scalar_mul_.SetName(absl::StrCat("mad_scalar_mul_", index));
+    scalar_add_.SetName(absl::StrCat("mad_scalar_add_", index));
+    mul_vec_.SetName(absl::StrCat("mad_mul_", index));
+    add_vec_.SetName(absl::StrCat("mad_add_", index));
 }
 
 std::string MultiplyAdd::GetCoreCode(const LinkingContext& context) const {
-  std::string result = absl::StrCat(context.var_name, " = ", context.var_name);
-  if (use_mul_vec_) {
-    absl::StrAppend(&result, " * ", mul_vec_.ReadLinearFLT4(context.s_coord));
-  }
-  if (scalar_mul_.Active()) {
-    absl::StrAppend(&result, " * (FLT)(", scalar_mul_.GetName(), ")");
-  }
-  if (use_add_vec_) {
-    absl::StrAppend(&result, " + ", add_vec_.ReadLinearFLT4(context.s_coord));
-  }
-  if (scalar_add_.Active()) {
-    absl::StrAppend(&result, " + (FLT)(", scalar_add_.GetName(), ")");
-  }
-  return absl::StrCat(result, ";\n");
+    std::string result = absl::StrCat(context.var_name, " = ", context.var_name);
+    if (use_mul_vec_) {
+        absl::StrAppend(&result, " * ", mul_vec_.ReadLinearFLT4(context.s_coord));
+    }
+    if (scalar_mul_.Active()) {
+        absl::StrAppend(&result, " * (FLT)(", scalar_mul_.GetName(), ")");
+    }
+    if (use_add_vec_) {
+        absl::StrAppend(&result, " + ", add_vec_.ReadLinearFLT4(context.s_coord));
+    }
+    if (scalar_add_.Active()) {
+        absl::StrAppend(&result, " + (FLT)(", scalar_add_.GetName(), ")");
+    }
+    return absl::StrCat(result, ";\n");
 }
 
 std::string MultiplyAdd::GetArgsDeclaration() const {
-  std::string args;
-  if (use_mul_vec_) {
-    absl::StrAppend(&args, ",\n    ", mul_vec_.GetDeclaration());
-  }
-  if (use_add_vec_) {
-    absl::StrAppend(&args, ",\n    ", add_vec_.GetDeclaration());
-  }
-  if (scalar_mul_.Active()) {
-    absl::StrAppend(&args, ",\n    ", scalar_mul_.GetDeclaration());
-  }
-  if (scalar_add_.Active()) {
-    absl::StrAppend(&args, ",\n    ", scalar_add_.GetDeclaration());
-  }
-  return args;
+    std::string args;
+    if (use_mul_vec_) {
+        absl::StrAppend(&args, ",\n    ", mul_vec_.GetDeclaration());
+    }
+    if (use_add_vec_) {
+        absl::StrAppend(&args, ",\n    ", add_vec_.GetDeclaration());
+    }
+    if (scalar_mul_.Active()) {
+        absl::StrAppend(&args, ",\n    ", scalar_mul_.GetDeclaration());
+    }
+    if (scalar_add_.Active()) {
+        absl::StrAppend(&args, ",\n    ", scalar_add_.GetDeclaration());
+    }
+    return args;
 }
 
 absl::Status MultiplyAdd::BindArguments(CLKernel* kernel) {
-  if (use_mul_vec_) {
-    RETURN_IF_ERROR(kernel->SetMemoryAuto(mul_vec_.GetMemoryPtr()));
-  }
-  if (use_add_vec_) {
-    RETURN_IF_ERROR(kernel->SetMemoryAuto(add_vec_.GetMemoryPtr()));
-  }
-  if (scalar_mul_.Active()) {
-    RETURN_IF_ERROR(kernel->SetBytesAuto(scalar_mul_));
-  }
-  if (scalar_add_.Active()) {
-    RETURN_IF_ERROR(kernel->SetBytesAuto(scalar_add_));
-  }
-  return absl::OkStatus();
+    if (use_mul_vec_) {
+        RETURN_IF_ERROR(kernel->SetMemoryAuto(mul_vec_.GetMemoryPtr()));
+    }
+    if (use_add_vec_) {
+        RETURN_IF_ERROR(kernel->SetMemoryAuto(add_vec_.GetMemoryPtr()));
+    }
+    if (scalar_mul_.Active()) {
+        RETURN_IF_ERROR(kernel->SetBytesAuto(scalar_mul_));
+    }
+    if (scalar_add_.Active()) {
+        RETURN_IF_ERROR(kernel->SetBytesAuto(scalar_add_));
+    }
+    return absl::OkStatus();
 }
 
 absl::Status MultiplyAdd::UploadMul(const MultiplyAttributes& attr,
                                     CalculationsPrecision scalar_precision,
                                     CLContext* context) {
-  auto mul =
-      absl::get_if<tflite::gpu::Tensor<Linear, DataType::FLOAT32>>(&attr.param);
-  auto mul_scalar = absl::get_if<float>(&attr.param);
-  if (mul) {
-    RETURN_IF_ERROR(UploadMul(*mul, context));
-  } else {
-    scalar_mul_ = FLT(scalar_precision, *mul_scalar);
-  }
-  return absl::OkStatus();
+    auto mul =
+        absl::get_if<tflite::gpu::Tensor<Linear, DataType::FLOAT32>>(&attr.param);
+    auto mul_scalar = absl::get_if<float>(&attr.param);
+    if (mul) {
+        RETURN_IF_ERROR(UploadMul(*mul, context));
+    } else {
+        scalar_mul_ = FLT(scalar_precision, *mul_scalar);
+    }
+    return absl::OkStatus();
 }
 
 absl::Status MultiplyAdd::UploadAdd(const AddAttributes& attr,
                                     CalculationsPrecision scalar_precision,
                                     CLContext* context) {
-  auto add =
-      absl::get_if<tflite::gpu::Tensor<Linear, DataType::FLOAT32>>(&attr.param);
-  auto add_scalar = absl::get_if<float>(&attr.param);
-  if (add) {
-    RETURN_IF_ERROR(UploadAdd(*add, context));
-  } else {
-    scalar_add_ = FLT(scalar_precision, *add_scalar);
-  }
-  return absl::OkStatus();
+    auto add =
+        absl::get_if<tflite::gpu::Tensor<Linear, DataType::FLOAT32>>(&attr.param);
+    auto add_scalar = absl::get_if<float>(&attr.param);
+    if (add) {
+        RETURN_IF_ERROR(UploadAdd(*add, context));
+    } else {
+        scalar_add_ = FLT(scalar_precision, *add_scalar);
+    }
+    return absl::OkStatus();
 }
 
 absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
                                const OperationDef& definition,
                                const MultiplyAttributes& attr,
                                MultiplyAdd* result) {
-  const auto scalar_precision = creation_context.device->IsPowerVR()
-                                    ? CalculationsPrecision::F32
-                                    : definition.precision;
-  *result = MultiplyAdd(definition);
-  RETURN_IF_ERROR(
-      result->UploadMul(attr, scalar_precision, creation_context.context));
-  result->SetLinkIndex(0);
-  return absl::OkStatus();
+    const auto scalar_precision = creation_context.device->IsPowerVR()
+                                  ? CalculationsPrecision::F32
+                                  : definition.precision;
+    *result = MultiplyAdd(definition);
+    RETURN_IF_ERROR(
+        result->UploadMul(attr, scalar_precision, creation_context.context));
+    result->SetLinkIndex(0);
+    return absl::OkStatus();
 }
 
 absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
                                const OperationDef& definition,
                                const AddAttributes& attr, MultiplyAdd* result) {
-  const auto scalar_precision = creation_context.device->IsPowerVR()
-                                    ? CalculationsPrecision::F32
-                                    : definition.precision;
-  *result = MultiplyAdd(definition);
-  RETURN_IF_ERROR(
-      result->UploadAdd(attr, scalar_precision, creation_context.context));
-  result->SetLinkIndex(0);
-  return absl::OkStatus();
+    const auto scalar_precision = creation_context.device->IsPowerVR()
+                                  ? CalculationsPrecision::F32
+                                  : definition.precision;
+    *result = MultiplyAdd(definition);
+    RETURN_IF_ERROR(
+        result->UploadAdd(attr, scalar_precision, creation_context.context));
+    result->SetLinkIndex(0);
+    return absl::OkStatus();
 }
 
 absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
@@ -165,16 +165,16 @@ absl::Status CreateMultiplyAdd(const CreationContext& creation_context,
                                const MultiplyAttributes& mul_attr,
                                const AddAttributes& add_attr,
                                MultiplyAdd* result) {
-  const auto scalar_precision = creation_context.device->IsPowerVR()
-                                    ? CalculationsPrecision::F32
-                                    : definition.precision;
-  *result = MultiplyAdd(definition);
-  RETURN_IF_ERROR(
-      result->UploadMul(mul_attr, scalar_precision, creation_context.context));
-  RETURN_IF_ERROR(
-      result->UploadAdd(add_attr, scalar_precision, creation_context.context));
-  result->SetLinkIndex(0);
-  return absl::OkStatus();
+    const auto scalar_precision = creation_context.device->IsPowerVR()
+                                  ? CalculationsPrecision::F32
+                                  : definition.precision;
+    *result = MultiplyAdd(definition);
+    RETURN_IF_ERROR(
+        result->UploadMul(mul_attr, scalar_precision, creation_context.context));
+    RETURN_IF_ERROR(
+        result->UploadAdd(add_attr, scalar_precision, creation_context.context));
+    result->SetLinkIndex(0);
+    return absl::OkStatus();
 }
 
 }  // namespace cl

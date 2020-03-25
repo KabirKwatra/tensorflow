@@ -35,91 +35,91 @@ namespace gpu {
 namespace cl {
 
 class FullyConnected : public GPUOperation {
- public:
-  FullyConnected() = default;
-  absl::Status AddToQueue(CLCommandQueue* queue) override;
+public:
+    FullyConnected() = default;
+    absl::Status AddToQueue(CLCommandQueue* queue) override;
 
-  absl::Status Compile(const CreationContext& creation_context) override;
+    absl::Status Compile(const CreationContext& creation_context) override;
 
-  // Move only
-  FullyConnected(FullyConnected&& kernel);
-  FullyConnected& operator=(FullyConnected&& kernel);
-  FullyConnected(const FullyConnected&) = delete;
-  FullyConnected& operator=(const FullyConnected&) = delete;
+    // Move only
+    FullyConnected(FullyConnected&& kernel);
+    FullyConnected& operator=(FullyConnected&& kernel);
+    FullyConnected(const FullyConnected&) = delete;
+    FullyConnected& operator=(const FullyConnected&) = delete;
 
- private:
-  explicit FullyConnected(const OperationDef& definition);
-  friend absl::Status CreateFullyConnected(
-      const CreationContext& creation_context, const OperationDef& definition,
-      const FullyConnectedAttributes& attr, FullyConnected* result);
+private:
+    explicit FullyConnected(const OperationDef& definition);
+    friend absl::Status CreateFullyConnected(
+        const CreationContext& creation_context, const OperationDef& definition,
+        const FullyConnectedAttributes& attr, FullyConnected* result);
 
-  template <DataType T>
-  absl::Status UploadWeights(const tflite::gpu::Tensor<OHWI, T>& weights,
-                             CLContext* context);
+    template <DataType T>
+    absl::Status UploadWeights(const tflite::gpu::Tensor<OHWI, T>& weights,
+                               CLContext* context);
 
-  template <DataType T, typename S>
-  void RearrangeWeights(const tflite::gpu::Tensor<OHWI, T>& weights,
-                        absl::Span<S> dst);
+    template <DataType T, typename S>
+    void RearrangeWeights(const tflite::gpu::Tensor<OHWI, T>& weights,
+                          absl::Span<S> dst);
 
-  Buffer weights_;
-  LinearStorage biases_;
-  CLKernel kernel_;
-  int3 work_group_size_ = int3(0, 0, 0);
+    Buffer weights_;
+    LinearStorage biases_;
+    CLKernel kernel_;
+    int3 work_group_size_ = int3(0, 0, 0);
 };
 
 template <DataType T>
 absl::Status FullyConnected::UploadWeights(
     const tflite::gpu::Tensor<OHWI, T>& weights, CLContext* context) {
-  const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
-  const int dst_depth = IntegralDivideRoundUp(weights.shape.o, 4);
+    const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
+    const int dst_depth = IntegralDivideRoundUp(weights.shape.o, 4);
 
-  const int elements_count = src_depth * dst_depth * 4;
-  const bool f32_weights = definition_.precision == CalculationsPrecision::F32;
+    const int elements_count = src_depth * dst_depth * 4;
+    const bool f32_weights = definition_.precision == CalculationsPrecision::F32;
 
-  const int float4_size = f32_weights ? 16 : 8;
+    const int float4_size = f32_weights ? 16 : 8;
 
-  if (definition_.GetDataType() == DataType::FLOAT32) {
-    std::vector<float4> gpu_data(dst_depth * src_depth * 4);
-    RearrangeWeights(weights, absl::MakeSpan(gpu_data));
-    return CreateReadOnlyBuffer(float4_size * elements_count, gpu_data.data(),
-                                context, &weights_);
-  } else {
-    std::vector<half4> gpu_data(dst_depth * src_depth * 4);
-    RearrangeWeights(weights, absl::MakeSpan(gpu_data));
-    return CreateReadOnlyBuffer(float4_size * elements_count, gpu_data.data(),
-                                context, &weights_);
-  }
+    if (definition_.GetDataType() == DataType::FLOAT32) {
+        std::vector<float4> gpu_data(dst_depth * src_depth * 4);
+        RearrangeWeights(weights, absl::MakeSpan(gpu_data));
+        return CreateReadOnlyBuffer(float4_size * elements_count, gpu_data.data(),
+                                    context, &weights_);
+    } else {
+        std::vector<half4> gpu_data(dst_depth * src_depth * 4);
+        RearrangeWeights(weights, absl::MakeSpan(gpu_data));
+        return CreateReadOnlyBuffer(float4_size * elements_count, gpu_data.data(),
+                                    context, &weights_);
+    }
 }
 
 template <DataType T, typename S>
 void FullyConnected::RearrangeWeights(
     const tflite::gpu::Tensor<OHWI, T>& weights, absl::Span<S> dst) {
-  const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
-  const int dst_depth = IntegralDivideRoundUp(weights.shape.o, 4);
-  int counter = 0;
+    const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
+    const int dst_depth = IntegralDivideRoundUp(weights.shape.o, 4);
+    int counter = 0;
 
-  for (int s = 0; s < src_depth; ++s) {
-    for (int d = 0; d < dst_depth; ++d) {
-      S filters[4];
-      for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-          const int dst_ch = d * 4 + i;
-          const int src_ch = s * 4 + j;
-          if (dst_ch < weights.shape.o && src_ch < weights.shape.i) {
-            const int f_index =
-                weights.shape.LinearIndex({dst_ch, 0, 0, src_ch});
-            filters[i][j] = weights.data[f_index];
-          } else {
-            filters[i][j] = 0.0;
-          }
+    for (int s = 0; s < src_depth; ++s) {
+        for (int d = 0; d < dst_depth; ++d) {
+            S filters[4];
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    const int dst_ch = d * 4 + i;
+                    const int src_ch = s * 4 + j;
+                    if (dst_ch < weights.shape.o && src_ch < weights.shape.i) {
+                        const int f_index =
+                            weights.shape.LinearIndex({dst_ch, 0, 0, src_ch});
+                        filters[i][j] = weights.data[f_index];
+                    } else {
+                        filters[i][j] = 0.0;
+                    }
+                }
+            }
+            dst[counter++] = filters[0];
+            dst[counter++] = filters[1];
+            dst[counter++] = filters[2];
+            dst[counter++] = filters[3];
         }
-      }
-      dst[counter++] = filters[0];
-      dst[counter++] = filters[1];
-      dst[counter++] = filters[2];
-      dst[counter++] = filters[3];
     }
-  }
 }
 
 absl::Status CreateFullyConnected(const CreationContext& creation_context,

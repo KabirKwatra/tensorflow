@@ -32,38 +32,38 @@ namespace cl {
 // principles. In this kernels used different matrices for transformations than
 // in original work.
 class Winograd4x4To36 : public GPUOperation {
- public:
-  Winograd4x4To36() = default;
-  Winograd4x4To36(const OperationDef& definition, const Padding2D& padding)
-      : GPUOperation(definition), padding_(padding) {}
-  absl::Status AddToQueue(CLCommandQueue* queue) override;
-  absl::Status Tune(const TuningParameters& params) override;
-  absl::Status Compile(const CreationContext& creation_context) override;
+public:
+    Winograd4x4To36() = default;
+    Winograd4x4To36(const OperationDef& definition, const Padding2D& padding)
+        : GPUOperation(definition), padding_(padding) {}
+    absl::Status AddToQueue(CLCommandQueue* queue) override;
+    absl::Status Tune(const TuningParameters& params) override;
+    absl::Status Compile(const CreationContext& creation_context) override;
 
-  // Move only
-  Winograd4x4To36(Winograd4x4To36&& operation);
-  Winograd4x4To36& operator=(Winograd4x4To36&& operation);
-  Winograd4x4To36(const Winograd4x4To36&) = delete;
-  Winograd4x4To36& operator=(const Winograd4x4To36&) = delete;
+    // Move only
+    Winograd4x4To36(Winograd4x4To36&& operation);
+    Winograd4x4To36& operator=(Winograd4x4To36&& operation);
+    Winograd4x4To36(const Winograd4x4To36&) = delete;
+    Winograd4x4To36& operator=(const Winograd4x4To36&) = delete;
 
- private:
-  friend absl::Status CreateWinograd4x4To36(
-      const CreationContext& creation_context, const OperationDef& definition,
-      const Padding2D& padding, Winograd4x4To36* result);
+private:
+    friend absl::Status CreateWinograd4x4To36(
+        const CreationContext& creation_context, const OperationDef& definition,
+        const Padding2D& padding, Winograd4x4To36* result);
 
-  absl::Status UploadBt(CLContext* context);
+    absl::Status UploadBt(CLContext* context);
 
-  // Must be called after kernel compilation
-  int3 SelectBestWorkGroup();
+    // Must be called after kernel compilation
+    int3 SelectBestWorkGroup();
 
-  absl::Status BindArguments();
-  int3 GetGridSize() const;
+    absl::Status BindArguments();
+    int3 GetGridSize() const;
 
-  LinearStorage bt_;
-  Padding2D padding_;
+    LinearStorage bt_;
+    Padding2D padding_;
 
-  CLKernel kernel_;
-  int3 work_group_size_ = int3(128, 1, 1);
+    CLKernel kernel_;
+    int3 work_group_size_ = int3(128, 1, 1);
 };
 
 absl::Status CreateWinograd4x4To36(const CreationContext& creation_context,
@@ -72,39 +72,39 @@ absl::Status CreateWinograd4x4To36(const CreationContext& creation_context,
                                    Winograd4x4To36* result);
 
 class Winograd36To4x4 : public GPUOperation {
- public:
-  Winograd36To4x4() = default;
-  explicit Winograd36To4x4(const OperationDef& definition)
-      : GPUOperation(definition) {}
-  absl::Status AddToQueue(CLCommandQueue* queue) override;
-  absl::Status Tune(const TuningParameters& params) override;
-  absl::Status Compile(const CreationContext& creation_context) override;
+public:
+    Winograd36To4x4() = default;
+    explicit Winograd36To4x4(const OperationDef& definition)
+        : GPUOperation(definition) {}
+    absl::Status AddToQueue(CLCommandQueue* queue) override;
+    absl::Status Tune(const TuningParameters& params) override;
+    absl::Status Compile(const CreationContext& creation_context) override;
 
-  // Move only
-  Winograd36To4x4(Winograd36To4x4&& operation);
-  Winograd36To4x4& operator=(Winograd36To4x4&& operation);
-  Winograd36To4x4(const Winograd36To4x4&) = delete;
-  Winograd36To4x4& operator=(const Winograd36To4x4&) = delete;
+    // Move only
+    Winograd36To4x4(Winograd36To4x4&& operation);
+    Winograd36To4x4& operator=(Winograd36To4x4&& operation);
+    Winograd36To4x4(const Winograd36To4x4&) = delete;
+    Winograd36To4x4& operator=(const Winograd36To4x4&) = delete;
 
- private:
-  friend absl::Status CreateWinograd36To4x4(
-      const CreationContext& creation_context, const OperationDef& definition,
-      const tflite::gpu::Tensor<Linear, DataType::FLOAT32>& biases,
-      Winograd36To4x4* result);
+private:
+    friend absl::Status CreateWinograd36To4x4(
+        const CreationContext& creation_context, const OperationDef& definition,
+        const tflite::gpu::Tensor<Linear, DataType::FLOAT32>& biases,
+        Winograd36To4x4* result);
 
-  absl::Status UploadAt(CLContext* context);
+    absl::Status UploadAt(CLContext* context);
 
-  // Must be called after kernel compilation
-  int3 SelectBestWorkGroup();
+    // Must be called after kernel compilation
+    int3 SelectBestWorkGroup();
 
-  absl::Status BindArguments();
-  int3 GetGridSize() const;
+    absl::Status BindArguments();
+    int3 GetGridSize() const;
 
-  LinearStorage at_;
-  LinearStorage biases_;
+    LinearStorage at_;
+    LinearStorage biases_;
 
-  CLKernel kernel_;
-  int3 work_group_size_ = int3(128, 1, 1);
+    CLKernel kernel_;
+    int3 work_group_size_ = int3(128, 1, 1);
 };
 
 absl::Status CreateWinograd36To4x4(

@@ -35,11 +35,11 @@ namespace tflite {
 /// It facilitates the use-case to verify and build a model without loading it
 /// twice.
 class TfLiteVerifier {
- public:
-  /// Returns true if the model is legit.
-  virtual bool Verify(const char* data, int length,
-                      ErrorReporter* reporter) = 0;
-  virtual ~TfLiteVerifier() {}
+public:
+    /// Returns true if the model is legit.
+    virtual bool Verify(const char* data, int length,
+                        ErrorReporter* reporter) = 0;
+    virtual ~TfLiteVerifier() {}
 };
 
 /// An RAII object that represents a read-only tflite model, copied from disk,
@@ -66,113 +66,123 @@ class TfLiteVerifier {
 /// interpreter. This is environment specific and may consist of just the
 /// builtin ops, or some custom operators you defined to extend tflite.
 class FlatBufferModel {
- public:
-  /// Builds a model based on a file.
-  /// Caller retains ownership of `error_reporter` and must ensure its lifetime
-  /// is longer than the FlatBufferModel instance.
-  /// Returns a nullptr in case of failure.
-  static std::unique_ptr<FlatBufferModel> BuildFromFile(
-      const char* filename,
-      ErrorReporter* error_reporter = DefaultErrorReporter());
+public:
+    /// Builds a model based on a file.
+    /// Caller retains ownership of `error_reporter` and must ensure its lifetime
+    /// is longer than the FlatBufferModel instance.
+    /// Returns a nullptr in case of failure.
+    static std::unique_ptr<FlatBufferModel> BuildFromFile(
+        const char* filename,
+        ErrorReporter* error_reporter = DefaultErrorReporter());
 
-  /// Verifies whether the content of the file is legit, then builds a model
-  /// based on the file.
-  /// The extra_verifier argument is an additional optional verifier for the
-  /// file contents. By default, we always check with tflite::VerifyModelBuffer.
-  /// If extra_verifier is supplied, the file contents is also checked against
-  /// the extra_verifier after the check against tflite::VerifyModelBuilder.
-  /// Caller retains ownership of `error_reporter` and must ensure its lifetime
-  /// is longer than the FlatBufferModel instance.
-  /// Returns a nullptr in case of failure.
-  static std::unique_ptr<FlatBufferModel> VerifyAndBuildFromFile(
-      const char* filename, TfLiteVerifier* extra_verifier = nullptr,
-      ErrorReporter* error_reporter = DefaultErrorReporter());
+    /// Verifies whether the content of the file is legit, then builds a model
+    /// based on the file.
+    /// The extra_verifier argument is an additional optional verifier for the
+    /// file contents. By default, we always check with tflite::VerifyModelBuffer.
+    /// If extra_verifier is supplied, the file contents is also checked against
+    /// the extra_verifier after the check against tflite::VerifyModelBuilder.
+    /// Caller retains ownership of `error_reporter` and must ensure its lifetime
+    /// is longer than the FlatBufferModel instance.
+    /// Returns a nullptr in case of failure.
+    static std::unique_ptr<FlatBufferModel> VerifyAndBuildFromFile(
+        const char* filename, TfLiteVerifier* extra_verifier = nullptr,
+        ErrorReporter* error_reporter = DefaultErrorReporter());
 
-  /// Builds a model based on a pre-loaded flatbuffer.
-  /// Caller retains ownership of the buffer and should keep it alive until
-  /// the returned object is destroyed. Caller also retains ownership of
-  /// `error_reporter` and must ensure its lifetime is longer than the
-  /// FlatBufferModel instance.
-  /// Returns a nullptr in case of failure.
-  /// NOTE: this does NOT validate the buffer so it should NOT be called on
-  /// invalid/untrusted input. Use VerifyAndBuildFromBuffer in that case
-  static std::unique_ptr<FlatBufferModel> BuildFromBuffer(
-      const char* caller_owned_buffer, size_t buffer_size,
-      ErrorReporter* error_reporter = DefaultErrorReporter());
+    /// Builds a model based on a pre-loaded flatbuffer.
+    /// Caller retains ownership of the buffer and should keep it alive until
+    /// the returned object is destroyed. Caller also retains ownership of
+    /// `error_reporter` and must ensure its lifetime is longer than the
+    /// FlatBufferModel instance.
+    /// Returns a nullptr in case of failure.
+    /// NOTE: this does NOT validate the buffer so it should NOT be called on
+    /// invalid/untrusted input. Use VerifyAndBuildFromBuffer in that case
+    static std::unique_ptr<FlatBufferModel> BuildFromBuffer(
+        const char* caller_owned_buffer, size_t buffer_size,
+        ErrorReporter* error_reporter = DefaultErrorReporter());
 
-  /// Verifies whether the content of the buffer is legit, then builds a model
-  /// based on the pre-loaded flatbuffer.
-  /// The extra_verifier argument is an additional optional verifier for the
-  /// buffer. By default, we always check with tflite::VerifyModelBuffer. If
-  /// extra_verifier is supplied, the buffer is checked against the
-  /// extra_verifier after the check against tflite::VerifyModelBuilder. The
-  /// caller retains ownership of the buffer and should keep it alive until the
-  /// returned object is destroyed. Caller retains ownership of `error_reporter`
-  /// and must ensure its lifetime is longer than the FlatBufferModel instance.
-  /// Returns a nullptr in case of failure.
-  static std::unique_ptr<FlatBufferModel> VerifyAndBuildFromBuffer(
-      const char* caller_owned_buffer, size_t buffer_size,
-      TfLiteVerifier* extra_verifier = nullptr,
-      ErrorReporter* error_reporter = DefaultErrorReporter());
+    /// Verifies whether the content of the buffer is legit, then builds a model
+    /// based on the pre-loaded flatbuffer.
+    /// The extra_verifier argument is an additional optional verifier for the
+    /// buffer. By default, we always check with tflite::VerifyModelBuffer. If
+    /// extra_verifier is supplied, the buffer is checked against the
+    /// extra_verifier after the check against tflite::VerifyModelBuilder. The
+    /// caller retains ownership of the buffer and should keep it alive until the
+    /// returned object is destroyed. Caller retains ownership of `error_reporter`
+    /// and must ensure its lifetime is longer than the FlatBufferModel instance.
+    /// Returns a nullptr in case of failure.
+    static std::unique_ptr<FlatBufferModel> VerifyAndBuildFromBuffer(
+        const char* caller_owned_buffer, size_t buffer_size,
+        TfLiteVerifier* extra_verifier = nullptr,
+        ErrorReporter* error_reporter = DefaultErrorReporter());
 
-  /// Builds a model directly from a flatbuffer pointer
-  /// Caller retains ownership of the buffer and should keep it alive until the
-  /// returned object is destroyed. Caller retains ownership of `error_reporter`
-  /// and must ensure its lifetime is longer than the FlatBufferModel instance.
-  /// Returns a nullptr in case of failure.
-  static std::unique_ptr<FlatBufferModel> BuildFromModel(
-      const tflite::Model* caller_owned_model_spec,
-      ErrorReporter* error_reporter = DefaultErrorReporter());
+    /// Builds a model directly from a flatbuffer pointer
+    /// Caller retains ownership of the buffer and should keep it alive until the
+    /// returned object is destroyed. Caller retains ownership of `error_reporter`
+    /// and must ensure its lifetime is longer than the FlatBufferModel instance.
+    /// Returns a nullptr in case of failure.
+    static std::unique_ptr<FlatBufferModel> BuildFromModel(
+        const tflite::Model* caller_owned_model_spec,
+        ErrorReporter* error_reporter = DefaultErrorReporter());
 
-  // Releases memory or unmaps mmaped memory.
-  ~FlatBufferModel();
+    // Releases memory or unmaps mmaped memory.
+    ~FlatBufferModel();
 
-  // Copying or assignment is disallowed to simplify ownership semantics.
-  FlatBufferModel(const FlatBufferModel&) = delete;
-  FlatBufferModel& operator=(const FlatBufferModel&) = delete;
+    // Copying or assignment is disallowed to simplify ownership semantics.
+    FlatBufferModel(const FlatBufferModel&) = delete;
+    FlatBufferModel& operator=(const FlatBufferModel&) = delete;
 
-  bool initialized() const { return model_ != nullptr; }
-  const tflite::Model* operator->() const { return model_; }
-  const tflite::Model* GetModel() const { return model_; }
-  ErrorReporter* error_reporter() const { return error_reporter_; }
-  const Allocation* allocation() const { return allocation_.get(); }
+    bool initialized() const {
+        return model_ != nullptr;
+    }
+    const tflite::Model* operator->() const {
+        return model_;
+    }
+    const tflite::Model* GetModel() const {
+        return model_;
+    }
+    ErrorReporter* error_reporter() const {
+        return error_reporter_;
+    }
+    const Allocation* allocation() const {
+        return allocation_.get();
+    }
 
-  // Returns the minimum runtime version from the flatbuffer. This runtime
-  // version encodes the minimum required interpreter version to run the
-  // flatbuffer model. If the minimum version can't be determined, an empty
-  // string will be returned.
-  // Note that the returned minimum version is a lower-bound but not a strict
-  // lower-bound; ops in the graph may not have an associated runtime version,
-  // in which case the actual required runtime might be greater than the
-  // reported minimum.
-  string GetMinimumRuntime() const;
+    // Returns the minimum runtime version from the flatbuffer. This runtime
+    // version encodes the minimum required interpreter version to run the
+    // flatbuffer model. If the minimum version can't be determined, an empty
+    // string will be returned.
+    // Note that the returned minimum version is a lower-bound but not a strict
+    // lower-bound; ops in the graph may not have an associated runtime version,
+    // in which case the actual required runtime might be greater than the
+    // reported minimum.
+    string GetMinimumRuntime() const;
 
-  /// Returns true if the model identifier is correct (otherwise false and
-  /// reports an error).
-  bool CheckModelIdentifier() const;
+    /// Returns true if the model identifier is correct (otherwise false and
+    /// reports an error).
+    bool CheckModelIdentifier() const;
 
- private:
-  /// Loads a model from a given allocation. FlatBufferModel will take over the
-  /// ownership of `allocation`, and delete it in destructor. The ownership of
-  /// `error_reporter`remains with the caller and must have lifetime at least
-  /// as much as FlatBufferModel. This is to allow multiple models to use the
-  /// same ErrorReporter instance.
-  FlatBufferModel(std::unique_ptr<Allocation> allocation,
-                  ErrorReporter* error_reporter = DefaultErrorReporter());
+private:
+    /// Loads a model from a given allocation. FlatBufferModel will take over the
+    /// ownership of `allocation`, and delete it in destructor. The ownership of
+    /// `error_reporter`remains with the caller and must have lifetime at least
+    /// as much as FlatBufferModel. This is to allow multiple models to use the
+    /// same ErrorReporter instance.
+    FlatBufferModel(std::unique_ptr<Allocation> allocation,
+                    ErrorReporter* error_reporter = DefaultErrorReporter());
 
-  /// Loads a model from Model flatbuffer. The `model` has to remain alive and
-  /// unchanged until the end of this flatbuffermodel's lifetime.
-  FlatBufferModel(const Model* model, ErrorReporter* error_reporter);
+    /// Loads a model from Model flatbuffer. The `model` has to remain alive and
+    /// unchanged until the end of this flatbuffermodel's lifetime.
+    FlatBufferModel(const Model* model, ErrorReporter* error_reporter);
 
-  /// Flatbuffer traverser pointer. (Model* is a pointer that is within the
-  /// allocated memory of the data allocated by allocation's internals.
-  const tflite::Model* model_ = nullptr;
-  /// The error reporter to use for model errors and subsequent errors when
-  /// the interpreter is created
-  ErrorReporter* error_reporter_;
-  /// The allocator used for holding memory of the model. Note that this will
-  /// be null if the client provides a tflite::Model directly.
-  std::unique_ptr<Allocation> allocation_;
+    /// Flatbuffer traverser pointer. (Model* is a pointer that is within the
+    /// allocated memory of the data allocated by allocation's internals.
+    const tflite::Model* model_ = nullptr;
+    /// The error reporter to use for model errors and subsequent errors when
+    /// the interpreter is created
+    ErrorReporter* error_reporter_;
+    /// The allocator used for holding memory of the model. Note that this will
+    /// be null if the client provides a tflite::Model directly.
+    std::unique_ptr<Allocation> allocation_;
 };
 
 }  // namespace tflite
