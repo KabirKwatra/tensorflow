@@ -106,29 +106,29 @@ aforementioned `:test` provides examples for doing so.
 Compared to a traditional profiler, e.g. Linux's "perf", the present kind of
 profiler has the following inconvenients:
 
-*   Requires manual instrumentation of code being profiled.
-*   Substantial overhead, modifying the performance characteristics of the code
-    being measured.
-*   Questionable accuracy.
+- Requires manual instrumentation of code being profiled.
+- Substantial overhead, modifying the performance characteristics of the code
+  being measured.
+- Questionable accuracy.
 
 But also the following advantages:
 
-*   Profiling can be driven from within a benchmark program, allowing the entire
-    profiling procedure to be a single command line.
-*   Not relying on symbol information removes removes exposure to toolchain
-    details and means less hassle in some build environments, especially
-    embedded/mobile (single command line to run and profile, no symbols files
-    required).
-*   Fully portable (all of this is standard C++11).
-*   Fully testable (see `:test`). Profiling becomes just another feature of the
-    code like any other.
-*   Customized instrumentation can result in easier to read treeviews (only
-    relevant functions, and custom labels may be more readable than function
-    names).
-*   Parametrized/formatted labels allow to do things that aren't possible with
-    call-stack-sampling profilers. For example, break down a profile where much
-    time is being spent in matrix multiplications, by the various matrix
-    multiplication shapes involved.
+- Profiling can be driven from within a benchmark program, allowing the entire
+  profiling procedure to be a single command line.
+- Not relying on symbol information removes removes exposure to toolchain
+  details and means less hassle in some build environments, especially
+  embedded/mobile (single command line to run and profile, no symbols files
+  required).
+- Fully portable (all of this is standard C++11).
+- Fully testable (see `:test`). Profiling becomes just another feature of the
+  code like any other.
+- Customized instrumentation can result in easier to read treeviews (only
+  relevant functions, and custom labels may be more readable than function
+  names).
+- Parametrized/formatted labels allow to do things that aren't possible with
+  call-stack-sampling profilers. For example, break down a profile where much
+  time is being spent in matrix multiplications, by the various matrix
+  multiplication shapes involved.
 
 The philosophy underlying this profiler is that software performance depends on
 software engineers profiling often, and a key factor limiting that in practice

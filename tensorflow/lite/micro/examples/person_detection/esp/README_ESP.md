@@ -13,11 +13,13 @@ Follow the instructions of the
 to setup the toolchain and the ESP-IDF itself.
 
 The next steps assume that the
-[IDF environment variables are set](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-4-set-up-the-environment-variables) :
-* The `IDF_PATH` environment variable is set. * `idf.py` and Xtensa-esp32 tools
-(e.g., `xtensa-esp32-elf-gcc`) are in `$PATH`. * `esp32-camera` should be
-downloaded in `components/` dir of example as explained in `Build the
-example`(below)
+[IDF environment variables are set](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-4-set-up-the-environment-variables)
+:
+
+- The `IDF_PATH` environment variable is set. _ `idf.py` and Xtensa-esp32 tools
+  (e.g., `xtensa-esp32-elf-gcc`) are in `$PATH`. _ `esp32-camera` should be
+  downloaded in `components/` dir of example as explained in
+  `Build the example`(below)
 
 ## Build the example
 
@@ -37,15 +39,15 @@ idf.py build
 
 ### Load and run the example
 
-To flash (replace `/dev/ttyUSB0` with the device serial port): `idf.py --port
-/dev/ttyUSB0 flash`
+To flash (replace `/dev/ttyUSB0` with the device serial port):
+`idf.py --port /dev/ttyUSB0 flash`
 
 Monitor the serial output: `idf.py --port /dev/ttyUSB0 monitor`
 
 Use `Ctrl+]` to exit.
 
-The previous two commands can be combined: `idf.py --port /dev/ttyUSB0 flash
-monitor`
+The previous two commands can be combined:
+`idf.py --port /dev/ttyUSB0 flash monitor`
 
 ## Project Generation
 

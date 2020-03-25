@@ -8,28 +8,28 @@ The example application listens to its surroundings with a microphone and
 indicates when it has detected a word by lighting an LED or displaying data on a
 screen, depending on the capabilities of the device.
 
-The code has a small footprint (for example around 22 kilobytes on a Cortex
-M3) and only uses about 10 kilobytes of RAM for working memory, so it's able to
-run on systems like an STM32F103 with only 20 kilobytes of total SRAM and 64
+The code has a small footprint (for example around 22 kilobytes on a Cortex M3)
+and only uses about 10 kilobytes of RAM for working memory, so it's able to run
+on systems like an STM32F103 with only 20 kilobytes of total SRAM and 64
 kilobytes of Flash.
 
 ## Table of contents
 
--   [Getting started](#getting-started)
--   [Deploy to Arduino](#deploy-to-arduino)
--   [Deploy to ESP32](#deploy-to-esp32)
--   [Deploy to SparkFun Edge](#deploy-to-sparkfun-edge)
--   [Deploy to STM32F746](#deploy-to-STM32F746)
--   [Deploy to NXP FRDM K66F](#deploy-to-nxp-frdm-k66f)
--   [Run on macOS](#run-on-macos)
--   [Run the tests on a development machine](#run-the-tests-on-a-development-machine)
--   [Calculating the input to the neural network](#calculating-the-input-to-the-neural-network)
--   [Train your own model](#train-your-own-model)
+- [Getting started](#getting-started)
+- [Deploy to Arduino](#deploy-to-arduino)
+- [Deploy to ESP32](#deploy-to-esp32)
+- [Deploy to SparkFun Edge](#deploy-to-sparkfun-edge)
+- [Deploy to STM32F746](#deploy-to-STM32F746)
+- [Deploy to NXP FRDM K66F](#deploy-to-nxp-frdm-k66f)
+- [Run on macOS](#run-on-macos)
+- [Run the tests on a development machine](#run-the-tests-on-a-development-machine)
+- [Calculating the input to the neural network](#calculating-the-input-to-the-neural-network)
+- [Train your own model](#train-your-own-model)
 
 ## Deploy to Arduino
 
-The following instructions will help you build and deploy this sample
-to [Arduino](https://www.arduino.cc/) devices.
+The following instructions will help you build and deploy this sample to
+[Arduino](https://www.arduino.cc/) devices.
 
 The sample has been tested with the following devices:
 
@@ -108,35 +108,35 @@ Follow the instructions of the
 to setup the toolchain and the ESP-IDF itself.
 
 The next steps assume that the
-[IDF environment variables are set](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-4-set-up-the-environment-variables) :
+[IDF environment variables are set](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-4-set-up-the-environment-variables)
+:
 
-*   The `IDF_PATH` environment variable is set
-*   `idf.py` and Xtensa-esp32 tools (e.g. `xtensa-esp32-elf-gcc`) are in `$PATH`
+- The `IDF_PATH` environment variable is set
+- `idf.py` and Xtensa-esp32 tools (e.g. `xtensa-esp32-elf-gcc`) are in `$PATH`
 
 ### Generate the examples
 
-The example project can be generated with the following command: `make -f
-tensorflow/lite/micro/tools/make/Makefile TARGET=esp
-generate_micro_speech_esp_project`
+The example project can be generated with the following command:
+`make -f tensorflow/lite/micro/tools/make/Makefile TARGET=esp generate_micro_speech_esp_project`
 
 ### Building the example
 
-Go the the example project directory `cd
-tensorflow/lite/micro/tools/make/gen/esp_xtensa-esp32/prj/micro_speech/esp-idf`
+Go the the example project directory
+`cd tensorflow/lite/micro/tools/make/gen/esp_xtensa-esp32/prj/micro_speech/esp-idf`
 
 Then build with `idf.py` `idf.py build`
 
 ### Load and run the example
 
-To flash (replace `/dev/ttyUSB0` with the device serial port): `idf.py --port
-/dev/ttyUSB0 flash`
+To flash (replace `/dev/ttyUSB0` with the device serial port):
+`idf.py --port /dev/ttyUSB0 flash`
 
 Monitor the serial output: `idf.py --port /dev/ttyUSB0 monitor`
 
 Use `Ctrl+]` to exit.
 
-The previous two commands can be combined: `idf.py --port /dev/ttyUSB0 flash
-monitor`
+The previous two commands can be combined:
+`idf.py --port /dev/ttyUSB0 flash monitor`
 
 ## Deploy to SparkFun Edge
 
@@ -147,9 +147,10 @@ The program will toggle the blue LED on and off with each inference. It will
 switch on the yellow LED when a "yes" is heard, the red LED when a "no" is
 heard, and the green LED when an unknown command is heard.
 
-The [AI on a microcontroller with TensorFlow Lite and SparkFun Edge](https://codelabs.developers.google.com/codelabs/sparkfun-tensorflow)
-walks through the deployment process in detail. The steps are also
-summarized below.
+The
+[AI on a microcontroller with TensorFlow Lite and SparkFun Edge](https://codelabs.developers.google.com/codelabs/sparkfun-tensorflow)
+walks through the deployment process in detail. The steps are also summarized
+below.
 
 ### Compile the binary
 
@@ -212,8 +213,10 @@ where you ran the commands. This is the file we'll be flashing to the device.
 
 Next, attach the board to your computer via a USB-to-serial adapter.
 
-**Note:** If you're using the [SparkFun Serial Basic Breakout](https://www.sparkfun.com/products/15096),
-you should [install the latest drivers](https://learn.sparkfun.com/tutorials/sparkfun-serial-basic-ch340c-hookup-guide#drivers-if-you-need-them)
+**Note:** If you're using the
+[SparkFun Serial Basic Breakout](https://www.sparkfun.com/products/15096), you
+should
+[install the latest drivers](https://learn.sparkfun.com/tutorials/sparkfun-serial-basic-ch340c-hookup-guide#drivers-if-you-need-them)
 before you continue.
 
 Once connected, assign the USB device name to an environment variable:
@@ -264,8 +267,8 @@ unknown command is heard. The current model has fairly low accuracy, so you may
 have to repeat "yes" a few times.
 
 Debug information is logged by the board while the program is running. To view
-it, establish a serial connection to the board using a baud rate of `115200`.
-On OSX and Linux, the following command should work:
+it, establish a serial connection to the board using a baud rate of `115200`. On
+OSX and Linux, the following command should work:
 
 ```
 screen ${DEVICENAME} 115200
@@ -297,7 +300,8 @@ Before we begin, you'll need the following:
 
 - STM32F7 discovery kit board
 - Mini-USB cable
-- ARM Mbed CLI ([installation instructions](https://os.mbed.com/docs/mbed-os/v5.12/tools/installation-and-setup.html))
+- ARM Mbed CLI
+  ([installation instructions](https://os.mbed.com/docs/mbed-os/v5.12/tools/installation-and-setup.html))
 - Python 2.7 and pip
 
 Since Mbed requires a special folder structure for projects, we'll first run a
@@ -365,11 +369,10 @@ cp ./BUILD/DISCO_F746NG/GCC_ARM/mbed.bin /Volumes/DIS_F746NG/
 
 Copying the file will initiate the flashing process.
 
-The inference results are logged by the board while the program is running.
-To view it, establish a serial connection to the board
-using a baud rate of `9600`. On OSX and Linux, the following command should
-work, replacing `/dev/tty.devicename` with the name of your device as it appears
-in `/dev`:
+The inference results are logged by the board while the program is running. To
+view it, establish a serial connection to the board using a baud rate of `9600`.
+On OSX and Linux, the following command should work, replacing
+`/dev/tty.devicename` with the name of your device as it appears in `/dev`:
 
 ```
 screen /dev/tty.devicename 9600
@@ -513,7 +516,7 @@ The number after the score is the number of milliseconds since the program was
 started.
 
 If you don't see any output, make sure your Mac's internal microphone is
-selected in the Mac's *Sound* menu, and that its input volume is turned up high
+selected in the Mac's _Sound_ menu, and that its input volume is turned up high
 enough.
 
 ## Run the tests on a development machine
@@ -610,7 +613,8 @@ go
 
 ### Use Google Colaboratory
 
-The easiest way to train your own speech model is by running [`train_speech_model.ipynb`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/examples/micro_speech/train_speech_model.ipynb)
+The easiest way to train your own speech model is by running
+[`train_speech_model.ipynb`](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/examples/micro_speech/train_speech_model.ipynb)
 in Google Colaboratory. This avoids the need to install dependencies, and allows
 the use of GPUs for training. Total training time will be 1.5-2hrs.
 
@@ -640,8 +644,8 @@ python tensorflow/tensorflow/examples/speech_commands/train.py \
 --data_dir=/tmp/speech_dataset --train_dir=/tmp/speech_commands_train
 ```
 
-The training process is likely to take a couple of hours. Once it
-has completed, the next step is to freeze the variables:
+The training process is likely to take a couple of hours. Once it has completed,
+the next step is to freeze the variables:
 
 ```
 python tensorflow/tensorflow/examples/speech_commands/freeze.py \

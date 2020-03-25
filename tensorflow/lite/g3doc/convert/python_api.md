@@ -15,12 +15,12 @@ The Python API for converting TensorFlow models to TensorFlow Lite is
 `tf.lite.TFLiteConverter`. `TFLiteConverter` provides the following classmethods
 to convert a model based on the original model format:
 
-*   `TFLiteConverter.from_saved_model()`: Converts
-    [SavedModel directories](https://www.tensorflow.org/guide/saved_model).
-*   `TFLiteConverter.from_keras_model()`: Converts
-    [`tf.keras` models](https://www.tensorflow.org/guide/keras/overview).
-*   `TFLiteConverter.from_concrete_functions()`: Converts
-    [concrete functions](https://tensorflow.org/guide/concrete_function).
+- `TFLiteConverter.from_saved_model()`: Converts
+  [SavedModel directories](https://www.tensorflow.org/guide/saved_model).
+- `TFLiteConverter.from_keras_model()`: Converts
+  [`tf.keras` models](https://www.tensorflow.org/guide/keras/overview).
+- `TFLiteConverter.from_concrete_functions()`: Converts
+  [concrete functions](https://tensorflow.org/guide/concrete_function).
 
 This document contains [example usages](#examples) of the API and
 [instructions](#versioning) on running the different versions of TensorFlow.
@@ -30,8 +30,8 @@ This document contains [example usages](#examples) of the API and
 ### Converting a SavedModel <a name="saved_model"></a>
 
 The following example shows how to convert a
-[SavedModel](https://www.tensorflow.org/guide/saved_model) into a
-TensorFlow Lite [`FlatBuffer`](https://google.github.io/flatbuffers/).
+[SavedModel](https://www.tensorflow.org/guide/saved_model) into a TensorFlow
+Lite [`FlatBuffer`](https://google.github.io/flatbuffers/).
 
 ```python
 import tensorflow as tf
@@ -196,14 +196,14 @@ either install the nightly build with
 
 There is a behavior change in how models containing
 [custom ops](https://www.tensorflow.org/lite/guide/ops_custom) (those for which
-users use to set allow\_custom\_ops before) are handled in the
+users use to set allow_custom_ops before) are handled in the
 [new converter](https://github.com/tensorflow/tensorflow/blob/917ebfe5fc1dfacf8eedcc746b7989bafc9588ef/tensorflow/lite/python/lite.py#L81).
 
 **Built-in TensorFlow op**
 
 If you are converting a model with a built-in TensorFlow op that does not exist
-in TensorFlow Lite, you should set allow\_custom\_ops attribute (same as
-before), explained [here](https://www.tensorflow.org/lite/guide/ops_custom).
+in TensorFlow Lite, you should set allow_custom_ops attribute (same as before),
+explained [here](https://www.tensorflow.org/lite/guide/ops_custom).
 
 **Custom op in TensorFlow**
 
@@ -211,20 +211,20 @@ If you are converting a model with a custom TensorFlow op, it is recommended
 that you write a [TensorFlow kernel](https://www.tensorflow.org/guide/create_op)
 and [TensorFlow Lite kernel](https://www.tensorflow.org/lite/guide/ops_custom).
 This ensures that the model is working end-to-end, from TensorFlow and
-TensorFlow Lite. This also requires setting the allow\_custom\_ops attribute.
+TensorFlow Lite. This also requires setting the allow_custom_ops attribute.
 
 **Advanced custom op usage (not recommended)**
 
 If the above is not possible, you can still convert a TensorFlow model
 containing a custom op without a corresponding kernel. You will need to pass the
 [OpDef](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/op_def.proto)
-of the custom op in TensorFlow using --custom\_opdefs flag, as long as you have
+of the custom op in TensorFlow using --custom_opdefs flag, as long as you have
 the corresponding OpDef registered in the TensorFlow global op registry. This
 ensures that the TensorFlow model is valid (i.e. loadable by the TensorFlow
 runtime).
 
 If the custom op is not part of the global TensorFlow op registry, then the
-corresponding OpDef needs to be specified via the --custom\_opdefs flag. This is
+corresponding OpDef needs to be specified via the --custom_opdefs flag. This is
 a list of an OpDef proto in string that needs to be additionally registered.
 Below is an example of an TFLiteAwesomeCustomOp with 2 inputs, 1 output, and 2
 attributes:
