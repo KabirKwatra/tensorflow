@@ -30,16 +30,16 @@ namespace tensorflow {
 
 /// Represents a SavedModel that is loaded from storage.
 class SavedModelBundleInterface {
-public:
-    virtual ~SavedModelBundleInterface();
+ public:
+  virtual ~SavedModelBundleInterface();
 
-    /// Returns the TensorFlow Session that can be used to interact with the
-    /// SavedModel.
-    virtual Session* GetSession() const = 0;
+  /// Returns the TensorFlow Session that can be used to interact with the
+  /// SavedModel.
+  virtual Session* GetSession() const = 0;
 
-    /// Returns a map from signature name to SignatureDef for all signatures in
-    /// in the SavedModel.
-    virtual const protobuf::Map<string, SignatureDef>& GetSignatures() const = 0;
+  /// Returns a map from signature name to SignatureDef for all signatures in
+  /// in the SavedModel.
+  virtual const protobuf::Map<string, SignatureDef>& GetSignatures() const = 0;
 };
 
 /// SavedModel representation once the SavedModel is loaded from storage.
@@ -47,57 +47,53 @@ public:
 /// NOTE: Prefer to use SavedModelBundleLite in new code, as it consumes less
 /// RAM.
 struct SavedModelBundle : public SavedModelBundleInterface {
-    /// A TensorFlow Session does not Close itself on destruction. To avoid
-    /// resource leaks, we explicitly call Close on Sessions that we create.
-    ~SavedModelBundle() override {
-        if (session) {
-            session->Close().IgnoreError();
-        }
+  /// A TensorFlow Session does not Close itself on destruction. To avoid
+  /// resource leaks, we explicitly call Close on Sessions that we create.
+  ~SavedModelBundle() override {
+    if (session) {
+      session->Close().IgnoreError();
     }
+  }
 
-    SavedModelBundle() = default;
+  SavedModelBundle() = default;
 
-    Session* GetSession() const override {
-        return session.get();
-    }
-    const protobuf::Map<string, SignatureDef>& GetSignatures() const override {
-        return meta_graph_def.signature_def();
-    }
+  Session* GetSession() const override { return session.get(); }
+  const protobuf::Map<string, SignatureDef>& GetSignatures() const override {
+    return meta_graph_def.signature_def();
+  }
 
-    std::unique_ptr<Session> session;
-    MetaGraphDef meta_graph_def;
-    std::unique_ptr<GraphDebugInfo> debug_info;
+  std::unique_ptr<Session> session;
+  MetaGraphDef meta_graph_def;
+  std::unique_ptr<GraphDebugInfo> debug_info;
 };
 
 // A version of SavedModelBundle that avoids storing a potentially large
 // MetaGraphDef. Prefer to use SavedModelBundleLite in new code.
 class SavedModelBundleLite : public SavedModelBundleInterface {
-public:
-    SavedModelBundleLite() = default;
-    SavedModelBundleLite& operator=(SavedModelBundleLite&& other) = default;
+ public:
+  SavedModelBundleLite() = default;
+  SavedModelBundleLite& operator=(SavedModelBundleLite&& other) = default;
 
-    SavedModelBundleLite(std::unique_ptr<Session> session,
-                         protobuf::Map<string, SignatureDef> signatures)
-        : session_(std::move(session)), signatures_(std::move(signatures)) {}
+  SavedModelBundleLite(std::unique_ptr<Session> session,
+                       protobuf::Map<string, SignatureDef> signatures)
+      : session_(std::move(session)), signatures_(std::move(signatures)) {}
 
-    /// A TensorFlow Session does not Close itself on destruction. To avoid
-    /// resource leaks, we explicitly call Close on Sessions that we create.
-    ~SavedModelBundleLite() override {
-        if (session_) {
-            session_->Close().IgnoreError();
-        }
+  /// A TensorFlow Session does not Close itself on destruction. To avoid
+  /// resource leaks, we explicitly call Close on Sessions that we create.
+  ~SavedModelBundleLite() override {
+    if (session_) {
+      session_->Close().IgnoreError();
     }
+  }
 
-    Session* GetSession() const override {
-        return session_.get();
-    }
-    const protobuf::Map<string, SignatureDef>& GetSignatures() const override {
-        return signatures_;
-    }
+  Session* GetSession() const override { return session_.get(); }
+  const protobuf::Map<string, SignatureDef>& GetSignatures() const override {
+    return signatures_;
+  }
 
-private:
-    std::unique_ptr<Session> session_;
-    protobuf::Map<string, SignatureDef> signatures_;
+ private:
+  std::unique_ptr<Session> session_;
+  protobuf::Map<string, SignatureDef> signatures_;
 };
 
 /// Loads a SavedModel from the specified export directory. The MetaGraphDef
