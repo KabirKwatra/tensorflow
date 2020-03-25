@@ -49,8 +49,7 @@ mkdir -p "$MICRO_LOG_PATH"
 
 xt-run "$1" 2>&1 | tee "$MICRO_LOG_FILENAME"
 
-if grep -q "$2" "$MICRO_LOG_FILENAME"
-then
+if grep -q "$2" "$MICRO_LOG_FILENAME"; then
   echo "$1: PASS"
   exit 0
 else
