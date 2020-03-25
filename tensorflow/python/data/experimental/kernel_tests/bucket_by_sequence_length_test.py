@@ -48,7 +48,7 @@ def _format_record(array, sparse):
         return {
             "values": array,
             "indices": [[i] for i in range(len(array))],
-            "dense_shape": (len(array),)
+            "dense_shape": (len(array),),
         }
     return array
 
@@ -58,7 +58,7 @@ def _get_record_type(sparse):
         return {
             "values": dtypes.int64,
             "indices": dtypes.int64,
-            "dense_shape": dtypes.int64
+            "dense_shape": dtypes.int64,
         }
     return dtypes.int32
 
@@ -66,19 +66,20 @@ def _get_record_type(sparse):
 def _get_record_shape(sparse):
     if sparse:
         return {
-            "values": tensor_shape.TensorShape([None, ]),
+            "values": tensor_shape.TensorShape([None,]),
             "indices": tensor_shape.TensorShape([None, 1]),
-            "dense_shape": tensor_shape.TensorShape([1, ])
+            "dense_shape": tensor_shape.TensorShape([1,]),
         }
     return tensor_shape.TensorShape([None])
 
 
-class BucketBySequenceLengthTest(test_base.DatasetTestBase,
-                                 parameterized.TestCase):
-
+class BucketBySequenceLengthTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(param_no_padding=[True, False])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(param_no_padding=[True, False]),
+        )
+    )
     def testBucketDropReminder(self, param_no_padding):
 
         boundaries = [10, 20, 30]
@@ -99,19 +100,21 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
         # <seq-length>: [batch1_size, ..., batchN_size]
         expected_batch_sizes = {}
 
-        for length, batch_size, bucket_elements in zip(lengths, batch_sizes,
-                                                       n_bucket_elements):
+        for length, batch_size, bucket_elements in zip(
+            lengths, batch_sizes, n_bucket_elements
+        ):
             # Calculate the expected sum across all batches of a specific sequence length.
-            expected_sums[length] = \
-                (bucket_elements - bucket_elements % batch_size) * length
+            expected_sums[length] = (
+                bucket_elements - bucket_elements % batch_size
+            ) * length
             # Calculate the expected occurrence of individual batch sizes.
-            expected_batch_sizes[length] = \
-                [batch_size] * (bucket_elements // batch_size)
+            expected_batch_sizes[length] = [batch_size] * (
+                bucket_elements // batch_size
+            )
             # Calculate the expected occurrence of individual sequence lengths.
             expected_lengths.extend([length] * (bucket_elements // batch_size))
 
         def build_dataset(sparse):
-
             def _generator():
                 # Produce 1 batch for each bucket
                 elements = []
@@ -126,7 +129,8 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
                     yield (_format_record(el, sparse),)
 
             dataset = dataset_ops.Dataset.from_generator(
-                _generator, (_get_record_type(sparse),), (_get_record_shape(sparse),))
+                _generator, (_get_record_type(sparse),), (_get_record_shape(sparse),)
+            )
             if sparse:
                 dataset = dataset.map(lambda x: (_to_sparse_tensor(x),))
             return dataset
@@ -139,12 +143,14 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
                     boundaries,
                     batch_sizes,
                     no_padding=no_padding,
-                    drop_remainder=True))
+                    drop_remainder=True,
+                )
+            )
 
             get_next = self.getNext(dataset)
             batches = []
             for _ in range(n_expected_batches):
-                batch, = self.evaluate(get_next())
+                (batch,) = self.evaluate(get_next())
                 batches.append(batch)
 
             with self.assertRaises(errors.OutOfRangeError):
@@ -158,8 +164,9 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
             # <seq-length>: [<batch_size>, ...]
             generated_batch_sizes = {}
 
-            for length, batch_size, bucket_elements in zip(lengths, batch_sizes,
-                                                           n_bucket_elements):
+            for length, batch_size, bucket_elements in zip(
+                lengths, batch_sizes, n_bucket_elements
+            ):
                 # Initialize the sum across all batches.
                 generated_sums[length] = 0
                 # Initialize the individual batch sizes.
@@ -179,30 +186,41 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
             for l in lengths:
                 # Make sure the sum of the batch contents is correct for the individual sequence lengths.
                 self.assertEqual(
-                    generated_sums[l], expected_sums[l], "Tensor sums did not match! "
-                    "expected: {}, generated: {}".format(expected_sums, generated_sums))
+                    generated_sums[l],
+                    expected_sums[l],
+                    "Tensor sums did not match! "
+                    "expected: {}, generated: {}".format(expected_sums, generated_sums),
+                )
 
                 # Make sure the individual batch sizes are generated as expected.
                 self.assertEqual(
-                    sorted(generated_batch_sizes[l]), sorted(
-                        expected_batch_sizes[l]),
+                    sorted(generated_batch_sizes[l]),
+                    sorted(expected_batch_sizes[l]),
                     "Batch-sizes did not match! "
                     "expected: {}, generated: {}".format(
                         sorted(expected_batch_sizes[l]),
-                        sorted(generated_batch_sizes[l])))
+                        sorted(generated_batch_sizes[l]),
+                    ),
+                )
 
             # Make sure the generated sequence lengths appear as often as expected.
             self.assertEqual(
-                sorted(generated_lengths), sorted(expected_lengths),
+                sorted(generated_lengths),
+                sorted(expected_lengths),
                 "The generated sequence lengths did not match! "
                 "expected: {}, generated: {}".format(
-                    sorted(expected_lengths), sorted(generated_lengths)))
+                    sorted(expected_lengths), sorted(generated_lengths)
+                ),
+            )
 
         _test_bucket_by_padding(param_no_padding)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(param_no_padding=[True, False])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(param_no_padding=[True, False]),
+        )
+    )
     def testBucket(self, param_no_padding):
 
         boundaries = [10, 20, 30]
@@ -221,10 +239,10 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
                 random.shuffle(elements)
                 for el in elements:
                     yield (_format_record(el, sparse),)
+
             dataset = dataset_ops.Dataset.from_generator(
-                _generator,
-                (_get_record_type(sparse),),
-                (_get_record_shape(sparse),))
+                _generator, (_get_record_type(sparse),), (_get_record_shape(sparse),)
+            )
             if sparse:
                 dataset = dataset.map(lambda x: (_to_sparse_tensor(x),))
             return dataset
@@ -233,14 +251,13 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
             dataset = build_dataset(sparse=no_padding)
             dataset = dataset.apply(
                 grouping.bucket_by_sequence_length(
-                    _element_length_fn,
-                    boundaries,
-                    batch_sizes,
-                    no_padding=no_padding))
+                    _element_length_fn, boundaries, batch_sizes, no_padding=no_padding
+                )
+            )
             get_next = self.getNext(dataset)
             batches = []
             for _ in range(4):
-                batch, = self.evaluate(get_next())
+                (batch,) = self.evaluate(get_next())
                 batches.append(batch)
             with self.assertRaises(errors.OutOfRangeError):
                 self.evaluate(get_next())
@@ -281,17 +298,21 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
                 el = [1] * (boundaries[-1] + 5)
                 yield (el,)
 
-        def element_len(el): return array_ops.shape(el)[0]
+        def element_len(el):
+            return array_ops.shape(el)[0]
+
         dataset = dataset_ops.Dataset.from_generator(
-            element_gen, (dtypes.int64,), ([None],)).apply(
-                grouping.bucket_by_sequence_length(
-                    element_len, boundaries, batch_sizes,
-                    pad_to_bucket_boundary=True))
+            element_gen, (dtypes.int64,), ([None],)
+        ).apply(
+            grouping.bucket_by_sequence_length(
+                element_len, boundaries, batch_sizes, pad_to_bucket_boundary=True
+            )
+        )
         get_next = self.getNext(dataset)
 
         batches = []
         for _ in range(3):
-            batch, = self.evaluate(get_next())
+            (batch,) = self.evaluate(get_next())
             batches.append(batch)
         with self.assertRaisesOpError("bucket_boundaries"):
             self.evaluate(get_next())
@@ -306,8 +327,9 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
         batch_sizes = batch_sizes[:-1]
         self.assertEqual(sum(batch_sizes_val), sum(batch_sizes))
         self.assertEqual(sorted(batch_sizes), sorted(batch_sizes_val))
-        self.assertEqual([boundary - 1 for boundary in sorted(boundaries)],
-                         sorted(lengths_val))
+        self.assertEqual(
+            [boundary - 1 for boundary in sorted(boundaries)], sorted(lengths_val)
+        )
 
     def testPadToBoundaryNoExtraneousPadding(self):
 
@@ -319,59 +341,68 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
             for length in lengths:
                 yield ([1] * length,)
 
-        def element_len(element): return array_ops.shape(element)[0]
+        def element_len(element):
+            return array_ops.shape(element)[0]
+
         dataset = dataset_ops.Dataset.from_generator(
-            element_gen, (dtypes.int64,), ([None],)).apply(
-                grouping.bucket_by_sequence_length(
-                    element_len, boundaries, batch_sizes,
-                    pad_to_bucket_boundary=True))
+            element_gen, (dtypes.int64,), ([None],)
+        ).apply(
+            grouping.bucket_by_sequence_length(
+                element_len, boundaries, batch_sizes, pad_to_bucket_boundary=True
+            )
+        )
         get_next = self.getNext(dataset)
 
         batches = []
         for _ in range(5):
-            batch, = self.evaluate(get_next())
+            (batch,) = self.evaluate(get_next())
             batches.append(batch)
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
 
-        self.assertAllEqual(batches[0], [[1, 0],
-                                         [1, 1]])
-        self.assertAllEqual(batches[1], [[1, 1, 1, 0, 0, 0],
-                                         [1, 1, 1, 1, 0, 0]])
-        self.assertAllEqual(batches[2], [[1, 1, 1, 1, 1, 0],
-                                         [1, 1, 1, 1, 1, 1]])
-        self.assertAllEqual(batches[3], [[1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-                                         [1, 1, 1, 1, 1, 1, 1, 1, 0, 0]])
-        self.assertAllEqual(batches[4], [[1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+        self.assertAllEqual(batches[0], [[1, 0], [1, 1]])
+        self.assertAllEqual(batches[1], [[1, 1, 1, 0, 0, 0], [1, 1, 1, 1, 0, 0]])
+        self.assertAllEqual(batches[2], [[1, 1, 1, 1, 1, 0], [1, 1, 1, 1, 1, 1]])
+        self.assertAllEqual(
+            batches[3], [[1, 1, 1, 1, 1, 1, 1, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1, 0, 0]]
+        )
+        self.assertAllEqual(
+            batches[4], [[1, 1, 1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        )
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(param_no_padding=[True, False])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(param_no_padding=[True, False]),
+        )
+    )
     def testTupleElements(self, param_no_padding):
-
         def build_dataset(sparse):
             def _generator():
                 text = [[1, 2, 3], [3, 4, 5, 6, 7], [1, 2], [8, 9, 0, 2, 3]]
                 label = [1, 2, 1, 2]
                 for x, y in zip(text, label):
                     yield (_format_record(x, sparse), y)
+
             dataset = dataset_ops.Dataset.from_generator(
                 generator=_generator,
                 output_types=(_get_record_type(sparse), dtypes.int32),
-                output_shapes=(_get_record_shape(sparse),
-                               tensor_shape.TensorShape([])))
+                output_shapes=(_get_record_shape(sparse), tensor_shape.TensorShape([])),
+            )
             if sparse:
                 dataset = dataset.map(lambda x, y: (_to_sparse_tensor(x), y))
             return dataset
 
         def _test_tuple_elements_by_padding(no_padding):
             dataset = build_dataset(sparse=no_padding)
-            dataset = dataset.apply(grouping.bucket_by_sequence_length(
-                element_length_func=_element_length_fn,
-                bucket_batch_sizes=[2, 2, 2],
-                bucket_boundaries=[0, 8],
-                no_padding=no_padding))
+            dataset = dataset.apply(
+                grouping.bucket_by_sequence_length(
+                    element_length_func=_element_length_fn,
+                    bucket_batch_sizes=[2, 2, 2],
+                    bucket_boundaries=[0, 8],
+                    no_padding=no_padding,
+                )
+            )
             shapes = dataset_ops.get_legacy_output_shapes(dataset)
             self.assertEqual([None, None], shapes[0].as_list())
             self.assertEqual([None], shapes[1].as_list())
@@ -381,7 +412,9 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(param_drop_remainder=[True, False])))
+            combinations.combine(param_drop_remainder=[True, False]),
+        )
+    )
     def testBucketSparse(self, param_drop_remainder):  # pylint: disable=g-doc-args
         """Tests bucketing of sparse tensors (case where `no_padding` == True).
 
@@ -403,14 +436,15 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
         bucket_size = 10
 
         def _build_dataset():
-            input_data = [range(i+1) for i in range(min_len, max_len)]
+            input_data = [range(i + 1) for i in range(min_len, max_len)]
 
             def generator_fn():
                 for record in input_data:
                     yield _format_record(record, sparse=True)
+
             dataset = dataset_ops.Dataset.from_generator(
-                generator=generator_fn,
-                output_types=_get_record_type(sparse=True))
+                generator=generator_fn, output_types=_get_record_type(sparse=True)
+            )
             dataset = dataset.map(_to_sparse_tensor)
             return dataset
 
@@ -425,17 +459,19 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
 
                 for batch_offset in batch_offsets:
                     batch_start_len = bucket_start_len + batch_offset
-                    batch_end_len = min(batch_start_len + batch_size,
-                                        bucket_start_len + bucket_size)
+                    batch_end_len = min(
+                        batch_start_len + batch_size, bucket_start_len + bucket_size
+                    )
                     expected_indices = []
                     expected_values = []
                     for length in range(batch_start_len, batch_end_len):
                         for val in range(length + 1):
-                            expected_indices.append(
-                                (length - batch_start_len, val))
+                            expected_indices.append((length - batch_start_len, val))
                             expected_values.append(val)
-                    expected_sprs_tensor = (tuple(expected_indices),
-                                            tuple(expected_values))
+                    expected_sprs_tensor = (
+                        tuple(expected_indices),
+                        tuple(expected_values),
+                    )
                     all_expected_sparse_tensors.add(expected_sprs_tensor)
             return all_expected_sparse_tensors
 
@@ -446,19 +482,25 @@ class BucketBySequenceLengthTest(test_base.DatasetTestBase,
             with self.assertRaises(errors.OutOfRangeError):
                 while True:
                     output = self.evaluate(batch())
-                    sprs_tensor = (tuple([tuple(idx) for idx in output.indices]),
-                                   tuple(output.values))
+                    sprs_tensor = (
+                        tuple([tuple(idx) for idx in output.indices]),
+                        tuple(output.values),
+                    )
                     all_sparse_tensors.add(sprs_tensor)
 
             return all_sparse_tensors
+
         dataset = _build_dataset()
         boundaries = range(min_len + bucket_size + 1, max_len, bucket_size)
         dataset = dataset.apply(
             grouping.bucket_by_sequence_length(
                 _element_length_fn,
-                boundaries, [batch_size] * (len(boundaries) + 1),
+                boundaries,
+                [batch_size] * (len(boundaries) + 1),
                 no_padding=True,
-                drop_remainder=param_drop_remainder))
+                drop_remainder=param_drop_remainder,
+            )
+        )
         batches = _compute_batches(dataset)
         expected_batches = _compute_expected_batches(param_drop_remainder)
         self.assertEqual(batches, expected_batches)
