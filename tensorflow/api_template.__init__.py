@@ -25,29 +25,28 @@ Note that the file `__init__.py` in the TensorFlow source code tree is actually
 only a placeholder to enable test cases to run. The TensorFlow build replaces
 this file with a file generated from [`api_template.__init__.py`](https://www.github.com/tensorflow/tensorflow/blob/master/tensorflow/api_template.__init__.py)
 """
-
 from __future__ import absolute_import as _absolute_import
 from __future__ import division as _division
 from __future__ import print_function as _print_function
 
-from tensorflow.python.lib.io import file_io as _fi
-from tensorflow.python.framework import load_library as _ll
-from tensorflow.python.compat import (
-    v2_compat as _compat,
-)  # pylint: disable=g-import-not-at-top
 import distutils as _distutils
 import inspect as _inspect
 import logging as _logging
 import os as _os
 import site as _site
-import six as _six
 import sys as _sys
 
+import six as _six
+
+from tensorflow.python import tf2 as _tf2
+from tensorflow.python.compat import (
+    v2_compat as _compat,
+)  # pylint: disable=g-import-not-at-top
+from tensorflow.python.framework import load_library as _ll
+from tensorflow.python.lib.io import file_io as _fi
 from tensorflow.python.tools import module_util as _module_util
 from tensorflow.python.util.lazy_loader import LazyLoader as _LazyLoader
-
 # Make sure code inside the TensorFlow codebase can use tf2.enabled() at import.
-from tensorflow.python import tf2 as _tf2
 
 _tf2.enable()
 

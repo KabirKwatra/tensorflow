@@ -17,7 +17,6 @@
 For details, see
 https://github.com/tensorflow/community/blob/master/rfcs/20200211-tf-types.md.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
