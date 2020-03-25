@@ -46,6 +46,7 @@ class Symbol(Tensor):
     These objects represent the output of an op definition and do not carry a
     value.
     """
+
     pass
 
 
