@@ -24,7 +24,7 @@ set +u
 # From this point on, logs can be publicly available
 set -x
 
-function run_build () {
+function run_build() {
   # Build a unique cache silo string.
   UBUNTU_VERSION=$(lsb_release -a | grep Release | awk '{print $2}')
   IMAGE_VERSION=$(cat /VERSION)
@@ -124,4 +124,3 @@ install_bazelisk
 which bazel
 
 run_build
-
