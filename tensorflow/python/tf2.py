@@ -17,7 +17,6 @@
 This module is meant for TensorFlow internal implementation, not for users of
 the TensorFlow library. For that see tf.compat instead.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
