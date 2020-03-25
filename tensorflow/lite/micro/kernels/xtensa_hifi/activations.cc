@@ -56,184 +56,184 @@ template <typename Q>
 inline void ReluQuantized(int32_t lower, const RuntimeShape& input_shape,
                           const Q* input_data, const RuntimeShape& output_shape,
                           Q* output_data) {
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
-  for (int i = 0; i < flat_size; ++i) {
-    const Q val = input_data[i];
-    const Q clamped = val < lower ? lower : val;
-    output_data[i] = clamped;
-  }
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    for (int i = 0; i < flat_size; ++i) {
+        const Q val = input_data[i];
+        const Q clamped = val < lower ? lower : val;
+        output_data[i] = clamped;
+    }
 }
 
 inline void ReluFloat(const RuntimeShape& input_shape, const float* input_data,
                       const RuntimeShape& output_shape, float* output_data) {
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
-  for (int i = 0; i < flat_size; ++i) {
-    const float val = input_data[i];
-    const float lower = 0.0f;
-    const float clamped = val < lower ? lower : val;
-    output_data[i] = clamped;
-  }
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    for (int i = 0; i < flat_size; ++i) {
+        const float val = input_data[i];
+        const float lower = 0.0f;
+        const float clamped = val < lower ? lower : val;
+        output_data[i] = clamped;
+    }
 }
 
 inline void Relu6Float(const RuntimeShape& input_shape, const float* input_data,
                        const RuntimeShape& output_shape, float* output_data) {
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
-  for (int i = 0; i < flat_size; ++i) {
-    const float val = input_data[i];
-    const float upper = 6.0f;
-    const float lower = 0.0f;
-    const float clamped = val > upper ? upper : val < lower ? lower : val;
-    output_data[i] = clamped;
-  }
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    for (int i = 0; i < flat_size; ++i) {
+        const float val = input_data[i];
+        const float upper = 6.0f;
+        const float lower = 0.0f;
+        const float clamped = val > upper ? upper : val < lower ? lower : val;
+        output_data[i] = clamped;
+    }
 }
 
 template <typename Q>
 inline void Relu6Quantized(Q lower, Q upper, const RuntimeShape& input_shape,
                            const Q* input_data,
                            const RuntimeShape& output_shape, Q* output_data) {
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
-  for (int i = 0; i < flat_size; ++i) {
-    const Q val = input_data[i];
-    const Q clamped = val > upper ? upper : val < lower ? lower : val;
-    output_data[i] = clamped;
-  }
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    for (int i = 0; i < flat_size; ++i) {
+        const Q val = input_data[i];
+        const Q clamped = val > upper ? upper : val < lower ? lower : val;
+        output_data[i] = clamped;
+    }
 }
 
 TfLiteStatus ReluPrepare(TfLiteContext* context, TfLiteNode* node) {
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 TfLiteStatus ReluEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-  switch (input->type) {
+    switch (input->type) {
     case kTfLiteFloat32: {
-      int err;
-      const float* inp_data_ptr;
-      float* out_data_ptr;
-      const RuntimeShape& input_shape = GetTensorShape(input);
-      const RuntimeShape& output_shape = GetTensorShape(output);
-      const int flat_size = MatchingFlatSize(input_shape, output_shape);
+        int err;
+        const float* inp_data_ptr;
+        float* out_data_ptr;
+        const RuntimeShape& input_shape = GetTensorShape(input);
+        const RuntimeShape& output_shape = GetTensorShape(output);
+        const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-      inp_data_ptr = GetTensorData<float>(input);
-      out_data_ptr = GetTensorData<float>(output);
+        inp_data_ptr = GetTensorData<float>(input);
+        out_data_ptr = GetTensorData<float>(output);
 
-      const float f32_pos_inf = 0x7F800000;
-      err = xa_nn_vec_relu_f32_f32(out_data_ptr, inp_data_ptr, f32_pos_inf,
-                                   flat_size);
+        const float f32_pos_inf = 0x7F800000;
+        err = xa_nn_vec_relu_f32_f32(out_data_ptr, inp_data_ptr, f32_pos_inf,
+                                     flat_size);
 
-      CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_relu1_f32_f32 failed");
-      return kTfLiteOk;
+        CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_relu1_f32_f32 failed");
+        return kTfLiteOk;
     }
     case kTfLiteInt8: {
-      ReluQuantized<int8_t>(input->params.zero_point, GetTensorShape(input),
-                            GetTensorData<int8_t>(input),
-                            GetTensorShape(output),
-                            GetTensorData<int8_t>(output));
-      return kTfLiteOk;
+        ReluQuantized<int8_t>(input->params.zero_point, GetTensorShape(input),
+                              GetTensorData<int8_t>(input),
+                              GetTensorShape(output),
+                              GetTensorData<int8_t>(output));
+        return kTfLiteOk;
     }
     case kTfLiteUInt8: {
-      int err;
-      const uint8_t* inp_data_ptr;
-      uint8_t* out_data_ptr;
-      const RuntimeShape& input_shape = GetTensorShape(input);
-      const RuntimeShape& output_shape = GetTensorShape(output);
-      const int flat_size = MatchingFlatSize(input_shape, output_shape);
+        int err;
+        const uint8_t* inp_data_ptr;
+        uint8_t* out_data_ptr;
+        const RuntimeShape& input_shape = GetTensorShape(input);
+        const RuntimeShape& output_shape = GetTensorShape(output);
+        const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-      inp_data_ptr = GetTensorData<uint8_t>(input);
-      out_data_ptr = GetTensorData<uint8_t>(output);
+        inp_data_ptr = GetTensorData<uint8_t>(input);
+        out_data_ptr = GetTensorData<uint8_t>(output);
 
-      err = xa_nn_vec_activation_min_max_asym8_asym8(
-          out_data_ptr, inp_data_ptr, 0, 255, flat_size);  // Is 255 right?
+        err = xa_nn_vec_activation_min_max_asym8_asym8(
+                  out_data_ptr, inp_data_ptr, 0, 255, flat_size);  // Is 255 right?
 
-      CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_activation_min_max_8_8 failed");
-      return kTfLiteOk;
+        CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_activation_min_max_8_8 failed");
+        return kTfLiteOk;
     }
     default: {
-      TF_LITE_KERNEL_LOG(context, "Only float32 is supported currently, got %s",
-                         TfLiteTypeGetName(input->type));
-      return kTfLiteError;
+        TF_LITE_KERNEL_LOG(context, "Only float32 is supported currently, got %s",
+                           TfLiteTypeGetName(input->type));
+        return kTfLiteError;
     }
-  }
+    }
 }
 
 TfLiteStatus Relu6Prepare(TfLiteContext* context, TfLiteNode* node) {
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 TfLiteStatus Relu6Eval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-  switch (input->type) {
+    switch (input->type) {
     case kTfLiteFloat32: {
-      int err;
-      const float* inp_data_ptr;
-      float* out_data_ptr;
-      const RuntimeShape& input_shape = GetTensorShape(input);
-      const RuntimeShape& output_shape = GetTensorShape(output);
-      const int flat_size = MatchingFlatSize(input_shape, output_shape);
+        int err;
+        const float* inp_data_ptr;
+        float* out_data_ptr;
+        const RuntimeShape& input_shape = GetTensorShape(input);
+        const RuntimeShape& output_shape = GetTensorShape(output);
+        const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-      inp_data_ptr = GetTensorData<float>(input);
-      out_data_ptr = GetTensorData<float>(output);
+        inp_data_ptr = GetTensorData<float>(input);
+        out_data_ptr = GetTensorData<float>(output);
 
-      err = xa_nn_vec_relu6_f32_f32(out_data_ptr, inp_data_ptr, flat_size);
+        err = xa_nn_vec_relu6_f32_f32(out_data_ptr, inp_data_ptr, flat_size);
 
-      CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_relu1_f32_f32 failed");
-      return kTfLiteOk;
+        CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_relu1_f32_f32 failed");
+        return kTfLiteOk;
     }
     case kTfLiteInt8: {
-      const int8_t six = FloatToAsymmetricQuantizedInt8(
-          6.0f, input->params.scale, input->params.zero_point);
-      const int8_t zero = input->params.zero_point;
-      Relu6Quantized<int8_t>(
-          zero, six, GetTensorShape(input), GetTensorData<int8_t>(input),
-          GetTensorShape(output), GetTensorData<int8_t>(output));
-      return kTfLiteOk;
+        const int8_t six = FloatToAsymmetricQuantizedInt8(
+                               6.0f, input->params.scale, input->params.zero_point);
+        const int8_t zero = input->params.zero_point;
+        Relu6Quantized<int8_t>(
+            zero, six, GetTensorShape(input), GetTensorData<int8_t>(input),
+            GetTensorShape(output), GetTensorData<int8_t>(output));
+        return kTfLiteOk;
     }
     case kTfLiteUInt8: {
-      const uint8_t six = FloatToAsymmetricQuantizedUInt8(
-          6.0f, input->params.scale, input->params.zero_point);
-      const uint8_t zero = input->params.zero_point;
-      int err;
-      const uint8_t* inp_data_ptr;
-      uint8_t* out_data_ptr;
-      const RuntimeShape& input_shape = GetTensorShape(input);
-      const RuntimeShape& output_shape = GetTensorShape(output);
-      const int flat_size = MatchingFlatSize(input_shape, output_shape);
+        const uint8_t six = FloatToAsymmetricQuantizedUInt8(
+                                6.0f, input->params.scale, input->params.zero_point);
+        const uint8_t zero = input->params.zero_point;
+        int err;
+        const uint8_t* inp_data_ptr;
+        uint8_t* out_data_ptr;
+        const RuntimeShape& input_shape = GetTensorShape(input);
+        const RuntimeShape& output_shape = GetTensorShape(output);
+        const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-      inp_data_ptr = GetTensorData<uint8_t>(input);
-      out_data_ptr = GetTensorData<uint8_t>(output);
+        inp_data_ptr = GetTensorData<uint8_t>(input);
+        out_data_ptr = GetTensorData<uint8_t>(output);
 
-      err = xa_nn_vec_activation_min_max_asym8_asym8(out_data_ptr, inp_data_ptr,
-                                                     zero, six, flat_size);
+        err = xa_nn_vec_activation_min_max_asym8_asym8(out_data_ptr, inp_data_ptr,
+                zero, six, flat_size);
 
-      CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_activation_min_max_8_8 failed");
-      return kTfLiteOk;
+        CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_activation_min_max_8_8 failed");
+        return kTfLiteOk;
     }
     default: {
-      TF_LITE_KERNEL_LOG(context, "Only float32 is supported currently, got %s",
-                         TfLiteTypeGetName(input->type));
-      return kTfLiteError;
+        TF_LITE_KERNEL_LOG(context, "Only float32 is supported currently, got %s",
+                           TfLiteTypeGetName(input->type));
+        return kTfLiteError;
     }
-  }
+    }
 }
 
 }  // namespace activations
 
 TfLiteRegistration* Register_RELU() {
-  static TfLiteRegistration r = {};
-  r.prepare = activations::ReluPrepare;
-  r.invoke = activations::ReluEval;
-  return &r;
+    static TfLiteRegistration r = {};
+    r.prepare = activations::ReluPrepare;
+    r.invoke = activations::ReluEval;
+    return &r;
 }
 
 TfLiteRegistration* Register_RELU6() {
-  static TfLiteRegistration r = {};
-  r.prepare = activations::Relu6Prepare;
-  r.invoke = activations::Relu6Eval;
-  return &r;
+    static TfLiteRegistration r = {};
+    r.prepare = activations::Relu6Prepare;
+    r.invoke = activations::Relu6Eval;
+    return &r;
 }
 
 }  // namespace micro

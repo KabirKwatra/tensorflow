@@ -54,71 +54,71 @@ constexpr int kInputTensor = 0;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-  if (input->type == kTfLiteFloat32) {
-    switch (output->type) {
-      case kTfLiteFloat32: {
-        int err;
-        const float* inp_data_ptr;
-        float* out_data_ptr;
-        const RuntimeShape& input_shape = GetTensorShape(input);
-        const RuntimeShape& output_shape = GetTensorShape(output);
-        const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    if (input->type == kTfLiteFloat32) {
+        switch (output->type) {
+        case kTfLiteFloat32: {
+            int err;
+            const float* inp_data_ptr;
+            float* out_data_ptr;
+            const RuntimeShape& input_shape = GetTensorShape(input);
+            const RuntimeShape& output_shape = GetTensorShape(output);
+            const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-        inp_data_ptr = GetTensorData<float>(input);
-        out_data_ptr = GetTensorData<float>(output);
+            inp_data_ptr = GetTensorData<float>(input);
+            out_data_ptr = GetTensorData<float>(output);
 
-        err = xa_nn_vec_sigmoid_f32_f32(out_data_ptr, inp_data_ptr, flat_size);
+            err = xa_nn_vec_sigmoid_f32_f32(out_data_ptr, inp_data_ptr, flat_size);
 
-        CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_sigmoid_f32_f32 failed");
-        return kTfLiteOk;
-      }
-      default:
+            CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_vec_sigmoid_f32_f32 failed");
+            return kTfLiteOk;
+        }
+        default:
+            TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
+                               TfLiteTypeGetName(input->type),
+                               TfLiteTypeGetName(output->type));
+            return kTfLiteError;
+        }
+    } else if (input->type == kTfLiteInt8) {
+        switch (output->type) {
+        case kTfLiteInt8: {
+            reference_ops::Logistic(
+                GetTensorShape(input), GetTensorData<int8_t>(input),
+                input->params.scale, input->params.zero_point,
+                GetTensorShape(output), GetTensorData<int8_t>(output),
+                output->params.scale, output->params.zero_point);
+            return kTfLiteOk;
+        }
+        default:
+            TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
+                               TfLiteTypeGetName(input->type),
+                               TfLiteTypeGetName(output->type));
+            return kTfLiteError;
+        }
+    } else {
+        // (b/141211002): Also support other data types once we have supported
+        // temporary tensors in TFLM.
         TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
                            TfLiteTypeGetName(input->type),
                            TfLiteTypeGetName(output->type));
         return kTfLiteError;
     }
-  } else if (input->type == kTfLiteInt8) {
-    switch (output->type) {
-      case kTfLiteInt8: {
-        reference_ops::Logistic(
-            GetTensorShape(input), GetTensorData<int8_t>(input),
-            input->params.scale, input->params.zero_point,
-            GetTensorShape(output), GetTensorData<int8_t>(output),
-            output->params.scale, output->params.zero_point);
-        return kTfLiteOk;
-      }
-      default:
-        TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
-                           TfLiteTypeGetName(input->type),
-                           TfLiteTypeGetName(output->type));
-        return kTfLiteError;
-    }
-  } else {
-    // (b/141211002): Also support other data types once we have supported
-    // temporary tensors in TFLM.
-    TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
-                       TfLiteTypeGetName(input->type),
-                       TfLiteTypeGetName(output->type));
-    return kTfLiteError;
-  }
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 }  // namespace activations
 
 TfLiteRegistration* Register_LOGISTIC() {
-  static TfLiteRegistration r = {};
-  r.prepare = activations::Prepare;
-  r.invoke = activations::Eval;
-  return &r;
+    static TfLiteRegistration r = {};
+    r.prepare = activations::Prepare;
+    r.invoke = activations::Eval;
+    return &r;
 }
 }  // namespace micro
 }  // namespace ops
