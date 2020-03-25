@@ -62,4 +62,3 @@ EMBARC_MLI_MD5 := "db0910cf0e07e43f74ae7a31de485d56"
 
 XTENSA_HIFI4_URL :="https://github.com/foss-xtensa/nnlib-hifi4/blob/master/archive/xa_nnlib.zip"
 XTENSA_HIFI4_MD5 :="a517b653a75b96d0271e1b99ee2a8c14"
-
