@@ -50,30 +50,30 @@ constexpr int kInputTensor = 0;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-    TF_LITE_ENSURE_EQ(context, input->type, kTfLiteFloat32);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-    int err;
-    const float* inp_data_ptr;
-    float* out_data_ptr;
-    const RuntimeShape& input_shape = GetTensorShape(input);
-    const RuntimeShape& output_shape = GetTensorShape(output);
-    const int flat_size = MatchingFlatSize(input_shape, output_shape);
+  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+  TF_LITE_ENSURE_EQ(context, input->type, kTfLiteFloat32);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  int err;
+  const float* inp_data_ptr;
+  float* out_data_ptr;
+  const RuntimeShape& input_shape = GetTensorShape(input);
+  const RuntimeShape& output_shape = GetTensorShape(output);
+  const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-    inp_data_ptr = GetTensorData<float>(input);
-    out_data_ptr = GetTensorData<float>(output);
+  inp_data_ptr = GetTensorData<float>(input);
+  out_data_ptr = GetTensorData<float>(output);
 
-    err = xa_nn_elm_floor_f32_f32(out_data_ptr, inp_data_ptr, flat_size);
+  err = xa_nn_elm_floor_f32_f32(out_data_ptr, inp_data_ptr, flat_size);
 
-    CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_elm_floor_f32_f32 failed");
-    return kTfLiteOk;
+  CHECK_ERR_HIFI_NNLIB_KER(err, "xa_nn_elm_floor_f32_f32 failed");
+  return kTfLiteOk;
 }
 }  // namespace floor
 
 TfLiteRegistration* Register_FLOOR() {
-    static TfLiteRegistration r = {};
-    r.invoke = floor::Eval;
-    return &r;
+  static TfLiteRegistration r = {};
+  r.invoke = floor::Eval;
+  return &r;
 }
 
 }  // namespace micro
