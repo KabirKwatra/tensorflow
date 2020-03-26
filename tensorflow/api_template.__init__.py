@@ -40,8 +40,7 @@ import six as _six
 
 from tensorflow.python import tf2 as _tf2
 from tensorflow.python.compat import (
-    v2_compat as _compat,
-)  # pylint: disable=g-import-not-at-top
+    v2_compat as _compat, )  # pylint: disable=g-import-not-at-top
 from tensorflow.python.framework import load_library as _ll
 from tensorflow.python.lib.io import file_io as _fi
 from tensorflow.python.tools import module_util as _module_util
@@ -75,12 +74,12 @@ _current_module.compat.v2  # pylint: disable=pointless-statement
 try:
     from tensorboard.summary._tf import summary
 
-    _current_module.__path__ = [
-        _module_util.get_parent_dir(summary)
-    ] + _current_module.__path__
+    _current_module.__path__ = [_module_util.get_parent_dir(summary)
+                                ] + _current_module.__path__
     setattr(_current_module, "summary", summary)
 except ImportError:
-    _logging.warning("Limited tf.summary API due to missing TensorBoard installation.")
+    _logging.warning(
+        "Limited tf.summary API due to missing TensorBoard installation.")
 
 # Lazy-load estimator.
 _estimator_module = "tensorflow_estimator.python.estimator.api._v2.estimator"
@@ -93,9 +92,8 @@ setattr(_current_module, "estimator", estimator)
 try:
     from .python.keras.api._v2 import keras
 
-    _current_module.__path__ = [
-        _module_util.get_parent_dir(keras)
-    ] + _current_module.__path__
+    _current_module.__path__ = [_module_util.get_parent_dir(keras)
+                                ] + _current_module.__path__
     setattr(_current_module, "keras", keras)
 except ImportError:
     pass
@@ -112,7 +110,6 @@ if not _six.PY2:
 # Enable TF2 behaviors
 _compat.enable_v2_behavior()
 _major_api_version = 2
-
 
 # Load all plugin libraries from site-packages/tensorflow-plugins if we are
 # running under pip.
@@ -137,7 +134,9 @@ _current_file_location = _inspect.getfile(_inspect.currentframe())
 
 
 def _running_from_pip_package():
-    return any(_current_file_location.startswith(dir_) for dir_ in _site_packages_dirs)
+    return any(
+        _current_file_location.startswith(dir_)
+        for dir_ in _site_packages_dirs)
 
 
 if _running_from_pip_package():

@@ -57,9 +57,8 @@ class ModuleTest(test.TestCase):
                 str(tf.range(1, 10)),
             )
         else:
-            self.assertEqual(
-                'Tensor("range:0", shape=(9,), dtype=int32)', str(tf.range(1, 10))
-            )
+            self.assertEqual('Tensor("range:0", shape=(9,), dtype=int32)',
+                             str(tf.range(1, 10)))
 
     def testCompatV2HasCompatV1(self):
         # pylint: disable=pointless-statement
