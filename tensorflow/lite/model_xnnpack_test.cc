@@ -25,35 +25,35 @@ limitations under the License.
 namespace tflite {
 
 TEST(FloatModel, WithXnnpackDelegate) {
-  // Note: this graph will be fully delegated by the XNNPACK delegate.
-  auto model = FlatBufferModel::BuildFromFile(
-      "tensorflow/lite/testdata/multi_add.bin");
-  ASSERT_TRUE(model);
+    // Note: this graph will be fully delegated by the XNNPACK delegate.
+    auto model = FlatBufferModel::BuildFromFile(
+                     "tensorflow/lite/testdata/multi_add.bin");
+    ASSERT_TRUE(model);
 
-  std::unique_ptr<Interpreter> interpreter;
-  ASSERT_EQ(InterpreterBuilder(*model,
-                               ops::builtin::BuiltinOpResolver{})(&interpreter),
-            kTfLiteOk);
-  ASSERT_TRUE(interpreter);
+    std::unique_ptr<Interpreter> interpreter;
+    ASSERT_EQ(InterpreterBuilder(*model,
+                                 ops::builtin::BuiltinOpResolver{})(&interpreter),
+              kTfLiteOk);
+    ASSERT_TRUE(interpreter);
 
-  ASSERT_EQ(interpreter->AllocateTensors(), kTfLiteOk);
+    ASSERT_EQ(interpreter->AllocateTensors(), kTfLiteOk);
 
 #if TFLITE_HAS_ATTRIBUTE_WEAK
-  // As the graph is fully delegated by XNNPACK delegate, we will expect the
-  // following:
-  EXPECT_EQ(1, interpreter->execution_plan().size());
-  int first_node_id = interpreter->execution_plan()[0];
-  const auto& first_node_reg =
-      interpreter->node_and_registration(first_node_id)->second;
-  const std::string op_name = GetOpNameByRegistration(first_node_reg);
-  EXPECT_EQ("DELEGATE TfLiteXNNPackDelegate", op_name);
+    // As the graph is fully delegated by XNNPACK delegate, we will expect the
+    // following:
+    EXPECT_EQ(1, interpreter->execution_plan().size());
+    int first_node_id = interpreter->execution_plan()[0];
+    const auto& first_node_reg =
+        interpreter->node_and_registration(first_node_id)->second;
+    const std::string op_name = GetOpNameByRegistration(first_node_reg);
+    EXPECT_EQ("DELEGATE TfLiteXNNPackDelegate", op_name);
 #endif
 }
 
 }  // namespace tflite
 
 int main(int argc, char** argv) {
-  ::tflite::LogToStderr();
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    ::tflite::LogToStderr();
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
