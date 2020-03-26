@@ -21,10 +21,10 @@ namespace tflite {
 // Corresponding weak declaration found in lite/model.cc.
 std::unique_ptr<TfLiteDelegate, void (*)(TfLiteDelegate*)>
 AcquireXNNPACKDelegate(int num_threads) {
-    auto opts = TfLiteXNNPackDelegateOptionsDefault();
-    // Note that we don't want to use the thread pool for num_threads == 1.
-    opts.num_threads = num_threads > 1 ? num_threads : 0;
-    return std::unique_ptr<TfLiteDelegate, void (*)(TfLiteDelegate*)>(
-               TfLiteXNNPackDelegateCreate(&opts), TfLiteXNNPackDelegateDelete);
+  auto opts = TfLiteXNNPackDelegateOptionsDefault();
+  // Note that we don't want to use the thread pool for num_threads == 1.
+  opts.num_threads = num_threads > 1 ? num_threads : 0;
+  return std::unique_ptr<TfLiteDelegate, void (*)(TfLiteDelegate*)>(
+      TfLiteXNNPackDelegateCreate(&opts), TfLiteXNNPackDelegateDelete);
 }
 }  // namespace tflite
