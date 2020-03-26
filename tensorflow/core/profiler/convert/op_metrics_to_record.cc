@@ -24,25 +24,25 @@ namespace tensorflow {
 namespace profiler {
 
 std::vector<const OpMetrics*> SortedOpMetricsDb(const OpMetricsDb& metrics_db,
-                                                int max_records) {
-  std::vector<const OpMetrics*> result;
-  result.reserve(metrics_db.metrics_db_size());
-  for (const OpMetrics& metrics : metrics_db.metrics_db()) {
-    result.push_back(&metrics);
-  }
+        int max_records) {
+    std::vector<const OpMetrics*> result;
+    result.reserve(metrics_db.metrics_db_size());
+    for (const OpMetrics& metrics : metrics_db.metrics_db()) {
+        result.push_back(&metrics);
+    }
 
-  auto comp = [](const OpMetrics* a, const OpMetrics* b) {
-    return std::make_tuple(a->self_time_ps(), b->name()) >
-           std::make_tuple(b->self_time_ps(), a->name());
-  };
+    auto comp = [](const OpMetrics* a, const OpMetrics* b) {
+        return std::make_tuple(a->self_time_ps(), b->name()) >
+               std::make_tuple(b->self_time_ps(), a->name());
+    };
 
-  if (max_records != -1 && result.size() > max_records) {
-    absl::c_partial_sort(result, result.begin() + max_records, comp);
-    result.resize(max_records);
-  } else {
-    absl::c_sort(result, comp);
-  }
-  return result;
+    if (max_records != -1 && result.size() > max_records) {
+        absl::c_partial_sort(result, result.begin() + max_records, comp);
+        result.resize(max_records);
+    } else {
+        absl::c_sort(result, comp);
+    }
+    return result;
 }
 
 }  // namespace profiler
