@@ -17,7 +17,6 @@
 Example usage:
 python strip_strings.py foo.tflite foo_stripped.tflite
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

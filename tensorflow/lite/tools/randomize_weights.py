@@ -17,7 +17,6 @@
 Example usage:
 python randomize_weights.py foo.tflite foo_randomized.tflite
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

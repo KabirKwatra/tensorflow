@@ -13,21 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for ragged.to_tensor."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import random
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python.client import session
 from tensorflow.python.eager import context
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
-
 from tensorflow.python.framework import errors
 from tensorflow.python.framework import indexed_slices
 from tensorflow.python.framework import ops
