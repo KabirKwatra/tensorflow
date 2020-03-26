@@ -22,6 +22,7 @@ import sys
 import time
 
 import numpy as np
+
 import tensorflow as tf
 from tensorflow.core.example import example_pb2
 from tensorflow.python.lib.io import file_io
