@@ -106,7 +106,8 @@ def build_mock_model():
     schema_fb.QuantizationParametersAddMin(builder, quant1_min_offset)
     schema_fb.QuantizationParametersAddMax(builder, quant1_max_offset)
     schema_fb.QuantizationParametersAddScale(builder, quant1_scale_offset)
-    schema_fb.QuantizationParametersAddZeroPoint(builder, quant1_zero_point_offset)
+    schema_fb.QuantizationParametersAddZeroPoint(builder,
+                                                 quant1_zero_point_offset)
     quantization1_offset = schema_fb.QuantizationParametersEnd(builder)
 
     string1_offset = builder.CreateString("constant_tensor")
@@ -151,7 +152,8 @@ def build_mock_model():
     outputs_offset = builder.EndVector(1)
 
     schema_fb.OperatorCodeStart(builder)
-    schema_fb.OperatorCodeAddBuiltinCode(builder, schema_fb.BuiltinOperator.ADD)
+    schema_fb.OperatorCodeAddBuiltinCode(builder,
+                                         schema_fb.BuiltinOperator.ADD)
     schema_fb.OperatorCodeAddVersion(builder, 1)
     code_offset = schema_fb.OperatorCodeEnd(builder)
 

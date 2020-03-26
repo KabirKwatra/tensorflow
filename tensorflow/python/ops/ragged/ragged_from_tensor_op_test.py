@@ -28,41 +28,48 @@ from tensorflow.python.platform import googletest
 
 
 @test_util.run_all_in_graph_and_eager_modes
-class RaggedTensorFromTensorOpTest(
-    test_util.TensorFlowTestCase, parameterized.TestCase
-):
+class RaggedTensorFromTensorOpTest(test_util.TensorFlowTestCase,
+                                   parameterized.TestCase):
     def testDocStringExamples(self):
         # The examples from RaggedTensor.from_tensor.__doc__.
         dt = constant_op.constant([[5, 7, 0], [0, 3, 0], [6, 0, 0]])
-        self.assertAllEqual(
-            RaggedTensor.from_tensor(dt), [[5, 7, 0], [0, 3, 0], [6, 0, 0]]
-        )
+        self.assertAllEqual(RaggedTensor.from_tensor(dt),
+                            [[5, 7, 0], [0, 3, 0], [6, 0, 0]])
 
-        self.assertAllEqual(
-            RaggedTensor.from_tensor(dt, lengths=[1, 0, 3]), [[5], [], [6, 0, 0]]
-        )
+        self.assertAllEqual(RaggedTensor.from_tensor(dt, lengths=[1, 0, 3]),
+                            [[5], [], [6, 0, 0]])
 
-        self.assertAllEqual(
-            RaggedTensor.from_tensor(dt, padding=0), [[5, 7], [0, 3], [6]]
-        )
+        self.assertAllEqual(RaggedTensor.from_tensor(dt, padding=0),
+                            [[5, 7], [0, 3], [6]])
 
-        dt_3d = constant_op.constant(
-            [
-                [[5, 0], [7, 0], [0, 0]],
-                [[0, 0], [3, 0], [0, 0]],
-                [[6, 0], [0, 0], [0, 0]],
-            ]
-        )
+        dt_3d = constant_op.constant([
+            [[5, 0], [7, 0], [0, 0]],
+            [[0, 0], [3, 0], [0, 0]],
+            [[6, 0], [0, 0], [0, 0]],
+        ])
         self.assertAllEqual(
-            RaggedTensor.from_tensor(dt_3d, lengths=([2, 0, 3], [1, 1, 2, 0, 1])),
+            RaggedTensor.from_tensor(dt_3d,
+                                     lengths=([2, 0, 3], [1, 1, 2, 0, 1])),
             [[[5], [7]], [], [[6, 0], [], [0]]],
         )
 
     @parameterized.parameters(
         # 2D test cases, no length or padding.
-        {"tensor": [[]], "expected": [[]], "expected_shape": [1, 0],},
-        {"tensor": [[1]], "expected": [[1]], "expected_shape": [1, 1],},
-        {"tensor": [[1, 2]], "expected": [[1, 2]], "expected_shape": [1, 2],},
+        {
+            "tensor": [[]],
+            "expected": [[]],
+            "expected_shape": [1, 0],
+        },
+        {
+            "tensor": [[1]],
+            "expected": [[1]],
+            "expected_shape": [1, 1],
+        },
+        {
+            "tensor": [[1, 2]],
+            "expected": [[1, 2]],
+            "expected_shape": [1, 2],
+        },
         {
             "tensor": [[1], [2], [3]],
             "expected": [[1], [2], [3]],
@@ -74,15 +81,27 @@ class RaggedTensorFromTensorOpTest(
             "expected_shape": [3, 3],
         },
         # 3D test cases, no length or padding
-        {"tensor": [[[]]], "expected": [[[]]], "expected_shape": [1, 1, 0],},
+        {
+            "tensor": [[[]]],
+            "expected": [[[]]],
+            "expected_shape": [1, 1, 0],
+        },
         {
             "tensor": [[[]]],
             "expected": [[[]]],
             "ragged_rank": 1,
             "expected_shape": [1, 1, 0],
         },
-        {"tensor": [[[1]]], "expected": [[[1]]], "expected_shape": [1, 1, 1],},
-        {"tensor": [[[1, 2]]], "expected": [[[1, 2]]], "expected_shape": [1, 1, 2],},
+        {
+            "tensor": [[[1]]],
+            "expected": [[[1]]],
+            "expected_shape": [1, 1, 1],
+        },
+        {
+            "tensor": [[[1, 2]]],
+            "expected": [[[1, 2]]],
+            "expected_shape": [1, 1, 2],
+        },
         {
             "tensor": [[[1, 2], [3, 4]]],
             "expected": [[[1, 2], [3, 4]]],
@@ -167,7 +186,12 @@ class RaggedTensorFromTensorOpTest(
             "expected": [[1]],
             "expected_shape": [1, None],
         },
-        {"tensor": [[0]], "padding": 0, "expected": [[]], "expected_shape": [1, None],},
+        {
+            "tensor": [[0]],
+            "padding": 0,
+            "expected": [[]],
+            "expected_shape": [1, None],
+        },
         {
             "tensor": [[0, 1]],
             "padding": 0,
@@ -219,7 +243,8 @@ class RaggedTensorFromTensorOpTest(
                 [[[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             ],
             "padding": [[0, 0], [0, 0]],
-            "expected": [[[[1, 2], [3, 4]]], [[[0, 0], [0, 0]], [[5, 6], [7, 8]]], []],
+            "expected": [[[[1, 2], [3, 4]]],
+                         [[[0, 0], [0, 0]], [[5, 6], [7, 8]]], []],
             "expected_shape": [3, None, 2, 2],
         },
         # 3D test cases, with ragged_rank=2.
@@ -249,7 +274,8 @@ class RaggedTensorFromTensorOpTest(
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
-            "ragged_rank": 2,
+            "ragged_rank":
+            2,
             "expected": [
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
@@ -261,7 +287,8 @@ class RaggedTensorFromTensorOpTest(
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
-            "ragged_rank": 3,
+            "ragged_rank":
+            3,
             "expected": [
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
@@ -273,7 +300,8 @@ class RaggedTensorFromTensorOpTest(
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
-            "ragged_rank": 2,
+            "ragged_rank":
+            2,
             "padding": [0, 0],
             "expected": [
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
@@ -287,9 +315,12 @@ class RaggedTensorFromTensorOpTest(
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
             "lengths": ([2, 2], [1, 2, 2, 1]),
-            "expected": [[[[1, 0]], [[0, 0], [4, 0]]], [[[5, 6], [7, 0]], [[0, 8]]]],
-            "ragged_rank": 2,
-            "use_ragged_rank": False,  # lengths contains nested_row_lengths.
+            "expected": [[[[1, 0]], [[0, 0], [4, 0]]],
+                         [[[5, 6], [7, 0]], [[0, 8]]]],
+            "ragged_rank":
+            2,
+            "use_ragged_rank":
+            False,  # lengths contains nested_row_lengths.
             "expected_shape": [2, None, None, 2],
         },
         {
@@ -298,9 +329,12 @@ class RaggedTensorFromTensorOpTest(
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
             "lengths": [[2, 2], [1, 2, 2, 1]],
-            "expected": [[[[1, 0]], [[0, 0], [4, 0]]], [[[5, 6], [7, 0]], [[0, 8]]]],
-            "ragged_rank": 2,
-            "use_ragged_rank": False,  # lengths contains nested_row_lengths.
+            "expected": [[[[1, 0]], [[0, 0], [4, 0]]],
+                         [[[5, 6], [7, 0]], [[0, 8]]]],
+            "ragged_rank":
+            2,
+            "use_ragged_rank":
+            False,  # lengths contains nested_row_lengths.
             "expected_shape": [2, None, None, 2],
         },
         {
@@ -308,9 +342,12 @@ class RaggedTensorFromTensorOpTest(
                 [[[1, 0], [2, 3]], [[0, 0], [4, 0]]],
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
-            "ragged_rank": 3,
-            "padding": 0,
-            "expected": [[[[1], [2, 3]], [[], [4]]], [[[5, 6], [7]], [[0, 8], []]]],
+            "ragged_rank":
+            3,
+            "padding":
+            0,
+            "expected": [[[[1], [2, 3]], [[], [4]]],
+                         [[[5, 6], [7]], [[0, 8], []]]],
             "expected_shape": [2, 2, 2, None],
         },
         {
@@ -319,9 +356,12 @@ class RaggedTensorFromTensorOpTest(
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
             "lengths": ([2, 2], [2, 2, 2, 2], [1, 2, 0, 1, 2, 1, 2, 0]),
-            "expected": [[[[1], [2, 3]], [[], [4]]], [[[5, 6], [7]], [[0, 8], []]]],
-            "ragged_rank": 3,
-            "use_ragged_rank": False,  # lengths contains nested_row_lengths.
+            "expected": [[[[1], [2, 3]], [[], [4]]],
+                         [[[5, 6], [7]], [[0, 8], []]]],
+            "ragged_rank":
+            3,
+            "use_ragged_rank":
+            False,  # lengths contains nested_row_lengths.
             "expected_shape": [2, None, None, None],
         },
         {
@@ -330,21 +370,24 @@ class RaggedTensorFromTensorOpTest(
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
             "lengths": [[2, 2], [2, 2, 2, 2], [1, 2, 0, 1, 2, 1, 2, 0]],
-            "expected": [[[[1], [2, 3]], [[], [4]]], [[[5, 6], [7]], [[0, 8], []]]],
-            "ragged_rank": 3,
-            "use_ragged_rank": False,  # lengths contains nested_row_lengths.
+            "expected": [[[[1], [2, 3]], [[], [4]]],
+                         [[[5, 6], [7]], [[0, 8], []]]],
+            "ragged_rank":
+            3,
+            "use_ragged_rank":
+            False,  # lengths contains nested_row_lengths.
             "expected_shape": [2, None, None, None],
         },
     )  # pyformat: disable
     def testRaggedFromTensor(
-        self,
-        tensor,
-        expected,
-        lengths=None,
-        padding=None,
-        ragged_rank=1,
-        use_ragged_rank=True,
-        expected_shape=None,
+            self,
+            tensor,
+            expected,
+            lengths=None,
+            padding=None,
+            ragged_rank=1,
+            use_ragged_rank=True,
+            expected_shape=None,
     ):
         dt = constant_op.constant(tensor)
         if use_ragged_rank:
@@ -362,17 +405,16 @@ class RaggedTensorFromTensorOpTest(
         self.assertAllEqual(rt, expected)
         self.assertAllEqual(
             rt,
-            RaggedTensor.from_nested_row_splits(
-                rt.flat_values, rt.nested_row_splits, validate=True
-            ),
+            RaggedTensor.from_nested_row_splits(rt.flat_values,
+                                                rt.nested_row_splits,
+                                                validate=True),
         )
 
     def testHighDimensions(self):
         # Use distinct prime numbers for all dimension shapes in this test, so
         # we can see any errors that are caused by mixing up dimension sizes.
-        dt = array_ops.reshape(
-            math_ops.range(3 * 5 * 7 * 11 * 13 * 17), [3, 5, 7, 11, 13, 17]
-        )
+        dt = array_ops.reshape(math_ops.range(3 * 5 * 7 * 11 * 13 * 17),
+                               [3, 5, 7, 11, 13, 17])
         for ragged_rank in range(1, 4):
             rt = RaggedTensor.from_tensor(dt, ragged_rank=ragged_rank)
             self.assertEqual(type(rt), RaggedTensor)
@@ -384,44 +426,116 @@ class RaggedTensorFromTensorOpTest(
             self.assertAllEqual(rt, self.evaluate(dt).tolist())
             self.assertAllEqual(
                 rt,
-                RaggedTensor.from_nested_row_splits(
-                    rt.flat_values, rt.nested_row_splits, validate=True
-                ),
+                RaggedTensor.from_nested_row_splits(rt.flat_values,
+                                                    rt.nested_row_splits,
+                                                    validate=True),
             )
 
     @parameterized.parameters(
         # With no padding or lengths
-        {"dt_shape": [0, 0], "expected": []},
-        {"dt_shape": [0, 3], "expected": []},
-        {"dt_shape": [3, 0], "expected": [[], [], []]},
-        {"dt_shape": [0, 2, 3], "expected": []},
-        {"dt_shape": [1, 0, 0], "expected": [[]]},
-        {"dt_shape": [2, 0, 3], "expected": [[], []]},
-        {"dt_shape": [2, 3, 0], "expected": [[[], [], []], [[], [], []]]},
-        {"dt_shape": [2, 3, 0, 1], "expected": [[[], [], []], [[], [], []]]},
+        {
+            "dt_shape": [0, 0],
+            "expected": []
+        },
+        {
+            "dt_shape": [0, 3],
+            "expected": []
+        },
+        {
+            "dt_shape": [3, 0],
+            "expected": [[], [], []]
+        },
+        {
+            "dt_shape": [0, 2, 3],
+            "expected": []
+        },
+        {
+            "dt_shape": [1, 0, 0],
+            "expected": [[]]
+        },
+        {
+            "dt_shape": [2, 0, 3],
+            "expected": [[], []]
+        },
+        {
+            "dt_shape": [2, 3, 0],
+            "expected": [[[], [], []], [[], [], []]]
+        },
+        {
+            "dt_shape": [2, 3, 0, 1],
+            "expected": [[[], [], []], [[], [], []]]
+        },
         {
             "dt_shape": [2, 3, 1, 0],
             "expected": [[[[]], [[]], [[]]], [[[]], [[]], [[]]]],
         },
         # With padding
-        {"dt_shape": [0, 0], "padding": 0, "expected": []},
-        {"dt_shape": [0, 3], "padding": 0, "expected": []},
-        {"dt_shape": [3, 0], "padding": 0, "expected": [[], [], []]},
-        {"dt_shape": [0, 2, 3], "padding": [0, 0, 0], "expected": []},
-        {"dt_shape": [2, 0, 3], "padding": [0, 0, 0], "expected": [[], []]},
-        {"dt_shape": [2, 3, 0], "padding": [], "expected": [[], []]},
+        {
+            "dt_shape": [0, 0],
+            "padding": 0,
+            "expected": []
+        },
+        {
+            "dt_shape": [0, 3],
+            "padding": 0,
+            "expected": []
+        },
+        {
+            "dt_shape": [3, 0],
+            "padding": 0,
+            "expected": [[], [], []]
+        },
+        {
+            "dt_shape": [0, 2, 3],
+            "padding": [0, 0, 0],
+            "expected": []
+        },
+        {
+            "dt_shape": [2, 0, 3],
+            "padding": [0, 0, 0],
+            "expected": [[], []]
+        },
+        {
+            "dt_shape": [2, 3, 0],
+            "padding": [],
+            "expected": [[], []]
+        },
         # With lengths
-        {"dt_shape": [0, 0], "lengths": [], "expected": []},
-        {"dt_shape": [0, 3], "lengths": [], "expected": []},
-        {"dt_shape": [3, 0], "lengths": [0, 0, 0], "expected": [[], [], []]},
+        {
+            "dt_shape": [0, 0],
+            "lengths": [],
+            "expected": []
+        },
+        {
+            "dt_shape": [0, 3],
+            "lengths": [],
+            "expected": []
+        },
+        {
+            "dt_shape": [3, 0],
+            "lengths": [0, 0, 0],
+            "expected": [[], [], []]
+        },
         {
             "dt_shape": [3, 0],
             "lengths": [2, 3, 4],  # lengths > ncols: truncated to ncols
             "expected": [[], [], []],
         },
-        {"dt_shape": [0, 2, 3], "lengths": [], "expected": []},
-        {"dt_shape": [2, 0, 3], "lengths": [0, 0], "expected": [[], []]},
-        {"dt_shape": [2, 3, 0], "lengths": [0, 0], "expected": [[], []]},
+        {
+            "dt_shape": [0, 2, 3],
+            "lengths": [],
+            "expected": []
+        },
+        {
+            "dt_shape": [2, 0, 3],
+            "lengths": [0, 0],
+            "expected": [[], []]
+        },
+        {
+            "dt_shape": [2, 3, 0],
+            "lengths": [0, 0],
+            "expected": [[], []]
+        },
     )
     def testEmpty(self, dt_shape, expected, lengths=None, padding=None):
         dt = array_ops.zeros(dt_shape)
@@ -433,9 +547,9 @@ class RaggedTensorFromTensorOpTest(
             self.assertAllEqual(rt, expected)
             self.assertAllEqual(
                 rt,
-                RaggedTensor.from_nested_row_splits(
-                    rt.flat_values, rt.nested_row_splits, validate=True
-                ),
+                RaggedTensor.from_nested_row_splits(rt.flat_values,
+                                                    rt.nested_row_splits,
+                                                    validate=True),
             )
 
     @parameterized.parameters(
@@ -455,7 +569,11 @@ class RaggedTensorFromTensorOpTest(
             "lengths": [[1], [1]],
             "error": (ValueError, r"Shape \(1, 3\) must have rank at least 3"),
         },
-        {"tensor": [[1]], "padding": "a", "error": (TypeError, ".*")},
+        {
+            "tensor": [[1]],
+            "padding": "a",
+            "error": (TypeError, ".*")
+        },
         {
             "tensor": [[1]],
             "padding": [1],
@@ -474,12 +592,14 @@ class RaggedTensorFromTensorOpTest(
         {
             "tensor": [[1]],
             "ragged_rank": 0,
-            "error": (ValueError, r"ragged_rank must be greater than 0; got 0"),
+            "error":
+            (ValueError, r"ragged_rank must be greater than 0; got 0"),
         },
         {
             "tensor": [[1]],
             "ragged_rank": -1,
-            "error": (ValueError, r"ragged_rank must be greater than 0; got -1"),
+            "error":
+            (ValueError, r"ragged_rank must be greater than 0; got -1"),
         },
         {
             "tensor": [
@@ -487,7 +607,8 @@ class RaggedTensorFromTensorOpTest(
                 [[[5, 6], [7, 0]], [[0, 8], [0, 0]]],
             ],
             "lengths": ([2, 2], [2, 2, 2, 2]),
-            "ragged_rank": 3,
+            "ragged_rank":
+            3,
             "error": (
                 ValueError,
                 r"If lengths is a tuple of row_lengths, then "
@@ -495,7 +616,12 @@ class RaggedTensorFromTensorOpTest(
             ),
         },
     )
-    def testErrors(self, tensor, lengths=None, padding=None, ragged_rank=1, error=None):
+    def testErrors(self,
+                   tensor,
+                   lengths=None,
+                   padding=None,
+                   ragged_rank=1,
+                   error=None):
         dt = constant_op.constant(tensor)
         self.assertRaisesRegexp(
             error[0],

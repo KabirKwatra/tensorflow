@@ -48,9 +48,11 @@ class WriteReadModelTest(test_util.TensorFlowTestCase):
         final_subgraph = final_model.subgraphs[0]
         self.assertEqual(initial_subgraph.name, final_subgraph.name)
         for i in range(len(initial_subgraph.inputs)):
-            self.assertEqual(initial_subgraph.inputs[i], final_subgraph.inputs[i])
+            self.assertEqual(initial_subgraph.inputs[i],
+                             final_subgraph.inputs[i])
         for i in range(len(initial_subgraph.outputs)):
-            self.assertEqual(initial_subgraph.outputs[i], final_subgraph.outputs[i])
+            self.assertEqual(initial_subgraph.outputs[i],
+                             final_subgraph.outputs[i])
         for i in range(len(initial_subgraph.operators)):
             self.assertEqual(
                 initial_subgraph.operators[i].opcodeIndex,
@@ -61,9 +63,11 @@ class WriteReadModelTest(test_util.TensorFlowTestCase):
         for i in range(len(initial_tensors)):
             self.assertEqual(initial_tensors[i].name, final_tensors[i].name)
             self.assertEqual(initial_tensors[i].type, final_tensors[i].type)
-            self.assertEqual(initial_tensors[i].buffer, final_tensors[i].buffer)
+            self.assertEqual(initial_tensors[i].buffer,
+                             final_tensors[i].buffer)
             for j in range(len(initial_tensors[i].shape)):
-                self.assertEqual(initial_tensors[i].shape[j], final_tensors[i].shape[j])
+                self.assertEqual(initial_tensors[i].shape[j],
+                                 final_tensors[i].shape[j])
         # Validate the first valid buffer (index 0 is always None)
         initial_buffer = initial_model.buffers[1].data
         final_buffer = final_model.buffers[1].data
@@ -92,9 +96,11 @@ class StripStringsTest(test_util.TensorFlowTestCase):
         self.assertNotEqual("", initial_model.subgraphs[0].name)
         self.assertEqual("", final_model.subgraphs[0].name)
         for i in range(len(initial_subgraph.inputs)):
-            self.assertEqual(initial_subgraph.inputs[i], final_subgraph.inputs[i])
+            self.assertEqual(initial_subgraph.inputs[i],
+                             final_subgraph.inputs[i])
         for i in range(len(initial_subgraph.outputs)):
-            self.assertEqual(initial_subgraph.outputs[i], final_subgraph.outputs[i])
+            self.assertEqual(initial_subgraph.outputs[i],
+                             final_subgraph.outputs[i])
         for i in range(len(initial_subgraph.operators)):
             self.assertEqual(
                 initial_subgraph.operators[i].opcodeIndex,
@@ -106,9 +112,11 @@ class StripStringsTest(test_util.TensorFlowTestCase):
             self.assertNotEqual("", initial_tensors[i].name)
             self.assertEqual("", final_tensors[i].name)
             self.assertEqual(initial_tensors[i].type, final_tensors[i].type)
-            self.assertEqual(initial_tensors[i].buffer, final_tensors[i].buffer)
+            self.assertEqual(initial_tensors[i].buffer,
+                             final_tensors[i].buffer)
             for j in range(len(initial_tensors[i].shape)):
-                self.assertEqual(initial_tensors[i].shape[j], final_tensors[i].shape[j])
+                self.assertEqual(initial_tensors[i].shape[j],
+                                 final_tensors[i].shape[j])
         # Validate the first valid buffer (index 0 is always None)
         initial_buffer = initial_model.buffers[1].data
         final_buffer = final_model.buffers[1].data
@@ -136,9 +144,11 @@ class RandomizeWeightsTest(test_util.TensorFlowTestCase):
         final_subgraph = final_model.subgraphs[0]
         self.assertEqual(initial_subgraph.name, final_subgraph.name)
         for i in range(len(initial_subgraph.inputs)):
-            self.assertEqual(initial_subgraph.inputs[i], final_subgraph.inputs[i])
+            self.assertEqual(initial_subgraph.inputs[i],
+                             final_subgraph.inputs[i])
         for i in range(len(initial_subgraph.outputs)):
-            self.assertEqual(initial_subgraph.outputs[i], final_subgraph.outputs[i])
+            self.assertEqual(initial_subgraph.outputs[i],
+                             final_subgraph.outputs[i])
         for i in range(len(initial_subgraph.operators)):
             self.assertEqual(
                 initial_subgraph.operators[i].opcodeIndex,
@@ -149,9 +159,11 @@ class RandomizeWeightsTest(test_util.TensorFlowTestCase):
         for i in range(len(initial_tensors)):
             self.assertEqual(initial_tensors[i].name, final_tensors[i].name)
             self.assertEqual(initial_tensors[i].type, final_tensors[i].type)
-            self.assertEqual(initial_tensors[i].buffer, final_tensors[i].buffer)
+            self.assertEqual(initial_tensors[i].buffer,
+                             final_tensors[i].buffer)
             for j in range(len(initial_tensors[i].shape)):
-                self.assertEqual(initial_tensors[i].shape[j], final_tensors[i].shape[j])
+                self.assertEqual(initial_tensors[i].shape[j],
+                                 final_tensors[i].shape[j])
         # Validate the first valid buffer (index 0 is always None)
         initial_buffer = initial_model.buffers[1].data
         final_buffer = final_model.buffers[1].data

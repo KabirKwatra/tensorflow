@@ -60,15 +60,15 @@ class VisualizeTest(test_util.TensorFlowTestCase):
         # It's hard to test debug output without doing a full HTML parse,
         # but at least sanity check that expected identifiers are present.
         self.assertRegex(
-            html_text, re.compile(r"%s" % model_filename, re.MULTILINE | re.DOTALL)
-        )
+            html_text,
+            re.compile(r"%s" % model_filename, re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text,
+                         re.compile(r"input_tensor", re.MULTILINE | re.DOTALL))
         self.assertRegex(
-            html_text, re.compile(r"input_tensor", re.MULTILINE | re.DOTALL)
-        )
-        self.assertRegex(
-            html_text, re.compile(r"constant_tensor", re.MULTILINE | re.DOTALL)
-        )
-        self.assertRegex(html_text, re.compile(r"ADD", re.MULTILINE | re.DOTALL))
+            html_text, re.compile(r"constant_tensor",
+                                  re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text, re.compile(r"ADD",
+                                               re.MULTILINE | re.DOTALL))
 
 
 if __name__ == "__main__":

@@ -31,8 +31,7 @@ from tensorflow.python.platform import app
 def main(_):
     """Application run loop."""
     parser = argparse.ArgumentParser(
-        description="Strips all nonessential strings from a tflite file."
-    )
+        description="Strips all nonessential strings from a tflite file.")
     parser.add_argument(
         "--input_tflite_file",
         type=str,

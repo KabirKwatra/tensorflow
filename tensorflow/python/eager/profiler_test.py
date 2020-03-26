@@ -43,7 +43,8 @@ class ProfilerTest(test_util.TensorFlowTestCase):
         profile_result = profiler.stop()
         profile_pb = trace_events_pb2.Trace()
         profile_pb.ParseFromString(profile_result)
-        devices = frozenset(device.name for device in profile_pb.devices.values())
+        devices = frozenset(device.name
+                            for device in profile_pb.devices.values())
         self.assertIn("/host:CPU", devices)
         if config.list_physical_devices("GPU"):
             self.assertIn("/device:GPU:0", devices)
