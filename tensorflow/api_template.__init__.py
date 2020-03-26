@@ -32,7 +32,9 @@ from __future__ import print_function as _print_function
 
 from tensorflow.python.lib.io import file_io as _fi
 from tensorflow.python.framework import load_library as _ll
-from tensorflow.python.compat import v2_compat as _compat  # pylint: disable=g-import-not-at-top
+from tensorflow.python.compat import (
+    v2_compat as _compat,
+)  # pylint: disable=g-import-not-at-top
 from tensorflow.python import tf2 as _tf2
 import distutils as _distutils
 import inspect as _inspect
@@ -46,7 +48,7 @@ from tensorflow.python.tools import module_util as _module_util
 from tensorflow.python.util.lazy_loader import LazyLoader as _LazyLoader
 
 # Make sure code inside the TensorFlow codebase can use tf2.enabled() at import.
-_os.environ['TF2_BEHAVIOR'] = '1'
+_os.environ["TF2_BEHAVIOR"] = "1"
 _tf2.enable()
 
 # API IMPORTS PLACEHOLDER
@@ -60,7 +62,7 @@ _API_MODULE = _sys.modules[__name__].bitwise
 _tf_api_dir = _os.path.dirname(_os.path.dirname(_API_MODULE.__file__))
 _current_module = _sys.modules[__name__]
 
-if not hasattr(_current_module, '__path__'):
+if not hasattr(_current_module, "__path__"):
     __path__ = [_tf_api_dir]
 elif _tf_api_dir not in __path__:
     __path__.append(_tf_api_dir)
@@ -72,12 +74,13 @@ elif _tf_api_dir not in __path__:
 _current_module.compat.v2  # pylint: disable=pointless-statement
 try:
     from tensorboard.summary._tf import summary
-    _current_module.__path__ = (
-        [_module_util.get_parent_dir(summary)] + _current_module.__path__)
+
+    _current_module.__path__ = [
+        _module_util.get_parent_dir(summary)
+    ] + _current_module.__path__
     setattr(_current_module, "summary", summary)
 except ImportError:
-    _logging.warning(
-        "Limited tf.summary API due to missing TensorBoard installation.")
+    _logging.warning("Limited tf.summary API due to missing TensorBoard installation.")
 
 # Lazy-load estimator.
 _estimator_module = "tensorflow_estimator.python.estimator.api._v2.estimator"
@@ -89,8 +92,10 @@ setattr(_current_module, "estimator", estimator)
 
 try:
     from .python.keras.api._v2 import keras
-    _current_module.__path__ = (
-        [_module_util.get_parent_dir(keras)] + _current_module.__path__)
+
+    _current_module.__path__ = [
+        _module_util.get_parent_dir(keras)
+    ] + _current_module.__path__
     setattr(_current_module, "keras", keras)
 except ImportError:
     pass
@@ -99,6 +104,7 @@ except ImportError:
 # pylint: disable=g-import-not-at-top
 if not _six.PY2:
     import typing as _typing
+
     if _typing.TYPE_CHECKING:
         from tensorflow_estimator.python.estimator.api._v2 import estimator
 # pylint: enable=g-import-not-at-top
@@ -117,11 +123,11 @@ _major_api_version = 2
 # Get sitepackages directories for the python installation.
 _site_packages_dirs = []
 _site_packages_dirs += [_site.USER_SITE]
-_site_packages_dirs += [_p for _p in _sys.path if 'site-packages' in _p]
-if 'getsitepackages' in dir(_site):
+_site_packages_dirs += [_p for _p in _sys.path if "site-packages" in _p]
+if "getsitepackages" in dir(_site):
     _site_packages_dirs += _site.getsitepackages()
 
-if 'sysconfig' in dir(_distutils):
+if "sysconfig" in dir(_distutils):
     _site_packages_dirs += [_distutils.sysconfig.get_python_lib()]
 
 _site_packages_dirs = list(set(_site_packages_dirs))
@@ -131,25 +137,24 @@ _current_file_location = _inspect.getfile(_inspect.currentframe())
 
 
 def _running_from_pip_package():
-    return any(
-        _current_file_location.startswith(dir_) for dir_ in _site_packages_dirs)
+    return any(_current_file_location.startswith(dir_) for dir_ in _site_packages_dirs)
 
 
 if _running_from_pip_package():
     # TODO(gunan): Add sanity checks to loaded modules here.
     for _s in _site_packages_dirs:
         # Load first party dynamic kernels.
-        _main_dir = _os.path.join(_s, 'tensorflow_core/core/kernels')
+        _main_dir = _os.path.join(_s, "tensorflow_core/core/kernels")
         if _fi.file_exists(_main_dir):
             _ll.load_library(_main_dir)
 
         # Load third party dynamic kernels.
-        _plugin_dir = _os.path.join(_s, 'tensorflow-plugins')
+        _plugin_dir = _os.path.join(_s, "tensorflow-plugins")
         if _fi.file_exists(_plugin_dir):
             _ll.load_library(_plugin_dir)
 
 # Add module aliases
-if hasattr(_current_module, 'keras'):
+if hasattr(_current_module, "keras"):
     losses = keras.losses
     metrics = keras.metrics
     optimizers = keras.optimizers
