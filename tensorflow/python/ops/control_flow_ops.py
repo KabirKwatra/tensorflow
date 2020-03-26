@@ -47,9 +47,11 @@ from tensorflow.python.ops import gen_logging_ops
 from tensorflow.python.ops import gen_math_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import tensor_array_ops
+
 # go/tf-wildcard-import
 # pylint: disable=wildcard-import,undefined-variable
 from tensorflow.python.ops.gen_control_flow_ops import *
+
 # pylint: enable=wildcard-import
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import compat
@@ -61,14 +63,12 @@ from tensorflow.python.util.tf_export import tf_export
 
 # This is to avoid a circular dependency:
 # cond_v2 -> gradients_util -> control_flow_ops
-cond_v2 = LazyLoader("cond_v2", globals(),
-                     "tensorflow.python.ops.cond_v2")
+cond_v2 = LazyLoader("cond_v2", globals(), "tensorflow.python.ops.cond_v2")
 
 # This is to avoid circular dependencies:
 # while_v2 -> control_flow_ops
 # while_v2 -> gradients_util -> control_flow_ops
-while_v2 = LazyLoader("while_v2", globals(),
-                      "tensorflow.python.ops.while_v2")
+while_v2 = LazyLoader("while_v2", globals(), "tensorflow.python.ops.while_v2")
 
 # We override the 'tuple' for a control flow op, so we keep python's
 # existing 'tuple' for later use in this module.
@@ -151,8 +151,9 @@ def Assert(condition, data, summarize=None, name=None):
             raise errors.InvalidArgumentError(
                 node_def=None,
                 op=None,
-                message="Expected '%s' to be true. Summarized data: %s" %
-                (condition, "\n".join(data_str)))
+                message="Expected '%s' to be true. Summarized data: %s"
+                % (condition, "\n".join(data_str)),
+            )
         return
 
     with ops.name_scope(name, "Assert", [condition, data]) as name:
@@ -167,10 +168,10 @@ def Assert(condition, data, summarize=None, name=None):
 
             def true_assert():
                 return gen_logging_ops._assert(
-                    condition, data, summarize, name="Assert")
+                    condition, data, summarize, name="Assert"
+                )
 
-            guarded_assert = cond(
-                condition, no_op, true_assert, name="AssertGuard")
+            guarded_assert = cond(condition, no_op, true_assert, name="AssertGuard")
             if context.executing_eagerly():
                 return
             return guarded_assert.op
@@ -211,13 +212,15 @@ def _NextIteration(data, name=None):
         raise TypeError("Type %s not supported" % type(data))
 
 
-def _Enter(data,
-           frame_name,
-           is_constant=False,
-           parallel_iterations=10,
-           use_ref=True,
-           use_input_shape=True,
-           name=None):
+def _Enter(
+    data,
+    frame_name,
+    is_constant=False,
+    parallel_iterations=10,
+    use_ref=True,
+    use_input_shape=True,
+    name=None,
+):
     """Creates or finds a child frame, and makes `data` available to it.
 
     The unique `frame_name` is used by the `Executor` to identify frames. If
@@ -241,18 +244,26 @@ def _Enter(data,
     if isinstance(data, ops.Tensor):
         if data.dtype._is_ref_dtype and use_ref:  # pylint: disable=protected-access
             result = gen_control_flow_ops.ref_enter(
-                data, frame_name, is_constant, parallel_iterations, name=name)
+                data, frame_name, is_constant, parallel_iterations, name=name
+            )
         else:
             result = gen_control_flow_ops.enter(
-                data, frame_name, is_constant, parallel_iterations, name=name)
+                data, frame_name, is_constant, parallel_iterations, name=name
+            )
         if use_input_shape:
             result.set_shape(data.get_shape())
         return result
     elif isinstance(data, composite_tensor.CompositeTensor):
 
         def enter_component(t):
-            return _Enter(t, frame_name, is_constant, parallel_iterations, use_ref,
-                          use_input_shape)
+            return _Enter(
+                t,
+                frame_name,
+                is_constant,
+                parallel_iterations,
+                use_ref,
+                use_input_shape,
+            )
 
         return nest.map_structure(enter_component, data, expand_composites=True)
     else:
@@ -304,7 +315,8 @@ def switch(data, pred, dtype=None, name=None):
     """
     with ops.name_scope(name, "Switch", [data, pred]) as name:
         data = ops.internal_convert_to_tensor_or_composite(
-            data, dtype=dtype, name="data", as_ref=True)
+            data, dtype=dtype, name="data", as_ref=True
+        )
         pred = ops.convert_to_tensor(pred, name="pred")
         if isinstance(data, ops.Tensor):
             return gen_control_flow_ops.switch(data, pred, name=name)
@@ -312,11 +324,12 @@ def switch(data, pred, dtype=None, name=None):
             if not isinstance(data, composite_tensor.CompositeTensor):
                 raise TypeError("Type %s not supported" % type(data))
             tensors = nest.flatten(data, expand_composites=True)
-            mapped = [gen_control_flow_ops.switch(
-                tensor, pred) for tensor in tensors]
+            mapped = [gen_control_flow_ops.switch(tensor, pred) for tensor in tensors]
             mapped_f, mapped_t = zip(*mapped)
-            return (nest.pack_sequence_as(data, mapped_f, expand_composites=True),
-                    nest.pack_sequence_as(data, mapped_t, expand_composites=True))
+            return (
+                nest.pack_sequence_as(data, mapped_f, expand_composites=True),
+                nest.pack_sequence_as(data, mapped_t, expand_composites=True),
+            )
 
 
 def _SwitchRefOrTensor(data, pred, name="Switch"):
@@ -389,15 +402,16 @@ def merge(inputs, name=None):
         some but not all have a dense_shape property.
     """
     if any(inp is None for inp in inputs):
-        raise ValueError(
-            "At least one of the merge inputs is None: %s" % inputs)
+        raise ValueError("At least one of the merge inputs is None: %s" % inputs)
     with ops.name_scope(name, "Merge", inputs) as name:
         inputs = [
             ops.internal_convert_to_tensor_or_composite(inp, as_ref=True)
             for inp in inputs
         ]
         if all(isinstance(v, ops.Tensor) for v in inputs):
-            if all(v.dtype._is_ref_dtype for v in inputs):  # pylint: disable=protected-access
+            if all(
+                v.dtype._is_ref_dtype for v in inputs
+            ):  # pylint: disable=protected-access
                 return gen_control_flow_ops.ref_merge(inputs, name)
             else:
                 return gen_control_flow_ops.merge(inputs, name)
@@ -405,27 +419,24 @@ def merge(inputs, name=None):
             # If there is a mix of tensors and indexed slices, then convert the
             # tensors to indexed slices.
             if all(isinstance(v, (ops.IndexedSlices, ops.Tensor)) for v in inputs):
-                inputs = math_ops._as_indexed_slices_list(
-                    inputs, optimize=False)
+                inputs = math_ops._as_indexed_slices_list(inputs, optimize=False)
 
             for v in inputs:
                 if not isinstance(v, composite_tensor.CompositeTensor):
                     raise TypeError("Type %s not supported" % type(v))
 
             for v in inputs[1:]:
-                nest.assert_same_structure(
-                    inputs[0], v, expand_composites=True)
+                nest.assert_same_structure(inputs[0], v, expand_composites=True)
 
-            flat_inputs = [nest.flatten(
-                v, expand_composites=True) for v in inputs]
+            flat_inputs = [nest.flatten(v, expand_composites=True) for v in inputs]
             merged_results = [
-                gen_control_flow_ops.merge(component)
-                for component in zip(*flat_inputs)
+                gen_control_flow_ops.merge(component) for component in zip(*flat_inputs)
             ]
             flat_merged = [tensor for (tensor, _) in merged_results]
             chosen_index = merged_results[0][1]
             merged_inputs = nest.pack_sequence_as(
-                inputs[0], flat_merged, expand_composites=True)
+                inputs[0], flat_merged, expand_composites=True
+            )
             return (merged_inputs, chosen_index)
 
 
@@ -442,11 +453,13 @@ def _convert_tensorarray_to_flow(tensor_or_tensor_array):
 def _convert_flows_to_tensorarrays(tensors_or_tensorarrays, tensors_or_flows):
     if len(tensors_or_tensorarrays) != len(tensors_or_flows):
         raise ValueError(
-            "Lengths of original Tensor list and new list do not match: %d vs. %d" %
-            (len(tensors_or_tensorarrays), len(tensors_or_flows)))
+            "Lengths of original Tensor list and new list do not match: %d vs. %d"
+            % (len(tensors_or_tensorarrays), len(tensors_or_flows))
+        )
     return [
-        tensor_array_ops.build_ta_with_new_flow(ta, t_or_flow) if isinstance(
-            ta, tensor_array_ops.TensorArray) else t_or_flow
+        tensor_array_ops.build_ta_with_new_flow(ta, t_or_flow)
+        if isinstance(ta, tensor_array_ops.TensorArray)
+        else t_or_flow
         for (ta, t_or_flow) in zip(tensors_or_tensorarrays, tensors_or_flows)
     ]
 
@@ -489,8 +502,7 @@ def _get_shape_invariant(var, shape=None):
         return var.shape
     elif isinstance(shape, tensor_spec.TensorSpec):
         if var.dtype != shape.dtype:
-            raise TypeError(
-                "TensorSpec %r is not compatible with %r" % (shape, var))
+            raise TypeError("TensorSpec %r is not compatible with %r" % (shape, var))
         return shape.shape
     elif isinstance(shape, type_spec.TypeSpec):
         raise TypeError("TypeSpec %r is not compatible with %r" % (shape, var))
@@ -513,28 +525,30 @@ def _shape_invariant_to_type_spec(var, shape):
         return type_spec.type_spec_from_value(var)
     elif isinstance(shape, type_spec.TypeSpec):
         if not shape.is_compatible_with(var):
-            raise TypeError(
-                "TypeSpec %r is not compatible with %r" % (shape, var))
+            raise TypeError("TypeSpec %r is not compatible with %r" % (shape, var))
         return shape
     elif not isinstance(shape, tensor_shape.TensorShape):
         raise TypeError(
             "Expected shape to be a TypeSpec, TensorShape or None, got %r for"
-            " value %r" % (shape, var))
+            " value %r" % (shape, var)
+        )
 
     if isinstance(var, ops.Tensor):
         return tensor_spec.TensorSpec(shape, var.dtype)
 
     elif isinstance(var, composite_tensor.CompositeTensor):
         try:
-            return var._shape_invariant_to_type_spec(shape)  # pylint: disable=protected-access
+            return var._shape_invariant_to_type_spec(
+                shape
+            )  # pylint: disable=protected-access
         except NotImplementedError:
             raise TypeError(
-                "To describe or constrain a %s, use a %s instead of a TensorShape." %
-                (type(var).__name__, type(var._type_spec).__name__))  # pylint: disable=protected-access
+                "To describe or constrain a %s, use a %s instead of a TensorShape."
+                % (type(var).__name__, type(var._type_spec).__name__)
+            )  # pylint: disable=protected-access
 
     else:
-        raise TypeError("Expected var to be a Tensor or CompositeTensor, got %s"
-                        % var)
+        raise TypeError("Expected var to be a Tensor or CompositeTensor, got %s" % var)
 
 
 def _SetShapeInvariants(input_vars, enter_vars, shapes):
@@ -553,8 +567,7 @@ def _SetShapeInvariants(input_vars, enter_vars, shapes):
         return
     flat_shapes = nest.flatten(shapes)
     if not all(isinstance(s, tensor_shape.TensorShape) for s in flat_shapes):
-        raise ValueError(
-            "`shapes` must be a (possibly nested) list of shapes.")
+        raise ValueError("`shapes` must be a (possibly nested) list of shapes.")
     # Check that the shapes of the inputs are less than the shape invariants,
     # and set the shapes of `enter_vars` to the shape invariants.
     for inp, var, shape in zip(input_vars, enter_vars, flat_shapes):
@@ -563,8 +576,9 @@ def _SetShapeInvariants(input_vars, enter_vars, shapes):
                 raise ValueError(
                     "The shape invariant specified for %s is not compatible with "
                     "the initial shape of the loop variable. It enters the loop "
-                    "with shape %s, but the specified shape invariant is %s." %
-                    (inp.name, inp.get_shape(), shape))
+                    "with shape %s, but the specified shape invariant is %s."
+                    % (inp.name, inp.get_shape(), shape)
+                )
             var.set_shape(shape)
         else:
             raise TypeError("Type %s not supported" % type(var))
@@ -594,7 +608,8 @@ def _EnforceShapeInvariant(merge_var, next_var):
                 "Input tensor '%s' enters the loop with shape %s, but has shape %s "
                 "after one iteration. To allow the shape to vary across iterations, "
                 "use the `shape_invariants` argument of tf.while_loop to specify a "
-                "less-specific shape." % (input_t.name, input_t.shape, n_shape))
+                "less-specific shape." % (input_t.name, input_t.shape, n_shape)
+            )
     else:
         raise TypeError("Type %s not supported" % type(merge_var))
 
@@ -650,7 +665,8 @@ class ControlFlowContext(object):
         self._outer_context = ops.get_default_graph()._get_control_flow_context()
         if self._outer_context:
             self._outer_context._nested_contexts.append(
-                self)  # pylint: disable=protected-access
+                self
+            )  # pylint: disable=protected-access
         self._context_stack = []
         if values_def:
             self._init_values_from_proto(values_def, import_scope=import_scope)
@@ -671,18 +687,21 @@ class ControlFlowContext(object):
         """
         assert isinstance(values_def, control_flow_pb2.ValuesDef)
         self._values = set(
-            ops.prepend_name_scope(value, import_scope)
-            for value in values_def.values)
+            ops.prepend_name_scope(value, import_scope) for value in values_def.values
+        )
         g = ops.get_default_graph()
         self._external_values = {}
         for k, v in values_def.external_values.items():
             k = ops.prepend_name_scope(k, import_scope)
             self._external_values[k] = g.as_graph_element(
-                ops.prepend_name_scope(v, import_scope))
-        op_names = set([
-            op.split(":")[0]
-            for op in self._values - set(self._external_values.keys())
-        ])
+                ops.prepend_name_scope(v, import_scope)
+            )
+        op_names = set(
+            [
+                op.split(":")[0]
+                for op in self._values - set(self._external_values.keys())
+            ]
+        )
         for op in op_names:
             # pylint: disable=protected-access
             g.as_graph_element(op)._set_control_flow_context(self)
@@ -726,11 +745,11 @@ class ControlFlowContext(object):
         """
         values_def = control_flow_pb2.ValuesDef()
         values_def.values.extend(
-            [ops.strip_name_scope(v, export_scope) for v in sorted(self._values)])
+            [ops.strip_name_scope(v, export_scope) for v in sorted(self._values)]
+        )
         for k, v in self._external_values.items():
             k = ops.strip_name_scope(k, export_scope)
-            values_def.external_values[k] = ops.strip_name_scope(
-                v.name, export_scope)
+            values_def.external_values[k] = ops.strip_name_scope(v.name, export_scope)
         return values_def
 
     def AddName(self, name):
@@ -762,9 +781,11 @@ class ControlFlowContext(object):
     def ExitResult(self, result):
         """Make a list of tensors available in the outer context."""
         if self._outer_context:
+
             def fn(x):
                 self._outer_context.AddName(x.name)
                 return x
+
             nest.map_structure(fn, result, expand_composites=True)
 
     def GetWhileContext(self):
@@ -789,7 +810,8 @@ class ControlFlowContext(object):
         external_control_inputs = []
         if len(internal_control_inputs) != len(op.control_inputs):
             external_control_inputs = list(
-                set(op.control_inputs) - set(internal_control_inputs))
+                set(op.control_inputs) - set(internal_control_inputs)
+            )
             op._remove_all_control_inputs()
             op._add_control_inputs(internal_control_inputs)
         return internal_control_inputs, external_control_inputs
@@ -821,13 +843,15 @@ class ControlFlowContext(object):
 class CondContext(ControlFlowContext):
     """The context for the conditional construct."""
 
-    def __init__(self,
-                 pred=None,
-                 pivot=None,
-                 branch=None,
-                 name="cond_text",
-                 context_def=None,
-                 import_scope=None):
+    def __init__(
+        self,
+        pred=None,
+        pivot=None,
+        branch=None,
+        name="cond_text",
+        context_def=None,
+        import_scope=None,
+    ):
         """Creates a `CondContext`.
 
         Args:
@@ -856,8 +880,7 @@ class CondContext(ControlFlowContext):
             self._values.add(pred.name)
             self._external_values[pred.name] = pred
             self._values.add(pivot.name)
-            pivot.op._set_control_flow_context(
-                self)  # pylint: disable=protected-access
+            pivot.op._set_control_flow_context(self)  # pylint: disable=protected-access
 
     def _init_from_proto(self, context_def, import_scope=None):
         """Creates a new `CondContext` from protocol buffer.
@@ -869,15 +892,17 @@ class CondContext(ControlFlowContext):
         assert isinstance(context_def, control_flow_pb2.CondContextDef)
         # Create from context_def.
         g = ops.get_default_graph()
-        self._name = ops.prepend_name_scope(
-            context_def.context_name, import_scope)
+        self._name = ops.prepend_name_scope(context_def.context_name, import_scope)
         self._pred = g.as_graph_element(
-            ops.prepend_name_scope(context_def.pred_name, import_scope))
+            ops.prepend_name_scope(context_def.pred_name, import_scope)
+        )
         self._pivot = g.as_graph_element(
-            ops.prepend_name_scope(context_def.pivot_name, import_scope))
+            ops.prepend_name_scope(context_def.pivot_name, import_scope)
+        )
         self._branch = context_def.branch
         super(CondContext, self).__init__(
-            values_def=context_def.values_def, import_scope=import_scope)
+            values_def=context_def.values_def, import_scope=import_scope
+        )
 
     @property
     def pred(self):
@@ -915,17 +940,17 @@ class CondContext(ControlFlowContext):
         Returns:
           A `CondContextDef` protocol buffer.
         """
-        if (export_scope is None or self.name.startswith(export_scope)):
+        if export_scope is None or self.name.startswith(export_scope):
             context_def = control_flow_pb2.CondContextDef()
-            context_def.context_name = ops.strip_name_scope(
-                self.name, export_scope)
-            context_def.pred_name = ops.strip_name_scope(self._pred.name,
-                                                         export_scope)
-            context_def.pivot_name = ops.strip_name_scope(self._pivot.name,
-                                                          export_scope)
+            context_def.context_name = ops.strip_name_scope(self.name, export_scope)
+            context_def.pred_name = ops.strip_name_scope(self._pred.name, export_scope)
+            context_def.pivot_name = ops.strip_name_scope(
+                self._pivot.name, export_scope
+            )
             context_def.branch = self._branch
             context_def.values_def.MergeFrom(
-                super(CondContext, self)._to_values_def(export_scope))
+                super(CondContext, self)._to_values_def(export_scope)
+            )
             for nested in self._nested_contexts:
                 nested_def = context_def.nested_contexts.add()
                 nested.to_control_flow_context_def(nested_def)
@@ -941,14 +966,12 @@ class CondContext(ControlFlowContext):
 
         ret.Enter()
         for nested_def in context_def.nested_contexts:
-            from_control_flow_context_def(
-                nested_def, import_scope=import_scope)
+            from_control_flow_context_def(nested_def, import_scope=import_scope)
         ret.Exit()
         return ret
 
     def to_control_flow_context_def(self, context_def, export_scope=None):
-        context_def.cond_ctxt.CopyFrom(
-            self.to_proto(export_scope=export_scope))
+        context_def.cond_ctxt.CopyFrom(self.to_proto(export_scope=export_scope))
 
     def AddValue(self, val):
         """Add `val` to the current context and its outer context recursively."""
@@ -997,7 +1020,8 @@ class CondContext(ControlFlowContext):
             self._RemoveExternalControlEdges(op)
 
             if not any(
-                    util.OpInContext(input_op, self) for input_op in op.control_inputs):
+                util.OpInContext(input_op, self) for input_op in op.control_inputs
+            ):
                 # pylint: disable=protected-access
                 op._add_control_input(self._pivot.op)
                 # pylint: enable=protected-access
@@ -1070,32 +1094,38 @@ class CondContext(ControlFlowContext):
             return with_dependencies([v], self._pivot)
         else:
             v = nest.map_structure(
-                _convert_tensorarray_to_flow, v, expand_composites=True)
+                _convert_tensorarray_to_flow, v, expand_composites=True
+            )
             return self._ProcessOutputTensor(ops.convert_to_tensor(v))
 
     def BuildCondBranch(self, fn):
         """Add the subgraph defined by fn() to the graph."""
         pre_summaries = ops.get_collection(
-            ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+            ops.GraphKeys._SUMMARY_COLLECTION
+        )  # pylint: disable=protected-access
         original_result = fn()
         post_summaries = ops.get_collection(
-            ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+            ops.GraphKeys._SUMMARY_COLLECTION
+        )  # pylint: disable=protected-access
         if len(post_summaries) > len(pre_summaries):
-            new_summaries = post_summaries[len(pre_summaries):]
+            new_summaries = post_summaries[len(pre_summaries) :]
             summary_ref = ops.get_collection_ref(
-                ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+                ops.GraphKeys._SUMMARY_COLLECTION
+            )  # pylint: disable=protected-access
             summary_ref[:] = pre_summaries
             with ops.control_dependencies(new_summaries):
                 if original_result is None:
                     return no_op(), None
                 elif not isinstance(original_result, ops.Operation):
                     original_result = nest.map_structure(
-                        array_ops.identity, original_result, expand_composites=True)
+                        array_ops.identity, original_result, expand_composites=True
+                    )
         if original_result is None:
             return None, None
 
         result = nest.map_structure(
-            self._BuildCondTensor, original_result, expand_composites=True)
+            self._BuildCondTensor, original_result, expand_composites=True
+        )
         if not isinstance(result, (list, _basetuple)):
             result = [result]
         return original_result, result
@@ -1115,15 +1145,14 @@ def _UnpackIfSingleton(res):
 # pylint: disable=g-doc-args
 @tf_export(v1=["cond"])
 @deprecation.deprecated_args(
-    None, "fn1/fn2 are deprecated in favor of the true_fn/false_fn arguments.",
-    "fn1", "fn2")
-def cond(pred,
-         true_fn=None,
-         false_fn=None,
-         strict=False,
-         name=None,
-         fn1=None,
-         fn2=None):
+    None,
+    "fn1/fn2 are deprecated in favor of the true_fn/false_fn arguments.",
+    "fn1",
+    "fn2",
+)
+def cond(
+    pred, true_fn=None, false_fn=None, strict=False, name=None, fn1=None, fn2=None
+):
     """Return `true_fn()` if the predicate `pred` is true else `false_fn()`.
 
     `true_fn` and `false_fn` both return lists of output tensors. `true_fn` and
@@ -1190,8 +1219,10 @@ def cond(pred,
 
     """
     # Always enable control flow v2 if building a function, regardless of toggle.
-    if (util.EnableControlFlowV2(ops.get_default_graph()) and
-            not context.executing_eagerly()):
+    if (
+        util.EnableControlFlowV2(ops.get_default_graph())
+        and not context.executing_eagerly()
+    ):
         return cond_v2.cond_v2(pred, true_fn, false_fn, name)
 
     # We needed to make true_fn/false_fn keyword arguments for
@@ -1201,15 +1232,13 @@ def cond(pred,
     # `fn1` and `fn2` are deleted.
     if fn1 is not None:
         if true_fn is not None:
-            raise TypeError(
-                "cond(): true_fn and fn1 may not be set simultaneously.")
+            raise TypeError("cond(): true_fn and fn1 may not be set simultaneously.")
         true_fn = fn1
     elif true_fn is None:
         raise TypeError("cond(): true_fn argument required")
     if fn2 is not None:
         if false_fn is not None:
-            raise TypeError(
-                "cond(): false_fn and fn2 may not be set simultaneously.")
+            raise TypeError("cond(): false_fn and fn2 may not be set simultaneously.")
         false_fn = fn2
     elif false_fn is None:
         raise TypeError("cond(): false_fn argument required")
@@ -1268,26 +1297,26 @@ def cond(pred,
 
         # Check that the return values of the two branches have the same structure.
         try:
-            nest.assert_same_structure(
-                orig_res_t, orig_res_f, expand_composites=True)
+            nest.assert_same_structure(orig_res_t, orig_res_f, expand_composites=True)
         except (TypeError, ValueError):
-            nest.map_structure(_cast_indexed_slice_indices,
-                               orig_res_t, orig_res_f)
+            nest.map_structure(_cast_indexed_slice_indices, orig_res_t, orig_res_f)
             nest.map_structure(_cast_indexed_slice_indices, res_t, res_f)
             try:
-                nest.assert_same_structure(orig_res_t, orig_res_f,
-                                           expand_composites=True)
+                nest.assert_same_structure(
+                    orig_res_t, orig_res_f, expand_composites=True
+                )
             except TypeError as e:
                 raise TypeError(
-                    "Incompatible return types of true_fn and false_fn: {}".format(e))
+                    "Incompatible return types of true_fn and false_fn: {}".format(e)
+                )
             except ValueError as e:
                 raise ValueError(
-                    "Incompatible return values of true_fn and false_fn: {}".format(e))
+                    "Incompatible return values of true_fn and false_fn: {}".format(e)
+                )
 
         # Add the final merge to the graph.
         if not res_t:
-            raise ValueError(
-                "true_fn and false_fn must return at least one result.")
+            raise ValueError("true_fn and false_fn must return at least one result.")
 
         res_t_flat = nest.flatten(res_t, expand_composites=True)
         res_f_flat = nest.flatten(res_f, expand_composites=True)
@@ -1297,11 +1326,13 @@ def cond(pred,
             if x.dtype.base_dtype != y.dtype.base_dtype:
                 raise ValueError(
                     "Outputs of true_fn and false_fn must have the same type: "
-                    "%s, %s" % (x.dtype.name, y.dtype.name))
+                    "%s, %s" % (x.dtype.name, y.dtype.name)
+                )
 
         merges = [merge(pair)[0] for pair in zip(res_f_flat, res_t_flat)]
         merges = _convert_flows_to_tensorarrays(
-            nest.flatten(orig_res_t, expand_composites=True), merges)
+            nest.flatten(orig_res_t, expand_composites=True), merges
+        )
 
         # Only add non-nested conds to the collection. Any nested control flow will
         # be encapsulated in the root context.
@@ -1311,7 +1342,8 @@ def cond(pred,
             ops.add_to_collection(ops.GraphKeys.COND_CONTEXT, context_f)
 
         merges = nest.pack_sequence_as(
-            structure=orig_res_t, flat_sequence=merges, expand_composites=True)
+            structure=orig_res_t, flat_sequence=merges, expand_composites=True
+        )
 
         # Singleton lists and tuples are automatically unpacked if strict == False.
         if not strict:
@@ -1330,8 +1362,11 @@ def _cast_indexed_slice_indices(a, b):
       a: A value, which may be an IndexedSlices.
       b: A value, which may be an IndexedSlices.
     """
-    if (isinstance(a, ops.IndexedSlices) and isinstance(b, ops.IndexedSlices)
-            and a.indices.dtype != b.indices.dtype):
+    if (
+        isinstance(a, ops.IndexedSlices)
+        and isinstance(b, ops.IndexedSlices)
+        and a.indices.dtype != b.indices.dtype
+    ):
         # pylint: disable=protected-access
         a._indices = math_ops.cast(a.indices, dtypes.int64)
         b._indices = math_ops.cast(b.indices, dtypes.int64)
@@ -1430,15 +1465,17 @@ def _resource_safe_shape(t):
 class WhileContext(ControlFlowContext):
     """The context for the loop construct."""
 
-    def __init__(self,
-                 maximum_iterations=None,
-                 parallel_iterations=10,
-                 back_prop=True,
-                 swap_memory=False,
-                 name="while_context",
-                 grad_state=None,
-                 context_def=None,
-                 import_scope=None):
+    def __init__(
+        self,
+        maximum_iterations=None,
+        parallel_iterations=10,
+        back_prop=True,
+        swap_memory=False,
+        name="while_context",
+        grad_state=None,
+        context_def=None,
+        import_scope=None,
+    ):
         """"Creates a `WhileContext`.
 
         Args:
@@ -1457,13 +1494,15 @@ class WhileContext(ControlFlowContext):
             self._init_from_proto(context_def, import_scope=import_scope)
         else:
             ControlFlowContext.__init__(self)
-            self._init_from_args(maximum_iterations, parallel_iterations, back_prop,
-                                 swap_memory, name)
+            self._init_from_args(
+                maximum_iterations, parallel_iterations, back_prop, swap_memory, name
+            )
         # The gradient loop state.
         self._grad_state = grad_state
 
-    def _init_from_args(self, maximum_iterations, parallel_iterations, back_prop,
-                        swap_memory, name):
+    def _init_from_args(
+        self, maximum_iterations, parallel_iterations, back_prop, swap_memory, name
+    ):
         """Creates a new `WhileContext` from arguments.
 
         Args:
@@ -1477,8 +1516,10 @@ class WhileContext(ControlFlowContext):
           ValueError: If `parallel_iterations` has invalid value.
         """
         if not isinstance(parallel_iterations, int) or (parallel_iterations <= 0):
-            raise ValueError("`parallel_iterations` must be a positive integer: "
-                             "%s" % parallel_iterations)
+            raise ValueError(
+                "`parallel_iterations` must be a positive integer: "
+                "%s" % parallel_iterations
+            )
         self._name = ops.get_default_graph().unique_name(name)
         self._maximum_iterations = maximum_iterations
         self._parallel_iterations = parallel_iterations
@@ -1507,26 +1548,30 @@ class WhileContext(ControlFlowContext):
         assert isinstance(context_def, control_flow_pb2.WhileContextDef)
         # Create from context_def.
         g = ops.get_default_graph()
-        self._name = ops.prepend_name_scope(
-            context_def.context_name, import_scope)
+        self._name = ops.prepend_name_scope(context_def.context_name, import_scope)
         if context_def.maximum_iterations_name:
             self._maximum_iterations = g.as_graph_element(
-                ops.prepend_name_scope(context_def.maximum_iterations_name,
-                                       import_scope))
+                ops.prepend_name_scope(
+                    context_def.maximum_iterations_name, import_scope
+                )
+            )
         else:
             self._maximum_iterations = None
         self._parallel_iterations = context_def.parallel_iterations
         self._back_prop = context_def.back_prop
         self._swap_memory = context_def.swap_memory
         self._pivot_for_pred = g.as_graph_element(
-            ops.prepend_name_scope(context_def.pivot_for_pred_name, import_scope))
+            ops.prepend_name_scope(context_def.pivot_for_pred_name, import_scope)
+        )
         # We use this node to control constants created by the body lambda.
         self._pivot_for_body = g.as_graph_element(
-            ops.prepend_name_scope(context_def.pivot_for_body_name, import_scope))
+            ops.prepend_name_scope(context_def.pivot_for_body_name, import_scope)
+        )
         # The boolean tensor for loop termination condition. Used in code
         # generation for gradient computation.
         self._pivot = g.as_graph_element(
-            ops.prepend_name_scope(context_def.pivot_name, import_scope))
+            ops.prepend_name_scope(context_def.pivot_name, import_scope)
+        )
         # The list of exit tensors for loop variables.
         self._loop_exits = [
             g.as_graph_element(ops.prepend_name_scope(exit_name, import_scope))
@@ -1534,12 +1579,12 @@ class WhileContext(ControlFlowContext):
         ]
         # The list of enter tensors for loop variables.
         self._loop_enters = [
-            g.as_graph_element(ops.prepend_name_scope(
-                enter_name, import_scope))
+            g.as_graph_element(ops.prepend_name_scope(enter_name, import_scope))
             for enter_name in context_def.loop_enter_names
         ]
         super(WhileContext, self).__init__(
-            values_def=context_def.values_def, import_scope=import_scope)
+            values_def=context_def.values_def, import_scope=import_scope
+        )
 
         # import_scope causes self.name to be different from the original serialized
         # context's name. Rewrite "frame_name" attrs with the new name.
@@ -1548,8 +1593,10 @@ class WhileContext(ControlFlowContext):
                 op = g.as_graph_element(tensor_name).op
                 if util.IsLoopEnter(op):
                     # pylint: disable=protected-access
-                    op._set_attr("frame_name",
-                                 attr_value_pb2.AttrValue(s=compat.as_bytes(self.name)))
+                    op._set_attr(
+                        "frame_name",
+                        attr_value_pb2.AttrValue(s=compat.as_bytes(self.name)),
+                    )
                     # pylint: enable=protected-access
         self._graph = ops.get_default_graph()
 
@@ -1602,30 +1649,34 @@ class WhileContext(ControlFlowContext):
         Returns:
           A `WhileContextDef` protocol buffer.
         """
-        if (export_scope is None or self.name.startswith(export_scope)):
+        if export_scope is None or self.name.startswith(export_scope):
             context_def = control_flow_pb2.WhileContextDef()
-            context_def.context_name = ops.strip_name_scope(
-                self.name, export_scope)
+            context_def.context_name = ops.strip_name_scope(self.name, export_scope)
             context_def.parallel_iterations = self._parallel_iterations
             if self._maximum_iterations is not None:
                 context_def.maximum_iterations_name = ops.strip_name_scope(
-                    self._maximum_iterations.name, export_scope)
+                    self._maximum_iterations.name, export_scope
+                )
             context_def.back_prop = self._back_prop
             context_def.swap_memory = self._swap_memory
             context_def.pivot_for_pred_name = ops.strip_name_scope(
-                self._pivot_for_pred.name, export_scope)
+                self._pivot_for_pred.name, export_scope
+            )
             context_def.pivot_for_body_name = ops.strip_name_scope(
-                self._pivot_for_body.name, export_scope)
-            context_def.pivot_name = ops.strip_name_scope(self._pivot.name,
-                                                          export_scope)
-            context_def.loop_exit_names.extend([
-                ops.strip_name_scope(l.name, export_scope) for l in self._loop_exits
-            ])
-            context_def.loop_enter_names.extend([
-                ops.strip_name_scope(l.name, export_scope) for l in self._loop_enters
-            ])
+                self._pivot_for_body.name, export_scope
+            )
+            context_def.pivot_name = ops.strip_name_scope(
+                self._pivot.name, export_scope
+            )
+            context_def.loop_exit_names.extend(
+                [ops.strip_name_scope(l.name, export_scope) for l in self._loop_exits]
+            )
+            context_def.loop_enter_names.extend(
+                [ops.strip_name_scope(l.name, export_scope) for l in self._loop_enters]
+            )
             context_def.values_def.MergeFrom(
-                super(WhileContext, self)._to_values_def(export_scope=export_scope))
+                super(WhileContext, self)._to_values_def(export_scope=export_scope)
+            )
             for nested in self._nested_contexts:
                 nested_def = context_def.nested_contexts.add()
                 nested.to_control_flow_context_def(nested_def)
@@ -1635,8 +1686,7 @@ class WhileContext(ControlFlowContext):
             return None
 
     def to_control_flow_context_def(self, context_def, export_scope=None):
-        context_def.while_ctxt.CopyFrom(
-            self.to_proto(export_scope=export_scope))
+        context_def.while_ctxt.CopyFrom(self.to_proto(export_scope=export_scope))
 
     @staticmethod
     def from_proto(context_def, import_scope=None):
@@ -1652,8 +1702,7 @@ class WhileContext(ControlFlowContext):
         ret = WhileContext(context_def=context_def, import_scope=import_scope)
         ret.Enter()
         for nested_def in context_def.nested_contexts:
-            from_control_flow_context_def(
-                nested_def, import_scope=import_scope)
+            from_control_flow_context_def(nested_def, import_scope=import_scope)
         ret.Exit()
         return ret
 
@@ -1675,7 +1724,9 @@ class WhileContext(ControlFlowContext):
         # imported while loop but not yet processed by this context and added to
         # self._values in _AddOpInternal. We only want to process external input
         # tensors to the while loop here.
-        new_value &= val.op._control_flow_context is not self  # pylint: disable=protected-access
+        new_value &= (
+            val.op._control_flow_context is not self
+        )  # pylint: disable=protected-access
         if new_value:
             self._values.add(val.name)
 
@@ -1704,7 +1755,8 @@ class WhileContext(ControlFlowContext):
                     result,
                     self._name,
                     is_constant=True,
-                    parallel_iterations=self._parallel_iterations)
+                    parallel_iterations=self._parallel_iterations,
+                )
                 enter.graph.prevent_feeding(enter)
                 if self._outer_context:
                     self._outer_context.AddInnerOp(enter.op)
@@ -1738,11 +1790,9 @@ class WhileContext(ControlFlowContext):
             if grad_ctxt:
                 grad_ctxt = grad_ctxt.GetWhileContext()
                 if grad_ctxt.grad_state:
-                    op_input_forward_ctxt = util.GetWhileContext(
-                        op.inputs[0].op)
+                    op_input_forward_ctxt = util.GetWhileContext(op.inputs[0].op)
                     if op_input_forward_ctxt == grad_ctxt.grad_state.forward_context:
-                        op_input_ctxt = op.inputs[0].op._get_control_flow_context(
-                        )
+                        op_input_ctxt = op.inputs[0].op._get_control_flow_context()
                         op._set_control_flow_context(op_input_ctxt)
                         op_input_ctxt._AddOpInternal(op)
                         return
@@ -1757,12 +1807,12 @@ class WhileContext(ControlFlowContext):
         # This is needed to prevent frame mismatch errors where there are Const
         # nodes inside tf.function in v1 while_loop and inlining is turned on.
         if op.type in ["PartitionedCall", "StatefulPartitionedCall"]:
-            op._add_control_input(self.GetControlPivot(
-            ).op)  # pylint: disable=protected-access
+            op._add_control_input(
+                self.GetControlPivot().op
+            )  # pylint: disable=protected-access
         if not op.inputs:
             # Remove any external control dependency on this op
-            control_inputs, external_inputs = self._RemoveExternalControlEdges(
-                op)
+            control_inputs, external_inputs = self._RemoveExternalControlEdges(op)
             # Add a control edge from the control pivot to this op.
             if not control_inputs:
                 # pylint: disable=protected-access
@@ -1775,8 +1825,7 @@ class WhileContext(ControlFlowContext):
                 x = op.inputs[index]
                 real_x = self.AddValue(x)
                 if real_x != x:
-                    op._update_input(
-                        index, real_x)  # pylint: disable=protected-access
+                    op._update_input(index, real_x)  # pylint: disable=protected-access
             # Remove any external control dependency on this op.
             _, external_inputs = self._RemoveExternalControlEdges(op)
             # Add a control dependency to prevent loop invariants from
@@ -1795,8 +1844,7 @@ class WhileContext(ControlFlowContext):
                     if x.outputs
                 ]
                 self.Exit()
-            op._add_control_inputs(
-                external_inputs)  # pylint: disable=protected-access
+            op._add_control_inputs(external_inputs)  # pylint: disable=protected-access
         if self._outer_context or not util.IsLoopExit(op):
             op.graph.prevent_fetching(op)
             for x in op.outputs:
@@ -1850,8 +1898,7 @@ class WhileContext(ControlFlowContext):
             # Force the stack pushes of i-th execution of an inner loop to be ordered
             # before the pushes of (i+1)-th execution of the same inner loop.
             outer_add_op = outer_grad_state.forward_index.op.inputs[0].op
-            n.op._add_control_input(
-                outer_add_op)  # pylint: disable=protected-access
+            n.op._add_control_input(outer_add_op)  # pylint: disable=protected-access
 
         self.Enter()
         self.AddName(n.name)
@@ -1860,7 +1907,8 @@ class WhileContext(ControlFlowContext):
             self._name,
             is_constant=False,
             parallel_iterations=self._parallel_iterations,
-            name="f_count")
+            name="f_count",
+        )
         self.loop_enters.append(enter_n)
 
         merge_n = merge([enter_n, enter_n])[0]
@@ -1912,7 +1960,8 @@ class WhileContext(ControlFlowContext):
             self._name,
             is_constant=False,
             parallel_iterations=self._parallel_iterations,
-            name="b_count")
+            name="b_count",
+        )
         self.loop_enters.append(enter_count)
 
         merge_count = merge([enter_count, enter_count])[0]
@@ -1974,14 +2023,15 @@ class WhileContext(ControlFlowContext):
         if shape.is_fully_defined():
             if self.outer_context:
                 self.outer_context.Enter()
-            acc = constant_op.constant(
-                0, grad.dtype, shape=shape, name="b_acc")
+            acc = constant_op.constant(0, grad.dtype, shape=shape, name="b_acc")
             if self.outer_context:
                 self.outer_context.Exit()
         else:
             value = op.inputs[0]
-            if (isinstance(self.outer_context, WhileContext) and
-                    self.outer_context.grad_state is not None):
+            if (
+                isinstance(self.outer_context, WhileContext)
+                and self.outer_context.grad_state is not None
+            ):
                 # We are in a nested while loop.
                 forward_ctxt = self.grad_state.forward_context
                 forward_ctxt.outer_context.Enter()
@@ -1989,10 +2039,12 @@ class WhileContext(ControlFlowContext):
                 forward_ctxt.outer_context.Exit()
                 outer_grad_state = self.grad_state.outer_grad_state
                 history_zeros_shape = outer_grad_state.AddForwardAccumulator(
-                    zeros_shape)
+                    zeros_shape
+                )
                 self.outer_context.Enter()
                 real_shape = outer_grad_state.AddBackpropAccumulatedValue(
-                    history_zeros_shape, zeros_shape)
+                    history_zeros_shape, zeros_shape
+                )
                 acc = array_ops.zeros(real_shape, grad.dtype)
                 self.outer_context.Exit()
             else:
@@ -2010,7 +2062,8 @@ class WhileContext(ControlFlowContext):
             self._name,
             is_constant=False,
             parallel_iterations=self._parallel_iterations,
-            name="b_acc")
+            name="b_acc",
+        )
         self.loop_enters.append(enter_acc)
 
         merge_acc = merge([enter_acc, enter_acc], name="b_acc")[0]
@@ -2018,8 +2071,7 @@ class WhileContext(ControlFlowContext):
 
         add_acc = math_ops.add(switch_acc_true, grad)
         next_acc = _NextIteration(add_acc)
-        merge_acc.op._update_input(
-            1, next_acc)  # pylint: disable=protected-access
+        merge_acc.op._update_input(1, next_acc)  # pylint: disable=protected-access
 
         result_acc = exit(switch_acc_false, name="b_acc")
         self.loop_exits.append(result_acc)
@@ -2047,12 +2099,14 @@ class WhileContext(ControlFlowContext):
         if self.outer_context:
             self.outer_context.Enter()
         if values.get_shape().is_fully_defined():
-            values_shape = tensor_shape.TensorShape([tensor_shape.Dimension(1)] +
-                                                    values.get_shape().dims[1:])
+            values_shape = tensor_shape.TensorShape(
+                [tensor_shape.Dimension(1)] + values.get_shape().dims[1:]
+            )
             if self.outer_context:
                 self.outer_context.Enter()
             values_acc = constant_op.constant(
-                0, values.dtype, shape=values_shape, name="b_acc")
+                0, values.dtype, shape=values_shape, name="b_acc"
+            )
             if self.outer_context:
                 self.outer_context.Exit()
         else:
@@ -2066,14 +2120,17 @@ class WhileContext(ControlFlowContext):
                 if self.outer_context:
                     self.outer_context.Enter()
                 shape_acc = constant_op.constant(
-                    0, dense_shape.dtype, shape=dense_shape.get_shape())
+                    0, dense_shape.dtype, shape=dense_shape.get_shape()
+                )
                 if self.outer_context:
                     self.outer_context.Exit()
             else:
                 shape_acc = array_ops.zeros_like(
                     array_ops.shape_internal(
-                        op.inputs[0], optimize=False, out_type=dense_shape.dtype),
-                    optimize=False)
+                        op.inputs[0], optimize=False, out_type=dense_shape.dtype
+                    ),
+                    optimize=False,
+                )
 
         if self.outer_context:
             self.outer_context.Exit()
@@ -2096,7 +2153,9 @@ class WhileContext(ControlFlowContext):
                 is_constant=False,
                 parallel_iterations=self._parallel_iterations,
                 use_input_shape=False,
-                name="b_acc") for x in init_acc
+                name="b_acc",
+            )
+            for x in init_acc
         ]
         # Manually set appropriate partial shapes.
         enter_acc[0].set_shape([None])
@@ -2114,8 +2173,7 @@ class WhileContext(ControlFlowContext):
         ]
         if shape_acc is not None:
             # For the shape we just keep the maximum
-            acc_indexed_slices.append(
-                math_ops.maximum(dense_shape, switch_acc[2][1]))
+            acc_indexed_slices.append(math_ops.maximum(dense_shape, switch_acc[2][1]))
 
         next_acc = [_NextIteration(x) for x in acc_indexed_slices]
         for xm, xn in zip(merge_acc, next_acc):
@@ -2128,7 +2186,8 @@ class WhileContext(ControlFlowContext):
         return ops.IndexedSlices(
             indices=exit_acc[0],
             values=exit_acc[1],
-            dense_shape=exit_acc[2] if shape_acc is not None else None)
+            dense_shape=exit_acc[2] if shape_acc is not None else None,
+        )
 
     def _InitializeValues(self, values):
         """Makes the values known to this context."""
@@ -2139,11 +2198,9 @@ class WhileContext(ControlFlowContext):
             else:
                 raise TypeError("Type %s not supported" % type(x))
 
-    def _BuildLoop(self, pred, body, original_loop_vars, loop_vars,
-                   shape_invariants):
+    def _BuildLoop(self, pred, body, original_loop_vars, loop_vars, shape_invariants):
         """Core: Add the loop termination condition and body to the graph."""
-        flat_loop_vars = nest.flatten(
-            original_loop_vars, expand_composites=True)
+        flat_loop_vars = nest.flatten(original_loop_vars, expand_composites=True)
 
         # Let the context know the loop variables so the loop variables
         # would be added in the outer contexts properly.
@@ -2158,7 +2215,9 @@ class WhileContext(ControlFlowContext):
                     self._name,
                     is_constant=False,
                     parallel_iterations=self._parallel_iterations,
-                    use_input_shape=(shape_invariants is None)) for x in real_vars
+                    use_input_shape=(shape_invariants is None),
+                )
+                for x in real_vars
             ]
             for x in enter_vars:
                 x.graph.prevent_feeding(x)
@@ -2191,12 +2250,14 @@ class WhileContext(ControlFlowContext):
         self._pivot_for_pred = merge_vars[0]
 
         # Build the graph for pred.
-        merge_vars_with_tensor_arrays = (
-            _convert_flows_to_tensorarrays(flat_loop_vars, merge_vars))
+        merge_vars_with_tensor_arrays = _convert_flows_to_tensorarrays(
+            flat_loop_vars, merge_vars
+        )
         packed_vars = nest.pack_sequence_as(
             structure=original_loop_vars,
             flat_sequence=merge_vars_with_tensor_arrays,
-            expand_composites=True)
+            expand_composites=True,
+        )
         c = ops.convert_to_tensor(pred(*packed_vars))
         self._pivot = loop_cond(c, name="LoopCond")
         switch_vars = [_SwitchRefOrTensor(x, self._pivot) for x in merge_vars]
@@ -2206,23 +2267,28 @@ class WhileContext(ControlFlowContext):
         self._pivot_for_body = vars_for_body[0]
         # Convert TensorArray flow variables inside the context back into
         # their associated TensorArrays for calling the body.
-        vars_for_body_with_tensor_arrays = (
-            _convert_flows_to_tensorarrays(flat_loop_vars, vars_for_body))
+        vars_for_body_with_tensor_arrays = _convert_flows_to_tensorarrays(
+            flat_loop_vars, vars_for_body
+        )
         packed_vars_for_body = nest.pack_sequence_as(
             structure=original_loop_vars,
             flat_sequence=vars_for_body_with_tensor_arrays,
-            expand_composites=True)
+            expand_composites=True,
+        )
         pre_summaries = ops.get_collection(
-            ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+            ops.GraphKeys._SUMMARY_COLLECTION
+        )  # pylint: disable=protected-access
         body_result = body(*packed_vars_for_body)
         post_summaries = ops.get_collection(
-            ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+            ops.GraphKeys._SUMMARY_COLLECTION
+        )  # pylint: disable=protected-access
         if not nest.is_sequence_or_composite(body_result):
             body_result = [body_result]
         if len(post_summaries) > len(pre_summaries):
-            new_summaries = post_summaries[len(pre_summaries):]
+            new_summaries = post_summaries[len(pre_summaries) :]
             summary_ref = ops.get_collection_ref(
-                ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+                ops.GraphKeys._SUMMARY_COLLECTION
+            )  # pylint: disable=protected-access
             summary_ref[:] = pre_summaries
             with ops.control_dependencies(new_summaries):
 
@@ -2233,14 +2299,16 @@ class WhileContext(ControlFlowContext):
                     return array_ops.identity(x)
 
                 body_result = nest.map_structure(
-                    map_fn, body_result, expand_composites=True)
+                    map_fn, body_result, expand_composites=True
+                )
 
         # Compare the structure types of input and output of body.
         # For backwards compatibility, the first layer is forced to a list
         # during this comparison, because inputs are typically lists and
         # outputs of the body are typically tuples.
         nest.assert_same_structure(
-            list(packed_vars_for_body), list(body_result), expand_composites=True)
+            list(packed_vars_for_body), list(body_result), expand_composites=True
+        )
 
         # Store body_result to keep track of TensorArrays returned by body
         original_body_result = body_result
@@ -2248,13 +2316,16 @@ class WhileContext(ControlFlowContext):
         result = nest.map_structure(
             _convert_tensorarray_to_flow,
             nest.flatten(body_result, expand_composites=True),
-            expand_composites=True)
+            expand_composites=True,
+        )
         result = ops.convert_n_to_tensor_or_composite(result)
 
         # Add NextIteration and the back edges to complete the loop.
         if len(merge_vars) != len(result):
-            raise ValueError("Number of inputs and outputs of body must match "
-                             "loop_vars: %d, %d" % (len(merge_vars), len(result)))
+            raise ValueError(
+                "Number of inputs and outputs of body must match "
+                "loop_vars: %d, %d" % (len(merge_vars), len(result))
+            )
         next_vars = []
         for m, v in zip(merge_vars, result):
             next_vars.append(_AddNextAndBackEdge(m, v))
@@ -2268,8 +2339,7 @@ class WhileContext(ControlFlowContext):
 
         return original_body_result, exit_vars
 
-    def BuildLoop(self, pred, body, loop_vars, shape_invariants,
-                  return_same_structure):
+    def BuildLoop(self, pred, body, loop_vars, shape_invariants, return_same_structure):
         """Add the loop termination condition and body to the graph."""
 
         # Keep original_loop_vars to identify which are TensorArrays
@@ -2278,11 +2348,13 @@ class WhileContext(ControlFlowContext):
         loop_vars = nest.map_structure(
             _convert_tensorarray_to_flow,
             nest.flatten(loop_vars, expand_composites=False),
-            expand_composites=True)
+            expand_composites=True,
+        )
         loop_vars = ops.convert_n_to_tensor_or_composite(loop_vars)
         if shape_invariants is None:
             shape_invariants = nest.map_structure(
-                _get_shape_invariant, loop_vars, expand_composites=False)
+                _get_shape_invariant, loop_vars, expand_composites=False
+            )
         loop_vars = nest.flatten(loop_vars, expand_composites=True)
         try:
             self.Enter()
@@ -2291,20 +2363,22 @@ class WhileContext(ControlFlowContext):
             # new ops.
             with ops.get_default_graph()._mutation_lock():  # pylint: disable=protected-access
                 original_body_result, exit_vars = self._BuildLoop(
-                    pred, body, original_loop_vars, loop_vars, shape_invariants)
+                    pred, body, original_loop_vars, loop_vars, shape_invariants
+                )
         finally:
             self.Exit()
 
-        flat_result = nest.flatten(
-            original_body_result, expand_composites=True)
+        flat_result = nest.flatten(original_body_result, expand_composites=True)
         # Convert TensorArray flow variables outside the context back into
         # their associated TensorArrays for returning to caller.
-        exit_vars_with_tensor_arrays = (
-            _convert_flows_to_tensorarrays(flat_result, exit_vars))
+        exit_vars_with_tensor_arrays = _convert_flows_to_tensorarrays(
+            flat_result, exit_vars
+        )
         packed_exit_vars = nest.pack_sequence_as(
             structure=original_body_result,
             flat_sequence=exit_vars_with_tensor_arrays,
-            expand_composites=True)
+            expand_composites=True,
+        )
 
         if return_same_structure:
             return packed_exit_vars
@@ -2321,8 +2395,7 @@ class WhileContext(ControlFlowContext):
                 raise TypeError("Type %s not supported" % type(e))
             for x in xs:
                 inp_op = x.op.inputs[0].op
-                control_inputs = graph._control_dependencies_for_inputs([
-                                                                        inp_op])
+                control_inputs = graph._control_dependencies_for_inputs([inp_op])
                 outer_control_inputs = []
                 for op in control_inputs:
                     # We need to keep control inputs that are in any ancestor
@@ -2330,8 +2403,9 @@ class WhileContext(ControlFlowContext):
                     keep_as_control_input = True
                     op_ctxt = util.GetOutputContext(op)
                     outer_ctxt = self.outer_context
-                    outer_while_context = (None if outer_ctxt is None else
-                                           outer_ctxt.GetWhileContext())
+                    outer_while_context = (
+                        None if outer_ctxt is None else outer_ctxt.GetWhileContext()
+                    )
                     while outer_ctxt != op_ctxt:
                         if outer_ctxt is None or outer_ctxt == outer_while_context:
                             keep_as_control_input = False
@@ -2359,16 +2433,19 @@ results = tf.while_loop(c, b, vars, back_prop=False)
 Use:
 results = tf.nest.map_structure(tf.stop_gradient, tf.while_loop(c, b, vars))""",
     warn_once=True,
-    back_prop=False)
-def while_loop_v2(cond,
-                  body,
-                  loop_vars,
-                  shape_invariants=None,
-                  parallel_iterations=10,
-                  back_prop=True,
-                  swap_memory=False,
-                  maximum_iterations=None,
-                  name=None):
+    back_prop=False,
+)
+def while_loop_v2(
+    cond,
+    body,
+    loop_vars,
+    shape_invariants=None,
+    parallel_iterations=10,
+    back_prop=True,
+    swap_memory=False,
+    maximum_iterations=None,
+    name=None,
+):
     """Repeat `body` while the condition `cond` is true.
 
     `cond` is a callable returning a boolean scalar tensor. `body` is a callable
@@ -2536,21 +2613,24 @@ def while_loop_v2(cond,
         swap_memory=swap_memory,
         name=name,
         maximum_iterations=maximum_iterations,
-        return_same_structure=True)
+        return_same_structure=True,
+    )
 
 
 # pylint: disable=redefined-outer-name
 @tf_export(v1=["while_loop"])
-def while_loop(cond,
-               body,
-               loop_vars,
-               shape_invariants=None,
-               parallel_iterations=10,
-               back_prop=True,
-               swap_memory=False,
-               name=None,
-               maximum_iterations=None,
-               return_same_structure=False):
+def while_loop(
+    cond,
+    body,
+    loop_vars,
+    shape_invariants=None,
+    parallel_iterations=10,
+    back_prop=True,
+    swap_memory=False,
+    name=None,
+    maximum_iterations=None,
+    return_same_structure=False,
+):
     """Repeat `body` while the condition `cond` is true.
 
     `cond` is a callable returning a boolean scalar tensor. `body` is a callable
@@ -2722,8 +2802,7 @@ def while_loop(cond,
 
     # Always enable control flow v2 if building a function, regardless of toggle.
     executing_eagerly = context.executing_eagerly()
-    if (util.EnableControlFlowV2(ops.get_default_graph()) and
-            not executing_eagerly):
+    if util.EnableControlFlowV2(ops.get_default_graph()) and not executing_eagerly:
         return while_v2.while_loop(
             cond,
             body,
@@ -2733,46 +2812,62 @@ def while_loop(cond,
             maximum_iterations=maximum_iterations,
             name=name,
             return_same_structure=return_same_structure,
-            back_prop=back_prop)
+            back_prop=back_prop,
+        )
 
     with ops.name_scope(name, "while", loop_vars):
         if not loop_vars:
             raise ValueError("No loop variables provided")
-        try_to_pack = (len(loop_vars) == 1 and not return_same_structure)
+        try_to_pack = len(loop_vars) == 1 and not return_same_structure
         if maximum_iterations is not None:
             maximum_iterations = ops.convert_to_tensor(
-                maximum_iterations, name="maximum_iterations")
+                maximum_iterations, name="maximum_iterations"
+            )
             if maximum_iterations.shape.ndims != 0:
-                raise ValueError("maximum_iterations must be a scalar, saw shape: %s" %
-                                 maximum_iterations.shape)
+                raise ValueError(
+                    "maximum_iterations must be a scalar, saw shape: %s"
+                    % maximum_iterations.shape
+                )
 
             if executing_eagerly:
                 counter = 0
                 maximum_iterations = int(maximum_iterations.numpy())
             else:
                 counter = constant_op.constant(
-                    0, dtype=maximum_iterations.dtype, name="iteration_counter")
+                    0, dtype=maximum_iterations.dtype, name="iteration_counter"
+                )
             orig_cond = cond
             orig_body = body
             if try_to_pack:
                 loop_vars = (counter, loop_vars[0])
-                def cond(i, lv): return (  # pylint: disable=g-long-lambda
-                    math_ops.logical_and(i < maximum_iterations, orig_cond(lv)))
 
-                def body(i, lv): return (i + 1, orig_body(lv))
+                def cond(i, lv):
+                    return math_ops.logical_and(  # pylint: disable=g-long-lambda
+                        i < maximum_iterations, orig_cond(lv)
+                    )
+
+                def body(i, lv):
+                    return (i + 1, orig_body(lv))
+
             else:
                 loop_vars = (counter, loop_vars)
-                def cond(i, lv): return (  # pylint: disable=g-long-lambda
-                    math_ops.logical_and(i < maximum_iterations, orig_cond(*lv)))
 
-                def body(i, lv): return (i + 1, orig_body(*lv))
+                def cond(i, lv):
+                    return math_ops.logical_and(  # pylint: disable=g-long-lambda
+                        i < maximum_iterations, orig_cond(*lv)
+                    )
+
+                def body(i, lv):
+                    return (i + 1, orig_body(*lv))
+
             try_to_pack = False
 
         if executing_eagerly:
             packed = False  # whether the body result was packed into a 1-item tuple
 
-            loop_var_structure = nest.map_structure(type_spec.type_spec_from_value,
-                                                    list(loop_vars))
+            loop_var_structure = nest.map_structure(
+                type_spec.type_spec_from_value, list(loop_vars)
+            )
             while cond(*loop_vars):
                 loop_vars = body(*loop_vars)
                 if try_to_pack and not isinstance(loop_vars, (list, _basetuple)):
@@ -2785,8 +2880,7 @@ def while_loop(cond,
                     return x
                 return ops.convert_to_tensor(x)
 
-            loop_vars = nest.map_structure(
-                convert, loop_vars, expand_composites=True)
+            loop_vars = nest.map_structure(convert, loop_vars, expand_composites=True)
             if maximum_iterations is not None:
                 return loop_vars[1]
             else:
@@ -2794,28 +2888,31 @@ def while_loop(cond,
 
         if shape_invariants is not None:
             if maximum_iterations is not None:
-                shape_invariants = (
-                    tensor_shape.TensorShape([]), shape_invariants)
+                shape_invariants = (tensor_shape.TensorShape([]), shape_invariants)
 
             nest.assert_same_structure(
-                loop_vars, shape_invariants, expand_composites=False)
+                loop_vars, shape_invariants, expand_composites=False
+            )
             shape_invariants = nest.map_structure(
                 _get_shape_invariant,
                 loop_vars,
                 shape_invariants,
-                expand_composites=False)
+                expand_composites=False,
+            )
 
         loop_context = WhileContext(
             maximum_iterations=maximum_iterations,
             parallel_iterations=parallel_iterations,
             back_prop=back_prop,
-            swap_memory=swap_memory)
+            swap_memory=swap_memory,
+        )
         # Only add non-nested loops to the collection. Any nested control flow will
         # be encapsulated in the root context.
         if loop_context.outer_context is None:
             ops.add_to_collection(ops.GraphKeys.WHILE_CONTEXT, loop_context)
-        result = loop_context.BuildLoop(cond, body, loop_vars, shape_invariants,
-                                        return_same_structure)
+        result = loop_context.BuildLoop(
+            cond, body, loop_vars, shape_invariants, return_same_structure
+        )
         if maximum_iterations is not None:
             return result[1]
         else:
@@ -2851,17 +2948,19 @@ def _AsTensorList(x, p):
         else:
             l.append(
                 ops.IndexedSlices(
-                    array_ops.identity(v.values), array_ops.identity(v.indices)))
+                    array_ops.identity(v.values), array_ops.identity(v.indices)
+                )
+            )
     return l
 
 
 def _CheckResults(a, b):
-    assert len(a) == len(b), (
-        "Values returned by a() and b() must have the same length.")
+    assert len(a) == len(b), "Values returned by a() and b() must have the same length."
     for x, y in zip(a, b):
         assert x.dtype == y.dtype, (
             "Values returned by a() [%s] and b() [%s] must have "
-            "the same type: %s, %s." % (x.name, y.name, x.dtype.name, y.dtype.name))
+            "the same type: %s, %s." % (x.name, y.name, x.dtype.name, y.dtype.name)
+        )
 
 
 def with_dependencies(dependencies, output_tensor, name=None):
@@ -2889,19 +2988,20 @@ def with_dependencies(dependencies, output_tensor, name=None):
     """
     if context.executing_eagerly():
         return output_tensor
-    with ops.name_scope(name, "control_dependency",
-                        list(dependencies) + [output_tensor]) as name:
+    with ops.name_scope(
+        name, "control_dependency", list(dependencies) + [output_tensor]
+    ) as name:
         with ops.colocate_with(output_tensor):
             with ops.control_dependencies(dependencies):
-                output_tensor = ops.convert_to_tensor_or_composite(
-                    output_tensor)
+                output_tensor = ops.convert_to_tensor_or_composite(output_tensor)
                 if isinstance(output_tensor, ops.Tensor):
                     return _Identity(output_tensor, name=name)
                 else:
                     return ops.IndexedSlices(
-                        _Identity(output_tensor.values,
-                                  name=name), output_tensor.indices,
-                        output_tensor.dense_shape)
+                        _Identity(output_tensor.values, name=name),
+                        output_tensor.indices,
+                        output_tensor.dense_shape,
+                    )
 
 
 def _GroupControlDeps(dev, deps, name=None):
@@ -2938,8 +3038,7 @@ def group(*inputs, **kwargs):
         return None
     name = kwargs.pop("name", None)
     if kwargs:
-        raise ValueError("Unknown keyword arguments: " +
-                         ", ".join(kwargs.keys()))
+        raise ValueError("Unknown keyword arguments: " + ", ".join(kwargs.keys()))
     with ops.name_scope(name, "group_deps", inputs) as name:
         # Grouping no inputs means do nothing
         if not inputs:
@@ -2949,8 +3048,10 @@ def group(*inputs, **kwargs):
         ops_on_device = {}  # device -> operations specified on the device.
         for inp in nest.flatten(inputs, expand_composites=True):
             if not hasattr(inp, "device"):
-                raise TypeError("Expected tf.group() expected Tensor arguments not "
-                                "'%s' with type '%s'" % (inp, type(inp)))
+                raise TypeError(
+                    "Expected tf.group() expected Tensor arguments not "
+                    "'%s' with type '%s'" % (inp, type(inp))
+                )
             dev = inp.device
             if dev in ops_on_device:
                 ops_on_device[dev].append(inp)
@@ -2958,7 +3059,7 @@ def group(*inputs, **kwargs):
                 ops_on_device[dev] = [inp]
         if len(ops_on_device) == 1:
             # 1-level tree. The root node is the returned NoOp node.
-            (dev, deps), = ops_on_device.items()
+            ((dev, deps),) = ops_on_device.items()
             return _GroupControlDeps(dev, deps, name=name)
 
         # 2-level tree. The root node is the returned NoOp node.
@@ -3009,7 +3110,9 @@ def tuple_v2(tensors, control_inputs=None, name=None):
         objects.
 
     """
-    return tuple(tensors=tensors, name=name, control_inputs=control_inputs)  # pylint: disable=redefined-builtin
+    return tuple(
+        tensors=tensors, name=name, control_inputs=control_inputs
+    )  # pylint: disable=redefined-builtin
 
 
 @tf_export(v1=["tuple"])
@@ -3049,8 +3152,10 @@ def tuple(tensors, name=None, control_inputs=None):  # pylint: disable=redefined
         return tensors
     with ops.name_scope(name, "tuple", tensors) as name:
         tensors = [
-            t if (isinstance(t, ops.Operation) or tensor_util.is_tensor(t) or
-                  t is None) else ops.convert_to_tensor(t) for t in tensors
+            t
+            if (isinstance(t, ops.Operation) or tensor_util.is_tensor(t) or t is None)
+            else ops.convert_to_tensor(t)
+            for t in tensors
         ]
         gating_ops = [
             t if isinstance(t, ops.Operation) else t.op
@@ -3062,8 +3167,7 @@ def tuple(tensors, name=None, control_inputs=None):  # pylint: disable=redefined
                 if isinstance(c, ops.Tensor):
                     c = c.op
                 elif not isinstance(c, ops.Operation):
-                    raise TypeError(
-                        "Control input must be Operation or Tensor: %s" % c)
+                    raise TypeError("Control input must be Operation or Tensor: %s" % c)
                 gating_ops.append(c)
         # Note that in order to ensure ordering in the pbtxt, we must take care to
         # ensure the order here.
@@ -3094,13 +3198,15 @@ def _assert_at_most_n_true(predicates, n, msg):
     """
     preds_c = array_ops.stack(predicates, name="preds_c")
     num_true_conditions = math_ops.reduce_sum(
-        math_ops.cast(preds_c, dtypes.int32), name="num_true_conds")
-    condition = math_ops.less_equal(num_true_conditions,
-                                    constant_op.constant(n, name="n_true_conds"))
+        math_ops.cast(preds_c, dtypes.int32), name="num_true_conds"
+    )
+    condition = math_ops.less_equal(
+        num_true_conditions, constant_op.constant(n, name="n_true_conds")
+    )
     preds_names = ", ".join(getattr(p, "name", "?") for p in predicates)
     error_msg = [
-        "%s: more than %d conditions (%s) evaluated as True:" %
-        (msg, n, preds_names), preds_c
+        "%s: more than %d conditions (%s) evaluated as True:" % (msg, n, preds_names),
+        preds_c,
     ]
     return Assert(condition, data=error_msg, summarize=len(predicates))
 
@@ -3123,23 +3229,29 @@ def _case_create_default_action(predicates, actions):
     other_predicates, other_actions = predicates[:k], actions[:k]
 
     def default_action():
-        others_msg = ("Implementation error: "
-                      "selected default action #%d was called, but some of other "
-                      "predicates are True: " % k)
-        default_msg = ("Input error: "
-                       "None of conditions evaluated as True:",
-                       array_ops.stack(predicates, name="preds_c"))
-        with ops.control_dependencies([
-            _assert_at_most_n_true(other_predicates, n=0, msg=others_msg),
-            Assert(predicate, data=default_msg)
-        ]):
+        others_msg = (
+            "Implementation error: "
+            "selected default action #%d was called, but some of other "
+            "predicates are True: " % k
+        )
+        default_msg = (
+            "Input error: " "None of conditions evaluated as True:",
+            array_ops.stack(predicates, name="preds_c"),
+        )
+        with ops.control_dependencies(
+            [
+                _assert_at_most_n_true(other_predicates, n=0, msg=others_msg),
+                Assert(predicate, data=default_msg),
+            ]
+        ):
             return action()
 
     return default_action, other_predicates, other_actions
 
 
-def _case_verify_and_canonicalize_args(pred_fn_pairs, exclusive, name,
-                                       allow_python_preds):
+def _case_verify_and_canonicalize_args(
+    pred_fn_pairs, exclusive, name, allow_python_preds
+):
     """Verifies input arguments for the case function.
 
     Args:
@@ -3169,18 +3281,21 @@ def _case_verify_and_canonicalize_args(pred_fn_pairs, exclusive, name,
             # No name to sort on in eager mode. Use dictionary traversal order,
             # which is nondeterministic in versions of Python < 3.6
             if not exclusive:
-                raise ValueError("Unordered dictionaries are not supported for the "
-                                 "`pred_fn_pairs` argument when `exclusive=False` and "
-                                 "eager mode is enabled.")
+                raise ValueError(
+                    "Unordered dictionaries are not supported for the "
+                    "`pred_fn_pairs` argument when `exclusive=False` and "
+                    "eager mode is enabled."
+                )
             pred_fn_pairs = list(pred_fn_pairs.items())
         else:
-            pred_fn_pairs = sorted(
-                pred_fn_pairs.items(), key=lambda item: item[0].name)
+            pred_fn_pairs = sorted(pred_fn_pairs.items(), key=lambda item: item[0].name)
             if not exclusive:
                 logging.warn(
                     "%s: An unordered dictionary of predicate/fn pairs was "
                     "provided, but exclusive=False. The order of conditional "
-                    "tests is deterministic but not guaranteed.", name)
+                    "tests is deterministic but not guaranteed.",
+                    name,
+                )
     for pred_fn_pair in pred_fn_pairs:
         if not isinstance(pred_fn_pair, _basetuple) or len(pred_fn_pair) != 2:
             raise TypeError("Each entry in pred_fn_pairs must be a 2-tuple")
@@ -3188,8 +3303,7 @@ def _case_verify_and_canonicalize_args(pred_fn_pairs, exclusive, name,
 
         if isinstance(pred, ops.Tensor):
             if pred.dtype != dtypes.bool:
-                raise TypeError(
-                    "pred must be Tensor of type bool: %s" % pred.name)
+                raise TypeError("pred must be Tensor of type bool: %s" % pred.name)
         elif not allow_python_preds:
             raise TypeError("pred must be a Tensor, got: %s" % pred)
         elif not isinstance(pred, bool):
@@ -3202,13 +3316,15 @@ def _case_verify_and_canonicalize_args(pred_fn_pairs, exclusive, name,
     return predicates, actions
 
 
-def _case_helper(cond_fn,
-                 pred_fn_pairs,
-                 default,
-                 exclusive,
-                 name,
-                 allow_python_preds=False,
-                 **cond_kwargs):
+def _case_helper(
+    cond_fn,
+    pred_fn_pairs,
+    default,
+    exclusive,
+    name,
+    allow_python_preds=False,
+    **cond_kwargs
+):
     """Implementation of case that allows for different cond functions.
 
     Args:
@@ -3233,29 +3349,34 @@ def _case_helper(cond_fn,
                  callable.
     """
     predicates, actions = _case_verify_and_canonicalize_args(
-        pred_fn_pairs, exclusive, name, allow_python_preds)
+        pred_fn_pairs, exclusive, name, allow_python_preds
+    )
     with ops.name_scope(name, "case", [predicates]):
         if default is None:
             default, predicates, actions = _case_create_default_action(
-                predicates, actions)
+                predicates, actions
+            )
         fn = default
         # To eval conditions in direct order we create nested conditions in reverse:
         #   cond_fn(c[0], true_fn=.., false_fn=cond_fn(c[1], ...))
         for predicate, action in reversed(list(zip(predicates, actions))):
             fn = functools.partial(
-                cond_fn, predicate, true_fn=action, false_fn=fn, **cond_kwargs)
+                cond_fn, predicate, true_fn=action, false_fn=fn, **cond_kwargs
+            )
         if exclusive:
-            with ops.control_dependencies([
-                _assert_at_most_n_true(
-                    predicates, n=1, msg="Input error: exclusive=True")
-            ]):
+            with ops.control_dependencies(
+                [
+                    _assert_at_most_n_true(
+                        predicates, n=1, msg="Input error: exclusive=True"
+                    )
+                ]
+            ):
                 return fn()
         else:
             return fn()
 
 
-def _indexed_case_verify_and_canonicalize_args(branch_fns, default,
-                                               branch_index):
+def _indexed_case_verify_and_canonicalize_args(branch_fns, default, branch_index):
     """Verifies input arguments for the case function.
 
     Args:
@@ -3276,11 +3397,11 @@ def _indexed_case_verify_and_canonicalize_args(branch_fns, default,
       branch_fns: validated list of callables for each branch (default last).
     """
     if not isinstance(branch_index, ops.Tensor):
-        raise TypeError("branch_index must a Tensor, got {}".format(
-            type(branch_index)))
+        raise TypeError("branch_index must a Tensor, got {}".format(type(branch_index)))
     if not branch_index.dtype.is_integer:
-        raise TypeError("branch_index must an integer Tensor, got {}".format(
-            branch_index.dtype))
+        raise TypeError(
+            "branch_index must an integer Tensor, got {}".format(branch_index.dtype)
+        )
 
     if not branch_fns:
         raise ValueError("Must provide at least one item in branch_fns")
@@ -3299,8 +3420,7 @@ def _indexed_case_verify_and_canonicalize_args(branch_fns, default,
         key, branch_fn = key_fn_pair
 
         if not isinstance(key, int):
-            raise TypeError(
-                "key must be a Python `int`, got {}".format(type(key)))
+            raise TypeError("key must be a Python `int`, got {}".format(type(key)))
 
         if not callable(branch_fn):
             raise TypeError("fn for key {} must be callable.".format(key))
@@ -3309,7 +3429,8 @@ def _indexed_case_verify_and_canonicalize_args(branch_fns, default,
     if min(keys) < 0 or max(keys) >= len(keys) or len(set(keys)) != len(keys):
         raise ValueError(
             "branch indices (keys) must form contiguous range of [0 to {}) but "
-            "found {{{}}}".format(len(keys), ",".join(map(str, sorted(keys)))))
+            "found {{{}}}".format(len(keys), ",".join(map(str, sorted(keys))))
+        )
     actions = [p[1] for p in sorted(branch_fns)]
     if default is not None:
         actions.append(default)
@@ -3339,23 +3460,22 @@ def _indexed_case_helper(branch_fns, default, branch_index, name):
                  callable.
     """
     branch_fns = _indexed_case_verify_and_canonicalize_args(
-        branch_fns, default, branch_index)
+        branch_fns, default, branch_index
+    )
     with ops.name_scope(name, "case", [branch_index]):
         if context.executing_eagerly() and not hasattr(branch_index, "graph"):
             branch_index = array_ops.where(
                 math_ops.less(branch_index, 0)
                 | math_ops.greater_equal(branch_index, len(branch_fns)),
-                len(branch_fns) - 1, branch_index)
+                len(branch_fns) - 1,
+                branch_index,
+            )
             return branch_fns[int(branch_index)]()
         return cond_v2.indexed_case(branch_index, branch_fns)
 
 
 @tf_export("case", v1=[])
-def case_v2(pred_fn_pairs,
-            default=None,
-            exclusive=False,
-            strict=False,
-            name="case"):
+def case_v2(pred_fn_pairs, default=None, exclusive=False, strict=False, name="case"):
     """Create a case operation.
 
     See also `tf.switch_case`.
@@ -3451,15 +3571,12 @@ def case_v2(pred_fn_pairs,
         exclusive,
         name,
         allow_python_preds=False,
-        strict=strict)
+        strict=strict,
+    )
 
 
 @tf_export(v1=["case"])
-def case(pred_fn_pairs,
-         default=None,
-         exclusive=False,
-         strict=False,
-         name="case"):
+def case(pred_fn_pairs, default=None, exclusive=False, strict=False, name="case"):
     """Create a case operation.
 
     See also `tf.switch_case`.
@@ -3559,14 +3676,12 @@ def case(pred_fn_pairs,
         exclusive,
         name,
         allow_python_preds=False,
-        strict=strict)
+        strict=strict,
+    )
 
 
 @tf_export("switch_case")
-def switch_case(branch_index,
-                branch_fns,
-                default=None,
-                name="switch_case"):
+def switch_case(branch_index, branch_fns, default=None, name="switch_case"):
     """Create a switch/case operation, i.e. an integer-indexed conditional.
 
     See also `tf.case`.
@@ -3648,8 +3763,9 @@ class XLAControlFlowContext(ControlFlowContext):
     def to_control_flow_context_def(self, context_def, export_scope=None):
         # pylint: disable=useless-super-delegation
         # NOTE(slebedev): the method is required by `ControlFlowContext`.
-        super(XLAControlFlowContext,
-              self).to_control_flow_context_def(context_def, export_scope)
+        super(XLAControlFlowContext, self).to_control_flow_context_def(
+            context_def, export_scope
+        )
 
     def IsXLAContext(self):
         return True
@@ -3672,23 +3788,26 @@ def from_control_flow_context_def(context_def, import_scope=None):
       A ControlFlowContext subclass
     """
     if context_def.HasField("cond_ctxt"):
-        return CondContext.from_proto(
-            context_def.cond_ctxt, import_scope=import_scope)
+        return CondContext.from_proto(context_def.cond_ctxt, import_scope=import_scope)
     if context_def.HasField("while_ctxt"):
         return WhileContext.from_proto(
-            context_def.while_ctxt, import_scope=import_scope)
-    raise NotImplementedError("Unknown ControlFlowContextDef field: %s" %
-                              context_def.WhichOneof("ctxt"))
+            context_def.while_ctxt, import_scope=import_scope
+        )
+    raise NotImplementedError(
+        "Unknown ControlFlowContextDef field: %s" % context_def.WhichOneof("ctxt")
+    )
 
 
 ops.register_proto_function(
     ops.GraphKeys.COND_CONTEXT,
     proto_type=control_flow_pb2.CondContextDef,
     to_proto=CondContext.to_proto,
-    from_proto=CondContext.from_proto)
+    from_proto=CondContext.from_proto,
+)
 
 ops.register_proto_function(
     ops.GraphKeys.WHILE_CONTEXT,
     proto_type=control_flow_pb2.WhileContextDef,
     to_proto=WhileContext.to_proto,
-    from_proto=WhileContext.from_proto)
+    from_proto=WhileContext.from_proto,
+)
