@@ -82,7 +82,8 @@ def create_dir_test():
     # Check that the directory exists.
     recursive_dir_exists = file_io.is_directory(recursive_dir_name)
     assert recursive_dir_exists
-    print("%s directory exists: %s" % (recursive_dir_name, recursive_dir_exists))
+    print("%s directory exists: %s" %
+          (recursive_dir_name, recursive_dir_exists))
 
     # Create some contents in the just created directory and list the contents.
     num_files = 10
@@ -108,13 +109,12 @@ def create_dir_test():
     assert not file_io.is_directory(new_dir_name)
 
     starttime_ms = int(round(time.time() * 1000))
-    print("Will try renaming directory %s to %s" % (dir_to_rename, new_dir_name))
+    print("Will try renaming directory %s to %s" %
+          (dir_to_rename, new_dir_name))
     file_io.rename(dir_to_rename, new_dir_name)
     elapsed_ms = int(round(time.time() * 1000)) - starttime_ms
-    print(
-        "Renamed directory %s to %s in %s milliseconds"
-        % (dir_to_rename, new_dir_name, elapsed_ms)
-    )
+    print("Renamed directory %s to %s in %s milliseconds" %
+          (dir_to_rename, new_dir_name, elapsed_ms))
     assert not file_io.is_directory(dir_to_rename)
     assert file_io.is_directory(new_dir_name)
 
@@ -125,9 +125,8 @@ def create_dir_test():
     elapsed_ms = int(round(time.time() * 1000)) - starttime_ms
     dir_exists = file_io.is_directory(dir_name)
     assert not dir_exists
-    print(
-        "Deleted directory recursively %s in %s milliseconds" % (dir_name, elapsed_ms)
-    )
+    print("Deleted directory recursively %s in %s milliseconds" %
+          (dir_name, elapsed_ms))
 
 
 def create_object_test():
@@ -139,8 +138,12 @@ def create_object_test():
 
     num_files = 5
     # Create files of 2 different patterns in this directory.
-    files_pattern_1 = ["%s/test_file_%d.txt" % (dir_name, n) for n in range(num_files)]
-    files_pattern_2 = ["%s/testfile%d.txt" % (dir_name, n) for n in range(num_files)]
+    files_pattern_1 = [
+        "%s/test_file_%d.txt" % (dir_name, n) for n in range(num_files)
+    ]
+    files_pattern_2 = [
+        "%s/testfile%d.txt" % (dir_name, n) for n in range(num_files)
+    ]
 
     starttime_ms = int(round(time.time() * 1000))
     files_to_create = files_pattern_1 + files_pattern_2
@@ -148,7 +151,8 @@ def create_object_test():
         print("Creating file %s." % file_name)
         file_io.write_string_to_file(file_name, "test file creation.")
     elapsed_ms = int(round(time.time() * 1000)) - starttime_ms
-    print("Created %d files in %s milliseconds" % (len(files_to_create), elapsed_ms))
+    print("Created %d files in %s milliseconds" %
+          (len(files_to_create), elapsed_ms))
 
     # Listing files of pattern1.
     list_files_pattern = "%s/test_file*.txt" % dir_name
@@ -181,10 +185,8 @@ def create_object_test():
     starttime_ms = int(round(time.time() * 1000))
     file_io.rename(file_to_rename, file_new_name)
     elapsed_ms = int(round(time.time() * 1000)) - starttime_ms
-    print(
-        "File %s renamed to %s in %s milliseconds"
-        % (file_to_rename, file_new_name, elapsed_ms)
-    )
+    print("File %s renamed to %s in %s milliseconds" %
+          (file_to_rename, file_new_name, elapsed_ms))
     assert not file_io.file_exists(file_to_rename)
     assert file_io.file_exists(file_new_name)
 
@@ -197,7 +199,8 @@ def main(argv):
     del argv  # Unused.
 
     # Sanity check on the GCS bucket URL.
-    if not FLAGS.gcs_bucket_url or not FLAGS.gcs_bucket_url.startswith("gs://"):
+    if not FLAGS.gcs_bucket_url or not FLAGS.gcs_bucket_url.startswith(
+            "gs://"):
         print('ERROR: Invalid GCS bucket URL: "%s"' % FLAGS.gcs_bucket_url)
         sys.exit(1)
 
@@ -225,18 +228,16 @@ def main(argv):
     print("Read %d records using tf_record_iterator" % read_count)
 
     if read_count != FLAGS.num_examples:
-        print(
-            "FAIL: The number of records read from tf_record_iterator (%d) "
-            "differs from the expected number (%d)" % (read_count, FLAGS.num_examples)
-        )
+        print("FAIL: The number of records read from tf_record_iterator (%d) "
+              "differs from the expected number (%d)" %
+              (read_count, FLAGS.num_examples))
         sys.exit(1)
 
     # Verify that running the read op in a session works.
     print("\n=== Testing TFRecordReader.read op in a session... ===")
     with tf.Graph().as_default():
-        filename_queue = tf.compat.v1.train.string_input_producer(
-            [input_path], num_epochs=1
-        )
+        filename_queue = tf.compat.v1.train.string_input_producer([input_path],
+                                                                  num_epochs=1)
         reader = tf.compat.v1.TFRecordReader()
         _, serialized_example = reader.read(filename_queue)
 
@@ -255,14 +256,11 @@ def main(argv):
                 sess.run(serialized_example)
                 print(
                     "FAIL: Failed to catch the expected OutOfRangeError while "
-                    "reading one more record than is available"
-                )
+                    "reading one more record than is available")
                 sys.exit(1)
             except tf.errors.OutOfRangeError:
-                print(
-                    "Successfully caught the expected OutOfRangeError while "
-                    "reading one more record than is available"
-                )
+                print("Successfully caught the expected OutOfRangeError while "
+                      "reading one more record than is available")
 
     create_dir_test()
     create_object_test()
