@@ -34,105 +34,105 @@ from tensorflow.lite.python import schema_py_generated as schema_fb
 
 
 def read_model(input_tflite_file):
-  """Reads and parses a tflite model.
+    """Reads and parses a tflite model.
 
-  Args:
-    input_tflite_file: Full path name to the input tflite file
+    Args:
+      input_tflite_file: Full path name to the input tflite file
 
-  Raises:
-    RuntimeError: If input_tflite_file is not found.
-    IOError: If input_tflite_file cannot be opened.
+    Raises:
+      RuntimeError: If input_tflite_file is not found.
+      IOError: If input_tflite_file cannot be opened.
 
-  Returns:
-    A python flatbuffer object corresponding to the input tflite file.
-  """
-  if not os.path.exists(input_tflite_file):
-    raise RuntimeError('Input file not found at %r\n' % input_tflite_file)
-  with open(input_tflite_file, 'rb') as file_handle:
-    file_data = bytearray(file_handle.read())
-  model_obj = schema_fb.Model.GetRootAsModel(file_data, 0)
-  return schema_fb.ModelT.InitFromObj(model_obj)
+    Returns:
+      A python flatbuffer object corresponding to the input tflite file.
+    """
+    if not os.path.exists(input_tflite_file):
+        raise RuntimeError('Input file not found at %r\n' % input_tflite_file)
+    with open(input_tflite_file, 'rb') as file_handle:
+        file_data = bytearray(file_handle.read())
+    model_obj = schema_fb.Model.GetRootAsModel(file_data, 0)
+    return schema_fb.ModelT.InitFromObj(model_obj)
 
 
 def write_model(model, output_tflite_file):
-  """Writes the model, a python flatbuffer object, into the output tflite file.
+    """Writes the model, a python flatbuffer object, into the output tflite file.
 
-  Args:
-    model: tflite model
-    output_tflite_file: Full path name to the output tflite file.
+    Args:
+      model: tflite model
+      output_tflite_file: Full path name to the output tflite file.
 
-  Raises:
-    IOError: If output_tflite_file cannot be opened.
-  """
-  # Initial size of the buffer, which will grow automatically if needed
-  builder = flatbuffers.Builder(1024)
-  model_offset = model.Pack(builder)
-  builder.Finish(model_offset)
-  model_data = builder.Output()
-  with open(output_tflite_file, 'wb') as out_file:
-    out_file.write(model_data)
+    Raises:
+      IOError: If output_tflite_file cannot be opened.
+    """
+    # Initial size of the buffer, which will grow automatically if needed
+    builder = flatbuffers.Builder(1024)
+    model_offset = model.Pack(builder)
+    builder.Finish(model_offset)
+    model_data = builder.Output()
+    with open(output_tflite_file, 'wb') as out_file:
+        out_file.write(model_data)
 
 
 def strip_strings(model):
-  """Strips all nonessential strings from the model to reduce model size.
+    """Strips all nonessential strings from the model to reduce model size.
 
-  We remove the following strings:
-  (find strings by searching ":string" in the tensorflow lite flatbuffer schema)
-  1. Model description
-  2. SubGraph name
-  3. Tensor names
-  We retain OperatorCode custom_code and Metadata name.
+    We remove the following strings:
+    (find strings by searching ":string" in the tensorflow lite flatbuffer schema)
+    1. Model description
+    2. SubGraph name
+    3. Tensor names
+    We retain OperatorCode custom_code and Metadata name.
 
-  Args:
-    model: The initial model containing nonessential strings.
+    Args:
+      model: The initial model containing nonessential strings.
 
-  Returns:
-    The final model from which all nonessential strings have been removed.
-  """
+    Returns:
+      The final model from which all nonessential strings have been removed.
+    """
 
-  # As the function passes arguments by reference, we make a copy to ensure
-  # that the original model is unmodified.
-  model = copy.deepcopy(model)
+    # As the function passes arguments by reference, we make a copy to ensure
+    # that the original model is unmodified.
+    model = copy.deepcopy(model)
 
-  model.description = ''
-  for subgraph in model.subgraphs:
-    subgraph.name = ''
-    for tensor in subgraph.tensors:
-      tensor.name = ''
-  return model
+    model.description = ''
+    for subgraph in model.subgraphs:
+        subgraph.name = ''
+        for tensor in subgraph.tensors:
+            tensor.name = ''
+    return model
 
 
 def randomize_weights(model, random_seed=0):
-  """Randomize weights in a model.
+    """Randomize weights in a model.
 
-  Args:
-    model: The initial model with unmodified weights.
-    random_seed: The input to the random number generator (default value is 0).
+    Args:
+      model: The initial model with unmodified weights.
+      random_seed: The input to the random number generator (default value is 0).
 
-  Returns:
-    The final model in which all the weights have been randomized.
-  """
+    Returns:
+      The final model in which all the weights have been randomized.
+    """
 
-  # As the function passes arguments by reference, we make a copy to ensure
-  # that the original model is unmodified.
-  model = copy.deepcopy(model)
+    # As the function passes arguments by reference, we make a copy to ensure
+    # that the original model is unmodified.
+    model = copy.deepcopy(model)
 
-  # The input to the random seed generator. The default value is 0.
-  random.seed(random_seed)
+    # The input to the random seed generator. The default value is 0.
+    random.seed(random_seed)
 
-  # Parse model buffers which store the model weights
-  buffers = model.buffers
-  for i in range(1, len(buffers)):  # ignore index 0 as it's always None
-    buffer_i_data = buffers[i].data
-    buffer_i_size = 0 if buffer_i_data is None else buffer_i_data.size
+    # Parse model buffers which store the model weights
+    buffers = model.buffers
+    for i in range(1, len(buffers)):  # ignore index 0 as it's always None
+        buffer_i_data = buffers[i].data
+        buffer_i_size = 0 if buffer_i_data is None else buffer_i_data.size
 
-    # Raw data buffers are of type ubyte (or uint8) whose values lie in the
-    # range [0, 255]. Those ubytes (or unint8s) are the underlying
-    # representation of each datatype. For example, a bias tensor of type
-    # int32 appears as a buffer 4 times it's length of type ubyte (or uint8).
-    # TODO(b/152324470): This does not work for float as randomized weights may
-    # end up as denormalized or NaN/Inf floating point numbers.
-    for j in range(buffer_i_size):
-      buffer_i_data[j] = random.randint(0, 255)
+        # Raw data buffers are of type ubyte (or uint8) whose values lie in the
+        # range [0, 255]. Those ubytes (or unint8s) are the underlying
+        # representation of each datatype. For example, a bias tensor of type
+        # int32 appears as a buffer 4 times it's length of type ubyte (or uint8).
+        # TODO(b/152324470): This does not work for float as randomized weights may
+        # end up as denormalized or NaN/Inf floating point numbers.
+        for j in range(buffer_i_size):
+            buffer_i_data[j] = random.randint(0, 255)
 
-  return model
+    return model

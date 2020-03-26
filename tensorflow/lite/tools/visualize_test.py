@@ -28,46 +28,47 @@ from tensorflow.python.platform import test
 
 class VisualizeTest(test_util.TensorFlowTestCase):
 
-  def testTensorTypeToName(self):
-    self.assertEqual('FLOAT32', visualize.TensorTypeToName(0))
+    def testTensorTypeToName(self):
+        self.assertEqual('FLOAT32', visualize.TensorTypeToName(0))
 
-  def testBuiltinCodeToName(self):
-    self.assertEqual('HASHTABLE_LOOKUP', visualize.BuiltinCodeToName(10))
+    def testBuiltinCodeToName(self):
+        self.assertEqual('HASHTABLE_LOOKUP', visualize.BuiltinCodeToName(10))
 
-  def testFlatbufferToDict(self):
-    model_data = test_utils.build_mock_model()
-    model_dict = visualize.CreateDictFromFlatbuffer(model_data)
-    self.assertEqual(0, model_dict['version'])
-    self.assertEqual(1, len(model_dict['subgraphs']))
-    self.assertEqual(1, len(model_dict['operator_codes']))
-    self.assertEqual(3, len(model_dict['buffers']))
-    self.assertEqual(3, len(model_dict['subgraphs'][0]['tensors']))
-    self.assertEqual(0, model_dict['subgraphs'][0]['tensors'][0]['buffer'])
+    def testFlatbufferToDict(self):
+        model_data = test_utils.build_mock_model()
+        model_dict = visualize.CreateDictFromFlatbuffer(model_data)
+        self.assertEqual(0, model_dict['version'])
+        self.assertEqual(1, len(model_dict['subgraphs']))
+        self.assertEqual(1, len(model_dict['operator_codes']))
+        self.assertEqual(3, len(model_dict['buffers']))
+        self.assertEqual(3, len(model_dict['subgraphs'][0]['tensors']))
+        self.assertEqual(0, model_dict['subgraphs'][0]['tensors'][0]['buffer'])
 
-  def testVisualize(self):
-    model_data = test_utils.build_mock_model()
+    def testVisualize(self):
+        model_data = test_utils.build_mock_model()
 
-    tmp_dir = self.get_temp_dir()
-    model_filename = os.path.join(tmp_dir, 'model.tflite')
-    with open(model_filename, 'wb') as model_file:
-      model_file.write(model_data)
-    html_filename = os.path.join(tmp_dir, 'visualization.html')
+        tmp_dir = self.get_temp_dir()
+        model_filename = os.path.join(tmp_dir, 'model.tflite')
+        with open(model_filename, 'wb') as model_file:
+            model_file.write(model_data)
+        html_filename = os.path.join(tmp_dir, 'visualization.html')
 
-    visualize.CreateHtmlFile(model_filename, html_filename)
+        visualize.CreateHtmlFile(model_filename, html_filename)
 
-    with open(html_filename, 'r') as html_file:
-      html_text = html_file.read()
+        with open(html_filename, 'r') as html_file:
+            html_text = html_file.read()
 
-    # It's hard to test debug output without doing a full HTML parse,
-    # but at least sanity check that expected identifiers are present.
-    self.assertRegex(
-        html_text, re.compile(r'%s' % model_filename, re.MULTILINE | re.DOTALL))
-    self.assertRegex(html_text,
-                     re.compile(r'input_tensor', re.MULTILINE | re.DOTALL))
-    self.assertRegex(html_text,
-                     re.compile(r'constant_tensor', re.MULTILINE | re.DOTALL))
-    self.assertRegex(html_text, re.compile(r'ADD', re.MULTILINE | re.DOTALL))
+        # It's hard to test debug output without doing a full HTML parse,
+        # but at least sanity check that expected identifiers are present.
+        self.assertRegex(
+            html_text, re.compile(r'%s' % model_filename, re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text,
+                         re.compile(r'input_tensor', re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text,
+                         re.compile(r'constant_tensor', re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text, re.compile(
+            r'ADD', re.MULTILINE | re.DOTALL))
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()

@@ -30,28 +30,28 @@ from tensorflow.python.platform import app
 
 
 def main(_):
-  """Application run loop."""
-  parser = argparse.ArgumentParser(
-      description='Strips all nonessential strings from a tflite file.')
-  parser.add_argument(
-      '--input_tflite_file',
-      type=str,
-      required=True,
-      help='Full path name to the input tflite file.')
-  parser.add_argument(
-      '--output_tflite_file',
-      type=str,
-      required=True,
-      help='Full path name to the stripped output tflite file.')
-  args = parser.parse_args()
+    """Application run loop."""
+    parser = argparse.ArgumentParser(
+        description='Strips all nonessential strings from a tflite file.')
+    parser.add_argument(
+        '--input_tflite_file',
+        type=str,
+        required=True,
+        help='Full path name to the input tflite file.')
+    parser.add_argument(
+        '--output_tflite_file',
+        type=str,
+        required=True,
+        help='Full path name to the stripped output tflite file.')
+    args = parser.parse_args()
 
-  # Read the model
-  input_model = flatbuffer_utils.read_model(args.input_tflite_file)
-  # Invoke the strip tflite file function
-  output_model = flatbuffer_utils.strip_strings(input_model)
-  # Write the model
-  flatbuffer_utils.write_model(output_model, args.output_tflite_file)
+    # Read the model
+    input_model = flatbuffer_utils.read_model(args.input_tflite_file)
+    # Invoke the strip tflite file function
+    output_model = flatbuffer_utils.strip_strings(input_model)
+    # Write the model
+    flatbuffer_utils.write_model(output_model, args.output_tflite_file)
 
 
 if __name__ == '__main__':
-  app.run(main=main, argv=sys.argv[:1])
+    app.run(main=main, argv=sys.argv[:1])
