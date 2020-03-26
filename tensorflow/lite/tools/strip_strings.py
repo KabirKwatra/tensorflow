@@ -32,17 +32,20 @@ from tensorflow.python.platform import app
 def main(_):
     """Application run loop."""
     parser = argparse.ArgumentParser(
-        description='Strips all nonessential strings from a tflite file.')
+        description="Strips all nonessential strings from a tflite file."
+    )
     parser.add_argument(
-        '--input_tflite_file',
+        "--input_tflite_file",
         type=str,
         required=True,
-        help='Full path name to the input tflite file.')
+        help="Full path name to the input tflite file.",
+    )
     parser.add_argument(
-        '--output_tflite_file',
+        "--output_tflite_file",
         type=str,
         required=True,
-        help='Full path name to the stripped output tflite file.')
+        help="Full path name to the stripped output tflite file.",
+    )
     args = parser.parse_args()
 
     # Read the model
@@ -53,5 +56,5 @@ def main(_):
     flatbuffer_utils.write_model(output_model, args.output_tflite_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(main=main, argv=sys.argv[:1])

@@ -47,8 +47,8 @@ def read_model(input_tflite_file):
       A python flatbuffer object corresponding to the input tflite file.
     """
     if not os.path.exists(input_tflite_file):
-        raise RuntimeError('Input file not found at %r\n' % input_tflite_file)
-    with open(input_tflite_file, 'rb') as file_handle:
+        raise RuntimeError("Input file not found at %r\n" % input_tflite_file)
+    with open(input_tflite_file, "rb") as file_handle:
         file_data = bytearray(file_handle.read())
     model_obj = schema_fb.Model.GetRootAsModel(file_data, 0)
     return schema_fb.ModelT.InitFromObj(model_obj)
@@ -69,7 +69,7 @@ def write_model(model, output_tflite_file):
     model_offset = model.Pack(builder)
     builder.Finish(model_offset)
     model_data = builder.Output()
-    with open(output_tflite_file, 'wb') as out_file:
+    with open(output_tflite_file, "wb") as out_file:
         out_file.write(model_data)
 
 
@@ -94,11 +94,11 @@ def strip_strings(model):
     # that the original model is unmodified.
     model = copy.deepcopy(model)
 
-    model.description = ''
+    model.description = ""
     for subgraph in model.subgraphs:
-        subgraph.name = ''
+        subgraph.name = ""
         for tensor in subgraph.tensors:
-            tensor.name = ''
+            tensor.name = ""
     return model
 
 

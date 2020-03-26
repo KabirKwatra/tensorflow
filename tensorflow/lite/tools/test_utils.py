@@ -57,7 +57,7 @@ def build_mock_model():
     builder.PrependUOffsetTRelative(buffer0_offset)
     buffers_offset = builder.EndVector(3)
 
-    string0_offset = builder.CreateString('input_tensor')
+    string0_offset = builder.CreateString("input_tensor")
     schema_fb.TensorStartShapeVector(builder, 3)
     builder.PrependInt32(1)
     builder.PrependInt32(2)
@@ -106,11 +106,10 @@ def build_mock_model():
     schema_fb.QuantizationParametersAddMin(builder, quant1_min_offset)
     schema_fb.QuantizationParametersAddMax(builder, quant1_max_offset)
     schema_fb.QuantizationParametersAddScale(builder, quant1_scale_offset)
-    schema_fb.QuantizationParametersAddZeroPoint(builder,
-                                                 quant1_zero_point_offset)
+    schema_fb.QuantizationParametersAddZeroPoint(builder, quant1_zero_point_offset)
     quantization1_offset = schema_fb.QuantizationParametersEnd(builder)
 
-    string1_offset = builder.CreateString('constant_tensor')
+    string1_offset = builder.CreateString("constant_tensor")
     schema_fb.TensorStartShapeVector(builder, 3)
     builder.PrependInt32(1)
     builder.PrependInt32(2)
@@ -124,7 +123,7 @@ def build_mock_model():
     schema_fb.TensorAddQuantization(builder, quantization1_offset)
     tensor1_offset = schema_fb.TensorEnd(builder)
 
-    string2_offset = builder.CreateString('output_tensor')
+    string2_offset = builder.CreateString("output_tensor")
     schema_fb.TensorStartShapeVector(builder, 3)
     builder.PrependInt32(1)
     builder.PrependInt32(2)
@@ -152,8 +151,7 @@ def build_mock_model():
     outputs_offset = builder.EndVector(1)
 
     schema_fb.OperatorCodeStart(builder)
-    schema_fb.OperatorCodeAddBuiltinCode(
-        builder, schema_fb.BuiltinOperator.ADD)
+    schema_fb.OperatorCodeAddBuiltinCode(builder, schema_fb.BuiltinOperator.ADD)
     schema_fb.OperatorCodeAddVersion(builder, 1)
     code_offset = schema_fb.OperatorCodeEnd(builder)
 
@@ -180,7 +178,7 @@ def build_mock_model():
     builder.PrependUOffsetTRelative(op_offset)
     ops_offset = builder.EndVector(1)
 
-    string3_offset = builder.CreateString('subgraph_name')
+    string3_offset = builder.CreateString("subgraph_name")
     schema_fb.SubGraphStart(builder)
     schema_fb.SubGraphAddName(builder, string3_offset)
     schema_fb.SubGraphAddTensors(builder, tensors_offset)
@@ -193,7 +191,7 @@ def build_mock_model():
     builder.PrependUOffsetTRelative(subgraph_offset)
     subgraphs_offset = builder.EndVector(1)
 
-    string4_offset = builder.CreateString('model_description')
+    string4_offset = builder.CreateString("model_description")
     schema_fb.ModelStart(builder)
     schema_fb.ModelAddOperatorCodes(builder, codes_offset)
     schema_fb.ModelAddSubgraphs(builder, subgraphs_offset)
