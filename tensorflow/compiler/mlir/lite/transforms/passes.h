@@ -37,7 +37,7 @@ std::unique_ptr<OpPassBase<FuncOp>> CreateOptimizePass();
 
 // Creates an instance of the TensorFlow Lite dialect PrepareTF pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreatePrepareTFPass(
-    bool unfold_batch_matmul);
+                                     bool unfold_batch_matmul);
 
 // Creates an instance of the TensorFlow Lite dialect LowerStaticTensorList
 // pass.
@@ -48,16 +48,16 @@ std::unique_ptr<OpPassBase<FuncOp>> CreateQuantizePass();
 
 // Creates an instance of the TensorFlow Lite dialect PrepareQuantize pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreatePrepareQuantizePass(
-    const QuantizationSpecs& quant_specs);
+                                     const QuantizationSpecs& quant_specs);
 
 // Creates an instance of the TensorFlow Lite dialect PostQuantize pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreatePostQuantizePass(
-    bool emit_quant_adaptor_ops);
+                                     bool emit_quant_adaptor_ops);
 
 // Creates an instance of the TensorFlow Lite dialect TrimFunctions
 // pass.
 std::unique_ptr<OpPassBase<ModuleOp>> CreateTrimFunctionsPass(
-    llvm::ArrayRef<std::string> trim_funcs_whitelist);
+                                       llvm::ArrayRef<std::string> trim_funcs_whitelist);
 
 // Creates an instance of the TensorFlow Lite dialect PrepareCompositeFunctions
 // pass.
@@ -79,7 +79,7 @@ std::unique_ptr<OpPassBase<ModuleOp>> CreateOptimizeFunctionalOpsPass();
 // Creates an instance of the TensorFlow Lite dialect pass to add default
 // quantization parameters.
 std::unique_ptr<OpPassBase<FuncOp>> CreateDefaultQuantParamsPass(
-    double default_min, double default_max);
+                                     double default_min, double default_max);
 
 // Creates an instance of the TensorFlow Lite dialect pass to convert dense
 // tensor to sparse format.
