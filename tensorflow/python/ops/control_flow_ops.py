@@ -47,12 +47,7 @@ from tensorflow.python.ops import gen_logging_ops
 from tensorflow.python.ops import gen_math_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import tensor_array_ops
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import,undefined-variable
 from tensorflow.python.ops.gen_control_flow_ops import *
-
-# pylint: enable=wildcard-import
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import compat
 from tensorflow.python.util import deprecation
@@ -60,6 +55,9 @@ from tensorflow.python.util import nest
 from tensorflow.python.util import tf_should_use
 from tensorflow.python.util.lazy_loader import LazyLoader
 from tensorflow.python.util.tf_export import tf_export
+# go/tf-wildcard-import
+# pylint: disable=wildcard-import,undefined-variable
+# pylint: enable=wildcard-import
 
 # This is to avoid a circular dependency:
 # cond_v2 -> gradients_util -> control_flow_ops
