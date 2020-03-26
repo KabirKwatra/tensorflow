@@ -34,7 +34,7 @@ namespace mlir {
 Status ConvertMlirHloToHlo(mlir::ModuleOp module, xla::HloProto* hlo_proto,
                            bool use_tuple_args, bool return_tuple,
                            const tensorflow::XlaCompiler::ShapeRepresentationFn
-                               shape_representation_fn = nullptr);
+                           shape_representation_fn = nullptr);
 
 // Creates XlaOp equivalent of a given MLIR operation using the operand info
 // from `value_lowering` map.

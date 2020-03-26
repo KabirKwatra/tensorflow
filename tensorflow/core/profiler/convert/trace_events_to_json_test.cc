@@ -25,20 +25,20 @@ namespace profiler {
 namespace {
 
 string ConvertTextFormattedTraceToJson(const string& trace_str) {
-  Trace trace;
-  ::tensorflow::protobuf::TextFormat::ParseFromString(trace_str, &trace);
-  return TraceEventsToJson(trace);
+    Trace trace;
+    ::tensorflow::protobuf::TextFormat::ParseFromString(trace_str, &trace);
+    return TraceEventsToJson(trace);
 }
 
 Json::Value ToJsonValue(const string& json_str) {
-  Json::Value json;
-  Json::Reader reader;
-  EXPECT_TRUE(reader.parse(json_str, json));
-  return json;
+    Json::Value json;
+    Json::Reader reader;
+    EXPECT_TRUE(reader.parse(json_str, json));
+    return json;
 }
 
 TEST(TraceEventsToJson, JsonConversion) {
-  string json_output = ConvertTextFormattedTraceToJson(R"(
+    string json_output = ConvertTextFormattedTraceToJson(R"(
       devices { key: 2 value {
         name: 'D2'
         device_id: 2
@@ -78,7 +78,7 @@ TEST(TraceEventsToJson, JsonConversion) {
         timestamp_ps: 105000
       }
   )");
-  string expected_json = R"(
+    string expected_json = R"(
   {
     "displayTimeUnit": "ns",
     "metadata": { "highres-ticks": true },
@@ -116,7 +116,7 @@ TEST(TraceEventsToJson, JsonConversion) {
       {}
     ]
   })";
-  EXPECT_EQ(ToJsonValue(json_output), ToJsonValue(expected_json));
+    EXPECT_EQ(ToJsonValue(json_output), ToJsonValue(expected_json));
 }
 
 }  // namespace

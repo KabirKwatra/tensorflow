@@ -34,40 +34,40 @@ namespace tensorflow {
 // profiling.
 // Thread-safety: ProfilerSession is thread-safe.
 class ProfilerSession {
- public:
-  // Creates and ProfilerSession and starts profiling.
-  static std::unique_ptr<ProfilerSession> Create(
-      const profiler::ProfilerOptions& options);
-  static std::unique_ptr<ProfilerSession> Create();
+public:
+    // Creates and ProfilerSession and starts profiling.
+    static std::unique_ptr<ProfilerSession> Create(
+        const profiler::ProfilerOptions& options);
+    static std::unique_ptr<ProfilerSession> Create();
 
-  // Deletes an existing Profiler and enables starting a new one.
-  ~ProfilerSession();
+    // Deletes an existing Profiler and enables starting a new one.
+    ~ProfilerSession();
 
-  tensorflow::Status Status() TF_LOCKS_EXCLUDED(mutex_);
+    tensorflow::Status Status() TF_LOCKS_EXCLUDED(mutex_);
 
-  tensorflow::Status CollectData(profiler::XSpace* space)
-      TF_LOCKS_EXCLUDED(mutex_);
+    tensorflow::Status CollectData(profiler::XSpace* space)
+    TF_LOCKS_EXCLUDED(mutex_);
 
-  tensorflow::Status CollectData(RunMetadata* run_metadata)
-      TF_LOCKS_EXCLUDED(mutex_);
+    tensorflow::Status CollectData(RunMetadata* run_metadata)
+    TF_LOCKS_EXCLUDED(mutex_);
 
- private:
-  // Constructs an instance of the class and starts profiling
-  explicit ProfilerSession(const profiler::ProfilerOptions& options);
+private:
+    // Constructs an instance of the class and starts profiling
+    explicit ProfilerSession(const profiler::ProfilerOptions& options);
 
-  // ProfilerSession is neither copyable or movable.
-  ProfilerSession(const ProfilerSession&) = delete;
-  ProfilerSession& operator=(const ProfilerSession&) = delete;
+    // ProfilerSession is neither copyable or movable.
+    ProfilerSession(const ProfilerSession&) = delete;
+    ProfilerSession& operator=(const ProfilerSession&) = delete;
 
-  std::vector<std::unique_ptr<profiler::ProfilerInterface>> profilers_
-      TF_GUARDED_BY(mutex_);
+    std::vector<std::unique_ptr<profiler::ProfilerInterface>> profilers_
+            TF_GUARDED_BY(mutex_);
 
-  // True if the session is active.
-  bool active_ TF_GUARDED_BY(mutex_);
+    // True if the session is active.
+    bool active_ TF_GUARDED_BY(mutex_);
 
-  tensorflow::Status status_ TF_GUARDED_BY(mutex_);
-  const uint64 start_time_ns_;
-  mutex mutex_;
+    tensorflow::Status status_ TF_GUARDED_BY(mutex_);
+    const uint64 start_time_ns_;
+    mutex mutex_;
 };
 
 }  // namespace tensorflow
