@@ -30,9 +30,8 @@ class ServerLibTest(test.TestCase):
 
     def testStartWorker(self):
         master = server_lib.MasterServer(PROTOCOL)
-        worker = server_lib.WorkerServer(
-            PROTOCOL, master.target[len(PROTOCOL + "://") :]
-        )
+        worker = server_lib.WorkerServer(PROTOCOL,
+                                         master.target[len(PROTOCOL + "://"):])
         self.assertRegex(worker.target, PROTOCOL + "://.*:.*")
 
 
