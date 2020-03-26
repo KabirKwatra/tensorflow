@@ -38,4 +38,3 @@ func @main() -> (tensor<1xf32>, tensor<i32>)
   }) : (tensor<i32>, tensor<1xf32>, tensor<i32>) -> (tensor<i32>, tensor<1xf32>, tensor<i32>)
   return %0#1, %0#2 : tensor<1xf32>, tensor<i32>
 }
-
