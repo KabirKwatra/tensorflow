@@ -29,31 +29,31 @@ namespace reference_ops {
 
 inline void Logistic(const RuntimeShape& input_shape, const float* input_data,
                      const RuntimeShape& output_shape, float* output_data) {
-  const float cutoff_upper = 16.619047164916992188f;
-  const float cutoff_lower = -9.f;
+    const float cutoff_upper = 16.619047164916992188f;
+    const float cutoff_lower = -9.f;
 
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-  // Rational for using approximation in reference kernel.
-  // 0. This approximation gives enough precision for float.
-  // 1. This works around an issue on an embedded chipset where exp() does not
-  // return correctly as expected - exp(x) should return inf when overflown
-  // not 1.701417   IEEE 754 defines representation for inf.
-  // 2. This will speed up calculation and is matching the behavior in the
-  // optimized kernels. (check the definition of scalar_logistic_op<float>)
+    // Rational for using approximation in reference kernel.
+    // 0. This approximation gives enough precision for float.
+    // 1. This works around an issue on an embedded chipset where exp() does not
+    // return correctly as expected - exp(x) should return inf when overflown
+    // not 1.701417   IEEE 754 defines representation for inf.
+    // 2. This will speed up calculation and is matching the behavior in the
+    // optimized kernels. (check the definition of scalar_logistic_op<float>)
 
-  for (int i = 0; i < flat_size; i++) {
-    float val = input_data[i];
-    float result;
-    if (val > cutoff_upper) {
-      result = 1.0f;
-    } else if (val < cutoff_lower) {
-      result = std::exp(val);
-    } else {
-      result = 1.f / (1.f + std::exp(-val));
+    for (int i = 0; i < flat_size; i++) {
+        float val = input_data[i];
+        float result;
+        if (val > cutoff_upper) {
+            result = 1.0f;
+        } else if (val < cutoff_lower) {
+            result = std::exp(val);
+        } else {
+            result = 1.f / (1.f + std::exp(-val));
+        }
+        output_data[i] = result;
     }
-    output_data[i] = result;
-  }
 }
 
 // Convenience version that allows, for example, generated-code calls to be
@@ -61,27 +61,27 @@ inline void Logistic(const RuntimeShape& input_shape, const float* input_data,
 inline void Logistic(const LogisticParams&, const RuntimeShape& input_shape,
                      const float* input_data, const RuntimeShape& output_shape,
                      float* output_data) {
-  // Drop params: not needed.
-  Logistic(input_shape, input_data, output_shape, output_data);
+    // Drop params: not needed.
+    Logistic(input_shape, input_data, output_shape, output_data);
 }
 
 inline void Logistic(const LogisticParams& params,
                      const RuntimeShape& input_shape, const int16* input_data,
                      const RuntimeShape& output_shape, int16* output_data) {
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-  for (int i = 0; i < flat_size; i++) {
-    // F0 uses 0 integer bits, range [-1, 1].
-    // This is the return type of math functions such as tanh, logistic,
-    // whose range is in [-1, 1].
-    using F0 = gemmlowp::FixedPoint<std::int16_t, 0>;
-    // F3 uses 3 integer bits, range [-8, 8], the input range expected here.
-    using F3 = gemmlowp::FixedPoint<std::int16_t, 3>;
+    for (int i = 0; i < flat_size; i++) {
+        // F0 uses 0 integer bits, range [-1, 1].
+        // This is the return type of math functions such as tanh, logistic,
+        // whose range is in [-1, 1].
+        using F0 = gemmlowp::FixedPoint<std::int16_t, 0>;
+        // F3 uses 3 integer bits, range [-8, 8], the input range expected here.
+        using F3 = gemmlowp::FixedPoint<std::int16_t, 3>;
 
-    const F3 input = F3::FromRaw(input_data[i]);
-    F0 output = gemmlowp::logistic(input);
-    output_data[i] = output.raw();
-  }
+        const F3 input = F3::FromRaw(input_data[i]);
+        F0 output = gemmlowp::logistic(input);
+        output_data[i] = output.raw();
+    }
 }
 
 // Quantized int8 logistic activation.  Cheats by dequantizing and requantizing
@@ -94,36 +94,36 @@ inline void Logistic(const RuntimeShape& input_shape, const int8_t* input_data,
                      float input_scale, int input_zero_point,
                      const RuntimeShape& output_shape, int8_t* output_data,
                      float output_scale, int output_zero_point) {
-  const float cutoff_upper = 16.619047164916992188f;
-  const float cutoff_lower = -9.f;
+    const float cutoff_upper = 16.619047164916992188f;
+    const float cutoff_lower = -9.f;
 
-  const int flat_size = MatchingFlatSize(input_shape, output_shape);
+    const int flat_size = MatchingFlatSize(input_shape, output_shape);
 
-  // Rational for using approximation in reference kernel.
-  // 0. This approximation gives enough precision for float.
-  // 1. This works around an issue on an embedded chipset where exp() does not
-  // return correctly as expected - exp(x) should return inf when overflown
-  // not 1.701417   IEEE 754 defines representation for inf.
-  // 2. This will speed up calculation and is matching the behavior in the
-  // optimized kernels. (check the definition of scalar_logistic_op<float>)
+    // Rational for using approximation in reference kernel.
+    // 0. This approximation gives enough precision for float.
+    // 1. This works around an issue on an embedded chipset where exp() does not
+    // return correctly as expected - exp(x) should return inf when overflown
+    // not 1.701417   IEEE 754 defines representation for inf.
+    // 2. This will speed up calculation and is matching the behavior in the
+    // optimized kernels. (check the definition of scalar_logistic_op<float>)
 
-  for (int i = 0; i < flat_size; i++) {
-    // Dequantize.
-    float val =
-        static_cast<float>((input_data[i] - input_zero_point) * input_scale);
-    float result;
-    if (val > cutoff_upper) {
-      result = 1.0f;
-    } else if (val < cutoff_lower) {
-      result = std::exp(val);
-    } else {
-      result = 1.f / (1.f + std::exp(-val));
+    for (int i = 0; i < flat_size; i++) {
+        // Dequantize.
+        float val =
+            static_cast<float>((input_data[i] - input_zero_point) * input_scale);
+        float result;
+        if (val > cutoff_upper) {
+            result = 1.0f;
+        } else if (val < cutoff_lower) {
+            result = std::exp(val);
+        } else {
+            result = 1.f / (1.f + std::exp(-val));
+        }
+        // Requantize
+        int8_t output =
+            static_cast<int8_t>(result / output_scale + output_zero_point);
+        output_data[i] = output;
     }
-    // Requantize
-    int8_t output =
-        static_cast<int8_t>(result / output_scale + output_zero_point);
-    output_data[i] = output;
-  }
 }
 
 }  // namespace reference_ops

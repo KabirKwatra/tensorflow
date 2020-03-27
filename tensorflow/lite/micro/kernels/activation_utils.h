@@ -28,24 +28,24 @@ namespace micro {
 
 // Returns the floating point value for a fused activation:
 inline float ActivationValFloat(TfLiteFusedActivation act, float a) {
-  switch (act) {
+    switch (act) {
     case kTfLiteActNone:
-      return a;
+        return a;
     case kTfLiteActRelu:
-      return std::max(0.0f, a);
+        return std::max(0.0f, a);
     case kTfLiteActRelu1:
-      return std::max(-1.0f, std::min(a, 1.0f));
+        return std::max(-1.0f, std::min(a, 1.0f));
     case kTfLiteActRelu6:
-      return std::max(0.0f, std::min(a, 6.0f));
+        return std::max(0.0f, std::min(a, 6.0f));
     case kTfLiteActTanh:
-      return std::tanh(a);
+        return std::tanh(a);
     case kTfLiteActSignBit:
-      return std::signbit(a);
+        return std::signbit(a);
     case kTfLiteActSigmoid:
-      return 1.0f / (1.0f + std::exp(-a));
-  }
-  return 0.0f;  // To indicate an unsupported activation (i.e. when a new fused
-                // activation is added to the enum and not handled here).
+        return 1.0f / (1.0f + std::exp(-a));
+    }
+    return 0.0f;  // To indicate an unsupported activation (i.e. when a new fused
+    // activation is added to the enum and not handled here).
 }
 
 }  // namespace micro
