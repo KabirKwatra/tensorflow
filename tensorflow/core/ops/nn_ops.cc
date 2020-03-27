@@ -33,36 +33,36 @@ using shape_inference::ShapeHandle;
 namespace {
 
 Status FractionalPoolShapeFn(InferenceContext* c) {
-  ShapeHandle input;
-  TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 4, &input));
+    ShapeHandle input;
+    TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 4, &input));
 
-  std::vector<float> pooling_ratio;
-  TF_RETURN_IF_ERROR(c->GetAttr("pooling_ratio", &pooling_ratio));
-  if (pooling_ratio.size() != 4) {
-    return errors::InvalidArgument(
-        "pooling_ratio field must specify 4 dimensions");
-  }
-  std::vector<DimensionHandle> output_dims;
-  for (int i = 0; i < 4; ++i) {
-    DimensionHandle d = c->Dim(input, i);
-    if (c->ValueKnown(d)) {
-      // This must match the same logic in the kernel function in
-      // core/kernels/fractional_max_pool_op.cc.
-      auto val = static_cast<int64>(std::floor(c->Value(d) / pooling_ratio[i]));
-      if (val < 0) {
-        return errors::InvalidArgument("Size computed for dim ", i,
-                                       " is negative: ", val);
-      }
-      output_dims.push_back(c->MakeDim(val));
-    } else {
-      output_dims.push_back(c->UnknownDim());
+    std::vector<float> pooling_ratio;
+    TF_RETURN_IF_ERROR(c->GetAttr("pooling_ratio", &pooling_ratio));
+    if (pooling_ratio.size() != 4) {
+        return errors::InvalidArgument(
+                   "pooling_ratio field must specify 4 dimensions");
     }
-  }
+    std::vector<DimensionHandle> output_dims;
+    for (int i = 0; i < 4; ++i) {
+        DimensionHandle d = c->Dim(input, i);
+        if (c->ValueKnown(d)) {
+            // This must match the same logic in the kernel function in
+            // core/kernels/fractional_max_pool_op.cc.
+            auto val = static_cast<int64>(std::floor(c->Value(d) / pooling_ratio[i]));
+            if (val < 0) {
+                return errors::InvalidArgument("Size computed for dim ", i,
+                                               " is negative: ", val);
+            }
+            output_dims.push_back(c->MakeDim(val));
+        } else {
+            output_dims.push_back(c->UnknownDim());
+        }
+    }
 
-  c->set_output(0, c->MakeShape(output_dims));
-  c->set_output(1, c->Vector(output_dims[1]));
-  c->set_output(2, c->Vector(output_dims[2]));
-  return Status::OK();
+    c->set_output(0, c->MakeShape(output_dims));
+    c->set_output(1, c->Vector(output_dims[1]));
+    c->set_output(2, c->Vector(output_dims[2]));
+    return Status::OK();
 }
 
 }  // namespace
@@ -70,184 +70,184 @@ Status FractionalPoolShapeFn(InferenceContext* c) {
 // --------------------------------------------------------------------------
 
 REGISTER_OP("AvgPool")
-    .Input("value: T")
-    .Output("output: T")
-    .Attr("ksize: list(int) >= 4")
-    .Attr("strides: list(int) >= 4")
-    .Attr(GetPaddingAttrString())
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("T: {half, bfloat16, float, double}")
-    .SetShapeFn(shape_inference::AvgPoolShape);
+.Input("value: T")
+.Output("output: T")
+.Attr("ksize: list(int) >= 4")
+.Attr("strides: list(int) >= 4")
+.Attr(GetPaddingAttrString())
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("T: {half, bfloat16, float, double}")
+.SetShapeFn(shape_inference::AvgPoolShape);
 
 REGISTER_OP("AvgPoolGrad")
-    .Input("orig_input_shape: int32")
-    .Input("grad: T")
-    .Output("output: T")
-    .Attr("ksize: list(int) >= 4")
-    .Attr("strides: list(int) >= 4")
-    .Attr(GetPaddingAttrString())
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("T: {half, bfloat16, float, double}")
-    .SetShapeFn([](InferenceContext* c) {
-      ShapeHandle s;
-      TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(0, &s));
-      TF_RETURN_IF_ERROR(c->WithRank(s, 4, &s));
-      c->set_output(0, s);
-      return Status::OK();
-    });
+.Input("orig_input_shape: int32")
+.Input("grad: T")
+.Output("output: T")
+.Attr("ksize: list(int) >= 4")
+.Attr("strides: list(int) >= 4")
+.Attr(GetPaddingAttrString())
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("T: {half, bfloat16, float, double}")
+.SetShapeFn([](InferenceContext* c) {
+    ShapeHandle s;
+    TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(0, &s));
+    TF_RETURN_IF_ERROR(c->WithRank(s, 4, &s));
+    c->set_output(0, s);
+    return Status::OK();
+});
 
 // --------------------------------------------------------------------------
 
 REGISTER_OP("BatchNormWithGlobalNormalization")
-    .Input("t: T")
-    .Input("m: T")
-    .Input("v: T")
-    .Input("beta: T")
-    .Input("gamma: T")
-    .Output("result: T")
-    .Attr("T: numbertype")
-    .Attr("variance_epsilon: float")
-    .Attr("scale_after_normalization: bool")
-    .Deprecated(9, "Use tf.nn.batch_normalization()")
-    .SetShapeFn([](InferenceContext* c) {
-      ShapeHandle input;
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 4, &input));
+.Input("t: T")
+.Input("m: T")
+.Input("v: T")
+.Input("beta: T")
+.Input("gamma: T")
+.Output("result: T")
+.Attr("T: numbertype")
+.Attr("variance_epsilon: float")
+.Attr("scale_after_normalization: bool")
+.Deprecated(9, "Use tf.nn.batch_normalization()")
+.SetShapeFn([](InferenceContext* c) {
+    ShapeHandle input;
+    TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 4, &input));
 
-      DimensionHandle last_dim = c->Dim(input, 3);
-      for (int i = 1; i < 5; ++i) {  // covers m, v, beta, gamma
+    DimensionHandle last_dim = c->Dim(input, 3);
+    for (int i = 1; i < 5; ++i) {  // covers m, v, beta, gamma
         ShapeHandle vec;
         TF_RETURN_IF_ERROR(c->WithRank(c->input(i), 1, &vec));
         TF_RETURN_IF_ERROR(c->Merge(last_dim, c->Dim(vec, 0), &last_dim));
-      }
+    }
 
-      ShapeHandle out;
-      TF_RETURN_IF_ERROR(c->ReplaceDim(input, 3, last_dim, &out));
-      c->set_output(0, out);
-      return Status::OK();
-    });
+    ShapeHandle out;
+    TF_RETURN_IF_ERROR(c->ReplaceDim(input, 3, last_dim, &out));
+    c->set_output(0, out);
+    return Status::OK();
+});
 
 REGISTER_OP("BatchNormWithGlobalNormalizationGrad")
-    .Input("t: T")
-    .Input("m: T")
-    .Input("v: T")
-    .Input("gamma: T")
-    .Input("backprop: T")
-    .Output("dx: T")
-    .Output("dm: T")
-    .Output("dv: T")
-    .Output("db: T")
-    .Output("dg: T")
-    .Attr("T: numbertype")
-    .Attr("variance_epsilon: float")
-    .Attr("scale_after_normalization: bool")
-    .Deprecated(9, "Use tf.nn.batch_normalization()")
-    .SetShapeFn([](InferenceContext* c) {
-      ShapeHandle input;
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 4, &input));
-      TF_RETURN_IF_ERROR(
-          c->Merge(input, c->input(4), &input));  // with backprop
+.Input("t: T")
+.Input("m: T")
+.Input("v: T")
+.Input("gamma: T")
+.Input("backprop: T")
+.Output("dx: T")
+.Output("dm: T")
+.Output("dv: T")
+.Output("db: T")
+.Output("dg: T")
+.Attr("T: numbertype")
+.Attr("variance_epsilon: float")
+.Attr("scale_after_normalization: bool")
+.Deprecated(9, "Use tf.nn.batch_normalization()")
+.SetShapeFn([](InferenceContext* c) {
+    ShapeHandle input;
+    TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 4, &input));
+    TF_RETURN_IF_ERROR(
+        c->Merge(input, c->input(4), &input));  // with backprop
 
-      DimensionHandle last_dim = c->Dim(input, 3);
-      for (int i = 1; i < 4; ++i) {  // covers m, v, gamma
+    DimensionHandle last_dim = c->Dim(input, 3);
+    for (int i = 1; i < 4; ++i) {  // covers m, v, gamma
         ShapeHandle vec;
         TF_RETURN_IF_ERROR(c->WithRank(c->input(i), 1, &vec));
         TF_RETURN_IF_ERROR(c->Merge(last_dim, c->Dim(vec, 0), &last_dim));
-      }
+    }
 
-      ShapeHandle dx;
-      TF_RETURN_IF_ERROR(c->ReplaceDim(input, 3, last_dim, &dx));
-      c->set_output(0, dx);
+    ShapeHandle dx;
+    TF_RETURN_IF_ERROR(c->ReplaceDim(input, 3, last_dim, &dx));
+    c->set_output(0, dx);
 
-      ShapeHandle vector_shape = c->Vector(last_dim);
-      c->set_output(1, vector_shape);
-      c->set_output(2, vector_shape);
-      c->set_output(3, vector_shape);
-      c->set_output(4, vector_shape);
-      return Status::OK();
-    });
+    ShapeHandle vector_shape = c->Vector(last_dim);
+    c->set_output(1, vector_shape);
+    c->set_output(2, vector_shape);
+    c->set_output(3, vector_shape);
+    c->set_output(4, vector_shape);
+    return Status::OK();
+});
 
 // --------------------------------------------------------------------------
 
 REGISTER_OP("FusedBatchNorm")
-    .Input("x: T")
-    .Input("scale: T")
-    .Input("offset: T")
-    .Input("mean: T")
-    .Input("variance: T")
-    .Output("y: T")
-    .Output("batch_mean: T")
-    .Output("batch_variance: T")
-    .Output("reserve_space_1: T")
-    .Output("reserve_space_2: T")
-    .Attr("T: {float}")
-    .Attr("epsilon: float = 0.0001")
-    .Attr("exponential_avg_factor: float = 1.0")
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("is_training: bool = true")
-    .SetShapeFn(shape_inference::FusedBatchNormShape);
+.Input("x: T")
+.Input("scale: T")
+.Input("offset: T")
+.Input("mean: T")
+.Input("variance: T")
+.Output("y: T")
+.Output("batch_mean: T")
+.Output("batch_variance: T")
+.Output("reserve_space_1: T")
+.Output("reserve_space_2: T")
+.Attr("T: {float}")
+.Attr("epsilon: float = 0.0001")
+.Attr("exponential_avg_factor: float = 1.0")
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("is_training: bool = true")
+.SetShapeFn(shape_inference::FusedBatchNormShape);
 
 REGISTER_OP("FusedBatchNormV2")
-    .Input("x: T")
-    .Input("scale: U")
-    .Input("offset: U")
-    .Input("mean: U")
-    .Input("variance: U")
-    .Output("y: T")
-    .Output("batch_mean: U")
-    .Output("batch_variance: U")
-    .Output("reserve_space_1: U")
-    .Output("reserve_space_2: U")
-    .Attr("T: {half, bfloat16, float}")
-    .Attr("U: {float}")
-    .Attr("epsilon: float = 0.0001")
-    .Attr("exponential_avg_factor: float = 1.0")
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("is_training: bool = true")
-    .SetShapeFn(shape_inference::FusedBatchNormShape);
+.Input("x: T")
+.Input("scale: U")
+.Input("offset: U")
+.Input("mean: U")
+.Input("variance: U")
+.Output("y: T")
+.Output("batch_mean: U")
+.Output("batch_variance: U")
+.Output("reserve_space_1: U")
+.Output("reserve_space_2: U")
+.Attr("T: {half, bfloat16, float}")
+.Attr("U: {float}")
+.Attr("epsilon: float = 0.0001")
+.Attr("exponential_avg_factor: float = 1.0")
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("is_training: bool = true")
+.SetShapeFn(shape_inference::FusedBatchNormShape);
 
 REGISTER_OP("FusedBatchNormV3")
-    .Input("x: T")
-    .Input("scale: U")
-    .Input("offset: U")
-    .Input("mean: U")
-    .Input("variance: U")
-    .Output("y: T")
-    .Output("batch_mean: U")
-    .Output("batch_variance: U")
-    .Output("reserve_space_1: U")
-    .Output("reserve_space_2: U")
-    .Output("reserve_space_3: U")
-    .Attr("T: {half, bfloat16, float}")
-    .Attr("U: {float}")
-    .Attr("epsilon: float = 0.0001")
-    .Attr("exponential_avg_factor: float = 1.0")
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("is_training: bool = true")
-    .SetShapeFn(shape_inference::FusedBatchNormV3Shape);
+.Input("x: T")
+.Input("scale: U")
+.Input("offset: U")
+.Input("mean: U")
+.Input("variance: U")
+.Output("y: T")
+.Output("batch_mean: U")
+.Output("batch_variance: U")
+.Output("reserve_space_1: U")
+.Output("reserve_space_2: U")
+.Output("reserve_space_3: U")
+.Attr("T: {half, bfloat16, float}")
+.Attr("U: {float}")
+.Attr("epsilon: float = 0.0001")
+.Attr("exponential_avg_factor: float = 1.0")
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("is_training: bool = true")
+.SetShapeFn(shape_inference::FusedBatchNormV3Shape);
 
 REGISTER_OP("_FusedBatchNormEx")
-    .Input("x: T")
-    .Input("scale: U")
-    .Input("offset: U")
-    .Input("mean: U")
-    .Input("variance: U")
-    .Input("side_input: num_side_inputs * T")
-    .Output("y: T")
-    .Output("batch_mean: U")
-    .Output("batch_variance: U")
-    .Output("reserve_space_1: U")
-    .Output("reserve_space_2: U")
-    .Output("reserve_space_3: U")
-    .Attr("T: {half, float}")
-    .Attr("U: {float}")
-    .Attr("epsilon: float = 0.0001")
-    .Attr("exponential_avg_factor: float = 1.0")
-    .Attr("num_side_inputs: int >= 0 = 0")
-    .Attr("activation_mode: string = \"Identity\"")
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("is_training: bool = true")
-    .SetShapeFn(shape_inference::FusedBatchNormExShape)
-    .Doc(R"doc(
+.Input("x: T")
+.Input("scale: U")
+.Input("offset: U")
+.Input("mean: U")
+.Input("variance: U")
+.Input("side_input: num_side_inputs * T")
+.Output("y: T")
+.Output("batch_mean: U")
+.Output("batch_variance: U")
+.Output("reserve_space_1: U")
+.Output("reserve_space_2: U")
+.Output("reserve_space_3: U")
+.Attr("T: {half, float}")
+.Attr("U: {float}")
+.Attr("epsilon: float = 0.0001")
+.Attr("exponential_avg_factor: float = 1.0")
+.Attr("num_side_inputs: int >= 0 = 0")
+.Attr("activation_mode: string = \"Identity\"")
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("is_training: bool = true")
+.SetShapeFn(shape_inference::FusedBatchNormExShape)
+.Doc(R"doc(
 *NOTE*: Do not invoke this operator directly in Python. Grappler is
 expected to create these operators.
 )doc");
@@ -1675,19 +1675,19 @@ REGISTER_OP("_MklEagerConv2D")
     )doc");
 
 REGISTER_OP("__MklDummyConv2DWithBias")
-    .Input("input: T")
-    .Input("filter: T")
-    .Input("bias: T")
-    .Output("output: T")
-    .Attr("T: {bfloat16, float}")
-    .Attr("strides: list(int)")
-    .Attr("use_cudnn_on_gpu: bool = true")
-    .Attr("is_filter_const: bool = false")
-    .Attr(GetPaddingAttrString())
-    .Attr(GetConvnetDataFormatAttrString())
-    .Attr("dilations: list(int) = [1, 1, 1, 1]")
-    .SetShapeFn(shape_inference::Conv2DShape)
-    .Doc(R"doc(
+.Input("input: T")
+.Input("filter: T")
+.Input("bias: T")
+.Output("output: T")
+.Attr("T: {bfloat16, float}")
+.Attr("strides: list(int)")
+.Attr("use_cudnn_on_gpu: bool = true")
+.Attr("is_filter_const: bool = false")
+.Attr(GetPaddingAttrString())
+.Attr(GetConvnetDataFormatAttrString())
+.Attr("dilations: list(int) = [1, 1, 1, 1]")
+.SetShapeFn(shape_inference::Conv2DShape)
+.Doc(R"doc(
 Dummy node that enables fusing Conv2D and BiasAdd operator for MKL. This node
 does not perform anything. It is just created as an intermediate output of
 merging Conv2D and BiasAdd.
