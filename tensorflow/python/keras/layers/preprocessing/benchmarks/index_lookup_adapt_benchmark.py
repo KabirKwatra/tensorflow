@@ -55,7 +55,8 @@ def get_top_k(dataset, k):
         for element in data:
             counts[element] += 1
     sorted_vocab = [
-        k for k, _ in sorted(counts.items(), key=lambda item: item[1], reverse=True)
+        k for k, _ in sorted(
+            counts.items(), key=lambda item: item[1], reverse=True)
     ]
     if len(sorted_vocab) > k:
         sorted_vocab = sorted_vocab[:k]
@@ -67,14 +68,13 @@ class BenchmarkAdapt(benchmark.Benchmark):
 
     def run_numpy_implementation(self, num_elements, batch_size, k):
         """Test the python implementation."""
-        ds = dataset_ops.Dataset.from_generator(
-            word_gen, dtypes.string, tensor_shape.TensorShape([])
-        )
+        ds = dataset_ops.Dataset.from_generator(word_gen, dtypes.string,
+                                                tensor_shape.TensorShape([]))
         batched_ds = ds.take(num_elements).batch(batch_size)
         input_t = keras.Input(shape=(), dtype=dtypes.string)
-        layer = index_lookup.IndexLookup(
-            max_tokens=k, num_oov_tokens=0, reserve_zero=False
-        )
+        layer = index_lookup.IndexLookup(max_tokens=k,
+                                         num_oov_tokens=0,
+                                         reserve_zero=False)
         _ = layer(input_t)
         num_repeats = 5
         starts = []
@@ -89,14 +89,13 @@ class BenchmarkAdapt(benchmark.Benchmark):
 
     def bm_adapt_implementation(self, num_elements, batch_size, k):
         """Test the KPL adapt implementation."""
-        ds = dataset_ops.Dataset.from_generator(
-            word_gen, dtypes.string, tensor_shape.TensorShape([])
-        )
+        ds = dataset_ops.Dataset.from_generator(word_gen, dtypes.string,
+                                                tensor_shape.TensorShape([]))
         batched_ds = ds.take(num_elements).batch(batch_size)
         input_t = keras.Input(shape=(), dtype=dtypes.string)
-        layer = index_lookup.IndexLookup(
-            max_tokens=k, num_oov_tokens=0, reserve_zero=False
-        )
+        layer = index_lookup.IndexLookup(max_tokens=k,
+                                         num_oov_tokens=0,
+                                         reserve_zero=False)
         _ = layer(input_t)
         num_repeats = 5
         starts = []
@@ -117,14 +116,16 @@ class BenchmarkAdapt(benchmark.Benchmark):
             "delta seconds": (baseline - avg_time),
             "delta percent": ((baseline - avg_time) / baseline) * 100,
         }
-        self.report_benchmark(
-            iters=num_repeats, wall_time=avg_time, extras=extras, name=name
-        )
+        self.report_benchmark(iters=num_repeats,
+                              wall_time=avg_time,
+                              extras=extras,
+                              name=name)
 
     def benchmark_vocab_size_by_batch(self):
         for vocab_size in [100, 1000, 10000, 100000, 1000000]:
             for batch in [1, 16, 2048]:
-                self.bm_adapt_implementation(vocab_size, batch, int(vocab_size / 10))
+                self.bm_adapt_implementation(vocab_size, batch,
+                                             int(vocab_size / 10))
 
 
 if __name__ == "__main__":
