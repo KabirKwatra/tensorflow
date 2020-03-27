@@ -25,4 +25,5 @@ class TensorLike(object):
     Do not check this with isinstance directly; prefer instead using
     `tf.is_tensor` to check whether converting to a tensor is necessary.
     """
+
     pass

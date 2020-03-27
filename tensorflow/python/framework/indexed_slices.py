@@ -42,17 +42,14 @@ from tensorflow.python.util.tf_export import tf_export
 # updated to refer the symbols defined in this module directly, rather than
 # using the backwards-compatible aliases in ops.py.  (E.g.,
 # "indexed_slices.IndexedSlices" rather than "ops.IndexedSlices".)
-math_ops = LazyLoader(
-    "math_ops", globals(),
-    "tensorflow.python.ops.math_ops")
-ops = LazyLoader(
-    "ops", globals(), "tensorflow.python.framework.ops")
+math_ops = LazyLoader("math_ops", globals(), "tensorflow.python.ops.math_ops")
+ops = LazyLoader("ops", globals(), "tensorflow.python.framework.ops")
 tensor_spec = LazyLoader(
-    "tensor_spec", globals(),
-    "tensorflow.python.framework.tensor_spec")
+    "tensor_spec", globals(), "tensorflow.python.framework.tensor_spec"
+)
 tensor_util = LazyLoader(
-    "tensor_util", globals(),
-    "tensorflow.python.framework.tensor_util")
+    "tensor_util", globals(), "tensorflow.python.framework.tensor_util"
+)
 
 
 @tf_export("IndexedSlices")
@@ -144,9 +141,12 @@ class IndexedSlices(tensor_like.TensorLike, composite_tensor.CompositeTensor):
 
     def __str__(self):
         return "IndexedSlices(indices=%s, values=%s%s)" % (
-            self._indices, self._values,
-            (", dense_shape=%s" %
-             self._dense_shape) if self._dense_shape is not None else "")
+            self._indices,
+            self._values,
+            (", dense_shape=%s" % self._dense_shape)
+            if self._dense_shape is not None
+            else "",
+        )
 
     def __neg__(self):
         return IndexedSlices(-self.values, self.indices, self.dense_shape)
@@ -155,15 +155,22 @@ class IndexedSlices(tensor_like.TensorLike, composite_tensor.CompositeTensor):
     def _type_spec(self):
         indices_shape = self._indices.shape.merge_with(self._values.shape[:1])
         dense_shape = tensor_shape.TensorShape([None]).concatenate(
-            self._values.shape[1:])
+            self._values.shape[1:]
+        )
         if self._dense_shape is not None:
             dense_shape_dtype = self._dense_shape.dtype
             dense_shape = dense_shape.merge_with(
-                tensor_util.constant_value_as_shape(self._dense_shape))
+                tensor_util.constant_value_as_shape(self._dense_shape)
+            )
         else:
             dense_shape_dtype = None
-        return IndexedSlicesSpec(dense_shape, self.dtype, self._indices.dtype,
-                                 dense_shape_dtype, indices_shape)
+        return IndexedSlicesSpec(
+            dense_shape,
+            self.dtype,
+            self._indices.dtype,
+            dense_shape_dtype,
+            indices_shape,
+        )
 
     def _shape_invariant_to_type_spec(self, shape):
         # From tf.while_loop docs: "If a loop variable is an IndexedSlices, the
@@ -176,29 +183,45 @@ class IndexedSlices(tensor_like.TensorLike, composite_tensor.CompositeTensor):
             dense_shape_dtype = None
         else:
             dense_shape_dtype = self._dense_shape.dtype
-        return IndexedSlicesSpec(dense_shape, self.dtype, self._indices.dtype,
-                                 dense_shape_dtype, indices_shape)
+        return IndexedSlicesSpec(
+            dense_shape,
+            self.dtype,
+            self._indices.dtype,
+            dense_shape_dtype,
+            indices_shape,
+        )
 
     def consumers(self):
         return self._consumers()
 
 
 IndexedSlicesValue = collections.namedtuple(
-    "IndexedSlicesValue", ["values", "indices", "dense_shape"])
+    "IndexedSlicesValue", ["values", "indices", "dense_shape"]
+)
 
 
 @tf_export("IndexedSlicesSpec")
 class IndexedSlicesSpec(type_spec.TypeSpec):
     """Type specification for a `tf.IndexedSlices`."""
 
-    __slots__ = ["_shape", "_values_dtype", "_indices_dtype",
-                 "_dense_shape_dtype", "_indices_shape"]
+    __slots__ = [
+        "_shape",
+        "_values_dtype",
+        "_indices_dtype",
+        "_dense_shape_dtype",
+        "_indices_shape",
+    ]
 
     value_type = property(lambda self: IndexedSlices)
 
-    def __init__(self, shape=None, dtype=dtypes.float32,
-                 indices_dtype=dtypes.int64, dense_shape_dtype=None,
-                 indices_shape=None):
+    def __init__(
+        self,
+        shape=None,
+        dtype=dtypes.float32,
+        indices_dtype=dtypes.int64,
+        dense_shape_dtype=None,
+        indices_shape=None,
+    ):
         """Constructs a type specification for a `tf.IndexedSlices`.
 
         Args:
@@ -223,18 +246,25 @@ class IndexedSlicesSpec(type_spec.TypeSpec):
         self._indices_shape = tensor_shape.as_shape(indices_shape).with_rank(1)
 
     def _serialize(self):
-        return (self._shape, self._values_dtype, self._indices_dtype,
-                self._dense_shape_dtype, self._indices_shape)
+        return (
+            self._shape,
+            self._values_dtype,
+            self._indices_dtype,
+            self._dense_shape_dtype,
+            self._indices_shape,
+        )
 
     @property
     def _component_specs(self):
         value_shape = self._indices_shape.concatenate(self._shape[1:])
         specs = [
             tensor_spec.TensorSpec(value_shape, self._values_dtype),
-            tensor_spec.TensorSpec(self._indices_shape, self._indices_dtype)]
+            tensor_spec.TensorSpec(self._indices_shape, self._indices_dtype),
+        ]
         if self._dense_shape_dtype is not None:
             specs.append(
-                tensor_spec.TensorSpec([self._shape.ndims], self._dense_shape_dtype))
+                tensor_spec.TensorSpec([self._shape.ndims], self._dense_shape_dtype)
+            )
         return tuple(specs)
 
     def _to_components(self, value):
@@ -244,8 +274,7 @@ class IndexedSlicesSpec(type_spec.TypeSpec):
             return (value.values, value.indices, value.dense_shape)
 
     def _from_components(self, tensor_list):
-        if (all(isinstance(t, np.ndarray) for t in tensor_list) and
-                not tf2.enabled()):
+        if all(isinstance(t, np.ndarray) for t in tensor_list) and not tf2.enabled():
             if len(tensor_list) == 2:
                 return IndexedSlicesValue(tensor_list[0], tensor_list[1], None)
             else:
@@ -276,13 +305,13 @@ def convert_to_tensor_or_indexed_slices(value, dtype=None, name=None):
       ValueError: If `dtype` does not match the element type of `value`.
     """
     return internal_convert_to_tensor_or_indexed_slices(
-        value=value, dtype=dtype, name=name, as_ref=False)
+        value=value, dtype=dtype, name=name, as_ref=False
+    )
 
 
-def internal_convert_to_tensor_or_indexed_slices(value,
-                                                 dtype=None,
-                                                 name=None,
-                                                 as_ref=False):
+def internal_convert_to_tensor_or_indexed_slices(
+    value, dtype=None, name=None, as_ref=False
+):
     """Converts the given object to a `Tensor` or an `IndexedSlices`.
 
     If `value` is an `IndexedSlices` or `SparseTensor` it is returned
@@ -308,17 +337,17 @@ def internal_convert_to_tensor_or_indexed_slices(value,
     elif isinstance(value, tensor_like.TensorLike):
         if dtype and not dtypes.as_dtype(dtype).is_compatible_with(value.dtype):
             raise ValueError(
-                "Tensor conversion requested dtype %s for Tensor with dtype %s: %r" %
-                (dtypes.as_dtype(dtype).name, value.dtype.name, str(value)))
+                "Tensor conversion requested dtype %s for Tensor with dtype %s: %r"
+                % (dtypes.as_dtype(dtype).name, value.dtype.name, str(value))
+            )
         return value
     else:
         return ops.convert_to_tensor(value, dtype=dtype, name=name, as_ref=as_ref)
 
 
-def internal_convert_n_to_tensor_or_indexed_slices(values,
-                                                   dtype=None,
-                                                   name=None,
-                                                   as_ref=False):
+def internal_convert_n_to_tensor_or_indexed_slices(
+    values, dtype=None, name=None, as_ref=False
+):
     """Converts `values` to a list of `Tensor` or `IndexedSlices` objects.
 
     Any `IndexedSlices` or `SparseTensor` objects in `values` are returned
@@ -352,7 +381,9 @@ def internal_convert_n_to_tensor_or_indexed_slices(values,
             n = None if name is None else "%s_%d" % (name, i)
             ret.append(
                 internal_convert_to_tensor_or_indexed_slices(
-                    value, dtype=dtype, name=n, as_ref=as_ref))
+                    value, dtype=dtype, name=n, as_ref=as_ref
+                )
+            )
     return ret
 
 
@@ -380,7 +411,8 @@ def convert_n_to_tensor_or_indexed_slices(values, dtype=None, name=None):
         value.
     """
     return internal_convert_n_to_tensor_or_indexed_slices(
-        values=values, dtype=dtype, name=name, as_ref=False)
+        values=values, dtype=dtype, name=name, as_ref=False
+    )
 
 
 # Warn the user if we convert a sparse representation to dense with at
@@ -408,12 +440,14 @@ def _indexed_slices_to_tensor(value, dtype=None, name=None, as_ref=False):
     _ = as_ref
     if dtype and not dtype.is_compatible_with(value.dtype):
         raise ValueError(
-            "Tensor conversion requested dtype %s for IndexedSlices with dtype %s" %
-            (dtype.name, value.dtype.name))
+            "Tensor conversion requested dtype %s for IndexedSlices with dtype %s"
+            % (dtype.name, value.dtype.name)
+        )
     if value.dense_shape is None:
         raise ValueError(
             "Tensor conversion requested for IndexedSlices without dense_shape: %s"
-            % str(value))
+            % str(value)
+        )
     # TODO(mrry): Consider adding static shape information to
     # IndexedSlices, to avoid using numpy here.
     if not context.executing_eagerly():
@@ -423,15 +457,19 @@ def _indexed_slices_to_tensor(value, dtype=None, name=None, as_ref=False):
             if num_elements >= _LARGE_SPARSE_NUM_ELEMENTS:
                 warnings.warn(
                     "Converting sparse IndexedSlices to a dense Tensor with %d "
-                    "elements. This may consume a large amount of memory." %
-                    num_elements)
+                    "elements. This may consume a large amount of memory."
+                    % num_elements
+                )
         else:
             warnings.warn(
                 "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
-                "This may consume a large amount of memory.")
+                "This may consume a large amount of memory."
+            )
     return math_ops.unsorted_segment_sum(
-        value.values, value.indices, value.dense_shape[0], name=name)
+        value.values, value.indices, value.dense_shape[0], name=name
+    )
 
 
 tensor_conversion_registry.register_tensor_conversion_function(
-    IndexedSlices, _indexed_slices_to_tensor)
+    IndexedSlices, _indexed_slices_to_tensor
+)

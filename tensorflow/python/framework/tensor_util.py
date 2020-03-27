@@ -36,6 +36,7 @@ from tensorflow.python.util.tf_export import tf_export
 # pylint: disable=g-import-not-at-top
 try:
     from tensorflow.python.framework import fast_tensor_util
+
     _FAST_TENSOR_UTIL_AVAILABLE = True
 except ImportError:
     _FAST_TENSOR_UTIL_AVAILABLE = False
@@ -47,77 +48,54 @@ def ExtractBitsFromFloat16(x):
 
 
 def SlowAppendFloat16ArrayToTensorProto(tensor_proto, proto_values):
-    tensor_proto.half_val.extend(
-        [ExtractBitsFromFloat16(x) for x in proto_values])
+    tensor_proto.half_val.extend([ExtractBitsFromFloat16(x) for x in proto_values])
 
 
 def _MediumAppendFloat16ArrayToTensorProto(tensor_proto, proto_values):
     # TODO: Remove the conversion if cython supports np.float16_t
     fast_tensor_util.AppendFloat16ArrayToTensorProto(
-        tensor_proto,
-        np.asarray(proto_values, dtype=np.float16).view(np.uint16))
+        tensor_proto, np.asarray(proto_values, dtype=np.float16).view(np.uint16)
+    )
 
 
 def ExtractBitsFromBFloat16(x):
-    return np.asarray(
-        x, dtype=dtypes.bfloat16.as_numpy_dtype).view(np.uint16).item()
+    return np.asarray(x, dtype=dtypes.bfloat16.as_numpy_dtype).view(np.uint16).item()
 
 
 def SlowAppendBFloat16ArrayToTensorProto(tensor_proto, proto_values):
-    tensor_proto.half_val.extend(
-        [ExtractBitsFromBFloat16(x) for x in proto_values])
+    tensor_proto.half_val.extend([ExtractBitsFromBFloat16(x) for x in proto_values])
 
 
 def FastAppendBFloat16ArrayToTensorProto(tensor_proto, proto_values):
     fast_tensor_util.AppendBFloat16ArrayToTensorProto(
-        tensor_proto, np.asarray(
-            proto_values, dtype=dtypes.bfloat16.as_numpy_dtype).view(np.uint16))
+        tensor_proto,
+        np.asarray(proto_values, dtype=dtypes.bfloat16.as_numpy_dtype).view(np.uint16),
+    )
 
 
 if _FAST_TENSOR_UTIL_AVAILABLE:
     _NP_TO_APPEND_FN = {
-        dtypes.bfloat16.as_numpy_dtype:
-            FastAppendBFloat16ArrayToTensorProto,
-        np.float16:
-            _MediumAppendFloat16ArrayToTensorProto,
-        np.float32:
-            fast_tensor_util.AppendFloat32ArrayToTensorProto,
-        np.float64:
-            fast_tensor_util.AppendFloat64ArrayToTensorProto,
-        np.int32:
-            fast_tensor_util.AppendInt32ArrayToTensorProto,
-        np.int64:
-            fast_tensor_util.AppendInt64ArrayToTensorProto,
-        np.uint8:
-            fast_tensor_util.AppendUInt8ArrayToTensorProto,
-        np.uint16:
-            fast_tensor_util.AppendUInt16ArrayToTensorProto,
-        np.uint32:
-            fast_tensor_util.AppendUInt32ArrayToTensorProto,
-        np.uint64:
-            fast_tensor_util.AppendUInt64ArrayToTensorProto,
-        np.int8:
-            fast_tensor_util.AppendInt8ArrayToTensorProto,
-        np.int16:
-            fast_tensor_util.AppendInt16ArrayToTensorProto,
-        np.complex64:
-            fast_tensor_util.AppendComplex64ArrayToTensorProto,
-        np.complex128:
-            fast_tensor_util.AppendComplex128ArrayToTensorProto,
-        np.object:
-            fast_tensor_util.AppendObjectArrayToTensorProto,
-        np.bool:
-            fast_tensor_util.AppendBoolArrayToTensorProto,
-        dtypes.qint8.as_numpy_dtype:
-            fast_tensor_util.AppendInt8ArrayToTensorProto,
-        dtypes.quint8.as_numpy_dtype:
-            fast_tensor_util.AppendUInt8ArrayToTensorProto,
-        dtypes.qint16.as_numpy_dtype:
-            fast_tensor_util.AppendInt8ArrayToTensorProto,
-        dtypes.quint16.as_numpy_dtype:
-            fast_tensor_util.AppendUInt8ArrayToTensorProto,
-        dtypes.qint32.as_numpy_dtype:
-            fast_tensor_util.AppendInt32ArrayToTensorProto,
+        dtypes.bfloat16.as_numpy_dtype: FastAppendBFloat16ArrayToTensorProto,
+        np.float16: _MediumAppendFloat16ArrayToTensorProto,
+        np.float32: fast_tensor_util.AppendFloat32ArrayToTensorProto,
+        np.float64: fast_tensor_util.AppendFloat64ArrayToTensorProto,
+        np.int32: fast_tensor_util.AppendInt32ArrayToTensorProto,
+        np.int64: fast_tensor_util.AppendInt64ArrayToTensorProto,
+        np.uint8: fast_tensor_util.AppendUInt8ArrayToTensorProto,
+        np.uint16: fast_tensor_util.AppendUInt16ArrayToTensorProto,
+        np.uint32: fast_tensor_util.AppendUInt32ArrayToTensorProto,
+        np.uint64: fast_tensor_util.AppendUInt64ArrayToTensorProto,
+        np.int8: fast_tensor_util.AppendInt8ArrayToTensorProto,
+        np.int16: fast_tensor_util.AppendInt16ArrayToTensorProto,
+        np.complex64: fast_tensor_util.AppendComplex64ArrayToTensorProto,
+        np.complex128: fast_tensor_util.AppendComplex128ArrayToTensorProto,
+        np.object: fast_tensor_util.AppendObjectArrayToTensorProto,
+        np.bool: fast_tensor_util.AppendBoolArrayToTensorProto,
+        dtypes.qint8.as_numpy_dtype: fast_tensor_util.AppendInt8ArrayToTensorProto,
+        dtypes.quint8.as_numpy_dtype: fast_tensor_util.AppendUInt8ArrayToTensorProto,
+        dtypes.qint16.as_numpy_dtype: fast_tensor_util.AppendInt8ArrayToTensorProto,
+        dtypes.quint16.as_numpy_dtype: fast_tensor_util.AppendUInt8ArrayToTensorProto,
+        dtypes.qint32.as_numpy_dtype: fast_tensor_util.AppendInt32ArrayToTensorProto,
         # NOTE(touts): Intentionally no way to feed a DT_BFLOAT16.
     }
 else:
@@ -145,15 +123,16 @@ else:
 
     def SlowAppendComplex64ArrayToTensorProto(tensor_proto, proto_values):
         tensor_proto.scomplex_val.extend(
-            [v.item() for x in proto_values for v in [x.real, x.imag]])
+            [v.item() for x in proto_values for v in [x.real, x.imag]]
+        )
 
     def SlowAppendComplex128ArrayToTensorProto(tensor_proto, proto_values):
         tensor_proto.dcomplex_val.extend(
-            [v.item() for x in proto_values for v in [x.real, x.imag]])
+            [v.item() for x in proto_values for v in [x.real, x.imag]]
+        )
 
     def SlowAppendObjectArrayToTensorProto(tensor_proto, proto_values):
-        tensor_proto.string_val.extend(
-            [compat.as_bytes(x) for x in proto_values])
+        tensor_proto.string_val.extend([compat.as_bytes(x) for x in proto_values])
 
     def SlowAppendBoolArrayToTensorProto(tensor_proto, proto_values):
         tensor_proto.bool_val.extend([x.item() for x in proto_values])
@@ -236,11 +215,24 @@ def _FlattenToStrings(nested_strings):
         yield nested_strings
 
 
-_TENSOR_CONTENT_TYPES = frozenset([
-    dtypes.float32, dtypes.float64, dtypes.int32, dtypes.uint8, dtypes.int16,
-    dtypes.int8, dtypes.int64, dtypes.qint8, dtypes.quint8, dtypes.qint16,
-    dtypes.quint16, dtypes.qint32, dtypes.uint32, dtypes.uint64
-])
+_TENSOR_CONTENT_TYPES = frozenset(
+    [
+        dtypes.float32,
+        dtypes.float64,
+        dtypes.int32,
+        dtypes.uint8,
+        dtypes.int16,
+        dtypes.int8,
+        dtypes.int64,
+        dtypes.qint8,
+        dtypes.quint8,
+        dtypes.qint16,
+        dtypes.quint16,
+        dtypes.qint32,
+        dtypes.uint32,
+        dtypes.uint64,
+    ]
+)
 
 
 # pylint: disable=invalid-name
@@ -262,13 +254,16 @@ def _check_quantized(values):
 
 def _generate_isinstance_check(expected_types):
     def inner(values):
-        _ = [_check_failed(v) for v in nest.flatten(values)
-             if not isinstance(v, expected_types)]
+        _ = [
+            _check_failed(v)
+            for v in nest.flatten(values)
+            if not isinstance(v, expected_types)
+        ]
+
     return inner
 
 
-_check_int = _generate_isinstance_check(
-    (compat.integral_types, tensor_shape.Dimension))
+_check_int = _generate_isinstance_check((compat.integral_types, tensor_shape.Dimension))
 _check_float = _generate_isinstance_check(compat.real_types)
 _check_complex = _generate_isinstance_check(compat.complex_types)
 _check_str = _generate_isinstance_check(compat.bytes_or_text_types)
@@ -276,8 +271,9 @@ _check_bool = _generate_isinstance_check(bool)
 
 
 def _check_not_tensor(values):
-    _ = [_check_failed(v) for v in nest.flatten(values)
-         if isinstance(v, ops.Tensor)]
+    _ = [_check_failed(v) for v in nest.flatten(values) if isinstance(v, ops.Tensor)]
+
+
 # pylint: enable=invalid-name
 
 
@@ -329,23 +325,27 @@ def _AssertCompatible(values, dtype):
     except ValueError as e:
         [mismatch] = e.args
         if dtype is None:
-            raise TypeError(
-                "Expected any non-tensor type, got a tensor instead.")
+            raise TypeError("Expected any non-tensor type, got a tensor instead.")
         else:
-            raise TypeError("Expected %s, got %s of type '%s' instead." %
-                            (dtype.name, repr(mismatch), type(mismatch).__name__))
+            raise TypeError(
+                "Expected %s, got %s of type '%s' instead."
+                % (dtype.name, repr(mismatch), type(mismatch).__name__)
+            )
 
 
 def _is_array_like(obj):  # pylint: disable=invalid-name
     """Check if a given object is array-like."""
-    if isinstance(obj, ops.Tensor) and not isinstance(obj, ops._EagerTensorBase):  # pylint: disable=protected-access
+    if isinstance(obj, ops.Tensor) and not isinstance(
+        obj, ops._EagerTensorBase
+    ):  # pylint: disable=protected-access
         # Tensor implements __array__ only so it can inform the user that it is not
         # a valid array.
         return False
 
     # TODO(slebedev): an object could also implement C-level array interface.
-    if (callable(getattr(obj, "__array__", None)) or
-            isinstance(getattr(obj, "__array_interface__", None), dict)):
+    if callable(getattr(obj, "__array__", None)) or isinstance(
+        getattr(obj, "__array_interface__", None), dict
+    ):
         return True
 
     try:
@@ -358,8 +358,9 @@ def _is_array_like(obj):  # pylint: disable=invalid-name
 
 # pylint: disable=invalid-name
 @tf_export("make_tensor_proto")
-def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
-                      allow_broadcast=False):
+def make_tensor_proto(
+    values, dtype=None, shape=None, verify_shape=False, allow_broadcast=False
+):
     """Create a TensorProto.
 
     In TensorFlow 2.0, representing tensors as protos should no longer be a
@@ -417,19 +418,20 @@ def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
 
     """
     if allow_broadcast and verify_shape:
-        raise ValueError(
-            "allow_broadcast and verify_shape are not both allowed.")
+        raise ValueError("allow_broadcast and verify_shape are not both allowed.")
     if isinstance(values, tensor_pb2.TensorProto):
         return values
 
     if dtype:
         dtype = dtypes.as_dtype(dtype)
 
-    is_quantized = (
-        dtype in [
-            dtypes.qint8, dtypes.quint8, dtypes.qint16, dtypes.quint16,
-            dtypes.qint32
-        ])
+    is_quantized = dtype in [
+        dtypes.qint8,
+        dtypes.quint8,
+        dtypes.qint16,
+        dtypes.quint16,
+        dtypes.qint32,
+    ]
 
     if _is_array_like(values):
         values = np.asarray(values)
@@ -458,12 +460,12 @@ def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
             nparray = np.array(values, dtype=np_dt)
             # check to them.
             # We need to pass in quantized values as tuples, so don't apply the shape
-            if (list(nparray.shape) != _GetDenseDimensions(values) and
-                    not is_quantized):
-                raise ValueError("""Argument must be a dense tensor: %s"""
-                                 """ - got shape %s, but wanted %s.""" %
-                                 (values, list(nparray.shape),
-                                  _GetDenseDimensions(values)))
+            if list(nparray.shape) != _GetDenseDimensions(values) and not is_quantized:
+                raise ValueError(
+                    """Argument must be a dense tensor: %s"""
+                    """ - got shape %s, but wanted %s."""
+                    % (values, list(nparray.shape), _GetDenseDimensions(values))
+                )
 
         # python/numpy default float type is float64. We prefer float32 instead.
         if (nparray.dtype == np.float64) and dtype is None:
@@ -486,10 +488,13 @@ def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
     if is_quantized:
         numpy_dtype = dtype
 
-    if dtype is not None and (not hasattr(dtype, "base_dtype") or
-                              dtype.base_dtype != numpy_dtype.base_dtype):
-        raise TypeError("Incompatible types: %s vs. %s. Value is %s" %
-                        (dtype, nparray.dtype, values))
+    if dtype is not None and (
+        not hasattr(dtype, "base_dtype") or dtype.base_dtype != numpy_dtype.base_dtype
+    ):
+        raise TypeError(
+            "Incompatible types: %s vs. %s. Value is %s"
+            % (dtype, nparray.dtype, values)
+        )
 
     # If shape is not given, get the shape from the numpy array.
     if shape is None:
@@ -505,27 +510,34 @@ def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
             if nparray.shape == (1,) or nparray.shape == tuple():
                 pass
             elif nparray.size != shape_size:
-                raise TypeError("Expected Tensor's shape: %s, got %s." %
-                                (tuple(shape), nparray.shape))
+                raise TypeError(
+                    "Expected Tensor's shape: %s, got %s."
+                    % (tuple(shape), nparray.shape)
+                )
 
         else:
             if verify_shape and nparray.shape != tuple(shape):
-                raise TypeError("Expected Tensor's shape: %s, got %s." %
-                                (tuple(shape), nparray.shape))
+                raise TypeError(
+                    "Expected Tensor's shape: %s, got %s."
+                    % (tuple(shape), nparray.shape)
+                )
 
             if nparray.size > shape_size:
                 raise ValueError(
-                    "Too many elements provided. Needed at most %d, but received %d" %
-                    (shape_size, nparray.size))
+                    "Too many elements provided. Needed at most %d, but received %d"
+                    % (shape_size, nparray.size)
+                )
 
     tensor_proto = tensor_pb2.TensorProto(
         dtype=numpy_dtype.as_datatype_enum,
-        tensor_shape=tensor_shape.as_shape(shape).as_proto())
+        tensor_shape=tensor_shape.as_shape(shape).as_proto(),
+    )
 
     if is_same_size and numpy_dtype in _TENSOR_CONTENT_TYPES and shape_size > 1:
         if nparray.size * nparray.itemsize >= (1 << 31):
             raise ValueError(
-                "Cannot create a tensor proto whose content is larger than 2GB.")
+                "Cannot create a tensor proto whose content is larger than 2GB."
+            )
         tensor_proto.tensor_content = nparray.tostring()
         return tensor_proto
 
@@ -548,9 +560,11 @@ def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
         try:
             str_values = [compat.as_bytes(x) for x in proto_values]
         except TypeError:
-            raise TypeError("Failed to convert object of type %s to Tensor. "
-                            "Contents: %s. Consider casting elements to a "
-                            "supported type." % (type(values), values))
+            raise TypeError(
+                "Failed to convert object of type %s to Tensor. "
+                "Contents: %s. Consider casting elements to a "
+                "supported type." % (type(values), values)
+            )
         tensor_proto.string_val.extend(str_values)
         return tensor_proto
 
@@ -560,10 +574,13 @@ def make_tensor_proto(values, dtype=None, shape=None, verify_shape=False,
     append_fn = GetNumpyAppendFn(proto_values.dtype)
     if append_fn is None:
         raise TypeError(
-            "Element type not supported in TensorProto: %s" % numpy_dtype.name)
+            "Element type not supported in TensorProto: %s" % numpy_dtype.name
+        )
     append_fn(tensor_proto, proto_values)
 
     return tensor_proto
+
+
 # pylint: enable=invalid-name
 
 
@@ -600,8 +617,7 @@ def MakeNdarray(tensor):
     dtype = tensor_dtype.as_numpy_dtype
 
     if tensor.tensor_content:
-        return (np.frombuffer(tensor.tensor_content,
-                              dtype=dtype).copy().reshape(shape))
+        return np.frombuffer(tensor.tensor_content, dtype=dtype).copy().reshape(shape)
 
     if tensor_dtype == dtypes.string:
         # np.pad throws on these arrays of type np.object.
@@ -622,20 +638,26 @@ def MakeNdarray(tensor):
     elif tensor_dtype == dtypes.float64:
         values = np.fromiter(tensor.double_val, dtype=dtype)
     elif tensor_dtype in [
-        dtypes.int32, dtypes.uint8, dtypes.uint16, dtypes.int16, dtypes.int8,
-        dtypes.qint32, dtypes.quint8, dtypes.qint8, dtypes.qint16, dtypes.quint16
+        dtypes.int32,
+        dtypes.uint8,
+        dtypes.uint16,
+        dtypes.int16,
+        dtypes.int8,
+        dtypes.qint32,
+        dtypes.quint8,
+        dtypes.qint8,
+        dtypes.qint16,
+        dtypes.quint16,
     ]:
         values = np.fromiter(tensor.int_val, dtype=dtype)
     elif tensor_dtype == dtypes.int64:
         values = np.fromiter(tensor.int64_val, dtype=dtype)
     elif tensor_dtype == dtypes.complex64:
         it = iter(tensor.scomplex_val)
-        values = np.array([complex(x[0], x[1])
-                           for x in zip(it, it)], dtype=dtype)
+        values = np.array([complex(x[0], x[1]) for x in zip(it, it)], dtype=dtype)
     elif tensor_dtype == dtypes.complex128:
         it = iter(tensor.dcomplex_val)
-        values = np.array([complex(x[0], x[1])
-                           for x in zip(it, it)], dtype=dtype)
+        values = np.array([complex(x[0], x[1]) for x in zip(it, it)], dtype=dtype)
     elif tensor_dtype == dtypes.bool:
         values = np.fromiter(tensor.bool_val, dtype=dtype)
     else:
@@ -677,8 +699,7 @@ def ShapeEquals(tensor_proto, shape):
 def _ConstantValue(tensor, partial):
     # TODO(touts): Support Variables?
     if not isinstance(tensor, ops.Tensor):
-        raise TypeError("%r is not a Tensor, has type %s" %
-                        (tensor, type(tensor)))
+        raise TypeError("%r is not a Tensor, has type %s" % (tensor, type(tensor)))
     if tensor.op.type == "Const":
         return MakeNdarray(tensor.op.get_attr("value"))
     elif tensor.op.type == "Shape":
@@ -686,7 +707,8 @@ def _ConstantValue(tensor, partial):
         if input_shape.is_fully_defined():
             return np.array(
                 [dim.value for dim in input_shape.dims],
-                dtype=tensor.dtype.as_numpy_dtype)
+                dtype=tensor.dtype.as_numpy_dtype,
+            )
         else:
             return None
     elif tensor.op.type == "Size":
@@ -701,7 +723,8 @@ def _ConstantValue(tensor, partial):
             return np.ndarray(
                 shape=(),
                 buffer=np.array([input_shape.ndims], dtype=np.int32),
-                dtype=np.int32)
+                dtype=np.int32,
+            )
         else:
             return None
     elif tensor.op.type == "Range":
@@ -862,18 +885,21 @@ def constant_value_as_shape(tensor):  # pylint: disable=invalid-name
     """
     if isinstance(tensor, ops.EagerTensor):
         return tensor_shape.as_shape(
-            [dim if dim != -1 else None for dim in tensor.numpy()])
+            [dim if dim != -1 else None for dim in tensor.numpy()]
+        )
 
     if tensor.get_shape().ndims == 0:
         value = constant_value(tensor)
         if value is None:
             raise ValueError(
                 "Received a scalar with unknown value as shape; require a statically "
-                "known scalar with value '-1' to describe an unknown shape.")
+                "known scalar with value '-1' to describe an unknown shape."
+            )
         if value != -1:
             raise ValueError(
                 "Received a scalar value '%s' as shape; require a statically known "
-                "scalar with value '-1' to describe an unknown shape." % value)
+                "scalar with value '-1' to describe an unknown shape." % value
+            )
         return tensor_shape.unknown_shape()
 
     shape = tensor.get_shape().with_rank(1)
@@ -888,11 +914,11 @@ def constant_value_as_shape(tensor):  # pylint: disable=invalid-name
         if cast_dtype not in (dtypes.int32, dtypes.int64):
             return tensor_shape.unknown_shape(shape.dims[0].value)
         dest_dtype_shape_array = np.array(
-            [x if x is not None else -1 for x in pre_cast.as_list()]).astype(
-                cast_dtype.as_numpy_dtype)
-        return tensor_shape.TensorShape([
-            x if x >= 0 else None
-            for x in dest_dtype_shape_array])
+            [x if x is not None else -1 for x in pre_cast.as_list()]
+        ).astype(cast_dtype.as_numpy_dtype)
+        return tensor_shape.TensorShape(
+            [x if x >= 0 else None for x in dest_dtype_shape_array]
+        )
     elif tensor.op.type == "Shape":
         return tensor.op.inputs[0].get_shape()
     elif tensor.op.type == "Pack":
@@ -949,10 +975,13 @@ def constant_value_as_shape(tensor):  # pylint: disable=invalid-name
                 ellipsis_mask = tensor.op.get_attr("ellipsis_mask")
                 new_axis_mask = tensor.op.get_attr("new_axis_mask")
                 shrink_axis_mask = tensor.op.get_attr("shrink_axis_mask")
-                valid_attributes = (not ellipsis_mask and not new_axis_mask and
-                                    not shrink_axis_mask and (not begin_mask or
-                                                              (begin_mask == 1)) and
-                                    (not end_mask or (end_mask == 1)))
+                valid_attributes = (
+                    not ellipsis_mask
+                    and not new_axis_mask
+                    and not shrink_axis_mask
+                    and (not begin_mask or (begin_mask == 1))
+                    and (not end_mask or (end_mask == 1))
+                )
                 if valid_attributes:  # additional inputs not supported
                     prev = constant_value_as_shape(tensor.op.inputs[0])
                     prev = prev[begin:end:strides]
@@ -963,9 +992,11 @@ def constant_value_as_shape(tensor):  # pylint: disable=invalid-name
             pass
         except TypeError:  # Could come from slicing prev.
             pass
-    elif (tensor.op.type == "Placeholder" and
-          tensor.op.graph.building_function and
-          hasattr(tensor.op.graph, "internal_captures")):
+    elif (
+        tensor.op.type == "Placeholder"
+        and tensor.op.graph.building_function
+        and hasattr(tensor.op.graph, "internal_captures")
+    ):
         # If we are inside a FuncGraph try to lookup the constant value of the
         # corresponding external capture. Note that we only look at captures and
         # not the fed inputs because those can be fed different values in different
@@ -980,7 +1011,8 @@ def constant_value_as_shape(tensor):  # pylint: disable=invalid-name
     value = constant_value(tensor)
     if value is not None:
         ret = ret.merge_with(
-            tensor_shape.TensorShape([d if d >= 0 else None for d in value]))
+            tensor_shape.TensorShape([d if d >= 0 else None for d in value])
+        )
     return ret
 
 
@@ -1010,9 +1042,11 @@ def is_tensor(x):  # pylint: disable=invalid-name
     Returns:
       `True` if `x` is a tensor or "tensor-like", `False` if not.
     """
-    return (isinstance(x, (tensor_like.TensorLike, core.Tensor)) or
-            ops.is_dense_tensor_like(x) or
-            getattr(x, "is_tensor_like", False))
+    return (
+        isinstance(x, (tensor_like.TensorLike, core.Tensor))
+        or ops.is_dense_tensor_like(x)
+        or getattr(x, "is_tensor_like", False)
+    )
 
 
 def shape_tensor(shape):  # pylint: disable=invalid-name
@@ -1061,9 +1095,13 @@ def maybe_set_static_shape(tensor, shape):  # pylint: disable=invalid-name
       tensor: A tensor.
       shape: A shape tensor.
     """
-    if (_ENABLE_MAYBE_SET_STATIC_SHAPE and not context.executing_eagerly() and
-        ops.get_default_graph().building_function and
-            not tensor.shape.is_fully_defined() and is_tensor(shape)):
+    if (
+        _ENABLE_MAYBE_SET_STATIC_SHAPE
+        and not context.executing_eagerly()
+        and ops.get_default_graph().building_function
+        and not tensor.shape.is_fully_defined()
+        and is_tensor(shape)
+    ):
         shape = shape_tensor(shape)
         const_shape = constant_value_as_shape(shape)
         tensor.set_shape(const_shape)

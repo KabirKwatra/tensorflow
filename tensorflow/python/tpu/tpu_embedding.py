@@ -49,20 +49,31 @@ INFERENCE = elc.TPUEmbeddingConfiguration.INFERENCE
 # TODO(shizhiw): a more future-proof way is to have optimization_parameter such
 #  as AdagradParameters etc instead of learning_rate.
 class TableConfig(
-        collections.namedtuple('TableConfig', [
-            'vocabulary_size', 'dimension', 'initializer', 'combiner',
-            'hot_id_replication', 'learning_rate', 'learning_rate_fn'
-        ])):
+    collections.namedtuple(
+        "TableConfig",
+        [
+            "vocabulary_size",
+            "dimension",
+            "initializer",
+            "combiner",
+            "hot_id_replication",
+            "learning_rate",
+            "learning_rate_fn",
+        ],
+    )
+):
     """Embedding table configuration."""
 
-    def __new__(cls,
-                vocabulary_size,
-                dimension,
-                initializer=None,
-                combiner='mean',
-                hot_id_replication=False,
-                learning_rate=None,
-                learning_rate_fn=None):
+    def __new__(
+        cls,
+        vocabulary_size,
+        dimension,
+        initializer=None,
+        combiner="mean",
+        hot_id_replication=False,
+        learning_rate=None,
+        learning_rate_fn=None,
+    ):
         """Embedding table configuration.
 
         Args:
@@ -104,41 +115,47 @@ class TableConfig(
             `None`.
         """
         if not isinstance(vocabulary_size, int) or vocabulary_size < 1:
-            raise ValueError(
-                'Invalid vocabulary_size {}.'.format(vocabulary_size))
+            raise ValueError("Invalid vocabulary_size {}.".format(vocabulary_size))
 
         if not isinstance(dimension, int) or dimension < 1:
-            raise ValueError('Invalid dimension {}.'.format(dimension))
+            raise ValueError("Invalid dimension {}.".format(dimension))
 
         if (initializer is not None) and (not callable(initializer)):
-            raise ValueError('initializer must be callable if specified.')
+            raise ValueError("initializer must be callable if specified.")
         if initializer is None:
             initializer = init_ops.truncated_normal_initializer(
-                mean=0.0, stddev=1 / math.sqrt(dimension))
+                mean=0.0, stddev=1 / math.sqrt(dimension)
+            )
 
-        if combiner not in ('mean', 'sum', 'sqrtn', None):
-            raise ValueError('Invalid combiner {}'.format(combiner))
+        if combiner not in ("mean", "sum", "sqrtn", None):
+            raise ValueError("Invalid combiner {}".format(combiner))
 
         if learning_rate is not None and learning_rate_fn is not None:
-            raise ValueError('At most one of learning_rate and learning_rate_fn '
-                             'can be None; got {} and {}'
-                             .format(learning_rate, learning_rate_fn))
+            raise ValueError(
+                "At most one of learning_rate and learning_rate_fn "
+                "can be None; got {} and {}".format(learning_rate, learning_rate_fn)
+            )
 
         return super(TableConfig, cls).__new__(
-            cls, vocabulary_size, dimension, initializer, combiner,
-            hot_id_replication, learning_rate, learning_rate_fn)
+            cls,
+            vocabulary_size,
+            dimension,
+            initializer,
+            combiner,
+            hot_id_replication,
+            learning_rate,
+            learning_rate_fn,
+        )
 
 
 class FeatureConfig(
     collections.namedtuple(
-        'FeatureConfig',
-        ['table_id', 'max_sequence_length', 'weight_key'])):
+        "FeatureConfig", ["table_id", "max_sequence_length", "weight_key"]
+    )
+):
     """Feature configuration."""
 
-    def __new__(cls,
-                table_id,
-                max_sequence_length=0,
-                weight_key=None):
+    def __new__(cls, table_id, max_sequence_length=0, weight_key=None):
         """Feature configuration.
 
         Args:
@@ -157,23 +174,23 @@ class FeatureConfig(
           ValueError: if `max_sequence_length` non-negative.
         """
         if not isinstance(max_sequence_length, int) or max_sequence_length < 0:
-            raise ValueError('Invalid max_sequence_length {}.'.format(
-                max_sequence_length))
+            raise ValueError(
+                "Invalid max_sequence_length {}.".format(max_sequence_length)
+            )
 
-        return super(FeatureConfig, cls).__new__(cls, table_id, max_sequence_length,
-                                                 weight_key)
+        return super(FeatureConfig, cls).__new__(
+            cls, table_id, max_sequence_length, weight_key
+        )
 
 
 class EnqueueData(
     collections.namedtuple(
-        'EnqueueData',
-        ['embedding_indices', 'sample_indices', 'aggregation_weights'])):
+        "EnqueueData", ["embedding_indices", "sample_indices", "aggregation_weights"]
+    )
+):
     """Data to be enqueued through generate_enqueue_ops()."""
 
-    def __new__(cls,
-                embedding_indices,
-                sample_indices=None,
-                aggregation_weights=None):
+    def __new__(cls, embedding_indices, sample_indices=None, aggregation_weights=None):
         """Data to be enqueued through generate_enqueue_ops().
 
         Args:
@@ -195,27 +212,28 @@ class EnqueueData(
           An EnqueueData tuple.
 
         """
-        return super(EnqueueData, cls).__new__(cls, embedding_indices,
-                                               sample_indices, aggregation_weights)
+        return super(EnqueueData, cls).__new__(
+            cls, embedding_indices, sample_indices, aggregation_weights
+        )
 
     @staticmethod
     def from_sparse_tensor(sp_tensor, weights=None):
         return EnqueueData(
             sp_tensor.values,
             sp_tensor.indices,
-            aggregation_weights=weights.values if weights is not None else None)
+            aggregation_weights=weights.values if weights is not None else None,
+        )
 
 
 class RaggedEnqueueData(
     collections.namedtuple(
-        'RaggedEnqueueData',
-        ['embedding_indices', 'sample_splits', 'aggregation_weights'])):
+        "RaggedEnqueueData",
+        ["embedding_indices", "sample_splits", "aggregation_weights"],
+    )
+):
     """RaggedTensor Data to be enqueued through generate_enqueue_ops()."""
 
-    def __new__(cls,
-                embedding_indices,
-                sample_splits=None,
-                aggregation_weights=None):
+    def __new__(cls, embedding_indices, sample_splits=None, aggregation_weights=None):
         """Data to be enqueued through generate_enqueue_ops().
 
         Args:
@@ -236,16 +254,17 @@ class RaggedEnqueueData(
           An RaggedEnqueueData tuple.
 
         """
-        return super(RaggedEnqueueData,
-                     cls).__new__(cls, embedding_indices, sample_splits,
-                                  aggregation_weights)
+        return super(RaggedEnqueueData, cls).__new__(
+            cls, embedding_indices, sample_splits, aggregation_weights
+        )
 
     @staticmethod
     def from_ragged_tensor(rg_tensor, weights=None):
         return RaggedEnqueueData(
             rg_tensor.values,
             rg_tensor.row_splits,
-            aggregation_weights=weights.values if weights is not None else None)
+            aggregation_weights=weights.values if weights is not None else None,
+        )
 
 
 def get_enqueue_datas_list_from_sparse_tensors_list(sp_tensors_list):
@@ -266,8 +285,8 @@ def get_enqueue_datas_list_from_sparse_tensors_list(sp_tensors_list):
     enqueue_datas_list = []
     for sp_tensors in sp_tensors_list:
         enqueue_datas = collections.OrderedDict(
-            (k, EnqueueData.from_sparse_tensor(v))
-            for k, v in six.iteritems(sp_tensors))
+            (k, EnqueueData.from_sparse_tensor(v)) for k, v in six.iteritems(sp_tensors)
+        )
         enqueue_datas_list.append(enqueue_datas)
     return enqueue_datas_list
 
@@ -291,64 +310,78 @@ def get_enqueue_datas_list_from_ragged_tensors_list(rg_tensors_list):
     for rg_tensors in rg_tensors_list:
         enqueue_datas = collections.OrderedDict(
             (k, RaggedEnqueueData.from_ragged_tensor(v))
-            for k, v in six.iteritems(rg_tensors))
+            for k, v in six.iteritems(rg_tensors)
+        )
         enqueue_datas_list.append(enqueue_datas)
     return enqueue_datas_list
 
 
-AdamSlotVariableNames = collections.namedtuple(
-    'AdamSlotVariableNames', ['m', 'v'])
+AdamSlotVariableNames = collections.namedtuple("AdamSlotVariableNames", ["m", "v"])
 
 AdagradSlotVariableName = collections.namedtuple(
-    'AdagradSlotVariableName', ['accumulator'])
+    "AdagradSlotVariableName", ["accumulator"]
+)
 
 ProximalAdagradSlotVariableName = collections.namedtuple(
-    'ProximalAdagradSlotVariableName', ['accumulator'])
+    "ProximalAdagradSlotVariableName", ["accumulator"]
+)
 
 FtrlSlotVariableName = collections.namedtuple(
-    'FtrlSlotVariableName', ['accumulator', 'linear'])
+    "FtrlSlotVariableName", ["accumulator", "linear"]
+)
 
 ProximalYogiSlotVariableNames = collections.namedtuple(
-    'ProximalYogiSlotVariableNames', ['v', 'm'])
+    "ProximalYogiSlotVariableNames", ["v", "m"]
+)
 
-AdamSlotVariables = collections.namedtuple(
-    'AdamSlotVariables', ['m', 'v'])
+AdamSlotVariables = collections.namedtuple("AdamSlotVariables", ["m", "v"])
 
-AdagradSlotVariable = collections.namedtuple(
-    'AdagradSlotVariable', ['accumulator'])
+AdagradSlotVariable = collections.namedtuple("AdagradSlotVariable", ["accumulator"])
 
 ProximalAdagradSlotVariable = collections.namedtuple(
-    'ProximalAdagradSlotVariable', ['accumulator'])
+    "ProximalAdagradSlotVariable", ["accumulator"]
+)
 
-FtrlSlotVariable = collections.namedtuple(
-    'FtrlSlotVariable', ['accumulator', 'linear'])
+FtrlSlotVariable = collections.namedtuple("FtrlSlotVariable", ["accumulator", "linear"])
 
-ProximalYogiSlotVariables = collections.namedtuple('ProximalYogiSlotVariables',
-                                                   ['v', 'm'])
+ProximalYogiSlotVariables = collections.namedtuple(
+    "ProximalYogiSlotVariables", ["v", "m"]
+)
 
 VariablesAndOps = collections.namedtuple(
-    'VariablesAndOps',
-    ['embedding_variables_by_table', 'slot_variables_by_table',
-     'load_ops', 'retrieve_ops']
+    "VariablesAndOps",
+    [
+        "embedding_variables_by_table",
+        "slot_variables_by_table",
+        "load_ops",
+        "retrieve_ops",
+    ],
 )
 
 
 class _OptimizationParameters(object):
     """Parameters common to all optimizations."""
 
-    def __init__(self, learning_rate, use_gradient_accumulation, clip_weight_min,
-                 clip_weight_max, weight_decay_factor,
-                 multiply_weight_decay_factor_by_learning_rate):
+    def __init__(
+        self,
+        learning_rate,
+        use_gradient_accumulation,
+        clip_weight_min,
+        clip_weight_max,
+        weight_decay_factor,
+        multiply_weight_decay_factor_by_learning_rate,
+    ):
         self.learning_rate = learning_rate
         self.use_gradient_accumulation = use_gradient_accumulation
         self.clip_weight_min = clip_weight_min
         self.clip_weight_max = clip_weight_max
         self.weight_decay_factor = weight_decay_factor
         self.multiply_weight_decay_factor_by_learning_rate = (
-            multiply_weight_decay_factor_by_learning_rate)
+            multiply_weight_decay_factor_by_learning_rate
+        )
 
 
-@tf_export(v1=['tpu.experimental.AdagradParameters'])
+@tf_export(v1=["tpu.experimental.AdagradParameters"])
 class AdagradParameters(_OptimizationParameters):
     """Optimization parameters for Adagrad with TPU embeddings.
 
@@ -368,14 +401,16 @@ class AdagradParameters(_OptimizationParameters):
 
     """
 
-    def __init__(self,
-                 learning_rate,
-                 initial_accumulator=0.1,
-                 use_gradient_accumulation=True,
-                 clip_weight_min=None,
-                 clip_weight_max=None,
-                 weight_decay_factor=None,
-                 multiply_weight_decay_factor_by_learning_rate=None):
+    def __init__(
+        self,
+        learning_rate,
+        initial_accumulator=0.1,
+        use_gradient_accumulation=True,
+        clip_weight_min=None,
+        clip_weight_max=None,
+        weight_decay_factor=None,
+        multiply_weight_decay_factor_by_learning_rate=None,
+    ):
         """Optimization parameters for Adagrad.
 
         Args:
@@ -392,12 +427,16 @@ class AdagradParameters(_OptimizationParameters):
           multiply_weight_decay_factor_by_learning_rate: if true,
             `weight_decay_factor` is multiplied by the current learning rate.
         """
-        super(AdagradParameters,
-              self).__init__(learning_rate, use_gradient_accumulation,
-                             clip_weight_min, clip_weight_max, weight_decay_factor,
-                             multiply_weight_decay_factor_by_learning_rate)
+        super(AdagradParameters, self).__init__(
+            learning_rate,
+            use_gradient_accumulation,
+            clip_weight_min,
+            clip_weight_max,
+            weight_decay_factor,
+            multiply_weight_decay_factor_by_learning_rate,
+        )
         if initial_accumulator <= 0:
-            raise ValueError('Adagrad initial_accumulator must be positive')
+            raise ValueError("Adagrad initial_accumulator must be positive")
         self.initial_accumulator = initial_accumulator
 
 
@@ -410,16 +449,18 @@ class ProximalAdagradParameters(_OptimizationParameters):
     for more details.
     """
 
-    def __init__(self,
-                 learning_rate,
-                 initial_accumulator=0.1,
-                 l1_regularization_strength=0.0,
-                 l2_regularization_strength=0.0,
-                 use_gradient_accumulation=True,
-                 clip_weight_min=None,
-                 clip_weight_max=None,
-                 weight_decay_factor=None,
-                 multiply_weight_decay_factor_by_learning_rate=None):
+    def __init__(
+        self,
+        learning_rate,
+        initial_accumulator=0.1,
+        l1_regularization_strength=0.0,
+        l2_regularization_strength=0.0,
+        use_gradient_accumulation=True,
+        clip_weight_min=None,
+        clip_weight_max=None,
+        weight_decay_factor=None,
+        multiply_weight_decay_factor_by_learning_rate=None,
+    ):
         """Optimization parameters for Adagrad.
 
         Args:
@@ -439,26 +480,34 @@ class ProximalAdagradParameters(_OptimizationParameters):
           multiply_weight_decay_factor_by_learning_rate: if true,
             `weight_decay_factor` is multiplied by the current learning rate.
         """
-        super(ProximalAdagradParameters,
-              self).__init__(learning_rate, use_gradient_accumulation,
-                             clip_weight_min, clip_weight_max, weight_decay_factor,
-                             multiply_weight_decay_factor_by_learning_rate)
+        super(ProximalAdagradParameters, self).__init__(
+            learning_rate,
+            use_gradient_accumulation,
+            clip_weight_min,
+            clip_weight_max,
+            weight_decay_factor,
+            multiply_weight_decay_factor_by_learning_rate,
+        )
         if initial_accumulator <= 0:
-            raise ValueError('Adagrad initial_accumulator must be positive')
-        if l1_regularization_strength < 0.:
-            raise ValueError('l1_regularization_strength must be greater than or '
-                             'equal to 0. got {}.'.format(l1_regularization_strength))
+            raise ValueError("Adagrad initial_accumulator must be positive")
+        if l1_regularization_strength < 0.0:
+            raise ValueError(
+                "l1_regularization_strength must be greater than or "
+                "equal to 0. got {}.".format(l1_regularization_strength)
+            )
 
-        if l2_regularization_strength < 0.:
-            raise ValueError('l2_regularization_strength must be greater than or '
-                             'equal to 0. got {}.'.format(l2_regularization_strength))
+        if l2_regularization_strength < 0.0:
+            raise ValueError(
+                "l2_regularization_strength must be greater than or "
+                "equal to 0. got {}.".format(l2_regularization_strength)
+            )
 
         self.initial_accumulator = initial_accumulator
         self.l1_regularization_strength = l1_regularization_strength
         self.l2_regularization_strength = l2_regularization_strength
 
 
-@tf_export(v1=['tpu.experimental.AdamParameters'])
+@tf_export(v1=["tpu.experimental.AdamParameters"])
 class AdamParameters(_OptimizationParameters):
     """Optimization parameters for Adam with TPU embeddings.
 
@@ -478,18 +527,20 @@ class AdamParameters(_OptimizationParameters):
 
     """
 
-    def __init__(self,
-                 learning_rate,
-                 beta1=0.9,
-                 beta2=0.999,
-                 epsilon=1e-08,
-                 lazy_adam=True,
-                 sum_inside_sqrt=True,
-                 use_gradient_accumulation=True,
-                 clip_weight_min=None,
-                 clip_weight_max=None,
-                 weight_decay_factor=None,
-                 multiply_weight_decay_factor_by_learning_rate=None):
+    def __init__(
+        self,
+        learning_rate,
+        beta1=0.9,
+        beta2=0.999,
+        epsilon=1e-08,
+        lazy_adam=True,
+        sum_inside_sqrt=True,
+        use_gradient_accumulation=True,
+        clip_weight_min=None,
+        clip_weight_max=None,
+        weight_decay_factor=None,
+        multiply_weight_decay_factor_by_learning_rate=None,
+    ):
         """Optimization parameters for Adam.
 
         Args:
@@ -514,22 +565,24 @@ class AdamParameters(_OptimizationParameters):
           multiply_weight_decay_factor_by_learning_rate: if true,
             `weight_decay_factor` is multiplied by the current learning rate.
         """
-        super(AdamParameters,
-              self).__init__(learning_rate, use_gradient_accumulation,
-                             clip_weight_min, clip_weight_max, weight_decay_factor,
-                             multiply_weight_decay_factor_by_learning_rate)
-        if beta1 < 0. or beta1 >= 1.:
-            raise ValueError(
-                'beta1 must be between 0. and 1; got {}.'.format(beta1))
-        if beta2 < 0. or beta2 >= 1.:
-            raise ValueError(
-                'beta2 must be between 0. and 1; got {}.'.format(beta2))
-        if epsilon <= 0.:
-            raise ValueError(
-                'epsilon must be positive; got {}.'.format(epsilon))
+        super(AdamParameters, self).__init__(
+            learning_rate,
+            use_gradient_accumulation,
+            clip_weight_min,
+            clip_weight_max,
+            weight_decay_factor,
+            multiply_weight_decay_factor_by_learning_rate,
+        )
+        if beta1 < 0.0 or beta1 >= 1.0:
+            raise ValueError("beta1 must be between 0. and 1; got {}.".format(beta1))
+        if beta2 < 0.0 or beta2 >= 1.0:
+            raise ValueError("beta2 must be between 0. and 1; got {}.".format(beta2))
+        if epsilon <= 0.0:
+            raise ValueError("epsilon must be positive; got {}.".format(epsilon))
         if not use_gradient_accumulation and not lazy_adam:
             raise ValueError(
-                'When disabling Lazy Adam, gradient accumulation must be used.')
+                "When disabling Lazy Adam, gradient accumulation must be used."
+            )
 
         self.beta1 = beta1
         self.beta2 = beta2
@@ -538,7 +591,7 @@ class AdamParameters(_OptimizationParameters):
         self.sum_inside_sqrt = sum_inside_sqrt
 
 
-@tf_export(v1=['tpu.experimental.FtrlParameters'])
+@tf_export(v1=["tpu.experimental.FtrlParameters"])
 class FtrlParameters(_OptimizationParameters):
     """Optimization parameters for Ftrl with TPU embeddings.
 
@@ -558,17 +611,19 @@ class FtrlParameters(_OptimizationParameters):
 
     """
 
-    def __init__(self,
-                 learning_rate,
-                 learning_rate_power=-0.5,
-                 initial_accumulator_value=0.1,
-                 l1_regularization_strength=0.0,
-                 l2_regularization_strength=0.0,
-                 use_gradient_accumulation=True,
-                 clip_weight_min=None,
-                 clip_weight_max=None,
-                 weight_decay_factor=None,
-                 multiply_weight_decay_factor_by_learning_rate=None):
+    def __init__(
+        self,
+        learning_rate,
+        learning_rate_power=-0.5,
+        initial_accumulator_value=0.1,
+        l1_regularization_strength=0.0,
+        l2_regularization_strength=0.0,
+        use_gradient_accumulation=True,
+        clip_weight_min=None,
+        clip_weight_max=None,
+        weight_decay_factor=None,
+        multiply_weight_decay_factor_by_learning_rate=None,
+    ):
         """Optimization parameters for Ftrl.
 
         Args:
@@ -594,25 +649,37 @@ class FtrlParameters(_OptimizationParameters):
           multiply_weight_decay_factor_by_learning_rate: if true,
             `weight_decay_factor` is multiplied by the current learning rate.
         """
-        super(FtrlParameters,
-              self).__init__(learning_rate, use_gradient_accumulation,
-                             clip_weight_min, clip_weight_max, weight_decay_factor,
-                             multiply_weight_decay_factor_by_learning_rate)
-        if learning_rate_power > 0.:
-            raise ValueError('learning_rate_power must be less than or equal to 0. '
-                             'got {}.'.format(learning_rate_power))
+        super(FtrlParameters, self).__init__(
+            learning_rate,
+            use_gradient_accumulation,
+            clip_weight_min,
+            clip_weight_max,
+            weight_decay_factor,
+            multiply_weight_decay_factor_by_learning_rate,
+        )
+        if learning_rate_power > 0.0:
+            raise ValueError(
+                "learning_rate_power must be less than or equal to 0. "
+                "got {}.".format(learning_rate_power)
+            )
 
-        if initial_accumulator_value < 0.:
-            raise ValueError('initial_accumulator_value must be greater than or equal'
-                             ' to 0. got {}.'.format(initial_accumulator_value))
+        if initial_accumulator_value < 0.0:
+            raise ValueError(
+                "initial_accumulator_value must be greater than or equal"
+                " to 0. got {}.".format(initial_accumulator_value)
+            )
 
-        if l1_regularization_strength < 0.:
-            raise ValueError('l1_regularization_strength must be greater than or '
-                             'equal to 0. got {}.'.format(l1_regularization_strength))
+        if l1_regularization_strength < 0.0:
+            raise ValueError(
+                "l1_regularization_strength must be greater than or "
+                "equal to 0. got {}.".format(l1_regularization_strength)
+            )
 
-        if l2_regularization_strength < 0.:
-            raise ValueError('l2_regularization_strength must be greater than or '
-                             'equal to 0. got {}.'.format(l2_regularization_strength))
+        if l2_regularization_strength < 0.0:
+            raise ValueError(
+                "l2_regularization_strength must be greater than or "
+                "equal to 0. got {}.".format(l2_regularization_strength)
+            )
 
         self.learning_rate_power = learning_rate_power
         self.initial_accumulator_value = initial_accumulator_value
@@ -635,19 +702,21 @@ class ProximalYogiParameters(_OptimizationParameters):
     """
     # pylint: enable=line-too-long
 
-    def __init__(self,
-                 learning_rate=0.01,
-                 beta1=0.9,
-                 beta2=0.999,
-                 epsilon=1e-3,
-                 l1_regularization_strength=0.0,
-                 l2_regularization_strength=0.0,
-                 initial_accumulator_value=1e-6,
-                 use_gradient_accumulation=True,
-                 clip_weight_min=None,
-                 clip_weight_max=None,
-                 weight_decay_factor=None,
-                 multiply_weight_decay_factor_by_learning_rate=None):
+    def __init__(
+        self,
+        learning_rate=0.01,
+        beta1=0.9,
+        beta2=0.999,
+        epsilon=1e-3,
+        l1_regularization_strength=0.0,
+        l2_regularization_strength=0.0,
+        initial_accumulator_value=1e-6,
+        use_gradient_accumulation=True,
+        clip_weight_min=None,
+        clip_weight_max=None,
+        weight_decay_factor=None,
+        multiply_weight_decay_factor_by_learning_rate=None,
+    ):
         """Optimization parameters for Proximal Yogi.
 
         Args:
@@ -673,25 +742,30 @@ class ProximalYogiParameters(_OptimizationParameters):
           multiply_weight_decay_factor_by_learning_rate: if true,
             `weight_decay_factor` is multiplied by the current learning rate.
         """
-        super(ProximalYogiParameters,
-              self).__init__(learning_rate, use_gradient_accumulation,
-                             clip_weight_min, clip_weight_max, weight_decay_factor,
-                             multiply_weight_decay_factor_by_learning_rate)
-        if beta1 < 0. or beta1 >= 1.:
+        super(ProximalYogiParameters, self).__init__(
+            learning_rate,
+            use_gradient_accumulation,
+            clip_weight_min,
+            clip_weight_max,
+            weight_decay_factor,
+            multiply_weight_decay_factor_by_learning_rate,
+        )
+        if beta1 < 0.0 or beta1 >= 1.0:
+            raise ValueError("beta1 must be between 0. and 1; got {}.".format(beta1))
+        if beta2 < 0.0 or beta2 >= 1.0:
+            raise ValueError("beta2 must be between 0. and 1; got {}.".format(beta2))
+        if epsilon <= 0.0:
+            raise ValueError("epsilon must be positive; got {}.".format(epsilon))
+        if l1_regularization_strength < 0.0:
             raise ValueError(
-                'beta1 must be between 0. and 1; got {}.'.format(beta1))
-        if beta2 < 0. or beta2 >= 1.:
+                "l1_regularization_strength must be greater than or "
+                "equal to 0. got {}.".format(l1_regularization_strength)
+            )
+        if l2_regularization_strength < 0.0:
             raise ValueError(
-                'beta2 must be between 0. and 1; got {}.'.format(beta2))
-        if epsilon <= 0.:
-            raise ValueError(
-                'epsilon must be positive; got {}.'.format(epsilon))
-        if l1_regularization_strength < 0.:
-            raise ValueError('l1_regularization_strength must be greater than or '
-                             'equal to 0. got {}.'.format(l1_regularization_strength))
-        if l2_regularization_strength < 0.:
-            raise ValueError('l2_regularization_strength must be greater than or '
-                             'equal to 0. got {}.'.format(l2_regularization_strength))
+                "l2_regularization_strength must be greater than or "
+                "equal to 0. got {}.".format(l2_regularization_strength)
+            )
 
         self.beta1 = beta1
         self.beta2 = beta2
@@ -701,7 +775,7 @@ class ProximalYogiParameters(_OptimizationParameters):
         self.initial_accumulator_value = initial_accumulator_value
 
 
-@tf_export(v1=['tpu.experimental.StochasticGradientDescentParameters'])
+@tf_export(v1=["tpu.experimental.StochasticGradientDescentParameters"])
 class StochasticGradientDescentParameters(_OptimizationParameters):
     """Optimization parameters for stochastic gradient descent for TPU embeddings.
 
@@ -721,12 +795,14 @@ class StochasticGradientDescentParameters(_OptimizationParameters):
 
     """
 
-    def __init__(self,
-                 learning_rate,
-                 clip_weight_min=None,
-                 clip_weight_max=None,
-                 weight_decay_factor=None,
-                 multiply_weight_decay_factor_by_learning_rate=None):
+    def __init__(
+        self,
+        learning_rate,
+        clip_weight_min=None,
+        clip_weight_max=None,
+        weight_decay_factor=None,
+        multiply_weight_decay_factor_by_learning_rate=None,
+    ):
         """Optimization parameters for stochastic gradient descent.
 
         Args:
@@ -738,14 +814,19 @@ class StochasticGradientDescentParameters(_OptimizationParameters):
           multiply_weight_decay_factor_by_learning_rate: if true,
             `weight_decay_factor` is multiplied by the current learning rate.
         """
-        super(StochasticGradientDescentParameters,
-              self).__init__(learning_rate, False, clip_weight_min, clip_weight_max,
-                             weight_decay_factor,
-                             multiply_weight_decay_factor_by_learning_rate)
+        super(StochasticGradientDescentParameters, self).__init__(
+            learning_rate,
+            False,
+            clip_weight_min,
+            clip_weight_max,
+            weight_decay_factor,
+            multiply_weight_decay_factor_by_learning_rate,
+        )
 
 
-DeviceConfig = collections.namedtuple('DeviceConfig',
-                                      ['num_hosts', 'num_cores', 'job_name'])
+DeviceConfig = collections.namedtuple(
+    "DeviceConfig", ["num_hosts", "num_cores", "job_name"]
+)
 
 
 class TPUEmbedding(object):
@@ -864,18 +945,20 @@ class TPUEmbedding(object):
     # `optimization_parameter` applies to all tables. If the need arises,
     # we can add `optimization_parameters` to `TableConfig` to override this
     # global setting.
-    def __init__(self,
-                 table_to_config_dict,
-                 feature_to_config_dict,
-                 batch_size,
-                 mode,
-                 master=None,
-                 optimization_parameters=None,
-                 cluster_def=None,
-                 pipeline_execution_with_tensor_core=False,
-                 partition_strategy='div',
-                 device_config=None,
-                 master_job_name=None):
+    def __init__(
+        self,
+        table_to_config_dict,
+        feature_to_config_dict,
+        batch_size,
+        mode,
+        master=None,
+        optimization_parameters=None,
+        cluster_def=None,
+        pipeline_execution_with_tensor_core=False,
+        partition_strategy="div",
+        device_config=None,
+        master_job_name=None,
+    ):
         """API for using TPU for embedding lookups.
 
         Args:
@@ -907,63 +990,70 @@ class TPUEmbedding(object):
         Raises:
           ValueError: if any input is invalid.
         """
-        if partition_strategy not in ('div', 'mod'):
-            raise ValueError(
-                'Invalid partition_strategy {}'.format(partition_strategy))
+        if partition_strategy not in ("div", "mod"):
+            raise ValueError("Invalid partition_strategy {}".format(partition_strategy))
         self._partition_strategy = partition_strategy
 
         _validate_table_to_config_dict(table_to_config_dict)
         # Avoid nondeterminism from `Dict` iteration order by using `OrderedDict`.
         self._table_to_config_dict = _create_ordered_dict(table_to_config_dict)
 
-        _validate_feature_to_config_dict(table_to_config_dict,
-                                         feature_to_config_dict)
-        self._feature_to_config_dict = _create_ordered_dict(
-            feature_to_config_dict)
-        self._table_to_features_dict, self._table_to_num_features_dict = (
-            _create_table_to_features_and_num_features_dicts(
-                self._feature_to_config_dict))
-        self._combiners = _create_combiners(self._table_to_config_dict,
-                                            self._table_to_features_dict)
+        _validate_feature_to_config_dict(table_to_config_dict, feature_to_config_dict)
+        self._feature_to_config_dict = _create_ordered_dict(feature_to_config_dict)
+        (
+            self._table_to_features_dict,
+            self._table_to_num_features_dict,
+        ) = _create_table_to_features_and_num_features_dicts(
+            self._feature_to_config_dict
+        )
+        self._combiners = _create_combiners(
+            self._table_to_config_dict, self._table_to_features_dict
+        )
 
         self._batch_size = batch_size
 
         if master is None and cluster_def is None:
             if device_config is None:
-                raise ValueError('When master and cluster_def are both None,'
-                                 'device_config must be set but is not.')
+                raise ValueError(
+                    "When master and cluster_def are both None,"
+                    "device_config must be set but is not."
+                )
             if device_config.num_cores % device_config.num_hosts:
-                raise ValueError('num_hosts ({}) should divide num_cores ({}) '
-                                 'but does not.'.format(device_config.num_cores,
-                                                        device_config.num_hosts))
+                raise ValueError(
+                    "num_hosts ({}) should divide num_cores ({}) "
+                    "but does not.".format(
+                        device_config.num_cores, device_config.num_hosts
+                    )
+                )
             self._num_hosts = device_config.num_hosts
             self._num_cores = device_config.num_cores
             self._num_cores_per_host = self._num_cores // self._num_hosts
             self._hosts = [
-                '{}/replica:0/task:{}/device:CPU:0'.format(
-                    device_config.job_name, i)
+                "{}/replica:0/task:{}/device:CPU:0".format(device_config.job_name, i)
                 for i in range(self._num_hosts)
             ]
         else:
-            tpu_system_metadata = (
-                tpu_system_metadata_lib._query_tpu_system_metadata(  # pylint: disable=protected-access
-                    master,
-                    cluster_def=cluster_def))
+            tpu_system_metadata = tpu_system_metadata_lib._query_tpu_system_metadata(  # pylint: disable=protected-access
+                master, cluster_def=cluster_def
+            )
             if tpu_system_metadata.num_cores == 0:
-                raise ValueError('TPUEmbedding needs TPUs, but master {} does not have '
-                                 'TPUs.'.format(master))
+                raise ValueError(
+                    "TPUEmbedding needs TPUs, but master {} does not have "
+                    "TPUs.".format(master)
+                )
             self._num_hosts = tpu_system_metadata.num_hosts
             if master_job_name is None:
                 try:
-                    master_job_name = tpu_system_metadata_lib.master_job(master,
-                                                                         cluster_def)
+                    master_job_name = tpu_system_metadata_lib.master_job(
+                        master, cluster_def
+                    )
                 except ValueError as e:
-                    raise ValueError(
-                        str(e) + ' Please specify a master_job_name.')
+                    raise ValueError(str(e) + " Please specify a master_job_name.")
             self._hosts = []
             for device in tpu_system_metadata.devices:
-                if 'device:CPU:' in device.name and (
-                        master_job_name is None or master_job_name in device.name):
+                if "device:CPU:" in device.name and (
+                    master_job_name is None or master_job_name in device.name
+                ):
                     self._hosts.append(device.name)
             self._num_cores_per_host = tpu_system_metadata.num_of_cores_per_host
             self._num_cores = tpu_system_metadata.num_cores
@@ -977,13 +1067,16 @@ class TPUEmbedding(object):
             self._optimization_parameters = optimization_parameters
         elif mode == INFERENCE:
             if optimization_parameters is not None:
-                raise ValueError('`optimization_parameters` should be `None` '
-                                 'for inference mode.')
-            self._optimization_parameters = (
-                StochasticGradientDescentParameters(1.))
+                raise ValueError(
+                    "`optimization_parameters` should be `None` " "for inference mode."
+                )
+            self._optimization_parameters = StochasticGradientDescentParameters(1.0)
         else:
-            raise ValueError('`mode` only supports {} and {}; got {}.'
-                             .format(TRAINING, INFERENCE, mode))
+            raise ValueError(
+                "`mode` only supports {} and {}; got {}.".format(
+                    TRAINING, INFERENCE, mode
+                )
+            )
         self._mode = mode
 
         # TODO(shizhiw): move `optimization_parameters` into `_optimizer_handler`
@@ -991,14 +1084,19 @@ class TPUEmbedding(object):
         # StochasticGradientDescentHandler with more user-friendly error message
         # on get_slot().
         self._optimizer_handler = _get_optimization_handler(
-            self._optimization_parameters)
-        self._pipeline_execution_with_tensor_core = (
-            pipeline_execution_with_tensor_core)
-        self._learning_rate_fn = list(set(
-            c.learning_rate_fn for c in self._table_to_config_dict.values()
-            if c.learning_rate_fn is not None))
+            self._optimization_parameters
+        )
+        self._pipeline_execution_with_tensor_core = pipeline_execution_with_tensor_core
+        self._learning_rate_fn = list(
+            set(
+                c.learning_rate_fn
+                for c in self._table_to_config_dict.values()
+                if c.learning_rate_fn is not None
+            )
+        )
         self._learning_rate_fn_to_tag = {
-            fn: id for id, fn in enumerate(self._learning_rate_fn)}
+            fn: id for id, fn in enumerate(self._learning_rate_fn)
+        }
 
         self._config_proto = self._create_config_proto()
 
@@ -1080,43 +1178,50 @@ class TPUEmbedding(object):
             table_config = self._table_to_config_dict[table]
             # For small tables, we pad to the number of hosts so that at least one
             # id will be assigned to each host.
-            table_descriptor.vocabulary_size = max(table_config.vocabulary_size,
-                                                   len(self.hosts))
+            table_descriptor.vocabulary_size = max(
+                table_config.vocabulary_size, len(self.hosts)
+            )
             table_descriptor.dimension = table_config.dimension
 
             table_descriptor.num_features = self._table_to_num_features_dict[table]
 
             parameters = table_descriptor.optimization_parameters
             if table_config.learning_rate:
-                parameters.learning_rate.constant = (
-                    table_config.learning_rate)
+                parameters.learning_rate.constant = table_config.learning_rate
             elif table_config.learning_rate_fn:
-                parameters.learning_rate.dynamic.tag = (
-                    self._learning_rate_fn_to_tag[table_config.learning_rate_fn])
+                parameters.learning_rate.dynamic.tag = self._learning_rate_fn_to_tag[
+                    table_config.learning_rate_fn
+                ]
             else:
                 parameters.learning_rate.constant = (
-                    self._optimization_parameters.learning_rate)
+                    self._optimization_parameters.learning_rate
+                )
             parameters.gradient_accumulation_status = (
                 optimization_parameters_pb2.GradientAccumulationStatus.ENABLED
-                if self._optimization_parameters.use_gradient_accumulation else
-                optimization_parameters_pb2.GradientAccumulationStatus.DISABLED)
+                if self._optimization_parameters.use_gradient_accumulation
+                else optimization_parameters_pb2.GradientAccumulationStatus.DISABLED
+            )
             if self._optimization_parameters.clip_weight_min is not None:
                 parameters.clipping_limits.lower.value = (
-                    self._optimization_parameters.clip_weight_min)
+                    self._optimization_parameters.clip_weight_min
+                )
             if self._optimization_parameters.clip_weight_max is not None:
                 parameters.clipping_limits.upper.value = (
-                    self._optimization_parameters.clip_weight_max)
+                    self._optimization_parameters.clip_weight_max
+                )
             if self._optimization_parameters.weight_decay_factor:
                 parameters.weight_decay_factor = (
-                    self._optimization_parameters.weight_decay_factor)
-                if (self._optimization_parameters
-                        .multiply_weight_decay_factor_by_learning_rate):
+                    self._optimization_parameters.weight_decay_factor
+                )
+                if (
+                    self._optimization_parameters.multiply_weight_decay_factor_by_learning_rate
+                ):
                     parameters.multiply_weight_decay_factor_by_learning_rate = True
             if table_config.hot_id_replication:
                 parameters.hot_id_replication_configuration.status = (
-                    optimization_parameters_pb2.HotIdReplicationConfiguration.ENABLED)
-            self._optimizer_handler.set_optimization_parameters(
-                table_descriptor)
+                    optimization_parameters_pb2.HotIdReplicationConfiguration.ENABLED
+                )
+            self._optimizer_handler.set_optimization_parameters(table_descriptor)
 
         config_proto.mode = self._mode
         config_proto.batch_size_per_tensor_core = self._batch_size_per_core
@@ -1124,15 +1229,18 @@ class TPUEmbedding(object):
         config_proto.num_tensor_cores = self._num_cores
         config_proto.sharding_strategy = (
             elc.TPUEmbeddingConfiguration.DIV_DEFAULT
-            if self._partition_strategy == 'div' else
-            elc.TPUEmbeddingConfiguration.MOD)
+            if self._partition_strategy == "div"
+            else elc.TPUEmbeddingConfiguration.MOD
+        )
         config_proto.pipeline_execution_with_tensor_core = (
-            self._pipeline_execution_with_tensor_core)
+            self._pipeline_execution_with_tensor_core
+        )
 
         return config_proto
 
-    def create_variables_and_ops(self, embedding_variable_name_by_table=None,
-                                 slot_variable_names_by_table=None):
+    def create_variables_and_ops(
+        self, embedding_variable_name_by_table=None, slot_variable_names_by_table=None
+    ):
         """Create embedding and slot variables, with ops to load and retrieve them.
 
         N.B.: the retrieve embedding variables (including slot variables) ops are
@@ -1179,14 +1287,15 @@ class TPUEmbedding(object):
             if slot_variable_names_by_table:
                 slot_variable_names = slot_variable_names_by_table[table]
             else:
-                slot_variable_names = (
-                    self._optimizer_handler.get_default_slot_variable_names(table))
+                slot_variable_names = self._optimizer_handler.get_default_slot_variable_names(
+                    table
+                )
 
             # TODO(b/139144091): Multi-host support for mid-level API in
             #  eager context (TF 2.0)
             # Workaround below allows single-host use case in TF 2.0
             if context.executing_eagerly():
-                device = ''
+                device = ""
             else:
                 device = _create_device_fn(self._hosts)
 
@@ -1197,16 +1306,25 @@ class TPUEmbedding(object):
                     vocabulary_size=self._table_to_config_dict[table].vocabulary_size,
                     embedding_dimension=self._table_to_config_dict[table].dimension,
                     initializer=self._table_to_config_dict[table].initializer,
-                    collections=[ops.GraphKeys.GLOBAL_VARIABLES])
+                    collections=[ops.GraphKeys.GLOBAL_VARIABLES],
+                )
                 embedding_variables_by_table[table] = table_variables
 
                 # Only loads embedding config to load/retrieve nodes for the first table
                 # on the first host, other nodes would use config from the first node.
                 config = None if i else self.config_proto.SerializeToString()
-                slot_variables_for_table, load_ops_fn, retrieve_ops_fn = (
-                    self._optimizer_handler.create_variables_and_ops(
-                        table, slot_variable_names, self._num_hosts,
-                        self._table_to_config_dict[table], table_variables, config))
+                (
+                    slot_variables_for_table,
+                    load_ops_fn,
+                    retrieve_ops_fn,
+                ) = self._optimizer_handler.create_variables_and_ops(
+                    table,
+                    slot_variable_names,
+                    self._num_hosts,
+                    self._table_to_config_dict[table],
+                    table_variables,
+                    config,
+                )
                 slot_variables_by_table[table] = slot_variables_for_table
                 load_op_fns.append(load_ops_fn)
                 retrieve_op_fns.append(retrieve_ops_fn)
@@ -1233,15 +1351,15 @@ class TPUEmbedding(object):
                 retrieve_ops_list.extend(retrieve_op_fn())
             return retrieve_ops_list
 
-        return VariablesAndOps(embedding_variables_by_table,
-                               slot_variables_by_table,
-                               load_ops, retrieve_ops)
+        return VariablesAndOps(
+            embedding_variables_by_table,
+            slot_variables_by_table,
+            load_ops,
+            retrieve_ops,
+        )
 
     def generate_enqueue_ops(
-        self,
-        enqueue_datas_list,
-        mode_override=None,
-        ragged=False,
+        self, enqueue_datas_list, mode_override=None, ragged=False,
     ):
         """Generate enqueue ops.
 
@@ -1261,19 +1379,18 @@ class TPUEmbedding(object):
         Returns:
           Ops to enqueue to TPU for embedding.
         """
-        self._validate_generate_enqueue_ops_enqueue_datas_list(
-            enqueue_datas_list)
+        self._validate_generate_enqueue_ops_enqueue_datas_list(enqueue_datas_list)
         return [
             self._generate_enqueue_op(  # pylint: disable=g-complex-comprehension
                 enqueue_datas,
                 device_ordinal=i % self._num_cores_per_host,
                 mode_override=mode_override,
                 ragged=ragged,
-            ) for i, enqueue_datas in enumerate(enqueue_datas_list)
+            )
+            for i, enqueue_datas in enumerate(enqueue_datas_list)
         ]
 
-    def _validate_generate_enqueue_ops_enqueue_datas_list(self,
-                                                          enqueue_datas_list):
+    def _validate_generate_enqueue_ops_enqueue_datas_list(self, enqueue_datas_list):
         """Validate `enqueue_datas_list`."""
         feature_set = set(self._feature_to_config_dict.keys())
         contiguous_device = None
@@ -1283,94 +1400,123 @@ class TPUEmbedding(object):
             # Check features are valid.
             missing_feature_set = feature_set - used_feature_set
             if missing_feature_set:
-                raise ValueError('`enqueue_datas_list[{}]` misses a feature that is '
-                                 'in `feature_to_config_dict`: {}.'.format(
-                                     i, missing_feature_set))
+                raise ValueError(
+                    "`enqueue_datas_list[{}]` misses a feature that is "
+                    "in `feature_to_config_dict`: {}.".format(i, missing_feature_set)
+                )
 
             extra_feature_set = used_feature_set - feature_set
             if extra_feature_set:
-                raise ValueError('`enqueue_datas_list[{}]` has a feature that is not '
-                                 'in `feature_to_config_dict`: {}.'.format(
-                                     i, extra_feature_set))
+                raise ValueError(
+                    "`enqueue_datas_list[{}]` has a feature that is not "
+                    "in `feature_to_config_dict`: {}.".format(i, extra_feature_set)
+                )
 
             device = None
             device_feature = None
             for feature, enqueue_data in six.iteritems(enqueue_datas):
                 combiner = self._table_to_config_dict[
-                    self._feature_to_config_dict[feature].table_id].combiner
+                    self._feature_to_config_dict[feature].table_id
+                ].combiner
 
                 if isinstance(enqueue_data, EnqueueData):
                     if enqueue_data.sample_indices is None and combiner:
                         logging.warn(
-                            'No sample indices set for features %f table %f but '
-                            'combiner is set to %s.', feature,
-                            self._feature_to_config_dict[feature].table_id, combiner)
-                    if (enqueue_data.sample_indices is not None and
-                        enqueue_data.sample_indices.device !=
-                            enqueue_data.embedding_indices.device):
+                            "No sample indices set for features %f table %f but "
+                            "combiner is set to %s.",
+                            feature,
+                            self._feature_to_config_dict[feature].table_id,
+                            combiner,
+                        )
+                    if (
+                        enqueue_data.sample_indices is not None
+                        and enqueue_data.sample_indices.device
+                        != enqueue_data.embedding_indices.device
+                    ):
                         raise ValueError(
-                            'Device of sample_indices does not agree with '
-                            'that of embedding_indices for feature {}.'.format(feature))
-                    if (enqueue_data.aggregation_weights is not None and
-                        enqueue_data.aggregation_weights.device !=
-                            enqueue_data.embedding_indices.device):
+                            "Device of sample_indices does not agree with "
+                            "that of embedding_indices for feature {}.".format(feature)
+                        )
+                    if (
+                        enqueue_data.aggregation_weights is not None
+                        and enqueue_data.aggregation_weights.device
+                        != enqueue_data.embedding_indices.device
+                    ):
                         raise ValueError(
-                            'Device of aggregation_weights does not agree with '
-                            'that of embedding_indices for feature {}.'.format(feature))
+                            "Device of aggregation_weights does not agree with "
+                            "that of embedding_indices for feature {}.".format(feature)
+                        )
 
                 elif isinstance(enqueue_data, RaggedEnqueueData):
                     if enqueue_data.sample_splits is None and combiner:
                         logging.warn(
-                            'No sample splits set for features %f table %f but '
-                            'combiner is set to %s.', feature,
-                            self._feature_to_config_dict[feature].table_id, combiner)
-                    if (enqueue_data.sample_splits is not None and
-                        enqueue_data.sample_splits.device !=
-                            enqueue_data.embedding_indices.device):
+                            "No sample splits set for features %f table %f but "
+                            "combiner is set to %s.",
+                            feature,
+                            self._feature_to_config_dict[feature].table_id,
+                            combiner,
+                        )
+                    if (
+                        enqueue_data.sample_splits is not None
+                        and enqueue_data.sample_splits.device
+                        != enqueue_data.embedding_indices.device
+                    ):
                         raise ValueError(
-                            'Device of sample_splits does not agree with '
-                            'that of embedding_indices for feature {}.'.format(feature))
-                    if (enqueue_data.aggregation_weights is not None and
-                        enqueue_data.aggregation_weights.device !=
-                            enqueue_data.embedding_indices.device):
+                            "Device of sample_splits does not agree with "
+                            "that of embedding_indices for feature {}.".format(feature)
+                        )
+                    if (
+                        enqueue_data.aggregation_weights is not None
+                        and enqueue_data.aggregation_weights.device
+                        != enqueue_data.embedding_indices.device
+                    ):
                         raise ValueError(
-                            'Device of aggregation_weights does not agree with '
-                            'that of embedding_indices for feature {}.'.format(feature))
+                            "Device of aggregation_weights does not agree with "
+                            "that of embedding_indices for feature {}.".format(feature)
+                        )
 
                 else:
                     raise ValueError(
-                        '`enqueue_datas_list[{}]` has a feature that is not mapped to '
-                        '`EnqueueData` or `RaggedEnqueueData`. `feature`: {}'.format(
-                            i, feature))
+                        "`enqueue_datas_list[{}]` has a feature that is not mapped to "
+                        "`EnqueueData` or `RaggedEnqueueData`. `feature`: {}".format(
+                            i, feature
+                        )
+                    )
                 # Check all features are on the same device.
                 if device is None:
                     device = enqueue_data.embedding_indices.device
                     device_feature = feature
                 else:
                     if device != enqueue_data.embedding_indices.device:
-                        raise ValueError('Devices are different between features in '
-                                         '`enqueue_datas_list[{}]`; '
-                                         'devices: {}, {}; features: {}, {}.'.format(
-                                             i, device,
-                                             enqueue_data.embedding_indices.device, feature,
-                                             device_feature))
+                        raise ValueError(
+                            "Devices are different between features in "
+                            "`enqueue_datas_list[{}]`; "
+                            "devices: {}, {}; features: {}, {}.".format(
+                                i,
+                                device,
+                                enqueue_data.embedding_indices.device,
+                                feature,
+                                device_feature,
+                            )
+                        )
 
             if i % self._num_cores_per_host:
                 if device != contiguous_device:
-                    raise ValueError('We expect the `enqueue_datas` which are on the '
-                                     'same host to be contiguous in '
-                                     '`enqueue_datas_list`, '
-                                     '`enqueue_datas_list[{}]` is on device {}, '
-                                     'but is expected to be on device {}.'.format(
-                                         i, device, contiguous_device))
+                    raise ValueError(
+                        "We expect the `enqueue_datas` which are on the "
+                        "same host to be contiguous in "
+                        "`enqueue_datas_list`, "
+                        "`enqueue_datas_list[{}]` is on device {}, "
+                        "but is expected to be on device {}.".format(
+                            i, device, contiguous_device
+                        )
+                    )
             else:
                 contiguous_device = device
 
-    def _generate_enqueue_op(self,
-                             enqueue_datas,
-                             device_ordinal,
-                             mode_override=None,
-                             ragged=False):
+    def _generate_enqueue_op(
+        self, enqueue_datas, device_ordinal, mode_override=None, ragged=False
+    ):
         """Creates op for enqueuing batch to TPU."""
         enqueue_data0 = list(enqueue_datas.values())[0]
         with ops.colocate_with(enqueue_data0.embedding_indices):
@@ -1380,13 +1526,15 @@ class TPUEmbedding(object):
                     device_ordinal=device_ordinal,
                     combiners=self._combiners,
                     mode_override=mode_override,
-                    **self._format_for_tpu_embedding_ragged_tensor_batch(enqueue_datas))
+                    **self._format_for_tpu_embedding_ragged_tensor_batch(enqueue_datas)
+                )
             else:
                 return tpu_ops.enqueue_tpu_embedding_sparse_tensor_batch(
                     device_ordinal=device_ordinal,
                     combiners=self._combiners,
                     mode_override=mode_override,
-                    **self._format_for_tpu_embedding_sparse_tensor_batch(enqueue_datas))
+                    **self._format_for_tpu_embedding_sparse_tensor_batch(enqueue_datas)
+                )
 
     def _format_for_tpu_embedding_ragged_tensor_batch(self, enqueue_datas):
         """Format sparse features for `enqueue_tpu_embedding_ragged_tensor_batch()`.
@@ -1399,29 +1547,31 @@ class TPUEmbedding(object):
         """
 
         kwargs = {
-            'sample_splits': [],
-            'embedding_indices': [],
-            'aggregation_weights': [],
-            'table_ids': [],
-            'max_sequence_lengths': [],
+            "sample_splits": [],
+            "embedding_indices": [],
+            "aggregation_weights": [],
+            "table_ids": [],
+            "max_sequence_lengths": [],
         }
         for table_id, table in enumerate(self._table_to_features_dict):
             features = self._table_to_features_dict[table]
             for feature in features:
                 enqueue_data = enqueue_datas[feature]
 
-                kwargs['sample_splits'].append(enqueue_data.sample_splits)
+                kwargs["sample_splits"].append(enqueue_data.sample_splits)
 
-                kwargs['aggregation_weights'].append(
-                    enqueue_data.aggregation_weights if enqueue_data.aggregation_weights
-                    is not None else array_ops.zeros((0,), dtype=dtypes.float32))
+                kwargs["aggregation_weights"].append(
+                    enqueue_data.aggregation_weights
+                    if enqueue_data.aggregation_weights is not None
+                    else array_ops.zeros((0,), dtype=dtypes.float32)
+                )
 
-                kwargs['embedding_indices'].append(
-                    enqueue_data.embedding_indices)
+                kwargs["embedding_indices"].append(enqueue_data.embedding_indices)
 
-                kwargs['table_ids'].append(table_id)
-                kwargs['max_sequence_lengths'].append(
-                    self._feature_to_config_dict[feature].max_sequence_length)
+                kwargs["table_ids"].append(table_id)
+                kwargs["max_sequence_lengths"].append(
+                    self._feature_to_config_dict[feature].max_sequence_length
+                )
 
         return kwargs
 
@@ -1435,11 +1585,11 @@ class TPUEmbedding(object):
           Dict of arguments for `enqueue_tpu_embedding_sparse_tensor_batch()`.
         """
         kwargs = {
-            'sample_indices': [],
-            'embedding_indices': [],
-            'aggregation_weights': [],
-            'table_ids': [],
-            'max_sequence_lengths': [],
+            "sample_indices": [],
+            "embedding_indices": [],
+            "aggregation_weights": [],
+            "table_ids": [],
+            "max_sequence_lengths": [],
         }
         int_zeros = array_ops.zeros((0,), dtype=dtypes.int64)
         float_zeros = array_ops.zeros((0,), dtype=dtypes.float32)
@@ -1448,20 +1598,24 @@ class TPUEmbedding(object):
             for feature in features:
                 enqueue_data = enqueue_datas[feature]
 
-                kwargs['sample_indices'].append(
+                kwargs["sample_indices"].append(
                     enqueue_data.sample_indices
-                    if enqueue_data.sample_indices is not None else int_zeros)
+                    if enqueue_data.sample_indices is not None
+                    else int_zeros
+                )
 
-                kwargs['aggregation_weights'].append(
-                    enqueue_data.aggregation_weights if
-                    enqueue_data.aggregation_weights is not None else float_zeros)
+                kwargs["aggregation_weights"].append(
+                    enqueue_data.aggregation_weights
+                    if enqueue_data.aggregation_weights is not None
+                    else float_zeros
+                )
 
-                kwargs['embedding_indices'].append(
-                    enqueue_data.embedding_indices)
+                kwargs["embedding_indices"].append(enqueue_data.embedding_indices)
 
-                kwargs['table_ids'].append(table_id)
-                kwargs['max_sequence_lengths'].append(
-                    self._feature_to_config_dict[feature].max_sequence_length)
+                kwargs["table_ids"].append(table_id)
+                kwargs["max_sequence_lengths"].append(
+                    self._feature_to_config_dict[feature].max_sequence_length
+                )
 
         return kwargs
 
@@ -1477,7 +1631,8 @@ class TPUEmbedding(object):
         """
         recv_activations = tpu_ops.recv_tpu_embedding_activations(
             num_outputs=len(self._table_to_config_dict),
-            config=self._config_proto.SerializeToString())
+            config=self._config_proto.SerializeToString(),
+        )
 
         activations = collections.OrderedDict()
         for table_id, table in enumerate(self._table_to_features_dict):
@@ -1485,24 +1640,22 @@ class TPUEmbedding(object):
             num_features = self._table_to_num_features_dict[table]
             feature_index = 0
             table_activations = array_ops.reshape(
-                recv_activations[table_id],
-                [self.batch_size_per_core, num_features, -1])
+                recv_activations[table_id], [self.batch_size_per_core, num_features, -1]
+            )
             for feature in features:
                 seq_length = self._feature_to_config_dict[feature].max_sequence_length
                 if not seq_length:
-                    activations[feature] = table_activations[:,
-                                                             feature_index, :]
+                    activations[feature] = table_activations[:, feature_index, :]
                     feature_index = feature_index + 1
                 else:
-                    activations[feature] = (
-                        table_activations[:, feature_index:(feature_index+seq_length), :])
+                    activations[feature] = table_activations[
+                        :, feature_index : (feature_index + seq_length), :
+                    ]
                     feature_index = feature_index + seq_length
 
         return activations
 
-    def generate_send_gradients_op(self,
-                                   feature_to_gradient_dict,
-                                   step=None):
+    def generate_send_gradients_op(self, feature_to_gradient_dict, step=None):
         """Send gradient to TPU embedding.
 
         Args:
@@ -1517,12 +1670,12 @@ class TPUEmbedding(object):
           RuntimeError: If `mode` is not `TRAINING`.
         """
         if self._mode != TRAINING:
-            raise RuntimeError('Only in training mode gradients need to '
-                               'be sent to TPU embedding; got mode {}.'
-                               .format(self._mode))
+            raise RuntimeError(
+                "Only in training mode gradients need to "
+                "be sent to TPU embedding; got mode {}.".format(self._mode)
+            )
         if step is None and self._learning_rate_fn:
-            raise ValueError(
-                'There are dynamic learning rates but step is None.')
+            raise ValueError("There are dynamic learning rates but step is None.")
 
         gradients = []
         for table in self._table_to_features_dict:
@@ -1536,57 +1689,67 @@ class TPUEmbedding(object):
                 table_gradients.append(gradient)
             interleaved_table_grads = array_ops.reshape(
                 array_ops.concat(table_gradients, axis=1),
-                [-1, array_ops.shape(table_gradients[0])[-1]])
+                [-1, array_ops.shape(table_gradients[0])[-1]],
+            )
             gradients.append(interleaved_table_grads)
 
         return tpu_ops.send_tpu_embedding_gradients(
             inputs=gradients,
-            learning_rates=[math_ops.cast(fn(step), dtype=dtypes.float32)
-                            for fn in self._learning_rate_fn],
-            config=self.config_proto.SerializeToString())
+            learning_rates=[
+                math_ops.cast(fn(step), dtype=dtypes.float32)
+                for fn in self._learning_rate_fn
+            ],
+            config=self.config_proto.SerializeToString(),
+        )
 
 
 def _validate_table_to_config_dict(table_to_config_dict):
     """Validate `table_to_config_dict`."""
     for k, v in six.iteritems(table_to_config_dict):
         if not isinstance(v, TableConfig):
-            raise ValueError('Value of `table_to_config_dict` must be of type '
-                             '`TableConfig`, got {} for {}.'.format(type(v), k))
+            raise ValueError(
+                "Value of `table_to_config_dict` must be of type "
+                "`TableConfig`, got {} for {}.".format(type(v), k)
+            )
 
 
-def _validate_feature_to_config_dict(table_to_config_dict,
-                                     feature_to_config_dict):
+def _validate_feature_to_config_dict(table_to_config_dict, feature_to_config_dict):
     """Validate `feature_to_config_dict`."""
-    used_table_set = set([feature.table_id
-                          for feature in feature_to_config_dict.values()])
+    used_table_set = set(
+        [feature.table_id for feature in feature_to_config_dict.values()]
+    )
     table_set = set(table_to_config_dict.keys())
 
     unused_table_set = table_set - used_table_set
     if unused_table_set:
-        raise ValueError('`table_to_config_dict` specifies table that is not '
-                         'used in `feature_to_config_dict`: {}.'
-                         .format(unused_table_set))
+        raise ValueError(
+            "`table_to_config_dict` specifies table that is not "
+            "used in `feature_to_config_dict`: {}.".format(unused_table_set)
+        )
 
     extra_table_set = used_table_set - table_set
     if extra_table_set:
-        raise ValueError('`feature_to_config_dict` refers to a table that is not '
-                         'specified in `table_to_config_dict`: {}.'
-                         .format(extra_table_set))
+        raise ValueError(
+            "`feature_to_config_dict` refers to a table that is not "
+            "specified in `table_to_config_dict`: {}.".format(extra_table_set)
+        )
 
 
 def _validate_batch_size(batch_size, num_cores):
     if batch_size % num_cores:
-        raise ValueError('`batch_size` is not a multiple of number of '
-                         'cores. `batch_size`={}, `_num_cores`={}.'.format(
-                             batch_size, num_cores))
+        raise ValueError(
+            "`batch_size` is not a multiple of number of "
+            "cores. `batch_size`={}, `_num_cores`={}.".format(batch_size, num_cores)
+        )
 
 
 def _validate_optimization_parameters(optimization_parameters):
     if not isinstance(optimization_parameters, _OptimizationParameters):
-        raise ValueError('`optimization_parameters` must inherit from '
-                         '`_OptimizationParameters`. '
-                         '`type(optimization_parameters)`={}'.format(
-                             type(optimization_parameters)))
+        raise ValueError(
+            "`optimization_parameters` must inherit from "
+            "`_OptimizationParameters`. "
+            "`type(optimization_parameters)`={}".format(type(optimization_parameters))
+        )
 
 
 class _OptimizerHandler(object):
@@ -1601,8 +1764,15 @@ class _OptimizerHandler(object):
     def get_default_slot_variable_names(self, table):
         raise NotImplementedError()
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         raise NotImplementedError()
 
 
@@ -1613,19 +1783,28 @@ class _AdagradHandler(_OptimizerHandler):
         table_descriptor.optimization_parameters.adagrad.SetInParent()
 
     def get_default_slot_variable_names(self, table):
-        return AdagradSlotVariableName('{}/{}'.format(table, 'Adagrad'))
+        return AdagradSlotVariableName("{}/{}".format(table, "Adagrad"))
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         accumulator_initializer = init_ops.constant_initializer(
-            self._optimization_parameters.initial_accumulator)
+            self._optimization_parameters.initial_accumulator
+        )
         accumulator_variables = _create_partitioned_variables(
             name=slot_variable_names.accumulator,
             num_hosts=num_hosts,
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=accumulator_initializer)
+            initializer=accumulator_initializer,
+        )
         slot_variables = AdagradSlotVariable(accumulator_variables)
 
         def load_ops_fn():
@@ -1637,16 +1816,17 @@ class _AdagradHandler(_OptimizerHandler):
             config = config_proto
             load_op_list = []
             for host_id, table_variable, accumulator_variable in zip(
-                    range(num_hosts), table_variables, accumulator_variables):
+                range(num_hosts), table_variables, accumulator_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    load_parameters_op = (
-                        tpu_ops.load_tpu_embedding_adagrad_parameters(
-                            parameters=table_variable,
-                            accumulators=accumulator_variable,
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    load_parameters_op = tpu_ops.load_tpu_embedding_adagrad_parameters(
+                        parameters=table_variable,
+                        accumulators=accumulator_variable,
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                 config = None
                 load_op_list.append(load_parameters_op)
             return load_op_list
@@ -1659,18 +1839,23 @@ class _AdagradHandler(_OptimizerHandler):
             """
             config = config_proto
             retrieve_op_list = []
-            for host_id, table_variable, accumulator_variable in (zip(
-                    range(num_hosts), table_variables, accumulator_variables)):
+            for host_id, table_variable, accumulator_variable in zip(
+                range(num_hosts), table_variables, accumulator_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    retrieved_table, retrieved_accumulator = (
-                        tpu_ops.retrieve_tpu_embedding_adagrad_parameters(
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    (
+                        retrieved_table,
+                        retrieved_accumulator,
+                    ) = tpu_ops.retrieve_tpu_embedding_adagrad_parameters(
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                     retrieve_parameters_op = control_flow_ops.group(
                         state_ops.assign(table_variable, retrieved_table),
-                        state_ops.assign(accumulator_variable, retrieved_accumulator))
+                        state_ops.assign(accumulator_variable, retrieved_accumulator),
+                    )
                 config = None
                 retrieve_op_list.append(retrieve_parameters_op)
             return retrieve_op_list
@@ -1684,25 +1869,35 @@ class _ProximalAdagradHandler(_OptimizerHandler):
     def set_optimization_parameters(self, table_descriptor):
         table_descriptor.optimization_parameters.proximal_adagrad.SetInParent()
         table_descriptor.optimization_parameters.proximal_adagrad.l1 = (
-            self._optimization_parameters.l1_regularization_strength)
+            self._optimization_parameters.l1_regularization_strength
+        )
         table_descriptor.optimization_parameters.proximal_adagrad.l2 = (
-            self._optimization_parameters.l2_regularization_strength)
+            self._optimization_parameters.l2_regularization_strength
+        )
 
     def get_default_slot_variable_names(self, table):
-        return ProximalAdagradSlotVariableName('{}/{}'.format(
-            table, 'ProximalAdagrad'))
+        return ProximalAdagradSlotVariableName("{}/{}".format(table, "ProximalAdagrad"))
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         accumulator_initializer = init_ops.constant_initializer(
-            self._optimization_parameters.initial_accumulator)
+            self._optimization_parameters.initial_accumulator
+        )
         accumulator_variables = _create_partitioned_variables(
             name=slot_variable_names.accumulator,
             num_hosts=num_hosts,
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=accumulator_initializer)
+            initializer=accumulator_initializer,
+        )
         slot_variables = ProximalAdagradSlotVariable(accumulator_variables)
 
         def load_ops_fn():
@@ -1714,16 +1909,17 @@ class _ProximalAdagradHandler(_OptimizerHandler):
             config = config_proto
             load_op_list = []
             for host_id, table_variable, accumulator_variable in zip(
-                    range(num_hosts), table_variables, accumulator_variables):
+                range(num_hosts), table_variables, accumulator_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    load_parameters_op = (
-                        tpu_ops.load_tpu_embedding_proximal_adagrad_parameters(
-                            parameters=table_variable,
-                            accumulators=accumulator_variable,
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    load_parameters_op = tpu_ops.load_tpu_embedding_proximal_adagrad_parameters(
+                        parameters=table_variable,
+                        accumulators=accumulator_variable,
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                 config = None
                 load_op_list.append(load_parameters_op)
             return load_op_list
@@ -1736,18 +1932,23 @@ class _ProximalAdagradHandler(_OptimizerHandler):
             """
             config = config_proto
             retrieve_op_list = []
-            for host_id, table_variable, accumulator_variable in (zip(
-                    range(num_hosts), table_variables, accumulator_variables)):
+            for host_id, table_variable, accumulator_variable in zip(
+                range(num_hosts), table_variables, accumulator_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    retrieved_table, retrieved_accumulator = (
-                        tpu_ops.retrieve_tpu_embedding_proximal_adagrad_parameters(
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    (
+                        retrieved_table,
+                        retrieved_accumulator,
+                    ) = tpu_ops.retrieve_tpu_embedding_proximal_adagrad_parameters(
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                     retrieve_parameters_op = control_flow_ops.group(
                         state_ops.assign(table_variable, retrieved_table),
-                        state_ops.assign(accumulator_variable, retrieved_accumulator))
+                        state_ops.assign(accumulator_variable, retrieved_accumulator),
+                    )
                 config = None
                 retrieve_op_list.append(retrieve_parameters_op)
             return retrieve_op_list
@@ -1760,22 +1961,35 @@ class _AdamHandler(_OptimizerHandler):
 
     def set_optimization_parameters(self, table_descriptor):
         table_descriptor.optimization_parameters.adam.beta1 = (
-            self._optimization_parameters.beta1)
+            self._optimization_parameters.beta1
+        )
         table_descriptor.optimization_parameters.adam.beta2 = (
-            self._optimization_parameters.beta2)
+            self._optimization_parameters.beta2
+        )
         table_descriptor.optimization_parameters.adam.epsilon = (
-            self._optimization_parameters.epsilon)
+            self._optimization_parameters.epsilon
+        )
         table_descriptor.optimization_parameters.adam.use_non_lazy_adam = (
-            not self._optimization_parameters.lazy_adam)
+            not self._optimization_parameters.lazy_adam
+        )
         table_descriptor.optimization_parameters.adam.use_sum_inside_sqrt = (
-            self._optimization_parameters.sum_inside_sqrt)
+            self._optimization_parameters.sum_inside_sqrt
+        )
 
     def get_default_slot_variable_names(self, table):
-        return AdamSlotVariableNames('{}/{}/m'.format(table, 'Adam'),
-                                     '{}/{}/v'.format(table, 'Adam'))
+        return AdamSlotVariableNames(
+            "{}/{}/m".format(table, "Adam"), "{}/{}/v".format(table, "Adam")
+        )
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         m_initializer = init_ops.zeros_initializer()
         m_variables = _create_partitioned_variables(
             name=slot_variable_names.m,
@@ -1783,7 +1997,8 @@ class _AdamHandler(_OptimizerHandler):
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=m_initializer)
+            initializer=m_initializer,
+        )
         v_initializer = init_ops.zeros_initializer()
         v_variables = _create_partitioned_variables(
             name=slot_variable_names.v,
@@ -1791,7 +2006,8 @@ class _AdamHandler(_OptimizerHandler):
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=v_initializer)
+            initializer=v_initializer,
+        )
         slot_variables = AdamSlotVariables(m_variables, v_variables)
 
         def load_ops_fn():
@@ -1802,19 +2018,19 @@ class _AdamHandler(_OptimizerHandler):
             """
             load_op_list = []
             config = config_proto
-            for host_id, table_variable, m_variable, v_variable in (zip(
-                    range(num_hosts), table_variables,
-                    m_variables, v_variables)):
+            for host_id, table_variable, m_variable, v_variable in zip(
+                range(num_hosts), table_variables, m_variables, v_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    load_parameters_op = (
-                        tpu_ops.load_tpu_embedding_adam_parameters(
-                            parameters=table_variable,
-                            momenta=m_variable,
-                            velocities=v_variable,
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    load_parameters_op = tpu_ops.load_tpu_embedding_adam_parameters(
+                        parameters=table_variable,
+                        momenta=m_variable,
+                        velocities=v_variable,
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                 # Set config to None to enforce that config is only loaded to the first
                 # table.
                 config = None
@@ -1829,20 +2045,25 @@ class _AdamHandler(_OptimizerHandler):
             """
             retrieve_op_list = []
             config = config_proto
-            for host_id, table_variable, m_variable, v_variable in (zip(
-                    range(num_hosts), table_variables,
-                    m_variables, v_variables)):
+            for host_id, table_variable, m_variable, v_variable in zip(
+                range(num_hosts), table_variables, m_variables, v_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    retrieved_table, retrieved_m, retrieved_v = (
-                        tpu_ops.retrieve_tpu_embedding_adam_parameters(
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    (
+                        retrieved_table,
+                        retrieved_m,
+                        retrieved_v,
+                    ) = tpu_ops.retrieve_tpu_embedding_adam_parameters(
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                     retrieve_parameters_op = control_flow_ops.group(
                         state_ops.assign(table_variable, retrieved_table),
                         state_ops.assign(m_variable, retrieved_m),
-                        state_ops.assign(v_variable, retrieved_v))
+                        state_ops.assign(v_variable, retrieved_v),
+                    )
                 config = None
                 retrieve_op_list.append(retrieve_parameters_op)
             return retrieve_op_list
@@ -1855,44 +2076,61 @@ class _FtrlHandler(_OptimizerHandler):
 
     def set_optimization_parameters(self, table_descriptor):
         table_descriptor.optimization_parameters.ftrl.lr_power = (
-            self._optimization_parameters.learning_rate_power)
+            self._optimization_parameters.learning_rate_power
+        )
         table_descriptor.optimization_parameters.ftrl.l1 = (
-            self._optimization_parameters.l1_regularization_strength)
+            self._optimization_parameters.l1_regularization_strength
+        )
         table_descriptor.optimization_parameters.ftrl.l2 = (
-            self._optimization_parameters.l2_regularization_strength)
+            self._optimization_parameters.l2_regularization_strength
+        )
         table_descriptor.optimization_parameters.ftrl.initial_accum = (
-            self._optimization_parameters.initial_accumulator_value)
+            self._optimization_parameters.initial_accumulator_value
+        )
         table_descriptor.optimization_parameters.ftrl.initial_linear = (
-            self._optimization_parameters.initial_linear_value)
+            self._optimization_parameters.initial_linear_value
+        )
 
     def get_default_slot_variable_names(self, table):
         # These match the default slot variable names created by
         # tf.train.FtrlOptimizer.
-        return FtrlSlotVariableName('{}/{}'.format(table, 'Ftrl'),  # accumulator
-                                    '{}/{}'.format(table, 'Ftrl_1'))  # linear
+        return FtrlSlotVariableName(
+            "{}/{}".format(table, "Ftrl"),  # accumulator
+            "{}/{}".format(table, "Ftrl_1"),
+        )  # linear
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         accumulator_initializer = init_ops.constant_initializer(
-            self._optimization_parameters.initial_accumulator_value)
+            self._optimization_parameters.initial_accumulator_value
+        )
         accumulator_variables = _create_partitioned_variables(
             name=slot_variable_names.accumulator,
             num_hosts=num_hosts,
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=accumulator_initializer)
+            initializer=accumulator_initializer,
+        )
         linear_initializer = init_ops.constant_initializer(
-            self._optimization_parameters.initial_linear_value)
+            self._optimization_parameters.initial_linear_value
+        )
         linear_variables = _create_partitioned_variables(
             name=slot_variable_names.linear,
             num_hosts=num_hosts,
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=linear_initializer)
-        slot_variables = FtrlSlotVariable(accumulator_variables,
-                                          linear_variables)
+            initializer=linear_initializer,
+        )
+        slot_variables = FtrlSlotVariable(accumulator_variables, linear_variables)
 
         def load_ops_fn():
             """Returns the retrieve ops for Ftrl embedding tables.
@@ -1903,18 +2141,21 @@ class _FtrlHandler(_OptimizerHandler):
             config = config_proto
             load_op_list = []
             for host_id, table_variable, accumulator_variable, linear_variable in zip(
-                    range(num_hosts), table_variables, accumulator_variables,
-                    linear_variables):
+                range(num_hosts),
+                table_variables,
+                accumulator_variables,
+                linear_variables,
+            ):
                 with ops.colocate_with(table_variable):
-                    load_parameters_op = (
-                        tpu_ops.load_tpu_embedding_ftrl_parameters(
-                            parameters=table_variable,
-                            accumulators=accumulator_variable,
-                            linears=linear_variable,
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    load_parameters_op = tpu_ops.load_tpu_embedding_ftrl_parameters(
+                        parameters=table_variable,
+                        accumulators=accumulator_variable,
+                        linears=linear_variable,
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                 config = None
                 load_op_list.append(load_parameters_op)
             return load_op_list
@@ -1928,20 +2169,27 @@ class _FtrlHandler(_OptimizerHandler):
             config = config_proto
             retrieve_op_list = []
             for host_id, table_variable, accumulator_variable, linear_variable in zip(
-                    range(num_hosts), table_variables, accumulator_variables,
-                    linear_variables):
+                range(num_hosts),
+                table_variables,
+                accumulator_variables,
+                linear_variables,
+            ):
                 with ops.colocate_with(table_variable):
-                    retrieved_table, retrieved_accumulator, retrieved_linear = (
-                        tpu_ops.retrieve_tpu_embedding_ftrl_parameters(
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    (
+                        retrieved_table,
+                        retrieved_accumulator,
+                        retrieved_linear,
+                    ) = tpu_ops.retrieve_tpu_embedding_ftrl_parameters(
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                     retrieve_parameters_op = control_flow_ops.group(
                         state_ops.assign(table_variable, retrieved_table),
-                        state_ops.assign(accumulator_variable,
-                                         retrieved_accumulator),
-                        state_ops.assign(linear_variable, retrieved_linear))
+                        state_ops.assign(accumulator_variable, retrieved_accumulator),
+                        state_ops.assign(linear_variable, retrieved_linear),
+                    )
                 config = None
                 retrieve_op_list.append(retrieve_parameters_op)
             return retrieve_op_list
@@ -1955,32 +2203,47 @@ class _ProximalYogiHandler(_OptimizerHandler):
     def set_optimization_parameters(self, table_descriptor):
         table_descriptor.optimization_parameters.proximal_yogi.SetInParent()
         table_descriptor.optimization_parameters.proximal_yogi.beta1 = (
-            self._optimization_parameters.beta1)
+            self._optimization_parameters.beta1
+        )
         table_descriptor.optimization_parameters.proximal_yogi.beta2 = (
-            self._optimization_parameters.beta2)
+            self._optimization_parameters.beta2
+        )
         table_descriptor.optimization_parameters.proximal_yogi.epsilon = (
-            self._optimization_parameters.epsilon)
+            self._optimization_parameters.epsilon
+        )
         table_descriptor.optimization_parameters.proximal_yogi.l1 = (
-            self._optimization_parameters.l1_regularization_strength)
+            self._optimization_parameters.l1_regularization_strength
+        )
         table_descriptor.optimization_parameters.proximal_yogi.l2 = (
-            self._optimization_parameters.l2_regularization_strength)
+            self._optimization_parameters.l2_regularization_strength
+        )
 
     def get_default_slot_variable_names(self, table):
         return ProximalYogiSlotVariableNames(
-            '{}/{}'.format(table, 'ProximalYogi'),  # v
-            '{}/{}_1'.format(table, 'ProximalYogi'))  # m
+            "{}/{}".format(table, "ProximalYogi"),  # v
+            "{}/{}_1".format(table, "ProximalYogi"),
+        )  # m
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         v_initializer = init_ops.constant_initializer(
-            self._optimization_parameters.initial_accumulator_value)
+            self._optimization_parameters.initial_accumulator_value
+        )
         v_variables = _create_partitioned_variables(
             name=slot_variable_names.v,
             num_hosts=num_hosts,
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=v_initializer)
+            initializer=v_initializer,
+        )
         m_initializer = init_ops.zeros_initializer()
         m_variables = _create_partitioned_variables(
             name=slot_variable_names.m,
@@ -1988,7 +2251,8 @@ class _ProximalYogiHandler(_OptimizerHandler):
             vocabulary_size=table_config.vocabulary_size,
             embedding_dimension=table_config.dimension,
             collections=[ops.GraphKeys.GLOBAL_VARIABLES],
-            initializer=m_initializer)
+            initializer=m_initializer,
+        )
         slot_variables = ProximalYogiSlotVariables(v_variables, m_variables)
 
         def load_ops_fn():
@@ -1999,18 +2263,19 @@ class _ProximalYogiHandler(_OptimizerHandler):
             """
             load_op_list = []
             config = config_proto
-            for host_id, table_variable, v_variable, m_variable in (zip(
-                    range(num_hosts), table_variables, v_variables, m_variables)):
+            for host_id, table_variable, v_variable, m_variable in zip(
+                range(num_hosts), table_variables, v_variables, m_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    load_parameters_op = (
-                        tpu_ops.load_tpu_embedding_proximal_yogi_parameters(
-                            parameters=table_variable,
-                            v=v_variable,
-                            m=m_variable,
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    load_parameters_op = tpu_ops.load_tpu_embedding_proximal_yogi_parameters(
+                        parameters=table_variable,
+                        v=v_variable,
+                        m=m_variable,
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                 # Set config to None to enforce that config is only loaded to the first
                 # table.
                 config = None
@@ -2025,19 +2290,25 @@ class _ProximalYogiHandler(_OptimizerHandler):
             """
             retrieve_op_list = []
             config = config_proto
-            for host_id, table_variable, v_variable, m_variable in (zip(
-                    range(num_hosts), table_variables, v_variables, m_variables)):
+            for host_id, table_variable, v_variable, m_variable in zip(
+                range(num_hosts), table_variables, v_variables, m_variables
+            ):
                 with ops.colocate_with(table_variable):
-                    retrieved_table, retrieved_v, retrieved_m = (
-                        tpu_ops.retrieve_tpu_embedding_proximal_yogi_parameters(
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    (
+                        retrieved_table,
+                        retrieved_v,
+                        retrieved_m,
+                    ) = tpu_ops.retrieve_tpu_embedding_proximal_yogi_parameters(
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                     retrieve_parameters_op = control_flow_ops.group(
                         state_ops.assign(table_variable, retrieved_table),
                         state_ops.assign(v_variable, retrieved_v),
-                        state_ops.assign(m_variable, retrieved_m))
+                        state_ops.assign(m_variable, retrieved_m),
+                    )
                 config = None
                 retrieve_op_list.append(retrieve_parameters_op)
             return retrieve_op_list
@@ -2049,14 +2320,22 @@ class _StochasticGradientDescentHandler(_OptimizerHandler):
     """Handles stochastic gradient descent specific logic."""
 
     def set_optimization_parameters(self, table_descriptor):
-        (table_descriptor.optimization_parameters.stochastic_gradient_descent
-         .SetInParent())
+        (
+            table_descriptor.optimization_parameters.stochastic_gradient_descent.SetInParent()
+        )
 
     def get_default_slot_variable_names(self, table):
         return None
 
-    def create_variables_and_ops(self, table, slot_variable_names, num_hosts,
-                                 table_config, table_variables, config_proto):
+    def create_variables_and_ops(
+        self,
+        table,
+        slot_variable_names,
+        num_hosts,
+        table_config,
+        table_variables,
+        config_proto,
+    ):
         del table_config
 
         def load_ops_fn():
@@ -2067,16 +2346,15 @@ class _StochasticGradientDescentHandler(_OptimizerHandler):
             """
             load_op_list = []
             config = config_proto
-            for host_id, table_variable in (zip(
-                    range(num_hosts), table_variables)):
+            for host_id, table_variable in zip(range(num_hosts), table_variables):
                 with ops.colocate_with(table_variable):
-                    load_parameters_op = (
-                        tpu_ops.load_tpu_embedding_stochastic_gradient_descent_parameters(
-                            parameters=table_variable,
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    load_parameters_op = tpu_ops.load_tpu_embedding_stochastic_gradient_descent_parameters(
+                        parameters=table_variable,
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                 config = None
                 load_op_list.append(load_parameters_op)
             return load_op_list
@@ -2089,18 +2367,17 @@ class _StochasticGradientDescentHandler(_OptimizerHandler):
             """
             retrieve_op_list = []
             config = config_proto
-            for host_id, table_variable in (zip(
-                    range(num_hosts), table_variables)):
+            for host_id, table_variable in zip(range(num_hosts), table_variables):
                 with ops.colocate_with(table_variable):
-                    retrieved_table = (
-                        tpu_ops
-                        .retrieve_tpu_embedding_stochastic_gradient_descent_parameters(
-                            table_name=table,
-                            num_shards=num_hosts,
-                            shard_id=host_id,
-                            config=config))
+                    retrieved_table = tpu_ops.retrieve_tpu_embedding_stochastic_gradient_descent_parameters(
+                        table_name=table,
+                        num_shards=num_hosts,
+                        shard_id=host_id,
+                        config=config,
+                    )
                     retrieve_parameters_op = control_flow_ops.group(
-                        state_ops.assign(table_variable, retrieved_table))
+                        state_ops.assign(table_variable, retrieved_table)
+                    )
                 config = None
                 retrieve_op_list.append(retrieve_parameters_op)
             return retrieve_op_list
@@ -2135,7 +2412,7 @@ def _create_combiners(table_to_config_dict, table_to_features_dict):
     """Create a per feature list of combiners, ordered by table."""
     combiners = []
     for table in table_to_config_dict:
-        combiner = table_to_config_dict[table].combiner or 'sum'
+        combiner = table_to_config_dict[table].combiner or "sum"
         combiners.extend([combiner] * len(table_to_features_dict[table]))
     return combiners
 
@@ -2152,17 +2429,18 @@ def _create_table_to_features_and_num_features_dicts(feature_to_config_dict):
             table_to_num_features_dict_tmp[feature_config.table_id] = 0
         if feature_config.max_sequence_length == 0:
             table_to_num_features_dict_tmp[feature_config.table_id] = (
-                table_to_num_features_dict_tmp[feature_config.table_id] + 1)
+                table_to_num_features_dict_tmp[feature_config.table_id] + 1
+            )
         else:
             table_to_num_features_dict_tmp[feature_config.table_id] = (
-                table_to_num_features_dict_tmp[feature_config.table_id] +
-                feature_config.max_sequence_length)
+                table_to_num_features_dict_tmp[feature_config.table_id]
+                + feature_config.max_sequence_length
+            )
 
     table_to_features_dict = collections.OrderedDict()
     table_to_num_features_dict = collections.OrderedDict()
     for table in sorted(table_to_features_dict_tmp):
-        table_to_features_dict[table] = sorted(
-            table_to_features_dict_tmp[table])
+        table_to_features_dict[table] = sorted(table_to_features_dict_tmp[table])
         table_to_num_features_dict[table] = table_to_num_features_dict_tmp[table]
     return table_to_features_dict, table_to_num_features_dict
 
@@ -2172,12 +2450,14 @@ def _create_device_fn(hosts):
 
     def device_fn(op):
         """Returns the `device` for `op`."""
-        part_match = re.match(r'.*/part_(\d+)(/|$)', op.name)
-        dummy_match = re.match(r'.*dummy_(\d+).*', op.name)
+        part_match = re.match(r".*/part_(\d+)(/|$)", op.name)
+        dummy_match = re.match(r".*dummy_(\d+).*", op.name)
         if not part_match and not dummy_match:
             raise RuntimeError(
-                'Internal Error: Expected {} to contain /part_* or dummy_*'.format(
-                    op.name))
+                "Internal Error: Expected {} to contain /part_* or dummy_*".format(
+                    op.name
+                )
+            )
 
         if part_match:
             idx = int(part_match.group(1))
@@ -2185,18 +2465,15 @@ def _create_device_fn(hosts):
             idx = int(dummy_match.group(1))
 
         device = hosts[idx]
-        logging.debug('assigning {} to {}.', op, device)
+        logging.debug("assigning {} to {}.", op, device)
         return device
 
     return device_fn
 
 
-def _create_partitioned_variables(name,
-                                  num_hosts,
-                                  vocabulary_size,
-                                  embedding_dimension,
-                                  initializer,
-                                  collections=None):  # pylint: disable=redefined-outer-name
+def _create_partitioned_variables(
+    name, num_hosts, vocabulary_size, embedding_dimension, initializer, collections=None
+):  # pylint: disable=redefined-outer-name
     """Creates PartitionedVariables based on `num_hosts` for `table`."""
 
     num_slices = min(vocabulary_size, num_hosts)
@@ -2205,12 +2482,13 @@ def _create_partitioned_variables(name,
         variable_scope.get_variable(
             name,
             shape=(vocabulary_size, embedding_dimension),
-            partitioner=partitioned_variables.fixed_size_partitioner(
-                num_slices),
+            partitioner=partitioned_variables.fixed_size_partitioner(num_slices),
             dtype=dtypes.float32,
             initializer=initializer,
             collections=collections,
-            trainable=False))
+            trainable=False,
+        )
+    )
 
     if vocabulary_size >= num_hosts:
         return var_list
@@ -2219,11 +2497,13 @@ def _create_partitioned_variables(name,
     for idx in range(num_hosts - vocabulary_size):
         var_list.append(
             variable_scope.get_variable(
-                'dummy_{}_{}'.format(vocabulary_size + idx, name),
+                "dummy_{}_{}".format(vocabulary_size + idx, name),
                 shape=(1, embedding_dimension),
                 dtype=dtypes.float32,
                 initializer=initializer,
                 collections=[ops.GraphKeys.LOCAL_VARIABLES],
-                trainable=False))
+                trainable=False,
+            )
+        )
 
     return var_list
