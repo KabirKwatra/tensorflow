@@ -35,27 +35,27 @@ const char kModulePrefix[] = R"(
 
 TEST_F(GpuFusibleTest,
        LayoutsAreReduceInputFusionFriendly_ElementwiseProducer) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY entry {
       p0 = f32[2,2,2]{2,1,0} parameter(0)
       c0 = f32[] constant(0)
       exp = f32[2,2,2]{2,1,0} exponential(p0)
       ROOT reduce = f32[2,2]{1,0} reduce(exp, c0), dimensions={2}, to_apply=scalar_add
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
-    const HloInstruction* exp =
-        module->entry_computation()->root_instruction()->operand(0);
-    ASSERT_EQ(exp->opcode(), HloOpcode::kExp);
-    EXPECT_TRUE(LayoutsAreReduceInputFusionFriendly(*exp, *reduce));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
+  const HloInstruction* exp =
+      module->entry_computation()->root_instruction()->operand(0);
+  ASSERT_EQ(exp->opcode(), HloOpcode::kExp);
+  EXPECT_TRUE(LayoutsAreReduceInputFusionFriendly(*exp, *reduce));
 }
 
 TEST_F(GpuFusibleTest,
        LayoutsAreReduceInputFusionFriendly_MixedLayoutProducer) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     mixed_input_layouts_computation {
       p0.1 = f16[128,1024,32,32]{1,3,2,0} parameter(0)
       p1.1 = f16[128,1024,32,32]{3,2,1,0} parameter(1)
@@ -78,22 +78,22 @@ TEST_F(GpuFusibleTest,
       reduce_fusion = f32[1024]{0} fusion(loop_fusion), kind=kInput, calls=fused_reduce
       ROOT root = (f32[1024]{0}, f16[128,1024,32,32]{1,3,2,0}) tuple(reduce_fusion, loop_fusion)
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce_fusion =
-        module->entry_computation()->root_instruction()->operand(0);
-    ASSERT_EQ(reduce_fusion->fused_expression_root()->opcode(),
-              HloOpcode::kReduce);
-    const HloInstruction* loop_fusion =
-        module->entry_computation()->root_instruction()->operand(1);
-    ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kSelect);
-    EXPECT_FALSE(
-        LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce_fusion));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce_fusion =
+      module->entry_computation()->root_instruction()->operand(0);
+  ASSERT_EQ(reduce_fusion->fused_expression_root()->opcode(),
+            HloOpcode::kReduce);
+  const HloInstruction* loop_fusion =
+      module->entry_computation()->root_instruction()->operand(1);
+  ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kSelect);
+  EXPECT_FALSE(
+      LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce_fusion));
 }
 
 TEST_F(GpuFusibleTest,
        LayoutsAreReduceInputFusionFriendly_MixedLayoutProducerWithTrivialDim) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     mixed_input_layouts_computation {
       p0.1 = f16[128,1,32,32]{1,3,2,0} parameter(0)
       p1.1 = f16[128,1,32,32]{3,2,1,0} parameter(1)
@@ -116,21 +116,21 @@ TEST_F(GpuFusibleTest,
       reduce_fusion = f32[1]{0} fusion(loop_fusion), kind=kInput, calls=fused_reduce
       ROOT root = (f32[1]{0}, f16[128,1,32,32]{1,3,2,0}) tuple(reduce_fusion, loop_fusion)
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce_fusion =
-        module->entry_computation()->root_instruction()->operand(0);
-    ASSERT_EQ(reduce_fusion->fused_expression_root()->opcode(),
-              HloOpcode::kReduce);
-    const HloInstruction* loop_fusion =
-        module->entry_computation()->root_instruction()->operand(1);
-    ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kSelect);
-    EXPECT_TRUE(
-        LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce_fusion));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce_fusion =
+      module->entry_computation()->root_instruction()->operand(0);
+  ASSERT_EQ(reduce_fusion->fused_expression_root()->opcode(),
+            HloOpcode::kReduce);
+  const HloInstruction* loop_fusion =
+      module->entry_computation()->root_instruction()->operand(1);
+  ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kSelect);
+  EXPECT_TRUE(
+      LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce_fusion));
 }
 
 TEST_F(GpuFusibleTest, LayoutsAreReduceInputFusionFriendly_CopyProducer) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduce {
       p0.1 = f32[128,1024,32,32]{1,3,2,0} parameter(0)
       c0.1 = f32[] constant(0)
@@ -141,20 +141,20 @@ TEST_F(GpuFusibleTest, LayoutsAreReduceInputFusionFriendly_CopyProducer) {
       copy = f32[128,1024,32,32]{1,3,2,0} copy(p0)
       ROOT reduce_fusion = f32[1024]{0} fusion(copy), kind=kInput, calls=fused_reduce
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->fused_expression_root()->opcode(), HloOpcode::kReduce);
-    const HloInstruction* copy =
-        module->entry_computation()->root_instruction()->operand(0);
-    ASSERT_EQ(copy->opcode(), HloOpcode::kCopy);
-    EXPECT_FALSE(LayoutsAreReduceInputFusionFriendly(*copy, *reduce));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->fused_expression_root()->opcode(), HloOpcode::kReduce);
+  const HloInstruction* copy =
+      module->entry_computation()->root_instruction()->operand(0);
+  ASSERT_EQ(copy->opcode(), HloOpcode::kCopy);
+  EXPECT_FALSE(LayoutsAreReduceInputFusionFriendly(*copy, *reduce));
 }
 
 TEST_F(GpuFusibleTest,
        LayoutsAreReduceInputFusionFriendly_LayoutChangingFusionProducer) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     layout_changing_computation {
       p0.1 = f16[128,1024,32,32]{3,2,1,0} parameter(0)
       p1.1 = f16[128,1024,32,32]{3,2,1,0} parameter(1)
@@ -176,22 +176,22 @@ TEST_F(GpuFusibleTest,
       loop_fusion = f16[128,1024,32,32]{1,3,2,0} fusion(p0, p1), kind=kLoop, calls=layout_changing_computation
       ROOT reduce_fusion = f32[1024]{0} fusion(loop_fusion), kind=kInput, calls=fused_reduce
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce_fusion =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce_fusion->fused_expression_root()->opcode(),
-              HloOpcode::kReduce);
-    const HloInstruction* loop_fusion =
-        module->entry_computation()->root_instruction()->operand(0);
-    ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kCopy);
-    EXPECT_FALSE(
-        LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce_fusion));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce_fusion =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce_fusion->fused_expression_root()->opcode(),
+            HloOpcode::kReduce);
+  const HloInstruction* loop_fusion =
+      module->entry_computation()->root_instruction()->operand(0);
+  ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kCopy);
+  EXPECT_FALSE(
+      LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce_fusion));
 }
 
 TEST_F(GpuFusibleTest,
        LayoutsAreReduceInputFusionFriendly_ConsiderMaximumTrueRanksParamsOnly) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     broadcasting_computation {
       p0.1 = f32[128,1024,32,32]{1,3,2,0} parameter(0)
       p1.1 = f32[1,128,1,1]{3,2,1,0} parameter(1)
@@ -206,36 +206,36 @@ TEST_F(GpuFusibleTest,
       c0.2 = f32[] constant(0)
       ROOT reduce = f32[1024]{0} reduce(loop_fusion, c0.2), dimensions={0,2,3}, to_apply=scalar_add
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
-    const HloInstruction* loop_fusion =
-        module->entry_computation()->root_instruction()->operand(0);
-    ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kAdd);
-    EXPECT_TRUE(LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
+  const HloInstruction* loop_fusion =
+      module->entry_computation()->root_instruction()->operand(0);
+  ASSERT_EQ(loop_fusion->fused_expression_root()->opcode(), HloOpcode::kAdd);
+  EXPECT_TRUE(LayoutsAreReduceInputFusionFriendly(*loop_fusion, *reduce));
 }
 
 TEST_F(GpuFusibleTest, IsReduceInputFusion_ReductionToVector) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY entry {
       c0 = f32[] parameter(0)
       p1 = f32[128,512,28,28]{3,2,1,0} parameter(1)
       // Reduction-to-vector lowered by IrEmitterUnnested.
       ROOT reduce = f32[512]{0} reduce(p1, c0), dimensions={0,2,3}, to_apply=scalar_add
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
-    EXPECT_FALSE(IsReduceInputFusion(*reduce));
-    EXPECT_TRUE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
+  EXPECT_FALSE(IsReduceInputFusion(*reduce));
+  EXPECT_TRUE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest, IsReduceInputFusion_ElementalReduction) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY entry {
       c0 = f32[] parameter(0)
       p1 = f32[8,512,5,16,1,1]{5,4,3,2,1,0} parameter(1)
@@ -243,17 +243,17 @@ TEST_F(GpuFusibleTest, IsReduceInputFusion_ElementalReduction) {
       ROOT reduce = f32[512,5,1,1]{3,2,1,0} reduce(p1, c0), dimensions={3,0},
         to_apply=scalar_add
     })"))
-                  .ValueOrDie();
-    SCOPED_TRACE(module->ToString());
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
-    EXPECT_FALSE(IsReduceInputFusion(*reduce));
-    EXPECT_FALSE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  SCOPED_TRACE(module->ToString());
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kReduce);
+  EXPECT_FALSE(IsReduceInputFusion(*reduce));
+  EXPECT_FALSE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest, IsReduceInputFusion_SingleOutputInputReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduction {
       c0 = f32[] constant(0)
       p1 = f32[128,512,28,28]{3,2,1,0} parameter(0)
@@ -263,16 +263,16 @@ TEST_F(GpuFusibleTest, IsReduceInputFusion_SingleOutputInputReduceFusion) {
       p0 = f32[128,512,28,28]{3,2,1,0} parameter(0)
       ROOT fusion = f32[128,512]{1,0} fusion(p0), kind=kInput, calls=fused_reduction
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
-    EXPECT_TRUE(IsReduceInputFusion(*reduce));
-    EXPECT_TRUE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
+  EXPECT_TRUE(IsReduceInputFusion(*reduce));
+  EXPECT_TRUE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest, IsReduceInputFusion_SingleOutputLoopReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduction {
       c0 = f32[] constant(0)
       p1 = f32[8,512,5,16,1,1]{5,4,3,2,1,0} parameter(0)
@@ -282,16 +282,16 @@ TEST_F(GpuFusibleTest, IsReduceInputFusion_SingleOutputLoopReduceFusion) {
       p0 = f32[8,512,5,16,1,1]{5,4,3,2,1,0} parameter(0)
       ROOT fusion = f32[8,5,1,1]{3,2,1,0} fusion(p0), kind=kLoop, calls=fused_reduction
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
-    EXPECT_FALSE(IsReduceInputFusion(*reduce));
-    EXPECT_FALSE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
+  EXPECT_FALSE(IsReduceInputFusion(*reduce));
+  EXPECT_FALSE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest, IsReduceInputFusion_MultiOutputInputReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduction {
       c0 = f32[] constant(0)
       p1 = f32[128,512,28,28]{3,2,1,0} parameter(0)
@@ -303,17 +303,17 @@ TEST_F(GpuFusibleTest, IsReduceInputFusion_MultiOutputInputReduceFusion) {
       p0 = f32[128,512,28,28]{3,2,1,0} parameter(0)
       ROOT fusion = (f32[128,512]{1,0}, f32[128,512]{1,0}) fusion(p0), kind=kInput, calls=fused_reduction
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
-    EXPECT_TRUE(IsReduceInputFusion(*reduce));
-    EXPECT_TRUE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
+  EXPECT_TRUE(IsReduceInputFusion(*reduce));
+  EXPECT_TRUE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest,
        IsReduceInputFusion_MultiOutputInputReduceFusionWithExtraOutputs) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduction {
       c0 = f32[] constant(0)
       p1 = f32[128,512,28,28]{3,2,1,0} parameter(0)
@@ -325,16 +325,16 @@ TEST_F(GpuFusibleTest,
       p0 = f32[128,512,28,28]{3,2,1,0} parameter(0)
       ROOT fusion = (f32[128,512]{1,0}, f32[128,512,28,28]{3,2,1,0}) fusion(p0), kind=kInput, calls=fused_reduction
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
-    EXPECT_TRUE(IsReduceInputFusion(*reduce));
-    EXPECT_TRUE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
+  EXPECT_TRUE(IsReduceInputFusion(*reduce));
+  EXPECT_TRUE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest, IsReduceInputFusion_MultiOutputLoopReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduction {
       c0 = f32[] constant(0)
       p1 = f32[128,512,28,28]{3,2,1,0} parameter(0)
@@ -346,17 +346,17 @@ TEST_F(GpuFusibleTest, IsReduceInputFusion_MultiOutputLoopReduceFusion) {
       p0 = f32[128,512,28,28]{3,2,1,0} parameter(0)
       ROOT fusion = (f32[512,28]{1,0}, f32[512,28]{1,0}) fusion(p0), kind=kLoop, calls=fused_reduction
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
-    EXPECT_FALSE(IsReduceInputFusion(*reduce));
-    EXPECT_FALSE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
+  EXPECT_FALSE(IsReduceInputFusion(*reduce));
+  EXPECT_FALSE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest,
        IsReduceInputFusion_MultiOutputLoopFusionReduceAndElementwiseOp) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduction {
       c0 = f32[] constant(0)
       p1 = f32[128,512,28,28]{3,2,1,0} parameter(0)
@@ -368,16 +368,16 @@ TEST_F(GpuFusibleTest,
       p0 = f32[128,512,28,28]{3,2,1,0} parameter(0)
       ROOT fusion = (f32[512,28]{1,0}, f32[128,512,28,28]{3,2,1,0}) fusion(p0), kind=kLoop, calls=fused_reduction
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction();
-    ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
-    EXPECT_FALSE(IsReduceInputFusion(*reduce));
-    EXPECT_FALSE(IsInputFusibleReduction(*reduce));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction();
+  ASSERT_EQ(reduce->opcode(), HloOpcode::kFusion);
+  EXPECT_FALSE(IsReduceInputFusion(*reduce));
+  EXPECT_FALSE(IsInputFusibleReduction(*reduce));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_LoopFusions) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_computation_1 {
       p0.1 = f32[6400]{0} parameter(0)
       ROOT mul = f32[6400]{0} multiply(p0.1, p0.1)
@@ -396,16 +396,16 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_LoopFusions) {
       fusion.2 = f32[6400]{0} fusion(p0), kind=kLoop, calls=fused_computation_2
       ROOT root = (f32[6400]{0}, f32[6400]{0}) tuple(fusion.1, fusion.2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_IgnoreFpPrecision) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_computation_1 {
       p0.1 = f32[6400]{0} parameter(0)
       ROOT mul = f32[6400]{0} multiply(p0.1, p0.1)
@@ -422,16 +422,16 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_IgnoreFpPrecision) {
       fusion.2 = f16[6400]{0} fusion(p0), kind=kLoop, calls=fused_computation_2
       ROOT root = (f32[6400]{0}, f16[6400]{0}) tuple(fusion.1, fusion.2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_Reduce) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_computation_1 {
       p0.1 = f32[6400]{0} parameter(0)
       ROOT mul = f32[6400]{0} multiply(p0.1, p0.1)
@@ -444,16 +444,16 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_Reduce) {
       reduce = f32[] reduce(p0, const.2), dimensions={0}, to_apply=scalar_add
       ROOT root = (f32[6400]{0}, f32[]) tuple(fusion.1, reduce)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion, *reduce));
+                    .ValueOrDie();
+  const HloInstruction* fusion =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion, *reduce));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_Elementwise) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_computation_1 {
       p0.1 = f32[6400]{0} parameter(0)
       ROOT mul = f32[6400]{0} multiply(p0.1, p0.1)
@@ -467,17 +467,17 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_Elementwise) {
       div = f32[6400]{0} divide(p0, broadcast)
       ROOT root = (f32[6400]{0}, f32[6400]{0}) tuple(fusion.1, div)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* div =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion, *div));
+                    .ValueOrDie();
+  const HloInstruction* fusion =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* div =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion, *div));
 }
 
 TEST_F(GpuFusibleTest,
        ShapesCompatibleForMultiOutputFusion_MultiOutputLoopFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_computation_1 {
       p0.1 = f32[8,1,5,16,1,1]{5,4,3,2,1,0} parameter(0)
       mul = f32[8,1,5,16,1,1]{5,4,3,2,1,0} multiply(p0.1, p0.1)
@@ -500,18 +500,18 @@ TEST_F(GpuFusibleTest,
       gte1 = f32[8,1,5,16,1,1]{5,4,3,2,1,0} get-tuple-element(fusion.1), index=1
       ROOT root = (f32[8,1,5,16,1,1]{5,4,3,2,1,0}, f32[8,1,5,16,1,1]{5,4,3,2,1,0}, f32[8,1,5,16,1,1]{5,4,3,2,1,0}) tuple(gte0, gte1, fusion.2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0)->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(2);
-    EXPECT_NE(fusion_1, fusion_2);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0)->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(2);
+  EXPECT_NE(fusion_1, fusion_2);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest,
        ShapesCompatibleForMultiOutputFusion_DifferentElementType) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_computation_1 {
       p0.1 = f32[8,1,5,16,1,1]{5,4,3,2,1,0} parameter(0)
       mul = f32[8,1,5,16,1,1]{5,4,3,2,1,0} multiply(p0.1, p0.1)
@@ -535,17 +535,17 @@ TEST_F(GpuFusibleTest,
       gte1 = f32[8,1,5,16,1,1]{5,4,3,2,1,0} get-tuple-element(fusion.1), index=1
       ROOT root = (f32[8,1,5,16,1,1]{5,4,3,2,1,0}, f32[8,1,5,16,1,1]{5,4,3,2,1,0}, f32[8,1,5,16,1,1]{5,4,3,2,1,0}) tuple(gte0, gte1, fusion.2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0)->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(2);
-    EXPECT_NE(fusion_1, fusion_2);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0)->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(2);
+  EXPECT_NE(fusion_1, fusion_2);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_UnfusedOps) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY reduce {
       p0 = f32[32,32,32]{2,1,0} parameter(0)
       c0 = f32[] constant(0)
@@ -554,16 +554,16 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_UnfusedOps) {
         to_apply=scalar_add
       ROOT root = (f32[32,32]{1,0}, f32[32,32,32]{2,1,0}) tuple(reduce, exp)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* exp =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*reduce, *exp));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* exp =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*reduce, *exp));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_DifferentLayouts) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY reduce {
       p0 = f32[2,2,2]{2,1,0} parameter(0)
       p1 = f32[2,2,2]{0,1,2} parameter(1)
@@ -572,17 +572,17 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_DifferentLayouts) {
       reduce = f32[2,2]{0,1} reduce(p1, c0), dimensions={2}, to_apply=scalar_add
       ROOT root = (f32[2,2]{0,1}, f32[2,2,2]{2,1,0}) tuple(reduce, exp)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* reduce =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* exp =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_FALSE(ShapesCompatibleForMultiOutputFusion(*reduce, *exp));
+                    .ValueOrDie();
+  const HloInstruction* reduce =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* exp =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_FALSE(ShapesCompatibleForMultiOutputFusion(*reduce, *exp));
 }
 
 TEST_F(GpuFusibleTest,
        ShapesCompatibleForMultiOutputFusion_MultiOutputReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_select {
       p1.1 = f32[2,2,2]{2,1,0} parameter(1)
       c0 = f32[] constant(0)
@@ -610,16 +610,16 @@ TEST_F(GpuFusibleTest,
       gte1 = f32[2,2]{1,0} get-tuple-element(fusion), index=1
       ROOT root = (f32[2,2]{1,0}, f32[2,2]{1,0}, f32[2,2,2]{2,1,0}) tuple(gte1, gte1, select)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0)->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(1)->operand(0);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0)->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(1)->operand(0);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_ReduceFusions) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduce_1 {
       p0.1 = f32[2,2,2]{2,1,0} parameter(0)
       c0 = f32[] constant(0)
@@ -640,17 +640,17 @@ TEST_F(GpuFusibleTest, ShapesCompatibleForMultiOutputFusion_ReduceFusions) {
       reduce_2 = f32[2,2]{1,0} fusion(p1), kind=kLoop, calls=fused_reduce_2
       ROOT root = (f32[2,2]{1,0}, f32[2,2,2]{2,1,0}) tuple(reduce_1, reduce_2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_TRUE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest,
        ShapesCompatibleForMultiOutputFusion_DifferentReduceDimensions) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_reduce_1 {
       p0.1 = f32[32,32,32]{2,1,0} parameter(0)
       c0 = f32[] constant(0)
@@ -675,17 +675,17 @@ TEST_F(GpuFusibleTest,
       ROOT root = (f32[32,32]{1,0}, f32[32,32,32]{2,1,0})
         tuple(reduce_1, reduce_2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_FALSE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_FALSE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest,
        ShapesCompatibleForMultiOutputFusion_NoReductionToVector) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_element_wise {
       p0.1 = f32[32,32,32]{2,1,0} parameter(0)
       p1.1 = f32[32,32,32]{2,1,0} parameter(1)
@@ -713,16 +713,16 @@ TEST_F(GpuFusibleTest,
       ROOT root = (f32[32,32]{1,0}, f32[32,32,32]{2,1,0})
         tuple(fusion, element_wise)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* fusion_1 =
-        module->entry_computation()->root_instruction()->operand(0);
-    const HloInstruction* fusion_2 =
-        module->entry_computation()->root_instruction()->operand(1);
-    EXPECT_FALSE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
+                    .ValueOrDie();
+  const HloInstruction* fusion_1 =
+      module->entry_computation()->root_instruction()->operand(0);
+  const HloInstruction* fusion_2 =
+      module->entry_computation()->root_instruction()->operand(1);
+  EXPECT_FALSE(ShapesCompatibleForMultiOutputFusion(*fusion_1, *fusion_2));
 }
 
 TEST_F(GpuFusibleTest, IsFusibleAsMultiOutputFusionRoot) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
     HloModule test_module
 
     ENTRY add {
@@ -730,14 +730,14 @@ TEST_F(GpuFusibleTest, IsFusibleAsMultiOutputFusionRoot) {
       rhs = f32[] parameter(1)
       ROOT add = f32[] add(lhs, rhs)
     })")
-                  .ValueOrDie();
+                    .ValueOrDie();
 
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    EXPECT_TRUE(IsFusibleAsMultiOutputFusionRoot(*root));
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  EXPECT_TRUE(IsFusibleAsMultiOutputFusionRoot(*root));
 }
 
 TEST_F(GpuFusibleTest, ScatterIsNotFusibleAsMultiOutputFusionRoot) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
     HloModule test_module
 
     add {
@@ -760,15 +760,15 @@ TEST_F(GpuFusibleTest, ScatterIsNotFusibleAsMultiOutputFusionRoot) {
           scatter_dims_to_operand_dims={0},
           index_vector_dim=1
     })")
-                  .ValueOrDie();
+                    .ValueOrDie();
 
-    const HloInstruction* scatter_inst =
-        module->entry_computation()->root_instruction();
-    EXPECT_FALSE(IsFusibleAsMultiOutputFusionRoot(*scatter_inst));
+  const HloInstruction* scatter_inst =
+      module->entry_computation()->root_instruction();
+  EXPECT_FALSE(IsFusibleAsMultiOutputFusionRoot(*scatter_inst));
 }
 
 TEST_F(GpuFusibleTest, ProducerConsumerFusionElementwiseAndReduce) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY reduce {
       p0 = f32[32,32,32]{2,1,0} parameter(0)
       c0 = f32[] constant(0)
@@ -777,15 +777,15 @@ TEST_F(GpuFusibleTest, ProducerConsumerFusionElementwiseAndReduce) {
         to_apply=scalar_add
       ROOT root = (f32[32,32]{1,0}, f32[32,32,32]{2,1,0}) tuple(reduce, exp)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* consumer = root->operand(0);
-    const HloInstruction* producer = root->operand(1);
-    EXPECT_TRUE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* consumer = root->operand(0);
+  const HloInstruction* producer = root->operand(1);
+  EXPECT_TRUE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, ProducerConsumerFusionLoopFusionAndReduce) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_add {
       p0.1 = f32[32,32,32]{2,1,0} parameter(0)
       p1.1 = f32[32,32,32]{2,1,0} parameter(1)
@@ -801,15 +801,15 @@ TEST_F(GpuFusibleTest, ProducerConsumerFusionLoopFusionAndReduce) {
         to_apply=scalar_add
       ROOT root = (f32[32,32]{1,0}, f32[32,32,32]{2,1,0}) tuple(reduce, add)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* consumer = root->operand(0);
-    const HloInstruction* producer = root->operand(1);
-    EXPECT_TRUE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* consumer = root->operand(0);
+  const HloInstruction* producer = root->operand(1);
+  EXPECT_TRUE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, ProducerConsumerFusionLoopFusionAndReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_select {
       p1.1 = f32[32,32,32]{2,1,0} parameter(1)
       c0 = f32[] constant(0)
@@ -840,15 +840,15 @@ TEST_F(GpuFusibleTest, ProducerConsumerFusionLoopFusionAndReduceFusion) {
         calls=fused_reduce
       ROOT root = (f32[32,32]{1,0}, f32[32,32,32]{2,1,0}) tuple(fusion, select)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* consumer = root->operand(0);
-    const HloInstruction* producer = root->operand(1);
-    EXPECT_TRUE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* consumer = root->operand(0);
+  const HloInstruction* producer = root->operand(1);
+  EXPECT_TRUE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, ProducerConsumerFusionDoNotFuseLoopReduceFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_element_wise {
       p0.1 = f32[2,2,2]{2,1,0} parameter(0)
       p1.1 = f32[2,2,2]{2,1,0} parameter(1)
@@ -872,16 +872,16 @@ TEST_F(GpuFusibleTest, ProducerConsumerFusionDoNotFuseLoopReduceFusion) {
       fusion = f32[2,2]{1,0} fusion(element_wise), kind=kLoop, calls=fused_reduce
       ROOT root = (f32[2,2]{1,0}, f32[2,2,2]{2,1,0}) tuple(fusion, element_wise)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* consumer = root->operand(0);
-    const HloInstruction* producer = root->operand(1);
-    // Not fusible as multioutput fusion root
-    EXPECT_FALSE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* consumer = root->operand(0);
+  const HloInstruction* producer = root->operand(1);
+  // Not fusible as multioutput fusion root
+  EXPECT_FALSE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, ProducerConsumerFusionReduceUnfriendlyLoopFusion) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     mixed_input_layouts_computation {
       p0.1 = f16[128,1024,32,32]{1,3,2,0} parameter(0)
       p1.1 = f16[128,1024,32,32]{3,2,1,0} parameter(1)
@@ -904,15 +904,15 @@ TEST_F(GpuFusibleTest, ProducerConsumerFusionReduceUnfriendlyLoopFusion) {
       reduce_fusion = f32[1024]{0} fusion(loop_fusion), kind=kInput, calls=fused_reduce
       ROOT root = (f32[1024]{0}, f16[128,1024,32,32]{1,3,2,0}) tuple(reduce_fusion, loop_fusion)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* consumer = root->operand(0);
-    const HloInstruction* producer = root->operand(1);
-    EXPECT_FALSE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* consumer = root->operand(0);
+  const HloInstruction* producer = root->operand(1);
+  EXPECT_FALSE(IsProducerConsumerMultiOutputFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, NonscalarConstantsNotFused) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
     HloModule test_module
 
     add {
@@ -929,20 +929,20 @@ TEST_F(GpuFusibleTest, NonscalarConstantsNotFused) {
                                                          to_apply=add
       ROOT root = (f32[], f32[], f32[16,16,16,16], f32[16]) tuple(reduce, constant.1, broadcast, constant)
     })")
-                  .ValueOrDie();
-    // Do not fuse if producer is a non-scalar constant or consumer is non-fusion
-    // node.
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* consumer = root->operand(0);
-    const HloInstruction* producer = root->operand(1);
-    const HloInstruction* consumer2 = root->operand(2);
-    const HloInstruction* producer2 = root->operand(3);
-    EXPECT_FALSE(IsProducerConsumerFusible(*producer, *consumer));
-    EXPECT_FALSE(IsProducerConsumerFusible(*producer2, *consumer2));
+                    .ValueOrDie();
+  // Do not fuse if producer is a non-scalar constant or consumer is non-fusion
+  // node.
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* consumer = root->operand(0);
+  const HloInstruction* producer = root->operand(1);
+  const HloInstruction* consumer2 = root->operand(2);
+  const HloInstruction* producer2 = root->operand(3);
+  EXPECT_FALSE(IsProducerConsumerFusible(*producer, *consumer));
+  EXPECT_FALSE(IsProducerConsumerFusible(*producer2, *consumer2));
 }
 
 TEST_F(GpuFusibleTest, DoNotFuseLayoutChangingOpWithReduce) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
     HloModule test_module
 
     add {
@@ -957,32 +957,32 @@ TEST_F(GpuFusibleTest, DoNotFuseLayoutChangingOpWithReduce) {
       constant.1 = f32[] constant(0)
       ROOT reduce = f32[16] reduce(copy, constant.1), dimensions={0,1,2}, to_apply=add
     })")
-                  .ValueOrDie();
+                    .ValueOrDie();
 
-    const HloInstruction* consumer =
-        module->entry_computation()->root_instruction();
-    const HloInstruction* producer = consumer->operand(0);
-    EXPECT_FALSE(IsProducerConsumerFusible(*producer, *consumer));
+  const HloInstruction* consumer =
+      module->entry_computation()->root_instruction();
+  const HloInstruction* producer = consumer->operand(0);
+  EXPECT_FALSE(IsProducerConsumerFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, FuseLayoutChangingOpWithElementwise) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
     HloModule test_module
     ENTRY entry {
       p0 = f32[16,16,16,16]{3,2,1,0} parameter(0)
       copy = f32[16,16,16,16]{0,1,2,3} copy(p0)
       ROOT add = f32[16,16,16,16]{0,1,2,3} add(copy, copy)
     })")
-                  .ValueOrDie();
+                    .ValueOrDie();
 
-    const HloInstruction* consumer =
-        module->entry_computation()->root_instruction();
-    const HloInstruction* producer = consumer->operand(0);
-    EXPECT_TRUE(IsProducerConsumerFusible(*producer, *consumer));
+  const HloInstruction* consumer =
+      module->entry_computation()->root_instruction();
+  const HloInstruction* producer = consumer->operand(0);
+  EXPECT_TRUE(IsProducerConsumerFusible(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, CreatesNestedLoop_NonfusionInstr) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY entry {
       p_0 = f32[2,5] parameter(0)
 
@@ -996,15 +996,15 @@ TEST_F(GpuFusibleTest, CreatesNestedLoop_NonfusionInstr) {
 
       ROOT root = (f32[32,32], f32[32,32,32]) tuple(reduce-window_1, reduce-window_2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* producer = root->operand(0);
-    const HloInstruction* consumer = root->operand(1);
-    EXPECT_TRUE(CreatesNestedLoop(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* producer = root->operand(0);
+  const HloInstruction* consumer = root->operand(1);
+  EXPECT_TRUE(CreatesNestedLoop(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, DoesNotCreateNestedLoop_NonfusionInstr) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY entry {
       p_0 = f32[3,5] parameter(0)
       constant = f32[] constant(1)
@@ -1017,15 +1017,15 @@ TEST_F(GpuFusibleTest, DoesNotCreateNestedLoop_NonfusionInstr) {
 
       ROOT root = (f32[32,32], f32[32,32,32]) tuple(reduce-window, scaled_p_0)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* producer = root->operand(0);
-    const HloInstruction* consumer = root->operand(1);
-    EXPECT_FALSE(CreatesNestedLoop(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* producer = root->operand(0);
+  const HloInstruction* consumer = root->operand(1);
+  EXPECT_FALSE(CreatesNestedLoop(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, DoesNotCreateNestedLoop_NonoverlappingReduceWindows) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     ENTRY entry {
       p_0 = f32[2,5] parameter(0)
 
@@ -1039,15 +1039,15 @@ TEST_F(GpuFusibleTest, DoesNotCreateNestedLoop_NonoverlappingReduceWindows) {
 
       ROOT root = (f32[32,32], f32[32,32,32]) tuple(reduce-window_1, reduce-window_2)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* producer = root->operand(0);
-    const HloInstruction* consumer = root->operand(1);
-    EXPECT_FALSE(CreatesNestedLoop(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* producer = root->operand(0);
+  const HloInstruction* consumer = root->operand(1);
+  EXPECT_FALSE(CreatesNestedLoop(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, CreatesNestedLoop_FusionInstr) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_producer {
       operand = f32[2,2] parameter(0)
       constant = f32[] constant(1)
@@ -1072,15 +1072,15 @@ TEST_F(GpuFusibleTest, CreatesNestedLoop_FusionInstr) {
       consumer = f32[2,2] fusion(p0, producer), kind=kLoop, calls=fused_consumer
       ROOT root = (f32[2,2], f32[2,2]) tuple(producer, consumer)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* producer = root->operand(0);
-    const HloInstruction* consumer = root->operand(1);
-    EXPECT_TRUE(CreatesNestedLoop(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* producer = root->operand(0);
+  const HloInstruction* consumer = root->operand(1);
+  EXPECT_TRUE(CreatesNestedLoop(*producer, *consumer));
 }
 
 TEST_F(GpuFusibleTest, DoesNotCreateNestedLoop_FusionInstr) {
-    auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
+  auto module = ParseAndReturnVerifiedModule(absl::StrCat(kModulePrefix, R"(
     fused_producer {
       p_0 = f32[2,2] parameter(0)
       constant = f32[] constant(1)
@@ -1105,11 +1105,11 @@ TEST_F(GpuFusibleTest, DoesNotCreateNestedLoop_FusionInstr) {
       consumer = f32[2,2] fusion(producer, p_0), kind=kLoop, calls=fused_consumer
       ROOT root = (f32[2,2], f32[2,2]) tuple(producer, consumer)
     })"))
-                  .ValueOrDie();
-    const HloInstruction* root = module->entry_computation()->root_instruction();
-    const HloInstruction* producer = root->operand(0);
-    const HloInstruction* consumer = root->operand(1);
-    EXPECT_FALSE(CreatesNestedLoop(*producer, *consumer));
+                    .ValueOrDie();
+  const HloInstruction* root = module->entry_computation()->root_instruction();
+  const HloInstruction* producer = root->operand(0);
+  const HloInstruction* consumer = root->operand(1);
+  EXPECT_FALSE(CreatesNestedLoop(*producer, *consumer));
 }
 
 }  // namespace gpu
