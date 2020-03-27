@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Functional tests for convolutional operations."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,8 +21,9 @@ import os
 import time
 
 import numpy as np
-
 from six.moves import xrange  # pylint: disable=redefined-builtin
+
+import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.client import session as session_lib
@@ -43,7 +43,6 @@ from tensorflow.python.ops import nn_impl
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import variables
-import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.python.platform import test
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.util.compat import collections_abc
