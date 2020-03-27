@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import os
 import sys
+
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import keras_export
 

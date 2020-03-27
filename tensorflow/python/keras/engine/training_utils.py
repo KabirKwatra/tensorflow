@@ -20,11 +20,11 @@ from __future__ import print_function
 import abc
 import atexit
 import collections
-from collections import OrderedDict
 import functools
 import multiprocessing.pool
 import threading
 import time
+from collections import OrderedDict
 
 import numpy as np
 import six

@@ -54,7 +54,6 @@ self_x = tf.while_loop(...)
 self.x = self_x    # the result is not properly captured
 ```
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

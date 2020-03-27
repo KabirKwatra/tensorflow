@@ -22,8 +22,8 @@ import collections
 
 import numpy as np
 
-from tensorflow.python import pywrap_tensorflow  # pylint: disable=unused-import
 from tensorflow.python import _pywrap_utils
+from tensorflow.python import pywrap_tensorflow  # pylint: disable=unused-import
 from tensorflow.python import tf2
 from tensorflow.python.framework import composite_tensor
 from tensorflow.python.framework import constant_op

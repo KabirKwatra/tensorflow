@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Wrappers for primitive Neural Net (NN) Operations."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -39,19 +38,16 @@ from tensorflow.python.ops import gen_math_ops
 from tensorflow.python.ops import gen_nn_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import random_ops
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_nn_ops import *
-
-# pylint: enable=wildcard-import
 from tensorflow.python.platform import device_context
 from tensorflow.python.util import deprecation
 from tensorflow.python.util.compat import collections_abc
 from tensorflow.python.util.deprecation import deprecated_args
 from tensorflow.python.util.deprecation import deprecated_argument_lookup
-
 from tensorflow.python.util.tf_export import tf_export
+# go/tf-wildcard-import
+# pylint: disable=wildcard-import
+# pylint: enable=wildcard-import
 
 # Aliases for some automatically-generated names.
 local_response_normalization = gen_nn_ops.lrn

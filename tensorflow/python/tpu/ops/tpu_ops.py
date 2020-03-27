@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
-
 """Operations for TPUs."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,15 +20,13 @@ from __future__ import print_function
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
-
-# pylint: disable=wildcard-import,unused-import
 from tensorflow.python.ops import gen_tpu_ops
 from tensorflow.python.ops.gen_tpu_ops import *
-
-# pylint: enable=wildcard-import,unused-import
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.tpu import tpu_function
 from tensorflow.python.util.tf_export import tf_export
+# pylint: disable=wildcard-import,unused-import
+# pylint: enable=wildcard-import,unused-import
 
 
 def _create_default_group_assignment():

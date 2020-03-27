@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Verify that memory usage is minimal in eager mode."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,8 +20,8 @@ from __future__ import print_function
 import gc
 import time
 
-from absl.testing import parameterized
 import six
+from absl.testing import parameterized
 
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python.data.kernel_tests import test_base
