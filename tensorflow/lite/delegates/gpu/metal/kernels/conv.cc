@@ -40,113 +40,113 @@ namespace gpu {
 namespace metal {
 
 enum class WeightsUploadType {
-    LOCAL_MEM_BY_THREADS,
-    GLOBAL_MEM,
-    CONSTANT_MEM,
+  LOCAL_MEM_BY_THREADS,
+  GLOBAL_MEM,
+  CONSTANT_MEM,
 };
 
 struct ConvParams {
-    int3 block_size;
-    int3 work_group_size;
-    int3 work_group_launch_order;
-    int src_depth_loop_size;
-    bool need_src_loop = true;
-    bool need_dst_loop = true;
-    bool linear_wh;
-    bool linear_whs;
-    WeightsUploadType weights_upload_type;
-    bool different_weights_for_height = false;
-    bool x_kernel_is_1;
-    bool y_kernel_is_1;
+  int3 block_size;
+  int3 work_group_size;
+  int3 work_group_launch_order;
+  int src_depth_loop_size;
+  bool need_src_loop = true;
+  bool need_dst_loop = true;
+  bool linear_wh;
+  bool linear_whs;
+  WeightsUploadType weights_upload_type;
+  bool different_weights_for_height = false;
+  bool x_kernel_is_1;
+  bool y_kernel_is_1;
 };
 
 namespace {
 
 int GetNumOutputSlices(int dst_channels) {
-    const int dst_depth = IntegralDivideRoundUp(dst_channels, 4);
-    if (dst_depth % 4 == 0 || dst_depth >= 16) {
-        return 4;
-    } else if (dst_depth % 2 == 0 || dst_depth >= 4) {
-        return 2;
-    } else {
-        return 1;
-    }
+  const int dst_depth = IntegralDivideRoundUp(dst_channels, 4);
+  if (dst_depth % 4 == 0 || dst_depth >= 16) {
+    return 4;
+  } else if (dst_depth % 2 == 0 || dst_depth >= 4) {
+    return 2;
+  } else {
+    return 1;
+  }
 }
 
 struct GlobalIdsParams {
-    std::vector<std::string> global_ids;
-    std::vector<std::string> group_ids;
-    std::vector<std::string> local_sizes;
-    std::vector<std::string> local_ids;
-    int3 block_size;
-    int3 launch_order;
-    bool linear_wh;
-    bool linear_whs;
-    std::string task_size_w;  // must be filled if linear_wh or linear_whs enabled
-    std::string task_size_wh;  // must be filled if linear_whs enabled
+  std::vector<std::string> global_ids;
+  std::vector<std::string> group_ids;
+  std::vector<std::string> local_sizes;
+  std::vector<std::string> local_ids;
+  int3 block_size;
+  int3 launch_order;
+  bool linear_wh;
+  bool linear_whs;
+  std::string task_size_w;  // must be filled if linear_wh or linear_whs enabled
+  std::string task_size_wh;  // must be filled if linear_whs enabled
 };
 
 std::string GlobalIdsGen(const GlobalIdsParams& params) {
-    std::string c;
-    int3 launch_remap;
-    launch_remap[params.launch_order.x] = 0;
-    launch_remap[params.launch_order.y] = 1;
-    launch_remap[params.launch_order.z] = 2;
-    if (params.linear_whs) {
-        c += "  int linear_whs = " + params.global_ids[0] + ";\n";
-        c += "  int Z = (linear_whs / " + params.task_size_wh + ") * " +
-             std::to_string(params.block_size.z) + ";\n";
-        c += "  int linear_wh = linear_whs % " + params.task_size_wh + ";\n";
-        c += "  int Y = (linear_wh / " + params.task_size_w + ") * " +
-             std::to_string(params.block_size.y) + ";\n";
-        c += "  int X = (linear_wh % " + params.task_size_w + ") * " +
-             std::to_string(params.block_size.x) + ";\n";
-    } else if (params.linear_wh) {
-        if (params.launch_order.x == 0) {
-            c += "  int linear_wh = " + params.global_ids[0] + ";\n";
-        } else {
-            c += "  int linear_wh = " + params.group_ids[launch_remap.x] + " * " +
-                 params.local_sizes[0] + " + " + params.local_ids[0] + ";\n";
-        }
-        c += "  int Y = (linear_wh / " + params.task_size_w + ") * " +
-             std::to_string(params.block_size.y) + ";\n";
-        c += "  int X = (linear_wh % " + params.task_size_w + ") * " +
-             std::to_string(params.block_size.x) + ";\n";
-        if (params.launch_order.y == 1) {
-            c += "  int Z = " + params.global_ids[1] + " * " +
-                 std::to_string(params.block_size.z) + ";\n";
-        } else {
-            c += "  int Z = (" + params.group_ids[launch_remap.y] + " * " +
-                 params.local_sizes[1] + " + " + params.local_ids[1] + ") * " +
-                 std::to_string(params.block_size.z) + ";\n";
-        }
+  std::string c;
+  int3 launch_remap;
+  launch_remap[params.launch_order.x] = 0;
+  launch_remap[params.launch_order.y] = 1;
+  launch_remap[params.launch_order.z] = 2;
+  if (params.linear_whs) {
+    c += "  int linear_whs = " + params.global_ids[0] + ";\n";
+    c += "  int Z = (linear_whs / " + params.task_size_wh + ") * " +
+         std::to_string(params.block_size.z) + ";\n";
+    c += "  int linear_wh = linear_whs % " + params.task_size_wh + ";\n";
+    c += "  int Y = (linear_wh / " + params.task_size_w + ") * " +
+         std::to_string(params.block_size.y) + ";\n";
+    c += "  int X = (linear_wh % " + params.task_size_w + ") * " +
+         std::to_string(params.block_size.x) + ";\n";
+  } else if (params.linear_wh) {
+    if (params.launch_order.x == 0) {
+      c += "  int linear_wh = " + params.global_ids[0] + ";\n";
     } else {
-        if (params.launch_order.x == 0) {
-            c += "  int X = " + params.global_ids[0] + " * " +
-                 std::to_string(params.block_size.x) + ";\n";
-        } else {
-            c += "  int X = (" + params.group_ids[launch_remap.x] + " * " +
-                 params.local_sizes[0] + " + " + params.local_ids[0] + ") * " +
-                 std::to_string(params.block_size.x) + ";\n";
-        }
-        if (params.launch_order.y == 1) {
-            c += "  int Y = " + params.global_ids[1] + " * " +
-                 std::to_string(params.block_size.y) + ";\n";
-        } else {
-            c += "  int Y = (" + params.group_ids[launch_remap.y] + " * " +
-                 params.local_sizes[1] + " + " + params.local_ids[1] + ") * " +
-                 std::to_string(params.block_size.y) + ";\n";
-        }
-        if (params.launch_order.z == 2) {
-            c += "  int Z = " + params.global_ids[2] + " * " +
-                 std::to_string(params.block_size.z) + ";\n";
-        } else {
-            c += "  int Z = (" + params.group_ids[launch_remap.z] + " * " +
-                 params.local_sizes[2] + " + " + params.local_ids[2] + ") * " +
-                 std::to_string(params.block_size.z) + ";\n";
-        }
+      c += "  int linear_wh = " + params.group_ids[launch_remap.x] + " * " +
+           params.local_sizes[0] + " + " + params.local_ids[0] + ";\n";
     }
-    return c;
+    c += "  int Y = (linear_wh / " + params.task_size_w + ") * " +
+         std::to_string(params.block_size.y) + ";\n";
+    c += "  int X = (linear_wh % " + params.task_size_w + ") * " +
+         std::to_string(params.block_size.x) + ";\n";
+    if (params.launch_order.y == 1) {
+      c += "  int Z = " + params.global_ids[1] + " * " +
+           std::to_string(params.block_size.z) + ";\n";
+    } else {
+      c += "  int Z = (" + params.group_ids[launch_remap.y] + " * " +
+           params.local_sizes[1] + " + " + params.local_ids[1] + ") * " +
+           std::to_string(params.block_size.z) + ";\n";
+    }
+  } else {
+    if (params.launch_order.x == 0) {
+      c += "  int X = " + params.global_ids[0] + " * " +
+           std::to_string(params.block_size.x) + ";\n";
+    } else {
+      c += "  int X = (" + params.group_ids[launch_remap.x] + " * " +
+           params.local_sizes[0] + " + " + params.local_ids[0] + ") * " +
+           std::to_string(params.block_size.x) + ";\n";
+    }
+    if (params.launch_order.y == 1) {
+      c += "  int Y = " + params.global_ids[1] + " * " +
+           std::to_string(params.block_size.y) + ";\n";
+    } else {
+      c += "  int Y = (" + params.group_ids[launch_remap.y] + " * " +
+           params.local_sizes[1] + " + " + params.local_ids[1] + ") * " +
+           std::to_string(params.block_size.y) + ";\n";
+    }
+    if (params.launch_order.z == 2) {
+      c += "  int Z = " + params.global_ids[2] + " * " +
+           std::to_string(params.block_size.z) + ";\n";
+    } else {
+      c += "  int Z = (" + params.group_ids[launch_remap.z] + " * " +
+           params.local_sizes[2] + " + " + params.local_ids[2] + ") * " +
+           std::to_string(params.block_size.z) + ";\n";
+    }
+  }
+  return c;
 }
 
 std::string GenerateUploadByThreads(const std::string& local_ptr_name,
@@ -155,60 +155,59 @@ std::string GenerateUploadByThreads(const std::string& local_ptr_name,
                                     const std::string& lid_name,
                                     int total_work_items,
                                     int elements_to_upload) {
-    std::string c;
-    std::string offset =
-        global_offset_name.empty() ? "" : global_offset_name + " + ";
-    const int groups = elements_to_upload / total_work_items;
-    const int reminder = elements_to_upload % total_work_items;
-    for (int i = 0; i < groups; ++i) {
-        c += "    " + local_ptr_name + "[" + lid_name + " + " +
-             std::to_string(total_work_items * i) + "] = " + global_ptr_name + "[" +
-             offset + lid_name + " + " + std::to_string(total_work_items * i) +
-             "];\n";
-    }
-    if (reminder != 0) {
-        c += "    if (" + lid_name + " < " + std::to_string(reminder) + ") {\n";
-        c += "      " + local_ptr_name + "[" + lid_name + " + " +
-             std::to_string(total_work_items * groups) + "] = " + global_ptr_name +
-             "[" + offset + lid_name + " + " +
-             std::to_string(total_work_items * groups) + "];\n";
-        c += "    }\n";
-    }
-    return c;
+  std::string c;
+  std::string offset =
+      global_offset_name.empty() ? "" : global_offset_name + " + ";
+  const int groups = elements_to_upload / total_work_items;
+  const int reminder = elements_to_upload % total_work_items;
+  for (int i = 0; i < groups; ++i) {
+    c += "    " + local_ptr_name + "[" + lid_name + " + " +
+         std::to_string(total_work_items * i) + "] = " + global_ptr_name + "[" +
+         offset + lid_name + " + " + std::to_string(total_work_items * i) +
+         "];\n";
+  }
+  if (reminder != 0) {
+    c += "    if (" + lid_name + " < " + std::to_string(reminder) + ") {\n";
+    c += "      " + local_ptr_name + "[" + lid_name + " + " +
+         std::to_string(total_work_items * groups) + "] = " + global_ptr_name +
+         "[" + offset + lid_name + " + " +
+         std::to_string(total_work_items * groups) + "];\n";
+    c += "    }\n";
+  }
+  return c;
 }
 
 std::string GenerateConvolution(const ConvParams& params) {
-    GlobalIdsParams ids_params;
-    ids_params.group_ids = {"group_id.x", "group_id.y", "group_id.z"};
-    ids_params.global_ids = {"ugid.x", "ugid.y", "ugid.z"};
-    ids_params.local_ids = {"tid3d.x", "tid3d.y", "tid3d.z"};
-    ids_params.local_sizes = {"params.work_group_size.x",
-                              "params.work_group_size.y",
-                              "params.work_group_size.z"
-                             };
-    ids_params.linear_wh = params.linear_wh;
-    ids_params.task_size_w = "params.task_sizes.x";
-    ids_params.task_size_wh = "params.task_sizes.y";
-    ids_params.linear_whs = params.linear_whs;
-    ids_params.block_size = params.block_size;
-    ids_params.launch_order = params.work_group_launch_order;
+  GlobalIdsParams ids_params;
+  ids_params.group_ids = {"group_id.x", "group_id.y", "group_id.z"};
+  ids_params.global_ids = {"ugid.x", "ugid.y", "ugid.z"};
+  ids_params.local_ids = {"tid3d.x", "tid3d.y", "tid3d.z"};
+  ids_params.local_sizes = {"params.work_group_size.x",
+                            "params.work_group_size.y",
+                            "params.work_group_size.z"};
+  ids_params.linear_wh = params.linear_wh;
+  ids_params.task_size_w = "params.task_sizes.x";
+  ids_params.task_size_wh = "params.task_sizes.y";
+  ids_params.linear_whs = params.linear_whs;
+  ids_params.block_size = params.block_size;
+  ids_params.launch_order = params.work_group_launch_order;
 
-    std::string addr_space =
-        params.weights_upload_type == WeightsUploadType::CONSTANT_MEM ? "constant"
-        : "device";
-    const bool use_local_mem =
-        params.weights_upload_type == WeightsUploadType::LOCAL_MEM_BY_THREADS;
-    const int local_mem_size =
-        params.block_size.z * 4 * params.src_depth_loop_size;
+  std::string addr_space =
+      params.weights_upload_type == WeightsUploadType::CONSTANT_MEM ? "constant"
+                                                                    : "device";
+  const bool use_local_mem =
+      params.weights_upload_type == WeightsUploadType::LOCAL_MEM_BY_THREADS;
+  const int local_mem_size =
+      params.block_size.z * 4 * params.src_depth_loop_size;
 
-    const bool use_filters_constants =
-        !params.need_dst_loop && !params.need_src_loop && params.x_kernel_is_1 &&
-        params.y_kernel_is_1;
+  const bool use_filters_constants =
+      !params.need_dst_loop && !params.need_src_loop && params.x_kernel_is_1 &&
+      params.y_kernel_is_1;
 
-    std::string channels[4] = {"x", "y", "z", "w"};
-    std::string c;
-    c.reserve(16 * 1024);  // Reserve large enough buffer.
-    c += R"(
+  std::string channels[4] = {"x", "y", "z", "w"};
+  std::string c;
+  c.reserve(16 * 1024);  // Reserve large enough buffer.
+  c += R"(
 #include <metal_stdlib>
 using namespace metal;
 
