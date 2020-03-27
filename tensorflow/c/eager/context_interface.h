@@ -31,125 +31,127 @@ namespace tensorflow {
 // A context is responsible for creating key objects such as Tensors,
 // TensorHandles & Operations.
 class AbstractContextInterface {
- public:
-  virtual ~AbstractContextInterface() {}
+public:
+    virtual ~AbstractContextInterface() {}
 
-  // Scalar creation functions
-  virtual std::unique_ptr<AbstractTensorInterface> CreateInt64Scalar(
-      int64 value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateUint64Scalar(
-      uint64 value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateInt32Scalar(
-      int32 value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateFloatScalar(
-      float value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateDoubleScalar(
-      double value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateHalfScalar(
-      Eigen::half value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateStringScalar(
-      tstring value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateComplex128Scalar(
-      complex128 value) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateBoolScalar(
-      bool value) = 0;
+    // Scalar creation functions
+    virtual std::unique_ptr<AbstractTensorInterface> CreateInt64Scalar(
+        int64 value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateUint64Scalar(
+        uint64 value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateInt32Scalar(
+        int32 value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateFloatScalar(
+        float value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateDoubleScalar(
+        double value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateHalfScalar(
+        Eigen::half value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateStringScalar(
+        tstring value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateComplex128Scalar(
+        complex128 value) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateBoolScalar(
+        bool value) = 0;
 
-  // Tensor creation functions
-  virtual std::unique_ptr<AbstractTensorInterface> CreateInt64Tensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateUint64Tensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateInt32Tensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateFloatTensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateDoubleTensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateHalfTensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateStringTensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateComplex128Tensor(
-      absl::Span<const int64> dim_sizes) = 0;
-  virtual std::unique_ptr<AbstractTensorInterface> CreateBoolTensor(
-      absl::Span<const int64> dim_sizes) = 0;
+    // Tensor creation functions
+    virtual std::unique_ptr<AbstractTensorInterface> CreateInt64Tensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateUint64Tensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateInt32Tensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateFloatTensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateDoubleTensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateHalfTensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateStringTensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateComplex128Tensor(
+        absl::Span<const int64> dim_sizes) = 0;
+    virtual std::unique_ptr<AbstractTensorInterface> CreateBoolTensor(
+        absl::Span<const int64> dim_sizes) = 0;
 
-  // Create a handle to wrap and manage a Tensor
-  virtual tensorflow::Status CreateLocalHandle(
-      const std::unique_ptr<AbstractTensorInterface> t,
-      std::unique_ptr<AbstractTensorHandleInterface>* handle) = 0;
+    // Create a handle to wrap and manage a Tensor
+    virtual tensorflow::Status CreateLocalHandle(
+        const std::unique_ptr<AbstractTensorInterface> t,
+        std::unique_ptr<AbstractTensorHandleInterface>* handle) = 0;
 
-  // Create an operation to perform op execution
-  virtual std::unique_ptr<AbstractOperationInterface> CreateOperation() = 0;
+    // Create an operation to perform op execution
+    virtual std::unique_ptr<AbstractOperationInterface> CreateOperation() = 0;
 
-  // List attributes of available devices
-  virtual void ListDevices(
-      std::vector<tensorflow::DeviceAttributes>* devices) = 0;
+    // List attributes of available devices
+    virtual void ListDevices(
+        std::vector<tensorflow::DeviceAttributes>* devices) = 0;
 };
 
 // TODO(gjn): Try to move these all to EagerContext and make it implement
 // AbstractContextInterface. Currently, this is not so straightforward because
 // of various BUILD file dependencies.
 class ContextInterface : public AbstractContextInterface {
- public:
-  explicit ContextInterface(EagerContext* ctx) : ctx_(ctx) {}
-  ~ContextInterface() override {}
+public:
+    explicit ContextInterface(EagerContext* ctx) : ctx_(ctx) {}
+    ~ContextInterface() override {}
 
-  std::unique_ptr<AbstractTensorInterface> CreateInt64Scalar(
-      int64 value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateUint64Scalar(
-      uint64 value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateInt32Scalar(
-      int32 value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateFloatScalar(
-      float value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateDoubleScalar(
-      double value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateHalfScalar(
-      Eigen::half value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateStringScalar(
-      tensorflow::tstring value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateComplex128Scalar(
-      tensorflow::complex128 value) override;
-  std::unique_ptr<AbstractTensorInterface> CreateBoolScalar(
-      bool value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateInt64Scalar(
+        int64 value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateUint64Scalar(
+        uint64 value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateInt32Scalar(
+        int32 value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateFloatScalar(
+        float value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateDoubleScalar(
+        double value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateHalfScalar(
+        Eigen::half value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateStringScalar(
+        tensorflow::tstring value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateComplex128Scalar(
+        tensorflow::complex128 value) override;
+    std::unique_ptr<AbstractTensorInterface> CreateBoolScalar(
+        bool value) override;
 
-  std::unique_ptr<AbstractTensorInterface> CreateInt64Tensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateUint64Tensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateInt32Tensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateFloatTensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateDoubleTensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateHalfTensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateStringTensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateComplex128Tensor(
-      absl::Span<const int64> dim_sizes) override;
-  std::unique_ptr<AbstractTensorInterface> CreateBoolTensor(
-      absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateInt64Tensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateUint64Tensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateInt32Tensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateFloatTensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateDoubleTensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateHalfTensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateStringTensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateComplex128Tensor(
+        absl::Span<const int64> dim_sizes) override;
+    std::unique_ptr<AbstractTensorInterface> CreateBoolTensor(
+        absl::Span<const int64> dim_sizes) override;
 
-  tensorflow::Status CreateLocalHandle(
-      const std::unique_ptr<AbstractTensorInterface> t,
-      std::unique_ptr<AbstractTensorHandleInterface>* h) override;
-  std::unique_ptr<AbstractOperationInterface> CreateOperation() override;
+    tensorflow::Status CreateLocalHandle(
+        const std::unique_ptr<AbstractTensorInterface> t,
+        std::unique_ptr<AbstractTensorHandleInterface>* h) override;
+    std::unique_ptr<AbstractOperationInterface> CreateOperation() override;
 
-  void ListDevices(std::vector<tensorflow::DeviceAttributes>* devices) override;
+    void ListDevices(std::vector<tensorflow::DeviceAttributes>* devices) override;
 
-  // For runtime specific APIs, provide ability to get the underlying context.
-  EagerContext* Context() const { return ctx_; }
+    // For runtime specific APIs, provide ability to get the underlying context.
+    EagerContext* Context() const {
+        return ctx_;
+    }
 
- private:
-  EagerContext* ctx_;
+private:
+    EagerContext* ctx_;
 };
 
 inline EagerContext* ContextFromInterface(
     const std::unique_ptr<AbstractContextInterface>& context) {
-  return down_cast<tensorflow::ContextInterface*>(context.get())->Context();
+    return down_cast<tensorflow::ContextInterface*>(context.get())->Context();
 }
 
 }  // namespace tensorflow
