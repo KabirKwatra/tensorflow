@@ -20,9 +20,9 @@ from __future__ import print_function
 
 
 class TensorLike(object):
-  """TF-specific types TF operations are expected to natively support.
+    """TF-specific types TF operations are expected to natively support.
 
-  Do not check this with isinstance directly; prefer instead using
-  `tf.is_tensor` to check whether converting to a tensor is necessary.
-  """
-  pass
+    Do not check this with isinstance directly; prefer instead using
+    `tf.is_tensor` to check whether converting to a tensor is necessary.
+    """
+    pass
