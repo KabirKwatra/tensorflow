@@ -52,7 +52,8 @@ def _make_matrix_ds(nrows):
 
 def _make_ragged_ds(nrows):
     """Create a test dataset with RaggedTensor elements (of varying size)."""
-    values = [[[i] * (i % 3) for i in range(j)] * (j % 3) for j in range(nrows)]
+    values = [[[i] * (i % 3) for i in range(j)] * (j % 3)
+              for j in range(nrows)]
     rt = ragged_factory_ops.constant(values)
     return dataset_ops.Dataset.from_tensor_slices(rt)
 
@@ -74,7 +75,8 @@ def _make_tuple_ds(nrows):
     """Create a test set with various element shapes."""
 
     def transform(x):
-        return (ops.convert_to_tensor(x), math_ops.range(x), array_ops.fill([x, 2], x))
+        return (ops.convert_to_tensor(x), math_ops.range(x),
+                array_ops.fill([x, 2], x))
 
     return _make_scalar_ds(nrows).map(transform)
 
@@ -100,9 +102,9 @@ class RaggedBatchTest(test_base.DatasetTestBase, parameterized.TestCase):
                 batch_size=[4],
                 drop_remainder=[True, False],
             ),
-        )
-    )
-    def testRaggedBatchDataset(self, make_dataset, nrows, batch_size, drop_remainder):
+        ))
+    def testRaggedBatchDataset(self, make_dataset, nrows, batch_size,
+                               drop_remainder):
         dataset = make_dataset(nrows)
 
         # Get the unbatched rows (so we can check expected values).
@@ -114,8 +116,7 @@ class RaggedBatchTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         # Batch the dataset, and check that batches match slices from `rows`.
         batched_dataset = dataset.apply(
-            batching.dense_to_ragged_batch(batch_size, drop_remainder)
-        )
+            batching.dense_to_ragged_batch(batch_size, drop_remainder))
         get_next = self.getNext(batched_dataset)
         for start_row in range(0, nrows, batch_size):
             end_row = start_row + batch_size
@@ -126,11 +127,8 @@ class RaggedBatchTest(test_base.DatasetTestBase, parameterized.TestCase):
 
             # Use nest for potentially nested datasets.
             nest.map_structure_up_to(
-                result,
-                lambda a, *b: self.assertAllEqual(a, list(b)),
-                result,
-                *rows[start_row:end_row]
-            )
+                result, lambda a, *b: self.assertAllEqual(a, list(b)), result,
+                *rows[start_row:end_row])
 
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
@@ -141,11 +139,14 @@ class RaggedBatchTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         def make_structure(x):
             return {
-                "dense": array_ops.fill([x], x),
-                "ragged": ragged_concat_ops.stack(
-                    [array_ops.stack([x]), array_ops.stack([x, x])]
-                ),
-                "sparse": sparse_tensor.SparseTensor([[x]], [x], [100]),
+                "dense":
+                array_ops.fill([x], x),
+                "ragged":
+                ragged_concat_ops.stack(
+                    [array_ops.stack([x]),
+                     array_ops.stack([x, x])]),
+                "sparse":
+                sparse_tensor.SparseTensor([[x]], [x], [100]),
             }
 
         dataset = dataset_ops.Dataset.from_tensor_slices(np.arange(nrows))
@@ -157,8 +158,10 @@ class RaggedBatchTest(test_base.DatasetTestBase, parameterized.TestCase):
             result = self.evaluate(get_next())
             rows = range(i, i + batch_size)
             self.assertAllEqual(result["dense"], [[r] * r for r in rows])
-            self.assertAllEqual(result["ragged"], [[[r], [r, r]] for r in rows])
-            self.assertAllEqual(result["sparse"].indices, list(enumerate(rows)))
+            self.assertAllEqual(result["ragged"],
+                                [[[r], [r, r]] for r in rows])
+            self.assertAllEqual(result["sparse"].indices,
+                                list(enumerate(rows)))
             self.assertAllEqual(result["sparse"].values, rows)
             self.assertAllEqual(result["sparse"].dense_shape, [4, 100])
 
