@@ -25,7 +25,6 @@ import sys
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import keras_export
 
-
 try:
     # pydot-ng is a fork of pydot that is better maintained.
     import pydot_ng as pydot
@@ -59,8 +58,7 @@ def is_wrapped_model(layer):
     from tensorflow.python.keras.layers import wrappers
 
     return isinstance(layer, wrappers.Wrapper) and isinstance(
-        layer.layer, network.Network
-    )
+        layer.layer, network.Network)
 
 
 def add_edge(dot, src, dst):
@@ -70,13 +68,13 @@ def add_edge(dot, src, dst):
 
 @keras_export("keras.utils.model_to_dot")
 def model_to_dot(
-    model,
-    show_shapes=False,
-    show_layer_names=True,
-    rankdir="TB",
-    expand_nested=False,
-    dpi=96,
-    subgraph=False,
+        model,
+        show_shapes=False,
+        show_layer_names=True,
+        rankdir="TB",
+        expand_nested=False,
+        dpi=96,
+        subgraph=False,
 ):
     """Convert a Keras model to dot format.
 
@@ -206,8 +204,7 @@ def model_to_dot(
                 inputlabels = format_shape(layer.input_shape)
             elif hasattr(layer, "input_shapes"):
                 inputlabels = ", ".join(
-                    [format_shape(ishape) for ishape in layer.input_shapes]
-                )
+                    [format_shape(ishape) for ishape in layer.input_shapes])
             else:
                 inputlabels = "?"
             label = "%s\n|{input:|output:}|{{%s}|{%s}}" % (
@@ -235,11 +232,11 @@ def model_to_dot(
                     else:
                         # if inbound_layer is not Model or wrapped Model
                         if not isinstance(
-                            inbound_layer, network.Network
+                                inbound_layer, network.Network
                         ) and not is_wrapped_model(inbound_layer):
                             # if current layer is not Model or wrapped Model
                             if not isinstance(
-                                layer, network.Network
+                                    layer, network.Network
                             ) and not is_wrapped_model(layer):
                                 assert dot.get_node(inbound_layer_id)
                                 assert dot.get_node(layer_id)
@@ -254,13 +251,16 @@ def model_to_dot(
                             # if current layer is wrapped Model
                             elif is_wrapped_model(layer):
                                 add_edge(dot, inbound_layer_id, layer_id)
-                                name = sub_w_first_node[layer.layer.name].get_name()
+                                name = sub_w_first_node[
+                                    layer.layer.name].get_name()
                                 add_edge(dot, layer_id, name)
                         # if inbound_layer is Model
                         elif isinstance(inbound_layer, network.Network):
-                            name = sub_n_last_node[inbound_layer.name].get_name()
+                            name = sub_n_last_node[
+                                inbound_layer.name].get_name()
                             if isinstance(layer, network.Network):
-                                output_name = sub_n_first_node[layer.name].get_name()
+                                output_name = sub_n_first_node[
+                                    layer.name].get_name()
                                 add_edge(dot, name, output_name)
                             else:
                                 add_edge(dot, name, layer_id)
@@ -277,13 +277,13 @@ def model_to_dot(
 
 @keras_export("keras.utils.plot_model")
 def plot_model(
-    model,
-    to_file="model.png",
-    show_shapes=False,
-    show_layer_names=True,
-    rankdir="TB",
-    expand_nested=False,
-    dpi=96,
+        model,
+        to_file="model.png",
+        show_shapes=False,
+        show_layer_names=True,
+        rankdir="TB",
+        expand_nested=False,
+        dpi=96,
 ):
     """Converts a Keras model to dot format and save to a file.
 

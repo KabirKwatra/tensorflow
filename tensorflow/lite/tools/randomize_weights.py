@@ -29,7 +29,8 @@ from tensorflow.python.platform import app
 
 
 def main(_):
-    parser = argparse.ArgumentParser(description="Randomize weights in a tflite file.")
+    parser = argparse.ArgumentParser(
+        description="Randomize weights in a tflite file.")
     parser.add_argument(
         "--input_tflite_file",
         type=str,
@@ -54,7 +55,8 @@ def main(_):
     # Read the model
     input_model = flatbuffer_utils.read_model(args.input_tflite_file)
     # Invoke the randomize weights function
-    output_model = flatbuffer_utils.randomize_weights(input_model, args.random_seed)
+    output_model = flatbuffer_utils.randomize_weights(input_model,
+                                                      args.random_seed)
     # Write the model
     flatbuffer_utils.write_model(output_model, args.output_tflite_file)
 
