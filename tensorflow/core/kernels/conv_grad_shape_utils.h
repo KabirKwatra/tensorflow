@@ -27,50 +27,40 @@ namespace tensorflow {
 // Information about a single spatial dimension for a convolution
 // backpropagation.
 struct ConvBackpropSpatialDimension {
-    int64 input_size;
-    int64 filter_size;
-    int64 output_size;
-    int64 stride;
-    int64 dilation;
+  int64 input_size;
+  int64 filter_size;
+  int64 output_size;
+  int64 stride;
+  int64 dilation;
 
-    // Output size after scaling by the stride.
-    int64 expanded_output_size;
+  // Output size after scaling by the stride.
+  int64 expanded_output_size;
 
-    // Number of padding elements to be added before/after this dimension of
-    // the input when computing Conv?DBackpropInput.
-    int64 pad_before, pad_after;
+  // Number of padding elements to be added before/after this dimension of
+  // the input when computing Conv?DBackpropInput.
+  int64 pad_before, pad_after;
 };
 
 // Computed dimensions for a backwards convolution.
 struct ConvBackpropDimensions {
-    // Information about each spatial dimension.
-    gtl::InlinedVector<ConvBackpropSpatialDimension, 3> spatial_dims;
+  // Information about each spatial dimension.
+  gtl::InlinedVector<ConvBackpropSpatialDimension, 3> spatial_dims;
 
-    // Batch size.
-    int64 batch_size;
+  // Batch size.
+  int64 batch_size;
 
-    // Input and output feature depth.
-    int64 in_depth, out_depth;
+  // Input and output feature depth.
+  int64 in_depth, out_depth;
 
-    // Convenience access methods for spatial dimensions properties.
-    int64 input_size(int dim) const {
-        return spatial_dims[dim].input_size;
-    }
-    int64 filter_size(int dim) const {
-        return spatial_dims[dim].filter_size;
-    }
-    int64 output_size(int dim) const {
-        return spatial_dims[dim].output_size;
-    }
-    int64 stride(int dim) const {
-        return spatial_dims[dim].stride;
-    }
-    int64 dilation(int dim) const {
-        return spatial_dims[dim].dilation;
-    }
+  // Convenience access methods for spatial dimensions properties.
+  int64 input_size(int dim) const { return spatial_dims[dim].input_size; }
+  int64 filter_size(int dim) const { return spatial_dims[dim].filter_size; }
+  int64 output_size(int dim) const { return spatial_dims[dim].output_size; }
+  int64 stride(int dim) const { return spatial_dims[dim].stride; }
+  int64 dilation(int dim) const { return spatial_dims[dim].dilation; }
 
-    // Compute padding for the given spatial dimension.
-    int SpatialPadding(const Padding& padding, int dim) const;
+  // Compute padding for the given spatial dimension.
+  int SpatialPadding(const Padding& padding, int dim) const;
 };
 
 // Common code between implementations of Conv?DBackpropInput and
