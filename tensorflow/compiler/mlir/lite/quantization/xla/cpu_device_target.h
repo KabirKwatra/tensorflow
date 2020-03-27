@@ -17,7 +17,7 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_MLIR_LITE_QUANTIZATION_XLA_CPU_DEVICE_TARGET_H_
 
 #include "mlir/Dialect/Quant/QuantOps.h"  // from @llvm-project
-#include "mlir/Support/LogicalResult.h"  // from @llvm-project
+#include "mlir/Support/LogicalResult.h"   // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/quantization/device_target.h"
 
 namespace mlir {
@@ -25,13 +25,13 @@ namespace xla_hlo {
 
 // Target specs for cpu kernels
 class CpuDeviceTarget : public quant::DeviceTarget {
-public:
-    explicit CpuDeviceTarget(MLIRContext* ctx);
+ public:
+  explicit CpuDeviceTarget(MLIRContext* ctx);
 
-private:
-    LogicalResult HandleMultiplyAccumulateScale(
-        quant::QuantizeContext* ctx, Operation* op,
-        quant::AdjacentOperations* new_items, bool* changed);
+ private:
+  LogicalResult HandleMultiplyAccumulateScale(
+      quant::QuantizeContext* ctx, Operation* op,
+      quant::AdjacentOperations* new_items, bool* changed);
 };
 
 }  // namespace xla_hlo
