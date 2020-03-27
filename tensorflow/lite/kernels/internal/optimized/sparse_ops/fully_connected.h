@@ -30,42 +30,42 @@ inline void FullyConnectedSparseWeight(
     const RuntimeShape& weights_shape, const float* weights_data,
     const RuntimeShape& bias_shape, const float* bias_data,
     const RuntimeShape& output_shape, float* output_data) {
-    const float output_activation_min = params.float_activation_min;
-    const float output_activation_max = params.float_activation_max;
+  const float output_activation_min = params.float_activation_min;
+  const float output_activation_max = params.float_activation_max;
 
-    const int output_elements = output_shape.FlatSize();
-    const int output_dims_count = output_shape.DimensionsCount();
-    const int weights_dims_count = weights_shape.DimensionsCount();
-    const int batches = FlatSizeSkipDim(output_shape, output_dims_count - 1);
-    const int output_depth = MatchingDim(weights_shape, weights_dims_count - 2,
-                                         output_shape, output_dims_count - 1);
-    const int accum_depth = weights_shape.Dims(weights_dims_count - 1);
-    const int w0_size = sparsity.dim_metadata[0].dense_size;
-    const int* w1_segments = sparsity.dim_metadata[1].array_segments->data;
-    const int* w1_indices = sparsity.dim_metadata[1].array_indices->data;
+  const int output_elements = output_shape.FlatSize();
+  const int output_dims_count = output_shape.DimensionsCount();
+  const int weights_dims_count = weights_shape.DimensionsCount();
+  const int batches = FlatSizeSkipDim(output_shape, output_dims_count - 1);
+  const int output_depth = MatchingDim(weights_shape, weights_dims_count - 2,
+                                       output_shape, output_dims_count - 1);
+  const int accum_depth = weights_shape.Dims(weights_dims_count - 1);
+  const int w0_size = sparsity.dim_metadata[0].dense_size;
+  const int* w1_segments = sparsity.dim_metadata[1].array_segments->data;
+  const int* w1_indices = sparsity.dim_metadata[1].array_indices->data;
 
-    for (int i = 0; i < output_elements; ++i) {
-        output_data[i] = 0.f;
+  for (int i = 0; i < output_elements; ++i) {
+    output_data[i] = 0.f;
+  }
+
+  for (int b = 0; b < batches; ++b) {
+    for (int idx_0 = 0; idx_0 < w0_size; ++idx_0) {
+      for (int pw1 = w1_segments[idx_0]; pw1 < w1_segments[idx_0 + 1]; ++pw1) {
+        int idx_1 = w1_indices[pw1];
+        output_data[b * output_depth + idx_0] +=
+            weights_data[pw1] * input_data[b * accum_depth + idx_1];
+      }
     }
+  }
 
-    for (int b = 0; b < batches; ++b) {
-        for (int idx_0 = 0; idx_0 < w0_size; ++idx_0) {
-            for (int pw1 = w1_segments[idx_0]; pw1 < w1_segments[idx_0 + 1]; ++pw1) {
-                int idx_1 = w1_indices[pw1];
-                output_data[b * output_depth + idx_0] +=
-                    weights_data[pw1] * input_data[b * accum_depth + idx_1];
-            }
-        }
+  for (int b = 0; b < batches; ++b) {
+    for (int i = 0; i < output_depth; ++i) {
+      float total = output_data[b * output_depth + i];
+      float bias_value = bias_data[i];
+      output_data[b * output_depth + i] = ActivationFunctionWithMinMax(
+          total + bias_value, output_activation_min, output_activation_max);
     }
-
-    for (int b = 0; b < batches; ++b) {
-        for (int i = 0; i < output_depth; ++i) {
-            float total = output_data[b * output_depth + i];
-            float bias_value = bias_data[i];
-            output_data[b * output_depth + i] = ActivationFunctionWithMinMax(
-                                                    total + bias_value, output_activation_min, output_activation_max);
-        }
-    }
+  }
 }
 
 }  // namespace optimized_ops

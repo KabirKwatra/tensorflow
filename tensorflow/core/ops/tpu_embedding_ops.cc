@@ -59,129 +59,129 @@ namespace tensorflow {
 // host CPU memory.
 
 REGISTER_OP("RecvTPUEmbeddingActivations")
-.Output("outputs: num_outputs * float32")
-.Attr("num_outputs: int >= 1")
-.Attr("config: string")
-.SetIsStateful()
-.SetShapeFn([](shape_inference::InferenceContext* c) -> Status {
-    string config_string;
-    TF_RETURN_IF_ERROR(c->GetAttr("config", &config_string));
-    tpu::TPUEmbeddingConfiguration config;
-    if (!config.ParseFromString(config_string)) {
+    .Output("outputs: num_outputs * float32")
+    .Attr("num_outputs: int >= 1")
+    .Attr("config: string")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext* c) -> Status {
+      string config_string;
+      TF_RETURN_IF_ERROR(c->GetAttr("config", &config_string));
+      tpu::TPUEmbeddingConfiguration config;
+      if (!config.ParseFromString(config_string)) {
         return errors::InvalidArgument("Malformed tpu_embedding_config.");
-    }
-    tpu::AddDefaultEmbeddingOutputLayoutIfNeeded(&config);
-    std::vector<TensorShapeProto> output_shapes;
-    TF_RETURN_IF_ERROR(ComputeOutputTensorShapes(config, &output_shapes));
-    if (c->num_outputs() != output_shapes.size()) {
+      }
+      tpu::AddDefaultEmbeddingOutputLayoutIfNeeded(&config);
+      std::vector<TensorShapeProto> output_shapes;
+      TF_RETURN_IF_ERROR(ComputeOutputTensorShapes(config, &output_shapes));
+      if (c->num_outputs() != output_shapes.size()) {
         return errors::InvalidArgument("num outputs != size of output shapes");
-    }
-    for (int i = 0; i < c->num_outputs(); ++i) {
+      }
+      for (int i = 0; i < c->num_outputs(); ++i) {
         shape_inference::ShapeHandle output_shape;
         TF_RETURN_IF_ERROR(
             c->MakeShapeFromShapeProto(output_shapes[i], &output_shape));
         c->set_output(i, output_shape);
-    }
-    return Status::OK();
-});
+      }
+      return Status::OK();
+    });
 
 REGISTER_OP("TPUEmbeddingActivations")
-.Input("embedding_variable: float32")
-.Input("sliced_activations: float32")
-.Output("output: float32")
-.Attr("table_id: int >= 0")
-.Attr("lookup_id: int >= 0")
-.SetShapeFn([](shape_inference::InferenceContext *c) {
-    c->set_output(0, c->input(1));
-    return Status::OK();
-});
+    .Input("embedding_variable: float32")
+    .Input("sliced_activations: float32")
+    .Output("output: float32")
+    .Attr("table_id: int >= 0")
+    .Attr("lookup_id: int >= 0")
+    .SetShapeFn([](shape_inference::InferenceContext* c) {
+      c->set_output(0, c->input(1));
+      return Status::OK();
+    });
 
 REGISTER_OP("SendTPUEmbeddingGradients")
-.Input("inputs: N * float32")
-.Input("learning_rates: NN * float32")
-.Attr("N: int >= 1")
-.Attr("NN: int >= 0 = 0")
-.Attr("config: string")
-.SetIsStateful()
-.SetShapeFn([](shape_inference::InferenceContext* c) -> Status {
-    int nn;
-    TF_RETURN_IF_ERROR(c->GetAttr("NN", &nn));
-    std::vector<shape_inference::ShapeHandle> learning_rates;
-    TF_RETURN_IF_ERROR(c->input("learning_rates", &learning_rates));
-    for (int i = 0; i < nn; ++i) {
+    .Input("inputs: N * float32")
+    .Input("learning_rates: NN * float32")
+    .Attr("N: int >= 1")
+    .Attr("NN: int >= 0 = 0")
+    .Attr("config: string")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext* c) -> Status {
+      int nn;
+      TF_RETURN_IF_ERROR(c->GetAttr("NN", &nn));
+      std::vector<shape_inference::ShapeHandle> learning_rates;
+      TF_RETURN_IF_ERROR(c->input("learning_rates", &learning_rates));
+      for (int i = 0; i < nn; ++i) {
         // Verify that each learning_rates element is scalar
         shape_inference::ShapeHandle learning_rates_shape;
         TF_RETURN_IF_ERROR(
             c->WithRank(learning_rates[i], 0, &learning_rates_shape));
-    }
+      }
 
-    return Status::OK();
-});
+      return Status::OK();
+    });
 
 REGISTER_OP("EnqueueTPUEmbeddingIntegerBatch")
-.Input("batch: N * int32")
-.Input("mode_override: string")
-.Attr("N: int >= 1")
-.Attr("device_ordinal: int = -1")
-.SetIsStateful()
-.SetShapeFn(shape_inference::UnknownShape);
+    .Input("batch: N * int32")
+    .Input("mode_override: string")
+    .Attr("N: int >= 1")
+    .Attr("device_ordinal: int = -1")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::UnknownShape);
 
 REGISTER_OP("EnqueueTPUEmbeddingSparseBatch")
-.Input("sample_indices: N * T1")
-.Input("embedding_indices: N * T2")
-.Input("aggregation_weights: N * T3")
-.Input("mode_override: string")
-.Attr("T1: {int32,int64} = DT_INT32")
-.Attr("T2: {int32,int64} = DT_INT32")
-.Attr("T3: {float32,float64} = DT_FLOAT")
-.Attr("N: int >= 1")
-.Attr("device_ordinal: int = -1")
-.Attr("combiners: list(string) = []")
-.SetIsStateful()
-.SetShapeFn([](shape_inference::InferenceContext* c) -> Status {
-    std::vector<string> combiners;
-    TF_RETURN_IF_ERROR(c->GetAttr("combiners", &combiners));
-    int n;
-    TF_RETURN_IF_ERROR(c->GetAttr("N", &n));
-    if (!combiners.empty() && combiners.size() != n) {
+    .Input("sample_indices: N * T1")
+    .Input("embedding_indices: N * T2")
+    .Input("aggregation_weights: N * T3")
+    .Input("mode_override: string")
+    .Attr("T1: {int32,int64} = DT_INT32")
+    .Attr("T2: {int32,int64} = DT_INT32")
+    .Attr("T3: {float32,float64} = DT_FLOAT")
+    .Attr("N: int >= 1")
+    .Attr("device_ordinal: int = -1")
+    .Attr("combiners: list(string) = []")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext* c) -> Status {
+      std::vector<string> combiners;
+      TF_RETURN_IF_ERROR(c->GetAttr("combiners", &combiners));
+      int n;
+      TF_RETURN_IF_ERROR(c->GetAttr("N", &n));
+      if (!combiners.empty() && combiners.size() != n) {
         return errors::InvalidArgument("Invalid length of combiners. Have ",
                                        combiners.size(), " but expected 0 or ",
                                        n);
-    }
+      }
 
-    return Status::OK();
-});
+      return Status::OK();
+    });
 
 REGISTER_OP("EnqueueTPUEmbeddingSparseTensorBatch")
-.Input("sample_indices: N * T1")
-.Input("embedding_indices: N * T2")
-.Input("aggregation_weights: N * T3")
-.Input("mode_override: string")
-.Attr("T1: {int32,int64} = DT_INT32")
-.Attr("T2: {int32,int64} = DT_INT32")
-.Attr("T3: {float32,float64} = DT_FLOAT")
-.Attr("N: int >= 1")
-.Attr("device_ordinal: int = -1")
-.Attr("combiners: list(string) = []")
-.Attr("table_ids: list(int)")
-.Attr("max_sequence_lengths: list(int) = []")
-.SetIsStateful()
-.SetShapeFn(shape_inference::UnknownShape);
+    .Input("sample_indices: N * T1")
+    .Input("embedding_indices: N * T2")
+    .Input("aggregation_weights: N * T3")
+    .Input("mode_override: string")
+    .Attr("T1: {int32,int64} = DT_INT32")
+    .Attr("T2: {int32,int64} = DT_INT32")
+    .Attr("T3: {float32,float64} = DT_FLOAT")
+    .Attr("N: int >= 1")
+    .Attr("device_ordinal: int = -1")
+    .Attr("combiners: list(string) = []")
+    .Attr("table_ids: list(int)")
+    .Attr("max_sequence_lengths: list(int) = []")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::UnknownShape);
 
 REGISTER_OP("EnqueueTPUEmbeddingRaggedTensorBatch")
-.Input("sample_splits: N * T1")
-.Input("embedding_indices: N * T2")
-.Input("aggregation_weights: N * T3")
-.Input("mode_override: string")
-.Attr("T1: {int32,int64} = DT_INT32")
-.Attr("T2: {int32,int64} = DT_INT32")
-.Attr("T3: {float32,float64} = DT_FLOAT")
-.Attr("N: int >= 1")
-.Attr("device_ordinal: int = -1")
-.Attr("combiners: list(string) = []")
-.Attr("table_ids: list(int)")
-.Attr("max_sequence_lengths: list(int) = []")
-.SetIsStateful()
-.SetShapeFn(shape_inference::UnknownShape);
+    .Input("sample_splits: N * T1")
+    .Input("embedding_indices: N * T2")
+    .Input("aggregation_weights: N * T3")
+    .Input("mode_override: string")
+    .Attr("T1: {int32,int64} = DT_INT32")
+    .Attr("T2: {int32,int64} = DT_INT32")
+    .Attr("T3: {float32,float64} = DT_FLOAT")
+    .Attr("N: int >= 1")
+    .Attr("device_ordinal: int = -1")
+    .Attr("combiners: list(string) = []")
+    .Attr("table_ids: list(int)")
+    .Attr("max_sequence_lengths: list(int) = []")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::UnknownShape);
 
 }  // namespace tensorflow

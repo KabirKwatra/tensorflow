@@ -34,49 +34,49 @@ namespace xla {
 // An implementation of the XLA GenericTransferManager that
 // handles CPU-specific infeed.
 class CpuTransferManager : public GenericTransferManager {
-public:
-    CpuTransferManager();
-    ~CpuTransferManager() override {}
+ public:
+  CpuTransferManager();
+  ~CpuTransferManager() override {}
 
-    Status TransferLiteralToInfeed(se::StreamExecutor* executor,
-                                   const LiteralSlice& literal) override;
-    Status TransferLiteralFromOutfeed(se::StreamExecutor* executor,
-                                      const Shape& literal_shape,
-                                      MutableBorrowingLiteral literal) override;
+  Status TransferLiteralToInfeed(se::StreamExecutor* executor,
+                                 const LiteralSlice& literal) override;
+  Status TransferLiteralFromOutfeed(se::StreamExecutor* executor,
+                                    const Shape& literal_shape,
+                                    MutableBorrowingLiteral literal) override;
 
-    bool CanShapedBufferBeAccessedNow(
-        se::StreamExecutor* executor,
-        const ShapedBuffer& device_buffer) const override {
-        return true;
-    }
+  bool CanShapedBufferBeAccessedNow(
+      se::StreamExecutor* executor,
+      const ShapedBuffer& device_buffer) const override {
+    return true;
+  }
 
-private:
-    Status TransferBufferToInfeed(se::StreamExecutor* executor, int64 size,
-                                  const void* source);
+ private:
+  Status TransferBufferToInfeed(se::StreamExecutor* executor, int64 size,
+                                const void* source);
 
-    // Transfers infeed data to device. InfeedBuffer->Done() must be
-    // called to clean up the memory allocated for InfeedBuffer.
-    StatusOr<cpu::runtime::XfeedBuffer*> TransferBufferToInfeedInternal(
-        se::StreamExecutor* executor, int64 size, const void* source);
+  // Transfers infeed data to device. InfeedBuffer->Done() must be
+  // called to clean up the memory allocated for InfeedBuffer.
+  StatusOr<cpu::runtime::XfeedBuffer*> TransferBufferToInfeedInternal(
+      se::StreamExecutor* executor, int64 size, const void* source);
 
-    // Helper that transfers a tuple of element buffers from the device's outfeed.
-    StatusOr<Shape> TransferTupleBuffersFromOutfeed(
-        se::StreamExecutor* executor,
-        absl::Span<const std::pair<void*, int64>> buffer_data);
+  // Helper that transfers a tuple of element buffers from the device's outfeed.
+  StatusOr<Shape> TransferTupleBuffersFromOutfeed(
+      se::StreamExecutor* executor,
+      absl::Span<const std::pair<void*, int64>> buffer_data);
 
-    // Helper that transfers an array buffer from the device's outfeed.
-    StatusOr<Shape> TransferArrayBufferFromOutfeed(se::StreamExecutor* executor,
-            void* destination,
-            int64 size_bytes);
+  // Helper that transfers an array buffer from the device's outfeed.
+  StatusOr<Shape> TransferArrayBufferFromOutfeed(se::StreamExecutor* executor,
+                                                 void* destination,
+                                                 int64 size_bytes);
 
-    // On success, returns the shape that was transferred from the outfeed -- if
-    // is_tuple is true, the returned shape will be a tuple of the returned shapes
-    // for the given buffers.
-    StatusOr<Shape> TransferBuffersFromOutfeedInternal(
-        se::StreamExecutor* executor,
-        absl::Span<const std::pair<void*, int64>> buffer_data, bool is_tuple);
+  // On success, returns the shape that was transferred from the outfeed -- if
+  // is_tuple is true, the returned shape will be a tuple of the returned shapes
+  // for the given buffers.
+  StatusOr<Shape> TransferBuffersFromOutfeedInternal(
+      se::StreamExecutor* executor,
+      absl::Span<const std::pair<void*, int64>> buffer_data, bool is_tuple);
 
-    TF_DISALLOW_COPY_AND_ASSIGN(CpuTransferManager);
+  TF_DISALLOW_COPY_AND_ASSIGN(CpuTransferManager);
 };
 
 }  // namespace xla
