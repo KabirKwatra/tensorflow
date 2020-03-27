@@ -25,16 +25,16 @@ namespace xla_hlo {
 namespace ph = std::placeholders;
 
 CpuDeviceTarget::CpuDeviceTarget(MLIRContext* ctx) : DeviceTarget(ctx) {
-  RegisterKernel("generic.concat", {qi8_, qi8_, qi8_},
-                 quant::ScaleConstraintType::OutputInputSameScale);
-  RegisterKernel("generic.mul", {qi8_, qi8_, qi8_},
-                 quant::ScaleConstraintType::OutputInputFreeScale);
-  RegisterKernel("generic.mul_add", {qi8_, qi8n_, any_, qi8_},
-                 std::bind(&CpuDeviceTarget::HandleMultiplyAccumulateScale,
-                           this, ph::_1, ph::_2, ph::_3, ph::_4));
-  RegisterKernel("generic.matmul_add", {qi8_, qi8n_, any_, qi8_},
-                 std::bind(&CpuDeviceTarget::HandleMultiplyAccumulateScale,
-                           this, ph::_1, ph::_2, ph::_3, ph::_4));
+    RegisterKernel("generic.concat", {qi8_, qi8_, qi8_},
+                   quant::ScaleConstraintType::OutputInputSameScale);
+    RegisterKernel("generic.mul", {qi8_, qi8_, qi8_},
+                   quant::ScaleConstraintType::OutputInputFreeScale);
+    RegisterKernel("generic.mul_add", {qi8_, qi8n_, any_, qi8_},
+                   std::bind(&CpuDeviceTarget::HandleMultiplyAccumulateScale,
+                             this, ph::_1, ph::_2, ph::_3, ph::_4));
+    RegisterKernel("generic.matmul_add", {qi8_, qi8n_, any_, qi8_},
+                   std::bind(&CpuDeviceTarget::HandleMultiplyAccumulateScale,
+                             this, ph::_1, ph::_2, ph::_3, ph::_4));
 }
 }  // namespace xla_hlo
 }  // namespace mlir

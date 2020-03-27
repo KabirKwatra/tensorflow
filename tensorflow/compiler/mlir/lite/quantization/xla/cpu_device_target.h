@@ -25,13 +25,13 @@ namespace xla_hlo {
 
 // Target specs for cpu kernels
 class CpuDeviceTarget : public quant::DeviceTarget {
- public:
-  explicit CpuDeviceTarget(MLIRContext* ctx);
+public:
+    explicit CpuDeviceTarget(MLIRContext* ctx);
 
- private:
-  LogicalResult HandleMultiplyAccumulateScale(
-      quant::QuantizeContext* ctx, Operation* op,
-      quant::AdjacentOperations* new_items, bool* changed);
+private:
+    LogicalResult HandleMultiplyAccumulateScale(
+        quant::QuantizeContext* ctx, Operation* op,
+        quant::AdjacentOperations* new_items, bool* changed);
 };
 
 }  // namespace xla_hlo
