@@ -23,7 +23,9 @@ namespace ruy {
 // These patterns must match those in the pack and kernel cc files.
 #if !(RUY_PLATFORM(SSE42) && RUY_OPT_ENABLED(RUY_OPT_ASM))
 
-bool HaveBuiltPathForSse42() { return false; }
+bool HaveBuiltPathForSse42() {
+    return false;
+}
 
 #else  // RUY_PLATFORM(SSE42) && RUY_OPT_ENABLED(RUY_OPT_ASM)
 
@@ -31,7 +33,9 @@ bool HaveBuiltPathForSse42() { return false; }
 // Optimization is not finished. In particular the dimensions of the kernel
 // blocks can be changed as desired.
 //
-bool HaveBuiltPathForSse42() { return true; }
+bool HaveBuiltPathForSse42() {
+    return true;
+}
 
 #endif  // RUY_PLATFORM(SSE42) && RUY_OPT_ENABLED(RUY_OPT_ASM)
 #endif  // RUY_PLATFORM(X86)

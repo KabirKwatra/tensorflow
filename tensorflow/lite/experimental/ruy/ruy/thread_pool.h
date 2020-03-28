@@ -27,8 +27,8 @@ namespace ruy {
 
 // A workload for a thread.
 struct Task {
-  virtual ~Task() {}
-  virtual void Run() = 0;
+    virtual ~Task() {}
+    virtual void Run() = 0;
 };
 
 class Thread;
@@ -52,49 +52,49 @@ class Thread;
 // That approach is the one used in ruy's multi-thread matrix multiplication
 // implementation --- see ruy's TrMulTask.
 class ThreadPool {
- public:
-  ThreadPool() {}
+public:
+    ThreadPool() {}
 
-  ~ThreadPool();
+    ~ThreadPool();
 
-  // Executes task_count tasks on task_count threads.
-  // Grows the threadpool as needed to have at least (task_count-1) threads.
-  // The 0-th task is run on the thread on which Execute is called: that
-  // is by definition what we call the "main thread". Synchronization of all
-  // threads is performed before this function returns.
-  //
-  // As explained in the class comment, there is a 1:1 mapping of tasks to
-  // threads. If you need something smarter than that, for instance if you
-  // want to run an unbounded number of tasks on a bounded number of threads,
-  // then you need something higher-level than this ThreadPool, that can
-  // be layered on top of it by appropriately subclassing Tasks.
-  //
-  // TaskType must be a subclass of ruy::Task. That is implicitly guarded by
-  // the static_cast in this inline implementation.
-  template <typename TaskType>
-  void Execute(int task_count, TaskType* tasks) {
-    ExecuteImpl(task_count, sizeof(TaskType), static_cast<Task*>(tasks));
-  }
+    // Executes task_count tasks on task_count threads.
+    // Grows the threadpool as needed to have at least (task_count-1) threads.
+    // The 0-th task is run on the thread on which Execute is called: that
+    // is by definition what we call the "main thread". Synchronization of all
+    // threads is performed before this function returns.
+    //
+    // As explained in the class comment, there is a 1:1 mapping of tasks to
+    // threads. If you need something smarter than that, for instance if you
+    // want to run an unbounded number of tasks on a bounded number of threads,
+    // then you need something higher-level than this ThreadPool, that can
+    // be layered on top of it by appropriately subclassing Tasks.
+    //
+    // TaskType must be a subclass of ruy::Task. That is implicitly guarded by
+    // the static_cast in this inline implementation.
+    template <typename TaskType>
+    void Execute(int task_count, TaskType* tasks) {
+        ExecuteImpl(task_count, sizeof(TaskType), static_cast<Task*>(tasks));
+    }
 
- private:
-  // Ensures that the pool has at least the given count of threads.
-  // If any new thread has to be created, this function waits for it to
-  // be ready.
-  void CreateThreads(int threads_count);
+private:
+    // Ensures that the pool has at least the given count of threads.
+    // If any new thread has to be created, this function waits for it to
+    // be ready.
+    void CreateThreads(int threads_count);
 
-  // Non-templatized implementation of the public Execute method.
-  // See the inline implementation of Execute for how this is used.
-  void ExecuteImpl(int task_count, int stride, Task* tasks);
+    // Non-templatized implementation of the public Execute method.
+    // See the inline implementation of Execute for how this is used.
+    void ExecuteImpl(int task_count, int stride, Task* tasks);
 
-  // copy construction disallowed
-  ThreadPool(const ThreadPool&) = delete;
+    // copy construction disallowed
+    ThreadPool(const ThreadPool&) = delete;
 
-  // The threads in this pool. They are owned by the pool:
-  // the pool creates threads and destroys them in its destructor.
-  std::vector<Thread*> threads_;
+    // The threads in this pool. They are owned by the pool:
+    // the pool creates threads and destroys them in its destructor.
+    std::vector<Thread*> threads_;
 
-  // The BlockingCounter used to wait for the threads.
-  BlockingCounter counter_to_decrement_when_ready_;
+    // The BlockingCounter used to wait for the threads.
+    BlockingCounter counter_to_decrement_when_ready_;
 };
 
 }  // namespace ruy

@@ -26,19 +26,19 @@ template <typename T>
 inline void MulElementwise(int size, const ArithmeticParams& params,
                            const T* input1_data, const T* input2_data,
                            T* output_data) {
-  for (int i = 0; i < size; ++i) {
-    const int32 input1_val = params.input1_offset + input1_data[i];
-    const int32 input2_val = params.input2_offset + input2_data[i];
-    const int32 unclamped_result =
-        params.output_offset +
-        MultiplyByQuantizedMultiplier(input1_val * input2_val,
-                                      params.output_multiplier,
-                                      params.output_shift);
-    const int32 clamped_output =
-        std::min(params.quantized_activation_max,
-                 std::max(params.quantized_activation_min, unclamped_result));
-    output_data[i] = static_cast<T>(clamped_output);
-  }
+    for (int i = 0; i < size; ++i) {
+        const int32 input1_val = params.input1_offset + input1_data[i];
+        const int32 input2_val = params.input2_offset + input2_data[i];
+        const int32 unclamped_result =
+            params.output_offset +
+            MultiplyByQuantizedMultiplier(input1_val * input2_val,
+                                          params.output_multiplier,
+                                          params.output_shift);
+        const int32 clamped_output =
+            std::min(params.quantized_activation_max,
+                     std::max(params.quantized_activation_min, unclamped_result));
+        output_data[i] = static_cast<T>(clamped_output);
+    }
 }
 
 template <typename T>
@@ -46,13 +46,13 @@ inline void Mul(const ArithmeticParams& params,
                 const RuntimeShape& input1_shape, const T* input1_data,
                 const RuntimeShape& input2_shape, const T* input2_data,
                 const RuntimeShape& output_shape, T* output_data) {
-  TFLITE_DCHECK_LE(params.quantized_activation_min,
-                   params.quantized_activation_max);
-  ruy::profiler::ScopeLabel label("Mul/8bit");
-  const int flat_size =
-      MatchingElementsSize(input1_shape, input2_shape, output_shape);
+    TFLITE_DCHECK_LE(params.quantized_activation_min,
+                     params.quantized_activation_max);
+    ruy::profiler::ScopeLabel label("Mul/8bit");
+    const int flat_size =
+        MatchingElementsSize(input1_shape, input2_shape, output_shape);
 
-  MulElementwise(flat_size, params, input1_data, input2_data, output_data);
+    MulElementwise(flat_size, params, input1_data, input2_data, output_data);
 }
 
 // Mul with 16 bit inputs and int8_t outputs.
@@ -60,29 +60,29 @@ inline void Mul(const ArithmeticParams& params,
                 const RuntimeShape& input1_shape, const int16* input1_data,
                 const RuntimeShape& input2_shape, const int16* input2_data,
                 const RuntimeShape& output_shape, int8_t* output_data) {
-  ruy::profiler::ScopeLabel label("Mul/Int16Int8");
-  int32 output_offset = params.output_offset;
-  int32 output_activation_min = params.quantized_activation_min;
-  int32 output_activation_max = params.quantized_activation_max;
-  TFLITE_DCHECK_LE(output_activation_min, output_activation_max);
+    ruy::profiler::ScopeLabel label("Mul/Int16Int8");
+    int32 output_offset = params.output_offset;
+    int32 output_activation_min = params.quantized_activation_min;
+    int32 output_activation_max = params.quantized_activation_max;
+    TFLITE_DCHECK_LE(output_activation_min, output_activation_max);
 
-  const int flat_size =
-      MatchingElementsSize(input1_shape, input2_shape, output_shape);
+    const int flat_size =
+        MatchingElementsSize(input1_shape, input2_shape, output_shape);
 
-  for (int i = 0; i < flat_size; i++) {
-    // F0 uses 0 integer bits, range [-1, 1].
-    using F0 = gemmlowp::FixedPoint<std::int16_t, 0>;
+    for (int i = 0; i < flat_size; i++) {
+        // F0 uses 0 integer bits, range [-1, 1].
+        using F0 = gemmlowp::FixedPoint<std::int16_t, 0>;
 
-    F0 unclamped_result =
-        F0::FromRaw(input1_data[i]) * F0::FromRaw(input2_data[i]);
-    int16 rescaled_result =
-        gemmlowp::RoundingDivideByPOT(unclamped_result.raw(), 8);
-    int16 clamped_result =
-        std::min<int16>(output_activation_max - output_offset, rescaled_result);
-    clamped_result =
-        std::max<int16>(output_activation_min - output_offset, clamped_result);
-    output_data[i] = output_offset + clamped_result;
-  }
+        F0 unclamped_result =
+            F0::FromRaw(input1_data[i]) * F0::FromRaw(input2_data[i]);
+        int16 rescaled_result =
+            gemmlowp::RoundingDivideByPOT(unclamped_result.raw(), 8);
+        int16 clamped_result =
+            std::min<int16>(output_activation_max - output_offset, rescaled_result);
+        clamped_result =
+            std::max<int16>(output_activation_min - output_offset, clamped_result);
+        output_data[i] = output_offset + clamped_result;
+    }
 }
 
 template <typename T>
@@ -90,40 +90,40 @@ inline void BroadcastMul4DSlow(
     const ArithmeticParams& params, const RuntimeShape& input1_shape,
     const T* input1_data, const RuntimeShape& input2_shape,
     const T* input2_data, const RuntimeShape& output_shape, T* output_data) {
-  ruy::profiler::ScopeLabel label("BroadcastMul4DSlow");
+    ruy::profiler::ScopeLabel label("BroadcastMul4DSlow");
 
-  NdArrayDesc<4> desc1;
-  NdArrayDesc<4> desc2;
-  // The input shapes are extended as part of NdArrayDesc initialization.
-  NdArrayDescsForElementwiseBroadcast(input1_shape, input2_shape, &desc1,
-                                      &desc2);
-  const RuntimeShape extended_output_shape =
-      RuntimeShape::ExtendedShape(4, output_shape);
+    NdArrayDesc<4> desc1;
+    NdArrayDesc<4> desc2;
+    // The input shapes are extended as part of NdArrayDesc initialization.
+    NdArrayDescsForElementwiseBroadcast(input1_shape, input2_shape, &desc1,
+                                        &desc2);
+    const RuntimeShape extended_output_shape =
+        RuntimeShape::ExtendedShape(4, output_shape);
 
-  for (int b = 0; b < extended_output_shape.Dims(0); ++b) {
-    for (int y = 0; y < extended_output_shape.Dims(1); ++y) {
-      for (int x = 0; x < extended_output_shape.Dims(2); ++x) {
-        for (int c = 0; c < extended_output_shape.Dims(3); ++c) {
-          const int32 input1_val =
-              params.input1_offset +
-              input1_data[SubscriptToIndex(desc1, b, y, x, c)];
-          const int32 input2_val =
-              params.input2_offset +
-              input2_data[SubscriptToIndex(desc2, b, y, x, c)];
-          const int32 unclamped_result =
-              params.output_offset +
-              MultiplyByQuantizedMultiplier(input1_val * input2_val,
-                                            params.output_multiplier,
-                                            params.output_shift);
-          const int32 clamped_output = std::min(
-              params.quantized_activation_max,
-              std::max(params.quantized_activation_min, unclamped_result));
-          output_data[Offset(extended_output_shape, b, y, x, c)] =
-              static_cast<T>(clamped_output);
+    for (int b = 0; b < extended_output_shape.Dims(0); ++b) {
+        for (int y = 0; y < extended_output_shape.Dims(1); ++y) {
+            for (int x = 0; x < extended_output_shape.Dims(2); ++x) {
+                for (int c = 0; c < extended_output_shape.Dims(3); ++c) {
+                    const int32 input1_val =
+                        params.input1_offset +
+                        input1_data[SubscriptToIndex(desc1, b, y, x, c)];
+                    const int32 input2_val =
+                        params.input2_offset +
+                        input2_data[SubscriptToIndex(desc2, b, y, x, c)];
+                    const int32 unclamped_result =
+                        params.output_offset +
+                        MultiplyByQuantizedMultiplier(input1_val * input2_val,
+                                                      params.output_multiplier,
+                                                      params.output_shift);
+                    const int32 clamped_output = std::min(
+                                                     params.quantized_activation_max,
+                                                     std::max(params.quantized_activation_min, unclamped_result));
+                    output_data[Offset(extended_output_shape, b, y, x, c)] =
+                        static_cast<T>(clamped_output);
+                }
+            }
         }
-      }
     }
-  }
 }
 
 }  // namespace reference_integer_ops

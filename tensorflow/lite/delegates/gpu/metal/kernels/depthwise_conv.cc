@@ -36,7 +36,7 @@ namespace metal {
 namespace {
 
 std::string GetKernelDepthWiseConv3x3Stride1x1() {
-  std::string code = R"(
+    std::string code = R"(
 #include <metal_stdlib>
 using namespace metal;
 
@@ -201,74 +201,74 @@ kernel void ComputeFunction(
 }
   )";
 
-  return code;
+    return code;
 }
 
 // Reorder weights to make the weights memory access pattern cache friendly for
 // DepthWiseConv3x3Stride1x1
 std::vector<float> ReorderWeightsDepthWiseConv3x3Stride1x1(
     const DepthwiseConvolution2DAttributes& attr) {
-  const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
-  const int kernel_x = 3;
-  const int kernel_y = 3;
-  std::vector<float> weights_reordered((kernel_x * kernel_y + 1) * src_depth *
-                                       4);
+    const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
+    const int kernel_x = 3;
+    const int kernel_y = 3;
+    std::vector<float> weights_reordered((kernel_x * kernel_y + 1) * src_depth *
+                                         4);
 
-  int counter = 0;
-  for (int s = 0; s < src_depth; ++s) {
-    for (int x = 0; x < kernel_x; ++x) {
-      for (int y = 0; y < kernel_y; ++y) {
-        for (int i = 0; i < 4; ++i) {
-          const int s_ch = s * 4 + i;
-          if (s_ch < attr.weights.shape.i) {
-            const int f_index = attr.weights.shape.LinearIndex({0, y, x, s_ch});
-            weights_reordered[counter++] = attr.weights.data[f_index];
-          } else {
-            weights_reordered[counter++] = 0.0f;
-          }
+    int counter = 0;
+    for (int s = 0; s < src_depth; ++s) {
+        for (int x = 0; x < kernel_x; ++x) {
+            for (int y = 0; y < kernel_y; ++y) {
+                for (int i = 0; i < 4; ++i) {
+                    const int s_ch = s * 4 + i;
+                    if (s_ch < attr.weights.shape.i) {
+                        const int f_index = attr.weights.shape.LinearIndex({0, y, x, s_ch});
+                        weights_reordered[counter++] = attr.weights.data[f_index];
+                    } else {
+                        weights_reordered[counter++] = 0.0f;
+                    }
+                }
+            }
         }
-      }
+
+        for (int i = 0; i < 4; ++i) {
+            const int dst_ch = s * 4 + i;
+            if (dst_ch < attr.bias.shape.v) {
+                weights_reordered[counter++] = attr.bias.data[dst_ch];
+            } else {
+                weights_reordered[counter++] = 0.0f;
+            }
+        }
     }
 
-    for (int i = 0; i < 4; ++i) {
-      const int dst_ch = s * 4 + i;
-      if (dst_ch < attr.bias.shape.v) {
-        weights_reordered[counter++] = attr.bias.data[dst_ch];
-      } else {
-        weights_reordered[counter++] = 0.0f;
-      }
-    }
-  }
-
-  return weights_reordered;
+    return weights_reordered;
 }
 
 static std::vector<uint8_t> GetUniformBufferDepthWiseConv3x3Stride1x1(
     const BHWC& src_size, const BHWC& dst_size,
     const DepthwiseConvolution2DAttributes& params) {
-  std::vector<int> uniform_params = {
-      src_size.w,
-      src_size.h,
-      src_size.w * src_size.h,
-      IntegralDivideRoundUp(src_size.c, 4),
-      dst_size.w,
-      dst_size.h,
-      dst_size.w * dst_size.h,
-      IntegralDivideRoundUp(dst_size.c, 4),
-      -params.padding.prepended.w,
-      -params.padding.prepended.h,
-      0,  // dummy, for alignment
-      0,  // dummy, for alignment
-      0,  // dummy, for alignment
-      0,  // dummy, for alignment
-      0,  // dummy, for alignment
-      0,  // dummy, for alignment
-  };
-  return GetByteBuffer(uniform_params);
+    std::vector<int> uniform_params = {
+        src_size.w,
+        src_size.h,
+        src_size.w * src_size.h,
+        IntegralDivideRoundUp(src_size.c, 4),
+        dst_size.w,
+        dst_size.h,
+        dst_size.w * dst_size.h,
+        IntegralDivideRoundUp(dst_size.c, 4),
+        -params.padding.prepended.w,
+        -params.padding.prepended.h,
+        0,  // dummy, for alignment
+        0,  // dummy, for alignment
+        0,  // dummy, for alignment
+        0,  // dummy, for alignment
+        0,  // dummy, for alignment
+        0,  // dummy, for alignment
+    };
+    return GetByteBuffer(uniform_params);
 }
 
 std::string GetKernelDepthWiseConv3x3Stride2() {
-  std::string code = R"(
+    std::string code = R"(
 #include <metal_stdlib>
 using namespace metal;
 
@@ -396,70 +396,70 @@ kernel void ComputeFunction(
 }
   )";
 
-  return code;
+    return code;
 }
 
 // Reorder weights to make the weights memory access pattern cache friendly for
 // DepthWiseConv3x3Stride2
 std::vector<float> ReorderWeightsDepthWiseConv3x3Stride2(
     const DepthwiseConvolution2DAttributes& attr) {
-  const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
-  const int kernel_x = 3;
-  const int kernel_y = 3;
-  std::vector<float> weights_reordered((kernel_x * kernel_y + 1) * src_depth *
-                                       4);
+    const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
+    const int kernel_x = 3;
+    const int kernel_y = 3;
+    std::vector<float> weights_reordered((kernel_x * kernel_y + 1) * src_depth *
+                                         4);
 
-  int counter = 0;
-  for (int s = 0; s < src_depth; ++s) {
-    for (int y = 0; y < kernel_y; ++y) {
-      for (int x = 0; x < kernel_x; ++x) {
-        for (int i = 0; i < 4; ++i) {
-          const int s_ch = s * 4 + i;
-          if (s_ch < attr.weights.shape.i) {
-            const int f_index = attr.weights.shape.LinearIndex({0, y, x, s_ch});
-            weights_reordered[counter++] = attr.weights.data[f_index];
-          } else {
-            weights_reordered[counter++] = 0.0f;
-          }
+    int counter = 0;
+    for (int s = 0; s < src_depth; ++s) {
+        for (int y = 0; y < kernel_y; ++y) {
+            for (int x = 0; x < kernel_x; ++x) {
+                for (int i = 0; i < 4; ++i) {
+                    const int s_ch = s * 4 + i;
+                    if (s_ch < attr.weights.shape.i) {
+                        const int f_index = attr.weights.shape.LinearIndex({0, y, x, s_ch});
+                        weights_reordered[counter++] = attr.weights.data[f_index];
+                    } else {
+                        weights_reordered[counter++] = 0.0f;
+                    }
+                }
+            }
         }
-      }
+
+        for (int i = 0; i < 4; ++i) {
+            const int dst_ch = s * 4 + i;
+            if (dst_ch < attr.bias.shape.v) {
+                weights_reordered[counter++] = attr.bias.data[dst_ch];
+            } else {
+                weights_reordered[counter++] = 0.0f;
+            }
+        }
     }
 
-    for (int i = 0; i < 4; ++i) {
-      const int dst_ch = s * 4 + i;
-      if (dst_ch < attr.bias.shape.v) {
-        weights_reordered[counter++] = attr.bias.data[dst_ch];
-      } else {
-        weights_reordered[counter++] = 0.0f;
-      }
-    }
-  }
-
-  return weights_reordered;
+    return weights_reordered;
 }
 
 static std::vector<uint8_t> GetUniformBufferDepthWiseConv3x3Stride2(
     const BHWC& src_size, const BHWC& dst_size,
     const DepthwiseConvolution2DAttributes& attr) {
-  std::vector<int> uniform_params = {
-      src_size.w,
-      src_size.h,
-      src_size.w * src_size.h,
-      IntegralDivideRoundUp(src_size.c, 4),
-      dst_size.w,
-      dst_size.h,
-      dst_size.w * dst_size.h,
-      IntegralDivideRoundUp(dst_size.c, 4),
-      -attr.padding.prepended.w,
-      -attr.padding.prepended.h,
-      attr.strides.w,
-      attr.strides.h,
-      attr.dilations.w,
-      attr.dilations.h,
-      0,  // dummy, for alignment
-      0,  // dummy, for alignment
-  };
-  return GetByteBuffer(uniform_params);
+    std::vector<int> uniform_params = {
+        src_size.w,
+        src_size.h,
+        src_size.w * src_size.h,
+        IntegralDivideRoundUp(src_size.c, 4),
+        dst_size.w,
+        dst_size.h,
+        dst_size.w * dst_size.h,
+        IntegralDivideRoundUp(dst_size.c, 4),
+        -attr.padding.prepended.w,
+        -attr.padding.prepended.h,
+        attr.strides.w,
+        attr.strides.h,
+        attr.dilations.w,
+        attr.dilations.h,
+        0,  // dummy, for alignment
+        0,  // dummy, for alignment
+    };
+    return GetByteBuffer(uniform_params);
 }
 
 }  // namespace
@@ -468,11 +468,11 @@ std::vector<ComputeTaskDescriptorPtr> DepthWiseConvolution(
     int id, ValueId input_id, ValueId output_id,
     const DepthwiseConvolution2DAttributes& attr,
     const RuntimeOptions& options) {
-  int channels_multiplier = attr.weights.shape.o;
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  std::string shader_source = R"(
+    int channels_multiplier = attr.weights.shape.o;
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    std::string shader_source = R"(
     #include <metal_stdlib>
     using namespace metal;
     struct uniforms {
@@ -554,195 +554,205 @@ std::vector<ComputeTaskDescriptorPtr> DepthWiseConvolution(
       dst_buffer[linear_index] = value;
     }
   )";
-  desc->shader_source = shader_source;
+    desc->shader_source = shader_source;
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+    };
 
-  desc->output_buffer = {
-      output_id, "device FLT4* dst_buffer",
-      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-        auto out_shape =
+    desc->output_buffer = {
+        output_id, "device FLT4* dst_buffer",
+        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+            auto out_shape =
             CalculateOutputShape(buffers.find(input_id)->second, attr);
-        return out_shape;
-      }};
+            return out_shape;
+        }
+    };
 
-  const int output_channels_count = attr.weights.shape.i * attr.weights.shape.o;
-  desc->immutable_buffers = {
-      {"device FLT4* const filters",
-       GetByteBufferConverted(ConvertToPIOHW4(attr.weights),
-                              options.storage_precision)},
-      {"device FLT4* const biases",
-       GetByteBufferConvertedResized(attr.bias.data, options.storage_precision,
-                                     output_channels_count)},
-  };
+    const int output_channels_count = attr.weights.shape.i * attr.weights.shape.o;
+    desc->immutable_buffers = {
+        {   "device FLT4* const filters",
+            GetByteBufferConverted(ConvertToPIOHW4(attr.weights),
+                                   options.storage_precision)
+        },
+        {   "device FLT4* const biases",
+            GetByteBufferConvertedResized(attr.bias.data, options.storage_precision,
+                                          output_channels_count)
+        },
+    };
 
-  desc->uniform_buffers = {
-      {"constant uniforms& U",
-       [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
-         const auto& dimension = buffers.find(input_id)->second;
-         const auto& output_dimension = buffers.find(output_id)->second;
-         std::vector<int> uniform_params{
-             dimension.w,
-             dimension.h,
-             IntegralDivideRoundUp(dimension.c, 4),
-             0,
-             output_dimension.w,
-             output_dimension.h,
-             IntegralDivideRoundUp(output_dimension.c, 4),
-             0,
-             attr.strides.w,
-             attr.strides.h,
-             -attr.padding.prepended.w,
-             -attr.padding.prepended.h,
-             attr.dilations.w,
-             attr.dilations.h,
-             attr.weights.shape.w,
-             attr.weights.shape.h,
-             attr.weights.shape.o,
-             0,
-             0,
-             0,
-         };
-         return GetByteBuffer(uniform_params);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant uniforms& U",
+            [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
+                const auto& dimension = buffers.find(input_id)->second;
+                const auto& output_dimension = buffers.find(output_id)->second;
+                std::vector<int> uniform_params{
+                    dimension.w,
+                    dimension.h,
+                    IntegralDivideRoundUp(dimension.c, 4),
+                    0,
+                    output_dimension.w,
+                    output_dimension.h,
+                    IntegralDivideRoundUp(output_dimension.c, 4),
+                    0,
+                    attr.strides.w,
+                    attr.strides.h,
+                    -attr.padding.prepended.w,
+                    -attr.padding.prepended.h,
+                    attr.dilations.w,
+                    attr.dilations.h,
+                    attr.weights.shape.w,
+                    attr.weights.shape.h,
+                    attr.weights.shape.o,
+                    0,
+                    0,
+                    0,
+                };
+                return GetByteBuffer(uniform_params);
+            }
+        },
+    };
 
-  desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
-    const auto& dimension = buffers.find(output_id)->second;
-    uint3 groups_size{8, 4, 1};
-    uint3 groups_count{IntegralDivideRoundUp(dimension.w, groups_size.x),
-                       IntegralDivideRoundUp(dimension.h, groups_size.y),
-                       IntegralDivideRoundUp(dimension.c, 4)};
-    return std::make_pair(groups_size, groups_count);
-  };
+    desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
+        const auto& dimension = buffers.find(output_id)->second;
+        uint3 groups_size{8, 4, 1};
+        uint3 groups_count{IntegralDivideRoundUp(dimension.w, groups_size.x),
+                           IntegralDivideRoundUp(dimension.h, groups_size.y),
+                           IntegralDivideRoundUp(dimension.c, 4)};
+        return std::make_pair(groups_size, groups_count);
+    };
 
-  return {desc};
+    return {desc};
 }
 
 std::vector<ComputeTaskDescriptorPtr> DepthWiseConv3x3Stride1x1(
     int id, ValueId input_id, ValueId output_id,
     const DepthwiseConvolution2DAttributes& attr,
     const RuntimeOptions& options) {
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  desc->shader_source = GetKernelDepthWiseConv3x3Stride1x1();
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    desc->shader_source = GetKernelDepthWiseConv3x3Stride1x1();
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+    };
 
-  desc->output_buffer = {
-      output_id, "device FLT4* dst_buffer",
-      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-        auto out_shape =
+    desc->output_buffer = {
+        output_id, "device FLT4* dst_buffer",
+        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+            auto out_shape =
             CalculateOutputShape(buffers.find(input_id)->second, attr);
-        return out_shape;
-      }};
+            return out_shape;
+        }
+    };
 
-  // For this operation we keep weights and biases in one buffer
-  auto weights_reordered = ReorderWeightsDepthWiseConv3x3Stride1x1(attr);
-  desc->immutable_buffers = {
-      {"device FLT4* const filters",
-       GetByteBufferConverted(weights_reordered, options.storage_precision)},
-  };
+    // For this operation we keep weights and biases in one buffer
+    auto weights_reordered = ReorderWeightsDepthWiseConv3x3Stride1x1(attr);
+    desc->immutable_buffers = {
+        {   "device FLT4* const filters",
+            GetByteBufferConverted(weights_reordered, options.storage_precision)
+        },
+    };
 
-  desc->uniform_buffers = {
-      {"constant uniforms& params",
-       [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
-         const auto& input_dimensions = buffers.find(input_id)->second;
-         const auto& output_dimensions = buffers.find(output_id)->second;
-         return GetUniformBufferDepthWiseConv3x3Stride1x1(
-             input_dimensions, output_dimensions, attr);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant uniforms& params",
+            [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
+                const auto& input_dimensions = buffers.find(input_id)->second;
+                const auto& output_dimensions = buffers.find(output_id)->second;
+                return GetUniformBufferDepthWiseConv3x3Stride1x1(
+                    input_dimensions, output_dimensions, attr);
+            }
+        },
+    };
 
-  desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
-    const auto& dimension = buffers.find(output_id)->second;
-    const int grid_x = IntegralDivideRoundUp(dimension.w, 2);
-    const int grid_y = IntegralDivideRoundUp(dimension.h, 2);
-    const int grid_z = IntegralDivideRoundUp(dimension.c, 4);
-    uint3 group_size{8, 4, 1};
-    if (grid_x <= 4) {
-      group_size.x = 4;
-      group_size.z = grid_z % 2 == 0 ? 2 : 1;
-    }
-    const int groups_x = IntegralDivideRoundUp(grid_x, group_size.x);
-    const int groups_y = IntegralDivideRoundUp(grid_y, group_size.y);
-    const int groups_z = IntegralDivideRoundUp(grid_z, group_size.z);
-    return std::make_pair(group_size, uint3(groups_x, groups_y, groups_z));
-  };
+    desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
+        const auto& dimension = buffers.find(output_id)->second;
+        const int grid_x = IntegralDivideRoundUp(dimension.w, 2);
+        const int grid_y = IntegralDivideRoundUp(dimension.h, 2);
+        const int grid_z = IntegralDivideRoundUp(dimension.c, 4);
+        uint3 group_size{8, 4, 1};
+        if (grid_x <= 4) {
+            group_size.x = 4;
+            group_size.z = grid_z % 2 == 0 ? 2 : 1;
+        }
+        const int groups_x = IntegralDivideRoundUp(grid_x, group_size.x);
+        const int groups_y = IntegralDivideRoundUp(grid_y, group_size.y);
+        const int groups_z = IntegralDivideRoundUp(grid_z, group_size.z);
+        return std::make_pair(group_size, uint3(groups_x, groups_y, groups_z));
+    };
 
-  return {desc};
+    return {desc};
 }
 
 bool CheckDepthWiseConv3x3Stride1x1Support(
     const DepthwiseConvolution2DAttributes& attr) {
-  return attr.weights.shape.o == 1 && attr.weights.shape.h == 3 &&
-         attr.weights.shape.w == 3 && attr.strides.h == 1 &&
-         attr.strides.w == 1 && attr.dilations.h == 1 && attr.dilations.w == 1;
+    return attr.weights.shape.o == 1 && attr.weights.shape.h == 3 &&
+           attr.weights.shape.w == 3 && attr.strides.h == 1 &&
+           attr.strides.w == 1 && attr.dilations.h == 1 && attr.dilations.w == 1;
 }
 
 std::vector<ComputeTaskDescriptorPtr> DepthWiseConv3x3Stride2(
     int id, ValueId input_id, ValueId output_id,
     const DepthwiseConvolution2DAttributes& attr,
     const RuntimeOptions& options) {
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  desc->shader_source = GetKernelDepthWiseConv3x3Stride2();
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    desc->shader_source = GetKernelDepthWiseConv3x3Stride2();
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+    };
 
-  desc->output_buffer = {
-      output_id, "device FLT4* dst_buffer",
-      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-        auto out_shape =
+    desc->output_buffer = {
+        output_id, "device FLT4* dst_buffer",
+        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+            auto out_shape =
             CalculateOutputShape(buffers.find(input_id)->second, attr);
-        return out_shape;
-      }};
+            return out_shape;
+        }
+    };
 
-  // For this operation we keep weights and biases in one buffer
-  auto weights_reordered = ReorderWeightsDepthWiseConv3x3Stride2(attr);
-  desc->immutable_buffers = {
-      {"device FLT4* const filters",
-       GetByteBufferConverted(weights_reordered, options.storage_precision)},
-  };
+    // For this operation we keep weights and biases in one buffer
+    auto weights_reordered = ReorderWeightsDepthWiseConv3x3Stride2(attr);
+    desc->immutable_buffers = {
+        {   "device FLT4* const filters",
+            GetByteBufferConverted(weights_reordered, options.storage_precision)
+        },
+    };
 
-  desc->uniform_buffers = {
-      {"constant uniforms& params",
-       [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
-         const auto& input_dimensions = buffers.find(input_id)->second;
-         const auto& output_dimensions = buffers.find(output_id)->second;
-         return GetUniformBufferDepthWiseConv3x3Stride2(
-             input_dimensions, output_dimensions, attr);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant uniforms& params",
+            [input_id, output_id, attr](const std::map<ValueId, BHWC>& buffers) {
+                const auto& input_dimensions = buffers.find(input_id)->second;
+                const auto& output_dimensions = buffers.find(output_id)->second;
+                return GetUniformBufferDepthWiseConv3x3Stride2(
+                    input_dimensions, output_dimensions, attr);
+            }
+        },
+    };
 
-  desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
-    const auto& dimension = buffers.find(output_id)->second;
-    const int grid_x = dimension.w;
-    const int grid_y = IntegralDivideRoundUp(dimension.h, 2);
-    const int grid_z = IntegralDivideRoundUp(dimension.c, 4);
-    const uint3 group_size{8, 4, 1};
-    const int groups_x = IntegralDivideRoundUp(grid_x, group_size.x);
-    const int groups_y = IntegralDivideRoundUp(grid_y, group_size.y);
-    const int groups_z = IntegralDivideRoundUp(grid_z, group_size.z);
-    return std::make_pair(group_size, uint3(groups_x, groups_y, groups_z));
-  };
+    desc->resize_function = [output_id](const std::map<ValueId, BHWC>& buffers) {
+        const auto& dimension = buffers.find(output_id)->second;
+        const int grid_x = dimension.w;
+        const int grid_y = IntegralDivideRoundUp(dimension.h, 2);
+        const int grid_z = IntegralDivideRoundUp(dimension.c, 4);
+        const uint3 group_size{8, 4, 1};
+        const int groups_x = IntegralDivideRoundUp(grid_x, group_size.x);
+        const int groups_y = IntegralDivideRoundUp(grid_y, group_size.y);
+        const int groups_z = IntegralDivideRoundUp(grid_z, group_size.z);
+        return std::make_pair(group_size, uint3(groups_x, groups_y, groups_z));
+    };
 
-  return {desc};
+    return {desc};
 }
 
 bool CheckDepthWiseConv3x3Stride2Support(
     const DepthwiseConvolution2DAttributes& attr) {
-  return attr.weights.shape.o == 1 && attr.weights.shape.h == 3 &&
-         attr.weights.shape.w == 3 && attr.strides.h == 2 &&
-         attr.dilations.h == 1;
+    return attr.weights.shape.o == 1 && attr.weights.shape.h == 3 &&
+           attr.weights.shape.w == 3 && attr.strides.h == 2 &&
+           attr.dilations.h == 1;
 }
 
 }  // namespace metal

@@ -56,61 +56,65 @@ enum class LayoutSupport { kGeneral, kRCC };
 // runtime values (for instance, the optional bias vector).
 template <typename tAccumScalar, typename tDstScalar>
 struct BasicSpec {
-  // Accumulator type. The type of accumulators used to compute the dot-products
-  // before being ultimately casted to the destination type.
-  using AccumScalar = tAccumScalar;
-  // The destination scalar type.
-  using DstScalar = tDstScalar;
-  // The bias vector data, if not null.
-  const AccumScalar* bias = nullptr;
-  // Only for non-floating-point cases. The fixed-point part (i.e. the mantissa)
-  // of the multiplier by which accumulators are multiplied before being casted
-  // to the destination type.
-  AccumScalar multiplier_fixedpoint = 0;
-  // Only for non-floating-point cases. The exponent part of the aforementioned
-  // multiplier.
-  int multiplier_exponent = 0;
-  // Per-channel variant of multiplier_fixedpoint. If not nullptr, this must
-  // point to a buffer of as many values as there are rows in the destination
-  // matrix. Each row of the destination matrix will use the corresponding
-  // buffer element instead of multiplier_fixedpoint.
-  const AccumScalar* multiplier_fixedpoint_perchannel = nullptr;
-  // Per-channel variant of multiplier_exponent. If not nullptr, this must
-  // point to a buffer of as many values as there are rows in the destination
-  // matrix. Each row of the destination matrix will use the corresponding
-  // buffer element instead of multiplier_exponent.
-  //
-  // Either none or both of multiplier_exponent_perchannel and
-  // multiplier_fixedpoint_perchannel must be nullptr.
-  const int* multiplier_exponent_perchannel = nullptr;
-  // min clamp bound of destination values.
-  DstScalar clamp_min = std::is_floating_point<DstScalar>::value
-                            ? -std::numeric_limits<DstScalar>::infinity()
-                            : std::numeric_limits<DstScalar>::lowest();
-  // max clamp bound of destination values.
-  DstScalar clamp_max = std::is_floating_point<DstScalar>::value
-                            ? std::numeric_limits<DstScalar>::infinity()
-                            : std::numeric_limits<DstScalar>::max();
-  // See above enum LoopStructure
-  static constexpr LoopStructure kLoopStructure = LoopStructure::kAuto;
-  // See above enum LayoutSupport
-  static constexpr LayoutSupport kLayoutSupport = LayoutSupport::kGeneral;
-  // See above enum ZeroPointSupport
-  static constexpr ZeroPointSupport kZeroPointSupport =
-      ZeroPointSupport::kGeneral;
-  // Testing-only, not meant to be used by actual users:
-  // Used for testing of various kernel layouts.
-  using StandardCppKernelLhsLayout = FixedKernelLayout<Order::kColMajor, 1, 1>;
-  using StandardCppKernelRhsLayout = FixedKernelLayout<Order::kColMajor, 1, 1>;
-  // Returns (a reasonable estimate of) the local CPU cache size.
-  // See ruy::LocalDataCacheSize() which returns some coarse, sane default for
-  // each CPU architecture.
-  // This may be overridden, either to provide more accurate/runtime values,
-  // or to test with other values to let testcases have more coverage.
-  static int local_data_cache_size() { return LocalDataCacheSize(); }
-  // Same as local_data_cache_size but for the total data cache size accessible
-  // to each CPU core. See ruy::SharedDataCacheSize().
-  static int shared_data_cache_size() { return SharedDataCacheSize(); }
+    // Accumulator type. The type of accumulators used to compute the dot-products
+    // before being ultimately casted to the destination type.
+    using AccumScalar = tAccumScalar;
+    // The destination scalar type.
+    using DstScalar = tDstScalar;
+    // The bias vector data, if not null.
+    const AccumScalar* bias = nullptr;
+    // Only for non-floating-point cases. The fixed-point part (i.e. the mantissa)
+    // of the multiplier by which accumulators are multiplied before being casted
+    // to the destination type.
+    AccumScalar multiplier_fixedpoint = 0;
+    // Only for non-floating-point cases. The exponent part of the aforementioned
+    // multiplier.
+    int multiplier_exponent = 0;
+    // Per-channel variant of multiplier_fixedpoint. If not nullptr, this must
+    // point to a buffer of as many values as there are rows in the destination
+    // matrix. Each row of the destination matrix will use the corresponding
+    // buffer element instead of multiplier_fixedpoint.
+    const AccumScalar* multiplier_fixedpoint_perchannel = nullptr;
+    // Per-channel variant of multiplier_exponent. If not nullptr, this must
+    // point to a buffer of as many values as there are rows in the destination
+    // matrix. Each row of the destination matrix will use the corresponding
+    // buffer element instead of multiplier_exponent.
+    //
+    // Either none or both of multiplier_exponent_perchannel and
+    // multiplier_fixedpoint_perchannel must be nullptr.
+    const int* multiplier_exponent_perchannel = nullptr;
+    // min clamp bound of destination values.
+    DstScalar clamp_min = std::is_floating_point<DstScalar>::value
+                          ? -std::numeric_limits<DstScalar>::infinity()
+                          : std::numeric_limits<DstScalar>::lowest();
+    // max clamp bound of destination values.
+    DstScalar clamp_max = std::is_floating_point<DstScalar>::value
+                          ? std::numeric_limits<DstScalar>::infinity()
+                          : std::numeric_limits<DstScalar>::max();
+    // See above enum LoopStructure
+    static constexpr LoopStructure kLoopStructure = LoopStructure::kAuto;
+    // See above enum LayoutSupport
+    static constexpr LayoutSupport kLayoutSupport = LayoutSupport::kGeneral;
+    // See above enum ZeroPointSupport
+    static constexpr ZeroPointSupport kZeroPointSupport =
+        ZeroPointSupport::kGeneral;
+    // Testing-only, not meant to be used by actual users:
+    // Used for testing of various kernel layouts.
+    using StandardCppKernelLhsLayout = FixedKernelLayout<Order::kColMajor, 1, 1>;
+    using StandardCppKernelRhsLayout = FixedKernelLayout<Order::kColMajor, 1, 1>;
+    // Returns (a reasonable estimate of) the local CPU cache size.
+    // See ruy::LocalDataCacheSize() which returns some coarse, sane default for
+    // each CPU architecture.
+    // This may be overridden, either to provide more accurate/runtime values,
+    // or to test with other values to let testcases have more coverage.
+    static int local_data_cache_size() {
+        return LocalDataCacheSize();
+    }
+    // Same as local_data_cache_size but for the total data cache size accessible
+    // to each CPU core. See ruy::SharedDataCacheSize().
+    static int shared_data_cache_size() {
+        return SharedDataCacheSize();
+    }
 };
 
 }  // namespace ruy

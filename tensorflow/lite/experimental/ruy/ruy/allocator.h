@@ -29,9 +29,9 @@ namespace ruy {
 namespace detail {
 
 inline void* VoidPtrAdd(void* p, std::ptrdiff_t offset) {
-  RUY_DCHECK(p);
-  std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(p) + offset;
-  return reinterpret_cast<void*>(addr);
+    RUY_DCHECK(p);
+    std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(p) + offset;
+    return reinterpret_cast<void*>(addr);
 }
 
 // Minimum alignment for blocks.
@@ -76,83 +76,83 @@ void SystemAlignedFree(void* ptr);
 //
 // All operations happen on aligned blocks for simplicity.
 class AlignedAllocator {
- public:
-  void operator=(const AlignedAllocator&) = delete;
-  ~AlignedAllocator() {
-    FreeAll();
-    SystemAlignedFree(ptr_);
-  }
-
-  void* AllocateAlignedBytes(std::ptrdiff_t num_bytes) {
-    RUY_DCHECK_GT(num_bytes, 0);
-    RUY_DCHECK((num_bytes & (kMinimumBlockAlignment - 1)) == 0);
-    if (void* p = AllocateFast(num_bytes)) {
-      return p;
-    }
-    return AllocateSlow(num_bytes);
-  }
-
-  void FreeAll() {
-    current_ = 0;
-    if (fallback_blocks_.empty()) {
-      return;
+public:
+    void operator=(const AlignedAllocator&) = delete;
+    ~AlignedAllocator() {
+        FreeAll();
+        SystemAlignedFree(ptr_);
     }
 
-    // No rounding-up of the size means linear instead of logarithmic
-    // bound on the number of allocation in some worst-case calling patterns.
-    // This is considered worth it because minimizing memory usage is important
-    // and actual calling patterns in applications that we care about still
-    // reach the no-further-allocations steady state in a small finite number
-    // of iterations.
-    std::ptrdiff_t new_size = size_ + fallback_blocks_total_size_;
-    SystemAlignedFree(ptr_);
-    ptr_ = SystemAlignedAlloc(new_size);
-    size_ = new_size;
-
-    for (void* p : fallback_blocks_) {
-      SystemAlignedFree(p);
+    void* AllocateAlignedBytes(std::ptrdiff_t num_bytes) {
+        RUY_DCHECK_GT(num_bytes, 0);
+        RUY_DCHECK((num_bytes & (kMinimumBlockAlignment - 1)) == 0);
+        if (void* p = AllocateFast(num_bytes)) {
+            return p;
+        }
+        return AllocateSlow(num_bytes);
     }
-    fallback_blocks_.clear();
-    fallback_blocks_total_size_ = 0;
-  }
 
- private:
-  void* AllocateFast(std::ptrdiff_t num_bytes) {
-    if (current_ + num_bytes > size_) {
-      return nullptr;
+    void FreeAll() {
+        current_ = 0;
+        if (fallback_blocks_.empty()) {
+            return;
+        }
+
+        // No rounding-up of the size means linear instead of logarithmic
+        // bound on the number of allocation in some worst-case calling patterns.
+        // This is considered worth it because minimizing memory usage is important
+        // and actual calling patterns in applications that we care about still
+        // reach the no-further-allocations steady state in a small finite number
+        // of iterations.
+        std::ptrdiff_t new_size = size_ + fallback_blocks_total_size_;
+        SystemAlignedFree(ptr_);
+        ptr_ = SystemAlignedAlloc(new_size);
+        size_ = new_size;
+
+        for (void* p : fallback_blocks_) {
+            SystemAlignedFree(p);
+        }
+        fallback_blocks_.clear();
+        fallback_blocks_total_size_ = 0;
     }
-    void* ret = VoidPtrAdd(ptr_, current_);
-    current_ += num_bytes;
-    return ret;
-  }
 
-  void* AllocateSlow(std::ptrdiff_t num_bytes) {
-    void* p = SystemAlignedAlloc(num_bytes);
-    fallback_blocks_total_size_ += num_bytes;
-    fallback_blocks_.push_back(p);
-    return p;
-  }
+private:
+    void* AllocateFast(std::ptrdiff_t num_bytes) {
+        if (current_ + num_bytes > size_) {
+            return nullptr;
+        }
+        void* ret = VoidPtrAdd(ptr_, current_);
+        current_ += num_bytes;
+        return ret;
+    }
 
-  // Theory of operation:
-  //
-  // - ptr_, current_, and size_ implement a basic bump-ptr allocator.
-  //
-  // - in AllocateAlignedBytes, the fast path is just a bump-ptr
-  // allocation. If our bump-ptr allocator doesn't have enough space for an
-  // allocation, then we allocate a block from the system allocator to
-  // service the allocation request. We save that block in fallback_blocks_
-  // and track the total size of the fallback blocks in
-  // fallback_blocks_total_size_.
-  //
-  // - in FreeAll, the fast path just resets the bump-ptr allocator. If
-  // there are any fallback blocks, we free them and reallocate the
-  // bump-ptr allocator's buffer so that the next sequence of allocations
-  // will hopefully not need any fallback blocks.
-  void* ptr_ = nullptr;
-  std::ptrdiff_t current_ = 0;
-  std::ptrdiff_t size_ = 0;
-  std::vector<void*> fallback_blocks_;
-  std::ptrdiff_t fallback_blocks_total_size_ = 0;
+    void* AllocateSlow(std::ptrdiff_t num_bytes) {
+        void* p = SystemAlignedAlloc(num_bytes);
+        fallback_blocks_total_size_ += num_bytes;
+        fallback_blocks_.push_back(p);
+        return p;
+    }
+
+    // Theory of operation:
+    //
+    // - ptr_, current_, and size_ implement a basic bump-ptr allocator.
+    //
+    // - in AllocateAlignedBytes, the fast path is just a bump-ptr
+    // allocation. If our bump-ptr allocator doesn't have enough space for an
+    // allocation, then we allocate a block from the system allocator to
+    // service the allocation request. We save that block in fallback_blocks_
+    // and track the total size of the fallback blocks in
+    // fallback_blocks_total_size_.
+    //
+    // - in FreeAll, the fast path just resets the bump-ptr allocator. If
+    // there are any fallback blocks, we free them and reallocate the
+    // bump-ptr allocator's buffer so that the next sequence of allocations
+    // will hopefully not need any fallback blocks.
+    void* ptr_ = nullptr;
+    std::ptrdiff_t current_ = 0;
+    std::ptrdiff_t size_ = 0;
+    std::vector<void*> fallback_blocks_;
+    std::ptrdiff_t fallback_blocks_total_size_ = 0;
 };
 
 }  // namespace detail
@@ -160,24 +160,26 @@ class AlignedAllocator {
 // The main Allocator class, with a convenient interface for allocating a
 // typed buffer.
 class Allocator {
- public:
-  void* AllocateBytes(std::ptrdiff_t num_bytes) {
-    if (num_bytes == 0) {
-      return nullptr;
+public:
+    void* AllocateBytes(std::ptrdiff_t num_bytes) {
+        if (num_bytes == 0) {
+            return nullptr;
+        }
+        return aligned.AllocateAlignedBytes(
+                   round_up_pot(num_bytes, detail::kMinimumBlockAlignment));
     }
-    return aligned.AllocateAlignedBytes(
-        round_up_pot(num_bytes, detail::kMinimumBlockAlignment));
-  }
-  template <typename Pointer>
-  void Allocate(std::ptrdiff_t count, Pointer* out) {
-    using T = typename std::pointer_traits<Pointer>::element_type;
-    *out = static_cast<T*>(AllocateBytes(count * sizeof(T)));
-  }
+    template <typename Pointer>
+    void Allocate(std::ptrdiff_t count, Pointer* out) {
+        using T = typename std::pointer_traits<Pointer>::element_type;
+        *out = static_cast<T*>(AllocateBytes(count * sizeof(T)));
+    }
 
-  void FreeAll() { aligned.FreeAll(); }
+    void FreeAll() {
+        aligned.FreeAll();
+    }
 
- private:
-  detail::AlignedAllocator aligned;
+private:
+    detail::AlignedAllocator aligned;
 };
 
 }  // namespace ruy

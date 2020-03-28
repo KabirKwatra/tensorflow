@@ -37,43 +37,59 @@ namespace ruy {
 // Ideally these values would be queried at runtime, and we should probably
 // do that on x86, but that is hard to do on ARM.
 #if RUY_PLATFORM(ARM_64)
-inline int LocalDataCacheSize() { return 1 << 15; }
-inline int SharedDataCacheSize() { return 1 << 19; }
+inline int LocalDataCacheSize() {
+    return 1 << 15;
+}
+inline int SharedDataCacheSize() {
+    return 1 << 19;
+}
 #elif RUY_PLATFORM(ARM_32)
-inline int LocalDataCacheSize() { return 1 << 14; }
-inline int SharedDataCacheSize() { return 1 << 18; }
+inline int LocalDataCacheSize() {
+    return 1 << 14;
+}
+inline int SharedDataCacheSize() {
+    return 1 << 18;
+}
 #elif RUY_PLATFORM(X86)
-inline int LocalDataCacheSize() { return 1 << 17; }
-inline int SharedDataCacheSize() { return 1 << 21; }
+inline int LocalDataCacheSize() {
+    return 1 << 17;
+}
+inline int SharedDataCacheSize() {
+    return 1 << 21;
+}
 #else
-inline int LocalDataCacheSize() { return 1 << 14; }
-inline int SharedDataCacheSize() { return 1 << 18; }
+inline int LocalDataCacheSize() {
+    return 1 << 14;
+}
+inline int SharedDataCacheSize() {
+    return 1 << 18;
+}
 #endif
 // Variants taking a Path argument which acts
 // as a hint telling whether we're targeting more or less recent/powerful CPUs.
 inline int LocalDataCacheSize(Path path) {
 #if RUY_PLATFORM(ARM_64)
-  if (path == Path::kNeonDotprod) {
-    // At the moment, the smallest CPU with dotprod is probably Cortex-A55 with
-    // 128k L2 local cache.
-    return 1 << 17;
-  }
+    if (path == Path::kNeonDotprod) {
+        // At the moment, the smallest CPU with dotprod is probably Cortex-A55 with
+        // 128k L2 local cache.
+        return 1 << 17;
+    }
 #else
-  (void)path;
+    (void)path;
 #endif
-  return LocalDataCacheSize();
+    return LocalDataCacheSize();
 }
 inline int SharedDataCacheSize(Path path) {
 #if RUY_PLATFORM(ARM_64)
-  if (path == Path::kNeonDotprod) {
-    // At the moment, the smallest CPU with dotprod is probably Cortex-A55 with
-    // 1M L3 shared cache.
-    return 1 << 20;
-  }
+    if (path == Path::kNeonDotprod) {
+        // At the moment, the smallest CPU with dotprod is probably Cortex-A55 with
+        // 1M L3 shared cache.
+        return 1 << 20;
+    }
 #else
-  (void)path;
+    (void)path;
 #endif
-  return SharedDataCacheSize();
+    return SharedDataCacheSize();
 }
 
 }  // namespace ruy

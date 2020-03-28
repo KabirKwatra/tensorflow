@@ -28,44 +28,46 @@ using TestSetType =
     TestSet<LhsScalar, RhsScalar, BasicSpec<AccumScalar, DstScalar>>;
 
 TEST(RuyTest, TestBigNarrowMuls) {
-  for (int width : {1, 2, 3, 4, 5, 8}) {
-    TestRCC<TestSetType>(width, 401, 601);
-    TestRCC<TestSetType>(587, 443, width);
-  }
-  TestRCC<TestSetType>(7, 45984,
-                       5);  // Large enough to trigger row-sum overflows.
-  TestRCC<TestSetType>(512, 256, 16);
+    for (int width : {
+                1, 2, 3, 4, 5, 8
+            }) {
+        TestRCC<TestSetType>(width, 401, 601);
+        TestRCC<TestSetType>(587, 443, width);
+    }
+    TestRCC<TestSetType>(7, 45984,
+                         5);  // Large enough to trigger row-sum overflows.
+    TestRCC<TestSetType>(512, 256, 16);
 }
 
 TEST(RuyTest, TestBigShallowMuls) {
-  TestLinearAllOrders<TestSetType>(501, 1, 321);
-  TestLinearAllOrders<TestSetType>(301, 5, 403);
-  TestLinearAllOrders<TestSetType>(256, 32, 512);
+    TestLinearAllOrders<TestSetType>(501, 1, 321);
+    TestLinearAllOrders<TestSetType>(301, 5, 403);
+    TestLinearAllOrders<TestSetType>(256, 32, 512);
 }
 
 TEST(RuyTest, TestBigMuls) {
-  TestRCC<TestSetType>(225, 303, 199);
-  TestLinearAllOrders<TestSetType>(256, 192, 128);
+    TestRCC<TestSetType>(225, 303, 199);
+    TestLinearAllOrders<TestSetType>(256, 192, 128);
 }
 
 TEST(RuyTest, TestBigPowerOfTwoDepthWithAvoidAliasing) {
-  // Important to test some power-of-two depths: that's when the
-  // RUY_AVOID_ALIASING optimization kicks in and makes packed matrices
-  // strided, exposing bugs in kernels mixing up size and stride.
-  // Moreover, it's important that the test matrices be sufficiently wide
-  // that they will result in multiple blocks, exposing bugs in the
-  // computation of the base address of each block.
-  TestLinearAllOrders<TestSetType>(70, 1024, 80);
-  TestLinearAllOrders<TestSetType>(60, 2048, 70);
-  TestLinearAllOrders<TestSetType>(40, 4096, 50);
+    // Important to test some power-of-two depths: that's when the
+    // RUY_AVOID_ALIASING optimization kicks in and makes packed matrices
+    // strided, exposing bugs in kernels mixing up size and stride.
+    // Moreover, it's important that the test matrices be sufficiently wide
+    // that they will result in multiple blocks, exposing bugs in the
+    // computation of the base address of each block.
+    TestLinearAllOrders<TestSetType>(70, 1024, 80);
+    TestLinearAllOrders<TestSetType>(60, 2048, 70);
+    TestLinearAllOrders<TestSetType>(40, 4096, 50);
 }
 
 TEST(RuyTest, TestGEMV) {
-  for (int size = 1025; size <= 1409; size += 384) {
-    for (int depth = 350; depth < 500; depth += 47) {
-      TestLinearAllOrders<TestSetType>(size, depth, 1);
+    for (int size = 1025; size <= 1409; size += 384) {
+        for (int depth = 350; depth < 500; depth += 47) {
+            TestLinearAllOrders<TestSetType>(size, depth, 1);
+        }
     }
-  }
 }
 
 }  // namespace ruy

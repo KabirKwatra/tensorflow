@@ -39,14 +39,14 @@ const int kThreadGroupWidth = 16;
 const int kThreadGroupHeight = 4;
 
 std::string GetDeconvolution(const ConvolutionTransposedAttributes& attr) {
-  std::string constant_args = R"(
+    std::string constant_args = R"(
     constant short2 padding = {$0, $1};
     constant short2 stride = {$2, $3};
     constant short2 kernel_size = {$4, $5};
     constant short2 inner_size = {$6, $7};
     constant short2 kernel_offset = {$8, $9};
   )";
-  std::string shader_source = R"(
+    std::string shader_source = R"(
     #include <metal_stdlib>
     using namespace metal;
 
@@ -122,32 +122,32 @@ std::string GetDeconvolution(const ConvolutionTransposedAttributes& attr) {
       }
     }
   )";
-  const int kernel_x = attr.weights.shape.w;
-  const int kernel_y = attr.weights.shape.h;
-  const int inner_size_x = (kernel_x - 1) / attr.stride.w + 1;
-  const int inner_size_y = (kernel_y - 1) / attr.stride.h + 1;
-  std::string constant_args_inplaced = absl::Substitute(
-      constant_args, attr.padding.prepended.w, attr.padding.prepended.h,
-      attr.stride.w, attr.stride.h, kernel_x, kernel_y, inner_size_x,
-      inner_size_y, kernel_x - 1, kernel_y - 1);
-  const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
-  const int dst_depth = IntegralDivideRoundUp(attr.weights.shape.o, 4);
-  const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 4);
-  return absl::Substitute(shader_source, src_depth * dst_channels_aligned,
-                          src_depth, dst_depth, attr.weights.shape.o,
-                          dst_channels_aligned, constant_args_inplaced);
+    const int kernel_x = attr.weights.shape.w;
+    const int kernel_y = attr.weights.shape.h;
+    const int inner_size_x = (kernel_x - 1) / attr.stride.w + 1;
+    const int inner_size_y = (kernel_y - 1) / attr.stride.h + 1;
+    std::string constant_args_inplaced = absl::Substitute(
+            constant_args, attr.padding.prepended.w, attr.padding.prepended.h,
+            attr.stride.w, attr.stride.h, kernel_x, kernel_y, inner_size_x,
+            inner_size_y, kernel_x - 1, kernel_y - 1);
+    const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
+    const int dst_depth = IntegralDivideRoundUp(attr.weights.shape.o, 4);
+    const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 4);
+    return absl::Substitute(shader_source, src_depth * dst_channels_aligned,
+                            src_depth, dst_depth, attr.weights.shape.o,
+                            dst_channels_aligned, constant_args_inplaced);
 }
 
 std::string GetDeconvolutionShared(const ConvolutionTransposedAttributes& attr,
                                    int workgroup_x, int workgroup_y) {
-  std::string constant_args = R"(
+    std::string constant_args = R"(
     constant short2 padding = {$0, $1};
     constant short2 stride = {$2, $3};
     constant short2 kernel_size = {$4, $5};
     constant short2 inner_size = {$6, $7};
     constant short2 kernel_offset = {$8, $9};
   )";
-  std::string shader_source = R"(
+    std::string shader_source = R"(
     #include <metal_stdlib>
     using namespace metal;
 
@@ -256,27 +256,27 @@ std::string GetDeconvolutionShared(const ConvolutionTransposedAttributes& attr,
       }
     }
   )";
-  const int kernel_x = attr.weights.shape.w;
-  const int kernel_y = attr.weights.shape.h;
-  const int inner_size_x = (kernel_x - 1) / attr.stride.w + 1;
-  const int inner_size_y = (kernel_y - 1) / attr.stride.h + 1;
-  std::string constant_args_inplaced = absl::Substitute(
-      constant_args, attr.padding.prepended.w, attr.padding.prepended.h,
-      attr.stride.w, attr.stride.h, kernel_x, kernel_y, inner_size_x,
-      inner_size_y, kernel_x - 1, kernel_y - 1);
-  const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
-  const int dst_depth = IntegralDivideRoundUp(attr.weights.shape.o, 4);
-  const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 4);
-  const int src_local_size_x = (workgroup_x + kernel_x) / attr.stride.w;
-  const int src_local_size_y = (workgroup_y + kernel_y) / attr.stride.h;
-  return absl::Substitute(
-      shader_source, src_depth * dst_channels_aligned, src_depth, dst_depth,
-      attr.weights.shape.o, dst_channels_aligned, constant_args_inplaced,
-      src_local_size_x, src_local_size_y, workgroup_x, workgroup_y);
+    const int kernel_x = attr.weights.shape.w;
+    const int kernel_y = attr.weights.shape.h;
+    const int inner_size_x = (kernel_x - 1) / attr.stride.w + 1;
+    const int inner_size_y = (kernel_y - 1) / attr.stride.h + 1;
+    std::string constant_args_inplaced = absl::Substitute(
+            constant_args, attr.padding.prepended.w, attr.padding.prepended.h,
+            attr.stride.w, attr.stride.h, kernel_x, kernel_y, inner_size_x,
+            inner_size_y, kernel_x - 1, kernel_y - 1);
+    const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
+    const int dst_depth = IntegralDivideRoundUp(attr.weights.shape.o, 4);
+    const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 4);
+    const int src_local_size_x = (workgroup_x + kernel_x) / attr.stride.w;
+    const int src_local_size_y = (workgroup_y + kernel_y) / attr.stride.h;
+    return absl::Substitute(
+               shader_source, src_depth * dst_channels_aligned, src_depth, dst_depth,
+               attr.weights.shape.o, dst_channels_aligned, constant_args_inplaced,
+               src_local_size_x, src_local_size_y, workgroup_x, workgroup_y);
 }
 
 std::string GetDeconvolution4x4(const int2& block_size, bool use_local_mem) {
-  std::string c = R"(
+    std::string c = R"(
     #include <metal_stdlib>
     using namespace metal;
 

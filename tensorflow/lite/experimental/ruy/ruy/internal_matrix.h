@@ -117,9 +117,9 @@ namespace ruy {
 // `[cols, rows, 1, 1]` which is equivalent to having no small-scale block
 // structure.
 struct KernelLayout {
-  Order order = Order::kColMajor;
-  std::uint8_t rows = 1;
-  std::uint8_t cols = 1;
+    Order order = Order::kColMajor;
+    std::uint8_t rows = 1;
+    std::uint8_t cols = 1;
 };
 
 // A packed matrix has a small-scale block structure that is not present in in
@@ -128,15 +128,15 @@ struct KernelLayout {
 //
 // This struct is very similar to Layout, but has the extra KernelLayout field.
 struct PackedLayout {
-  std::int32_t rows = 0;
-  std::int32_t cols = 0;
-  // Stride is the offset between two adjacent matrix elements
-  // in the non-contiguous direction.
-  std::int32_t stride = 0;
-  Order order = Order::kColMajor;
-  // Small scale layout shuffling, potentially departing from
-  // linear row-major or column-major storage. See KernelLayout.
-  KernelLayout kernel;
+    std::int32_t rows = 0;
+    std::int32_t cols = 0;
+    // Stride is the offset between two adjacent matrix elements
+    // in the non-contiguous direction.
+    std::int32_t stride = 0;
+    Order order = Order::kColMajor;
+    // Small scale layout shuffling, potentially departing from
+    // linear row-major or column-major storage. See KernelLayout.
+    KernelLayout kernel;
 };
 
 // Dynamic representation for a type.
@@ -151,179 +151,179 @@ struct PackedLayout {
 // necessary "back-end" routines with complete static knowledge of all the
 // types.
 struct Type {
-  template <typename T>
-  static Type Create() {
-    Type ret;
-    ret.is_signed = std::is_signed<T>::value;
-    ret.is_floating_point = std::is_floating_point<T>::value;
-    ret.size = sizeof(T);
-    return ret;
-  }
+    template <typename T>
+    static Type Create() {
+        Type ret;
+        ret.is_signed = std::is_signed<T>::value;
+        ret.is_floating_point = std::is_floating_point<T>::value;
+        ret.size = sizeof(T);
+        return ret;
+    }
 
-  template <typename T>
-  void AssertIs() const {
-    RUY_DCHECK_EQ(is_signed, Create<T>().is_signed);
-    RUY_DCHECK_EQ(is_floating_point, Create<T>().is_floating_point);
-    RUY_DCHECK_EQ(size, Create<T>().size);
-  }
+    template <typename T>
+    void AssertIs() const {
+        RUY_DCHECK_EQ(is_signed, Create<T>().is_signed);
+        RUY_DCHECK_EQ(is_floating_point, Create<T>().is_floating_point);
+        RUY_DCHECK_EQ(size, Create<T>().size);
+    }
 
-  bool is_signed = false;
-  bool is_floating_point = false;
-  std::uint8_t size = 0;
+    bool is_signed = false;
+    bool is_floating_point = false;
+    std::uint8_t size = 0;
 };
 
 // Type-erased matrix.
 struct DMatrix {
-  Type data_type;
-  void* data = nullptr;
-  Layout layout;
-  std::int32_t zero_point = 0;
+    Type data_type;
+    void* data = nullptr;
+    Layout layout;
+    std::int32_t zero_point = 0;
 };
 
 // Type-erased packed matrix.
 struct PMatrix {
-  Type data_type;
-  void* data = nullptr;
-  Type sums_type;
-  void* sums = nullptr;
-  PackedLayout layout;
-  std::int32_t zero_point = 0;
+    Type data_type;
+    void* data = nullptr;
+    Type sums_type;
+    void* sums = nullptr;
+    PackedLayout layout;
+    std::int32_t zero_point = 0;
 };
 
 // Convenient typed helper for packed matrices.
 template <typename Scalar>
 struct PackedMatrix {
-  // The row/column sums needed for quantized matrix multiplication when
-  // the opposite operand of the multiplication uses a non-symmetric zero
-  // point.
-  // This member is only relevant for packed matrices.
-  // Additionally, Ruy always uses 32-bit signed accumulators for quantized
-  // matrix multiplication.
-  // For floating point types, there is no quantization, so this pointer
-  // will always be null. We still need code referencing it to compile
-  // though, even if it is always branched around. Hence we use Scalar*
-  // itself as the type in that case.
-  using SumsType =
-      typename std::conditional<std::is_floating_point<Scalar>::value, Scalar,
-                                std::int32_t>::type;
+    // The row/column sums needed for quantized matrix multiplication when
+    // the opposite operand of the multiplication uses a non-symmetric zero
+    // point.
+    // This member is only relevant for packed matrices.
+    // Additionally, Ruy always uses 32-bit signed accumulators for quantized
+    // matrix multiplication.
+    // For floating point types, there is no quantization, so this pointer
+    // will always be null. We still need code referencing it to compile
+    // though, even if it is always branched around. Hence we use Scalar*
+    // itself as the type in that case.
+    using SumsType =
+        typename std::conditional<std::is_floating_point<Scalar>::value, Scalar,
+        std::int32_t>::type;
 
-  Scalar* data = nullptr;
-  SumsType* sums = nullptr;
-  PackedLayout layout;
-  std::int32_t zero_point = 0;
+    Scalar* data = nullptr;
+    SumsType* sums = nullptr;
+    PackedLayout layout;
+    std::int32_t zero_point = 0;
 };
 
 template <typename T>
 DMatrix ToDMatrix(const Matrix<T>& matrix) {
-  DMatrix ret;
-  ret.data_type = Type::Create<T>();
-  ret.data = ToVoidPtr(matrix.data.get());
-  ret.layout = matrix.layout;
-  ret.zero_point = matrix.zero_point;
-  return ret;
+    DMatrix ret;
+    ret.data_type = Type::Create<T>();
+    ret.data = ToVoidPtr(matrix.data.get());
+    ret.layout = matrix.layout;
+    ret.zero_point = matrix.zero_point;
+    return ret;
 }
 
 template <typename T>
 Matrix<T> ToMatrix(const DMatrix& dmatrix) {
-  dmatrix.data_type.AssertIs<T>();
-  Matrix<T> ret;
-  ret.data = static_cast<T*>(dmatrix.data);
-  ret.layout = dmatrix.layout;
-  ret.zero_point = dmatrix.zero_point;
-  return ret;
+    dmatrix.data_type.AssertIs<T>();
+    Matrix<T> ret;
+    ret.data = static_cast<T*>(dmatrix.data);
+    ret.layout = dmatrix.layout;
+    ret.zero_point = dmatrix.zero_point;
+    return ret;
 }
 
 template <typename T>
 PackedMatrix<T> ToPackedMatrix(const PMatrix& pmatrix) {
-  using SumsType = typename PackedMatrix<T>::SumsType;
-  pmatrix.data_type.AssertIs<T>();
-  pmatrix.sums_type.AssertIs<SumsType>();
-  PackedMatrix<T> ret;
-  ret.data = static_cast<T*>(pmatrix.data);
-  ret.sums = static_cast<SumsType*>(pmatrix.sums);
-  ret.layout = pmatrix.layout;
-  ret.zero_point = pmatrix.zero_point;
-  return ret;
+    using SumsType = typename PackedMatrix<T>::SumsType;
+    pmatrix.data_type.AssertIs<T>();
+    pmatrix.sums_type.AssertIs<SumsType>();
+    PackedMatrix<T> ret;
+    ret.data = static_cast<T*>(pmatrix.data);
+    ret.sums = static_cast<SumsType*>(pmatrix.sums);
+    ret.layout = pmatrix.layout;
+    ret.zero_point = pmatrix.zero_point;
+    return ret;
 }
 
 // Helpers for Layout / PackedLayout.
 
 inline bool IsPacked(const Layout& layout) {
-  if (layout.order == Order::kColMajor) {
-    return layout.stride == layout.rows;
-  } else {
-    return layout.stride == layout.cols;
-  }
+    if (layout.order == Order::kColMajor) {
+        return layout.stride == layout.rows;
+    } else {
+        return layout.stride == layout.cols;
+    }
 }
 
 inline bool IsRowMajor(const Layout& layout) {
-  return layout.order == Order::kRowMajor;
+    return layout.order == Order::kRowMajor;
 }
 
 template <typename LayoutOrPackedLayout>
 inline bool IsColMajor(const LayoutOrPackedLayout& layout) {
-  return layout.order == Order::kColMajor;
+    return layout.order == Order::kColMajor;
 }
 
 template <typename LayoutOrPackedLayout>
 inline int FlatSize(const LayoutOrPackedLayout& layout) {
-  const int outerdim =
-      layout.order == Order::kColMajor ? layout.cols : layout.rows;
-  return layout.stride * outerdim;
+    const int outerdim =
+        layout.order == Order::kColMajor ? layout.cols : layout.rows;
+    return layout.stride * outerdim;
 }
 
 // TODO(b/130417400) add a unit test
 inline int Offset(const Layout& layout, int row, int col) {
-  // TODO(benoitjacob)  - should check this but this make the _slow tests take
-  // 5x longer.  Find a mitigation like in Eigen with an 'internal' variant
-  // bypassing the check?
-  // RUY_DCHECK_GE(row, 0);
-  // RUY_DCHECK_GE(col, 0);
-  // RUY_DCHECK_LT(row, layout.rows);
-  // RUY_DCHECK_LT(col, layout.cols);
-  int row_stride = layout.order == Order::kColMajor ? 1 : layout.stride;
-  int col_stride = layout.order == Order::kRowMajor ? 1 : layout.stride;
-  return row * row_stride + col * col_stride;
+    // TODO(benoitjacob)  - should check this but this make the _slow tests take
+    // 5x longer.  Find a mitigation like in Eigen with an 'internal' variant
+    // bypassing the check?
+    // RUY_DCHECK_GE(row, 0);
+    // RUY_DCHECK_GE(col, 0);
+    // RUY_DCHECK_LT(row, layout.rows);
+    // RUY_DCHECK_LT(col, layout.cols);
+    int row_stride = layout.order == Order::kColMajor ? 1 : layout.stride;
+    int col_stride = layout.order == Order::kRowMajor ? 1 : layout.stride;
+    return row * row_stride + col * col_stride;
 }
 
 // TODO(b/130417400) add a unit test
 inline int Offset(const PackedLayout& layout, int row, int col) {
-  RUY_DCHECK(is_pot(layout.kernel.rows));
-  RUY_DCHECK(is_pot(layout.kernel.cols));
-  int row_outer = row & ~(layout.kernel.rows - 1);
-  int col_outer = col & ~(layout.kernel.cols - 1);
-  int row_stride_outer =
-      layout.order == Order::kColMajor ? layout.kernel.cols : layout.stride;
-  int col_stride_outer =
-      layout.order == Order::kRowMajor ? layout.kernel.rows : layout.stride;
-  int offset_outer =
-      row_outer * row_stride_outer + col_outer * col_stride_outer;
-  int row_inner = row - row_outer;
-  int col_inner = col - col_outer;
-  int row_stride_inner =
-      layout.kernel.order == Order::kColMajor ? 1 : layout.kernel.cols;
-  int col_stride_inner =
-      layout.kernel.order == Order::kRowMajor ? 1 : layout.kernel.rows;
-  int offset_inner =
-      row_inner * row_stride_inner + col_inner * col_stride_inner;
-  return offset_outer + offset_inner;
+    RUY_DCHECK(is_pot(layout.kernel.rows));
+    RUY_DCHECK(is_pot(layout.kernel.cols));
+    int row_outer = row & ~(layout.kernel.rows - 1);
+    int col_outer = col & ~(layout.kernel.cols - 1);
+    int row_stride_outer =
+        layout.order == Order::kColMajor ? layout.kernel.cols : layout.stride;
+    int col_stride_outer =
+        layout.order == Order::kRowMajor ? layout.kernel.rows : layout.stride;
+    int offset_outer =
+        row_outer * row_stride_outer + col_outer * col_stride_outer;
+    int row_inner = row - row_outer;
+    int col_inner = col - col_outer;
+    int row_stride_inner =
+        layout.kernel.order == Order::kColMajor ? 1 : layout.kernel.cols;
+    int col_stride_inner =
+        layout.kernel.order == Order::kRowMajor ? 1 : layout.kernel.rows;
+    int offset_inner =
+        row_inner * row_stride_inner + col_inner * col_stride_inner;
+    return offset_outer + offset_inner;
 }
 
 // Helpers for Matrix<T>.
 
 template <typename Scalar>
 const Scalar* ElementPtr(const Matrix<Scalar>& mat, int row, int col) {
-  return mat.data.get() + Offset(mat.layout, row, col);
+    return mat.data.get() + Offset(mat.layout, row, col);
 }
 
 template <typename Scalar>
 Scalar* ElementPtr(Matrix<Scalar>* mat, int row, int col) {
-  return mat->data.get() + Offset(mat->layout, row, col);
+    return mat->data.get() + Offset(mat->layout, row, col);
 }
 
 template <typename Scalar>
 Scalar Element(const Matrix<Scalar>& mat, int row, int col) {
-  return *ElementPtr(mat, row, col);
+    return *ElementPtr(mat, row, col);
 }
 
 // Helpers for PackedMatrix<T>.
@@ -331,56 +331,56 @@ Scalar Element(const Matrix<Scalar>& mat, int row, int col) {
 
 template <typename Scalar>
 const Scalar* ElementPtr(const PackedMatrix<Scalar>& mat, int row, int col) {
-  return mat.data + Offset(mat.layout, row, col);
+    return mat.data + Offset(mat.layout, row, col);
 }
 
 template <typename Scalar>
 Scalar* ElementPtr(PackedMatrix<Scalar>* mat, int row, int col) {
-  return mat->data + Offset(mat->layout, row, col);
+    return mat->data + Offset(mat->layout, row, col);
 }
 
 template <typename Scalar>
 Scalar Element(const PackedMatrix<Scalar>& mat, int row, int col) {
-  return *ElementPtr(mat, row, col);
+    return *ElementPtr(mat, row, col);
 }
 
 // Helpers for PMatrix.
 
 inline std::size_t DataSize(const PMatrix& packed) {
-  return FlatSize(packed.layout) * packed.data_type.size;
+    return FlatSize(packed.layout) * packed.data_type.size;
 }
 
 inline std::size_t SumsSize(const PMatrix& packed) {
-  // Packed matrices are only relevant for Ruy's TrMul implementations. For
-  // TrMul, the number of sums is always equal to the number of columns.
-  return packed.layout.cols * packed.sums_type.size;
+    // Packed matrices are only relevant for Ruy's TrMul implementations. For
+    // TrMul, the number of sums is always equal to the number of columns.
+    return packed.layout.cols * packed.sums_type.size;
 }
 
 // Transpose helpers.
 
 inline void Transpose(Order* order) {
-  *order = *order == Order::kColMajor ? Order::kRowMajor : Order::kColMajor;
+    *order = *order == Order::kColMajor ? Order::kRowMajor : Order::kColMajor;
 }
 
 inline void Transpose(Layout* layout) {
-  Transpose(&layout->order);
-  std::swap(layout->rows, layout->cols);
+    Transpose(&layout->order);
+    std::swap(layout->rows, layout->cols);
 }
 
 template <typename Scalar>
 inline void Transpose(Matrix<Scalar>* matrix) {
-  Transpose(&matrix->layout);
+    Transpose(&matrix->layout);
 }
 
 // Helpers for KernelLayout.
 
 template <typename FixedKernelLayout>
 KernelLayout ToKernelLayout() {
-  KernelLayout ret;
-  ret.order = FixedKernelLayout::kOrder;
-  ret.rows = FixedKernelLayout::kRows;
-  ret.cols = FixedKernelLayout::kCols;
-  return ret;
+    KernelLayout ret;
+    ret.order = FixedKernelLayout::kOrder;
+    ret.rows = FixedKernelLayout::kRows;
+    ret.cols = FixedKernelLayout::kCols;
+    return ret;
 }
 
 }  // namespace ruy

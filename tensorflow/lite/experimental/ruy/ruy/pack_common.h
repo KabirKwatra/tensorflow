@@ -99,24 +99,24 @@ namespace ruy {
 
 template <Path ThePath, typename Scalar>
 struct PackedTypeImpl {
-  using Type = Scalar;
+    using Type = Scalar;
 };
 
 #if RUY_PLATFORM(NEON_32)
 struct PackParams8bit {
-  const void* src_ptr0;
-  const void* src_ptr1;
-  const void* src_ptr2;
-  const void* src_ptr3;
-  const std::int32_t* sums_ptr;
-  const std::int8_t* packed_ptr;
-  int src_inc0;
-  int src_inc1;
-  int src_inc2;
-  int src_inc3;
-  int src_rows;
-  int src_zero_point;
-  int input_xor;
+    const void* src_ptr0;
+    const void* src_ptr1;
+    const void* src_ptr2;
+    const void* src_ptr3;
+    const std::int32_t* sums_ptr;
+    const std::int8_t* packed_ptr;
+    int src_inc0;
+    int src_inc1;
+    int src_inc2;
+    int src_inc3;
+    int src_rows;
+    int src_zero_point;
+    int input_xor;
 };
 
 inline void MakePackParams8bit(const void* src_ptr0, const void* src_ptr1,
@@ -126,47 +126,47 @@ inline void MakePackParams8bit(const void* src_ptr0, const void* src_ptr1,
                                int src_inc1, int src_inc2, int src_inc3,
                                int src_rows, int src_zero_point, int input_xor,
                                PackParams8bit* params) {
-  params->src_ptr0 = src_ptr0;
-  params->src_ptr1 = src_ptr1;
-  params->src_ptr2 = src_ptr2;
-  params->src_ptr3 = src_ptr3;
-  params->sums_ptr = sums_ptr;
-  params->packed_ptr = packed_ptr;
-  params->src_inc0 = src_inc0;
-  params->src_inc1 = src_inc1;
-  params->src_inc2 = src_inc2;
-  params->src_inc3 = src_inc3;
-  params->src_rows = src_rows;
-  params->src_zero_point = src_zero_point;
-  params->input_xor = input_xor;
+    params->src_ptr0 = src_ptr0;
+    params->src_ptr1 = src_ptr1;
+    params->src_ptr2 = src_ptr2;
+    params->src_ptr3 = src_ptr3;
+    params->sums_ptr = sums_ptr;
+    params->packed_ptr = packed_ptr;
+    params->src_inc0 = src_inc0;
+    params->src_inc1 = src_inc1;
+    params->src_inc2 = src_inc2;
+    params->src_inc3 = src_inc3;
+    params->src_rows = src_rows;
+    params->src_zero_point = src_zero_point;
+    params->input_xor = input_xor;
 }
 #endif
 
 #if RUY_PLATFORM(NEON)
 template <>
 struct PackedTypeImpl<Path::kNeon, std::uint8_t> {
-  using Type = std::int8_t;
+    using Type = std::int8_t;
 };
 template <>
 struct PackedTypeImpl<Path::kNeonDotprod, std::uint8_t> {
-  using Type = std::int8_t;
+    using Type = std::int8_t;
 };
 #elif RUY_PLATFORM(X86)
 template <>
 struct PackedTypeImpl<Path::kSse42, std::uint8_t> {
-  using Type = std::int8_t;
+    using Type = std::int8_t;
 };
 template <>
 struct PackedTypeImpl<Path::kAvx2, std::uint8_t> {
-  using Type = std::int8_t;
+    using Type = std::int8_t;
 };
 template <>
 struct PackedTypeImpl<Path::kAvx512, std::uint8_t> {
-  using Type = std::int8_t;
+    using Type = std::int8_t;
 };
 template <>
 struct PackedTypeImpl<Path::kAvxVnni, std::uint8_t> {
-  using Type = std::int8_t;
+    using Type = std::int8_t;
 };
 #endif
 
@@ -175,7 +175,7 @@ using PackedType = typename PackedTypeImpl<ThePath, Scalar>::Type;
 
 template <typename PackedScalar, typename Scalar>
 PackedScalar Pack(Scalar x) {
-  return x - SymmetricZeroPoint<Scalar>() + SymmetricZeroPoint<PackedScalar>();
+    return x - SymmetricZeroPoint<Scalar>() + SymmetricZeroPoint<PackedScalar>();
 }
 
 template <Path ThePath, typename FixedKernelLayout, typename Scalar,
@@ -192,30 +192,30 @@ struct PackImpl {};
 template <typename FixedKernelLayout, typename Scalar, typename PackedScalar,
           typename SumsType>
 struct PackImpl<Path::kStandardCpp, FixedKernelLayout, Scalar, PackedScalar,
-                SumsType> {
-  static void Run(Tuning, const Matrix<Scalar>& src_matrix,
-                  PackedMatrix<PackedScalar>* packed_matrix, int start_col,
-                  int end_col) {
-    profiler::ScopeLabel label("Pack (generic)");
-    RUY_DCHECK_EQ((end_col - start_col) % FixedKernelLayout::kCols, 0);
-    SumsType* sums = packed_matrix->sums;
-    for (int col = start_col; col < end_col; col++) {
-      SumsType accum = 0;
-      for (int row = 0; row < packed_matrix->layout.rows; row++) {
-        PackedScalar packed_val;
-        if (col < src_matrix.layout.cols && row < src_matrix.layout.rows) {
-          packed_val = Pack<PackedScalar>(Element(src_matrix, row, col));
-        } else {
-          packed_val = packed_matrix->zero_point;
+           SumsType> {
+    static void Run(Tuning, const Matrix<Scalar>& src_matrix,
+                    PackedMatrix<PackedScalar>* packed_matrix, int start_col,
+                    int end_col) {
+        profiler::ScopeLabel label("Pack (generic)");
+        RUY_DCHECK_EQ((end_col - start_col) % FixedKernelLayout::kCols, 0);
+        SumsType* sums = packed_matrix->sums;
+        for (int col = start_col; col < end_col; col++) {
+            SumsType accum = 0;
+            for (int row = 0; row < packed_matrix->layout.rows; row++) {
+                PackedScalar packed_val;
+                if (col < src_matrix.layout.cols && row < src_matrix.layout.rows) {
+                    packed_val = Pack<PackedScalar>(Element(src_matrix, row, col));
+                } else {
+                    packed_val = packed_matrix->zero_point;
+                }
+                accum += packed_val;
+                *ElementPtr(packed_matrix, row, col) = packed_val;
+            }
+            if (sums) {
+                sums[col] = accum;
+            }
         }
-        accum += packed_val;
-        *ElementPtr(packed_matrix, row, col) = packed_val;
-      }
-      if (sums) {
-        sums[col] = accum;
-      }
     }
-  }
 };
 
 #if RUY_PLATFORM(NEON)
@@ -233,12 +233,12 @@ template <Path ThePath, typename FixedKernelLayout, typename Scalar,
           typename PackedScalar>
 void RunPack(Tuning tuning, const DMatrix& src_matrix, PMatrix* packed_matrix,
              int start_col, int end_col) {
-  using SumsType = typename PackedMatrix<PackedScalar>::SumsType;
-  Matrix<Scalar> src = ToMatrix<Scalar>(src_matrix);
-  PackedMatrix<PackedScalar> packed =
-      ToPackedMatrix<PackedScalar>(*packed_matrix);
-  PackImpl<ThePath, FixedKernelLayout, Scalar, PackedScalar, SumsType>::Run(
-      tuning, src, &packed, start_col, end_col);
+    using SumsType = typename PackedMatrix<PackedScalar>::SumsType;
+    Matrix<Scalar> src = ToMatrix<Scalar>(src_matrix);
+    PackedMatrix<PackedScalar> packed =
+        ToPackedMatrix<PackedScalar>(*packed_matrix);
+    PackImpl<ThePath, FixedKernelLayout, Scalar, PackedScalar, SumsType>::Run(
+        tuning, src, &packed, start_col, end_col);
 }
 
 }  // namespace ruy

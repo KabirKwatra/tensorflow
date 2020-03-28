@@ -22,14 +22,14 @@ limitations under the License.
 namespace ruy {
 
 enum class BlockMapTraversalOrder {
-  // Plain old row-by-row or column-by-column traversal.
-  kLinear,
-  // Fractal Z-order curve, https://en.wikipedia.org/wiki/Z-order_curve
-  kFractalZ,
-  // Variant of Z-order doing a U instead of a Z.
-  kFractalU,
-  // Hilbert curve, https://en.wikipedia.org/wiki/Hilbert_curve
-  kFractalHilbert
+    // Plain old row-by-row or column-by-column traversal.
+    kLinear,
+    // Fractal Z-order curve, https://en.wikipedia.org/wiki/Z-order_curve
+    kFractalZ,
+    // Variant of Z-order doing a U instead of a Z.
+    kFractalU,
+    // Hilbert curve, https://en.wikipedia.org/wiki/Hilbert_curve
+    kFractalHilbert
 };
 
 // A BlockMap describes a tiling of a matrix, typically the destination matrix
@@ -80,36 +80,36 @@ enum class BlockMapTraversalOrder {
 // will only allow that to happen in the last position along each axis, so
 // as to minimize the overhead incurred onto the matrix multiplication kernels.
 struct BlockMap {
-  // The number of threads to use (to distribute the blocks to).
-  int thread_count;
-  // The order in which to traverse the matrix of which this BlockMap represents
-  // a tiling (hereafter "the matrix").
-  BlockMapTraversalOrder traversal_order;
-  // The dimensions of the block_map, that is, of the destination
-  // matrix rounded up to next multiples of kernel_dims.
-  SidePair<int> dims;
-  // Log2 of the minimum number of subdivisions of the grid along either axis.
-  int num_blocks_base_log2;
-  // Log2 of the additional subdivision of the rows/columns axis.
-  SidePair<int> rectangularness_log2;
-  // Requested alignment of the subdivisions of the grid along the rows/columns
-  // axis.
-  SidePair<int> kernel_dims;
-  // Internal helper. Minimum number of rows/columns in each block.
-  SidePair<int> small_block_dims;
-  // Internal helper. Number of blocks along each dimension that need to have
-  // their size in that dimension be given by (small_block_dims + kernel_dims)
-  // instead of just small_block_dims.
-  SidePair<int> large_blocks;
+    // The number of threads to use (to distribute the blocks to).
+    int thread_count;
+    // The order in which to traverse the matrix of which this BlockMap represents
+    // a tiling (hereafter "the matrix").
+    BlockMapTraversalOrder traversal_order;
+    // The dimensions of the block_map, that is, of the destination
+    // matrix rounded up to next multiples of kernel_dims.
+    SidePair<int> dims;
+    // Log2 of the minimum number of subdivisions of the grid along either axis.
+    int num_blocks_base_log2;
+    // Log2 of the additional subdivision of the rows/columns axis.
+    SidePair<int> rectangularness_log2;
+    // Requested alignment of the subdivisions of the grid along the rows/columns
+    // axis.
+    SidePair<int> kernel_dims;
+    // Internal helper. Minimum number of rows/columns in each block.
+    SidePair<int> small_block_dims;
+    // Internal helper. Number of blocks along each dimension that need to have
+    // their size in that dimension be given by (small_block_dims + kernel_dims)
+    // instead of just small_block_dims.
+    SidePair<int> large_blocks;
 };
 
 // Returns the traversal order to be used for the given matrix multiplication
 // parameters.
 BlockMapTraversalOrder GetTraversalOrder(int rows, int cols, int depth,
-                                         int lhs_scalar_size,
-                                         int rhs_scalar_size,
-                                         int local_data_cache_size,
-                                         int shared_data_cache_size);
+        int lhs_scalar_size,
+        int rhs_scalar_size,
+        int local_data_cache_size,
+        int shared_data_cache_size);
 
 // Create a BlockMap suitable for tiling the destination matrix in a
 // matrix multiplication with the given parameters.
@@ -139,8 +139,8 @@ void GetBlockMatrixCoords(const BlockMap& block_map, const SidePair<int>& block,
 // Returns the number of grid subdivisions along the rows dimension (if
 // side == kLhs) or columns dimension (if side == kRhs).
 inline int NumBlocksPerSide(Side side, const BlockMap& block_map) {
-  return 1 << (block_map.num_blocks_base_log2 +
-               block_map.rectangularness_log2[side]);
+    return 1 << (block_map.num_blocks_base_log2 +
+                 block_map.rectangularness_log2[side]);
 }
 
 // Returns the overall number of blocks in
@@ -151,9 +151,9 @@ inline int NumBlocksPerSide(Side side, const BlockMap& block_map) {
 //   NumBlocks == NumBlocksOfRows * NumBlocksOfCols
 // because either rows_rectangularness_log2 or cols_rectangularness_log2 is 0.
 inline int NumBlocks(const BlockMap& block_map) {
-  return 1 << (2 * block_map.num_blocks_base_log2 +
-               block_map.rectangularness_log2[Side::kLhs] +
-               block_map.rectangularness_log2[Side::kRhs]);
+    return 1 << (2 * block_map.num_blocks_base_log2 +
+                 block_map.rectangularness_log2[Side::kLhs] +
+                 block_map.rectangularness_log2[Side::kRhs]);
 }
 
 }  // namespace ruy

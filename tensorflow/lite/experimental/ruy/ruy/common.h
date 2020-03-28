@@ -54,18 +54,18 @@ namespace ruy {
 // The opposite of this operation is just `static_cast<T*>(void_ptr)`.
 template <typename T>
 void* ToVoidPtr(T* p) {
-  return const_cast<void*>(static_cast<const void*>(p));
+    return const_cast<void*>(static_cast<const void*>(p));
 }
 
 template <typename Scalar>
 Scalar SymmetricZeroPoint() {
-  if (std::is_floating_point<Scalar>::value) {
-    return 0;
-  }
-  if (std::is_signed<Scalar>::value) {
-    return 0;
-  }
-  return std::numeric_limits<Scalar>::max() / 2 + 1;
+    if (std::is_floating_point<Scalar>::value) {
+        return 0;
+    }
+    if (std::is_signed<Scalar>::value) {
+        return 0;
+    }
+    return std::numeric_limits<Scalar>::max() / 2 + 1;
 }
 
 }  // namespace ruy

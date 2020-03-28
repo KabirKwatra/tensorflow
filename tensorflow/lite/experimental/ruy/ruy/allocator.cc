@@ -28,21 +28,21 @@ namespace detail {
 
 void *SystemAlignedAlloc(std::ptrdiff_t num_bytes) {
 #ifdef _WIN32
-  return _aligned_malloc(num_bytes, kMinimumBlockAlignment);
+    return _aligned_malloc(num_bytes, kMinimumBlockAlignment);
 #else
-  void *ptr;
-  if (posix_memalign(&ptr, kMinimumBlockAlignment, num_bytes)) {
-    return nullptr;
-  }
-  return ptr;
+    void *ptr;
+    if (posix_memalign(&ptr, kMinimumBlockAlignment, num_bytes)) {
+        return nullptr;
+    }
+    return ptr;
 #endif
 }
 
 void SystemAlignedFree(void *ptr) {
 #ifdef _WIN32
-  _aligned_free(ptr);
+    _aligned_free(ptr);
 #else
-  free(ptr);
+    free(ptr);
 #endif
 }
 

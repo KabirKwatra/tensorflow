@@ -30,25 +30,29 @@ namespace profiler {
 
 // A tree view of a profile.
 class TreeView {
- public:
-  struct Node {
-    std::vector<std::unique_ptr<Node>> children;
-    Label label;
-    int weight = 0;
-  };
+public:
+    struct Node {
+        std::vector<std::unique_ptr<Node>> children;
+        Label label;
+        int weight = 0;
+    };
 
-  void Populate(const std::vector<char>& samples_buf_);
+    void Populate(const std::vector<char>& samples_buf_);
 
-  // Intentionally an *ordered* map so that threads are enumerated
-  // in an order that's consistent and typically putting the 'main thread'
-  // first.
-  using ThreadRootsMap = std::map<std::uint32_t, std::unique_ptr<Node>>;
+    // Intentionally an *ordered* map so that threads are enumerated
+    // in an order that's consistent and typically putting the 'main thread'
+    // first.
+    using ThreadRootsMap = std::map<std::uint32_t, std::unique_ptr<Node>>;
 
-  const ThreadRootsMap& thread_roots() const { return thread_roots_; }
-  ThreadRootsMap* mutable_thread_roots() { return &thread_roots_; }
+    const ThreadRootsMap& thread_roots() const {
+        return thread_roots_;
+    }
+    ThreadRootsMap* mutable_thread_roots() {
+        return &thread_roots_;
+    }
 
- private:
-  ThreadRootsMap thread_roots_;
+private:
+    ThreadRootsMap thread_roots_;
 };
 
 /* Below are API functions for manipulating and printing treeviews. */

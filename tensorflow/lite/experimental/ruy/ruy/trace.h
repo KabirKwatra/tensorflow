@@ -28,13 +28,13 @@ struct Trace;
 #ifdef RUY_TRACE
 
 struct TracingContext {
-  bool initialized = false;
-  bool enabled = false;
-  int filter_shape_rows = 0;
-  int filter_shape_cols = 0;
-  int filter_shape_depth = 0;
-  Trace* trace = nullptr;
-  ~TracingContext();
+    bool initialized = false;
+    bool enabled = false;
+    int filter_shape_rows = 0;
+    int filter_shape_cols = 0;
+    int filter_shape_depth = 0;
+    Trace* trace = nullptr;
+    ~TracingContext();
 };
 
 Trace* NewTraceOrNull(TracingContext* context, int rows, int depth, int cols);
@@ -55,7 +55,9 @@ void TraceRecordEnd(Trace* trace);
 
 struct TracingContext {};
 
-inline Trace* NewTraceOrNull(TracingContext*, int, int, int) { return nullptr; }
+inline Trace* NewTraceOrNull(TracingContext*, int, int, int) {
+    return nullptr;
+}
 inline void TraceRecordThreadStart(std::uint32_t, Trace*) {}
 inline void TraceRecordThreadLoopStart(std::uint32_t, Trace*) {}
 inline void TraceRecordBlockReserved(std::uint32_t, std::uint32_t, Trace*) {}

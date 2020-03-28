@@ -21,29 +21,29 @@ limitations under the License.
 namespace ruy {
 
 void BlockingCounter::Reset(int initial_count) {
-  int old_count_value = count_.load(std::memory_order_relaxed);
-  RUY_DCHECK_EQ(old_count_value, 0);
-  (void)old_count_value;
-  count_.store(initial_count, std::memory_order_release);
+    int old_count_value = count_.load(std::memory_order_relaxed);
+    RUY_DCHECK_EQ(old_count_value, 0);
+    (void)old_count_value;
+    count_.store(initial_count, std::memory_order_release);
 }
 
 bool BlockingCounter::DecrementCount() {
-  int old_count_value = count_.fetch_sub(1, std::memory_order_acq_rel);
-  RUY_DCHECK_GT(old_count_value, 0);
-  int count_value = old_count_value - 1;
-  bool hit_zero = (count_value == 0);
-  if (hit_zero) {
-    std::lock_guard<std::mutex> lock(count_mutex_);
-    count_cond_.notify_all();
-  }
-  return hit_zero;
+    int old_count_value = count_.fetch_sub(1, std::memory_order_acq_rel);
+    RUY_DCHECK_GT(old_count_value, 0);
+    int count_value = old_count_value - 1;
+    bool hit_zero = (count_value == 0);
+    if (hit_zero) {
+        std::lock_guard<std::mutex> lock(count_mutex_);
+        count_cond_.notify_all();
+    }
+    return hit_zero;
 }
 
 void BlockingCounter::Wait() {
-  const auto& condition = [this]() {
-    return count_.load(std::memory_order_acquire) == 0;
-  };
-  ruy::Wait(condition, &count_cond_, &count_mutex_);
+    const auto& condition = [this]() {
+        return count_.load(std::memory_order_acquire) == 0;
+    };
+    ruy::Wait(condition, &count_cond_, &count_mutex_);
 }
 
 }  // namespace ruy

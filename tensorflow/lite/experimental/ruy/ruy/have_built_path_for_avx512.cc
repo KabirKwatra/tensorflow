@@ -23,11 +23,15 @@ namespace ruy {
 // These patterns must match those in the pack and kernel cc files.
 #if !(RUY_PLATFORM(AVX512) && RUY_OPT_ENABLED(RUY_OPT_ASM))
 
-bool HaveBuiltPathForAvx512() { return false; }
+bool HaveBuiltPathForAvx512() {
+    return false;
+}
 
 #else  // RUY_PLATFORM(AVX512) && RUY_OPT_ENABLED(RUY_OPT_ASM)
 
-bool HaveBuiltPathForAvx512() { return true; }
+bool HaveBuiltPathForAvx512() {
+    return true;
+}
 
 #endif  // RUY_PLATFORM(AVX512) && RUY_OPT_ENABLED(RUY_OPT_ASM)
 #endif  // RUY_PLATFORM(X86)

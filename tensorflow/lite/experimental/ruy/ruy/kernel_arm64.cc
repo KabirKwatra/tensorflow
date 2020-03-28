@@ -59,34 +59,34 @@ namespace ruy {
 
 template <typename Params>
 void CheckOffsetsInKernelParams8bit(const Params&) {
-  static_assert(offsetof(Params, lhs_zero_point) == RUY_OFFSET_LHS_ZERO_POINT,
-                "");
-  static_assert(offsetof(Params, rhs_zero_point) == RUY_OFFSET_RHS_ZERO_POINT,
-                "");
-  static_assert(offsetof(Params, dst_zero_point) == RUY_OFFSET_DST_ZERO_POINT,
-                "");
-  static_assert(offsetof(Params, prod_zp_depth) == RUY_OFFSET_PROD_ZP_DEPTH,
-                "");
-  static_assert(offsetof(Params, multiplier_fixedpoint) ==
-                    RUY_OFFSET_MULTIPLIER_FIXEDPOINT,
-                "");
-  static_assert(
-      offsetof(Params, multiplier_exponent) == RUY_OFFSET_MULTIPLIER_EXPONENT,
-      "");
-  static_assert(offsetof(Params, clamp_min) == RUY_OFFSET_CLAMP_MIN, "");
-  static_assert(offsetof(Params, clamp_max) == RUY_OFFSET_CLAMP_MAX, "");
-  static_assert(offsetof(Params, bias) == RUY_OFFSET_BIAS, "");
-  static_assert(offsetof(Params, lhs_sums) == RUY_OFFSET_LHS_SUMS, "");
-  static_assert(offsetof(Params, rhs_sums) == RUY_OFFSET_RHS_SUMS, "");
-  static_assert(offsetof(Params, flags) == RUY_OFFSET_FLAGS, "");
-  static_assert(offsetof(Params, lhs_base_ptr) == RUY_OFFSET_LHS_BASE_PTR, "");
-  static_assert(offsetof(Params, start_row) == RUY_OFFSET_START_ROW, "");
-  static_assert(offsetof(Params, last_row) == RUY_OFFSET_LAST_ROW, "");
-  static_assert(offsetof(Params, last_col) == RUY_OFFSET_LAST_COL, "");
-  static_assert(offsetof(Params, lhs_stride) == RUY_OFFSET_LHS_STRIDE, "");
-  static_assert(offsetof(Params, rhs_stride) == RUY_OFFSET_RHS_STRIDE, "");
-  static_assert(offsetof(Params, dst_stride) == RUY_OFFSET_DST_STRIDE, "");
-  static_assert(offsetof(Params, depth) == RUY_OFFSET_DEPTH, "");
+    static_assert(offsetof(Params, lhs_zero_point) == RUY_OFFSET_LHS_ZERO_POINT,
+                  "");
+    static_assert(offsetof(Params, rhs_zero_point) == RUY_OFFSET_RHS_ZERO_POINT,
+                  "");
+    static_assert(offsetof(Params, dst_zero_point) == RUY_OFFSET_DST_ZERO_POINT,
+                  "");
+    static_assert(offsetof(Params, prod_zp_depth) == RUY_OFFSET_PROD_ZP_DEPTH,
+                  "");
+    static_assert(offsetof(Params, multiplier_fixedpoint) ==
+                  RUY_OFFSET_MULTIPLIER_FIXEDPOINT,
+                  "");
+    static_assert(
+        offsetof(Params, multiplier_exponent) == RUY_OFFSET_MULTIPLIER_EXPONENT,
+        "");
+    static_assert(offsetof(Params, clamp_min) == RUY_OFFSET_CLAMP_MIN, "");
+    static_assert(offsetof(Params, clamp_max) == RUY_OFFSET_CLAMP_MAX, "");
+    static_assert(offsetof(Params, bias) == RUY_OFFSET_BIAS, "");
+    static_assert(offsetof(Params, lhs_sums) == RUY_OFFSET_LHS_SUMS, "");
+    static_assert(offsetof(Params, rhs_sums) == RUY_OFFSET_RHS_SUMS, "");
+    static_assert(offsetof(Params, flags) == RUY_OFFSET_FLAGS, "");
+    static_assert(offsetof(Params, lhs_base_ptr) == RUY_OFFSET_LHS_BASE_PTR, "");
+    static_assert(offsetof(Params, start_row) == RUY_OFFSET_START_ROW, "");
+    static_assert(offsetof(Params, last_row) == RUY_OFFSET_LAST_ROW, "");
+    static_assert(offsetof(Params, last_col) == RUY_OFFSET_LAST_COL, "");
+    static_assert(offsetof(Params, lhs_stride) == RUY_OFFSET_LHS_STRIDE, "");
+    static_assert(offsetof(Params, rhs_stride) == RUY_OFFSET_RHS_STRIDE, "");
+    static_assert(offsetof(Params, dst_stride) == RUY_OFFSET_DST_STRIDE, "");
+    static_assert(offsetof(Params, depth) == RUY_OFFSET_DEPTH, "");
 }
 
 // Fast-int8-trick kernel, similar to this production gemmlowp kernel:
@@ -96,44 +96,44 @@ void CheckOffsetsInKernelParams8bit(const Params&) {
 // Relevant target CPUs for this kernel include ARM Cortex-A73 and Cortex-A75,
 // since these are 64-bit, out-of-order and without dotprod support.
 void Kernel8bitNeonOutOfOrder(const KernelParams8bit<4, 4>& params) {
-  profiler::ScopeLabel label(
-      "Kernel (kNeon, optimized for out-of-order cores)");
+    profiler::ScopeLabel label(
+        "Kernel (kNeon, optimized for out-of-order cores)");
 
-  CheckOffsetsInKernelParams8bit(params);
+    CheckOffsetsInKernelParams8bit(params);
 
-  const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
-  const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
-  const std::int8_t* lhs_ptr = lhs_col_ptr;
-  const std::int8_t* rhs_ptr = rhs_col_ptr;
-  void* dst_col_ptr = params.dst_base_ptr;
-  void* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
+    const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
+    const std::int8_t* lhs_ptr = lhs_col_ptr;
+    const std::int8_t* rhs_ptr = rhs_col_ptr;
+    void* dst_col_ptr = params.dst_base_ptr;
+    void* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are int32 accumulators.
-  // During accumulation, v0 -- v3 are used to load int8 data from LHS and
-  // v4 -- v7 from RHS:
-  //
-  //                                      int8 RHS 16x4 block
-  //                           /-----------------------------------------\
-  //                           |v4.b[0]          ...           v7.b[0]   |
-  //                           |  ...                            ...     |
-  //                           |v4.b[15]         ...           v7.b[15]  |
-  //                           \-----------------------------------------/
-  //    int8 LHS 4x16 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |v0.b[0] ... v0.b[15] |  |v16.4s           ...           v28.4s    |
-  //  |v1.b[0] ... v1.b[15] |  |v17.4s           ...           v29.4s    |
-  //  |v2.b[0] ... v2.b[15] |  |v18.4s           ...           v30.4s    |
-  //  |v3.b[0] ... v3.b[15] |  |v19.4s           ...           v31.4s    |
-  //  \---------------------/  \-----------------------------------------/
-  //                                  int32 accumulators 4x4 block
-  //
-  // No attempt had been made so far at implementing the RUY_OPT_MAX_STREAMING
-  // optimization for this kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are int32 accumulators.
+    // During accumulation, v0 -- v3 are used to load int8 data from LHS and
+    // v4 -- v7 from RHS:
+    //
+    //                                      int8 RHS 16x4 block
+    //                           /-----------------------------------------\
+    //                           |v4.b[0]          ...           v7.b[0]   |
+    //                           |  ...                            ...     |
+    //                           |v4.b[15]         ...           v7.b[15]  |
+    //                           \-----------------------------------------/
+    //    int8 LHS 4x16 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |v0.b[0] ... v0.b[15] |  |v16.4s           ...           v28.4s    |
+    //  |v1.b[0] ... v1.b[15] |  |v17.4s           ...           v29.4s    |
+    //  |v2.b[0] ... v2.b[15] |  |v18.4s           ...           v30.4s    |
+    //  |v3.b[0] ... v3.b[15] |  |v19.4s           ...           v31.4s    |
+    //  \---------------------/  \-----------------------------------------/
+    //                                  int32 accumulators 4x4 block
+    //
+    // No attempt had been made so far at implementing the RUY_OPT_MAX_STREAMING
+    // optimization for this kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -885,7 +885,7 @@ void Kernel8bitNeonOutOfOrder(const KernelParams8bit<4, 4>& params) {
         // Compute w2 = how many cols of the 4x4 block fit
         "csel w2, w2, w3, le\n"
 
-       // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
+        // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
         "cmp w1, w3\n"
         "ccmp w2, w3, 0, eq\n"
         "mov x4, %[dst_ptr]\n"
@@ -1114,15 +1114,15 @@ void Kernel8bitNeonOutOfOrder(const KernelParams8bit<4, 4>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
-          [dst_type_id] "r"(params.dst_type_id)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
+        [dst_type_id] "r"(params.dst_type_id)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 
 // Similar to existing Kernel8bitNeonOutOfOrder but specialized for the case of
@@ -1130,44 +1130,44 @@ void Kernel8bitNeonOutOfOrder(const KernelParams8bit<4, 4>& params) {
 // Relevant target CPUs for this kernel include ARM Cortex-A73 and Cortex-A75,
 // since these are 64-bit, out-of-order and without dotprod support.
 void Kernel8bitNeonOutOfOrder1Col(const KernelParams8bit<4, 4>& params) {
-  profiler::ScopeLabel label(
-      "Kernel (kNeon, optimized for out-of-order cores)");
+    profiler::ScopeLabel label(
+        "Kernel (kNeon, optimized for out-of-order cores)");
 
-  CheckOffsetsInKernelParams8bit(params);
+    CheckOffsetsInKernelParams8bit(params);
 
-  const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
-  const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
-  const std::int8_t* lhs_ptr = lhs_col_ptr;
-  const std::int8_t* rhs_ptr = rhs_col_ptr;
-  void* dst_col_ptr = params.dst_base_ptr;
-  void* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
+    const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
+    const std::int8_t* lhs_ptr = lhs_col_ptr;
+    const std::int8_t* rhs_ptr = rhs_col_ptr;
+    void* dst_col_ptr = params.dst_base_ptr;
+    void* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v19 are int32 accumulators.
-  // During accumulation, v0 -- v3 are used to load int8 data from LHS and
-  // v4 from RHS:
-  //
-  //                         int8 RHS 16x1 block
-  //                           /-----------\
-  //                           |v4.b[0]    |
-  //                           |  ...      |
-  //                           |v4.b[15]   |
-  //                           \-----------/
-  //    int8 LHS 4x16 block
-  //  /---------------------\  /-----------\
-  //  |v0.b[0] ... v0.b[15] |  |v16.4s     |
-  //  |v1.b[0] ... v1.b[15] |  |v17.4s     |
-  //  |v2.b[0] ... v2.b[15] |  |v18.4s     |
-  //  |v3.b[0] ... v3.b[15] |  |v19.4s     |
-  //  \---------------------/  \-----------/
-  //                         int32 accumulators 4x1 block
-  //
-  // No attempt had been made so far at implementing the RUY_OPT_MAX_STREAMING
-  // optimization for this kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v19 are int32 accumulators.
+    // During accumulation, v0 -- v3 are used to load int8 data from LHS and
+    // v4 from RHS:
+    //
+    //                         int8 RHS 16x1 block
+    //                           /-----------\
+    //                           |v4.b[0]    |
+    //                           |  ...      |
+    //                           |v4.b[15]   |
+    //                           \-----------/
+    //    int8 LHS 4x16 block
+    //  /---------------------\  /-----------\
+    //  |v0.b[0] ... v0.b[15] |  |v16.4s     |
+    //  |v1.b[0] ... v1.b[15] |  |v17.4s     |
+    //  |v2.b[0] ... v2.b[15] |  |v18.4s     |
+    //  |v3.b[0] ... v3.b[15] |  |v19.4s     |
+    //  \---------------------/  \-----------/
+    //                         int32 accumulators 4x1 block
+    //
+    // No attempt had been made so far at implementing the RUY_OPT_MAX_STREAMING
+    // optimization for this kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -1667,7 +1667,7 @@ void Kernel8bitNeonOutOfOrder1Col(const KernelParams8bit<4, 4>& params) {
         "csel w1, w1, w3, le\n"
         "cmp w2, #4\n"
 
-       // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
+        // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
         "cmp w1, w3\n"
         "mov x4, %[dst_ptr]\n"
         // Yes, all of the 4x4 block fits, go to fast path.
@@ -1812,14 +1812,14 @@ void Kernel8bitNeonOutOfOrder1Col(const KernelParams8bit<4, 4>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
-          [dst_type_id] "r"(params.dst_type_id)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
+        [dst_type_id] "r"(params.dst_type_id)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19");
 }
 
 // Variant of the above Kernel8bitNeonOutOfOrder, tuned for in-order CPUs.
@@ -1832,40 +1832,40 @@ void Kernel8bitNeonOutOfOrder1Col(const KernelParams8bit<4, 4>& params) {
 // comments. Specifically, see this comment about tuning for Cortex-A53:
 // https://github.com/google/gemmlowp/blob/36212ad3651871bc3e9a599f1a6d5324778aea25/standalone/neon-gemm-kernel-benchmark.cc#L4215
 void Kernel8bitNeonInOrder(const KernelParams8bit<4, 4>& params) {
-  profiler::ScopeLabel label("Kernel (kNeon, optimized for in-order cores)");
+    profiler::ScopeLabel label("Kernel (kNeon, optimized for in-order cores)");
 
-  CheckOffsetsInKernelParams8bit(params);
+    CheckOffsetsInKernelParams8bit(params);
 
-  const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
-  const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
-  const std::int8_t* lhs_ptr = lhs_col_ptr;
-  const std::int8_t* rhs_ptr = rhs_col_ptr;
-  void* dst_col_ptr = params.dst_base_ptr;
-  void* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
+    const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
+    const std::int8_t* lhs_ptr = lhs_col_ptr;
+    const std::int8_t* rhs_ptr = rhs_col_ptr;
+    void* dst_col_ptr = params.dst_base_ptr;
+    void* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are int32 accumulators.
-  // During accumulation, v0 -- v3 are used to load int8 data from LHS and
-  // v4 -- v7 from RHS:
-  //
-  //                                      int8 RHS 16x4 block
-  //                           /-----------------------------------------\
-  //                           |v4.b[0]          ...           v7.b[0]   |
-  //                           |  ...                            ...     |
-  //                           |v4.b[15]         ...           v7.b[15]  |
-  //                           \-----------------------------------------/
-  //    int8 LHS 4x16 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |v0.b[0] ... v0.b[15] |  |v16.4s           ...           v28.4s    |
-  //  |v1.b[0] ... v1.b[15] |  |v17.4s           ...           v29.4s    |
-  //  |v2.b[0] ... v2.b[15] |  |v18.4s           ...           v30.4s    |
-  //  |v3.b[0] ... v3.b[15] |  |v19.4s           ...           v31.4s    |
-  //  \---------------------/  \-----------------------------------------/
-  //                                  int32 accumulators 4x4 block
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are int32 accumulators.
+    // During accumulation, v0 -- v3 are used to load int8 data from LHS and
+    // v4 -- v7 from RHS:
+    //
+    //                                      int8 RHS 16x4 block
+    //                           /-----------------------------------------\
+    //                           |v4.b[0]          ...           v7.b[0]   |
+    //                           |  ...                            ...     |
+    //                           |v4.b[15]         ...           v7.b[15]  |
+    //                           \-----------------------------------------/
+    //    int8 LHS 4x16 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |v0.b[0] ... v0.b[15] |  |v16.4s           ...           v28.4s    |
+    //  |v1.b[0] ... v1.b[15] |  |v17.4s           ...           v29.4s    |
+    //  |v2.b[0] ... v2.b[15] |  |v18.4s           ...           v30.4s    |
+    //  |v3.b[0] ... v3.b[15] |  |v19.4s           ...           v31.4s    |
+    //  \---------------------/  \-----------------------------------------/
+    //                                  int32 accumulators 4x4 block
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -2394,7 +2394,7 @@ void Kernel8bitNeonInOrder(const KernelParams8bit<4, 4>& params) {
         // Compute w2 = how many cols of the 4x4 block fit
         "csel w2, w2, w3, le\n"
 
-       // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
+        // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
         "cmp w1, w3\n"
         "ccmp w2, w3, 0, eq\n"
         "mov x4, %[dst_ptr]\n"
@@ -2526,7 +2526,7 @@ void Kernel8bitNeonInOrder(const KernelParams8bit<4, 4>& params) {
         // Compute w2 = how many cols of the 4x4 block fit
         "csel w2, w2, w3, le\n"
 
-       // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
+        // Test if w1==4 && w2 == 4, i.e. if all of the 8x8 block fits.
         "cmp w1, w3\n"
         "ccmp w2, w3, 0, eq\n"
         "mov x4, %[dst_ptr]\n"
@@ -2661,7 +2661,7 @@ void Kernel8bitNeonInOrder(const KernelParams8bit<4, 4>& params) {
         // Compute w2 = how many cols of the 4x4 block fit
         "csel w2, w2, w3, le\n"
 
-       // Test if w1==4 && w2 == 4, i.e. if all of the 4x4 block fits.
+        // Test if w1==4 && w2 == 4, i.e. if all of the 4x4 block fits.
         "cmp w1, w3\n"
         "ccmp w2, w3, 0, eq\n"
         "mov x4, %[dst_ptr]\n"
@@ -2912,15 +2912,15 @@ void Kernel8bitNeonInOrder(const KernelParams8bit<4, 4>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params),[dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
-          [dst_type_id] "r"(params.dst_type_id)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
+        [dst_type_id] "r"(params.dst_type_id)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 
 // Kernel taking advantage of the optional dotprod instruction.
@@ -2938,52 +2938,52 @@ void Kernel8bitNeonInOrder(const KernelParams8bit<4, 4>& params) {
 // Relevant target CPUs for this kernel include ARM Cortex-A76,
 // since these are 64-bit, out-of-order and with dotprod support.
 void Kernel8bitNeonDotprodOutOfOrder(const KernelParams8bit<8, 8>& params) {
-  profiler::ScopeLabel label(
-      "Kernel (kNeonDotprod, optimized for out-of-order cores)");
+    profiler::ScopeLabel label(
+        "Kernel (kNeonDotprod, optimized for out-of-order cores)");
 
-  CheckOffsetsInKernelParams8bit(params);
+    CheckOffsetsInKernelParams8bit(params);
 
-  const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
-  const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
-  const std::int8_t* lhs_ptr = lhs_col_ptr;
-  const std::int8_t* rhs_ptr = rhs_col_ptr;
-  void* dst_col_ptr = params.dst_base_ptr;
-  void* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
+    const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
+    const std::int8_t* lhs_ptr = lhs_col_ptr;
+    const std::int8_t* rhs_ptr = rhs_col_ptr;
+    void* dst_col_ptr = params.dst_base_ptr;
+    void* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are int32 accumulators.
-  // During accumulation, v0 -- v15 are used to load int8 data from LHS and
-  // RHS. At least v0 and v1 are used to load a 8x4 block of LHS, and v2 and
-  // v3 are used to load a 4x8 block of RHS, like this:
-  //
-  //                                      int8 RHS 4x8 block
-  //                           /-----------------------------------------\
-  //                           |v2.b[0] ... v2.b[12] v3.b[0] ... v3.b[12]|
-  //                           |  ...                              ...   |
-  //                           |v2.b[3] ... v2.b[15] v3.b[3] ... v3.b[15]|
-  //                           \-----------------------------------------/
-  //    int8 LHS 8x4 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |v0.b[0]  ... v0.b[3] |  |v16.s[0]           ...           v30.s[0]|
-  //  |  ...          ...   |  |  ...                              ...   |
-  //  |v0.b[12] ... v0.b[15]|  |v16.s[3]           ...           v30.s[3]|
-  //  |v1.b[0]  ... v1.b[3] |  |v17.s[0]           ...           v31.s[0]|
-  //  |  ...         ...    |  |  ...                              ...   |
-  //  |v1.b[12] ... v1.b[15]|  |v17.s[3]           ...           v31.s[3]|
-  //  \---------------------/  \-----------------------------------------/
-  //                                  int32 accumulators 8x8 block
-  //
-  // In the RUY_OPT_MAX_STREAMING part of the kernel, this elementary step
-  // is repeated 4 times, using 4x more registers for LHS and RHS, so that
-  // is where instead of using v0 -- v3 for LHS and RHS, we use v0 -- v15.
-  //
-  // Outside of the RUY_OPT_MAX_STREAMING part of the kernel, v4 -- v7 are
-  // unused, and v8 -- v15 are used for loading parameters used for the
-  // post-accumulation part of the kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are int32 accumulators.
+    // During accumulation, v0 -- v15 are used to load int8 data from LHS and
+    // RHS. At least v0 and v1 are used to load a 8x4 block of LHS, and v2 and
+    // v3 are used to load a 4x8 block of RHS, like this:
+    //
+    //                                      int8 RHS 4x8 block
+    //                           /-----------------------------------------\
+    //                           |v2.b[0] ... v2.b[12] v3.b[0] ... v3.b[12]|
+    //                           |  ...                              ...   |
+    //                           |v2.b[3] ... v2.b[15] v3.b[3] ... v3.b[15]|
+    //                           \-----------------------------------------/
+    //    int8 LHS 8x4 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |v0.b[0]  ... v0.b[3] |  |v16.s[0]           ...           v30.s[0]|
+    //  |  ...          ...   |  |  ...                              ...   |
+    //  |v0.b[12] ... v0.b[15]|  |v16.s[3]           ...           v30.s[3]|
+    //  |v1.b[0]  ... v1.b[3] |  |v17.s[0]           ...           v31.s[0]|
+    //  |  ...         ...    |  |  ...                              ...   |
+    //  |v1.b[12] ... v1.b[15]|  |v17.s[3]           ...           v31.s[3]|
+    //  \---------------------/  \-----------------------------------------/
+    //                                  int32 accumulators 8x8 block
+    //
+    // In the RUY_OPT_MAX_STREAMING part of the kernel, this elementary step
+    // is repeated 4 times, using 4x more registers for LHS and RHS, so that
+    // is where instead of using v0 -- v3 for LHS and RHS, we use v0 -- v15.
+    //
+    // Outside of the RUY_OPT_MAX_STREAMING part of the kernel, v4 -- v7 are
+    // unused, and v8 -- v15 are used for loading parameters used for the
+    // post-accumulation part of the kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -4298,15 +4298,15 @@ void Kernel8bitNeonDotprodOutOfOrder(const KernelParams8bit<8, 8>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
-          [dst_type_id] "r"(params.dst_type_id)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
+        [dst_type_id] "r"(params.dst_type_id)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 
 // Similar to the above 8-bit dotprod kernel, but specialized for the case of
@@ -4314,52 +4314,52 @@ void Kernel8bitNeonDotprodOutOfOrder(const KernelParams8bit<8, 8>& params) {
 // Relevant target CPUs for this kernel include ARM Cortex-A76,
 // since these are 64-bit, out-of-order and with dotprod support.
 void Kernel8bitNeonDotprodOutOfOrder1Col(const KernelParams8bit<8, 8>& params) {
-  profiler::ScopeLabel label(
-      "Kernel (kNeonDotprod, optimized for out-of-order cores)");
+    profiler::ScopeLabel label(
+        "Kernel (kNeonDotprod, optimized for out-of-order cores)");
 
-  CheckOffsetsInKernelParams8bit(params);
+    CheckOffsetsInKernelParams8bit(params);
 
-  const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
-  const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
-  const std::int8_t* lhs_ptr = lhs_col_ptr;
-  const std::int8_t* rhs_ptr = rhs_col_ptr;
-  void* dst_col_ptr = params.dst_base_ptr;
-  void* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
+    const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
+    const std::int8_t* lhs_ptr = lhs_col_ptr;
+    const std::int8_t* rhs_ptr = rhs_col_ptr;
+    void* dst_col_ptr = params.dst_base_ptr;
+    void* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are int32 accumulators.
-  // During accumulation, v0 -- v15 are used to load int8 data from LHS and
-  // RHS. At least v0 and v1 are used to load a 8x4 block of LHS, and v2 and
-  // v3 are used to load a 4x8 block of RHS, like this:
-  //
-  //                            int8 RHS 4x1 block
-  //                           /-------\
-  //                           |v2.b[0]|
-  //                           |  ...  |
-  //                           |v2.b[3]|
-  //                           \-------/
-  //    int8 LHS 8x4 block
-  //  /---------------------\  /--------\
-  //  |v0.b[0]  ... v0.b[3] |  |v16.s[0]|
-  //  |  ...          ...   |  |  ...   |
-  //  |v0.b[12] ... v0.b[15]|  |v16.s[3]|
-  //  |v1.b[0]  ... v1.b[3] |  |v17.s[0]|
-  //  |  ...         ...    |  |  ...   |
-  //  |v1.b[12] ... v1.b[15]|  |v17.s[3]|
-  //  \---------------------/  \--------/
-  //                           int32 accumulators 8x1 block
-  //
-  // In the RUY_OPT_MAX_STREAMING part of the kernel, this elementary step
-  // is repeated 4 times, using 4x more registers for LHS and RHS, so that
-  // is where instead of using v0 -- v3 for LHS and RHS, we use v0 -- v15.
-  //
-  // Outside of the RUY_OPT_MAX_STREAMING part of the kernel, v4 -- v7 are
-  // unused, and v8 -- v15 are used for loading parameters used for the
-  // post-accumulation part of the kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are int32 accumulators.
+    // During accumulation, v0 -- v15 are used to load int8 data from LHS and
+    // RHS. At least v0 and v1 are used to load a 8x4 block of LHS, and v2 and
+    // v3 are used to load a 4x8 block of RHS, like this:
+    //
+    //                            int8 RHS 4x1 block
+    //                           /-------\
+    //                           |v2.b[0]|
+    //                           |  ...  |
+    //                           |v2.b[3]|
+    //                           \-------/
+    //    int8 LHS 8x4 block
+    //  /---------------------\  /--------\
+    //  |v0.b[0]  ... v0.b[3] |  |v16.s[0]|
+    //  |  ...          ...   |  |  ...   |
+    //  |v0.b[12] ... v0.b[15]|  |v16.s[3]|
+    //  |v1.b[0]  ... v1.b[3] |  |v17.s[0]|
+    //  |  ...         ...    |  |  ...   |
+    //  |v1.b[12] ... v1.b[15]|  |v17.s[3]|
+    //  \---------------------/  \--------/
+    //                           int32 accumulators 8x1 block
+    //
+    // In the RUY_OPT_MAX_STREAMING part of the kernel, this elementary step
+    // is repeated 4 times, using 4x more registers for LHS and RHS, so that
+    // is where instead of using v0 -- v3 for LHS and RHS, we use v0 -- v15.
+    //
+    // Outside of the RUY_OPT_MAX_STREAMING part of the kernel, v4 -- v7 are
+    // unused, and v8 -- v15 are used for loading parameters used for the
+    // post-accumulation part of the kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -5023,14 +5023,14 @@ void Kernel8bitNeonDotprodOutOfOrder1Col(const KernelParams8bit<8, 8>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
-          [dst_type_id] "r"(params.dst_type_id)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
+        [dst_type_id] "r"(params.dst_type_id)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17");
 }
 
 // Variant of the above Kernel8bitNeonDotprodOutOfOrder, tuned for in-order
@@ -5043,49 +5043,49 @@ void Kernel8bitNeonDotprodOutOfOrder1Col(const KernelParams8bit<8, 8>& params) {
 // comments. Specifically, see this comment about tuning for Cortex-A55r1:
 // https://github.com/google/gemmlowp/blob/36212ad3651871bc3e9a599f1a6d5324778aea25/standalone/neon-gemm-kernel-benchmark.cc#L4412
 void Kernel8bitNeonDotprodInOrder(const KernelParams8bit<8, 8>& params) {
-  profiler::ScopeLabel label(
-      "Kernel (kNeonDotprod, optimized for in-order cores)");
+    profiler::ScopeLabel label(
+        "Kernel (kNeonDotprod, optimized for in-order cores)");
 
-  CheckOffsetsInKernelParams8bit(params);
+    CheckOffsetsInKernelParams8bit(params);
 
-  const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
-  const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
-  const std::int8_t* lhs_ptr = lhs_col_ptr;
-  const std::int8_t* rhs_ptr = rhs_col_ptr;
-  void* dst_col_ptr = params.dst_base_ptr;
-  void* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const std::int8_t* lhs_col_ptr = params.lhs_base_ptr;
+    const std::int8_t* rhs_col_ptr = params.rhs_base_ptr;
+    const std::int8_t* lhs_ptr = lhs_col_ptr;
+    const std::int8_t* rhs_ptr = rhs_col_ptr;
+    void* dst_col_ptr = params.dst_base_ptr;
+    void* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are int32 accumulators.
-  // During accumulation, v0 -- v3 are used to load int8 data from LHS and
-  // RHS.
-  //
-  //                                      int8 RHS 4x8 block
-  //                           /-----------------------------------------\
-  //                           |v2.b[0] ... v2.b[12] v3.b[0] ... v3.b[12]|
-  //                           |  ...                              ...   |
-  //                           |v2.b[3] ... v2.b[15] v3.b[3] ... v3.b[15]|
-  //                           \-----------------------------------------/
-  //    int8 LHS 8x4 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |v0.b[0]  ... v0.b[3] |  |v16.s[0]           ...           v30.s[0]|
-  //  |  ...          ...   |  |  ...                              ...   |
-  //  |v0.b[12] ... v0.b[15]|  |v16.s[3]           ...           v30.s[3]|
-  //  |v1.b[0]  ... v1.b[3] |  |v17.s[0]           ...           v31.s[0]|
-  //  |  ...         ...    |  |  ...                              ...   |
-  //  |v1.b[12] ... v1.b[15]|  |v17.s[3]           ...           v31.s[3]|
-  //  \---------------------/  \-----------------------------------------/
-  //                                  int32 accumulators 8x8 block
-  //
-  // There is no RUY_OPT_MAX_STREAMING 4x-unrolled part in this kernel because
-  // we did not observe a benefit of such partial unrolling on in-order CPUs.
-  //
-  // v4 -- v7 are unused, and v8 -- v15 are used for loading parameters used for
-  // the post-accumulation part of the kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are int32 accumulators.
+    // During accumulation, v0 -- v3 are used to load int8 data from LHS and
+    // RHS.
+    //
+    //                                      int8 RHS 4x8 block
+    //                           /-----------------------------------------\
+    //                           |v2.b[0] ... v2.b[12] v3.b[0] ... v3.b[12]|
+    //                           |  ...                              ...   |
+    //                           |v2.b[3] ... v2.b[15] v3.b[3] ... v3.b[15]|
+    //                           \-----------------------------------------/
+    //    int8 LHS 8x4 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |v0.b[0]  ... v0.b[3] |  |v16.s[0]           ...           v30.s[0]|
+    //  |  ...          ...   |  |  ...                              ...   |
+    //  |v0.b[12] ... v0.b[15]|  |v16.s[3]           ...           v30.s[3]|
+    //  |v1.b[0]  ... v1.b[3] |  |v17.s[0]           ...           v31.s[0]|
+    //  |  ...         ...    |  |  ...                              ...   |
+    //  |v1.b[12] ... v1.b[15]|  |v17.s[3]           ...           v31.s[3]|
+    //  \---------------------/  \-----------------------------------------/
+    //                                  int32 accumulators 8x8 block
+    //
+    // There is no RUY_OPT_MAX_STREAMING 4x-unrolled part in this kernel because
+    // we did not observe a benefit of such partial unrolling on in-order CPUs.
+    //
+    // v4 -- v7 are unused, and v8 -- v15 are used for loading parameters used for
+    // the post-accumulation part of the kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -6233,15 +6233,15 @@ void Kernel8bitNeonDotprodInOrder(const KernelParams8bit<8, 8>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
-          [dst_type_id] "r"(params.dst_type_id)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf),
+        [dst_type_id] "r"(params.dst_type_id)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 #undef RUY_OFFSET_BIAS
 #undef RUY_OFFSET_LHS_SUMS
@@ -6287,21 +6287,21 @@ void Kernel8bitNeonDotprodInOrder(const KernelParams8bit<8, 8>& params) {
 
 template <typename Params>
 void CheckOffsetsInKernelParamsFloat(const Params&) {
-  static_assert(offsetof(Params, lhs_base_ptr) == RUY_OFFSET_LHS_BASE_PTR, "");
-  static_assert(offsetof(Params, rhs_base_ptr) == RUY_OFFSET_RHS_BASE_PTR, "");
-  static_assert(offsetof(Params, dst_base_ptr) == RUY_OFFSET_DST_BASE_PTR, "");
-  static_assert(offsetof(Params, bias) == RUY_OFFSET_BIAS, "");
-  static_assert(offsetof(Params, start_row) == RUY_OFFSET_START_ROW, "");
-  static_assert(offsetof(Params, start_col) == RUY_OFFSET_START_COL, "");
-  static_assert(offsetof(Params, last_row) == RUY_OFFSET_LAST_ROW, "");
-  static_assert(offsetof(Params, last_col) == RUY_OFFSET_LAST_COL, "");
-  static_assert(offsetof(Params, lhs_stride) == RUY_OFFSET_LHS_STRIDE, "");
-  static_assert(offsetof(Params, rhs_stride) == RUY_OFFSET_RHS_STRIDE, "");
-  static_assert(offsetof(Params, dst_stride) == RUY_OFFSET_DST_STRIDE, "");
-  static_assert(offsetof(Params, depth) == RUY_OFFSET_DEPTH, "");
-  static_assert(offsetof(Params, clamp_min) == RUY_OFFSET_CLAMP_MIN, "");
-  static_assert(offsetof(Params, clamp_max) == RUY_OFFSET_CLAMP_MAX, "");
-  static_assert(offsetof(Params, flags) == RUY_OFFSET_FLAGS, "");
+    static_assert(offsetof(Params, lhs_base_ptr) == RUY_OFFSET_LHS_BASE_PTR, "");
+    static_assert(offsetof(Params, rhs_base_ptr) == RUY_OFFSET_RHS_BASE_PTR, "");
+    static_assert(offsetof(Params, dst_base_ptr) == RUY_OFFSET_DST_BASE_PTR, "");
+    static_assert(offsetof(Params, bias) == RUY_OFFSET_BIAS, "");
+    static_assert(offsetof(Params, start_row) == RUY_OFFSET_START_ROW, "");
+    static_assert(offsetof(Params, start_col) == RUY_OFFSET_START_COL, "");
+    static_assert(offsetof(Params, last_row) == RUY_OFFSET_LAST_ROW, "");
+    static_assert(offsetof(Params, last_col) == RUY_OFFSET_LAST_COL, "");
+    static_assert(offsetof(Params, lhs_stride) == RUY_OFFSET_LHS_STRIDE, "");
+    static_assert(offsetof(Params, rhs_stride) == RUY_OFFSET_RHS_STRIDE, "");
+    static_assert(offsetof(Params, dst_stride) == RUY_OFFSET_DST_STRIDE, "");
+    static_assert(offsetof(Params, depth) == RUY_OFFSET_DEPTH, "");
+    static_assert(offsetof(Params, clamp_min) == RUY_OFFSET_CLAMP_MIN, "");
+    static_assert(offsetof(Params, clamp_max) == RUY_OFFSET_CLAMP_MAX, "");
+    static_assert(offsetof(Params, flags) == RUY_OFFSET_FLAGS, "");
 }
 
 // Just a plain float kernel; good enough for out-of-order cores.
@@ -6314,49 +6314,49 @@ void CheckOffsetsInKernelParamsFloat(const Params&) {
 // the aforementioned gemmlowp kernel uses.  Ruy likes powers of two for now
 // and we don't have evidence that going beyond 8x8 is needed.
 void KernelFloatNeonOutOfOrder(const KernelParamsFloat<8, 8>& params) {
-  CheckOffsetsInKernelParamsFloat(params);
-  profiler::ScopeLabel label(
-      "Kernel (kNeon, optimized for out-of-order cores)");
+    CheckOffsetsInKernelParamsFloat(params);
+    profiler::ScopeLabel label(
+        "Kernel (kNeon, optimized for out-of-order cores)");
 
-  const float* lhs_col_ptr = params.lhs_base_ptr;
-  const float* rhs_col_ptr = params.rhs_base_ptr;
-  const float* lhs_ptr = lhs_col_ptr;
-  const float* rhs_ptr = rhs_col_ptr;
-  float* dst_col_ptr = params.dst_base_ptr;
-  float* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const float* lhs_col_ptr = params.lhs_base_ptr;
+    const float* rhs_col_ptr = params.rhs_base_ptr;
+    const float* lhs_ptr = lhs_col_ptr;
+    const float* rhs_ptr = rhs_col_ptr;
+    float* dst_col_ptr = params.dst_base_ptr;
+    float* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are accumulators.
-  // During accumulation, v0 -- v15 are used to load data from LHS and RHS.
-  // At least v0 and v1 are used to load a 8x1 block of LHS, and v2 and
-  // v3 are used to load a 1x8 block of RHS, like this:
-  //
-  //                                          RHS 1x8 block
-  //                           /-----------------------------------------\
-  //                           |v2.s[0] ... v2.s[3]   v3.s[0] ... v3.s[3]|
-  //                           \-----------------------------------------/
-  //        LHS 8x1 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |        v0.s[0]      |  |v16.s[0]           ...           v30.s[0]|
-  //  |         ...         |  |  ...                              ...   |
-  //  |        v0.s[3]      |  |v16.s[3]           ...           v30.s[3]|
-  //  |        v1.s[0]      |  |v17.s[0]           ...           v31.s[0]|
-  //  |         ...         |  |  ...                              ...   |
-  //  |        v1.s[3]      |  |v17.s[3]           ...           v31.s[3]|
-  //  \---------------------/  \-----------------------------------------/
-  //                                      accumulators 8x8 block
-  //
-  // In the RUY_OPT_MAX_STREAMING part of the kernel, this elementary step
-  // is repeated 4 times, using 4x more registers for LHS and RHS, so that
-  // is where instead of using v0 -- v3 for LHS and RHS, we use v0 -- v15.
-  //
-  // Outside of the RUY_OPT_MAX_STREAMING part of the kernel, v4 -- v7 are
-  // unused, and v8 -- v15 are used for floading parameters used for the
-  // post-accumulation part of the kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are accumulators.
+    // During accumulation, v0 -- v15 are used to load data from LHS and RHS.
+    // At least v0 and v1 are used to load a 8x1 block of LHS, and v2 and
+    // v3 are used to load a 1x8 block of RHS, like this:
+    //
+    //                                          RHS 1x8 block
+    //                           /-----------------------------------------\
+    //                           |v2.s[0] ... v2.s[3]   v3.s[0] ... v3.s[3]|
+    //                           \-----------------------------------------/
+    //        LHS 8x1 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |        v0.s[0]      |  |v16.s[0]           ...           v30.s[0]|
+    //  |         ...         |  |  ...                              ...   |
+    //  |        v0.s[3]      |  |v16.s[3]           ...           v30.s[3]|
+    //  |        v1.s[0]      |  |v17.s[0]           ...           v31.s[0]|
+    //  |         ...         |  |  ...                              ...   |
+    //  |        v1.s[3]      |  |v17.s[3]           ...           v31.s[3]|
+    //  \---------------------/  \-----------------------------------------/
+    //                                      accumulators 8x8 block
+    //
+    // In the RUY_OPT_MAX_STREAMING part of the kernel, this elementary step
+    // is repeated 4 times, using 4x more registers for LHS and RHS, so that
+    // is where instead of using v0 -- v3 for LHS and RHS, we use v0 -- v15.
+    //
+    // Outside of the RUY_OPT_MAX_STREAMING part of the kernel, v4 -- v7 are
+    // unused, and v8 -- v15 are used for floading parameters used for the
+    // post-accumulation part of the kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -6897,14 +6897,14 @@ void KernelFloatNeonOutOfOrder(const KernelParamsFloat<8, 8>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 
 // Variant of KernelFloatNeonOutOfOrder tuned for in-order CPUs that do not
@@ -6921,45 +6921,45 @@ void KernelFloatNeonOutOfOrder(const KernelParamsFloat<8, 8>& params) {
 // comments. Specifically, see this comment about tuning for Cortex-A53:
 // https://github.com/google/gemmlowp/blob/36212ad3651871bc3e9a599f1a6d5324778aea25/standalone/neon-gemm-kernel-benchmark.cc#L4215
 void KernelFloatNeonInOrder(const KernelParamsFloat<8, 8>& params) {
-  profiler::ScopeLabel label("Kernel (kNeon, optimized for in-order cores)");
+    profiler::ScopeLabel label("Kernel (kNeon, optimized for in-order cores)");
 
-  CheckOffsetsInKernelParamsFloat(params);
+    CheckOffsetsInKernelParamsFloat(params);
 
-  const float* lhs_col_ptr = params.lhs_base_ptr;
-  const float* rhs_col_ptr = params.rhs_base_ptr;
-  const float* lhs_ptr = lhs_col_ptr;
-  const float* rhs_ptr = rhs_col_ptr;
-  float* dst_col_ptr = params.dst_base_ptr;
-  float* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const float* lhs_col_ptr = params.lhs_base_ptr;
+    const float* rhs_col_ptr = params.rhs_base_ptr;
+    const float* lhs_ptr = lhs_col_ptr;
+    const float* rhs_ptr = rhs_col_ptr;
+    float* dst_col_ptr = params.dst_base_ptr;
+    float* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are accumulators.
-  // During accumulation, v0 -- v3 are used to load data from LHS and RHS.
-  //
-  //                                          RHS 1x8 block
-  //                           /-----------------------------------------\
-  //                           |v2.s[0] ... v2.s[3]   v3.s[0] ... v3.s[3]|
-  //                           \-----------------------------------------/
-  //        LHS 8x1 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |        v0.s[0]      |  |v16.s[0]           ...           v30.s[0]|
-  //  |         ...         |  |  ...                              ...   |
-  //  |        v0.s[3]      |  |v16.s[3]           ...           v30.s[3]|
-  //  |        v1.s[0]      |  |v17.s[0]           ...           v31.s[0]|
-  //  |         ...         |  |  ...                              ...   |
-  //  |        v1.s[3]      |  |v17.s[3]           ...           v31.s[3]|
-  //  \---------------------/  \-----------------------------------------/
-  //                                      accumulators 8x8 block
-  //
-  // There is no RUY_OPT_MAX_STREAMING 4x-unrolled part in this kernel because
-  // we did not observe a benefit of such partial unrolling on in-order CPUs.
-  //
-  // v4 -- v7 are unused, and v8 -- v15 are used for floading parameters used
-  // for the post-accumulation part of the kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are accumulators.
+    // During accumulation, v0 -- v3 are used to load data from LHS and RHS.
+    //
+    //                                          RHS 1x8 block
+    //                           /-----------------------------------------\
+    //                           |v2.s[0] ... v2.s[3]   v3.s[0] ... v3.s[3]|
+    //                           \-----------------------------------------/
+    //        LHS 8x1 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |        v0.s[0]      |  |v16.s[0]           ...           v30.s[0]|
+    //  |         ...         |  |  ...                              ...   |
+    //  |        v0.s[3]      |  |v16.s[3]           ...           v30.s[3]|
+    //  |        v1.s[0]      |  |v17.s[0]           ...           v31.s[0]|
+    //  |         ...         |  |  ...                              ...   |
+    //  |        v1.s[3]      |  |v17.s[3]           ...           v31.s[3]|
+    //  \---------------------/  \-----------------------------------------/
+    //                                      accumulators 8x8 block
+    //
+    // There is no RUY_OPT_MAX_STREAMING 4x-unrolled part in this kernel because
+    // we did not observe a benefit of such partial unrolling on in-order CPUs.
+    //
+    // v4 -- v7 are unused, and v8 -- v15 are used for floading parameters used
+    // for the post-accumulation part of the kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -7351,14 +7351,14 @@ void KernelFloatNeonInOrder(const KernelParamsFloat<8, 8>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 
 // Variant of KernelFloatNeonInOrder tuned for in-order CPUs that do
@@ -7374,46 +7374,46 @@ void KernelFloatNeonInOrder(const KernelParamsFloat<8, 8>& params) {
 // comments. Specifically, see this comment about tuning for Cortex-A55r1:
 // https://github.com/google/gemmlowp/blob/36212ad3651871bc3e9a599f1a6d5324778aea25/standalone/neon-gemm-kernel-benchmark.cc#L4412
 void KernelFloatNeonDotprodInOrder(const KernelParamsFloat<8, 8>& params) {
-  profiler::ScopeLabel label(
-      "Kernel (kNeonDotprod, optimized for in-order cores)");
+    profiler::ScopeLabel label(
+        "Kernel (kNeonDotprod, optimized for in-order cores)");
 
-  CheckOffsetsInKernelParamsFloat(params);
+    CheckOffsetsInKernelParamsFloat(params);
 
-  const float* lhs_col_ptr = params.lhs_base_ptr;
-  const float* rhs_col_ptr = params.rhs_base_ptr;
-  const float* lhs_ptr = lhs_col_ptr;
-  const float* rhs_ptr = rhs_col_ptr;
-  float* dst_col_ptr = params.dst_base_ptr;
-  float* dst_ptr = dst_col_ptr;
-  int row = params.start_row;
-  int col = params.start_col;
+    const float* lhs_col_ptr = params.lhs_base_ptr;
+    const float* rhs_col_ptr = params.rhs_base_ptr;
+    const float* lhs_ptr = lhs_col_ptr;
+    const float* rhs_ptr = rhs_col_ptr;
+    float* dst_col_ptr = params.dst_base_ptr;
+    float* dst_ptr = dst_col_ptr;
+    int row = params.start_row;
+    int col = params.start_col;
 
-  // The asm kernel below has the following NEON register allocation:
-  //
-  // v16 -- v31 are accumulators.
-  // During accumulation, v0 -- v3 are used to load data from LHS and RHS.
-  //
-  //                                          RHS 1x8 block
-  //                           /-----------------------------------------\
-  //                           |v2.s[0] ... v2.s[3]   v3.s[0] ... v3.s[3]|
-  //                           \-----------------------------------------/
-  //        LHS 8x1 block
-  //  /---------------------\  /-----------------------------------------\
-  //  |        v0.s[0]      |  |v16.s[0]           ...           v30.s[0]|
-  //  |         ...         |  |  ...                              ...   |
-  //  |        v0.s[3]      |  |v16.s[3]           ...           v30.s[3]|
-  //  |        v1.s[0]      |  |v17.s[0]           ...           v31.s[0]|
-  //  |         ...         |  |  ...                              ...   |
-  //  |        v1.s[3]      |  |v17.s[3]           ...           v31.s[3]|
-  //  \---------------------/  \-----------------------------------------/
-  //                                      accumulators 8x8 block
-  //
-  // There is no RUY_OPT_MAX_STREAMING 4x-unrolled part in this kernel because
-  // we did not observe a benefit of such partial unrolling on in-order CPUs.
-  //
-  // v4 -- v7 are unused, and v8 -- v15 are used for floading parameters used
-  // for the post-accumulation part of the kernel.
-  asm volatile(
+    // The asm kernel below has the following NEON register allocation:
+    //
+    // v16 -- v31 are accumulators.
+    // During accumulation, v0 -- v3 are used to load data from LHS and RHS.
+    //
+    //                                          RHS 1x8 block
+    //                           /-----------------------------------------\
+    //                           |v2.s[0] ... v2.s[3]   v3.s[0] ... v3.s[3]|
+    //                           \-----------------------------------------/
+    //        LHS 8x1 block
+    //  /---------------------\  /-----------------------------------------\
+    //  |        v0.s[0]      |  |v16.s[0]           ...           v30.s[0]|
+    //  |         ...         |  |  ...                              ...   |
+    //  |        v0.s[3]      |  |v16.s[3]           ...           v30.s[3]|
+    //  |        v1.s[0]      |  |v17.s[0]           ...           v31.s[0]|
+    //  |         ...         |  |  ...                              ...   |
+    //  |        v1.s[3]      |  |v17.s[3]           ...           v31.s[3]|
+    //  \---------------------/  \-----------------------------------------/
+    //                                      accumulators 8x8 block
+    //
+    // There is no RUY_OPT_MAX_STREAMING 4x-unrolled part in this kernel because
+    // we did not observe a benefit of such partial unrolling on in-order CPUs.
+    //
+    // v4 -- v7 are unused, and v8 -- v15 are used for floading parameters used
+    // for the post-accumulation part of the kernel.
+    asm volatile(
 #define RUY_MAKE_ZERO(reg) "dup " #reg ".4s, wzr\n"
 
         // clang-format off
@@ -7805,14 +7805,14 @@ void KernelFloatNeonDotprodInOrder(const KernelParamsFloat<8, 8>& params) {
         // clang-format on
 
         : [ lhs_col_ptr ] "+r"(lhs_col_ptr), [rhs_col_ptr] "+r"(rhs_col_ptr),
-          [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
-          [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
+        [lhs_ptr] "+r"(lhs_ptr), [rhs_ptr] "+r"(rhs_ptr),
+        [dst_col_ptr] "+r"(dst_col_ptr), [dst_ptr] "+r"(dst_ptr), [row] "+r"(row), [col] "+r"(col)
         : [ params ] "r"(&params), [dst_rows] "r"(params.dst_rows),
-          [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf)
+        [dst_cols] "r"(params.dst_cols), [dst_tmp_buf] "r"(params.dst_tmp_buf)
         : "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "cc",
-          "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
-          "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
-          "v26", "v27", "v28", "v29", "v30", "v31");
+        "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
+        "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",
+        "v26", "v27", "v28", "v29", "v30", "v31");
 }
 #undef RUY_OFFSET_BIAS
 #undef RUY_OFFSET_FLAGS

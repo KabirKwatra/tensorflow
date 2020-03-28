@@ -37,71 +37,73 @@ namespace ruy {
 // Linux-specific. Not ARM-specific.
 #ifdef __linux__
 class PerfEvent {
- public:
-  PerfEvent(std::uint32_t type, std::uint64_t config) {
-    perf_event_attr pe;
-    memset(&pe, 0, sizeof(pe));
-    pe.size = sizeof(pe);
-    pe.type = type;
-    pe.config = config;
-    pe.disabled = 1;
-    pe.exclude_kernel = 1;
-    pe.exclude_hv = 1;
-    pe.inherit = 1;
-    fd_ = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
-    if (fd_ == -1) {
-      fprintf(stderr, "perf_event_open failed for config 0x%lx\n",
-              static_cast<unsigned long>(config));
-      // abort();
+public:
+    PerfEvent(std::uint32_t type, std::uint64_t config) {
+        perf_event_attr pe;
+        memset(&pe, 0, sizeof(pe));
+        pe.size = sizeof(pe);
+        pe.type = type;
+        pe.config = config;
+        pe.disabled = 1;
+        pe.exclude_kernel = 1;
+        pe.exclude_hv = 1;
+        pe.inherit = 1;
+        fd_ = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
+        if (fd_ == -1) {
+            fprintf(stderr, "perf_event_open failed for config 0x%lx\n",
+                    static_cast<unsigned long>(config));
+            // abort();
+        }
     }
-  }
 
-  ~PerfEvent() {
-    RUY_CHECK(!started_);
-    close(fd_);
-  }
+    ~PerfEvent() {
+        RUY_CHECK(!started_);
+        close(fd_);
+    }
 
-  void Start() {
-    RUY_CHECK(!started_);
-    started_ = true;
-    ioctl(fd_, PERF_EVENT_IOC_RESET, 0);
-    ioctl(fd_, PERF_EVENT_IOC_ENABLE, 0);
-    count_at_start_ = Read();
-  }
+    void Start() {
+        RUY_CHECK(!started_);
+        started_ = true;
+        ioctl(fd_, PERF_EVENT_IOC_RESET, 0);
+        ioctl(fd_, PERF_EVENT_IOC_ENABLE, 0);
+        count_at_start_ = Read();
+    }
 
-  void Stop() {
-    RUY_CHECK(started_);
-    started_ = false;
-    ioctl(fd_, PERF_EVENT_IOC_DISABLE, 0);
-    count_at_stop_ = Read();
-  }
+    void Stop() {
+        RUY_CHECK(started_);
+        started_ = false;
+        ioctl(fd_, PERF_EVENT_IOC_DISABLE, 0);
+        count_at_stop_ = Read();
+    }
 
-  std::int64_t Count() const {
-    RUY_CHECK(!started_);
-    return count_at_stop_ - count_at_start_;
-  }
+    std::int64_t Count() const {
+        RUY_CHECK(!started_);
+        return count_at_stop_ - count_at_start_;
+    }
 
- private:
-  std::int64_t Read() const {
-    std::int64_t count;
-    RUY_CHECK_NE(read(fd_, &count, sizeof(count)), -1);
-    return count;
-  }
-  std::int64_t count_at_start_ = -1;
-  std::int64_t count_at_stop_ = -1;
-  bool started_ = false;
-  int fd_ = -1;
+private:
+    std::int64_t Read() const {
+        std::int64_t count;
+        RUY_CHECK_NE(read(fd_, &count, sizeof(count)), -1);
+        return count;
+    }
+    std::int64_t count_at_start_ = -1;
+    std::int64_t count_at_stop_ = -1;
+    bool started_ = false;
+    int fd_ = -1;
 };
 #else
 // Placeholder implementation to at least compile outside of linux.
 #define PERF_TYPE_RAW 0
 class PerfEvent {
- public:
-  PerfEvent(std::uint32_t, std::uint64_t) {}
-  ~PerfEvent() {}
-  void Start() {}
-  void Stop() {}
-  std::int64_t Count() const { return 0; }
+public:
+    PerfEvent(std::uint32_t, std::uint64_t) {}
+    ~PerfEvent() {}
+    void Start() {}
+    void Stop() {}
+    std::int64_t Count() const {
+        return 0;
+    }
 };
 #endif
 
@@ -184,98 +186,100 @@ constexpr std::uint16_t L3D_CACHE_REFILL_RD = 0xA2;
 };  // namespace arm_pmuv3
 
 class PmuEventsPrivate {
- public:
-  PmuEventsPrivate()
-      : l1d_cache_refill(PERF_TYPE_RAW, arm_pmuv3::L1D_CACHE_REFILL),
-        l2d_cache_refill(PERF_TYPE_RAW, arm_pmuv3::L2D_CACHE_REFILL),
-        l3d_cache_refill(PERF_TYPE_RAW, arm_pmuv3::L3D_CACHE_REFILL),
-        ll_cache_miss(PERF_TYPE_RAW, arm_pmuv3::LL_CACHE_MISS),
-        l1d_tlb_refill(PERF_TYPE_RAW, arm_pmuv3::L1D_TLB_REFILL),
-        l2d_tlb_refill(PERF_TYPE_RAW, arm_pmuv3::L2D_TLB_REFILL),
-        stall_frontend(PERF_TYPE_RAW, arm_pmuv3::STALL_FRONTEND),
-        stall_backend(PERF_TYPE_RAW, arm_pmuv3::STALL_BACKEND),
-        br_mis_pred(PERF_TYPE_RAW, arm_pmuv3::BR_MIS_PRED) {}
+public:
+    PmuEventsPrivate()
+        : l1d_cache_refill(PERF_TYPE_RAW, arm_pmuv3::L1D_CACHE_REFILL),
+          l2d_cache_refill(PERF_TYPE_RAW, arm_pmuv3::L2D_CACHE_REFILL),
+          l3d_cache_refill(PERF_TYPE_RAW, arm_pmuv3::L3D_CACHE_REFILL),
+          ll_cache_miss(PERF_TYPE_RAW, arm_pmuv3::LL_CACHE_MISS),
+          l1d_tlb_refill(PERF_TYPE_RAW, arm_pmuv3::L1D_TLB_REFILL),
+          l2d_tlb_refill(PERF_TYPE_RAW, arm_pmuv3::L2D_TLB_REFILL),
+          stall_frontend(PERF_TYPE_RAW, arm_pmuv3::STALL_FRONTEND),
+          stall_backend(PERF_TYPE_RAW, arm_pmuv3::STALL_BACKEND),
+          br_mis_pred(PERF_TYPE_RAW, arm_pmuv3::BR_MIS_PRED) {}
 
- private:
-  friend class PmuEvents;
-  PerfEvent l1d_cache_refill;
-  PerfEvent l2d_cache_refill;
-  PerfEvent l3d_cache_refill;
-  PerfEvent ll_cache_miss;
-  PerfEvent l1d_tlb_refill;
-  PerfEvent l2d_tlb_refill;
-  PerfEvent stall_frontend;
-  PerfEvent stall_backend;
-  PerfEvent br_mis_pred;
+private:
+    friend class PmuEvents;
+    PerfEvent l1d_cache_refill;
+    PerfEvent l2d_cache_refill;
+    PerfEvent l3d_cache_refill;
+    PerfEvent ll_cache_miss;
+    PerfEvent l1d_tlb_refill;
+    PerfEvent l2d_tlb_refill;
+    PerfEvent stall_frontend;
+    PerfEvent stall_backend;
+    PerfEvent br_mis_pred;
 };
 
 PmuEvents::PmuEvents() : priv(new PmuEventsPrivate) {}
-PmuEvents::~PmuEvents() { delete priv; }
+PmuEvents::~PmuEvents() {
+    delete priv;
+}
 
 void PmuEvents::StartRecording() {
-  priv->l1d_cache_refill.Start();
-  priv->l2d_cache_refill.Start();
-  priv->l3d_cache_refill.Start();
-  priv->ll_cache_miss.Start();
-  priv->l1d_tlb_refill.Start();
-  priv->l2d_tlb_refill.Start();
-  priv->stall_frontend.Start();
-  priv->stall_backend.Start();
-  priv->br_mis_pred.Start();
+    priv->l1d_cache_refill.Start();
+    priv->l2d_cache_refill.Start();
+    priv->l3d_cache_refill.Start();
+    priv->ll_cache_miss.Start();
+    priv->l1d_tlb_refill.Start();
+    priv->l2d_tlb_refill.Start();
+    priv->stall_frontend.Start();
+    priv->stall_backend.Start();
+    priv->br_mis_pred.Start();
 }
 
 void PmuEvents::StopRecording() {
-  priv->l1d_cache_refill.Stop();
-  priv->l2d_cache_refill.Stop();
-  priv->l3d_cache_refill.Stop();
-  priv->ll_cache_miss.Stop();
-  priv->l1d_tlb_refill.Stop();
-  priv->l2d_tlb_refill.Stop();
-  priv->stall_frontend.Stop();
-  priv->stall_backend.Stop();
-  priv->br_mis_pred.Stop();
+    priv->l1d_cache_refill.Stop();
+    priv->l2d_cache_refill.Stop();
+    priv->l3d_cache_refill.Stop();
+    priv->ll_cache_miss.Stop();
+    priv->l1d_tlb_refill.Stop();
+    priv->l2d_tlb_refill.Stop();
+    priv->stall_frontend.Stop();
+    priv->stall_backend.Stop();
+    priv->br_mis_pred.Stop();
 }
 
 float PmuEvents::BranchMispredictionCount() const {
-  return static_cast<float>(priv->br_mis_pred.Count());
+    return static_cast<float>(priv->br_mis_pred.Count());
 }
 
 float PmuEvents::FrontendStallCount() const {
-  return static_cast<float>(priv->stall_frontend.Count());
+    return static_cast<float>(priv->stall_frontend.Count());
 }
 
 float PmuEvents::BackendStallCount() const {
-  return static_cast<float>(priv->stall_backend.Count());
+    return static_cast<float>(priv->stall_backend.Count());
 }
 
 float PmuEvents::L1RefillCount() const {
-  return static_cast<float>(priv->l1d_cache_refill.Count());
+    return static_cast<float>(priv->l1d_cache_refill.Count());
 }
 
 float PmuEvents::L2RefillCount() const {
-  return static_cast<float>(priv->l2d_cache_refill.Count());
+    return static_cast<float>(priv->l2d_cache_refill.Count());
 }
 
 float PmuEvents::L3RefillCount() const {
-  // Important: this was discovered in the context of the above experiments,
-  // which also tested the _RD variants of these counters. So it's possible that
-  // it's just not needed here with the default (non _RD) counters.
-  //
-  // Some CPUs implement LL_CACHE_MISS[_RD], some implement
-  // L3D_CACHE_REFILL[_RD]. It seems that either one of these two counters is
-  // zero, or they roughly both agree with each other. Therefore, taking the max
-  // of them is a reasonable way to get something more portable across various
-  // CPUs.
-  return static_cast<float>(
-      std::max(priv->l3d_cache_refill.Count(), priv->ll_cache_miss.Count()));
+    // Important: this was discovered in the context of the above experiments,
+    // which also tested the _RD variants of these counters. So it's possible that
+    // it's just not needed here with the default (non _RD) counters.
+    //
+    // Some CPUs implement LL_CACHE_MISS[_RD], some implement
+    // L3D_CACHE_REFILL[_RD]. It seems that either one of these two counters is
+    // zero, or they roughly both agree with each other. Therefore, taking the max
+    // of them is a reasonable way to get something more portable across various
+    // CPUs.
+    return static_cast<float>(
+               std::max(priv->l3d_cache_refill.Count(), priv->ll_cache_miss.Count()));
 }
 
 float PmuEvents::L1TLBRefillCount() const {
-  return static_cast<float>(priv->l1d_tlb_refill.Count());
+    return static_cast<float>(priv->l1d_tlb_refill.Count());
 }
 
 float PmuEvents::L2TLBRefillCount() const {
-  return static_cast<float>(priv->l2d_tlb_refill.Count());
+    return static_cast<float>(priv->l2d_tlb_refill.Count());
 }
 
 }  // namespace ruy

@@ -36,8 +36,8 @@ using Task = ruy::Task;
 template <typename TaskType>
 void Execute(int tasks_count, TaskType* tasks,
              CpuBackendContext* cpu_backend_context) {
-  TFLITE_DCHECK_LE(tasks_count, cpu_backend_context->max_num_threads());
-  cpu_backend_context->ruy_context()->workers_pool.Execute(tasks_count, tasks);
+    TFLITE_DCHECK_LE(tasks_count, cpu_backend_context->max_num_threads());
+    cpu_backend_context->ruy_context()->workers_pool.Execute(tasks_count, tasks);
 }
 
 #else  // not TFLITE_WITH_RUY
@@ -47,9 +47,9 @@ using Task = gemmlowp::Task;
 template <typename TaskType>
 void Execute(int tasks_count, TaskType* tasks,
              CpuBackendContext* cpu_backend_context) {
-  TFLITE_DCHECK_LE(tasks_count, cpu_backend_context->max_num_threads());
-  cpu_backend_context->gemmlowp_context()->workers_pool()->Execute(tasks_count,
-                                                                   tasks);
+    TFLITE_DCHECK_LE(tasks_count, cpu_backend_context->max_num_threads());
+    cpu_backend_context->gemmlowp_context()->workers_pool()->Execute(tasks_count,
+            tasks);
 }
 
 #endif
