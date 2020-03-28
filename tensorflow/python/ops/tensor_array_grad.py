@@ -69,7 +69,9 @@ def _GetGradSource(op_or_tensor):
       ValueError: If not called within a gradients calculation.
     """
     name_tokens = op_or_tensor.name.split("/")
-    grad_pos = [i for i, x in enumerate(name_tokens) if x.startswith("gradients")]
+    grad_pos = [
+        i for i, x in enumerate(name_tokens) if x.startswith("gradients")
+    ]
     if not grad_pos:
         raise ValueError(
             "Expected op/tensor name to start with gradients (excluding scope)"
@@ -77,9 +79,8 @@ def _GetGradSource(op_or_tensor):
             "dependency path has a custom name that does not start with "
             "'gradients'. Please make sure all calls to tf.gradients that have "
             "non-empty 'name' arguments use names that start with "
-            "'gradients'.".format(op_or_tensor.name)
-        )
-    return "/".join(name_tokens[: grad_pos[-1] + 1])
+            "'gradients'.".format(op_or_tensor.name))
+    return "/".join(name_tokens[:grad_pos[-1] + 1])
 
 
 @ops.RegisterGradient("TensorArrayRead")
@@ -107,8 +108,11 @@ def _TensorArrayReadGrad(op, grad):
     dtype = op.get_attr("dtype")
     grad_source = _GetGradSource(grad)
     g = tensor_array_ops.TensorArray(
-        dtype=dtype, handle=handle, flow=flow, colocate_with_first_write_call=False
-    ).grad(source=grad_source, flow=flow)
+        dtype=dtype,
+        handle=handle,
+        flow=flow,
+        colocate_with_first_write_call=False).grad(source=grad_source,
+                                                   flow=flow)
     w_g = g.write(index, grad)
     return [None, None, w_g.flow]
 
@@ -139,8 +143,11 @@ def _TensorArrayWriteGrad(op, flow):
     with ops.control_dependencies([flow_out]):
         flow = array_ops.identity(flow, "write_barrier")
     g = tensor_array_ops.TensorArray(
-        dtype=dtype, handle=handle, flow=flow, colocate_with_first_write_call=False
-    ).grad(source=grad_source, flow=flow)
+        dtype=dtype,
+        handle=handle,
+        flow=flow,
+        colocate_with_first_write_call=False).grad(source=grad_source,
+                                                   flow=flow)
     grad = g.read(index)
     return [None, None, grad, flow]
 
@@ -170,8 +177,11 @@ def _TensorArrayGatherGrad(op, grad):
     dtype = op.get_attr("dtype")
     grad_source = _GetGradSource(grad)
     g = tensor_array_ops.TensorArray(
-        dtype=dtype, handle=handle, flow=flow, colocate_with_first_write_call=False
-    ).grad(source=grad_source, flow=flow)
+        dtype=dtype,
+        handle=handle,
+        flow=flow,
+        colocate_with_first_write_call=False).grad(source=grad_source,
+                                                   flow=flow)
     u_g = g.scatter(indices, grad)
     return [None, None, u_g.flow]
 
@@ -200,8 +210,11 @@ def _TensorArrayScatterGrad(op, flow):
     with ops.control_dependencies([flow_out]):
         flow = array_ops.identity(flow, "write_barrier")
     g = tensor_array_ops.TensorArray(
-        dtype=dtype, handle=handle, flow=flow, colocate_with_first_write_call=False
-    ).grad(source=grad_source, flow=flow)
+        dtype=dtype,
+        handle=handle,
+        flow=flow,
+        colocate_with_first_write_call=False).grad(source=grad_source,
+                                                   flow=flow)
     grad = g.gather(indices)
     return [None, None, grad, flow]
 
@@ -231,8 +244,11 @@ def _TensorArrayConcatGrad(op, grad, unused_lengths_grad):
     dtype = op.get_attr("dtype")
     grad_source = _GetGradSource(grad)
     g = tensor_array_ops.TensorArray(
-        dtype=dtype, handle=handle, flow=flow, colocate_with_first_write_call=False
-    ).grad(source=grad_source, flow=flow)
+        dtype=dtype,
+        handle=handle,
+        flow=flow,
+        colocate_with_first_write_call=False).grad(source=grad_source,
+                                                   flow=flow)
     u_g = g.split(grad, lengths=lengths)
     # handle, flow_in
     return [None, u_g.flow]
@@ -261,8 +277,11 @@ def _TensorArraySplitGrad(op, flow):
     with ops.control_dependencies([flow_out]):
         flow = array_ops.identity(flow, "write_barrier")
     g = tensor_array_ops.TensorArray(
-        dtype=dtype, handle=handle, flow=flow, colocate_with_first_write_call=False
-    ).grad(source=grad_source, flow=flow)
+        dtype=dtype,
+        handle=handle,
+        flow=flow,
+        colocate_with_first_write_call=False).grad(source=grad_source,
+                                                   flow=flow)
     grad = g.concat()
     # handle, value, lengths, flow_in
     return [None, grad, None, flow]
