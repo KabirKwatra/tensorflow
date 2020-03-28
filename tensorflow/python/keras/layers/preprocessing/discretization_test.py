@@ -31,8 +31,8 @@ from tensorflow.python.platform import test
 
 @keras_parameterized.run_all_keras_modes
 class CategoricalEncodingInputTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
     def test_bucketize_with_explicit_buckets_one_hot(self):
         input_array = np.array([[-1.5, 1.0, 3.4, 0.5], [0.0, 3.0, 1.3, 0.0]])
 
@@ -45,10 +45,9 @@ class CategoricalEncodingInputTest(
         num_buckets = 4
         expected_output_shape = [None, None, num_buckets]
 
-        input_data = keras.Input(shape=(None,))
+        input_data = keras.Input(shape=(None, ))
         layer = discretization.Discretization(
-            bins=[0.0, 1.0, 2.0], output_mode=discretization.BINARY
-        )
+            bins=[0.0, 1.0, 2.0], output_mode=discretization.BINARY)
         bucket_data = layer(input_data)
         self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
 
@@ -62,10 +61,9 @@ class CategoricalEncodingInputTest(
         expected_output = [[0, 2, 3, 1], [1, 3, 2, 1]]
         expected_output_shape = [None, None]
 
-        input_data = keras.Input(shape=(None,))
+        input_data = keras.Input(shape=(None, ))
         layer = discretization.Discretization(
-            bins=[0.0, 1.0, 2.0], output_mode=discretization.INTEGER
-        )
+            bins=[0.0, 1.0, 2.0], output_mode=discretization.INTEGER)
         bucket_data = layer(input_data)
         self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
 
@@ -79,10 +77,9 @@ class CategoricalEncodingInputTest(
         expected_output = [[0, 2, 3, 1], [1, 3, 2, 1]]
         expected_output_shape = [None, None]
 
-        input_data = keras.Input(shape=(None,), dtype=dtypes.int64)
+        input_data = keras.Input(shape=(None, ), dtype=dtypes.int64)
         layer = discretization.Discretization(
-            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER
-        )
+            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER)
         bucket_data = layer(input_data)
         self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
 
@@ -92,14 +89,15 @@ class CategoricalEncodingInputTest(
 
     def test_bucketize_with_explicit_buckets_sparse_float_input(self):
         indices = [[0, 1], [0, 2], [1, 1]]
-        input_array = sparse_tensor.SparseTensor(
-            indices=indices, values=[-1.5, 1.0, 3.4], dense_shape=[2, 3]
-        )
+        input_array = sparse_tensor.SparseTensor(indices=indices,
+                                                 values=[-1.5, 1.0, 3.4],
+                                                 dense_shape=[2, 3])
         expected_output = [0, 2, 3]
-        input_data = keras.Input(shape=(3,), dtype=dtypes.float32, sparse=True)
+        input_data = keras.Input(shape=(3, ),
+                                 dtype=dtypes.float32,
+                                 sparse=True)
         layer = discretization.Discretization(
-            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER
-        )
+            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER)
         bucket_data = layer(input_data)
 
         model = keras.Model(inputs=input_data, outputs=bucket_data)
@@ -108,17 +106,15 @@ class CategoricalEncodingInputTest(
         self.assertAllEqual(expected_output, output_dataset.values)
 
     def test_bucketize_with_explicit_buckets_ragged_float_input(self):
-        input_array = ragged_factory_ops.constant(
-            [[-1.5, 1.0, 3.4, 0.5], [0.0, 3.0, 1.3]]
-        )
+        input_array = ragged_factory_ops.constant([[-1.5, 1.0, 3.4, 0.5],
+                                                   [0.0, 3.0, 1.3]])
 
         expected_output = [[0, 2, 3, 1], [1, 3, 2]]
         expected_output_shape = [None, None]
 
-        input_data = keras.Input(shape=(None,), ragged=True)
+        input_data = keras.Input(shape=(None, ), ragged=True)
         layer = discretization.Discretization(
-            bins=[0.0, 1.0, 2.0], output_mode=discretization.INTEGER
-        )
+            bins=[0.0, 1.0, 2.0], output_mode=discretization.INTEGER)
         bucket_data = layer(input_data)
         self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
 
@@ -127,17 +123,17 @@ class CategoricalEncodingInputTest(
         self.assertAllEqual(expected_output, output_dataset)
 
     def test_bucketize_with_explicit_buckets_ragged_int_input(self):
-        input_array = ragged_factory_ops.constant(
-            [[-1, 1, 3, 0], [0, 3, 1]], dtype=dtypes.int64
-        )
+        input_array = ragged_factory_ops.constant([[-1, 1, 3, 0], [0, 3, 1]],
+                                                  dtype=dtypes.int64)
 
         expected_output = [[0, 2, 3, 1], [1, 3, 2]]
         expected_output_shape = [None, None]
 
-        input_data = keras.Input(shape=(None,), ragged=True, dtype=dtypes.int64)
+        input_data = keras.Input(shape=(None, ),
+                                 ragged=True,
+                                 dtype=dtypes.int64)
         layer = discretization.Discretization(
-            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER
-        )
+            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER)
         bucket_data = layer(input_data)
         self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
 
@@ -147,14 +143,13 @@ class CategoricalEncodingInputTest(
 
     def test_bucketize_with_explicit_buckets_sparse_int_input(self):
         indices = [[0, 1], [0, 2], [1, 1]]
-        input_array = sparse_tensor.SparseTensor(
-            indices=indices, values=[-1, 1, 3], dense_shape=[2, 3]
-        )
+        input_array = sparse_tensor.SparseTensor(indices=indices,
+                                                 values=[-1, 1, 3],
+                                                 dense_shape=[2, 3])
         expected_output = [0, 2, 3]
-        input_data = keras.Input(shape=(3,), dtype=dtypes.int32, sparse=True)
+        input_data = keras.Input(shape=(3, ), dtype=dtypes.int32, sparse=True)
         layer = discretization.Discretization(
-            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER
-        )
+            bins=[-0.5, 0.5, 1.5], output_mode=discretization.INTEGER)
         bucket_data = layer(input_data)
 
         model = keras.Model(inputs=input_data, outputs=bucket_data)

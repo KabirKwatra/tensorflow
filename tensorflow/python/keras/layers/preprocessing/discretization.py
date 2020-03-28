@@ -72,36 +72,31 @@ class Discretization(Layer):
         if self.output_mode == INTEGER:
             return input_shape
         else:
-            return tensor_shape.TensorShape(
-                [dim for dim in input_shape] + [len(self.bins)]
-            )
+            return tensor_shape.TensorShape([dim for dim in input_shape] +
+                                            [len(self.bins)])
 
     def compute_output_signature(self, input_spec):
         output_shape = self.compute_output_shape(input_spec.shape.as_list())
         output_dtype = dtypes.int64
         if isinstance(input_spec, sparse_tensor.SparseTensorSpec):
-            return sparse_tensor.SparseTensorSpec(
-                shape=output_shape, dtype=output_dtype
-            )
+            return sparse_tensor.SparseTensorSpec(shape=output_shape,
+                                                  dtype=output_dtype)
         return tensor_spec.TensorSpec(shape=output_shape, dtype=output_dtype)
 
     def call(self, inputs):
         if ragged_tensor.is_ragged(inputs):
             integer_buckets = ragged_functional_ops.map_flat_values(
-                math_ops._bucketize, inputs, boundaries=self.bins
-            )  # pylint: disable=protected-access
+                math_ops._bucketize, inputs, boundaries=self.bins)  # pylint: disable=protected-access
             # Ragged map_flat_values doesn't touch the non-values tensors in the
             # ragged composite tensor. If this op is the only op a Keras model,
             # this can cause errors in Graph mode, so wrap the tensor in an identity.
             integer_buckets = array_ops.identity(integer_buckets)
         elif isinstance(inputs, sparse_tensor.SparseTensor):
             integer_buckets = math_ops._bucketize(  # pylint: disable=protected-access
-                inputs.values, boundaries=self.bins
-            )
+                inputs.values,
+                boundaries=self.bins)
         else:
-            integer_buckets = math_ops._bucketize(
-                inputs, boundaries=self.bins
-            )  # pylint: disable=protected-access
+            integer_buckets = math_ops._bucketize(inputs, boundaries=self.bins)  # pylint: disable=protected-access
 
         if self.output_mode == INTEGER:
             if isinstance(inputs, sparse_tensor.SparseTensor):
@@ -113,9 +108,8 @@ class Discretization(Layer):
             return integer_buckets
         else:
             if isinstance(inputs, sparse_tensor.SparseTensor):
-                raise ValueError(
-                    "`output_mode=binary` is not supported for " "sparse input"
-                )
+                raise ValueError("`output_mode=binary` is not supported for "
+                                 "sparse input")
             # The 'bins' array is the set of boundaries between the bins. We actually
             # have 'len(bins)+1' outputs.
             # TODO(momernick): This will change when we have the ability to adapt().
