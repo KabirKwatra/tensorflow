@@ -46,8 +46,9 @@ def in_defun():
         return False
 
     graph = ops.get_default_graph()
-    while (isinstance(graph, CondBranchFuncGraph) or
-           isinstance(graph, WhileBodyFuncGraph)):
+    while isinstance(graph, CondBranchFuncGraph) or isinstance(
+        graph, WhileBodyFuncGraph
+    ):
         graph = graph.outer_graph
     return isinstance(graph, FuncGraph)
 
@@ -62,7 +63,8 @@ def create_new_tf_function(func_graph):
       The name of the new TF_Function.
     """
     func = function._EagerDefinedFunction(  # pylint: disable=protected-access
-        func_graph.name, func_graph, func_graph.inputs, func_graph.outputs, {})
+        func_graph.name, func_graph, func_graph.inputs, func_graph.outputs, {}
+    )
     func.add_to_graph(func_graph.outer_graph)
     return func_graph.name
 
@@ -104,12 +106,13 @@ def maybe_set_lowering_attr(op):
     Args:
       op: An `If` or `While` Operation.
     """
-    if (not control_flow_util.GraphOrParentsInXlaContext(op.graph) and
-        context.context().function_call_options.executor_type !=
-            "SINGLE_THREADED_EXECUTOR"):
+    if (
+        not control_flow_util.GraphOrParentsInXlaContext(op.graph)
+        and context.context().function_call_options.executor_type
+        != "SINGLE_THREADED_EXECUTOR"
+    ):
         # pylint: disable=protected-access
-        op._set_attr("_lower_using_switch_merge",
-                     attr_value_pb2.AttrValue(b=True))
+        op._set_attr("_lower_using_switch_merge", attr_value_pb2.AttrValue(b=True))
         # pylint: enable=protected-access
 
 
@@ -126,8 +129,9 @@ def maybe_propagate_compile_time_consts_in_xla(op):
     """
     if control_flow_util.GraphOrParentsInXlaContext(op.graph):
         # pylint: disable=protected-access
-        op._set_attr("_xla_propagate_compile_time_consts",
-                     attr_value_pb2.AttrValue(b=True))
+        op._set_attr(
+            "_xla_propagate_compile_time_consts", attr_value_pb2.AttrValue(b=True)
+        )
         # pylint: enable=protected-access
 
 
@@ -188,17 +192,21 @@ def resource_input_index(tensor_name, input_names, node_defs, functions):
             output_arg_name = fdef.signature.output_arg[output_idx].name
             output_tensor_name = fdef.ret[output_arg_name]
             input_index = resource_input_index(
-                output_tensor_name, [
-                    arg.name for arg in fdef.signature.input_arg],
-                {ndef.name: ndef for ndef in fdef.node_def}, functions)
+                output_tensor_name,
+                [arg.name for arg in fdef.signature.input_arg],
+                {ndef.name: ndef for ndef in fdef.node_def},
+                functions,
+            )
             tensor_name = node_def.input[input_index]
         else:
             # We assume there are no other ops types that will "forward" resource
             # handles like this, so all other handles must have been created by the
             # op. (Note that cond_v2 wraps resource handle outputs in optionals,
             # which we'll end up accumulating).
-            raise ValueError("Taking gradient of a while loop which creates "
-                             "a resource in its body is not supported: %s" % op_name)
+            raise ValueError(
+                "Taking gradient of a while loop which creates "
+                "a resource in its body is not supported: %s" % op_name
+            )
 
     return input_names.index(tensor_name)
 
@@ -224,8 +232,9 @@ def clear_control_inputs():
 
 
 def _is_tpu_strategy(strategy):
-    return (strategy is not None and
-            strategy.__class__.__name__.startswith("TPUStrategy"))
+    return strategy is not None and strategy.__class__.__name__.startswith(
+        "TPUStrategy"
+    )
 
 
 def _register_keras_layer_context_function(func):
@@ -267,11 +276,14 @@ def output_all_intermediates():
         return _EXPERIMENTAL_OUTPUT_ALL_INTERMEDIATES_OVERRIDE
     if in_defun():
         return False
-    if (control_flow_util.GraphOrParentsInXlaContext(ops.get_default_graph()) or
-            _is_tpu_strategy(distribution_strategy_context.get_strategy())):
+    if control_flow_util.GraphOrParentsInXlaContext(
+        ops.get_default_graph()
+    ) or _is_tpu_strategy(distribution_strategy_context.get_strategy()):
         return False
-    if (context.context().function_call_options.executor_type ==
-            "SINGLE_THREADED_EXECUTOR"):
+    if (
+        context.context().function_call_options.executor_type
+        == "SINGLE_THREADED_EXECUTOR"
+    ):
         return False
     return _is_building_keras_layer()
 
@@ -281,8 +293,7 @@ def get_func_graph(op, input_shapes, func_name):
     graph = op.graph
     # Recursively search the func in graphs.
     while graph is not None:
-        func = graph._get_function(
-            func_name)  # pylint: disable=protected-access
+        func = graph._get_function(func_name)  # pylint: disable=protected-access
         if func is not None:
             fdef = func.definition
             break
@@ -298,6 +309,5 @@ def get_func_graph(op, input_shapes, func_name):
     # forward pass. We need this so that we can resolve references to tensors
     # in `func_graph` from its gradient graph in `_resolve_grad_inputs`.
     with op.graph.as_default():
-        func_graph = function_def_to_graph.function_def_to_graph(
-            fdef, input_shapes)
+        func_graph = function_def_to_graph.function_def_to_graph(fdef, input_shapes)
     return func_graph
