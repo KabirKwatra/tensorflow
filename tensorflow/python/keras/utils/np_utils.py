@@ -21,8 +21,8 @@ import numpy as np
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export('keras.utils.to_categorical')
-def to_categorical(y, num_classes=None, dtype='float32'):
+@keras_export("keras.utils.to_categorical")
+def to_categorical(y, num_classes=None, dtype="float32"):
     """Converts a class vector (integers) to binary class matrix.
 
     E.g. for use with categorical_crossentropy.
@@ -62,7 +62,7 @@ def to_categorical(y, num_classes=None, dtype='float32'):
         A binary matrix representation of the input. The classes axis is placed
         last.
     """
-    y = np.array(y, dtype='int')
+    y = np.array(y, dtype="int")
     input_shape = y.shape
     if input_shape and input_shape[-1] == 1 and len(input_shape) > 1:
         input_shape = tuple(input_shape[:-1])
@@ -77,7 +77,7 @@ def to_categorical(y, num_classes=None, dtype='float32'):
     return categorical
 
 
-@keras_export('keras.utils.normalize')
+@keras_export("keras.utils.normalize")
 def normalize(x, axis=-1, order=2):
     """Normalizes a Numpy array.
 
