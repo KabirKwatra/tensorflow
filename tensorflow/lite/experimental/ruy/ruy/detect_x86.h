@@ -32,24 +32,14 @@ bool DetectCpuAvx512();
 // blocks can be changed as desired.
 //
 // TODO(b/146646451): Introduce and activate.
-inline bool DetectCpuAvxVnni() {
-    return false;
-}
+inline bool DetectCpuAvxVnni() { return false; }
 
 #else  // RUY_PLATFORM(X86_ENHANCEMENTS)
 
-inline bool DetectCpuSse42() {
-    return false;
-}
-inline bool DetectCpuAvx2() {
-    return false;
-}
-inline bool DetectCpuAvx512() {
-    return false;
-}
-inline bool DetectCpuAvxVnni() {
-    return false;
-}
+inline bool DetectCpuSse42() { return false; }
+inline bool DetectCpuAvx2() { return false; }
+inline bool DetectCpuAvx512() { return false; }
+inline bool DetectCpuAvxVnni() { return false; }
 
 #endif  // !RUY_PLATFORM(X86_ENHANCEMENTS)
 #endif  // RUY_PLATFORM(X86)

@@ -16,6 +16,7 @@ limitations under the License.
 #include "tensorflow/lite/experimental/ruy/ruy/context.h"
 
 #include <gtest/gtest.h>
+
 #include "tensorflow/lite/experimental/ruy/ruy/path.h"
 #include "tensorflow/lite/experimental/ruy/ruy/platform.h"
 
@@ -23,34 +24,34 @@ namespace ruy {
 namespace {
 
 TEST(ContextTest, EnabledPathsGeneral) {
-    ruy::Context ruy_context;
-    const auto ruy_paths = ruy_context.GetRuntimeEnabledPaths();
-    const auto ruy_paths_repeat = ruy_context.GetRuntimeEnabledPaths();
-    ASSERT_EQ(ruy_paths, ruy_paths_repeat);
-    EXPECT_NE(ruy_paths, Path::kNone);
-    EXPECT_EQ(ruy_paths & Path::kReference, Path::kReference);
-    EXPECT_EQ(ruy_paths & Path::kStandardCpp, Path::kStandardCpp);
+  ruy::Context ruy_context;
+  const auto ruy_paths = ruy_context.GetRuntimeEnabledPaths();
+  const auto ruy_paths_repeat = ruy_context.GetRuntimeEnabledPaths();
+  ASSERT_EQ(ruy_paths, ruy_paths_repeat);
+  EXPECT_NE(ruy_paths, Path::kNone);
+  EXPECT_EQ(ruy_paths & Path::kReference, Path::kReference);
+  EXPECT_EQ(ruy_paths & Path::kStandardCpp, Path::kStandardCpp);
 }
 
 #if RUY_PLATFORM(X86)
 TEST(ContextTest, EnabledPathsX86) {
-    ruy::Context ruy_context;
-    ruy_context.SetRuntimeEnabledPaths(Path::kSse42 | Path::kAvx2 |
-                                       Path::kAvx512 | Path::kAvxVnni);
-    const auto ruy_paths = ruy_context.GetRuntimeEnabledPaths();
-    EXPECT_EQ(ruy_paths & Path::kReference, Path::kNone);
-    EXPECT_EQ(ruy_paths & Path::kStandardCpp, Path::kNone);
+  ruy::Context ruy_context;
+  ruy_context.SetRuntimeEnabledPaths(Path::kSse42 | Path::kAvx2 |
+                                     Path::kAvx512 | Path::kAvxVnni);
+  const auto ruy_paths = ruy_context.GetRuntimeEnabledPaths();
+  EXPECT_EQ(ruy_paths & Path::kReference, Path::kNone);
+  EXPECT_EQ(ruy_paths & Path::kStandardCpp, Path::kNone);
 }
 #endif  // RUY_PLATFORM(X86)
 
 #if RUY_PLATFORM(ARM)
 TEST(ContextTest, EnabledPathsArm) {
-    ruy::Context ruy_context;
-    ruy_context.SetRuntimeEnabledPaths(Path::kNeon | Path::kNeonDotprod);
-    const auto ruy_paths = ruy_context.GetRuntimeEnabledPaths();
-    EXPECT_EQ(ruy_paths & Path::kReference, Path::kNone);
-    EXPECT_EQ(ruy_paths & Path::kStandardCpp, Path::kNone);
-    EXPECT_EQ(ruy_paths & Path::kNeon, Path::kNeon);
+  ruy::Context ruy_context;
+  ruy_context.SetRuntimeEnabledPaths(Path::kNeon | Path::kNeonDotprod);
+  const auto ruy_paths = ruy_context.GetRuntimeEnabledPaths();
+  EXPECT_EQ(ruy_paths & Path::kReference, Path::kNone);
+  EXPECT_EQ(ruy_paths & Path::kStandardCpp, Path::kNone);
+  EXPECT_EQ(ruy_paths & Path::kNeon, Path::kNeon);
 }
 #endif  // RUY_PLATFORM(ARM)
 
@@ -58,6 +59,6 @@ TEST(ContextTest, EnabledPathsArm) {
 }  // namespace ruy
 
 int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

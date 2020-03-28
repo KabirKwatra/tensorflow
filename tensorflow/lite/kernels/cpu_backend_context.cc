@@ -27,47 +27,47 @@ const int kDefaultNumThreadpoolThreads = 1;
 namespace tflite {
 
 CpuBackendContext* CpuBackendContext::GetFromContext(TfLiteContext* context) {
-    auto* external_context = static_cast<ExternalCpuBackendContext*>(
-                                 context->GetExternalContext(context, kTfLiteCpuBackendContext));
+  auto* external_context = static_cast<ExternalCpuBackendContext*>(
+      context->GetExternalContext(context, kTfLiteCpuBackendContext));
 
-    if (external_context == nullptr) {
-        TF_LITE_FATAL(
-            "ExternalCpuBackendContext isn't properly initialized during TFLite "
-            "interpreter initialization.");
-    }
+  if (external_context == nullptr) {
+    TF_LITE_FATAL(
+        "ExternalCpuBackendContext isn't properly initialized during TFLite "
+        "interpreter initialization.");
+  }
 
-    auto* cpu_backend_context = static_cast<CpuBackendContext*>(
-                                    external_context->internal_backend_context());
-    if (cpu_backend_context == nullptr) {
-        // We do the lazy initialization here for the TfLiteInternalBackendContext
-        // that's wrapped inside ExternalCpuBackendContext.
-        cpu_backend_context = new CpuBackendContext();
-        cpu_backend_context->SetMaxNumThreads(context->recommended_num_threads);
-        external_context->set_internal_backend_context(
-            std::unique_ptr<TfLiteInternalBackendContext>(cpu_backend_context));
-    }
+  auto* cpu_backend_context = static_cast<CpuBackendContext*>(
+      external_context->internal_backend_context());
+  if (cpu_backend_context == nullptr) {
+    // We do the lazy initialization here for the TfLiteInternalBackendContext
+    // that's wrapped inside ExternalCpuBackendContext.
+    cpu_backend_context = new CpuBackendContext();
+    cpu_backend_context->SetMaxNumThreads(context->recommended_num_threads);
+    external_context->set_internal_backend_context(
+        std::unique_ptr<TfLiteInternalBackendContext>(cpu_backend_context));
+  }
 
-    return cpu_backend_context;
+  return cpu_backend_context;
 }
 
 CpuBackendContext::CpuBackendContext()
     : TfLiteInternalBackendContext(),
       ruy_context_(new ruy::Context),
       gemmlowp_context_(new gemmlowp::GemmContext) {
-    SetMaxNumThreads(kDefaultNumThreadpoolThreads);
+  SetMaxNumThreads(kDefaultNumThreadpoolThreads);
 #ifdef TFLITE_WITH_RUY_GEMV
-    ruy_context_->cache_policy = ruy::kCacheLHSOnNarrowMul;
+  ruy_context_->cache_policy = ruy::kCacheLHSOnNarrowMul;
 #endif
 }
 
 CpuBackendContext::~CpuBackendContext() {}
 
 void CpuBackendContext::SetMaxNumThreads(int max_num_threads) {
-    const int target_num_threads =
-        max_num_threads > -1 ? max_num_threads : kDefaultNumThreadpoolThreads;
-    max_num_threads_ = target_num_threads;
-    ruy_context_->max_num_threads = target_num_threads;
-    gemmlowp_context_->set_max_num_threads(target_num_threads);
+  const int target_num_threads =
+      max_num_threads > -1 ? max_num_threads : kDefaultNumThreadpoolThreads;
+  max_num_threads_ = target_num_threads;
+  ruy_context_->max_num_threads = target_num_threads;
+  gemmlowp_context_->set_max_num_threads(target_num_threads);
 }
 
 }  // namespace tflite

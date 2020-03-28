@@ -29,37 +29,37 @@ using RunPackFn = void(Tuning, const DMatrix&, PMatrix*, int, int);
 
 // Type-erased data needed for implementing TrMul.
 struct TrMulParams {
-    TrMulParams() : run_pack{nullptr, nullptr}, is_prepacked{false, false} {}
-    // Helper functions for invoking the function pointers.
-    void RunPack(Side side, Tuning tuning, int start, int end) {
-        run_pack[side](tuning, src[side], &packed[side], start, end);
-    }
-    void RunKernel(Tuning tuning, const SidePair<int>& start,
-                   const SidePair<int>& end) {
-        run_kernel(tuning, packed, spec, start, end, &dst);
-    }
+  TrMulParams() : run_pack{nullptr, nullptr}, is_prepacked{false, false} {}
+  // Helper functions for invoking the function pointers.
+  void RunPack(Side side, Tuning tuning, int start, int end) {
+    run_pack[side](tuning, src[side], &packed[side], start, end);
+  }
+  void RunKernel(Tuning tuning, const SidePair<int>& start,
+                 const SidePair<int>& end) {
+    run_kernel(tuning, packed, spec, start, end, &dst);
+  }
 
-    // path id, can be useful info for some fine-tuning, e.g. to guess reasonable
-    // cache sizes when not runtime-detectable.
-    Path path;
+  // path id, can be useful info for some fine-tuning, e.g. to guess reasonable
+  // cache sizes when not runtime-detectable.
+  Path path;
 
-    // See Spec::local_data_cache_size().
-    int local_data_cache_size = 0;
-    // See Spec::shared_data_cache_size().
-    int shared_data_cache_size = 0;
+  // See Spec::local_data_cache_size().
+  int local_data_cache_size = 0;
+  // See Spec::shared_data_cache_size().
+  int shared_data_cache_size = 0;
 
-    // Function pointers to type-erased entry points for kernels and packers.
-    SidePair<RunPackFn*> run_pack;
-    RunKernelFn* run_kernel = nullptr;
+  // Function pointers to type-erased entry points for kernels and packers.
+  SidePair<RunPackFn*> run_pack;
+  RunKernelFn* run_kernel = nullptr;
 
-    // Matrices and packed matrices.
-    SidePair<DMatrix> src;
-    DMatrix dst;
-    SidePair<PMatrix> packed;
-    SidePair<bool> is_prepacked;
+  // Matrices and packed matrices.
+  SidePair<DMatrix> src;
+  DMatrix dst;
+  SidePair<PMatrix> packed;
+  SidePair<bool> is_prepacked;
 
-    // Type-erased Spec.
-    void* spec = nullptr;
+  // Type-erased Spec.
+  void* spec = nullptr;
 };
 
 }  // namespace ruy

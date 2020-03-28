@@ -114,44 +114,44 @@ void Pack8bitSse42(const std::int8_t* src_ptr, std::int8_t input_xor,
 
 template <typename Scalar>
 struct PackImpl<Path::kSse42, FixedKernelLayout<Order::kColMajor, 4, 8>, Scalar,
-           std::int8_t, std::int32_t> {
-    static_assert(std::is_same<Scalar, std::int8_t>::value ||
-                  std::is_same<Scalar, std::uint8_t>::value,
-                  "");
-    using Layout = FixedKernelLayout<Order::kColMajor, 4, 8>;
-    static constexpr std::int8_t kInputXor =
-        std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
+                std::int8_t, std::int32_t> {
+  static_assert(std::is_same<Scalar, std::int8_t>::value ||
+                    std::is_same<Scalar, std::uint8_t>::value,
+                "");
+  using Layout = FixedKernelLayout<Order::kColMajor, 4, 8>;
+  static constexpr std::int8_t kInputXor =
+      std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
 
-    static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
-                    PackedMatrix<std::int8_t>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (SSE 4.2 8-bit)");
+  static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
+                  PackedMatrix<std::int8_t>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (SSE 4.2 8-bit)");
 
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        std::int32_t* sums = packed_matrix->sums;
-        Scalar zerobuf[Layout::kCols * Layout::kRows];
-        memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
-               Layout::kCols * Layout::kRows * sizeof(Scalar));
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
-            int src_stride = src_matrix.layout.stride;
-            const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    std::int32_t* sums = packed_matrix->sums;
+    Scalar zerobuf[Layout::kCols * Layout::kRows];
+    memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
+           Layout::kCols * Layout::kRows * sizeof(Scalar));
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
+      int src_stride = src_matrix.layout.stride;
+      const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            std::int8_t* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            Pack8bitSse42(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
-                          reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
-                          remaining_src_cols, src_matrix.layout.rows, packed_ptr,
-                          sums_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      std::int8_t* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      Pack8bitSse42(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
+                    reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
+                    remaining_src_cols, src_matrix.layout.rows, packed_ptr,
+                    sums_ptr);
     }
+  }
 };
 
 // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete / placeholder.
@@ -163,34 +163,33 @@ void PackFloatSse42(const float* src_ptr, const float* zerobuf, int src_stride,
 
 template <>
 struct PackImpl<Path::kSse42, FixedKernelLayout<Order::kRowMajor, 1, 8>, float,
-           float, float> {
-    using Layout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    static void Run(Tuning, const Matrix<float>& src_matrix,
-                    PackedMatrix<float>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (SSE 4.2 float)");
+                float, float> {
+  using Layout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  static void Run(Tuning, const Matrix<float>& src_matrix,
+                  PackedMatrix<float>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (SSE 4.2 float)");
 
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        const float zerobuf[Layout::kCols] = {
-            0.0f
-        };  // Remainder default inits to 0.0f.
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            int src_stride = src_matrix.layout.stride;
-            const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    const float zerobuf[Layout::kCols] = {
+        0.0f};  // Remainder default inits to 0.0f.
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      int src_stride = src_matrix.layout.stride;
+      const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            float* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            PackFloatSse42(src_ptr, zerobuf, src_stride, remaining_src_cols,
-                           src_matrix.layout.rows, packed_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      float* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      PackFloatSse42(src_ptr, zerobuf, src_stride, remaining_src_cols,
+                     src_matrix.layout.rows, packed_ptr);
     }
+  }
 };
 
 // Note that source and zero buffers can be uint8 type, but in the packing
@@ -202,44 +201,44 @@ void Pack8bitAvx2(const std::int8_t* src_ptr, std::int8_t input_xor,
 
 template <typename Scalar>
 struct PackImpl<Path::kAvx2, FixedKernelLayout<Order::kColMajor, 4, 8>, Scalar,
-           std::int8_t, std::int32_t> {
-    static_assert(std::is_same<Scalar, std::int8_t>::value ||
-                  std::is_same<Scalar, std::uint8_t>::value,
-                  "");
-    using Layout = FixedKernelLayout<Order::kColMajor, 4, 8>;
-    static constexpr std::int8_t kInputXor =
-        std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
+                std::int8_t, std::int32_t> {
+  static_assert(std::is_same<Scalar, std::int8_t>::value ||
+                    std::is_same<Scalar, std::uint8_t>::value,
+                "");
+  using Layout = FixedKernelLayout<Order::kColMajor, 4, 8>;
+  static constexpr std::int8_t kInputXor =
+      std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
 
-    static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
-                    PackedMatrix<std::int8_t>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (AVX2 8-bit)");
+  static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
+                  PackedMatrix<std::int8_t>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (AVX2 8-bit)");
 
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        std::int32_t* sums = packed_matrix->sums;
-        Scalar zerobuf[Layout::kCols * Layout::kRows];
-        memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
-               Layout::kCols * Layout::kRows * sizeof(Scalar));
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
-            int src_stride = src_matrix.layout.stride;
-            const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    std::int32_t* sums = packed_matrix->sums;
+    Scalar zerobuf[Layout::kCols * Layout::kRows];
+    memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
+           Layout::kCols * Layout::kRows * sizeof(Scalar));
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
+      int src_stride = src_matrix.layout.stride;
+      const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            std::int8_t* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            Pack8bitAvx2(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
-                         reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
-                         remaining_src_cols, src_matrix.layout.rows, packed_ptr,
-                         sums_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      std::int8_t* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      Pack8bitAvx2(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
+                   reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
+                   remaining_src_cols, src_matrix.layout.rows, packed_ptr,
+                   sums_ptr);
     }
+  }
 };
 
 void PackFloatAvx2(const float* src_ptr, const float* zerobuf, int src_stride,
@@ -247,34 +246,33 @@ void PackFloatAvx2(const float* src_ptr, const float* zerobuf, int src_stride,
 
 template <>
 struct PackImpl<Path::kAvx2, FixedKernelLayout<Order::kRowMajor, 1, 8>, float,
-           float, float> {
-    using Layout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    static void Run(Tuning, const Matrix<float>& src_matrix,
-                    PackedMatrix<float>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (AVX2 float)");
+                float, float> {
+  using Layout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  static void Run(Tuning, const Matrix<float>& src_matrix,
+                  PackedMatrix<float>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (AVX2 float)");
 
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        const float zerobuf[Layout::kCols] = {
-            0.0f
-        };  // Remainder default inits to 0.0f.
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            int src_stride = src_matrix.layout.stride;
-            const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    const float zerobuf[Layout::kCols] = {
+        0.0f};  // Remainder default inits to 0.0f.
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      int src_stride = src_matrix.layout.stride;
+      const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            float* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            PackFloatAvx2(src_ptr, zerobuf, src_stride, remaining_src_cols,
-                          src_matrix.layout.rows, packed_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      float* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      PackFloatAvx2(src_ptr, zerobuf, src_stride, remaining_src_cols,
+                    src_matrix.layout.rows, packed_ptr);
     }
+  }
 };
 
 // Note that source and zero buffers can be uint8 type, but in the packing
@@ -286,47 +284,47 @@ void Pack8bitAvx512(const std::int8_t* src_ptr, std::int8_t input_xor,
 
 template <typename Scalar>
 struct PackImpl<Path::kAvx512, FixedKernelLayout<Order::kColMajor, 4, 16>,
-           Scalar, std::int8_t, std::int32_t> {
-    static_assert(std::is_same<Scalar, std::int8_t>::value ||
-                  std::is_same<Scalar, std::uint8_t>::value,
-                  "");
-    using Layout = FixedKernelLayout<Order::kColMajor, 4, 16>;
-    static constexpr int kHalfLayoutCols =
-        8;  // Half the number of cols in a block.
-    static constexpr std::int8_t kInputXor =
-        std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
+                Scalar, std::int8_t, std::int32_t> {
+  static_assert(std::is_same<Scalar, std::int8_t>::value ||
+                    std::is_same<Scalar, std::uint8_t>::value,
+                "");
+  using Layout = FixedKernelLayout<Order::kColMajor, 4, 16>;
+  static constexpr int kHalfLayoutCols =
+      8;  // Half the number of cols in a block.
+  static constexpr std::int8_t kInputXor =
+      std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
 
-    static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
-                    PackedMatrix<std::int8_t>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (AVX-512 8-bit)");
+  static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
+                  PackedMatrix<std::int8_t>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (AVX-512 8-bit)");
 
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        RUY_DCHECK_EQ(kHalfLayoutCols * 2, Layout::kCols);
-        std::int32_t* sums = packed_matrix->sums;
-        Scalar zerobuf[kHalfLayoutCols * Layout::kRows];
-        memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
-               kHalfLayoutCols * Layout::kRows * sizeof(Scalar));
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
-            int src_stride = src_matrix.layout.stride;
-            const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    RUY_DCHECK_EQ(kHalfLayoutCols * 2, Layout::kCols);
+    std::int32_t* sums = packed_matrix->sums;
+    Scalar zerobuf[kHalfLayoutCols * Layout::kRows];
+    memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
+           kHalfLayoutCols * Layout::kRows * sizeof(Scalar));
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
+      int src_stride = src_matrix.layout.stride;
+      const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            std::int8_t* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            Pack8bitAvx512(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
-                           reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
-                           remaining_src_cols, src_matrix.layout.rows, packed_ptr,
-                           sums_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      std::int8_t* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      Pack8bitAvx512(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
+                     reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
+                     remaining_src_cols, src_matrix.layout.rows, packed_ptr,
+                     sums_ptr);
     }
+  }
 };
 
 void PackFloatAvx512(const float* src_ptr, const float* zerobuf, int src_stride,
@@ -334,33 +332,32 @@ void PackFloatAvx512(const float* src_ptr, const float* zerobuf, int src_stride,
 
 template <>
 struct PackImpl<Path::kAvx512, FixedKernelLayout<Order::kRowMajor, 1, 16>,
-           float, float, float> {
-    static void Run(Tuning, const Matrix<float>& src_matrix,
-                    PackedMatrix<float>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (AVX-512 float)");
-        using Layout = FixedKernelLayout<Order::kRowMajor, 1, 16>;
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        const float zerobuf[Layout::kCols] = {
-            0.0f
-        };  // Remainder default inits to 0.0f.
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            int src_stride = src_matrix.layout.stride;
-            const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+                float, float, float> {
+  static void Run(Tuning, const Matrix<float>& src_matrix,
+                  PackedMatrix<float>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (AVX-512 float)");
+    using Layout = FixedKernelLayout<Order::kRowMajor, 1, 16>;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    const float zerobuf[Layout::kCols] = {
+        0.0f};  // Remainder default inits to 0.0f.
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      int src_stride = src_matrix.layout.stride;
+      const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            float* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            PackFloatAvx512(src_ptr, zerobuf, src_stride, remaining_src_cols,
-                            src_matrix.layout.rows, packed_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      float* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      PackFloatAvx512(src_ptr, zerobuf, src_stride, remaining_src_cols,
+                      src_matrix.layout.rows, packed_ptr);
     }
+  }
 };
 
 // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete / placeholder.
@@ -376,47 +373,47 @@ void Pack8bitAvxVnni(const std::int8_t* src_ptr, std::int8_t input_xor,
 
 template <typename Scalar>
 struct PackImpl<Path::kAvxVnni, FixedKernelLayout<Order::kColMajor, 4, 16>,
-           Scalar, std::int8_t, std::int32_t> {
-    static_assert(std::is_same<Scalar, std::int8_t>::value ||
-                  std::is_same<Scalar, std::uint8_t>::value,
-                  "");
-    using Layout = FixedKernelLayout<Order::kColMajor, 4, 16>;
-    static constexpr int kHalfLayoutCols =
-        8;  // Half the number of cols in a block.
-    static constexpr std::int8_t kInputXor =
-        std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
+                Scalar, std::int8_t, std::int32_t> {
+  static_assert(std::is_same<Scalar, std::int8_t>::value ||
+                    std::is_same<Scalar, std::uint8_t>::value,
+                "");
+  using Layout = FixedKernelLayout<Order::kColMajor, 4, 16>;
+  static constexpr int kHalfLayoutCols =
+      8;  // Half the number of cols in a block.
+  static constexpr std::int8_t kInputXor =
+      std::is_same<Scalar, std::int8_t>::value ? 0 : 0x80;
 
-    static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
-                    PackedMatrix<std::int8_t>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (AVX-512 8-bit)");
+  static void Run(Tuning tuning, const Matrix<Scalar>& src_matrix,
+                  PackedMatrix<std::int8_t>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (AVX-512 8-bit)");
 
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        RUY_DCHECK_EQ(kHalfLayoutCols * 2, Layout::kCols);
-        std::int32_t* sums = packed_matrix->sums;
-        Scalar zerobuf[kHalfLayoutCols * Layout::kRows];
-        memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
-               kHalfLayoutCols * Layout::kRows * sizeof(Scalar));
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
-            int src_stride = src_matrix.layout.stride;
-            const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    RUY_DCHECK_EQ(kHalfLayoutCols * 2, Layout::kCols);
+    std::int32_t* sums = packed_matrix->sums;
+    Scalar zerobuf[kHalfLayoutCols * Layout::kRows];
+    memset(zerobuf, packed_matrix->zero_point ^ kInputXor,
+           kHalfLayoutCols * Layout::kRows * sizeof(Scalar));
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      std::int32_t* sums_ptr = sums ? sums + block_col : nullptr;
+      int src_stride = src_matrix.layout.stride;
+      const Scalar* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            std::int8_t* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            Pack8bitAvxVnni(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
-                            reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
-                            remaining_src_cols, src_matrix.layout.rows, packed_ptr,
-                            sums_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      std::int8_t* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      Pack8bitAvxVnni(reinterpret_cast<const std::int8_t*>(src_ptr), kInputXor,
+                      reinterpret_cast<const std::int8_t*>(zerobuf), src_stride,
+                      remaining_src_cols, src_matrix.layout.rows, packed_ptr,
+                      sums_ptr);
     }
+  }
 };
 
 // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete / placeholder.
@@ -429,34 +426,33 @@ void PackFloatAvxVnni(const float* src_ptr, const float* zerobuf,
 
 template <>
 struct PackImpl<Path::kAvxVnni, FixedKernelLayout<Order::kRowMajor, 1, 16>,
-           float, float, float> {
-    static void Run(Tuning, const Matrix<float>& src_matrix,
-                    PackedMatrix<float>* packed_matrix, int start_col,
-                    int end_col) {
-        profiler::ScopeLabel label("Pack (AVX-512 float)");
+                float, float, float> {
+  static void Run(Tuning, const Matrix<float>& src_matrix,
+                  PackedMatrix<float>* packed_matrix, int start_col,
+                  int end_col) {
+    profiler::ScopeLabel label("Pack (AVX-512 float)");
 
-        using Layout = FixedKernelLayout<Order::kRowMajor, 1, 16>;
-        RUY_DCHECK(IsColMajor(src_matrix.layout));
-        RUY_DCHECK(IsColMajor(packed_matrix->layout));
-        RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
-        RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
-        const float zerobuf[Layout::kCols] = {
-            0.0f
-        };  // Remainder default inits to 0.0f.
-        for (int block_col = start_col; block_col < end_col;
-                block_col += Layout::kCols) {
-            int src_stride = src_matrix.layout.stride;
-            const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
-            int remaining_src_cols = src_matrix.layout.cols - block_col;
+    using Layout = FixedKernelLayout<Order::kRowMajor, 1, 16>;
+    RUY_DCHECK(IsColMajor(src_matrix.layout));
+    RUY_DCHECK(IsColMajor(packed_matrix->layout));
+    RUY_DCHECK_EQ((end_col - start_col) % Layout::kCols, 0);
+    RUY_DCHECK_EQ(start_col % Layout::kCols, 0);
+    const float zerobuf[Layout::kCols] = {
+        0.0f};  // Remainder default inits to 0.0f.
+    for (int block_col = start_col; block_col < end_col;
+         block_col += Layout::kCols) {
+      int src_stride = src_matrix.layout.stride;
+      const float* src_ptr = src_matrix.data.get() + src_stride * block_col;
+      int remaining_src_cols = src_matrix.layout.cols - block_col;
 
-            static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
-            float* packed_ptr =
-                packed_matrix->data +
-                packed_matrix->layout.stride * (block_col & block_col_mask);
-            PackFloatAvxVnni(src_ptr, zerobuf, src_stride, remaining_src_cols,
-                             src_matrix.layout.rows, packed_ptr);
-        }
+      static constexpr int block_col_mask = ~(Layout::kCols - 1);  // High bits.
+      float* packed_ptr =
+          packed_matrix->data +
+          packed_matrix->layout.stride * (block_col & block_col_mask);
+      PackFloatAvxVnni(src_ptr, zerobuf, src_stride, remaining_src_cols,
+                       src_matrix.layout.rows, packed_ptr);
     }
+  }
 };
 #endif  // RUY_PLATFORM(X86)
 

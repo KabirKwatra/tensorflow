@@ -36,68 +36,66 @@ namespace profiler {
 // RAII user-facing way to create a profiler and let it profile a code scope,
 // and print out an ASCII/MarkDown treeview upon leaving the scope.
 class ScopeProfile {
-public:
-    // Default constructor, unconditionally profiling.
-    ScopeProfile();
+ public:
+  // Default constructor, unconditionally profiling.
+  ScopeProfile();
 
-    // Constructor allowing to choose at runtime whether to profile.
-    explicit ScopeProfile(bool enable);
+  // Constructor allowing to choose at runtime whether to profile.
+  explicit ScopeProfile(bool enable);
 
-    // Destructor. It's where the profile is reported.
-    ~ScopeProfile();
+  // Destructor. It's where the profile is reported.
+  ~ScopeProfile();
 
-    // See treeview_ member.
-    void SetUserTreeView(TreeView* treeview) {
-        user_treeview_ = treeview;
-    }
+  // See treeview_ member.
+  void SetUserTreeView(TreeView* treeview) { user_treeview_ = treeview; }
 
-private:
-    void Start();
+ private:
+  void Start();
 
-    // Thread entry point function for the profiler thread. This thread is
-    // created on construction.
-    void ThreadFunc();
+  // Thread entry point function for the profiler thread. This thread is
+  // created on construction.
+  void ThreadFunc();
 
-    // Record a stack as a sample.
-    void Sample(const detail::ThreadStack& stack);
+  // Record a stack as a sample.
+  void Sample(const detail::ThreadStack& stack);
 
-    // Finalize the profile. Called on destruction.
-    // If user_treeview_ is non-null, it will receive the treeview.
-    // Otherwise the treeview will just be printed.
-    void Finish();
+  // Finalize the profile. Called on destruction.
+  // If user_treeview_ is non-null, it will receive the treeview.
+  // Otherwise the treeview will just be printed.
+  void Finish();
 
-    // Buffer where samples are recorded during profiling.
-    std::vector<char> samples_buf_;
+  // Buffer where samples are recorded during profiling.
+  std::vector<char> samples_buf_;
 
-    // Used to synchronize thread termination.
-    std::atomic<bool> finishing_;
+  // Used to synchronize thread termination.
+  std::atomic<bool> finishing_;
 
-    // Underlying profiler thread, which will perform the sampling.
-    // This profiler approach relies on a thread rather than on signals.
-    std::unique_ptr<std::thread> thread_;
+  // Underlying profiler thread, which will perform the sampling.
+  // This profiler approach relies on a thread rather than on signals.
+  std::unique_ptr<std::thread> thread_;
 
-    // TreeView to populate upon destruction. If left null (the default),
-    // a temporary treeview will be used and dumped on stdout. The user
-    // may override that by passing their own TreeView object for other
-    // output options or to directly inspect the TreeView.
-    TreeView* user_treeview_ = nullptr;
+  // TreeView to populate upon destruction. If left null (the default),
+  // a temporary treeview will be used and dumped on stdout. The user
+  // may override that by passing their own TreeView object for other
+  // output options or to directly inspect the TreeView.
+  TreeView* user_treeview_ = nullptr;
 };
 
 #else  // no RUY_PROFILER
 
 struct ScopeProfile {
-    ScopeProfile() {
+  ScopeProfile() {
 #ifdef GEMMLOWP_PROFILING
-        fprintf(
-            stderr,
-            "\n\n\n**********\n\nWARNING:\n\nLooks like you defined "
-            "GEMMLOWP_PROFILING, but this code has been ported to the new ruy "
-            "profiler replacing the old gemmlowp profiler. You should now be "
-            "defining RUY_PROFILER and not GEMMLOWP_PROFILING. When building using "
-            "Bazel, just pass --define=ruy_profiler=true.\n\n**********\n\n\n");
+    fprintf(
+        stderr,
+        "\n\n\n**********\n\nWARNING:\n\nLooks like you defined "
+        "GEMMLOWP_PROFILING, but this code has been ported to the new ruy "
+        "profiler replacing the old gemmlowp profiler. You should now be "
+        "defining RUY_PROFILER and not GEMMLOWP_PROFILING. When building using "
+        "Bazel, just pass --define=ruy_profiler=true.\n\n**********\n\n\n");
 #endif
-    }
-    explicit ScopeProfile(bool) {}
+  }
+  explicit ScopeProfile(bool) {}
 };
 
 #endif

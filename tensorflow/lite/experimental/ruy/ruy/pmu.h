@@ -21,22 +21,22 @@ namespace ruy {
 class PmuEventsPrivate;
 
 class PmuEvents {
-public:
-    PmuEvents();
-    ~PmuEvents();
-    void StartRecording();
-    void StopRecording();
-    float L1RefillCount() const;
-    float L2RefillCount() const;
-    float L3RefillCount() const;
-    float BranchMispredictionCount() const;
-    float FrontendStallCount() const;
-    float BackendStallCount() const;
-    float L1TLBRefillCount() const;
-    float L2TLBRefillCount() const;
+ public:
+  PmuEvents();
+  ~PmuEvents();
+  void StartRecording();
+  void StopRecording();
+  float L1RefillCount() const;
+  float L2RefillCount() const;
+  float L3RefillCount() const;
+  float BranchMispredictionCount() const;
+  float FrontendStallCount() const;
+  float BackendStallCount() const;
+  float L1TLBRefillCount() const;
+  float L2TLBRefillCount() const;
 
-private:
-    PmuEventsPrivate* priv = nullptr;
+ private:
+  PmuEventsPrivate* priv = nullptr;
 };
 
 }  // namespace ruy

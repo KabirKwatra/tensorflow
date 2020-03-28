@@ -30,71 +30,71 @@ namespace {
 // See Intel docs, such as http://goo.gl/c6IkGX.
 inline void RunCpuid(std::uint32_t eax, std::uint32_t ecx,
                      std::uint32_t abcd[4]) {
-    std::uint32_t ebx, edx;
+  std::uint32_t ebx, edx;
 #if defined(__i386__) && defined(__PIC__)
-    /* in case of PIC under 32-bit EBX cannot be clobbered */
-    asm volatile("movl %%ebx, %%edi \n\t cpuid \n\t xchgl %%ebx, %%edi"
-                 : "=D"(ebx),
+  /* in case of PIC under 32-bit EBX cannot be clobbered */
+  asm volatile("movl %%ebx, %%edi \n\t cpuid \n\t xchgl %%ebx, %%edi"
+               : "=D"(ebx),
 #else
-    asm volatile("cpuid"
-                 : "+b"(ebx),
+  asm volatile("cpuid"
+               : "+b"(ebx),
 #endif
                  "+a"(eax), "+c"(ecx), "=d"(edx));
-    abcd[0] = eax;
-    abcd[1] = ebx;
-    abcd[2] = ecx;
-    abcd[3] = edx;
+  abcd[0] = eax;
+  abcd[1] = ebx;
+  abcd[2] = ecx;
+  abcd[3] = edx;
 }
 
 }  // namespace
 
 bool DetectCpuSse42() {
-    std::uint32_t abcd[4];
+  std::uint32_t abcd[4];
 
-    constexpr std::uint32_t kEcxSse42 = 1u << 20;
-    RunCpuid(1, 0, abcd);
-    const bool has_sse4_2_base = (abcd[2] & kEcxSse42) == kEcxSse42;
+  constexpr std::uint32_t kEcxSse42 = 1u << 20;
+  RunCpuid(1, 0, abcd);
+  const bool has_sse4_2_base = (abcd[2] & kEcxSse42) == kEcxSse42;
 
 #ifdef RUY_ENABLE_AMD_CPUID_CHECKS
-    constexpr std::uint32_t kEcxAbm = 1u << 5;
-    RunCpuid(0x80000001, 0, abcd);
-    const bool has_extras = (abcd[2] & kEcxAbm) == kEcxAbm;
+  constexpr std::uint32_t kEcxAbm = 1u << 5;
+  RunCpuid(0x80000001, 0, abcd);
+  const bool has_extras = (abcd[2] & kEcxAbm) == kEcxAbm;
 #else
-    constexpr std::uint32_t kEcxPopcnt = 1u << 23;
-    RunCpuid(1, 0, abcd);
-    const bool has_extras = (abcd[2] & kEcxPopcnt) == kEcxPopcnt;
+  constexpr std::uint32_t kEcxPopcnt = 1u << 23;
+  RunCpuid(1, 0, abcd);
+  const bool has_extras = (abcd[2] & kEcxPopcnt) == kEcxPopcnt;
 #endif
 
-    return has_sse4_2_base && has_extras;
+  return has_sse4_2_base && has_extras;
 }
 
 bool DetectCpuAvx2() {
-    constexpr std::uint32_t kEbxAvx2 = 1u << 5;
-    constexpr std::uint32_t kEcxFma = 1u << 12;
+  constexpr std::uint32_t kEbxAvx2 = 1u << 5;
+  constexpr std::uint32_t kEcxFma = 1u << 12;
 
-    std::uint32_t abcd[4];
+  std::uint32_t abcd[4];
 
-    RunCpuid(7, 0, abcd);
-    const bool has_avx2 = (abcd[1] & kEbxAvx2) == kEbxAvx2;
-    RunCpuid(1, 0, abcd);
-    const bool has_fma = (abcd[2] & kEcxFma) == kEcxFma;
+  RunCpuid(7, 0, abcd);
+  const bool has_avx2 = (abcd[1] & kEbxAvx2) == kEbxAvx2;
+  RunCpuid(1, 0, abcd);
+  const bool has_fma = (abcd[2] & kEcxFma) == kEcxFma;
 
-    return has_avx2 && has_fma;
+  return has_avx2 && has_fma;
 }
 
 bool DetectCpuAvx512() {
-    constexpr std::uint32_t kEbxAvx512F = 1u << 16;
-    constexpr std::uint32_t kEbxAvx512Dq = 1u << 17;
-    constexpr std::uint32_t kEbxAvx512Cd = 1u << 28;
-    constexpr std::uint32_t kEbxAvx512Bw = 1u << 30;
-    constexpr std::uint32_t kEbxAvx512Vl = 1u << 31;
+  constexpr std::uint32_t kEbxAvx512F = 1u << 16;
+  constexpr std::uint32_t kEbxAvx512Dq = 1u << 17;
+  constexpr std::uint32_t kEbxAvx512Cd = 1u << 28;
+  constexpr std::uint32_t kEbxAvx512Bw = 1u << 30;
+  constexpr std::uint32_t kEbxAvx512Vl = 1u << 31;
 
-    constexpr std::uint32_t kEbxAvx512Mask =
-        kEbxAvx512F | kEbxAvx512Dq | kEbxAvx512Cd | kEbxAvx512Bw | kEbxAvx512Vl;
-    std::uint32_t abcd[4];
-    RunCpuid(7, 0, abcd);
+  constexpr std::uint32_t kEbxAvx512Mask =
+      kEbxAvx512F | kEbxAvx512Dq | kEbxAvx512Cd | kEbxAvx512Bw | kEbxAvx512Vl;
+  std::uint32_t abcd[4];
+  RunCpuid(7, 0, abcd);
 
-    return (abcd[1] & kEbxAvx512Mask) == kEbxAvx512Mask;
+  return (abcd[1] & kEbxAvx512Mask) == kEbxAvx512Mask;
 }
 
 #endif

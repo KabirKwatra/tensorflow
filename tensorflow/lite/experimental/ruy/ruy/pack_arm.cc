@@ -30,9 +30,9 @@ void Pack8bitNeonOutOfOrder(const void* src_ptr0, const void* src_ptr1,
                             int src_inc3, int src_rows, int src_zero_point,
                             std::int8_t* packed_ptr, int start_col, int end_col,
                             std::int32_t* sums_ptr, int input_xor) {
-    profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
-    asm volatile(
-        // clang-format off
+  profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
+  asm volatile(
+      // clang-format off
         "dup v26.16b, %w[input_xor]\n"
         "mov w1, #0\n"
         "dup v28.4s, wzr\n"
@@ -168,18 +168,18 @@ void Pack8bitNeonOutOfOrder(const void* src_ptr0, const void* src_ptr1,
         "beq 6f\n"
         "st1 {v28.4s}, [%[sums_ptr]], #16\n"
         "6:\n"
-        // clang-format on
+      // clang-format on
 
-        : [ src_ptr0 ] "+r"(src_ptr0), [ src_ptr1 ] "+r"(src_ptr1),
+      : [ src_ptr0 ] "+r"(src_ptr0), [ src_ptr1 ] "+r"(src_ptr1),
         [ src_ptr2 ] "+r"(src_ptr2), [ src_ptr3 ] "+r"(src_ptr3),
         [ packed_ptr ] "+r"(packed_ptr), [ sums_ptr ] "+r"(sums_ptr)
-        : [ src_inc0 ] "r"(static_cast<std::int64_t>(src_inc0)),
+      : [ src_inc0 ] "r"(static_cast<std::int64_t>(src_inc0)),
         [ src_inc1 ] "r"(static_cast<std::int64_t>(src_inc1)),
         [ src_inc2 ] "r"(static_cast<std::int64_t>(src_inc2)),
         [ src_inc3 ] "r"(static_cast<std::int64_t>(src_inc3)),
         [ rows ] "r"(src_rows), [ src_zero_point ] "r"(src_zero_point),
         [ input_xor ] "r"(input_xor)
-        : "cc", "memory", "x1", "x2", "v0", "v1", "v2", "v3", "v4", "v5", "v6",
+      : "cc", "memory", "x1", "x2", "v0", "v1", "v2", "v3", "v4", "v5", "v6",
         "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16",
         "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26",
         "v27", "v28", "v29", "v30", "v31");
@@ -204,38 +204,38 @@ void Pack8bitNeonOutOfOrder(const void* src_ptr0, const void* src_ptr1,
 
 template <typename Params>
 void CheckOffsetsInPackParams8bit(const Params&) {
-    static_assert(offsetof(Params, src_ptr0) == RUY_OFFSET_SRC_PTR0, "");
-    static_assert(offsetof(Params, src_ptr1) == RUY_OFFSET_SRC_PTR1, "");
-    static_assert(offsetof(Params, src_ptr2) == RUY_OFFSET_SRC_PTR2, "");
-    static_assert(offsetof(Params, src_ptr3) == RUY_OFFSET_SRC_PTR3, "");
-    static_assert(offsetof(Params, sums_ptr) == RUY_OFFSET_SUMS_PTR, "");
-    static_assert(offsetof(Params, packed_ptr) == RUY_OFFSET_PACKED_PTR, "");
-    static_assert(offsetof(Params, src_inc0) == RUY_OFFSET_SRC_INC0, "");
-    static_assert(offsetof(Params, src_inc1) == RUY_OFFSET_SRC_INC1, "");
-    static_assert(offsetof(Params, src_inc2) == RUY_OFFSET_SRC_INC2, "");
-    static_assert(offsetof(Params, src_inc3) == RUY_OFFSET_SRC_INC3, "");
-    static_assert(offsetof(Params, src_rows) == RUY_OFFSET_SRC_ROWS, "");
-    static_assert(offsetof(Params, src_zero_point) == RUY_OFFSET_SRC_ZERO_POINT,
-                  "");
-    static_assert(offsetof(Params, input_xor) == RUY_OFFSET_INPUT_XOR, "");
+  static_assert(offsetof(Params, src_ptr0) == RUY_OFFSET_SRC_PTR0, "");
+  static_assert(offsetof(Params, src_ptr1) == RUY_OFFSET_SRC_PTR1, "");
+  static_assert(offsetof(Params, src_ptr2) == RUY_OFFSET_SRC_PTR2, "");
+  static_assert(offsetof(Params, src_ptr3) == RUY_OFFSET_SRC_PTR3, "");
+  static_assert(offsetof(Params, sums_ptr) == RUY_OFFSET_SUMS_PTR, "");
+  static_assert(offsetof(Params, packed_ptr) == RUY_OFFSET_PACKED_PTR, "");
+  static_assert(offsetof(Params, src_inc0) == RUY_OFFSET_SRC_INC0, "");
+  static_assert(offsetof(Params, src_inc1) == RUY_OFFSET_SRC_INC1, "");
+  static_assert(offsetof(Params, src_inc2) == RUY_OFFSET_SRC_INC2, "");
+  static_assert(offsetof(Params, src_inc3) == RUY_OFFSET_SRC_INC3, "");
+  static_assert(offsetof(Params, src_rows) == RUY_OFFSET_SRC_ROWS, "");
+  static_assert(offsetof(Params, src_zero_point) == RUY_OFFSET_SRC_ZERO_POINT,
+                "");
+  static_assert(offsetof(Params, input_xor) == RUY_OFFSET_INPUT_XOR, "");
 }
 
 // Packing code for out-of-order ARMv7 CPUs like the Krait 400 or A9.
 // No attempt made at making this code efficient on in-order cores yet.
 void Pack8bitNeonOutOfOrder4Cols(const PackParams8bit& params) {
-    CheckOffsetsInPackParams8bit(params);
-    profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
-    const void* src_ptr0 = params.src_ptr0;
-    const void* src_ptr1 = params.src_ptr1;
-    const void* src_ptr2 = params.src_ptr2;
-    const void* src_ptr3 = params.src_ptr3;
-    const int src_inc0 = params.src_inc0;
-    const int src_inc1 = params.src_inc1;
-    const int src_inc2 = params.src_inc2;
-    const int src_inc3 = params.src_inc3;
-    const std::int8_t* packed_ptr = params.packed_ptr;
+  CheckOffsetsInPackParams8bit(params);
+  profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
+  const void* src_ptr0 = params.src_ptr0;
+  const void* src_ptr1 = params.src_ptr1;
+  const void* src_ptr2 = params.src_ptr2;
+  const void* src_ptr3 = params.src_ptr3;
+  const int src_inc0 = params.src_inc0;
+  const int src_inc1 = params.src_inc1;
+  const int src_inc2 = params.src_inc2;
+  const int src_inc3 = params.src_inc3;
+  const std::int8_t* packed_ptr = params.packed_ptr;
 
-    asm volatile(
+  asm volatile(
         // clang-format off
 
         "ldr r2, [%[params], #" RUY_STR(RUY_OFFSET_INPUT_XOR) "]\n"
@@ -448,15 +448,15 @@ void Pack8bitNeonOutOfOrder4Cols(const PackParams8bit& params) {
 // This version differs from the above in that we only handle two columns
 // at a time.
 void Pack8bitNeonOutOfOrder2Cols(const PackParams8bit& params) {
-    CheckOffsetsInPackParams8bit(params);
-    profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
-    const void* src_ptr0 = params.src_ptr0;
-    const void* src_ptr1 = params.src_ptr1;
-    const int src_inc0 = params.src_inc0;
-    const int src_inc1 = params.src_inc1;
-    const std::int8_t* packed_ptr = params.packed_ptr;
+  CheckOffsetsInPackParams8bit(params);
+  profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
+  const void* src_ptr0 = params.src_ptr0;
+  const void* src_ptr1 = params.src_ptr1;
+  const int src_inc0 = params.src_inc0;
+  const int src_inc1 = params.src_inc1;
+  const std::int8_t* packed_ptr = params.packed_ptr;
 
-    asm volatile(
+  asm volatile(
         // clang-format off
 
         "ldr r2, [%[params], #" RUY_STR(RUY_OFFSET_INPUT_XOR) "]\n"
@@ -606,8 +606,8 @@ void Pack8bitNeonInOrder(const void* src_ptr0, const void* src_ptr1,
                          int src_rows, int src_zero_point,
                          std::int8_t* packed_ptr, int start_col, int end_col,
                          std::int32_t* sums_ptr, int input_xor) {
-    profiler::ScopeLabel label("Pack (kNeon, optimized for in-order cores)");
-    asm volatile(
+  profiler::ScopeLabel label("Pack (kNeon, optimized for in-order cores)");
+  asm volatile(
         // clang-format off
         "dup v26.16b, %w[input_xor]\n"
         "mov w1, #0\n"
@@ -796,9 +796,9 @@ void Pack8bitNeonDotprodInOrder(const void* src_ptr0, const void* src_ptr1,
                                 std::int8_t* packed_ptr, int start_col,
                                 int end_col, std::int32_t* sums_ptr,
                                 int input_xor) {
-    profiler::ScopeLabel label(
-        "Pack (kNeonDotprod, optimized for in-order cores)");
-    asm volatile(
+  profiler::ScopeLabel label(
+      "Pack (kNeonDotprod, optimized for in-order cores)");
+  asm volatile(
         // clang-format off
         "dup v26.16b, %w[input_xor]\n"
         "mov w1, #1\n"
@@ -1012,10 +1012,10 @@ void Pack8bitNeonDotprodOutOfOrder(const void* src_ptr0, const void* src_ptr1,
                                    int src_zero_point, std::int8_t* packed_ptr,
                                    int start_col, int end_col,
                                    std::int32_t* sums_ptr, int input_xor) {
-    profiler::ScopeLabel label(
-        "Pack (kNeonDotprod, optimized for out-of-order cores)");
-    asm volatile(
-        // clang-format off
+  profiler::ScopeLabel label(
+      "Pack (kNeonDotprod, optimized for out-of-order cores)");
+  asm volatile(
+      // clang-format off
         "dup v26.16b, %w[input_xor]\n"
         "mov w1, #1\n"
         "dup v27.16b, w1\n"
@@ -1443,19 +1443,19 @@ void Pack8bitNeonDotprodOutOfOrder(const void* src_ptr0, const void* src_ptr1,
         "beq 6f\n"
         "st1 {v28.4s}, [%[sums_ptr]], #16\n"
         "6:\n"
-        // clang-format on
+      // clang-format on
 
-        : [ src_ptr0 ] "+r"(src_ptr0), [ src_ptr1 ] "+r"(src_ptr1),
+      : [ src_ptr0 ] "+r"(src_ptr0), [ src_ptr1 ] "+r"(src_ptr1),
         [ src_ptr2 ] "+r"(src_ptr2), [ src_ptr3 ] "+r"(src_ptr3),
         [ packed_ptr ] "+r"(packed_ptr), [ sums_ptr ] "+r"(sums_ptr)
-        : [ src_inc0 ] "r"(static_cast<std::int64_t>(src_inc0)),
+      : [ src_inc0 ] "r"(static_cast<std::int64_t>(src_inc0)),
         [ src_inc1 ] "r"(static_cast<std::int64_t>(src_inc1)),
         [ src_inc2 ] "r"(static_cast<std::int64_t>(src_inc2)),
         [ src_inc3 ] "r"(static_cast<std::int64_t>(src_inc3)),
         [ rows ] "r"(src_rows),
         [ src_zero_point ] "r"(static_cast<int>(src_zero_point)),
         [ input_xor ] "r"(input_xor)
-        : "cc", "memory", "x1", "x2", "v0", "v1", "v2", "v3", "v4", "v5", "v6",
+      : "cc", "memory", "x1", "x2", "v0", "v1", "v2", "v3", "v4", "v5", "v6",
         "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16",
         "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26",
         "v27", "v28", "v29", "v30", "v31");
@@ -1469,9 +1469,9 @@ void PackFloatNeonOutOfOrder(const float* src_ptr0, const float* src_ptr1,
                              int src_inc0, int src_inc1, int src_inc2,
                              int src_inc3, int src_rows, int src_zero_point,
                              float* packed_ptr, int start_col, int end_col) {
-    profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
-    asm volatile(
-        // clang-format off
+  profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
+  asm volatile(
+      // clang-format off
         "mov w1, #0\n"
 
         "and w2, %w[rows], #-4\n"
@@ -1581,17 +1581,17 @@ void PackFloatNeonOutOfOrder(const float* src_ptr0, const float* src_ptr1,
 
         "4:\n"
 
-        // clang-format on
+      // clang-format on
 
-        : [ src_ptr0 ] "+r"(src_ptr0), [ src_ptr1 ] "+r"(src_ptr1),
+      : [ src_ptr0 ] "+r"(src_ptr0), [ src_ptr1 ] "+r"(src_ptr1),
         [ src_ptr2 ] "+r"(src_ptr2), [ src_ptr3 ] "+r"(src_ptr3),
         [ packed_ptr ] "+r"(packed_ptr)
-        : [ src_inc0 ] "r"(static_cast<std::int64_t>(src_inc0)),
+      : [ src_inc0 ] "r"(static_cast<std::int64_t>(src_inc0)),
         [ src_inc1 ] "r"(static_cast<std::int64_t>(src_inc1)),
         [ src_inc2 ] "r"(static_cast<std::int64_t>(src_inc2)),
         [ src_inc3 ] "r"(static_cast<std::int64_t>(src_inc3)),
         [ rows ] "r"(src_rows)
-        : "cc", "memory", "x1", "x2", "x10", "x11", "x12", "x13", "v0", "v1",
+      : "cc", "memory", "x1", "x2", "x10", "x11", "x12", "x13", "v0", "v1",
         "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12",
         "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22",
         "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31");
@@ -1604,8 +1604,8 @@ void PackFloatNeonOutOfOrder(const float* src_ptr0, const float* src_ptr1,
                              int src_inc, int src_rows, int src_zero_point,
                              float* packed_ptr, int start_col, int end_col,
                              int output_stride) {
-    profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
-    asm volatile(
+  profiler::ScopeLabel label("Pack (kNeon, optimized for out-of-order cores)");
+  asm volatile(
         // clang-format off
         "mov r1, #0\n"
         "and r2, %[rows], #-4\n"
@@ -1785,9 +1785,9 @@ void PackFloatNeonInOrder(const float* src_ptr0, const float* src_ptr1,
                           int src_inc0, int src_inc1, int src_inc2,
                           int src_inc3, int src_rows, int src_zero_point,
                           float* packed_ptr, int start_col, int end_col) {
-    profiler::ScopeLabel label("Pack (kNeon, optimized for in-order cores)");
+  profiler::ScopeLabel label("Pack (kNeon, optimized for in-order cores)");
 
-    asm volatile(
+  asm volatile(
         // clang-format off
         "mov w1, #0\n"
 

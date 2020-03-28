@@ -30,12 +30,12 @@ enum class Order : std::uint8_t { kColMajor, kRowMajor };
 
 // Describes the shape and storage layout of a matrix.
 struct Layout final {
-    std::int32_t rows = 0;
-    std::int32_t cols = 0;
-    // Stride is the offset between two adjacent matrix elements
-    // in the non-contiguous direction.
-    std::int32_t stride = 0;
-    Order order = Order::kColMajor;
+  std::int32_t rows = 0;
+  std::int32_t cols = 0;
+  // Stride is the offset between two adjacent matrix elements
+  // in the non-contiguous direction.
+  std::int32_t stride = 0;
+  Order order = Order::kColMajor;
 };
 
 namespace detail {
@@ -49,58 +49,52 @@ namespace detail {
 // zero-overhead, we only enforce it in debug builds.
 template <typename T>
 class ConstCheckingPtr final {
-public:
-    using element_type = T;
+ public:
+  using element_type = T;
 
-    // Convenience methods. Most `set` calls go through these.
-    ConstCheckingPtr& operator=(T* ptr) {
-        set(ptr);
-        return *this;
-    }
-    ConstCheckingPtr& operator=(const T* ptr) {
-        set(ptr);
-        return *this;
-    }
-    ConstCheckingPtr& operator=(std::nullptr_t) {
-        set(static_cast<T*>(nullptr));
-        return *this;
-    }
+  // Convenience methods. Most `set` calls go through these.
+  ConstCheckingPtr& operator=(T* ptr) {
+    set(ptr);
+    return *this;
+  }
+  ConstCheckingPtr& operator=(const T* ptr) {
+    set(ptr);
+    return *this;
+  }
+  ConstCheckingPtr& operator=(std::nullptr_t) {
+    set(static_cast<T*>(nullptr));
+    return *this;
+  }
 
-    // Core accessors. These encapsulate the main logic:
-    // - for `set`, the constness of the argument determines whether internal
-    // pointer should be tracked as const/mutable.
-    // - for `get`, the constness of `this` determines whether the call
-    // counts as a const or mutable use of the internal pointer.
-    void set(T* ptr) {
-        ptr_ = ptr;
-        set_mutable(true);
-    }
-    void set(const T* ptr) {
-        ptr_ = ptr;
-        set_mutable(false);
-    }
-    T* get() { /* NOT const */
-        assert_mutable();
-        return const_cast<T*>(ptr_);
-    }
-    const T* get() const {
-        return ptr_;
-    }
+  // Core accessors. These encapsulate the main logic:
+  // - for `set`, the constness of the argument determines whether internal
+  // pointer should be tracked as const/mutable.
+  // - for `get`, the constness of `this` determines whether the call
+  // counts as a const or mutable use of the internal pointer.
+  void set(T* ptr) {
+    ptr_ = ptr;
+    set_mutable(true);
+  }
+  void set(const T* ptr) {
+    ptr_ = ptr;
+    set_mutable(false);
+  }
+  T* get() { /* NOT const */
+    assert_mutable();
+    return const_cast<T*>(ptr_);
+  }
+  const T* get() const { return ptr_; }
 
-private:
-    static_assert(!std::is_const<T>::value, "");
-    const T* ptr_ = nullptr;
+ private:
+  static_assert(!std::is_const<T>::value, "");
+  const T* ptr_ = nullptr;
 #ifndef NDEBUG
-    bool is_mutable_ = true;
-    void set_mutable(bool val) {
-        is_mutable_ = val;
-    }
-    void assert_mutable() {
-        RUY_DCHECK(is_mutable_);
-    }
+  bool is_mutable_ = true;
+  void set_mutable(bool val) { is_mutable_ = val; }
+  void assert_mutable() { RUY_DCHECK(is_mutable_); }
 #else
-    void set_mutable(bool) {}
-    void assert_mutable() {}
+  void set_mutable(bool) {}
+  void assert_mutable() {}
 #endif
 };
 
@@ -112,52 +106,52 @@ private:
 // signed or unsigned.
 template <typename Scalar>
 struct Matrix final {
-    Matrix& operator=(const Matrix& other) {
-        data = other.data;
-        cacheable = other.cacheable;
-        layout = other.layout;
-        zero_point = other.zero_point;
-        return *this;
-    }
+  Matrix& operator=(const Matrix& other) {
+    data = other.data;
+    cacheable = other.cacheable;
+    layout = other.layout;
+    zero_point = other.zero_point;
+    return *this;
+  }
 
-    // The underlying buffer wrapped by this matrix.
-    detail::ConstCheckingPtr<Scalar> data;
-    // The shape and data layout of this matrix.
-    Layout layout;
-    // The zero_point, i.e. which Scalar value is to be interpreted as zero.
-    // When Scalar is floating-point, this must be 0.
-    Scalar zero_point = 0;
-    // Clients of Ruy must set this flag to enable any caching behavior. Doesn't
-    // impact numerical results, but caching can impact observable metrics like
-    // latency, memory usage, power, etc.
-    bool cacheable = false;
+  // The underlying buffer wrapped by this matrix.
+  detail::ConstCheckingPtr<Scalar> data;
+  // The shape and data layout of this matrix.
+  Layout layout;
+  // The zero_point, i.e. which Scalar value is to be interpreted as zero.
+  // When Scalar is floating-point, this must be 0.
+  Scalar zero_point = 0;
+  // Clients of Ruy must set this flag to enable any caching behavior. Doesn't
+  // impact numerical results, but caching can impact observable metrics like
+  // latency, memory usage, power, etc.
+  bool cacheable = false;
 };
 
 inline void MakeSimpleLayout(int rows, int cols, Order order, Layout* layout) {
-    layout->rows = rows;
-    layout->cols = cols;
-    layout->order = order;
-    layout->stride = order == Order::kColMajor ? rows : cols;
+  layout->rows = rows;
+  layout->cols = cols;
+  layout->order = order;
+  layout->stride = order == Order::kColMajor ? rows : cols;
 }
 
 // Opaque data structure representing a pre-packed matrix, as obtained from
 // Ruy's advanced API.
 struct PrepackedMatrix {
-    void* data = nullptr;
-    std::size_t data_size = 0;
-    void* sums = nullptr;
-    std::size_t sums_size = 0;
+  void* data = nullptr;
+  std::size_t data_size = 0;
+  void* sums = nullptr;
+  std::size_t sums_size = 0;
 };
 
 template <typename StreamType, typename Scalar>
 StreamType& operator<<(StreamType& stream, const Matrix<Scalar>& mat) {
-    for (int row = 0; row < mat.layout.rows; row++) {
-        for (int col = 0; col < mat.layout.cols; col++) {
-            stream << static_cast<double>(Element(mat, row, col)) << " ";
-        }
-        stream << "\n";
+  for (int row = 0; row < mat.layout.rows; row++) {
+    for (int col = 0; col < mat.layout.cols; col++) {
+      stream << static_cast<double>(Element(mat, row, col)) << " ";
     }
-    return stream;
+    stream << "\n";
+  }
+  return stream;
 }
 
 // Compile-time version of KernelLayout, used to declare kernel layouts in a
@@ -168,9 +162,9 @@ StreamType& operator<<(StreamType& stream, const Matrix<Scalar>& mat) {
 // testing-only feature. See Spec::StandardCppKernelLhsLayout.
 template <Order tOrder, int tRows, int tCols>
 struct FixedKernelLayout {
-    static constexpr Order kOrder = tOrder;
-    static constexpr int kRows = tRows;
-    static constexpr int kCols = tCols;
+  static constexpr Order kOrder = tOrder;
+  static constexpr int kRows = tRows;
+  static constexpr int kCols = tCols;
 };
 
 #if (__cplusplus < 201703L)

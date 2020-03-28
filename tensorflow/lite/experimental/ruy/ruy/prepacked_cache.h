@@ -32,32 +32,32 @@ namespace detail {
 
 // Tracks a set of blocks allocated from the underlying system allocator.
 class SystemBlockAllocator {
-public:
-    void *Alloc(std::ptrdiff_t num_bytes) {
-        void *p = detail::SystemAlignedAlloc(num_bytes);
-        blocks_.push_back(p);
-        return p;
-    }
+ public:
+  void* Alloc(std::ptrdiff_t num_bytes) {
+    void* p = detail::SystemAlignedAlloc(num_bytes);
+    blocks_.push_back(p);
+    return p;
+  }
 
-    void Free(void *block) {
-        for (auto it = blocks_.begin(); it != blocks_.end(); ++it) {
-            if (*it == block) {
-                detail::SystemAlignedFree(block);
-                blocks_.erase(it);
-                return;
-            }
-        }
-        RUY_DCHECK(false);  // Trying to free pointer we did not allocate.
+  void Free(void* block) {
+    for (auto it = blocks_.begin(); it != blocks_.end(); ++it) {
+      if (*it == block) {
+        detail::SystemAlignedFree(block);
+        blocks_.erase(it);
+        return;
+      }
     }
+    RUY_DCHECK(false);  // Trying to free pointer we did not allocate.
+  }
 
-    ~SystemBlockAllocator() {
-        for (void *block : blocks_) {
-            detail::SystemAlignedFree(block);
-        }
+  ~SystemBlockAllocator() {
+    for (void* block : blocks_) {
+      detail::SystemAlignedFree(block);
     }
+  }
 
-private:
-    std::vector<void *> blocks_;
+ private:
+  std::vector<void*> blocks_;
 };
 
 }  // namespace detail
@@ -78,57 +78,51 @@ enum CachePolicy { kNoCache, kCacheLHSOnNarrowMul };
 // is done in a single threaded context and the actual packing activity may
 // be done in a multi-threaded context.
 class PrepackedCache {
-public:
-    static constexpr int kDefaultEjectionThresholdBytes = 1 << 28;
+ public:
+  static constexpr int kDefaultEjectionThresholdBytes = 1 << 28;
 
-    using CacheKey = std::pair<void *, void *>;
+  using CacheKey = std::pair<void*, void*>;
 
-    using MatrixWithTimeStamp = std::pair<PrepackedMatrix, TimePoint>;
+  using MatrixWithTimeStamp = std::pair<PrepackedMatrix, TimePoint>;
 
-    using CacheIterator = std::map<CacheKey, MatrixWithTimeStamp>::const_iterator;
+  using CacheIterator = std::map<CacheKey, MatrixWithTimeStamp>::const_iterator;
 
-    using AlignedAllocator = detail::AlignedAllocator;
+  using AlignedAllocator = detail::AlignedAllocator;
 
-    explicit PrepackedCache(
-        int32_t ejection_threshold = kDefaultEjectionThresholdBytes)
-        : ejection_threshold_(ejection_threshold), cache_size_(0) {}
+  explicit PrepackedCache(
+      int32_t ejection_threshold = kDefaultEjectionThresholdBytes)
+      : ejection_threshold_(ejection_threshold), cache_size_(0) {}
 
-    // Looks for an entry with `key`. If found, update its time stamp.
-    CacheIterator FindAndUpdate(const CacheKey &key);
+  // Looks for an entry with `key`. If found, update its time stamp.
+  CacheIterator FindAndUpdate(const CacheKey& key);
 
-    // Returns end iterator for internal cache. The iterator type is appropriate
-    // to use with `FindAndUpdate`.
-    CacheIterator cend() const {
-        return cache_.end();
-    }
+  // Returns end iterator for internal cache. The iterator type is appropriate
+  // to use with `FindAndUpdate`.
+  CacheIterator cend() const { return cache_.end(); }
 
-    // Returns the total size (in bytes) of data held in this cache.
-    int TotalSize() const {
-        return cache_size_;
-    }
+  // Returns the total size (in bytes) of data held in this cache.
+  int TotalSize() const { return cache_size_; }
 
-    // All calls to get current TimePoints go through here.
-    // TODO(b/145625614) Profile timestamps on relevant models to see if
-    // this level of granularity is sufficient. CoarseNow is cheap so
-    // it would be nice to keep it.
-    TimePoint CacheNow() const {
-        return CoarseNow();
-    }
+  // All calls to get current TimePoints go through here.
+  // TODO(b/145625614) Profile timestamps on relevant models to see if
+  // this level of granularity is sufficient. CoarseNow is cheap so
+  // it would be nice to keep it.
+  TimePoint CacheNow() const { return CoarseNow(); }
 
-    // Performs the memory allocation for the `data` and `sums` members of a
-    // PrepackedMatrix.
-    void AllocatePrepackedMatrix(PrepackedMatrix *pmatrix);
+  // Performs the memory allocation for the `data` and `sums` members of a
+  // PrepackedMatrix.
+  void AllocatePrepackedMatrix(PrepackedMatrix* pmatrix);
 
-    // Adds the PrepackedMatrix to the cache, possibly ejecting other values.
-    void Insert(const CacheKey &key, const PrepackedMatrix &matrix);
+  // Adds the PrepackedMatrix to the cache, possibly ejecting other values.
+  void Insert(const CacheKey& key, const PrepackedMatrix& matrix);
 
-private:
-    void EjectOne();
-    void DoInsert(const CacheKey &key, const PrepackedMatrix &matrix);
-    detail::SystemBlockAllocator allocator_;
-    std::map<CacheKey, MatrixWithTimeStamp> cache_;
-    const int32_t ejection_threshold_;
-    size_t cache_size_;
+ private:
+  void EjectOne();
+  void DoInsert(const CacheKey& key, const PrepackedMatrix& matrix);
+  detail::SystemBlockAllocator allocator_;
+  std::map<CacheKey, MatrixWithTimeStamp> cache_;
+  const int32_t ejection_threshold_;
+  size_t cache_size_;
 };
 
 }  // namespace ruy

@@ -51,81 +51,81 @@ void Kernel8bitNeonDotprodInOrder(const KernelParams8bit<8, 8>& params);
 #if RUY_PLATFORM(NEON_64)
 template <typename DstScalar>
 struct Kernel<Path::kNeon, std::int8_t, std::int8_t, DstScalar,
-           BasicSpec<std::int32_t, DstScalar>> {
-    using LhsLayout = FixedKernelLayout<Order::kColMajor, 16, 4>;
-    using RhsLayout = FixedKernelLayout<Order::kColMajor, 16, 4>;
-    Tuning tuning = Tuning::kAuto;
-    explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
-    void Run(const PackedMatrix<std::int8_t>& lhs,
-             const PackedMatrix<std::int8_t>& rhs,
-             const BasicSpec<std::int32_t, DstScalar>& spec, int start_row,
-             int start_col, int end_row, int end_col,
-             Matrix<DstScalar>* dst) const {
-        KernelParams8bit<LhsLayout::kCols, RhsLayout::kCols> params;
-        MakeKernelParams8bit(lhs, rhs, spec, start_row, start_col, end_row, end_col,
-                             dst, &params);
-        if (dst->layout.cols == 1) {
-            Kernel8bitNeonOutOfOrder1Col(params);
-            return;
-        }
-        if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
-            Kernel8bitNeonInOrder(params);
-        } else {
-            Kernel8bitNeonOutOfOrder(params);
-        }
+              BasicSpec<std::int32_t, DstScalar>> {
+  using LhsLayout = FixedKernelLayout<Order::kColMajor, 16, 4>;
+  using RhsLayout = FixedKernelLayout<Order::kColMajor, 16, 4>;
+  Tuning tuning = Tuning::kAuto;
+  explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
+  void Run(const PackedMatrix<std::int8_t>& lhs,
+           const PackedMatrix<std::int8_t>& rhs,
+           const BasicSpec<std::int32_t, DstScalar>& spec, int start_row,
+           int start_col, int end_row, int end_col,
+           Matrix<DstScalar>* dst) const {
+    KernelParams8bit<LhsLayout::kCols, RhsLayout::kCols> params;
+    MakeKernelParams8bit(lhs, rhs, spec, start_row, start_col, end_row, end_col,
+                         dst, &params);
+    if (dst->layout.cols == 1) {
+      Kernel8bitNeonOutOfOrder1Col(params);
+      return;
     }
+    if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
+      Kernel8bitNeonInOrder(params);
+    } else {
+      Kernel8bitNeonOutOfOrder(params);
+    }
+  }
 };
 #endif
 
 #if RUY_PLATFORM(NEON_32)
 template <typename DstScalar>
 struct Kernel<Path::kNeon, std::int8_t, std::int8_t, DstScalar,
-           BasicSpec<std::int32_t, DstScalar>> {
-    using LhsLayout = FixedKernelLayout<Order::kColMajor, 16, 4>;
-    using RhsLayout = FixedKernelLayout<Order::kColMajor, 16, 2>;
-    Tuning tuning = Tuning::kAuto;
-    explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
-    void Run(const PackedMatrix<std::int8_t>& lhs,
-             const PackedMatrix<std::int8_t>& rhs,
-             const BasicSpec<std::int32_t, DstScalar>& spec, int start_row,
-             int start_col, int end_row, int end_col,
-             Matrix<DstScalar>* dst) const {
-        KernelParams8bit<LhsLayout::kCols, RhsLayout::kCols> params;
-        MakeKernelParams8bit(lhs, rhs, spec, start_row, start_col, end_row, end_col,
-                             dst, &params);
-        if (dst->layout.cols == 1) {
-            Kernel8bitNeonOutOfOrder1Col(params);
-            return;
-        }
-        Kernel8bitNeonOutOfOrder(params);
+              BasicSpec<std::int32_t, DstScalar>> {
+  using LhsLayout = FixedKernelLayout<Order::kColMajor, 16, 4>;
+  using RhsLayout = FixedKernelLayout<Order::kColMajor, 16, 2>;
+  Tuning tuning = Tuning::kAuto;
+  explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
+  void Run(const PackedMatrix<std::int8_t>& lhs,
+           const PackedMatrix<std::int8_t>& rhs,
+           const BasicSpec<std::int32_t, DstScalar>& spec, int start_row,
+           int start_col, int end_row, int end_col,
+           Matrix<DstScalar>* dst) const {
+    KernelParams8bit<LhsLayout::kCols, RhsLayout::kCols> params;
+    MakeKernelParams8bit(lhs, rhs, spec, start_row, start_col, end_row, end_col,
+                         dst, &params);
+    if (dst->layout.cols == 1) {
+      Kernel8bitNeonOutOfOrder1Col(params);
+      return;
     }
+    Kernel8bitNeonOutOfOrder(params);
+  }
 };
 #endif
 
 #if RUY_PLATFORM(NEON_64)
 template <typename DstScalar>
 struct Kernel<Path::kNeonDotprod, std::int8_t, std::int8_t, DstScalar,
-           BasicSpec<std::int32_t, DstScalar>> {
-    Tuning tuning = Tuning::kAuto;
-    using LhsLayout = FixedKernelLayout<Order::kColMajor, 4, 8>;
-    using RhsLayout = FixedKernelLayout<Order::kColMajor, 4, 8>;
-    explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
-    void Run(const PackedMatrix<std::int8_t>& lhs,
-             const PackedMatrix<std::int8_t>& rhs,
-             const BasicSpec<std::int32_t, DstScalar>& spec, int start_row,
-             int start_col, int end_row, int end_col,
-             Matrix<DstScalar>* dst) const {
-        KernelParams8bit<LhsLayout::kCols, RhsLayout::kCols> params;
-        MakeKernelParams8bit(lhs, rhs, spec, start_row, start_col, end_row, end_col,
-                             dst, &params);
-        if (dst->layout.cols == 1) {
-            Kernel8bitNeonDotprodOutOfOrder1Col(params);
-        } else if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
-            Kernel8bitNeonDotprodInOrder(params);
-        } else {
-            Kernel8bitNeonDotprodOutOfOrder(params);
-        }
+              BasicSpec<std::int32_t, DstScalar>> {
+  Tuning tuning = Tuning::kAuto;
+  using LhsLayout = FixedKernelLayout<Order::kColMajor, 4, 8>;
+  using RhsLayout = FixedKernelLayout<Order::kColMajor, 4, 8>;
+  explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
+  void Run(const PackedMatrix<std::int8_t>& lhs,
+           const PackedMatrix<std::int8_t>& rhs,
+           const BasicSpec<std::int32_t, DstScalar>& spec, int start_row,
+           int start_col, int end_row, int end_col,
+           Matrix<DstScalar>* dst) const {
+    KernelParams8bit<LhsLayout::kCols, RhsLayout::kCols> params;
+    MakeKernelParams8bit(lhs, rhs, spec, start_row, start_col, end_row, end_col,
+                         dst, &params);
+    if (dst->layout.cols == 1) {
+      Kernel8bitNeonDotprodOutOfOrder1Col(params);
+    } else if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
+      Kernel8bitNeonDotprodInOrder(params);
+    } else {
+      Kernel8bitNeonDotprodOutOfOrder(params);
     }
+  }
 };
 #endif
 
@@ -138,22 +138,22 @@ void KernelFloatNeonDotprodInOrder(const KernelParamsFloat<8, 8>& params);
 // A Float kernel for ARM64 Neon.
 template <>
 struct Kernel<Path::kNeon, float, float, float, BasicSpec<float, float>> {
-    Tuning tuning = Tuning::kAuto;
-    using LhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    using RhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
-    void Run(const PackedMatrix<float>& lhs, const PackedMatrix<float>& rhs,
-             const BasicSpec<float, float>& spec, int start_row, int start_col,
-             int end_row, int end_col, Matrix<float>* dst) const {
-        KernelParamsFloat<LhsLayout::kCols, RhsLayout::kCols> params;
-        MakeKernelParamsFloat(lhs, rhs, spec, start_row, start_col, end_row,
-                              end_col, dst, &params);
-        if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
-            KernelFloatNeonInOrder(params);
-        } else {
-            KernelFloatNeonOutOfOrder(params);
-        }
+  Tuning tuning = Tuning::kAuto;
+  using LhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  using RhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
+  void Run(const PackedMatrix<float>& lhs, const PackedMatrix<float>& rhs,
+           const BasicSpec<float, float>& spec, int start_row, int start_col,
+           int end_row, int end_col, Matrix<float>* dst) const {
+    KernelParamsFloat<LhsLayout::kCols, RhsLayout::kCols> params;
+    MakeKernelParamsFloat(lhs, rhs, spec, start_row, start_col, end_row,
+                          end_col, dst, &params);
+    if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
+      KernelFloatNeonInOrder(params);
+    } else {
+      KernelFloatNeonOutOfOrder(params);
     }
+  }
 };
 #endif
 
@@ -161,20 +161,20 @@ struct Kernel<Path::kNeon, float, float, float, BasicSpec<float, float>> {
 // A Float kernel for ARM32 Neon.
 template <>
 struct Kernel<Path::kNeon, float, float, float, BasicSpec<float, float>> {
-    Tuning tuning = Tuning::kAuto;
-    using LhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    using RhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 4>;
-    explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
-    void Run(const PackedMatrix<float>& lhs, const PackedMatrix<float>& rhs,
-             const BasicSpec<float, float>& spec, int start_row, int start_col,
-             int end_row, int end_col, Matrix<float>* dst) const {
-        KernelParamsFloat<8, 4> params;
+  Tuning tuning = Tuning::kAuto;
+  using LhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  using RhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 4>;
+  explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
+  void Run(const PackedMatrix<float>& lhs, const PackedMatrix<float>& rhs,
+           const BasicSpec<float, float>& spec, int start_row, int start_col,
+           int end_row, int end_col, Matrix<float>* dst) const {
+    KernelParamsFloat<8, 4> params;
 
-        MakeKernelParamsFloat(lhs, rhs, spec, start_row, start_col, end_row,
-                              end_col, dst, &params);
+    MakeKernelParamsFloat(lhs, rhs, spec, start_row, start_col, end_row,
+                          end_col, dst, &params);
 
-        KernelFloat32NeonOutOfOrder(params);
-    }
+    KernelFloat32NeonOutOfOrder(params);
+  }
 };
 #endif
 
@@ -183,25 +183,25 @@ struct Kernel<Path::kNeon, float, float, float, BasicSpec<float, float>> {
 // A53 and A55r1. TODO: should this be folded into tuning?
 template <>
 struct Kernel<Path::kNeonDotprod, float, float, float,
-           BasicSpec<float, float>> {
-    Tuning tuning = Tuning::kAuto;
-    using LhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    using RhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
-    using Base =
-        Kernel<Path::kNeon, float, float, float, BasicSpec<float, float>>;
-    explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
-    void Run(const PackedMatrix<float>& lhs, const PackedMatrix<float>& rhs,
-             const BasicSpec<float, float>& spec, int start_row, int start_col,
-             int end_row, int end_col, Matrix<float>* dst) const {
-        KernelParamsFloat<LhsLayout::kCols, RhsLayout::kCols> params;
-        MakeKernelParamsFloat(lhs, rhs, spec, start_row, start_col, end_row,
-                              end_col, dst, &params);
-        if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
-            KernelFloatNeonDotprodInOrder(params);
-        } else {
-            KernelFloatNeonOutOfOrder(params);
-        }
+              BasicSpec<float, float>> {
+  Tuning tuning = Tuning::kAuto;
+  using LhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  using RhsLayout = FixedKernelLayout<Order::kRowMajor, 1, 8>;
+  using Base =
+      Kernel<Path::kNeon, float, float, float, BasicSpec<float, float>>;
+  explicit Kernel(Tuning tuning_) : tuning(tuning_) {}
+  void Run(const PackedMatrix<float>& lhs, const PackedMatrix<float>& rhs,
+           const BasicSpec<float, float>& spec, int start_row, int start_col,
+           int end_row, int end_col, Matrix<float>* dst) const {
+    KernelParamsFloat<LhsLayout::kCols, RhsLayout::kCols> params;
+    MakeKernelParamsFloat(lhs, rhs, spec, start_row, start_col, end_row,
+                          end_col, dst, &params);
+    if (__builtin_expect(tuning == Tuning::kInOrder, true)) {
+      KernelFloatNeonDotprodInOrder(params);
+    } else {
+      KernelFloatNeonOutOfOrder(params);
     }
+  }
 };
 
 #endif  // RUY_PLATFORM(NEON) && RUY_OPT_ENABLED(RUY_OPT_ASM)

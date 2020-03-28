@@ -32,77 +32,75 @@ namespace profiler {
 
 #ifdef RUY_PROFILER
 
-ScopeProfile::ScopeProfile() {
-    Start();
-}
+ScopeProfile::ScopeProfile() { Start(); }
 ScopeProfile::ScopeProfile(bool enable) {
-    if (enable) {
-        Start();
-    }
+  if (enable) {
+    Start();
+  }
 }
 ScopeProfile::~ScopeProfile() {
-    if (!thread_) {
-        return;
-    }
-    finishing_.store(true);
-    thread_->join();
-    Finish();
+  if (!thread_) {
+    return;
+  }
+  finishing_.store(true);
+  thread_->join();
+  Finish();
 }
 
 void ScopeProfile::Start() {
-    {
-        std::lock_guard<std::mutex> lock(*detail::GlobalsMutex());
-        if (detail::GlobalIsProfilerRunning()) {
-            fprintf(stderr, "FATAL: profiler already running!\n");
-            abort();
-        }
-        detail::GlobalIsProfilerRunning() = true;
+  {
+    std::lock_guard<std::mutex> lock(*detail::GlobalsMutex());
+    if (detail::GlobalIsProfilerRunning()) {
+      fprintf(stderr, "FATAL: profiler already running!\n");
+      abort();
     }
-    finishing_ = false;
-    thread_.reset(new std::thread(&ScopeProfile::ThreadFunc, this));
+    detail::GlobalIsProfilerRunning() = true;
+  }
+  finishing_ = false;
+  thread_.reset(new std::thread(&ScopeProfile::ThreadFunc, this));
 }
 
 void ScopeProfile::ThreadFunc() {
-    while (!finishing_.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::lock_guard<std::mutex> lock(*detail::GlobalsMutex());
-        auto* thread_stacks = detail::GlobalAllThreadStacks();
-        for (detail::ThreadStack* thread_stack : *thread_stacks) {
-            Sample(*thread_stack);
-        }
+  while (!finishing_.load()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::lock_guard<std::mutex> lock(*detail::GlobalsMutex());
+    auto* thread_stacks = detail::GlobalAllThreadStacks();
+    for (detail::ThreadStack* thread_stack : *thread_stacks) {
+      Sample(*thread_stack);
     }
+  }
 }
 
 void ScopeProfile::Sample(const detail::ThreadStack& thread_stack) {
-    std::lock_guard<std::mutex> lock(thread_stack.Mutex());
-    // Drop empty stacks.
-    // This ensures that profiles aren't polluted by uninteresting threads.
-    if (thread_stack.stack().size == 0) {
-        return;
-    }
-    int sample_size = detail::GetBufferSize(thread_stack.stack());
-    int old_buf_size = samples_buf_.size();
-    samples_buf_.resize(old_buf_size + sample_size);
-    detail::CopyToBuffer(thread_stack.stack(),
-                         samples_buf_.data() + old_buf_size);
+  std::lock_guard<std::mutex> lock(thread_stack.Mutex());
+  // Drop empty stacks.
+  // This ensures that profiles aren't polluted by uninteresting threads.
+  if (thread_stack.stack().size == 0) {
+    return;
+  }
+  int sample_size = detail::GetBufferSize(thread_stack.stack());
+  int old_buf_size = samples_buf_.size();
+  samples_buf_.resize(old_buf_size + sample_size);
+  detail::CopyToBuffer(thread_stack.stack(),
+                       samples_buf_.data() + old_buf_size);
 }
 
 void ScopeProfile::Finish() {
-    {
-        std::lock_guard<std::mutex> lock(*detail::GlobalsMutex());
-        if (!detail::GlobalIsProfilerRunning()) {
-            fprintf(stderr, "FATAL: profiler is not running!\n");
-            abort();
-        }
-        detail::GlobalIsProfilerRunning() = false;
+  {
+    std::lock_guard<std::mutex> lock(*detail::GlobalsMutex());
+    if (!detail::GlobalIsProfilerRunning()) {
+      fprintf(stderr, "FATAL: profiler is not running!\n");
+      abort();
     }
-    if (user_treeview_) {
-        user_treeview_->Populate(samples_buf_);
-    } else {
-        TreeView treeview;
-        treeview.Populate(samples_buf_);
-        Print(treeview);
-    }
+    detail::GlobalIsProfilerRunning() = false;
+  }
+  if (user_treeview_) {
+    user_treeview_->Populate(samples_buf_);
+  } else {
+    TreeView treeview;
+    treeview.Populate(samples_buf_);
+    Print(treeview);
+  }
 }
 
 #endif  // RUY_PROFILER

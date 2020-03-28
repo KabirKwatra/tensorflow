@@ -52,11 +52,11 @@ namespace {
 
 #if defined __linux__ && defined __aarch64__
 bool DetectDotprodByLinuxAuxvMethod() {
-    // This is the value of HWCAP_ASIMDDP in sufficiently recent Linux headers,
-    // however we need to support building against older headers for the time
-    // being.
-    const int kLocalHwcapAsimddp = 1 << 20;
-    return getauxval(AT_HWCAP) & kLocalHwcapAsimddp;
+  // This is the value of HWCAP_ASIMDDP in sufficiently recent Linux headers,
+  // however we need to support building against older headers for the time
+  // being.
+  const int kLocalHwcapAsimddp = 1 << 20;
+  return getauxval(AT_HWCAP) & kLocalHwcapAsimddp;
 }
 #endif
 
@@ -64,10 +64,10 @@ bool DetectDotprodByLinuxAuxvMethod() {
 
 bool DetectDotprod() {
 #if defined __linux__ && defined __aarch64__
-    return DetectDotprodByLinuxAuxvMethod();
+  return DetectDotprodByLinuxAuxvMethod();
 #endif
 
-    return false;
+  return false;
 }
 
 }  // namespace ruy

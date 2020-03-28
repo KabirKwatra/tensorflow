@@ -57,76 +57,76 @@ namespace ruy {
 // both for the compile-time logic to select paths, and when manually spelling
 // out Path values, such as when invoking a test or benchmark.
 enum class Path : std::uint8_t {
-    // This is a special null value, representing the absence of any path.
-    kNone = 0,
-    // Reference multiplication code.
-    // The main purpose of this path is to have a very simple standalone Mul
-    // implementation to check against.
-    // This path bypasses almost all of Ruy's internal implementation details.
-    //
-    // This is intended for testing/development.
-    kReference = 0x1,
-    // Standard C++ implementation of Ruy's architecture-specific parts.
-    // Unlike Path::kReference, this path exercises most of Ruy's internal logic.
-    //
-    // This is intended for testing/development.
-    kStandardCpp = 0x2,
+  // This is a special null value, representing the absence of any path.
+  kNone = 0,
+  // Reference multiplication code.
+  // The main purpose of this path is to have a very simple standalone Mul
+  // implementation to check against.
+  // This path bypasses almost all of Ruy's internal implementation details.
+  //
+  // This is intended for testing/development.
+  kReference = 0x1,
+  // Standard C++ implementation of Ruy's architecture-specific parts.
+  // Unlike Path::kReference, this path exercises most of Ruy's internal logic.
+  //
+  // This is intended for testing/development.
+  kStandardCpp = 0x2,
 
 #if RUY_PLATFORM(ARM)
-    // ARM architectures.
-    //
-    // Optimized path using a widely available subset of ARM NEON instructions.
-    kNeon = 0x4,
-    // Optimized path making use of ARM NEON dot product instructions that are
-    // available on newer ARM cores.
-    kNeonDotprod = 0x8,
+  // ARM architectures.
+  //
+  // Optimized path using a widely available subset of ARM NEON instructions.
+  kNeon = 0x4,
+  // Optimized path making use of ARM NEON dot product instructions that are
+  // available on newer ARM cores.
+  kNeonDotprod = 0x8,
 #endif  // RUY_PLATFORM(ARM)
 
 #if RUY_PLATFORM(X86)
-    // x86 architectures.
-    //
-    // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete /
-    // placeholder.
-    // Optimization is not finished. In particular the dimensions of the kernel
-    // blocks can be changed as desired.
-    //
-    // Optimized for SSE 4.2.
-    kSse42 = 0x4,
-    // Optimized for AVX2.
-    kAvx2 = 0x8,
-    // Optimized for AVX-512.
-    kAvx512 = 0x10,
-    // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete /
-    // placeholder.
-    // Optimization is not finished. In particular the dimensions of the kernel
-    // blocks can be changed as desired.
-    //
-    // Optimized for AVX-VNNI.
-    kAvxVnni = 0x20,
+  // x86 architectures.
+  //
+  // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete /
+  // placeholder.
+  // Optimization is not finished. In particular the dimensions of the kernel
+  // blocks can be changed as desired.
+  //
+  // Optimized for SSE 4.2.
+  kSse42 = 0x4,
+  // Optimized for AVX2.
+  kAvx2 = 0x8,
+  // Optimized for AVX-512.
+  kAvx512 = 0x10,
+  // TODO(b/147376783): SSE 4.2 and AVX-VNNI support is incomplete /
+  // placeholder.
+  // Optimization is not finished. In particular the dimensions of the kernel
+  // blocks can be changed as desired.
+  //
+  // Optimized for AVX-VNNI.
+  kAvxVnni = 0x20,
 #endif  // RUY_PLATFORM(X86)
 };
 
 inline constexpr Path operator|(Path p, Path q) {
-    return static_cast<Path>(static_cast<std::uint32_t>(p) |
-                             static_cast<std::uint32_t>(q));
+  return static_cast<Path>(static_cast<std::uint32_t>(p) |
+                           static_cast<std::uint32_t>(q));
 }
 
 inline constexpr Path operator&(Path p, Path q) {
-    return static_cast<Path>(static_cast<std::uint32_t>(p) &
-                             static_cast<std::uint32_t>(q));
+  return static_cast<Path>(static_cast<std::uint32_t>(p) &
+                           static_cast<std::uint32_t>(q));
 }
 
 inline constexpr Path operator^(Path p, Path q) {
-    return static_cast<Path>(static_cast<std::uint32_t>(p) ^
-                             static_cast<std::uint32_t>(q));
+  return static_cast<Path>(static_cast<std::uint32_t>(p) ^
+                           static_cast<std::uint32_t>(q));
 }
 
 inline constexpr Path operator~(Path p) {
-    return static_cast<Path>(~static_cast<std::uint32_t>(p));
+  return static_cast<Path>(~static_cast<std::uint32_t>(p));
 }
 
 inline Path GetMostSignificantPath(Path path_mask) {
-    return static_cast<Path>(round_down_pot(static_cast<int>(path_mask)));
+  return static_cast<Path>(round_down_pot(static_cast<int>(path_mask)));
 }
 
 // ruy::kAllPaths represents all Path's that make sense to on a given
@@ -144,7 +144,7 @@ constexpr Path kAllPaths = Path::kReference | Path::kStandardCpp |
 #else
 constexpr Path kAllPaths = Path::kReference | Path::kStandardCpp;
 #endif
-#else   // __linux__
+#else  // __linux__
 // We don't know how to do runtime dotprod detection outside of linux for now.
 #if RUY_PLATFORM(NEON)
 constexpr Path kAllPaths = Path::kReference | Path::kStandardCpp | Path::kNeon;

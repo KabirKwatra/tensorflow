@@ -24,39 +24,39 @@ namespace ruy {
 // multiplication. The numerical values of these enumeration constants matter
 // because these will be used as indices into the array underlying a SidePair.
 enum class Side {
-    // Left-hand side
-    kLhs = 0,
-    // Right-hand side
-    kRhs = 1
+  // Left-hand side
+  kLhs = 0,
+  // Right-hand side
+  kRhs = 1
 };
 
 // SidePair is a pair container where the two elements are indexed by a Side
 // enum.
 template <typename T>
 class SidePair final {
-public:
-    SidePair() {}
-    SidePair(const T& a, const T& b) : elem_{a, b} {}
-    const T& operator[](Side side) const {
-        const int index = static_cast<int>(side);
-        // Technically this check is vacuous, since other values would be
-        // out-of-range for enum Side.
-        RUY_DCHECK(index == 0 || index == 1);
-        return elem_[index];
-    }
+ public:
+  SidePair() {}
+  SidePair(const T& a, const T& b) : elem_{a, b} {}
+  const T& operator[](Side side) const {
+    const int index = static_cast<int>(side);
+    // Technically this check is vacuous, since other values would be
+    // out-of-range for enum Side.
+    RUY_DCHECK(index == 0 || index == 1);
+    return elem_[index];
+  }
 
-    T& operator[](Side side) {
-        const int index = static_cast<int>(side);
-        // Technically this check is vacuous, since other values would be
-        // out-of-range for enum Side.
-        RUY_DCHECK(index == 0 || index == 1);
-        return elem_[index];
-    }
+  T& operator[](Side side) {
+    const int index = static_cast<int>(side);
+    // Technically this check is vacuous, since other values would be
+    // out-of-range for enum Side.
+    RUY_DCHECK(index == 0 || index == 1);
+    return elem_[index];
+  }
 
-private:
-    static_assert(static_cast<int>(Side::kLhs) == 0, "");
-    static_assert(static_cast<int>(Side::kRhs) == 1, "");
-    T elem_[2];
+ private:
+  static_assert(static_cast<int>(Side::kLhs) == 0, "");
+  static_assert(static_cast<int>(Side::kRhs) == 1, "");
+  T elem_[2];
 };
 
 }  // namespace ruy

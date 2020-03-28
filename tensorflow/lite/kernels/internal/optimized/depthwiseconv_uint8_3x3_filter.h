@@ -29,16 +29,16 @@ namespace depthwise_conv {
 
 #ifdef USE_NEON
 inline int8x16_t util_vld1q_x8(const uint8* data_addr) {
-    return vreinterpretq_s8_u8(vld1q_u8(data_addr));
+  return vreinterpretq_s8_u8(vld1q_u8(data_addr));
 }
 inline int8x16_t util_vld1q_x8(const int8* data_addr) {
-    return vld1q_s8(data_addr);
+  return vld1q_s8(data_addr);
 }
 inline int8x8_t util_vld1_x8(const uint8* data_addr) {
-    return vreinterpret_s8_u8(vld1_u8(data_addr));
+  return vreinterpret_s8_u8(vld1_u8(data_addr));
 }
 inline int8x8_t util_vld1_x8(const int8* data_addr) {
-    return vld1_s8(data_addr);
+  return vld1_s8(data_addr);
 }
 #endif
 
@@ -100,54 +100,54 @@ inline int8x8_t util_vld1_x8(const int8* data_addr) {
 static_assert(offsetof(DepthwiseConvParams, input_depth) == OFFSET_INPUT_DEPTH,
               "");
 static_assert(offsetof(DepthwiseConvParams, input_row_size) ==
-              OFFSET_INPUT_ROW_SIZE,
+                  OFFSET_INPUT_ROW_SIZE,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_depth) ==
-              OFFSET_OUTPUT_DEPTH,
+                  OFFSET_OUTPUT_DEPTH,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_row_size) ==
-              OFFSET_OUTPUT_ROW_SIZE,
+                  OFFSET_OUTPUT_ROW_SIZE,
               "");
 static_assert(offsetof(DepthwiseConvParams, filter_row_size) ==
-              OFFSET_FILTER_ROW_SIZE,
+                  OFFSET_FILTER_ROW_SIZE,
               "");
 static_assert(offsetof(DepthwiseConvParams, input_offset) ==
-              OFFSET_INPUT_OFFSET,
+                  OFFSET_INPUT_OFFSET,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_offset) ==
-              OFFSET_OUTPUT_OFFSET,
+                  OFFSET_OUTPUT_OFFSET,
               "");
 static_assert(offsetof(DepthwiseConvParams, filter_offset) ==
-              OFFSET_FILTER_OFFSET,
+                  OFFSET_FILTER_OFFSET,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_multiplier) ==
-              OFFSET_OUTPUT_MULTIPLIER,
+                  OFFSET_OUTPUT_MULTIPLIER,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_activation_min) ==
-              OFFSET_OUTPUT_ACTIVATION_MIN,
+                  OFFSET_OUTPUT_ACTIVATION_MIN,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_activation_max) ==
-              OFFSET_OUTPUT_ACTIVATION_MAX,
+                  OFFSET_OUTPUT_ACTIVATION_MAX,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_right_shift) ==
-              OFFSET_OUTPUT_RIGHT_SHIFT,
+                  OFFSET_OUTPUT_RIGHT_SHIFT,
               "");
 static_assert(offsetof(DepthwiseConvParams, input_width) == OFFSET_INPUT_WIDTH,
               "");
 static_assert(offsetof(DepthwiseConvParams, input_height) ==
-              OFFSET_INPUT_HEIGHT,
+                  OFFSET_INPUT_HEIGHT,
               "");
 static_assert(offsetof(DepthwiseConvParams, stride_width) ==
-              OFFSET_STRIDE_WIDTH,
+                  OFFSET_STRIDE_WIDTH,
               "");
 static_assert(offsetof(DepthwiseConvParams, stride_height) ==
-              OFFSET_STRIDE_HEIGHT,
+                  OFFSET_STRIDE_HEIGHT,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_width) ==
-              OFFSET_OUTPUT_WIDTH,
+                  OFFSET_OUTPUT_WIDTH,
               "");
 static_assert(offsetof(DepthwiseConvParams, output_height) ==
-              OFFSET_OUTPUT_HEIGHT,
+                  OFFSET_OUTPUT_HEIGHT,
               "");
 
 // Dot product ops hard-coded
@@ -204,111 +204,111 @@ static_assert(offsetof(DepthwiseConvParams, output_height) ==
   DP_OFFSET_OUTPUT_MULTPLIPLIER_PER_CHANNEL + 8
 
 static_assert(offsetof(DepthwiseConvDotProdParams, input_depth) ==
-              DP_OFFSET_INPUT_DEPTH,
+                  DP_OFFSET_INPUT_DEPTH,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_depth) ==
-              DP_OFFSET_OUTPUT_DEPTH,
+                  DP_OFFSET_OUTPUT_DEPTH,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, stride) == DP_OFFSET_STRIDE,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, bias_increment) ==
-              DP_OFFSET_BIAS_INCREMENT,
+                  DP_OFFSET_BIAS_INCREMENT,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams, input_offset) ==
-              DP_OFFSET_INPUT_OFFSET,
+                  DP_OFFSET_INPUT_OFFSET,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_offset) ==
-              DP_OFFSET_OUTPUT_OFFSET,
+                  DP_OFFSET_OUTPUT_OFFSET,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_multiplier) ==
-              DP_OFFSET_OUTPUT_MULTIPLIER,
+                  DP_OFFSET_OUTPUT_MULTIPLIER,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_shift) ==
-              DP_OFFSET_OUTPUT_SHIFT,
+                  DP_OFFSET_OUTPUT_SHIFT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, quantized_activation_min) ==
-              DP_OFFSET_QUANTIZED_ACTIVATION_MIN,
+                  DP_OFFSET_QUANTIZED_ACTIVATION_MIN,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, quantized_activation_max) ==
-              DP_OFFSET_QUANTIZED_ACTIVATION_MAX,
+                  DP_OFFSET_QUANTIZED_ACTIVATION_MAX,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams, padding_left) ==
-              DP_OFFSET_PADDING_LEFT,
+                  DP_OFFSET_PADDING_LEFT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, padding_right) ==
-              DP_OFFSET_PADDING_RIGHT,
+                  DP_OFFSET_PADDING_RIGHT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, padding_top) ==
-              DP_OFFSET_PADDING_TOP,
+                  DP_OFFSET_PADDING_TOP,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, padding_bottom) ==
-              DP_OFFSET_PADDING_BOTTOM,
+                  DP_OFFSET_PADDING_BOTTOM,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams, depth_micro_repeats) ==
-              DP_OFFSET_DEPTH_MICRO_REPEATS,
+                  DP_OFFSET_DEPTH_MICRO_REPEATS,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams, width_macro_count) ==
-              DP_OFFSET_WIDTH_MACRO_COUNT,
+                  DP_OFFSET_WIDTH_MACRO_COUNT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams,
                        input_width_overall_micro_repeats) ==
-              DP_OFFSET_INPUT_WIDTH_OVERALL_MICRO_REPEATS,
+                  DP_OFFSET_INPUT_WIDTH_OVERALL_MICRO_REPEATS,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, input_width_micro_repeats) ==
-              DP_OFFSET_INPUT_WIDTH_MICRO_REPEATS,
+                  DP_OFFSET_INPUT_WIDTH_MICRO_REPEATS,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, residual_width) ==
-              DP_OFFSET_RESIDUAL_WIDTH,
+                  DP_OFFSET_RESIDUAL_WIDTH,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams,
                        output_width_overall_micro_repeats) ==
-              DP_OFFSET_OUTPUT_WIDTH_OVERALL_MICRO_REPEATS,
+                  DP_OFFSET_OUTPUT_WIDTH_OVERALL_MICRO_REPEATS,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams,
                        output_width_micro_repeats) ==
-              DP_OFFSET_OUTPUT_WIDTH_MICRO_REPEATS,
+                  DP_OFFSET_OUTPUT_WIDTH_MICRO_REPEATS,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_residual_width) ==
-              DP_OFFSET_OUTPUT_RESIDUAL_WIDTH,
+                  DP_OFFSET_OUTPUT_RESIDUAL_WIDTH,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams,
                        workspace_width_micro_repeats) ==
-              DP_OFFSET_WORKSPACE_WIDTH_MICRO_REPEATS,
+                  DP_OFFSET_WORKSPACE_WIDTH_MICRO_REPEATS,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams, height_macro_count) ==
-              DP_OFFSET_HEIGHT_MACRO_COUNT,
+                  DP_OFFSET_HEIGHT_MACRO_COUNT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, inbound_block_height) ==
-              DP_OFFSET_INBOUND_BLOCK_HEIGHT,
+                  DP_OFFSET_INBOUND_BLOCK_HEIGHT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, outbound_block_height) ==
-              DP_OFFSET_OUTBOUND_BLOCK_HEIGHT,
+                  DP_OFFSET_OUTBOUND_BLOCK_HEIGHT,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, input_height_stride) ==
-              DP_OFFSET_INPUT_HEIGHT_STRIDE,
+                  DP_OFFSET_INPUT_HEIGHT_STRIDE,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_height_stride) ==
-              DP_OFFSET_OUTPUT_HEIGHT_STRIDE,
+                  DP_OFFSET_OUTPUT_HEIGHT_STRIDE,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, workspace_height_stride) ==
-              DP_OFFSET_WORKSPACE_HEIGHT_STRIDE,
+                  DP_OFFSET_WORKSPACE_HEIGHT_STRIDE,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams, four_over_stride) ==
-              DP_OFFSET_FOUR_OVER_STRIDE,
+                  DP_OFFSET_FOUR_OVER_STRIDE,
               "");
 //
 static_assert(offsetof(DepthwiseConvDotProdParams,
                        output_multiplier_per_channel) ==
-              DP_OFFSET_OUTPUT_MULTPLIPLIER_PER_CHANNEL,
+                  DP_OFFSET_OUTPUT_MULTPLIPLIER_PER_CHANNEL,
               "");
 static_assert(offsetof(DepthwiseConvDotProdParams, output_shift_per_channel) ==
-              DP_OFFSET_OUTPUT_SHIFT_PER_CHANNEL,
+                  DP_OFFSET_OUTPUT_SHIFT_PER_CHANNEL,
               "");
 
 #endif  // __aarch64__ && !GOOGLE_L4T - Dot product ops hard-coded
@@ -317,16 +317,16 @@ static_assert(offsetof(DepthwiseConvDotProdParams, output_shift_per_channel) ==
 
 template <>
 struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kAwayFromZero, 8, 1,
-           1> {
-public:
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           int64_t input_depth, int64_t input_row_size,
-                           int32 output_window_height, int32 output_window_width,
-                           const DepthwiseConvParams* params_ptr) {
-        const int64_t input_width_increment = 2 * input_depth;
-        const int64_t input_height_increment = 2 * input_row_size;
-        const int64_t output_height_increment = 2 * params_ptr->output_row_size;
+                           1> {
+ public:
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         int64_t input_depth, int64_t input_row_size,
+                         int32 output_window_height, int32 output_window_width,
+                         const DepthwiseConvParams* params_ptr) {
+    const int64_t input_width_increment = 2 * input_depth;
+    const int64_t input_height_increment = 2 * input_row_size;
+    const int64_t output_height_increment = 2 * params_ptr->output_row_size;
 
 #define DEPTHWISECONV_LABEL_HEIGHT_2_LOOP "1"
 #define DEPTHWISECONV_LABEL_HEIGHT_2_WIDTH_2_LOOP "2"
@@ -340,7 +340,7 @@ public:
 #define DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER "10"
 #define DEPTHWISECONV_LABEL_HEIGHT_1_END "11"
 
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for a window specified by
             // |output_window_height| and |output_window_width|. The inner-most loop
             // processes 2x2 outputs, and any leftovers at the end.
@@ -1246,20 +1246,20 @@ public:
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_1_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_END
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kUpward, 8, 1, 1> {
-public:
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           int64_t input_depth, int64_t input_row_size,
-                           int32 output_window_height, int32 output_window_width,
-                           const DepthwiseConvParams* params_ptr) {
-        const int64_t input_width_increment = 2 * input_depth;
-        const int64_t input_height_increment = 2 * input_row_size;
-        const int64_t output_height_increment = 2 * params_ptr->output_row_size;
+ public:
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         int64_t input_depth, int64_t input_row_size,
+                         int32 output_window_height, int32 output_window_width,
+                         const DepthwiseConvParams* params_ptr) {
+    const int64_t input_width_increment = 2 * input_depth;
+    const int64_t input_height_increment = 2 * input_row_size;
+    const int64_t output_height_increment = 2 * params_ptr->output_row_size;
 
 #define DEPTHWISECONV_LABEL_HEIGHT_2_LOOP "1"
 #define DEPTHWISECONV_LABEL_HEIGHT_2_WIDTH_2_LOOP "2"
@@ -1273,7 +1273,7 @@ public:
 #define DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER "10"
 #define DEPTHWISECONV_LABEL_HEIGHT_1_END "11"
 
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for a window specified by
             // |output_window_height| and |output_window_width|. The inner-most loop
             // processes 2x2 outputs, and any leftovers at the end.
@@ -2071,20 +2071,20 @@ public:
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_1_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_END
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kAwayFromZero, 8, 2,
-           2> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           int64_t input_depth, int64_t input_row_size,
-                           int32 output_window_height, int32 output_window_width,
-                           const DepthwiseConvParams* params_ptr) {
-        const int64_t input_width_increment = 4 * input_depth;
-        const int64_t input_height_increment = 4 * input_row_size;
-        const int64_t output_height_increment = 2 * params_ptr->output_row_size;
+                           2> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         int64_t input_depth, int64_t input_row_size,
+                         int32 output_window_height, int32 output_window_width,
+                         const DepthwiseConvParams* params_ptr) {
+    const int64_t input_width_increment = 4 * input_depth;
+    const int64_t input_height_increment = 4 * input_row_size;
+    const int64_t output_height_increment = 2 * params_ptr->output_row_size;
 
 #define DEPTHWISECONV_LABEL_HEIGHT_2_LOOP "1"
 #define DEPTHWISECONV_LABEL_HEIGHT_2_WIDTH_2_LOOP "2"
@@ -2098,7 +2098,7 @@ struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kAwayFromZero, 8, 2,
 #define DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER "10"
 #define DEPTHWISECONV_LABEL_HEIGHT_1_END "11"
 
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for a window specified by
             // |output_window_height| and |output_window_width|. The inner-most loop
             // processes 2x2 outputs, and any leftovers at the end.
@@ -3104,19 +3104,19 @@ struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kAwayFromZero, 8, 2,
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_1_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_END
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kUpward, 8, 2, 2> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           int64_t input_depth, int64_t input_row_size,
-                           int32 output_window_height, int32 output_window_width,
-                           const DepthwiseConvParams* params_ptr) {
-        const int64_t input_width_increment = 4 * input_depth;
-        const int64_t input_height_increment = 4 * input_row_size;
-        const int64_t output_height_increment = 2 * params_ptr->output_row_size;
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         int64_t input_depth, int64_t input_row_size,
+                         int32 output_window_height, int32 output_window_width,
+                         const DepthwiseConvParams* params_ptr) {
+    const int64_t input_width_increment = 4 * input_depth;
+    const int64_t input_height_increment = 4 * input_row_size;
+    const int64_t output_height_increment = 2 * params_ptr->output_row_size;
 
 #define DEPTHWISECONV_LABEL_HEIGHT_2_LOOP "1"
 #define DEPTHWISECONV_LABEL_HEIGHT_2_WIDTH_2_LOOP "2"
@@ -3130,7 +3130,7 @@ struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kUpward, 8, 2, 2> {
 #define DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER "10"
 #define DEPTHWISECONV_LABEL_HEIGHT_1_END "11"
 
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for a window specified by
             // |output_window_height| and |output_window_width|. The inner-most loop
             // processes 2x2 outputs, and any leftovers at the end.
@@ -4026,18 +4026,18 @@ struct DepthwiseConvWindow<DepthwiseConvOutputRounding::kUpward, 8, 2, 2> {
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_1_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_WIDTH_2_LEFTOVER
 #undef DEPTHWISECONV_LABEL_HEIGHT_1_END
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
-           EdgeType::kCenter, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kCenter, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 1x1 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the 1x1 input and filter values.
@@ -4139,18 +4139,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
             "x9", "x10", "x11");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
-           EdgeType::kCenter, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kCenter, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 1x1 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the 1x1 input and filter values.
@@ -4240,18 +4240,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
             "x9", "x10", "x11");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
-           EdgeType::kCorner, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kCorner, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 2x2 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the beginning of the 2x2 input and
@@ -4405,18 +4405,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
             "x6", "x7", "x9", "x10", "x11", "x12", "x13", "x14", "x15");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
-           EdgeType::kCorner, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kCorner, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 2x2 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the beginning of the 2x2 input and
@@ -4558,18 +4558,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
             "x6", "x7", "x9", "x10", "x11", "x12", "x13", "x14", "x15");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
-           EdgeType::kHorizontal, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kHorizontal, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 2x3 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the beginning of the 2x3 input and
@@ -4757,18 +4757,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
             "x7", "x9", "x10", "x11", "x12", "x13", "x14", "x15");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
-           EdgeType::kHorizontal, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kHorizontal, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 2x3 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the beginning of the 2x3 input and
@@ -4944,18 +4944,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
             "x7", "x9", "x10", "x11", "x12", "x13", "x14", "x15");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
-           EdgeType::kVertical, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kVertical, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 3x2 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the beginning of the 3x2 input and
@@ -5148,18 +5148,18 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kAwayFromZero,
             "x5", "x6", "x7", "x9", "x10", "x11", "x12", "x13", "x14", "x15");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 template <>
 struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
-           EdgeType::kVertical, 1, 1> {
-    static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
-                           const int32* bias_ptr, uint8* output_ptr,
-                           const DepthwiseConvParams* params_ptr) {
+                            EdgeType::kVertical, 1, 1> {
+  static inline void Run(const uint8* input_ptr, const uint8* filter_ptr,
+                         const int32* bias_ptr, uint8* output_ptr,
+                         const DepthwiseConvParams* params_ptr) {
 #define DEPTHWISECONV_LABEL_DEPTH_8_LOOP "1"
 #define DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP "2"
-        asm volatile(
+    asm volatile(
             // Performs depthwise convolutions for an input window of size 3x2 and
             // padding of 1 across the full depth. Expects |input_ptr| and
             // |filter_ptr| to be pointing to the beginning of the 3x2 input and
@@ -5340,7 +5340,7 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
             "x5", "x6", "x7", "x9", "x10", "x11", "x12", "x13", "x14", "x15");
 #undef DEPTHWISECONV_LABEL_DEPTH_8_LOOP
 #undef DEPTHWISECONV_LABEL_DEPTH_8_AFTER_LOOP
-    }
+  }
 };
 
 #undef OFFSET_INPUT_DEPTH
@@ -5362,122 +5362,122 @@ struct DepthwiseConvPartial<DepthwiseConvOutputRounding::kUpward,
 template <DepthwiseConvOutputRounding output_rounding, int32 kStrideWidth,
           int32 kStrideHeight>
 struct DepthwiseConvThroughDepth {
-    // Runs the DepthwiseConvWindow kernels through the depth dimension from
-    // |start_depth| to |end_depth|. Keep this not inlined to maintain a small
-    // binary size. We use a DepthwiseConvParams struct for read only params
-    // to minimize call overhead.
-    static void __attribute__((noinline))
-    Run(const uint8* input_ptr, const uint8* filter_ptr, const int32* bias_ptr,
-        uint8* output_ptr, int64_t start_depth, int64_t end_depth,
-        int64_t input_depth, int64_t input_row_size, int32 output_window_height,
-        int32 output_window_width, const DepthwiseConvParams& params) {
-        for (; start_depth <= end_depth - 8; start_depth += 8) {
-            DepthwiseConvWindow<output_rounding, 8, kStrideWidth, kStrideHeight>::Run(
-                input_ptr, filter_ptr, bias_ptr, output_ptr, input_depth,
-                input_row_size, output_window_height, output_window_width, &params);
-            input_ptr += 8;
-            output_ptr += 8;
-            filter_ptr += 8;
-            bias_ptr += 8;
-        }
+  // Runs the DepthwiseConvWindow kernels through the depth dimension from
+  // |start_depth| to |end_depth|. Keep this not inlined to maintain a small
+  // binary size. We use a DepthwiseConvParams struct for read only params
+  // to minimize call overhead.
+  static void __attribute__((noinline))
+  Run(const uint8* input_ptr, const uint8* filter_ptr, const int32* bias_ptr,
+      uint8* output_ptr, int64_t start_depth, int64_t end_depth,
+      int64_t input_depth, int64_t input_row_size, int32 output_window_height,
+      int32 output_window_width, const DepthwiseConvParams& params) {
+    for (; start_depth <= end_depth - 8; start_depth += 8) {
+      DepthwiseConvWindow<output_rounding, 8, kStrideWidth, kStrideHeight>::Run(
+          input_ptr, filter_ptr, bias_ptr, output_ptr, input_depth,
+          input_row_size, output_window_height, output_window_width, &params);
+      input_ptr += 8;
+      output_ptr += 8;
+      filter_ptr += 8;
+      bias_ptr += 8;
     }
+  }
 };
 
 template <DepthwiseConvOutputRounding output_rounding, int32 kStrideWidth,
           int32 kStrideHeight>
 struct DepthwiseConvMultiRow {
-    using ConvKernel =
-        DepthwiseConvThroughDepth<output_rounding, kStrideWidth, kStrideHeight>;
+  using ConvKernel =
+      DepthwiseConvThroughDepth<output_rounding, kStrideWidth, kStrideHeight>;
 
-    static inline void Run(const uint8* input_data, int32 start_x, int32 end_x,
-                           const uint8* filter_data, const int32* bias_data,
-                           uint8* output_data, const DepthwiseConvParams& params,
-                           const ShuffleParams& shuffle_params,
-                           uint8* shuffle_workspace) {
-        TFLITE_DCHECK(
-            shuffle_params.input_height ==
-            get_shuffle_input_size(kStrideHeight, shuffle_params.output_height));
-        TFLITE_DCHECK(
-            shuffle_params.input_width ==
-            get_shuffle_input_size(kStrideWidth, shuffle_params.output_width));
-        TFLITE_DCHECK_LE(
-            64 * shuffle_params.input_width * shuffle_params.input_height,
-            kDepthwiseConvScratchWorkspaceSize);
+  static inline void Run(const uint8* input_data, int32 start_x, int32 end_x,
+                         const uint8* filter_data, const int32* bias_data,
+                         uint8* output_data, const DepthwiseConvParams& params,
+                         const ShuffleParams& shuffle_params,
+                         uint8* shuffle_workspace) {
+    TFLITE_DCHECK(
+        shuffle_params.input_height ==
+        get_shuffle_input_size(kStrideHeight, shuffle_params.output_height));
+    TFLITE_DCHECK(
+        shuffle_params.input_width ==
+        get_shuffle_input_size(kStrideWidth, shuffle_params.output_width));
+    TFLITE_DCHECK_LE(
+        64 * shuffle_params.input_width * shuffle_params.input_height,
+        kDepthwiseConvScratchWorkspaceSize);
 
-        int32 out_x = start_x;
+    int32 out_x = start_x;
 
-        // Run shuffling on inputs with sufficiently large depth and width. When
-        // these parameters are large enough, more time is taken to load inputs
-        // from memory. At this point, it becomes useful to prefetch and
-        // preshuffle the input data to maximize locality.
-        if (params.output_depth > 64 ||
-                (params.output_depth <= 64 && params.input_width > 150)) {
-            for (; out_x <= (end_x - shuffle_params.output_width);
-                    out_x += shuffle_params.output_width) {
-                const uint8* input_ptr = input_data;
-                const int32* bias_ptr = bias_data;
-                const uint8* filter_ptr = filter_data;
-                uint8* output_ptr = output_data;
-                int64_t depth = 0;
-                const int64_t shuffle_row_size = 64 * shuffle_params.input_width;
+    // Run shuffling on inputs with sufficiently large depth and width. When
+    // these parameters are large enough, more time is taken to load inputs
+    // from memory. At this point, it becomes useful to prefetch and
+    // preshuffle the input data to maximize locality.
+    if (params.output_depth > 64 ||
+        (params.output_depth <= 64 && params.input_width > 150)) {
+      for (; out_x <= (end_x - shuffle_params.output_width);
+           out_x += shuffle_params.output_width) {
+        const uint8* input_ptr = input_data;
+        const int32* bias_ptr = bias_data;
+        const uint8* filter_ptr = filter_data;
+        uint8* output_ptr = output_data;
+        int64_t depth = 0;
+        const int64_t shuffle_row_size = 64 * shuffle_params.input_width;
 
-                for (; depth <= params.output_depth - 64; depth += 64) {
-                    // Preload.
-                    const uint8* h_ptr = input_ptr;
-                    for (int32 i = 0; i < shuffle_params.input_height; i++) {
-                        const uint8* ptr = h_ptr;
-                        for (int32 j = 0; j < shuffle_params.input_width; j++) {
-                            asm volatile("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(ptr) :);
-                            ptr += params.input_depth;
-                        }
-                        h_ptr += params.input_row_size;
-                    }
-
-                    // For a large enough input, shuffle into buckets.
-                    ShuffleInput(input_ptr, params.input_depth, params.input_width,
-                                 params.input_height, 64, shuffle_params.input_width,
-                                 shuffle_params.input_height, shuffle_workspace);
-                    ConvKernel::Run(shuffle_workspace, filter_ptr, bias_ptr, output_ptr,
-                                    0, 64, 64, shuffle_row_size,
-                                    shuffle_params.output_height,
-                                    shuffle_params.output_width, params);
-                    input_ptr += 64;
-                    output_ptr += 64;
-                    filter_ptr += 64;
-                    bias_ptr += 64;
-                }
-
-                // Preload.
-                const uint8* h_ptr = input_ptr;
-                for (int32 i = 0; i < shuffle_params.input_height; i++) {
-                    const uint8* ptr = h_ptr;
-                    for (int32 j = 0; j < shuffle_params.input_width; j++) {
-                        asm volatile("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(ptr) :);
-                        ptr += params.input_depth;
-                    }
-                    h_ptr += params.input_row_size;
-                }
-
-                // Handle leftover depth.
-                ConvKernel::Run(input_ptr, filter_ptr, bias_ptr, output_ptr, depth,
-                                params.output_depth, params.input_depth,
-                                params.input_row_size, shuffle_params.output_height,
-                                shuffle_params.output_width, params);
-
-                input_data +=
-                    shuffle_params.output_width * kStrideWidth * params.input_depth;
-                output_data += shuffle_params.output_width * params.output_depth;
+        for (; depth <= params.output_depth - 64; depth += 64) {
+          // Preload.
+          const uint8* h_ptr = input_ptr;
+          for (int32 i = 0; i < shuffle_params.input_height; i++) {
+            const uint8* ptr = h_ptr;
+            for (int32 j = 0; j < shuffle_params.input_width; j++) {
+              asm volatile("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(ptr) :);
+              ptr += params.input_depth;
             }
+            h_ptr += params.input_row_size;
+          }
+
+          // For a large enough input, shuffle into buckets.
+          ShuffleInput(input_ptr, params.input_depth, params.input_width,
+                       params.input_height, 64, shuffle_params.input_width,
+                       shuffle_params.input_height, shuffle_workspace);
+          ConvKernel::Run(shuffle_workspace, filter_ptr, bias_ptr, output_ptr,
+                          0, 64, 64, shuffle_row_size,
+                          shuffle_params.output_height,
+                          shuffle_params.output_width, params);
+          input_ptr += 64;
+          output_ptr += 64;
+          filter_ptr += 64;
+          bias_ptr += 64;
         }
 
-        const int32 output_leftover_width = end_x - out_x;
-        if (output_leftover_width > 0) {
-            ConvKernel::Run(input_data, filter_data, bias_data, output_data, 0,
-                            params.output_depth, params.input_depth,
-                            params.input_row_size, shuffle_params.output_height,
-                            output_leftover_width, params);
+        // Preload.
+        const uint8* h_ptr = input_ptr;
+        for (int32 i = 0; i < shuffle_params.input_height; i++) {
+          const uint8* ptr = h_ptr;
+          for (int32 j = 0; j < shuffle_params.input_width; j++) {
+            asm volatile("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(ptr) :);
+            ptr += params.input_depth;
+          }
+          h_ptr += params.input_row_size;
         }
+
+        // Handle leftover depth.
+        ConvKernel::Run(input_ptr, filter_ptr, bias_ptr, output_ptr, depth,
+                        params.output_depth, params.input_depth,
+                        params.input_row_size, shuffle_params.output_height,
+                        shuffle_params.output_width, params);
+
+        input_data +=
+            shuffle_params.output_width * kStrideWidth * params.input_depth;
+        output_data += shuffle_params.output_width * params.output_depth;
+      }
     }
+
+    const int32 output_leftover_width = end_x - out_x;
+    if (output_leftover_width > 0) {
+      ConvKernel::Run(input_data, filter_data, bias_data, output_data, 0,
+                      params.output_depth, params.input_depth,
+                      params.input_row_size, shuffle_params.output_height,
+                      output_leftover_width, params);
+    }
+  }
 };
 
 // Processes the borders of the input for pad_width and pad_height = 1.
@@ -5492,94 +5492,94 @@ inline void DepthwiseConvHandlePadding(const uint8* input_data,
                                        const int32* bias_data,
                                        uint8* output_data,
                                        const DepthwiseConvParams& params) {
-    if (params.input_width == 1 && params.input_height == 1) {
-        const uint8* filter_ptr =
-            filter_data + params.filter_row_size + params.output_depth;
-        DepthwiseConvPartial<output_rounding, EdgeType::kCenter, 1, 1>::Run(
-            input_data, filter_ptr, bias_data, output_data, &params);
-        return;
-    }
-
-    const int32 out_x_start_corner = 0;
-    const int32 out_x_end_corner = params.output_width - 1;
-    const int32 out_y_start_corner = 0;
-    const int32 out_y_end_corner = params.output_height - 1;
-
-    // Handle top row.
-    const uint8* input_ptr = input_data;
+  if (params.input_width == 1 && params.input_height == 1) {
     const uint8* filter_ptr =
         filter_data + params.filter_row_size + params.output_depth;
-    uint8* output_ptr = output_data;
+    DepthwiseConvPartial<output_rounding, EdgeType::kCenter, 1, 1>::Run(
+        input_data, filter_ptr, bias_data, output_data, &params);
+    return;
+  }
 
-    DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+  const int32 out_x_start_corner = 0;
+  const int32 out_x_end_corner = params.output_width - 1;
+  const int32 out_y_start_corner = 0;
+  const int32 out_y_end_corner = params.output_height - 1;
+
+  // Handle top row.
+  const uint8* input_ptr = input_data;
+  const uint8* filter_ptr =
+      filter_data + params.filter_row_size + params.output_depth;
+  uint8* output_ptr = output_data;
+
+  DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+      input_ptr, filter_ptr, bias_data, output_ptr, &params);
+
+  input_ptr += (params.stride_width - 1) * params.input_depth;
+  filter_ptr = filter_data + params.filter_row_size;
+  output_ptr += params.output_depth;
+
+  for (int32 out_x = out_x_start_corner + 1; out_x < out_x_end_corner;
+       out_x++) {
+    DepthwiseConvPartial<output_rounding, EdgeType::kHorizontal, 1, 1>::Run(
         input_ptr, filter_ptr, bias_data, output_ptr, &params);
-
-    input_ptr += (params.stride_width - 1) * params.input_depth;
-    filter_ptr = filter_data + params.filter_row_size;
+    input_ptr += params.stride_width * params.input_depth;
     output_ptr += params.output_depth;
+  }
 
-    for (int32 out_x = out_x_start_corner + 1; out_x < out_x_end_corner;
-            out_x++) {
-        DepthwiseConvPartial<output_rounding, EdgeType::kHorizontal, 1, 1>::Run(
-            input_ptr, filter_ptr, bias_data, output_ptr, &params);
-        input_ptr += params.stride_width * params.input_depth;
-        output_ptr += params.output_depth;
-    }
+  DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+      input_ptr, filter_ptr, bias_data, output_ptr, &params);
 
-    DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+  // Handle left side.
+  input_ptr = input_data + (params.stride_width - 1) * params.input_row_size;
+  filter_ptr = filter_data + params.input_depth;
+  output_ptr = output_data + params.output_row_size;
+
+  for (int32 out_y = out_y_start_corner + 1; out_y < out_y_end_corner;
+       out_y++) {
+    DepthwiseConvPartial<output_rounding, EdgeType::kVertical, 1, 1>::Run(
         input_ptr, filter_ptr, bias_data, output_ptr, &params);
+    input_ptr += params.stride_width * params.input_row_size;
+    output_ptr += params.output_row_size;
+  }
 
-    // Handle left side.
-    input_ptr = input_data + (params.stride_width - 1) * params.input_row_size;
-    filter_ptr = filter_data + params.input_depth;
-    output_ptr = output_data + params.output_row_size;
+  // Handle right side.
+  input_ptr = input_data + (params.input_width - 2) * params.input_depth +
+              (params.stride_width - 1) * params.input_row_size;
+  filter_ptr = filter_data;
+  output_ptr = output_data + params.output_row_size +
+               (params.output_width - 1) * params.output_depth;
 
-    for (int32 out_y = out_y_start_corner + 1; out_y < out_y_end_corner;
-            out_y++) {
-        DepthwiseConvPartial<output_rounding, EdgeType::kVertical, 1, 1>::Run(
-            input_ptr, filter_ptr, bias_data, output_ptr, &params);
-        input_ptr += params.stride_width * params.input_row_size;
-        output_ptr += params.output_row_size;
-    }
-
-    // Handle right side.
-    input_ptr = input_data + (params.input_width - 2) * params.input_depth +
-                (params.stride_width - 1) * params.input_row_size;
-    filter_ptr = filter_data;
-    output_ptr = output_data + params.output_row_size +
-                 (params.output_width - 1) * params.output_depth;
-
-    for (int32 out_y = out_y_start_corner + 1; out_y < out_y_end_corner;
-            out_y++) {
-        DepthwiseConvPartial<output_rounding, EdgeType::kVertical, 1, 1>::Run(
-            input_ptr, filter_ptr, bias_data, output_ptr, &params);
-        input_ptr += params.stride_width * params.input_row_size;
-        output_ptr += params.output_row_size;
-    }
-
-    // Handle bottom row.
-    input_ptr = input_data + (params.input_height - 2) * params.input_row_size;
-    filter_ptr = filter_data + params.output_depth;
-    output_ptr =
-        output_data + (params.output_height - 1) * params.output_row_size;
-
-    DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+  for (int32 out_y = out_y_start_corner + 1; out_y < out_y_end_corner;
+       out_y++) {
+    DepthwiseConvPartial<output_rounding, EdgeType::kVertical, 1, 1>::Run(
         input_ptr, filter_ptr, bias_data, output_ptr, &params);
+    input_ptr += params.stride_width * params.input_row_size;
+    output_ptr += params.output_row_size;
+  }
 
-    input_ptr += (params.stride_width == 1) ? 0 : params.input_depth;
-    filter_ptr = filter_data;
+  // Handle bottom row.
+  input_ptr = input_data + (params.input_height - 2) * params.input_row_size;
+  filter_ptr = filter_data + params.output_depth;
+  output_ptr =
+      output_data + (params.output_height - 1) * params.output_row_size;
+
+  DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+      input_ptr, filter_ptr, bias_data, output_ptr, &params);
+
+  input_ptr += (params.stride_width == 1) ? 0 : params.input_depth;
+  filter_ptr = filter_data;
+  output_ptr += params.output_depth;
+
+  for (int32 out_x = out_x_start_corner + 1; out_x < out_x_end_corner;
+       out_x++) {
+    DepthwiseConvPartial<output_rounding, EdgeType::kHorizontal, 1, 1>::Run(
+        input_ptr, filter_ptr, bias_data, output_ptr, &params);
+    input_ptr += params.stride_width * params.input_depth;
     output_ptr += params.output_depth;
+  }
 
-    for (int32 out_x = out_x_start_corner + 1; out_x < out_x_end_corner;
-            out_x++) {
-        DepthwiseConvPartial<output_rounding, EdgeType::kHorizontal, 1, 1>::Run(
-            input_ptr, filter_ptr, bias_data, output_ptr, &params);
-        input_ptr += params.stride_width * params.input_depth;
-        output_ptr += params.output_depth;
-    }
-
-    DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
-        input_ptr, filter_ptr, bias_data, output_ptr, &params);
+  DepthwiseConvPartial<output_rounding, EdgeType::kCorner, 1, 1>::Run(
+      input_ptr, filter_ptr, bias_data, output_ptr, &params);
 }
 
 template <DepthwiseConvOutputRounding output_rounding>
@@ -5589,201 +5589,201 @@ inline void DepthwiseConv3x3Filter(
     const uint8* filter_data, const RuntimeShape& bias_shape,
     const int32* bias_data, const RuntimeShape& output_shape,
     uint8* output_data, int thread_start, int thread_end, int thread_dim) {
-    DepthwiseConvParams params;
+  DepthwiseConvParams params;
 
-    const int32 stride_width = rt_params.stride_width;
-    const int32 stride_height = rt_params.stride_height;
-    const int32 pad_width = rt_params.padding_values.width;
-    const int32 pad_height = rt_params.padding_values.height;
-    const int32 depth_multiplier = rt_params.depth_multiplier;
-    const int32 output_activation_min = rt_params.quantized_activation_min;
-    const int32 output_activation_max = rt_params.quantized_activation_max;
-    const int32 input_offset = rt_params.input_offset;
-    const int32 filter_offset = rt_params.weights_offset;
-    const int32 output_offset = rt_params.output_offset;
-    const int32 output_multiplier = rt_params.output_multiplier;
-    const int32 output_shift = rt_params.output_shift;
+  const int32 stride_width = rt_params.stride_width;
+  const int32 stride_height = rt_params.stride_height;
+  const int32 pad_width = rt_params.padding_values.width;
+  const int32 pad_height = rt_params.padding_values.height;
+  const int32 depth_multiplier = rt_params.depth_multiplier;
+  const int32 output_activation_min = rt_params.quantized_activation_min;
+  const int32 output_activation_max = rt_params.quantized_activation_max;
+  const int32 input_offset = rt_params.input_offset;
+  const int32 filter_offset = rt_params.weights_offset;
+  const int32 output_offset = rt_params.output_offset;
+  const int32 output_multiplier = rt_params.output_multiplier;
+  const int32 output_shift = rt_params.output_shift;
 
-    params.input_depth = input_shape.Dims(3);
-    params.input_width = input_shape.Dims(2);
-    params.input_height = input_shape.Dims(1);
-    params.input_row_size = params.input_depth * params.input_width;
-    params.input_offset = input_offset;
-    params.stride_width = stride_width;
-    params.stride_height = stride_height;
-    params.output_depth = MatchingDim(filter_shape, 3, output_shape, 3);
-    params.output_width = output_shape.Dims(2);
-    params.output_height = output_shape.Dims(1);
-    params.output_row_size = params.output_depth * params.output_width;
-    params.output_offset = output_offset;
-    params.filter_offset = filter_offset;
-    params.output_multiplier = output_multiplier;
-    params.output_right_shift = output_shift;
-    params.output_activation_min = output_activation_min;
-    params.output_activation_max = output_activation_max;
+  params.input_depth = input_shape.Dims(3);
+  params.input_width = input_shape.Dims(2);
+  params.input_height = input_shape.Dims(1);
+  params.input_row_size = params.input_depth * params.input_width;
+  params.input_offset = input_offset;
+  params.stride_width = stride_width;
+  params.stride_height = stride_height;
+  params.output_depth = MatchingDim(filter_shape, 3, output_shape, 3);
+  params.output_width = output_shape.Dims(2);
+  params.output_height = output_shape.Dims(1);
+  params.output_row_size = params.output_depth * params.output_width;
+  params.output_offset = output_offset;
+  params.filter_offset = filter_offset;
+  params.output_multiplier = output_multiplier;
+  params.output_right_shift = output_shift;
+  params.output_activation_min = output_activation_min;
+  params.output_activation_max = output_activation_max;
 
-    const int32 filter_height = filter_shape.Dims(1);
-    const int32 filter_width = filter_shape.Dims(2);
-    params.filter_row_size = params.output_depth * filter_width;
+  const int32 filter_height = filter_shape.Dims(1);
+  const int32 filter_width = filter_shape.Dims(2);
+  params.filter_row_size = params.output_depth * filter_width;
 
-    // Algorithm assumes below constraints. It is optimized for depth
-    // multiplier of 1, 3x3 filter, no padding and strides 1 and 2.
-    TFLITE_DCHECK(params.output_depth == params.input_depth * depth_multiplier);
-    TFLITE_DCHECK(depth_multiplier == 1);
-    TFLITE_DCHECK(filter_height == 3);
-    TFLITE_DCHECK(filter_width == 3);
-    TFLITE_DCHECK(stride_height == 1 || stride_height == 2);
-    TFLITE_DCHECK(stride_width == 1 || stride_width == 2);
-    TFLITE_DCHECK(stride_width == stride_height);
-    TFLITE_DCHECK(pad_height == 0 || pad_height == 1);
-    TFLITE_DCHECK(pad_width == 0 || pad_width == 1);
-    TFLITE_DCHECK(pad_width == pad_height);
-    TFLITE_DCHECK(thread_dim == 0 || thread_dim == 1);
+  // Algorithm assumes below constraints. It is optimized for depth
+  // multiplier of 1, 3x3 filter, no padding and strides 1 and 2.
+  TFLITE_DCHECK(params.output_depth == params.input_depth * depth_multiplier);
+  TFLITE_DCHECK(depth_multiplier == 1);
+  TFLITE_DCHECK(filter_height == 3);
+  TFLITE_DCHECK(filter_width == 3);
+  TFLITE_DCHECK(stride_height == 1 || stride_height == 2);
+  TFLITE_DCHECK(stride_width == 1 || stride_width == 2);
+  TFLITE_DCHECK(stride_width == stride_height);
+  TFLITE_DCHECK(pad_height == 0 || pad_height == 1);
+  TFLITE_DCHECK(pad_width == 0 || pad_width == 1);
+  TFLITE_DCHECK(pad_width == pad_height);
+  TFLITE_DCHECK(thread_dim == 0 || thread_dim == 1);
 
-    const int32 batches = MatchingDim(input_shape, 0, output_shape, 0);
-    const int64_t input_batch_size = params.input_row_size * params.input_height;
-    const int64_t output_batch_size =
-        params.output_row_size * params.output_height;
+  const int32 batches = MatchingDim(input_shape, 0, output_shape, 0);
+  const int64_t input_batch_size = params.input_row_size * params.input_height;
+  const int64_t output_batch_size =
+      params.output_row_size * params.output_height;
 
-    ShuffleParams one_row_shuffle_params, two_row_shuffle_params,
-                  four_row_shuffle_params, eight_row_shuffle_params;
-    if (stride_width == 1) {
-        one_row_shuffle_params = ShuffleParams(30, 1, 1, 1);
-        two_row_shuffle_params = ShuffleParams(22, 2, 1, 1);
-        four_row_shuffle_params = ShuffleParams(14, 4, 1, 1);
-        eight_row_shuffle_params = ShuffleParams(8, 8, 1, 1);
-    } else {
-        one_row_shuffle_params = ShuffleParams(14, 1, 2, 2);
-        two_row_shuffle_params = ShuffleParams(8, 2, 2, 2);
-        four_row_shuffle_params = ShuffleParams(4, 4, 2, 2);
-        eight_row_shuffle_params = ShuffleParams(2, 8, 2, 2);
-    }
+  ShuffleParams one_row_shuffle_params, two_row_shuffle_params,
+      four_row_shuffle_params, eight_row_shuffle_params;
+  if (stride_width == 1) {
+    one_row_shuffle_params = ShuffleParams(30, 1, 1, 1);
+    two_row_shuffle_params = ShuffleParams(22, 2, 1, 1);
+    four_row_shuffle_params = ShuffleParams(14, 4, 1, 1);
+    eight_row_shuffle_params = ShuffleParams(8, 8, 1, 1);
+  } else {
+    one_row_shuffle_params = ShuffleParams(14, 1, 2, 2);
+    two_row_shuffle_params = ShuffleParams(8, 2, 2, 2);
+    four_row_shuffle_params = ShuffleParams(4, 4, 2, 2);
+    eight_row_shuffle_params = ShuffleParams(2, 8, 2, 2);
+  }
 
-    using conv_multirow_func_t =
-        decltype(&DepthwiseConvMultiRow<output_rounding, 1, 1>::Run);
-    conv_multirow_func_t conv_multirow_func =
-        DepthwiseConvMultiRow<output_rounding, 1, 1>::Run;
-    if (stride_width == 2) {
-        conv_multirow_func = DepthwiseConvMultiRow<output_rounding, 2, 2>::Run;
-    }
+  using conv_multirow_func_t =
+      decltype(&DepthwiseConvMultiRow<output_rounding, 1, 1>::Run);
+  conv_multirow_func_t conv_multirow_func =
+      DepthwiseConvMultiRow<output_rounding, 1, 1>::Run;
+  if (stride_width == 2) {
+    conv_multirow_func = DepthwiseConvMultiRow<output_rounding, 2, 2>::Run;
+  }
 
-    // Allocate maximum memory needed for shuffled input.
-    // TODO(mariewhite): The size of this workspace is small enough to be
-    // allocated on the stack. Eventually we will want to move it to the heap
-    // and have it allocated outside of this function, like the im2col_array
-    // used in gemmlowp.
-    uint8 shuffle_workspace[kDepthwiseConvScratchWorkspaceSize];
+  // Allocate maximum memory needed for shuffled input.
+  // TODO(mariewhite): The size of this workspace is small enough to be
+  // allocated on the stack. Eventually we will want to move it to the heap
+  // and have it allocated outside of this function, like the im2col_array
+  // used in gemmlowp.
+  uint8 shuffle_workspace[kDepthwiseConvScratchWorkspaceSize];
 
-    int batch_start = 0;
-    int batch_end = batches;
-    int row_start = 0;
-    int row_end = params.output_height;
+  int batch_start = 0;
+  int batch_end = batches;
+  int row_start = 0;
+  int row_end = params.output_height;
 
-    switch (thread_dim) {
+  switch (thread_dim) {
     case 0:
-        TFLITE_DCHECK_GE(thread_start, 0);
-        TFLITE_DCHECK_LE(thread_end, batches);
-        batch_start = thread_start;
-        batch_end = thread_end;
-        break;
+      TFLITE_DCHECK_GE(thread_start, 0);
+      TFLITE_DCHECK_LE(thread_end, batches);
+      batch_start = thread_start;
+      batch_end = thread_end;
+      break;
     case 1:
-        TFLITE_DCHECK_GE(thread_start, 0);
-        TFLITE_DCHECK_LE(thread_end, params.output_height);
-        row_start = thread_start;
-        row_end = thread_end;
-        break;
+      TFLITE_DCHECK_GE(thread_start, 0);
+      TFLITE_DCHECK_LE(thread_end, params.output_height);
+      row_start = thread_start;
+      row_end = thread_end;
+      break;
+  }
+
+  for (int32 b = batch_start; b < batch_end; ++b) {
+    // input_ptr and output_ptr point to the start of each batch
+    const uint8* input_ptr = input_data + b * input_batch_size;
+    uint8* output_ptr = output_data + b * output_batch_size;
+
+    int32 out_x = 0;
+    int32 out_y = row_start;
+    int32 end_x = params.output_width;
+    int32 end_y = row_end;
+
+    if (pad_width == 1 && pad_height == 1) {
+      DepthwiseConvHandlePadding<output_rounding>(
+          input_ptr, filter_data, bias_data, output_ptr, params);
+
+      // Update extents now that the edges have been handled.
+      out_x = 1;
+      end_x = params.output_width - 1;
+      out_y = std::max(1, out_y);
+      end_y = std::min(params.output_height - 1, end_y);
     }
 
-    for (int32 b = batch_start; b < batch_end; ++b) {
-        // input_ptr and output_ptr point to the start of each batch
-        const uint8* input_ptr = input_data + b * input_batch_size;
-        uint8* output_ptr = output_data + b * output_batch_size;
+    // pad_width and pad_height can both be 0 or 1, depending on padding option,
+    // such as Padding_VALID / Padding_SAME.
+    const int in_x = (out_x * stride_width) - pad_width;
+    const int in_y = (out_y * stride_height) - pad_height;
 
-        int32 out_x = 0;
-        int32 out_y = row_start;
-        int32 end_x = params.output_width;
-        int32 end_y = row_end;
+    // input_ptr and output_ptr point to (in_y, in_x) and (out_y, out_x),
+    // respectively. (in_y, in_x) and (out_y, out_x) change along with
+    // row_start.
+    input_ptr += in_y * params.input_row_size + in_x * params.input_depth;
+    output_ptr += out_y * params.output_row_size + out_x * params.output_depth;
 
-        if (pad_width == 1 && pad_height == 1) {
-            DepthwiseConvHandlePadding<output_rounding>(
-                input_ptr, filter_data, bias_data, output_ptr, params);
+    // Shuffling shapes that maximize width over the shuffle workspace size
+    // perform better since the inputs are closer together, minimizing
+    // shuffling time.
+    //
+    // If the input shape has width large enough for the 2 row kernels,
+    // we prefer to use this. The innermost loop of the kernels handle
+    // 2 height x 2 width so this is the fastest path.
+    //
+    // If the input shape has smaller width but larger height, shuffling is
+    // still useful and can benefit from kernels 4 row and 8 row kernels.
 
-            // Update extents now that the edges have been handled.
-            out_x = 1;
-            end_x = params.output_width - 1;
-            out_y = std::max(1, out_y);
-            end_y = std::min(params.output_height - 1, end_y);
-        }
-
-        // pad_width and pad_height can both be 0 or 1, depending on padding option,
-        // such as Padding_VALID / Padding_SAME.
-        const int in_x = (out_x * stride_width) - pad_width;
-        const int in_y = (out_y * stride_height) - pad_height;
-
-        // input_ptr and output_ptr point to (in_y, in_x) and (out_y, out_x),
-        // respectively. (in_y, in_x) and (out_y, out_x) change along with
-        // row_start.
-        input_ptr += in_y * params.input_row_size + in_x * params.input_depth;
-        output_ptr += out_y * params.output_row_size + out_x * params.output_depth;
-
-        // Shuffling shapes that maximize width over the shuffle workspace size
-        // perform better since the inputs are closer together, minimizing
-        // shuffling time.
-        //
-        // If the input shape has width large enough for the 2 row kernels,
-        // we prefer to use this. The innermost loop of the kernels handle
-        // 2 height x 2 width so this is the fastest path.
-        //
-        // If the input shape has smaller width but larger height, shuffling is
-        // still useful and can benefit from kernels 4 row and 8 row kernels.
-
-        // Handle 8 rows at a time.
-        if (params.input_width < four_row_shuffle_params.input_width) {
-            for (; out_y <= end_y - 8; out_y += 8) {
-                conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
-                                   output_ptr, params, eight_row_shuffle_params,
-                                   shuffle_workspace);
-                input_ptr += 8 * stride_height * params.input_row_size;
-                output_ptr += 8 * params.output_row_size;
-            }
-        }
-
-        // Handle 4 rows at a time.
-        if (params.input_width < two_row_shuffle_params.input_width) {
-            for (; out_y <= end_y - 4; out_y += 4) {
-                conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
-                                   output_ptr, params, four_row_shuffle_params,
-                                   shuffle_workspace);
-                input_ptr += 4 * stride_height * params.input_row_size;
-                output_ptr += 4 * params.output_row_size;
-            }
-        }
-
-        // Handle 2 rows at a time.
-        for (; out_y <= end_y - 2; out_y += 2) {
-            conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
-                               output_ptr, params, two_row_shuffle_params,
-                               shuffle_workspace);
-            input_ptr += 2 * stride_height * params.input_row_size;
-            output_ptr += 2 * params.output_row_size;
-        }
-
-        // Handle one row at a time.
-        for (; out_y < end_y; out_y++) {
-            conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
-                               output_ptr, params, one_row_shuffle_params,
-                               shuffle_workspace);
-            input_ptr += stride_height * params.input_row_size;
-            output_ptr += params.output_row_size;
-        }
+    // Handle 8 rows at a time.
+    if (params.input_width < four_row_shuffle_params.input_width) {
+      for (; out_y <= end_y - 8; out_y += 8) {
+        conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
+                           output_ptr, params, eight_row_shuffle_params,
+                           shuffle_workspace);
+        input_ptr += 8 * stride_height * params.input_row_size;
+        output_ptr += 8 * params.output_row_size;
+      }
     }
+
+    // Handle 4 rows at a time.
+    if (params.input_width < two_row_shuffle_params.input_width) {
+      for (; out_y <= end_y - 4; out_y += 4) {
+        conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
+                           output_ptr, params, four_row_shuffle_params,
+                           shuffle_workspace);
+        input_ptr += 4 * stride_height * params.input_row_size;
+        output_ptr += 4 * params.output_row_size;
+      }
+    }
+
+    // Handle 2 rows at a time.
+    for (; out_y <= end_y - 2; out_y += 2) {
+      conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
+                         output_ptr, params, two_row_shuffle_params,
+                         shuffle_workspace);
+      input_ptr += 2 * stride_height * params.input_row_size;
+      output_ptr += 2 * params.output_row_size;
+    }
+
+    // Handle one row at a time.
+    for (; out_y < end_y; out_y++) {
+      conv_multirow_func(input_ptr, out_x, end_x, filter_data, bias_data,
+                         output_ptr, params, one_row_shuffle_params,
+                         shuffle_workspace);
+      input_ptr += stride_height * params.input_row_size;
+      output_ptr += params.output_row_size;
+    }
+  }
 }
 #endif  // __aarch64__
 
 // Perform any necessary cache hinting and pre-writing.
 template <DepthwiseConvImplementation implementation>
 struct WorkspacePrefetchWrite {
-    static inline void Run(int8 fill_data, int size, int8* workspace) {}
+  static inline void Run(int8 fill_data, int size, int8* workspace) {}
 };
 
 #if defined(__aarch64__)
@@ -5798,18 +5798,18 @@ struct WorkspacePrefetchWrite {
 template <>
 struct WorkspacePrefetchWrite<
     DepthwiseConvImplementation::kUseNeon3x3DotProduct> {
-    static void __attribute__((noinline))
-    Run(int8 fill_data, int size, int8* workspace) {
-        const int8x8_t fill_data_vec_int8 = vdup_n_s8(fill_data);
-        const uint32x2_t fill_data_vec = vreinterpret_u32_s8(fill_data_vec_int8);
-        for (int i = 0; i < (size - 15); i += 64) {
-            int8* ptr = workspace + i;
-            asm volatile("prfm pstl1keep, [%[ptr]]\n" ::[ptr] "r"(ptr) :);
-            vst1_lane_u32(reinterpret_cast<uint32_t*>(ptr), fill_data_vec, 0);
-        }
-        vst1_lane_u32(reinterpret_cast<uint32_t*>(workspace + size - 4),
-                      fill_data_vec, 0);
+  static void __attribute__((noinline))
+  Run(int8 fill_data, int size, int8* workspace) {
+    const int8x8_t fill_data_vec_int8 = vdup_n_s8(fill_data);
+    const uint32x2_t fill_data_vec = vreinterpret_u32_s8(fill_data_vec_int8);
+    for (int i = 0; i < (size - 15); i += 64) {
+      int8* ptr = workspace + i;
+      asm volatile("prfm pstl1keep, [%[ptr]]\n" ::[ptr] "r"(ptr) :);
+      vst1_lane_u32(reinterpret_cast<uint32_t*>(ptr), fill_data_vec, 0);
     }
+    vst1_lane_u32(reinterpret_cast<uint32_t*>(workspace + size - 4),
+                  fill_data_vec, 0);
+  }
 };
 
 #endif  // __aarch64__
@@ -5820,21 +5820,21 @@ struct WorkspacePrefetchWrite<
 
 template <>
 struct ProcessPerDepth<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kNonPerChannelUint8> {
-    static inline void ProcessPerDepthNeon(
-        const uint8* filter_data, const int32* bias_data,
-        int8* shuffled_filter_data, int32* adjusted_bias_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[filter_data]
-        // x1 %[bias_data]
-        // x2 %[shuffled_filter_data]
-        // x3 %[adjusted_bias_data]
-        // x4 %[function_params]
+                       QuantizationType::kNonPerChannelUint8> {
+  static inline void ProcessPerDepthNeon(
+      const uint8* filter_data, const int32* bias_data,
+      int8* shuffled_filter_data, int32* adjusted_bias_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[filter_data]
+    // x1 %[bias_data]
+    // x2 %[shuffled_filter_data]
+    // x3 %[adjusted_bias_data]
+    // x4 %[function_params]
 #define DC_PER_DEPTH_1 "1"
 #define DC_PER_DEPTH_2 "2"
 
-        asm volatile(
+    asm volatile(
             "ldp    w12, w11, [%[function_params], #" STR(DP_OFFSET_BIAS_INCREMENT) "]\n"
             "ldrsw  x9, [%[function_params], #" STR(DP_OFFSET_OUTPUT_DEPTH) "]\n"
             "ldr    w10, [%[function_params], #" STR(DP_OFFSET_DEPTH_MICRO_REPEATS) "]\n"
@@ -5926,35 +5926,35 @@ struct ProcessPerDepth<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
             "x8", "x9", "x10", "x11", "x12", "x13");
 #undef DC_PER_DEPTH_1
 #undef DC_PER_DEPTH_2
-    }
+  }
 
-    static void __attribute__((noinline))
-    Run(const uint8* filter_data, const int32* bias_data,
-        int8* shuffled_filter_data, int32* adjusted_bias_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        ProcessPerDepthNeon(filter_data, bias_data, shuffled_filter_data,
-                            adjusted_bias_data, function_params);
-    }
+  static void __attribute__((noinline))
+  Run(const uint8* filter_data, const int32* bias_data,
+      int8* shuffled_filter_data, int32* adjusted_bias_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    ProcessPerDepthNeon(filter_data, bias_data, shuffled_filter_data,
+                        adjusted_bias_data, function_params);
+  }
 };
 
 template <>
 struct ProcessPerDepth<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kPerChannelInt8> {
-    static inline void ProcessPerDepthNeon(
-        const int8* filter_data, const int32* bias_data,
-        int8* shuffled_filter_data, int32* adjusted_bias_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[filter_data]
-        // x1 %[bias_data]
-        // x2 %[shuffled_filter_data]
-        // x3 %[adjusted_bias_data]
-        // x4 %[function_params]
+                       QuantizationType::kPerChannelInt8> {
+  static inline void ProcessPerDepthNeon(
+      const int8* filter_data, const int32* bias_data,
+      int8* shuffled_filter_data, int32* adjusted_bias_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[filter_data]
+    // x1 %[bias_data]
+    // x2 %[shuffled_filter_data]
+    // x3 %[adjusted_bias_data]
+    // x4 %[function_params]
 #define DC_PER_DEPTH_1 "1"
 #define DC_PER_DEPTH_2 "2"
 #define DC_PER_DEPTH_3 "3"
 
-        asm volatile(        // %bb.0:
+    asm volatile(        // %bb.0:
             "ldr    w8, [%[function_params], #" STR(DP_OFFSET_DEPTH_MICRO_REPEATS) "]\n"
             "cmp    w8, #1\n"  // =1
             "b.lt   " DC_PER_DEPTH_3 "f\n"
@@ -6042,1356 +6042,1356 @@ struct ProcessPerDepth<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_PER_DEPTH_1
 #undef DC_PER_DEPTH_2
 #undef DC_PER_DEPTH_3
-    }
+  }
 
-    static void __attribute__((noinline))
-    Run(const int8* filter_data, const int32* bias_data,
-        int8* shuffled_filter_data, int32* adjusted_bias_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        ProcessPerDepthNeon(filter_data, bias_data, shuffled_filter_data,
-                            adjusted_bias_data, function_params);
-    }
+  static void __attribute__((noinline))
+  Run(const int8* filter_data, const int32* bias_data,
+      int8* shuffled_filter_data, int32* adjusted_bias_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    ProcessPerDepthNeon(filter_data, bias_data, shuffled_filter_data,
+                        adjusted_bias_data, function_params);
+  }
 };
 template <QuantizationType quantization_type>
 struct PackMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           quantization_type,
-           DepthwiseConvDepthMultiplication::kNoMultiplication,
-/*max_padding=*/0> {
-    static inline void PackMacroBlockNeon(
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        TFLITE_DCHECK_EQ(function_params->padding_bottom, 0);
-        TFLITE_DCHECK_EQ(function_params->padding_top, 0);
-        TFLITE_DCHECK_EQ(function_params->padding_left, 0);
-        TFLITE_DCHECK_EQ(function_params->padding_right, 0);
-        const int workspace_height_stride =
-            function_params->workspace_height_stride;
-        const int width_overall_micro_repeats =
-            function_params->input_width_overall_micro_repeats;
-        const int input_width_micro_repeats =
-            function_params->input_width_micro_repeats;
-        const int depth_micro_repeats = function_params->depth_micro_repeats;
-        const int block_height = function_params->inbound_block_height;
-        const int residual_width = function_params->residual_width;
-        const int input_height_stride = function_params->input_height_stride;
-        const int input_depth = function_params->input_depth;
+                      quantization_type,
+                      DepthwiseConvDepthMultiplication::kNoMultiplication,
+                      /*max_padding=*/0> {
+  static inline void PackMacroBlockNeon(
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    TFLITE_DCHECK_EQ(function_params->padding_bottom, 0);
+    TFLITE_DCHECK_EQ(function_params->padding_top, 0);
+    TFLITE_DCHECK_EQ(function_params->padding_left, 0);
+    TFLITE_DCHECK_EQ(function_params->padding_right, 0);
+    const int workspace_height_stride =
+        function_params->workspace_height_stride;
+    const int width_overall_micro_repeats =
+        function_params->input_width_overall_micro_repeats;
+    const int input_width_micro_repeats =
+        function_params->input_width_micro_repeats;
+    const int depth_micro_repeats = function_params->depth_micro_repeats;
+    const int block_height = function_params->inbound_block_height;
+    const int residual_width = function_params->residual_width;
+    const int input_height_stride = function_params->input_height_stride;
+    const int input_depth = function_params->input_depth;
 
-        TFLITE_DCHECK_GE(depth_micro_repeats, 0);
-        constexpr uint8 kSignBit =
-            QuantizationTypeImpl<quantization_type>::kUint8SignBit;
-        const int micro_block_size = 4 * 8;
-        const int depth_advance = width_overall_micro_repeats * micro_block_size;
-        const int width_advance =
-            micro_block_size *
-            (1 - depth_micro_repeats * width_overall_micro_repeats);
-        const int height_advance = workspace_height_stride -
-                                   width_overall_micro_repeats * micro_block_size;
-        const int input_depth_skip = 4 * input_depth - 8 * depth_micro_repeats;
+    TFLITE_DCHECK_GE(depth_micro_repeats, 0);
+    constexpr uint8 kSignBit =
+        QuantizationTypeImpl<quantization_type>::kUint8SignBit;
+    const int micro_block_size = 4 * 8;
+    const int depth_advance = width_overall_micro_repeats * micro_block_size;
+    const int width_advance =
+        micro_block_size *
+        (1 - depth_micro_repeats * width_overall_micro_repeats);
+    const int height_advance = workspace_height_stride -
+                               width_overall_micro_repeats * micro_block_size;
+    const int input_depth_skip = 4 * input_depth - 8 * depth_micro_repeats;
 
-        // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
-        // code. Note the blocks of 4x4 are still interleaved down the depth.
-        int8x16_t work_reg_a;
-        int8x16_t work_reg_b;
+    // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
+    // code. Note the blocks of 4x4 are still interleaved down the depth.
+    int8x16_t work_reg_a;
+    int8x16_t work_reg_b;
 
-        // Effect subtraction of zero-point = 128 by XOR of sign bit.
-        const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
+    // Effect subtraction of zero-point = 128 by XOR of sign bit.
+    const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
 
-        // Work through one slice, by row, at a time.
-        int8* scratch_data_0 = scratch_block_data;
+    // Work through one slice, by row, at a time.
+    int8* scratch_data_0 = scratch_block_data;
 
-        for (int k_height = 0; k_height < block_height; ++k_height) {
-            const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-            input_data_0 = input_block_data;
-            int8x16_t input_data_a;
-            int8x16_t input_data_b;
-            int8x16_t input_data_c;
-            int8x16_t input_data_d;
+    for (int k_height = 0; k_height < block_height; ++k_height) {
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_data_0 = input_block_data;
+      int8x16_t input_data_a;
+      int8x16_t input_data_b;
+      int8x16_t input_data_c;
+      int8x16_t input_data_d;
 
-            // Traverse the width one point at a time, but the depth in (micro) blocks
-            // of size 8.
-            //
-            // The depth and width margins, which are filled with "zeros", may be
-            // larger than is strictly needed to calculate output. This is because the
-            // conv calculation is performed across complete micro blocks.
-            for (int j_width = 0; j_width < input_width_micro_repeats; ++j_width) {
-                int8x16_t work_reg_a_sp;
-                int8x16_t work_reg_b_sp;
+      // Traverse the width one point at a time, but the depth in (micro) blocks
+      // of size 8.
+      //
+      // The depth and width margins, which are filled with "zeros", may be
+      // larger than is strictly needed to calculate output. This is because the
+      // conv calculation is performed across complete micro blocks.
+      for (int j_width = 0; j_width < input_width_micro_repeats; ++j_width) {
+        int8x16_t work_reg_a_sp;
+        int8x16_t work_reg_b_sp;
 
-                int i_depth = 0;
+        int i_depth = 0;
 
-                if (depth_micro_repeats >= 2) {
-                    i_depth += 2;
+        if (depth_micro_repeats >= 2) {
+          i_depth += 2;
 
-                    input_data_a = util_vld1q_x8(input_data_0);
-                    input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
-                    input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
-                    input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
-                    input_data_0 += 16;
+          input_data_a = util_vld1q_x8(input_data_0);
+          input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
+          input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
+          input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
+          input_data_0 += 16;
 
-                    for (; i_depth < depth_micro_repeats - 1; i_depth += 2) {
-                        work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                        work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-                        vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                        if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                            work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                            work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                        }
-
-                        work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
-                        work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
-                        vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
-
-                        input_data_a = util_vld1q_x8(input_data_0);
-                        input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
-                        optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                        optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                        vst1q_s8(scratch_data_0, work_reg_a);
-                        vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                        scratch_data_0 += depth_advance;
-
-                        if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                            work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
-                            work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
-                        }
-
-                        input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
-                        input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
-                        optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                        optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                        vst1q_s8(scratch_data_0, work_reg_a_sp);
-                        vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
-
-                        scratch_data_0 += depth_advance;
-                        input_data_0 += 16;
-                    }
-
-                    work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                    work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-                    vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                        work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                    }
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                    vst1q_s8(scratch_data_0, work_reg_a);
-                    vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                    scratch_data_0 += depth_advance;
-
-                    work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
-                    work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
-                    vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
-                        work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
-                    }
-
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                    vst1q_s8(scratch_data_0, work_reg_a_sp);
-                    vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
-
-                    scratch_data_0 += depth_advance;
-                }
-                for (; i_depth < depth_micro_repeats; ++i_depth) {
-                    input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
-                    input_data_b =
-                        vld1q_lane_s8x8(input_data_0 + 1 * input_depth, input_data_b, 0);
-                    input_data_c =
-                        vld1q_lane_s8x8(input_data_0 + 2 * input_depth, input_data_c, 0);
-                    input_data_d =
-                        vld1q_lane_s8x8(input_data_0 + 3 * input_depth, input_data_d, 0);
-                    work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                    work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-
-                    input_data_0 += 8;
-
-                    vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                        work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                    }
-
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                    vst1q_s8(scratch_data_0, work_reg_a);
-                    vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                    scratch_data_0 += depth_advance;
-                }
-                scratch_data_0 += width_advance;
-                input_data_0 += input_depth_skip;
-            }
-            if (width_overall_micro_repeats > input_width_micro_repeats) {
-                TFLITE_DCHECK_EQ(width_overall_micro_repeats,
-                                 input_width_micro_repeats + 1);
-                TFLITE_DCHECK_GT(residual_width, 0);
-                TFLITE_DCHECK_LT(residual_width, 4);
-                for (int i_depth = 0; i_depth < depth_micro_repeats; ++i_depth) {
-                    input_data_c = vdupq_n_u8(kSignBit);
-                    input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
-                    input_data_d = vdupq_n_u8(kSignBit);
-                    if (residual_width > 1) {
-                        input_data_b =
-                            vld1q_lane_s8x8(input_data_0 + input_depth, input_data_b, 0);
-                        if (residual_width == 3) {
-                            input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
-                                                           input_data_c, 0);
-                        }
-                    }
-                    work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                    work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                        work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                    }
-                    vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                    vst1q_s8(scratch_data_0, work_reg_a);
-                    vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                    scratch_data_0 += depth_advance;
-                    input_data_0 += 8;
-                }
-                scratch_data_0 += width_advance;
-                input_data_0 += input_depth_skip;
+          for (; i_depth < depth_micro_repeats - 1; i_depth += 2) {
+            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+              work_reg_a = veorq_s8(work_reg_a, sign_bit);
+              work_reg_b = veorq_s8(work_reg_b, sign_bit);
             }
 
-            scratch_data_0 += height_advance;
-            input_block_data += input_height_stride;
-        }
-        TFLITE_DCHECK_EQ(
-            scratch_data_0,
-            scratch_block_data + block_height * workspace_height_stride);
-    }
+            work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
+            work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
+            vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
 
-    static void __attribute__((noinline))
-    Run(int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        PreloadInputBlock(input_block_data, function_params);
-        PackMacroBlockNeon(input_block_data, scratch_block_data, function_params);
-    }
-};
+            input_data_a = util_vld1q_x8(input_data_0);
+            input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
+            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+            vst1q_s8(scratch_data_0, work_reg_a);
+            vst1q_s8(scratch_data_0 + 16, work_reg_b);
 
-template <QuantizationType quantization_type>
-struct PackMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           quantization_type,
-           DepthwiseConvDepthMultiplication::kNoMultiplication,
-/*max_padding=*/1> {
-    static inline void PackMacroBlockNeon(
-        int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        constexpr uint8 kSignBit =
-            QuantizationTypeImpl<quantization_type>::kUint8SignBit;
+            scratch_data_0 += depth_advance;
 
-        const int workspace_height_stride =
-            function_params->workspace_height_stride;
-        const int width_overall_micro_repeats =
-            function_params->input_width_overall_micro_repeats;
-        const int input_width_micro_repeats =
-            function_params->input_width_micro_repeats;
-        const int depth_micro_repeats = function_params->depth_micro_repeats;
-        const int block_height = function_params->inbound_block_height;
-        const int residual_width = function_params->residual_width;
-        const int input_height_stride = function_params->input_height_stride;
-        const int input_depth = function_params->input_depth;
-
-        const int padding_left = function_params->padding_left;
-        const int padding_right = function_params->padding_right;
-        const int padding_top = function_params->padding_top;
-        const int padding_bottom = function_params->padding_bottom;
-
-        TFLITE_DCHECK_GT(depth_micro_repeats, 0);
-        constexpr int kSymmetricZeroPoint =
-            QuantizationTypeImpl<quantization_type>::kIntSymmetricZeroPoint;
-
-        const int micro_block_size = 4 * 8;
-        const int depth_advance = width_overall_micro_repeats * micro_block_size;
-        const int width_advance =
-            micro_block_size *
-            (1 - depth_micro_repeats * width_overall_micro_repeats);
-        const int height_advance = workspace_height_stride -
-                                   width_overall_micro_repeats * micro_block_size;
-        const int input_depth_skip = 4 * input_depth - 8 * depth_micro_repeats;
-
-        const bool leading_width_padding =
-            padding_left > 0 && width_block_number == 0;
-        const bool trailing_width_padding =
-            padding_right > 0 &&
-            width_block_number == (function_params->width_macro_count - 1);
-        const bool leading_height_padding =
-            padding_top > 0 && height_block_number < 0;
-        const bool trailing_height_padding =
-            padding_bottom > 0 &&
-            height_block_number == (function_params->height_macro_count - 1);
-
-        const int32 input_offset = function_params->input_offset;
-        const int32 input_offset_difference = input_offset + kSymmetricZeroPoint;
-
-        // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
-        // code. Note the blocks of 4x4 are still interleaved down the depth.
-        int8x16_t work_reg_a;
-        int8x16_t work_reg_b;
-
-        // Effect subtraction of zero-point = 128 by XOR of sign bit.
-        const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
-
-        // Work through one slice, by row, at a time.
-        int8* scratch_data_0 = scratch_block_data;
-
-        int copy_block_height = block_height;
-        if (leading_height_padding) {
-            copy_block_height -= 1;
-            memset(scratch_data_0, -input_offset_difference, workspace_height_stride);
-            scratch_data_0 += workspace_height_stride;
-            input_block_data += input_height_stride;
-        }
-        if (trailing_height_padding) {
-            copy_block_height -= 1;
-        }
-
-        for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-            const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-            input_data_0 = input_block_data;
-            int8x16_t input_data_a;
-            int8x16_t input_data_b;
-            int8x16_t input_data_c;
-            int8x16_t input_data_d;
-
-            // Traverse the width one point at a time, but the depth in (micro) blocks
-            // of size 8.
-            //
-            // The depth and width margins, which are filled with "zeros", may be
-            // larger than is strictly needed to calculate output. This is because the
-            // conv calculation is performed across complete micro blocks.
-            for (int j_width = 0; j_width < width_overall_micro_repeats; ++j_width) {
-                // Figure out division of work (available input vs zero-ed).
-                int adjusted_residual_width =
-                    j_width == (input_width_micro_repeats) ? residual_width : 4;
-
-                if (trailing_width_padding &&
-                        j_width == (width_overall_micro_repeats - 1)) {
-                    adjusted_residual_width -= 1;
-                }
-                int start_width = 0;
-                if (leading_width_padding && j_width == 0) {
-                    start_width = 1;
-                }
-                if (start_width == 0) {
-                    if (adjusted_residual_width == 4) {
-                        int8x16_t work_reg_a_sp;
-                        int8x16_t work_reg_b_sp;
-
-                        int i_depth = 0;
-
-                        if (depth_micro_repeats >= 2) {
-                            i_depth += 2;
-
-                            input_data_a = util_vld1q_x8(input_data_0);
-                            input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
-                            input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
-                            input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
-                            input_data_0 += 16;
-
-                            for (; i_depth < depth_micro_repeats - 1; i_depth += 2) {
-                                work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                                work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-                                vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                                if (quantization_type ==
-                                        QuantizationType::kNonPerChannelUint8) {
-                                    work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                    work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                                }
-
-                                work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
-                                work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
-                                vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
-
-                                input_data_a = util_vld1q_x8(input_data_0);
-                                input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                                vst1q_s8(scratch_data_0, work_reg_a);
-                                vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                                scratch_data_0 += depth_advance;
-
-                                if (quantization_type ==
-                                        QuantizationType::kNonPerChannelUint8) {
-                                    work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
-                                    work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
-                                }
-
-                                input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
-                                input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                                vst1q_s8(scratch_data_0, work_reg_a_sp);
-                                vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
-
-                                scratch_data_0 += depth_advance;
-                                input_data_0 += 16;
-                            }
-
-                            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-                            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                            }
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                            scratch_data_0 += depth_advance;
-
-                            work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
-                            work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
-                            vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
-                                work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
-                            }
-
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a_sp);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
-
-                            scratch_data_0 += depth_advance;
-                        }
-                        for (; i_depth < depth_micro_repeats; ++i_depth) {
-                            input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
-                            input_data_b = vld1q_lane_s8x8(input_data_0 + 1 * input_depth,
-                                                           input_data_b, 0);
-                            input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
-                                                           input_data_c, 0);
-                            input_data_d = vld1q_lane_s8x8(input_data_0 + 3 * input_depth,
-                                                           input_data_d, 0);
-                            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-
-                            input_data_0 += 8;
-
-                            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                            }
-
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                            scratch_data_0 += depth_advance;
-                        }
-                        scratch_data_0 += width_advance;
-                        input_data_0 += input_depth_skip;
-                    } else {
-                        TFLITE_DCHECK_LT(adjusted_residual_width, 4);
-                        for (int i_depth = 0; i_depth < depth_micro_repeats; ++i_depth) {
-                            input_data_a = vdupq_n_u8(-input_offset);
-                            input_data_b = vdupq_n_u8(-input_offset);
-                            input_data_c = vdupq_n_u8(-input_offset);
-                            input_data_d = vdupq_n_u8(-input_offset);
-                            if (adjusted_residual_width > 0) {
-                                input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
-                                if (adjusted_residual_width > 1) {
-                                    input_data_b = vld1q_lane_s8x8(input_data_0 + input_depth,
-                                                                   input_data_b, 0);
-                                    if (adjusted_residual_width == 3) {
-                                        input_data_c = vld1q_lane_s8x8(
-                                                           input_data_0 + 2 * input_depth, input_data_c, 0);
-                                    }
-                                }
-                            }
-                            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                            }
-                            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                            scratch_data_0 += depth_advance;
-                            input_data_0 += 8;
-                        }
-                        scratch_data_0 += width_advance;
-                        input_data_0 += input_depth_skip;
-                    }
-                } else {
-                    if (adjusted_residual_width == 4) {
-                        int8x16_t work_reg_a_sp;
-                        int8x16_t work_reg_b_sp;
-
-                        int i_depth = 0;
-
-                        if (depth_micro_repeats >= 2) {
-                            i_depth += 2;
-
-                            input_data_a = vdupq_n_u8(-input_offset);
-                            input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
-                            input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
-                            input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
-                            input_data_0 += 16;
-
-                            for (; i_depth < depth_micro_repeats - 1; i_depth += 2) {
-                                work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                                work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-                                vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                                if (quantization_type ==
-                                        QuantizationType::kNonPerChannelUint8) {
-                                    work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                    work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                                }
-
-                                work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
-                                work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
-                                vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
-
-                                input_data_a = vdupq_n_u8(-input_offset);
-                                input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                                vst1q_s8(scratch_data_0, work_reg_a);
-                                vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                                scratch_data_0 += depth_advance;
-
-                                if (quantization_type ==
-                                        QuantizationType::kNonPerChannelUint8) {
-                                    work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
-                                    work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
-                                }
-
-                                input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
-                                input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                                vst1q_s8(scratch_data_0, work_reg_a_sp);
-                                vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
-
-                                scratch_data_0 += depth_advance;
-                                input_data_0 += 16;
-                            }
-
-                            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-                            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                            }
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                            scratch_data_0 += depth_advance;
-
-                            work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
-                            work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
-                            vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
-                                work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
-                            }
-
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a_sp);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
-
-                            scratch_data_0 += depth_advance;
-                        }
-                        for (; i_depth < depth_micro_repeats; ++i_depth) {
-                            input_data_a = vdupq_n_u8(-input_offset);
-                            input_data_b = vld1q_lane_s8x8(input_data_0 + 1 * input_depth,
-                                                           input_data_b, 0);
-                            input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
-                                                           input_data_c, 0);
-                            input_data_d = vld1q_lane_s8x8(input_data_0 + 3 * input_depth,
-                                                           input_data_d, 0);
-                            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-
-                            input_data_0 += 8;
-
-                            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                            }
-
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                            scratch_data_0 += depth_advance;
-                        }
-                        scratch_data_0 += width_advance;
-                        input_data_0 += input_depth_skip;
-                    } else {
-                        TFLITE_DCHECK_LT(adjusted_residual_width, 4);
-
-                        for (int i_depth = 0; i_depth < depth_micro_repeats; ++i_depth) {
-                            input_data_a = vdupq_n_u8(-input_offset);
-                            input_data_b = vdupq_n_u8(-input_offset);
-                            input_data_c = vdupq_n_u8(-input_offset);
-                            input_data_d = vdupq_n_u8(-input_offset);
-                            // Skip loading first column.
-                            if (adjusted_residual_width > 1) {
-                                input_data_b = vld1q_lane_s8x8(input_data_0 + input_depth,
-                                                               input_data_b, 0);
-                                if (adjusted_residual_width == 3) {
-                                    input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
-                                                                   input_data_c, 0);
-                                }
-                            }
-                            work_reg_a = vzip1q_s8(input_data_a, input_data_b);
-                            work_reg_b = vzip1q_s8(input_data_c, input_data_d);
-
-                            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                                work_reg_a = veorq_s8(work_reg_a, sign_bit);
-                                work_reg_b = veorq_s8(work_reg_b, sign_bit);
-                            }
-                            vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
-
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
-                            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
-                            vst1q_s8(scratch_data_0, work_reg_a);
-                            vst1q_s8(scratch_data_0 + 16, work_reg_b);
-
-                            scratch_data_0 += depth_advance;
-                            input_data_0 += 8;
-                        }
-                        scratch_data_0 += width_advance;
-                        input_data_0 += input_depth_skip;
-                    }
-                }
+            if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+              work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
+              work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
             }
-            scratch_data_0 += height_advance;
-            input_block_data += input_height_stride;
+
+            input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
+            input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
+            optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+            optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+            vst1q_s8(scratch_data_0, work_reg_a_sp);
+            vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
+
+            scratch_data_0 += depth_advance;
+            input_data_0 += 16;
+          }
+
+          work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+          work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+          vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg_a = veorq_s8(work_reg_a, sign_bit);
+            work_reg_b = veorq_s8(work_reg_b, sign_bit);
+          }
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+          vst1q_s8(scratch_data_0, work_reg_a);
+          vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+          scratch_data_0 += depth_advance;
+
+          work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
+          work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
+          vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
+            work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
+          }
+
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+          vst1q_s8(scratch_data_0, work_reg_a_sp);
+          vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
+
+          scratch_data_0 += depth_advance;
         }
+        for (; i_depth < depth_micro_repeats; ++i_depth) {
+          input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
+          input_data_b =
+              vld1q_lane_s8x8(input_data_0 + 1 * input_depth, input_data_b, 0);
+          input_data_c =
+              vld1q_lane_s8x8(input_data_0 + 2 * input_depth, input_data_c, 0);
+          input_data_d =
+              vld1q_lane_s8x8(input_data_0 + 3 * input_depth, input_data_d, 0);
+          work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+          work_reg_b = vzip1q_s8(input_data_c, input_data_d);
 
-        if (trailing_height_padding) {
-            memset(scratch_data_0, -input_offset_difference, workspace_height_stride);
-            scratch_data_0 += workspace_height_stride;
+          input_data_0 += 8;
+
+          vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg_a = veorq_s8(work_reg_a, sign_bit);
+            work_reg_b = veorq_s8(work_reg_b, sign_bit);
+          }
+
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+          vst1q_s8(scratch_data_0, work_reg_a);
+          vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+          scratch_data_0 += depth_advance;
         }
+        scratch_data_0 += width_advance;
+        input_data_0 += input_depth_skip;
+      }
+      if (width_overall_micro_repeats > input_width_micro_repeats) {
+        TFLITE_DCHECK_EQ(width_overall_micro_repeats,
+                         input_width_micro_repeats + 1);
+        TFLITE_DCHECK_GT(residual_width, 0);
+        TFLITE_DCHECK_LT(residual_width, 4);
+        for (int i_depth = 0; i_depth < depth_micro_repeats; ++i_depth) {
+          input_data_c = vdupq_n_u8(kSignBit);
+          input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
+          input_data_d = vdupq_n_u8(kSignBit);
+          if (residual_width > 1) {
+            input_data_b =
+                vld1q_lane_s8x8(input_data_0 + input_depth, input_data_b, 0);
+            if (residual_width == 3) {
+              input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
+                                             input_data_c, 0);
+            }
+          }
+          work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+          work_reg_b = vzip1q_s8(input_data_c, input_data_d);
 
-        TFLITE_DCHECK_EQ(
-            scratch_data_0,
-            scratch_block_data + block_height * workspace_height_stride);
-    }
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg_a = veorq_s8(work_reg_a, sign_bit);
+            work_reg_b = veorq_s8(work_reg_b, sign_bit);
+          }
+          vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
 
-    static void __attribute__((noinline))
-    Run(int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        PreloadInputBlock(input_block_data, function_params);
-        PackMacroBlockNeon(height_block_number, width_block_number,
-                           input_block_data, scratch_block_data, function_params);
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+          vst1q_s8(scratch_data_0, work_reg_a);
+          vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+          scratch_data_0 += depth_advance;
+          input_data_0 += 8;
+        }
+        scratch_data_0 += width_advance;
+        input_data_0 += input_depth_skip;
+      }
+
+      scratch_data_0 += height_advance;
+      input_block_data += input_height_stride;
     }
+    TFLITE_DCHECK_EQ(
+        scratch_data_0,
+        scratch_block_data + block_height * workspace_height_stride);
+  }
+
+  static void __attribute__((noinline))
+  Run(int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    PreloadInputBlock(input_block_data, function_params);
+    PackMacroBlockNeon(input_block_data, scratch_block_data, function_params);
+  }
 };
 
 template <QuantizationType quantization_type>
 struct PackMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           quantization_type,
-           DepthwiseConvDepthMultiplication::kUnitInputDepth,
-/*max_padding=*/1> {
-    static inline void PackMacroBlockNeon(
-        int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        const int workspace_height_stride =
-            function_params->workspace_height_stride;
-        const int width_overall_micro_repeats =
-            function_params->input_width_overall_micro_repeats;
-        const int input_width_micro_repeats =
-            function_params->input_width_micro_repeats;
-        const int block_height = function_params->inbound_block_height;
-        const int residual_width = function_params->residual_width;
-        const int input_height_stride = function_params->input_height_stride;
+                      quantization_type,
+                      DepthwiseConvDepthMultiplication::kNoMultiplication,
+                      /*max_padding=*/1> {
+  static inline void PackMacroBlockNeon(
+      int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    constexpr uint8 kSignBit =
+        QuantizationTypeImpl<quantization_type>::kUint8SignBit;
 
-        const int padding_left = function_params->padding_left;
-        const int padding_right = function_params->padding_right;
-        const int padding_top = function_params->padding_top;
-        const int padding_bottom = function_params->padding_bottom;
+    const int workspace_height_stride =
+        function_params->workspace_height_stride;
+    const int width_overall_micro_repeats =
+        function_params->input_width_overall_micro_repeats;
+    const int input_width_micro_repeats =
+        function_params->input_width_micro_repeats;
+    const int depth_micro_repeats = function_params->depth_micro_repeats;
+    const int block_height = function_params->inbound_block_height;
+    const int residual_width = function_params->residual_width;
+    const int input_height_stride = function_params->input_height_stride;
+    const int input_depth = function_params->input_depth;
 
-        constexpr int kSymmetricZeroPoint =
-            QuantizationTypeImpl<quantization_type>::kIntSymmetricZeroPoint;
+    const int padding_left = function_params->padding_left;
+    const int padding_right = function_params->padding_right;
+    const int padding_top = function_params->padding_top;
+    const int padding_bottom = function_params->padding_bottom;
 
-        TFLITE_DCHECK_GE(workspace_height_stride, 4 * width_overall_micro_repeats);
+    TFLITE_DCHECK_GT(depth_micro_repeats, 0);
+    constexpr int kSymmetricZeroPoint =
+        QuantizationTypeImpl<quantization_type>::kIntSymmetricZeroPoint;
 
-        const bool leading_width_padding =
-            padding_left > 0 && width_block_number == 0;
-        const bool trailing_width_padding =
-            padding_right > 0 &&
-            width_block_number == (function_params->width_macro_count - 1);
-        const bool leading_height_padding =
-            padding_top > 0 && height_block_number < 0;
-        const bool trailing_height_padding =
-            padding_bottom > 0 &&
-            height_block_number == (function_params->height_macro_count - 1);
+    const int micro_block_size = 4 * 8;
+    const int depth_advance = width_overall_micro_repeats * micro_block_size;
+    const int width_advance =
+        micro_block_size *
+        (1 - depth_micro_repeats * width_overall_micro_repeats);
+    const int height_advance = workspace_height_stride -
+                               width_overall_micro_repeats * micro_block_size;
+    const int input_depth_skip = 4 * input_depth - 8 * depth_micro_repeats;
 
-        const int32 input_offset = function_params->input_offset;
-        const int32 input_offset_difference = input_offset + kSymmetricZeroPoint;
+    const bool leading_width_padding =
+        padding_left > 0 && width_block_number == 0;
+    const bool trailing_width_padding =
+        padding_right > 0 &&
+        width_block_number == (function_params->width_macro_count - 1);
+    const bool leading_height_padding =
+        padding_top > 0 && height_block_number < 0;
+    const bool trailing_height_padding =
+        padding_bottom > 0 &&
+        height_block_number == (function_params->height_macro_count - 1);
 
-        // Work through one slice, by row, at a time.
-        int8* scratch_data_base = scratch_block_data;
+    const int32 input_offset = function_params->input_offset;
+    const int32 input_offset_difference = input_offset + kSymmetricZeroPoint;
 
-        int copy_block_height = block_height;
-        if (leading_height_padding) {
-            copy_block_height -= 1;
-            memset(scratch_data_base, -input_offset_difference,
-                   workspace_height_stride + kWorkspaceExtension);
-            scratch_data_base += workspace_height_stride;
-            input_block_data += input_height_stride;
-        }
-        if (trailing_height_padding) {
-            copy_block_height -= 1;
-        }
+    // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
+    // code. Note the blocks of 4x4 are still interleaved down the depth.
+    int8x16_t work_reg_a;
+    int8x16_t work_reg_b;
 
+    // Effect subtraction of zero-point = 128 by XOR of sign bit.
+    const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
+
+    // Work through one slice, by row, at a time.
+    int8* scratch_data_0 = scratch_block_data;
+
+    int copy_block_height = block_height;
+    if (leading_height_padding) {
+      copy_block_height -= 1;
+      memset(scratch_data_0, -input_offset_difference, workspace_height_stride);
+      scratch_data_0 += workspace_height_stride;
+      input_block_data += input_height_stride;
+    }
+    if (trailing_height_padding) {
+      copy_block_height -= 1;
+    }
+
+    for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_data_0 = input_block_data;
+      int8x16_t input_data_a;
+      int8x16_t input_data_b;
+      int8x16_t input_data_c;
+      int8x16_t input_data_d;
+
+      // Traverse the width one point at a time, but the depth in (micro) blocks
+      // of size 8.
+      //
+      // The depth and width margins, which are filled with "zeros", may be
+      // larger than is strictly needed to calculate output. This is because the
+      // conv calculation is performed across complete micro blocks.
+      for (int j_width = 0; j_width < width_overall_micro_repeats; ++j_width) {
+        // Figure out division of work (available input vs zero-ed).
         int adjusted_residual_width =
-            input_width_micro_repeats < width_overall_micro_repeats ? residual_width
-            : 4;
+            j_width == (input_width_micro_repeats) ? residual_width : 4;
 
-        if (trailing_width_padding) {
-            adjusted_residual_width -= 1;
+        if (trailing_width_padding &&
+            j_width == (width_overall_micro_repeats - 1)) {
+          adjusted_residual_width -= 1;
         }
         int start_width = 0;
-        if (leading_width_padding) {
-            start_width = 1;
-            input_block_data += 1;
+        if (leading_width_padding && j_width == 0) {
+          start_width = 1;
         }
+        if (start_width == 0) {
+          if (adjusted_residual_width == 4) {
+            int8x16_t work_reg_a_sp;
+            int8x16_t work_reg_b_sp;
 
-        const int copy_size = (width_overall_micro_repeats - 1) * 4 +
-                              adjusted_residual_width - start_width;
-        // Adjusted so that later conditionals are simplified.
-        const int copy_size_adjusted =
-            trailing_width_padding ? copy_size + 1 : copy_size;
+            int i_depth = 0;
 
-        TFLITE_DCHECK_LE(
-            copy_size,
-            input_height_stride - width_block_number * input_width_micro_repeats);
-        // We may drop up to stride-1 of trailing input.
-        TFLITE_DCHECK_GE(copy_size, input_height_stride - 1);
+            if (depth_micro_repeats >= 2) {
+              i_depth += 2;
 
-        int scratch_data_offset = 0;
-        int input_block_offset = 0;
+              input_data_a = util_vld1q_x8(input_data_0);
+              input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
+              input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
+              input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
+              input_data_0 += 16;
 
-        constexpr uint8 kSignBit =
-            QuantizationTypeImpl<quantization_type>::kUint8SignBit;
-
-        // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
-        // code. Note the blocks of 4x4 are still interleaved down the depth.
-        int8x16_t work_reg;
-        int8x8_t half_work_reg;
-        int8x8_t padding_mask;
-
-        // Effect subtraction of zero-point = 128 by XOR of sign bit.
-        const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
-        const uint8x16_t padding_reg = vdupq_n_u8(-input_offset);
-        padding_mask = vdup_n_s8(-1);
-        half_work_reg = vdup_n_s8(0);
-
-        if (copy_size >= 16) {
-            const int copy_remaining = (copy_size + start_width) & 0x7;
-            padding_mask = vreinterpret_s8_s64(vshl_s64(
-                                                   vreinterpret_s64_s8(padding_mask), vdup_n_s64(8 * copy_remaining)));
-
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                // Work through one slice, by row, at a time.
-                int8* scratch_data = scratch_data_base + scratch_data_offset;
-
-                int copy_done = 0;
-
-                // The surrounding condition ensures that we always need at least one
-                // iteration of the main copy loop. In the case of leading width
-                // padding, we unroll this specially.
-                if (leading_width_padding) {
-                    work_reg = util_vld1q_x8(input_block_data + input_block_offset);
-                    work_reg = vextq_s8(padding_reg, work_reg, 15);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg = veorq_s8(work_reg, sign_bit);
-                    }
-                    optimized_ops_prefetch_write_l1_keep(scratch_data);
-                    vst1q_s8(scratch_data, work_reg);
-                    copy_done += 15;
+              for (; i_depth < depth_micro_repeats - 1; i_depth += 2) {
+                work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+                work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+                vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+                if (quantization_type ==
+                    QuantizationType::kNonPerChannelUint8) {
+                  work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                  work_reg_b = veorq_s8(work_reg_b, sign_bit);
                 }
 
-                // Main copy loop.
-                for (; (copy_done + 16) <= copy_size; copy_done += 16) {
-                    work_reg =
-                        util_vld1q_x8(input_block_data + input_block_offset + copy_done);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg = veorq_s8(work_reg, sign_bit);
-                    }
-                    TFLITE_DCHECK_EQ((start_width + copy_done) % 16, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                         copy_done);
-                    vst1q_s8(scratch_data + start_width + copy_done, work_reg);
+                work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
+                work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
+                vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
+
+                input_data_a = util_vld1q_x8(input_data_0);
+                input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+                vst1q_s8(scratch_data_0, work_reg_a);
+                vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+                scratch_data_0 += depth_advance;
+
+                if (quantization_type ==
+                    QuantizationType::kNonPerChannelUint8) {
+                  work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
+                  work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
                 }
 
-                if (copy_done + 8 <= copy_size) {
-                    half_work_reg =
-                        util_vld1_x8(input_block_data + input_block_offset + copy_done);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ((start_width + copy_done) % 8, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                         copy_done);
-                    vst1_s8(scratch_data + start_width + copy_done, half_work_reg);
-                    copy_done += 8;
-                }
+                input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
+                input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+                vst1q_s8(scratch_data_0, work_reg_a_sp);
+                vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
 
-                TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
-                // Total amount
-                // = copy_size - copy_done + 4 - adjusted_residual_width
-                // = width_overall_micro_repeats * 4 - start_width - copy_done.
-                // Undone micro blocks
-                // = width_overall_micro_repeats - (start_width + copy_done) / 4.
+                scratch_data_0 += depth_advance;
+                input_data_0 += 16;
+              }
 
-                // Conditional is (copy_remaining > 0 || trailing_width_padding).
-                if (copy_done < copy_size_adjusted) {
-                    // Employ overlapping-load strategy in order to load full register,
-                    // but use only part.
-                    // This has the advantage of resulting in zeros after shifting.
-                    half_work_reg = util_vld1_x8(input_block_data + input_block_offset +
-                                                 copy_size - 8);
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_s64(vreinterpret_s64_s8(half_work_reg),
-                                                 vdup_n_s64(-8 * (8 - copy_remaining))));
-                    half_work_reg = vbsl_s8(vreinterpret_u8_s8(padding_mask),
-                                            vget_low_s8(padding_reg), half_work_reg);
+              work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+              work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+              vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                work_reg_b = veorq_s8(work_reg_b, sign_bit);
+              }
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b);
 
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ((start_width + copy_done) % 8, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                         copy_done);
-                    vst1_s8(scratch_data + start_width + copy_done, half_work_reg);
-                }
+              scratch_data_0 += depth_advance;
 
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                     copy_done);
-                optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                     copy_done + 8);
-                vst1_s8(scratch_data + start_width + copy_done, half_work_reg);
-                vst1_s8(scratch_data + start_width + copy_done + 8, half_work_reg);
+              work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
+              work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
+              vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
+                work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
+              }
 
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a_sp);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
+
+              scratch_data_0 += depth_advance;
             }
-        } else if (copy_size >= 4) {
-            const int copy_remaining = (copy_size + start_width) & 0x3;
-            padding_mask = vreinterpret_s8_s64(vshl_s64(
-                                                   vreinterpret_s64_s8(padding_mask), vdup_n_s64(8 * copy_remaining)));
+            for (; i_depth < depth_micro_repeats; ++i_depth) {
+              input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
+              input_data_b = vld1q_lane_s8x8(input_data_0 + 1 * input_depth,
+                                             input_data_b, 0);
+              input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
+                                             input_data_c, 0);
+              input_data_d = vld1q_lane_s8x8(input_data_0 + 3 * input_depth,
+                                             input_data_d, 0);
+              work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+              work_reg_b = vzip1q_s8(input_data_c, input_data_d);
 
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                // Work through one slice, by row, at a time.
-                int8* scratch_data = scratch_data_base + scratch_data_offset;
+              input_data_0 += 8;
 
-                int copy_done = 0;
+              vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                work_reg_b = veorq_s8(work_reg_b, sign_bit);
+              }
 
-                // The surrounding condition ensures that we always need at least one
-                // iteration of the main copy loop. In the case of leading width
-                // padding, we unroll this specially.
-                if (leading_width_padding) {
-                    half_work_reg = vld1_lane_8x4(input_block_data + input_block_offset,
-                                                  half_work_reg, 0);
-                    half_work_reg = vext_s8(vget_low_s8(padding_reg), half_work_reg, 7);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    optimized_ops_prefetch_write_l1_keep(scratch_data);
-                    vst1_lane_8x4(scratch_data, half_work_reg, 0);
-                    copy_done += 3;
-                }
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b);
 
-                // Main copy loop.
-                for (; (copy_done + 4) <= copy_size; copy_done += 4) {
-                    half_work_reg =
-                        vld1_lane_8x4(input_block_data + input_block_offset + copy_done,
-                                      half_work_reg, 0);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ((start_width + copy_done) % 4, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                         copy_done);
-                    vst1_lane_8x4(scratch_data + start_width + copy_done, half_work_reg,
-                                  0);
-                }
-
-                TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
-                // Total amount
-                // = copy_size - copy_done + 4 - adjusted_residual_width
-                // = width_overall_micro_repeats * 4 - start_width - copy_done.
-                // Undone micro blocks
-                // = width_overall_micro_repeats - (start_width + copy_done) / 4.
-
-                // Conditional is (copy_remaining > 0 || trailing_width_padding).
-                if (copy_done < copy_size_adjusted) {
-                    TFLITE_DCHECK_LT(copy_remaining, 4);
-                    // Employ overlapping-load strategy in order to load full register,
-                    // but use only part.
-                    // This has the advantage of resulting in zeros after shifting.
-                    half_work_reg = vld1_lane_8x4(
-                                        input_block_data + input_block_offset + copy_size - 4,
-                                        half_work_reg, 0);
-
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_s64(vreinterpret_s64_s8(half_work_reg),
-                                                 vdup_n_s64(-8 * (4 - copy_remaining))));
-                    half_work_reg = vbsl_s8(vreinterpret_u8_s8(padding_mask),
-                                            vget_low_s8(padding_reg), half_work_reg);
-
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ((start_width + copy_done) % 4, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                         copy_done);
-                    vst1_lane_8x4(scratch_data + start_width + copy_done, half_work_reg,
-                                  0);
-                    copy_done += 4;
-                }
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                     copy_done);
-                optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
-                                                     copy_done + 12);
-                vst1_lane_8x4(scratch_data + start_width + copy_done, half_work_reg, 0);
-                vst1_lane_8x4(scratch_data + start_width + copy_done + 4, half_work_reg,
-                              0);
-                vst1_lane_8x4(scratch_data + start_width + copy_done + 8, half_work_reg,
-                              0);
-                vst1_lane_8x4(scratch_data + start_width + copy_done + 12,
-                              half_work_reg, 0);
-
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
+              scratch_data_0 += depth_advance;
             }
-        } else if (width_overall_micro_repeats == 2) {
-            // Special case of 1 + 3 + 1, padding + copy + padding.
-            // This is rarely executed in practice.
-            TFLITE_DCHECK_EQ(copy_size, 3);
-            TFLITE_DCHECK_EQ(start_width, 1);
-            TFLITE_DCHECK(leading_width_padding);
-            TFLITE_DCHECK(trailing_width_padding);
-
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                half_work_reg = vdup_n_u8(-input_offset);
-                half_work_reg = vld1_lane_s8(reinterpret_cast<const int8*>(
-                                                 input_block_data + input_block_offset),
-                                             half_work_reg, 1);
-                half_work_reg =
-                    vld1_lane_s8(reinterpret_cast<const int8*>(input_block_data +
-                                 input_block_offset + 1),
-                                 half_work_reg, 2);
-                half_work_reg =
-                    vld1_lane_s8(reinterpret_cast<const int8*>(input_block_data +
-                                 input_block_offset + 2),
-                                 half_work_reg, 3);
-
-                if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                    half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+            scratch_data_0 += width_advance;
+            input_data_0 += input_depth_skip;
+          } else {
+            TFLITE_DCHECK_LT(adjusted_residual_width, 4);
+            for (int i_depth = 0; i_depth < depth_micro_repeats; ++i_depth) {
+              input_data_a = vdupq_n_u8(-input_offset);
+              input_data_b = vdupq_n_u8(-input_offset);
+              input_data_c = vdupq_n_u8(-input_offset);
+              input_data_d = vdupq_n_u8(-input_offset);
+              if (adjusted_residual_width > 0) {
+                input_data_a = vld1q_lane_s8x8(input_data_0, input_data_a, 0);
+                if (adjusted_residual_width > 1) {
+                  input_data_b = vld1q_lane_s8x8(input_data_0 + input_depth,
+                                                 input_data_b, 0);
+                  if (adjusted_residual_width == 3) {
+                    input_data_c = vld1q_lane_s8x8(
+                        input_data_0 + 2 * input_depth, input_data_c, 0);
+                  }
                 }
-                TFLITE_DCHECK_EQ(scratch_data_offset % 8, 0);
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset);
-                vst1_s8(scratch_data_base + scratch_data_offset, half_work_reg);
+              }
+              work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+              work_reg_b = vzip1q_s8(input_data_c, input_data_d);
 
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset + 4);
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset + 16);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 4,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 8,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 12,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 16,
-                              half_work_reg, 0);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                work_reg_b = veorq_s8(work_reg_b, sign_bit);
+              }
+              vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
 
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+              scratch_data_0 += depth_advance;
+              input_data_0 += 8;
             }
+            scratch_data_0 += width_advance;
+            input_data_0 += input_depth_skip;
+          }
         } else {
-            TFLITE_DCHECK_EQ(width_overall_micro_repeats, 1);
-            const int copy_remaining = (copy_size + start_width) & 0x3;
-            padding_mask = vreinterpret_s8_s64(vshl_s64(
-                                                   vreinterpret_s64_s8(padding_mask), vdup_n_s64(8 * copy_remaining)));
-            if (leading_width_padding) {
-                padding_mask = vset_lane_u8(255, padding_mask, 0);
+          if (adjusted_residual_width == 4) {
+            int8x16_t work_reg_a_sp;
+            int8x16_t work_reg_b_sp;
+
+            int i_depth = 0;
+
+            if (depth_micro_repeats >= 2) {
+              i_depth += 2;
+
+              input_data_a = vdupq_n_u8(-input_offset);
+              input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
+              input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
+              input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
+              input_data_0 += 16;
+
+              for (; i_depth < depth_micro_repeats - 1; i_depth += 2) {
+                work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+                work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+                vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+                if (quantization_type ==
+                    QuantizationType::kNonPerChannelUint8) {
+                  work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                  work_reg_b = veorq_s8(work_reg_b, sign_bit);
+                }
+
+                work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
+                work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
+                vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
+
+                input_data_a = vdupq_n_u8(-input_offset);
+                input_data_b = util_vld1q_x8(input_data_0 + 1 * input_depth);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+                vst1q_s8(scratch_data_0, work_reg_a);
+                vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+                scratch_data_0 += depth_advance;
+
+                if (quantization_type ==
+                    QuantizationType::kNonPerChannelUint8) {
+                  work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
+                  work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
+                }
+
+                input_data_c = util_vld1q_x8(input_data_0 + 2 * input_depth);
+                input_data_d = util_vld1q_x8(input_data_0 + 3 * input_depth);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+                optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+                vst1q_s8(scratch_data_0, work_reg_a_sp);
+                vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
+
+                scratch_data_0 += depth_advance;
+                input_data_0 += 16;
+              }
+
+              work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+              work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+              vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                work_reg_b = veorq_s8(work_reg_b, sign_bit);
+              }
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+              scratch_data_0 += depth_advance;
+
+              work_reg_a_sp = vzip2q_s8(input_data_a, input_data_b);
+              work_reg_b_sp = vzip2q_s8(input_data_c, input_data_d);
+              vzipq_s8x2_in_place(&work_reg_a_sp, &work_reg_b_sp);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a_sp = veorq_s8(work_reg_a_sp, sign_bit);
+                work_reg_b_sp = veorq_s8(work_reg_b_sp, sign_bit);
+              }
+
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a_sp);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b_sp);
+
+              scratch_data_0 += depth_advance;
             }
+            for (; i_depth < depth_micro_repeats; ++i_depth) {
+              input_data_a = vdupq_n_u8(-input_offset);
+              input_data_b = vld1q_lane_s8x8(input_data_0 + 1 * input_depth,
+                                             input_data_b, 0);
+              input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
+                                             input_data_c, 0);
+              input_data_d = vld1q_lane_s8x8(input_data_0 + 3 * input_depth,
+                                             input_data_d, 0);
+              work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+              work_reg_b = vzip1q_s8(input_data_c, input_data_d);
 
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                for (int i = 0; i < copy_size; ++i) {
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_n_s64(vreinterpret_s64_s8(half_work_reg), 8));
-                    half_work_reg = vld1_lane_s8(
-                                        reinterpret_cast<const int8*>(
-                                            input_block_data + input_block_offset + copy_size - 1 - i),
-                                        half_work_reg, 0);
-                }
-                if (leading_width_padding) {
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_n_s64(vreinterpret_s64_s8(half_work_reg), 8));
-                }
-                half_work_reg = vbsl_s8(vreinterpret_u8_s8(padding_mask),
-                                        vget_low_s8(padding_reg), half_work_reg);
+              input_data_0 += 8;
 
-                if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                    half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                }
-                TFLITE_DCHECK_EQ(scratch_data_offset % 4, 0);
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset, half_work_reg,
-                              0);
+              vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                work_reg_b = veorq_s8(work_reg_b, sign_bit);
+              }
 
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset + 4);
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset + 16);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 4,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 8,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 12,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 16,
-                              half_work_reg, 0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b);
 
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
+              scratch_data_0 += depth_advance;
             }
+            scratch_data_0 += width_advance;
+            input_data_0 += input_depth_skip;
+          } else {
+            TFLITE_DCHECK_LT(adjusted_residual_width, 4);
+
+            for (int i_depth = 0; i_depth < depth_micro_repeats; ++i_depth) {
+              input_data_a = vdupq_n_u8(-input_offset);
+              input_data_b = vdupq_n_u8(-input_offset);
+              input_data_c = vdupq_n_u8(-input_offset);
+              input_data_d = vdupq_n_u8(-input_offset);
+              // Skip loading first column.
+              if (adjusted_residual_width > 1) {
+                input_data_b = vld1q_lane_s8x8(input_data_0 + input_depth,
+                                               input_data_b, 0);
+                if (adjusted_residual_width == 3) {
+                  input_data_c = vld1q_lane_s8x8(input_data_0 + 2 * input_depth,
+                                                 input_data_c, 0);
+                }
+              }
+              work_reg_a = vzip1q_s8(input_data_a, input_data_b);
+              work_reg_b = vzip1q_s8(input_data_c, input_data_d);
+
+              if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+                work_reg_a = veorq_s8(work_reg_a, sign_bit);
+                work_reg_b = veorq_s8(work_reg_b, sign_bit);
+              }
+              vzipq_s8x2_in_place(&work_reg_a, &work_reg_b);
+
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0);
+              optimized_ops_prefetch_write_l1_keep(scratch_data_0 + 16);
+              vst1q_s8(scratch_data_0, work_reg_a);
+              vst1q_s8(scratch_data_0 + 16, work_reg_b);
+
+              scratch_data_0 += depth_advance;
+              input_data_0 += 8;
+            }
+            scratch_data_0 += width_advance;
+            input_data_0 += input_depth_skip;
+          }
         }
-
-        scratch_data_base += copy_block_height * workspace_height_stride;
-
-        if (trailing_height_padding) {
-            memset(scratch_data_base, -input_offset_difference,
-                   workspace_height_stride + kWorkspaceExtension);
-            scratch_data_base += workspace_height_stride;
-        }
-
-        TFLITE_DCHECK_EQ(
-            scratch_data_base,
-            scratch_block_data + block_height * workspace_height_stride);
+      }
+      scratch_data_0 += height_advance;
+      input_block_data += input_height_stride;
     }
 
-    static void __attribute__((noinline))
-    Run(int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        PreloadInputBlock(input_block_data, function_params);
-        PackMacroBlockNeon(height_block_number, width_block_number,
-                           input_block_data, scratch_block_data, function_params);
+    if (trailing_height_padding) {
+      memset(scratch_data_0, -input_offset_difference, workspace_height_stride);
+      scratch_data_0 += workspace_height_stride;
     }
+
+    TFLITE_DCHECK_EQ(
+        scratch_data_0,
+        scratch_block_data + block_height * workspace_height_stride);
+  }
+
+  static void __attribute__((noinline))
+  Run(int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    PreloadInputBlock(input_block_data, function_params);
+    PackMacroBlockNeon(height_block_number, width_block_number,
+                       input_block_data, scratch_block_data, function_params);
+  }
 };
 
 template <QuantizationType quantization_type>
 struct PackMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           quantization_type,
-           DepthwiseConvDepthMultiplication::kUnitInputDepth,
-/*max_padding=*/0> {
-    static inline void PackMacroBlockNeon(
-        int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        const int workspace_height_stride =
-            function_params->workspace_height_stride;
-        const int width_overall_micro_repeats =
-            function_params->input_width_overall_micro_repeats;
-        const int input_width_micro_repeats =
-            function_params->input_width_micro_repeats;
-        const int block_height = function_params->inbound_block_height;
-        const int residual_width = function_params->residual_width;
-        const int input_height_stride = function_params->input_height_stride;
+                      quantization_type,
+                      DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                      /*max_padding=*/1> {
+  static inline void PackMacroBlockNeon(
+      int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    const int workspace_height_stride =
+        function_params->workspace_height_stride;
+    const int width_overall_micro_repeats =
+        function_params->input_width_overall_micro_repeats;
+    const int input_width_micro_repeats =
+        function_params->input_width_micro_repeats;
+    const int block_height = function_params->inbound_block_height;
+    const int residual_width = function_params->residual_width;
+    const int input_height_stride = function_params->input_height_stride;
 
-        TFLITE_DCHECK_EQ(function_params->padding_left, 0);
-        TFLITE_DCHECK_EQ(function_params->padding_right, 0);
-        TFLITE_DCHECK_EQ(function_params->padding_top, 0);
-        TFLITE_DCHECK_EQ(function_params->padding_bottom, 0);
+    const int padding_left = function_params->padding_left;
+    const int padding_right = function_params->padding_right;
+    const int padding_top = function_params->padding_top;
+    const int padding_bottom = function_params->padding_bottom;
 
-        TFLITE_DCHECK_GE(workspace_height_stride, 4 * width_overall_micro_repeats);
+    constexpr int kSymmetricZeroPoint =
+        QuantizationTypeImpl<quantization_type>::kIntSymmetricZeroPoint;
 
+    TFLITE_DCHECK_GE(workspace_height_stride, 4 * width_overall_micro_repeats);
+
+    const bool leading_width_padding =
+        padding_left > 0 && width_block_number == 0;
+    const bool trailing_width_padding =
+        padding_right > 0 &&
+        width_block_number == (function_params->width_macro_count - 1);
+    const bool leading_height_padding =
+        padding_top > 0 && height_block_number < 0;
+    const bool trailing_height_padding =
+        padding_bottom > 0 &&
+        height_block_number == (function_params->height_macro_count - 1);
+
+    const int32 input_offset = function_params->input_offset;
+    const int32 input_offset_difference = input_offset + kSymmetricZeroPoint;
+
+    // Work through one slice, by row, at a time.
+    int8* scratch_data_base = scratch_block_data;
+
+    int copy_block_height = block_height;
+    if (leading_height_padding) {
+      copy_block_height -= 1;
+      memset(scratch_data_base, -input_offset_difference,
+             workspace_height_stride + kWorkspaceExtension);
+      scratch_data_base += workspace_height_stride;
+      input_block_data += input_height_stride;
+    }
+    if (trailing_height_padding) {
+      copy_block_height -= 1;
+    }
+
+    int adjusted_residual_width =
+        input_width_micro_repeats < width_overall_micro_repeats ? residual_width
+                                                                : 4;
+
+    if (trailing_width_padding) {
+      adjusted_residual_width -= 1;
+    }
+    int start_width = 0;
+    if (leading_width_padding) {
+      start_width = 1;
+      input_block_data += 1;
+    }
+
+    const int copy_size = (width_overall_micro_repeats - 1) * 4 +
+                          adjusted_residual_width - start_width;
+    // Adjusted so that later conditionals are simplified.
+    const int copy_size_adjusted =
+        trailing_width_padding ? copy_size + 1 : copy_size;
+
+    TFLITE_DCHECK_LE(
+        copy_size,
+        input_height_stride - width_block_number * input_width_micro_repeats);
+    // We may drop up to stride-1 of trailing input.
+    TFLITE_DCHECK_GE(copy_size, input_height_stride - 1);
+
+    int scratch_data_offset = 0;
+    int input_block_offset = 0;
+
+    constexpr uint8 kSignBit =
+        QuantizationTypeImpl<quantization_type>::kUint8SignBit;
+
+    // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
+    // code. Note the blocks of 4x4 are still interleaved down the depth.
+    int8x16_t work_reg;
+    int8x8_t half_work_reg;
+    int8x8_t padding_mask;
+
+    // Effect subtraction of zero-point = 128 by XOR of sign bit.
+    const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
+    const uint8x16_t padding_reg = vdupq_n_u8(-input_offset);
+    padding_mask = vdup_n_s8(-1);
+    half_work_reg = vdup_n_s8(0);
+
+    if (copy_size >= 16) {
+      const int copy_remaining = (copy_size + start_width) & 0x7;
+      padding_mask = vreinterpret_s8_s64(vshl_s64(
+          vreinterpret_s64_s8(padding_mask), vdup_n_s64(8 * copy_remaining)));
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
         // Work through one slice, by row, at a time.
-        int8* scratch_data_base = scratch_block_data;
+        int8* scratch_data = scratch_data_base + scratch_data_offset;
 
-        const int copy_block_height = block_height;
+        int copy_done = 0;
 
-        int adjusted_residual_width =
-            input_width_micro_repeats < width_overall_micro_repeats ? residual_width
-            : 4;
-
-        const int copy_size =
-            (width_overall_micro_repeats - 1) * 4 + adjusted_residual_width;
-
-        TFLITE_DCHECK_LE(
-            copy_size,
-            input_height_stride - width_block_number * input_width_micro_repeats);
-        // We may drop up to stride-1 of trailing input.
-        TFLITE_DCHECK_GE(copy_size, input_height_stride - 1);
-
-        int scratch_data_offset = 0;
-        int input_block_offset = 0;
-
-        constexpr uint8 kSignBit =
-            QuantizationTypeImpl<quantization_type>::kUint8SignBit;
-
-        // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
-        // code. Note the blocks of 4x4 are still interleaved down the depth.
-        int8x16_t work_reg;
-        int8x8_t half_work_reg;
-
-        // Effect subtraction of zero-point = 128 by XOR of sign bit.
-        const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
-        half_work_reg = vdup_n_s8(0);
-
-        if (copy_size >= 16) {
-            const int copy_remaining = copy_size & 0x7;
-
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                // Work through one slice, by row, at a time.
-                int8* scratch_data = scratch_data_base + scratch_data_offset;
-
-                int copy_done = 0;
-
-                // Main copy loop.
-                for (; (copy_done + 16) <= copy_size; copy_done += 16) {
-                    work_reg =
-                        util_vld1q_x8(input_block_data + input_block_offset + copy_done);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        work_reg = veorq_s8(work_reg, sign_bit);
-                    }
-                    TFLITE_DCHECK_EQ(copy_done % 16, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                    vst1q_s8(scratch_data + copy_done, work_reg);
-                }
-
-                if (copy_done + 8 <= copy_size) {
-                    half_work_reg =
-                        util_vld1_x8(input_block_data + input_block_offset + copy_done);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ(copy_done % 8, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                    vst1_s8(scratch_data + copy_done, half_work_reg);
-                    copy_done += 8;
-                }
-
-                TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
-                // Total amount
-                // = copy_size - copy_done + 4 - adjusted_residual_width
-                // = width_overall_micro_repeats * 4 - start_width - copy_done.
-                // Undone micro blocks
-                // = width_overall_micro_repeats - (start_width + copy_done) / 4.
-
-                // Conditional is (copy_remaining > 0 || trailing_width_padding).
-                if (copy_done < copy_size) {
-                    // Employ overlapping-load strategy in order to load full register,
-                    // but use only part.
-                    // This has the advantage of resulting in zeros after shifting.
-                    half_work_reg = util_vld1_x8(input_block_data + input_block_offset +
-                                                 copy_size - 8);
-
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_s64(vreinterpret_s64_s8(half_work_reg),
-                                                 vdup_n_s64(-8 * (8 - copy_remaining))));
-
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ(copy_done % 8, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                    vst1_s8(scratch_data + copy_done, half_work_reg);
-                    copy_done += 8;
-                }
-
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done + 8);
-                vst1_s8(scratch_data + copy_done, half_work_reg);
-                vst1_s8(scratch_data + copy_done + 8, half_work_reg);
-
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
-            }
-        } else if (copy_size >= 4) {
-            const int copy_remaining = copy_size & 0x3;
-
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                // Work through one slice, by row, at a time.
-                int8* scratch_data = scratch_data_base + scratch_data_offset;
-
-                int copy_done = 0;
-
-                // Main copy loop.
-                for (; (copy_done + 4) <= copy_size; copy_done += 4) {
-                    half_work_reg =
-                        vld1_lane_8x4(input_block_data + input_block_offset + copy_done,
-                                      half_work_reg, 0);
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ(copy_done % 4, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                    vst1_lane_8x4(scratch_data + copy_done, half_work_reg, 0);
-                }
-
-                TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
-                // Total amount
-                // = copy_size - copy_done + 4 - adjusted_residual_width
-                // = width_overall_micro_repeats * 4 - start_width - copy_done.
-                // Undone micro blocks
-                // = width_overall_micro_repeats - (start_width + copy_done) / 4.
-
-                // Conditional is (copy_remaining > 0 || trailing_width_padding).
-                if (copy_done < copy_size) {
-                    TFLITE_DCHECK_LT(copy_remaining, 4);
-                    // Employ overlapping-load strategy in order to load full register,
-                    // but use only part.
-                    // This has the advantage of resulting in zeros after shifting.
-                    half_work_reg = vld1_lane_8x4(
-                                        input_block_data + input_block_offset + copy_size - 4,
-                                        half_work_reg, 0);
-
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_s64(vreinterpret_s64_s8(half_work_reg),
-                                                 vdup_n_s64(-8 * (4 - copy_remaining))));
-
-                    if (quantization_type == QuantizationType::kNonPerChannelUint8) {
-                        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                    }
-                    TFLITE_DCHECK_EQ(copy_done % 4, 0);
-                    optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                    vst1_lane_8x4(scratch_data + copy_done, half_work_reg, 0);
-                    copy_done += 4;
-                }
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
-                optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done + 12);
-                vst1_lane_8x4(scratch_data + copy_done, half_work_reg, 0);
-                vst1_lane_8x4(scratch_data + copy_done + 4, half_work_reg, 0);
-                vst1_lane_8x4(scratch_data + copy_done + 8, half_work_reg, 0);
-                vst1_lane_8x4(scratch_data + copy_done + 12, half_work_reg, 0);
-
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
-            }
-        } else {
-            TFLITE_DCHECK_EQ(width_overall_micro_repeats, 1);
-
-            for (int k_height = 0; k_height < copy_block_height; ++k_height) {
-                for (int i = 0; i < copy_size; ++i) {
-                    half_work_reg = vreinterpret_s8_s64(
-                                        vshl_n_s64(vreinterpret_s64_s8(half_work_reg), 8));
-                    half_work_reg = vld1_lane_s8(
-                                        reinterpret_cast<const int8*>(
-                                            input_block_data + input_block_offset + copy_size - 1 - i),
-                                        half_work_reg, 0);
-                }
-
-                half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
-                TFLITE_DCHECK_EQ(scratch_data_offset % 4, 0);
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset, half_work_reg,
-                              0);
-
-                // Trailing guard.
-                optimized_ops_prefetch_write_l1_keep(scratch_data_base +
-                                                     scratch_data_offset + 8);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 4,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 8,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 12,
-                              half_work_reg, 0);
-                vst1_lane_8x4(scratch_data_base + scratch_data_offset + 16,
-                              half_work_reg, 0);
-
-                scratch_data_offset += workspace_height_stride;
-                input_block_offset += input_height_stride;
-            }
+        // The surrounding condition ensures that we always need at least one
+        // iteration of the main copy loop. In the case of leading width
+        // padding, we unroll this specially.
+        if (leading_width_padding) {
+          work_reg = util_vld1q_x8(input_block_data + input_block_offset);
+          work_reg = vextq_s8(padding_reg, work_reg, 15);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg = veorq_s8(work_reg, sign_bit);
+          }
+          optimized_ops_prefetch_write_l1_keep(scratch_data);
+          vst1q_s8(scratch_data, work_reg);
+          copy_done += 15;
         }
 
-        scratch_data_base += copy_block_height * workspace_height_stride;
+        // Main copy loop.
+        for (; (copy_done + 16) <= copy_size; copy_done += 16) {
+          work_reg =
+              util_vld1q_x8(input_block_data + input_block_offset + copy_done);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg = veorq_s8(work_reg, sign_bit);
+          }
+          TFLITE_DCHECK_EQ((start_width + copy_done) % 16, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                               copy_done);
+          vst1q_s8(scratch_data + start_width + copy_done, work_reg);
+        }
 
-        TFLITE_DCHECK_EQ(
-            scratch_data_base,
-            scratch_block_data + block_height * workspace_height_stride);
+        if (copy_done + 8 <= copy_size) {
+          half_work_reg =
+              util_vld1_x8(input_block_data + input_block_offset + copy_done);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ((start_width + copy_done) % 8, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                               copy_done);
+          vst1_s8(scratch_data + start_width + copy_done, half_work_reg);
+          copy_done += 8;
+        }
+
+        TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
+        // Total amount
+        // = copy_size - copy_done + 4 - adjusted_residual_width
+        // = width_overall_micro_repeats * 4 - start_width - copy_done.
+        // Undone micro blocks
+        // = width_overall_micro_repeats - (start_width + copy_done) / 4.
+
+        // Conditional is (copy_remaining > 0 || trailing_width_padding).
+        if (copy_done < copy_size_adjusted) {
+          // Employ overlapping-load strategy in order to load full register,
+          // but use only part.
+          // This has the advantage of resulting in zeros after shifting.
+          half_work_reg = util_vld1_x8(input_block_data + input_block_offset +
+                                       copy_size - 8);
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_s64(vreinterpret_s64_s8(half_work_reg),
+                       vdup_n_s64(-8 * (8 - copy_remaining))));
+          half_work_reg = vbsl_s8(vreinterpret_u8_s8(padding_mask),
+                                  vget_low_s8(padding_reg), half_work_reg);
+
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ((start_width + copy_done) % 8, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                               copy_done);
+          vst1_s8(scratch_data + start_width + copy_done, half_work_reg);
+        }
+
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                             copy_done);
+        optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                             copy_done + 8);
+        vst1_s8(scratch_data + start_width + copy_done, half_work_reg);
+        vst1_s8(scratch_data + start_width + copy_done + 8, half_work_reg);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
+    } else if (copy_size >= 4) {
+      const int copy_remaining = (copy_size + start_width) & 0x3;
+      padding_mask = vreinterpret_s8_s64(vshl_s64(
+          vreinterpret_s64_s8(padding_mask), vdup_n_s64(8 * copy_remaining)));
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+        // Work through one slice, by row, at a time.
+        int8* scratch_data = scratch_data_base + scratch_data_offset;
+
+        int copy_done = 0;
+
+        // The surrounding condition ensures that we always need at least one
+        // iteration of the main copy loop. In the case of leading width
+        // padding, we unroll this specially.
+        if (leading_width_padding) {
+          half_work_reg = vld1_lane_8x4(input_block_data + input_block_offset,
+                                        half_work_reg, 0);
+          half_work_reg = vext_s8(vget_low_s8(padding_reg), half_work_reg, 7);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          optimized_ops_prefetch_write_l1_keep(scratch_data);
+          vst1_lane_8x4(scratch_data, half_work_reg, 0);
+          copy_done += 3;
+        }
+
+        // Main copy loop.
+        for (; (copy_done + 4) <= copy_size; copy_done += 4) {
+          half_work_reg =
+              vld1_lane_8x4(input_block_data + input_block_offset + copy_done,
+                            half_work_reg, 0);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ((start_width + copy_done) % 4, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                               copy_done);
+          vst1_lane_8x4(scratch_data + start_width + copy_done, half_work_reg,
+                        0);
+        }
+
+        TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
+        // Total amount
+        // = copy_size - copy_done + 4 - adjusted_residual_width
+        // = width_overall_micro_repeats * 4 - start_width - copy_done.
+        // Undone micro blocks
+        // = width_overall_micro_repeats - (start_width + copy_done) / 4.
+
+        // Conditional is (copy_remaining > 0 || trailing_width_padding).
+        if (copy_done < copy_size_adjusted) {
+          TFLITE_DCHECK_LT(copy_remaining, 4);
+          // Employ overlapping-load strategy in order to load full register,
+          // but use only part.
+          // This has the advantage of resulting in zeros after shifting.
+          half_work_reg = vld1_lane_8x4(
+              input_block_data + input_block_offset + copy_size - 4,
+              half_work_reg, 0);
+
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_s64(vreinterpret_s64_s8(half_work_reg),
+                       vdup_n_s64(-8 * (4 - copy_remaining))));
+          half_work_reg = vbsl_s8(vreinterpret_u8_s8(padding_mask),
+                                  vget_low_s8(padding_reg), half_work_reg);
+
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ((start_width + copy_done) % 4, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                               copy_done);
+          vst1_lane_8x4(scratch_data + start_width + copy_done, half_work_reg,
+                        0);
+          copy_done += 4;
+        }
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                             copy_done);
+        optimized_ops_prefetch_write_l1_keep(scratch_data + start_width +
+                                             copy_done + 12);
+        vst1_lane_8x4(scratch_data + start_width + copy_done, half_work_reg, 0);
+        vst1_lane_8x4(scratch_data + start_width + copy_done + 4, half_work_reg,
+                      0);
+        vst1_lane_8x4(scratch_data + start_width + copy_done + 8, half_work_reg,
+                      0);
+        vst1_lane_8x4(scratch_data + start_width + copy_done + 12,
+                      half_work_reg, 0);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
+    } else if (width_overall_micro_repeats == 2) {
+      // Special case of 1 + 3 + 1, padding + copy + padding.
+      // This is rarely executed in practice.
+      TFLITE_DCHECK_EQ(copy_size, 3);
+      TFLITE_DCHECK_EQ(start_width, 1);
+      TFLITE_DCHECK(leading_width_padding);
+      TFLITE_DCHECK(trailing_width_padding);
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+        half_work_reg = vdup_n_u8(-input_offset);
+        half_work_reg = vld1_lane_s8(reinterpret_cast<const int8*>(
+                                         input_block_data + input_block_offset),
+                                     half_work_reg, 1);
+        half_work_reg =
+            vld1_lane_s8(reinterpret_cast<const int8*>(input_block_data +
+                                                       input_block_offset + 1),
+                         half_work_reg, 2);
+        half_work_reg =
+            vld1_lane_s8(reinterpret_cast<const int8*>(input_block_data +
+                                                       input_block_offset + 2),
+                         half_work_reg, 3);
+
+        if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+          half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+        }
+        TFLITE_DCHECK_EQ(scratch_data_offset % 8, 0);
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset);
+        vst1_s8(scratch_data_base + scratch_data_offset, half_work_reg);
+
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset + 4);
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset + 16);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 4,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 8,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 12,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 16,
+                      half_work_reg, 0);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
+    } else {
+      TFLITE_DCHECK_EQ(width_overall_micro_repeats, 1);
+      const int copy_remaining = (copy_size + start_width) & 0x3;
+      padding_mask = vreinterpret_s8_s64(vshl_s64(
+          vreinterpret_s64_s8(padding_mask), vdup_n_s64(8 * copy_remaining)));
+      if (leading_width_padding) {
+        padding_mask = vset_lane_u8(255, padding_mask, 0);
+      }
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+        for (int i = 0; i < copy_size; ++i) {
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_n_s64(vreinterpret_s64_s8(half_work_reg), 8));
+          half_work_reg = vld1_lane_s8(
+              reinterpret_cast<const int8*>(
+                  input_block_data + input_block_offset + copy_size - 1 - i),
+              half_work_reg, 0);
+        }
+        if (leading_width_padding) {
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_n_s64(vreinterpret_s64_s8(half_work_reg), 8));
+        }
+        half_work_reg = vbsl_s8(vreinterpret_u8_s8(padding_mask),
+                                vget_low_s8(padding_reg), half_work_reg);
+
+        if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+          half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+        }
+        TFLITE_DCHECK_EQ(scratch_data_offset % 4, 0);
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset, half_work_reg,
+                      0);
+
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset + 4);
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset + 16);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 4,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 8,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 12,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 16,
+                      half_work_reg, 0);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
     }
 
-    static void __attribute__((noinline))
-    Run(int32 height_block_number, int32 width_block_number,
-        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-        input_block_data,
-        int8* scratch_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        PreloadInputBlock(input_block_data, function_params);
-        PackMacroBlockNeon(height_block_number, width_block_number,
-                           input_block_data, scratch_block_data, function_params);
+    scratch_data_base += copy_block_height * workspace_height_stride;
+
+    if (trailing_height_padding) {
+      memset(scratch_data_base, -input_offset_difference,
+             workspace_height_stride + kWorkspaceExtension);
+      scratch_data_base += workspace_height_stride;
     }
+
+    TFLITE_DCHECK_EQ(
+        scratch_data_base,
+        scratch_block_data + block_height * workspace_height_stride);
+  }
+
+  static void __attribute__((noinline))
+  Run(int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    PreloadInputBlock(input_block_data, function_params);
+    PackMacroBlockNeon(height_block_number, width_block_number,
+                       input_block_data, scratch_block_data, function_params);
+  }
+};
+
+template <QuantizationType quantization_type>
+struct PackMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
+                      quantization_type,
+                      DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                      /*max_padding=*/0> {
+  static inline void PackMacroBlockNeon(
+      int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    const int workspace_height_stride =
+        function_params->workspace_height_stride;
+    const int width_overall_micro_repeats =
+        function_params->input_width_overall_micro_repeats;
+    const int input_width_micro_repeats =
+        function_params->input_width_micro_repeats;
+    const int block_height = function_params->inbound_block_height;
+    const int residual_width = function_params->residual_width;
+    const int input_height_stride = function_params->input_height_stride;
+
+    TFLITE_DCHECK_EQ(function_params->padding_left, 0);
+    TFLITE_DCHECK_EQ(function_params->padding_right, 0);
+    TFLITE_DCHECK_EQ(function_params->padding_top, 0);
+    TFLITE_DCHECK_EQ(function_params->padding_bottom, 0);
+
+    TFLITE_DCHECK_GE(workspace_height_stride, 4 * width_overall_micro_repeats);
+
+    // Work through one slice, by row, at a time.
+    int8* scratch_data_base = scratch_block_data;
+
+    const int copy_block_height = block_height;
+
+    int adjusted_residual_width =
+        input_width_micro_repeats < width_overall_micro_repeats ? residual_width
+                                                                : 4;
+
+    const int copy_size =
+        (width_overall_micro_repeats - 1) * 4 + adjusted_residual_width;
+
+    TFLITE_DCHECK_LE(
+        copy_size,
+        input_height_stride - width_block_number * input_width_micro_repeats);
+    // We may drop up to stride-1 of trailing input.
+    TFLITE_DCHECK_GE(copy_size, input_height_stride - 1);
+
+    int scratch_data_offset = 0;
+    int input_block_offset = 0;
+
+    constexpr uint8 kSignBit =
+        QuantizationTypeImpl<quantization_type>::kUint8SignBit;
+
+    // Transpositions are 4x4, but doing 2 at a time is more efficient in NEON
+    // code. Note the blocks of 4x4 are still interleaved down the depth.
+    int8x16_t work_reg;
+    int8x8_t half_work_reg;
+
+    // Effect subtraction of zero-point = 128 by XOR of sign bit.
+    const uint8x16_t sign_bit = vdupq_n_u8(kSignBit);
+    half_work_reg = vdup_n_s8(0);
+
+    if (copy_size >= 16) {
+      const int copy_remaining = copy_size & 0x7;
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+        // Work through one slice, by row, at a time.
+        int8* scratch_data = scratch_data_base + scratch_data_offset;
+
+        int copy_done = 0;
+
+        // Main copy loop.
+        for (; (copy_done + 16) <= copy_size; copy_done += 16) {
+          work_reg =
+              util_vld1q_x8(input_block_data + input_block_offset + copy_done);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            work_reg = veorq_s8(work_reg, sign_bit);
+          }
+          TFLITE_DCHECK_EQ(copy_done % 16, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+          vst1q_s8(scratch_data + copy_done, work_reg);
+        }
+
+        if (copy_done + 8 <= copy_size) {
+          half_work_reg =
+              util_vld1_x8(input_block_data + input_block_offset + copy_done);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ(copy_done % 8, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+          vst1_s8(scratch_data + copy_done, half_work_reg);
+          copy_done += 8;
+        }
+
+        TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
+        // Total amount
+        // = copy_size - copy_done + 4 - adjusted_residual_width
+        // = width_overall_micro_repeats * 4 - start_width - copy_done.
+        // Undone micro blocks
+        // = width_overall_micro_repeats - (start_width + copy_done) / 4.
+
+        // Conditional is (copy_remaining > 0 || trailing_width_padding).
+        if (copy_done < copy_size) {
+          // Employ overlapping-load strategy in order to load full register,
+          // but use only part.
+          // This has the advantage of resulting in zeros after shifting.
+          half_work_reg = util_vld1_x8(input_block_data + input_block_offset +
+                                       copy_size - 8);
+
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_s64(vreinterpret_s64_s8(half_work_reg),
+                       vdup_n_s64(-8 * (8 - copy_remaining))));
+
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ(copy_done % 8, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+          vst1_s8(scratch_data + copy_done, half_work_reg);
+          copy_done += 8;
+        }
+
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+        optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done + 8);
+        vst1_s8(scratch_data + copy_done, half_work_reg);
+        vst1_s8(scratch_data + copy_done + 8, half_work_reg);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
+    } else if (copy_size >= 4) {
+      const int copy_remaining = copy_size & 0x3;
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+        // Work through one slice, by row, at a time.
+        int8* scratch_data = scratch_data_base + scratch_data_offset;
+
+        int copy_done = 0;
+
+        // Main copy loop.
+        for (; (copy_done + 4) <= copy_size; copy_done += 4) {
+          half_work_reg =
+              vld1_lane_8x4(input_block_data + input_block_offset + copy_done,
+                            half_work_reg, 0);
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ(copy_done % 4, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+          vst1_lane_8x4(scratch_data + copy_done, half_work_reg, 0);
+        }
+
+        TFLITE_DCHECK_EQ(copy_remaining, copy_size - copy_done);
+        // Total amount
+        // = copy_size - copy_done + 4 - adjusted_residual_width
+        // = width_overall_micro_repeats * 4 - start_width - copy_done.
+        // Undone micro blocks
+        // = width_overall_micro_repeats - (start_width + copy_done) / 4.
+
+        // Conditional is (copy_remaining > 0 || trailing_width_padding).
+        if (copy_done < copy_size) {
+          TFLITE_DCHECK_LT(copy_remaining, 4);
+          // Employ overlapping-load strategy in order to load full register,
+          // but use only part.
+          // This has the advantage of resulting in zeros after shifting.
+          half_work_reg = vld1_lane_8x4(
+              input_block_data + input_block_offset + copy_size - 4,
+              half_work_reg, 0);
+
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_s64(vreinterpret_s64_s8(half_work_reg),
+                       vdup_n_s64(-8 * (4 - copy_remaining))));
+
+          if (quantization_type == QuantizationType::kNonPerChannelUint8) {
+            half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+          }
+          TFLITE_DCHECK_EQ(copy_done % 4, 0);
+          optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+          vst1_lane_8x4(scratch_data + copy_done, half_work_reg, 0);
+          copy_done += 4;
+        }
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done);
+        optimized_ops_prefetch_write_l1_keep(scratch_data + copy_done + 12);
+        vst1_lane_8x4(scratch_data + copy_done, half_work_reg, 0);
+        vst1_lane_8x4(scratch_data + copy_done + 4, half_work_reg, 0);
+        vst1_lane_8x4(scratch_data + copy_done + 8, half_work_reg, 0);
+        vst1_lane_8x4(scratch_data + copy_done + 12, half_work_reg, 0);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
+    } else {
+      TFLITE_DCHECK_EQ(width_overall_micro_repeats, 1);
+
+      for (int k_height = 0; k_height < copy_block_height; ++k_height) {
+        for (int i = 0; i < copy_size; ++i) {
+          half_work_reg = vreinterpret_s8_s64(
+              vshl_n_s64(vreinterpret_s64_s8(half_work_reg), 8));
+          half_work_reg = vld1_lane_s8(
+              reinterpret_cast<const int8*>(
+                  input_block_data + input_block_offset + copy_size - 1 - i),
+              half_work_reg, 0);
+        }
+
+        half_work_reg = veor_s8(half_work_reg, vget_low_s8(sign_bit));
+        TFLITE_DCHECK_EQ(scratch_data_offset % 4, 0);
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset, half_work_reg,
+                      0);
+
+        // Trailing guard.
+        optimized_ops_prefetch_write_l1_keep(scratch_data_base +
+                                             scratch_data_offset + 8);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 4,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 8,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 12,
+                      half_work_reg, 0);
+        vst1_lane_8x4(scratch_data_base + scratch_data_offset + 16,
+                      half_work_reg, 0);
+
+        scratch_data_offset += workspace_height_stride;
+        input_block_offset += input_height_stride;
+      }
+    }
+
+    scratch_data_base += copy_block_height * workspace_height_stride;
+
+    TFLITE_DCHECK_EQ(
+        scratch_data_base,
+        scratch_block_data + block_height * workspace_height_stride);
+  }
+
+  static void __attribute__((noinline))
+  Run(int32 height_block_number, int32 width_block_number,
+      const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+          input_block_data,
+      int8* scratch_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    PreloadInputBlock(input_block_data, function_params);
+    PackMacroBlockNeon(height_block_number, width_block_number,
+                       input_block_data, scratch_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kNonPerChannelUint8,
-           DepthwiseConvDepthMultiplication::kNoMultiplication,
-/*stride=*/1> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kNonPerChannelUint8,
+                        DepthwiseConvDepthMultiplication::kNoMultiplication,
+                        /*stride=*/1> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_NO_MULT_1 "1"
 #define DC_KERNEL_NO_MULT_2 "2"
 #define DC_KERNEL_NO_MULT_3 "3"
@@ -7428,7 +7428,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_NO_MULT_34 "34"
 #define DC_KERNEL_NO_MULT_35 "35"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 320 for spill out of total stack of 464.
             "sub    sp, sp, #320\n"  // =464
             "ldr    w8, [%[function_params], #" STR(DP_OFFSET_DEPTH_MICRO_REPEATS) "]\n"
@@ -8179,32 +8179,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_NO_MULT_33
 #undef DC_KERNEL_NO_MULT_34
 #undef DC_KERNEL_NO_MULT_35
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static void __attribute__((noinline))
-    Run(const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static void __attribute__((noinline))
+  Run(const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kNonPerChannelUint8,
-           DepthwiseConvDepthMultiplication::kNoMultiplication,
-/*stride=*/2> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kNonPerChannelUint8,
+                        DepthwiseConvDepthMultiplication::kNoMultiplication,
+                        /*stride=*/2> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_NO_MULT_STRIDE_1 "1"
 #define DC_KERNEL_NO_MULT_STRIDE_2 "2"
 #define DC_KERNEL_NO_MULT_STRIDE_3 "3"
@@ -8241,7 +8241,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_NO_MULT_STRIDE_34 "34"
 #define DC_KERNEL_NO_MULT_STRIDE_35 "35"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 160 for spill out of total stack of 304.
             "sub    sp, sp, #160\n"  // =304
             "stp    %[output_block_data], %[filter_workspace], [sp, #144]\n"  // 16-byte Folded Spill
@@ -8880,32 +8880,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_NO_MULT_STRIDE_33
 #undef DC_KERNEL_NO_MULT_STRIDE_34
 #undef DC_KERNEL_NO_MULT_STRIDE_35
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static void __attribute__((noinline))
-    Run(const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static void __attribute__((noinline))
+  Run(const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kNonPerChannelUint8,
-           DepthwiseConvDepthMultiplication::kUnitInputDepth,
-/*stride=*/1> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kNonPerChannelUint8,
+                        DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                        /*stride=*/1> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_MULT_1 "1"
 #define DC_KERNEL_MULT_2 "2"
 #define DC_KERNEL_MULT_3 "3"
@@ -8929,7 +8929,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_MULT_21 "21"
 #define DC_KERNEL_MULT_22 "22"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 288 for spill out of total stack of 400.
             // However, an 8-byte spill was sneaked in to #296.
             // Spillage increased to 304 and these are mapped to #288.
@@ -9565,32 +9565,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_MULT_20
 #undef DC_KERNEL_MULT_21
 #undef DC_KERNEL_MULT_22
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static void __attribute__((noinline))
-    Run(const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static void __attribute__((noinline))
+  Run(const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kNonPerChannelUint8,
-           DepthwiseConvDepthMultiplication::kUnitInputDepth,
-/*stride=*/2> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kNonPerChannelUint8,
+                        DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                        /*stride=*/2> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_MULT_STRIDE_1 "1"
 #define DC_KERNEL_MULT_STRIDE_2 "2"
 #define DC_KERNEL_MULT_STRIDE_3 "3"
@@ -9605,7 +9605,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_MULT_STRIDE_12 "12"
 #define DC_KERNEL_MULT_STRIDE_13 "13"
 
-        asm volatile(
+    asm volatile(
             "ldr    w15, [%[function_params], #" STR(DP_OFFSET_OUTPUT_RESIDUAL_WIDTH) "]\n"
             "ldp    w11, w6, [%[function_params], #" STR(DP_OFFSET_OUTPUT_WIDTH_OVERALL_MICRO_REPEATS) "]\n"
             "ldpsw  x9, x10, [%[function_params], #" STR(DP_OFFSET_OUTPUT_HEIGHT_STRIDE) "]\n"
@@ -9948,32 +9948,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_MULT_STRIDE_11
 #undef DC_KERNEL_MULT_STRIDE_12
 #undef DC_KERNEL_MULT_STRIDE_13
-    }
+  }
 
-    static void __attribute__((noinline))
-    Run(const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, uint8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static void __attribute__((noinline))
+  Run(const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, uint8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kPerChannelInt8,
-           DepthwiseConvDepthMultiplication::kNoMultiplication,
-/*stride=*/1> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, int8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kPerChannelInt8,
+                        DepthwiseConvDepthMultiplication::kNoMultiplication,
+                        /*stride=*/1> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, int8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_NO_MULT_1 "1"
 #define DC_KERNEL_NO_MULT_2 "2"
 #define DC_KERNEL_NO_MULT_3 "3"
@@ -10008,7 +10008,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_NO_MULT_32 "32"
 #define DC_KERNEL_NO_MULT_33 "33"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 384 for spill out of total stack of 528.
             "sub    sp, sp, #384\n"  // =528
             "ldr    w8, [%[function_params], #" STR(DP_OFFSET_DEPTH_MICRO_REPEATS) "]\n"
@@ -10773,32 +10773,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_NO_MULT_31
 #undef DC_KERNEL_NO_MULT_32
 #undef DC_KERNEL_NO_MULT_33
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static inline void Run(const int8* scratch_block_data,
-                           const int8* filter_workspace, const int32* bias_data,
-                           int8* output_block_data,
-                           const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static inline void Run(const int8* scratch_block_data,
+                         const int8* filter_workspace, const int32* bias_data,
+                         int8* output_block_data,
+                         const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kPerChannelInt8,
-           DepthwiseConvDepthMultiplication::kNoMultiplication,
-/*stride=*/2> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, int8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kPerChannelInt8,
+                        DepthwiseConvDepthMultiplication::kNoMultiplication,
+                        /*stride=*/2> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, int8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_NO_MULT_STRIDE_1 "1"
 #define DC_KERNEL_NO_MULT_STRIDE_2 "2"
 #define DC_KERNEL_NO_MULT_STRIDE_3 "3"
@@ -10835,7 +10835,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_NO_MULT_STRIDE_34 "34"
 #define DC_KERNEL_NO_MULT_STRIDE_35 "35"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 176 for spill out of total stack of 320.
             "sub    sp, sp, #176\n"  // =320
 
@@ -11511,32 +11511,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_NO_MULT_STRIDE_33
 #undef DC_KERNEL_NO_MULT_STRIDE_34
 #undef DC_KERNEL_NO_MULT_STRIDE_35
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static inline void Run(const int8* scratch_block_data,
-                           const int8* filter_workspace, const int32* bias_data,
-                           int8* output_block_data,
-                           const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static inline void Run(const int8* scratch_block_data,
+                         const int8* filter_workspace, const int32* bias_data,
+                         int8* output_block_data,
+                         const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kPerChannelInt8,
-           DepthwiseConvDepthMultiplication::kUnitInputDepth,
-/*stride=*/1> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, int8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kPerChannelInt8,
+                        DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                        /*stride=*/1> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, int8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_MULT_1 "1"
 #define DC_KERNEL_MULT_2 "2"
 #define DC_KERNEL_MULT_3 "3"
@@ -11561,7 +11561,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_MULT_22 "22"
 #define DC_KERNEL_MULT_23 "23"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 336 for spill out of total stack of 448.
             // However, an 8-byte spill was sneaked in to #344.
             // Spillage increased to 352 and these are mapped to #336.
@@ -12228,32 +12228,32 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_MULT_21
 #undef DC_KERNEL_MULT_22
 #undef DC_KERNEL_MULT_23
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static inline void Run(const int8* scratch_block_data,
-                           const int8* filter_workspace, const int32* bias_data,
-                           int8* output_block_data,
-                           const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static inline void Run(const int8* scratch_block_data,
+                         const int8* filter_workspace, const int32* bias_data,
+                         int8* output_block_data,
+                         const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 template <>
 struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
-           QuantizationType::kPerChannelInt8,
-           DepthwiseConvDepthMultiplication::kUnitInputDepth,
-/*stride=*/2> {
-    static inline void KernelMacroBlockNeon(
-        const int8* scratch_block_data, const int8* filter_workspace,
-        const int32* bias_data, int8* output_block_data,
-        const DepthwiseConvDotProdParams* function_params) {
-        // Note that argument registers may be reused after parameter loading.
-        // x0 %[scratch_block_data]
-        // x1 %[filter_workspace]
-        // x2 %[bias_data]
-        // x3 %[output_block_data]
-        // x4 %[function_params]
+                        QuantizationType::kPerChannelInt8,
+                        DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                        /*stride=*/2> {
+  static inline void KernelMacroBlockNeon(
+      const int8* scratch_block_data, const int8* filter_workspace,
+      const int32* bias_data, int8* output_block_data,
+      const DepthwiseConvDotProdParams* function_params) {
+    // Note that argument registers may be reused after parameter loading.
+    // x0 %[scratch_block_data]
+    // x1 %[filter_workspace]
+    // x2 %[bias_data]
+    // x3 %[output_block_data]
+    // x4 %[function_params]
 #define DC_KERNEL_MULT_STRIDE_1 "1"
 #define DC_KERNEL_MULT_STRIDE_2 "2"
 #define DC_KERNEL_MULT_STRIDE_3 "3"
@@ -12273,7 +12273,7 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #define DC_KERNEL_MULT_STRIDE_17 "17"
 #define DC_KERNEL_MULT_STRIDE_18 "18"
 
-        asm volatile(
+    asm volatile(
             // Compiled code used block of 32 for spill out of total stack of 112.
             "sub    sp, sp, #32\n"  // =112
 
@@ -12717,15 +12717,15 @@ struct KernelMacroBlock<DepthwiseConvImplementation::kUseNeon3x3DotProduct,
 #undef DC_KERNEL_MULT_STRIDE_16
 #undef DC_KERNEL_MULT_STRIDE_17
 #undef DC_KERNEL_MULT_STRIDE_18
-    }  // NOLINT(readability/fn_size) Manually unrolled.
+  }  // NOLINT(readability/fn_size) Manually unrolled.
 
-    static inline void Run(const int8* scratch_block_data,
-                           const int8* filter_workspace, const int32* bias_data,
-                           int8* output_block_data,
-                           const DepthwiseConvDotProdParams* function_params) {
-        KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
-                             output_block_data, function_params);
-    }
+  static inline void Run(const int8* scratch_block_data,
+                         const int8* filter_workspace, const int32* bias_data,
+                         int8* output_block_data,
+                         const DepthwiseConvDotProdParams* function_params) {
+    KernelMacroBlockNeon(scratch_block_data, filter_workspace, bias_data,
+                         output_block_data, function_params);
+  }
 };
 
 #undef DP_OFFSET_INPUT_DEPTH
@@ -12857,538 +12857,538 @@ template <DepthwiseConvImplementation implementation,
 inline void DepthwiseConvDotProduct3x3Impl(
     const DepthwiseParams& params, const RuntimeShape& input_shape,
     const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-    input_data,
+        input_data,
     const RuntimeShape& filter_shape,
     const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-    filter_data,
+        filter_data,
     const RuntimeShape& bias_shape, const int32* bias_data,
     const RuntimeShape& output_shape,
     typename QuantizationTypeImpl<quantization_type>::ExternalType* output_data,
     int thread_start, int thread_end, int thread_dim) {
-    // Check kernel restrictions.
-    constexpr int filter_size = 3;
-    constexpr int kMaxStride = 2;
-    constexpr int kMaxPadding = 1;
-    constexpr int kSymmetricZeroPoint =
-        QuantizationTypeImpl<quantization_type>::kIntSymmetricZeroPoint;
-    TFLITE_DCHECK_EQ(params.weights_offset, -kSymmetricZeroPoint);
-    TFLITE_DCHECK_LE(params.stride_width, kMaxStride);
-    TFLITE_DCHECK_EQ(params.stride_height, params.stride_width);
-    TFLITE_DCHECK_EQ(params.dilation_width_factor, 1);
-    TFLITE_DCHECK_EQ(params.dilation_height_factor, 1);
-    TFLITE_DCHECK_LE(params.padding_values.width, kMaxPadding);
-    TFLITE_DCHECK_LE(params.padding_values.height, kMaxPadding);
-    TFLITE_DCHECK_EQ(input_shape.DimensionsCount(), 4);
-    TFLITE_DCHECK_EQ(filter_shape.DimensionsCount(), 4);
-    TFLITE_DCHECK_EQ(output_shape.DimensionsCount(), 4);
-    TFLITE_DCHECK_LE(params.quantized_activation_min,
-                     params.quantized_activation_max);
+  // Check kernel restrictions.
+  constexpr int filter_size = 3;
+  constexpr int kMaxStride = 2;
+  constexpr int kMaxPadding = 1;
+  constexpr int kSymmetricZeroPoint =
+      QuantizationTypeImpl<quantization_type>::kIntSymmetricZeroPoint;
+  TFLITE_DCHECK_EQ(params.weights_offset, -kSymmetricZeroPoint);
+  TFLITE_DCHECK_LE(params.stride_width, kMaxStride);
+  TFLITE_DCHECK_EQ(params.stride_height, params.stride_width);
+  TFLITE_DCHECK_EQ(params.dilation_width_factor, 1);
+  TFLITE_DCHECK_EQ(params.dilation_height_factor, 1);
+  TFLITE_DCHECK_LE(params.padding_values.width, kMaxPadding);
+  TFLITE_DCHECK_LE(params.padding_values.height, kMaxPadding);
+  TFLITE_DCHECK_EQ(input_shape.DimensionsCount(), 4);
+  TFLITE_DCHECK_EQ(filter_shape.DimensionsCount(), 4);
+  TFLITE_DCHECK_EQ(output_shape.DimensionsCount(), 4);
+  TFLITE_DCHECK_LE(params.quantized_activation_min,
+                   params.quantized_activation_max);
 
-    // Key kernel parameters (along with padding handled later).
-    const int stride = params.stride_width;
-    const int depth_multiplier = params.depth_multiplier;
-    const bool has_depth_multiplication = depth_multiplier > 1;
+  // Key kernel parameters (along with padding handled later).
+  const int stride = params.stride_width;
+  const int depth_multiplier = params.depth_multiplier;
+  const bool has_depth_multiplication = depth_multiplier > 1;
 
-    // Extract task dimensions.
-    const int input_depth = input_shape.Dims(3);
-    const int output_depth = MatchingDim(filter_shape, 3, output_shape, 3);
-    const int input_height = input_shape.Dims(1);
-    const int input_width = input_shape.Dims(2);
-    const int output_height = output_shape.Dims(1);
-    const int output_width = output_shape.Dims(2);
-    const int batches = MatchingDim(input_shape, 0, output_shape, 0);
-    TFLITE_DCHECK(!has_depth_multiplication || input_depth == 1);
-    TFLITE_DCHECK(has_depth_multiplication || input_depth == output_depth);
-    TFLITE_DCHECK_EQ(bias_shape.FlatSize(), output_depth);
-    TFLITE_DCHECK_EQ(input_depth * depth_multiplier, output_depth);
-    TFLITE_DCHECK_EQ(MatchingDim(filter_shape, 1, filter_shape, 2), filter_size);
-    TFLITE_DCHECK(thread_dim == 0 || thread_dim == 1);
+  // Extract task dimensions.
+  const int input_depth = input_shape.Dims(3);
+  const int output_depth = MatchingDim(filter_shape, 3, output_shape, 3);
+  const int input_height = input_shape.Dims(1);
+  const int input_width = input_shape.Dims(2);
+  const int output_height = output_shape.Dims(1);
+  const int output_width = output_shape.Dims(2);
+  const int batches = MatchingDim(input_shape, 0, output_shape, 0);
+  TFLITE_DCHECK(!has_depth_multiplication || input_depth == 1);
+  TFLITE_DCHECK(has_depth_multiplication || input_depth == output_depth);
+  TFLITE_DCHECK_EQ(bias_shape.FlatSize(), output_depth);
+  TFLITE_DCHECK_EQ(input_depth * depth_multiplier, output_depth);
+  TFLITE_DCHECK_EQ(MatchingDim(filter_shape, 1, filter_shape, 2), filter_size);
+  TFLITE_DCHECK(thread_dim == 0 || thread_dim == 1);
 
-    // Return now if nothing to do.
-    if (output_width == 0 || output_height == 0) {
-        return;
-    }
+  // Return now if nothing to do.
+  if (output_width == 0 || output_height == 0) {
+    return;
+  }
 
-    // Kernel parameter structure: set basic fields.
-    //
-    // In asm it is easier to pass a structure than more than, say, 8 parameters.
-    DepthwiseConvDotProdParams function_params;
-    function_params.input_depth = input_depth;
-    function_params.output_depth = output_depth;
-    function_params.input_offset = params.input_offset;
-    function_params.output_offset = params.output_offset;
-    function_params.output_multiplier = params.output_multiplier;
-    function_params.output_shift = params.output_shift;
-    function_params.quantized_activation_min = params.quantized_activation_min;
-    function_params.quantized_activation_max = params.quantized_activation_max;
-    function_params.stride = stride;
+  // Kernel parameter structure: set basic fields.
+  //
+  // In asm it is easier to pass a structure than more than, say, 8 parameters.
+  DepthwiseConvDotProdParams function_params;
+  function_params.input_depth = input_depth;
+  function_params.output_depth = output_depth;
+  function_params.input_offset = params.input_offset;
+  function_params.output_offset = params.output_offset;
+  function_params.output_multiplier = params.output_multiplier;
+  function_params.output_shift = params.output_shift;
+  function_params.quantized_activation_min = params.quantized_activation_min;
+  function_params.quantized_activation_max = params.quantized_activation_max;
+  function_params.stride = stride;
 
-    // Handle inbound bias data.
-    //
-    // Note that this data is adjusted in a per-depth process before the main
-    // filters. The adjustment accounts for a non-symmetric input offset.
-    //
-    // Kernel subroutines need to be able to operate consistently on an bias
-    // array. Where there is no bias, we provide one filled with zeros.
-    constexpr int kMinBiasLoad = 8;
-    int32 zero_bias_data[kMinBiasLoad];
-    int32 bias_increment;
-    if (bias_data) {
-        bias_increment = 4;
-    } else {
-        memset(zero_bias_data, 0, sizeof(zero_bias_data));
-        bias_data = &zero_bias_data[0];
-        bias_increment = 0;
-    }
-    function_params.bias_increment = bias_increment;
-    TFLITE_DCHECK_LE(2 * function_params.bias_increment, kMinBiasLoad);
+  // Handle inbound bias data.
+  //
+  // Note that this data is adjusted in a per-depth process before the main
+  // filters. The adjustment accounts for a non-symmetric input offset.
+  //
+  // Kernel subroutines need to be able to operate consistently on an bias
+  // array. Where there is no bias, we provide one filled with zeros.
+  constexpr int kMinBiasLoad = 8;
+  int32 zero_bias_data[kMinBiasLoad];
+  int32 bias_increment;
+  if (bias_data) {
+    bias_increment = 4;
+  } else {
+    memset(zero_bias_data, 0, sizeof(zero_bias_data));
+    bias_data = &zero_bias_data[0];
+    bias_increment = 0;
+  }
+  function_params.bias_increment = bias_increment;
+  TFLITE_DCHECK_LE(2 * function_params.bias_increment, kMinBiasLoad);
 
-    // Process multithreading.
-    int batch_start = 0;
-    int batch_end = batches;
-    int row_start = 0;
-    int row_end = output_height;
-    switch (thread_dim) {
+  // Process multithreading.
+  int batch_start = 0;
+  int batch_end = batches;
+  int row_start = 0;
+  int row_end = output_height;
+  switch (thread_dim) {
     case 0:
-        TFLITE_DCHECK_GE(thread_start, 0);
-        TFLITE_DCHECK_LE(thread_end, batches);
-        batch_start = thread_start;
-        batch_end = thread_end;
-        break;
+      TFLITE_DCHECK_GE(thread_start, 0);
+      TFLITE_DCHECK_LE(thread_end, batches);
+      batch_start = thread_start;
+      batch_end = thread_end;
+      break;
     case 1:
-        TFLITE_DCHECK_GE(thread_start, 0);
-        TFLITE_DCHECK_LE(thread_end, output_height);
-        row_start = thread_start;
-        row_end = thread_end;
-        break;
+      TFLITE_DCHECK_GE(thread_start, 0);
+      TFLITE_DCHECK_LE(thread_end, output_height);
+      row_start = thread_start;
+      row_end = thread_end;
+      break;
+  }
+  const int row_count = row_end - row_start;
+
+  // Process padding.
+  //
+  // Whether "correct" or not, this matches ComputeConvSizes. When there is
+  // stride > 1 there can be padding on the bottom or top, and therefore
+  // we need to consider padding. This is true even if one or other of the
+  // padding_values is 0.
+  const int padded_width = (output_width - 1) * stride + filter_size;
+  int full_padding_top;
+  {
+    const int padding_left = params.padding_values.width;
+    // Right padding would be -1 if discarding input because of stride.
+    const int padding_right =
+        std::max(padded_width - input_width - padding_left, 0);
+    int padding_top = params.padding_values.height;
+    const int padded_height = (output_height - 1) * stride + filter_size;
+    int padding_bottom =
+        std::max(padded_height - input_height - padding_top, 0);
+
+    TFLITE_DCHECK_LE(padding_left, padding_right);
+    TFLITE_DCHECK_LE(padding_top, padding_bottom);
+
+    full_padding_top = padding_top;
+    if (row_start != 0) {
+      padding_top = 0;
     }
-    const int row_count = row_end - row_start;
-
-    // Process padding.
-    //
-    // Whether "correct" or not, this matches ComputeConvSizes. When there is
-    // stride > 1 there can be padding on the bottom or top, and therefore
-    // we need to consider padding. This is true even if one or other of the
-    // padding_values is 0.
-    const int padded_width = (output_width - 1) * stride + filter_size;
-    int full_padding_top;
-    {
-        const int padding_left = params.padding_values.width;
-        // Right padding would be -1 if discarding input because of stride.
-        const int padding_right =
-            std::max(padded_width - input_width - padding_left, 0);
-        int padding_top = params.padding_values.height;
-        const int padded_height = (output_height - 1) * stride + filter_size;
-        int padding_bottom =
-            std::max(padded_height - input_height - padding_top, 0);
-
-        TFLITE_DCHECK_LE(padding_left, padding_right);
-        TFLITE_DCHECK_LE(padding_top, padding_bottom);
-
-        full_padding_top = padding_top;
-        if (row_start != 0) {
-            padding_top = 0;
-        }
-        if (row_end != output_height) {
-            padding_bottom = 0;
-        }
-
-        function_params.padding_left = padding_left;
-        function_params.padding_right = padding_right;
-        function_params.padding_top = padding_top;
-        function_params.padding_bottom = padding_bottom;
-    }
-    // When stride == 1 left or top padding may only be non-zero.
-    // This is when padding is specified but not needed on a trailing dimension.
-    // When stride == 2 right or bottom padding may only be non-zero.
-    // This is a result of the details of the padding calculations.
-    const bool padding_required =
-        function_params.padding_left > 0 || function_params.padding_top > 0 ||
-        function_params.padding_right > 0 || function_params.padding_bottom > 0;
-
-    // Choose parameter-specific kernel subroutines.
-    //
-    // The main part of the kernel has two stages. First, a temporary workspace is
-    // filled with padded and permuted data. Second, the filter is applied to the
-    // workspace data to generate output.
-    //
-    // The workspace fill stage handles padding so that the filter stage does not
-    // need to account for it. The workspace fill stage does not need to
-    // understand striding, and implicitly handles striding through the parameters
-    // that it is given.
-    using pack_macro_block_func_t = decltype(
-                                        &PackMacroBlock<implementation, quantization_type,
-                                        DepthwiseConvDepthMultiplication::kNoMultiplication,
-                                        0>::Run);
-    using kernel_macro_block_func_t = decltype(
-                                          &KernelMacroBlock<implementation, quantization_type,
-                                          DepthwiseConvDepthMultiplication::kNoMultiplication,
-                                          1>::Run);
-    pack_macro_block_func_t pack_macro_block_func;
-    kernel_macro_block_func_t kernel_macro_block_func;
-    {
-        if (has_depth_multiplication) {
-            if (padding_required) {
-                pack_macro_block_func =
-                    PackMacroBlock<implementation, quantization_type,
-                    DepthwiseConvDepthMultiplication::kUnitInputDepth,
-                    /*max_padding=*/1>::Run;
-            } else {
-                pack_macro_block_func =
-                    PackMacroBlock<implementation, quantization_type,
-                    DepthwiseConvDepthMultiplication::kUnitInputDepth,
-                    /*max_padding=*/0>::Run;
-            }
-            if (stride == 1) {
-                kernel_macro_block_func =
-                    KernelMacroBlock<implementation, quantization_type,
-                    DepthwiseConvDepthMultiplication::kUnitInputDepth,
-                    /*stride=*/1>::Run;
-            } else {
-                kernel_macro_block_func =
-                    KernelMacroBlock<implementation, quantization_type,
-                    DepthwiseConvDepthMultiplication::kUnitInputDepth,
-                    /*stride=*/2>::Run;
-            }
-        } else {
-            if (padding_required) {
-                pack_macro_block_func =
-                    PackMacroBlock<implementation, quantization_type,
-                    DepthwiseConvDepthMultiplication::kNoMultiplication,
-                    /*max_padding=*/1>::Run;
-            } else {
-                pack_macro_block_func =
-                    PackMacroBlock<implementation, quantization_type,
-                    DepthwiseConvDepthMultiplication::kNoMultiplication,
-                    /*max_padding=*/0>::Run;
-            }
-            if (stride == 1) {
-                kernel_macro_block_func = KernelMacroBlock<
-                                          implementation, quantization_type,
-                                          DepthwiseConvDepthMultiplication::kNoMultiplication,
-                                          /*stride=*/1>::Run;
-            } else {
-                kernel_macro_block_func = KernelMacroBlock<
-                                          implementation, quantization_type,
-                                          DepthwiseConvDepthMultiplication::kNoMultiplication,
-                                          /*stride=*/2>::Run;
-            }
-        }
+    if (row_end != output_height) {
+      padding_bottom = 0;
     }
 
-    // Stride-only variables.
-    //
-    const int row_count_per_macro = stride == 1 ? 4 : 2;
-    // row_count_per_macro * stride:
-    constexpr int input_height_per_macro = 4;
-    // Number of rows per micro block (= rows per macro block) is
-    //   (row_count_per_macro - 1) * stride + 1 + (filter_size - 1)
-    const int height_block_size = stride == 1 ? 3 + filter_size : 2 + filter_size;
-    const int input_height_overlap = filter_size - stride;
-    // stride == 1 ? 4 : 2:
-    function_params.four_over_stride = row_count_per_macro;
+    function_params.padding_left = padding_left;
+    function_params.padding_right = padding_right;
+    function_params.padding_top = padding_top;
+    function_params.padding_bottom = padding_bottom;
+  }
+  // When stride == 1 left or top padding may only be non-zero.
+  // This is when padding is specified but not needed on a trailing dimension.
+  // When stride == 2 right or bottom padding may only be non-zero.
+  // This is a result of the details of the padding calculations.
+  const bool padding_required =
+      function_params.padding_left > 0 || function_params.padding_top > 0 ||
+      function_params.padding_right > 0 || function_params.padding_bottom > 0;
 
-    TFLITE_DCHECK_EQ(stride * function_params.four_over_stride, 4);
-    TFLITE_DCHECK_EQ(height_block_size,
-                     input_height_per_macro + input_height_overlap);
-
-    // Create workspaces.
-    //
-    // Filter workspace is for shuffle: only first depth/8 is used.
-    // indexed as [depth/8][sub-block][height][depth][width].
-    TFLITE_DCHECK_EQ(kDepthwiseConvAdjustedBiasLimit % 8, 0);
-    int8 macroblock_workspace[kDepthwiseConvScratchWorkspaceSize];
-    int32 adjusted_bias_data[kDepthwiseConvAdjustedBiasLimit];
-    int8 filter_workspace[kDepthwiseConvAdjustedBiasLimit >> 3][3][2][4][4];
-
-    // Output depth characterization.
-    //
-    const int depth_macro_count = output_depth / 64;
-    const int depth_overall_macro_count = (output_depth + 63) / 64;
-    // Number of micro blocks down the depth in a final incomplete macro block.
-    const int depth_trailing_micro_repeats = output_depth / 8 % 8;
-    // The output_depth may not have a remainder: it must be a multiple of 8.
-    TFLITE_DCHECK_EQ(output_depth,
-                     64 * depth_macro_count + 8 * depth_trailing_micro_repeats);
-
-    // Characterize the first macro block depth, the largest.
-    //
-    // We base treatment of the width on the trailing macro block if there are
-    // no full blocks, in order to do more work together (that is, increase
-    // workspace_width_micro_repeats when largest_macro_depth < 64).
-    const int largest_macro_depth =
-        has_depth_multiplication
-        ? 1
-        : (depth_macro_count > 0 ? 64 : 8 * depth_trailing_micro_repeats);
-
-    // Characterize width, consumption of input and generation of output.
-    //
-    // In the case of depth multiplication, we ensure that some of the workspace
-    // at the end remains unused. This enables the filter routines to load the
-    // "next" data, of at least 16 bytes, even when at the end of the workspace.
-    // It is relatively expensive to detect the end micro block. It is also very
-    // difficult to test for (to trigger) erroneous reads (past end of array) in
-    // the depth multiplication case.
-    int workspace_width_micro_repeats =
-        (has_depth_multiplication
-         ? kDepthwiseConvScratchWorkspaceSize - kWorkspaceExtension
-         : kDepthwiseConvScratchWorkspaceSize) /
-        (4 * largest_macro_depth * height_block_size);
-    // When there is no depth multiplication, the workspace depth is a multiple of
-    // 8, which ensures that workspace rows are 16-byte aligned. (Actually 32,
-    // because of the micro width of 4.) This is not necessarily the case under
-    // depth multiplication, so we adjust now to impose this restriction.
+  // Choose parameter-specific kernel subroutines.
+  //
+  // The main part of the kernel has two stages. First, a temporary workspace is
+  // filled with padded and permuted data. Second, the filter is applied to the
+  // workspace data to generate output.
+  //
+  // The workspace fill stage handles padding so that the filter stage does not
+  // need to account for it. The workspace fill stage does not need to
+  // understand striding, and implicitly handles striding through the parameters
+  // that it is given.
+  using pack_macro_block_func_t = decltype(
+      &PackMacroBlock<implementation, quantization_type,
+                      DepthwiseConvDepthMultiplication::kNoMultiplication,
+                      0>::Run);
+  using kernel_macro_block_func_t = decltype(
+      &KernelMacroBlock<implementation, quantization_type,
+                        DepthwiseConvDepthMultiplication::kNoMultiplication,
+                        1>::Run);
+  pack_macro_block_func_t pack_macro_block_func;
+  kernel_macro_block_func_t kernel_macro_block_func;
+  {
     if (has_depth_multiplication) {
-        workspace_width_micro_repeats = (workspace_width_micro_repeats / 4) * 4;
-    }
-    TFLITE_DCHECK_EQ((workspace_width_micro_repeats * largest_macro_depth) % 4,
-                     0);
-    // Discount 1 of the micro-block repeats in each macro block to account for
-    // overlap.
-    const int consumed_width_per_macro_block =
-        4 * (workspace_width_micro_repeats - 1);
-    const int output_width_per_macro_block =
-        function_params.four_over_stride * (workspace_width_micro_repeats - 1);
-    TFLITE_DCHECK_GT(workspace_width_micro_repeats, 1);
-    TFLITE_DCHECK_EQ(output_width_per_macro_block * stride,
-                     consumed_width_per_macro_block);
-
-    // Width repetitions and residuals.
-    //
-    // Use of the workspace is characterized primarily in terms of *padded input*.
-    // Striding only matters in a few places.
-    //
-    // Simplifications: We require that there always be at least one full
-    // micro-block across the width. Since the maximum padding is 1, the trailing
-    // padding cannot span two micro blocks.
-    const int residual_micro_width = padded_width % 4;
-    // We base the count of macro blocks on the amount of padded input data each
-    // one consumes.
-    int width_overall_macro_count = (padded_width - residual_micro_width +
-                                     consumed_width_per_macro_block - 1) /
-                                    consumed_width_per_macro_block;
-    // Recall that we left a micro block at the end of each macro block for use as
-    // overlap. There is a special case in which we can use one fewer macro
-    // blocks, with the last one consuming extra input. (But not if the
-    // calculation thinks that we can use zero blocks.)
-    if (padded_width <=
-            ((width_overall_macro_count - 1) * consumed_width_per_macro_block + 4)) {
-        width_overall_macro_count -= 1;
-    }
-    width_overall_macro_count = std::max(width_overall_macro_count, 1);
-    // We always have to treat the final macro block along width as trailing,
-    // because even if it is full in terms of padded input, it will be incomplete
-    // in terms of output.
-    const int width_macro_count = width_overall_macro_count - 1;
-    // Micro blocks are traversed in terms of input in fill routines.
-    const int width_trailing_micro_repeats =
-        (padded_width - consumed_width_per_macro_block * width_macro_count) / 4;
-    const int width_overall_trailing_micro_repeats =
-        (padded_width - consumed_width_per_macro_block * width_macro_count + 3) /
-        4;
-    // Micro blocks are traversed in terms of output in filtering routines.
-    const int residual_output_micro_width =
-        (output_width - 1) % function_params.four_over_stride + 1;
-    const int output_width_trailing_micro_repeats =
-        residual_micro_width > (filter_size - 1)
-        ? width_trailing_micro_repeats
-        : width_trailing_micro_repeats - 1;
-    // Check results.
-    TFLITE_DCHECK_GT(width_overall_trailing_micro_repeats, 0);
-    TFLITE_DCHECK_EQ(padded_width,
-                     residual_micro_width +
-                     consumed_width_per_macro_block * width_macro_count +
-                     4 * width_trailing_micro_repeats);
-    TFLITE_DCHECK_LE(width_overall_macro_count, width_macro_count + 1);
-    TFLITE_DCHECK_GE(width_overall_macro_count, width_macro_count);
-
-    // Height repetitions and residuals.
-    //
-    int height_macro_count;
-    int residual_row_count;
-    int height_overall_macro_count;
-    if (stride == 1) {
-        TFLITE_DCHECK_EQ(row_count_per_macro, 4);
-        height_macro_count = row_count / 4;
-        residual_row_count = row_count % 4;
-        height_overall_macro_count = (row_count + 3) / 4;
+      if (padding_required) {
+        pack_macro_block_func =
+            PackMacroBlock<implementation, quantization_type,
+                           DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                           /*max_padding=*/1>::Run;
+      } else {
+        pack_macro_block_func =
+            PackMacroBlock<implementation, quantization_type,
+                           DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                           /*max_padding=*/0>::Run;
+      }
+      if (stride == 1) {
+        kernel_macro_block_func =
+            KernelMacroBlock<implementation, quantization_type,
+                             DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                             /*stride=*/1>::Run;
+      } else {
+        kernel_macro_block_func =
+            KernelMacroBlock<implementation, quantization_type,
+                             DepthwiseConvDepthMultiplication::kUnitInputDepth,
+                             /*stride=*/2>::Run;
+      }
     } else {
-        TFLITE_DCHECK_EQ(row_count_per_macro, 2);
-        height_macro_count = row_count / 2;
-        residual_row_count = row_count % 2;
-        height_overall_macro_count = (row_count + 1) / 2;
+      if (padding_required) {
+        pack_macro_block_func =
+            PackMacroBlock<implementation, quantization_type,
+                           DepthwiseConvDepthMultiplication::kNoMultiplication,
+                           /*max_padding=*/1>::Run;
+      } else {
+        pack_macro_block_func =
+            PackMacroBlock<implementation, quantization_type,
+                           DepthwiseConvDepthMultiplication::kNoMultiplication,
+                           /*max_padding=*/0>::Run;
+      }
+      if (stride == 1) {
+        kernel_macro_block_func = KernelMacroBlock<
+            implementation, quantization_type,
+            DepthwiseConvDepthMultiplication::kNoMultiplication,
+            /*stride=*/1>::Run;
+      } else {
+        kernel_macro_block_func = KernelMacroBlock<
+            implementation, quantization_type,
+            DepthwiseConvDepthMultiplication::kNoMultiplication,
+            /*stride=*/2>::Run;
+      }
     }
-    TFLITE_DCHECK_EQ(
-        row_count, residual_row_count + row_count_per_macro * height_macro_count);
-    TFLITE_DCHECK_LE(height_overall_macro_count, height_macro_count + 1);
-    TFLITE_DCHECK_GE(height_overall_macro_count, height_macro_count);
+  }
 
-    // Data strides.
-    //
-    const int input_height_stride = input_width * input_depth;
-    const int output_height_stride = output_width * output_depth;
-    const int input_batch_stride = input_height_stride * input_height;
-    const int output_batch_stride = output_height_stride * output_height;
-    const int input_depth_macro_stride = has_depth_multiplication ? 0 : 64;
-    const int input_width_macro_stride =
-        input_depth * consumed_width_per_macro_block;
-    const int output_width_macro_stride =
-        output_depth * output_width_per_macro_block;
+  // Stride-only variables.
+  //
+  const int row_count_per_macro = stride == 1 ? 4 : 2;
+  // row_count_per_macro * stride:
+  constexpr int input_height_per_macro = 4;
+  // Number of rows per micro block (= rows per macro block) is
+  //   (row_count_per_macro - 1) * stride + 1 + (filter_size - 1)
+  const int height_block_size = stride == 1 ? 3 + filter_size : 2 + filter_size;
+  const int input_height_overlap = filter_size - stride;
+  // stride == 1 ? 4 : 2:
+  function_params.four_over_stride = row_count_per_macro;
 
-    // Store parameters that do not vary across macro blocks.
-    //
-    function_params.workspace_width_micro_repeats = workspace_width_micro_repeats;
-    function_params.height_macro_count = height_overall_macro_count;
-    function_params.width_macro_count = width_overall_macro_count;
-    function_params.input_height_stride = input_height_stride;
-    function_params.output_height_stride = output_height_stride;
-    function_params.residual_width = residual_micro_width;
+  TFLITE_DCHECK_EQ(stride * function_params.four_over_stride, 4);
+  TFLITE_DCHECK_EQ(height_block_size,
+                   input_height_per_macro + input_height_overlap);
 
-    // Prefetch workspace for write, along with any necessary dummy writes.
-    const int max_workspace_height_stride =
-        16 * ((workspace_width_micro_repeats + 3) >> 2) * largest_macro_depth;
-    const int workspace_fill_size = std::min(
-                                        kDepthwiseConvScratchWorkspaceSize,
-                                        height_block_size * max_workspace_height_stride + kWorkspaceExtension);
-    WorkspacePrefetchWrite<implementation>::Run(
-        params.weights_offset, workspace_fill_size, macroblock_workspace);
+  // Create workspaces.
+  //
+  // Filter workspace is for shuffle: only first depth/8 is used.
+  // indexed as [depth/8][sub-block][height][depth][width].
+  TFLITE_DCHECK_EQ(kDepthwiseConvAdjustedBiasLimit % 8, 0);
+  int8 macroblock_workspace[kDepthwiseConvScratchWorkspaceSize];
+  int32 adjusted_bias_data[kDepthwiseConvAdjustedBiasLimit];
+  int8 filter_workspace[kDepthwiseConvAdjustedBiasLimit >> 3][3][2][4][4];
 
-    // Main process.
-    //
-    // Most kernels are nested batch-height-width-depth. Here we proceed over
-    // macro blocks batch-width-depth-height.
-    //
-    // Example of handling of trailing iteration: when there is trailing depth,
-    // depth_overall_macro_count = depth_macro_count + 1, so we can adjust the
-    // dimensions for trailing macro blocks by looking for
-    // j_depth == depth_macro_count.
-    for (int b = batch_start; b < batch_end; ++b) {
-        for (int k_width = 0; k_width < width_overall_macro_count; ++k_width) {
-            // Figure out the work to be done for this macro block. If it trails in
-            // any dimension, the work in that dimension is adjusted.
-            // The work to be done across widths has 3 cases:
-            // (a) A full macro block,
-            // (b) Partial terminal macro block, with input and output ending in
-            //     same micro block, and
-            // (c) Partial terminal macro block, with output corresponding to one
-            //     fewer micro blocks, because filter extends across micro-block
-            //     boundary.
-            if (k_width != width_macro_count) {
-                function_params.output_residual_width = 0;
-                function_params.input_width_micro_repeats =
-                    workspace_width_micro_repeats;
-                function_params.input_width_overall_micro_repeats =
-                    workspace_width_micro_repeats;
-                function_params.output_width_micro_repeats =
-                    workspace_width_micro_repeats - 1;
-            } else {
-                function_params.output_residual_width = residual_output_micro_width;
-                function_params.input_width_micro_repeats =
-                    width_trailing_micro_repeats;
-                function_params.input_width_overall_micro_repeats =
-                    width_overall_trailing_micro_repeats;
-                function_params.output_width_micro_repeats =
-                    output_width_trailing_micro_repeats;
-            }
-            function_params.output_width_overall_micro_repeats =
-                function_params.output_residual_width == 0
-                ? function_params.output_width_micro_repeats
-                : function_params.output_width_micro_repeats + 1;
+  // Output depth characterization.
+  //
+  const int depth_macro_count = output_depth / 64;
+  const int depth_overall_macro_count = (output_depth + 63) / 64;
+  // Number of micro blocks down the depth in a final incomplete macro block.
+  const int depth_trailing_micro_repeats = output_depth / 8 % 8;
+  // The output_depth may not have a remainder: it must be a multiple of 8.
+  TFLITE_DCHECK_EQ(output_depth,
+                   64 * depth_macro_count + 8 * depth_trailing_micro_repeats);
 
-            for (int j_depth = 0; j_depth < depth_overall_macro_count; ++j_depth) {
-                if (quantization_type == QuantizationType::kPerChannelInt8) {
-                    // Each macro block handles depth of 64 (8 micro). The kernel
-                    // functions receive pointers to quantization data for the block being
-                    // processed.
-                    function_params.output_multiplier_per_channel =
-                        params.output_multiplier_per_channel + 64 * j_depth;
-                    function_params.output_shift_per_channel =
-                        params.output_shift_per_channel + 64 * j_depth;
-                }
-                // Process filter and bias data.
-                //
-                function_params.depth_micro_repeats =
-                    j_depth == depth_macro_count ? depth_trailing_micro_repeats : 8;
-                ProcessPerDepth<implementation, quantization_type>::Run(
-                    filter_data + 64 * j_depth,
-                    bias_data + 8 * 2 * bias_increment * j_depth,
-                    filter_workspace[0][0][0][0], adjusted_bias_data, &function_params);
+  // Characterize the first macro block depth, the largest.
+  //
+  // We base treatment of the width on the trailing macro block if there are
+  // no full blocks, in order to do more work together (that is, increase
+  // workspace_width_micro_repeats when largest_macro_depth < 64).
+  const int largest_macro_depth =
+      has_depth_multiplication
+          ? 1
+          : (depth_macro_count > 0 ? 64 : 8 * depth_trailing_micro_repeats);
 
-                const typename QuantizationTypeImpl<quantization_type>::ExternalType*
-                input_data_block = input_data + b * input_batch_stride +
-                                   j_depth * input_depth_macro_stride +
-                                   k_width * input_width_macro_stride -
-                                   function_params.padding_left * input_depth +
-                                   row_start * stride * input_height_stride -
-                                   full_padding_top * input_height_stride;
-                typename QuantizationTypeImpl<quantization_type>::ExternalType*
-                output_data_block =
-                    output_data + b * output_batch_stride +
-                    row_start * output_height_stride + j_depth * 64 +
-                    k_width * output_width_macro_stride;
+  // Characterize width, consumption of input and generation of output.
+  //
+  // In the case of depth multiplication, we ensure that some of the workspace
+  // at the end remains unused. This enables the filter routines to load the
+  // "next" data, of at least 16 bytes, even when at the end of the workspace.
+  // It is relatively expensive to detect the end micro block. It is also very
+  // difficult to test for (to trigger) erroneous reads (past end of array) in
+  // the depth multiplication case.
+  int workspace_width_micro_repeats =
+      (has_depth_multiplication
+           ? kDepthwiseConvScratchWorkspaceSize - kWorkspaceExtension
+           : kDepthwiseConvScratchWorkspaceSize) /
+      (4 * largest_macro_depth * height_block_size);
+  // When there is no depth multiplication, the workspace depth is a multiple of
+  // 8, which ensures that workspace rows are 16-byte aligned. (Actually 32,
+  // because of the micro width of 4.) This is not necessarily the case under
+  // depth multiplication, so we adjust now to impose this restriction.
+  if (has_depth_multiplication) {
+    workspace_width_micro_repeats = (workspace_width_micro_repeats / 4) * 4;
+  }
+  TFLITE_DCHECK_EQ((workspace_width_micro_repeats * largest_macro_depth) % 4,
+                   0);
+  // Discount 1 of the micro-block repeats in each macro block to account for
+  // overlap.
+  const int consumed_width_per_macro_block =
+      4 * (workspace_width_micro_repeats - 1);
+  const int output_width_per_macro_block =
+      function_params.four_over_stride * (workspace_width_micro_repeats - 1);
+  TFLITE_DCHECK_GT(workspace_width_micro_repeats, 1);
+  TFLITE_DCHECK_EQ(output_width_per_macro_block * stride,
+                   consumed_width_per_macro_block);
 
-                // Under depth multiplication the workspace_height_stride does not have
-                // to depend on input_width_overall_micro_repeats, but this improves the
-                // compactness of workspace use.
-                const int workspace_height_stride =
-                    has_depth_multiplication
-                    ? 16 * ((function_params.input_width_overall_micro_repeats +
-                             3) >>
-                            2)
-                    : 4 * function_params.input_width_overall_micro_repeats * 8 *
-                    function_params.depth_micro_repeats;
-                TFLITE_DCHECK_EQ(workspace_height_stride % 16, 0);
-                function_params.workspace_height_stride = workspace_height_stride;
+  // Width repetitions and residuals.
+  //
+  // Use of the workspace is characterized primarily in terms of *padded input*.
+  // Striding only matters in a few places.
+  //
+  // Simplifications: We require that there always be at least one full
+  // micro-block across the width. Since the maximum padding is 1, the trailing
+  // padding cannot span two micro blocks.
+  const int residual_micro_width = padded_width % 4;
+  // We base the count of macro blocks on the amount of padded input data each
+  // one consumes.
+  int width_overall_macro_count = (padded_width - residual_micro_width +
+                                   consumed_width_per_macro_block - 1) /
+                                  consumed_width_per_macro_block;
+  // Recall that we left a micro block at the end of each macro block for use as
+  // overlap. There is a special case in which we can use one fewer macro
+  // blocks, with the last one consuming extra input. (But not if the
+  // calculation thinks that we can use zero blocks.)
+  if (padded_width <=
+      ((width_overall_macro_count - 1) * consumed_width_per_macro_block + 4)) {
+    width_overall_macro_count -= 1;
+  }
+  width_overall_macro_count = std::max(width_overall_macro_count, 1);
+  // We always have to treat the final macro block along width as trailing,
+  // because even if it is full in terms of padded input, it will be incomplete
+  // in terms of output.
+  const int width_macro_count = width_overall_macro_count - 1;
+  // Micro blocks are traversed in terms of input in fill routines.
+  const int width_trailing_micro_repeats =
+      (padded_width - consumed_width_per_macro_block * width_macro_count) / 4;
+  const int width_overall_trailing_micro_repeats =
+      (padded_width - consumed_width_per_macro_block * width_macro_count + 3) /
+      4;
+  // Micro blocks are traversed in terms of output in filtering routines.
+  const int residual_output_micro_width =
+      (output_width - 1) % function_params.four_over_stride + 1;
+  const int output_width_trailing_micro_repeats =
+      residual_micro_width > (filter_size - 1)
+          ? width_trailing_micro_repeats
+          : width_trailing_micro_repeats - 1;
+  // Check results.
+  TFLITE_DCHECK_GT(width_overall_trailing_micro_repeats, 0);
+  TFLITE_DCHECK_EQ(padded_width,
+                   residual_micro_width +
+                       consumed_width_per_macro_block * width_macro_count +
+                       4 * width_trailing_micro_repeats);
+  TFLITE_DCHECK_LE(width_overall_macro_count, width_macro_count + 1);
+  TFLITE_DCHECK_GE(width_overall_macro_count, width_macro_count);
 
-                // For the first macro block for output rows we fill in the first few
-                // rows.  After this we will copy them (see below in loop.)
-                function_params.inbound_block_height = input_height_overlap;
-                pack_macro_block_func(-1, k_width, input_data_block,
-                                      macroblock_workspace, &function_params);
-                input_data_block += input_height_stride * input_height_overlap;
+  // Height repetitions and residuals.
+  //
+  int height_macro_count;
+  int residual_row_count;
+  int height_overall_macro_count;
+  if (stride == 1) {
+    TFLITE_DCHECK_EQ(row_count_per_macro, 4);
+    height_macro_count = row_count / 4;
+    residual_row_count = row_count % 4;
+    height_overall_macro_count = (row_count + 3) / 4;
+  } else {
+    TFLITE_DCHECK_EQ(row_count_per_macro, 2);
+    height_macro_count = row_count / 2;
+    residual_row_count = row_count % 2;
+    height_overall_macro_count = (row_count + 1) / 2;
+  }
+  TFLITE_DCHECK_EQ(
+      row_count, residual_row_count + row_count_per_macro * height_macro_count);
+  TFLITE_DCHECK_LE(height_overall_macro_count, height_macro_count + 1);
+  TFLITE_DCHECK_GE(height_overall_macro_count, height_macro_count);
 
-                for (int i_height = 0; i_height < height_overall_macro_count;
-                        ++i_height) {
-                    if (i_height != height_macro_count) {
-                        function_params.inbound_block_height = input_height_per_macro;
-                        function_params.outbound_block_height = row_count_per_macro;
-                    } else {
-                        function_params.inbound_block_height = residual_row_count * stride;
-                        function_params.outbound_block_height = residual_row_count;
-                    }
-                    TFLITE_DCHECK_LT(i_height * row_count_per_macro, row_count);
-                    TFLITE_DCHECK_LT(i_height * input_height_per_macro, input_height);
-                    TFLITE_DCHECK_LT(k_width * output_width_per_macro_block,
-                                     output_width);
-                    TFLITE_DCHECK_LT(k_width * consumed_width_per_macro_block,
-                                     input_width);
+  // Data strides.
+  //
+  const int input_height_stride = input_width * input_depth;
+  const int output_height_stride = output_width * output_depth;
+  const int input_batch_stride = input_height_stride * input_height;
+  const int output_batch_stride = output_height_stride * output_height;
+  const int input_depth_macro_stride = has_depth_multiplication ? 0 : 64;
+  const int input_width_macro_stride =
+      input_depth * consumed_width_per_macro_block;
+  const int output_width_macro_stride =
+      output_depth * output_width_per_macro_block;
 
-                    // Macro blocks overlap by input_height_overlap rows, so we copy
-                    // those instead of filling in afresh.  The first macro block across
-                    // output rows was filled in outside of the loop (above).
-                    if (i_height > 0) {
-                        memcpy(macroblock_workspace,
-                               macroblock_workspace +
-                               input_height_per_macro * workspace_height_stride,
-                               input_height_overlap * workspace_height_stride);
-                    }
+  // Store parameters that do not vary across macro blocks.
+  //
+  function_params.workspace_width_micro_repeats = workspace_width_micro_repeats;
+  function_params.height_macro_count = height_overall_macro_count;
+  function_params.width_macro_count = width_overall_macro_count;
+  function_params.input_height_stride = input_height_stride;
+  function_params.output_height_stride = output_height_stride;
+  function_params.residual_width = residual_micro_width;
 
-                    pack_macro_block_func(
-                        i_height, k_width, input_data_block,
-                        macroblock_workspace +
-                        input_height_overlap * workspace_height_stride,
-                        &function_params);
+  // Prefetch workspace for write, along with any necessary dummy writes.
+  const int max_workspace_height_stride =
+      16 * ((workspace_width_micro_repeats + 3) >> 2) * largest_macro_depth;
+  const int workspace_fill_size = std::min(
+      kDepthwiseConvScratchWorkspaceSize,
+      height_block_size * max_workspace_height_stride + kWorkspaceExtension);
+  WorkspacePrefetchWrite<implementation>::Run(
+      params.weights_offset, workspace_fill_size, macroblock_workspace);
 
-                    kernel_macro_block_func(
-                        macroblock_workspace, filter_workspace[0][0][0][0],
-                        adjusted_bias_data, output_data_block, &function_params);
+  // Main process.
+  //
+  // Most kernels are nested batch-height-width-depth. Here we proceed over
+  // macro blocks batch-width-depth-height.
+  //
+  // Example of handling of trailing iteration: when there is trailing depth,
+  // depth_overall_macro_count = depth_macro_count + 1, so we can adjust the
+  // dimensions for trailing macro blocks by looking for
+  // j_depth == depth_macro_count.
+  for (int b = batch_start; b < batch_end; ++b) {
+    for (int k_width = 0; k_width < width_overall_macro_count; ++k_width) {
+      // Figure out the work to be done for this macro block. If it trails in
+      // any dimension, the work in that dimension is adjusted.
+      // The work to be done across widths has 3 cases:
+      // (a) A full macro block,
+      // (b) Partial terminal macro block, with input and output ending in
+      //     same micro block, and
+      // (c) Partial terminal macro block, with output corresponding to one
+      //     fewer micro blocks, because filter extends across micro-block
+      //     boundary.
+      if (k_width != width_macro_count) {
+        function_params.output_residual_width = 0;
+        function_params.input_width_micro_repeats =
+            workspace_width_micro_repeats;
+        function_params.input_width_overall_micro_repeats =
+            workspace_width_micro_repeats;
+        function_params.output_width_micro_repeats =
+            workspace_width_micro_repeats - 1;
+      } else {
+        function_params.output_residual_width = residual_output_micro_width;
+        function_params.input_width_micro_repeats =
+            width_trailing_micro_repeats;
+        function_params.input_width_overall_micro_repeats =
+            width_overall_trailing_micro_repeats;
+        function_params.output_width_micro_repeats =
+            output_width_trailing_micro_repeats;
+      }
+      function_params.output_width_overall_micro_repeats =
+          function_params.output_residual_width == 0
+              ? function_params.output_width_micro_repeats
+              : function_params.output_width_micro_repeats + 1;
 
-                    input_data_block += input_height_stride * input_height_per_macro;
-                    output_data_block += output_height_stride * row_count_per_macro;
-                }
-            }
+      for (int j_depth = 0; j_depth < depth_overall_macro_count; ++j_depth) {
+        if (quantization_type == QuantizationType::kPerChannelInt8) {
+          // Each macro block handles depth of 64 (8 micro). The kernel
+          // functions receive pointers to quantization data for the block being
+          // processed.
+          function_params.output_multiplier_per_channel =
+              params.output_multiplier_per_channel + 64 * j_depth;
+          function_params.output_shift_per_channel =
+              params.output_shift_per_channel + 64 * j_depth;
         }
+        // Process filter and bias data.
+        //
+        function_params.depth_micro_repeats =
+            j_depth == depth_macro_count ? depth_trailing_micro_repeats : 8;
+        ProcessPerDepth<implementation, quantization_type>::Run(
+            filter_data + 64 * j_depth,
+            bias_data + 8 * 2 * bias_increment * j_depth,
+            filter_workspace[0][0][0][0], adjusted_bias_data, &function_params);
+
+        const typename QuantizationTypeImpl<quantization_type>::ExternalType*
+            input_data_block = input_data + b * input_batch_stride +
+                               j_depth * input_depth_macro_stride +
+                               k_width * input_width_macro_stride -
+                               function_params.padding_left * input_depth +
+                               row_start * stride * input_height_stride -
+                               full_padding_top * input_height_stride;
+        typename QuantizationTypeImpl<quantization_type>::ExternalType*
+            output_data_block =
+                output_data + b * output_batch_stride +
+                row_start * output_height_stride + j_depth * 64 +
+                k_width * output_width_macro_stride;
+
+        // Under depth multiplication the workspace_height_stride does not have
+        // to depend on input_width_overall_micro_repeats, but this improves the
+        // compactness of workspace use.
+        const int workspace_height_stride =
+            has_depth_multiplication
+                ? 16 * ((function_params.input_width_overall_micro_repeats +
+                         3) >>
+                        2)
+                : 4 * function_params.input_width_overall_micro_repeats * 8 *
+                      function_params.depth_micro_repeats;
+        TFLITE_DCHECK_EQ(workspace_height_stride % 16, 0);
+        function_params.workspace_height_stride = workspace_height_stride;
+
+        // For the first macro block for output rows we fill in the first few
+        // rows.  After this we will copy them (see below in loop.)
+        function_params.inbound_block_height = input_height_overlap;
+        pack_macro_block_func(-1, k_width, input_data_block,
+                              macroblock_workspace, &function_params);
+        input_data_block += input_height_stride * input_height_overlap;
+
+        for (int i_height = 0; i_height < height_overall_macro_count;
+             ++i_height) {
+          if (i_height != height_macro_count) {
+            function_params.inbound_block_height = input_height_per_macro;
+            function_params.outbound_block_height = row_count_per_macro;
+          } else {
+            function_params.inbound_block_height = residual_row_count * stride;
+            function_params.outbound_block_height = residual_row_count;
+          }
+          TFLITE_DCHECK_LT(i_height * row_count_per_macro, row_count);
+          TFLITE_DCHECK_LT(i_height * input_height_per_macro, input_height);
+          TFLITE_DCHECK_LT(k_width * output_width_per_macro_block,
+                           output_width);
+          TFLITE_DCHECK_LT(k_width * consumed_width_per_macro_block,
+                           input_width);
+
+          // Macro blocks overlap by input_height_overlap rows, so we copy
+          // those instead of filling in afresh.  The first macro block across
+          // output rows was filled in outside of the loop (above).
+          if (i_height > 0) {
+            memcpy(macroblock_workspace,
+                   macroblock_workspace +
+                       input_height_per_macro * workspace_height_stride,
+                   input_height_overlap * workspace_height_stride);
+          }
+
+          pack_macro_block_func(
+              i_height, k_width, input_data_block,
+              macroblock_workspace +
+                  input_height_overlap * workspace_height_stride,
+              &function_params);
+
+          kernel_macro_block_func(
+              macroblock_workspace, filter_workspace[0][0][0][0],
+              adjusted_bias_data, output_data_block, &function_params);
+
+          input_data_block += input_height_stride * input_height_per_macro;
+          output_data_block += output_height_stride * row_count_per_macro;
+        }
+      }
     }
+  }
 }
 
 template <DepthwiseConvImplementation implementation>
@@ -13398,11 +13398,11 @@ inline void DepthwiseConvDotProduct3x3(
     const uint8* filter_data, const RuntimeShape& bias_shape,
     const int32* bias_data, const RuntimeShape& output_shape,
     uint8* output_data, int thread_start, int thread_end, int thread_dim) {
-    DepthwiseConvDotProduct3x3Impl<
-    implementation, depthwise_conv::QuantizationType::kNonPerChannelUint8>(
-        params, input_shape, input_data, filter_shape, filter_data, bias_shape,
-        bias_data, output_shape, output_data, thread_start, thread_end,
-        thread_dim);
+  DepthwiseConvDotProduct3x3Impl<
+      implementation, depthwise_conv::QuantizationType::kNonPerChannelUint8>(
+      params, input_shape, input_data, filter_shape, filter_data, bias_shape,
+      bias_data, output_shape, output_data, thread_start, thread_end,
+      thread_dim);
 }
 
 template <DepthwiseConvImplementation implementation>
@@ -13412,11 +13412,11 @@ inline void DepthwiseConvDotProduct3x3PerChannel(
     const int8* filter_data, const RuntimeShape& bias_shape,
     const int32* bias_data, const RuntimeShape& output_shape, int8* output_data,
     int thread_start, int thread_end, int thread_dim) {
-    DepthwiseConvDotProduct3x3Impl<
-    implementation, depthwise_conv::QuantizationType::kPerChannelInt8>(
-        params, input_shape, input_data, filter_shape, filter_data, bias_shape,
-        bias_data, output_shape, output_data, thread_start, thread_end,
-        thread_dim);
+  DepthwiseConvDotProduct3x3Impl<
+      implementation, depthwise_conv::QuantizationType::kPerChannelInt8>(
+      params, input_shape, input_data, filter_shape, filter_data, bias_shape,
+      bias_data, output_shape, output_data, thread_start, thread_end,
+      thread_dim);
 }
 
 #undef vst1_lane_8x4

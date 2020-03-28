@@ -27,66 +27,66 @@ constexpr int kValueBufSize = 32;
 
 template <typename T, typename Enable = void>
 struct ToString {
-    static void Run(const T& value, char* buf) {
-        snprintf(buf, kValueBufSize, "(?)");
-    }
+  static void Run(const T& value, char* buf) {
+    snprintf(buf, kValueBufSize, "(?)");
+  }
 };
 
 template <>
 struct ToString<float, void> {
-    static void Run(float value, char* buf) {
-        snprintf(buf, kValueBufSize, "%.9g", static_cast<double>(value));
-    }
+  static void Run(float value, char* buf) {
+    snprintf(buf, kValueBufSize, "%.9g", static_cast<double>(value));
+  }
 };
 
 template <>
 struct ToString<double, void> {
-    static void Run(double value, char* buf) {
-        snprintf(buf, kValueBufSize, "%.16g", value);
-    }
+  static void Run(double value, char* buf) {
+    snprintf(buf, kValueBufSize, "%.16g", value);
+  }
 };
 
 template <typename T>
 struct ToString<T, typename std::enable_if<std::is_integral<T>::value>::type> {
-    static void Run(const T& value, char* buf) {
-        snprintf(buf, kValueBufSize, "%lld", static_cast<long long>(value));
-    }
+  static void Run(const T& value, char* buf) {
+    snprintf(buf, kValueBufSize, "%lld", static_cast<long long>(value));
+  }
 };
 
 template <typename T>
 struct ToString<T*, void> {
-    static void Run(T* value, char* buf) {
-        snprintf(buf, kValueBufSize, "%p", value);
-    }
+  static void Run(T* value, char* buf) {
+    snprintf(buf, kValueBufSize, "%p", value);
+  }
 };
 
 template <typename T>
 struct ToString<T, typename std::enable_if<std::is_enum<T>::value>::type> {
-    static void Run(const T& value, char* buf) {
-        snprintf(buf, kValueBufSize, "(enum value %d)", static_cast<int>(value));
-    }
+  static void Run(const T& value, char* buf) {
+    snprintf(buf, kValueBufSize, "(enum value %d)", static_cast<int>(value));
+  }
 };
 
 inline void Failure(const char* file, int line, const char* macro,
                     const char* condition) {
-    fprintf(stderr, "%s:%d: %s condition not satisfied: %s\n", file, line, macro,
-            condition);
-    abort();
+  fprintf(stderr, "%s:%d: %s condition not satisfied: %s\n", file, line, macro,
+          condition);
+  abort();
 }
 
 template <typename LhsType, typename RhsType>
 inline void Failure(const char* file, int line, const char* macro,
                     const char* lhs, const LhsType& lhs_value, const char* op,
                     const char* rhs, const RhsType& rhs_value) {
-    char lhs_value_buf[kValueBufSize];
-    ToString<LhsType>::Run(lhs_value, lhs_value_buf);
-    char rhs_value_buf[kValueBufSize];
-    ToString<RhsType>::Run(rhs_value, rhs_value_buf);
-    fprintf(stderr,
-            "%s:%d: %s condition not satisfied:   [ %s %s %s ]   with values   [ "
-            "%s %s %s ].\n",
-            file, line, macro, lhs, op, rhs, lhs_value_buf, op, rhs_value_buf);
-    abort();
+  char lhs_value_buf[kValueBufSize];
+  ToString<LhsType>::Run(lhs_value, lhs_value_buf);
+  char rhs_value_buf[kValueBufSize];
+  ToString<RhsType>::Run(rhs_value, rhs_value_buf);
+  fprintf(stderr,
+          "%s:%d: %s condition not satisfied:   [ %s %s %s ]   with values   [ "
+          "%s %s %s ].\n",
+          file, line, macro, lhs, op, rhs, lhs_value_buf, op, rhs_value_buf);
+  abort();
 }
 
 #define RUY_CHECK_IMPL(macro, condition)                                  \
