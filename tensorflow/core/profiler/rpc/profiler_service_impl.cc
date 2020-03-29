@@ -35,66 +35,66 @@ namespace {
 Status CollectDataToResponse(const ProfileRequest& req,
                              ProfilerSession* profiler,
                              ProfileResponse* response) {
-  profiler::XSpace xspace;
-  TF_RETURN_IF_ERROR(profiler->CollectData(&xspace));
-  TF_RETURN_IF_ERROR(
-      profiler::ConvertXSpaceToProfileResponse(xspace, req, response));
-  return Status::OK();
+    profiler::XSpace xspace;
+    TF_RETURN_IF_ERROR(profiler->CollectData(&xspace));
+    TF_RETURN_IF_ERROR(
+        profiler::ConvertXSpaceToProfileResponse(xspace, req, response));
+    return Status::OK();
 }
 
 class ProfilerServiceImpl : public grpc::ProfilerService::Service {
- public:
-  ::grpc::Status Monitor(::grpc::ServerContext* ctx, const MonitorRequest* req,
-                         MonitorResponse* response) override {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "unimplemented.");
-  }
-
-  ::grpc::Status Profile(::grpc::ServerContext* ctx, const ProfileRequest* req,
-                         ProfileResponse* response) override {
-    VLOG(1) << "Received a profile request: " << req->DebugString();
-    std::unique_ptr<ProfilerSession> profiler =
-        ProfilerSession::Create(GetOptions(req->opts()));
-    Status status = profiler->Status();
-    if (!status.ok()) {
-      return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                            status.error_message());
+public:
+    ::grpc::Status Monitor(::grpc::ServerContext* ctx, const MonitorRequest* req,
+                           MonitorResponse* response) override {
+        return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "unimplemented.");
     }
 
-    Env* env = Env::Default();
-    for (size_t i = 0; i < req->duration_ms(); ++i) {
-      env->SleepForMicroseconds(EnvTime::kMillisToMicros);
-      if (ctx->IsCancelled()) {
-        return ::grpc::Status::CANCELLED;
-      }
+    ::grpc::Status Profile(::grpc::ServerContext* ctx, const ProfileRequest* req,
+                           ProfileResponse* response) override {
+        VLOG(1) << "Received a profile request: " << req->DebugString();
+        std::unique_ptr<ProfilerSession> profiler =
+            ProfilerSession::Create(GetOptions(req->opts()));
+        Status status = profiler->Status();
+        if (!status.ok()) {
+            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
+                                  status.error_message());
+        }
+
+        Env* env = Env::Default();
+        for (size_t i = 0; i < req->duration_ms(); ++i) {
+            env->SleepForMicroseconds(EnvTime::kMillisToMicros);
+            if (ctx->IsCancelled()) {
+                return ::grpc::Status::CANCELLED;
+            }
+        }
+
+        status = CollectDataToResponse(*req, profiler.get(), response);
+        if (!status.ok()) {
+            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
+                                  status.error_message());
+        }
+
+        return ::grpc::Status::OK;
     }
 
-    status = CollectDataToResponse(*req, profiler.get(), response);
-    if (!status.ok()) {
-      return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                            status.error_message());
+private:
+    profiler::ProfilerOptions GetOptions(const tensorflow::ProfileOptions& opts) {
+        profiler::ProfilerOptions options;
+        if (opts.version()) {
+            options.host_tracer_level = opts.host_tracer_level();
+            options.device_tracer_level = opts.device_tracer_level();
+            options.enable_python_tracer = opts.python_tracer_level() > 0;
+        } else {
+            // use default options value;
+        }
+        return options;
     }
-
-    return ::grpc::Status::OK;
-  }
-
- private:
-  profiler::ProfilerOptions GetOptions(const tensorflow::ProfileOptions& opts) {
-    profiler::ProfilerOptions options;
-    if (opts.version()) {
-      options.host_tracer_level = opts.host_tracer_level();
-      options.device_tracer_level = opts.device_tracer_level();
-      options.enable_python_tracer = opts.python_tracer_level() > 0;
-    } else {
-      // use default options value;
-    }
-    return options;
-  }
 };
 
 }  // namespace
 
 std::unique_ptr<grpc::ProfilerService::Service> CreateProfilerService() {
-  return MakeUnique<ProfilerServiceImpl>();
+    return MakeUnique<ProfilerServiceImpl>();
 }
 
 }  // namespace tensorflow
