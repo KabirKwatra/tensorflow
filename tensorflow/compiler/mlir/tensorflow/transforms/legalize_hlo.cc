@@ -17,12 +17,12 @@ limitations under the License.
 
 #include <memory>
 
-#include "mlir/Dialect/StandardOps/IR/Ops.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/PatternMatch.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
-#include "mlir/Support/LogicalResult.h"  // from @llvm-project
+#include "mlir/Dialect/StandardOps/IR/Ops.h"    // from @llvm-project
+#include "mlir/IR/MLIRContext.h"                // from @llvm-project
+#include "mlir/IR/Operation.h"                  // from @llvm-project
+#include "mlir/IR/PatternMatch.h"               // from @llvm-project
+#include "mlir/Pass/Pass.h"                     // from @llvm-project
+#include "mlir/Support/LogicalResult.h"         // from @llvm-project
 #include "mlir/Transforms/DialectConversion.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.h"
 #include "tensorflow/compiler/mlir/xla/ir/hlo_ops.h"
@@ -32,43 +32,43 @@ namespace TF {
 namespace {
 
 class LegalizeHloToTf : public FunctionPass<LegalizeHloToTf> {
-public:
-    LegalizeHloToTf() = default;
-    LegalizeHloToTf(const LegalizeHloToTf &) {}
+ public:
+  LegalizeHloToTf() = default;
+  LegalizeHloToTf(const LegalizeHloToTf&) {}
 
-    /// Performs the legalization to the TF dialect.
-    void runOnFunction() override;
+  /// Performs the legalization to the TF dialect.
+  void runOnFunction() override;
 };
 
 // Returns whether the two values are guaranteed to be broadcastable to the
 // same shape, this broadcasts size 1 tensors up to any rank.
 // TODO(jpienaar): Move this to more general location.
 static bool AreBroadcastCompatible(Value x, Value y) {
-    auto x_ranked = x.getType().dyn_cast<RankedTensorType>();
-    auto y_ranked = y.getType().dyn_cast<RankedTensorType>();
-    if (!x_ranked || !y_ranked) {
-        return true;
-    }
-    SmallVector<int64_t, 4> resultShape;
-    return OpTrait::util::getBroadcastedShape(x_ranked.getShape(),
-            y_ranked.getShape(), resultShape);
+  auto x_ranked = x.getType().dyn_cast<RankedTensorType>();
+  auto y_ranked = y.getType().dyn_cast<RankedTensorType>();
+  if (!x_ranked || !y_ranked) {
+    return true;
+  }
+  SmallVector<int64_t, 4> resultShape;
+  return OpTrait::util::getBroadcastedShape(x_ranked.getShape(),
+                                            y_ranked.getShape(), resultShape);
 }
 
 #include "tensorflow/compiler/mlir/tensorflow/transforms/generated_legalize_hlo.inc"
 
 /// Performs the lowering to XLA dialect.
 void LegalizeHloToTf::runOnFunction() {
-    MLIRContext &context = getContext();
+  MLIRContext& context = getContext();
 
-    // Add legalization patterns to the list.
-    OwningRewritePatternList patterns;
-    populateWithGenerated(&context, &patterns);
+  // Add legalization patterns to the list.
+  OwningRewritePatternList patterns;
+  populateWithGenerated(&context, &patterns);
 
-    ConversionTarget target(context);
-    target.addLegalDialect<TensorFlowDialect>();
-    target.addLegalOp<CallOp>();
-    if (failed(applyPartialConversion(getFunction(), target, patterns)))
-        signalPassFailure();
+  ConversionTarget target(context);
+  target.addLegalDialect<TensorFlowDialect>();
+  target.addLegalOp<CallOp>();
+  if (failed(applyPartialConversion(getFunction(), target, patterns)))
+    signalPassFailure();
 }
 
 static PassRegistration<LegalizeHloToTf> pass(
@@ -77,7 +77,7 @@ static PassRegistration<LegalizeHloToTf> pass(
 }  // end namespace
 
 std::unique_ptr<OpPassBase<FuncOp>> CreateLegalizeHloToTfPass() {
-    return std::make_unique<LegalizeHloToTf>();
+  return std::make_unique<LegalizeHloToTf>();
 }
 
 }  // end namespace TF
