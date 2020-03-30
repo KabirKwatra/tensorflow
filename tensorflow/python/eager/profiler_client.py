@@ -23,12 +23,12 @@ from tensorflow.python.util.deprecation import deprecated
 
 @deprecated("2020-07-01", "use `tf.profiler.experimental.client.trace`.")
 def start_tracing(
-    service_addr,
-    logdir,
-    duration_ms,
-    worker_list="",
-    include_dataset_ops=True,
-    num_tracing_attempts=3,
+        service_addr,
+        logdir,
+        duration_ms,
+        worker_list="",
+        include_dataset_ops=True,
+        num_tracing_attempts=3,
 ):
     """Sends grpc requests to profiler server to perform on-demand profiling.
 
@@ -58,7 +58,10 @@ def start_tracing(
 
 
 @deprecated("2020-07-01", "use `tf.profiler.experimental.client.monitor`.")
-def monitor(service_addr, duration_ms, monitoring_level=1, display_timestamp=False):
+def monitor(service_addr,
+            duration_ms,
+            monitoring_level=1,
+            display_timestamp=False):
     """Sends grpc requests to profiler server to perform on-demand monitoring.
 
     This method will block caller thread until receives monitoring result.
@@ -73,6 +76,5 @@ def monitor(service_addr, duration_ms, monitoring_level=1, display_timestamp=Fal
     Returns:
       A string of monitoring output.
     """
-    return _pywrap_profiler.monitor(
-        service_addr, duration_ms, monitoring_level, display_timestamp
-    )
+    return _pywrap_profiler.monitor(service_addr, duration_ms,
+                                    monitoring_level, display_timestamp)
