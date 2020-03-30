@@ -85,89 +85,89 @@ LOCAL = threading.local()
 
 
 def populate_deserializable_objects():
-  """Populates dict ALL_OBJECTS with every built-in layer.
-  """
-  global LOCAL
-  if not hasattr(LOCAL, 'ALL_OBJECTS'):
+    """Populates dict ALL_OBJECTS with every built-in layer.
+    """
+    global LOCAL
+    if not hasattr(LOCAL, 'ALL_OBJECTS'):
+        LOCAL.ALL_OBJECTS = {}
+        LOCAL.GENERATED_WITH_V2 = None
+
+    if LOCAL.ALL_OBJECTS and LOCAL.GENERATED_WITH_V2 == tf2.enabled():
+        # Objects dict is already generated for the proper TF version:
+        # do nothing.
+        return
+
     LOCAL.ALL_OBJECTS = {}
-    LOCAL.GENERATED_WITH_V2 = None
+    LOCAL.GENERATED_WITH_V2 = tf2.enabled()
 
-  if LOCAL.ALL_OBJECTS and LOCAL.GENERATED_WITH_V2 == tf2.enabled():
-    # Objects dict is already generated for the proper TF version:
-    # do nothing.
-    return
-
-  LOCAL.ALL_OBJECTS = {}
-  LOCAL.GENERATED_WITH_V2 = tf2.enabled()
-
-  base_cls = base_layer.Layer
-  generic_utils.populate_dict_with_module_objects(
-      LOCAL.ALL_OBJECTS,
-      ALL_MODULES,
-      obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls))
-
-  # Overwrite certain V1 objects with V2 versions
-  if tf2.enabled():
+    base_cls = base_layer.Layer
     generic_utils.populate_dict_with_module_objects(
         LOCAL.ALL_OBJECTS,
-        ALL_V2_MODULES,
+        ALL_MODULES,
         obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls))
 
-  # These deserialization aliases are added for backward compatibility,
-  # as in TF 1.13, "BatchNormalizationV1" and "BatchNormalizationV2"
-  # were used as class name for v1 and v2 version of BatchNormalization,
-  # respectively. Here we explicitly convert them to their canonical names.
-  LOCAL.ALL_OBJECTS['BatchNormalizationV1'] = normalization.BatchNormalization
-  LOCAL.ALL_OBJECTS[
-      'BatchNormalizationV2'] = normalization_v2.BatchNormalization
+    # Overwrite certain V1 objects with V2 versions
+    if tf2.enabled():
+        generic_utils.populate_dict_with_module_objects(
+            LOCAL.ALL_OBJECTS,
+            ALL_V2_MODULES,
+            obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls))
 
-  # Prevent circular dependencies.
-  from tensorflow.python.keras import models  # pylint: disable=g-import-not-at-top
-  from tensorflow.python.keras.premade.linear import LinearModel  # pylint: disable=g-import-not-at-top
-  from tensorflow.python.keras.premade.wide_deep import WideDeepModel  # pylint: disable=g-import-not-at-top
-  from tensorflow.python.feature_column import dense_features  # pylint: disable=g-import-not-at-top
-  from tensorflow.python.feature_column import sequence_feature_column as sfc  # pylint: disable=g-import-not-at-top
+    # These deserialization aliases are added for backward compatibility,
+    # as in TF 1.13, "BatchNormalizationV1" and "BatchNormalizationV2"
+    # were used as class name for v1 and v2 version of BatchNormalization,
+    # respectively. Here we explicitly convert them to their canonical names.
+    LOCAL.ALL_OBJECTS['BatchNormalizationV1'] = normalization.BatchNormalization
+    LOCAL.ALL_OBJECTS[
+        'BatchNormalizationV2'] = normalization_v2.BatchNormalization
 
-  LOCAL.ALL_OBJECTS['Input'] = input_layer.Input
-  LOCAL.ALL_OBJECTS['InputSpec'] = input_spec.InputSpec
-  LOCAL.ALL_OBJECTS['Network'] = models.Network
-  LOCAL.ALL_OBJECTS['Model'] = models.Model
-  LOCAL.ALL_OBJECTS['Sequential'] = models.Sequential
-  LOCAL.ALL_OBJECTS['LinearModel'] = LinearModel
-  LOCAL.ALL_OBJECTS['WideDeepModel'] = WideDeepModel
-  LOCAL.ALL_OBJECTS['DenseFeatures'] = dense_features.DenseFeatures
-  LOCAL.ALL_OBJECTS['SequenceFeatures'] = sfc.SequenceFeatures
-  # Merge layers, function versions.
-  LOCAL.ALL_OBJECTS['add'] = merge.add
-  LOCAL.ALL_OBJECTS['subtract'] = merge.subtract
-  LOCAL.ALL_OBJECTS['multiply'] = merge.multiply
-  LOCAL.ALL_OBJECTS['average'] = merge.average
-  LOCAL.ALL_OBJECTS['maximum'] = merge.maximum
-  LOCAL.ALL_OBJECTS['minimum'] = merge.minimum
-  LOCAL.ALL_OBJECTS['concatenate'] = merge.concatenate
-  LOCAL.ALL_OBJECTS['dot'] = merge.dot
+    # Prevent circular dependencies.
+    from tensorflow.python.keras import models  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.premade.linear import LinearModel  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.premade.wide_deep import WideDeepModel  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.feature_column import dense_features  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.feature_column import sequence_feature_column as sfc  # pylint: disable=g-import-not-at-top
+
+    LOCAL.ALL_OBJECTS['Input'] = input_layer.Input
+    LOCAL.ALL_OBJECTS['InputSpec'] = input_spec.InputSpec
+    LOCAL.ALL_OBJECTS['Network'] = models.Network
+    LOCAL.ALL_OBJECTS['Model'] = models.Model
+    LOCAL.ALL_OBJECTS['Sequential'] = models.Sequential
+    LOCAL.ALL_OBJECTS['LinearModel'] = LinearModel
+    LOCAL.ALL_OBJECTS['WideDeepModel'] = WideDeepModel
+    LOCAL.ALL_OBJECTS['DenseFeatures'] = dense_features.DenseFeatures
+    LOCAL.ALL_OBJECTS['SequenceFeatures'] = sfc.SequenceFeatures
+    # Merge layers, function versions.
+    LOCAL.ALL_OBJECTS['add'] = merge.add
+    LOCAL.ALL_OBJECTS['subtract'] = merge.subtract
+    LOCAL.ALL_OBJECTS['multiply'] = merge.multiply
+    LOCAL.ALL_OBJECTS['average'] = merge.average
+    LOCAL.ALL_OBJECTS['maximum'] = merge.maximum
+    LOCAL.ALL_OBJECTS['minimum'] = merge.minimum
+    LOCAL.ALL_OBJECTS['concatenate'] = merge.concatenate
+    LOCAL.ALL_OBJECTS['dot'] = merge.dot
 
 
 @keras_export('keras.layers.serialize')
 def serialize(layer):
-  return generic_utils.serialize_keras_object(layer)
+    return generic_utils.serialize_keras_object(layer)
 
 
 @keras_export('keras.layers.deserialize')
 def deserialize(config, custom_objects=None):
-  """Instantiates a layer from a config dictionary.
+    """Instantiates a layer from a config dictionary.
 
-  Arguments:
-      config: dict of the form {'class_name': str, 'config': dict}
-      custom_objects: dict mapping class names (or function names)
-          of custom (non-Keras) objects to class/functions
+    Arguments:
+        config: dict of the form {'class_name': str, 'config': dict}
+        custom_objects: dict mapping class names (or function names)
+            of custom (non-Keras) objects to class/functions
 
-  Returns:
-      Layer instance (may be Model, Sequential, Network, Layer...)
-  """
-  populate_deserializable_objects()
-  return generic_utils.deserialize_keras_object(
-      config,
-      module_objects=LOCAL.ALL_OBJECTS,
-      custom_objects=custom_objects,
-      printable_module_name='layer')
+    Returns:
+        Layer instance (may be Model, Sequential, Network, Layer...)
+    """
+    populate_deserializable_objects()
+    return generic_utils.deserialize_keras_object(
+        config,
+        module_objects=LOCAL.ALL_OBJECTS,
+        custom_objects=custom_objects,
+        printable_module_name='layer')
