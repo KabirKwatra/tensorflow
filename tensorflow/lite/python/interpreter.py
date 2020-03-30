@@ -46,8 +46,7 @@ if not __file__.endswith("tflite_runtime/interpreter.py"):
 else:
     # This file is part of tflite_runtime package.
     from tflite_runtime import (
-        _pywrap_tensorflow_interpreter_wrapper as _interpreter_wrapper,
-    )
+        _pywrap_tensorflow_interpreter_wrapper as _interpreter_wrapper, )
 
     def _tf_export(*x, **kwargs):
         del x, kwargs
@@ -91,8 +90,7 @@ class Delegate(object):
         if platform.python_implementation() != "CPython":
             raise RuntimeError(
                 "Delegates are currently only supported into CPython"
-                "due to missing immediate reference counting."
-            )
+                "due to missing immediate reference counting.")
 
         self._library = ctypes.pydll.LoadLibrary(library)
         self._library.tflite_plugin_create_delegate.argtypes = [
@@ -119,11 +117,11 @@ class Delegate(object):
                 self.message += x if isinstance(x, str) else x.decode("utf-8")
 
         capture = ErrorMessageCapture()
-        error_capturer_cb = ctypes.CFUNCTYPE(None, ctypes.c_char_p)(capture.report)
+        error_capturer_cb = ctypes.CFUNCTYPE(None,
+                                             ctypes.c_char_p)(capture.report)
         # Do not make a copy of _delegate_ptr. It is freed by Delegate's finalizer.
         self._delegate_ptr = self._library.tflite_plugin_create_delegate(
-            options_keys, options_values, len(options), error_capturer_cb
-        )
+            options_keys, options_values, len(options), error_capturer_cb)
         if self._delegate_ptr is None:
             raise ValueError(capture.message)
 
@@ -131,7 +129,9 @@ class Delegate(object):
         # __del__ can not be called multiple times, so if the delegate is destroyed.
         # don't try to destroy it twice.
         if self._library is not None:
-            self._library.tflite_plugin_destroy_delegate.argtypes = [ctypes.c_void_p]
+            self._library.tflite_plugin_destroy_delegate.argtypes = [
+                ctypes.c_void_p
+            ]
             self._library.tflite_plugin_destroy_delegate(self._delegate_ptr)
             self._library = None
 
@@ -168,7 +168,8 @@ def load_delegate(library, options=None):
     try:
         delegate = Delegate(library, options)
     except ValueError as e:
-        raise ValueError("Failed to load delegate from {}\n{}".format(library, str(e)))
+        raise ValueError("Failed to load delegate from {}\n{}".format(
+            library, str(e)))
     return delegate
 
 
@@ -187,9 +188,10 @@ class Interpreter(object):
     has returned before calling tensor().
     """
 
-    def __init__(
-        self, model_path=None, model_content=None, experimental_delegates=None
-    ):
+    def __init__(self,
+                 model_path=None,
+                 model_content=None,
+                 experimental_delegates=None):
         """Constructor.
 
         Args:
@@ -206,8 +208,7 @@ class Interpreter(object):
             self._custom_op_registerers = []
         if model_path and not model_content:
             self._interpreter = _interpreter_wrapper.CreateWrapperFromFile(
-                model_path, self._custom_op_registerers
-            )
+                model_path, self._custom_op_registerers)
             if not self._interpreter:
                 raise ValueError("Failed to open {}".format(model_path))
         elif model_content and not model_path:
@@ -216,12 +217,13 @@ class Interpreter(object):
             # will always return the same pointer.
             self._model_content = model_content
             self._interpreter = _interpreter_wrapper.CreateWrapperFromBuffer(
-                model_content, self._custom_op_registerers
-            )
+                model_content, self._custom_op_registerers)
         elif not model_content and not model_path:
-            raise ValueError("`model_path` or `model_content` must be specified.")
+            raise ValueError(
+                "`model_path` or `model_content` must be specified.")
         else:
-            raise ValueError("Can't both provide `model_path` and `model_content`")
+            raise ValueError(
+                "Can't both provide `model_path` and `model_content`")
 
         # Each delegate is a wrapper that owns the delegates that have been loaded
         # as plugins. The interpreter wrapper will be using them, but we need to
@@ -232,8 +234,7 @@ class Interpreter(object):
             self._delegates = experimental_delegates
             for delegate in self._delegates:
                 self._interpreter.ModifyGraphWithDelegate(
-                    delegate._get_native_delegate_pointer()
-                )  # pylint: disable=protected-access
+                    delegate._get_native_delegate_pointer())  # pylint: disable=protected-access
 
     def __del__(self):
         # Must make sure the interpreter is destroyed before things that
@@ -275,8 +276,7 @@ class Interpreter(object):
                 """There is at least 1 reference to internal data
       in the interpreter in the form of a numpy array or slice. Be sure to
       only hold the function returned from tensor() if you are using raw
-      data access."""
-            )
+      data access.""")
 
     # Experimental and subject to change
     def _get_op_details(self, op_index):
@@ -329,15 +329,15 @@ class Interpreter(object):
         tensor_index = int(tensor_index)
         tensor_name = self._interpreter.TensorName(tensor_index)
         tensor_size = self._interpreter.TensorSize(tensor_index)
-        tensor_size_signature = self._interpreter.TensorSizeSignature(tensor_index)
+        tensor_size_signature = self._interpreter.TensorSizeSignature(
+            tensor_index)
         tensor_type = self._interpreter.TensorType(tensor_index)
-        tensor_quantization = self._interpreter.TensorQuantization(tensor_index)
+        tensor_quantization = self._interpreter.TensorQuantization(
+            tensor_index)
         tensor_quantization_params = self._interpreter.TensorQuantizationParameters(
-            tensor_index
-        )
+            tensor_index)
         tensor_sparsity_params = self._interpreter.TensorSparsityParameters(
-            tensor_index
-        )
+            tensor_index)
 
         if not tensor_name or not tensor_type:
             raise ValueError("Could not get tensor details")
@@ -368,7 +368,8 @@ class Interpreter(object):
           tensors involved in the op.
         """
         return [
-            self._get_op_details(idx) for idx in range(self._interpreter.NumNodes())
+            self._get_op_details(idx)
+            for idx in range(self._interpreter.NumNodes())
         ]
 
     def get_tensor_details(self):
@@ -394,7 +395,10 @@ class Interpreter(object):
         Returns:
           A list of input details.
         """
-        return [self._get_tensor_details(i) for i in self._interpreter.InputIndices()]
+        return [
+            self._get_tensor_details(i)
+            for i in self._interpreter.InputIndices()
+        ]
 
     def set_tensor(self, tensor_index, value):
         """Sets the value of the input tensor.
@@ -437,7 +441,10 @@ class Interpreter(object):
         Returns:
           A list of output details.
         """
-        return [self._get_tensor_details(i) for i in self._interpreter.OutputIndices()]
+        return [
+            self._get_tensor_details(i)
+            for i in self._interpreter.OutputIndices()
+        ]
 
     def get_tensor(self, tensor_index):
         """Gets the value of the input tensor (get a copy).
@@ -502,7 +509,8 @@ class Interpreter(object):
           TFLite tensor state at any point. It is safe to hold the function forever,
           but it is not safe to hold the numpy array forever.
         """
-        return lambda: self._interpreter.tensor(self._interpreter, tensor_index)
+        return lambda: self._interpreter.tensor(self._interpreter, tensor_index
+                                                )
 
     def invoke(self):
         """Invoke the interpreter.
@@ -535,11 +543,11 @@ class InterpreterWithCustomOps(Interpreter):
     """
 
     def __init__(
-        self,
-        model_path=None,
-        model_content=None,
-        experimental_delegates=None,
-        custom_op_registerers=None,
+            self,
+            model_path=None,
+            model_content=None,
+            experimental_delegates=None,
+            custom_op_registerers=None,
     ):
         """Constructor.
 

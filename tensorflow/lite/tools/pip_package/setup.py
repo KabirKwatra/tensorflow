@@ -75,11 +75,12 @@ def get_build_cpus():
 
 def make_args(target="", quiet=True):
     """Construct make command line."""
-    args = (
-        ["make", "SHELL=/bin/bash", "BUILD_WITH_NNAPI=false", "-C", TENSORFLOW_DIR]
-        + MAKE_CROSS_OPTIONS
-        + ["-f", RELATIVE_MAKEFILE_PATH, "-j", str(get_build_cpus())]
-    )
+    args = ([
+        "make", "SHELL=/bin/bash", "BUILD_WITH_NNAPI=false", "-C",
+        TENSORFLOW_DIR
+    ] + MAKE_CROSS_OPTIONS +
+            ["-f", RELATIVE_MAKEFILE_PATH, "-j",
+             str(get_build_cpus())])
     if quiet:
         args.append("--quiet")
     if target:
@@ -143,9 +144,8 @@ def get_pybind_include():
         include_dirs = glob.glob("/usr/local/include/python2*")
     include_dirs.append(sysconfig.get_path("include"))
     tmp_include_dirs = []
-    pip_dir = os.path.join(
-        TENSORFLOW_DIR, "tensorflow", "lite", "tools", "pip_package", "gen"
-    )
+    pip_dir = os.path.join(TENSORFLOW_DIR, "tensorflow", "lite", "tools",
+                           "pip_package", "gen")
     for include_dir in include_dirs:
         tmp_include_dir = os.path.join(pip_dir, include_dir[1:])
         tmp_include_dirs.append(tmp_include_dir)
@@ -173,12 +173,12 @@ ext = Extension(
     extra_compile_args=["--std=c++11"],
     include_dirs=[
         TENSORFLOW_DIR,
-        os.path.join(TENSORFLOW_DIR, "tensorflow", "lite", "tools", "pip_package"),
+        os.path.join(TENSORFLOW_DIR, "tensorflow", "lite", "tools",
+                     "pip_package"),
         numpy.get_include(),
         os.path.join(DOWNLOADS_DIR, "flatbuffers", "include"),
         os.path.join(DOWNLOADS_DIR, "absl"),
-    ]
-    + get_pybind_include(),
+    ] + get_pybind_include(),
     libraries=[LIB_TFLITE],
     library_dirs=[LIB_TFLITE_DIR],
 )
@@ -214,6 +214,12 @@ setup(
     ],
     packages=find_packages(exclude=[]),
     ext_modules=[ext],
-    install_requires=["numpy >= 1.16.0", "pybind11 >= 2.4.3",],
-    cmdclass={"build_ext": CustomBuildExt, "build_py": CustomBuildPy,},
+    install_requires=[
+        "numpy >= 1.16.0",
+        "pybind11 >= 2.4.3",
+    ],
+    cmdclass={
+        "build_ext": CustomBuildExt,
+        "build_py": CustomBuildPy,
+    },
 )
