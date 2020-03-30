@@ -52,7 +52,7 @@ _profiler_lock = threading.Lock()
 _run_num = 0
 # This suffix should be kept in sync with kProfileEmptySuffix in
 # tensorflow/core/profiler/rpc/client/capture_profile.cc.
-_EVENT_FILE_SUFFIX = '.profile-empty'
+_EVENT_FILE_SUFFIX = ".profile-empty"
 
 
 class ProfilerAlreadyRunningError(Exception):
@@ -63,7 +63,7 @@ class ProfilerNotRunningError(Exception):
     pass
 
 
-@deprecated('2020-07-01', 'use `tf.profiler.experimental.start` instead.')
+@deprecated("2020-07-01", "use `tf.profiler.experimental.start` instead.")
 def start():
     """Start profiling.
 
@@ -73,20 +73,22 @@ def start():
     global _profiler
     with _profiler_lock:
         if _profiler is not None:
-            raise ProfilerAlreadyRunningError('Another profiler is running.')
+            raise ProfilerAlreadyRunningError("Another profiler is running.")
         if context.default_execution_mode == context.EAGER_MODE:
             context.ensure_initialized()
         _profiler = _pywrap_profiler.ProfilerSession()
         try:
-            _profiler.start('')
+            _profiler.start("")
         except errors.AlreadyExistsError:
-            logging.warning('Another profiler session is running which is probably '
-                            'created by profiler server. Please avoid using profiler '
-                            'server and profiler APIs at the same time.')
-            raise ProfilerAlreadyRunningError('Another profiler is running.')
+            logging.warning(
+                "Another profiler session is running which is probably "
+                "created by profiler server. Please avoid using profiler "
+                "server and profiler APIs at the same time."
+            )
+            raise ProfilerAlreadyRunningError("Another profiler is running.")
 
 
-@deprecated('2020-07-01', 'use `tf.profiler.experimental.stop` instead.')
+@deprecated("2020-07-01", "use `tf.profiler.experimental.stop` instead.")
 def stop():
     """Stop current profiling session and return its result.
 
@@ -102,7 +104,8 @@ def stop():
     with _profiler_lock:
         if _profiler is None:
             raise ProfilerNotRunningError(
-                'Cannot stop profiling. No profiler is running.')
+                "Cannot stop profiling. No profiler is running."
+            )
         if context.default_execution_mode == context.EAGER_MODE:
             context.context().executor.wait()
         result = _profiler.stop()
@@ -112,8 +115,8 @@ def stop():
 
 
 @deprecated(
-    '2020-07-01',
-    '`tf.python.eager.profiler` has deprecated, use `tf.profiler` instead.'
+    "2020-07-01",
+    "`tf.python.eager.profiler` has deprecated, use `tf.profiler` instead.",
 )
 def maybe_create_event_file(logdir):
     """Create an empty event file if not already exists.
@@ -129,13 +132,14 @@ def maybe_create_event_file(logdir):
             return
     # TODO(b/127330388): Use summary_ops_v2.create_file_writer instead.
     event_writer = _pywrap_events_writer.EventsWriter(
-        compat.as_bytes(os.path.join(logdir, 'events')))
+        compat.as_bytes(os.path.join(logdir, "events"))
+    )
     event_writer.InitWithSuffix(compat.as_bytes(_EVENT_FILE_SUFFIX))
 
 
 @deprecated(
-    '2020-07-01',
-    '`tf.python.eager.profiler` has deprecated, use `tf.profiler` instead.'
+    "2020-07-01",
+    "`tf.python.eager.profiler` has deprecated, use `tf.profiler` instead.",
 )
 def save(logdir, result):
     """Save profile result to TensorBoard logdir.
@@ -145,15 +149,18 @@ def save(logdir, result):
       result: profiling result returned by stop().
     """
     plugin_dir = os.path.join(
-        logdir, 'plugins', 'profile',
-        datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        logdir,
+        "plugins",
+        "profile",
+        datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+    )
     gfile.MakeDirs(plugin_dir)
     maybe_create_event_file(logdir)
-    with gfile.Open(os.path.join(plugin_dir, 'local.trace'), 'wb') as f:
+    with gfile.Open(os.path.join(plugin_dir, "local.trace"), "wb") as f:
         f.write(result)
 
 
-@deprecated('2020-07-01', 'use `tf.profiler.experimental.server.start`.')
+@deprecated("2020-07-01", "use `tf.profiler.experimental.server.start`.")
 def start_profiler_server(port):
     """Start a profiler grpc server that listens to given port.
 
@@ -172,7 +179,7 @@ def start_profiler_server(port):
     _pywrap_profiler.start_server(port)
 
 
-@deprecated('2020-07-01', 'use `tf.profiler.experimental.Profile` instead.')
+@deprecated("2020-07-01", "use `tf.profiler.experimental.Profile` instead.")
 class Profiler(object):
     """Context-manager eager profiler api.
 
