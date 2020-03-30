@@ -25,8 +25,7 @@ from absl.testing import parameterized
 
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (
-    SimpleClusterResolver,
-)
+    SimpleClusterResolver, )
 from tensorflow.python.eager import context
 from tensorflow.python.eager import def_function
 from tensorflow.python.eager import remote
@@ -84,7 +83,8 @@ class SingleWorkerTest(test.TestCase, parameterized.TestCase):
         def with_variable(i):
             return i + variable_b
 
-        self.assertAllEqual(with_variable(constant_op.constant([2])).numpy(), [3])
+        self.assertAllEqual(
+            with_variable(constant_op.constant([2])).numpy(), [3])
 
     @test_util.eager_lazy_remote_copy_on_and_off
     def testMultiDeviceFunctionRemoteOutput(self):
@@ -97,7 +97,8 @@ class SingleWorkerTest(test.TestCase, parameterized.TestCase):
                 c = variable_b + 1
             return c, i + variable_b
 
-        self.assertAllEqual(remote_output(constant_op.constant([1]))[0].numpy(), 2)
+        self.assertAllEqual(
+            remote_output(constant_op.constant([1]))[0].numpy(), 2)
 
     def testMultiDeviceFunctionAmbiguousDevice(self):
         @def_function.function
@@ -109,9 +110,8 @@ class SingleWorkerTest(test.TestCase, parameterized.TestCase):
             with ops.device("/job:worker/replica:0/task:0/cpu:0"):
                 ambiguous_device(constant_op.constant([2])).numpy()
 
-        self.assertIn(
-            "the output node must match exactly one device", cm.exception.message
-        )
+        self.assertIn("the output node must match exactly one device",
+                      cm.exception.message)
 
     def testStreaming(self):
         """A mini stress test for streaming - issuing many RPCs back to back."""
@@ -126,8 +126,7 @@ class SingleWorkerTest(test.TestCase, parameterized.TestCase):
                 if random.randint(1, 10) == 1:
                     _ = y.shape
         np.testing.assert_array_equal(
-            [[num_iters, num_iters], [num_iters, num_iters]], y.numpy()
-        )
+            [[num_iters, num_iters], [num_iters, num_iters]], y.numpy())
 
     def testShapeError_OpByOp(self):
         with ops.device("job:worker/replica:0/task:0/device:CPU:0"):
@@ -171,8 +170,7 @@ class SingleWorkerTest(test.TestCase, parameterized.TestCase):
     @test_util.eager_lazy_remote_copy_on_and_off
     def testRemoteCall(self):
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec([], dtypes.int32)]
-        )
+            input_signature=[tensor_spec.TensorSpec([], dtypes.int32)])
         def _remote_fn(x):
             return constant_op.constant(1) + x
 
@@ -180,9 +178,10 @@ class SingleWorkerTest(test.TestCase, parameterized.TestCase):
 
         @def_function.function
         def func(x):
-            return functional_ops.remote_call(
-                args=[x], Tout=[dtypes.int32], f=remote_fn, target="/job:worker/task:0"
-            )
+            return functional_ops.remote_call(args=[x],
+                                              Tout=[dtypes.int32],
+                                              f=remote_fn,
+                                              target="/job:worker/task:0")
 
         self.assertAllEqual(func(constant_op.constant(1)), [2])
 
@@ -280,8 +279,7 @@ class MultiWorkersTest(test.TestCase, parameterized.TestCase):
 
         workers, _ = test_util.create_local_cluster(3, 0)
         remote.connect_to_remote_host(
-            [workers[0].target, workers[1].target, workers[2].target]
-        )
+            [workers[0].target, workers[1].target, workers[2].target])
 
     def tearDown(self):
         super(MultiWorkersTest, self).tearDown()
@@ -315,7 +313,8 @@ class MultiWorkersTest(test.TestCase, parameterized.TestCase):
             c = a + 1.0
             return c
 
-        self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+        self.assertAllEqual(remote_function(constant_op.constant([1.0])),
+                            [3.0])
 
     @test_util.eager_lazy_remote_copy_on_and_off
     def testMultiDeviceFunctionOnRemoteDeviceWithWait(self):
@@ -351,7 +350,8 @@ class MultiWorkersTest(test.TestCase, parameterized.TestCase):
         # There should be a sync point here and the next function will be executed
         # only after the first function has completed.
         with ops.device("/job:worker/replica:0/task:2"):
-            self.assertAllEqual(remote_function2(constant_op.constant([3.0])), [7.0])
+            self.assertAllEqual(remote_function2(constant_op.constant([3.0])),
+                                [7.0])
 
     @test_util.eager_lazy_remote_copy_on_and_off
     def testMultiDeviceFunctionOnRemoteDevice(self):
@@ -368,20 +368,24 @@ class MultiWorkersTest(test.TestCase, parameterized.TestCase):
         context.context().mirroring_policy = context.MIRRORING_NONE
 
         with ops.device("/job:worker/replica:0/task:0"):
-            self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+            self.assertAllEqual(remote_function(constant_op.constant([1.0])),
+                                [3.0])
 
         if test_util.is_gpu_available():
             with ops.device("/job:worker/replica:0/task:0/device:GPU:0"):
-                self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+                self.assertAllEqual(
+                    remote_function(constant_op.constant([1.0])), [3.0])
 
         context.context().mirroring_policy = context.MIRRORING_ALL
 
         with ops.device("/job:worker/replica:0/task:0"):
-            self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+            self.assertAllEqual(remote_function(constant_op.constant([1.0])),
+                                [3.0])
 
         if test_util.is_gpu_available():
             with ops.device("/job:worker/replica:0/task:0/device:GPU:0"):
-                self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+                self.assertAllEqual(
+                    remote_function(constant_op.constant([1.0])), [3.0])
 
     @test_util.eager_lazy_remote_copy_on_and_off
     def testMultiDeviceWhileLoopOnRemoteDevice(self):
@@ -395,25 +399,30 @@ class MultiWorkersTest(test.TestCase, parameterized.TestCase):
                     a = i + variable_b
                 return a + 1.0, 1
 
-            return control_flow_ops.while_loop_v2(lambda _, d: d < 1, body, [i, 0])[0]
+            return control_flow_ops.while_loop_v2(lambda _, d: d < 1, body,
+                                                  [i, 0])[0]
 
         context.context().mirroring_policy = context.MIRRORING_NONE
 
         with ops.device("/job:worker/replica:0/task:0"):
-            self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+            self.assertAllEqual(remote_function(constant_op.constant([1.0])),
+                                [3.0])
 
         if test_util.is_gpu_available():
             with ops.device("/job:worker/replica:0/task:0/device:GPU:0"):
-                self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+                self.assertAllEqual(
+                    remote_function(constant_op.constant([1.0])), [3.0])
 
         context.context().mirroring_policy = context.MIRRORING_ALL
 
         with ops.device("/job:worker/replica:0/task:0"):
-            self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+            self.assertAllEqual(remote_function(constant_op.constant([1.0])),
+                                [3.0])
 
         if test_util.is_gpu_available():
             with ops.device("/job:worker/replica:0/task:0/device:GPU:0"):
-                self.assertAllEqual(remote_function(constant_op.constant([1.0])), [3.0])
+                self.assertAllEqual(
+                    remote_function(constant_op.constant([1.0])), [3.0])
 
     @test_util.eager_lazy_remote_copy_on_and_off
     def testSimpleParameterServer(self):
@@ -444,13 +453,13 @@ class MultiJobsTest(test.TestCase, parameterized.TestCase):
 
         workers, ps = test_util.create_local_cluster(num_workers=2, num_ps=2)
         cluster = {
-            "my_worker": [_strip_prefix(t.target, _GRPC_PREFIX) for t in workers],
+            "my_worker":
+            [_strip_prefix(t.target, _GRPC_PREFIX) for t in workers],
             "my_ps": [_strip_prefix(t.target, _GRPC_PREFIX) for t in ps],
         }
         self._cluster = server_lib.ClusterSpec(cluster)
         self._cluster_resolver = SimpleClusterResolver(
-            cluster_spec=self._cluster, master=ps[0].target
-        )
+            cluster_spec=self._cluster, master=ps[0].target)
 
     def tearDown(self):
         super(MultiJobsTest, self).tearDown()
@@ -485,11 +494,12 @@ class MultiJobsTest(test.TestCase, parameterized.TestCase):
     def DISABLED_testSimpleParameterServerWithDeviceFilters(self):
         cluster_device_filters = server_lib.ClusterDeviceFilters()
         for i in range(2):
-            cluster_device_filters.set_device_filters("my_worker", i, ["/job:my_ps"])
-            cluster_device_filters.set_device_filters("my_ps", i, ["/job:my_worker"])
+            cluster_device_filters.set_device_filters("my_worker", i,
+                                                      ["/job:my_ps"])
+            cluster_device_filters.set_device_filters("my_ps", i,
+                                                      ["/job:my_worker"])
         remote.connect_to_cluster(
-            self._cluster, cluster_device_filters=cluster_device_filters
-        )
+            self._cluster, cluster_device_filters=cluster_device_filters)
 
         with ops.device("/job:my_ps/task:0/device:CPU:0"):
             v1 = variables.Variable(initial_value=0)
@@ -581,7 +591,7 @@ class MultiJobsTest(test.TestCase, parameterized.TestCase):
 
 
 def _strip_prefix(s, prefix):
-    return s[len(prefix) :] if s.startswith(prefix) else s
+    return s[len(prefix):] if s.startswith(prefix) else s
 
 
 if __name__ == "__main__":

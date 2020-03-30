@@ -39,7 +39,10 @@ def get_json_type(obj):
     # if obj is a serializable Keras class instance
     # e.g. optimizer, layer
     if hasattr(obj, "get_config"):
-        return {"class_name": obj.__class__.__name__, "config": obj.get_config()}
+        return {
+            "class_name": obj.__class__.__name__,
+            "config": obj.get_config()
+        }
 
     # if obj is any numpy type
     if type(obj).__module__ == np.__name__:

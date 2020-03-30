@@ -44,7 +44,8 @@ def reduce_fn(state, values):
     # If this is the first iteration, we pick the first value to be 'k',
     # which helps with precision - we assume that k is close to an average
     # value and calculate mean and variance with respect to that.
-    k = control_flow_ops.cond(math_ops.equal(n, 0), lambda: values[0], lambda: k)
+    k = control_flow_ops.cond(math_ops.equal(n,
+                                             0), lambda: values[0], lambda: k)
 
     sum_v = math_ops.reduce_sum(values, axis=0)
     sum_v2 = math_ops.reduce_sum(math_ops.square(values), axis=0)
@@ -53,14 +54,11 @@ def reduce_fn(state, values):
     batch_size_f = math_ops.cast(batch_size, dtypes.float32)
 
     ex = 0 + sum_v - math_ops.multiply(batch_size_f, k)
-    ex2 = (
-        0
-        + sum_v2
-        + math_ops.multiply(
-            batch_size_f,
-            (math_ops.square(k) - math_ops.multiply(math_ops.multiply(2.0, k), sum_v)),
-        )
-    )
+    ex2 = (0 + sum_v2 + math_ops.multiply(
+        batch_size_f,
+        (math_ops.square(k) -
+         math_ops.multiply(math_ops.multiply(2.0, k), sum_v)),
+    ))
 
     return (k, n + batch_size, ex, ex2)
 
@@ -69,7 +67,7 @@ class BenchmarkAdapt(benchmark.Benchmark):
     """Benchmark adapt."""
 
     def run_dataset_implementation(self, num_elements, batch_size):
-        input_t = keras.Input(shape=(1,))
+        input_t = keras.Input(shape=(1, ))
         layer = normalization.Normalization()
         _ = layer(input_t)
 
@@ -78,18 +76,16 @@ class BenchmarkAdapt(benchmark.Benchmark):
         ends = []
         for _ in range(num_repeats):
             ds = dataset_ops.Dataset.range(num_elements)
-            ds = ds.map(
-                lambda x: array_ops.expand_dims(math_ops.cast(x, dtypes.float32), -1)
-            )
+            ds = ds.map(lambda x: array_ops.expand_dims(
+                math_ops.cast(x, dtypes.float32), -1))
             ds = ds.batch(batch_size)
 
             starts.append(time.time())
             # Benchmarked code begins here.
             k, n, ex, ex2 = ds.reduce((0.0, 0, 0.0, 0.0), reduce_fn)
             mean = k.numpy() + ex.numpy() / n.numpy()
-            var = (ex2.numpy() - (ex.numpy() * ex.numpy()) / n.numpy()) / (
-                n.numpy() - 1
-            )
+            var = (ex2.numpy() -
+                   (ex.numpy() * ex.numpy()) / n.numpy()) / (n.numpy() - 1)
             layer.set_weights([mean, var])
             # Benchmarked code ends here.
             ends.append(time.time())
@@ -99,7 +95,7 @@ class BenchmarkAdapt(benchmark.Benchmark):
 
     def bm_adapt_implementation(self, num_elements, batch_size):
         """Test the KPL adapt implementation."""
-        input_t = keras.Input(shape=(1,), dtype=dtypes.float32)
+        input_t = keras.Input(shape=(1, ), dtype=dtypes.float32)
         layer = normalization.Normalization()
         _ = layer(input_t)
 
@@ -108,9 +104,8 @@ class BenchmarkAdapt(benchmark.Benchmark):
         ends = []
         for _ in range(num_repeats):
             ds = dataset_ops.Dataset.range(num_elements)
-            ds = ds.map(
-                lambda x: array_ops.expand_dims(math_ops.cast(x, dtypes.float32), -1)
-            )
+            ds = ds.map(lambda x: array_ops.expand_dims(
+                math_ops.cast(x, dtypes.float32), -1))
             ds = ds.batch(batch_size)
 
             starts.append(time.time())
@@ -120,16 +115,18 @@ class BenchmarkAdapt(benchmark.Benchmark):
             ends.append(time.time())
 
         avg_time = np.mean(np.array(ends) - np.array(starts))
-        name = "normalization_adapt|%s_elements|batch_%s" % (num_elements, batch_size)
+        name = "normalization_adapt|%s_elements|batch_%s" % (num_elements,
+                                                             batch_size)
         baseline = self.run_dataset_implementation(num_elements, batch_size)
         extras = {
             "tf.data implementation baseline": baseline,
             "delta seconds": (baseline - avg_time),
             "delta percent": ((baseline - avg_time) / baseline) * 100,
         }
-        self.report_benchmark(
-            iters=num_repeats, wall_time=avg_time, extras=extras, name=name
-        )
+        self.report_benchmark(iters=num_repeats,
+                              wall_time=avg_time,
+                              extras=extras,
+                              name=name)
 
     def benchmark_vocab_size_by_batch(self):
         for vocab_size in [100, 1000, 10000, 100000, 1000000]:
