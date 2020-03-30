@@ -28,6 +28,13 @@ def IsTrainable(tensor_or_dtype):
     else:
         dtype = tensor_or_dtype
     dtype = dtypes.as_dtype(dtype)
-    return dtype.base_dtype in (dtypes.float16, dtypes.float32, dtypes.float64,
-                                dtypes.complex64, dtypes.complex128,
-                                dtypes.resource, dtypes.variant, dtypes.bfloat16)
+    return dtype.base_dtype in (
+        dtypes.float16,
+        dtypes.float32,
+        dtypes.float64,
+        dtypes.complex64,
+        dtypes.complex128,
+        dtypes.resource,
+        dtypes.variant,
+        dtypes.bfloat16,
+    )

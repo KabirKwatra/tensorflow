@@ -22,7 +22,9 @@ from absl import logging
 
 from tensorflow.compiler.xla.python import xla_client
 from tensorflow.compiler.xla.python import xla_extension as _xla
-from tensorflow.compiler.xla.python.tpu_driver.client import tpu_client_extension as _tpu_client
+from tensorflow.compiler.xla.python.tpu_driver.client import (
+    tpu_client_extension as _tpu_client,
+)
 
 
 class TpuBackend(xla_client.Backend):
@@ -37,7 +39,7 @@ class TpuBackend(xla_client.Backend):
         Args:
           client: A _tpu_client.TpuClient object.
         """
-        super(TpuBackend, self).__init__('tpu')
+        super(TpuBackend, self).__init__("tpu")
         self.client = client
 
     @staticmethod
@@ -46,21 +48,23 @@ class TpuBackend(xla_client.Backend):
         # always try to create a new client.
         if worker is None:
             raise ValueError(
-                'Failed to create TpuBackend. The `worker` parameter must not be '
-                '`None`. Use `local` to connect to a local TPU or '
-                '`grpc://host:port` to connect to a remote TPU.')
+                "Failed to create TpuBackend. The `worker` parameter must not be "
+                "`None`. Use `local` to connect to a local TPU or "
+                "`grpc://host:port` to connect to a remote TPU."
+            )
 
-        if worker == 'local' or 'local://' in worker:
+        if worker == "local" or "local://" in worker:
             # We usually want to cache for local backends to prevent double
             # initialization, except where `force` == True.
-            if worker == 'local':
-                worker = 'local://'
+            if worker == "local":
+                worker = "local://"
             if force:
                 return TpuBackend(_tpu_client.TpuClient.Get(worker))
             if TpuBackend._local_backend is None:
-                logging.info('Starting the local TPU driver.')
+                logging.info("Starting the local TPU driver.")
                 TpuBackend._local_backend = TpuBackend(
-                    _tpu_client.TpuClient.Get(worker))
+                    _tpu_client.TpuClient.Get(worker)
+                )
             return TpuBackend._local_backend
         else:
             # We do not cache for non-local backends.
@@ -97,16 +101,18 @@ class TpuBackend(xla_client.Backend):
         options.debug_options.xla_cpu_fast_math_honor_division = True
         options.debug_options.xla_cpu_fast_math_honor_functions = True
         options.debug_options.xla_gpu_enable_fast_min_max = False
-        return _tpu_client.TpuExecutable.Compile(c_computation,
-                                                 compile_options.argument_layouts,
-                                                 options, self.client,
-                                                 compile_options.device_assignment,
-                                                 compile_options.tuple_arguments)
+        return _tpu_client.TpuExecutable.Compile(
+            c_computation,
+            compile_options.argument_layouts,
+            options,
+            self.client,
+            compile_options.device_assignment,
+            compile_options.tuple_arguments,
+        )
 
     def get_default_device_assignment(self, num_replicas, num_partitions=None):
         if num_partitions is not None:
-            return self.client.GetDefaultDeviceAssignment(num_replicas,
-                                                          num_partitions)
+            return self.client.GetDefaultDeviceAssignment(num_replicas, num_partitions)
         else:
             # TODO(henrytan): delete this case after all callers can handle 2D output
             return self.client.GetDefaultDeviceAssignment(num_replicas)

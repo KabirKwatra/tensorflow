@@ -45,8 +45,12 @@ from tensorflow.python.keras.layers import recurrent_v2
 from tensorflow.python.keras.layers import rnn_cell_wrapper_v2
 from tensorflow.python.keras.layers import wrappers
 from tensorflow.python.keras.layers.preprocessing import image_preprocessing
-from tensorflow.python.keras.layers.preprocessing import normalization as preprocessing_normalization
-from tensorflow.python.keras.layers.preprocessing import normalization_v1 as preprocessing_normalization_v1
+from tensorflow.python.keras.layers.preprocessing import (
+    normalization as preprocessing_normalization,
+)
+from tensorflow.python.keras.layers.preprocessing import (
+    normalization_v1 as preprocessing_normalization_v1,
+)
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.util import tf_inspect as inspect
 from tensorflow.python.util.tf_export import keras_export
@@ -70,13 +74,13 @@ ALL_MODULES = (
     image_preprocessing,
     preprocessing_normalization_v1,
     recurrent,
-    wrappers
+    wrappers,
 )
 ALL_V2_MODULES = (
     rnn_cell_wrapper_v2,
     normalization_v2,
     recurrent_v2,
-    preprocessing_normalization
+    preprocessing_normalization,
 )
 
 # ALL_OBJECTS is meant to be a global mutable. Hence we need to make it
@@ -88,7 +92,7 @@ def populate_deserializable_objects():
     """Populates dict ALL_OBJECTS with every built-in layer.
     """
     global LOCAL
-    if not hasattr(LOCAL, 'ALL_OBJECTS'):
+    if not hasattr(LOCAL, "ALL_OBJECTS"):
         LOCAL.ALL_OBJECTS = {}
         LOCAL.GENERATED_WITH_V2 = None
 
@@ -104,56 +108,65 @@ def populate_deserializable_objects():
     generic_utils.populate_dict_with_module_objects(
         LOCAL.ALL_OBJECTS,
         ALL_MODULES,
-        obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls))
+        obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls),
+    )
 
     # Overwrite certain V1 objects with V2 versions
     if tf2.enabled():
         generic_utils.populate_dict_with_module_objects(
             LOCAL.ALL_OBJECTS,
             ALL_V2_MODULES,
-            obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls))
+            obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls),
+        )
 
     # These deserialization aliases are added for backward compatibility,
     # as in TF 1.13, "BatchNormalizationV1" and "BatchNormalizationV2"
     # were used as class name for v1 and v2 version of BatchNormalization,
     # respectively. Here we explicitly convert them to their canonical names.
-    LOCAL.ALL_OBJECTS['BatchNormalizationV1'] = normalization.BatchNormalization
-    LOCAL.ALL_OBJECTS[
-        'BatchNormalizationV2'] = normalization_v2.BatchNormalization
+    LOCAL.ALL_OBJECTS["BatchNormalizationV1"] = normalization.BatchNormalization
+    LOCAL.ALL_OBJECTS["BatchNormalizationV2"] = normalization_v2.BatchNormalization
 
     # Prevent circular dependencies.
     from tensorflow.python.keras import models  # pylint: disable=g-import-not-at-top
-    from tensorflow.python.keras.premade.linear import LinearModel  # pylint: disable=g-import-not-at-top
-    from tensorflow.python.keras.premade.wide_deep import WideDeepModel  # pylint: disable=g-import-not-at-top
-    from tensorflow.python.feature_column import dense_features  # pylint: disable=g-import-not-at-top
-    from tensorflow.python.feature_column import sequence_feature_column as sfc  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.premade.linear import (
+        LinearModel,
+    )  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.keras.premade.wide_deep import (
+        WideDeepModel,
+    )  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.feature_column import (
+        dense_features,
+    )  # pylint: disable=g-import-not-at-top
+    from tensorflow.python.feature_column import (
+        sequence_feature_column as sfc,
+    )  # pylint: disable=g-import-not-at-top
 
-    LOCAL.ALL_OBJECTS['Input'] = input_layer.Input
-    LOCAL.ALL_OBJECTS['InputSpec'] = input_spec.InputSpec
-    LOCAL.ALL_OBJECTS['Network'] = models.Network
-    LOCAL.ALL_OBJECTS['Model'] = models.Model
-    LOCAL.ALL_OBJECTS['Sequential'] = models.Sequential
-    LOCAL.ALL_OBJECTS['LinearModel'] = LinearModel
-    LOCAL.ALL_OBJECTS['WideDeepModel'] = WideDeepModel
-    LOCAL.ALL_OBJECTS['DenseFeatures'] = dense_features.DenseFeatures
-    LOCAL.ALL_OBJECTS['SequenceFeatures'] = sfc.SequenceFeatures
+    LOCAL.ALL_OBJECTS["Input"] = input_layer.Input
+    LOCAL.ALL_OBJECTS["InputSpec"] = input_spec.InputSpec
+    LOCAL.ALL_OBJECTS["Network"] = models.Network
+    LOCAL.ALL_OBJECTS["Model"] = models.Model
+    LOCAL.ALL_OBJECTS["Sequential"] = models.Sequential
+    LOCAL.ALL_OBJECTS["LinearModel"] = LinearModel
+    LOCAL.ALL_OBJECTS["WideDeepModel"] = WideDeepModel
+    LOCAL.ALL_OBJECTS["DenseFeatures"] = dense_features.DenseFeatures
+    LOCAL.ALL_OBJECTS["SequenceFeatures"] = sfc.SequenceFeatures
     # Merge layers, function versions.
-    LOCAL.ALL_OBJECTS['add'] = merge.add
-    LOCAL.ALL_OBJECTS['subtract'] = merge.subtract
-    LOCAL.ALL_OBJECTS['multiply'] = merge.multiply
-    LOCAL.ALL_OBJECTS['average'] = merge.average
-    LOCAL.ALL_OBJECTS['maximum'] = merge.maximum
-    LOCAL.ALL_OBJECTS['minimum'] = merge.minimum
-    LOCAL.ALL_OBJECTS['concatenate'] = merge.concatenate
-    LOCAL.ALL_OBJECTS['dot'] = merge.dot
+    LOCAL.ALL_OBJECTS["add"] = merge.add
+    LOCAL.ALL_OBJECTS["subtract"] = merge.subtract
+    LOCAL.ALL_OBJECTS["multiply"] = merge.multiply
+    LOCAL.ALL_OBJECTS["average"] = merge.average
+    LOCAL.ALL_OBJECTS["maximum"] = merge.maximum
+    LOCAL.ALL_OBJECTS["minimum"] = merge.minimum
+    LOCAL.ALL_OBJECTS["concatenate"] = merge.concatenate
+    LOCAL.ALL_OBJECTS["dot"] = merge.dot
 
 
-@keras_export('keras.layers.serialize')
+@keras_export("keras.layers.serialize")
 def serialize(layer):
     return generic_utils.serialize_keras_object(layer)
 
 
-@keras_export('keras.layers.deserialize')
+@keras_export("keras.layers.deserialize")
 def deserialize(config, custom_objects=None):
     """Instantiates a layer from a config dictionary.
 
@@ -170,4 +183,5 @@ def deserialize(config, custom_objects=None):
         config,
         module_objects=LOCAL.ALL_OBJECTS,
         custom_objects=custom_objects,
-        printable_module_name='layer')
+        printable_module_name="layer",
+    )

@@ -145,10 +145,18 @@ from tensorflow.python.keras.engine.base_preprocessing_layer import Preprocessin
 from tensorflow.python.keras.layers.preprocessing.image_preprocessing import CenterCrop
 from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomCrop
 from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomFlip
-from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomContrast
-from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomHeight
-from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomRotation
-from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomTranslation
+from tensorflow.python.keras.layers.preprocessing.image_preprocessing import (
+    RandomContrast,
+)
+from tensorflow.python.keras.layers.preprocessing.image_preprocessing import (
+    RandomHeight,
+)
+from tensorflow.python.keras.layers.preprocessing.image_preprocessing import (
+    RandomRotation,
+)
+from tensorflow.python.keras.layers.preprocessing.image_preprocessing import (
+    RandomTranslation,
+)
 from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomWidth
 from tensorflow.python.keras.layers.preprocessing.image_preprocessing import RandomZoom
 from tensorflow.python.keras.layers.preprocessing.image_preprocessing import Resizing
@@ -157,17 +165,35 @@ from tensorflow.python.keras.layers.preprocessing.image_preprocessing import Res
 # Preprocessing layers.
 if tf2.enabled():
     from tensorflow.python.keras.layers.preprocessing.normalization import Normalization
-    from tensorflow.python.keras.layers.preprocessing.normalization_v1 import Normalization as NormalizationV1
+    from tensorflow.python.keras.layers.preprocessing.normalization_v1 import (
+        Normalization as NormalizationV1,
+    )
+
     NormalizationV2 = Normalization
-    from tensorflow.python.keras.layers.preprocessing.text_vectorization import TextVectorization
-    from tensorflow.python.keras.layers.preprocessing.text_vectorization_v1 import TextVectorization as TextVectorizationV1
+    from tensorflow.python.keras.layers.preprocessing.text_vectorization import (
+        TextVectorization,
+    )
+    from tensorflow.python.keras.layers.preprocessing.text_vectorization_v1 import (
+        TextVectorization as TextVectorizationV1,
+    )
+
     TextVectorizationV2 = TextVectorization
 else:
-    from tensorflow.python.keras.layers.preprocessing.normalization_v1 import Normalization
-    from tensorflow.python.keras.layers.preprocessing.normalization import Normalization as NormalizationV2
+    from tensorflow.python.keras.layers.preprocessing.normalization_v1 import (
+        Normalization,
+    )
+    from tensorflow.python.keras.layers.preprocessing.normalization import (
+        Normalization as NormalizationV2,
+    )
+
     NormalizationV1 = Normalization
-    from tensorflow.python.keras.layers.preprocessing.text_vectorization_v1 import TextVectorization
-    from tensorflow.python.keras.layers.preprocessing.text_vectorization import TextVectorization as TextVectorizationV2
+    from tensorflow.python.keras.layers.preprocessing.text_vectorization_v1 import (
+        TextVectorization,
+    )
+    from tensorflow.python.keras.layers.preprocessing.text_vectorization import (
+        TextVectorization as TextVectorizationV2,
+    )
+
     TextVectorizationV1 = TextVectorization
 
 # Advanced activations.
@@ -194,11 +220,17 @@ else:
 
 if tf2.enabled():
     from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
-    from tensorflow.python.keras.layers.normalization import BatchNormalization as BatchNormalizationV1
+    from tensorflow.python.keras.layers.normalization import (
+        BatchNormalization as BatchNormalizationV1,
+    )
+
     BatchNormalizationV2 = BatchNormalization
 else:
     from tensorflow.python.keras.layers.normalization import BatchNormalization
-    from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization as BatchNormalizationV2
+    from tensorflow.python.keras.layers.normalization_v2 import (
+        BatchNormalization as BatchNormalizationV2,
+    )
+
     BatchNormalizationV1 = BatchNormalization
 
 # Kernelized layers.
@@ -218,6 +250,7 @@ if tf2.enabled():
     from tensorflow.python.keras.layers.recurrent import GRUCell as GRUCellV1
     from tensorflow.python.keras.layers.recurrent import LSTM as LSTMV1
     from tensorflow.python.keras.layers.recurrent import LSTMCell as LSTMCellV1
+
     GRUV2 = GRU
     GRUCellV2 = GRUCell
     LSTMV2 = LSTM
@@ -231,6 +264,7 @@ else:
     from tensorflow.python.keras.layers.recurrent_v2 import GRUCell as GRUCellV2
     from tensorflow.python.keras.layers.recurrent_v2 import LSTM as LSTMV2
     from tensorflow.python.keras.layers.recurrent_v2 import LSTMCell as LSTMCellV2
+
     GRUV1 = GRU
     GRUCellV1 = GRUCell
     LSTMV1 = LSTM
