@@ -49,8 +49,7 @@ final class ModelMetadataInfo {
     checkNotNull(buffer, "Metadata flatbuffer cannot be null.");
 
     modelMetadata = ModelMetadata.getRootAsModelMetadata(buffer);
-    checkArgument(
-        modelMetadata.subgraphMetadataLength() > 0,
+    checkArgument(modelMetadata.subgraphMetadataLength() > 0,
         "The metadata flatbuffer does not contain any subgraph metadata.");
 
     inputsMetadata = getInputsMetadata(modelMetadata);
@@ -70,8 +69,7 @@ final class ModelMetadataInfo {
    */
   @Nullable
   TensorMetadata getInputTensorMetadata(int inputIndex) {
-    checkArgument(
-        inputIndex >= 0 && inputIndex < inputsMetadata.size(),
+    checkArgument(inputIndex >= 0 && inputIndex < inputsMetadata.size(),
         "The inputIndex specified is invalid.");
     return inputsMetadata.get(inputIndex);
   }
@@ -94,8 +92,7 @@ final class ModelMetadataInfo {
    */
   @Nullable
   TensorMetadata getOutputTensorMetadata(int outputIndex) {
-    checkArgument(
-        outputIndex >= 0 && outputIndex < outputsMetadata.size(),
+    checkArgument(outputIndex >= 0 && outputIndex < outputsMetadata.size(),
         "The outputIndex specified is invalid.");
     return outputsMetadata.get(outputIndex);
   }
