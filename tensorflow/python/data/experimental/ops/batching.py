@@ -33,9 +33,9 @@ from tensorflow.python.util.tf_export import tf_export
 
 
 @tf_export("data.experimental.dense_to_ragged_batch")
-def dense_to_ragged_batch(
-    batch_size, drop_remainder=False, row_splits_dtype=dtypes.int64
-):
+def dense_to_ragged_batch(batch_size,
+                          drop_remainder=False,
+                          row_splits_dtype=dtypes.int64):
     """A transformation that batches ragged elements into `tf.RaggedTensor`s.
 
     This transformation combines multiple consecutive elements of the input
@@ -92,9 +92,9 @@ def dense_to_ragged_batch(
 
     def _apply_fn(dataset):
         ragged_dataset = _DenseToRaggedDataset(dataset, row_splits_dtype)
-        return dataset_ops.BatchDataset(
-            ragged_dataset, batch_size=batch_size, drop_remainder=drop_remainder
-        )
+        return dataset_ops.BatchDataset(ragged_dataset,
+                                        batch_size=batch_size,
+                                        drop_remainder=drop_remainder)
 
     return _apply_fn
 
@@ -152,11 +152,11 @@ def dense_to_sparse_batch(batch_size, row_shape):
 @deprecation.deprecated(None, "Use `tf.data.experimental.map_and_batch()")
 @tf_export(v1=["data.experimental.map_and_batch_with_legacy_function"])
 def map_and_batch_with_legacy_function(
-    map_func,
-    batch_size,
-    num_parallel_batches=None,
-    drop_remainder=False,
-    num_parallel_calls=None,
+        map_func,
+        batch_size,
+        num_parallel_batches=None,
+        drop_remainder=False,
+        num_parallel_calls=None,
 ):
     """Fused implementation of `map` and `batch`.
 
@@ -196,10 +196,8 @@ def map_and_batch_with_legacy_function(
     elif num_parallel_batches is not None and num_parallel_calls is None:
         num_parallel_calls = batch_size * num_parallel_batches
     elif num_parallel_batches is not None and num_parallel_calls is not None:
-        raise ValueError(
-            "The `num_parallel_batches` and `num_parallel_calls` "
-            "arguments are mutually exclusive."
-        )
+        raise ValueError("The `num_parallel_batches` and `num_parallel_calls` "
+                         "arguments are mutually exclusive.")
 
     def _apply_fn(dataset):
         return _MapAndBatchDataset(
@@ -222,11 +220,11 @@ def map_and_batch_with_legacy_function(
 )
 @tf_export("data.experimental.map_and_batch")
 def map_and_batch(
-    map_func,
-    batch_size,
-    num_parallel_batches=None,
-    drop_remainder=False,
-    num_parallel_calls=None,
+        map_func,
+        batch_size,
+        num_parallel_batches=None,
+        drop_remainder=False,
+        num_parallel_calls=None,
 ):
     """Fused implementation of `map` and `batch`.
 
@@ -267,15 +265,12 @@ def map_and_batch(
     elif num_parallel_batches is not None and num_parallel_calls is None:
         num_parallel_calls = batch_size * num_parallel_batches
     elif num_parallel_batches is not None and num_parallel_calls is not None:
-        raise ValueError(
-            "The `num_parallel_batches` and `num_parallel_calls` "
-            "arguments are mutually exclusive."
-        )
+        raise ValueError("The `num_parallel_batches` and `num_parallel_calls` "
+                         "arguments are mutually exclusive.")
 
     def _apply_fn(dataset):
-        return _MapAndBatchDataset(
-            dataset, map_func, batch_size, num_parallel_calls, drop_remainder
-        )
+        return _MapAndBatchDataset(dataset, map_func, batch_size,
+                                   num_parallel_calls, drop_remainder)
 
     return _apply_fn
 
@@ -315,14 +310,12 @@ class _DenseToSparseBatchDataset(dataset_ops.UnaryDataset):
 
     def __init__(self, input_dataset, batch_size, row_shape):
         """See `Dataset.dense_to_sparse_batch()` for more details."""
-        if not isinstance(
-            dataset_ops.get_legacy_output_types(input_dataset), dtypes.DType
-        ):
+        if not isinstance(dataset_ops.get_legacy_output_types(input_dataset),
+                          dtypes.DType):
             raise TypeError(
                 "DenseToSparseDataset requires an input whose elements "
-                "have a single component, whereas the input has %r."
-                % dataset_ops.get_legacy_output_types(input_dataset)
-            )
+                "have a single component, whereas the input has %r." %
+                dataset_ops.get_legacy_output_types(input_dataset))
         self._input_dataset = input_dataset
         self._batch_size = batch_size
         self._row_shape = row_shape
@@ -335,9 +328,9 @@ class _DenseToSparseBatchDataset(dataset_ops.UnaryDataset):
             self._input_dataset._variant_tensor,  # pylint: disable=protected-access
             self._batch_size,
             row_shape=convert.partial_shape_to_tensor(self._row_shape),
-            **self._flat_structure
-        )
-        super(_DenseToSparseBatchDataset, self).__init__(input_dataset, variant_tensor)
+            **self._flat_structure)
+        super(_DenseToSparseBatchDataset,
+              self).__init__(input_dataset, variant_tensor)
 
     @property
     def element_spec(self):
@@ -348,13 +341,13 @@ class _MapAndBatchDataset(dataset_ops.UnaryDataset):
     """A `Dataset` that maps a function over a batch of elements."""
 
     def __init__(
-        self,
-        input_dataset,
-        map_func,
-        batch_size,
-        num_parallel_calls,
-        drop_remainder,
-        use_legacy_function=False,
+            self,
+            input_dataset,
+            map_func,
+            batch_size,
+            num_parallel_calls,
+            drop_remainder,
+            use_legacy_function=False,
     ):
         self._input_dataset = input_dataset
 
@@ -364,17 +357,17 @@ class _MapAndBatchDataset(dataset_ops.UnaryDataset):
             dataset=input_dataset,
             use_legacy_function=use_legacy_function,
         )
-        self._batch_size_t = ops.convert_to_tensor(
-            batch_size, dtype=dtypes.int64, name="batch_size"
-        )
+        self._batch_size_t = ops.convert_to_tensor(batch_size,
+                                                   dtype=dtypes.int64,
+                                                   name="batch_size")
         self._num_parallel_calls_t = ops.convert_to_tensor(
-            num_parallel_calls, dtype=dtypes.int64, name="num_parallel_calls"
-        )
-        self._drop_remainder_t = ops.convert_to_tensor(
-            drop_remainder, dtype=dtypes.bool, name="drop_remainder"
-        )
+            num_parallel_calls, dtype=dtypes.int64, name="num_parallel_calls")
+        self._drop_remainder_t = ops.convert_to_tensor(drop_remainder,
+                                                       dtype=dtypes.bool,
+                                                       name="drop_remainder")
 
-        constant_drop_remainder = tensor_util.constant_value(self._drop_remainder_t)
+        constant_drop_remainder = tensor_util.constant_value(
+            self._drop_remainder_t)
         # pylint: disable=protected-access
         if constant_drop_remainder:
             # NOTE(mrry): `constant_drop_remainder` may be `None` (unknown statically)
@@ -382,8 +375,7 @@ class _MapAndBatchDataset(dataset_ops.UnaryDataset):
             # pylint: disable=g-long-lambda
             self._element_spec = nest.map_structure(
                 lambda component_spec: component_spec._batch(
-                    tensor_util.constant_value(self._batch_size_t)
-                ),
+                    tensor_util.constant_value(self._batch_size_t)),
                 self._map_func.output_structure,
             )
         else:
@@ -400,9 +392,9 @@ class _MapAndBatchDataset(dataset_ops.UnaryDataset):
             num_parallel_calls=self._num_parallel_calls_t,
             drop_remainder=self._drop_remainder_t,
             preserve_cardinality=True,
-            **self._flat_structure
-        )
-        super(_MapAndBatchDataset, self).__init__(input_dataset, variant_tensor)
+            **self._flat_structure)
+        super(_MapAndBatchDataset, self).__init__(input_dataset,
+                                                  variant_tensor)
 
     def _functions(self):
         return [self._map_func]
@@ -432,24 +424,20 @@ class _DenseToRaggedDataset(dataset_ops.UnaryDataset):
             any new ragged tensors.  Existing `tf.RaggedTensor` elements do *not*
             have their row_splits dtype changed.
         """
+
         # Replace each TensorSpec in the input dataset's structure with a
         # corresponding RaggedTensorSpec.
         def to_ragged_spec(spec):
             """Returns the new spec based on RaggedTensors."""
-            if (
-                not isinstance(spec, tensor_spec.TensorSpec)
-                or spec.shape.rank is None
-                or spec.shape.is_fully_defined()
-            ):
+            if (not isinstance(spec, tensor_spec.TensorSpec)
+                    or spec.shape.rank is None
+                    or spec.shape.is_fully_defined()):
                 return spec
             else:
-                ragged_rank = max(
-                    [
-                        axis
-                        for (axis, size) in enumerate(spec.shape.as_list())
-                        if size is None
-                    ]
-                )
+                ragged_rank = max([
+                    axis for (axis, size) in enumerate(spec.shape.as_list())
+                    if size is None
+                ])
                 return ragged_tensor.RaggedTensorSpec(
                     shape=spec.shape,
                     dtype=spec.dtype,
@@ -457,7 +445,8 @@ class _DenseToRaggedDataset(dataset_ops.UnaryDataset):
                     row_splits_dtype=row_splits_dtype,
                 )
 
-        self._structure = nest.map_structure(to_ragged_spec, input_dataset.element_spec)
+        self._structure = nest.map_structure(to_ragged_spec,
+                                             input_dataset.element_spec)
 
         # Replace each tf.Tensor value in the input dataset with a variant-encoded
         # RaggedTensor. Since we're updating the corresponding structure to be
@@ -465,27 +454,21 @@ class _DenseToRaggedDataset(dataset_ops.UnaryDataset):
         # RaggedTensorSpec._from_tensor_list.
         def to_ragged_variant(value):
             """Re-encode Tensors as RaggedTensors."""
-            if (
-                not isinstance(value, ops.Tensor)
-                or value.shape.rank is None
-                or value.shape.is_fully_defined()
-            ):
+            if (not isinstance(value, ops.Tensor) or value.shape.rank is None
+                    or value.shape.is_fully_defined()):
                 return value
             else:
-                spec = to_ragged_spec(tensor_spec.TensorSpec.from_tensor(value))
+                spec = to_ragged_spec(
+                    tensor_spec.TensorSpec.from_tensor(value))
                 if spec._ragged_rank > 0:  # pylint: disable=protected-access
                     value = ragged_tensor.RaggedTensor.from_tensor(
-                        value, ragged_rank=spec._ragged_rank
-                    )  # pylint: disable=protected-access
-                return spec._to_tensor_list(value)[
-                    0
-                ]  # pylint: disable=protected-access
+                        value, ragged_rank=spec._ragged_rank)  # pylint: disable=protected-access
+                return spec._to_tensor_list(value)[0]  # pylint: disable=protected-access
 
         # Tuples are automatically unpacked by `dataset.map` so we repack them.
-        if dataset_ops._should_unpack_args(
-            input_dataset.element_spec
-        ):  # pylint: disable=protected-access
-            map_fn = lambda *value: nest.map_structure(to_ragged_variant, value)
+        if dataset_ops._should_unpack_args(input_dataset.element_spec):  # pylint: disable=protected-access
+            map_fn = lambda *value: nest.map_structure(to_ragged_variant, value
+                                                       )
         else:
 
             def map_fn(value):
@@ -493,9 +476,7 @@ class _DenseToRaggedDataset(dataset_ops.UnaryDataset):
 
         self._mapped_dataset = input_dataset.map(map_fn)
 
-        variant = (
-            self._mapped_dataset._variant_tensor
-        )  # pylint: disable=protected-access
+        variant = (self._mapped_dataset._variant_tensor)  # pylint: disable=protected-access
         super(_DenseToRaggedDataset, self).__init__(input_dataset, variant)
 
     @property
