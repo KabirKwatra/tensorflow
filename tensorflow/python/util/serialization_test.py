@@ -33,41 +33,42 @@ from tensorflow.python.util import serialization
 
 class SerializationTests(test.TestCase):
 
-  def test_serialize_dense(self):
-    dense = core.Dense(3)
-    dense(constant_op.constant([[4.]]))
-    round_trip = json.loads(json.dumps(
-        dense, default=serialization.get_json_type))
-    self.assertEqual(3, round_trip["config"]["units"])
+    def test_serialize_dense(self):
+        dense = core.Dense(3)
+        dense(constant_op.constant([[4.]]))
+        round_trip = json.loads(json.dumps(
+            dense, default=serialization.get_json_type))
+        self.assertEqual(3, round_trip["config"]["units"])
 
-  def test_serialize_shape(self):
-    round_trip = json.loads(json.dumps(
-        tensor_shape.TensorShape([None, 2, 3]),
-        default=serialization.get_json_type))
-    self.assertIs(round_trip[0], None)
-    self.assertEqual(round_trip[1], 2)
+    def test_serialize_shape(self):
+        round_trip = json.loads(json.dumps(
+            tensor_shape.TensorShape([None, 2, 3]),
+            default=serialization.get_json_type))
+        self.assertIs(round_trip[0], None)
+        self.assertEqual(round_trip[1], 2)
 
-  @test_util.run_in_graph_and_eager_modes
-  def test_serialize_sequential(self):
-    model = sequential.Sequential()
-    model.add(core.Dense(4))
-    model.add(core.Dense(5))
-    model(constant_op.constant([[1.]]))
-    sequential_round_trip = json.loads(
-        json.dumps(model, default=serialization.get_json_type))
-    self.assertEqual(
-        5, sequential_round_trip["config"]["layers"][1]["config"]["units"])
+    @test_util.run_in_graph_and_eager_modes
+    def test_serialize_sequential(self):
+        model = sequential.Sequential()
+        model.add(core.Dense(4))
+        model.add(core.Dense(5))
+        model(constant_op.constant([[1.]]))
+        sequential_round_trip = json.loads(
+            json.dumps(model, default=serialization.get_json_type))
+        self.assertEqual(
+            5, sequential_round_trip["config"]["layers"][1]["config"]["units"])
 
-  @test_util.run_in_graph_and_eager_modes
-  def test_serialize_model(self):
-    x = input_layer.Input(shape=[3])
-    y = core.Dense(10)(x)
-    model = training.Model(x, y)
-    model(constant_op.constant([[1., 1., 1.]]))
-    model_round_trip = json.loads(
-        json.dumps(model, default=serialization.get_json_type))
-    self.assertEqual(
-        10, model_round_trip["config"]["layers"][1]["config"]["units"])
+    @test_util.run_in_graph_and_eager_modes
+    def test_serialize_model(self):
+        x = input_layer.Input(shape=[3])
+        y = core.Dense(10)(x)
+        model = training.Model(x, y)
+        model(constant_op.constant([[1., 1., 1.]]))
+        model_round_trip = json.loads(
+            json.dumps(model, default=serialization.get_json_type))
+        self.assertEqual(
+            10, model_round_trip["config"]["layers"][1]["config"]["units"])
+
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
