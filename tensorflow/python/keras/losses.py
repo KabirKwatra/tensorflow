@@ -1720,7 +1720,7 @@ def cosine_similarity(y_true, y_pred, axis=-1):
     Note that it is a negative quantity between -1 and 0, where 0 indicates
     orthogonality and values closer to -1 indicate greater similarity. This makes
     it usable as a loss function in a setting where you try to maximize the
-    proximity between predictions and targets. If either `y_true` or `y_pred` 
+    proximity between predictions and targets. If either `y_true` or `y_pred`
     is a zero vector, cosine similarity will be 0 regardless of the proximity
     between predictions and targets.
 
