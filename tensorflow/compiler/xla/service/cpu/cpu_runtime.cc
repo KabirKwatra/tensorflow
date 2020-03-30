@@ -50,15 +50,15 @@ namespace cpu {
 namespace runtime {
 
 XfeedManager* GetXfeedManager(int device_ordinal) {
-    static auto* managers = new absl::flat_hash_map<int, XfeedManager*>();
-    static absl::Mutex* mutex = new absl::Mutex();
+  static auto* managers = new absl::flat_hash_map<int, XfeedManager*>();
+  static absl::Mutex* mutex = new absl::Mutex();
 
-    absl::MutexLock lock(mutex);
-    auto it = managers->find(device_ordinal);
-    if (it == managers->end()) {
-        it = managers->emplace(device_ordinal, new XfeedManager()).first;
-    }
-    return it->second;
+  absl::MutexLock lock(mutex);
+  auto it = managers->find(device_ordinal);
+  if (it == managers->end()) {
+    it = managers->emplace(device_ordinal, new XfeedManager()).first;
+  }
+  return it->second;
 }
 
 extern const char* const kEigenMatMulF16SymbolName =
@@ -125,44 +125,44 @@ namespace {
 // Inverses the encoding of a Shape protobuf into an LLVM global variable.
 xla::StatusOr<xla::Shape> DecodeSelfDescribingShapeConstant(
     const void* shape_ptr, xla::int32 size_bytes) {
-    xla::ShapeProto shape_proto;
-    if (!shape_proto.ParseFromArray(shape_ptr, size_bytes)) {
-        return tensorflow::errors::Internal("Failed parsing the shape proto");
-    }
-    xla::Shape shape(shape_proto);
-    auto status = xla::ShapeUtil::ValidateShape(shape);
-    if (!status.ok()) {
-        return status;
-    }
-    return std::move(shape);
+  xla::ShapeProto shape_proto;
+  if (!shape_proto.ParseFromArray(shape_ptr, size_bytes)) {
+    return tensorflow::errors::Internal("Failed parsing the shape proto");
+  }
+  xla::Shape shape(shape_proto);
+  auto status = xla::ShapeUtil::ValidateShape(shape);
+  if (!status.ok()) {
+    return status;
+  }
+  return std::move(shape);
 }
 
 tensorflow::string ShapeString(const void* shape_ptr, xla::int32 shape_length) {
-    xla::StatusOr<xla::Shape> shape =
-        DecodeSelfDescribingShapeConstant(shape_ptr, shape_length);
-    if (shape.ok()) {
-        return xla::ShapeUtil::HumanStringWithLayout(shape.ValueOrDie());
-    }
-    return "<invalid shape>";
+  xla::StatusOr<xla::Shape> shape =
+      DecodeSelfDescribingShapeConstant(shape_ptr, shape_length);
+  if (shape.ok()) {
+    return xla::ShapeUtil::HumanStringWithLayout(shape.ValueOrDie());
+  }
+  return "<invalid shape>";
 }
 
 }  // namespace
 
 extern "C" {
 
-    TF_ATTRIBUTE_NO_SANITIZE_MEMORY xla::int64 __xla_cpu_runtime_TracingStart(
-        const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
-        const char* name) {
-        VLOG(3) << "TracingStart " << name;
-        return tensorflow::profiler::TraceMe::ActivityStart(name);
-    }
+TF_ATTRIBUTE_NO_SANITIZE_MEMORY xla::int64 __xla_cpu_runtime_TracingStart(
+    const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
+    const char* name) {
+  VLOG(3) << "TracingStart " << name;
+  return tensorflow::profiler::TraceMe::ActivityStart(name);
+}
 
-    TF_ATTRIBUTE_NO_SANITIZE_MEMORY void __xla_cpu_runtime_TracingEnd(
-        const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
-        xla::int64 id) {
-        VLOG(3) << "TracingEnd " << id;
-        tensorflow::profiler::TraceMe::ActivityEnd(id);
-    }
+TF_ATTRIBUTE_NO_SANITIZE_MEMORY void __xla_cpu_runtime_TracingEnd(
+    const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
+    xla::int64 id) {
+  VLOG(3) << "TracingEnd " << id;
+  tensorflow::profiler::TraceMe::ActivityEnd(id);
+}
 
 }  // extern "C"
 
@@ -170,221 +170,221 @@ TF_ATTRIBUTE_NO_SANITIZE_MEMORY void*
 __xla_cpu_runtime_AcquireInfeedBufferForDequeue(
     const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
     const void* shape, xla::int32 shape_length) {
-    int device_ordinal =
-        run_options ? run_options->stream()->parent()->device_ordinal() : 0;
+  int device_ordinal =
+      run_options ? run_options->stream()->parent()->device_ordinal() : 0;
 
-    VLOG(2) << "AcquireInfeedBufferForDequeue: "
-            << ShapeString(shape, shape_length) << " on stream executor "
-            << device_ordinal;
+  VLOG(2) << "AcquireInfeedBufferForDequeue: "
+          << ShapeString(shape, shape_length) << " on stream executor "
+          << device_ordinal;
 
-    xla::cpu::runtime::XfeedManager* xfeed =
-        xla::cpu::runtime::GetXfeedManager(device_ordinal);
-    // Wait until there's a buffer to dequeue.
-    xla::cpu::runtime::XfeedBuffer* buffer =
-        xfeed->infeed()->BlockingDequeueBuffer();
-    CHECK_EQ(buffer->length(), buffer_length)
-            << "XLA program infeed request buffer size " << buffer_length
-            << " did not match the runtime's infed buffer length " << buffer->length()
-            << "; program reports desired shape: "
-            << ShapeString(shape, shape_length);
-    return buffer->data();
+  xla::cpu::runtime::XfeedManager* xfeed =
+      xla::cpu::runtime::GetXfeedManager(device_ordinal);
+  // Wait until there's a buffer to dequeue.
+  xla::cpu::runtime::XfeedBuffer* buffer =
+      xfeed->infeed()->BlockingDequeueBuffer();
+  CHECK_EQ(buffer->length(), buffer_length)
+      << "XLA program infeed request buffer size " << buffer_length
+      << " did not match the runtime's infed buffer length " << buffer->length()
+      << "; program reports desired shape: "
+      << ShapeString(shape, shape_length);
+  return buffer->data();
 }
 
 TF_ATTRIBUTE_NO_SANITIZE_MEMORY void
 __xla_cpu_runtime_ReleaseInfeedBufferAfterDequeue(
     const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
     void* buffer_ptr, const void* shape_ptr, xla::int32 shape_length) {
-    int device_ordinal =
-        run_options ? run_options->stream()->parent()->device_ordinal() : 0;
+  int device_ordinal =
+      run_options ? run_options->stream()->parent()->device_ordinal() : 0;
 
-    VLOG(2) << "ReleaseInfeedBufferAfterDeque: "
-            << ShapeString(shape_ptr, shape_length) << " on stream executor "
-            << device_ordinal;
+  VLOG(2) << "ReleaseInfeedBufferAfterDeque: "
+          << ShapeString(shape_ptr, shape_length) << " on stream executor "
+          << device_ordinal;
 
-    xla::cpu::runtime::XfeedManager* xfeed =
-        xla::cpu::runtime::GetXfeedManager(device_ordinal);
-    xla::StatusOr<xla::Shape> shape =
-        DecodeSelfDescribingShapeConstant(shape_ptr, shape_length);
-    xfeed->infeed()->ReleaseCurrentBuffer(buffer_length, buffer_ptr,
-                                          std::move(shape));
+  xla::cpu::runtime::XfeedManager* xfeed =
+      xla::cpu::runtime::GetXfeedManager(device_ordinal);
+  xla::StatusOr<xla::Shape> shape =
+      DecodeSelfDescribingShapeConstant(shape_ptr, shape_length);
+  xfeed->infeed()->ReleaseCurrentBuffer(buffer_length, buffer_ptr,
+                                        std::move(shape));
 }
 
 TF_ATTRIBUTE_NO_SANITIZE_MEMORY void*
 __xla_cpu_runtime_AcquireOutfeedBufferForPopulation(
     const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
     const void* shape_ptr, xla::int32 shape_length) {
-    int device_ordinal =
-        run_options ? run_options->stream()->parent()->device_ordinal() : 0;
+  int device_ordinal =
+      run_options ? run_options->stream()->parent()->device_ordinal() : 0;
 
-    VLOG(2) << "AcquireOutfeedBufferForPopulation: "
-            << ShapeString(shape_ptr, shape_length) << " on stream executor "
-            << device_ordinal;
+  VLOG(2) << "AcquireOutfeedBufferForPopulation: "
+          << ShapeString(shape_ptr, shape_length) << " on stream executor "
+          << device_ordinal;
 
-    xla::cpu::runtime::XfeedManager* xfeed =
-        xla::cpu::runtime::GetXfeedManager(device_ordinal);
-    // Wait until there's a buffer to dequeue.
-    xla::cpu::runtime::XfeedBuffer* buffer =
-        xfeed->outfeed()->BlockingDequeueBuffer();
-    CHECK_EQ(buffer->length(), buffer_length)
-            << "XLA program outfeed request buffer size " << buffer_length
-            << " did not match the runtime's outfeed buffer length "
-            << buffer->length() << "; program reports outfed shape: "
-            << ShapeString(shape_ptr, shape_length);
-    return buffer->data();
+  xla::cpu::runtime::XfeedManager* xfeed =
+      xla::cpu::runtime::GetXfeedManager(device_ordinal);
+  // Wait until there's a buffer to dequeue.
+  xla::cpu::runtime::XfeedBuffer* buffer =
+      xfeed->outfeed()->BlockingDequeueBuffer();
+  CHECK_EQ(buffer->length(), buffer_length)
+      << "XLA program outfeed request buffer size " << buffer_length
+      << " did not match the runtime's outfeed buffer length "
+      << buffer->length() << "; program reports outfed shape: "
+      << ShapeString(shape_ptr, shape_length);
+  return buffer->data();
 }
 
 TF_ATTRIBUTE_NO_SANITIZE_MEMORY void
 __xla_cpu_runtime_ReleaseOutfeedBufferAfterPopulation(
     const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
     void* buffer_ptr, const void* shape_ptr, xla::int32 shape_length) {
-    int device_ordinal =
-        run_options ? run_options->stream()->parent()->device_ordinal() : 0;
+  int device_ordinal =
+      run_options ? run_options->stream()->parent()->device_ordinal() : 0;
 
-    VLOG(2) << "ReleaseOutfeedBufferAfterPopulation: "
-            << ShapeString(shape_ptr, shape_length) << " on stream executor "
-            << device_ordinal;
+  VLOG(2) << "ReleaseOutfeedBufferAfterPopulation: "
+          << ShapeString(shape_ptr, shape_length) << " on stream executor "
+          << device_ordinal;
 
-    xla::cpu::runtime::XfeedManager* xfeed =
-        xla::cpu::runtime::GetXfeedManager(device_ordinal);
-    xla::StatusOr<xla::Shape> shape =
-        DecodeSelfDescribingShapeConstant(shape_ptr, shape_length);
-    xfeed->outfeed()->ReleaseCurrentBuffer(buffer_length, buffer_ptr,
-                                           std::move(shape));
+  xla::cpu::runtime::XfeedManager* xfeed =
+      xla::cpu::runtime::GetXfeedManager(device_ordinal);
+  xla::StatusOr<xla::Shape> shape =
+      DecodeSelfDescribingShapeConstant(shape_ptr, shape_length);
+  xfeed->outfeed()->ReleaseCurrentBuffer(buffer_length, buffer_ptr,
+                                         std::move(shape));
 }
 
 namespace {
 
 class CpuAllReduceRendezvous : public xla::Rendezvous<std::nullptr_t> {
-public:
-    explicit CpuAllReduceRendezvous(const xla::RendezvousKey& k)
-        : xla::Rendezvous<std::nullptr_t>(k) {}
+ public:
+  explicit CpuAllReduceRendezvous(const xla::RendezvousKey& k)
+      : xla::Rendezvous<std::nullptr_t>(k) {}
 
-protected:
-    xla::StatusOr<std::pair<std::nullptr_t, bool>> SubmitParticipantImpl(
-    xla::AllReduceParticipantData participant) override {
-        TF_RET_CHECK(participant.buffers.size() == 1);
-        xla::PrimitiveType datatype = participant.buffers.front().primitive_type;
-        bool primary = [&] {
-            tensorflow::mutex_lock lock(mu_);
-            if (!initialized_) {
-                initialized_ = true;
-                return true;
-            }
-            return false;
-        }();
+ protected:
+  xla::StatusOr<std::pair<std::nullptr_t, bool>> SubmitParticipantImpl(
+      xla::AllReduceParticipantData participant) override {
+    TF_RET_CHECK(participant.buffers.size() == 1);
+    xla::PrimitiveType datatype = participant.buffers.front().primitive_type;
+    bool primary = [&] {
+      tensorflow::mutex_lock lock(mu_);
+      if (!initialized_) {
+        initialized_ = true;
+        return true;
+      }
+      return false;
+    }();
 
-        if (primary) {
-            switch (datatype) {
-            case xla::S8:
-                DoAllReduce<xla::S8>(participant);
-                break;
-            case xla::PRED:
-            case xla::U8:
-                DoAllReduce<xla::U8>(participant);
-                break;
-            case xla::S32:
-                DoAllReduce<xla::S32>(participant);
-                break;
-            case xla::U32:
-                DoAllReduce<xla::U32>(participant);
-                break;
-            case xla::S64:
-                DoAllReduce<xla::S64>(participant);
-                break;
-            case xla::U64:
-                DoAllReduce<xla::U64>(participant);
-                break;
-            case xla::F16:
-                DoAllReduce<xla::F16>(participant);
-                break;
-            case xla::F32:
-                DoAllReduce<xla::F32>(participant);
-                break;
-            case xla::F64:
-                DoAllReduce<xla::F64>(participant);
-                break;
-            default:
-                LOG(FATAL) << "Unexpected datatype;";
-            }
-        }
-
-        // First element is a dummy value.
-        return std::make_pair(nullptr, primary);
+    if (primary) {
+      switch (datatype) {
+        case xla::S8:
+          DoAllReduce<xla::S8>(participant);
+          break;
+        case xla::PRED:
+        case xla::U8:
+          DoAllReduce<xla::U8>(participant);
+          break;
+        case xla::S32:
+          DoAllReduce<xla::S32>(participant);
+          break;
+        case xla::U32:
+          DoAllReduce<xla::U32>(participant);
+          break;
+        case xla::S64:
+          DoAllReduce<xla::S64>(participant);
+          break;
+        case xla::U64:
+          DoAllReduce<xla::U64>(participant);
+          break;
+        case xla::F16:
+          DoAllReduce<xla::F16>(participant);
+          break;
+        case xla::F32:
+          DoAllReduce<xla::F32>(participant);
+          break;
+        case xla::F64:
+          DoAllReduce<xla::F64>(participant);
+          break;
+        default:
+          LOG(FATAL) << "Unexpected datatype;";
+      }
     }
 
-private:
-    template <xla::PrimitiveType PT>
-    void DoAllReduce(xla::AllReduceParticipantData participant) {
-        using T = typename xla::primitive_util::PrimitiveTypeToNative<PT>::type;
-        tensorflow::mutex_lock lock(mu_);
-        CHECK(!participants_.empty());
-        xla::ReductionKind reduction_kind = participant.reduction_kind;
-        for (const auto& p : participants_) {
-            CHECK(p.reduction_kind == reduction_kind);
-        }
+    // First element is a dummy value.
+    return std::make_pair(nullptr, primary);
+  }
 
-        std::vector<absl::Span<T>> input_buffers;
-        std::vector<absl::Span<T>> output_buffers;
-        input_buffers.reserve(participants_.size());
-        output_buffers.reserve(participants_.size());
-
-        for (auto& p : participants_) {
-            CHECK_EQ(p.buffers.size(), 1);
-            CHECK_EQ(p.buffers.front().element_count,
-                     participants_.front().buffers.front().element_count);
-            xla::int64 element_count = participant.buffers.front().element_count;
-            input_buffers.emplace_back(
-                static_cast<T*>(p.buffers.front().source_data.opaque()),
-                element_count);
-            output_buffers.emplace_back(
-                static_cast<T*>(p.buffers.front().destination_data.opaque()),
-                element_count);
-        }
-        xla::int64 element_count =
-            participants_.front().buffers.front().element_count;
-
-        auto compute = [reduction_kind](T a, T b) -> T {
-            switch (reduction_kind) {
-            case xla::ReductionKind::SUM:
-                return a + b;
-            case xla::ReductionKind::PRODUCT:
-                return a * b;
-            case xla::ReductionKind::MIN:
-                return std::min(a, b);
-            case xla::ReductionKind::MAX:
-                return std::max(a, b);
-            }
-        };
-
-        for (int idx = 0; idx < element_count; idx++) {
-            T out = [&]() -> T {
-                switch (reduction_kind) {
-                case xla::ReductionKind::SUM:
-                    return static_cast<T>(0);
-                case xla::ReductionKind::PRODUCT:
-                    return static_cast<T>(1);
-                case xla::ReductionKind::MIN:
-                    return std::numeric_limits<T>::max();
-                case xla::ReductionKind::MAX:
-                    return std::numeric_limits<T>::min();
-                }
-            }();
-
-            for (auto& input : input_buffers) {
-                out = compute(out, input[idx]);
-            }
-            for (auto& output : output_buffers) {
-                output[idx] = out;
-            }
-        }
+ private:
+  template <xla::PrimitiveType PT>
+  void DoAllReduce(xla::AllReduceParticipantData participant) {
+    using T = typename xla::primitive_util::PrimitiveTypeToNative<PT>::type;
+    tensorflow::mutex_lock lock(mu_);
+    CHECK(!participants_.empty());
+    xla::ReductionKind reduction_kind = participant.reduction_kind;
+    for (const auto& p : participants_) {
+      CHECK(p.reduction_kind == reduction_kind);
     }
+
+    std::vector<absl::Span<T>> input_buffers;
+    std::vector<absl::Span<T>> output_buffers;
+    input_buffers.reserve(participants_.size());
+    output_buffers.reserve(participants_.size());
+
+    for (auto& p : participants_) {
+      CHECK_EQ(p.buffers.size(), 1);
+      CHECK_EQ(p.buffers.front().element_count,
+               participants_.front().buffers.front().element_count);
+      xla::int64 element_count = participant.buffers.front().element_count;
+      input_buffers.emplace_back(
+          static_cast<T*>(p.buffers.front().source_data.opaque()),
+          element_count);
+      output_buffers.emplace_back(
+          static_cast<T*>(p.buffers.front().destination_data.opaque()),
+          element_count);
+    }
+    xla::int64 element_count =
+        participants_.front().buffers.front().element_count;
+
+    auto compute = [reduction_kind](T a, T b) -> T {
+      switch (reduction_kind) {
+        case xla::ReductionKind::SUM:
+          return a + b;
+        case xla::ReductionKind::PRODUCT:
+          return a * b;
+        case xla::ReductionKind::MIN:
+          return std::min(a, b);
+        case xla::ReductionKind::MAX:
+          return std::max(a, b);
+      }
+    };
+
+    for (int idx = 0; idx < element_count; idx++) {
+      T out = [&]() -> T {
+        switch (reduction_kind) {
+          case xla::ReductionKind::SUM:
+            return static_cast<T>(0);
+          case xla::ReductionKind::PRODUCT:
+            return static_cast<T>(1);
+          case xla::ReductionKind::MIN:
+            return std::numeric_limits<T>::max();
+          case xla::ReductionKind::MAX:
+            return std::numeric_limits<T>::min();
+        }
+      }();
+
+      for (auto& input : input_buffers) {
+        out = compute(out, input[idx]);
+      }
+      for (auto& output : output_buffers) {
+        output[idx] = out;
+      }
+    }
+  }
 };
 
 xla::RefcountingHashMap<xla::RendezvousKey, CpuAllReduceRendezvous>&
 GlobalRendezvousMap() {
-    static auto& m =
-        *new xla::RefcountingHashMap<xla::RendezvousKey, CpuAllReduceRendezvous>;
-    return m;
+  static auto& m =
+      *new xla::RefcountingHashMap<xla::RendezvousKey, CpuAllReduceRendezvous>;
+  return m;
 }
 
 }  // namespace
@@ -395,89 +395,88 @@ TF_ATTRIBUTE_NO_SANITIZE_MEMORY void __xla_cpu_runtime_AllReduce(
     xla::int32 channel_id_present, xla::int64 op_id, xla::int32 reduction_kind,
     const void* shape_ptr, xla::int32 shape_length, void* input_buffer,
     void* output_buffer) {
-    absl::string_view replica_groups_serialized(
-        static_cast<const char*>(replica_groups_str), replica_groups_str_size);
+  absl::string_view replica_groups_serialized(
+      static_cast<const char*>(replica_groups_str), replica_groups_str_size);
 
-    // FIXME(cheshire): avoid repetition w/__xla_cpu_runtime_ReplicaId.
-    int device_ordinal = [&] {
-        if (run_options->stream()) {
-            return run_options->stream()->parent()->device_ordinal();
-        } else {
-            return run_options->device_ordinal();
-        }
-    }();
-
-    std::vector<xla::ReplicaGroup> group =
-        xla::ParseReplicaGroupsOnly(replica_groups_serialized).ValueOrDie();
-    const xla::DeviceAssignment& device_assignment =
-        *run_options->device_assignment();
-    xla::int32 replica_count = device_assignment.replica_count();
-    CHECK_EQ(device_assignment.computation_count(), 1);
-    std::vector<xla::int64> participating_replicas =
-        xla::GetParticipatingReplicas(xla::GlobalDeviceId(device_ordinal), group,
-                                      replica_count,
-                                      *run_options->device_assignment())
-        .ValueOrDie();
-
-    xla::RendezvousKey::CollectiveOpKind op_kind =
-        channel_id_present ? xla::RendezvousKey::kCrossModule
-        : xla::RendezvousKey::kCrossReplica;
-    std::vector<xla::GlobalDeviceId> participating_devices;
-    participating_devices.reserve(participating_replicas.size());
-    for (xla::int64 replica : participating_replicas) {
-        participating_devices.push_back(
-            xla::GlobalDeviceId(device_assignment(replica, 0)));
+  // FIXME(cheshire): avoid repetition w/__xla_cpu_runtime_ReplicaId.
+  int device_ordinal = [&] {
+    if (run_options->stream()) {
+      return run_options->stream()->parent()->device_ordinal();
+    } else {
+      return run_options->device_ordinal();
     }
-    xla::RendezvousKey rendezvous_key(
-        run_options->run_id(), std::move(participating_devices),
-        participating_replicas.size(), op_kind, op_id);
-    auto shape_str = ShapeString(shape_ptr, shape_length);
-    VLOG(2) << "All-reduce input/output shape : " << shape_str;
+  }();
 
-    xla::Shape shape =
-        DecodeSelfDescribingShapeConstant(shape_ptr, shape_length).ValueOrDie();
-    CHECK(xla::LayoutUtil::IsDenseArray(shape))
-            << "All-reduce on CPU is implemented only for dense arrays";
+  std::vector<xla::ReplicaGroup> group =
+      xla::ParseReplicaGroupsOnly(replica_groups_serialized).ValueOrDie();
+  const xla::DeviceAssignment& device_assignment =
+      *run_options->device_assignment();
+  xla::int32 replica_count = device_assignment.replica_count();
+  CHECK_EQ(device_assignment.computation_count(), 1);
+  std::vector<xla::int64> participating_replicas =
+      xla::GetParticipatingReplicas(xla::GlobalDeviceId(device_ordinal), group,
+                                    replica_count,
+                                    *run_options->device_assignment())
+          .ValueOrDie();
 
-    xla::AllReduceParticipantData participant(rendezvous_key);
-    participant.device_ordinal = device_ordinal;
-    participant.stream = run_options->stream();
-    xla::AllReduceParticipantData::Buffer buffer;
-    buffer.element_count = xla::ShapeUtil::ElementsIn(shape);
-    buffer.primitive_type = shape.element_type();
-    buffer.source_data =
-        se::DeviceMemoryBase(input_buffer, xla::ShapeUtil::ByteSizeOf(shape));
-    buffer.destination_data =
-        se::DeviceMemoryBase(output_buffer, xla::ShapeUtil::ByteSizeOf(shape));
-    participant.buffers = {buffer};
-    participant.reduction_kind = static_cast<xla::ReductionKind>(reduction_kind);
+  xla::RendezvousKey::CollectiveOpKind op_kind =
+      channel_id_present ? xla::RendezvousKey::kCrossModule
+                         : xla::RendezvousKey::kCrossReplica;
+  std::vector<xla::GlobalDeviceId> participating_devices;
+  participating_devices.reserve(participating_replicas.size());
+  for (xla::int64 replica : participating_replicas) {
+    participating_devices.push_back(
+        xla::GlobalDeviceId(device_assignment(replica, 0)));
+  }
+  xla::RendezvousKey rendezvous_key(
+      run_options->run_id(), std::move(participating_devices),
+      participating_replicas.size(), op_kind, op_id);
+  auto shape_str = ShapeString(shape_ptr, shape_length);
+  VLOG(2) << "All-reduce input/output shape : " << shape_str;
 
-    auto make_cpu_rendezvous = [](const xla::RendezvousKey& k) {
-        return absl::make_unique<CpuAllReduceRendezvous>(k);
-    };
+  xla::Shape shape =
+      DecodeSelfDescribingShapeConstant(shape_ptr, shape_length).ValueOrDie();
+  CHECK(xla::LayoutUtil::IsDenseArray(shape))
+      << "All-reduce on CPU is implemented only for dense arrays";
 
-    TF_CHECK_OK(CpuAllReduceRendezvous::SubmitParticipant(
-    [&] {
-        return GlobalRendezvousMap().GetOrCreateIfAbsent(
-            rendezvous_key, make_cpu_rendezvous);
-    },
-    participant)
-    .status());
+  xla::AllReduceParticipantData participant(rendezvous_key);
+  participant.device_ordinal = device_ordinal;
+  participant.stream = run_options->stream();
+  xla::AllReduceParticipantData::Buffer buffer;
+  buffer.element_count = xla::ShapeUtil::ElementsIn(shape);
+  buffer.primitive_type = shape.element_type();
+  buffer.source_data =
+      se::DeviceMemoryBase(input_buffer, xla::ShapeUtil::ByteSizeOf(shape));
+  buffer.destination_data =
+      se::DeviceMemoryBase(output_buffer, xla::ShapeUtil::ByteSizeOf(shape));
+  participant.buffers = {buffer};
+  participant.reduction_kind = static_cast<xla::ReductionKind>(reduction_kind);
+
+  auto make_cpu_rendezvous = [](const xla::RendezvousKey& k) {
+    return absl::make_unique<CpuAllReduceRendezvous>(k);
+  };
+
+  TF_CHECK_OK(CpuAllReduceRendezvous::SubmitParticipant(
+                  [&] {
+                    return GlobalRendezvousMap().GetOrCreateIfAbsent(
+                        rendezvous_key, make_cpu_rendezvous);
+                  },
+                  participant)
+                  .status());
 }
 
 TF_ATTRIBUTE_NO_SANITIZE_MEMORY void __xla_cpu_runtime_ReplicaId(
     const xla::ExecutableRunOptions* run_options, void* output_buffer) {
-    int device_ordinal = [&]() {
-        if (run_options->stream()) {
-            return run_options->stream()->parent()->device_ordinal();
-        } else {
-            return run_options->device_ordinal();
-        }
+  int device_ordinal = [&]() {
+    if (run_options->stream()) {
+      return run_options->stream()->parent()->device_ordinal();
+    } else {
+      return run_options->device_ordinal();
     }
-    ();
+  }();
 
-    xla::int32 replica_id = run_options->device_assignment()
-                            ->ReplicaIdForDeviceOrdinal(device_ordinal)
-                            .ValueOrDie();
-    std::memcpy(output_buffer, &replica_id, 4);
+  xla::int32 replica_id = run_options->device_assignment()
+                              ->ReplicaIdForDeviceOrdinal(device_ordinal)
+                              .ValueOrDie();
+  std::memcpy(output_buffer, &replica_id, 4);
 }
