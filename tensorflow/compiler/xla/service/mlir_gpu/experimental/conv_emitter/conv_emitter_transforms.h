@@ -18,16 +18,16 @@ limitations under the License.
 
 #include "absl/types/span.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"  // from @llvm-project
-#include "mlir/Dialect/StandardOps/IR/Ops.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
+#include "mlir/Dialect/StandardOps/IR/Ops.h"   // from @llvm-project
+#include "mlir/IR/Operation.h"                 // from @llvm-project
 #include "tensorflow/core/platform/types.h"
 
 namespace xla {
 namespace mlir_gpu {
 
 struct BoundAffineMap {
-    mlir::AffineMap affine_map;
-    std::vector<mlir::Value> operands;
+  mlir::AffineMap affine_map;
+  std::vector<mlir::Value> operands;
 };
 
 BoundAffineMap GetBoundAffineMapFrom(mlir::Operation* op);
