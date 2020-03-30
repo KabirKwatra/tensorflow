@@ -37,42 +37,42 @@ namespace mlir {
 namespace {
 TfLiteStatus QuantizeAnnotatedModel(llvm::StringRef buffer,
                                     flatbuffers::FlatBufferBuilder* builder) {
-  auto model_ptr = tflite::FlatBufferModel::VerifyAndBuildFromBuffer(
-      buffer.data(), buffer.size());
-  if (nullptr == model_ptr) {
-    return TfLiteStatus::kTfLiteError;
-  }
-  std::unique_ptr<tflite::ModelT> model(model_ptr->GetModel()->UnPack());
+    auto model_ptr = tflite::FlatBufferModel::VerifyAndBuildFromBuffer(
+                         buffer.data(), buffer.size());
+    if (nullptr == model_ptr) {
+        return TfLiteStatus::kTfLiteError;
+    }
+    std::unique_ptr<tflite::ModelT> model(model_ptr->GetModel()->UnPack());
 
-  tflite::StderrReporter error_reporter;
-  return mlir::lite::QuantizeModel(
-      *model, tflite::TensorType_INT8, tflite::TensorType_INT8, {},
-      /*fully_quantize=*/true, builder, &error_reporter);
+    tflite::StderrReporter error_reporter;
+    return mlir::lite::QuantizeModel(
+               *model, tflite::TensorType_INT8, tflite::TensorType_INT8, {},
+               /*fully_quantize=*/true, builder, &error_reporter);
 }
 
 }  // namespace
 }  // namespace mlir
 
 int main(int argc, char** argv) {
-  llvm::InitLLVM y(argc, argv);
-  llvm::cl::ParseCommandLineOptions(argc, argv);
-  auto file_or_err = llvm::MemoryBuffer::getFileOrSTDIN(inputFileName.c_str());
-  if (std::error_code error = file_or_err.getError()) {
-    llvm::errs() << argv[0] << ": could not open input file '" << inputFileName
-                 << "': " << error.message() << "\n";
-    return 1;
-  }
-  auto buffer = file_or_err->get();
-  flatbuffers::FlatBufferBuilder builder;
-  auto status =
-      mlir::QuantizeAnnotatedModel(buffer->getBuffer().str(), &builder);
-  if (status != kTfLiteOk) {
-    return 1;
-  }
+    llvm::InitLLVM y(argc, argv);
+    llvm::cl::ParseCommandLineOptions(argc, argv);
+    auto file_or_err = llvm::MemoryBuffer::getFileOrSTDIN(inputFileName.c_str());
+    if (std::error_code error = file_or_err.getError()) {
+        llvm::errs() << argv[0] << ": could not open input file '" << inputFileName
+                     << "': " << error.message() << "\n";
+        return 1;
+    }
+    auto buffer = file_or_err->get();
+    flatbuffers::FlatBufferBuilder builder;
+    auto status =
+        mlir::QuantizeAnnotatedModel(buffer->getBuffer().str(), &builder);
+    if (status != kTfLiteOk) {
+        return 1;
+    }
 
-  std::cout << std::string(
-                   reinterpret_cast<const char*>(builder.GetBufferPointer()),
-                   builder.GetSize())
-            << "\n";
-  return 0;
+    std::cout << std::string(
+                  reinterpret_cast<const char*>(builder.GetBufferPointer()),
+                  builder.GetSize())
+              << "\n";
+    return 0;
 }
