@@ -29,7 +29,8 @@ from tensorflow.python.platform import app
 
 
 def main(_):
-    parser = argparse.ArgumentParser(description="Randomize weights in a tflite file.")
+    parser = argparse.ArgumentParser(
+        description="Randomize weights in a tflite file.")
     parser.add_argument(
         "--input_tflite_file",
         type=str,
