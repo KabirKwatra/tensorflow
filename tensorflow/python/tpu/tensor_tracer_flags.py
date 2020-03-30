@@ -116,18 +116,14 @@ class TTParameters(object):
         self.report_file_path = self._get_report_filepath()
         self.op_range = self._get_op_range()
         self.excluded_opname_re_list = self._flag_value_to_re_list(
-            FLAG_NAME_EXCLUDED_OPNAMES
-        )
+            FLAG_NAME_EXCLUDED_OPNAMES)
         self.excluded_optype_re_list = self._flag_value_to_re_list(
-            FLAG_NAME_EXCLUDED_OPTYPES
-        )
+            FLAG_NAME_EXCLUDED_OPTYPES)
 
         self.included_opname_re_list = self._flag_value_to_re_list(
-            FLAG_NAME_INCLUDED_OPNAMES
-        )
+            FLAG_NAME_INCLUDED_OPNAMES)
         self.included_optype_re_list = self._flag_value_to_re_list(
-            FLAG_NAME_INCLUDED_OPTYPES
-        )
+            FLAG_NAME_INCLUDED_OPTYPES)
 
         self.is_conditional_trace = self._is_conditional_trace_mode()
         self.trace_scalar_ops = self.is_flag_on(FLAG_NAME_TRACE_SCALAR_OPS)
@@ -144,24 +140,22 @@ class TTParameters(object):
         # included op. Similarly, if --trace_after_included_ops=2, then op4 and op5
         # will also be traced.
         self.trace_ops_before_included = self._get_flag_int_value(
-            FLAG_NAME_TRACE_BEFORE_OPS, 0
-        )
+            FLAG_NAME_TRACE_BEFORE_OPS, 0)
         self.trace_ops_after_included = self._get_flag_int_value(
-            FLAG_NAME_TRACE_AFTER_OPS, 0
-        )
-        self.trace_stack_size = self._get_flag_int_value(FLAG_NAME_TRACE_STACK_SIZE, 1)
+            FLAG_NAME_TRACE_AFTER_OPS, 0)
+        self.trace_stack_size = self._get_flag_int_value(
+            FLAG_NAME_TRACE_STACK_SIZE, 1)
         _, self.graph_dump_path = self.get_flag_value(
-            FLAG_NAME_DUMP_BEFORE_AFTER_GRAPHS
-        )
-        self.included_cores = self._flag_value_as_int_list(FLAG_NAME_INCLUDED_CORES)
+            FLAG_NAME_DUMP_BEFORE_AFTER_GRAPHS)
+        self.included_cores = self._flag_value_as_int_list(
+            FLAG_NAME_INCLUDED_CORES)
         self.include_less_interesting_ops = self.is_flag_on(
-            FLAG_NAME_INCLUDE_LESS_INTERESTING_OPS
-        )
-        self.trace_level = self._get_flag_int_value(
-            FLAG_NAME_TRACE_LEVEL, _TT_DEFAULT_TRACE_LEVEL
-        )
+            FLAG_NAME_INCLUDE_LESS_INTERESTING_OPS)
+        self.trace_level = self._get_flag_int_value(FLAG_NAME_TRACE_LEVEL,
+                                                    _TT_DEFAULT_TRACE_LEVEL)
         self.summary_signatures = self._get_summary_signatures()
-        self.collect_summary_per_core = self.is_flag_on(FLAG_NAME_SUMMARY_PER_CORE)
+        self.collect_summary_per_core = self.is_flag_on(
+            FLAG_NAME_SUMMARY_PER_CORE)
 
     def _is_conditional_trace_mode(self):
         return self.trace_mode == TRACE_MODE_FULL_IF_NAN
@@ -170,13 +164,13 @@ class TTParameters(object):
         """Sets the path of the output report file."""
 
         found, report_file_path = self.get_flag_value(FLAG_NAME_REPORT_FILE)
-        if found and report_file_path and self.use_test_undeclared_outputs_dir():
+        if found and report_file_path and self.use_test_undeclared_outputs_dir(
+        ):
             if os.path.isabs(report_file_path):
                 raise ValueError(
                     "If use_test_undeclared_outputs_dir is set,"
-                    "report_file_path cannot be an absolute path (%s)"
-                    % report_file_path
-                )
+                    "report_file_path cannot be an absolute path (%s)" %
+                    report_file_path)
             outputs_dir = self._env.get(_TEST_UNDECLARED_OUTPUTS_DIR_ENV_VAR)
             report_file_path = os.path.join(outputs_dir, report_file_path)
         return report_file_path
@@ -197,10 +191,9 @@ class TTParameters(object):
     def _get_trace_dir(self):
         found, trace_dir = self.get_flag_value(FLAG_NAME_TRACE_DIR)
         if found and trace_dir and self.use_test_undeclared_outputs_dir():
-            raise ValueError(
-                "Cannot not use --%s and --%s at the same time"
-                % (FLAG_NAME_TRACE_DIR, FLAG_NAME_USE_TEST_UNDECLARED_OUTPUTS_DIR)
-            )
+            raise ValueError("Cannot not use --%s and --%s at the same time" %
+                             (FLAG_NAME_TRACE_DIR,
+                              FLAG_NAME_USE_TEST_UNDECLARED_OUTPUTS_DIR))
         if self.use_test_undeclared_outputs_dir():
             trace_dir = self._env.get(_TEST_UNDECLARED_OUTPUTS_DIR_ENV_VAR)
         return trace_dir
@@ -224,8 +217,7 @@ class TTParameters(object):
         if trace_mode not in valid_trace_modes:
             raise ValueError(
                 'Invalid trace mode "%s" given to the Tensor_Tracer.'
-                "Valid trace modes are: %s" % (trace_mode, valid_trace_modes)
-            )
+                "Valid trace modes are: %s" % (trace_mode, valid_trace_modes))
         return trace_mode
 
     def is_brief_mode(self):
@@ -241,10 +233,9 @@ class TTParameters(object):
             return
         valid_submodes = [_SUBMODE_DETAILED, _SUBMODE_BRIEF]
         if submode not in valid_submodes:
-            raise ValueError(
-                'Invalid submode "%s" given to the Tensor_Tracer.'
-                "Valid submodes are: %s" % (submode, valid_submodes)
-            )
+            raise ValueError('Invalid submode "%s" given to the Tensor_Tracer.'
+                             "Valid submodes are: %s" %
+                             (submode, valid_submodes))
         return submode
 
     @staticmethod
@@ -316,8 +307,7 @@ class TTParameters(object):
                 raise ValueError(
                     'The flag name "%s" passed via the environment variable "%s" '
                     "is invalid. Valid flag names are:"
-                    "\n%s" % (flag_name, FLAGS_ENV_VAR, valid_flag_names)
-                )
+                    "\n%s" % (flag_name, FLAGS_ENV_VAR, valid_flag_names))
             pos = match.end()
 
     def _get_summary_signatures(self):
@@ -338,14 +328,16 @@ class TTParameters(object):
                 tt_signatures.append(signature_with_prefix)
             else:
                 logging.warning(
-                    "Unknown signature:%s. Supported signatures: %s"
-                    % (signature, TT_SUMMARY_SIGNATURES)
-                )
+                    "Unknown signature:%s. Supported signatures: %s" %
+                    (signature, TT_SUMMARY_SIGNATURES))
         if not tt_signatures:
             # Default case collects norm and max only.
             return {TT_SUMMARY_MAX: 0, TT_SUMMARY_NORM: 1}
         else:
-            return {signature: idx for idx, signature in enumerate(tt_signatures)}
+            return {
+                signature: idx
+                for idx, signature in enumerate(tt_signatures)
+            }
 
     def get_signature_to_agg_fn_map(self):
         """Returns a map that contains the aggregate function for each signature."""
@@ -394,9 +386,8 @@ class TTParameters(object):
                 integer_values = flag_value.split(",")
                 int_list = [int(int_val) for int_val in integer_values]
             except ValueError:
-                logging.warning(
-                    "Cannot convert %s to int for flag %s", int_list, wanted_flag_name
-                )
+                logging.warning("Cannot convert %s to int for flag %s",
+                                int_list, wanted_flag_name)
         return int_list
 
     def _get_flag_int_value(self, wanted_flag_name, default_value):
@@ -417,10 +408,8 @@ class TTParameters(object):
             try:
                 flag_int_value = int(flag_value)
             except ValueError:
-                logging.warning(
-                    "Cannot convert %s to int for flag %s"
-                    % (flag_int_value, wanted_flag_name)
-                )
+                logging.warning("Cannot convert %s to int for flag %s" %
+                                (flag_int_value, wanted_flag_name))
         return flag_int_value
 
     def get_flag_value(self, wanted_flag_name):
@@ -442,7 +431,8 @@ class TTParameters(object):
             return False, None
         pos = 0
         while True:
-            match, has_value = TTParameters.match_next_flag(tensor_tracer_flags, pos)
+            match, has_value = TTParameters.match_next_flag(
+                tensor_tracer_flags, pos)
             if not match:
                 return False, None
             flag_name = match.group(1)
@@ -485,9 +475,8 @@ class TTParameters(object):
         """Returns True if TensorTracer is enabled."""
 
         if self.is_flag_on(FLAG_NAME_ENABLE):
-            logging.info(
-                "Tensor Tracer is enabled with flags %s." % self._env.get(FLAGS_ENV_VAR)
-            )
+            logging.info("Tensor Tracer is enabled with flags %s." %
+                         self._env.get(FLAGS_ENV_VAR))
             return True
         else:
             return False

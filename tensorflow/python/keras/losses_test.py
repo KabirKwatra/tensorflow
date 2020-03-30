@@ -62,7 +62,9 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
             y_b = backend.variable(np.random.random((6, 7)))
             for obj in ALL_LOSSES:
                 objective_output = obj(y_a, y_b)
-                self.assertListEqual(objective_output.shape.as_list(), [6,])
+                self.assertListEqual(objective_output.shape.as_list(), [
+                    6,
+                ])
 
     def test_cce_one_hot(self):
         with self.cached_session():
@@ -71,20 +73,21 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
             objective_output = losses.sparse_categorical_crossentropy(y_a, y_b)
             assert backend.eval(objective_output).shape == (5, 6)
 
-            y_a = backend.variable(np.random.randint(0, 7, (6,)))
+            y_a = backend.variable(np.random.randint(0, 7, (6, )))
             y_b = backend.variable(np.random.random((6, 7)))
             objective_output = losses.sparse_categorical_crossentropy(y_a, y_b)
-            assert backend.eval(objective_output).shape == (6,)
+            assert backend.eval(objective_output).shape == (6, )
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_categorical_crossentropy_loss(self):
         target = backend.variable(np.random.randint(0, 1, (5, 1)))
         logits = backend.variable(np.random.random((5, 1)))
         softmax_output = backend.softmax(logits)
-        output_from_logit = losses.categorical_crossentropy(
-            target, logits, from_logits=True
-        )
-        output_from_softmax = losses.categorical_crossentropy(target, softmax_output)
+        output_from_logit = losses.categorical_crossentropy(target,
+                                                            logits,
+                                                            from_logits=True)
+        output_from_softmax = losses.categorical_crossentropy(
+            target, softmax_output)
         np.testing.assert_allclose(
             backend.eval(output_from_logit),
             backend.eval(output_from_softmax),
@@ -97,21 +100,19 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
         p = backend.placeholder()
         o = losses.categorical_crossentropy(t, p)
 
-        t_val = ops.convert_to_tensor_v2(
-            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
-        )
-        p_val = ops.convert_to_tensor_v2(
-            [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.05, 0.01, 0.94]]
-        )
+        t_val = ops.convert_to_tensor_v2([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0],
+                                          [0.0, 0.0, 1.0]])
+        p_val = ops.convert_to_tensor_v2([[0.9, 0.05,
+                                           0.05], [0.05, 0.89, 0.06],
+                                          [0.05, 0.01, 0.94]])
         f = backend.function([t, p], o)
 
         result = f([t_val, p_val])
         self.assertArrayNear(result, [0.105, 0.116, 0.062], 1e-3)
 
         # from logits
-        p_val = ops.convert_to_tensor_v2(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        p_val = ops.convert_to_tensor_v2([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                          [2.0, 3.0, 5.0]])
         o = losses.categorical_crossentropy(t, p, from_logits=True)
         f = backend.function([t, p], o)
 
@@ -124,11 +125,9 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
         logits = backend.variable(np.random.random((5, 1)))
         softmax_output = backend.softmax(logits)
         output_from_logit = losses.sparse_categorical_crossentropy(
-            target, logits, from_logits=True
-        )
+            target, logits, from_logits=True)
         output_from_softmax = losses.sparse_categorical_crossentropy(
-            target, softmax_output
-        )
+            target, softmax_output)
         np.testing.assert_allclose(
             backend.eval(output_from_logit),
             backend.eval(output_from_softmax),
@@ -136,24 +135,24 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
         )
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
-    def test_sparse_categorical_crossentropy_loss_with_unknown_rank_tensor(self):
+    def test_sparse_categorical_crossentropy_loss_with_unknown_rank_tensor(
+            self):
         t = backend.placeholder()
         p = backend.placeholder()
         o = losses.sparse_categorical_crossentropy(t, p)
 
         t_val = ops.convert_to_tensor_v2([0, 1, 2])
-        p_val = ops.convert_to_tensor_v2(
-            [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.05, 0.01, 0.94]]
-        )
+        p_val = ops.convert_to_tensor_v2([[0.9, 0.05,
+                                           0.05], [0.05, 0.89, 0.06],
+                                          [0.05, 0.01, 0.94]])
         f = backend.function([t, p], o)
 
         result = f([t_val, p_val])
         self.assertArrayNear(result, [0.105, 0.116, 0.062], 1e-3)
 
         # from logits
-        p_val = ops.convert_to_tensor_v2(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        p_val = ops.convert_to_tensor_v2([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                          [2.0, 3.0, 5.0]])
         o = losses.sparse_categorical_crossentropy(t, p, from_logits=True)
         f = backend.function([t, p], o)
 
@@ -165,8 +164,11 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
         target = backend.variable(np.random.randint(0, 1, (5, 1)))
         logits = backend.variable(np.random.random((5, 1)))
         sigmoid_output = backend.sigmoid(logits)
-        output_from_logit = losses.binary_crossentropy(target, logits, from_logits=True)
-        output_from_sigmoid = losses.binary_crossentropy(target, sigmoid_output)
+        output_from_logit = losses.binary_crossentropy(target,
+                                                       logits,
+                                                       from_logits=True)
+        output_from_sigmoid = losses.binary_crossentropy(
+            target, sigmoid_output)
         np.testing.assert_allclose(
             backend.eval(output_from_logit),
             backend.eval(output_from_sigmoid),
@@ -223,8 +225,7 @@ class KerasLossesTest(test.TestCase, parameterized.TestCase):
 class MeanSquaredErrorTest(test.TestCase):
     def test_config(self):
         mse_obj = losses.MeanSquaredError(
-            reduction=losses_utils.ReductionV2.SUM, name="mse_1"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="mse_1")
         self.assertEqual(mse_obj.name, "mse_1")
         self.assertEqual(mse_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -237,27 +238,27 @@ class MeanSquaredErrorTest(test.TestCase):
     def test_unweighted(self):
         mse_obj = losses.MeanSquaredError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mse_obj(y_true, y_pred)
         self.assertAlmostEqual(self.evaluate(loss), 49.5, 3)
 
     def test_scalar_weighted(self):
         mse_obj = losses.MeanSquaredError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mse_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 113.85, 3)
 
     def test_sample_weighted(self):
         mse_obj = losses.MeanSquaredError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
         loss = mse_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 767.8 / 6, 3)
@@ -265,9 +266,9 @@ class MeanSquaredErrorTest(test.TestCase):
     def test_timestep_weighted(self):
         mse_obj = losses.MeanSquaredError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3, 1))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3, 1), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3, 1),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2], shape=(2, 3))
         loss = mse_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 587 / 6, 3)
@@ -275,9 +276,9 @@ class MeanSquaredErrorTest(test.TestCase):
     def test_zero_weighted(self):
         mse_obj = losses.MeanSquaredError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mse_obj(y_true, y_pred, sample_weight=0)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
@@ -288,26 +289,29 @@ class MeanSquaredErrorTest(test.TestCase):
         sample_weight = constant_op.constant([3, 6, 5, 0], shape=(2, 2))
         with self.assertRaisesRegexp(
             (ValueError, errors_impl.InvalidArgumentError),
-            (r"Incompatible shapes: \[2,3\] vs. \[2,2\]|" "Dimensions must be equal"),
+            (r"Incompatible shapes: \[2,3\] vs. \[2,2\]|"
+             "Dimensions must be equal"),
         ):
             mse_obj(y_true, y_pred, sample_weight=sample_weight)
 
     def test_no_reduction(self):
-        mse_obj = losses.MeanSquaredError(reduction=losses_utils.ReductionV2.NONE)
+        mse_obj = losses.MeanSquaredError(
+            reduction=losses_utils.ReductionV2.NONE)
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mse_obj(y_true, y_pred, sample_weight=2.3)
         loss = self.evaluate(loss)
         self.assertArrayNear(loss, [84.3333, 143.3666], 1e-3)
 
     def test_sum_reduction(self):
-        mse_obj = losses.MeanSquaredError(reduction=losses_utils.ReductionV2.SUM)
+        mse_obj = losses.MeanSquaredError(
+            reduction=losses_utils.ReductionV2.SUM)
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mse_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 227.69998, 3)
 
@@ -316,8 +320,7 @@ class MeanSquaredErrorTest(test.TestCase):
 class MeanAbsoluteErrorTest(test.TestCase):
     def test_config(self):
         mae_obj = losses.MeanAbsoluteError(
-            reduction=losses_utils.ReductionV2.SUM, name="mae_1"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="mae_1")
         self.assertEqual(mae_obj.name, "mae_1")
         self.assertEqual(mae_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -330,27 +333,27 @@ class MeanAbsoluteErrorTest(test.TestCase):
     def test_unweighted(self):
         mae_obj = losses.MeanAbsoluteError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mae_obj(y_true, y_pred)
         self.assertAlmostEqual(self.evaluate(loss), 5.5, 3)
 
     def test_scalar_weighted(self):
         mae_obj = losses.MeanAbsoluteError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mae_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 12.65, 3)
 
     def test_sample_weighted(self):
         mae_obj = losses.MeanAbsoluteError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
         loss = mae_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 81.4 / 6, 3)
@@ -358,9 +361,9 @@ class MeanAbsoluteErrorTest(test.TestCase):
     def test_timestep_weighted(self):
         mae_obj = losses.MeanAbsoluteError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3, 1))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3, 1), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3, 1),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2], shape=(2, 3))
         loss = mae_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 83 / 6, 3)
@@ -368,9 +371,9 @@ class MeanAbsoluteErrorTest(test.TestCase):
     def test_zero_weighted(self):
         mae_obj = losses.MeanAbsoluteError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mae_obj(y_true, y_pred, sample_weight=0)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
@@ -381,26 +384,29 @@ class MeanAbsoluteErrorTest(test.TestCase):
         sample_weight = constant_op.constant([3, 6, 5, 0], shape=(2, 2))
         with self.assertRaisesRegexp(
             (ValueError, errors_impl.InvalidArgumentError),
-            (r"Incompatible shapes: \[2,3\] vs. \[2,2\]|" "Dimensions must be equal"),
+            (r"Incompatible shapes: \[2,3\] vs. \[2,2\]|"
+             "Dimensions must be equal"),
         ):
             mae_obj(y_true, y_pred, sample_weight=sample_weight)
 
     def test_no_reduction(self):
-        mae_obj = losses.MeanAbsoluteError(reduction=losses_utils.ReductionV2.NONE)
+        mae_obj = losses.MeanAbsoluteError(
+            reduction=losses_utils.ReductionV2.NONE)
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mae_obj(y_true, y_pred, sample_weight=2.3)
         loss = self.evaluate(loss)
         self.assertArrayNear(loss, [10.7333, 14.5666], 1e-3)
 
     def test_sum_reduction(self):
-        mae_obj = losses.MeanAbsoluteError(reduction=losses_utils.ReductionV2.SUM)
+        mae_obj = losses.MeanAbsoluteError(
+            reduction=losses_utils.ReductionV2.SUM)
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mae_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 25.29999, 3)
 
@@ -409,43 +415,42 @@ class MeanAbsoluteErrorTest(test.TestCase):
 class MeanAbsolutePercentageErrorTest(test.TestCase):
     def test_config(self):
         mape_obj = losses.MeanAbsolutePercentageError(
-            reduction=losses_utils.ReductionV2.SUM, name="mape_1"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="mape_1")
         self.assertEqual(mape_obj.name, "mape_1")
         self.assertEqual(mape_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_all_correct_unweighted(self):
         mape_obj = losses.MeanAbsolutePercentageError()
-        y_true = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_true = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mape_obj(y_true, y_true)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
     def test_unweighted(self):
         mape_obj = losses.MeanAbsolutePercentageError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mape_obj(y_true, y_pred)
         self.assertAlmostEqual(self.evaluate(loss), 211.8518, 3)
 
     def test_scalar_weighted(self):
         mape_obj = losses.MeanAbsolutePercentageError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mape_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 487.259, 3)
 
     def test_sample_weighted(self):
         mape_obj = losses.MeanAbsolutePercentageError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
         loss = mape_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 422.8888, 3)
@@ -453,9 +458,9 @@ class MeanAbsolutePercentageErrorTest(test.TestCase):
     def test_timestep_weighted(self):
         mape_obj = losses.MeanAbsolutePercentageError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3, 1))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3, 1), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3, 1),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2], shape=(2, 3))
         loss = mape_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 694.4445, 3)
@@ -463,20 +468,19 @@ class MeanAbsolutePercentageErrorTest(test.TestCase):
     def test_zero_weighted(self):
         mape_obj = losses.MeanAbsolutePercentageError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mape_obj(y_true, y_pred, sample_weight=0)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
     def test_no_reduction(self):
         mape_obj = losses.MeanAbsolutePercentageError(
-            reduction=losses_utils.ReductionV2.NONE
-        )
+            reduction=losses_utils.ReductionV2.NONE)
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = mape_obj(y_true, y_pred, sample_weight=2.3)
         loss = self.evaluate(loss)
         self.assertArrayNear(loss, [621.8518, 352.6666], 1e-3)
@@ -486,35 +490,34 @@ class MeanAbsolutePercentageErrorTest(test.TestCase):
 class MeanSquaredLogarithmicErrorTest(test.TestCase):
     def test_config(self):
         msle_obj = losses.MeanSquaredLogarithmicError(
-            reduction=losses_utils.ReductionV2.SUM, name="mape_1"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="mape_1")
         self.assertEqual(msle_obj.name, "mape_1")
         self.assertEqual(msle_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_unweighted(self):
         msle_obj = losses.MeanSquaredLogarithmicError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = msle_obj(y_true, y_pred)
         self.assertAlmostEqual(self.evaluate(loss), 1.4370, 3)
 
     def test_scalar_weighted(self):
         msle_obj = losses.MeanSquaredLogarithmicError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = msle_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 3.3051, 3)
 
     def test_sample_weighted(self):
         msle_obj = losses.MeanSquaredLogarithmicError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
         loss = msle_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 3.7856, 3)
@@ -522,9 +525,9 @@ class MeanSquaredLogarithmicErrorTest(test.TestCase):
     def test_timestep_weighted(self):
         msle_obj = losses.MeanSquaredLogarithmicError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3, 1))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3, 1), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3, 1),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2], shape=(2, 3))
         loss = msle_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 2.6473, 3)
@@ -532,9 +535,9 @@ class MeanSquaredLogarithmicErrorTest(test.TestCase):
     def test_zero_weighted(self):
         msle_obj = losses.MeanSquaredLogarithmicError()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = msle_obj(y_true, y_pred, sample_weight=0)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
@@ -553,15 +556,14 @@ class CosineSimilarityTest(test.TestCase):
 
         y_true = self.l2_norm(self.np_y_true, axis)
         y_pred = self.l2_norm(self.np_y_pred, axis)
-        self.expected_loss = np.sum(np.multiply(y_true, y_pred), axis=(axis,))
+        self.expected_loss = np.sum(np.multiply(y_true, y_pred), axis=(axis, ))
 
         self.y_true = constant_op.constant(self.np_y_true)
         self.y_pred = constant_op.constant(self.np_y_pred)
 
     def test_config(self):
         cosine_obj = losses.CosineSimilarity(
-            axis=2, reduction=losses_utils.ReductionV2.SUM, name="cosine_loss"
-        )
+            axis=2, reduction=losses_utils.ReductionV2.SUM, name="cosine_loss")
         self.assertEqual(cosine_obj.name, "cosine_loss")
         self.assertEqual(cosine_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -576,7 +578,9 @@ class CosineSimilarityTest(test.TestCase):
         self.setup()
         cosine_obj = losses.CosineSimilarity()
         sample_weight = 2.3
-        loss = cosine_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss = cosine_obj(self.y_true,
+                          self.y_pred,
+                          sample_weight=sample_weight)
         expected_loss = -np.mean(self.expected_loss * sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
@@ -584,9 +588,9 @@ class CosineSimilarityTest(test.TestCase):
         self.setup()
         cosine_obj = losses.CosineSimilarity()
         sample_weight = np.asarray([1.2, 3.4])
-        loss = cosine_obj(
-            self.y_true, self.y_pred, sample_weight=constant_op.constant(sample_weight)
-        )
+        loss = cosine_obj(self.y_true,
+                          self.y_pred,
+                          sample_weight=constant_op.constant(sample_weight))
         expected_loss = -np.mean(self.expected_loss * sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
@@ -599,13 +603,13 @@ class CosineSimilarityTest(test.TestCase):
 
         y_true = self.l2_norm(np_y_true, 2)
         y_pred = self.l2_norm(np_y_pred, 2)
-        expected_loss = np.sum(np.multiply(y_true, y_pred), axis=(2,))
+        expected_loss = np.sum(np.multiply(y_true, y_pred), axis=(2, ))
 
         y_true = constant_op.constant(np_y_true)
         y_pred = constant_op.constant(np_y_pred)
-        loss = cosine_obj(
-            y_true, y_pred, sample_weight=constant_op.constant(sample_weight)
-        )
+        loss = cosine_obj(y_true,
+                          y_pred,
+                          sample_weight=constant_op.constant(sample_weight))
 
         expected_loss = -np.mean(expected_loss * sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
@@ -628,23 +632,21 @@ class CosineSimilarityTest(test.TestCase):
 class BinaryCrossentropyTest(test.TestCase):
     def test_config(self):
         bce_obj = losses.BinaryCrossentropy(
-            reduction=losses_utils.ReductionV2.SUM, name="bce_1"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="bce_1")
         self.assertEqual(bce_obj.name, "bce_1")
         self.assertEqual(bce_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_all_correct_unweighted(self):
-        y_true = constant_op.constant(
-            [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=dtypes.float32
-        )
+        y_true = constant_op.constant([[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                                      dtype=dtypes.float32)
         bce_obj = losses.BinaryCrossentropy()
         loss = bce_obj(y_true, y_true)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[100.0, -100.0, -100.0], [-100.0, 100.0, -100.0], [-100.0, -100.0, 100.0]]
-        )
+        logits = constant_op.constant([[100.0, -100.0, -100.0],
+                                       [-100.0, 100.0, -100.0],
+                                       [-100.0, -100.0, 100.0]])
         bce_obj = losses.BinaryCrossentropy(from_logits=True)
         loss = bce_obj(y_true, logits)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
@@ -669,7 +671,8 @@ class BinaryCrossentropyTest(test.TestCase):
 
         # Test with logits.
         y_true = constant_op.constant([[1, 0, 1], [0, 1, 1]])
-        logits = constant_op.constant([[100.0, -100.0, 100.0], [100.0, 100.0, -100.0]])
+        logits = constant_op.constant([[100.0, -100.0, 100.0],
+                                       [100.0, 100.0, -100.0]])
         bce_obj = losses.BinaryCrossentropy(from_logits=True)
         loss = bce_obj(y_true, logits)
 
@@ -707,7 +710,8 @@ class BinaryCrossentropyTest(test.TestCase):
 
         # Test with logits.
         y_true = constant_op.constant([[1, 0, 1], [0, 1, 1]])
-        logits = constant_op.constant([[100.0, -100.0, 100.0], [100.0, 100.0, -100.0]])
+        logits = constant_op.constant([[100.0, -100.0, 100.0],
+                                       [100.0, 100.0, -100.0]])
         bce_obj = losses.BinaryCrossentropy(from_logits=True)
         loss = bce_obj(y_true, logits, sample_weight=2.3)
 
@@ -740,7 +744,8 @@ class BinaryCrossentropyTest(test.TestCase):
 
         # Test with logits.
         y_true = constant_op.constant([[1, 0, 1], [0, 1, 1]])
-        logits = constant_op.constant([[100.0, -100.0, 100.0], [100.0, 100.0, -100.0]])
+        logits = constant_op.constant([[100.0, -100.0, 100.0],
+                                       [100.0, 100.0, -100.0]])
         weights = constant_op.constant([4, 3])
         bce_obj = losses.BinaryCrossentropy(from_logits=True)
         loss = bce_obj(y_true, logits, sample_weight=weights)
@@ -755,10 +760,10 @@ class BinaryCrossentropyTest(test.TestCase):
 
     def test_no_reduction(self):
         y_true = constant_op.constant([[1, 0, 1], [0, 1, 1]])
-        logits = constant_op.constant([[100.0, -100.0, 100.0], [100.0, 100.0, -100.0]])
+        logits = constant_op.constant([[100.0, -100.0, 100.0],
+                                       [100.0, 100.0, -100.0]])
         bce_obj = losses.BinaryCrossentropy(
-            from_logits=True, reduction=losses_utils.ReductionV2.NONE
-        )
+            from_logits=True, reduction=losses_utils.ReductionV2.NONE)
         loss = bce_obj(y_true, logits)
 
         # Loss = max(x, 0) - x * z + log(1 + exp(-abs(x)))
@@ -781,9 +786,8 @@ class BinaryCrossentropyTest(test.TestCase):
         #  0   + 100 * (0.5 L)      + 0 +
         #  0   + 100 * (1 - 0.5 L)  + 0) * (1/3)
         #  = (100 + 50L) * 1/3
-        bce_obj = losses.BinaryCrossentropy(
-            from_logits=True, label_smoothing=label_smoothing
-        )
+        bce_obj = losses.BinaryCrossentropy(from_logits=True,
+                                            label_smoothing=label_smoothing)
         loss = bce_obj(y_true, logits)
         expected_value = (100.0 + 50.0 * label_smoothing) / 3.0
         self.assertAlmostEqual(self.evaluate(loss), expected_value, 3)
@@ -793,26 +797,23 @@ class BinaryCrossentropyTest(test.TestCase):
 class CategoricalCrossentropyTest(test.TestCase):
     def test_config(self):
         cce_obj = losses.CategoricalCrossentropy(
-            reduction=losses_utils.ReductionV2.SUM, name="bce_1"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="bce_1")
         self.assertEqual(cce_obj.name, "bce_1")
         self.assertEqual(cce_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_all_correct_unweighted(self):
-        y_true = constant_op.constant(
-            [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=dtypes.int64
-        )
+        y_true = constant_op.constant([[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                                      dtype=dtypes.int64)
         y_pred = constant_op.constant(
-            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], dtype=dtypes.float32
-        )
+            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+            dtype=dtypes.float32)
         cce_obj = losses.CategoricalCrossentropy()
         loss = cce_obj(y_true, y_pred)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
-        )
+        logits = constant_op.constant([[10.0, 0.0, 0.0], [0.0, 10.0, 0.0],
+                                       [0.0, 0.0, 10.0]])
         cce_obj = losses.CategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
@@ -828,9 +829,8 @@ class CategoricalCrossentropyTest(test.TestCase):
         self.assertAlmostEqual(self.evaluate(loss), 0.3239, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.CategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits)
         self.assertAlmostEqual(self.evaluate(loss), 0.0573, 3)
@@ -846,9 +846,8 @@ class CategoricalCrossentropyTest(test.TestCase):
         self.assertAlmostEqual(self.evaluate(loss), 0.7449, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.CategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 0.1317, 3)
@@ -860,28 +859,27 @@ class CategoricalCrossentropyTest(test.TestCase):
             [[0.9, 0.05, 0.05], [0.5, 0.89, 0.6], [0.05, 0.01, 0.94]],
             dtype=dtypes.float32,
         )
-        sample_weight = constant_op.constant([[1.2], [3.4], [5.6]], shape=(3, 1))
+        sample_weight = constant_op.constant([[1.2], [3.4], [5.6]],
+                                             shape=(3, 1))
         loss = cce_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 1.0696, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.CategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 0.31829, 3)
 
     def test_no_reduction(self):
         y_true = constant_op.constant([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.CategoricalCrossentropy(
-            from_logits=True, reduction=losses_utils.ReductionV2.NONE
-        )
+            from_logits=True, reduction=losses_utils.ReductionV2.NONE)
         loss = cce_obj(y_true, logits)
-        self.assertAllClose((0.001822, 0.000459, 0.169846), self.evaluate(loss), 3)
+        self.assertAllClose((0.001822, 0.000459, 0.169846),
+                            self.evaluate(loss), 3)
 
     def test_label_smoothing(self):
         logits = constant_op.constant([[100.0, -100.0, -100.0]])
@@ -900,17 +898,15 @@ class CategoricalCrossentropyTest(test.TestCase):
         # Applying the above two fns to the given input:
         # -0 * (1 - L + L/n) + 200 * L/n + 200 * L/n = 400 L/n
         cce_obj = losses.CategoricalCrossentropy(
-            from_logits=True, label_smoothing=label_smoothing
-        )
+            from_logits=True, label_smoothing=label_smoothing)
         loss = cce_obj(y_true, logits)
         expected_value = 400.0 * label_smoothing / 3.0
         self.assertAlmostEqual(self.evaluate(loss), expected_value, 3)
 
     def test_shape_mismatch(self):
         y_true = constant_op.constant([[0], [1], [2]])
-        y_pred = constant_op.constant(
-            [[0.9, 0.05, 0.05], [0.5, 0.89, 0.6], [0.05, 0.01, 0.94]]
-        )
+        y_pred = constant_op.constant([[0.9, 0.05, 0.05], [0.5, 0.89, 0.6],
+                                       [0.05, 0.01, 0.94]])
 
         cce_obj = losses.CategoricalCrossentropy()
         with self.assertRaisesRegexp(ValueError, "Shapes .+ are incompatible"):
@@ -921,24 +917,22 @@ class CategoricalCrossentropyTest(test.TestCase):
 class SparseCategoricalCrossentropyTest(test.TestCase):
     def test_config(self):
         cce_obj = losses.SparseCategoricalCrossentropy(
-            reduction=losses_utils.ReductionV2.SUM, name="scc"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="scc")
         self.assertEqual(cce_obj.name, "scc")
         self.assertEqual(cce_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_all_correct_unweighted(self):
         y_true = constant_op.constant([[0], [1], [2]], dtype=dtypes.int64)
         y_pred = constant_op.constant(
-            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], dtype=dtypes.float32
-        )
+            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+            dtype=dtypes.float32)
         cce_obj = losses.SparseCategoricalCrossentropy()
         loss = cce_obj(y_true, y_pred)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
-        )
+        logits = constant_op.constant([[10.0, 0.0, 0.0], [0.0, 10.0, 0.0],
+                                       [0.0, 0.0, 10.0]])
         cce_obj = losses.SparseCategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
@@ -954,9 +948,8 @@ class SparseCategoricalCrossentropyTest(test.TestCase):
         self.assertAlmostEqual(self.evaluate(loss), 0.3239, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.SparseCategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits)
         self.assertAlmostEqual(self.evaluate(loss), 0.0573, 3)
@@ -972,9 +965,8 @@ class SparseCategoricalCrossentropyTest(test.TestCase):
         self.assertAlmostEqual(self.evaluate(loss), 0.7449, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.SparseCategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 0.1317, 3)
@@ -986,28 +978,27 @@ class SparseCategoricalCrossentropyTest(test.TestCase):
             [[0.9, 0.05, 0.05], [0.5, 0.89, 0.6], [0.05, 0.01, 0.94]],
             dtype=dtypes.float32,
         )
-        sample_weight = constant_op.constant([[1.2], [3.4], [5.6]], shape=(3, 1))
+        sample_weight = constant_op.constant([[1.2], [3.4], [5.6]],
+                                             shape=(3, 1))
         loss = cce_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 1.0696, 3)
 
         # Test with logits.
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.SparseCategoricalCrossentropy(from_logits=True)
         loss = cce_obj(y_true, logits, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 0.31829, 3)
 
     def test_no_reduction(self):
         y_true = constant_op.constant([[0], [1], [2]])
-        logits = constant_op.constant(
-            [[8.0, 1.0, 1.0], [0.0, 9.0, 1.0], [2.0, 3.0, 5.0]]
-        )
+        logits = constant_op.constant([[8.0, 1.0, 1.0], [0.0, 9.0, 1.0],
+                                       [2.0, 3.0, 5.0]])
         cce_obj = losses.SparseCategoricalCrossentropy(
-            from_logits=True, reduction=losses_utils.ReductionV2.NONE
-        )
+            from_logits=True, reduction=losses_utils.ReductionV2.NONE)
         loss = cce_obj(y_true, logits)
-        self.assertAllClose((0.001822, 0.000459, 0.169846), self.evaluate(loss), 3)
+        self.assertAllClose((0.001822, 0.000459, 0.169846),
+                            self.evaluate(loss), 3)
 
     def test_non_tensor(self):
         # Test case for GitHub issue 33394.
@@ -1021,16 +1012,16 @@ class SparseCategoricalCrossentropyTest(test.TestCase):
 @combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class HingeTest(test.TestCase):
     def test_config(self):
-        hinge_obj = losses.Hinge(
-            reduction=losses_utils.ReductionV2.SUM, name="hinge_loss"
-        )
+        hinge_obj = losses.Hinge(reduction=losses_utils.ReductionV2.SUM,
+                                 name="hinge_loss")
         self.assertEqual(hinge_obj.name, "hinge_loss")
         self.assertEqual(hinge_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_unweighted(self):
         hinge_obj = losses.Hinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1047,7 +1038,8 @@ class HingeTest(test.TestCase):
     def test_scalar_weighted(self):
         hinge_obj = losses.Hinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1069,7 +1061,8 @@ class HingeTest(test.TestCase):
     def test_sample_weighted(self):
         hinge_obj = losses.Hinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1087,11 +1080,12 @@ class HingeTest(test.TestCase):
 
     def test_timestep_weighted(self):
         hinge_obj = losses.Hinge()
-        y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]], shape=(2, 4, 1))
+        y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]],
+                                      shape=(2, 4, 1))
         y_pred = constant_op.constant(
-            [[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]], shape=(2, 4, 1)
-        )
-        sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2, 1, 3], shape=(2, 4))
+            [[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]], shape=(2, 4, 1))
+        sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2, 1, 3],
+                                             shape=(2, 4))
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1110,7 +1104,8 @@ class HingeTest(test.TestCase):
     def test_zero_weighted(self):
         hinge_obj = losses.Hinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
         loss = hinge_obj(y_true, y_pred, sample_weight=0)
         self.assertAllClose(self.evaluate(loss), 0.0, 1e-3)
 
@@ -1119,15 +1114,15 @@ class HingeTest(test.TestCase):
 class SquaredHingeTest(test.TestCase):
     def test_config(self):
         sq_hinge_obj = losses.SquaredHinge(
-            reduction=losses_utils.ReductionV2.SUM, name="sq_hinge_loss"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="sq_hinge_loss")
         self.assertEqual(sq_hinge_obj.name, "sq_hinge_loss")
         self.assertEqual(sq_hinge_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_unweighted(self):
         sq_hinge_obj = losses.SquaredHinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1147,7 +1142,8 @@ class SquaredHingeTest(test.TestCase):
     def test_scalar_weighted(self):
         sq_hinge_obj = losses.SquaredHinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1172,7 +1168,8 @@ class SquaredHingeTest(test.TestCase):
     def test_sample_weighted(self):
         sq_hinge_obj = losses.SquaredHinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1193,11 +1190,12 @@ class SquaredHingeTest(test.TestCase):
 
     def test_timestep_weighted(self):
         sq_hinge_obj = losses.SquaredHinge()
-        y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]], shape=(2, 4, 1))
+        y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]],
+                                      shape=(2, 4, 1))
         y_pred = constant_op.constant(
-            [[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]], shape=(2, 4, 1)
-        )
-        sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2, 1, 3], shape=(2, 4))
+            [[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]], shape=(2, 4, 1))
+        sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2, 1, 3],
+                                             shape=(2, 4))
 
         # loss = max(0, 1-y_true * y_pred), where y_true is -1/1
 
@@ -1216,7 +1214,8 @@ class SquaredHingeTest(test.TestCase):
     def test_zero_weighted(self):
         sq_hinge_obj = losses.SquaredHinge()
         y_true = constant_op.constant([[0, 1, 0, 1], [0, 0, 1, 1]])
-        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6], [-0.25, -1.0, 0.5, 0.6]])
+        y_pred = constant_op.constant([[-0.3, 0.2, -0.1, 1.6],
+                                       [-0.25, -1.0, 0.5, 0.6]])
         loss = sq_hinge_obj(y_true, y_pred, sample_weight=0)
         self.assertAllClose(self.evaluate(loss), 0.0, 1e-3)
 
@@ -1225,15 +1224,16 @@ class SquaredHingeTest(test.TestCase):
 class CategoricalHingeTest(test.TestCase):
     def test_config(self):
         cat_hinge_obj = losses.CategoricalHinge(
-            reduction=losses_utils.ReductionV2.SUM, name="cat_hinge_loss"
-        )
+            reduction=losses_utils.ReductionV2.SUM, name="cat_hinge_loss")
         self.assertEqual(cat_hinge_obj.name, "cat_hinge_loss")
         self.assertEqual(cat_hinge_obj.reduction, losses_utils.ReductionV2.SUM)
 
     def test_unweighted(self):
         cat_hinge_obj = losses.CategoricalHinge()
         y_true = constant_op.constant([1, 9, 2, -5], shape=(2, 2))
-        y_pred = constant_op.constant([4, 8, 12, 8], shape=(2, 2), dtype=dtypes.float32)
+        y_pred = constant_op.constant([4, 8, 12, 8],
+                                      shape=(2, 2),
+                                      dtype=dtypes.float32)
         loss = cat_hinge_obj(y_true, y_pred)
 
         # pos = reduce_sum(y_true * y_pred) = [1*4+8*9, 12*2+8*-5] = [76, -16]
@@ -1245,9 +1245,9 @@ class CategoricalHingeTest(test.TestCase):
     def test_scalar_weighted(self):
         cat_hinge_obj = losses.CategoricalHinge()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = cat_hinge_obj(y_true, y_pred, sample_weight=2.3)
         self.assertAlmostEqual(self.evaluate(loss), 83.95, 3)
 
@@ -1258,9 +1258,9 @@ class CategoricalHingeTest(test.TestCase):
     def test_sample_weighted(self):
         cat_hinge_obj = losses.CategoricalHinge()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
         loss = cat_hinge_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 124.1, 3)
@@ -1268,9 +1268,9 @@ class CategoricalHingeTest(test.TestCase):
     def test_timestep_weighted(self):
         cat_hinge_obj = losses.CategoricalHinge()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3, 1))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3, 1), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3, 1),
+                                      dtype=dtypes.float32)
         sample_weight = constant_op.constant([3, 6, 5, 0, 4, 2], shape=(2, 3))
         loss = cat_hinge_obj(y_true, y_pred, sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 4.0, 3)
@@ -1278,9 +1278,9 @@ class CategoricalHingeTest(test.TestCase):
     def test_zero_weighted(self):
         cat_hinge_obj = losses.CategoricalHinge()
         y_true = constant_op.constant([1, 9, 2, -5, -2, 6], shape=(2, 3))
-        y_pred = constant_op.constant(
-            [4, 8, 12, 8, 1, 3], shape=(2, 3), dtype=dtypes.float32
-        )
+        y_pred = constant_op.constant([4, 8, 12, 8, 1, 3],
+                                      shape=(2, 3),
+                                      dtype=dtypes.float32)
         loss = cat_hinge_obj(y_true, y_pred, sample_weight=0)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
@@ -1299,9 +1299,8 @@ class LogCoshTest(test.TestCase):
         self.y_true = constant_op.constant(y_true)
 
     def test_config(self):
-        logcosh_obj = losses.LogCosh(
-            reduction=losses_utils.ReductionV2.SUM, name="logcosh_loss"
-        )
+        logcosh_obj = losses.LogCosh(reduction=losses_utils.ReductionV2.SUM,
+                                     name="logcosh_loss")
         self.assertEqual(logcosh_obj.name, "logcosh_loss")
         self.assertEqual(logcosh_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -1318,12 +1317,17 @@ class LogCoshTest(test.TestCase):
         logcosh_obj = losses.LogCosh()
         sample_weight = 2.3
 
-        loss = logcosh_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
-        expected_loss = sample_weight * np.sum(self.expected_losses) / self.batch_size
+        loss = logcosh_obj(self.y_true,
+                           self.y_pred,
+                           sample_weight=sample_weight)
+        expected_loss = sample_weight * np.sum(
+            self.expected_losses) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
         # Verify we get the same output when the same input is given
-        loss_2 = logcosh_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss_2 = logcosh_obj(self.y_true,
+                             self.y_pred,
+                             sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), self.evaluate(loss_2), 3)
 
     def test_sample_weighted(self):
@@ -1331,7 +1335,9 @@ class LogCoshTest(test.TestCase):
         logcosh_obj = losses.LogCosh()
 
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
-        loss = logcosh_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss = logcosh_obj(self.y_true,
+                           self.y_pred,
+                           sample_weight=sample_weight)
 
         expected_loss = np.multiply(
             self.expected_losses,
@@ -1356,14 +1362,17 @@ class LogCoshTest(test.TestCase):
             y_pred,
             sample_weight=constant_op.constant(sample_weight, shape=(2, 3)),
         )
-        expected_loss = np.sum(expected_losses * sample_weight) / self.batch_size
+        expected_loss = np.sum(
+            expected_losses * sample_weight) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
     def test_zero_weighted(self):
         self.setup()
         logcosh_obj = losses.LogCosh()
         sample_weight = 0
-        loss = logcosh_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss = logcosh_obj(self.y_true,
+                           self.y_pred,
+                           sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), 0.0, 3)
 
 
@@ -1375,16 +1384,15 @@ class PoissonTest(test.TestCase):
 
         self.batch_size = 6
         self.expected_losses = self.np_y_pred - np.multiply(
-            self.np_y_true, np.log(self.np_y_pred)
-        )
+            self.np_y_true, np.log(self.np_y_pred))
 
-        self.y_pred = constant_op.constant(self.np_y_pred, dtype=dtypes.float32)
+        self.y_pred = constant_op.constant(self.np_y_pred,
+                                           dtype=dtypes.float32)
         self.y_true = constant_op.constant(self.np_y_true)
 
     def test_config(self):
-        poisson_obj = losses.Poisson(
-            reduction=losses_utils.ReductionV2.SUM, name="poisson"
-        )
+        poisson_obj = losses.Poisson(reduction=losses_utils.ReductionV2.SUM,
+                                     name="poisson")
         self.assertEqual(poisson_obj.name, "poisson")
         self.assertEqual(poisson_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -1400,14 +1408,19 @@ class PoissonTest(test.TestCase):
         self.setup()
         poisson_obj = losses.Poisson()
         sample_weight = 2.3
-        loss = poisson_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss = poisson_obj(self.y_true,
+                           self.y_pred,
+                           sample_weight=sample_weight)
 
-        expected_loss = sample_weight * np.sum(self.expected_losses) / self.batch_size
+        expected_loss = sample_weight * np.sum(
+            self.expected_losses) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
         # Verify we get the same output when the same input is given
-        loss_2 = poisson_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss_2 = poisson_obj(self.y_true,
+                             self.y_pred,
+                             sample_weight=sample_weight)
         self.assertAlmostEqual(self.evaluate(loss), self.evaluate(loss_2), 3)
 
     def test_sample_weighted(self):
@@ -1415,7 +1428,9 @@ class PoissonTest(test.TestCase):
         poisson_obj = losses.Poisson()
 
         sample_weight = constant_op.constant([1.2, 3.4], shape=(2, 1))
-        loss = poisson_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
+        loss = poisson_obj(self.y_true,
+                           self.y_pred,
+                           sample_weight=sample_weight)
 
         expected_loss = np.multiply(
             self.expected_losses,
@@ -1440,7 +1455,8 @@ class PoissonTest(test.TestCase):
             y_pred,
             sample_weight=constant_op.constant(sample_weight, shape=(2, 3)),
         )
-        expected_loss = np.sum(expected_losses * sample_weight) / self.batch_size
+        expected_loss = np.sum(
+            expected_losses * sample_weight) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
     def test_zero_weighted(self):
@@ -1453,19 +1469,22 @@ class PoissonTest(test.TestCase):
 @combinations.generate(combinations.combine(mode=["graph", "eager"]))
 class KLDivergenceTest(test.TestCase):
     def setup(self):
-        self.np_y_pred = np.asarray([0.4, 0.9, 0.12, 0.36, 0.3, 0.4]).reshape((2, 3))
-        self.np_y_true = np.asarray([0.5, 0.8, 0.12, 0.7, 0.43, 0.8]).reshape((2, 3))
+        self.np_y_pred = np.asarray([0.4, 0.9, 0.12, 0.36, 0.3, 0.4]).reshape(
+            (2, 3))
+        self.np_y_true = np.asarray([0.5, 0.8, 0.12, 0.7, 0.43, 0.8]).reshape(
+            (2, 3))
 
         self.batch_size = 2
         self.expected_losses = np.multiply(
-            self.np_y_true, np.log(self.np_y_true / self.np_y_pred)
-        )
+            self.np_y_true, np.log(self.np_y_true / self.np_y_pred))
 
-        self.y_pred = constant_op.constant(self.np_y_pred, dtype=dtypes.float32)
+        self.y_pred = constant_op.constant(self.np_y_pred,
+                                           dtype=dtypes.float32)
         self.y_true = constant_op.constant(self.np_y_true)
 
     def test_config(self):
-        k_obj = losses.KLDivergence(reduction=losses_utils.ReductionV2.SUM, name="kld")
+        k_obj = losses.KLDivergence(reduction=losses_utils.ReductionV2.SUM,
+                                    name="kld")
         self.assertEqual(k_obj.name, "kld")
         self.assertEqual(k_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -1483,7 +1502,8 @@ class KLDivergenceTest(test.TestCase):
         sample_weight = 2.3
 
         loss = k_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
-        expected_loss = sample_weight * np.sum(self.expected_losses) / self.batch_size
+        expected_loss = sample_weight * np.sum(
+            self.expected_losses) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
         # Verify we get the same output when the same input is given
@@ -1509,16 +1529,18 @@ class KLDivergenceTest(test.TestCase):
         y_true = self.np_y_true.reshape(2, 3, 1)
         y_pred = self.np_y_pred.reshape(2, 3, 1)
         sample_weight = np.asarray([3, 6, 5, 0, 4, 2]).reshape(2, 3)
-        expected_losses = np.sum(np.multiply(y_true, np.log(y_true / y_pred)), axis=-1)
+        expected_losses = np.sum(np.multiply(y_true, np.log(y_true / y_pred)),
+                                 axis=-1)
 
         y_pred = constant_op.constant(y_pred, dtype=dtypes.float32)
         y_true = constant_op.constant(y_true)
-        loss = k_obj(y_true, y_pred, sample_weight=constant_op.constant(sample_weight))
+        loss = k_obj(y_true,
+                     y_pred,
+                     sample_weight=constant_op.constant(sample_weight))
 
         num_timesteps = 3
         expected_loss = np.sum(expected_losses * sample_weight) / (
-            self.batch_size * num_timesteps
-        )
+            self.batch_size * num_timesteps)
         self.assertAlmostEqual(self.evaluate(loss), expected_loss, 3)
 
     def test_zero_weighted(self):
@@ -1542,17 +1564,21 @@ class HuberLossTest(test.TestCase):
         )
 
     def setup(self, delta=1.0):
-        self.np_y_pred = np.asarray([0.9, 0.2, 0.2, 0.8, 0.4, 0.6]).reshape((2, 3))
-        self.np_y_true = np.asarray([1.0, 0.0, 1.0, 1.0, 0.0, 0.0]).reshape((2, 3))
+        self.np_y_pred = np.asarray([0.9, 0.2, 0.2, 0.8, 0.4, 0.6]).reshape(
+            (2, 3))
+        self.np_y_true = np.asarray([1.0, 0.0, 1.0, 1.0, 0.0, 0.0]).reshape(
+            (2, 3))
 
         self.batch_size = 6
-        self.expected_losses = self.huber_loss(self.np_y_true, self.np_y_pred, delta)
+        self.expected_losses = self.huber_loss(self.np_y_true, self.np_y_pred,
+                                               delta)
 
         self.y_pred = constant_op.constant(self.np_y_pred)
         self.y_true = constant_op.constant(self.np_y_true)
 
     def test_config(self):
-        h_obj = losses.Huber(reduction=losses_utils.ReductionV2.SUM, name="huber")
+        h_obj = losses.Huber(reduction=losses_utils.ReductionV2.SUM,
+                             name="huber")
         self.assertEqual(h_obj.name, "huber")
         self.assertEqual(h_obj.reduction, losses_utils.ReductionV2.SUM)
 
@@ -1574,7 +1600,8 @@ class HuberLossTest(test.TestCase):
         h_obj = losses.Huber()
         sample_weight = 2.3
         loss = h_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
-        actual_loss = sample_weight * np.sum(self.expected_losses) / self.batch_size
+        actual_loss = sample_weight * np.sum(
+            self.expected_losses) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), actual_loss, 3)
 
         # Verify we get the same output when the same input is given
@@ -1625,7 +1652,8 @@ class HuberLossTest(test.TestCase):
         h_obj = losses.Huber(delta=0.8)
         sample_weight = 2.3
         loss = h_obj(self.y_true, self.y_pred, sample_weight=sample_weight)
-        actual_loss = sample_weight * np.sum(self.expected_losses) / self.batch_size
+        actual_loss = sample_weight * np.sum(
+            self.expected_losses) / self.batch_size
         self.assertAlmostEqual(self.evaluate(loss), actual_loss, 3)
 
 

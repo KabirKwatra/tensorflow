@@ -147,13 +147,10 @@ def InvokeHipcc(argv, log=False):
     undefines = "".join([" -U" + define for define in undefines])
     std_options = GetOptionValue(argv, "std")
     hipcc_allowed_std_options = ["c++11"]
-    std_options = "".join(
-        [
-            " -std=" + define
-            for define in std_options
-            if define in hipcc_allowed_std_options
-        ]
-    )
+    std_options = "".join([
+        " -std=" + define for define in std_options
+        if define in hipcc_allowed_std_options
+    ])
 
     # The list of source files get passed after the -c option. I don't know of
     # any other reliable way to just get the list of source files to be compiled.
@@ -166,11 +163,14 @@ def InvokeHipcc(argv, log=False):
 
     opt = " -O2" if (len(opt_option) > 0 and int(opt_option[0]) > 0) else " -g"
 
-    includes = " -I " + " -I ".join(include_options) if len(include_options) > 0 else ""
+    includes = " -I " + " -I ".join(include_options) if len(
+        include_options) > 0 else ""
 
     # Unfortunately, there are other options that have -c prefix too.
     # So allowing only those look like C/C++ files.
-    src_files = [f for f in src_files if re.search("\.cpp$|\.cc$|\.c$|\.cxx$|\.C$", f)]
+    src_files = [
+        f for f in src_files if re.search("\.cpp$|\.cc$|\.c$|\.cxx$|\.C$", f)
+    ]
     srcs = " ".join(src_files)
     out = " -o " + out_file[0]
 
@@ -196,45 +196,23 @@ def InvokeHipcc(argv, log=False):
     if depfiles:
         # Generate the dependency file
         depfile = depfiles[0]
-        cmd = (
-            HIPCC_PATH
-            + " "
-            + hipccopts
-            + host_compiler_options
-            + " "
-            + GCC_HOST_COMPILER_PATH
-            + " -I ."
-            + includes
-            + " "
-            + srcs
-            + " -M -o "
-            + depfile
-        )
+        cmd = (HIPCC_PATH + " " + hipccopts + host_compiler_options + " " +
+               GCC_HOST_COMPILER_PATH + " -I ." + includes + " " + srcs +
+               " -M -o " + depfile)
         if log:
             Log(cmd)
         exit_status = os.system(cmd)
         if exit_status != 0:
             return exit_status
 
-    cmd = (
-        HIPCC_PATH
-        + " "
-        + hipccopts
-        + host_compiler_options
-        + " -fPIC"
-        + " "
-        + GCC_HOST_COMPILER_PATH
-        + " -I ."
-        + opt
-        + includes
-        + " -c "
-        + srcs
-        + out
-    )
+    cmd = (HIPCC_PATH + " " + hipccopts + host_compiler_options + " -fPIC" +
+           " " + GCC_HOST_COMPILER_PATH + " -I ." + opt + includes + " -c " +
+           srcs + out)
 
     # TODO(zhengxq): for some reason, 'gcc' needs this help to find 'as'.
     # Need to investigate and fix.
-    cmd = "PATH=" + PREFIX_DIR + ":$PATH " + HIPCC_ENV.replace(";", " ") + " " + cmd
+    cmd = "PATH=" + PREFIX_DIR + ":$PATH " + HIPCC_ENV.replace(";",
+                                                               " ") + " " + cmd
     if log:
         Log(cmd)
     if VERBOSE:
@@ -273,7 +251,8 @@ def main():
         # Such restriction would be revised further as the bazel script get
         # improved to fine tune dependencies to ROCm libraries.
         gpu_linker_flags = [
-            flag for flag in sys.argv[1:] if not flag.startswith(("--rocm_log"))
+            flag for flag in sys.argv[1:]
+            if not flag.startswith(("--rocm_log"))
         ]
 
         gpu_linker_flags.append("-L" + ROCR_RUNTIME_PATH)
@@ -301,7 +280,8 @@ def main():
         # relative location in the argv list (the compiler is actually sensitive to
         # this).
         cpu_compiler_flags = [
-            flag for flag in sys.argv[1:] if not flag.startswith(("--rocm_log"))
+            flag for flag in sys.argv[1:]
+            if not flag.startswith(("--rocm_log"))
         ]
 
         # XXX: SE codes need to be built with gcc, but need this macro defined
