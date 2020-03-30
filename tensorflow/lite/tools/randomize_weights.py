@@ -30,24 +30,26 @@ from tensorflow.python.platform import app
 
 
 def main(_):
-    parser = argparse.ArgumentParser(
-        description='Randomize weights in a tflite file.')
+    parser = argparse.ArgumentParser(description="Randomize weights in a tflite file.")
     parser.add_argument(
-        '--input_tflite_file',
+        "--input_tflite_file",
         type=str,
         required=True,
-        help='Full path name to the input tflite file.')
+        help="Full path name to the input tflite file.",
+    )
     parser.add_argument(
-        '--output_tflite_file',
+        "--output_tflite_file",
         type=str,
         required=True,
-        help='Full path name to the output randomized tflite file.')
+        help="Full path name to the output randomized tflite file.",
+    )
     parser.add_argument(
-        '--random_seed',
+        "--random_seed",
         type=str,
         required=False,
         default=0,
-        help='Input to the random number generator. The default value is 0.')
+        help="Input to the random number generator. The default value is 0.",
+    )
     args = parser.parse_args()
 
     # Read the model
@@ -58,5 +60,5 @@ def main(_):
     flatbuffer_utils.write_model(model, args.output_tflite_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(main=main, argv=sys.argv[:1])
