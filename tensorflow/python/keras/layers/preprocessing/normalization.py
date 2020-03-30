@@ -24,20 +24,22 @@ import numpy as np
 from tensorflow.python.framework import dtypes
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine.base_preprocessing_layer import Combiner
-from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
+from tensorflow.python.keras.engine.base_preprocessing_layer import (
+    CombinerPreprocessingLayer,
+)
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.util import compat
 from tensorflow.python.util.tf_export import keras_export
 
-_COUNT_NAME = 'count'
-_MEAN_NAME = 'mean'
-_VARIANCE_NAME = 'variance'
+_COUNT_NAME = "count"
+_MEAN_NAME = "mean"
+_VARIANCE_NAME = "variance"
 
 
 # TODO(momernick): Find a good example of normalization?
-@keras_export('keras.layers.experimental.preprocessing.Normalization', v1=[])
+@keras_export("keras.layers.experimental.preprocessing.Normalization", v1=[])
 class Normalization(CombinerPreprocessingLayer):
     """Feature-wise normalization of the data.
 
@@ -63,10 +65,11 @@ class Normalization(CombinerPreprocessingLayer):
         dtype = dtype or K.floatx()
 
         super(Normalization, self).__init__(
-            combiner=_NormalizingCombiner(axis), dtype=dtype, **kwargs)
+            combiner=_NormalizingCombiner(axis), dtype=dtype, **kwargs
+        )
 
         if axis == 0:
-            raise ValueError('The argument \'axis\' may not be 0.')
+            raise ValueError("The argument 'axis' may not be 0.")
 
         self.axis = axis
 
@@ -92,17 +95,20 @@ class Normalization(CombinerPreprocessingLayer):
             name=_MEAN_NAME,
             shape=mean_and_var_shape,
             dtype=K.floatx(),
-            initializer=init_ops.zeros_initializer)
+            initializer=init_ops.zeros_initializer,
+        )
         self.variance = self._add_state_variable(
             name=_VARIANCE_NAME,
             shape=mean_and_var_shape,
             dtype=K.floatx(),
-            initializer=init_ops.ones_initializer)
+            initializer=init_ops.ones_initializer,
+        )
         self.count = self._add_state_variable(
             name=_COUNT_NAME,
             shape=(),
             dtype=dtypes.int32,
-            initializer=init_ops.zeros_initializer)
+            initializer=init_ops.zeros_initializer,
+        )
 
         super(Normalization, self).build(input_shape)
 
@@ -120,7 +126,7 @@ class Normalization(CombinerPreprocessingLayer):
         return input_spec
 
     def get_config(self):
-        config = {'axis': self.axis}
+        config = {"axis": self.axis}
         base_config = super(Normalization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
@@ -141,6 +147,7 @@ class _NormalizingCombiner(Combiner):
     Attributes:
       axis: The axis to compute mean and var over.
     """
+
     COUNT_IDX = 0
     MEAN_IDX = 1
     VAR_IDX = 2
@@ -186,18 +193,20 @@ class _NormalizingCombiner(Combiner):
         # To combine accumulator means, we weight each accumulator's mean by the
         # number of elements that were accumulated, and then divide by the
         # total number of elements.
-        combined_mean = (mean * count + accumulator[self.MEAN_IDX] *
-                         accumulator[self.COUNT_IDX]) / combined_count
+        combined_mean = (
+            mean * count + accumulator[self.MEAN_IDX] * accumulator[self.COUNT_IDX]
+        ) / combined_count
 
         # The variance is computed using the lack-of-fit sum of squares
         # formula (see https://en.wikipedia.org/wiki/Lack-of-fit_sum_of_squares).
         accumulator_var_contribution = accumulator[self.COUNT_IDX] * (
-            accumulator[self.VAR_IDX] +
-            np.square(accumulator[self.MEAN_IDX] - combined_mean))
-        data_var_contribution = count * \
-            (variance + np.square(mean - combined_mean))
-        combined_variance = (accumulator_var_contribution +
-                             data_var_contribution) / combined_count
+            accumulator[self.VAR_IDX]
+            + np.square(accumulator[self.MEAN_IDX] - combined_mean)
+        )
+        data_var_contribution = count * (variance + np.square(mean - combined_mean))
+        combined_variance = (
+            accumulator_var_contribution + data_var_contribution
+        ) / combined_count
 
         accumulator[self.COUNT_IDX] = combined_count
         accumulator[self.MEAN_IDX] = np.nan_to_num(combined_mean)
@@ -208,36 +217,47 @@ class _NormalizingCombiner(Combiner):
         """Merge several accumulators to a single accumulator."""
         # Combine accumulators and return the result.
         combined_count = np.sum(
-            [accumulator[self.COUNT_IDX] for accumulator in accumulators])
+            [accumulator[self.COUNT_IDX] for accumulator in accumulators]
+        )
 
         # To combine accumulator means, we weight each accumulator's mean by the
         # number of elements that were accumulated, and then divide by the
         # total number of elements.
-        combined_mean = np.add.reduce([
-            accumulator[self.MEAN_IDX] * accumulator[self.COUNT_IDX]
-            for accumulator in accumulators
-        ]) / combined_count
+        combined_mean = (
+            np.add.reduce(
+                [
+                    accumulator[self.MEAN_IDX] * accumulator[self.COUNT_IDX]
+                    for accumulator in accumulators
+                ]
+            )
+            / combined_count
+        )
 
         # The variance is computed using the lack-of-fit sum of squares
         # formula (see https://en.wikipedia.org/wiki/Lack-of-fit_sum_of_squares).
         def variance_contribution(accumulator):
             return accumulator[self.COUNT_IDX] * (
-                accumulator[self.VAR_IDX] +
-                np.square(accumulator[self.MEAN_IDX] - combined_mean))
+                accumulator[self.VAR_IDX]
+                + np.square(accumulator[self.MEAN_IDX] - combined_mean)
+            )
 
-        combined_variance = np.add.reduce([
-            variance_contribution(accumulator) for accumulator in accumulators
-        ]) / combined_count
+        combined_variance = (
+            np.add.reduce(
+                [variance_contribution(accumulator) for accumulator in accumulators]
+            )
+            / combined_count
+        )
 
-        return self._create_accumulator(combined_count, combined_mean,
-                                        combined_variance)
+        return self._create_accumulator(
+            combined_count, combined_mean, combined_variance
+        )
 
     def extract(self, accumulator):
         """Convert an accumulator into a dict of output values."""
         return {
             _COUNT_NAME: accumulator[self.COUNT_IDX],
             _MEAN_NAME: accumulator[1],
-            _VARIANCE_NAME: accumulator[2]
+            _VARIANCE_NAME: accumulator[2],
         }
 
     def restore(self, output):
@@ -247,20 +267,22 @@ class _NormalizingCombiner(Combiner):
         count = output[_COUNT_NAME]
         mean = output[_MEAN_NAME]
         var = output[_VARIANCE_NAME]
-        if (count == 0 and (mean.any() != 0.0 or var.any() != 0.0)):
+        if count == 0 and (mean.any() != 0.0 or var.any() != 0.0):
             raise RuntimeError(
-                'The mean and/or variance of a Normalization preprocessing layer '
+                "The mean and/or variance of a Normalization preprocessing layer "
                 "were set without also setting 'count'. If 'count' is not also set,"
-                " 'adapt' cannot be called unless the 'reset_state' arg is True.")
-        return self._create_accumulator(output[_COUNT_NAME], output[_MEAN_NAME],
-                                        output[_VARIANCE_NAME])
+                " 'adapt' cannot be called unless the 'reset_state' arg is True."
+            )
+        return self._create_accumulator(
+            output[_COUNT_NAME], output[_MEAN_NAME], output[_VARIANCE_NAME]
+        )
 
     def serialize(self, accumulator):
         """Serialize an accumulator for a remote call."""
         output_dict = {
             _COUNT_NAME: accumulator[self.COUNT_IDX].tolist(),
             _MEAN_NAME: accumulator[1].tolist(),
-            _VARIANCE_NAME: accumulator[2].tolist()
+            _VARIANCE_NAME: accumulator[2].tolist(),
         }
         return compat.as_bytes(json.dumps(output_dict))
 
@@ -268,9 +290,10 @@ class _NormalizingCombiner(Combiner):
         """Deserialize an accumulator received from 'serialize()'."""
         value_dict = json.loads(compat.as_text(encoded_accumulator))
         return self._create_accumulator(
-            np.array(value_dict[_COUNT_NAME]), np.array(
-                value_dict[_MEAN_NAME]),
-            np.array(value_dict[_VARIANCE_NAME]))
+            np.array(value_dict[_COUNT_NAME]),
+            np.array(value_dict[_MEAN_NAME]),
+            np.array(value_dict[_VARIANCE_NAME]),
+        )
 
     def _create_accumulator(self, count, mean, variance):
         """Convert any 'nan' values in the given accumulator to numeric values."""
