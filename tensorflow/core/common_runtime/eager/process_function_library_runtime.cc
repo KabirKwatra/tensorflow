@@ -31,7 +31,7 @@ void EagerProcessFunctionLibraryRuntime::RunRemoteDevice(
     FunctionLibraryRuntime::Handle local_handle,
     gtl::ArraySlice<FunctionArg> args, std::vector<Tensor>* rets,
     FunctionLibraryRuntime::DoneCallback done) const {
-  parent_->Run(opts, local_handle, args, rets, std::move(done));
+    parent_->Run(opts, local_handle, args, rets, std::move(done));
 }
 
 void EagerProcessFunctionLibraryRuntime::Run(
@@ -39,33 +39,33 @@ void EagerProcessFunctionLibraryRuntime::Run(
     FunctionLibraryRuntime::Handle handle, const FunctionArgsInterface& args,
     std::vector<Tensor>* rets,
     FunctionLibraryRuntime::DoneCallback done) const {
-  if (!args.HasRemoteInputs()) {
-    return ProcessFunctionLibraryRuntime::Run(opts, handle, args, rets,
-                                              std::move(done));
-  }
-  auto* cleanup_items = new std::vector<std::unique_ptr<CleanUpItem>>;
-  done = ApplyCleanUpToDoneCallback(cleanup_items, done, opts.step_id,
-                                    /*rendezvous=*/nullptr);
-
-  auto get_component_args = [&args](const ComponentFunctionData& comp_data,
-                                    InternalArgs* comp_args) -> Status {
-    for (int i = 0; i < comp_data.arg_indices_.size(); ++i) {
-      const int index = comp_data.arg_indices_.at(i);
-      Tensor tensor;
-      if (args.GetLocalArg(index, &tensor).ok()) {
-        comp_args->args.push_back(std::move(tensor));
-      } else {
-        RemoteTensorHandle remote_handle;
-        TF_RETURN_IF_ERROR(args.GetRemoteArg(index, &remote_handle));
-        comp_args->remote_args.emplace_back(
-            absl::make_unique<RemoteTensorHandle>(std::move(remote_handle)));
-        comp_args->args.push_back(comp_args->remote_args.back().get());
-      }
+    if (!args.HasRemoteInputs()) {
+        return ProcessFunctionLibraryRuntime::Run(opts, handle, args, rets,
+                std::move(done));
     }
-    return Status::OK();
-  };
-  return RunMultiDevice(opts, handle, rets, cleanup_items, std::move(done),
-                        std::move(get_component_args));
+    auto* cleanup_items = new std::vector<std::unique_ptr<CleanUpItem>>;
+    done = ApplyCleanUpToDoneCallback(cleanup_items, done, opts.step_id,
+                                      /*rendezvous=*/nullptr);
+
+    auto get_component_args = [&args](const ComponentFunctionData& comp_data,
+    InternalArgs* comp_args) -> Status {
+        for (int i = 0; i < comp_data.arg_indices_.size(); ++i) {
+            const int index = comp_data.arg_indices_.at(i);
+            Tensor tensor;
+            if (args.GetLocalArg(index, &tensor).ok()) {
+                comp_args->args.push_back(std::move(tensor));
+            } else {
+                RemoteTensorHandle remote_handle;
+                TF_RETURN_IF_ERROR(args.GetRemoteArg(index, &remote_handle));
+                comp_args->remote_args.emplace_back(
+                    absl::make_unique<RemoteTensorHandle>(std::move(remote_handle)));
+                comp_args->args.push_back(comp_args->remote_args.back().get());
+            }
+        }
+        return Status::OK();
+    };
+    return RunMultiDevice(opts, handle, rets, cleanup_items, std::move(done),
+                          std::move(get_component_args));
 }
 #endif  // IS_MOBILE_PLATFORM
 

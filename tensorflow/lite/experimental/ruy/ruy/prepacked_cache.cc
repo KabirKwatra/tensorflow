@@ -26,61 +26,61 @@ using CacheIterator = PrepackedCache::CacheIterator;
 
 // Looks for an entry with `key`. If found, update its time stamp.
 CacheIterator PrepackedCache::FindAndUpdate(const CacheKey &key) {
-  auto itr = cache_.find(key);
-  // If found, update with new access time for this entry.
-  if (itr != cache_.end()) {
-    const TimePoint time = CacheNow();
-    itr->second.second = time;
-  }
-  // std::move() is required in the MSVC STL when NDEBUG is not set, and has no
-  // effect in libc++.
-  return std::move(itr);  // NOLINT
+    auto itr = cache_.find(key);
+    // If found, update with new access time for this entry.
+    if (itr != cache_.end()) {
+        const TimePoint time = CacheNow();
+        itr->second.second = time;
+    }
+    // std::move() is required in the MSVC STL when NDEBUG is not set, and has no
+    // effect in libc++.
+    return std::move(itr);  // NOLINT
 }
 
 void PrepackedCache::Insert(const CacheKey &key,
                             const PrepackedMatrix &matrix) {
-  // Calculate size of this new item.
-  const size_t size_bytes = matrix.data_size + matrix.sums_size;
+    // Calculate size of this new item.
+    const size_t size_bytes = matrix.data_size + matrix.sums_size;
 
-  // While we are above the threshold of ejection, eject the LRU entry.
-  while (!cache_.empty() &&
-         ((TotalSize() + size_bytes) > ejection_threshold_)) {
-    EjectOne();
-  }
-  DoInsert(key, matrix);
-  cache_size_ += matrix.data_size + matrix.sums_size;
+    // While we are above the threshold of ejection, eject the LRU entry.
+    while (!cache_.empty() &&
+            ((TotalSize() + size_bytes) > ejection_threshold_)) {
+        EjectOne();
+    }
+    DoInsert(key, matrix);
+    cache_size_ += matrix.data_size + matrix.sums_size;
 }
 
 void PrepackedCache::EjectOne() {
-  TimePoint oldest_time = CacheNow();
-  auto oldest = cache_.begin();
-  {
-    profiler::ScopeLabel label("PepackedCacheEjection");
-    for (auto itr = cache_.begin(); itr != cache_.end(); ++itr) {
-      if (itr->second.second < oldest_time) {
-        oldest_time = itr->second.second;
-        oldest = itr;
-      }
+    TimePoint oldest_time = CacheNow();
+    auto oldest = cache_.begin();
+    {
+        profiler::ScopeLabel label("PepackedCacheEjection");
+        for (auto itr = cache_.begin(); itr != cache_.end(); ++itr) {
+            if (itr->second.second < oldest_time) {
+                oldest_time = itr->second.second;
+                oldest = itr;
+            }
+        }
     }
-  }
-  PrepackedMatrix &pmatrix = oldest->second.first;
-  cache_size_ -= pmatrix.data_size;
-  cache_size_ -= pmatrix.sums_size;
-  allocator_.Free(pmatrix.data);
-  allocator_.Free(pmatrix.sums);
-  cache_.erase(oldest);
+    PrepackedMatrix &pmatrix = oldest->second.first;
+    cache_size_ -= pmatrix.data_size;
+    cache_size_ -= pmatrix.sums_size;
+    allocator_.Free(pmatrix.data);
+    allocator_.Free(pmatrix.sums);
+    cache_.erase(oldest);
 }
 
 void PrepackedCache::AllocatePrepackedMatrix(PrepackedMatrix *pmatrix) {
-  pmatrix->data = allocator_.Alloc(pmatrix->data_size);
-  pmatrix->sums = allocator_.Alloc(pmatrix->sums_size);
+    pmatrix->data = allocator_.Alloc(pmatrix->data_size);
+    pmatrix->sums = allocator_.Alloc(pmatrix->sums_size);
 }
 
 void PrepackedCache::DoInsert(const CacheKey &key,
                               const PrepackedMatrix &matrix) {
-  const TimePoint t = CacheNow();
-  const MatrixWithTimeStamp mts({matrix, t});
-  cache_.insert({key, mts});
+    const TimePoint t = CacheNow();
+    const MatrixWithTimeStamp mts({matrix, t});
+    cache_.insert({key, mts});
 }
 
 }  // namespace ruy
