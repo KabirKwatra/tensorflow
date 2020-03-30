@@ -12,7 +12,6 @@ DESCRIPTION:
   as is as a string to --compiler-options of hipcc. When "-x rocm" is not
   present, this wrapper invokes gcc with the input arguments as is.
 """
-
 from __future__ import print_function
 
 __author__ = "whchung@gmail.com (Wen-Heng (Jack) Chung)"
