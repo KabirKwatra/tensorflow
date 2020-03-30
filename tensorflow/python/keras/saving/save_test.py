@@ -58,7 +58,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         if h5py is not None:
             self.assertTrue(
                 h5py.is_hdf5(path),
-                "Model saved at path {} is not a valid hdf5 file.".format(path),
+                "Model saved at path {} is not a valid hdf5 file.".format(
+                    path),
             )
 
     def assert_saved_model(self, path):
@@ -76,8 +77,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         save.save_model(self.model, path, save_format="h5")
         self.assert_h5_format(path)
         with self.assertRaisesRegexp(
-            NotImplementedError,
-            "requires the model to be a Functional model or a Sequential model.",
+                NotImplementedError,
+                "requires the model to be a Functional model or a Sequential model.",
         ):
             save.save_model(self.subclassed_model, path, save_format="h5")
 
@@ -86,7 +87,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         path = os.path.join(self.get_temp_dir(), "model")
         save.save_model(self.model, path, save_format="tf")
         self.assert_saved_model(path)
-        with self.assertRaisesRegexp(ValueError, "input shapes have not been set"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "input shapes have not been set"):
             save.save_model(self.subclassed_model, path, save_format="tf")
         self.subclassed_model.predict(np.random.random((3, 5)))
         save.save_model(self.subclassed_model, path, save_format="tf")
@@ -111,13 +113,11 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
             feature_column_lib.numeric_column("a"),
             feature_column_lib.indicator_column(
                 feature_column_lib.categorical_column_with_vocabulary_list(
-                    "b", ["one", "two"]
-                )
-            ),
+                    "b", ["one", "two"])),
         ]
         input_layers = {
-            "a": keras.layers.Input(shape=(1,), name="a"),
-            "b": keras.layers.Input(shape=(1,), name="b", dtype="string"),
+            "a": keras.layers.Input(shape=(1, ), name="a"),
+            "b": keras.layers.Input(shape=(1, ), name="b", dtype="string"),
         }
 
         fc_layer = feature_column_lib.DenseFeatures(cols)(input_layers)
@@ -142,23 +142,29 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
             if not context.executing_eagerly():
                 self.evaluate(lookup_ops.tables_initializer())
 
-            self.assertLen(loaded_model.predict({"a": inputs_a, "b": inputs_b}), 10)
+            self.assertLen(
+                loaded_model.predict({
+                    "a": inputs_a,
+                    "b": inputs_b
+                }), 10)
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_saving_with_sequence_features(self):
         cols = [
             feature_column_lib.sequence_numeric_column("a"),
             feature_column_lib.indicator_column(
-                feature_column_lib.sequence_categorical_column_with_vocabulary_list(
-                    "b", ["one", "two"]
-                )
-            ),
+                feature_column_lib.
+                sequence_categorical_column_with_vocabulary_list(
+                    "b", ["one", "two"])),
         ]
         input_layers = {
-            "a": keras.layers.Input(shape=(None, 1), sparse=True, name="a"),
-            "b": keras.layers.Input(
-                shape=(None, 1), sparse=True, name="b", dtype="string"
-            ),
+            "a":
+            keras.layers.Input(shape=(None, 1), sparse=True, name="a"),
+            "b":
+            keras.layers.Input(shape=(None, 1),
+                               sparse=True,
+                               name="b",
+                               dtype="string"),
         }
 
         fc_layer, _ = feature_column_lib.SequenceFeatures(cols)(input_layers)
@@ -185,16 +191,14 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         values_a = np.arange(10, dtype=np.float32)
         indices_a = np.zeros((10, 3), dtype=np.int64)
         indices_a[:, 0] = np.arange(10)
-        inputs_a = sparse_tensor.SparseTensor(
-            indices_a, values_a, (batch_size, timesteps, 1)
-        )
+        inputs_a = sparse_tensor.SparseTensor(indices_a, values_a,
+                                              (batch_size, timesteps, 1))
 
         values_b = np.zeros(10, dtype=np.str)
         indices_b = np.zeros((10, 3), dtype=np.int64)
         indices_b[:, 0] = np.arange(10)
-        inputs_b = sparse_tensor.SparseTensor(
-            indices_b, values_b, (batch_size, timesteps, 1)
-        )
+        inputs_b = sparse_tensor.SparseTensor(indices_b, values_b,
+                                              (batch_size, timesteps, 1))
 
         with self.cached_session():
             # Initialize tables for V1 lookup.
@@ -202,7 +206,10 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
                 self.evaluate(lookup_ops.tables_initializer())
 
             self.assertLen(
-                loaded_model.predict({"a": inputs_a, "b": inputs_b}, steps=1),
+                loaded_model.predict({
+                    "a": inputs_a,
+                    "b": inputs_b
+                }, steps=1),
                 batch_size,
             )
 
@@ -211,20 +218,24 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         # See https://github.com/tensorflow/tensorflow/issues/35731 for details.
         inputs = keras.Input([10, 91], name="train_input")
         rnn_layers = [
-            keras.layers.LSTMCell(size, recurrent_dropout=0, name="rnn_cell%d" % i)
+            keras.layers.LSTMCell(size,
+                                  recurrent_dropout=0,
+                                  name="rnn_cell%d" % i)
             for i, size in enumerate([512, 512])
         ]
-        rnn_output = keras.layers.RNN(
-            rnn_layers, return_sequences=True, name="rnn_layer"
-        )(inputs)
-        pred_feat = keras.layers.Dense(91, name="prediction_features")(rnn_output)
+        rnn_output = keras.layers.RNN(rnn_layers,
+                                      return_sequences=True,
+                                      name="rnn_layer")(inputs)
+        pred_feat = keras.layers.Dense(91,
+                                       name="prediction_features")(rnn_output)
         pred = keras.layers.Softmax()(pred_feat)
         model = keras.Model(inputs=[inputs], outputs=[pred, pred_feat])
         path = os.path.join(self.get_temp_dir(), "model_path.h5")
         model.save(path)
 
         # Make sure the variable name is unique.
-        self.assertNotEqual(rnn_layers[0].kernel.name, rnn_layers[1].kernel.name)
+        self.assertNotEqual(rnn_layers[0].kernel.name,
+                            rnn_layers[1].kernel.name)
         self.assertIn("rnn_cell1", rnn_layers[1].kernel.name)
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
@@ -266,7 +277,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
             class CustomLoss(losses.MeanSquaredError):
                 pass
 
-            model = sequential.Sequential([core.Dense(units=1, input_shape=(1,))])
+            model = sequential.Sequential(
+                [core.Dense(units=1, input_shape=(1, ))])
             model.compile(optimizer="sgd", loss=CustomLoss())
             model.fit(np.zeros([10, 1]), np.zeros([10, 1]))
 
