@@ -26,8 +26,8 @@ namespace xla {
 namespace mlir_gpu {
 
 struct BoundAffineMap {
-  mlir::AffineMap affine_map;
-  std::vector<mlir::Value> operands;
+    mlir::AffineMap affine_map;
+    std::vector<mlir::Value> operands;
 };
 
 BoundAffineMap GetBoundAffineMapFrom(mlir::Operation* op);
