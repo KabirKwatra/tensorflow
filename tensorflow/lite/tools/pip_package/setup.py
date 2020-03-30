@@ -51,111 +51,111 @@ DOWNLOAD_SCRIPT_PATH = os.path.join(MAKE_DIR, 'download_dependencies.sh')
 # Setup cross compiling
 TARGET = os.environ.get('TENSORFLOW_TARGET')
 if TARGET == 'rpi':
-  os.environ['CXX'] = 'arm-linux-gnueabihf-g++'
-  os.environ['CC'] = 'arm-linux-gnueabihf-gcc'
+    os.environ['CXX'] = 'arm-linux-gnueabihf-g++'
+    os.environ['CC'] = 'arm-linux-gnueabihf-gcc'
 elif TARGET == 'aarch64':
-  os.environ['CXX'] = 'aarch64-linux-gnu-g++'
-  os.environ['CC'] = 'aarch64-linux-gnu-gcc'
+    os.environ['CXX'] = 'aarch64-linux-gnu-g++'
+    os.environ['CC'] = 'aarch64-linux-gnu-gcc'
 
 MAKE_CROSS_OPTIONS = []
 for name in ['TARGET', 'TARGET_ARCH', 'CC_PREFIX', 'EXTRA_CXXFLAGS']:
-  value = os.environ.get('TENSORFLOW_%s' % name)
-  if value:
-    MAKE_CROSS_OPTIONS.append('%s=%s' % (name, value))
+    value = os.environ.get('TENSORFLOW_%s' % name)
+    if value:
+        MAKE_CROSS_OPTIONS.append('%s=%s' % (name, value))
 
 
 # Check physical memory and if we are on a reasonable non small SOC machine
 # with more than 4GB, use all the CPUs, otherwise only 1.
 def get_build_cpus():
-  physical_bytes = os.sysconf('SC_PAGESIZE') * os.sysconf('SC_PHYS_PAGES')
-  if physical_bytes < (1 << 30) * 4:
-    return 1
-  else:
-    return multiprocessing.cpu_count()
+    physical_bytes = os.sysconf('SC_PAGESIZE') * os.sysconf('SC_PHYS_PAGES')
+    if physical_bytes < (1 << 30) * 4:
+        return 1
+    else:
+        return multiprocessing.cpu_count()
 
 
 def make_args(target='', quiet=True):
-  """Construct make command line."""
-  args = ([
-      'make', 'SHELL=/bin/bash', 'BUILD_WITH_NNAPI=false', '-C', TENSORFLOW_DIR
-  ] + MAKE_CROSS_OPTIONS +
-          ['-f', RELATIVE_MAKEFILE_PATH, '-j',
-           str(get_build_cpus())])
-  if quiet:
-    args.append('--quiet')
-  if target:
-    args.append(target)
-  return args
+    """Construct make command line."""
+    args = ([
+        'make', 'SHELL=/bin/bash', 'BUILD_WITH_NNAPI=false', '-C', TENSORFLOW_DIR
+    ] + MAKE_CROSS_OPTIONS +
+        ['-f', RELATIVE_MAKEFILE_PATH, '-j',
+         str(get_build_cpus())])
+    if quiet:
+        args.append('--quiet')
+    if target:
+        args.append(target)
+    return args
 
 
 def make_output(target):
-  """Invoke make on the target and return output."""
-  return subprocess.check_output(make_args(target)).decode('utf-8').strip()
+    """Invoke make on the target and return output."""
+    return subprocess.check_output(make_args(target)).decode('utf-8').strip()
 
 
 def make():
-  """Invoke make to build tflite C++ sources.
+    """Invoke make to build tflite C++ sources.
 
-  Build dependencies:
-     apt-get install swig libjpeg-dev zlib1g-dev python3-dev python3-nump
-  """
-  subprocess.check_call(make_args(quiet=False))
+    Build dependencies:
+       apt-get install swig libjpeg-dev zlib1g-dev python3-dev python3-nump
+    """
+    subprocess.check_call(make_args(quiet=False))
 
 
 def download_dependencies():
-  """Download build dependencies if haven't done yet."""
-  if not os.path.isdir(DOWNLOADS_DIR) or not os.listdir(DOWNLOADS_DIR):
-    subprocess.check_call(DOWNLOAD_SCRIPT_PATH)
+    """Download build dependencies if haven't done yet."""
+    if not os.path.isdir(DOWNLOADS_DIR) or not os.listdir(DOWNLOADS_DIR):
+        subprocess.check_call(DOWNLOAD_SCRIPT_PATH)
 
 
 class CustomBuildExt(build_ext, object):
-  """Customized build extension."""
+    """Customized build extension."""
 
-  def get_ext_filename(self, ext_name):
-    if TARGET:
-      ext_path = ext_name.split('.')
-      return os.path.join(*ext_path) + '.so'
-    return super(CustomBuildExt, self).get_ext_filename(ext_name)
+    def get_ext_filename(self, ext_name):
+        if TARGET:
+            ext_path = ext_name.split('.')
+            return os.path.join(*ext_path) + '.so'
+        return super(CustomBuildExt, self).get_ext_filename(ext_name)
 
-  def run(self):
-    download_dependencies()
-    make()
+    def run(self):
+        download_dependencies()
+        make()
 
-    return super(CustomBuildExt, self).run()
+        return super(CustomBuildExt, self).run()
 
 
 class CustomBuildPy(build_py, object):
 
-  def run(self):
-    self.run_command('build_ext')
-    return super(CustomBuildPy, self).run()
+    def run(self):
+        self.run_command('build_ext')
+        return super(CustomBuildPy, self).run()
 
 
 def get_pybind_include():
-  """pybind11 include directory is not correctly resolved.
+    """pybind11 include directory is not correctly resolved.
 
-  This fixes include directory to /usr/local/pythonX.X
+    This fixes include directory to /usr/local/pythonX.X
 
-  Returns:
-    include directories to find pybind11
-  """
-  if sys.version_info[0] == 3:
-    include_dirs = glob.glob('/usr/local/include/python3*')
-  else:
-    include_dirs = glob.glob('/usr/local/include/python2*')
-  include_dirs.append(sysconfig.get_path('include'))
-  tmp_include_dirs = []
-  pip_dir = os.path.join(TENSORFLOW_DIR, 'tensorflow', 'lite', 'tools',
-                         'pip_package', 'gen')
-  for include_dir in include_dirs:
-    tmp_include_dir = os.path.join(pip_dir, include_dir[1:])
-    tmp_include_dirs.append(tmp_include_dir)
-    try:
-      os.makedirs(tmp_include_dir)
-      os.symlink(include_dir, os.path.join(tmp_include_dir, 'include'))
-    except IOError:  # file already exists.
-      pass
-  return tmp_include_dirs
+    Returns:
+      include directories to find pybind11
+    """
+    if sys.version_info[0] == 3:
+        include_dirs = glob.glob('/usr/local/include/python3*')
+    else:
+        include_dirs = glob.glob('/usr/local/include/python2*')
+    include_dirs.append(sysconfig.get_path('include'))
+    tmp_include_dirs = []
+    pip_dir = os.path.join(TENSORFLOW_DIR, 'tensorflow', 'lite', 'tools',
+                           'pip_package', 'gen')
+    for include_dir in include_dirs:
+        tmp_include_dir = os.path.join(pip_dir, include_dir[1:])
+        tmp_include_dirs.append(tmp_include_dir)
+        try:
+            os.makedirs(tmp_include_dir)
+            os.symlink(include_dir, os.path.join(tmp_include_dir, 'include'))
+        except IOError:  # file already exists.
+            pass
+    return tmp_include_dirs
 
 
 LIB_TFLITE = 'tensorflow-lite'
