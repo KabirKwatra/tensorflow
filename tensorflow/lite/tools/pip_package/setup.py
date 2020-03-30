@@ -19,7 +19,6 @@ mobile and embedded devices. It enables on-device machine learning inference
 with low latency and a small binary size on Android, iOS, and other operating
 systems.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -30,10 +29,9 @@ import os
 import subprocess
 import sys
 import sysconfig
-
 from distutils.command.build_ext import build_ext
-import numpy
 
+import numpy
 from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
