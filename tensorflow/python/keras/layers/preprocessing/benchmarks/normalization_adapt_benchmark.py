@@ -19,8 +19,8 @@ from __future__ import print_function
 
 import time
 
-from absl import flags
 import numpy as np
+from absl import flags
 
 from tensorflow.python import keras
 from tensorflow.python.compat import v2_compat

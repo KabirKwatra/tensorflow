@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Functional test for learning rate decay."""
 from __future__ import absolute_import
 from __future__ import division
@@ -25,11 +24,10 @@ from tensorflow.python.framework import test_util
 from tensorflow.python.keras.optimizer_v2 import (
     legacy_learning_rate_decay as learning_rate_decay,
 )
-
-# Import resource_variable_ops for the variables-to-tensor implicit conversion.
 from tensorflow.python.ops import resource_variable_ops  # pylint: disable=unused-import
 from tensorflow.python.ops import variables
 from tensorflow.python.platform import googletest
+# Import resource_variable_ops for the variables-to-tensor implicit conversion.
 
 
 class LRDecayTest(test_util.TensorFlowTestCase):
