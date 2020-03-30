@@ -13,15 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tensorflow.python.framework.importer."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
 from google.protobuf import text_format
 
+import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.core.framework import graph_pb2
 from tensorflow.core.framework import op_def_pb2
 from tensorflow.python.framework import constant_op
@@ -41,7 +40,6 @@ from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.ops import variables
-import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.python.platform import test
 
 

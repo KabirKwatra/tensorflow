@@ -14,7 +14,6 @@
 # ==============================================================================
 # pylint: disable=unidiomatic-typecheck
 """Prototype decorator for defining graph functions with eager semantics."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,10 +21,11 @@ from __future__ import print_function
 import functools
 import threading
 import weakref
-import six
 
+import six
 from google.protobuf import text_format as _text_format
 from google.protobuf.message import DecodeError
+
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python import pywrap_tfe
 from tensorflow.python.eager import context
