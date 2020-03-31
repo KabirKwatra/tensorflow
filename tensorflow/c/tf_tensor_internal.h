@@ -31,51 +31,59 @@ limitations under the License.
 // passed to or returned from C functions *by pointer*. Otherwise, changes to
 // its internal structure will break the C API's binary interface.
 typedef struct TF_Tensor {
-  std::unique_ptr<tensorflow::AbstractTensorInterface> tensor;
+    std::unique_ptr<tensorflow::AbstractTensorInterface> tensor;
 } TF_Tensor;
 
 class TF_ManagedBuffer : public tensorflow::TensorBuffer {
- public:
-  TF_ManagedBuffer(void* data, size_t len,
-                   void (*deallocator)(void* data, size_t len, void* arg),
-                   void* deallocator_arg, bool owns_memory)
-      : TensorBuffer(data),
-        len_(len),
-        deallocator_(deallocator),
-        deallocator_arg_(deallocator_arg),
-        owns_memory_(owns_memory) {}
+public:
+    TF_ManagedBuffer(void* data, size_t len,
+                     void (*deallocator)(void* data, size_t len, void* arg),
+                     void* deallocator_arg, bool owns_memory)
+        : TensorBuffer(data),
+          len_(len),
+          deallocator_(deallocator),
+          deallocator_arg_(deallocator_arg),
+          owns_memory_(owns_memory) {}
 
-  ~TF_ManagedBuffer() override {
-    (*deallocator_)(data(), len_, deallocator_arg_);
-  }
+    ~TF_ManagedBuffer() override {
+        (*deallocator_)(data(), len_, deallocator_arg_);
+    }
 
-  size_t size() const override { return len_; }
-  TensorBuffer* root_buffer() override { return this; }
-  void FillAllocationDescription(
-      tensorflow::AllocationDescription* proto) const override {
-    tensorflow::int64 rb = size();
-    proto->set_requested_bytes(rb);
-    proto->set_allocator_name(tensorflow::cpu_allocator()->Name());
-  }
+    size_t size() const override {
+        return len_;
+    }
+    TensorBuffer* root_buffer() override {
+        return this;
+    }
+    void FillAllocationDescription(
+        tensorflow::AllocationDescription* proto) const override {
+        tensorflow::int64 rb = size();
+        proto->set_requested_bytes(rb);
+        proto->set_allocator_name(tensorflow::cpu_allocator()->Name());
+    }
 
-  bool OwnsMemory() const override { return owns_memory_; }
+    bool OwnsMemory() const override {
+        return owns_memory_;
+    }
 
- private:
-  const size_t len_;
-  void (*const deallocator_)(void* data, size_t len, void* arg);
-  void* const deallocator_arg_;
-  bool owns_memory_;
+private:
+    const size_t len_;
+    void (*const deallocator_)(void* data, size_t len, void* arg);
+    void* const deallocator_arg_;
+    bool owns_memory_;
 };
 
 namespace tensorflow {
 
 class TensorCApi {
- public:
-  static TensorBuffer* Buffer(const Tensor& tensor) { return tensor.buf_; }
-  static Tensor MakeTensor(TF_DataType type, const TensorShape& shape,
-                           TensorBuffer* buf) {
-    return Tensor(static_cast<DataType>(type), shape, buf);
-  }
+public:
+    static TensorBuffer* Buffer(const Tensor& tensor) {
+        return tensor.buf_;
+    }
+    static Tensor MakeTensor(TF_DataType type, const TensorShape& shape,
+                             TensorBuffer* buf) {
+        return Tensor(static_cast<DataType>(type), shape, buf);
+    }
 };
 
 // Allocates tensor data buffer using specified allocator.

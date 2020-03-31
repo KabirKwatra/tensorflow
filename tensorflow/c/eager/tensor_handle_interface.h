@@ -33,71 +33,73 @@ namespace tensorflow {
 // any concrete implementation. However, in cases where the true concrete class
 // is needed a static_cast can be applied.
 class AbstractTensorHandleInterface {
- public:
-  virtual ~AbstractTensorHandleInterface() {}
+public:
+    virtual ~AbstractTensorHandleInterface() {}
 
-  // Check if the handle is in a valid initialized state.
-  virtual bool IsValid(Status* status) const = 0;
-  // Returns tensor dtype.
-  virtual TF_DataType DataType() const = 0;
-  // Returns number of dimensions.
-  virtual int NumDims(Status* status) const = 0;
-  // Returns number of elements across all dimensions.
-  virtual int64_t NumElements(Status* status) const = 0;
-  // Returns size of specified dimension
-  virtual int64_t Dim(int dim_index, Status* status) const = 0;
+    // Check if the handle is in a valid initialized state.
+    virtual bool IsValid(Status* status) const = 0;
+    // Returns tensor dtype.
+    virtual TF_DataType DataType() const = 0;
+    // Returns number of dimensions.
+    virtual int NumDims(Status* status) const = 0;
+    // Returns number of elements across all dimensions.
+    virtual int64_t NumElements(Status* status) const = 0;
+    // Returns size of specified dimension
+    virtual int64_t Dim(int dim_index, Status* status) const = 0;
 
-  // Returns the device which created the handle.
-  virtual const char* DeviceName(Status* status) const = 0;
-  // Returns the device where the tensor was placed.
-  virtual const char* BackingDeviceName(Status* status) const = 0;
-  // Returns a tensor for the handle. If tensor is remote, it will be copied.
-  virtual std::unique_ptr<AbstractTensorInterface> Resolve(Status* status) = 0;
+    // Returns the device which created the handle.
+    virtual const char* DeviceName(Status* status) const = 0;
+    // Returns the device where the tensor was placed.
+    virtual const char* BackingDeviceName(Status* status) const = 0;
+    // Returns a tensor for the handle. If tensor is remote, it will be copied.
+    virtual std::unique_ptr<AbstractTensorInterface> Resolve(Status* status) = 0;
 
-  // Return a copy of the handle.
-  virtual AbstractTensorHandleInterface* Copy() = 0;
+    // Return a copy of the handle.
+    virtual AbstractTensorHandleInterface* Copy() = 0;
 
-  // Maintain mirror tensors for any implicit copies to local devices. This
-  // setting is offered on a per tensor handle basis to avoid potential memory
-  // over utilization due to holding on to mirrors as well as the original
-  // tensor. Note this setting overrides the context mirroring policy whereby if
-  // the mirroring policy is MIRRORING_NONE, we will still continue to mirror
-  // this tensor.
-  virtual void EnableImplicitMirroring() = 0;
+    // Maintain mirror tensors for any implicit copies to local devices. This
+    // setting is offered on a per tensor handle basis to avoid potential memory
+    // over utilization due to holding on to mirrors as well as the original
+    // tensor. Note this setting overrides the context mirroring policy whereby if
+    // the mirroring policy is MIRRORING_NONE, we will still continue to mirror
+    // this tensor.
+    virtual void EnableImplicitMirroring() = 0;
 };
 
 // TODO(gjn): Try to move these all to TensorHandle and make it implement
 // AbstractTensorHandleInterface. Currently, this is not so straightforward
 // because of various BUILD file dependencies.
 class TensorHandleInterface : public AbstractTensorHandleInterface {
- public:
-  explicit TensorHandleInterface(TensorHandle* h) : handle_(h) {}
-  ~TensorHandleInterface() override;
+public:
+    explicit TensorHandleInterface(TensorHandle* h) : handle_(h) {}
+    ~TensorHandleInterface() override;
 
-  bool IsValid(Status* status) const override;
-  TF_DataType DataType() const override;
-  int NumDims(Status* status) const override;
-  int64_t NumElements(Status* status) const override;
-  int64_t Dim(int dim_index, Status* status) const override;
+    bool IsValid(Status* status) const override;
+    TF_DataType DataType() const override;
+    int NumDims(Status* status) const override;
+    int64_t NumElements(Status* status) const override;
+    int64_t Dim(int dim_index, Status* status) const override;
 
-  const char* DeviceName(Status* status) const override;
-  const char* BackingDeviceName(Status* status) const override;
-  std::unique_ptr<AbstractTensorInterface> Resolve(Status* status) override;
+    const char* DeviceName(Status* status) const override;
+    const char* BackingDeviceName(Status* status) const override;
+    std::unique_ptr<AbstractTensorInterface> Resolve(Status* status) override;
 
-  AbstractTensorHandleInterface* Copy() override;
+    AbstractTensorHandleInterface* Copy() override;
 
-  void EnableImplicitMirroring() override;
+    void EnableImplicitMirroring() override;
 
-  // For runtime specific APIs, provide ability to get the underlying handle.
-  TensorHandle* Handle() { return handle_; }
+    // For runtime specific APIs, provide ability to get the underlying handle.
+    TensorHandle* Handle() {
+        return handle_;
+    }
 
- private:
-  TensorHandle* handle_;
+private:
+    TensorHandle* handle_;
 };
 
 inline TensorHandle* TensorHandleFromInterface(
     const std::unique_ptr<AbstractTensorHandleInterface>& handle) {
-  return down_cast<TensorHandleInterface*>(handle.get())->Handle();
+    return down_cast<TensorHandleInterface*>(handle.get())->Handle();
 }
 
 }  // namespace tensorflow
