@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python.util.lazy_loader import LazyLoader
 
 # Lazy load since some of the performance benchmark skylark rules

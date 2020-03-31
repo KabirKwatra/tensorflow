@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Ops to manipulate lists of tensors."""
-
 # pylint: disable=g-bad-name
 from __future__ import absolute_import
 from __future__ import division
@@ -24,13 +23,11 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import gen_list_ops
-
+from tensorflow.python.ops.gen_list_ops import *
+from tensorflow.python.util.lazy_loader import LazyLoader
 # go/tf-wildcard-import
 # pylint: disable=wildcard-import
-from tensorflow.python.ops.gen_list_ops import *
-
 # pylint: enable=wildcard-import
-from tensorflow.python.util.lazy_loader import LazyLoader
 
 # list_ops -> control_flow_ops -> tensor_array_ops -> list_ops
 control_flow_ops = LazyLoader(
