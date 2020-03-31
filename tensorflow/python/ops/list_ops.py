@@ -24,16 +24,18 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import gen_list_ops
+
 # go/tf-wildcard-import
 # pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_list_ops import *
+
 # pylint: enable=wildcard-import
 from tensorflow.python.util.lazy_loader import LazyLoader
 
 # list_ops -> control_flow_ops -> tensor_array_ops -> list_ops
 control_flow_ops = LazyLoader(
-    "control_flow_ops", globals(),
-    "tensorflow.python.ops.control_flow_ops")
+    "control_flow_ops", globals(), "tensorflow.python.ops.control_flow_ops"
+)
 
 
 ops.NotDifferentiable("TensorListConcatLists")
@@ -42,10 +44,7 @@ ops.NotDifferentiable("TensorListLength")
 ops.NotDifferentiable("TensorListPushBackBatch")
 
 
-def empty_tensor_list(element_shape,
-                      element_dtype,
-                      max_num_elements=None,
-                      name=None):
+def empty_tensor_list(element_shape, element_dtype, max_num_elements=None, name=None):
     if max_num_elements is None:
         max_num_elements = -1
 
@@ -53,7 +52,8 @@ def empty_tensor_list(element_shape,
         element_shape=_build_element_shape(element_shape),
         element_dtype=element_dtype,
         max_num_elements=max_num_elements,
-        name=name)
+        name=name,
+    )
 
 
 def tensor_list_reserve(element_shape, num_elements, element_dtype, name=None):
@@ -61,24 +61,26 @@ def tensor_list_reserve(element_shape, num_elements, element_dtype, name=None):
         element_shape=_build_element_shape(element_shape),
         num_elements=num_elements,
         element_dtype=element_dtype,
-        name=name)
+        name=name,
+    )
 
 
 def tensor_list_from_tensor(tensor, element_shape, name=None):
     return gen_list_ops.tensor_list_from_tensor(
-        tensor=tensor,
-        element_shape=_build_element_shape(element_shape),
-        name=name)
+        tensor=tensor, element_shape=_build_element_shape(element_shape), name=name
+    )
 
 
-def tensor_list_get_item(input_handle, index, element_dtype, element_shape=None,
-                         name=None):
+def tensor_list_get_item(
+    input_handle, index, element_dtype, element_shape=None, name=None
+):
     return gen_list_ops.tensor_list_get_item(
         input_handle=input_handle,
         index=index,
         element_shape=_build_element_shape(element_shape),
         element_dtype=element_dtype,
-        name=name)
+        name=name,
+    )
 
 
 def tensor_list_pop_back(input_handle, element_dtype, name=None):
@@ -86,54 +88,52 @@ def tensor_list_pop_back(input_handle, element_dtype, name=None):
         input_handle=input_handle,
         element_shape=-1,
         element_dtype=element_dtype,
-        name=name)
+        name=name,
+    )
 
 
-def tensor_list_gather(input_handle,
-                       indices,
-                       element_dtype,
-                       element_shape=None,
-                       name=None):
+def tensor_list_gather(
+    input_handle, indices, element_dtype, element_shape=None, name=None
+):
     return gen_list_ops.tensor_list_gather(
         input_handle=input_handle,
         indices=indices,
         element_shape=_build_element_shape(element_shape),
         element_dtype=element_dtype,
-        name=name)
+        name=name,
+    )
 
 
-def tensor_list_scatter(tensor,
-                        indices,
-                        element_shape=None,
-                        input_handle=None,
-                        name=None):
+def tensor_list_scatter(
+    tensor, indices, element_shape=None, input_handle=None, name=None
+):
     if input_handle is not None:
         return gen_list_ops.tensor_list_scatter_into_existing_list(
-            input_handle=input_handle, tensor=tensor, indices=indices, name=name)
+            input_handle=input_handle, tensor=tensor, indices=indices, name=name
+        )
     else:
         return gen_list_ops.tensor_list_scatter_v2(
             tensor=tensor,
             indices=indices,
             element_shape=_build_element_shape(element_shape),
             num_elements=-1,
-            name=name)
+            name=name,
+        )
 
 
-def tensor_list_stack(input_handle,
-                      element_dtype,
-                      num_elements=-1,
-                      element_shape=None,
-                      name=None):
+def tensor_list_stack(
+    input_handle, element_dtype, num_elements=-1, element_shape=None, name=None
+):
     return gen_list_ops.tensor_list_stack(
         input_handle=input_handle,
         element_shape=_build_element_shape(element_shape),
         element_dtype=element_dtype,
         num_elements=num_elements,
-        name=name)
+        name=name,
+    )
 
 
-def tensor_list_concat(input_handle, element_dtype, element_shape=None,
-                       name=None):
+def tensor_list_concat(input_handle, element_dtype, element_shape=None, name=None):
     # Ignore the lengths output of TensorListConcat. It is only used during
     # gradient computation.
     return gen_list_ops.tensor_list_concat_v2(
@@ -141,7 +141,8 @@ def tensor_list_concat(input_handle, element_dtype, element_shape=None,
         element_dtype=element_dtype,
         element_shape=_build_element_shape(element_shape),
         leading_dims=ops.convert_to_tensor([], dtype=dtypes.int64),
-        name=name)[0]
+        name=name,
+    )[0]
 
 
 def tensor_list_split(tensor, element_shape, lengths, name=None):
@@ -149,14 +150,13 @@ def tensor_list_split(tensor, element_shape, lengths, name=None):
         tensor=tensor,
         element_shape=_build_element_shape(element_shape),
         lengths=lengths,
-        name=name)
+        name=name,
+    )
 
 
-def tensor_list_set_item(input_handle,
-                         index,
-                         item,
-                         resize_if_index_out_of_bounds=False,
-                         name=None):
+def tensor_list_set_item(
+    input_handle, index, item, resize_if_index_out_of_bounds=False, name=None
+):
     """Sets `item` at `index` in input list."""
     if resize_if_index_out_of_bounds:
         input_list_size = gen_list_ops.tensor_list_length(input_handle)
@@ -165,10 +165,13 @@ def tensor_list_set_item(input_handle,
         input_handle = control_flow_ops.cond(
             index >= input_list_size,
             lambda: gen_list_ops.tensor_list_resize(  # pylint: disable=g-long-lambda
-                input_handle, index + 1),
-            lambda: input_handle)
+                input_handle, index + 1
+            ),
+            lambda: input_handle,
+        )
     return gen_list_ops.tensor_list_set_item(
-        input_handle=input_handle, index=index, item=item, name=name)
+        input_handle=input_handle, index=index, item=item, name=name
+    )
 
 
 @ops.RegisterGradient("TensorListPushBack")
@@ -176,7 +179,8 @@ def _PushBackGrad(op, dresult):
     return gen_list_ops.tensor_list_pop_back(
         dresult,
         element_shape=array_ops.shape(op.inputs[1]),
-        element_dtype=op.get_attr("element_dtype"))
+        element_dtype=op.get_attr("element_dtype"),
+    )
 
 
 @ops.RegisterGradient("TensorListPopBack")
@@ -185,7 +189,9 @@ def _PopBackGrad(op, dlist, delement):
         dlist = empty_tensor_list(
             element_dtype=delement.dtype,
             element_shape=gen_list_ops.tensor_list_element_shape(
-                op.outputs[0], shape_type=dtypes.int32))
+                op.outputs[0], shape_type=dtypes.int32
+            ),
+        )
     if delement is None:
         delement = array_ops.zeros_like(op.outputs[1])
     return gen_list_ops.tensor_list_push_back(dlist, delement), None
@@ -203,8 +209,10 @@ def _TensorListConcatGrad(op, dtensor, unused_dlengths):
     dlist = tensor_list_split(
         dtensor,
         element_shape=gen_list_ops.tensor_list_element_shape(
-            op.inputs[0], shape_type=dtypes.int32),
-        lengths=op.outputs[1])
+            op.inputs[0], shape_type=dtypes.int32
+        ),
+        lengths=op.outputs[1],
+    )
     if op.type == "TensorListConcatV2":
         return dlist, None, None
     else:
@@ -216,11 +224,16 @@ def _TensorListSplitGrad(op, dlist):
     tensor, _, lengths = op.inputs
     element_shape = array_ops.slice(array_ops.shape(tensor), [1], [-1])
     element_shape = array_ops.concat([[-1], element_shape], axis=0)
-    return gen_list_ops.tensor_list_concat_v2(
-        dlist,
-        element_shape=element_shape,
-        leading_dims=lengths,
-        element_dtype=op.inputs[0].dtype)[0], None, None
+    return (
+        gen_list_ops.tensor_list_concat_v2(
+            dlist,
+            element_shape=element_shape,
+            leading_dims=lengths,
+            element_dtype=op.inputs[0].dtype,
+        )[0],
+        None,
+        None,
+    )
 
 
 @ops.RegisterGradient("TensorListFromTensor")
@@ -235,12 +248,15 @@ def _TensorListFromTensorGrad(op, dlist):
         dlist = empty_tensor_list(
             element_dtype=t.dtype,
             element_shape=gen_list_ops.tensor_list_element_shape(
-                op.outputs[0], shape_type=dtypes.int32))
+                op.outputs[0], shape_type=dtypes.int32
+            ),
+        )
     tensor_grad = gen_list_ops.tensor_list_stack(
         dlist,
         element_shape=array_ops.slice(array_ops.shape(t), [1], [-1]),
         element_dtype=t.dtype,
-        num_elements=num_elements)
+        num_elements=num_elements,
+    )
     shape_grad = None
     return tensor_grad, shape_grad
 
@@ -251,11 +267,15 @@ def _TensorListGetItemGrad(op, ditem):
     list_size = gen_list_ops.tensor_list_length(op.inputs[0])
     list_grad = gen_list_ops.tensor_list_set_item(
         gen_list_ops.tensor_list_reserve(
-            gen_list_ops.tensor_list_element_shape(op.inputs[0],
-                                                   shape_type=dtypes.int32),
-            list_size, element_dtype=ditem.dtype),
+            gen_list_ops.tensor_list_element_shape(
+                op.inputs[0], shape_type=dtypes.int32
+            ),
+            list_size,
+            element_dtype=ditem.dtype,
+        ),
         index=op.inputs[1],
-        item=ditem)
+        item=ditem,
+    )
     index_grad = None
     element_shape_grad = None
     return list_grad, index_grad, element_shape_grad
@@ -266,13 +286,12 @@ def _TensorListSetItemGrad(op, dlist):
     """Gradient function for TensorListSetItem."""
     _, index, item = op.inputs
     list_grad = gen_list_ops.tensor_list_set_item(
-        dlist, index=index, item=array_ops.zeros_like(item))
+        dlist, index=index, item=array_ops.zeros_like(item)
+    )
     index_grad = None
     element_grad = tensor_list_get_item(
-        dlist,
-        index,
-        element_shape=array_ops.shape(item),
-        element_dtype=item.dtype)
+        dlist, index, element_shape=array_ops.shape(item), element_dtype=item.dtype
+    )
     return list_grad, index_grad, element_grad
 
 
@@ -288,11 +307,11 @@ def _TensorListGatherGrad(op, dtensor):
     """Gradient function for TensorListGather."""
     input_list, indices, _ = op.inputs
     element_shape = gen_list_ops.tensor_list_element_shape(
-        input_list, shape_type=dtypes.int32)
+        input_list, shape_type=dtypes.int32
+    )
     num_elements = gen_list_ops.tensor_list_length(input_list)
     dlist = tensor_list_reserve(element_shape, num_elements, dtensor.dtype)
-    dlist = tensor_list_scatter(
-        tensor=dtensor, indices=indices, input_handle=dlist)
+    dlist = tensor_list_scatter(tensor=dtensor, indices=indices, input_handle=dlist)
     return dlist, None, None
 
 
@@ -306,7 +325,8 @@ def _TensorListScatterGrad(op, dlist):
         dlist,
         indices,
         element_shape=array_ops.slice(array_ops.shape(tensor), [1], [-1]),
-        element_dtype=tensor.dtype)
+        element_dtype=tensor.dtype,
+    )
     if op.type == "TensorListScatterV2":
         return dtensor, None, None, None
     else:
@@ -321,7 +341,8 @@ def _TensorListScatterIntoExistingListGrad(op, dlist):
         dlist,
         indices,
         element_shape=array_ops.slice(array_ops.shape(tensor), [1], [-1]),
-        element_dtype=tensor.dtype)
+        element_dtype=tensor.dtype,
+    )
     zeros = array_ops.zeros_like(tensor)
     dlist = tensor_list_scatter(zeros, indices, indices, input_handle=dlist)
     return dlist, dtensor, None

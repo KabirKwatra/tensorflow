@@ -24,9 +24,10 @@ from tensorflow.python.util.lazy_loader import LazyLoader
 # break dependencies. Must use double quotes to match code internal rewrite
 # rule.
 _calibration_wrapper = LazyLoader(
-    "_calibration_wrapper", globals(),
-    "tensorflow.lite.python.optimize."
-    "_pywrap_tensorflow_lite_calibration_wrapper")
+    "_calibration_wrapper",
+    globals(),
+    "tensorflow.lite.python.optimize." "_pywrap_tensorflow_lite_calibration_wrapper",
+)
 
 
 class Calibrator(object):
@@ -47,19 +48,15 @@ class Calibrator(object):
         if not model_content:
             raise ValueError("`model_content` must be specified.")
         try:
-            self._calibrator = (
-                _calibration_wrapper.CalibrationWrapper(model_content))
+            self._calibrator = _calibration_wrapper.CalibrationWrapper(model_content)
         except Exception as e:
             raise ValueError("Failed to parse the model: %s." % e)
         if not self._calibrator:
             raise ValueError("Failed to parse the model.")
 
-    def calibrate_and_quantize(self,
-                               dataset_gen,
-                               input_type,
-                               output_type,
-                               allow_float,
-                               resize_input=True):
+    def calibrate_and_quantize(
+        self, dataset_gen, input_type, output_type, allow_float, resize_input=True
+    ):
         """Calibrates the model with specified generator and then quantizes it.
 
         The input shapes of the calibrator are resized with the calibration data if
@@ -90,15 +87,19 @@ class Calibrator(object):
             self._calibrator.FeedTensor(sample)
         return self._calibrator.QuantizeModel(
             np.dtype(input_type.as_numpy_dtype()).num,
-            np.dtype(output_type.as_numpy_dtype()).num, allow_float)
+            np.dtype(output_type.as_numpy_dtype()).num,
+            allow_float,
+        )
 
-    def calibrate_and_quantize_single(self,
-                                      dataset_gen,
-                                      input_type,
-                                      output_type,
-                                      allow_float,
-                                      op_output_name,
-                                      resize_input=True):
+    def calibrate_and_quantize_single(
+        self,
+        dataset_gen,
+        input_type,
+        output_type,
+        allow_float,
+        op_output_name,
+        resize_input=True,
+    ):
         """Calibrates the model with specified generator and then quantizes it.
 
         Only the single op with output op_output_name will be quantized.
@@ -130,7 +131,10 @@ class Calibrator(object):
             self._calibrator.FeedTensor(sample)
         return self._calibrator.QuantizeModel(
             np.dtype(input_type.as_numpy_dtype()).num,
-            np.dtype(output_type.as_numpy_dtype()).num, allow_float, op_output_name)
+            np.dtype(output_type.as_numpy_dtype()).num,
+            allow_float,
+            op_output_name,
+        )
 
     def calibrate(self, dataset_gen):
         """Calibrates the model with specified generator.
