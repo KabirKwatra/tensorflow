@@ -167,7 +167,9 @@ class Ones(init_ops_v2.Ones, Initializer):
         return super(Ones, self).__call__(shape, dtype=_get_dtype(dtype))
 
 
-@keras_export("keras.initializers.Constant", "keras.initializers.constant", v1=[])
+@keras_export("keras.initializers.Constant",
+              "keras.initializers.constant",
+              v1=[])
 class Constant(Initializer):
     """Initializer that generates tensors with constant values.
 
@@ -204,15 +206,17 @@ class Constant(Initializer):
            which default to `float32` unless you configured it otherwise
            (via `tf.keras.backend.set_floatx(float_dtype)`).
         """
-        return constant_op.constant(self.value, dtype=_get_dtype(dtype), shape=shape)
+        return constant_op.constant(self.value,
+                                    dtype=_get_dtype(dtype),
+                                    shape=shape)
 
     def get_config(self):
         return {"value": self.value}
 
 
-@keras_export(
-    "keras.initializers.RandomUniform", "keras.initializers.random_uniform", v1=[]
-)
+@keras_export("keras.initializers.RandomUniform",
+              "keras.initializers.random_uniform",
+              v1=[])
 class RandomUniform(init_ops_v2.RandomUniform, Initializer):
     """Initializer that generates tensors with a uniform distribution.
 
@@ -249,12 +253,13 @@ class RandomUniform(init_ops_v2.RandomUniform, Initializer):
            which default to `float32` unless you configured it otherwise
            (via `tf.keras.backend.set_floatx(float_dtype)`).
         """
-        return super(RandomUniform, self).__call__(shape, dtype=_get_dtype(dtype))
+        return super(RandomUniform, self).__call__(shape,
+                                                   dtype=_get_dtype(dtype))
 
 
-@keras_export(
-    "keras.initializers.RandomNormal", "keras.initializers.random_normal", v1=[]
-)
+@keras_export("keras.initializers.RandomNormal",
+              "keras.initializers.random_normal",
+              v1=[])
 class RandomNormal(init_ops_v2.RandomNormal, Initializer):
     """Initializer that generates tensors with a normal distribution.
 
@@ -290,12 +295,13 @@ class RandomNormal(init_ops_v2.RandomNormal, Initializer):
            which default to `float32` unless you configured it otherwise
            (via `tf.keras.backend.set_floatx(float_dtype)`)
         """
-        return super(RandomNormal, self).__call__(shape, dtype=_get_dtype(dtype))
+        return super(RandomNormal, self).__call__(shape,
+                                                  dtype=_get_dtype(dtype))
 
 
-@keras_export(
-    "keras.initializers.TruncatedNormal", "keras.initializers.truncated_normal", v1=[]
-)
+@keras_export("keras.initializers.TruncatedNormal",
+              "keras.initializers.truncated_normal",
+              v1=[])
 class TruncatedNormal(init_ops_v2.TruncatedNormal, Initializer):
     """Initializer that generates a truncated normal distribution.
 
@@ -336,12 +342,13 @@ class TruncatedNormal(init_ops_v2.TruncatedNormal, Initializer):
            which default to `float32` unless you configured it otherwise
            (via `tf.keras.backend.set_floatx(float_dtype)`)
         """
-        return super(TruncatedNormal, self).__call__(shape, dtype=_get_dtype(dtype))
+        return super(TruncatedNormal, self).__call__(shape,
+                                                     dtype=_get_dtype(dtype))
 
 
-@keras_export(
-    "keras.initializers.VarianceScaling", "keras.initializers.variance_scaling", v1=[]
-)
+@keras_export("keras.initializers.VarianceScaling",
+              "keras.initializers.variance_scaling",
+              v1=[])
 class VarianceScaling(init_ops_v2.VarianceScaling, Initializer):
     """Initializer capable of adapting its scale to the shape of weights tensors.
 
@@ -391,10 +398,13 @@ class VarianceScaling(init_ops_v2.VarianceScaling, Initializer):
            which default to `float32` unless you configured it otherwise
            (via `tf.keras.backend.set_floatx(float_dtype)`)
         """
-        return super(VarianceScaling, self).__call__(shape, dtype=_get_dtype(dtype))
+        return super(VarianceScaling, self).__call__(shape,
+                                                     dtype=_get_dtype(dtype))
 
 
-@keras_export("keras.initializers.Orthogonal", "keras.initializers.orthogonal", v1=[])
+@keras_export("keras.initializers.Orthogonal",
+              "keras.initializers.orthogonal",
+              v1=[])
 class Orthogonal(init_ops_v2.Orthogonal, Initializer):
     """Initializer that generates an orthogonal matrix.
 
@@ -444,7 +454,9 @@ class Orthogonal(init_ops_v2.Orthogonal, Initializer):
         return super(Orthogonal, self).__call__(shape, dtype=_get_dtype(dtype))
 
 
-@keras_export("keras.initializers.Identity", "keras.initializers.identity", v1=[])
+@keras_export("keras.initializers.Identity",
+              "keras.initializers.identity",
+              v1=[])
 class Identity(init_ops_v2.Identity, Initializer):
     """Initializer that generates the identity matrix.
 
@@ -479,9 +491,9 @@ class Identity(init_ops_v2.Identity, Initializer):
         return super(Identity, self).__call__(shape, dtype=_get_dtype(dtype))
 
 
-@keras_export(
-    "keras.initializers.GlorotUniform", "keras.initializers.glorot_uniform", v1=[]
-)
+@keras_export("keras.initializers.GlorotUniform",
+              "keras.initializers.glorot_uniform",
+              v1=[])
 class GlorotUniform(VarianceScaling):
     """The Glorot uniform initializer, also called Xavier uniform initializer.
 
@@ -512,17 +524,18 @@ class GlorotUniform(VarianceScaling):
     """
 
     def __init__(self, seed=None):
-        super(GlorotUniform, self).__init__(
-            scale=1.0, mode="fan_avg", distribution="uniform", seed=seed
-        )
+        super(GlorotUniform, self).__init__(scale=1.0,
+                                            mode="fan_avg",
+                                            distribution="uniform",
+                                            seed=seed)
 
     def get_config(self):
         return {"seed": self.seed}
 
 
-@keras_export(
-    "keras.initializers.GlorotNormal", "keras.initializers.glorot_normal", v1=[]
-)
+@keras_export("keras.initializers.GlorotNormal",
+              "keras.initializers.glorot_normal",
+              v1=[])
 class GlorotNormal(VarianceScaling):
     """The Glorot normal initializer, also called Xavier normal initializer.
 
@@ -554,17 +567,18 @@ class GlorotNormal(VarianceScaling):
     """
 
     def __init__(self, seed=None):
-        super(GlorotNormal, self).__init__(
-            scale=1.0, mode="fan_avg", distribution="truncated_normal", seed=seed
-        )
+        super(GlorotNormal, self).__init__(scale=1.0,
+                                           mode="fan_avg",
+                                           distribution="truncated_normal",
+                                           seed=seed)
 
     def get_config(self):
         return {"seed": self.seed}
 
 
-@keras_export(
-    "keras.initializers.LecunNormal", "keras.initializers.lecun_normal", v1=[]
-)
+@keras_export("keras.initializers.LecunNormal",
+              "keras.initializers.lecun_normal",
+              v1=[])
 class LecunNormal(VarianceScaling):
     """Lecun normal initializer.
 
@@ -603,17 +617,18 @@ class LecunNormal(VarianceScaling):
     """
 
     def __init__(self, seed=None):
-        super(LecunNormal, self).__init__(
-            scale=1.0, mode="fan_in", distribution="truncated_normal", seed=seed
-        )
+        super(LecunNormal, self).__init__(scale=1.0,
+                                          mode="fan_in",
+                                          distribution="truncated_normal",
+                                          seed=seed)
 
     def get_config(self):
         return {"seed": self.seed}
 
 
-@keras_export(
-    "keras.initializers.LecunUniform", "keras.initializers.lecun_uniform", v1=[]
-)
+@keras_export("keras.initializers.LecunUniform",
+              "keras.initializers.lecun_uniform",
+              v1=[])
 class LecunUniform(VarianceScaling):
     """Lecun uniform initializer.
 
@@ -647,15 +662,18 @@ class LecunUniform(VarianceScaling):
     """
 
     def __init__(self, seed=None):
-        super(LecunUniform, self).__init__(
-            scale=1.0, mode="fan_in", distribution="uniform", seed=seed
-        )
+        super(LecunUniform, self).__init__(scale=1.0,
+                                           mode="fan_in",
+                                           distribution="uniform",
+                                           seed=seed)
 
     def get_config(self):
         return {"seed": self.seed}
 
 
-@keras_export("keras.initializers.HeNormal", "keras.initializers.he_normal", v1=[])
+@keras_export("keras.initializers.HeNormal",
+              "keras.initializers.he_normal",
+              v1=[])
 class HeNormal(VarianceScaling):
     """He normal initializer.
 
@@ -686,15 +704,18 @@ class HeNormal(VarianceScaling):
     """
 
     def __init__(self, seed=None):
-        super(HeNormal, self).__init__(
-            scale=2.0, mode="fan_in", distribution="truncated_normal", seed=seed
-        )
+        super(HeNormal, self).__init__(scale=2.0,
+                                       mode="fan_in",
+                                       distribution="truncated_normal",
+                                       seed=seed)
 
     def get_config(self):
         return {"seed": self.seed}
 
 
-@keras_export("keras.initializers.HeUniform", "keras.initializers.he_uniform", v1=[])
+@keras_export("keras.initializers.HeUniform",
+              "keras.initializers.he_uniform",
+              v1=[])
 class HeUniform(VarianceScaling):
     """He uniform variance scaling initializer.
 
@@ -725,9 +746,10 @@ class HeUniform(VarianceScaling):
     """
 
     def __init__(self, seed=None):
-        super(HeUniform, self).__init__(
-            scale=2.0, mode="fan_in", distribution="uniform", seed=seed
-        )
+        super(HeUniform, self).__init__(scale=2.0,
+                                        mode="fan_in",
+                                        distribution="uniform",
+                                        seed=seed)
 
     def get_config(self):
         return {"seed": self.seed}

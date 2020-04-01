@@ -82,8 +82,7 @@ def start():
             logging.warning(
                 "Another profiler session is running which is probably "
                 "created by profiler server. Please avoid using profiler "
-                "server and profiler APIs at the same time."
-            )
+                "server and profiler APIs at the same time.")
             raise ProfilerAlreadyRunningError("Another profiler is running.")
 
 
@@ -103,8 +102,7 @@ def stop():
     with _profiler_lock:
         if _profiler is None:
             raise ProfilerNotRunningError(
-                "Cannot stop profiling. No profiler is running."
-            )
+                "Cannot stop profiling. No profiler is running.")
         if context.default_execution_mode == context.EAGER_MODE:
             context.context().executor.wait()
         result = _profiler.stop()
@@ -131,8 +129,7 @@ def maybe_create_event_file(logdir):
             return
     # TODO(b/127330388): Use summary_ops_v2.create_file_writer instead.
     event_writer = _pywrap_events_writer.EventsWriter(
-        compat.as_bytes(os.path.join(logdir, "events"))
-    )
+        compat.as_bytes(os.path.join(logdir, "events")))
     event_writer.InitWithSuffix(compat.as_bytes(_EVENT_FILE_SUFFIX))
 
 

@@ -47,10 +47,8 @@ _profiler_lock = threading.Lock()
 
 @tf_export("profiler.experimental.ProfilerOptions", v1=[])
 class ProfilerOptions(
-    collections.namedtuple(
-        "ProfilerOptions", ["host_tracer_level", "python_tracer_level"]
-    )
-):
+        collections.namedtuple("ProfilerOptions",
+                               ["host_tracer_level", "python_tracer_level"])):
     """Options to control profiler behaviors.
 
     A `tf.profiler.ProfilerOptions` hold the knobs to control tf.profiler's
@@ -93,7 +91,8 @@ def start(logdir, options=None):
     global _profiler
     with _profiler_lock:
         if _profiler is not None:
-            raise errors.AlreadyExistsError(None, None, "Another profiler is running.")
+            raise errors.AlreadyExistsError(None, None,
+                                            "Another profiler is running.")
         _profiler = _pywrap_profiler.ProfilerSession()
         try:
             # support for namedtuple in pybind11 is missing, we change it to
@@ -104,9 +103,9 @@ def start(logdir, options=None):
             logging.warning(
                 "Another profiler session is running which is probably "
                 "created by profiler server. Please avoid using profiler "
-                "server and profiler APIs at the same time."
-            )
-            raise errors.AlreadyExistsError(None, None, "Another profiler is running.")
+                "server and profiler APIs at the same time.")
+            raise errors.AlreadyExistsError(None, None,
+                                            "Another profiler is running.")
         except Exception:
             _profiler = None
             raise
@@ -128,8 +127,8 @@ def stop(save=True):
     with _profiler_lock:
         if _profiler is None:
             raise errors.UnavailableError(
-                None, None, "Cannot export profiling results. No profiler is running."
-            )
+                None, None,
+                "Cannot export profiling results. No profiler is running.")
         if save:
             try:
                 _profiler.export_to_tb()

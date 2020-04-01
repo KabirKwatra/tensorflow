@@ -70,22 +70,26 @@ class ProfilerTest(test_util.TensorFlowTestCase):
         profile_dir = os.path.join(logdir, "plugins", "profile")
         run = gfile.ListDirectory(profile_dir)[0]
         hostname = socket.gethostname()
-        overview_page = os.path.join(profile_dir, run, hostname + ".overview_page.pb")
+        overview_page = os.path.join(profile_dir, run,
+                                     hostname + ".overview_page.pb")
         self.assertTrue(gfile.Exists(overview_page))
-        input_pipeline = os.path.join(profile_dir, run, hostname + ".input_pipeline.pb")
+        input_pipeline = os.path.join(profile_dir, run,
+                                      hostname + ".input_pipeline.pb")
         self.assertTrue(gfile.Exists(input_pipeline))
-        tensorflow_stats = os.path.join(
-            profile_dir, run, hostname + ".tensorflow_stats.pb"
-        )
+        tensorflow_stats = os.path.join(profile_dir, run,
+                                        hostname + ".tensorflow_stats.pb")
         self.assertTrue(gfile.Exists(tensorflow_stats))
-        kernel_stats = os.path.join(profile_dir, run, hostname + ".kernel_stats.pb")
+        kernel_stats = os.path.join(profile_dir, run,
+                                    hostname + ".kernel_stats.pb")
         self.assertTrue(gfile.Exists(kernel_stats))
-        trace_file = os.path.join(profile_dir, run, hostname + ".trace.json.gz")
+        trace_file = os.path.join(profile_dir, run,
+                                  hostname + ".trace.json.gz")
         self.assertTrue(gfile.Exists(trace_file))
 
     def test_profile_with_options(self):
         logdir = self.get_temp_dir()
-        options = profiler.ProfilerOptions(host_tracer_level=3, python_tracer_level=1)
+        options = profiler.ProfilerOptions(host_tracer_level=3,
+                                           python_tracer_level=1)
         profiler.start(logdir, options)
         with traceme.TraceMe("three_times_five"):
             three = constant_op.constant(3)
@@ -99,7 +103,8 @@ class ProfilerTest(test_util.TensorFlowTestCase):
 
     def test_context_manager_with_options(self):
         logdir = self.get_temp_dir()
-        options = profiler.ProfilerOptions(host_tracer_level=3, python_tracer_level=1)
+        options = profiler.ProfilerOptions(host_tracer_level=3,
+                                           python_tracer_level=1)
         with profiler.Profile(logdir, options):
             with traceme.TraceMe("three_times_five"):
                 three = constant_op.constant(3)
