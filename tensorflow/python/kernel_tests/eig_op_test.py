@@ -77,20 +77,18 @@ class EigTest(test.TestCase):
         matrix = np.genfromtxt(
             test.test_src_dir_path(
                 "python/kernel_tests/testdata/"
-                "self_adjoint_eig_fail_if_denorms_flushed.txt"
-            )
-        ).astype(np.float32)
+                "self_adjoint_eig_fail_if_denorms_flushed.txt")).astype(
+                    np.float32)
         self.assertEqual(matrix.shape, (32, 32))
         matrix_tensor = constant_op.constant(matrix)
         with self.session(use_gpu=True) as sess:
             (e, v) = self.evaluate(linalg_ops.self_adjoint_eig(matrix_tensor))
             self.assertEqual(e.size, 32)
+            self.assertAllClose(np.matmul(v, v.transpose()),
+                                np.eye(32, dtype=np.float32),
+                                atol=2e-3)
             self.assertAllClose(
-                np.matmul(v, v.transpose()), np.eye(32, dtype=np.float32), atol=2e-3
-            )
-            self.assertAllClose(
-                matrix, np.matmul(np.matmul(v, np.diag(e)), v.transpose())
-            )
+                matrix, np.matmul(np.matmul(v, np.diag(e)), v.transpose()))
 
 
 def SortEigenValues(e):
@@ -149,15 +147,11 @@ def _GetEigTest(dtype_, shape_, compute_v_):
         batch_shape = shape_[:-2]
         np_dtype = dtype_.as_numpy_dtype
         # most of matrices are diagonalizable # TODO
-        a = (
-            np.random.uniform(low=-1.0, high=1.0, size=n * n)
-            .reshape([n, n])
-            .astype(np_dtype)
-        )
+        a = (np.random.uniform(low=-1.0, high=1.0,
+                               size=n * n).reshape([n, n]).astype(np_dtype))
         if dtype_.is_complex:
-            a += 1j * np.random.uniform(low=-1.0, high=1.0, size=n * n).reshape(
-                [n, n]
-            ).astype(np_dtype)
+            a += 1j * np.random.uniform(low=-1.0, high=1.0, size=n *
+                                        n).reshape([n, n]).astype(np_dtype)
         a = np.tile(a, batch_shape + (1, 1))
         if dtype_ in (dtypes_lib.float32, dtypes_lib.complex64):
             atol = 1e-4
@@ -176,9 +170,9 @@ def _GetEigTest(dtype_, shape_, compute_v_):
                 self.assertAllClose(self.evaluate(a_ev), a, atol=atol)
 
                 # Compare to numpy.linalg.eig.
-                CompareEigenDecompositions(
-                    self, np_e, np_v, self.evaluate(tf_e), self.evaluate(tf_v), atol
-                )
+                CompareEigenDecompositions(self, np_e, np_v,
+                                           self.evaluate(tf_e),
+                                           self.evaluate(tf_v), atol)
             else:
                 tf_e = linalg_ops.eigvals(constant_op.constant(a))
                 self.assertAllClose(
@@ -200,13 +194,15 @@ if __name__ == "__main__":
     for compute_v in True, False:
         for dtype in dtypes_to_test:
             for size in 1, 2, 5, 10:
-                for batch_dims in [(), (3,)] + [(3, 2)] * (max(size, size) < 10):
+                for batch_dims in [(),
+                                   (3, )] + [(3, 2)] * (max(size, size) < 10):
                     shape = batch_dims + (size, size)
                     name = "%s_%s_%s" % (
                         dtype.name,
                         "_".join(map(str, shape)),
                         compute_v,
                     )
-                    _AddTest(EigTest, "Eig", name, _GetEigTest(dtype, shape, compute_v))
+                    _AddTest(EigTest, "Eig", name,
+                             _GetEigTest(dtype, shape, compute_v))
                     # No gradient yet
     test.main()

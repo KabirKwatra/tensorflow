@@ -48,11 +48,11 @@ class LBetaTest(test.TestCase):
         x_one_half = [2, 1.0]
         with self.session(use_gpu=True):
             self.assertAllClose(
-                1, self.evaluate(math_ops.exp(special_math_ops.lbeta(x_one)))
-            )
+                1, self.evaluate(math_ops.exp(special_math_ops.lbeta(x_one))))
             self.assertAllClose(
-                0.5, self.evaluate(math_ops.exp(special_math_ops.lbeta(x_one_half)))
-            )
+                0.5,
+                self.evaluate(math_ops.exp(
+                    special_math_ops.lbeta(x_one_half))))
             self.assertEqual([], special_math_ops.lbeta(x_one).get_shape())
 
     @test_util.run_deprecated_v1
@@ -78,7 +78,8 @@ class LBetaTest(test.TestCase):
         with self.session(use_gpu=True):
             x_ph = array_ops.placeholder(dtypes.float32, [3, 2, 3, None])
             beta_ph = math_ops.exp(special_math_ops.lbeta(x_ph))
-            self.assertAllClose(expected_beta_x, beta_ph.eval(feed_dict={x_ph: x_}))
+            self.assertAllClose(expected_beta_x,
+                                beta_ph.eval(feed_dict={x_ph: x_}))
 
     @test_util.run_in_graph_and_eager_modes
     def test_two_dimensional_arg(self):
@@ -87,9 +88,11 @@ class LBetaTest(test.TestCase):
         with self.session(use_gpu=True):
             self.assertAllClose(
                 [0.5, 0.5],
-                self.evaluate(math_ops.exp(special_math_ops.lbeta(x_one_half))),
+                self.evaluate(math_ops.exp(
+                    special_math_ops.lbeta(x_one_half))),
             )
-            self.assertEqual((2,), special_math_ops.lbeta(x_one_half).get_shape())
+            self.assertEqual((2, ),
+                             special_math_ops.lbeta(x_one_half).get_shape())
 
     @test_util.run_deprecated_v1
     def test_two_dimensional_arg_dynamic(self):
@@ -98,7 +101,8 @@ class LBetaTest(test.TestCase):
         with self.session(use_gpu=True):
             ph = array_ops.placeholder(dtypes.float32)
             beta_ph = math_ops.exp(special_math_ops.lbeta(ph))
-            self.assertAllClose([0.5, 0.5], beta_ph.eval(feed_dict={ph: x_one_half}))
+            self.assertAllClose([0.5, 0.5],
+                                beta_ph.eval(feed_dict={ph: x_one_half}))
 
     @test_util.run_in_graph_and_eager_modes
     def test_two_dimensional_proper_shape(self):
@@ -107,11 +111,13 @@ class LBetaTest(test.TestCase):
         with self.session(use_gpu=True):
             self.assertAllClose(
                 [0.5, 0.5],
-                self.evaluate(math_ops.exp(special_math_ops.lbeta(x_one_half))),
+                self.evaluate(math_ops.exp(
+                    special_math_ops.lbeta(x_one_half))),
             )
             self.assertEqual(
-                (2,), self.evaluate(array_ops.shape(special_math_ops.lbeta(x_one_half)))
-            )
+                (2, ),
+                self.evaluate(
+                    array_ops.shape(special_math_ops.lbeta(x_one_half))))
             self.assertEqual(
                 tensor_shape.TensorShape([2]),
                 special_math_ops.lbeta(x_one_half).get_shape(),
@@ -122,11 +128,10 @@ class LBetaTest(test.TestCase):
         with self.session(use_gpu=True):
             x = ops.convert_to_tensor(np.random.rand(3, 2, 2))
             self.assertAllEqual(
-                (3, 2), self.evaluate(array_ops.shape(special_math_ops.lbeta(x)))
-            )
-            self.assertEqual(
-                tensor_shape.TensorShape([3, 2]), special_math_ops.lbeta(x).get_shape()
-            )
+                (3, 2),
+                self.evaluate(array_ops.shape(special_math_ops.lbeta(x))))
+            self.assertEqual(tensor_shape.TensorShape([3, 2]),
+                             special_math_ops.lbeta(x).get_shape())
 
     @test_util.run_in_graph_and_eager_modes
     def test_length_1_last_dimension_results_in_one(self):
@@ -135,12 +140,12 @@ class LBetaTest(test.TestCase):
         x_a = [5.5]
         x_b = [0.1]
         with self.session(use_gpu=True):
+            self.assertAllClose(1,
+                                self.evaluate(
+                                    math_ops.exp(special_math_ops.lbeta(x_a))),
+                                rtol=3e-6)
             self.assertAllClose(
-                1, self.evaluate(math_ops.exp(special_math_ops.lbeta(x_a))), rtol=3e-6
-            )
-            self.assertAllClose(
-                1, self.evaluate(math_ops.exp(special_math_ops.lbeta(x_b)))
-            )
+                1, self.evaluate(math_ops.exp(special_math_ops.lbeta(x_b))))
             self.assertEqual((), special_math_ops.lbeta(x_a).get_shape())
 
     @test_util.run_in_graph_and_eager_modes
@@ -150,7 +155,8 @@ class LBetaTest(test.TestCase):
             lbeta_x = special_math_ops.lbeta(x)
             expected_result = constant_op.constant(-np.inf, shape=())
 
-            self.assertAllEqual(self.evaluate(expected_result), self.evaluate(lbeta_x))
+            self.assertAllEqual(self.evaluate(expected_result),
+                                self.evaluate(lbeta_x))
             self.assertEqual(expected_result.get_shape(), lbeta_x.get_shape())
 
     @test_util.run_in_graph_and_eager_modes
@@ -160,12 +166,13 @@ class LBetaTest(test.TestCase):
             for batch_size in [0, 1, 2]:
                 x = constant_op.constant([], shape=[batch_size, event_size])
                 lbeta_x = special_math_ops.lbeta(x)
-                expected_result = constant_op.constant(-np.inf, shape=[batch_size])
+                expected_result = constant_op.constant(-np.inf,
+                                                       shape=[batch_size])
 
-                self.assertAllEqual(
-                    self.evaluate(expected_result), self.evaluate(lbeta_x)
-                )
-                self.assertEqual(expected_result.get_shape(), lbeta_x.get_shape())
+                self.assertAllEqual(self.evaluate(expected_result),
+                                    self.evaluate(lbeta_x))
+                self.assertEqual(expected_result.get_shape(),
+                                 lbeta_x.get_shape())
 
     @test_util.run_in_graph_and_eager_modes
     def test_empty_rank2_with_zero_batch_dim_returns_empty(self):
@@ -177,10 +184,10 @@ class LBetaTest(test.TestCase):
 
                 expected_result = constant_op.constant([], shape=[batch_size])
 
-                self.assertAllEqual(
-                    self.evaluate(expected_result), self.evaluate(lbeta_x)
-                )
-                self.assertEqual(expected_result.get_shape(), lbeta_x.get_shape())
+                self.assertAllEqual(self.evaluate(expected_result),
+                                    self.evaluate(lbeta_x))
+                self.assertEqual(expected_result.get_shape(),
+                                 lbeta_x.get_shape())
 
 
 @test_util.run_all_in_graph_and_eager_modes
@@ -188,7 +195,8 @@ class DawsnTest(test.TestCase, parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_dawsn_boundary(self):
         self.assertAllClose(0.0, special_math_ops.dawsn(0.0))
-        self.assertTrue(np.isnan(self.evaluate(special_math_ops.dawsn(np.nan))))
+        self.assertTrue(np.isnan(self.evaluate(special_math_ops.dawsn(
+            np.nan))))
 
     @parameterized.parameters(np.float32, np.float64)
     def test_dawsn_odd(self, dtype):
@@ -204,9 +212,8 @@ class DawsnTest(test.TestCase, parameterized.TestCase):
         try:
             from scipy import special  # pylint: disable=g-import-not-at-top
 
-            self.assertAllClose(
-                special.dawsn(x), self.evaluate(special_math_ops.dawsn(x))
-            )
+            self.assertAllClose(special.dawsn(x),
+                                self.evaluate(special_math_ops.dawsn(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
@@ -216,18 +223,17 @@ class DawsnTest(test.TestCase, parameterized.TestCase):
         try:
             from scipy import special  # pylint: disable=g-import-not-at-top
 
-            self.assertAllClose(
-                special.dawsn(x), self.evaluate(special_math_ops.dawsn(x))
-            )
+            self.assertAllClose(special.dawsn(x),
+                                self.evaluate(special_math_ops.dawsn(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
     def test_dawsn_gradient(self):
         inputs = [np.random.uniform(-50.0, 50.0, size=int(1e2))]
         analytical, numerical = gradient_checker_v2.compute_gradient(
-            special_math_ops.dawsn, inputs
-        )
-        self.assertLess(gradient_checker_v2.max_error(analytical, numerical), 1e-4)
+            special_math_ops.dawsn, inputs)
+        self.assertLess(gradient_checker_v2.max_error(analytical, numerical),
+                        1e-4)
 
 
 @test_util.run_all_in_graph_and_eager_modes
@@ -235,19 +241,15 @@ class ExpintTest(test.TestCase, parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_expint_boundary(self):
         self.assertAllClose(-np.inf, special_math_ops.expint(0.0))
-        self.assertTrue(np.isnan(self.evaluate(special_math_ops.expint(np.nan))))
+        self.assertTrue(
+            np.isnan(self.evaluate(special_math_ops.expint(np.nan))))
         # Check that the domain of definition is [0, inf)
         self.assertTrue(
             np.all(
                 np.isnan(
                     self.evaluate(
                         special_math_ops.expint(
-                            np.random.uniform(-20.0, -1.0, size=int(1e3))
-                        )
-                    )
-                )
-            )
-        )
+                            np.random.uniform(-20.0, -1.0, size=int(1e3)))))))
 
     @parameterized.parameters(np.float32, np.float64)
     def test_expint_small(self, dtype):
@@ -255,9 +257,8 @@ class ExpintTest(test.TestCase, parameterized.TestCase):
         try:
             from scipy import special  # pylint: disable=g-import-not-at-top
 
-            self.assertAllClose(
-                special.expi(x), self.evaluate(special_math_ops.expint(x))
-            )
+            self.assertAllClose(special.expi(x),
+                                self.evaluate(special_math_ops.expint(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
@@ -267,18 +268,17 @@ class ExpintTest(test.TestCase, parameterized.TestCase):
         try:
             from scipy import special  # pylint: disable=g-import-not-at-top
 
-            self.assertAllClose(
-                special.expi(x), self.evaluate(special_math_ops.expint(x))
-            )
+            self.assertAllClose(special.expi(x),
+                                self.evaluate(special_math_ops.expint(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
     def test_expint_gradient(self):
         inputs = [np.random.uniform(1.0, 10.0, size=int(1e2))]
         analytical, numerical = gradient_checker_v2.compute_gradient(
-            special_math_ops.expint, inputs
-        )
-        self.assertLess(gradient_checker_v2.max_error(analytical, numerical), 5e-3)
+            special_math_ops.expint, inputs)
+        self.assertLess(gradient_checker_v2.max_error(analytical, numerical),
+                        5e-3)
 
 
 @test_util.run_all_in_graph_and_eager_modes
@@ -286,7 +286,8 @@ class FresnelCosTest(test.TestCase, parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_fresnel_cos_boundary(self):
         self.assertAllClose(0.0, special_math_ops.fresnel_cos(0.0))
-        self.assertTrue(np.isnan(self.evaluate(special_math_ops.fresnel_cos(np.nan))))
+        self.assertTrue(
+            np.isnan(self.evaluate(special_math_ops.fresnel_cos(np.nan))))
 
     @parameterized.parameters(np.float32, np.float64)
     def test_fresnel_cos_odd(self, dtype):
@@ -303,8 +304,8 @@ class FresnelCosTest(test.TestCase, parameterized.TestCase):
             from scipy import special  # pylint: disable=g-import-not-at-top
 
             self.assertAllClose(
-                special.fresnel(x)[1], self.evaluate(special_math_ops.fresnel_cos(x))
-            )
+                special.fresnel(x)[1],
+                self.evaluate(special_math_ops.fresnel_cos(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
@@ -325,9 +326,9 @@ class FresnelCosTest(test.TestCase, parameterized.TestCase):
     def test_fresnel_cos_gradient(self):
         inputs = [np.random.uniform(1.0, 50.0, size=int(1e2))]
         analytical, numerical = gradient_checker_v2.compute_gradient(
-            special_math_ops.fresnel_cos, inputs
-        )
-        self.assertLess(gradient_checker_v2.max_error(analytical, numerical), 5e-3)
+            special_math_ops.fresnel_cos, inputs)
+        self.assertLess(gradient_checker_v2.max_error(analytical, numerical),
+                        5e-3)
 
 
 @test_util.run_all_in_graph_and_eager_modes
@@ -335,7 +336,8 @@ class FresnelSinTest(test.TestCase, parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_fresnel_sin_boundary(self):
         self.assertAllClose(0.0, special_math_ops.fresnel_sin(0.0))
-        self.assertTrue(np.isnan(self.evaluate(special_math_ops.fresnel_sin(np.nan))))
+        self.assertTrue(
+            np.isnan(self.evaluate(special_math_ops.fresnel_sin(np.nan))))
 
     @parameterized.parameters(np.float32, np.float64)
     def test_fresnel_sin_odd(self, dtype):
@@ -352,8 +354,8 @@ class FresnelSinTest(test.TestCase, parameterized.TestCase):
             from scipy import special  # pylint: disable=g-import-not-at-top
 
             self.assertAllClose(
-                special.fresnel(x)[0], self.evaluate(special_math_ops.fresnel_sin(x))
-            )
+                special.fresnel(x)[0],
+                self.evaluate(special_math_ops.fresnel_sin(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
@@ -374,30 +376,26 @@ class FresnelSinTest(test.TestCase, parameterized.TestCase):
     def test_fresnel_sin_gradient(self):
         inputs = [np.random.uniform(1.0, 50.0, size=int(1e2))]
         analytical, numerical = gradient_checker_v2.compute_gradient(
-            special_math_ops.fresnel_sin, inputs
-        )
-        self.assertLess(gradient_checker_v2.max_error(analytical, numerical), 5e-3)
+            special_math_ops.fresnel_sin, inputs)
+        self.assertLess(gradient_checker_v2.max_error(analytical, numerical),
+                        5e-3)
 
 
 @test_util.run_all_in_graph_and_eager_modes
 class SpenceTest(test.TestCase, parameterized.TestCase):
     @test_util.run_in_graph_and_eager_modes
     def test_spence_boundary(self):
-        self.assertAllClose(np.pi ** 2 / 6.0, special_math_ops.spence(0.0))
+        self.assertAllClose(np.pi**2 / 6.0, special_math_ops.spence(0.0))
         self.assertAllClose(0.0, special_math_ops.spence(1.0))
-        self.assertTrue(np.isnan(self.evaluate(special_math_ops.spence(np.nan))))
+        self.assertTrue(
+            np.isnan(self.evaluate(special_math_ops.spence(np.nan))))
         # Check that the domain of definition is [0, inf)
         self.assertTrue(
             np.all(
                 np.isnan(
                     self.evaluate(
                         special_math_ops.spence(
-                            np.random.uniform(-20.0, -1.0, size=int(1e3))
-                        )
-                    )
-                )
-            )
-        )
+                            np.random.uniform(-20.0, -1.0, size=int(1e3)))))))
 
     @parameterized.parameters(np.float32, np.float64)
     def test_spence_small(self, dtype):
@@ -405,9 +403,8 @@ class SpenceTest(test.TestCase, parameterized.TestCase):
         try:
             from scipy import special  # pylint: disable=g-import-not-at-top
 
-            self.assertAllClose(
-                special.spence(x), self.evaluate(special_math_ops.spence(x))
-            )
+            self.assertAllClose(special.spence(x),
+                                self.evaluate(special_math_ops.spence(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
@@ -417,23 +414,21 @@ class SpenceTest(test.TestCase, parameterized.TestCase):
         try:
             from scipy import special  # pylint: disable=g-import-not-at-top
 
-            self.assertAllClose(
-                special.spence(x), self.evaluate(special_math_ops.spence(x))
-            )
+            self.assertAllClose(special.spence(x),
+                                self.evaluate(special_math_ops.spence(x)))
         except ImportError as e:
             tf_logging.warn("Cannot test special functions: %s" % str(e))
 
     def test_spence_gradient(self):
         inputs = [np.random.uniform(1.0, 50.0, size=int(1e2))]
         analytical, numerical = gradient_checker_v2.compute_gradient(
-            special_math_ops.spence, inputs
-        )
-        self.assertLess(gradient_checker_v2.max_error(analytical, numerical), 1e-4)
+            special_math_ops.spence, inputs)
+        self.assertLess(gradient_checker_v2.max_error(analytical, numerical),
+                        1e-4)
 
     def test_spence_gradient_at_one(self):
         analytical, _ = gradient_checker_v2.compute_gradient(
-            special_math_ops.spence, [1.0]
-        )
+            special_math_ops.spence, [1.0])
         self.assertAllClose([[[-1.0]]], analytical)
 
 
@@ -486,7 +481,9 @@ class EinsumTest(test.TestCase):
             if dtype == np.complex64 or dtype == np.complex128:
                 arr += 1j * np.array(r.randn(*shape)).astype(dtype)
             inputs.append(arr)
-        input_tensors = [constant_op.constant(x, shape=x.shape) for x in inputs]
+        input_tensors = [
+            constant_op.constant(x, shape=x.shape) for x in inputs
+        ]
         a = np.einsum(s, *inputs)
         b = self.evaluate(special_math_ops.einsum(s, *input_tensors))
         self.assertAllClose(a, b, atol=1e-4, rtol=1e-4)
@@ -496,12 +493,15 @@ class EinsumTest(test.TestCase):
         a = array_ops.placeholder_with_default(r.randn(2, 3), shape=(2, 3))
         b = array_ops.placeholder_with_default(r.randn(3, 4), shape=(3, 4))
         with self.assertRaises(TypeError):
-            _ = special_math_ops.einsum(
-                "ij,jk->ik", a, b, name="name", invalid1="value1", invalid2="value2"
-            )
+            _ = special_math_ops.einsum("ij,jk->ik",
+                                        a,
+                                        b,
+                                        name="name",
+                                        invalid1="value1",
+                                        invalid2="value2")
 
     def test_unary(self):
-        self._check("a", (3,))
+        self._check("a", (3, ))
         self._check("aa", (3, 3))
         self._check("ab->", (3, 3))
         self._check("ab->ab", (3, 3))
@@ -547,9 +547,9 @@ class EinsumTest(test.TestCase):
         # once in both the inputs (batch or contraction index), or (b) appearing
         # exactly once in an input and in the output (free index).
         self._check(",->", (), ())
-        self._check("a,a->", (3,), (3,))
-        self._check("a,a->a", (3,), (3,))
-        self._check("ab,b->a", (3, 4), (4,))
+        self._check("a,a->", (3, ), (3, ))
+        self._check("a,a->a", (3, ), (3, ))
+        self._check("ab,b->a", (3, 4), (4, ))
         self._check("ab,ab->", (3, 4), (3, 4))
         self._check("ab,bc->ac", (3, 4), (4, 5))
         self._check("nij,jk->nik", (5, 2, 3), (3, 4))
@@ -557,17 +557,17 @@ class EinsumTest(test.TestCase):
         # Based on https://github.com/google/jax/issues/37#issuecomment-448572187
         self._check("sa,shb->shab", (2, 1), (2, 3, 4))
         # Infer the output subscripts.
-        self._check("ab,b", (3, 4), (4,))
-        self._check("cab,b", (1, 3, 4), (4,))
+        self._check("ab,b", (3, 4), (4, ))
+        self._check("cab,b", (1, 3, 4), (4, ))
 
     def test_reduced_indices(self):
-        self._check("ba,b->", (3, 2), (3,))
+        self._check("ba,b->", (3, 2), (3, ))
         self._check("ab,ab->", (3, 4), (3, 4))
 
     def test_repeated_indices(self):
         # Repeated indices.
-        self._check("ijj,k->ik", (2, 3, 3), (4,))
-        self._check("aba,a->b", (3, 4, 3), (3,))
+        self._check("ijj,k->ik", (2, 3, 3), (4, ))
+        self._check("aba,a->b", (3, 4, 3), (3, ))
         # From https://github.com/dask/dask/pull/3412#discussion_r182413444
         self._check("aab,bc->ac", (2, 2, 3), (3, 4))
         self._check("aab,bcc->ac", (2, 2, 3), (3, 4, 4))
@@ -578,7 +578,8 @@ class EinsumTest(test.TestCase):
         # Empty batch dimensions.
         self._check("...mk,...kn->...mn", (2, 3), (3, 4))
         # Tensor contraction with transpose.
-        self._check("...ija,aijb...->ba...ij", (1, 2, 2, 3, 1), (1, 2, 3, 4, 1, 2))
+        self._check("...ija,aijb...->ba...ij", (1, 2, 2, 3, 1),
+                    (1, 2, 3, 4, 1, 2))
         # Output subscripts may omit ellipsis when batch shape is empty.
         self._check("...mk,...kn->mn", (2, 3), (3, 4))
         self._check("...mk,kn->mn", (2, 3), (3, 4))
@@ -602,7 +603,7 @@ class EinsumTest(test.TestCase):
         self._check("i...jj,jk...k->i...", (3, 3, 1, 2, 2), (2, 4, 1, 5, 4))
         # Following 2 from https://stackoverflow.com/a/19203475/1611416
         self._check("...abc,...abcd->...d", (1, 1, 2, 3, 4), (5, 2, 3, 4, 6))
-        self._check("ab...,b->ab...", (2, 3, 1, 1, 5), (3,))
+        self._check("ab...,b->ab...", (2, 3, 1, 1, 5), (3, ))
 
     def test_dtypes(self):
         dtypes = [np.float64, np.float32, np.complex64, np.complex128]
@@ -615,11 +616,11 @@ class EinsumTest(test.TestCase):
 
     def test_multiple_inputs(self):
         self._check("ijk,ijl,ikl->i", (1, 2, 3), (1, 2, 4), (1, 3, 4))
-        self._check("i,ijk,j->k", (1,), (1, 2, 4), (2,))
+        self._check("i,ijk,j->k", (1, ), (1, 2, 4), (2, ))
         self._check("ij,ij,jk,kl->il", (1, 2), (1, 2), (2, 3), (3, 4))
         # Tests from dask.
-        self._check("a,b,c", (5,), (7,), (9,))
-        self._check("ab,ab,c->c", (5, 6), (5, 6), (2,))
+        self._check("a,b,c", (5, ), (7, ), (9, ))
+        self._check("ab,ab,c->c", (5, 6), (5, 6), (2, ))
 
     @test_util.disable_xla("b/131919749")
     def test_placeholder(self):
@@ -631,11 +632,12 @@ class EinsumTest(test.TestCase):
                 input_np = np.array(r.randn(*actual_shape))
                 inputs.append(input_np)
                 input_placeholders.append(
-                    array_ops.placeholder_with_default(input_np, placeholder_shape)
-                )
+                    array_ops.placeholder_with_default(input_np,
+                                                       placeholder_shape))
 
             a = np.einsum(equation, *inputs)
-            b = self.evaluate(special_math_ops.einsum(equation, *input_placeholders))
+            b = self.evaluate(
+                special_math_ops.einsum(equation, *input_placeholders))
             self.assertAllClose(a, b, atol=1e-4, rtol=1e-4)
 
         check(
@@ -643,9 +645,8 @@ class EinsumTest(test.TestCase):
             ((9, 2, 3, 5), (None, None, None, 5)),
             ((9, 3, 4, 7), (None, None, 4, None)),
         )
-        check(
-            "...ij,...->...i", ((4, 3, 1, 2), (None, 3, None, 2)), ((4, 3), (None, 3))
-        )
+        check("...ij,...->...i", ((4, 3, 1, 2), (None, 3, None, 2)),
+              ((4, 3), (None, 3)))
 
         # Ellipsis with unknown rank.
         check("bijl,bjkm->bik", ((9, 2, 3, 5), None), ((9, 3, 4, 7), None))
@@ -680,7 +681,8 @@ class EinsumTest(test.TestCase):
             inputs = equation.split("->")[0].replace(" ", "")
             input_shapes = []
             for input_str in inputs.split(","):
-                input_shapes.append(tuple([dimension_map[c] for c in input_str]))
+                input_shapes.append(
+                    tuple([dimension_map[c] for c in input_str]))
             self._check(equation, *input_shapes)
 
     def test_opt_einsum_cached(self):
@@ -692,8 +694,8 @@ class EinsumTest(test.TestCase):
         input_2 = ("ij,ij,jk,kl->il", (1, 2), (1, 2), (2, 3), (3, 4))
 
         with test.mock.patch.object(
-            opt_einsum, "contract_path", wraps=opt_einsum.contract_path
-        ) as mock_contract_path:
+                opt_einsum, "contract_path",
+                wraps=opt_einsum.contract_path) as mock_contract_path:
 
             # explicitly clear the lru_cache contents for the method
             #   special_math_ops.get_opt_einsum_contract_path
@@ -710,15 +712,18 @@ class EinsumTest(test.TestCase):
             # The same input results in no extra call if we're caching the
             # opt_einsum.contract_path call. We only cache in Python3.
             self._check(*input_1)
-            self.assertEqual(mock_contract_path.call_count, 2 if six.PY2 else 1)
+            self.assertEqual(mock_contract_path.call_count,
+                             2 if six.PY2 else 1)
             # New input results in another call to opt_einsum.
             self._check(*input_2)
-            self.assertEqual(mock_contract_path.call_count, 3 if six.PY2 else 2)
+            self.assertEqual(mock_contract_path.call_count,
+                             3 if six.PY2 else 2)
             # No more extra calls as the inputs should be cached.
             self._check(*input_1)
             self._check(*input_2)
             self._check(*input_1)
-            self.assertEqual(mock_contract_path.call_count, 6 if six.PY2 else 2)
+            self.assertEqual(mock_contract_path.call_count,
+                             6 if six.PY2 else 2)
 
     @test_util.disable_xla("b/131919749")
     def test_long_cases_with_repeated_labels(self):
@@ -732,7 +737,8 @@ class EinsumTest(test.TestCase):
             inputs = equation.split("->")[0].replace(" ", "")
             input_shapes = []
             for input_str in inputs.split(","):
-                input_shapes.append(tuple([dimension_map[c] for c in input_str]))
+                input_shapes.append(
+                    tuple([dimension_map[c] for c in input_str]))
             self._check(equation, *input_shapes)
 
     @test_util.disable_xla("b/131919749")
@@ -768,10 +774,12 @@ class EinsumTest(test.TestCase):
                 _ = special_math_ops.einsum(*args)
 
             placeholders = [
-                array_ops.placeholder_with_default(x, shape=None) for x in args[1:]
+                array_ops.placeholder_with_default(x, shape=None)
+                for x in args[1:]
             ]
             with self.assertRaises((ValueError, errors.InvalidArgumentError)):
-                _ = self.evaluate(special_math_ops.einsum(args[0], *placeholders))
+                _ = self.evaluate(
+                    special_math_ops.einsum(args[0], *placeholders))
 
     @test_util.disable_xla("b/131919749")
     def test_empty(self):
@@ -781,9 +789,15 @@ class EinsumTest(test.TestCase):
             # are needed for EinsumOp gradients.
             r = np.random.RandomState(0)
             inputs = [np.array(r.randn(*shape)) for shape in input_shapes]
-            input_tensors = [constant_op.constant(x, shape=x.shape) for x in inputs]
-            output = self.evaluate(special_math_ops.einsum(equation, *input_tensors))
-            self.assertAllClose(output, np.zeros(output_shape), atol=1e-4, rtol=1e-4)
+            input_tensors = [
+                constant_op.constant(x, shape=x.shape) for x in inputs
+            ]
+            output = self.evaluate(
+                special_math_ops.einsum(equation, *input_tensors))
+            self.assertAllClose(output,
+                                np.zeros(output_shape),
+                                atol=1e-4,
+                                rtol=1e-4)
 
         # Contractions along zero-sized dimensions.
         check("ab,bc->ac", [(0, 10), (10, 10)], (0, 10))
@@ -792,7 +806,7 @@ class EinsumTest(test.TestCase):
 
         # Generalized traces with zero-sized dimensions.
         check("aab,bc->ac", [(0, 0, 10), (10, 10)], (0, 10))
-        check("aaab,bc->c", [(0, 0, 0, 3), (3, 4)], (4,))
+        check("aaab,bc->c", [(0, 0, 0, 3), (3, 4)], (4, ))
 
 
 @test_util.run_all_in_graph_and_eager_modes
@@ -801,11 +815,13 @@ class EinsumGradTest(test.TestCase):
         with self.cached_session():
             r = np.random.RandomState(0)
             inputs = [np.array(r.randn(*shape)) for shape in input_shapes]
-            input_tensors = [constant_op.constant(x, shape=x.shape) for x in inputs]
+            input_tensors = [
+                constant_op.constant(x, shape=x.shape) for x in inputs
+            ]
             analytical, numerical = gradient_checker_v2.compute_gradient(
-                lambda *xs: special_math_ops.einsum(s, *xs), input_tensors
-            )
-            self.assertLess(gradient_checker_v2.max_error(analytical, numerical), 1e-4)
+                lambda *xs: special_math_ops.einsum(s, *xs), input_tensors)
+            self.assertLess(
+                gradient_checker_v2.max_error(analytical, numerical), 1e-4)
 
     @test_util.disable_xla("b/131919749")
     def test_unary(self):
@@ -837,9 +853,9 @@ class EinsumGradTest(test.TestCase):
         # exactly once in both the inputs (batch or contraction index), or
         # (b) appearing exactly once in an input and in the output (free index).
         self._check_gradient(",->", (), ())
-        self._check_gradient("a,a->", (3,), (3,))
-        self._check_gradient("a,a->a", (3,), (3,))
-        self._check_gradient("ab,b->a", (3, 4), (4,))
+        self._check_gradient("a,a->", (3, ), (3, ))
+        self._check_gradient("a,a->a", (3, ), (3, ))
+        self._check_gradient("ab,b->a", (3, 4), (4, ))
         self._check_gradient("ab,ab->", (3, 4), (3, 4))
         self._check_gradient("ab,bc->ac", (3, 4), (4, 5))
         self._check_gradient("nij,jk->nik", (5, 2, 3), (3, 4))
@@ -853,16 +869,16 @@ class EinsumGradTest(test.TestCase):
 
     @test_util.disable_xla("b/131919749")
     def test_reduced_indices(self):
-        self._check_gradient("ba,b->", (3, 2), (3,))
+        self._check_gradient("ba,b->", (3, 2), (3, ))
         self._check_gradient("ab,ab->", (3, 4), (3, 4))
         self._check_gradient("abce,badf->abcd", (1, 2, 3, 4), (2, 1, 4, 3))
 
     @test_util.disable_xla("b/131919749")
     def test_repeated_indices(self):
         # Repeated indices.
-        self._check_gradient("aba,a->b", (3, 4, 3), (3,))
-        self._check_gradient("ijj,k->ik", (2, 3, 3), (4,))
-        self._check_gradient("ill,k->ik", (2, 3, 3), (4,))
+        self._check_gradient("aba,a->b", (3, 4, 3), (3, ))
+        self._check_gradient("ijj,k->ik", (2, 3, 3), (4, ))
+        self._check_gradient("ill,k->ik", (2, 3, 3), (4, ))
         # From https://github.com/dask/dask/pull/3412#discussion_r182413444
         self._check_gradient("aab,bc->ac", (1, 1, 3), (3, 4))
         self._check_gradient("aab,bcc->ac", (2, 2, 3), (3, 4, 4))
@@ -881,10 +897,9 @@ class EinsumGradTest(test.TestCase):
         self._check_gradient("ij,jk...k->i...", (3, 2), (2, 4, 1, 4))
         self._check_gradient("aab,b...c->a...c", (1, 1, 3), (3, 1, 1, 4))
         # Tests from dask.
-        self._check_gradient(
-            "...i,...j,...k->...ijk", (1, 4, 1, 2), (5, 1, 1, 3), (1, 1, 1, 1, 9)
-        )
-        self._check_gradient("...i,...j,...k->...ijk", (1,), (1,), (1,))
+        self._check_gradient("...i,...j,...k->...ijk", (1, 4, 1, 2),
+                             (5, 1, 1, 3), (1, 1, 1, 1, 9))
+        self._check_gradient("...i,...j,...k->...ijk", (1, ), (1, ), (1, ))
 
     def test_long_cases(self):
         cases = [
@@ -892,12 +907,14 @@ class EinsumGradTest(test.TestCase):
             # Tests from dask.
             "ea,fb,abcd,gc,hd->efgh",
         ]
-        dimension_map = dict((c, ((ord(c) - ord("a")) % 3) + 1) for c in "abcdefghij")
+        dimension_map = dict(
+            (c, ((ord(c) - ord("a")) % 3) + 1) for c in "abcdefghij")
         for equation in cases:
             inputs = equation.split("->")[0].replace(" ", "")
             input_shapes = []
             for input_str in inputs.split(","):
-                input_shapes.append(tuple([dimension_map[c] for c in input_str]))
+                input_shapes.append(
+                    tuple([dimension_map[c] for c in input_str]))
             self._check_gradient(equation, *input_shapes)
 
     @test_util.disable_xla("b/131919749")
@@ -907,12 +924,14 @@ class EinsumGradTest(test.TestCase):
             "fdf,cdd,ccd,afe->ae",
             "fff,fae,bef,def->abd",
         ]
-        dimension_map = dict((c, ((ord(c) - ord("a")) % 3) + 1) for c in "abcdefghij")
+        dimension_map = dict(
+            (c, ((ord(c) - ord("a")) % 3) + 1) for c in "abcdefghij")
         for equation in cases:
             inputs = equation.split("->")[0].replace(" ", "")
             input_shapes = []
             for input_str in inputs.split(","):
-                input_shapes.append(tuple([dimension_map[c] for c in input_str]))
+                input_shapes.append(
+                    tuple([dimension_map[c] for c in input_str]))
             self._check_gradient(equation, *input_shapes)
 
 
@@ -948,16 +967,16 @@ class EinsumBenchmark(test.Benchmark):
     def benchmark_einsum(self):
         for equation, dim in self.cases:
             with ops.Graph().as_default(), session.Session(
-                config=benchmark.benchmark_config()
-            ) as sess, ops.device("/cpu:0"):
+                    config=benchmark.benchmark_config()) as sess, ops.device(
+                        "/cpu:0"):
                 r = np.random.RandomState(0)
                 input_subscripts = equation.split("->")[0].split(",")
                 input_vars = []
                 for subscript in input_subscripts:
-                    input_shape = (dim,) * len(subscript)
+                    input_shape = (dim, ) * len(subscript)
                     input_vars.append(
-                        variables.Variable(np.array(r.randn(*input_shape), np.float32))
-                    )
+                        variables.Variable(
+                            np.array(r.randn(*input_shape), np.float32)))
                 variables.global_variables_initializer().run()
 
                 if len(input_vars) <= 2:
@@ -971,13 +990,12 @@ class EinsumBenchmark(test.Benchmark):
                     for optimize in ["greedy", "auto"]:
                         self.run_op_benchmark(
                             sess,
-                            special_math_ops.einsum(
-                                equation, *input_vars, optimize=optimize
-                            ),
+                            special_math_ops.einsum(equation,
+                                                    *input_vars,
+                                                    optimize=optimize),
                             min_iters=50,
                             name="einsum_cpu_({})_{}_{}".format(
-                                equation, optimize, dim
-                            ),
+                                equation, optimize, dim),
                         )
 
 

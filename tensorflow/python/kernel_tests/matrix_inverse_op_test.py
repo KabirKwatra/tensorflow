@@ -59,8 +59,8 @@ class InverseOpTest(test.TestCase):
 
     def _makeBatch(self, matrix1, matrix2):
         matrix_batch = np.concatenate(
-            [np.expand_dims(matrix1, 0), np.expand_dims(matrix2, 0)]
-        )
+            [np.expand_dims(matrix1, 0),
+             np.expand_dims(matrix2, 0)])
         matrix_batch = np.tile(matrix_batch, [2, 3, 1, 1])
         return matrix_batch
 
@@ -103,7 +103,8 @@ class InverseOpTest(test.TestCase):
         # When the inverse of a non-square matrix is attempted we should return
         # an error
         with self.assertRaises(ValueError):
-            linalg_ops.matrix_inverse(np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0]]))
+            linalg_ops.matrix_inverse(
+                np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0]]))
 
     @test_util.deprecated_graph_mode_only
     def testWrongDimensions(self):
@@ -117,9 +118,9 @@ class InverseOpTest(test.TestCase):
         with self.cached_session():
             with self.assertRaisesOpError("Input is not invertible."):
                 # All rows of the matrix below add to zero.
-                tensor3 = constant_op.constant(
-                    [[1.0, 0.0, -1.0], [-1.0, 1.0, 0.0], [0.0, -1.0, 1.0]]
-                )
+                tensor3 = constant_op.constant([[1.0, 0.0, -1.0],
+                                                [-1.0, 1.0, 0.0],
+                                                [0.0, -1.0, 1.0]])
                 linalg_ops.matrix_inverse(tensor3).eval()
 
     def testEmpty(self):
@@ -129,14 +130,12 @@ class InverseOpTest(test.TestCase):
     def testRandomSmallAndLarge(self):
         np.random.seed(42)
         for dtype in np.float32, np.float64, np.complex64, np.complex128:
-            for batch_dims in [(), (1,), (3,), (2, 2)]:
+            for batch_dims in [(), (1, ), (3, ), (2, 2)]:
                 for size in 8, 31, 32:
                     shape = batch_dims + (size, size)
-                    matrix = (
-                        np.random.uniform(low=-1.0, high=1.0, size=np.prod(shape))
-                        .reshape(shape)
-                        .astype(dtype)
-                    )
+                    matrix = (np.random.uniform(
+                        low=-1.0, high=1.0,
+                        size=np.prod(shape)).reshape(shape).astype(dtype))
                     self._verifyInverseReal(matrix)
 
     @test_util.deprecated_graph_mode_only
@@ -176,16 +175,15 @@ class MatrixInverseBenchmark(test.Benchmark):
         assert shape[0] == shape[1]
         n = shape[0]
         matrix = np.ones(shape).astype(np.float32) / (2.0 * n) + np.diag(
-            np.ones(n).astype(np.float32)
-        )
+            np.ones(n).astype(np.float32))
         return variables.Variable(np.tile(matrix, batch_shape + (1, 1)))
 
     def benchmarkMatrixInverseOp(self):
         for adjoint in False, True:
             for shape in self.shapes:
                 with ops.Graph().as_default(), session.Session(
-                    config=benchmark.benchmark_config()
-                ) as sess, ops.device("/cpu:0"):
+                        config=benchmark.benchmark_config(
+                        )) as sess, ops.device("/cpu:0"):
                     matrix = self._GenerateMatrix(shape)
                     inv = linalg_ops.matrix_inverse(matrix, adjoint=adjoint)
                     variables.global_variables_initializer().run()
@@ -193,25 +191,24 @@ class MatrixInverseBenchmark(test.Benchmark):
                         sess,
                         control_flow_ops.group(inv),
                         min_iters=25,
-                        name="matrix_inverse_cpu_{shape}_adjoint_{adjoint}".format(
-                            shape=shape, adjoint=adjoint
-                        ),
+                        name="matrix_inverse_cpu_{shape}_adjoint_{adjoint}".
+                        format(shape=shape, adjoint=adjoint),
                     )
 
                 if test.is_gpu_available(True):
                     with ops.Graph().as_default(), session.Session(
-                        config=benchmark.benchmark_config()
-                    ) as sess, ops.device("/gpu:0"):
+                            config=benchmark.benchmark_config(
+                            )) as sess, ops.device("/gpu:0"):
                         matrix = self._GenerateMatrix(shape)
-                        inv = linalg_ops.matrix_inverse(matrix, adjoint=adjoint)
+                        inv = linalg_ops.matrix_inverse(matrix,
+                                                        adjoint=adjoint)
                         variables.global_variables_initializer().run()
                         self.run_op_benchmark(
                             sess,
                             control_flow_ops.group(inv),
                             min_iters=25,
-                            name="matrix_inverse_gpu_{shape}_adjoint_{adjoint}".format(
-                                shape=shape, adjoint=adjoint
-                            ),
+                            name="matrix_inverse_gpu_{shape}_adjoint_{adjoint}"
+                            .format(shape=shape, adjoint=adjoint),
                         )
 
 

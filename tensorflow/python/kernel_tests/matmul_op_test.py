@@ -43,7 +43,7 @@ class MatVecTest(test_lib.TestCase):
         a = np.array([[1, 2], [3, 4]])
         b = np.array([5, 6])
         c = math_ops.matvec(a, b)
-        self.assertAllEqual((2,), c.shape)
+        self.assertAllEqual((2, ), c.shape)
         self.assertAllEqual([5 + 2 * 6, 3 * 5 + 4 * 6], c)
 
 
@@ -72,9 +72,12 @@ def _GetMatMulTest(a_np_, b_np_, use_static_shape_, **kwargs_):
         np_val = np.matrix(a_np_) * np.matrix(b_np_)
 
         use_gpu = True
-        if a_np_.dtype is np.float16 and (not test_util.GpuSupportsHalfMatMulAndConv()):
+        if a_np_.dtype is np.float16 and (
+                not test_util.GpuSupportsHalfMatMulAndConv()):
             use_gpu = False
-            print("Built without fp16 matmul support for Cuda, running test on CPU.")
+            print(
+                "Built without fp16 matmul support for Cuda, running test on CPU."
+            )
 
         # Transpose and possibly conjugate a_np_ and b_np_ according to the
         # attributes such that tf.matmul(effective_a_np, effective_b_np, **kwargs)
@@ -92,7 +95,11 @@ def _GetMatMulTest(a_np_, b_np_, use_static_shape_, **kwargs_):
                 a = array_ops.placeholder(a_np_.dtype)
                 b = array_ops.placeholder(b_np_.dtype)
                 res = math_ops.matmul(a, b, **kwargs_)
-                tf_val = sess.run(res, feed_dict={a: effective_a_np, b: effective_b_np})
+                tf_val = sess.run(res,
+                                  feed_dict={
+                                      a: effective_a_np,
+                                      b: effective_b_np
+                                  })
 
         self.assertAllCloseAccordingToType(
             tf_val,
@@ -112,7 +119,8 @@ class MatMulGradientTest(test_lib.TestCase):
 
 def _GetMatMulGradientTest(a_np_, b_np_, use_static_shape_, **kwargs_):
     def Test(self):
-        if not use_static_shape_ or a_np_.dtype in (np.int32, np.int64, np.float16):
+        if not use_static_shape_ or a_np_.dtype in (np.int32, np.int64,
+                                                    np.float16):
             self.skipTest("Skipping infeasible gradient test.")
 
         # Transpose and possibly conjugate a_np_ and b_np_ according to the
@@ -123,7 +131,7 @@ def _GetMatMulGradientTest(a_np_, b_np_, use_static_shape_, **kwargs_):
         effective_b_np = _GetTransposedMatrices(b_np_, "b", kwargs_)
 
         epsilon = np.finfo(a_np_.dtype).eps
-        delta = epsilon ** (1.0 / 3.0)
+        delta = epsilon**(1.0 / 3.0)
         tol = 20 * delta
         with self.session():
             theoretical, numerical = gradient_checker_v2.compute_gradient(
@@ -187,17 +195,16 @@ except AttributeError:
         if r is NotImplemented:
             raise TypeError(
                 "unsupported operand type(s) for @: '{}' and '{}'".format(
-                    type(x).__name__, type(y).__name__
-                )
-            )
+                    type(x).__name__,
+                    type(y).__name__))
         return r
 
 
 class MatMulInfixOperatorTest(test_lib.TestCase):
     def testMismatchedShape(self):
         with self.assertRaisesRegexp(
-            Exception, "(Shape must be rank 2 but is rank 1|is not a matrix)"
-        ):
+                Exception,
+                "(Shape must be rank 2 but is rank 1|is not a matrix)"):
             infix_matmul(
                 ops.convert_to_tensor([10.0, 20.0, 30.0]),
                 ops.convert_to_tensor([[40.0, 50.0], [60.0, 70.0]]),
@@ -205,8 +212,8 @@ class MatMulInfixOperatorTest(test_lib.TestCase):
 
     def testMismatchedDimensions(self):
         with self.assertRaisesRegexp(
-            Exception, "(Dimensions must be equal|Matrix size-incompatible)"
-        ):
+                Exception,
+                "(Dimensions must be equal|Matrix size-incompatible)"):
             infix_matmul(
                 ops.convert_to_tensor([[10.0, 20.0, 30.0]]),
                 ops.convert_to_tensor([[40.0, 50.0], [60.0, 70.0]]),
@@ -242,7 +249,8 @@ if __name__ == "__main__":
     # TF2 does not support placeholders under eager so we skip it
     for use_static_shape in set([True, tf2.enabled()]):
         for dtype in dtypes_to_test:
-            if not use_static_shape and (dtype == np.int32 or dtype == np.int64):
+            if not use_static_shape and (dtype == np.int32
+                                         or dtype == np.int64):
                 # TODO(rmlarsen): Re-enable this test when we have fixed the underlying
                 # bug in Windows (b/35935459).
                 continue
@@ -251,24 +259,16 @@ if __name__ == "__main__":
                     for k in sizes:
                         # Construct compatible random matrices a_np of size [m, k] and b_np
                         # of size [k, n].
-                        a_np = (
-                            np.random.normal(-5, 5, m * k).astype(dtype).reshape([m, k])
-                        )
+                        a_np = (np.random.normal(
+                            -5, 5, m * k).astype(dtype).reshape([m, k]))
                         if dtype in (np.complex64, np.complex128):
-                            a_np.imag = (
-                                np.random.normal(-5, 5, m * k)
-                                .astype(dtype)
-                                .reshape([m, k])
-                            )
-                        b_np = (
-                            np.random.normal(-5, 5, k * n).astype(dtype).reshape([k, n])
-                        )
+                            a_np.imag = (np.random.normal(
+                                -5, 5, m * k).astype(dtype).reshape([m, k]))
+                        b_np = (np.random.normal(
+                            -5, 5, k * n).astype(dtype).reshape([k, n]))
                         if dtype in (np.complex64, np.complex128):
-                            b_np.imag = (
-                                np.random.normal(-5, 5, k * n)
-                                .astype(dtype)
-                                .reshape([k, n])
-                            )
+                            b_np.imag = (np.random.normal(
+                                -5, 5, k * n).astype(dtype).reshape([k, n]))
                         for adjoint_a, transpose_a in trans_options:
                             for adjoint_b, transpose_b in trans_options:
                                 name = "%s_%s_%s_%s_%s_%s_%s_%s_%s" % (

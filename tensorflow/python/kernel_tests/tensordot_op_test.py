@@ -50,16 +50,18 @@ class TensordotTest(test_lib.TestCase):
             math_ops.tensordot(a, b, (a_axes, b_axes))
         # Invalid dynamic shapes.
         with self.cached_session() as sess:
-            with self.assertRaisesRegexp(
-                errors_impl.InvalidArgumentError, "Matrix size-incompatible"
-            ):
+            with self.assertRaisesRegexp(errors_impl.InvalidArgumentError,
+                                         "Matrix size-incompatible"):
                 a_ph = array_ops.placeholder(dtypes.float32)
                 b_ph = array_ops.placeholder(dtypes.float32)
                 axes_ph = array_ops.placeholder(dtypes.int32)
                 output = math_ops.tensordot(a_ph, b_ph, axes_ph)
-                _ = sess.run(
-                    [output], feed_dict={a_ph: a, b_ph: b, axes_ph: (a_axes, b_axes)}
-                )
+                _ = sess.run([output],
+                             feed_dict={
+                                 a_ph: a,
+                                 b_ph: b,
+                                 axes_ph: (a_axes, b_axes)
+                             })
 
     @test_util.run_v1_only("b/120545219")
     def test_invalid_axes(self):
@@ -82,9 +84,12 @@ class TensordotTest(test_lib.TestCase):
         for axes_value in 1, [1], [0, 1], [[1]], [[0, 1]], [[0], [7]]:
             with self.cached_session() as sess:
                 with self.assertRaises(errors_impl.InvalidArgumentError):
-                    _ = sess.run(
-                        [output], feed_dict={a_ph: a, b_ph: b, axes_ph: axes_value}
-                    )
+                    _ = sess.run([output],
+                                 feed_dict={
+                                     a_ph: a,
+                                     b_ph: b,
+                                     axes_ph: axes_value
+                                 })
 
     # Test case for 11950
     def test_valid_axis(self):
@@ -95,7 +100,8 @@ class TensordotTest(test_lib.TestCase):
                 np_ans = np.tensordot(np_a, np_b, axes_value)
 
                 tf_a = array_ops.ones((3, 3), dtype=dtypes.float32)
-                tf_b = constant_op.constant([2, 3, 1], dtype=dtypes.float32)[None, None]
+                tf_b = constant_op.constant([2, 3, 1],
+                                            dtype=dtypes.float32)[None, None]
                 tf_ans = math_ops.tensordot(tf_a, tf_b, axes_value)
 
                 self.assertAllEqual(tf_ans.shape, np_ans.shape)
@@ -144,16 +150,12 @@ def _get_tensordot_tests(dtype_, rank_a_, rank_b_, num_dims_, dynamic_shape_):
         for i in range(num_dims_):
             a_shape[a_dims[i]] = shared_shape[i]
             b_shape[b_dims[i]] = shared_shape[i]
-        a = (
-            np.random.uniform(low=-1.0, high=1.0, size=np.prod(a_shape))
-            .reshape(a_shape)
-            .astype(dtype_)
-        )
-        b = (
-            np.random.uniform(low=-1.0, high=1.0, size=np.prod(b_shape))
-            .reshape(b_shape)
-            .astype(dtype_)
-        )
+        a = (np.random.uniform(
+            low=-1.0, high=1.0,
+            size=np.prod(a_shape)).reshape(a_shape).astype(dtype_))
+        b = (np.random.uniform(
+            low=-1.0, high=1.0,
+            size=np.prod(b_shape)).reshape(b_shape).astype(dtype_))
         return a, b, a_dims, b_dims
 
     def test_tensordot(self):
@@ -165,7 +167,8 @@ def _get_tensordot_tests(dtype_, rank_a_, rank_b_, num_dims_, dynamic_shape_):
         else:
             tol = 1e-12
         for _ in range(num_trials):
-            a_np, b_np, a_dims_np, b_dims_np = _generate_random_tensors_and_dims()
+            a_np, b_np, a_dims_np, b_dims_np = _generate_random_tensors_and_dims(
+            )
             np_ans = np.tensordot(a_np, b_np, axes=(a_dims_np, b_dims_np))
             with self.cached_session(use_gpu=True) as sess:
                 if dynamic_shape_:
@@ -173,11 +176,15 @@ def _get_tensordot_tests(dtype_, rank_a_, rank_b_, num_dims_, dynamic_shape_):
                     b = array_ops.placeholder(dtype_)
                     axes = array_ops.placeholder(dtypes.int32)
                     c = math_ops.tensordot(a, b, axes)
-                    tf_ans = sess.run(
-                        c, feed_dict={a: a_np, b: b_np, axes: (a_dims_np, b_dims_np)}
-                    )
+                    tf_ans = sess.run(c,
+                                      feed_dict={
+                                          a: a_np,
+                                          b: b_np,
+                                          axes: (a_dims_np, b_dims_np)
+                                      })
                 else:
-                    tf_ans = math_ops.tensordot(a_np, b_np, (a_dims_np, b_dims_np))
+                    tf_ans = math_ops.tensordot(a_np, b_np,
+                                                (a_dims_np, b_dims_np))
             self.assertAllClose(tf_ans, np_ans, rtol=tol, atol=tol)
             self.assertAllEqual(tf_ans.shape, np_ans.shape)
 
@@ -191,16 +198,12 @@ def _get_tensordot_tests(dtype_, rank_a_, rank_b_, num_dims_, dynamic_shape_):
         else:
             tol = 1e-12
         shape = [5] * num_dims_
-        a_np = (
-            np.random.uniform(low=-1.0, high=1.0, size=np.prod(shape))
-            .reshape(shape)
-            .astype(dtype_)
-        )
-        b_np = (
-            np.random.uniform(low=-1.0, high=1.0, size=np.prod(shape))
-            .reshape(shape)
-            .astype(dtype_)
-        )
+        a_np = (np.random.uniform(
+            low=-1.0, high=1.0,
+            size=np.prod(shape)).reshape(shape).astype(dtype_))
+        b_np = (np.random.uniform(
+            low=-1.0, high=1.0,
+            size=np.prod(shape)).reshape(shape).astype(dtype_))
         all_axes = [0, 1]
         if a_np.ndim > 2:
             all_axes.append(a_np.ndim - 1)
@@ -221,7 +224,9 @@ def _get_tensordot_tests(dtype_, rank_a_, rank_b_, num_dims_, dynamic_shape_):
 
 
 if __name__ == "__main__":
-    dtypes_to_test = [np.float16, np.float32, np.float64, np.complex64, np.complex128]
+    dtypes_to_test = [
+        np.float16, np.float32, np.float64, np.complex64, np.complex128
+    ]
     for dtype in dtypes_to_test:
         for rank_a in 1, 2, 4, 5:
             for rank_b in 1, 2, 4, 5:
@@ -229,8 +234,8 @@ if __name__ == "__main__":
                     # TF2 does not support placeholders under eager so we skip it
                     for dynamic_shape in set([False, not tf2.enabled()]):
                         for testcase in _get_tensordot_tests(
-                            dtype, rank_a, rank_b, num_dims, dynamic_shape
-                        ):
+                                dtype, rank_a, rank_b, num_dims,
+                                dynamic_shape):
                             name = "%s_%s_%s_%s_%s_%s" % (
                                 testcase.__name__,
                                 dtype.__name__,

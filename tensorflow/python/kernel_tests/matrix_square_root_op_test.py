@@ -47,8 +47,8 @@ class SquareRootOpTest(test.TestCase):
 
     def _makeBatch(self, matrix1, matrix2):
         matrix_batch = np.concatenate(
-            [np.expand_dims(matrix1, 0), np.expand_dims(matrix2, 0)]
-        )
+            [np.expand_dims(matrix1, 0),
+             np.expand_dims(matrix2, 0)])
         matrix_batch = np.tile(matrix_batch, [2, 3, 1, 1])
         return matrix_batch
 
