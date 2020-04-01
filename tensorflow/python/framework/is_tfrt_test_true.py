@@ -19,7 +19,6 @@ then attempts to import this module. If this file is made available through the
 BUILD rule, then this function is overridden and will instead cause
 Tensorflow eager execution to run with TFRT.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
