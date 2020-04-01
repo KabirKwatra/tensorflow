@@ -33,9 +33,7 @@ from tensorflow.python.platform import test
 
 
 class DefFunctionTest(test.TestCase):
-
     def testAutoclusteringWithTfFunction(self):
-
         @def_function.function(experimental_compile=False)
         def outer(a, b, c):
             return a * inner(b, c) + c
@@ -52,12 +50,11 @@ class DefFunctionTest(test.TestCase):
             outer(i1, i2, i3)
 
         if test_util.is_xla_enabled():
-            self.assertIn('_XlaRun', [n.op for n in graphs[0].node])
+            self.assertIn("_XlaRun", [n.op for n in graphs[0].node])
         else:
-            self.assertNotIn('_XlaRun', [n.op for n in graphs[0].node])
+            self.assertNotIn("_XlaRun", [n.op for n in graphs[0].node])
 
     def testBasic(self):
-
         def fn(x, a):
             return x + a
 
@@ -71,7 +68,6 @@ class DefFunctionTest(test.TestCase):
             self.assertAllClose([2, 3, 3, 4, 4], xla_func(inputs, 1))
 
     def testBasicInt32(self):
-
         def fn(x, a):
             return x + a
 
@@ -92,7 +88,7 @@ class DefFunctionTest(test.TestCase):
         xla_func = def_function.function(fn, experimental_compile=True)
 
         with backprop.GradientTape() as tape:
-            inputs = constant_op.constant([1., 2., 2., 3., 3.])
+            inputs = constant_op.constant([1.0, 2.0, 2.0, 3.0, 3.0])
             tape.watch(inputs)
             outputs = xla_func(inputs, 1)
 
@@ -100,17 +96,17 @@ class DefFunctionTest(test.TestCase):
 
         # pylint: disable=protected-access
         (forward, backward) = xla_func.get_concrete_function(
-            inputs, 1)._delayed_rewrite_functions.forward_backward()
+            inputs, 1
+        )._delayed_rewrite_functions.forward_backward()
 
         # Check that the must-compile attribute gets correctly propagated to the
         # created derivatives.
-        self.assertTrue(backward.function_def.attr['_XlaMustCompile'])
-        self.assertTrue(forward.definition.attr['_XlaMustCompile'])
+        self.assertTrue(backward.function_def.attr["_XlaMustCompile"])
+        self.assertTrue(forward.definition.attr["_XlaMustCompile"])
 
     # Calling function with experimental_compile=True from
     # experimental_compile=False should compile the inner func.
     def testNestedCall(self):
-
         def fn(x, a):
             return x + a
 
@@ -127,7 +123,6 @@ class DefFunctionTest(test.TestCase):
             self.assertAllClose([2, 3, 3, 4, 4], func(inputs, 1))
 
     def testNestedCallUnsupportedOps(self):
-
         def fn(x):
             return array_ops.unique(x).y
 
@@ -139,12 +134,10 @@ class DefFunctionTest(test.TestCase):
         func = def_function.function(fn2, experimental_compile=False)
         inputs = constant_op.constant([1, 2, 2, 3, 3])
         if not test.is_built_with_rocm():
-            with self.assertRaisesRegexp(errors.InvalidArgumentError,
-                                         'not compilable'):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError, "not compilable"):
                 func(inputs)
 
     def testUnsupportedOps(self):
-
         def fn(x):
             return array_ops.unique(x).y  # Unique is not supported by XLA
 
@@ -153,7 +146,7 @@ class DefFunctionTest(test.TestCase):
 
         inputs = constant_op.constant([1, 2, 2, 3, 3])
         self.assertAllClose([1, 2, 3], func(inputs))
-        with self.assertRaisesRegexp(errors.InvalidArgumentError, 'not compilable'):
+        with self.assertRaisesRegexp(errors.InvalidArgumentError, "not compilable"):
             xla_func(inputs)
 
     def testFunctionGradient(self):
@@ -180,21 +173,23 @@ class DefFunctionTest(test.TestCase):
             run_and_check(xla_func)
 
     def testControlFlow(self):
-
         @def_function.function(experimental_compile=True)
         def f(x):
-            assert control_flow_util.GraphOrParentsInXlaContext(
-                ops.get_default_graph())
+            assert control_flow_util.GraphOrParentsInXlaContext(ops.get_default_graph())
             x = ops.convert_to_tensor(x)
 
             def body(i, a):
-                return i + 1, control_flow_ops.cond(i > 2, lambda: a + (x**2),
-                                                    lambda: a + 3)
+                return (
+                    i + 1,
+                    control_flow_ops.cond(i > 2, lambda: a + (x ** 2), lambda: a + 3),
+                )
 
             return control_flow_ops.while_loop(
                 lambda i, *_: i < 10,
-                body, (constant_op.constant(0), constant_op.constant(3.)),
-                maximum_iterations=10)[1]
+                body,
+                (constant_op.constant(0), constant_op.constant(3.0)),
+                maximum_iterations=10,
+            )[1]
 
         @def_function.function(experimental_compile=True)
         def g(x):
@@ -212,7 +207,6 @@ class DefFunctionTest(test.TestCase):
             return
 
         class C(object):
-
             @def_function.function(experimental_compile=True)
             def f1(self, x, a):
                 return x + a
@@ -226,14 +220,13 @@ class DefFunctionTest(test.TestCase):
             return
 
         class C(object):
-
             @def_function.function(experimental_compile=True)
             def f1(self, x):
                 return array_ops.unique(x).y
 
         inputs = constant_op.constant([1, 2, 2, 3, 3])
         c = C()
-        with self.assertRaisesRegexp(errors.InvalidArgumentError, 'not compilable'):
+        with self.assertRaisesRegexp(errors.InvalidArgumentError, "not compilable"):
             c.f1(inputs)
 
     def testMustBeConstantPropagation(self):
@@ -255,6 +248,6 @@ class DefFunctionTest(test.TestCase):
         z()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ops.enable_eager_execution()
     test.main()

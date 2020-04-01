@@ -69,13 +69,11 @@ class MatMulTest(test_lib.TestCase):
 
 
 def _GetMatMulTest(a_np_, b_np_, use_static_shape_, **kwargs_):
-
     def Test(self):
         np_val = np.matrix(a_np_) * np.matrix(b_np_)
 
         use_gpu = True
-        if a_np_.dtype is np.float16 and (
-                not test_util.GpuSupportsHalfMatMulAndConv()):
+        if a_np_.dtype is np.float16 and (not test_util.GpuSupportsHalfMatMulAndConv()):
             use_gpu = False
             print("Built without fp16 matmul support for Cuda, running test on CPU.")
 
@@ -95,8 +93,7 @@ def _GetMatMulTest(a_np_, b_np_, use_static_shape_, **kwargs_):
                 a = array_ops.placeholder(a_np_.dtype)
                 b = array_ops.placeholder(b_np_.dtype)
                 res = math_ops.matmul(a, b, **kwargs_)
-                tf_val = sess.run(
-                    res, feed_dict={a: effective_a_np, b: effective_b_np})
+                tf_val = sess.run(res, feed_dict={a: effective_a_np, b: effective_b_np})
 
         self.assertAllCloseAccordingToType(
             tf_val,
@@ -104,7 +101,8 @@ def _GetMatMulTest(a_np_, b_np_, use_static_shape_, **kwargs_):
             float_rtol=3e-5,
             float_atol=3e-5,
             half_rtol=0.2,
-            half_atol=0.2)
+            half_atol=0.2,
+        )
 
     return Test
 
@@ -114,7 +112,6 @@ class MatMulGradientTest(test_lib.TestCase):
 
 
 def _GetMatMulGradientTest(a_np_, b_np_, use_static_shape_, **kwargs_):
-
     def Test(self):
         if not use_static_shape_ or a_np_.dtype in (np.int32, np.int64, np.float16):
             self.skipTest("Skipping infeasible gradient test.")
@@ -127,26 +124,27 @@ def _GetMatMulGradientTest(a_np_, b_np_, use_static_shape_, **kwargs_):
         effective_b_np = _GetTransposedMatrices(b_np_, "b", kwargs_)
 
         epsilon = np.finfo(a_np_.dtype).eps
-        delta = epsilon**(1.0 / 3.0)
+        delta = epsilon ** (1.0 / 3.0)
         tol = 20 * delta
         with self.session():
             theoretical, numerical = gradient_checker_v2.compute_gradient(
                 lambda x: math_ops.matmul(x, effective_b_np, **kwargs_),
                 [effective_a_np],
-                delta=delta)
+                delta=delta,
+            )
             self.assertAllClose(theoretical, numerical, rtol=tol, atol=tol)
 
             theoretical, numerical = gradient_checker_v2.compute_gradient(
                 lambda x: math_ops.matmul(effective_a_np, x, **kwargs_),
                 [effective_b_np],
-                delta=delta)
+                delta=delta,
+            )
             self.assertAllClose(theoretical, numerical, rtol=tol, atol=tol)
 
     return Test
 
 
 class MatMulStatsTest(test_lib.TestCase):
-
     @test_util.run_v1_only("Test requires a Graph and NodeDef inspection")
     def testSimpleStatistics(self):
         a = variables.Variable(random_ops.random_normal([25, 16]))
@@ -188,26 +186,32 @@ except AttributeError:
             except AttributeError:
                 r = NotImplemented
         if r is NotImplemented:
-            raise TypeError("unsupported operand type(s) for @: '{}' and '{}'"
-                            .format(type(x).__name__, type(y).__name__))
+            raise TypeError(
+                "unsupported operand type(s) for @: '{}' and '{}'".format(
+                    type(x).__name__, type(y).__name__
+                )
+            )
         return r
 
 
 class MatMulInfixOperatorTest(test_lib.TestCase):
-
     def testMismatchedShape(self):
         with self.assertRaisesRegexp(
-                Exception, "(Shape must be rank 2 but is rank 1|is not a matrix)"):
+            Exception, "(Shape must be rank 2 but is rank 1|is not a matrix)"
+        ):
             infix_matmul(
                 ops.convert_to_tensor([10.0, 20.0, 30.0]),
-                ops.convert_to_tensor([[40.0, 50.0], [60.0, 70.0]]))
+                ops.convert_to_tensor([[40.0, 50.0], [60.0, 70.0]]),
+            )
 
     def testMismatchedDimensions(self):
         with self.assertRaisesRegexp(
-                Exception, "(Dimensions must be equal|Matrix size-incompatible)"):
+            Exception, "(Dimensions must be equal|Matrix size-incompatible)"
+        ):
             infix_matmul(
                 ops.convert_to_tensor([[10.0, 20.0, 30.0]]),
-                ops.convert_to_tensor([[40.0, 50.0], [60.0, 70.0]]))
+                ops.convert_to_tensor([[40.0, 50.0], [60.0, 70.0]]),
+            )
 
     @test_util.run_v1_only("Tensor.op is generally not applicable in TF 2")
     def testInfixMatmulIsTfMatmul(self):
@@ -228,8 +232,13 @@ if __name__ == "__main__":
     sizes = [1, 3, 5]
     trans_options = [[False, False], [True, False], [False, True]]
     dtypes_to_test = [
-        np.int32, np.int64, np.float16, np.float32, np.float64, np.complex64,
-        np.complex128
+        np.int32,
+        np.int64,
+        np.float16,
+        np.float32,
+        np.float64,
+        np.complex64,
+        np.complex128,
     ]
     # TF2 does not support placeholders under eager so we skip it
     for use_static_shape in set([True, tf2.enabled()]):
@@ -243,38 +252,64 @@ if __name__ == "__main__":
                     for k in sizes:
                         # Construct compatible random matrices a_np of size [m, k] and b_np
                         # of size [k, n].
-                        a_np = np.random.normal(-5, 5, m *
-                                                k).astype(dtype).reshape([m, k])
+                        a_np = (
+                            np.random.normal(-5, 5, m * k).astype(dtype).reshape([m, k])
+                        )
                         if dtype in (np.complex64, np.complex128):
-                            a_np.imag = np.random.normal(-5, 5,
-                                                         m * k).astype(dtype).reshape([m, k])
-                        b_np = np.random.normal(-5, 5, k *
-                                                n).astype(dtype).reshape([k, n])
+                            a_np.imag = (
+                                np.random.normal(-5, 5, m * k)
+                                .astype(dtype)
+                                .reshape([m, k])
+                            )
+                        b_np = (
+                            np.random.normal(-5, 5, k * n).astype(dtype).reshape([k, n])
+                        )
                         if dtype in (np.complex64, np.complex128):
-                            b_np.imag = np.random.normal(-5, 5,
-                                                         k * n).astype(dtype).reshape([k, n])
+                            b_np.imag = (
+                                np.random.normal(-5, 5, k * n)
+                                .astype(dtype)
+                                .reshape([k, n])
+                            )
                         for adjoint_a, transpose_a in trans_options:
                             for adjoint_b, transpose_b in trans_options:
                                 name = "%s_%s_%s_%s_%s_%s_%s_%s_%s" % (
-                                    use_static_shape, dtype.__name__, m, n, k, adjoint_a,
-                                    transpose_a, adjoint_b, transpose_b)
-                                _AddTest(MatMulTest, "MatMulTest", name,
-                                         _GetMatMulTest(
-                                             a_np,
-                                             b_np,
-                                             use_static_shape,
-                                             adjoint_a=adjoint_a,
-                                             transpose_a=transpose_a,
-                                             adjoint_b=adjoint_b,
-                                             transpose_b=transpose_b))
-                                _AddTest(MatMulGradientTest, "MatMulGradientTest", name,
-                                         _GetMatMulGradientTest(
-                                             a_np,
-                                             b_np,
-                                             use_static_shape,
-                                             adjoint_a=adjoint_a,
-                                             transpose_a=transpose_a,
-                                             adjoint_b=adjoint_b,
-                                             transpose_b=transpose_b))
+                                    use_static_shape,
+                                    dtype.__name__,
+                                    m,
+                                    n,
+                                    k,
+                                    adjoint_a,
+                                    transpose_a,
+                                    adjoint_b,
+                                    transpose_b,
+                                )
+                                _AddTest(
+                                    MatMulTest,
+                                    "MatMulTest",
+                                    name,
+                                    _GetMatMulTest(
+                                        a_np,
+                                        b_np,
+                                        use_static_shape,
+                                        adjoint_a=adjoint_a,
+                                        transpose_a=transpose_a,
+                                        adjoint_b=adjoint_b,
+                                        transpose_b=transpose_b,
+                                    ),
+                                )
+                                _AddTest(
+                                    MatMulGradientTest,
+                                    "MatMulGradientTest",
+                                    name,
+                                    _GetMatMulGradientTest(
+                                        a_np,
+                                        b_np,
+                                        use_static_shape,
+                                        adjoint_a=adjoint_a,
+                                        transpose_a=transpose_a,
+                                        adjoint_b=adjoint_b,
+                                        transpose_b=transpose_b,
+                                    ),
+                                )
 
     test_lib.main()

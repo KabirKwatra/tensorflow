@@ -34,7 +34,6 @@ from tensorflow.python.platform import test
 
 
 class InverseOpTest(test.TestCase):
-
     def _verifyInverse(self, x, np_type):
         for adjoint in False, True:
             y = x.astype(np_type)
@@ -61,15 +60,15 @@ class InverseOpTest(test.TestCase):
 
     def _makeBatch(self, matrix1, matrix2):
         matrix_batch = np.concatenate(
-            [np.expand_dims(matrix1, 0),
-             np.expand_dims(matrix2, 0)])
+            [np.expand_dims(matrix1, 0), np.expand_dims(matrix2, 0)]
+        )
         matrix_batch = np.tile(matrix_batch, [2, 3, 1, 1])
         return matrix_batch
 
     def testNonsymmetric(self):
         # 2x2 matrices
-        matrix1 = np.array([[1., 2.], [3., 4.]])
-        matrix2 = np.array([[1., 3.], [3., 5.]])
+        matrix1 = np.array([[1.0, 2.0], [3.0, 4.0]])
+        matrix2 = np.array([[1.0, 3.0], [3.0, 5.0]])
         self._verifyInverseReal(matrix1)
         self._verifyInverseReal(matrix2)
         # A multidimensional batch of 2x2 matrices
@@ -85,8 +84,8 @@ class InverseOpTest(test.TestCase):
 
     def testSymmetricPositiveDefinite(self):
         # 2x2 matrices
-        matrix1 = np.array([[2., 1.], [1., 2.]])
-        matrix2 = np.array([[3., -1.], [-1., 3.]])
+        matrix1 = np.array([[2.0, 1.0], [1.0, 2.0]])
+        matrix2 = np.array([[3.0, -1.0], [-1.0, 3.0]])
         self._verifyInverseReal(matrix1)
         self._verifyInverseReal(matrix2)
         # A multidimensional batch of 2x2 matrices
@@ -105,12 +104,12 @@ class InverseOpTest(test.TestCase):
         # When the inverse of a non-square matrix is attempted we should return
         # an error
         with self.assertRaises(ValueError):
-            linalg_ops.matrix_inverse(np.array([[1., 2., 3.], [3., 4., 5.]]))
+            linalg_ops.matrix_inverse(np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0]]))
 
     @test_util.deprecated_graph_mode_only
     def testWrongDimensions(self):
         # The input to the inverse should be at least a 2-dimensional tensor.
-        tensor3 = constant_op.constant([1., 2.])
+        tensor3 = constant_op.constant([1.0, 2.0])
         with self.assertRaises(ValueError):
             linalg_ops.matrix_inverse(tensor3)
 
@@ -119,8 +118,9 @@ class InverseOpTest(test.TestCase):
         with self.cached_session():
             with self.assertRaisesOpError("Input is not invertible."):
                 # All rows of the matrix below add to zero.
-                tensor3 = constant_op.constant([[1., 0., -1.], [-1., 1., 0.],
-                                                [0., -1., 1.]])
+                tensor3 = constant_op.constant(
+                    [[1.0, 0.0, -1.0], [-1.0, 1.0, 0.0], [0.0, -1.0, 1.0]]
+                )
                 linalg_ops.matrix_inverse(tensor3).eval()
 
     def testEmpty(self):
@@ -133,9 +133,11 @@ class InverseOpTest(test.TestCase):
             for batch_dims in [(), (1,), (3,), (2, 2)]:
                 for size in 8, 31, 32:
                     shape = batch_dims + (size, size)
-                    matrix = np.random.uniform(
-                        low=-1.0, high=1.0,
-                        size=np.prod(shape)).reshape(shape).astype(dtype)
+                    matrix = (
+                        np.random.uniform(low=-1.0, high=1.0, size=np.prod(shape))
+                        .reshape(shape)
+                        .astype(dtype)
+                    )
                     self._verifyInverseReal(matrix)
 
     @test_util.deprecated_graph_mode_only
@@ -174,16 +176,17 @@ class MatrixInverseBenchmark(test.Benchmark):
         shape = shape[-2:]
         assert shape[0] == shape[1]
         n = shape[0]
-        matrix = np.ones(shape).astype(np.float32) / (
-            2.0 * n) + np.diag(np.ones(n).astype(np.float32))
+        matrix = np.ones(shape).astype(np.float32) / (2.0 * n) + np.diag(
+            np.ones(n).astype(np.float32)
+        )
         return variables.Variable(np.tile(matrix, batch_shape + (1, 1)))
 
     def benchmarkMatrixInverseOp(self):
         for adjoint in False, True:
             for shape in self.shapes:
-                with ops.Graph().as_default(), \
-                        session.Session(config=benchmark.benchmark_config()) as sess, \
-                        ops.device("/cpu:0"):
+                with ops.Graph().as_default(), session.Session(
+                    config=benchmark.benchmark_config()
+                ) as sess, ops.device("/cpu:0"):
                     matrix = self._GenerateMatrix(shape)
                     inv = linalg_ops.matrix_inverse(matrix, adjoint=adjoint)
                     variables.global_variables_initializer().run()
@@ -192,22 +195,25 @@ class MatrixInverseBenchmark(test.Benchmark):
                         control_flow_ops.group(inv),
                         min_iters=25,
                         name="matrix_inverse_cpu_{shape}_adjoint_{adjoint}".format(
-                            shape=shape, adjoint=adjoint))
+                            shape=shape, adjoint=adjoint
+                        ),
+                    )
 
                 if test.is_gpu_available(True):
-                    with ops.Graph().as_default(), \
-                            session.Session(config=benchmark.benchmark_config()) as sess, \
-                            ops.device("/gpu:0"):
+                    with ops.Graph().as_default(), session.Session(
+                        config=benchmark.benchmark_config()
+                    ) as sess, ops.device("/gpu:0"):
                         matrix = self._GenerateMatrix(shape)
-                        inv = linalg_ops.matrix_inverse(
-                            matrix, adjoint=adjoint)
+                        inv = linalg_ops.matrix_inverse(matrix, adjoint=adjoint)
                         variables.global_variables_initializer().run()
                         self.run_op_benchmark(
                             sess,
                             control_flow_ops.group(inv),
                             min_iters=25,
                             name="matrix_inverse_gpu_{shape}_adjoint_{adjoint}".format(
-                                shape=shape, adjoint=adjoint))
+                                shape=shape, adjoint=adjoint
+                            ),
+                        )
 
 
 if __name__ == "__main__":

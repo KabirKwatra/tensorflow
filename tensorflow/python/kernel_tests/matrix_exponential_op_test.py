@@ -48,7 +48,6 @@ def np_expm(x):  # pylint: disable=invalid-name
 
 
 class ExponentialOpTest(test.TestCase):
-
     def _verifyExponential(self, x, np_type):
         inp = x.astype(np_type)
         with test_util.use_gpu():
@@ -75,15 +74,15 @@ class ExponentialOpTest(test.TestCase):
 
     def _makeBatch(self, matrix1, matrix2):
         matrix_batch = np.concatenate(
-            [np.expand_dims(matrix1, 0),
-             np.expand_dims(matrix2, 0)])
+            [np.expand_dims(matrix1, 0), np.expand_dims(matrix2, 0)]
+        )
         matrix_batch = np.tile(matrix_batch, [2, 3, 1, 1])
         return matrix_batch
 
     def testNonsymmetricReal(self):
         # 2x2 matrices
-        matrix1 = np.array([[1., 2.], [3., 4.]])
-        matrix2 = np.array([[1., 3.], [3., 5.]])
+        matrix1 = np.array([[1.0, 2.0], [3.0, 4.0]])
+        matrix2 = np.array([[1.0, 3.0], [3.0, 5.0]])
         self._verifyExponentialReal(matrix1)
         self._verifyExponentialReal(matrix2)
         # A multidimensional batch of 2x2 matrices
@@ -91,8 +90,8 @@ class ExponentialOpTest(test.TestCase):
 
     @test_util.run_deprecated_v1
     def testNonsymmetricComplex(self):
-        matrix1 = np.array([[1., 2.], [3., 4.]])
-        matrix2 = np.array([[1., 3.], [3., 5.]])
+        matrix1 = np.array([[1.0, 2.0], [3.0, 4.0]])
+        matrix2 = np.array([[1.0, 3.0], [3.0, 5.0]])
         matrix1 = matrix1.astype(np.complex64)
         matrix1 += 1j * matrix1
         matrix2 = matrix2.astype(np.complex64)
@@ -104,16 +103,16 @@ class ExponentialOpTest(test.TestCase):
 
     def testSymmetricPositiveDefiniteReal(self):
         # 2x2 matrices
-        matrix1 = np.array([[2., 1.], [1., 2.]])
-        matrix2 = np.array([[3., -1.], [-1., 3.]])
+        matrix1 = np.array([[2.0, 1.0], [1.0, 2.0]])
+        matrix2 = np.array([[3.0, -1.0], [-1.0, 3.0]])
         self._verifyExponentialReal(matrix1)
         self._verifyExponentialReal(matrix2)
         # A multidimensional batch of 2x2 matrices
         self._verifyExponentialReal(self._makeBatch(matrix1, matrix2))
 
     def testSymmetricPositiveDefiniteComplex(self):
-        matrix1 = np.array([[2., 1.], [1., 2.]])
-        matrix2 = np.array([[3., -1.], [-1., 3.]])
+        matrix1 = np.array([[2.0, 1.0], [1.0, 2.0]])
+        matrix2 = np.array([[3.0, -1.0], [-1.0, 3.0]])
         matrix1 = matrix1.astype(np.complex64)
         matrix1 += 1j * matrix1
         matrix2 = matrix2.astype(np.complex64)
@@ -128,13 +127,12 @@ class ExponentialOpTest(test.TestCase):
         # When the exponential of a non-square matrix is attempted we should return
         # an error
         with self.assertRaises(ValueError):
-            linalg_impl.matrix_exponential(
-                np.array([[1., 2., 3.], [3., 4., 5.]]))
+            linalg_impl.matrix_exponential(np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0]]))
 
     @test_util.run_deprecated_v1
     def testWrongDimensions(self):
         # The input to the exponential should be at least a 2-dimensional tensor.
-        tensor3 = constant_op.constant([1., 2.])
+        tensor3 = constant_op.constant([1.0, 2.0])
         with self.assertRaises(ValueError):
             linalg_impl.matrix_exponential(tensor3)
 
@@ -147,7 +145,7 @@ class ExponentialOpTest(test.TestCase):
         with self.session(use_gpu=True) as sess:
             inp = array_ops.placeholder(ops.dtypes.float32)
             expm = linalg_impl.matrix_exponential(inp)
-            matrix = np.array([[1., 2.], [3., 4.]])
+            matrix = np.array([[1.0, 2.0], [3.0, 4.0]])
             sess.run(expm, feed_dict={inp: matrix})
 
     @test_util.run_deprecated_v1
@@ -183,14 +181,15 @@ class MatrixExponentialBenchmark(test.Benchmark):
         assert shape[0] == shape[1]
         n = shape[0]
         matrix = np.ones(shape).astype(np.float32) / (2.0 * n) + np.diag(
-            np.ones(n).astype(np.float32))
+            np.ones(n).astype(np.float32)
+        )
         return variables.Variable(np.tile(matrix, batch_shape + (1, 1)))
 
     def benchmarkMatrixExponentialOp(self):
         for shape in self.shapes:
-            with ops.Graph().as_default(), \
-                    session.Session(config=benchmark.benchmark_config()) as sess, \
-                    ops.device("/cpu:0"):
+            with ops.Graph().as_default(), session.Session(
+                config=benchmark.benchmark_config()
+            ) as sess, ops.device("/cpu:0"):
                 matrix = self._GenerateMatrix(shape)
                 expm = linalg_impl.matrix_exponential(matrix)
                 variables.global_variables_initializer().run()
@@ -198,12 +197,13 @@ class MatrixExponentialBenchmark(test.Benchmark):
                     sess,
                     control_flow_ops.group(expm),
                     min_iters=25,
-                    name="matrix_exponential_cpu_{shape}".format(shape=shape))
+                    name="matrix_exponential_cpu_{shape}".format(shape=shape),
+                )
 
             if test.is_gpu_available(True):
-                with ops.Graph().as_default(), \
-                        session.Session(config=benchmark.benchmark_config()) as sess, \
-                        ops.device("/gpu:0"):
+                with ops.Graph().as_default(), session.Session(
+                    config=benchmark.benchmark_config()
+                ) as sess, ops.device("/gpu:0"):
                     matrix = self._GenerateMatrix(shape)
                     expm = linalg_impl.matrix_exponential(matrix)
                     variables.global_variables_initializer().run()
@@ -211,27 +211,28 @@ class MatrixExponentialBenchmark(test.Benchmark):
                         sess,
                         control_flow_ops.group(expm),
                         min_iters=25,
-                        name="matrix_exponential_gpu_{shape}".format(shape=shape))
+                        name="matrix_exponential_gpu_{shape}".format(shape=shape),
+                    )
 
 
 def _TestRandomSmall(dtype, batch_dims, size):
-
     def Test(self):
         np.random.seed(42)
         shape = batch_dims + (size, size)
-        matrix = np.random.uniform(
-            low=-1.0, high=1.0, size=shape).astype(dtype)
+        matrix = np.random.uniform(low=-1.0, high=1.0, size=shape).astype(dtype)
         self._verifyExponentialReal(matrix)
 
     return Test
 
 
 def _TestL1Norms(dtype, shape, scale):
-
     def Test(self):
         np.random.seed(42)
-        matrix = np.random.uniform(
-            low=-1.0, high=1.0, size=np.prod(shape)).reshape(shape).astype(dtype)
+        matrix = (
+            np.random.uniform(low=-1.0, high=1.0, size=np.prod(shape))
+            .reshape(shape)
+            .astype(dtype)
+        )
         print(dtype, shape, scale, matrix)
         l1_norm = np.max(np.sum(np.abs(matrix), axis=matrix.ndim - 2))
         matrix /= l1_norm
@@ -245,20 +246,27 @@ if __name__ == "__main__":
         for batch_ in [(), (2,), (2, 2)]:
             for size_ in [4, 7]:
                 name = "%s_%d_%d" % (dtype_.__name__, len(batch_), size_)
-                setattr(ExponentialOpTest, "testL1Norms_" + name,
-                        _TestRandomSmall(dtype_, batch_, size_))
+                setattr(
+                    ExponentialOpTest,
+                    "testL1Norms_" + name,
+                    _TestRandomSmall(dtype_, batch_, size_),
+                )
 
     for shape_ in [(3, 3), (2, 3, 3)]:
         for dtype_ in [np.float32, np.complex64]:
             for scale_ in [0.1, 1.5, 5.0, 20.0]:
-                name = "%s_%d_%d" % (
-                    dtype_.__name__, len(shape_), int(scale_ * 10))
-                setattr(ExponentialOpTest, "testL1Norms_" + name,
-                        _TestL1Norms(dtype_, shape_, scale_))
+                name = "%s_%d_%d" % (dtype_.__name__, len(shape_), int(scale_ * 10))
+                setattr(
+                    ExponentialOpTest,
+                    "testL1Norms_" + name,
+                    _TestL1Norms(dtype_, shape_, scale_),
+                )
         for dtype_ in [np.float64, np.complex128]:
             for scale_ in [0.01, 0.2, 0.5, 1.5, 6.0, 25.0]:
-                name = "%s_%d_%d" % (
-                    dtype_.__name__, len(shape_), int(scale_ * 100))
-                setattr(ExponentialOpTest, "testL1Norms_" + name,
-                        _TestL1Norms(dtype_, shape_, scale_))
+                name = "%s_%d_%d" % (dtype_.__name__, len(shape_), int(scale_ * 100))
+                setattr(
+                    ExponentialOpTest,
+                    "testL1Norms_" + name,
+                    _TestL1Norms(dtype_, shape_, scale_),
+                )
     test.main()

@@ -38,8 +38,7 @@ def GetRandomNormalInput(shape, dtype):
     loc = -10.0 if dtype != np.float16 else 0.1
     vals = np.array(np.random.normal(loc, scale, np.prod(shape)), dtype=dtype)
     if dtype in (np.complex64, np.complex128):
-        imag = np.array(np.random.normal(
-            loc, scale, np.prod(shape)), dtype=dtype)
+        imag = np.array(np.random.normal(loc, scale, np.prod(shape)), dtype=dtype)
         vals += 1j * imag
     return vals.reshape(shape)
 
@@ -65,27 +64,27 @@ class BatchMatmulOpTest(test.TestCase):
         tol = 100 * np.finfo(x.dtype).eps if is_floating else 0
         with self.cached_session(use_gpu=is_floating) as sess:
             if static_shape:
-                z0 = math_ops.matmul(
-                    x, y, adjoint_a=adjoint_a, adjoint_b=adjoint_b)
+                z0 = math_ops.matmul(x, y, adjoint_a=adjoint_a, adjoint_b=adjoint_b)
                 z0_val = self.evaluate(z0)
             else:
                 x_ph = array_ops.placeholder(x.dtype)
                 y_ph = array_ops.placeholder(y.dtype)
                 z0 = math_ops.matmul(
-                    x_ph, y_ph, adjoint_a=adjoint_a, adjoint_b=adjoint_b)
+                    x_ph, y_ph, adjoint_a=adjoint_a, adjoint_b=adjoint_b
+                )
                 z0_val = sess.run(z0, feed_dict={x_ph: x, y_ph: y})
             z1 = self._npBatchMatmul(x, y, adjoint_a, adjoint_b)
             self.assertAllClose(z0_val, z1, rtol=tol, atol=tol)
 
     def _testNonEmpty(self, dtype, adjoint_a, adjoint_b, use_static_shape):
-
         def CompareNonEmpty(self, a_shape, b_shape):
             self._compare(
                 GetRandomNormalInput(a_shape, dtype),
                 GetRandomNormalInput(b_shape, dtype),
                 adjoint_a,
                 adjoint_b,
-                static_shape=use_static_shape)
+                static_shape=use_static_shape,
+            )
 
         CompareNonEmpty(self, [1, 2, 3], [1, 3, 5])
         CompareNonEmpty(self, [1, 2, 3], [1, 3, 1])
@@ -98,14 +97,14 @@ class BatchMatmulOpTest(test.TestCase):
         CompareNonEmpty(self, [5, 7, 2, 3], [5, 7, 3, 5])
 
     def _testBroadcasting(self, dtype, adjoint_a, adjoint_b, use_static_shape):
-
         def CompareNonEmpty(self, a_shape, b_shape):
             self._compare(
                 GetRandomNormalInput(a_shape, dtype),
                 GetRandomNormalInput(b_shape, dtype),
                 adjoint_a,
                 adjoint_b,
-                static_shape=use_static_shape)
+                static_shape=use_static_shape,
+            )
 
         CompareNonEmpty(self, [2, 3], [1, 3, 5])
         CompareNonEmpty(self, [1, 2, 3], [3, 5])
@@ -113,18 +112,17 @@ class BatchMatmulOpTest(test.TestCase):
         CompareNonEmpty(self, [5, 2, 2, 3], [3, 5])
         CompareNonEmpty(self, [2, 3], [5, 2, 3, 5])
         CompareNonEmpty(self, [4, 5, 1, 2, 3], [1, 1, 3, 5])
-        CompareNonEmpty(self, [1, 2, 1, 4, 2, 1, 3, 4],
-                        [3, 2, 1, 1, 1, 2, 4, 2])
+        CompareNonEmpty(self, [1, 2, 1, 4, 2, 1, 3, 4], [3, 2, 1, 1, 1, 2, 4, 2])
 
     def _testEmpty(self, dtype, adjoint_a, adjoint_b, use_static_shape):
-
         def CompareEmpty(self, a_shape, b_shape):
             self._compare(
                 np.zeros(a_shape).astype(dtype),
                 np.zeros(b_shape).astype(dtype),
                 adjoint_a,
                 adjoint_b,
-                static_shape=use_static_shape)
+                static_shape=use_static_shape,
+            )
 
         CompareEmpty(self, [0, 3, 2], [0, 2, 4])
         CompareEmpty(self, [3, 0, 2], [3, 2, 5])
@@ -132,7 +130,6 @@ class BatchMatmulOpTest(test.TestCase):
 
 
 def _GetBatchMatmulOpTest(dtype, adjoint_a, adjoint_b, use_static_shape):
-
     def Test(self):
         np.random.seed(42)
         self._testNonEmpty(dtype, adjoint_a, adjoint_b, use_static_shape)
@@ -141,9 +138,7 @@ def _GetBatchMatmulOpTest(dtype, adjoint_a, adjoint_b, use_static_shape):
     return Test
 
 
-def _GetBatchMatmulOpBroadcastingTest(dtype, adjoint_a, adjoint_b,
-                                      use_static_shape):
-
+def _GetBatchMatmulOpBroadcastingTest(dtype, adjoint_a, adjoint_b, use_static_shape):
     def Test(self):
         np.random.seed(42)
         self._testBroadcasting(dtype, adjoint_a, adjoint_b, use_static_shape)
@@ -162,15 +157,16 @@ class BatchMatmulGradientTest(test.TestCase):
         y = y_in if not adjoint_b else y_in.reshape(y_t_shape)
         epsilon = np.finfo(x.dtype).eps
         # Since our gradient is linear, a larger delta decreases the error.
-        delta = 10 * epsilon**(1.0 / 3.0)
+        delta = 10 * epsilon ** (1.0 / 3.0)
 
         def Loss(x, y):
             return math_ops.reduce_sum(math_ops.matmul(x, y, adjoint_a, adjoint_b))
 
         with self.cached_session(use_gpu=True):
-            ((x_jacob_t, y_jacob_t),
-             (x_jacob_n, y_jacob_n)) = gradient_checker_v2.compute_gradient(
-                 Loss, [x, y], delta=delta)
+            (
+                (x_jacob_t, y_jacob_t),
+                (x_jacob_n, y_jacob_n),
+            ) = gradient_checker_v2.compute_gradient(Loss, [x, y], delta=delta)
             tol = 10 * delta
             self.assertAllClose(x_jacob_t, x_jacob_n, rtol=tol, atol=tol)
             self.assertAllClose(y_jacob_t, y_jacob_n, rtol=tol, atol=tol)
@@ -184,7 +180,6 @@ class BatchMatmulGradientTest(test.TestCase):
 
 
 def _GetBatchMatmulGradientTest(dtype, adjoint_a, adjoint_b):
-
     def Test(self):
         def CheckGradients(self, a_shape, b_shape):
             self._compare(a_shape, b_shape, dtype, adjoint_a, adjoint_b)
@@ -196,7 +191,6 @@ def _GetBatchMatmulGradientTest(dtype, adjoint_a, adjoint_b):
 
 
 def _GetBatchMatmulGradientWithBroadcastingTest(dtype, adjoint_a, adjoint_b):
-
     def Test(self):
         def CheckGradients(self, a_shape, b_shape):
             self._compare(a_shape, b_shape, dtype, adjoint_a, adjoint_b)
@@ -207,8 +201,7 @@ def _GetBatchMatmulGradientWithBroadcastingTest(dtype, adjoint_a, adjoint_b):
         CheckGradients(self, [5, 2, 5], [5, 3])
         CheckGradients(self, [5, 2, 2, 3], [3, 5])
         CheckGradients(self, [4, 5, 1, 2, 3], [1, 1, 3, 5])
-        CheckGradients(self, [1, 2, 1, 4, 2, 1, 3, 4],
-                       [3, 2, 1, 1, 1, 2, 4, 2])
+        CheckGradients(self, [1, 2, 1, 4, 2, 1, 3, 4], [3, 2, 1, 1, 1, 2, 4, 2])
 
     return Test
 
@@ -232,13 +225,11 @@ class BatchMatMulBenchmark(test.Benchmark):
 
     def benchmarkBatchMatMulBroadcast(self):
         for (a_shape, b_shape) in self.shape_pairs:
-            with ops.Graph().as_default(), \
-                    session.Session(config=benchmark.benchmark_config()) as sess, \
-                    ops.device("/cpu:0"):
-                matrix_a = variables.Variable(
-                    GetRandomNormalInput(a_shape, np.float32))
-                matrix_b = variables.Variable(
-                    GetRandomNormalInput(b_shape, np.float32))
+            with ops.Graph().as_default(), session.Session(
+                config=benchmark.benchmark_config()
+            ) as sess, ops.device("/cpu:0"):
+                matrix_a = variables.Variable(GetRandomNormalInput(a_shape, np.float32))
+                matrix_b = variables.Variable(GetRandomNormalInput(b_shape, np.float32))
                 variables.global_variables_initializer().run()
 
                 # Use batch matmul op's internal broadcasting.
@@ -246,28 +237,40 @@ class BatchMatMulBenchmark(test.Benchmark):
                     sess,
                     math_ops.matmul(matrix_a, matrix_b),
                     min_iters=50,
-                    name="batch_matmul_cpu_{}_{}".format(a_shape, b_shape))
+                    name="batch_matmul_cpu_{}_{}".format(a_shape, b_shape),
+                )
 
                 # Manually broadcast the input matrices using the broadcast_to op.
                 broadcasted_batch_shape = array_ops.broadcast_static_shape(
-                    matrix_a.shape[:-2], matrix_b.shape[:-2])
+                    matrix_a.shape[:-2], matrix_b.shape[:-2]
+                )
                 broadcasted_a_shape = broadcasted_batch_shape.concatenate(
-                    matrix_a.shape[-2:])
+                    matrix_a.shape[-2:]
+                )
                 broadcasted_b_shape = broadcasted_batch_shape.concatenate(
-                    matrix_b.shape[-2:])
+                    matrix_b.shape[-2:]
+                )
                 self.run_op_benchmark(
                     sess,
                     math_ops.matmul(
                         array_ops.broadcast_to(matrix_a, broadcasted_a_shape),
-                        array_ops.broadcast_to(matrix_b, broadcasted_b_shape)),
+                        array_ops.broadcast_to(matrix_b, broadcasted_b_shape),
+                    ),
                     min_iters=50,
                     name="batch_matmul_manual_broadcast_cpu_{}_{}".format(
-                        a_shape, b_shape))
+                        a_shape, b_shape
+                    ),
+                )
 
 
 if __name__ == "__main__":
     dtypes_to_test = [
-        np.float16, np.float32, np.float64, np.int32, np.complex64, np.complex128
+        np.float16,
+        np.float32,
+        np.float64,
+        np.int32,
+        np.complex64,
+        np.complex128,
     ]
     for dtype_ in dtypes_to_test:
         for adjoint_a_ in False, True:
@@ -277,29 +280,42 @@ if __name__ == "__main__":
                 for use_static_shape_ in set([True, tf2.enabled()]):
                     setattr(
                         BatchMatmulOpTest,
-                        "testBatchMatmulOp_" + name +
-                        "_{}".format(use_static_shape_),
+                        "testBatchMatmulOp_" + name + "_{}".format(use_static_shape_),
                         test_util.xla_allow_fallback(
-                            "TODO(b/134526360): XLA:CPU hasn't implemented int32 dot.")(
-                                _GetBatchMatmulOpTest(dtype_, adjoint_a_, adjoint_b_,
-                                                      use_static_shape_)))
+                            "TODO(b/134526360): XLA:CPU hasn't implemented int32 dot."
+                        )(
+                            _GetBatchMatmulOpTest(
+                                dtype_, adjoint_a_, adjoint_b_, use_static_shape_
+                            )
+                        ),
+                    )
                     # Broadcasting is supported only in v2.
                     setattr(
-                        BatchMatmulOpTest, "testBatchMatmulBroadcasting_" + name +
-                        ("_%s" % use_static_shape_),
+                        BatchMatmulOpTest,
+                        "testBatchMatmulBroadcasting_"
+                        + name
+                        + ("_%s" % use_static_shape_),
                         test_util.xla_allow_fallback(
-                            "TODO(b/134526360): XLA:CPU hasn't implemented int32 dot.")(
-                                _GetBatchMatmulOpBroadcastingTest(dtype_, adjoint_a_,
-                                                                  adjoint_b_,
-                                                                  use_static_shape_)))
+                            "TODO(b/134526360): XLA:CPU hasn't implemented int32 dot."
+                        )(
+                            _GetBatchMatmulOpBroadcastingTest(
+                                dtype_, adjoint_a_, adjoint_b_, use_static_shape_
+                            )
+                        ),
+                    )
                 if dtype_ == np.int32:
                     continue
-                setattr(BatchMatmulGradientTest, "testBatchMatmulGradient_" + name,
-                        _GetBatchMatmulGradientTest(dtype_, adjoint_a_, adjoint_b_))
+                setattr(
+                    BatchMatmulGradientTest,
+                    "testBatchMatmulGradient_" + name,
+                    _GetBatchMatmulGradientTest(dtype_, adjoint_a_, adjoint_b_),
+                )
                 # Broadcasting is supported only in v2.
                 setattr(
                     BatchMatmulGradientTest,
                     "testBatchMatmulGradientWithBroadcasting_" + name,
-                    _GetBatchMatmulGradientWithBroadcastingTest(dtype_, adjoint_a_,
-                                                                adjoint_b_))
+                    _GetBatchMatmulGradientWithBroadcastingTest(
+                        dtype_, adjoint_a_, adjoint_b_
+                    ),
+                )
     test.main()
