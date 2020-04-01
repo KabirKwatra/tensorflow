@@ -23,32 +23,32 @@ namespace tensorflow {
 
 Status ForceXlaConstantsOnHostPass::Run(
     const GraphOptimizationPassOptions& options) {
-  Graph* graph = options.graph->get();
+    Graph* graph = options.graph->get();
 
-  OptimizerOptions opts;
-  auto pflr = absl::make_unique<ProcessFunctionLibraryRuntime>(
-      nullptr, options.session_options->env, /*config=*/nullptr,
-      TF_GRAPH_DEF_VERSION, options.flib_def, opts);
-  FunctionLibraryRuntime* flr =
-      pflr->GetFLR(ProcessFunctionLibraryRuntime::kDefaultFLRDevice);
+    OptimizerOptions opts;
+    auto pflr = absl::make_unique<ProcessFunctionLibraryRuntime>(
+                    nullptr, options.session_options->env, /*config=*/nullptr,
+                    TF_GRAPH_DEF_VERSION, options.flib_def, opts);
+    FunctionLibraryRuntime* flr =
+        pflr->GetFLR(ProcessFunctionLibraryRuntime::kDefaultFLRDevice);
 
-  for (Node* node : graph->nodes()) {
-    if (CanCreateXlaKernel(node->def())) {
-      const FunctionBody* fbody = nullptr;
-      std::vector<int> constant_arg_indices;
-      std::vector<int> resource_arg_indices;
+    for (Node* node : graph->nodes()) {
+        if (CanCreateXlaKernel(node->def())) {
+            const FunctionBody* fbody = nullptr;
+            std::vector<int> constant_arg_indices;
+            std::vector<int> resource_arg_indices;
 
-      // Force all constants to be on the host memory.
-      TF_RETURN_IF_ERROR(GetBodyAndConstantsAndResources(
-          flr, node->def(), &fbody, &constant_arg_indices,
-          &resource_arg_indices));
-      VLOG(3) << "Found constant arg indices: "
-              << absl::StrJoin(constant_arg_indices, ", ");
+            // Force all constants to be on the host memory.
+            TF_RETURN_IF_ERROR(GetBodyAndConstantsAndResources(
+                                   flr, node->def(), &fbody, &constant_arg_indices,
+                                   &resource_arg_indices));
+            VLOG(3) << "Found constant arg indices: "
+                    << absl::StrJoin(constant_arg_indices, ", ");
 
-      node->AddAttr("_input_hostmem", constant_arg_indices);
+            node->AddAttr("_input_hostmem", constant_arg_indices);
+        }
     }
-  }
-  return Status::OK();
+    return Status::OK();
 }
 
 }  // namespace tensorflow
