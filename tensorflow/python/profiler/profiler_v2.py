@@ -46,10 +46,12 @@ _profiler = None
 _profiler_lock = threading.Lock()
 
 
-@tf_export('profiler.experimental.ProfilerOptions', v1=[])
+@tf_export("profiler.experimental.ProfilerOptions", v1=[])
 class ProfilerOptions(
-    collections.namedtuple('ProfilerOptions',
-                           ['host_tracer_level', 'python_tracer_level'])):
+    collections.namedtuple(
+        "ProfilerOptions", ["host_tracer_level", "python_tracer_level"]
+    )
+):
     """Options to control profiler behaviors.
 
     A `tf.profiler.ProfilerOptions` hold the knobs to control tf.profiler's
@@ -61,10 +63,11 @@ class ProfilerOptions(
       python_tracer_level: for enable python function call tracing, 1 => enable.
                            0 => disable [default to 0]
     """
+
     pass
 
 
-@tf_export('profiler.experimental.start', v1=[])
+@tf_export("profiler.experimental.start", v1=[])
 def start(logdir, options=None):
     """Starts profiling.
 
@@ -91,8 +94,7 @@ def start(logdir, options=None):
     global _profiler
     with _profiler_lock:
         if _profiler is not None:
-            raise errors.AlreadyExistsError(None, None,
-                                            'Another profiler is running.')
+            raise errors.AlreadyExistsError(None, None, "Another profiler is running.")
         _profiler = _pywrap_profiler.ProfilerSession()
         try:
             # support for namedtuple in pybind11 is missing, we change it to
@@ -100,17 +102,18 @@ def start(logdir, options=None):
             opts = dict(options._asdict()) if options is not None else {}
             _profiler.start(logdir, opts)
         except errors.AlreadyExistsError:
-            logging.warning('Another profiler session is running which is probably '
-                            'created by profiler server. Please avoid using profiler '
-                            'server and profiler APIs at the same time.')
-            raise errors.AlreadyExistsError(None, None,
-                                            'Another profiler is running.')
+            logging.warning(
+                "Another profiler session is running which is probably "
+                "created by profiler server. Please avoid using profiler "
+                "server and profiler APIs at the same time."
+            )
+            raise errors.AlreadyExistsError(None, None, "Another profiler is running.")
         except Exception:
             _profiler = None
             raise
 
 
-@tf_export('profiler.experimental.stop', v1=[])
+@tf_export("profiler.experimental.stop", v1=[])
 def stop(save=True):
     """Stops the current profiling session.
 
@@ -126,8 +129,8 @@ def stop(save=True):
     with _profiler_lock:
         if _profiler is None:
             raise errors.UnavailableError(
-                None, None,
-                'Cannot export profiling results. No profiler is running.')
+                None, None, "Cannot export profiling results. No profiler is running."
+            )
         if save:
             try:
                 _profiler.export_to_tb()
@@ -145,11 +148,11 @@ def warmup():
     the profiling results.
 
     """
-    start('')
+    start("")
     stop(save=False)
 
 
-@tf_export('profiler.experimental.server.start', v1=[])
+@tf_export("profiler.experimental.server.start", v1=[])
 def start_server(port):
     """Start a profiler grpc server that listens to given port.
 
@@ -164,7 +167,7 @@ def start_server(port):
     _pywrap_profiler.start_server(port)
 
 
-@tf_export('profiler.experimental.Profile', v1=[])
+@tf_export("profiler.experimental.Profile", v1=[])
 class Profile(object):
     """Context-manager profile API.
 
