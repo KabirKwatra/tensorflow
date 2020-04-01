@@ -30,51 +30,47 @@ namespace tensorflow {
 
 // GrpcServer implementation that forwards calls to callbacks.
 class CGrpcServer : public GrpcServer {
-protected:
-    CGrpcServer(const ServerDef& server_def,
-                void (*start_function)(const TF_GrpcServer*, void*, TF_Status*),
-                void (*stop_function)(const TF_GrpcServer*, void*, TF_Status*),
-                void (*join_function)(const TF_GrpcServer*, void*, TF_Status*),
-                void (*delete_function)(void*))
-        : GrpcServer(server_def, ::tensorflow::Env::Default()),
-          start_function_(start_function),
-          stop_function_(stop_function),
-          join_function_(join_function),
-          delete_function_(delete_function),
-          context_(nullptr) {}
+ protected:
+  CGrpcServer(const ServerDef& server_def,
+              void (*start_function)(const TF_GrpcServer*, void*, TF_Status*),
+              void (*stop_function)(const TF_GrpcServer*, void*, TF_Status*),
+              void (*join_function)(const TF_GrpcServer*, void*, TF_Status*),
+              void (*delete_function)(void*))
+      : GrpcServer(server_def, ::tensorflow::Env::Default()),
+        start_function_(start_function),
+        stop_function_(stop_function),
+        join_function_(join_function),
+        delete_function_(delete_function),
+        context_(nullptr) {}
 
-public:
-    static Status Create(
-        const ServerDef& server_def,
-        void* (*init_function)(const TF_GrpcServer*, TF_Status*),
-        void (*start_function)(const TF_GrpcServer*, void*, TF_Status*),
-        void (*stop_function)(const TF_GrpcServer*, void*, TF_Status*),
-        void (*join_function)(const TF_GrpcServer*, void*, TF_Status*),
-        void (*delete_function)(void*),
-        TF_RemoteRendezvousBuilder* rendezvous_builder,
-        std::unique_ptr<ServerInterface>* out_server);
+ public:
+  static Status Create(
+      const ServerDef& server_def,
+      void* (*init_function)(const TF_GrpcServer*, TF_Status*),
+      void (*start_function)(const TF_GrpcServer*, void*, TF_Status*),
+      void (*stop_function)(const TF_GrpcServer*, void*, TF_Status*),
+      void (*join_function)(const TF_GrpcServer*, void*, TF_Status*),
+      void (*delete_function)(void*),
+      TF_RemoteRendezvousBuilder* rendezvous_builder,
+      std::unique_ptr<ServerInterface>* out_server);
 
-    Status Start() override;
-    Status Stop() override;
-    Status Join() override;
+  Status Start() override;
+  Status Stop() override;
+  Status Join() override;
 
-    ~CGrpcServer() override {
-        delete_function_(context_);
-    }
+  ~CGrpcServer() override { delete_function_(context_); }
 
-protected:
-    void SetContext(void* context) {
-        context_ = context;
-    }
+ protected:
+  void SetContext(void* context) { context_ = context; }
 
-private:
-    void (*start_function_)(const TF_GrpcServer*, void*, TF_Status*);
-    void (*stop_function_)(const TF_GrpcServer*, void*, TF_Status*);
-    void (*join_function_)(const TF_GrpcServer*, void*, TF_Status*);
-    void (*delete_function_)(void*);
-    void* context_;
+ private:
+  void (*start_function_)(const TF_GrpcServer*, void*, TF_Status*);
+  void (*stop_function_)(const TF_GrpcServer*, void*, TF_Status*);
+  void (*join_function_)(const TF_GrpcServer*, void*, TF_Status*);
+  void (*delete_function_)(void*);
+  void* context_;
 
-    friend class NetworksTest;
+  friend class NetworksTest;
 };
 
 }  // namespace tensorflow
