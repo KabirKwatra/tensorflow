@@ -28,30 +28,30 @@ namespace tensorflow {
 // any concrete implementation. However, in cases where the true concrete class
 // is needed a static_cast can be applied.
 class AbstractTensorInterface {
- public:
-  // Release any underlying resources, including the interface object.
-  virtual void Release() = 0;
+public:
+    // Release any underlying resources, including the interface object.
+    virtual void Release() = 0;
 
-  // Returns tensor dtype.
-  virtual DataType Type() const = 0;
-  // Returns number of dimensions.
-  virtual int NumDims() const = 0;
-  // Returns size of specified dimension
-  virtual int64_t Dim(int dim_index) const = 0;
-  // Returns number of elements across all dimensions.
-  virtual int64_t NumElements() const = 0;
-  // Return size in bytes of the Tensor
-  virtual size_t ByteSize() const = 0;
-  // Returns a pointer to tensor data
-  virtual void* Data() const = 0;
+    // Returns tensor dtype.
+    virtual DataType Type() const = 0;
+    // Returns number of dimensions.
+    virtual int NumDims() const = 0;
+    // Returns size of specified dimension
+    virtual int64_t Dim(int dim_index) const = 0;
+    // Returns number of elements across all dimensions.
+    virtual int64_t NumElements() const = 0;
+    // Return size in bytes of the Tensor
+    virtual size_t ByteSize() const = 0;
+    // Returns a pointer to tensor data
+    virtual void* Data() const = 0;
 
-  // Returns if the tensor is aligned
-  virtual bool IsAligned() const = 0;
-  // Returns if their is sole ownership of this Tensor and thus it can be moved.
-  virtual bool CanMove() const = 0;
+    // Returns if the tensor is aligned
+    virtual bool IsAligned() const = 0;
+    // Returns if their is sole ownership of this Tensor and thus it can be moved.
+    virtual bool CanMove() const = 0;
 
- protected:
-  virtual ~AbstractTensorInterface() {}
+protected:
+    virtual ~AbstractTensorInterface() {}
 };
 
 }  // namespace tensorflow

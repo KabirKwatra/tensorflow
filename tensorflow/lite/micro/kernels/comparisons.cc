@@ -98,277 +98,283 @@ TF_LITE_QUANTIZE_COMPARISON(LessEqual);
   }
 
 TfLiteStatus EqualEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  bool requires_broadcast = !HaveSameShapes(input1, input2);
-  switch (input1->type) {
+    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    bool requires_broadcast = !HaveSameShapes(input1, input2);
+    switch (input1->type) {
     case kTfLiteBool:
-      TF_LITE_COMPARISON(bool, Equal, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(bool, Equal, requires_broadcast);
+        break;
     case kTfLiteFloat32:
-      TF_LITE_COMPARISON(float, Equal, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(float, Equal, requires_broadcast);
+        break;
     case kTfLiteInt32:
-      TF_LITE_COMPARISON(int32_t, Equal, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int32_t, Equal, requires_broadcast);
+        break;
     case kTfLiteInt64:
-      TF_LITE_COMPARISON(int64_t, Equal, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int64_t, Equal, requires_broadcast);
+        break;
     case kTfLiteUInt8:
-      EvalQuantizedEqual<uint8_t>(context, node, input1, input2, output,
-                                  requires_broadcast);
-      break;
+        EvalQuantizedEqual<uint8_t>(context, node, input1, input2, output,
+                                    requires_broadcast);
+        break;
     case kTfLiteInt8:
-      EvalQuantizedEqual<int8_t>(context, node, input1, input2, output,
-                                 requires_broadcast);
-      break;
+        EvalQuantizedEqual<int8_t>(context, node, input1, input2, output,
+                                   requires_broadcast);
+        break;
     default:
-      TF_LITE_KERNEL_LOG(
-          context, "Does not support type %d, requires bool|float|int|uint8",
-          input1->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(
+            context, "Does not support type %d, requires bool|float|int|uint8",
+            input1->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 // TODO(renjieliu): Refactor the logic to avoid duplications.
 TfLiteStatus NotEqualEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  bool requires_broadcast = !HaveSameShapes(input1, input2);
-  switch (input1->type) {
+    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    bool requires_broadcast = !HaveSameShapes(input1, input2);
+    switch (input1->type) {
     case kTfLiteBool:
-      TF_LITE_COMPARISON(bool, NotEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(bool, NotEqual, requires_broadcast);
+        break;
     case kTfLiteFloat32:
-      TF_LITE_COMPARISON(float, NotEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(float, NotEqual, requires_broadcast);
+        break;
     case kTfLiteInt32:
-      TF_LITE_COMPARISON(int32_t, NotEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int32_t, NotEqual, requires_broadcast);
+        break;
     case kTfLiteInt64:
-      TF_LITE_COMPARISON(int64_t, NotEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int64_t, NotEqual, requires_broadcast);
+        break;
     case kTfLiteUInt8:
-      EvalQuantizedNotEqual<uint8_t>(context, node, input1, input2, output,
-                                     requires_broadcast);
-      break;
+        EvalQuantizedNotEqual<uint8_t>(context, node, input1, input2, output,
+                                       requires_broadcast);
+        break;
     case kTfLiteInt8:
-      EvalQuantizedNotEqual<int8_t>(context, node, input1, input2, output,
-                                    requires_broadcast);
-      break;
+        EvalQuantizedNotEqual<int8_t>(context, node, input1, input2, output,
+                                      requires_broadcast);
+        break;
     default:
-      TF_LITE_KERNEL_LOG(
-          context, "Does not support type %d, requires bool|float|int|uint8",
-          input1->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(
+            context, "Does not support type %d, requires bool|float|int|uint8",
+            input1->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 TfLiteStatus GreaterEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  bool requires_broadcast = !HaveSameShapes(input1, input2);
-  switch (input1->type) {
+    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    bool requires_broadcast = !HaveSameShapes(input1, input2);
+    switch (input1->type) {
     case kTfLiteFloat32:
-      TF_LITE_COMPARISON(float, Greater, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(float, Greater, requires_broadcast);
+        break;
     case kTfLiteInt32:
-      TF_LITE_COMPARISON(int32_t, Greater, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int32_t, Greater, requires_broadcast);
+        break;
     case kTfLiteInt64:
-      TF_LITE_COMPARISON(int64_t, Greater, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int64_t, Greater, requires_broadcast);
+        break;
     case kTfLiteUInt8:
-      EvalQuantizedGreater<uint8_t>(context, node, input1, input2, output,
-                                    requires_broadcast);
-      break;
+        EvalQuantizedGreater<uint8_t>(context, node, input1, input2, output,
+                                      requires_broadcast);
+        break;
     case kTfLiteInt8:
-      EvalQuantizedGreater<int8_t>(context, node, input1, input2, output,
-                                   requires_broadcast);
-      break;
+        EvalQuantizedGreater<int8_t>(context, node, input1, input2, output,
+                                     requires_broadcast);
+        break;
     default:
-      TF_LITE_KERNEL_LOG(context,
-                         "Does not support type %d, requires float|int|uint8",
-                         input1->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(context,
+                           "Does not support type %d, requires float|int|uint8",
+                           input1->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 TfLiteStatus GreaterEqualEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  bool requires_broadcast = !HaveSameShapes(input1, input2);
-  switch (input1->type) {
+    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    bool requires_broadcast = !HaveSameShapes(input1, input2);
+    switch (input1->type) {
     case kTfLiteFloat32:
-      TF_LITE_COMPARISON(float, GreaterEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(float, GreaterEqual, requires_broadcast);
+        break;
     case kTfLiteInt32:
-      TF_LITE_COMPARISON(int32_t, GreaterEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int32_t, GreaterEqual, requires_broadcast);
+        break;
     case kTfLiteInt64:
-      TF_LITE_COMPARISON(int64_t, GreaterEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int64_t, GreaterEqual, requires_broadcast);
+        break;
     case kTfLiteUInt8:
-      EvalQuantizedGreaterEqual<uint8_t>(context, node, input1, input2, output,
-                                         requires_broadcast);
-      break;
+        EvalQuantizedGreaterEqual<uint8_t>(context, node, input1, input2, output,
+                                           requires_broadcast);
+        break;
     case kTfLiteInt8:
-      EvalQuantizedGreaterEqual<int8_t>(context, node, input1, input2, output,
-                                        requires_broadcast);
-      break;
+        EvalQuantizedGreaterEqual<int8_t>(context, node, input1, input2, output,
+                                          requires_broadcast);
+        break;
     default:
-      TF_LITE_KERNEL_LOG(context,
-                         "Does not support type %d, requires float|int|uint8",
-                         input1->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(context,
+                           "Does not support type %d, requires float|int|uint8",
+                           input1->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 TfLiteStatus LessEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  bool requires_broadcast = !HaveSameShapes(input1, input2);
-  switch (input1->type) {
+    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    bool requires_broadcast = !HaveSameShapes(input1, input2);
+    switch (input1->type) {
     case kTfLiteFloat32:
-      TF_LITE_COMPARISON(float, Less, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(float, Less, requires_broadcast);
+        break;
     case kTfLiteInt32:
-      TF_LITE_COMPARISON(int32_t, Less, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int32_t, Less, requires_broadcast);
+        break;
     case kTfLiteInt64:
-      TF_LITE_COMPARISON(int64_t, Less, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int64_t, Less, requires_broadcast);
+        break;
     case kTfLiteUInt8:
-      EvalQuantizedLess<uint8_t>(context, node, input1, input2, output,
-                                 requires_broadcast);
-      break;
+        EvalQuantizedLess<uint8_t>(context, node, input1, input2, output,
+                                   requires_broadcast);
+        break;
     case kTfLiteInt8:
-      EvalQuantizedLess<int8_t>(context, node, input1, input2, output,
-                                requires_broadcast);
-      break;
+        EvalQuantizedLess<int8_t>(context, node, input1, input2, output,
+                                  requires_broadcast);
+        break;
     default:
-      TF_LITE_KERNEL_LOG(context,
-                         "Does not support type %d, requires float|int|uint8",
-                         input1->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(context,
+                           "Does not support type %d, requires float|int|uint8",
+                           input1->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 TfLiteStatus LessEqualEval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  bool requires_broadcast = !HaveSameShapes(input1, input2);
-  switch (input1->type) {
+    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    bool requires_broadcast = !HaveSameShapes(input1, input2);
+    switch (input1->type) {
     case kTfLiteFloat32:
-      TF_LITE_COMPARISON(float, LessEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(float, LessEqual, requires_broadcast);
+        break;
     case kTfLiteInt32:
-      TF_LITE_COMPARISON(int32_t, LessEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int32_t, LessEqual, requires_broadcast);
+        break;
     case kTfLiteInt64:
-      TF_LITE_COMPARISON(int64_t, LessEqual, requires_broadcast);
-      break;
+        TF_LITE_COMPARISON(int64_t, LessEqual, requires_broadcast);
+        break;
     case kTfLiteUInt8:
-      EvalQuantizedLessEqual<uint8_t>(context, node, input1, input2, output,
-                                      requires_broadcast);
-      break;
+        EvalQuantizedLessEqual<uint8_t>(context, node, input1, input2, output,
+                                        requires_broadcast);
+        break;
     case kTfLiteInt8:
-      EvalQuantizedLessEqual<int8_t>(context, node, input1, input2, output,
-                                     requires_broadcast);
-      break;
+        EvalQuantizedLessEqual<int8_t>(context, node, input1, input2, output,
+                                       requires_broadcast);
+        break;
     default:
-      TF_LITE_KERNEL_LOG(context,
-                         "Does not support type %d, requires float|int|uint8",
-                         input1->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(context,
+                           "Does not support type %d, requires float|int|uint8",
+                           input1->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 }  // namespace
 }  // namespace comparisons
 
 TfLiteRegistration* Register_EQUAL() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/comparisons::EqualEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/comparisons::EqualEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 TfLiteRegistration* Register_NOT_EQUAL() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/comparisons::NotEqualEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/comparisons::NotEqualEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 TfLiteRegistration* Register_GREATER() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/comparisons::GreaterEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/comparisons::GreaterEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 TfLiteRegistration* Register_GREATER_EQUAL() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/comparisons::GreaterEqualEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/comparisons::GreaterEqualEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 TfLiteRegistration* Register_LESS() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/comparisons::LessEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/comparisons::LessEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 TfLiteRegistration* Register_LESS_EQUAL() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/comparisons::LessEqualEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/comparisons::LessEqualEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 }  // namespace micro

@@ -28,35 +28,36 @@ constexpr int kInputTensor = 0;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  switch (input->type) {
+    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    switch (input->type) {
     // TODO(wangtz): handle for kTfLiteInt8
     case kTfLiteFloat32:
-      reference_ops::Negate(GetTensorShape(input), GetTensorData<float>(input),
-                            GetTensorShape(output),
-                            GetTensorData<float>(output));
-      break;
+        reference_ops::Negate(GetTensorShape(input), GetTensorData<float>(input),
+                              GetTensorShape(output),
+                              GetTensorData<float>(output));
+        break;
     default:
-      TF_LITE_KERNEL_LOG(
-          context, "Neg only currently supports float32, got %d.", input->type);
-      return kTfLiteError;
-  }
-  return kTfLiteOk;
+        TF_LITE_KERNEL_LOG(
+            context, "Neg only currently supports float32, got %d.", input->type);
+        return kTfLiteError;
+    }
+    return kTfLiteOk;
 }
 
 }  // namespace neg
 
 TfLiteRegistration* Register_NEG() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/neg::Eval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/neg::Eval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 }  // namespace micro

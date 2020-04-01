@@ -28,25 +28,26 @@ constexpr int kInputTensor = 0;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-  TF_LITE_ENSURE_EQ(context, input->type, kTfLiteFloat32);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
-  reference_ops::Floor(GetTensorShape(input), GetTensorData<float>(input),
-                       GetTensorShape(output), GetTensorData<float>(output));
-  return kTfLiteOk;
+    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+    TF_LITE_ENSURE_EQ(context, input->type, kTfLiteFloat32);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    reference_ops::Floor(GetTensorShape(input), GetTensorData<float>(input),
+                         GetTensorShape(output), GetTensorData<float>(output));
+    return kTfLiteOk;
 }
 }  // namespace floor
 
 TfLiteRegistration* Register_FLOOR() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/floor::Eval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/floor::Eval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 }  // namespace micro

@@ -24,45 +24,45 @@ limitations under the License.
 namespace tensorflow {
 
 auto* scalar_cache_hits = tensorflow::monitoring::Counter<0>::New(
-    "/tensorflow/eager/python/scalar_cache_hits",
-    "Number of times a scalar TFE_TensorHandle was retrieved from cache");
+                              "/tensorflow/eager/python/scalar_cache_hits",
+                              "Number of times a scalar TFE_TensorHandle was retrieved from cache");
 auto* scalar_cache_misses = tensorflow::monitoring::Counter<0>::New(
-    "/tensorflow/eager/python/scalar_cache_misses",
-    "Number of times a scalar TFE_TensorHandle was not available in cache");
+                                "/tensorflow/eager/python/scalar_cache_misses",
+                                "Number of times a scalar TFE_TensorHandle was not available in cache");
 
 TFE_TensorHandleCache* TFE_TensorHandleCache::Get() {
-  // TODO(slebedev): link with Context (in context.py) instead of having
-  // a static global?
-  static auto* cache = new TFE_TensorHandleCache();
-  return cache;
+    // TODO(slebedev): link with Context (in context.py) instead of having
+    // a static global?
+    static auto* cache = new TFE_TensorHandleCache();
+    return cache;
 }
 
 TFE_TensorHandle* TFE_TensorHandleCache::Lookup(
     PyObject* value, tensorflow::DataType dtype,
     absl::string_view device_name) const {
-  CHECK_NOTNULL(value);
-  const auto& it = cache.find(Key{PyObjectPtr{value}, dtype, device_name});
-  if (it == cache.end()) {
-    scalar_cache_misses->GetCell()->IncrementBy(1);
-    return nullptr;
-  }
+    CHECK_NOTNULL(value);
+    const auto& it = cache.find(Key{PyObjectPtr{value}, dtype, device_name});
+    if (it == cache.end()) {
+        scalar_cache_misses->GetCell()->IncrementBy(1);
+        return nullptr;
+    }
 
-  scalar_cache_hits->GetCell()->IncrementBy(1);
-  auto* h = it->second;
-  return new TFE_TensorHandle{h->handle->Copy()};
+    scalar_cache_hits->GetCell()->IncrementBy(1);
+    auto* h = it->second;
+    return new TFE_TensorHandle{h->handle->Copy()};
 }
 
 void TFE_TensorHandleCache::Insert(PyObject* value, tensorflow::DataType dtype,
                                    absl::string_view device_name,
                                    TFE_TensorHandle* h) {
-  Py_INCREF(value);
-  cache.emplace(Key{PyObjectPtr{value}, dtype, device_name},
-                new TFE_TensorHandle{h->handle->Copy()});
+    Py_INCREF(value);
+    cache.emplace(Key{PyObjectPtr{value}, dtype, device_name},
+                  new TFE_TensorHandle{h->handle->Copy()});
 }
 
 void TFE_TensorHandleCache::Clear() {
-  DecrefUnrefAll();
-  cache.clear();
+    DecrefUnrefAll();
+    cache.clear();
 }
 
 }  // namespace tensorflow
