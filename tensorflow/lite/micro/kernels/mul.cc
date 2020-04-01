@@ -32,58 +32,58 @@ constexpr int kInput2Tensor = 1;
 constexpr int kOutputTensor = 0;
 
 struct OpData {
-    int32_t output_activation_min;
-    int32_t output_activation_max;
+  int32_t output_activation_min;
+  int32_t output_activation_max;
 
-    int32_t output_multiplier;
-    int output_shift;
+  int32_t output_multiplier;
+  int output_shift;
 };
 
 TfLiteStatus CalculateOpData(TfLiteContext* context, TfLiteNode* node,
                              TfLiteMulParams* params, OpData* data) {
-    const TfLiteTensor* input1 = GetInput(context, node, kInput1Tensor);
-    const TfLiteTensor* input2 = GetInput(context, node, kInput2Tensor);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input1 = GetInput(context, node, kInput1Tensor);
+  const TfLiteTensor* input2 = GetInput(context, node, kInput2Tensor);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    TF_LITE_ENSURE_EQ(context, NumInputs(node), 2);
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
+  TF_LITE_ENSURE_EQ(context, NumInputs(node), 2);
+  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
 
-    TF_LITE_ENSURE_EQ(context, input1->type, input2->type);
+  TF_LITE_ENSURE_EQ(context, input1->type, input2->type);
 
-    TF_LITE_ENSURE_STATUS(CalculateActivationRangeQuantized(
-                              context, params->activation, output, &data->output_activation_min,
-                              &data->output_activation_max));
+  TF_LITE_ENSURE_STATUS(CalculateActivationRangeQuantized(
+      context, params->activation, output, &data->output_activation_min,
+      &data->output_activation_max));
 
-    if (output->type == kTfLiteUInt8 || output->type == kTfLiteInt8) {
-        double real_multiplier = static_cast<double>(input1->params.scale) *
-                                 static_cast<double>(input2->params.scale) /
-                                 static_cast<double>(output->params.scale);
-        QuantizeMultiplier(real_multiplier, &data->output_multiplier,
-                           &data->output_shift);
-    }
+  if (output->type == kTfLiteUInt8 || output->type == kTfLiteInt8) {
+    double real_multiplier = static_cast<double>(input1->params.scale) *
+                             static_cast<double>(input2->params.scale) /
+                             static_cast<double>(output->params.scale);
+    QuantizeMultiplier(real_multiplier, &data->output_multiplier,
+                       &data->output_shift);
+  }
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 void EvalQuantized(TfLiteContext* context, TfLiteNode* node,
                    TfLiteMulParams* params, OpData* data,
                    const TfLiteTensor* input1, const TfLiteTensor* input2,
                    TfLiteTensor* output) {
-    if (output->type == kTfLiteInt8 || output->type == kTfLiteUInt8) {
-        tflite::ArithmeticParams op_params;
-        SetActivationParams(data->output_activation_min,
-                            data->output_activation_max, &op_params);
-        op_params.input1_offset = -input1->params.zero_point;
-        op_params.input2_offset = -input2->params.zero_point;
-        op_params.output_offset = output->params.zero_point;
-        op_params.output_multiplier = data->output_multiplier;
-        op_params.output_shift = data->output_shift;
-        bool need_broadcast = reference_ops::ProcessBroadcastShapes(
-                                  GetTensorShape(input1), GetTensorShape(input2), &op_params);
+  if (output->type == kTfLiteInt8 || output->type == kTfLiteUInt8) {
+    tflite::ArithmeticParams op_params;
+    SetActivationParams(data->output_activation_min,
+                        data->output_activation_max, &op_params);
+    op_params.input1_offset = -input1->params.zero_point;
+    op_params.input2_offset = -input2->params.zero_point;
+    op_params.output_offset = output->params.zero_point;
+    op_params.output_multiplier = data->output_multiplier;
+    op_params.output_shift = data->output_shift;
+    bool need_broadcast = reference_ops::ProcessBroadcastShapes(
+        GetTensorShape(input1), GetTensorShape(input2), &op_params);
 
 #define TF_LITE_MUL(type, opname, dtype)                             \
   type::opname(op_params, GetTensorShape(input1),                    \
@@ -91,88 +91,87 @@ void EvalQuantized(TfLiteContext* context, TfLiteNode* node,
                GetTensorData<dtype>(input2), GetTensorShape(output), \
                GetTensorData<dtype>(output));
 
-        if (output->type == kTfLiteInt8) {
-            if (need_broadcast) {
-                TF_LITE_MUL(reference_integer_ops, BroadcastMul4DSlow, int8_t);
-            } else {
-                TF_LITE_MUL(reference_integer_ops, Mul, int8_t);
-            }
-        } else if (output->type == kTfLiteUInt8) {
-            if (need_broadcast) {
-                TF_LITE_MUL(reference_ops, BroadcastMul4DSlow, uint8_t);
-            } else {
-                TF_LITE_MUL(reference_ops, Mul, uint8_t);
-            }
-        }
-#undef TF_LITE_MUL
+    if (output->type == kTfLiteInt8) {
+      if (need_broadcast) {
+        TF_LITE_MUL(reference_integer_ops, BroadcastMul4DSlow, int8_t);
+      } else {
+        TF_LITE_MUL(reference_integer_ops, Mul, int8_t);
+      }
+    } else if (output->type == kTfLiteUInt8) {
+      if (need_broadcast) {
+        TF_LITE_MUL(reference_ops, BroadcastMul4DSlow, uint8_t);
+      } else {
+        TF_LITE_MUL(reference_ops, Mul, uint8_t);
+      }
     }
+#undef TF_LITE_MUL
+  }
 }
 
 void EvalFloat(TfLiteContext* context, TfLiteNode* node,
                TfLiteMulParams* params, OpData* data,
                const TfLiteTensor* input1, const TfLiteTensor* input2,
                TfLiteTensor* output) {
-    float output_activation_min, output_activation_max;
-    CalculateActivationRange(params->activation, &output_activation_min,
-                             &output_activation_max);
-    tflite::ArithmeticParams op_params;
-    SetActivationParams(output_activation_min, output_activation_max, &op_params);
+  float output_activation_min, output_activation_max;
+  CalculateActivationRange(params->activation, &output_activation_min,
+                           &output_activation_max);
+  tflite::ArithmeticParams op_params;
+  SetActivationParams(output_activation_min, output_activation_max, &op_params);
 
-    bool need_broadcast = reference_ops::ProcessBroadcastShapes(
-                              GetTensorShape(input1), GetTensorShape(input2), &op_params);
+  bool need_broadcast = reference_ops::ProcessBroadcastShapes(
+      GetTensorShape(input1), GetTensorShape(input2), &op_params);
 #define TF_LITE_MUL(opname)                                                   \
   reference_ops::opname(op_params, GetTensorShape(input1),                    \
                         GetTensorData<float>(input1), GetTensorShape(input2), \
                         GetTensorData<float>(input2), GetTensorShape(output), \
                         GetTensorData<float>(output));
 
-    if (need_broadcast) {
-        TF_LITE_MUL(BroadcastMul4DSlow);
-    } else {
-        TF_LITE_MUL(Mul);
-    }
+  if (need_broadcast) {
+    TF_LITE_MUL(BroadcastMul4DSlow);
+  } else {
+    TF_LITE_MUL(Mul);
+  }
 #undef TF_LITE_MUL
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    auto* params = reinterpret_cast<TfLiteMulParams*>(node->builtin_data);
-    OpData data;
+  auto* params = reinterpret_cast<TfLiteMulParams*>(node->builtin_data);
+  OpData data;
 
-    const TfLiteTensor* input1 = GetInput(context, node, kInput1Tensor);
-    const TfLiteTensor* input2 = GetInput(context, node, kInput2Tensor);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input1 = GetInput(context, node, kInput1Tensor);
+  const TfLiteTensor* input2 = GetInput(context, node, kInput2Tensor);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    CalculateOpData(context, node, params, &data);
+  CalculateOpData(context, node, params, &data);
 
-    switch (input1->type) {
+  switch (input1->type) {
     case kTfLiteUInt8:
     case kTfLiteInt8:
-        EvalQuantized(context, node, params, &data, input1, input2, output);
-        break;
+      EvalQuantized(context, node, params, &data, input1, input2, output);
+      break;
     case kTfLiteFloat32:
-        EvalFloat(context, node, params, &data, input1, input2, output);
-        break;
+      EvalFloat(context, node, params, &data, input1, input2, output);
+      break;
     default:
-        TF_LITE_KERNEL_LOG(context, "Type %d not currently supported.",
-                           input1->type);
-        return kTfLiteError;
-    }
+      TF_LITE_KERNEL_LOG(context, "Type %d not currently supported.",
+                         input1->type);
+      return kTfLiteError;
+  }
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 }  // namespace mul
 
 TfLiteRegistration* Register_MUL() {
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/nullptr,
-                                            /*prepare=*/mul::Prepare,
-                                            /*invoke=*/mul::Eval,
-                                            /*profiling_string=*/nullptr,
-                                            /*builtin_code=*/0,
-                                            /*custom_name=*/nullptr,
-                                            /*version=*/0
-                                  };
-    return &r;
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/nullptr,
+                                 /*prepare=*/mul::Prepare,
+                                 /*invoke=*/mul::Eval,
+                                 /*profiling_string=*/nullptr,
+                                 /*builtin_code=*/0,
+                                 /*custom_name=*/nullptr,
+                                 /*version=*/0};
+  return &r;
 }
 
 }  // namespace micro

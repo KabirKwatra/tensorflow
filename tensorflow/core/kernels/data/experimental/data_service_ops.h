@@ -30,18 +30,18 @@ namespace data {
 // error out when the dataset contains external state.
 // The op produces a dataset id for identifying the registered dataset.
 class RegisterDatasetOp : public OpKernel {
-public:
-    static constexpr const char* const kAddress = "address";
-    static constexpr const char* const kProtocol = "protocol";
-    static constexpr const char* const kExternalStatePolicy =
-        "external_state_policy";
+ public:
+  static constexpr const char* const kAddress = "address";
+  static constexpr const char* const kProtocol = "protocol";
+  static constexpr const char* const kExternalStatePolicy =
+      "external_state_policy";
 
-    explicit RegisterDatasetOp(OpKernelConstruction* ctx);
+  explicit RegisterDatasetOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 
-private:
-    SerializationContext::ExternalStatePolicy external_state_policy_;
+ private:
+  SerializationContext::ExternalStatePolicy external_state_policy_;
 };
 
 // Begins a new epoch for a tf.data service dataset.
@@ -51,14 +51,14 @@ private:
 // master.
 // The op produces an epoch id to identify the newly created epoch.
 class BeginEpochOp : public OpKernel {
-public:
-    static constexpr const char* const kDatasetId = "dataset_id";
-    static constexpr const char* const kAddress = "address";
-    static constexpr const char* const kProtocol = "protocol";
+ public:
+  static constexpr const char* const kDatasetId = "dataset_id";
+  static constexpr const char* const kAddress = "address";
+  static constexpr const char* const kProtocol = "protocol";
 
-    explicit BeginEpochOp(OpKernelConstruction* ctx);
+  explicit BeginEpochOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 };
 
 // Creates a new iterator for iterating over a tf.data service dataset.
@@ -67,14 +67,14 @@ public:
 // may read from the same epoch, causing the elements of the epoch to be split
 // across all iterators.
 class MakeDataServiceIteratorOp : public MakeIteratorOp {
-public:
-    static constexpr const char* const kEpochId = "epoch_id";
+ public:
+  static constexpr const char* const kEpochId = "epoch_id";
 
-    explicit MakeDataServiceIteratorOp(OpKernelConstruction* ctx)
-        : MakeIteratorOp(ctx) {}
+  explicit MakeDataServiceIteratorOp(OpKernelConstruction* ctx)
+      : MakeIteratorOp(ctx) {}
 
-protected:
-    Status DoCompute(OpKernelContext* ctx) override;
+ protected:
+  Status DoCompute(OpKernelContext* ctx) override;
 };
 
 }  // namespace data

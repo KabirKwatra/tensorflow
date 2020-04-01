@@ -31,7 +31,7 @@ namespace {
 
 // This file has a reference implementation of TFMaximum/TFMinimum.
 enum KernelType {
-    kReference,
+  kReference,
 };
 
 constexpr int kInputTensor1 = 0;
@@ -39,28 +39,28 @@ constexpr int kInputTensor2 = 1;
 constexpr int kOutputTensor = 0;
 
 struct OpContext {
-    OpContext(TfLiteContext* context, TfLiteNode* node) {
-        input1 = GetInput(context, node, kInputTensor1);
-        input2 = GetInput(context, node, kInputTensor2);
-        output = GetOutput(context, node, kOutputTensor);
-    }
-    const TfLiteTensor* input1;
-    const TfLiteTensor* input2;
-    TfLiteTensor* output;
+  OpContext(TfLiteContext* context, TfLiteNode* node) {
+    input1 = GetInput(context, node, kInputTensor1);
+    input2 = GetInput(context, node, kInputTensor2);
+    output = GetOutput(context, node, kOutputTensor);
+  }
+  const TfLiteTensor* input1;
+  const TfLiteTensor* input2;
+  TfLiteTensor* output;
 };
 
 struct MaximumOp {
-    template <typename data_type>
-    static data_type op(data_type el1, data_type el2) {
-        return el1 > el2 ? el1 : el2;
-    }
+  template <typename data_type>
+  static data_type op(data_type el1, data_type el2) {
+    return el1 > el2 ? el1 : el2;
+  }
 };
 
 struct MinimumOp {
-    template <typename data_type>
-    static data_type op(data_type el1, data_type el2) {
-        return el1 < el2 ? el1 : el2;
-    }
+  template <typename data_type>
+  static data_type op(data_type el1, data_type el2) {
+    return el1 < el2 ? el1 : el2;
+  }
 };
 
 }  // namespace
@@ -68,84 +68,82 @@ struct MinimumOp {
 template <typename data_type, typename op_type>
 void TFLiteOperation(TfLiteContext* context, TfLiteNode* node,
                      const OpContext& op_context) {
-    reference_ops::MaximumMinimumBroadcastSlow(
-        GetTensorShape(op_context.input1),
-        GetTensorData<data_type>(op_context.input1),
-        GetTensorShape(op_context.input2),
-        GetTensorData<data_type>(op_context.input2),
-        GetTensorShape(op_context.output),
-        GetTensorData<data_type>(op_context.output),
-        op_type::template op<data_type>);
+  reference_ops::MaximumMinimumBroadcastSlow(
+      GetTensorShape(op_context.input1),
+      GetTensorData<data_type>(op_context.input1),
+      GetTensorShape(op_context.input2),
+      GetTensorData<data_type>(op_context.input2),
+      GetTensorShape(op_context.output),
+      GetTensorData<data_type>(op_context.output),
+      op_type::template op<data_type>);
 }
 
 template <KernelType kernel_type, typename OpType>
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    OpContext op_context(context, node);
+  OpContext op_context(context, node);
 
-    if (kernel_type == kReference) {
-        switch (op_context.output->type) {
-        case kTfLiteFloat32:
-            TFLiteOperation<float, OpType>(context, node, op_context);
-            break;
-        case kTfLiteUInt8:
-            TFLiteOperation<uint8_t, OpType>(context, node, op_context);
-            break;
-        case kTfLiteInt8:
-            TFLiteOperation<int8_t, OpType>(context, node, op_context);
-            break;
-        case kTfLiteInt32:
-            TFLiteOperation<int32_t, OpType>(context, node, op_context);
-            break;
-        case kTfLiteInt64:
-            TFLiteOperation<int64_t, OpType>(context, node, op_context);
-            break;
-        default:
-            TF_LITE_KERNEL_LOG(context,
-                               "Type %s (%d) is not supported by Maximum/Minimum.",
-                               TfLiteTypeGetName(op_context.output->type),
-                               op_context.output->type);
-            return kTfLiteError;
-        }
-    } else {
+  if (kernel_type == kReference) {
+    switch (op_context.output->type) {
+      case kTfLiteFloat32:
+        TFLiteOperation<float, OpType>(context, node, op_context);
+        break;
+      case kTfLiteUInt8:
+        TFLiteOperation<uint8_t, OpType>(context, node, op_context);
+        break;
+      case kTfLiteInt8:
+        TFLiteOperation<int8_t, OpType>(context, node, op_context);
+        break;
+      case kTfLiteInt32:
+        TFLiteOperation<int32_t, OpType>(context, node, op_context);
+        break;
+      case kTfLiteInt64:
+        TFLiteOperation<int64_t, OpType>(context, node, op_context);
+        break;
+      default:
         TF_LITE_KERNEL_LOG(context,
-                           "Kernel type not supported by Maximum/Minimum.");
+                           "Type %s (%d) is not supported by Maximum/Minimum.",
+                           TfLiteTypeGetName(op_context.output->type),
+                           op_context.output->type);
         return kTfLiteError;
     }
-    return kTfLiteOk;
+  } else {
+    TF_LITE_KERNEL_LOG(context,
+                       "Kernel type not supported by Maximum/Minimum.");
+    return kTfLiteError;
+  }
+  return kTfLiteOk;
 }
 
 }  // namespace maximum_minimum
 
 TfLiteRegistration* Register_MAXIMUM() {
-    static TfLiteRegistration r = {
-        /*init=*/nullptr,
-        /*free=*/nullptr,
-        /*prepare=*/nullptr,
-        /*invoke=*/
-        maximum_minimum::Eval<maximum_minimum::kReference,
-        maximum_minimum::MaximumOp>,
-        /*profiling_string=*/nullptr,
-        /*builtin_code=*/0,
-        /*custom_name=*/nullptr,
-        /*version=*/0
-    };
-    return &r;
+  static TfLiteRegistration r = {
+      /*init=*/nullptr,
+      /*free=*/nullptr,
+      /*prepare=*/nullptr,
+      /*invoke=*/
+      maximum_minimum::Eval<maximum_minimum::kReference,
+                            maximum_minimum::MaximumOp>,
+      /*profiling_string=*/nullptr,
+      /*builtin_code=*/0,
+      /*custom_name=*/nullptr,
+      /*version=*/0};
+  return &r;
 }
 
 TfLiteRegistration* Register_MINIMUM() {
-    static TfLiteRegistration r = {
-        /*init=*/nullptr,
-        /*free=*/nullptr,
-        /*prepare=*/nullptr,
-        /*invoke=*/
-        maximum_minimum::Eval<maximum_minimum::kReference,
-        maximum_minimum::MinimumOp>,
-        /*profiling_string=*/nullptr,
-        /*builtin_code=*/0,
-        /*custom_name=*/nullptr,
-        /*version=*/0
-    };
-    return &r;
+  static TfLiteRegistration r = {
+      /*init=*/nullptr,
+      /*free=*/nullptr,
+      /*prepare=*/nullptr,
+      /*invoke=*/
+      maximum_minimum::Eval<maximum_minimum::kReference,
+                            maximum_minimum::MinimumOp>,
+      /*profiling_string=*/nullptr,
+      /*builtin_code=*/0,
+      /*custom_name=*/nullptr,
+      /*version=*/0};
+  return &r;
 }
 
 }  // namespace micro

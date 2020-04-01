@@ -62,8 +62,8 @@ constexpr int kTfLiteAbort = -9;
 // returns kTfLiteAbort until cycles_until_run-- is zero.  At this time,
 // cycles_until_run is reset to cycles_max.
 struct OpData {
-    int cycles_until_run;
-    int cycles_max;
+  int cycles_until_run;
+  int cycles_max;
 };
 
 // These constants represent constants specific to the music detect model.
@@ -74,103 +74,100 @@ OpData op_data_array[kMaxOpDataSize];
 
 }  // namespace
 
-void Free(TfLiteContext* context, void* buffer) {
-    op_data_counter = 0;
-}
+void Free(TfLiteContext* context, void* buffer) { op_data_counter = 0; }
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    TF_LITE_ENSURE(context, input != nullptr);
-    TF_LITE_ENSURE(context, output != nullptr);
-    TF_LITE_ENSURE_EQ(context, 1, output->dims->data[0]);
-    TF_LITE_ENSURE_EQ(context, 1, input->dims->data[0]);
-    TF_LITE_ENSURE_EQ(context, 1, input->dims->data[1]);
-    TF_LITE_ENSURE_EQ(context, 1, output->dims->data[2]);
-    TF_LITE_ENSURE_EQ(context, 1, input->dims->data[2]);
-    TF_LITE_ENSURE_EQ(context, output->dims->data[3], input->dims->data[3]);
+  TF_LITE_ENSURE(context, input != nullptr);
+  TF_LITE_ENSURE(context, output != nullptr);
+  TF_LITE_ENSURE_EQ(context, 1, output->dims->data[0]);
+  TF_LITE_ENSURE_EQ(context, 1, input->dims->data[0]);
+  TF_LITE_ENSURE_EQ(context, 1, input->dims->data[1]);
+  TF_LITE_ENSURE_EQ(context, 1, output->dims->data[2]);
+  TF_LITE_ENSURE_EQ(context, 1, input->dims->data[2]);
+  TF_LITE_ENSURE_EQ(context, output->dims->data[3], input->dims->data[3]);
 
-    TF_LITE_ENSURE_EQ(context, input->type, output->type);
+  TF_LITE_ENSURE_EQ(context, input->type, output->type);
 
-    // The circular buffer custom operator currently only supports int8.
-    TF_LITE_ENSURE_EQ(context, input->type, kTfLiteInt8);
+  // The circular buffer custom operator currently only supports int8.
+  TF_LITE_ENSURE_EQ(context, input->type, kTfLiteInt8);
 
-    // TODO(b/132070898): Use statically slotted OpData structures until a
-    // scratch memory API is ready.
-    TFLITE_DCHECK_LE(op_data_counter, kMaxOpDataSize);
-    OpData* op_data = &op_data_array[op_data_counter++];
-    // The last circular buffer layer (length 5) simply accumulates outputs, and
-    // does not run periodically.
-    // TODO(b/150001379): Move this special case logic to the tflite flatbuffer.
-    if (output->dims->data[1] == 5) {
-        op_data->cycles_max = 1;
-    } else {
-        op_data->cycles_max = 2;
-    }
-    op_data->cycles_until_run = op_data->cycles_max;
-    node->user_data = op_data;
+  // TODO(b/132070898): Use statically slotted OpData structures until a
+  // scratch memory API is ready.
+  TFLITE_DCHECK_LE(op_data_counter, kMaxOpDataSize);
+  OpData* op_data = &op_data_array[op_data_counter++];
+  // The last circular buffer layer (length 5) simply accumulates outputs, and
+  // does not run periodically.
+  // TODO(b/150001379): Move this special case logic to the tflite flatbuffer.
+  if (output->dims->data[1] == 5) {
+    op_data->cycles_max = 1;
+  } else {
+    op_data->cycles_max = 2;
+  }
+  op_data->cycles_until_run = op_data->cycles_max;
+  node->user_data = op_data;
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 // Shifts buffer over by the output depth, and write new input to end of buffer.
 // num_slots is the number of samples stored in the output buffer.
 // depth is the size of each sample.
 void EvalInt8(const int8_t* input, int num_slots, int depth, int8_t* output) {
-    memmove(output, &output[depth], (num_slots - 1) * depth);
-    memcpy(&output[(num_slots - 1) * depth], input, depth);
+  memmove(output, &output[depth], (num_slots - 1) * depth);
+  memcpy(&output[(num_slots - 1) * depth], input, depth);
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    OpData* data = reinterpret_cast<OpData*>(node->user_data);
+  OpData* data = reinterpret_cast<OpData*>(node->user_data);
 
-    int num_slots = output->dims->data[1];
-    int depth = output->dims->data[3];
+  int num_slots = output->dims->data[1];
+  int depth = output->dims->data[3];
 
-    if (input->type == kTfLiteInt8) {
-        EvalInt8(GetTensorData<int8_t>(input), num_slots, depth,
-                 GetTensorData<int8_t>(output));
-    } else {
-        TF_LITE_KERNEL_LOG(context, "Type %s (%d) not supported.",
-                           TfLiteTypeGetName(input->type), input->type);
-        return kTfLiteError;
-    }
+  if (input->type == kTfLiteInt8) {
+    EvalInt8(GetTensorData<int8_t>(input), num_slots, depth,
+             GetTensorData<int8_t>(output));
+  } else {
+    TF_LITE_KERNEL_LOG(context, "Type %s (%d) not supported.",
+                       TfLiteTypeGetName(input->type), input->type);
+    return kTfLiteError;
+  }
 
-    if (--data->cycles_until_run != 0) {
-        // Signal the interpreter to end current run if the delay before op invoke
-        // has not been reached.
-        // TODO(b/149795762): Add kTfLiteAbort to TfLiteStatus enum.
-        return static_cast<TfLiteStatus>(kTfLiteAbort);
-    }
+  if (--data->cycles_until_run != 0) {
+    // Signal the interpreter to end current run if the delay before op invoke
+    // has not been reached.
+    // TODO(b/149795762): Add kTfLiteAbort to TfLiteStatus enum.
+    return static_cast<TfLiteStatus>(kTfLiteAbort);
+  }
 
-    // If prepare is ever called more than one time (for example, when testing the
-    // ambient model, the interpreter is created a few times), this op data
-    // counter needs to be reset so that future instances do not overrun this op
-    // data array.
-    op_data_counter = 0;
+  // If prepare is ever called more than one time (for example, when testing the
+  // ambient model, the interpreter is created a few times), this op data
+  // counter needs to be reset so that future instances do not overrun this op
+  // data array.
+  op_data_counter = 0;
 
-    data->cycles_until_run = data->cycles_max;
+  data->cycles_until_run = data->cycles_max;
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 }  // namespace circular_buffer
 
 TfLiteRegistration* Register_CIRCULAR_BUFFER() {
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/circular_buffer::Free,
-                                            /*prepare=*/circular_buffer::Prepare,
-                                            /*invoke=*/circular_buffer::Eval,
-                                            /*profiling_string=*/nullptr,
-                                            /*builtin_code=*/0,
-                                            /*custom_name=*/nullptr,
-                                            /*version=*/0
-                                  };
-    return &r;
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/circular_buffer::Free,
+                                 /*prepare=*/circular_buffer::Prepare,
+                                 /*invoke=*/circular_buffer::Eval,
+                                 /*profiling_string=*/nullptr,
+                                 /*builtin_code=*/0,
+                                 /*custom_name=*/nullptr,
+                                 /*version=*/0};
+  return &r;
 }
 
 }  // namespace micro

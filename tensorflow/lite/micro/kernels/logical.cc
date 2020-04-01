@@ -31,72 +31,66 @@ constexpr int kOutputTensor = 0;
 
 TfLiteStatus LogicalImpl(TfLiteContext* context, TfLiteNode* node,
                          bool (*func)(bool, bool)) {
-    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    if (HaveSameShapes(input1, input2)) {
-        reference_ops::BinaryFunction<bool, bool, bool>(
-            GetTensorShape(input1), GetTensorData<bool>(input1),
-            GetTensorShape(input2), GetTensorData<bool>(input2),
-            GetTensorShape(output), GetTensorData<bool>(output), func);
-    } else {
-        reference_ops::BroadcastBinaryFunction4DSlow<bool, bool, bool>(
-            GetTensorShape(input1), GetTensorData<bool>(input1),
-            GetTensorShape(input2), GetTensorData<bool>(input2),
-            GetTensorShape(output), GetTensorData<bool>(output), func);
-    }
+  if (HaveSameShapes(input1, input2)) {
+    reference_ops::BinaryFunction<bool, bool, bool>(
+        GetTensorShape(input1), GetTensorData<bool>(input1),
+        GetTensorShape(input2), GetTensorData<bool>(input2),
+        GetTensorShape(output), GetTensorData<bool>(output), func);
+  } else {
+    reference_ops::BroadcastBinaryFunction4DSlow<bool, bool, bool>(
+        GetTensorShape(input1), GetTensorData<bool>(input1),
+        GetTensorShape(input2), GetTensorData<bool>(input2),
+        GetTensorShape(output), GetTensorData<bool>(output), func);
+  }
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
-bool LogicalOr(bool x, bool y) {
-    return x || y;
-}
+bool LogicalOr(bool x, bool y) { return x || y; }
 
 TfLiteStatus LogicalOrEval(TfLiteContext* context, TfLiteNode* node) {
-    return LogicalImpl(context, node, LogicalOr);
+  return LogicalImpl(context, node, LogicalOr);
 }
 
-bool LogicalAnd(bool x, bool y) {
-    return x && y;
-}
+bool LogicalAnd(bool x, bool y) { return x && y; }
 
 TfLiteStatus LogicalAndEval(TfLiteContext* context, TfLiteNode* node) {
-    return LogicalImpl(context, node, LogicalAnd);
+  return LogicalImpl(context, node, LogicalAnd);
 }
 
 }  // namespace
 }  // namespace logical
 
 TfLiteRegistration* Register_LOGICAL_OR() {
-    // Init, Free, Prepare, Eval are satisfying the Interface required by
-    // TfLiteRegistration.
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/nullptr,
-                                            /*prepare=*/nullptr,
-                                            /*invoke=*/logical::LogicalOrEval,
-                                            /*profiling_string=*/nullptr,
-                                            /*builtin_code=*/0,
-                                            /*custom_name=*/nullptr,
-                                            /*version=*/0
-                                  };
-    return &r;
+  // Init, Free, Prepare, Eval are satisfying the Interface required by
+  // TfLiteRegistration.
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/nullptr,
+                                 /*prepare=*/nullptr,
+                                 /*invoke=*/logical::LogicalOrEval,
+                                 /*profiling_string=*/nullptr,
+                                 /*builtin_code=*/0,
+                                 /*custom_name=*/nullptr,
+                                 /*version=*/0};
+  return &r;
 }
 
 TfLiteRegistration* Register_LOGICAL_AND() {
-    // Init, Free, Prepare, Eval are satisfying the Interface required by
-    // TfLiteRegistration.
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/nullptr,
-                                            /*prepare=*/nullptr,
-                                            /*invoke=*/logical::LogicalAndEval,
-                                            /*profiling_string=*/nullptr,
-                                            /*builtin_code=*/0,
-                                            /*custom_name=*/nullptr,
-                                            /*version=*/0
-                                  };
-    return &r;
+  // Init, Free, Prepare, Eval are satisfying the Interface required by
+  // TfLiteRegistration.
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/nullptr,
+                                 /*prepare=*/nullptr,
+                                 /*invoke=*/logical::LogicalAndEval,
+                                 /*profiling_string=*/nullptr,
+                                 /*builtin_code=*/0,
+                                 /*custom_name=*/nullptr,
+                                 /*version=*/0};
+  return &r;
 }
 
 }  // namespace micro

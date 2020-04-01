@@ -28,107 +28,107 @@ namespace data {
 
 RegisterDatasetOp::RegisterDatasetOp(OpKernelConstruction* ctx)
     : OpKernel(ctx) {
-    int64 external_state_policy_int;
-    OP_REQUIRES_OK(
-        ctx, ctx->GetAttr(kExternalStatePolicy, &external_state_policy_int));
-    external_state_policy_ =
-        SerializationContext::ExternalStatePolicy(external_state_policy_int);
+  int64 external_state_policy_int;
+  OP_REQUIRES_OK(
+      ctx, ctx->GetAttr(kExternalStatePolicy, &external_state_policy_int));
+  external_state_policy_ =
+      SerializationContext::ExternalStatePolicy(external_state_policy_int);
 }
 
 void RegisterDatasetOp::Compute(OpKernelContext* ctx) {
-    DatasetBase* dataset;
-    OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
+  DatasetBase* dataset;
+  OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
 
-    tstring address;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
-    OP_REQUIRES(ctx, !address.empty(),
-                errors::InvalidArgument(kAddress, " must be non-empty."));
+  tstring address;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
+  OP_REQUIRES(ctx, !address.empty(),
+              errors::InvalidArgument(kAddress, " must be non-empty."));
 
-    tstring protocol;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
-    OP_REQUIRES(ctx, !protocol.empty(),
-                errors::InvalidArgument(kProtocol, " must be non-empty."));
+  tstring protocol;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
+  OP_REQUIRES(ctx, !protocol.empty(),
+              errors::InvalidArgument(kProtocol, " must be non-empty."));
 
-    SerializationContext::Params params;
-    params.external_state_policy = external_state_policy_;
-    SerializationContext serialization_ctx(params);
-    GraphDef graph_def;
-    OP_REQUIRES_OK(
-        ctx, AsGraphDef(ctx, dataset, std::move(serialization_ctx), &graph_def));
+  SerializationContext::Params params;
+  params.external_state_policy = external_state_policy_;
+  SerializationContext serialization_ctx(params);
+  GraphDef graph_def;
+  OP_REQUIRES_OK(
+      ctx, AsGraphDef(ctx, dataset, std::move(serialization_ctx), &graph_def));
 
-    // ::grpc::ChannelArguments args;
-    std::shared_ptr<::grpc::ChannelCredentials> credentials;
-    OP_REQUIRES_OK(
-        ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
-    auto channel = ::grpc::CreateChannel(address, credentials);
-    auto master_stub = MasterService::NewStub(channel);
-    GetOrRegisterDatasetRequest req;
-    *req.mutable_dataset()->mutable_graph() = graph_def;
-    GetOrRegisterDatasetResponse resp;
-    grpc::ClientContext client_ctx;
-    auto status = master_stub->GetOrRegisterDataset(&client_ctx, req, &resp);
-    if (!status.ok()) {
-        ctx->CtxFailure(grpc_util::WrapError("Failed to register dataset", status));
-        return;
-    }
-    Tensor* output;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
-    auto output_dataset_id = output->tensor<int64, 0>();
-    output_dataset_id() = resp.dataset_id();
+  // ::grpc::ChannelArguments args;
+  std::shared_ptr<::grpc::ChannelCredentials> credentials;
+  OP_REQUIRES_OK(
+      ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
+  auto channel = ::grpc::CreateChannel(address, credentials);
+  auto master_stub = MasterService::NewStub(channel);
+  GetOrRegisterDatasetRequest req;
+  *req.mutable_dataset()->mutable_graph() = graph_def;
+  GetOrRegisterDatasetResponse resp;
+  grpc::ClientContext client_ctx;
+  auto status = master_stub->GetOrRegisterDataset(&client_ctx, req, &resp);
+  if (!status.ok()) {
+    ctx->CtxFailure(grpc_util::WrapError("Failed to register dataset", status));
+    return;
+  }
+  Tensor* output;
+  OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
+  auto output_dataset_id = output->tensor<int64, 0>();
+  output_dataset_id() = resp.dataset_id();
 }
 
 BeginEpochOp::BeginEpochOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
 
 void BeginEpochOp::Compute(OpKernelContext* ctx) {
-    int64 dataset_id;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kDatasetId, &dataset_id));
+  int64 dataset_id;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kDatasetId, &dataset_id));
 
-    tstring address;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
-    OP_REQUIRES(ctx, !address.empty(),
-                errors::InvalidArgument(kAddress, " must be non-empty."));
+  tstring address;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
+  OP_REQUIRES(ctx, !address.empty(),
+              errors::InvalidArgument(kAddress, " must be non-empty."));
 
-    tstring protocol;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
-    OP_REQUIRES(ctx, !protocol.empty(),
-                errors::InvalidArgument(kProtocol, " must be non-empty."));
+  tstring protocol;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
+  OP_REQUIRES(ctx, !protocol.empty(),
+              errors::InvalidArgument(kProtocol, " must be non-empty."));
 
-    std::shared_ptr<::grpc::ChannelCredentials> credentials;
-    OP_REQUIRES_OK(
-        ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
-    auto channel = ::grpc::CreateChannel(address, credentials);
-    auto master_stub = MasterService::NewStub(channel);
-    BeginEpochRequest req;
-    req.set_dataset_id(dataset_id);
-    BeginEpochResponse resp;
-    grpc::ClientContext client_ctx;
-    auto status = master_stub->BeginEpoch(&client_ctx, req, &resp);
-    if (!status.ok()) {
-        ctx->CtxFailure(grpc_util::WrapError(
-                            absl::StrCat("Failed to begin epoch for dataset id ", dataset_id),
-                            status));
-        return;
-    }
-    Tensor* output;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
-    auto output_epoch_id = output->tensor<int64, 0>();
-    output_epoch_id() = resp.epoch_id();
+  std::shared_ptr<::grpc::ChannelCredentials> credentials;
+  OP_REQUIRES_OK(
+      ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
+  auto channel = ::grpc::CreateChannel(address, credentials);
+  auto master_stub = MasterService::NewStub(channel);
+  BeginEpochRequest req;
+  req.set_dataset_id(dataset_id);
+  BeginEpochResponse resp;
+  grpc::ClientContext client_ctx;
+  auto status = master_stub->BeginEpoch(&client_ctx, req, &resp);
+  if (!status.ok()) {
+    ctx->CtxFailure(grpc_util::WrapError(
+        absl::StrCat("Failed to begin epoch for dataset id ", dataset_id),
+        status));
+    return;
+  }
+  Tensor* output;
+  OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
+  auto output_epoch_id = output->tensor<int64, 0>();
+  output_epoch_id() = resp.epoch_id();
 }
 
 Status MakeDataServiceIteratorOp::DoCompute(OpKernelContext* ctx) {
-    DatasetBase* dataset;
-    TF_RETURN_IF_ERROR(GetDatasetFromVariantTensor(ctx->input(0), &dataset));
+  DatasetBase* dataset;
+  TF_RETURN_IF_ERROR(GetDatasetFromVariantTensor(ctx->input(0), &dataset));
 
-    const Tensor* epoch_id_tensor;
-    TF_RETURN_IF_ERROR(ctx->input(kEpochId, &epoch_id_tensor));
-    int64 epoch_id = epoch_id_tensor->scalar<int64>()();
+  const Tensor* epoch_id_tensor;
+  TF_RETURN_IF_ERROR(ctx->input(kEpochId, &epoch_id_tensor));
+  int64 epoch_id = epoch_id_tensor->scalar<int64>()();
 
-    IteratorResource* iterator_resource;
-    TF_RETURN_IF_ERROR(
-        LookupResource(ctx, HandleFromInput(ctx, 2), &iterator_resource));
+  IteratorResource* iterator_resource;
+  TF_RETURN_IF_ERROR(
+      LookupResource(ctx, HandleFromInput(ctx, 2), &iterator_resource));
 
-    core::ScopedUnref unref_iterator(iterator_resource);
-    return iterator_resource->SetIteratorFromDataset(ctx, dataset, epoch_id);
+  core::ScopedUnref unref_iterator(iterator_resource);
+  return iterator_resource->SetIteratorFromDataset(ctx, dataset, epoch_id);
 }
 
 REGISTER_KERNEL_BUILDER(Name("RegisterDataset").Device(DEVICE_CPU),

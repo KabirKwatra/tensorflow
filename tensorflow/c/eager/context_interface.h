@@ -31,58 +31,58 @@ namespace tensorflow {
 // A context is responsible for creating key objects such as Tensors,
 // TensorHandles & Operations.
 class AbstractContextInterface {
-public:
-    // Release any underlying resources, including the interface object.
-    //
-    // WARNING: The destructor of this class is marked as protected to disallow
-    // clients from directly destroying this object since it may manage it's own
-    // lifetime through ref counting. Thus clients MUST call Release() in order to
-    // destroy an instance of this class.
-    virtual void Release() = 0;
+ public:
+  // Release any underlying resources, including the interface object.
+  //
+  // WARNING: The destructor of this class is marked as protected to disallow
+  // clients from directly destroying this object since it may manage it's own
+  // lifetime through ref counting. Thus clients MUST call Release() in order to
+  // destroy an instance of this class.
+  virtual void Release() = 0;
 
-    // Scalar creation functions
-    virtual AbstractTensorInterface* CreateInt64Scalar(int64 value) = 0;
-    virtual AbstractTensorInterface* CreateUint64Scalar(uint64 value) = 0;
-    virtual AbstractTensorInterface* CreateInt32Scalar(int32 value) = 0;
-    virtual AbstractTensorInterface* CreateFloatScalar(float value) = 0;
-    virtual AbstractTensorInterface* CreateDoubleScalar(double value) = 0;
-    virtual AbstractTensorInterface* CreateHalfScalar(Eigen::half value) = 0;
-    virtual AbstractTensorInterface* CreateStringScalar(tstring value) = 0;
-    virtual AbstractTensorInterface* CreateComplex128Scalar(complex128 value) = 0;
-    virtual AbstractTensorInterface* CreateBoolScalar(bool value) = 0;
+  // Scalar creation functions
+  virtual AbstractTensorInterface* CreateInt64Scalar(int64 value) = 0;
+  virtual AbstractTensorInterface* CreateUint64Scalar(uint64 value) = 0;
+  virtual AbstractTensorInterface* CreateInt32Scalar(int32 value) = 0;
+  virtual AbstractTensorInterface* CreateFloatScalar(float value) = 0;
+  virtual AbstractTensorInterface* CreateDoubleScalar(double value) = 0;
+  virtual AbstractTensorInterface* CreateHalfScalar(Eigen::half value) = 0;
+  virtual AbstractTensorInterface* CreateStringScalar(tstring value) = 0;
+  virtual AbstractTensorInterface* CreateComplex128Scalar(complex128 value) = 0;
+  virtual AbstractTensorInterface* CreateBoolScalar(bool value) = 0;
 
-    // Tensor creation functions
-    virtual AbstractTensorInterface* CreateInt64Tensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateUint64Tensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateInt32Tensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateFloatTensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateDoubleTensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateHalfTensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateStringTensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateComplex128Tensor(
-        absl::Span<const int64> dim_sizes) = 0;
-    virtual AbstractTensorInterface* CreateBoolTensor(
-        absl::Span<const int64> dim_sizes) = 0;
+  // Tensor creation functions
+  virtual AbstractTensorInterface* CreateInt64Tensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateUint64Tensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateInt32Tensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateFloatTensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateDoubleTensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateHalfTensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateStringTensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateComplex128Tensor(
+      absl::Span<const int64> dim_sizes) = 0;
+  virtual AbstractTensorInterface* CreateBoolTensor(
+      absl::Span<const int64> dim_sizes) = 0;
 
-    // Create a handle to wrap and manage a Tensor
-    virtual AbstractTensorHandleInterface* CreateLocalHandle(
-        AbstractTensorInterface* t) = 0;
+  // Create a handle to wrap and manage a Tensor
+  virtual AbstractTensorHandleInterface* CreateLocalHandle(
+      AbstractTensorInterface* t) = 0;
 
-    // Create an operation to perform op execution
-    virtual AbstractOperationInterface* CreateOperation() = 0;
+  // Create an operation to perform op execution
+  virtual AbstractOperationInterface* CreateOperation() = 0;
 
-    // List attributes of available devices
-    virtual void ListDevices(std::vector<DeviceAttributes>* devices) = 0;
+  // List attributes of available devices
+  virtual void ListDevices(std::vector<DeviceAttributes>* devices) = 0;
 
-protected:
-    virtual ~AbstractContextInterface() {}
+ protected:
+  virtual ~AbstractContextInterface() {}
 };
 
 }  // namespace tensorflow
