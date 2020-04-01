@@ -24,28 +24,28 @@ namespace tensorflow {
 bool XlaKernelCreator::CanCreateKernel(
     const FunctionLibraryRuntime& flr,
     const std::shared_ptr<const NodeProperties>& props) const {
-    return CanCreateXlaKernel(props->node_def);
+  return CanCreateXlaKernel(props->node_def);
 }
 
 Status XlaKernelCreator::CreateKernel(
     FunctionLibraryRuntime* flr,
     const std::shared_ptr<const NodeProperties>& props,
     std::unique_ptr<OpKernel>* kernel) const {
-    return CreateXlaKernel(flr, props->node_def, kernel);
+  return CreateXlaKernel(flr, props->node_def, kernel);
 }
 
 namespace {
 
 bool RegisterLaunchOpCreator() {
-    XlaKernelCreator* xla_kernel_creator = new XlaKernelCreator();
-    RegisterDefaultCustomKernelCreator(xla_kernel_creator);
-    return true;
+  XlaKernelCreator* xla_kernel_creator = new XlaKernelCreator();
+  RegisterDefaultCustomKernelCreator(xla_kernel_creator);
+  return true;
 }
 
 static bool register_me = RegisterLaunchOpCreator();
 static bool register_xla = [] {
-    SetXlaIsEnabled();
-    return true;
+  SetXlaIsEnabled();
+  return true;
 }();
 
 }  // end namespace

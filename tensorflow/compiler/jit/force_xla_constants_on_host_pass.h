@@ -25,10 +25,10 @@ namespace tensorflow {
 // An optimization pass which marks the constants which have to be resolved for
 // XLA compilation with `_input_hostmem`.
 class ForceXlaConstantsOnHostPass : public GraphOptimizationPass {
-public:
-    ForceXlaConstantsOnHostPass() = default;
+ public:
+  ForceXlaConstantsOnHostPass() = default;
 
-    Status Run(const GraphOptimizationPassOptions& options) override;
+  Status Run(const GraphOptimizationPassOptions& options) override;
 };
 
 }  // namespace tensorflow
