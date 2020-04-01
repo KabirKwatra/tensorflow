@@ -74,152 +74,134 @@ namespace gpu {
 // for this purpose. A tile block is a three dimensional array of tiles, of
 // which some dimensions may be degenerated to only one tile.
 class KernelMappingScheme {
-public:
-    enum { DimZ = 0, DimY, DimX, DimTot };
-    KernelMappingScheme(absl::Span<const int64> dims_in_elems,
-                        absl::Span<const int64> tile_sizes, int64 num_threads_y,
-                        int64 num_threads_x, bool is_dilated_x)
-        : dims_in_elems_{dims_in_elems[0], dims_in_elems[1], dims_in_elems[2]},
-          tile_sizes_{tile_sizes[0], tile_sizes[1], tile_sizes[2]},
-          num_threads_x_(num_threads_x),
-          num_threads_y_(num_threads_y),
-          dilated_x_(is_dilated_x) {
-        CHECK_EQ(tile_sizes[1] % num_threads_y_, 0);
-        CHECK_EQ(tile_sizes[2] % num_threads_x_, 0);
-        VLOG(10) << "dims_in_elems_ = " << absl::StrJoin(dims_in_elems_, ",");
-        if (!dilated_x_) {
-            // dilated_x_=false is for the purpose of vectorization, which requires
-            // GetTileSizeFor(DimX) to be a multiplier of num_threads_x_.
-            CHECK_EQ(GetTileSizeFor(DimX) % num_threads_x_, 0);
-        }
+ public:
+  enum { DimZ = 0, DimY, DimX, DimTot };
+  KernelMappingScheme(absl::Span<const int64> dims_in_elems,
+                      absl::Span<const int64> tile_sizes, int64 num_threads_y,
+                      int64 num_threads_x, bool is_dilated_x)
+      : dims_in_elems_{dims_in_elems[0], dims_in_elems[1], dims_in_elems[2]},
+        tile_sizes_{tile_sizes[0], tile_sizes[1], tile_sizes[2]},
+        num_threads_x_(num_threads_x),
+        num_threads_y_(num_threads_y),
+        dilated_x_(is_dilated_x) {
+    CHECK_EQ(tile_sizes[1] % num_threads_y_, 0);
+    CHECK_EQ(tile_sizes[2] % num_threads_x_, 0);
+    VLOG(10) << "dims_in_elems_ = " << absl::StrJoin(dims_in_elems_, ",");
+    if (!dilated_x_) {
+      // dilated_x_=false is for the purpose of vectorization, which requires
+      // GetTileSizeFor(DimX) to be a multiplier of num_threads_x_.
+      CHECK_EQ(GetTileSizeFor(DimX) % num_threads_x_, 0);
     }
+  }
 
-    // Number of elements in each dimension (Z/Y/X respectively).
-    absl::Span<const int64> GetDimsInElems() const {
-        return dims_in_elems_;
-    }
+  // Number of elements in each dimension (Z/Y/X respectively).
+  absl::Span<const int64> GetDimsInElems() const { return dims_in_elems_; }
 
-    int64 GetNumberOfBlocks() const {
-        return CeilOfRatio(dims_in_elems_[0], GetTileSizeZ()) *
-               CeilOfRatio(dims_in_elems_[1], GetTileSizeY()) *
-               CeilOfRatio(dims_in_elems_[2], GetTileSizeX());
-    }
+  int64 GetNumberOfBlocks() const {
+    return CeilOfRatio(dims_in_elems_[0], GetTileSizeZ()) *
+           CeilOfRatio(dims_in_elems_[1], GetTileSizeY()) *
+           CeilOfRatio(dims_in_elems_[2], GetTileSizeX());
+  }
 
-    // Tile size for a given dimensions. Tiles are assigned per thread block,
-    // and are processed by all threads in the block.
-    int64 GetTileSizeFor(int d) const {
-        return tile_sizes_.at(d);
-    }
+  // Tile size for a given dimensions. Tiles are assigned per thread block,
+  // and are processed by all threads in the block.
+  int64 GetTileSizeFor(int d) const { return tile_sizes_.at(d); }
 
-    int64 GetTileSizeZ() const {
-        return GetTileSizeFor(DimZ);
-    }
-    int64 GetTileSizeX() const {
-        return GetTileSizeFor(DimX);
-    }
-    int64 GetTileSizeY() const {
-        return GetTileSizeFor(DimY);
-    }
+  int64 GetTileSizeZ() const { return GetTileSizeFor(DimZ); }
+  int64 GetTileSizeX() const { return GetTileSizeFor(DimX); }
+  int64 GetTileSizeY() const { return GetTileSizeFor(DimY); }
 
-    int64 GetNumThreadsX() const {
-        return num_threads_x_;
-    }
-    int64 GetNumThreadsY() const {
-        return num_threads_y_;
-    }
+  int64 GetNumThreadsX() const { return num_threads_x_; }
+  int64 GetNumThreadsY() const { return num_threads_y_; }
 
-    int64 GetThreadsPerBlock() const {
-        return GetNumThreadsX() * GetNumThreadsY();
-    }
+  int64 GetThreadsPerBlock() const {
+    return GetNumThreadsX() * GetNumThreadsY();
+  }
 
-    bool DilatedX() const {
-        return dilated_x_;
-    }
+  bool DilatedX() const { return dilated_x_; }
 
-private:
-    // The number of elements in each dimension.
-    const std::array<int64, 3> dims_in_elems_;
+ private:
+  // The number of elements in each dimension.
+  const std::array<int64, 3> dims_in_elems_;
 
-    // The number of elements for each dimension of a tile.
-    const std::array<int64, 3> tile_sizes_;
+  // The number of elements for each dimension of a tile.
+  const std::array<int64, 3> tile_sizes_;
 
-    // Number of threads used to process elements in the X direction of a tile.
-    const int64 num_threads_x_;
+  // Number of threads used to process elements in the X direction of a tile.
+  const int64 num_threads_x_;
 
-    // Number of threads used to process elements in the Y direction of a tile.
-    const int64 num_threads_y_;
+  // Number of threads used to process elements in the Y direction of a tile.
+  const int64 num_threads_y_;
 
-    // When num_threads_x threads process a total of tile_size_x elements in the
-    // X dimension of a tile, each threads process n=tile_size_x/num_threads_x
-    // elements. When dilated_x=false, the n elements processed by a thread are
-    // contiguous. On the other hand, when dilated_x=true the n elements are
-    // dilated by a factor of num_threads_x.
-    const bool dilated_x_;
+  // When num_threads_x threads process a total of tile_size_x elements in the
+  // X dimension of a tile, each threads process n=tile_size_x/num_threads_x
+  // elements. When dilated_x=false, the n elements processed by a thread are
+  // contiguous. On the other hand, when dilated_x=true the n elements are
+  // dilated by a factor of num_threads_x.
+  const bool dilated_x_;
 };
 
 // Information to support the code generation for a tiled reduction kernel.
 using AddressVector = absl::InlinedVector<llvm::AllocaInst*, 1>;
 class ReductionCodegenInfo {
-public:
-    explicit ReductionCodegenInfo(KernelMappingScheme mapping_scheme,
-                                  bool is_row_reduction)
-        : mapping_scheme_(mapping_scheme), is_row_reduction_(is_row_reduction) {}
+ public:
+  explicit ReductionCodegenInfo(KernelMappingScheme mapping_scheme,
+                                bool is_row_reduction)
+      : mapping_scheme_(mapping_scheme), is_row_reduction_(is_row_reduction) {}
 
-    const KernelMappingScheme& GetKernelMappingScheme() const {
-        return mapping_scheme_;
-    }
+  const KernelMappingScheme& GetKernelMappingScheme() const {
+    return mapping_scheme_;
+  }
 
-    // Gets writeable pointer to the address (or addresses) used to store
-    // reduction accumulators.
-    AddressVector* GetMutablePartialResultAddresses() {
-        return &partial_result_addresses_;
-    }
+  // Gets writeable pointer to the address (or addresses) used to store
+  // reduction accumulators.
+  AddressVector* GetMutablePartialResultAddresses() {
+    return &partial_result_addresses_;
+  }
 
-    // Returns the address (addresses) of the reduction accumulators.
-    absl::Span<llvm::AllocaInst* const> GetPartialResultAddresses() const {
-        return partial_result_addresses_;
-    }
+  // Returns the address (addresses) of the reduction accumulators.
+  absl::Span<llvm::AllocaInst* const> GetPartialResultAddresses() const {
+    return partial_result_addresses_;
+  }
 
-    // Mutable pointer to the address of the input element to perform the
-    // reduction with.
-    AddressVector* GetMutableReductionInputAddresses() {
-        return &reduction_input_addresses_;
-    }
+  // Mutable pointer to the address of the input element to perform the
+  // reduction with.
+  AddressVector* GetMutableReductionInputAddresses() {
+    return &reduction_input_addresses_;
+  }
 
-    std::vector<llvm::Value*>* GetMutableInitialValues() {
-        return &initial_values_;
-    }
+  std::vector<llvm::Value*>* GetMutableInitialValues() {
+    return &initial_values_;
+  }
 
-    absl::Span<llvm::Value* const> GetInitialValues() const {
-        return initial_values_;
-    }
+  absl::Span<llvm::Value* const> GetInitialValues() const {
+    return initial_values_;
+  }
 
-    // Returns the address of the input element to perform the reduction with.
-    absl::Span<llvm::AllocaInst* const> GetReductionInputAddresses() const {
-        return reduction_input_addresses_;
-    }
+  // Returns the address of the input element to perform the reduction with.
+  absl::Span<llvm::AllocaInst* const> GetReductionInputAddresses() const {
+    return reduction_input_addresses_;
+  }
 
-    bool IsRowReduction() const {
-        return is_row_reduction_;
-    }
+  bool IsRowReduction() const { return is_row_reduction_; }
 
-    // Gets a pointer to a mutable shared cache used by reduction.
-    std::vector<llvm::GlobalVariable*>* GetMutableSharedCache() {
-        return &shared_cache_;
-    }
+  // Gets a pointer to a mutable shared cache used by reduction.
+  std::vector<llvm::GlobalVariable*>* GetMutableSharedCache() {
+    return &shared_cache_;
+  }
 
-    // Shared cache used for reduction.
-    absl::Span<llvm::GlobalVariable* const> GetSharedCache() const {
-        return shared_cache_;
-    }
+  // Shared cache used for reduction.
+  absl::Span<llvm::GlobalVariable* const> GetSharedCache() const {
+    return shared_cache_;
+  }
 
-private:
-    std::vector<llvm::GlobalVariable*> shared_cache_;
-    std::vector<llvm::Value*> initial_values_;
-    const KernelMappingScheme mapping_scheme_;
-    AddressVector partial_result_addresses_;
-    AddressVector reduction_input_addresses_;
-    bool is_row_reduction_;
+ private:
+  std::vector<llvm::GlobalVariable*> shared_cache_;
+  std::vector<llvm::Value*> initial_values_;
+  const KernelMappingScheme mapping_scheme_;
+  AddressVector partial_result_addresses_;
+  AddressVector reduction_input_addresses_;
+  bool is_row_reduction_;
 };
 
 }  // end namespace gpu
