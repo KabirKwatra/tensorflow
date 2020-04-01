@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tensorflow.ops.gen_linalg_ops.matrix_logarithm."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

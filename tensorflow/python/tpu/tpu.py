@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ======================================
-
 """Library of TPU helper functions."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl import logging
 import enum
 
 import numpy as np
+from absl import logging
 from six.moves import xrange  # pylint: disable=redefined-builtin
 
 from tensorflow.core.framework import attr_value_pb2
