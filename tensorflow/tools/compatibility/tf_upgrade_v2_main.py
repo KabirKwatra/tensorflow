@@ -43,14 +43,13 @@ def process_file(in_filename, out_filename, upgrader):
 
     if six.ensure_str(in_filename).endswith(".py"):
         files_processed, report_text, errors = upgrader.process_file(
-            in_filename, out_filename
-        )
+            in_filename, out_filename)
     elif six.ensure_str(in_filename).endswith(".ipynb"):
         files_processed, report_text, errors = ipynb.process_file(
-            in_filename, out_filename, upgrader
-        )
+            in_filename, out_filename, upgrader)
     else:
-        raise NotImplementedError("Currently converter only supports python or ipynb")
+        raise NotImplementedError(
+            "Currently converter only supports python or ipynb")
 
     return files_processed, report_text, errors
 
@@ -69,7 +68,8 @@ Simple usage:
     parser.add_argument(
         "--infile",
         dest="input_file",
-        help="If converting a single file, the name of the file " "to convert",
+        help="If converting a single file, the name of the file "
+        "to convert",
     )
     parser.add_argument(
         "--outfile",
@@ -91,20 +91,17 @@ Simple usage:
     parser.add_argument(
         "--copyotherfiles",
         dest="copy_other_files",
-        help=(
-            "If converting a whole tree of files, whether to " "copy the other files."
-        ),
+        help=("If converting a whole tree of files, whether to "
+              "copy the other files."),
         type=bool,
         default=True,
     )
     parser.add_argument(
         "--inplace",
         dest="in_place",
-        help=(
-            "If converting a set of files, whether to "
-            "allow the conversion to be performed on the "
-            "input files."
-        ),
+        help=("If converting a set of files, whether to "
+              "allow the conversion to be performed on the "
+              "input files."),
         action="store_true",
     )
     parser.add_argument(
@@ -120,31 +117,26 @@ Simple usage:
             "If specified, don't upgrade explicit imports of "
             "`tensorflow.compat.v1 as tf` to the v2 apis. Otherwise, "
             "explicit imports of  the form `tensorflow.compat.v1 as tf` will "
-            "be upgraded."
-        ),
+            "be upgraded."),
         action="store_true",
     )
     parser.add_argument(
         "--reportfile",
         dest="report_filename",
-        help=(
-            "The name of the file where the report log is "
-            "stored."
-            "(default: %(default)s)"
-        ),
+        help=("The name of the file where the report log is "
+              "stored."
+              "(default: %(default)s)"),
         default="report.txt",
     )
     parser.add_argument(
         "--mode",
         dest="mode",
         choices=[_DEFAULT_MODE, _SAFETY_MODE],
-        help=(
-            "Upgrade script mode. Supported modes:\n"
-            "%s: Perform only straightforward conversions to upgrade to "
-            "2.0. In more difficult cases, switch to use compat.v1.\n"
-            "%s: Keep 1.* code intact and import compat.v1 "
-            "module." % (_DEFAULT_MODE, _SAFETY_MODE)
-        ),
+        help=("Upgrade script mode. Supported modes:\n"
+              "%s: Perform only straightforward conversions to upgrade to "
+              "2.0. In more difficult cases, switch to use compat.v1.\n"
+              "%s: Keep 1.* code intact and import compat.v1 "
+              "module." % (_DEFAULT_MODE, _SAFETY_MODE)),
         default=_DEFAULT_MODE,
     )
     parser.add_argument(
@@ -177,32 +169,26 @@ Simple usage:
         if not args.in_place and not args.output_file:
             raise ValueError(
                 "--outfile=<output file> argument is required when converting a "
-                "single file."
-            )
+                "single file.")
         if args.in_place and args.output_file:
             raise ValueError(
-                "--outfile argument is invalid when when converting in place"
-            )
+                "--outfile argument is invalid when when converting in place")
         output_file = args.input_file if args.in_place else args.output_file
         files_processed, report_text, errors = process_file(
-            args.input_file, output_file, upgrade
-        )
+            args.input_file, output_file, upgrade)
         errors = {args.input_file: errors}
         files_processed = 1
     elif args.input_tree:
         if not args.in_place and not args.output_tree:
             raise ValueError(
                 "--outtree=<output directory> argument is required when converting a "
-                "file tree."
-            )
+                "file tree.")
         if args.in_place and args.output_tree:
             raise ValueError(
-                "--outtree argument is invalid when when converting in place"
-            )
+                "--outtree argument is invalid when when converting in place")
         output_tree = args.input_tree if args.in_place else args.output_tree
         files_processed, report_text, errors = upgrade.process_tree(
-            args.input_tree, output_tree, args.copy_other_files
-        )
+            args.input_tree, output_tree, args.copy_other_files)
     else:
         parser.print_help()
     if report_text:
@@ -216,15 +202,11 @@ Simple usage:
                 report.append(six.ensure_str("-" * 80) + "\n")
                 report.append("\n".join(errors[f]) + "\n")
 
-        report = (
-            "TensorFlow 2.0 Upgrade Script\n"
-            "-----------------------------\n"
-            "Converted %d files\n" % files_processed
-            + "Detected %d issues that require attention" % num_errors
-            + "\n"
-            + six.ensure_str("-" * 80)
-            + "\n"
-        ) + "".join(report)
+        report = ("TensorFlow 2.0 Upgrade Script\n"
+                  "-----------------------------\n"
+                  "Converted %d files\n" % files_processed +
+                  "Detected %d issues that require attention" % num_errors +
+                  "\n" + six.ensure_str("-" * 80) + "\n") + "".join(report)
         detailed_report_header = six.ensure_str("=" * 80) + "\n"
         detailed_report_header += "Detailed log follows:\n\n"
         detailed_report_header += six.ensure_str("=" * 80) + "\n"
