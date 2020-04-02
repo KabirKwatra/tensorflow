@@ -32,62 +32,63 @@ constexpr int kInputTensor = 0;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
-  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-  if (input->type == kTfLiteFloat32) {
-    switch (output->type) {
-      case kTfLiteFloat32: {
-        reference_ops::Logistic(
-            GetTensorShape(input), GetTensorData<float>(input),
-            GetTensorShape(output), GetTensorData<float>(output));
-        return kTfLiteOk;
-      }
-      default:
+    if (input->type == kTfLiteFloat32) {
+        switch (output->type) {
+        case kTfLiteFloat32: {
+            reference_ops::Logistic(
+                GetTensorShape(input), GetTensorData<float>(input),
+                GetTensorShape(output), GetTensorData<float>(output));
+            return kTfLiteOk;
+        }
+        default:
+            TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
+                               TfLiteTypeGetName(input->type),
+                               TfLiteTypeGetName(output->type));
+            return kTfLiteError;
+        }
+    } else if (input->type == kTfLiteInt8) {
+        switch (output->type) {
+        case kTfLiteInt8: {
+            reference_ops::Logistic(
+                GetTensorShape(input), GetTensorData<int8_t>(input),
+                input->params.scale, input->params.zero_point,
+                GetTensorShape(output), GetTensorData<int8_t>(output),
+                output->params.scale, output->params.zero_point);
+            return kTfLiteOk;
+        }
+        default:
+            TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
+                               TfLiteTypeGetName(input->type),
+                               TfLiteTypeGetName(output->type));
+            return kTfLiteError;
+        }
+    } else {
+        // TODO(b/141211002): Also support other data types once we have supported
+        // temporary tensors in TFLM.
         TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
                            TfLiteTypeGetName(input->type),
                            TfLiteTypeGetName(output->type));
         return kTfLiteError;
     }
-  } else if (input->type == kTfLiteInt8) {
-    switch (output->type) {
-      case kTfLiteInt8: {
-        reference_ops::Logistic(
-            GetTensorShape(input), GetTensorData<int8_t>(input),
-            input->params.scale, input->params.zero_point,
-            GetTensorShape(output), GetTensorData<int8_t>(output),
-            output->params.scale, output->params.zero_point);
-        return kTfLiteOk;
-      }
-      default:
-        TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
-                           TfLiteTypeGetName(input->type),
-                           TfLiteTypeGetName(output->type));
-        return kTfLiteError;
-    }
-  } else {
-    // TODO(b/141211002): Also support other data types once we have supported
-    // temporary tensors in TFLM.
-    TF_LITE_KERNEL_LOG(context, "Input %s, output %s not supported.",
-                       TfLiteTypeGetName(input->type),
-                       TfLiteTypeGetName(output->type));
-    return kTfLiteError;
-  }
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 }  // namespace activations
 
 TfLiteRegistration* Register_LOGISTIC() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/nullptr,
-                                 /*invoke=*/activations::Eval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/nullptr,
+                                            /*invoke=*/activations::Eval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 }  // namespace micro
 }  // namespace ops

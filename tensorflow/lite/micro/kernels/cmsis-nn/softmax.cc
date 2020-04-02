@@ -30,116 +30,117 @@ TfLiteStatus CalculateSoftmaxParams(TfLiteContext* context,
                                     TfLiteTensor* output,
                                     const TfLiteSoftmaxParams* params,
                                     SoftmaxParams* op_data) {
-  if (input->type == kTfLiteUInt8 || input->type == kTfLiteInt8) {
-    if (input->type == kTfLiteUInt8) {
-      TF_LITE_ENSURE_TYPES_EQ(context, output->type, kTfLiteUInt8);
-      TF_LITE_ENSURE_EQ(context, output->params.zero_point, 0);
+    if (input->type == kTfLiteUInt8 || input->type == kTfLiteInt8) {
+        if (input->type == kTfLiteUInt8) {
+            TF_LITE_ENSURE_TYPES_EQ(context, output->type, kTfLiteUInt8);
+            TF_LITE_ENSURE_EQ(context, output->params.zero_point, 0);
+        } else {
+            TF_LITE_ENSURE_TYPES_EQ(context, input->type, kTfLiteInt8);
+            TF_LITE_ENSURE_TYPES_EQ(context, output->type, kTfLiteInt8);
+            TF_LITE_ENSURE_EQ(context, output->params.zero_point, -128);
+        }
+        TF_LITE_ENSURE(context, (output->params.scale == 1.f / 256) ||
+                       (output->params.scale == 1.f / 255));
+
+        static const int kScaledDiffIntegerBits = 5;
+
+        int input_left_shift;
+        tflite::PreprocessSoftmaxScaling(
+            params->beta, input->params.scale, kScaledDiffIntegerBits,
+            &op_data->input_multiplier, &input_left_shift);
+        op_data->input_left_shift = input_left_shift;
+        op_data->diff_min =
+            -1.0 * tflite::CalculateInputRadius(kScaledDiffIntegerBits,
+                                                op_data->input_left_shift);
     } else {
-      TF_LITE_ENSURE_TYPES_EQ(context, input->type, kTfLiteInt8);
-      TF_LITE_ENSURE_TYPES_EQ(context, output->type, kTfLiteInt8);
-      TF_LITE_ENSURE_EQ(context, output->params.zero_point, -128);
+        TF_LITE_ENSURE_TYPES_EQ(context, input->type, kTfLiteFloat32);
+        TF_LITE_ENSURE_TYPES_EQ(context, output->type, kTfLiteFloat32);
+        op_data->beta = static_cast<double>(params->beta);
     }
-    TF_LITE_ENSURE(context, (output->params.scale == 1.f / 256) ||
-                                (output->params.scale == 1.f / 255));
-
-    static const int kScaledDiffIntegerBits = 5;
-
-    int input_left_shift;
-    tflite::PreprocessSoftmaxScaling(
-        params->beta, input->params.scale, kScaledDiffIntegerBits,
-        &op_data->input_multiplier, &input_left_shift);
-    op_data->input_left_shift = input_left_shift;
-    op_data->diff_min =
-        -1.0 * tflite::CalculateInputRadius(kScaledDiffIntegerBits,
-                                            op_data->input_left_shift);
-  } else {
-    TF_LITE_ENSURE_TYPES_EQ(context, input->type, kTfLiteFloat32);
-    TF_LITE_ENSURE_TYPES_EQ(context, output->type, kTfLiteFloat32);
-    op_data->beta = static_cast<double>(params->beta);
-  }
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 }  // namespace
 
 TfLiteStatus SoftmaxPrepare(TfLiteContext* context, TfLiteNode* node) {
-  TF_LITE_ENSURE_EQ(context, NumInputs(node), 1);
-  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
-  const TfLiteTensor* input = GetInput(context, node, 0);
-  TF_LITE_ENSURE(context, NumDimensions(input) >= 1);
+    TF_LITE_ENSURE_EQ(context, NumInputs(node), 1);
+    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
+    const TfLiteTensor* input = GetInput(context, node, 0);
+    TF_LITE_ENSURE(context, NumDimensions(input) >= 1);
 
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 
 // Takes a tensor and performs softmax along the last dimension.
 void SoftmaxFloat(const TfLiteTensor* input, TfLiteTensor* output,
                   const SoftmaxParams& op_data) {
-  tflite::reference_ops::Softmax(
-      op_data, GetTensorShape(input), GetTensorData<float>(input),
-      GetTensorShape(output), GetTensorData<float>(output));
+    tflite::reference_ops::Softmax(
+        op_data, GetTensorShape(input), GetTensorData<float>(input),
+        GetTensorShape(output), GetTensorData<float>(output));
 }
 
 void SoftmaxQuantized(const TfLiteTensor* input, TfLiteTensor* output,
                       const SoftmaxParams& op_data) {
-  if (input->type == kTfLiteUInt8) {
-    tflite::reference_ops::Softmax(
-        op_data, GetTensorShape(input), GetTensorData<uint8_t>(input),
-        GetTensorShape(output), GetTensorData<uint8_t>(output));
-  } else {
-    const unsigned int num_dims = NumDimensions(input);
+    if (input->type == kTfLiteUInt8) {
+        tflite::reference_ops::Softmax(
+            op_data, GetTensorShape(input), GetTensorData<uint8_t>(input),
+            GetTensorShape(output), GetTensorData<uint8_t>(output));
+    } else {
+        const unsigned int num_dims = NumDimensions(input);
 
-    const int trailing_dim = input_shape.DimensionsCount() - 1;
-    const int outer_size =
-        MatchingFlatSizeSkipDim(input_shape, trailing_dim, output_shape);
-    const int depth =
-        MatchingDim(input_shape, trailing_dim, output_shape, trailing_dim);
+        const int trailing_dim = input_shape.DimensionsCount() - 1;
+        const int outer_size =
+            MatchingFlatSizeSkipDim(input_shape, trailing_dim, output_shape);
+        const int depth =
+            MatchingDim(input_shape, trailing_dim, output_shape, trailing_dim);
 
-    arm_softmax_s8(GetTensorData<int8_t>(input), outer_size, depth,
-                   op_data.input_multiplier, op_data.input_left_shift,
-                   op_data.diff_min, GetTensorData<int8_t>(output));
-  }
+        arm_softmax_s8(GetTensorData<int8_t>(input), outer_size, depth,
+                       op_data.input_multiplier, op_data.input_left_shift,
+                       op_data.diff_min, GetTensorData<int8_t>(output));
+    }
 }
 
 TfLiteStatus SoftmaxEval(TfLiteContext* context, TfLiteNode* node) {
-  auto* params = static_cast<TfLiteSoftmaxParams*>(node->builtin_data);
+    auto* params = static_cast<TfLiteSoftmaxParams*>(node->builtin_data);
 
-  const TfLiteTensor* input = GetInput(context, node, 0);
-  TfLiteTensor* output = GetOutput(context, node, 0);
+    const TfLiteTensor* input = GetInput(context, node, 0);
+    TfLiteTensor* output = GetOutput(context, node, 0);
 
-  SoftmaxParams op_data;
-  TF_LITE_ENSURE_STATUS(
-      CalculateSoftmaxParams(context, input, output, params, &op_data));
+    SoftmaxParams op_data;
+    TF_LITE_ENSURE_STATUS(
+        CalculateSoftmaxParams(context, input, output, params, &op_data));
 
-  switch (input->type) {
+    switch (input->type) {
     case kTfLiteFloat32: {
-      SoftmaxFloat(input, output, op_data);
-      return kTfLiteOk;
+        SoftmaxFloat(input, output, op_data);
+        return kTfLiteOk;
     }
     case kTfLiteInt8:
     case kTfLiteUInt8: {
-      SoftmaxQuantized(input, output, params, op_data);
-      return kTfLiteOk;
+        SoftmaxQuantized(input, output, params, op_data);
+        return kTfLiteOk;
     }
     default:
-      TF_LITE_KERNEL_LOG(
-          context,
-          "Only float32, uint8_t and int8_t input supported currently, got %d.",
-          input->type);
-      return kTfLiteError;
-  }
+        TF_LITE_KERNEL_LOG(
+            context,
+            "Only float32, uint8_t and int8_t input supported currently, got %d.",
+            input->type);
+        return kTfLiteError;
+    }
 }
 }  // namespace activations
 
 TfLiteRegistration* Register_SOFTMAX() {
-  static TfLiteRegistration r = {/*init=*/nullptr,
-                                 /*free=*/nullptr,
-                                 /*prepare=*/activations::SoftmaxPrepare,
-                                 /*invoke=*/activations::SoftmaxEval,
-                                 /*profiling_string=*/nullptr,
-                                 /*builtin_code=*/0,
-                                 /*custom_name=*/nullptr,
-                                 /*version=*/0};
-  return &r;
+    static TfLiteRegistration r = {/*init=*/nullptr,
+                                            /*free=*/nullptr,
+                                            /*prepare=*/activations::SoftmaxPrepare,
+                                            /*invoke=*/activations::SoftmaxEval,
+                                            /*profiling_string=*/nullptr,
+                                            /*builtin_code=*/0,
+                                            /*custom_name=*/nullptr,
+                                            /*version=*/0
+                                  };
+    return &r;
 }
 
 }  // namespace micro
