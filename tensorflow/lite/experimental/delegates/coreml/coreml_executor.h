@@ -22,9 +22,9 @@ limitations under the License.
 
 // Data for input/output tensors.
 struct TensorData {
-    std::vector<float> data;
-    const std::string name;
-    std::vector<int> shape;  // only required for input tensor.
+  std::vector<float> data;
+  const std::string name;
+  std::vector<int> shape;  // only required for input tensor.
 };
 
 // Responsible for:
@@ -35,7 +35,7 @@ struct TensorData {
 @interface CoreMlExecutor : NSObject
 
 - (bool)invokeWithInputs:(const std::vector<TensorData>&)inputs
-    outputs:(const std::vector<TensorData>&)outputs API_AVAILABLE(ios(11));
+                 outputs:(const std::vector<TensorData>&)outputs API_AVAILABLE(ios(11));
 
 - (NSURL*)saveModel:(CoreML::Specification::Model*)model API_AVAILABLE(ios(11));
 - (bool)build:(NSURL*)modelUrl API_AVAILABLE(ios(11));

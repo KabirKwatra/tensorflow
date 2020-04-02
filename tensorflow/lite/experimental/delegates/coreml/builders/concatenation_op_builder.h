@@ -22,23 +22,23 @@ namespace delegates {
 namespace coreml {
 
 class ConcatenationOpBuilder : public OpBuilder {
-public:
-    explicit ConcatenationOpBuilder(GraphBuilder* graph_builder)
-        : OpBuilder(graph_builder) {}
+ public:
+  explicit ConcatenationOpBuilder(GraphBuilder* graph_builder)
+      : OpBuilder(graph_builder) {}
 
-    const char* DebugName() override {
-        if (!str_debug_name_[0])
-            GetDebugName("ConcatOpBuilder", node_id_, str_debug_name_);
-        return str_debug_name_;
-    }
+  const char* DebugName() override {
+    if (!str_debug_name_[0])
+      GetDebugName("ConcatOpBuilder", node_id_, str_debug_name_);
+    return str_debug_name_;
+  }
 
-    CoreML::Specification::NeuralNetworkLayer* Build() override;
+  CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                                TfLiteContext* context) override;
+  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                              TfLiteContext* context) override;
 
-    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                                 TfLiteContext* context) override;
+  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                               TfLiteContext* context) override;
 };
 
 }  // namespace coreml

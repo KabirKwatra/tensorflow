@@ -23,30 +23,30 @@ namespace delegates {
 namespace coreml {
 // Builder for Reshape op in CoreML.
 class ReshapeOpBuilder : public OpBuilder {
-public:
-    explicit ReshapeOpBuilder(GraphBuilder* graph_builder)
-        : OpBuilder(graph_builder) {}
-    const char* DebugName() override;
+ public:
+  explicit ReshapeOpBuilder(GraphBuilder* graph_builder)
+      : OpBuilder(graph_builder) {}
+  const char* DebugName() override;
 
-    CoreML::Specification::NeuralNetworkLayer* Build() override;
+  CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                                TfLiteContext* context) override;
-    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                                 TfLiteContext* context) override;
+  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                              TfLiteContext* context) override;
+  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                               TfLiteContext* context) override;
 
-    // Sets output shape of the Core ML reshape layer, given output shape and
-    // the input tensor's shape.
-    void SetShapeFromTensor(const TfLiteTensor* output_shape,
+  // Sets output shape of the Core ML reshape layer, given output shape and
+  // the input tensor's shape.
+  void SetShapeFromTensor(const TfLiteTensor* output_shape,
+                          const TfLiteIntArray* input_shape);
+  void SetShapeFromIntArray(const TfLiteIntArray* output_shape,
                             const TfLiteIntArray* input_shape);
-    void SetShapeFromIntArray(const TfLiteIntArray* output_shape,
-                              const TfLiteIntArray* input_shape);
 
-private:
-    std::vector<int> shape_;
-    // When channel dimension is changed, reshape should be done with HWC layout,
-    // thus transpose is required. (set with ReshapeLayerParams.mode)
-    bool need_transpose_ = false;
+ private:
+  std::vector<int> shape_;
+  // When channel dimension is changed, reshape should be done with HWC layout,
+  // thus transpose is required. (set with ReshapeLayerParams.mode)
+  bool need_transpose_ = false;
 };
 
 }  // namespace coreml

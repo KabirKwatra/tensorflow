@@ -26,31 +26,27 @@ namespace coreml {
 // linear activation layer) operation.
 // TODO(karimnosseir): Generalize to other unary operators.
 class ThresholdLayerBuilder : public OpBuilder {
-public:
-    explicit ThresholdLayerBuilder(GraphBuilder* graph_builder)
-        : OpBuilder(graph_builder) {}
+ public:
+  explicit ThresholdLayerBuilder(GraphBuilder* graph_builder)
+      : OpBuilder(graph_builder) {}
 
-    const char* DebugName() override;
+  const char* DebugName() override;
 
-    CoreML::Specification::NeuralNetworkLayer* Build() override;
+  CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-    void SetAlpha(float alpha) {
-        alpha_ = alpha;
-    }
+  void SetAlpha(float alpha) { alpha_ = alpha; }
 
-    void SetScale(float scale) {
-        scale_ = scale;
-    }
+  void SetScale(float scale) { scale_ = scale; }
 
-    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                                TfLiteContext* context) override;
+  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                              TfLiteContext* context) override;
 
-    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                                 TfLiteContext* context) override;
+  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                               TfLiteContext* context) override;
 
-private:
-    float alpha_ = 0.0f;
-    float scale_ = 1.0f;
+ private:
+  float alpha_ = 0.0f;
+  float scale_ = 1.0f;
 };
 
 }  // namespace coreml

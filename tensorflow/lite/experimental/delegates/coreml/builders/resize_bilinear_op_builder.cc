@@ -29,76 +29,76 @@ namespace delegates {
 namespace coreml {
 
 const char* ResizeBilinearOpBuilder::DebugName() {
-    if (str_debug_name_[0]) return str_debug_name_;
-    GetDebugName("ResizeBilinearOpBuilder", node_id_, str_debug_name_);
-    return str_debug_name_;
+  if (str_debug_name_[0]) return str_debug_name_;
+  GetDebugName("ResizeBilinearOpBuilder", node_id_, str_debug_name_);
+  return str_debug_name_;
 }
 
 CoreML::Specification::NeuralNetworkLayer* ResizeBilinearOpBuilder::Build() {
-    if (layer_ == nullptr) {
-        layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
-    }
-    layer_->set_name(DebugName());
-    const TfLiteResizeBilinearParams* params =
-        reinterpret_cast<const TfLiteResizeBilinearParams*>(builtin_data_);
+  if (layer_ == nullptr) {
+    layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
+  }
+  layer_->set_name(DebugName());
+  const TfLiteResizeBilinearParams* params =
+      reinterpret_cast<const TfLiteResizeBilinearParams*>(builtin_data_);
 
-    layer_->mutable_resizebilinear()->mutable_targetsize()->Add(height_);
-    layer_->mutable_resizebilinear()->mutable_targetsize()->Add(width_);
+  layer_->mutable_resizebilinear()->mutable_targetsize()->Add(height_);
+  layer_->mutable_resizebilinear()->mutable_targetsize()->Add(width_);
 
-    // align_corners makes last sampling position to be aligned with last index of
-    // input. This is the same behavior as STRICT_ALIGN_ENDPOINTS_MODE in Core ML
-    // sampling mode. When not set, the sampling positions are the same as
-    // UPSAMPLE_MODE. (indices are in [0, (input_size-1)/output_size])
-    if (params->align_corners) {
-        layer_->mutable_resizebilinear()->mutable_mode()->set_samplingmethod(
-            CoreML::Specification::SamplingMode::STRICT_ALIGN_ENDPOINTS_MODE);
-    } else {
-        layer_->mutable_resizebilinear()->mutable_mode()->set_samplingmethod(
-            CoreML::Specification::SamplingMode::UPSAMPLE_MODE);
-    }
-    return layer_.release();
+  // align_corners makes last sampling position to be aligned with last index of
+  // input. This is the same behavior as STRICT_ALIGN_ENDPOINTS_MODE in Core ML
+  // sampling mode. When not set, the sampling positions are the same as
+  // UPSAMPLE_MODE. (indices are in [0, (input_size-1)/output_size])
+  if (params->align_corners) {
+    layer_->mutable_resizebilinear()->mutable_mode()->set_samplingmethod(
+        CoreML::Specification::SamplingMode::STRICT_ALIGN_ENDPOINTS_MODE);
+  } else {
+    layer_->mutable_resizebilinear()->mutable_mode()->set_samplingmethod(
+        CoreML::Specification::SamplingMode::UPSAMPLE_MODE);
+  }
+  return layer_.release();
 }
 
 TfLiteStatus ResizeBilinearOpBuilder::RegisterInputs(
     const TfLiteIntArray* inputs, TfLiteContext* context) {
-    if (inputs->size != 2) {
-        TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to ResizeBilinear!.");
-        return kTfLiteError;
-    }
-    AddInput(inputs->data[0]);
-    TfLiteTensor* size = &context->tensors[inputs->data[1]];
-    height_ = GetTensorData<int32_t>(size)[0];
-    width_ = GetTensorData<int32_t>(size)[1];
-    return kTfLiteOk;
+  if (inputs->size != 2) {
+    TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to ResizeBilinear!.");
+    return kTfLiteError;
+  }
+  AddInput(inputs->data[0]);
+  TfLiteTensor* size = &context->tensors[inputs->data[1]];
+  height_ = GetTensorData<int32_t>(size)[0];
+  width_ = GetTensorData<int32_t>(size)[1];
+  return kTfLiteOk;
 }
 
 TfLiteStatus ResizeBilinearOpBuilder::RegisterOutputs(
     const TfLiteIntArray* outputs, TfLiteContext* context) {
-    if (outputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to ResizeBilinear!.");
-        return kTfLiteError;
-    }
-    graph_builder_->AddTensorWithID(outputs->data[0], GetOutput(context));
-    return kTfLiteOk;
+  if (outputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to ResizeBilinear!.");
+    return kTfLiteError;
+  }
+  graph_builder_->AddTensorWithID(outputs->data[0], GetOutput(context));
+  return kTfLiteOk;
 }
 
 OpBuilder* CreateResizeBilinearOpBuilder(GraphBuilder* graph_builder) {
-    return new ResizeBilinearOpBuilder(graph_builder);
+  return new ResizeBilinearOpBuilder(graph_builder);
 }
 
 bool IsResizeBilinearOpSupported(const TfLiteRegistration* registration,
                                  const TfLiteNode* node,
                                  TfLiteContext* context) {
-    if (node->builtin_data == nullptr) {
-        return false;
-    }
-    const int kOutputSize = 1;
-    if (!IsConstantTensor(GetInput(context, node, kOutputSize))) {
-        TF_LITE_KERNEL_LOG(context,
-                           "Output size of ResizeBilinear should be constant.");
-        return false;
-    }
-    return true;
+  if (node->builtin_data == nullptr) {
+    return false;
+  }
+  const int kOutputSize = 1;
+  if (!IsConstantTensor(GetInput(context, node, kOutputSize))) {
+    TF_LITE_KERNEL_LOG(context,
+                       "Output size of ResizeBilinear should be constant.");
+    return false;
+  }
+  return true;
 }
 
 }  // namespace coreml

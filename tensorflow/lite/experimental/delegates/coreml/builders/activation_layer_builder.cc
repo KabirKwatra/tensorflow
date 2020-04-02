@@ -25,115 +25,115 @@ namespace delegates {
 namespace coreml {
 
 const char* ActivationLayerBuilder::DebugName() {
-    if (!str_debug_name_[0])
-        GetDebugName("ActivationLayerBuilder", node_id_, str_debug_name_);
-    return str_debug_name_;
+  if (!str_debug_name_[0])
+    GetDebugName("ActivationLayerBuilder", node_id_, str_debug_name_);
+  return str_debug_name_;
 }
 
 CoreML::Specification::NeuralNetworkLayer* ActivationLayerBuilder::Build() {
-    layer_->set_name(DebugName());
-    switch (activation_) {
+  layer_->set_name(DebugName());
+  switch (activation_) {
     // ActNone is used for sclalar multiplication (linear activation)
     case kTfLiteActNone:
-        layer_->mutable_activation()->mutable_linear()->set_alpha(alpha_);
-        break;
+      layer_->mutable_activation()->mutable_linear()->set_alpha(alpha_);
+      break;
     case kTfLiteActRelu:
-        layer_->mutable_activation()->mutable_relu();
-        break;
+      layer_->mutable_activation()->mutable_relu();
+      break;
     // Relu1 and Relu6 layers are fully composed in PopulateSubgraph().
     case kTfLiteActRelu1:  // clip(-1, 1)
-        layer_->mutable_unary()->set_alpha(-1);
-        layer_->mutable_unary()->set_type(
-            CoreML::Specification::UnaryFunctionLayerParams::THRESHOLD);
-        break;
+      layer_->mutable_unary()->set_alpha(-1);
+      layer_->mutable_unary()->set_type(
+          CoreML::Specification::UnaryFunctionLayerParams::THRESHOLD);
+      break;
     case kTfLiteActRelu6:  // clip(0, 6)
-        layer_->mutable_activation()->mutable_relu();
-        break;
+      layer_->mutable_activation()->mutable_relu();
+      break;
     case kTfLiteActTanh:
-        layer_->mutable_activation()->mutable_tanh();
-        break;
+      layer_->mutable_activation()->mutable_tanh();
+      break;
     case kTfLiteActSigmoid:
-        layer_->mutable_activation()->mutable_sigmoid();
-        break;
+      layer_->mutable_activation()->mutable_sigmoid();
+      break;
     // TODO(taeheej): signbit is not implemented.
     default:
-        fprintf(stderr, "Activation %d is not supported.\n", activation_);
-        break;
-    }
-    return layer_.release();
+      fprintf(stderr, "Activation %d is not supported.\n", activation_);
+      break;
+  }
+  return layer_.release();
 }
 
 TfLiteStatus ActivationLayerBuilder::PopulateSubgraph(TfLiteContext* context) {
-    if (!(activation_ == kTfLiteActRelu6 || activation_ == kTfLiteActRelu1)) {
-        builder_output_ = AddOutput();
-        return kTfLiteOk;
-    }
-
-    // Relu1: Threshold(-1) -> Threshold(-1) with scale: -1 -> Negation
-    // Relu6: ReLU -> Threshold(-6) with scale: -1 -> Negation
-    const int relu_threshold = activation_ == kTfLiteActRelu6 ? 6 : 1;
-    ThresholdLayerBuilder* threshold_builder =
-        reinterpret_cast<ThresholdLayerBuilder*>(
-            graph_builder_->AddBuilder(CreateThresholdLayerBuilder, nullptr));
-
-    threshold_builder->SetAlpha(-relu_threshold);
-    threshold_builder->SetScale(-1);
-
-    threshold_builder->AddInput(AddOutput());
-
-    ActivationLayerBuilder* negation_builder =
-        reinterpret_cast<ActivationLayerBuilder*>(
-            graph_builder_->AddBuilder(CreateActivationLayerBuilder, nullptr));
-    negation_builder->SetActivation(kTfLiteActNone);
-    negation_builder->SetAlpha(-1);
-
-    negation_builder->AddInput(threshold_builder->AddOutput());
-    builder_output_ = negation_builder->AddOutput();
+  if (!(activation_ == kTfLiteActRelu6 || activation_ == kTfLiteActRelu1)) {
+    builder_output_ = AddOutput();
     return kTfLiteOk;
+  }
+
+  // Relu1: Threshold(-1) -> Threshold(-1) with scale: -1 -> Negation
+  // Relu6: ReLU -> Threshold(-6) with scale: -1 -> Negation
+  const int relu_threshold = activation_ == kTfLiteActRelu6 ? 6 : 1;
+  ThresholdLayerBuilder* threshold_builder =
+      reinterpret_cast<ThresholdLayerBuilder*>(
+          graph_builder_->AddBuilder(CreateThresholdLayerBuilder, nullptr));
+
+  threshold_builder->SetAlpha(-relu_threshold);
+  threshold_builder->SetScale(-1);
+
+  threshold_builder->AddInput(AddOutput());
+
+  ActivationLayerBuilder* negation_builder =
+      reinterpret_cast<ActivationLayerBuilder*>(
+          graph_builder_->AddBuilder(CreateActivationLayerBuilder, nullptr));
+  negation_builder->SetActivation(kTfLiteActNone);
+  negation_builder->SetAlpha(-1);
+
+  negation_builder->AddInput(threshold_builder->AddOutput());
+  builder_output_ = negation_builder->AddOutput();
+  return kTfLiteOk;
 }
 
 TfLiteStatus ActivationLayerBuilder::RegisterInputs(
     const TfLiteIntArray* inputs, TfLiteContext* context) {
-    if (inputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Activation: Wrong # of inputs!.");
-        return kTfLiteError;
-    }
-    AddInput(inputs->data[0]);
-    return kTfLiteOk;
+  if (inputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Activation: Wrong # of inputs!.");
+    return kTfLiteError;
+  }
+  AddInput(inputs->data[0]);
+  return kTfLiteOk;
 }
 
 TfLiteStatus ActivationLayerBuilder::RegisterOutputs(
     const TfLiteIntArray* outputs, TfLiteContext* context) {
-    if (outputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Activation: Wrong # of outputs!.");
-        return kTfLiteError;
-    }
-    graph_builder_->AddTensorWithID(outputs->data[0], GetOutput(context));
-    return kTfLiteOk;
+  if (outputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Activation: Wrong # of outputs!.");
+    return kTfLiteError;
+  }
+  graph_builder_->AddTensorWithID(outputs->data[0], GetOutput(context));
+  return kTfLiteOk;
 }
 
 OpBuilder* CreateActivationLayerBuilder(GraphBuilder* graph_builder) {
-    return new ActivationLayerBuilder(graph_builder);
+  return new ActivationLayerBuilder(graph_builder);
 }
 
 OpBuilder* CreateLogisticOpBuilder(GraphBuilder* graph_builder) {
-    return new ActivationLayerBuilder(graph_builder, kTfLiteActSigmoid);
+  return new ActivationLayerBuilder(graph_builder, kTfLiteActSigmoid);
 }
 
 OpBuilder* CreateReluOpBuilder(GraphBuilder* graph_builder) {
-    return new ActivationLayerBuilder(graph_builder, kTfLiteActRelu);
+  return new ActivationLayerBuilder(graph_builder, kTfLiteActRelu);
 }
 
 OpBuilder* CreateReluN1To1OpBuilder(GraphBuilder* graph_builder) {
-    return new ActivationLayerBuilder(graph_builder, kTfLiteActRelu1);
+  return new ActivationLayerBuilder(graph_builder, kTfLiteActRelu1);
 }
 
 OpBuilder* CreateRelu6OpBuilder(GraphBuilder* graph_builder) {
-    return new ActivationLayerBuilder(graph_builder, kTfLiteActRelu6);
+  return new ActivationLayerBuilder(graph_builder, kTfLiteActRelu6);
 }
 
 OpBuilder* CreateTanhOpBuilder(GraphBuilder* graph_builder) {
-    return new ActivationLayerBuilder(graph_builder, kTfLiteActTanh);
+  return new ActivationLayerBuilder(graph_builder, kTfLiteActTanh);
 }
 
 }  // namespace coreml

@@ -20,48 +20,48 @@ namespace tflite {
 namespace delegates {
 namespace coreml {
 const char* SoftmaxOpBuilder::DebugName() {
-    if (!str_debug_name_[0])
-        GetDebugName("SoftmaxOpBuilder", node_id_, str_debug_name_);
-    return str_debug_name_;
+  if (!str_debug_name_[0])
+    GetDebugName("SoftmaxOpBuilder", node_id_, str_debug_name_);
+  return str_debug_name_;
 }
 
 CoreML::Specification::NeuralNetworkLayer* SoftmaxOpBuilder::Build() {
-    if (layer_ == nullptr) {
-        layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
-    }
-    layer_->set_name(DebugName());
-    layer_->mutable_softmax();
+  if (layer_ == nullptr) {
+    layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
+  }
+  layer_->set_name(DebugName());
+  layer_->mutable_softmax();
 
-    return layer_.release();
+  return layer_.release();
 }
 
 TfLiteStatus SoftmaxOpBuilder::RegisterInputs(const TfLiteIntArray* inputs,
-        TfLiteContext* context) {
-    if (inputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to softmax!.");
-        return kTfLiteError;
-    }
-    AddInput(inputs->data[0]);
-    return kTfLiteOk;
+                                              TfLiteContext* context) {
+  if (inputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to softmax!.");
+    return kTfLiteError;
+  }
+  AddInput(inputs->data[0]);
+  return kTfLiteOk;
 }
 
 TfLiteStatus SoftmaxOpBuilder::RegisterOutputs(const TfLiteIntArray* outputs,
-        TfLiteContext* context) {
-    if (outputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to softmax!.");
-        return kTfLiteError;
-    }
-    TensorID output_tensor = GetOutput(context);
-    if (output_tensor.NodeID() == -1) {
-        TF_LITE_KERNEL_LOG(context, "Failed to build output tensor.");
-        return kTfLiteError;
-    }
-    graph_builder_->AddTensorWithID(outputs->data[0], output_tensor);
-    return kTfLiteOk;
+                                               TfLiteContext* context) {
+  if (outputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to softmax!.");
+    return kTfLiteError;
+  }
+  TensorID output_tensor = GetOutput(context);
+  if (output_tensor.NodeID() == -1) {
+    TF_LITE_KERNEL_LOG(context, "Failed to build output tensor.");
+    return kTfLiteError;
+  }
+  graph_builder_->AddTensorWithID(outputs->data[0], output_tensor);
+  return kTfLiteOk;
 }
 
 OpBuilder* CreateSoftmaxOpBuilder(GraphBuilder* graph_builder) {
-    return new SoftmaxOpBuilder(graph_builder);
+  return new SoftmaxOpBuilder(graph_builder);
 }
 }  // namespace coreml
 }  // namespace delegates

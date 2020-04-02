@@ -28,89 +28,87 @@ namespace tflite {
 namespace delegates {
 namespace coreml {
 const char* MulOpBuilder::DebugName() {
-    if (!str_debug_name_[0])
-        GetDebugName("MulOpBuilder", node_id_, str_debug_name_);
-    return str_debug_name_;
+  if (!str_debug_name_[0])
+    GetDebugName("MulOpBuilder", node_id_, str_debug_name_);
+  return str_debug_name_;
 }
 
 CoreML::Specification::NeuralNetworkLayer* MulOpBuilder::Build() {
-    if (layer_ == nullptr) {
-        layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
-    }
-    // MultiplyLayerParams only has limited broadcasting support. For example:
-    // [B, 1, 1, 1], [B, C, 1, 1], [B, 1, H, W], [B, C, H, W]. other shapes
-    // will make broadcasting fail.
-    layer_->set_name(DebugName());
-    layer_->mutable_multiply();
-    if (alpha_ != 1.0f) {
-        layer_->mutable_multiply()->set_alpha(alpha_);
-    }
+  if (layer_ == nullptr) {
+    layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
+  }
+  // MultiplyLayerParams only has limited broadcasting support. For example:
+  // [B, 1, 1, 1], [B, C, 1, 1], [B, 1, H, W], [B, C, H, W]. other shapes
+  // will make broadcasting fail.
+  layer_->set_name(DebugName());
+  layer_->mutable_multiply();
+  if (alpha_ != 1.0f) {
+    layer_->mutable_multiply()->set_alpha(alpha_);
+  }
 
-    return layer_.release();
+  return layer_.release();
 }
 
 TfLiteStatus MulOpBuilder::PopulateSubgraph(TfLiteContext* context) {
-    TfLiteMulParams* params = reinterpret_cast<TfLiteMulParams*>(builtin_data_);
+  TfLiteMulParams* params = reinterpret_cast<TfLiteMulParams*>(builtin_data_);
 
-    TfLiteFusedActivation activation = params->activation;
-    if (activation == kTfLiteActNone) {
-        builder_output_ = AddOutput();
-    } else {
-        ActivationLayerBuilder* activation_builder =
-            reinterpret_cast<ActivationLayerBuilder*>(
-                graph_builder_->AddBuilder(CreateActivationLayerBuilder, nullptr));
-        activation_builder->SetActivation(activation);
-        activation_builder->AddInput(AddOutput());
-        activation_builder->PopulateSubgraph(context);
-        builder_output_ = activation_builder->GetOutput(context);
-    }
-    return kTfLiteOk;
+  TfLiteFusedActivation activation = params->activation;
+  if (activation == kTfLiteActNone) {
+    builder_output_ = AddOutput();
+  } else {
+    ActivationLayerBuilder* activation_builder =
+        reinterpret_cast<ActivationLayerBuilder*>(
+            graph_builder_->AddBuilder(CreateActivationLayerBuilder, nullptr));
+    activation_builder->SetActivation(activation);
+    activation_builder->AddInput(AddOutput());
+    activation_builder->PopulateSubgraph(context);
+    builder_output_ = activation_builder->GetOutput(context);
+  }
+  return kTfLiteOk;
 }
 
 TfLiteStatus MulOpBuilder::RegisterInputs(const TfLiteIntArray* inputs,
-        TfLiteContext* context) {
-    // TFL MUL op always has 2 inputs.
-    if (inputs->size != 2) {
-        TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to mul!.");
-        return kTfLiteError;
-    }
-    const auto* input_0 = &context->tensors[inputs->data[0]];
-    const auto* input_1 = &context->tensors[inputs->data[1]];
-    // store constant, scalar value into MultiplyLayerParams directly.
-    if (IsConstantTensor(input_0) && NumElements(input_0) == 1) {
-        AddInput(inputs->data[1]);
-        SetAlpha(GetTensorData<float>(input_0)[0]);
-    } else if (IsConstantTensor(input_1) && NumElements(input_1) == 1) {
-        AddInput(inputs->data[0]);
-        SetAlpha(GetTensorData<float>(input_1)[0]);
-    } else {
-        AddInput(inputs->data[0]);
-        AddInput(inputs->data[1]);
-    }
-    return kTfLiteOk;
+                                          TfLiteContext* context) {
+  // TFL MUL op always has 2 inputs.
+  if (inputs->size != 2) {
+    TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to mul!.");
+    return kTfLiteError;
+  }
+  const auto* input_0 = &context->tensors[inputs->data[0]];
+  const auto* input_1 = &context->tensors[inputs->data[1]];
+  // store constant, scalar value into MultiplyLayerParams directly.
+  if (IsConstantTensor(input_0) && NumElements(input_0) == 1) {
+    AddInput(inputs->data[1]);
+    SetAlpha(GetTensorData<float>(input_0)[0]);
+  } else if (IsConstantTensor(input_1) && NumElements(input_1) == 1) {
+    AddInput(inputs->data[0]);
+    SetAlpha(GetTensorData<float>(input_1)[0]);
+  } else {
+    AddInput(inputs->data[0]);
+    AddInput(inputs->data[1]);
+  }
+  return kTfLiteOk;
 }
 
 TfLiteStatus MulOpBuilder::RegisterOutputs(const TfLiteIntArray* outputs,
-        TfLiteContext* context) {
-    if (outputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to mul!.");
-        return kTfLiteError;
-    }
-    TensorID output_tensor = GetOutput(context);
-    if (output_tensor.NodeID() == -1) {
-        TF_LITE_KERNEL_LOG(context, "Failed to build output tensor.");
-        return kTfLiteError;
-    }
-    graph_builder_->AddTensorWithID(outputs->data[0], output_tensor);
-    return kTfLiteOk;
+                                           TfLiteContext* context) {
+  if (outputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to mul!.");
+    return kTfLiteError;
+  }
+  TensorID output_tensor = GetOutput(context);
+  if (output_tensor.NodeID() == -1) {
+    TF_LITE_KERNEL_LOG(context, "Failed to build output tensor.");
+    return kTfLiteError;
+  }
+  graph_builder_->AddTensorWithID(outputs->data[0], output_tensor);
+  return kTfLiteOk;
 }
 
-void MulOpBuilder::SetAlpha(float alpha) {
-    alpha_ = alpha;
-}
+void MulOpBuilder::SetAlpha(float alpha) { alpha_ = alpha; }
 
 OpBuilder* CreateMulOpBuilder(GraphBuilder* graph_builder) {
-    return new MulOpBuilder(graph_builder);
+  return new MulOpBuilder(graph_builder);
 }
 
 }  // namespace coreml

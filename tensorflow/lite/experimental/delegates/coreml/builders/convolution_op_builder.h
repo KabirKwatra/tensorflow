@@ -26,49 +26,49 @@ namespace coreml {
 
 // Layer that provides convolution and depthwise convolution.
 class ConvolutionOpBuilder : public OpBuilder {
-public:
-    explicit ConvolutionOpBuilder(GraphBuilder* graph_builder, bool is_depthwise)
-        : OpBuilder(graph_builder), is_depthwise_(is_depthwise) {}
+ public:
+  explicit ConvolutionOpBuilder(GraphBuilder* graph_builder, bool is_depthwise)
+      : OpBuilder(graph_builder), is_depthwise_(is_depthwise) {}
 
-    const char* DebugName() override;
+  const char* DebugName() override;
 
-    CoreML::Specification::NeuralNetworkLayer* Build() override;
+  CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-    TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
+  TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
 
-    void SetOutputChannels(uint64_t output_channels);
+  void SetOutputChannels(uint64_t output_channels);
 
-    void SetNGroups(uint64_t n_groups);
+  void SetNGroups(uint64_t n_groups);
 
-    void SetWeights(TfLiteTensor* weights);
+  void SetWeights(TfLiteTensor* weights);
 
-    void SetBias(TfLiteTensor* bias);
+  void SetBias(TfLiteTensor* bias);
 
-    void SetParams(void* builtin_data);
+  void SetParams(void* builtin_data);
 
-    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                                TfLiteContext* context) override;
+  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                              TfLiteContext* context) override;
 
-    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                                 TfLiteContext* context) override;
+  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                               TfLiteContext* context) override;
 
-private:
-    void FillCoreMLWeights();
-    void FillCoreMLBias();
+ private:
+  void FillCoreMLWeights();
+  void FillCoreMLBias();
 
-    // Transpose TFLite kernel weights to CoreML kernel weights.
-    // Should be called after setting CoreML's kernel shapes.
-    void TransposeKernelWeights();
+  // Transpose TFLite kernel weights to CoreML kernel weights.
+  // Should be called after setting CoreML's kernel shapes.
+  void TransposeKernelWeights();
 
-    uint64_t output_channels_;
-    uint64_t n_groups_ = 1;
+  uint64_t output_channels_;
+  uint64_t n_groups_ = 1;
 
-    bool is_depthwise_ = false;
+  bool is_depthwise_ = false;
 
-    // using default dilation_factor (1, 1)
-    // CoreML ConvolutionLayerParams.isDeconvolution == false
-    TfLiteTensor* weights_ = nullptr;
-    TfLiteTensor* bias_ = nullptr;
+  // using default dilation_factor (1, 1)
+  // CoreML ConvolutionLayerParams.isDeconvolution == false
+  TfLiteTensor* weights_ = nullptr;
+  TfLiteTensor* bias_ = nullptr;
 };
 
 }  // namespace coreml

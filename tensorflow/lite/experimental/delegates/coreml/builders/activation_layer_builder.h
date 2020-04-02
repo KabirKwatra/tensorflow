@@ -23,37 +23,35 @@ namespace delegates {
 namespace coreml {
 
 class ActivationLayerBuilder : public OpBuilder {
-public:
-    explicit ActivationLayerBuilder(GraphBuilder* graph_builder)
-        : OpBuilder(graph_builder) {}
+ public:
+  explicit ActivationLayerBuilder(GraphBuilder* graph_builder)
+      : OpBuilder(graph_builder) {}
 
-    explicit ActivationLayerBuilder(GraphBuilder* graph_builder,
-                                    TfLiteFusedActivation activation)
-        : OpBuilder(graph_builder), activation_(activation) {}
+  explicit ActivationLayerBuilder(GraphBuilder* graph_builder,
+                                  TfLiteFusedActivation activation)
+      : OpBuilder(graph_builder), activation_(activation) {}
 
-    const char* DebugName() override;
+  const char* DebugName() override;
 
-    CoreML::Specification::NeuralNetworkLayer* Build() override;
+  CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-    void SetActivation(TfLiteFusedActivation activation) {
-        activation_ = activation;
-    }
+  void SetActivation(TfLiteFusedActivation activation) {
+    activation_ = activation;
+  }
 
-    void SetAlpha(float alpha) {
-        alpha_ = alpha;
-    }
+  void SetAlpha(float alpha) { alpha_ = alpha; }
 
-    TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
+  TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
 
-    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                                TfLiteContext* context) override;
+  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                              TfLiteContext* context) override;
 
-    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                                 TfLiteContext* context) override;
+  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                               TfLiteContext* context) override;
 
-private:
-    TfLiteFusedActivation activation_;
-    float alpha_ = 1.0f;
+ private:
+  TfLiteFusedActivation activation_;
+  float alpha_ = 1.0f;
 };
 
 }  // namespace coreml

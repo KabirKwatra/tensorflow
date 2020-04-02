@@ -21,45 +21,45 @@ namespace delegates {
 namespace coreml {
 
 const char* ThresholdLayerBuilder::DebugName() {
-    if (!str_debug_name_[0])
-        GetDebugName("ThresholdLayerBuilder", node_id_, str_debug_name_);
-    return str_debug_name_;
+  if (!str_debug_name_[0])
+    GetDebugName("ThresholdLayerBuilder", node_id_, str_debug_name_);
+  return str_debug_name_;
 }
 
 CoreML::Specification::NeuralNetworkLayer* ThresholdLayerBuilder::Build() {
-    if (layer_ == nullptr) {
-        layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
-    }
-    layer_->set_name(DebugName());
-    layer_->mutable_unary()->set_alpha(alpha_);
-    layer_->mutable_unary()->set_scale(scale_);
-    layer_->mutable_unary()->set_type(
-        CoreML::Specification::UnaryFunctionLayerParams::THRESHOLD);
-    return layer_.release();
+  if (layer_ == nullptr) {
+    layer_.reset(new CoreML::Specification::NeuralNetworkLayer);
+  }
+  layer_->set_name(DebugName());
+  layer_->mutable_unary()->set_alpha(alpha_);
+  layer_->mutable_unary()->set_scale(scale_);
+  layer_->mutable_unary()->set_type(
+      CoreML::Specification::UnaryFunctionLayerParams::THRESHOLD);
+  return layer_.release();
 }
 
 TfLiteStatus ThresholdLayerBuilder::RegisterInputs(const TfLiteIntArray* inputs,
-        TfLiteContext* context) {
-    if (inputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Threshold: Wrong # of inputs!.");
-        return kTfLiteError;
-    }
-    AddInput(inputs->data[0]);
-    return kTfLiteOk;
+                                                   TfLiteContext* context) {
+  if (inputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Threshold: Wrong # of inputs!.");
+    return kTfLiteError;
+  }
+  AddInput(inputs->data[0]);
+  return kTfLiteOk;
 }
 
 TfLiteStatus ThresholdLayerBuilder::RegisterOutputs(
     const TfLiteIntArray* outputs, TfLiteContext* context) {
-    if (outputs->size != 1) {
-        TF_LITE_KERNEL_LOG(context, "Threshold: Wrong # of outputs!.");
-        return kTfLiteError;
-    }
-    graph_builder_->AddTensorWithID(outputs->data[0], GetOutput(context));
-    return kTfLiteOk;
+  if (outputs->size != 1) {
+    TF_LITE_KERNEL_LOG(context, "Threshold: Wrong # of outputs!.");
+    return kTfLiteError;
+  }
+  graph_builder_->AddTensorWithID(outputs->data[0], GetOutput(context));
+  return kTfLiteOk;
 }
 
 OpBuilder* CreateThresholdLayerBuilder(GraphBuilder* graph_builder) {
-    return new ThresholdLayerBuilder(graph_builder);
+  return new ThresholdLayerBuilder(graph_builder);
 }
 
 }  // namespace coreml

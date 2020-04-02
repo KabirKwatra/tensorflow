@@ -21,9 +21,9 @@ limitations under the License.
 extern "C" {
 #endif  // __cplusplus
 typedef struct {
-    // TODO(karimnosseir): Remove when other fields are added.
-    // We have dummy for now as we can't have empty struct in C.
-    char dummy;
+  // TODO(karimnosseir): Remove when other fields are added.
+  // We have dummy for now as we can't have empty struct in C.
+  char dummy;
 } TfLiteCoreMlDelegateOptions;
 
 // Return a delegate that uses CoreML for ops execution.
