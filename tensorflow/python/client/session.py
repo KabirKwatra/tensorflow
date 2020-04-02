@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """A client interface for TensorFlow."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -41,8 +40,8 @@ from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training.experimental import mixed_precision_global_state
 from tensorflow.python.util import compat
 from tensorflow.python.util import nest
-from tensorflow.python.util.tf_export import tf_export
 from tensorflow.python.util.compat import collections_abc
+from tensorflow.python.util.tf_export import tf_export
 
 _python_session_create_counter = monitoring.Counter(
     "/tensorflow/api/python/session_create_counter",

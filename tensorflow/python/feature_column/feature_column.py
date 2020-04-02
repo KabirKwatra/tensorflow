@@ -126,7 +126,6 @@ NOTE: The new feature columns are being developed in feature_column_v2.py and
 are a somewhat duplicate of the code here. Please make sure to update logic
 in both places.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -165,8 +164,8 @@ from tensorflow.python.platform import gfile
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import checkpoint_utils
 from tensorflow.python.util import nest
-from tensorflow.python.util.tf_export import tf_export
 from tensorflow.python.util.compat import collections_abc
+from tensorflow.python.util.tf_export import tf_export
 
 
 def _internal_input_layer(
