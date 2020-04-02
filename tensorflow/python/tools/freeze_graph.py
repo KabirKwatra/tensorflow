@@ -74,21 +74,23 @@ def _has_no_variables(sess):
     return True
 
 
-def freeze_graph_with_def_protos(input_graph_def,
-                                 input_saver_def,
-                                 input_checkpoint,
-                                 output_node_names,
-                                 restore_op_name,
-                                 filename_tensor_name,
-                                 output_graph,
-                                 clear_devices,
-                                 initializer_nodes,
-                                 variable_names_whitelist="",
-                                 variable_names_blacklist="",
-                                 input_meta_graph_def=None,
-                                 input_saved_model_dir=None,
-                                 saved_model_tags=None,
-                                 checkpoint_version=saver_pb2.SaverDef.V2):
+def freeze_graph_with_def_protos(
+    input_graph_def,
+    input_saver_def,
+    input_checkpoint,
+    output_node_names,
+    restore_op_name,
+    filename_tensor_name,
+    output_graph,
+    clear_devices,
+    initializer_nodes,
+    variable_names_whitelist="",
+    variable_names_blacklist="",
+    input_meta_graph_def=None,
+    input_saved_model_dir=None,
+    saved_model_tags=None,
+    checkpoint_version=saver_pb2.SaverDef.V2,
+):
     """Converts all variables in a graph and checkpoint into constants.
 
     Args:
@@ -123,14 +125,15 @@ def freeze_graph_with_def_protos(input_graph_def,
     del restore_op_name, filename_tensor_name  # Unused by updated loading code.
 
     # 'input_checkpoint' may be a prefix if we're using Saver V2 format
-    if (not input_saved_model_dir and
-            not checkpoint_management.checkpoint_exists(input_checkpoint)):
-        raise ValueError("Input checkpoint '" + input_checkpoint +
-                         "' doesn't exist!")
+    if not input_saved_model_dir and not checkpoint_management.checkpoint_exists(
+        input_checkpoint
+    ):
+        raise ValueError("Input checkpoint '" + input_checkpoint + "' doesn't exist!")
 
     if not output_node_names:
         raise ValueError(
-            "You need to supply the name of a node to --output_node_names.")
+            "You need to supply the name of a node to --output_node_names."
+        )
 
     # Remove all the explicit device specifications for this node. This helps to
     # make the graph more portable.
@@ -147,11 +150,13 @@ def freeze_graph_with_def_protos(input_graph_def,
     with session.Session() as sess:
         if input_saver_def:
             saver = saver_lib.Saver(
-                saver_def=input_saver_def, write_version=checkpoint_version)
+                saver_def=input_saver_def, write_version=checkpoint_version
+            )
             saver.restore(sess, input_checkpoint)
         elif input_meta_graph_def:
             restorer = saver_lib.import_meta_graph(
-                input_meta_graph_def, clear_devices=True)
+                input_meta_graph_def, clear_devices=True
+            )
             restorer.restore(sess, input_checkpoint)
             if initializer_nodes:
                 sess.run(initializer_nodes.replace(" ", "").split(","))
@@ -187,7 +192,8 @@ def freeze_graph_with_def_protos(input_graph_def,
 
             try:
                 saver = saver_lib.Saver(
-                    var_list=var_list, write_version=checkpoint_version)
+                    var_list=var_list, write_version=checkpoint_version
+                )
             except TypeError as e:
                 # `var_list` is required to be a map of variable names to Variable
                 # tensors. Partition variables are Identity tensors that cannot be
@@ -196,12 +202,14 @@ def freeze_graph_with_def_protos(input_graph_def,
                     raise ValueError(
                         "Models containing partition variables cannot be converted "
                         "from checkpoint files. Please pass in a SavedModel using "
-                        "the flag --input_saved_model_dir.")
+                        "the flag --input_saved_model_dir."
+                    )
                 # Models that have been frozen previously do not contain Variables.
                 elif _has_no_variables(sess):
                     raise ValueError(
                         "No variables were found in this model. It is likely the model "
-                        "was frozen previously. You cannot freeze a graph twice.")
+                        "was frozen previously. You cannot freeze a graph twice."
+                    )
                     return 0
                 else:
                     raise e
@@ -212,10 +220,14 @@ def freeze_graph_with_def_protos(input_graph_def,
 
         variable_names_whitelist = (
             variable_names_whitelist.replace(" ", "").split(",")
-            if variable_names_whitelist else None)
+            if variable_names_whitelist
+            else None
+        )
         variable_names_blacklist = (
             variable_names_blacklist.replace(" ", "").split(",")
-            if variable_names_blacklist else None)
+            if variable_names_blacklist
+            else None
+        )
 
         if input_meta_graph_def:
             output_graph_def = graph_util.convert_variables_to_constants(
@@ -223,14 +235,16 @@ def freeze_graph_with_def_protos(input_graph_def,
                 input_meta_graph_def.graph_def,
                 output_node_names.replace(" ", "").split(","),
                 variable_names_whitelist=variable_names_whitelist,
-                variable_names_blacklist=variable_names_blacklist)
+                variable_names_blacklist=variable_names_blacklist,
+            )
         else:
             output_graph_def = graph_util.convert_variables_to_constants(
                 sess,
                 input_graph_def,
                 output_node_names.replace(" ", "").split(","),
                 variable_names_whitelist=variable_names_whitelist,
-                variable_names_blacklist=variable_names_blacklist)
+                variable_names_blacklist=variable_names_blacklist,
+            )
 
     # Write GraphDef to file if output path has been given.
     if output_graph:
@@ -257,8 +271,7 @@ def _parse_input_graph_proto(input_graph, input_binary):
 def _parse_input_meta_graph_proto(input_graph, input_binary):
     """Parses input tensorflow graph into MetaGraphDef proto."""
     if not gfile.Exists(input_graph):
-        raise IOError("Input meta graph file '" +
-                      input_graph + "' does not exist!")
+        raise IOError("Input meta graph file '" + input_graph + "' does not exist!")
     input_meta_graph_def = MetaGraphDef()
     mode = "rb" if input_binary else "r"
     with gfile.GFile(input_graph, mode) as f:
@@ -284,22 +297,24 @@ def _parse_input_saver_proto(input_saver, input_binary):
     return saver_def
 
 
-def freeze_graph(input_graph,
-                 input_saver,
-                 input_binary,
-                 input_checkpoint,
-                 output_node_names,
-                 restore_op_name,
-                 filename_tensor_name,
-                 output_graph,
-                 clear_devices,
-                 initializer_nodes,
-                 variable_names_whitelist="",
-                 variable_names_blacklist="",
-                 input_meta_graph=None,
-                 input_saved_model_dir=None,
-                 saved_model_tags=tag_constants.SERVING,
-                 checkpoint_version=saver_pb2.SaverDef.V2):
+def freeze_graph(
+    input_graph,
+    input_saver,
+    input_binary,
+    input_checkpoint,
+    output_node_names,
+    restore_op_name,
+    filename_tensor_name,
+    output_graph,
+    clear_devices,
+    initializer_nodes,
+    variable_names_whitelist="",
+    variable_names_blacklist="",
+    input_meta_graph=None,
+    input_saved_model_dir=None,
+    saved_model_tags=tag_constants.SERVING,
+    checkpoint_version=saver_pb2.SaverDef.V2,
+):
     """Converts all variables in a graph and checkpoint into constants.
 
     Args:
@@ -334,13 +349,15 @@ def freeze_graph(input_graph,
     input_graph_def = None
     if input_saved_model_dir:
         input_graph_def = saved_model_utils.get_meta_graph_def(
-            input_saved_model_dir, saved_model_tags).graph_def
+            input_saved_model_dir, saved_model_tags
+        ).graph_def
     elif input_graph:
         input_graph_def = _parse_input_graph_proto(input_graph, input_binary)
     input_meta_graph_def = None
     if input_meta_graph:
         input_meta_graph_def = _parse_input_meta_graph_proto(
-            input_meta_graph, input_binary)
+            input_meta_graph, input_binary
+        )
     input_saver_def = None
     if input_saver:
         input_saver_def = _parse_input_saver_proto(input_saver, input_binary)
@@ -359,7 +376,8 @@ def freeze_graph(input_graph,
         input_meta_graph_def,
         input_saved_model_dir,
         [tag for tag in saved_model_tags.replace(" ", "").split(",") if tag],
-        checkpoint_version=checkpoint_version)
+        checkpoint_version=checkpoint_version,
+    )
 
 
 def main(unused_args, flags):
@@ -368,15 +386,28 @@ def main(unused_args, flags):
     elif flags.checkpoint_version == 2:
         checkpoint_version = saver_pb2.SaverDef.V2
     else:
-        raise ValueError("Invalid checkpoint version (must be '1' or '2'): %d" %
-                         flags.checkpoint_version)
-    freeze_graph(flags.input_graph, flags.input_saver, flags.input_binary,
-                 flags.input_checkpoint, flags.output_node_names,
-                 flags.restore_op_name, flags.filename_tensor_name,
-                 flags.output_graph, flags.clear_devices, flags.initializer_nodes,
-                 flags.variable_names_whitelist, flags.variable_names_blacklist,
-                 flags.input_meta_graph, flags.input_saved_model_dir,
-                 flags.saved_model_tags, checkpoint_version)
+        raise ValueError(
+            "Invalid checkpoint version (must be '1' or '2'): %d"
+            % flags.checkpoint_version
+        )
+    freeze_graph(
+        flags.input_graph,
+        flags.input_saver,
+        flags.input_binary,
+        flags.input_checkpoint,
+        flags.output_node_names,
+        flags.restore_op_name,
+        flags.filename_tensor_name,
+        flags.output_graph,
+        flags.clear_devices,
+        flags.initializer_nodes,
+        flags.variable_names_whitelist,
+        flags.variable_names_blacklist,
+        flags.input_meta_graph,
+        flags.input_saved_model_dir,
+        flags.saved_model_tags,
+        checkpoint_version,
+    )
 
 
 def run_main():
@@ -387,39 +418,40 @@ def run_main():
         "--input_graph",
         type=str,
         default="",
-        help="TensorFlow \'GraphDef\' file to load.")
+        help="TensorFlow 'GraphDef' file to load.",
+    )
     parser.add_argument(
-        "--input_saver",
-        type=str,
-        default="",
-        help="TensorFlow saver file to load.")
+        "--input_saver", type=str, default="", help="TensorFlow saver file to load."
+    )
     parser.add_argument(
         "--input_checkpoint",
         type=str,
         default="",
-        help="TensorFlow variables file to load.")
+        help="TensorFlow variables file to load.",
+    )
     parser.add_argument(
         "--checkpoint_version",
         type=int,
         default=2,
-        help="Tensorflow variable file format")
+        help="Tensorflow variable file format",
+    )
     parser.add_argument(
-        "--output_graph",
-        type=str,
-        default="",
-        help="Output \'GraphDef\' file name.")
+        "--output_graph", type=str, default="", help="Output 'GraphDef' file name."
+    )
     parser.add_argument(
         "--input_binary",
         nargs="?",
         const=True,
         type="bool",
         default=False,
-        help="Whether the input files are in binary format.")
+        help="Whether the input files are in binary format.",
+    )
     parser.add_argument(
         "--output_node_names",
         type=str,
         default="",
-        help="The name of the output nodes, comma separated.")
+        help="The name of the output nodes, comma separated.",
+    )
     parser.add_argument(
         "--restore_op_name",
         type=str,
@@ -427,7 +459,8 @@ def run_main():
         help="""\
       The name of the master restore operator. Deprecated, unused by updated \
       loading code.
-      """)
+      """,
+    )
     parser.add_argument(
         "--filename_tensor_name",
         type=str,
@@ -435,19 +468,22 @@ def run_main():
         help="""\
       The name of the tensor holding the save path. Deprecated, unused by \
       updated loading code.
-      """)
+      """,
+    )
     parser.add_argument(
         "--clear_devices",
         nargs="?",
         const=True,
         type="bool",
         default=True,
-        help="Whether to remove device specifications.")
+        help="Whether to remove device specifications.",
+    )
     parser.add_argument(
         "--initializer_nodes",
         type=str,
         default="",
-        help="Comma separated list of initializer nodes to run before freezing.")
+        help="Comma separated list of initializer nodes to run before freezing.",
+    )
     parser.add_argument(
         "--variable_names_whitelist",
         type=str,
@@ -455,24 +491,28 @@ def run_main():
         help="""\
       Comma separated list of variables to convert to constants. If specified, \
       only those variables will be converted to constants.\
-      """)
+      """,
+    )
     parser.add_argument(
         "--variable_names_blacklist",
         type=str,
         default="",
         help="""\
       Comma separated list of variables to skip converting to constants.\
-      """)
+      """,
+    )
     parser.add_argument(
         "--input_meta_graph",
         type=str,
         default="",
-        help="TensorFlow \'MetaGraphDef\' file to load.")
+        help="TensorFlow 'MetaGraphDef' file to load.",
+    )
     parser.add_argument(
         "--input_saved_model_dir",
         type=str,
         default="",
-        help="Path to the dir with TensorFlow \'SavedModel\' file and variables.")
+        help="Path to the dir with TensorFlow 'SavedModel' file and variables.",
+    )
     parser.add_argument(
         "--saved_model_tags",
         type=str,
@@ -481,10 +521,13 @@ def run_main():
       Group of tag(s) of the MetaGraphDef to load, in string format,\
       separated by \',\'. For tag-set contains multiple tags, all tags \
       must be passed in.\
-      """)
+      """,
+    )
     flags, unparsed = parser.parse_known_args()
 
-    def my_main(unused_args): return main(unused_args, flags)
+    def my_main(unused_args):
+        return main(unused_args, flags)
+
     app.run(main=my_main, argv=[sys.argv[0]] + unparsed)
 
 
