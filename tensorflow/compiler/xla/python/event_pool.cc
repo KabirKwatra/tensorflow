@@ -22,10 +22,10 @@ limitations under the License.
 namespace xla {
 
 EventPool::Handle::~Handle() {
-  if (pool_ && event_) {
-    absl::MutexLock lock(&pool_->mu_);
-    pool_->free_events_.push(std::move(event_));
-  }
+    if (pool_ && event_) {
+        absl::MutexLock lock(&pool_->mu_);
+        pool_->free_events_.push(std::move(event_));
+    }
 }
 
 EventPool::EventPool(bool allow_reuse)
@@ -33,26 +33,26 @@ EventPool::EventPool(bool allow_reuse)
 
 StatusOr<EventPool::Handle> EventPool::ThenAllocateAndRecordEvent(
     se::Stream* stream) {
-  Handle event;
+    Handle event;
 
-  if (allow_reuse_) {
-    event.pool_ = this;
-    absl::MutexLock lock(&mu_);
-    if (!free_events_.empty()) {
-      event.event_ = std::move(free_events_.top());
-      free_events_.pop();
+    if (allow_reuse_) {
+        event.pool_ = this;
+        absl::MutexLock lock(&mu_);
+        if (!free_events_.empty()) {
+            event.event_ = std::move(free_events_.top());
+            free_events_.pop();
+        }
     }
-  }
-  if (!event.event_) {
-    event.event_ = absl::make_unique<se::Event>(stream->parent());
-    TF_RET_CHECK(event.event_->Init()) << "Event initialization failed";
-  }
-  {
-    absl::MutexLock lock(&mu_);
-    stream->ThenRecordEvent(event.event_.get());
-    event.sequence_number_ = next_sequence_number_++;
-  }
-  return event;
+    if (!event.event_) {
+        event.event_ = absl::make_unique<se::Event>(stream->parent());
+        TF_RET_CHECK(event.event_->Init()) << "Event initialization failed";
+    }
+    {
+        absl::MutexLock lock(&mu_);
+        stream->ThenRecordEvent(event.event_.get());
+        event.sequence_number_ = next_sequence_number_++;
+    }
+    return event;
 }
 
 }  // namespace xla

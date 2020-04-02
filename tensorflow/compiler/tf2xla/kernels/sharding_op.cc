@@ -24,23 +24,23 @@ namespace tensorflow {
 namespace {
 
 class ShardingOp : public XlaOpKernel {
- public:
-  explicit ShardingOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+public:
+    explicit ShardingOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
 
-  ~ShardingOp() override = default;
+    ~ShardingOp() override = default;
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    xla::XlaOp input = ctx->Input(0);
-    auto shape_or = ctx->InputXlaShape(0);
-    OP_REQUIRES_OK(ctx, shape_or.status());
+    void Compile(XlaOpKernelContext* ctx) override {
+        xla::XlaOp input = ctx->Input(0);
+        auto shape_or = ctx->InputXlaShape(0);
+        OP_REQUIRES_OK(ctx, shape_or.status());
 
-    ctx->SetOutput(
-        0, xla::CustomCall(ctx->builder(), /*call_target_name=*/"Sharding",
-                           {input}, shape_or.ValueOrDie()));
-  }
+        ctx->SetOutput(
+            0, xla::CustomCall(ctx->builder(), /*call_target_name=*/"Sharding",
+        {input}, shape_or.ValueOrDie()));
+    }
 
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(ShardingOp);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(ShardingOp);
 };
 
 REGISTER_XLA_OP(Name("XlaSharding"), ShardingOp);

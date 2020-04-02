@@ -27,31 +27,31 @@ CpuDevice::CpuDevice(int id,
     : Device(id, std::move(local_device_state), kCpuPlatformName) {}
 
 StatusOr<std::shared_ptr<PyLocalClient>> GetCpuClient(bool asynchronous) {
-  TF_ASSIGN_OR_RETURN(se::Platform * platform,
-                      PlatformUtil::GetPlatform("Host"));
-  if (platform->VisibleDeviceCount() <= 0) {
-    return FailedPrecondition("CPU platform has no visible devices.");
-  }
-  LocalClientOptions options;
-  options.set_platform(platform);
-  TF_ASSIGN_OR_RETURN(LocalClient * client,
-                      ClientLibrary::GetOrCreateLocalClient(options));
+    TF_ASSIGN_OR_RETURN(se::Platform * platform,
+                        PlatformUtil::GetPlatform("Host"));
+    if (platform->VisibleDeviceCount() <= 0) {
+        return FailedPrecondition("CPU platform has no visible devices.");
+    }
+    LocalClientOptions options;
+    options.set_platform(platform);
+    TF_ASSIGN_OR_RETURN(LocalClient * client,
+                        ClientLibrary::GetOrCreateLocalClient(options));
 
-  std::vector<std::unique_ptr<Device>> devices;
-  for (int i = 0; i < client->device_count(); ++i) {
-    se::StreamExecutor* executor =
-        client->backend().stream_executor(i).ValueOrDie();
-    auto device_state = absl::make_unique<LocalDeviceState>(
-        executor, client, LocalDeviceState::kSynchronous, asynchronous,
-        /*allow_event_reuse=*/false);
-    auto device = absl::make_unique<CpuDevice>(i, std::move(device_state));
-    devices.push_back(std::move(device));
-  }
+    std::vector<std::unique_ptr<Device>> devices;
+    for (int i = 0; i < client->device_count(); ++i) {
+        se::StreamExecutor* executor =
+            client->backend().stream_executor(i).ValueOrDie();
+        auto device_state = absl::make_unique<LocalDeviceState>(
+                                executor, client, LocalDeviceState::kSynchronous, asynchronous,
+                                /*allow_event_reuse=*/false);
+        auto device = absl::make_unique<CpuDevice>(i, std::move(device_state));
+        devices.push_back(std::move(device));
+    }
 
-  return std::make_shared<PyLocalClient>(
-      kCpuPlatformName, client, std::move(devices), /*host_id=*/0,
-      /*allocator=*/nullptr, /*host_memory_allocator=*/nullptr,
-      /*gpu_run_options=*/nullptr);
+    return std::make_shared<PyLocalClient>(
+               kCpuPlatformName, client, std::move(devices), /*host_id=*/0,
+               /*allocator=*/nullptr, /*host_memory_allocator=*/nullptr,
+               /*gpu_run_options=*/nullptr);
 }
 
 }  // namespace xla
