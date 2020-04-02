@@ -32,19 +32,19 @@ ABSL_CONST_INIT extern const absl::string_view kMemcpyHToDOp;
 ABSL_CONST_INIT extern const absl::string_view kMemcpyDToHOp;
 
 enum class Category {
-  kTensorFlow,
-  kJax,
-  kTfData,
-  kMemcpyHToD,
-  kMemcpyDToH,
-  kUnknown,
+    kTensorFlow,
+    kJax,
+    kTfData,
+    kMemcpyHToD,
+    kMemcpyDToH,
+    kUnknown,
 };
 
 // Breaks a TensorFlow op fullname into name and type.
 struct TfOp {
-  Category category;
-  absl::string_view name;
-  absl::string_view type;
+    Category category;
+    absl::string_view name;
+    absl::string_view type;
 };
 
 TfOp ParseTfOpFullname(absl::string_view tf_op_fullname);
@@ -59,27 +59,27 @@ std::string TfOpEventName(absl::string_view tf_op_fullname);
 
 // Returns true if the given name is a TensorFlow Dataset Op.
 inline bool IsDatasetOp(absl::string_view tf_op_type) {
-  return tf_op_type == kDatasetOp;
+    return tf_op_type == kDatasetOp;
 }
 
 // Returns true if the given name is a TensorFlow Infeed Enqueue Op.
 inline bool IsInfeedEnqueueOp(absl::string_view tf_op_type) {
-  return tf_op_type == "InfeedEnqueue" || tf_op_type == "InfeedEnqueueTuple";
+    return tf_op_type == "InfeedEnqueue" || tf_op_type == "InfeedEnqueueTuple";
 }
 
 // Returns true if the given name is a TensorFlow embedding op.
 inline bool IsEmbeddingOp(absl::string_view tf_op_fullname) {
-  return absl::StrContains(tf_op_fullname, "Embedding");
+    return absl::StrContains(tf_op_fullname, "Embedding");
 }
 
 // Returns true if the given op is for copying data from host to device.
 inline bool IsMemcpyHToDOp(absl::string_view tf_op_type) {
-  return tf_op_type == kMemcpyHToDOp;
+    return tf_op_type == kMemcpyHToDOp;
 }
 
 // Returns true if the given op is for copying data from device to host.
 inline bool IsMemcpyDToHOp(absl::string_view tf_op_type) {
-  return tf_op_type == kMemcpyDToHOp;
+    return tf_op_type == kMemcpyDToHOp;
 }
 }  // namespace profiler
 }  // namespace tensorflow
