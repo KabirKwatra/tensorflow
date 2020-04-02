@@ -41,20 +41,19 @@ except ImportError:
 
 _HDF5_EXTENSIONS = [".h5", ".hdf5", ".keras"]
 
-
 # TODO(kathywu): Remove this when Keras SavedModel is not experimental.
 _KERAS_SAVED_MODEL_STILL_EXPERIMENTAL = True
 
 
 @keras_export("keras.models.save_model")
 def save_model(
-    model,
-    filepath,
-    overwrite=True,
-    include_optimizer=True,
-    save_format=None,
-    signatures=None,
-    options=None,
+        model,
+        filepath,
+        overwrite=True,
+        include_optimizer=True,
+        save_format=None,
+        signatures=None,
+        options=None,
 ):
     """Saves a model as a TensorFlow SavedModel or HDF5 file.
 
@@ -112,8 +111,7 @@ def save_model(
         ImportError: If save format is hdf5, and h5py is not available.
     """
     from tensorflow.python.keras.engine import (
-        sequential,
-    )  # pylint: disable=g-import-not-at-top
+        sequential, )  # pylint: disable=g-import-not-at-top
 
     default_format = "tf" if tf2.enabled() else "h5"
     save_format = save_format or default_format
@@ -121,37 +119,28 @@ def save_model(
     if sys.version_info >= (3, 4) and isinstance(filepath, pathlib.Path):
         filepath = str(filepath)
 
-    if (
-        save_format == "h5"
-        or (h5py is not None and isinstance(filepath, h5py.File))
-        or os.path.splitext(filepath)[1] in _HDF5_EXTENSIONS
-    ):
+    if (save_format == "h5"
+            or (h5py is not None and isinstance(filepath, h5py.File))
+            or os.path.splitext(filepath)[1] in _HDF5_EXTENSIONS):
         # TODO(b/130258301): add utility method for detecting model type.
-        if (
-            not model._is_graph_network
-            and not isinstance(  # pylint:disable=protected-access
-                model, sequential.Sequential
-            )
-        ):
+        if (not model._is_graph_network and not isinstance(  # pylint:disable=protected-access
+                model, sequential.Sequential)):
             raise NotImplementedError(
                 "Saving the model to HDF5 format requires the model to be a "
                 "Functional model or a Sequential model. It does not work for "
                 "subclassed models, because such models are defined via the body of "
                 "a Python method, which isn't safely serializable. Consider saving "
                 'to the Tensorflow SavedModel format (by setting save_format="tf") '
-                "or using `save_weights`."
-            )
-        hdf5_format.save_model_to_hdf5(model, filepath, overwrite, include_optimizer)
+                "or using `save_weights`.")
+        hdf5_format.save_model_to_hdf5(model, filepath, overwrite,
+                                       include_optimizer)
     else:
-        saved_model_save.save(
-            model, filepath, overwrite, include_optimizer, signatures, options
-        )
+        saved_model_save.save(model, filepath, overwrite, include_optimizer,
+                              signatures, options)
 
 
 @keras_export("keras.models.load_model")
-def load_model(
-    filepath, custom_objects=None, compile=True
-):  # pylint: disable=redefined-builtin
+def load_model(filepath, custom_objects=None, compile=True):  # pylint: disable=redefined-builtin
     """Loads a model saved via `model.save()`.
 
     Usage:
@@ -191,10 +180,10 @@ def load_model(
         IOError: In case of an invalid savefile.
     """
     with generic_utils.CustomObjectScope(custom_objects or {}):
-        if h5py is not None and (
-            isinstance(filepath, h5py.File) or h5py.is_hdf5(filepath)
-        ):
-            return hdf5_format.load_model_from_hdf5(filepath, custom_objects, compile)
+        if h5py is not None and (isinstance(filepath, h5py.File)
+                                 or h5py.is_hdf5(filepath)):
+            return hdf5_format.load_model_from_hdf5(filepath, custom_objects,
+                                                    compile)
 
         if sys.version_info >= (3, 4) and isinstance(filepath, pathlib.Path):
             filepath = str(filepath)
@@ -204,5 +193,4 @@ def load_model(
 
     raise IOError(
         "Unable to load model. Filepath is not an hdf5 file (or h5py is not "
-        "available) or SavedModel."
-    )
+        "available) or SavedModel.")
