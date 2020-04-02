@@ -14,7 +14,6 @@
 # ==============================================================================
 # pylint: disable=unidiomatic-typecheck
 """Defun decorator for defining graph-mode functions."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -60,7 +59,6 @@ from tensorflow.python.ops import default_gradient
 from tensorflow.python.ops import functional_ops
 from tensorflow.python.ops import gradients_util
 from tensorflow.python.ops import resource_variable_ops
-
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import compat
 from tensorflow.python.util import function_utils
