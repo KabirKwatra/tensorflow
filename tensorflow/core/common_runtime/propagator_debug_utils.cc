@@ -25,71 +25,70 @@ namespace tensorflow {
 // 1-D, 0 element tensor.
 static const Tensor* const kEmptyTensor = new Tensor;
 
-
 const Tensor* GetTensorValueForDump(const Entry& input) {
-    switch (input.state) {
+  switch (input.state) {
     case Entry::State::NO_VALUE:
-        return kEmptyTensor;
+      return kEmptyTensor;
     case Entry::State::HAS_VALUE:
-        return input.val.get();
+      return input.val.get();
     case Entry::State::HAS_CONST_TENSOR:
-        return input.const_tensor;
+      return input.const_tensor;
     case Entry::State::HAS_REF_TENSOR:
-        return input.ref_tensor.tensor;
-    }
+      return input.ref_tensor.tensor;
+  }
 }
 
 void DumpPendingNodeState(const ImmutableExecutorState& immutable_state,
                           const int node_id, const Entry* input_vector,
                           const bool show_nodes_with_no_ready_inputs) {
-    const NodeItem& node_item = immutable_state.graph_view().node_ref(node_id);
-    const int input_base = node_item.input_start;
-    if (!show_nodes_with_no_ready_inputs) {
-        bool has_ready_input = false;
-        for (int i = 0; i < node_item.num_inputs; ++i) {
-            const Entry& input = input_vector[input_base + i];
-            const Tensor* tensor = GetTensorValueForDump(input);
-            if (tensor && tensor->IsInitialized()) {
-                has_ready_input = true;
-                break;
-            }
-        }
-        if (!has_ready_input) {
-            return;
-        }
-    }
-    LOG(WARNING) << "    Pending Node: " << node_item.DebugString();
+  const NodeItem& node_item = immutable_state.graph_view().node_ref(node_id);
+  const int input_base = node_item.input_start;
+  if (!show_nodes_with_no_ready_inputs) {
+    bool has_ready_input = false;
     for (int i = 0; i < node_item.num_inputs; ++i) {
-        const Entry& input = input_vector[input_base + i];
-        const Tensor* tensor = GetTensorValueForDump(input);
-        if (tensor->IsInitialized()) {
-            LOG(WARNING) << "      Input " << i << ": "
-                         << strings::StrCat(
-                             "Tensor<type: ", DataTypeString(tensor->dtype()),
-                             " shape: ", tensor->shape().DebugString(), ">");
-        } else {
-            LOG(WARNING) << "      Input " << i << ": not present";
-        }
+      const Entry& input = input_vector[input_base + i];
+      const Tensor* tensor = GetTensorValueForDump(input);
+      if (tensor && tensor->IsInitialized()) {
+        has_ready_input = true;
+        break;
+      }
     }
+    if (!has_ready_input) {
+      return;
+    }
+  }
+  LOG(WARNING) << "    Pending Node: " << node_item.DebugString();
+  for (int i = 0; i < node_item.num_inputs; ++i) {
+    const Entry& input = input_vector[input_base + i];
+    const Tensor* tensor = GetTensorValueForDump(input);
+    if (tensor->IsInitialized()) {
+      LOG(WARNING) << "      Input " << i << ": "
+                   << strings::StrCat(
+                          "Tensor<type: ", DataTypeString(tensor->dtype()),
+                          " shape: ", tensor->shape().DebugString(), ">");
+    } else {
+      LOG(WARNING) << "      Input " << i << ": not present";
+    }
+  }
 }
 
 void DumpActiveNodeState(const ImmutableExecutorState& immutable_state,
                          const int node_id, const Entry* input_vector) {
-    const NodeItem& node_item = immutable_state.graph_view().node_ref(node_id);
-    LOG(WARNING) << "    Active Node: " << node_item.DebugString();
-    const int input_base = node_item.input_start;
-    for (int i = 0; i < node_item.num_inputs; ++i) {
-        const Entry& input = input_vector[input_base + i];
-        const Tensor* tensor = GetTensorValueForDump(input);
-        if (tensor->IsInitialized()) {
-            LOG(WARNING) << "      Input " << i << ": "
-                         << strings::StrCat(
-                             "Tensor<type: ", DataTypeString(tensor->dtype()),
-                             " shape: ", tensor->shape().DebugString(), ">");
-        } else {
-            LOG(WARNING) << "      Input " << i << ": not present";
-        }
+  const NodeItem& node_item = immutable_state.graph_view().node_ref(node_id);
+  LOG(WARNING) << "    Active Node: " << node_item.DebugString();
+  const int input_base = node_item.input_start;
+  for (int i = 0; i < node_item.num_inputs; ++i) {
+    const Entry& input = input_vector[input_base + i];
+    const Tensor* tensor = GetTensorValueForDump(input);
+    if (tensor->IsInitialized()) {
+      LOG(WARNING) << "      Input " << i << ": "
+                   << strings::StrCat(
+                          "Tensor<type: ", DataTypeString(tensor->dtype()),
+                          " shape: ", tensor->shape().DebugString(), ">");
+    } else {
+      LOG(WARNING) << "      Input " << i << ": not present";
     }
+  }
 }
 
 }  // namespace tensorflow

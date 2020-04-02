@@ -27,55 +27,53 @@ const char kProtocol[] = "grpc+local";
 
 // Parse the address from a string in the form "<protocol>://<address>".
 Status AddressFromTarget(absl::string_view target, std::string* address) {
-    std::vector<std::string> parts = absl::StrSplit(target, "://");
-    if (parts.size() != 2) {
-        return errors::InvalidArgument("target ", target, " split into ",
-                                       parts.size(), " parts, not 2");
-    }
-    *address = parts[1];
-    return Status::OK();
+  std::vector<std::string> parts = absl::StrSplit(target, "://");
+  if (parts.size() != 2) {
+    return errors::InvalidArgument("target ", target, " split into ",
+                                   parts.size(), " parts, not 2");
+  }
+  *address = parts[1];
+  return Status::OK();
 }
 }  // namespace
 
 TestCluster::TestCluster(int num_workers) : num_workers_(num_workers) {}
 
 Status TestCluster::Initialize() {
-    if (initialized_) {
-        return errors::FailedPrecondition(
-                   "Test cluster has already been initialized.");
-    }
-    initialized_ = true;
-    TF_RETURN_IF_ERROR(NewMasterServer(/*port=*/0, kProtocol, &master_));
-    TF_RETURN_IF_ERROR(master_->Start());
-    TF_RETURN_IF_ERROR(AddressFromTarget(master_->Target(), &master_address_));
-    workers_.reserve(num_workers_);
-    worker_addresses_.reserve(num_workers_);
-    for (int i = 0; i < num_workers_; ++i) {
-        TF_RETURN_IF_ERROR(AddWorker());
-    }
-    return Status::OK();
+  if (initialized_) {
+    return errors::FailedPrecondition(
+        "Test cluster has already been initialized.");
+  }
+  initialized_ = true;
+  TF_RETURN_IF_ERROR(NewMasterServer(/*port=*/0, kProtocol, &master_));
+  TF_RETURN_IF_ERROR(master_->Start());
+  TF_RETURN_IF_ERROR(AddressFromTarget(master_->Target(), &master_address_));
+  workers_.reserve(num_workers_);
+  worker_addresses_.reserve(num_workers_);
+  for (int i = 0; i < num_workers_; ++i) {
+    TF_RETURN_IF_ERROR(AddWorker());
+  }
+  return Status::OK();
 }
 
 Status TestCluster::AddWorker() {
-    std::unique_ptr<GrpcDataServer> worker;
-    TF_RETURN_IF_ERROR(
-        NewWorkerServer(/*port=*/0, kProtocol, master_address_, &worker));
-    TF_RETURN_IF_ERROR(worker->Start());
-    std::string address;
-    TF_RETURN_IF_ERROR(AddressFromTarget(worker->Target(), &address));
-    workers_.push_back(std::move(worker));
-    worker_addresses_.push_back(address);
-    return Status::OK();
+  std::unique_ptr<GrpcDataServer> worker;
+  TF_RETURN_IF_ERROR(
+      NewWorkerServer(/*port=*/0, kProtocol, master_address_, &worker));
+  TF_RETURN_IF_ERROR(worker->Start());
+  std::string address;
+  TF_RETURN_IF_ERROR(AddressFromTarget(worker->Target(), &address));
+  workers_.push_back(std::move(worker));
+  worker_addresses_.push_back(address);
+  return Status::OK();
 }
 
-std::string TestCluster::MasterAddress() {
-    return master_address_;
-}
+std::string TestCluster::MasterAddress() { return master_address_; }
 
 std::string TestCluster::WorkerAddress(int index) {
-    DCHECK_GE(index, 0);
-    DCHECK_LT(index, num_workers_);
-    return worker_addresses_[index];
+  DCHECK_GE(index, 0);
+  DCHECK_LT(index, num_workers_);
+  return worker_addresses_[index];
 }
 
 }  // namespace data

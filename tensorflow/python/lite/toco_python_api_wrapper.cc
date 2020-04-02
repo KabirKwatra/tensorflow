@@ -20,22 +20,22 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_toco_api, m) {
-    m.def(
-        "TocoConvert",
-        [](py::object model_flags_proto_txt_raw,
-           py::object toco_flags_proto_txt_raw, py::object input_contents_txt_raw,
-           bool extended_return, py::object debug_info_txt_raw,
-    bool enable_mlir_converter) {
+  m.def(
+      "TocoConvert",
+      [](py::object model_flags_proto_txt_raw,
+         py::object toco_flags_proto_txt_raw, py::object input_contents_txt_raw,
+         bool extended_return, py::object debug_info_txt_raw,
+         bool enable_mlir_converter) {
         return tensorflow::pyo_or_throw(toco::TocoConvert(
-                                            model_flags_proto_txt_raw.ptr(), toco_flags_proto_txt_raw.ptr(),
-                                            input_contents_txt_raw.ptr(), extended_return,
-                                            debug_info_txt_raw.ptr(), enable_mlir_converter));
-    },
-    py::arg("model_flags_proto_txt_raw"), py::arg("toco_flags_proto_txt_raw"),
-    py::arg("input_contents_txt_raw"), py::arg("extended_return") = false,
-    py::arg("debug_info_txt_raw") = py::none(),
-    py::arg("enable_mlir_converter") = false,
-    R"pbdoc(
+            model_flags_proto_txt_raw.ptr(), toco_flags_proto_txt_raw.ptr(),
+            input_contents_txt_raw.ptr(), extended_return,
+            debug_info_txt_raw.ptr(), enable_mlir_converter));
+      },
+      py::arg("model_flags_proto_txt_raw"), py::arg("toco_flags_proto_txt_raw"),
+      py::arg("input_contents_txt_raw"), py::arg("extended_return") = false,
+      py::arg("debug_info_txt_raw") = py::none(),
+      py::arg("enable_mlir_converter") = false,
+      R"pbdoc(
       Convert a model represented in `input_contents`. `model_flags_proto`
       describes model parameters. `toco_flags_proto` describes conversion
       parameters (see relevant .protos for more information). Returns a string
@@ -46,22 +46,22 @@ PYBIND11_MODULE(_pywrap_toco_api, m) {
       `enable_mlir_converter` is True, tuse MLIR-based conversion instead of
       TOCO conversion.
     )pbdoc");
-    m.def(
-        "TocoGetPotentiallySupportedOps",
-    []() {
+  m.def(
+      "TocoGetPotentiallySupportedOps",
+      []() {
         return tensorflow::pyo_or_throw(toco::TocoGetPotentiallySupportedOps());
-    },
-    R"pbdoc(
+      },
+      R"pbdoc(
       Returns a list of names of all ops potentially supported by tflite.
     )pbdoc");
-    m.def(
-        "ExperimentalMlirQuantizeModel",
-    [](py::object input_contents_txt_raw, bool fully_quantize) {
+  m.def(
+      "ExperimentalMlirQuantizeModel",
+      [](py::object input_contents_txt_raw, bool fully_quantize) {
         return tensorflow::pyo_or_throw(toco::MlirQuantizeModel(
-                                            input_contents_txt_raw.ptr(), fully_quantize));
-    },
-    py::arg("input_contents_txt_raw"), py::arg("fully_quantize") = true,
-    R"pbdoc(
+            input_contents_txt_raw.ptr(), fully_quantize));
+      },
+      py::arg("input_contents_txt_raw"), py::arg("fully_quantize") = true,
+      R"pbdoc(
       Returns a quantized model.
     )pbdoc");
 }
