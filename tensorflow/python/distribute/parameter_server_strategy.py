@@ -13,13 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 """Class implementing a multi-worker parameter server tf.distribute strategy."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import copy
-
 
 from tensorflow.python.distribute import cross_device_ops as cross_device_ops_lib
 from tensorflow.python.distribute import device_util
