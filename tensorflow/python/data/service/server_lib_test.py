@@ -27,16 +27,16 @@ PROTOCOL = "grpc"
 
 class ServerLibTest(test.TestCase):
 
-  def testStartMaster(self):
-    master = server_lib.MasterServer(PROTOCOL)
-    self.assertRegex(master.target, PROTOCOL + "://.*:.*")
+    def testStartMaster(self):
+        master = server_lib.MasterServer(PROTOCOL)
+        self.assertRegex(master.target, PROTOCOL + "://.*:.*")
 
-  def testStartWorker(self):
-    master = server_lib.MasterServer(PROTOCOL)
-    worker = server_lib.WorkerServer(PROTOCOL,
-                                     master.target[len(PROTOCOL + "://"):])
-    self.assertRegex(worker.target, PROTOCOL + "://.*:.*")
+    def testStartWorker(self):
+        master = server_lib.MasterServer(PROTOCOL)
+        worker = server_lib.WorkerServer(PROTOCOL,
+                                         master.target[len(PROTOCOL + "://"):])
+        self.assertRegex(worker.target, PROTOCOL + "://.*:.*")
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()

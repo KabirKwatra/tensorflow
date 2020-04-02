@@ -24,72 +24,72 @@ from tensorflow.python.data.service import _pywrap_server_lib
 
 
 class MasterServer(object):
-  """An in-process tf.data service master, for use in testing."""
+    """An in-process tf.data service master, for use in testing."""
 
-  def __init__(self, protocol):
-    """Creates and starts a new tf.data master server.
+    def __init__(self, protocol):
+        """Creates and starts a new tf.data master server.
 
-    The server will choose an available port. Use `target()` to get the string
-    for connecting to the server.
+        The server will choose an available port. Use `target()` to get the string
+        for connecting to the server.
 
-    Args:
-      protocol: A string representing the type of protocol to use when creating
-        channels. For no security, use "grpc". For local credentials, use
-        "grpc+local", and make sure your binary links in
-        `data/service:local_credentials`.
-    """
-    self._server = _pywrap_server_lib.TF_DATA_NewMasterServer(0, protocol)
+        Args:
+          protocol: A string representing the type of protocol to use when creating
+            channels. For no security, use "grpc". For local credentials, use
+            "grpc+local", and make sure your binary links in
+            `data/service:local_credentials`.
+        """
+        self._server = _pywrap_server_lib.TF_DATA_NewMasterServer(0, protocol)
 
-  @property
-  def target(self):
-    """Returns the target for connecting to this server.
+    @property
+    def target(self):
+        """Returns the target for connecting to this server.
 
-    The returned string will be in the form protocol://address:port, e.g.
-    "grpc://localhost:1000".
-    """
-    return _pywrap_server_lib.TF_DATA_ServerTarget(self._server)
+        The returned string will be in the form protocol://address:port, e.g.
+        "grpc://localhost:1000".
+        """
+        return _pywrap_server_lib.TF_DATA_ServerTarget(self._server)
 
-  def __del__(self):
-    """Shuts down and deletes the server.
+    def __del__(self):
+        """Shuts down and deletes the server.
 
-    This method will block until all outstanding rpcs have completed and the
-    server has been shut down.
-    """
-    _pywrap_server_lib.TF_DATA_DeleteServer(self._server)
+        This method will block until all outstanding rpcs have completed and the
+        server has been shut down.
+        """
+        _pywrap_server_lib.TF_DATA_DeleteServer(self._server)
 
 
 class WorkerServer(object):
-  """An in-process tf.data service worker, for use in testing."""
+    """An in-process tf.data service worker, for use in testing."""
 
-  def __init__(self, protocol, master_address):
-    """Creates and starts a new tf.data worker server.
+    def __init__(self, protocol, master_address):
+        """Creates and starts a new tf.data worker server.
 
-    The server will choose an available port. Use `target()` to get the string
-    for connecting to the server.
+        The server will choose an available port. Use `target()` to get the string
+        for connecting to the server.
 
-    Args:
-      protocol: A string representing the type of protocol to use when creating
-        channels. For no security, use "grpc". For local credentials, use
-        "grpc+local", and make sure your binary links in
-        `data/service:local_credentials`.
-      master_address: The address of the tf.data master server to register with.
-    """
-    self._server = _pywrap_server_lib.TF_DATA_NewWorkerServer(
-        0, protocol, master_address)
+        Args:
+          protocol: A string representing the type of protocol to use when creating
+            channels. For no security, use "grpc". For local credentials, use
+            "grpc+local", and make sure your binary links in
+            `data/service:local_credentials`.
+          master_address: The address of the tf.data master server to register with.
+        """
+        self._server = _pywrap_server_lib.TF_DATA_NewWorkerServer(
+            0, protocol, master_address)
 
-  @property
-  def target(self):
-    """Returns the target for connecting to this server.
+    @property
+    def target(self):
+        """Returns the target for connecting to this server.
 
-    The returned string will be in the form protocol://address:port, e.g.
-    "grpc://localhost:1000".
-    """
-    return _pywrap_server_lib.TF_DATA_ServerTarget(self._server)
+        The returned string will be in the form protocol://address:port, e.g.
+        "grpc://localhost:1000".
+        """
+        return _pywrap_server_lib.TF_DATA_ServerTarget(self._server)
 
-  def __del__(self):
-    """Shuts down and deletes the server.
+    def __del__(self):
+        """Shuts down and deletes the server.
 
-    This method will block until all outstanding rpcs have completed and the
-    server has been shut down.
-    """
-    _pywrap_server_lib.TF_DATA_DeleteServer(self._server)
+        This method will block until all outstanding rpcs have completed and the
+        server has been shut down.
+        """
+        _pywrap_server_lib.TF_DATA_DeleteServer(self._server)

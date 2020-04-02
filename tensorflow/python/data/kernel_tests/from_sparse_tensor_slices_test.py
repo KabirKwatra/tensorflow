@@ -33,62 +33,64 @@ from tensorflow.python.platform import test
 class FromSparseTensorSlicesTest(test_base.DatasetTestBase,
                                  parameterized.TestCase):
 
-  # TODO(jsimsa): Break this down to multiple (parameterized) test cases.
-  @combinations.generate(
-      combinations.combine(tf_api_version=1, mode=["graph"]))
-  def testFromSparseTensorSlices(self):
-    """Test a dataset based on slices of a `tf.sparse.SparseTensor`."""
-    st = array_ops.sparse_placeholder(dtypes.float64)
-    iterator = dataset_ops.make_initializable_iterator(
-        dataset_ops.Dataset.from_sparse_tensor_slices(st))
-    init_op = iterator.initializer
-    get_next = sparse_tensor.SparseTensor(*iterator.get_next())
+    # TODO(jsimsa): Break this down to multiple (parameterized) test cases.
+    @combinations.generate(
+        combinations.combine(tf_api_version=1, mode=["graph"]))
+    def testFromSparseTensorSlices(self):
+        """Test a dataset based on slices of a `tf.sparse.SparseTensor`."""
+        st = array_ops.sparse_placeholder(dtypes.float64)
+        iterator = dataset_ops.make_initializable_iterator(
+            dataset_ops.Dataset.from_sparse_tensor_slices(st))
+        init_op = iterator.initializer
+        get_next = sparse_tensor.SparseTensor(*iterator.get_next())
 
-    with self.cached_session() as sess:
-      slices = [[1., 2., 3.], [1.], [1.], [1., 2.], [], [1., 2.], [], [], []]
+        with self.cached_session() as sess:
+            slices = [[1., 2., 3.], [1.], [1.], [
+                1., 2.], [], [1., 2.], [], [], []]
 
-      # Test with sparse tensor in the appropriate order.
-      indices = np.array(
-          [[i, j] for i in range(len(slices)) for j in range(len(slices[i]))])
-      values = np.array([val for s in slices for val in s])
-      dense_shape = np.array([len(slices), max(len(s) for s in slices) + 1])
-      sparse_feed = sparse_tensor.SparseTensorValue(indices, values,
-                                                    dense_shape)
-      sess.run(init_op, feed_dict={st: sparse_feed})
-      for i, s in enumerate(slices):
-        results = sess.run(get_next)
-        self.assertAllEqual(s, results.values)
-        expected_indices = np.array(
-            [[j] for j in range(len(slices[i]))]).reshape([-1, 1])
-        self.assertAllEqual(expected_indices, results.indices)
-        self.assertAllEqual(dense_shape[1:], results.dense_shape)
-      with self.assertRaises(errors.OutOfRangeError):
-        sess.run(get_next)
+            # Test with sparse tensor in the appropriate order.
+            indices = np.array(
+                [[i, j] for i in range(len(slices)) for j in range(len(slices[i]))])
+            values = np.array([val for s in slices for val in s])
+            dense_shape = np.array(
+                [len(slices), max(len(s) for s in slices) + 1])
+            sparse_feed = sparse_tensor.SparseTensorValue(indices, values,
+                                                          dense_shape)
+            sess.run(init_op, feed_dict={st: sparse_feed})
+            for i, s in enumerate(slices):
+                results = sess.run(get_next)
+                self.assertAllEqual(s, results.values)
+                expected_indices = np.array(
+                    [[j] for j in range(len(slices[i]))]).reshape([-1, 1])
+                self.assertAllEqual(expected_indices, results.indices)
+                self.assertAllEqual(dense_shape[1:], results.dense_shape)
+            with self.assertRaises(errors.OutOfRangeError):
+                sess.run(get_next)
 
-      # Test with sparse tensor in the reverse order, which is not
-      # currently supported.
-      reverse_order_indices = indices[::-1, :]
-      reverse_order_values = values[::-1]
-      sparse_feed = sparse_tensor.SparseTensorValue(
-          reverse_order_indices, reverse_order_values, dense_shape)
-      with self.assertRaises(errors.UnimplementedError):
-        sess.run(init_op, feed_dict={st: sparse_feed})
+            # Test with sparse tensor in the reverse order, which is not
+            # currently supported.
+            reverse_order_indices = indices[::-1, :]
+            reverse_order_values = values[::-1]
+            sparse_feed = sparse_tensor.SparseTensorValue(
+                reverse_order_indices, reverse_order_values, dense_shape)
+            with self.assertRaises(errors.UnimplementedError):
+                sess.run(init_op, feed_dict={st: sparse_feed})
 
-      # Test with an empty sparse tensor.
-      empty_indices = np.empty((0, 4), dtype=np.int64)
-      empty_values = np.empty((0,), dtype=np.float64)
-      empty_dense_shape = [0, 4, 37, 9]
-      sparse_feed = sparse_tensor.SparseTensorValue(empty_indices, empty_values,
-                                                    empty_dense_shape)
-      sess.run(init_op, feed_dict={st: sparse_feed})
-      with self.assertRaises(errors.OutOfRangeError):
-        sess.run(get_next)
+            # Test with an empty sparse tensor.
+            empty_indices = np.empty((0, 4), dtype=np.int64)
+            empty_values = np.empty((0,), dtype=np.float64)
+            empty_dense_shape = [0, 4, 37, 9]
+            sparse_feed = sparse_tensor.SparseTensorValue(empty_indices, empty_values,
+                                                          empty_dense_shape)
+            sess.run(init_op, feed_dict={st: sparse_feed})
+            with self.assertRaises(errors.OutOfRangeError):
+                sess.run(get_next)
 
-  @combinations.generate(combinations.combine(tf_api_version=2, mode=["eager"]))
-  def testFromSparseTensorSlicesError(self):
-    with self.assertRaises(AttributeError):
-      dataset_ops.Dataset.from_sparse_tensor_slices(None)
+    @combinations.generate(combinations.combine(tf_api_version=2, mode=["eager"]))
+    def testFromSparseTensorSlicesError(self):
+        with self.assertRaises(AttributeError):
+            dataset_ops.Dataset.from_sparse_tensor_slices(None)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
