@@ -37,57 +37,59 @@ namespace delegate {
 namespace nnapi {
 
 class NnApiMock : public ::tflite::nnapi::NnApiHandler {
- public:
-  explicit NnApiMock(NnApi* nnapi, int android_sdk_version = 29)
-      : ::tflite::nnapi::NnApiHandler(nnapi) {
-    nnapi_->nnapi_exists = true;
-    nnapi_->android_sdk_version = android_sdk_version;
+public:
+    explicit NnApiMock(NnApi* nnapi, int android_sdk_version = 29)
+        : ::tflite::nnapi::NnApiHandler(nnapi) {
+        nnapi_->nnapi_exists = true;
+        nnapi_->android_sdk_version = android_sdk_version;
 
-    nnapi_->ANeuralNetworksCompilation_free =
+        nnapi_->ANeuralNetworksCompilation_free =
         [](ANeuralNetworksCompilation* compilation) {};
-    nnapi_->ANeuralNetworksMemory_free = [](ANeuralNetworksMemory* memory) {};
-    nnapi_->ANeuralNetworksModel_free = [](ANeuralNetworksModel* model) {};
-    nnapi_->ANeuralNetworksExecution_free =
+        nnapi_->ANeuralNetworksMemory_free = [](ANeuralNetworksMemory* memory) {};
+        nnapi_->ANeuralNetworksModel_free = [](ANeuralNetworksModel* model) {};
+        nnapi_->ANeuralNetworksExecution_free =
         [](ANeuralNetworksExecution* execution) {};
-    nnapi_->ASharedMemory_create = [](const char* name, size_t size) -> int {
-      return open("/dev/zero", O_RDWR);
-    };
-    nnapi_->ANeuralNetworksEvent_free = [](ANeuralNetworksEvent* event) {};
+        nnapi_->ASharedMemory_create = [](const char* name, size_t size) -> int {
+            return open("/dev/zero", O_RDWR);
+        };
+        nnapi_->ANeuralNetworksEvent_free = [](ANeuralNetworksEvent* event) {};
 
-    ModelCreateReturns<ANEURALNETWORKS_NO_ERROR>();
-    AddOperandReturns<ANEURALNETWORKS_NO_ERROR>();
-    SetOperandValueReturns<ANEURALNETWORKS_NO_ERROR>();
-    AddOperationReturns<ANEURALNETWORKS_NO_ERROR>();
-    IdentifyInputAndOutputsReturns<ANEURALNETWORKS_NO_ERROR>();
-    RelaxComputationFloatReturns<ANEURALNETWORKS_NO_ERROR>();
-    ModelFinishReturns<ANEURALNETWORKS_NO_ERROR>();
-    MemoryCreateFromFdReturns<ANEURALNETWORKS_NO_ERROR>();
-    CompilationCreateReturns<ANEURALNETWORKS_NO_ERROR>();
-    CompilationCreateForDevicesReturns<ANEURALNETWORKS_NO_ERROR>();
-    CompilationFinishReturns<ANEURALNETWORKS_NO_ERROR>();
-    ExecutionCreateReturns<ANEURALNETWORKS_NO_ERROR>();
-    ExecutionSetInputFromMemoryReturns<ANEURALNETWORKS_NO_ERROR>();
-    ExecutionSetOutputFromMemoryReturns<ANEURALNETWORKS_NO_ERROR>();
-    ExecutionComputeReturns<ANEURALNETWORKS_NO_ERROR>();
-    ExecutionStartComputeReturns<ANEURALNETWORKS_NO_ERROR>();
-    EventWaitReturns<ANEURALNETWORKS_NO_ERROR>();
-    SetNnapiSupportedDevice("test-device", android_sdk_version);
-  }
+        ModelCreateReturns<ANEURALNETWORKS_NO_ERROR>();
+        AddOperandReturns<ANEURALNETWORKS_NO_ERROR>();
+        SetOperandValueReturns<ANEURALNETWORKS_NO_ERROR>();
+        AddOperationReturns<ANEURALNETWORKS_NO_ERROR>();
+        IdentifyInputAndOutputsReturns<ANEURALNETWORKS_NO_ERROR>();
+        RelaxComputationFloatReturns<ANEURALNETWORKS_NO_ERROR>();
+        ModelFinishReturns<ANEURALNETWORKS_NO_ERROR>();
+        MemoryCreateFromFdReturns<ANEURALNETWORKS_NO_ERROR>();
+        CompilationCreateReturns<ANEURALNETWORKS_NO_ERROR>();
+        CompilationCreateForDevicesReturns<ANEURALNETWORKS_NO_ERROR>();
+        CompilationFinishReturns<ANEURALNETWORKS_NO_ERROR>();
+        ExecutionCreateReturns<ANEURALNETWORKS_NO_ERROR>();
+        ExecutionSetInputFromMemoryReturns<ANEURALNETWORKS_NO_ERROR>();
+        ExecutionSetOutputFromMemoryReturns<ANEURALNETWORKS_NO_ERROR>();
+        ExecutionComputeReturns<ANEURALNETWORKS_NO_ERROR>();
+        ExecutionStartComputeReturns<ANEURALNETWORKS_NO_ERROR>();
+        EventWaitReturns<ANEURALNETWORKS_NO_ERROR>();
+        SetNnapiSupportedDevice("test-device", android_sdk_version);
+    }
 
-  ~NnApiMock() { Reset(); }
+    ~NnApiMock() {
+        Reset();
+    }
 };
 
 class NnApiDelegateMockTest : public ::testing::Test {
- protected:
-  void SetUp() override {
-    nnapi_ = *NnApiImplementation();
-    nnapi_mock_ = absl::make_unique<NnApiMock>(&nnapi_);
-  }
+protected:
+    void SetUp() override {
+        nnapi_ = *NnApiImplementation();
+        nnapi_mock_ = absl::make_unique<NnApiMock>(&nnapi_);
+    }
 
-  std::unique_ptr<NnApiMock> nnapi_mock_;
+    std::unique_ptr<NnApiMock> nnapi_mock_;
 
- private:
-  NnApi nnapi_;
+private:
+    NnApi nnapi_;
 };
 
 }  // namespace nnapi
