@@ -63,8 +63,8 @@ ANY = object()
 
 
 class ASTEdgePattern(
-    collections.namedtuple("ASTEdgePattern", ["parent", "field", "child"])
-):
+        collections.namedtuple("ASTEdgePattern",
+                               ["parent", "field", "child"])):
     """A pattern defining a type of AST edge.
 
     This consists of three components:
@@ -130,12 +130,14 @@ class AnfTransformer(transformer.Base):
                     gast.Str,
                     gast.Bytes,
                     gast.NameConstant,
-                    gast.Name,  # Name is here to cover True, False, and None in Python 2
+                    gast.
+                    Name,  # Name is here to cover True, False, and None in Python 2
                 )
             elif gast_util.GAST3:
                 literal_node_types = (
                     gast.Constant,
-                    gast.Name,  # Name is here to cover True, False, and None in Python 2
+                    gast.
+                    Name,  # Name is here to cover True, False, and None in Python 2
                 )
             else:
                 assert False
@@ -172,9 +174,9 @@ class AnfTransformer(transformer.Base):
 
     def _do_transform_node(self, node):
         temp_name = self._gensym.new_name()
-        temp_assign = templates.replace(
-            "temp_name = expr", temp_name=temp_name, expr=node
-        )[0]
+        temp_assign = templates.replace("temp_name = expr",
+                                        temp_name=temp_name,
+                                        expr=node)[0]
         self._add_pending_statement(temp_assign)
         answer = templates.replace("temp_name", temp_name=temp_name)[0]
         return answer
@@ -225,9 +227,8 @@ class AnfTransformer(transformer.Base):
             setattr(
                 node,
                 field,
-                self._ensure_node_in_anf(
-                    parent_supplied, field_supplied, getattr(node, field)
-                ),
+                self._ensure_node_in_anf(parent_supplied, field_supplied,
+                                         getattr(node, field)),
             )
         return node
 
@@ -274,13 +275,16 @@ class AnfTransformer(transformer.Base):
         return self._visit_strict_statement(node)
 
     def visit_Delete(self, node):
-        return self._visit_strict_statement(node, children_ok_to_transform=False)
+        return self._visit_strict_statement(node,
+                                            children_ok_to_transform=False)
 
     def visit_Assign(self, node):
-        return self._visit_strict_statement(node, children_ok_to_transform=False)
+        return self._visit_strict_statement(node,
+                                            children_ok_to_transform=False)
 
     def visit_AugAssign(self, node):
-        return self._visit_strict_statement(node, children_ok_to_transform=False)
+        return self._visit_strict_statement(node,
+                                            children_ok_to_transform=False)
 
     def visit_Print(self, node):
         return self._visit_strict_statement(node)
@@ -305,10 +309,8 @@ class AnfTransformer(transformer.Base):
         return iter_stmts
 
     def visit_AsyncFor(self, node):
-        msg = (
-            "Nontrivial AsyncFor nodes not supported yet "
-            "(need to think through the semantics)."
-        )
+        msg = ("Nontrivial AsyncFor nodes not supported yet "
+               "(need to think through the semantics).")
         return self._visit_trivial_only_statement(node, msg)
 
     def visit_While(self, node):
@@ -316,10 +318,8 @@ class AnfTransformer(transformer.Base):
         self.visit(node.test)
         node.test = self._ensure_node_in_anf(node, "test", node.test)
         if self._pending_statements:
-            msg = (
-                "While with nontrivial test not supported yet "
-                "(need to avoid precomputing the test)."
-            )
+            msg = ("While with nontrivial test not supported yet "
+                   "(need to avoid precomputing the test).")
             raise ValueError(msg)
         # If traversing node.test yielded no statements extracted, the generic visit
         # will do the right thing.
@@ -348,7 +348,9 @@ class AnfTransformer(transformer.Base):
         # thereby need to live outside the body.
         for item in node.items:
             self.visit(item)
-        node.items = [self._ensure_node_in_anf(node, "items", n) for n in node.items]
+        node.items = [
+            self._ensure_node_in_anf(node, "items", n) for n in node.items
+        ]
         contexts_stmts = self._consume_pending_statements()
         # This generic_visit will revisit node.items, but that is correct because by
         # this point the node.items link has been checked.  It may be somewhat
@@ -361,10 +363,8 @@ class AnfTransformer(transformer.Base):
         return contexts_stmts
 
     def visit_AsyncWith(self, node):
-        msg = (
-            "Nontrivial AsyncWith nodes not supported yet "
-            "(need to think through the semantics)."
-        )
+        msg = ("Nontrivial AsyncWith nodes not supported yet "
+               "(need to think through the semantics).")
         return self._visit_trivial_only_statement(node, msg)
 
     def visit_Raise(self, node):
@@ -376,8 +376,7 @@ class AnfTransformer(transformer.Base):
         msg = (
             "Nontrivial Assert nodes not supported yet "
             "(need to avoid computing the test when assertions are off, and "
-            "avoid computing the irritant when the assertion does not fire)."
-        )
+            "avoid computing the irritant when the assertion does not fire).")
         return self._visit_trivial_only_statement(node, msg)
 
     # Import and ImportFrom should be correct by default.
@@ -388,15 +387,14 @@ class AnfTransformer(transformer.Base):
     # Global and Nonlocal should be correct by default.
 
     def visit_Expr(self, node):
-        return self._visit_strict_statement(node, children_ok_to_transform=False)
+        return self._visit_strict_statement(node,
+                                            children_ok_to_transform=False)
 
     # Pass, Break, and Continue should be correct by default.
 
     def visit_BoolOp(self, node):
-        msg = (
-            "Nontrivial BoolOp nodes not supported yet "
-            "(need to preserve short-circuiting semantics)."
-        )
+        msg = ("Nontrivial BoolOp nodes not supported yet "
+               "(need to preserve short-circuiting semantics).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_BinOp(self, node):
@@ -406,18 +404,14 @@ class AnfTransformer(transformer.Base):
         return self._visit_strict_expression(node)
 
     def visit_Lambda(self, node):
-        msg = (
-            "Nontrivial Lambda nodes not supported "
-            "(cannot insert statements into lambda bodies)."
-        )
+        msg = ("Nontrivial Lambda nodes not supported "
+               "(cannot insert statements into lambda bodies).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_IfExp(self, node):
-        msg = (
-            "Nontrivial IfExp nodes not supported yet "
-            "(need to convert to If statement, to evaluate branches lazily "
-            "and insert statements into them)."
-        )
+        msg = ("Nontrivial IfExp nodes not supported yet "
+               "(need to convert to If statement, to evaluate branches lazily "
+               "and insert statements into them).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_Dict(self, node):
@@ -427,60 +421,46 @@ class AnfTransformer(transformer.Base):
         return self._visit_strict_expression(node)
 
     def visit_ListComp(self, node):
-        msg = (
-            "ListComp nodes not supported "
-            "(need to convert to a form that tolerates "
-            "assignment statements in clause bodies)."
-        )
+        msg = ("ListComp nodes not supported "
+               "(need to convert to a form that tolerates "
+               "assignment statements in clause bodies).")
         raise ValueError(msg)
 
     def visit_SetComp(self, node):
-        msg = (
-            "SetComp nodes not supported "
-            "(need to convert to a form that tolerates "
-            "assignment statements in clause bodies)."
-        )
+        msg = ("SetComp nodes not supported "
+               "(need to convert to a form that tolerates "
+               "assignment statements in clause bodies).")
         raise ValueError(msg)
 
     def visit_DictComp(self, node):
-        msg = (
-            "DictComp nodes not supported "
-            "(need to convert to a form that tolerates "
-            "assignment statements in clause bodies)."
-        )
+        msg = ("DictComp nodes not supported "
+               "(need to convert to a form that tolerates "
+               "assignment statements in clause bodies).")
         raise ValueError(msg)
 
     def visit_GeneratorExp(self, node):
-        msg = (
-            "GeneratorExp nodes not supported "
-            "(need to convert to a form that tolerates "
-            "assignment statements in clause bodies)."
-        )
+        msg = ("GeneratorExp nodes not supported "
+               "(need to convert to a form that tolerates "
+               "assignment statements in clause bodies).")
         raise ValueError(msg)
 
     def visit_Await(self, node):
-        msg = (
-            "Nontrivial Await nodes not supported yet "
-            "(need to think through the semantics)."
-        )
+        msg = ("Nontrivial Await nodes not supported yet "
+               "(need to think through the semantics).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_Yield(self, node):
         return self._visit_strict_expression(node)
 
     def visit_YieldFrom(self, node):
-        msg = (
-            "Nontrivial YieldFrom nodes not supported yet "
-            "(need to unit-test them in Python 2)."
-        )
+        msg = ("Nontrivial YieldFrom nodes not supported yet "
+               "(need to unit-test them in Python 2).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_Compare(self, node):
         if len(node.ops) > 1:
-            msg = (
-                "Multi-ary compare nodes not supported yet "
-                "(need to preserve short-circuiting semantics)."
-            )
+            msg = ("Multi-ary compare nodes not supported yet "
+                   "(need to preserve short-circuiting semantics).")
             raise ValueError(msg)
         return self._visit_strict_expression(node)
 
@@ -488,24 +468,18 @@ class AnfTransformer(transformer.Base):
         return self._visit_strict_expression(node)
 
     def visit_Repr(self, node):
-        msg = (
-            "Nontrivial Repr nodes not supported yet "
-            "(need to research their syntax and semantics)."
-        )
+        msg = ("Nontrivial Repr nodes not supported yet "
+               "(need to research their syntax and semantics).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_FormattedValue(self, node):
-        msg = (
-            "Nontrivial FormattedValue nodes not supported yet "
-            "(need to unit-test them in Python 2)."
-        )
+        msg = ("Nontrivial FormattedValue nodes not supported yet "
+               "(need to unit-test them in Python 2).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_JoinedStr(self, node):
-        msg = (
-            "Nontrivial JoinedStr nodes not supported yet "
-            "(need to unit-test them in Python 2)."
-        )
+        msg = ("Nontrivial JoinedStr nodes not supported yet "
+               "(need to unit-test them in Python 2).")
         return self._visit_trivial_only_expression(node, msg)
 
     def visit_Attribute(self, node):
@@ -587,7 +561,8 @@ def _is_trivial(node):
         # Other leaf nodes that don't make sense standalone.
         gast.expr_context,
     )
-    if isinstance(node, trivial_node_types) and not _is_py2_name_constant(node):
+    if isinstance(node,
+                  trivial_node_types) and not _is_py2_name_constant(node):
         return True
     if gast_util.is_ellipsis(node):
         return True
