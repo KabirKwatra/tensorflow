@@ -111,18 +111,22 @@ class ParameterServerStrategy(distribute_lib.Strategy):
         if cluster_resolver is None:
             cluster_resolver = TFConfigClusterResolver()
         if not cluster_resolver.cluster_spec():
-            raise ValueError(
-                "Cluster spec must be non-empty in `cluster_resolver`.")
+            raise ValueError("Cluster spec must be non-empty in `cluster_resolver`.")
         extended = ParameterServerStrategyExtended(
-            self, cluster_resolver=cluster_resolver)
+            self, cluster_resolver=cluster_resolver
+        )
         super(ParameterServerStrategy, self).__init__(extended)
         distribute_lib.distribution_strategy_gauge.get_cell("V2").set(
-            "ParameterServerStrategy")
+            "ParameterServerStrategy"
+        )
         distribute_lib.distribution_strategy_replica_gauge.get_cell("num_ps").set(
-            len(self.extended.parameter_devices))
+            len(self.extended.parameter_devices)
+        )
 
 
-@tf_export(v1=["distribute.experimental.ParameterServerStrategy"])  # pylint: disable=missing-docstring
+@tf_export(
+    v1=["distribute.experimental.ParameterServerStrategy"]
+)  # pylint: disable=missing-docstring
 class ParameterServerStrategyV1(distribute_lib.StrategyV1):
 
     __doc__ = ParameterServerStrategy.__doc__
@@ -130,12 +134,14 @@ class ParameterServerStrategyV1(distribute_lib.StrategyV1):
     def __init__(self, cluster_resolver=None):
         """Initializes this strategy."""
         super(ParameterServerStrategyV1, self).__init__(
-            ParameterServerStrategyExtended(
-                self, cluster_resolver=cluster_resolver))
+            ParameterServerStrategyExtended(self, cluster_resolver=cluster_resolver)
+        )
         distribute_lib.distribution_strategy_gauge.get_cell("V1").set(
-            "ParameterServerStrategy")
+            "ParameterServerStrategy"
+        )
         distribute_lib.distribution_strategy_replica_gauge.get_cell("num_ps").set(
-            len(self.extended.parameter_devices))
+            len(self.extended.parameter_devices)
+        )
 
     __init__.__doc__ = ParameterServerStrategy.__init__.__doc__
 
@@ -144,31 +150,34 @@ class ParameterServerStrategyV1(distribute_lib.StrategyV1):
 class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
     """Implementation of ParameterServerStrategy and CentralStorageStrategy."""
 
-    def __init__(self,
-                 container_strategy,
-                 cluster_resolver=None,
-                 compute_devices=None,
-                 parameter_device=None):
-        super(ParameterServerStrategyExtended,
-              self).__init__(container_strategy)
+    def __init__(
+        self,
+        container_strategy,
+        cluster_resolver=None,
+        compute_devices=None,
+        parameter_device=None,
+    ):
+        super(ParameterServerStrategyExtended, self).__init__(container_strategy)
         self._initialize_strategy(
             cluster_resolver=cluster_resolver,
             compute_devices=compute_devices,
-            parameter_device=parameter_device)
+            parameter_device=parameter_device,
+        )
 
         # We typically don't need to do all-reduce in this strategy.
-        self._cross_device_ops = (
-            cross_device_ops_lib.ReductionToOneDevice(reduce_to_device=_LOCAL_CPU))
+        self._cross_device_ops = cross_device_ops_lib.ReductionToOneDevice(
+            reduce_to_device=_LOCAL_CPU
+        )
 
-    def _initialize_strategy(self,
-                             cluster_resolver=None,
-                             compute_devices=None,
-                             parameter_device=None):
+    def _initialize_strategy(
+        self, cluster_resolver=None, compute_devices=None, parameter_device=None
+    ):
         if cluster_resolver and cluster_resolver.cluster_spec():
             self._initialize_multi_worker(cluster_resolver)
         else:
             self._initialize_local(
-                compute_devices, parameter_device, cluster_resolver=cluster_resolver)
+                compute_devices, parameter_device, cluster_resolver=cluster_resolver
+            )
 
     def _initialize_multi_worker(self, cluster_resolver):
         """Initialize devices for multiple workers.
@@ -199,8 +208,10 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         task_type = cluster_resolver.task_type
         task_id = cluster_resolver.task_id
         if not task_type or task_id is None:
-            raise ValueError("When `cluster_spec` is given, you must also specify "
-                             "`task_type` and `task_id`")
+            raise ValueError(
+                "When `cluster_spec` is given, you must also specify "
+                "`task_type` and `task_id`"
+            )
         cluster_spec = multi_worker_util.normalize_cluster_spec(cluster_spec)
         assert cluster_spec.as_dict()
 
@@ -212,14 +223,13 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         # Otherwise, place operations on CPU.
         if num_gpus > 0:
             compute_devices = tuple(
-                "%s/device:GPU:%d" % (worker_device, i) for i in range(num_gpus))
+                "%s/device:GPU:%d" % (worker_device, i) for i in range(num_gpus)
+            )
         else:
             compute_devices = (worker_device,)
 
-        self._compute_devices = [
-            device_util.canonicalize(d) for d in compute_devices]
-        self._input_workers = input_lib.InputWorkers(
-            [(worker_device, compute_devices)])
+        self._compute_devices = [device_util.canonicalize(d) for d in compute_devices]
+        self._input_workers = input_lib.InputWorkers([(worker_device, compute_devices)])
 
         # In distributed mode, place variables on ps jobs in a round-robin fashion.
         # Note that devices returned from `replica_device_setter` are not
@@ -236,20 +246,21 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             ps_tasks=num_ps_replicas,
             worker_device=worker_device,
             merge_devices=True,
-            cluster=cluster_spec)
+            cluster=cluster_spec,
+        )
 
         # The `_parameter_devices` is needed for the `parameter_devices` property
         # and is a list of all variable devices. Here parameter devices are all
         # tasks of the "ps" job.
-        self._parameter_devices = tuple(map("/job:ps/task:{}".format,
-                                            range(num_ps_replicas)))
+        self._parameter_devices = tuple(
+            map("/job:ps/task:{}".format, range(num_ps_replicas))
+        )
 
         # Add a default device so that ops without specified devices will not end up
         # on other workers.
         self._default_device = worker_device
 
-        self._is_chief = multi_worker_util.is_chief(cluster_spec, task_type,
-                                                    task_id)
+        self._is_chief = multi_worker_util.is_chief(cluster_spec, task_type, task_id)
         self._cluster_spec = cluster_spec
         self._task_type = task_type
         self._task_id = task_id
@@ -258,16 +269,21 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             "Multi-worker ParameterServerStrategy with "
             "cluster_spec = %r, task_type = %r, task_id = %r, "
             "num_ps_replicas = %r, is_chief = %r, compute_devices = %r, "
-            "variable_device = %r", cluster_spec.as_dict(), task_type, task_id,
-            num_ps_replicas, self._is_chief, self._compute_devices,
-            self._variable_device)
+            "variable_device = %r",
+            cluster_spec.as_dict(),
+            task_type,
+            task_id,
+            num_ps_replicas,
+            self._is_chief,
+            self._compute_devices,
+            self._variable_device,
+        )
 
     # TODO(yuefengz): get rid of cluster_resolver argument when contrib's
     # version no longer depends on this class.
-    def _initialize_local(self,
-                          compute_devices,
-                          parameter_device,
-                          cluster_resolver=None):
+    def _initialize_local(
+        self, compute_devices, parameter_device, cluster_resolver=None
+    ):
         """Initialize local devices for training."""
         worker_device = device_util.canonicalize("/device:CPU:0")
         self._input_host_device = numpy_dataset.SingleDevice(worker_device)
@@ -283,8 +299,7 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
 
             compute_devices = device_util.local_devices_from_num_gpus(num_gpus)
 
-        compute_devices = [device_util.canonicalize(
-            d) for d in compute_devices]
+        compute_devices = [device_util.canonicalize(d) for d in compute_devices]
 
         if parameter_device is None:
             # If there is only one GPU, put everything on that GPU. Otherwise, place
@@ -294,8 +309,7 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             else:
                 parameter_device = _LOCAL_CPU
 
-        self._input_workers = input_lib.InputWorkers(
-            [(worker_device, compute_devices)])
+        self._input_workers = input_lib.InputWorkers([(worker_device, compute_devices)])
 
         self._variable_device = parameter_device
         self._compute_devices = compute_devices
@@ -308,7 +322,9 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         logging.info(
             "ParameterServerStrategy (CentralStorageStrategy if you are using a "
             "single machine) with compute_devices = %r, variable_device = %r",
-            compute_devices, self._variable_device)
+            compute_devices,
+            self._variable_device,
+        )
 
     def _validate_colocate_with_variable(self, colocate_with_variable):
         values.validate_colocate(colocate_with_variable, self)
@@ -318,46 +334,53 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             dataset,
             self._input_workers,
             self._container_strategy(),
-            split_batch_by=self._num_replicas_in_sync)
+            split_batch_by=self._num_replicas_in_sync,
+        )
 
     def _make_dataset_iterator(self, dataset):
         return input_lib.DatasetIterator(
             dataset,
             self._input_workers,
             self._container_strategy(),
-            split_batch_by=self._num_replicas_in_sync)
+            split_batch_by=self._num_replicas_in_sync,
+        )
 
     def _make_input_fn_iterator(
-            self,
-            input_fn,
-            replication_mode=distribute_lib.InputReplicationMode.PER_WORKER):
+        self, input_fn, replication_mode=distribute_lib.InputReplicationMode.PER_WORKER
+    ):
         """Distributes the dataset to each local GPU."""
         if self._cluster_spec:
             input_pipeline_id = multi_worker_util.id_in_cluster(
-                self._cluster_spec, self._task_type, self._task_id)
+                self._cluster_spec, self._task_type, self._task_id
+            )
             num_input_pipelines = multi_worker_util.worker_count(
-                self._cluster_spec, self._task_type)
+                self._cluster_spec, self._task_type
+            )
         else:
             input_pipeline_id = 0
             num_input_pipelines = 1
         input_context = distribute_lib.InputContext(
             num_input_pipelines=num_input_pipelines,
             input_pipeline_id=input_pipeline_id,
-            num_replicas_in_sync=self._num_replicas_in_sync)
-        return input_lib.InputFunctionIterator(input_fn, self._input_workers,
-                                               [input_context],
-                                               self._container_strategy())
+            num_replicas_in_sync=self._num_replicas_in_sync,
+        )
+        return input_lib.InputFunctionIterator(
+            input_fn, self._input_workers, [input_context], self._container_strategy()
+        )
 
     def _experimental_make_numpy_dataset(self, numpy_input, session):
         return numpy_dataset.one_host_numpy_dataset(
-            numpy_input, self._input_host_device, session)
+            numpy_input, self._input_host_device, session
+        )
 
     def _experimental_distribute_datasets_from_function(self, dataset_fn):
         if self._cluster_spec:
             input_pipeline_id = multi_worker_util.id_in_cluster(
-                self._cluster_spec, self._task_type, self._task_id)
+                self._cluster_spec, self._task_type, self._task_id
+            )
             num_input_pipelines = multi_worker_util.worker_count(
-                self._cluster_spec, self._task_type)
+                self._cluster_spec, self._task_type
+            )
         else:
             input_pipeline_id = 0
             num_input_pipelines = 1
@@ -365,19 +388,20 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         input_context = distribute_lib.InputContext(
             num_input_pipelines=num_input_pipelines,
             input_pipeline_id=input_pipeline_id,
-            num_replicas_in_sync=self._num_replicas_in_sync)
+            num_replicas_in_sync=self._num_replicas_in_sync,
+        )
 
         return input_lib.get_distributed_datasets_from_function(
-            dataset_fn,
-            self._input_workers,
-            [input_context],
-            self._container_strategy())
+            dataset_fn, self._input_workers, [input_context], self._container_strategy()
+        )
 
     def _experimental_distribute_values_from_function(self, value_fn):
         # TODO(b/137795644): Implement this method for ParameterServerStrategy if
         # needed.
-        raise NotImplementedError("_experimental_distribute_values_from_function "
-                                  "not yet implemented in ParameterServerStrategy.")
+        raise NotImplementedError(
+            "_experimental_distribute_values_from_function "
+            "not yet implemented in ParameterServerStrategy."
+        )
 
     def _broadcast_to(self, tensor, destinations):
         # This is both a fast path for Python constants, and a way to delay
@@ -399,16 +423,19 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
     # this creator, such as "MutableHashTable".
     def _create_variable(self, next_creator, **kwargs):
         if self._num_replicas_in_sync > 1:
-            aggregation = kwargs.pop(
-                "aggregation", vs.VariableAggregation.NONE)
+            aggregation = kwargs.pop("aggregation", vs.VariableAggregation.NONE)
             if aggregation not in (
                 vs.VariableAggregation.NONE,
                 vs.VariableAggregation.SUM,
                 vs.VariableAggregation.MEAN,
-                vs.VariableAggregation.ONLY_FIRST_REPLICA
+                vs.VariableAggregation.ONLY_FIRST_REPLICA,
             ):
-                raise ValueError("Invalid variable aggregation mode: " + aggregation +
-                                 " for variable: " + kwargs["name"])
+                raise ValueError(
+                    "Invalid variable aggregation mode: "
+                    + aggregation
+                    + " for variable: "
+                    + kwargs["name"]
+                )
 
             def var_creator(**kwargs):
                 """Create an AggregatingVariable and fix up collections."""
@@ -421,7 +448,8 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
                 # Create and wrap the variable.
                 v = next_creator(**kwargs)
                 wrapped = values.AggregatingVariable(
-                    self._container_strategy(), v, aggregation)
+                    self._container_strategy(), v, aggregation
+                )
 
                 # Add the wrapped variable to the requested collections.
                 # The handling of eager mode and the global step matches
@@ -435,8 +463,7 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
                     # implicit_gradients to skip those variables.
                     if kwargs.get("trainable", True):
                         collections.append(ops.GraphKeys.TRAINABLE_VARIABLES)
-                        l = g.get_collection_ref(
-                            ops.GraphKeys.TRAINABLE_VARIABLES)
+                        l = g.get_collection_ref(ops.GraphKeys.TRAINABLE_VARIABLES)
                         if v in l:
                             l.remove(v)
                     g.add_to_collections(collections, wrapped)
@@ -444,6 +471,7 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
                     ops.add_to_collections(ops.GraphKeys.GLOBAL_STEP, wrapped)
 
                 return wrapped
+
         else:
             var_creator = next_creator
 
@@ -461,8 +489,9 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
                 return var_creator(**kwargs)
 
     def _call_for_each_replica(self, fn, args, kwargs):
-        return mirrored_run.call_for_each_replica(self._container_strategy(), fn,
-                                                  args, kwargs)
+        return mirrored_run.call_for_each_replica(
+            self._container_strategy(), fn, args, kwargs
+        )
 
     def _verify_destinations_not_different_worker(self, destinations):
         if not self._cluster_spec:
@@ -473,28 +502,30 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             d_spec = tf_device.DeviceSpec.from_string(d)
             if d_spec.job == self._task_type and d_spec.task != self._task_id:
                 raise ValueError(
-                    "Cannot reduce to another worker: %r, current worker is %r" %
-                    (d, self._input_workers.worker_devices[0]))
+                    "Cannot reduce to another worker: %r, current worker is %r"
+                    % (d, self._input_workers.worker_devices[0])
+                )
 
     def _reduce_to(self, reduce_op, value, destinations, experimental_hints):
         self._verify_destinations_not_different_worker(destinations)
         if not isinstance(value, values.DistributedValues):
             # pylint: disable=protected-access
             return cross_device_ops_lib.reduce_non_distributed_value(
-                reduce_op, value, destinations, self._num_replicas_in_sync)
+                reduce_op, value, destinations, self._num_replicas_in_sync
+            )
         return self._cross_device_ops.reduce(
             reduce_op,
             value,
             destinations=destinations,
-            experimental_hints=experimental_hints)
+            experimental_hints=experimental_hints,
+        )
 
-    def _batch_reduce_to(self, reduce_op, value_destination_pairs,
-                         experimental_hints):
+    def _batch_reduce_to(self, reduce_op, value_destination_pairs, experimental_hints):
         for _, destinations in value_destination_pairs:
             self._verify_destinations_not_different_worker(destinations)
-        return self._cross_device_ops.batch_reduce(reduce_op,
-                                                   value_destination_pairs,
-                                                   experimental_hints)
+        return self._cross_device_ops.batch_reduce(
+            reduce_op, value_destination_pairs, experimental_hints
+        )
 
     def _select_single_value(self, structured):
         """Select any single value in `structured`."""
@@ -507,12 +538,14 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
                     raise ValueError(
                         "You cannot update variable with a Mirrored object with multiple "
                         "components %r when using ParameterServerStrategy. You must "
-                        "specify a single value or a Mirrored with a single value." % x)
+                        "specify a single value or a Mirrored with a single value." % x
+                    )
             elif isinstance(x, values.PerReplica):
                 raise ValueError(
                     "You cannot update variable with a PerReplica object %r when using "
                     "ParameterServerStrategy. You must specify a single value or a "
-                    "Mirrored with a single value" % x)
+                    "Mirrored with a single value" % x
+                )
             else:
                 return x
 
@@ -523,10 +556,14 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             var = var.get()
         if not resource_variable_ops.is_resource_variable(var):
             raise ValueError(
-                "You can not update `var` %r. It must be a Variable." % var)
+                "You can not update `var` %r. It must be a Variable." % var
+            )
         with ops.colocate_with(var), distribute_lib.UpdateContext(var.device):
-            result = fn(var, *self._select_single_value(args),
-                        **self._select_single_value(kwargs))
+            result = fn(
+                var,
+                *self._select_single_value(args),
+                **self._select_single_value(kwargs)
+            )
             if group:
                 return result
             else:
@@ -534,8 +571,9 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
 
     # TODO(yuefengz): does it need to call _select_single_value?
     def _update_non_slot(self, colocate_with, fn, args, kwargs, group):
-        with ops.device(
-                colocate_with.device), distribute_lib.UpdateContext(colocate_with):
+        with ops.device(colocate_with.device), distribute_lib.UpdateContext(
+            colocate_with
+        ):
             result = fn(*args, **kwargs)
             if group:
                 return result
@@ -548,8 +586,9 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         return (val,)
 
     def value_container(self, val):
-        if (hasattr(val, "_aggregating_container") and
-                not isinstance(val, values.AggregatingVariable)):
+        if hasattr(val, "_aggregating_container") and not isinstance(
+            val, values.AggregatingVariable
+        ):
             wrapper = val._aggregating_container()  # pylint: disable=protected-access
             if wrapper is not None:
                 return wrapper
@@ -560,11 +599,9 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         # variables.
         return array_ops.identity(var)
 
-    def _configure(self,
-                   session_config=None,
-                   cluster_spec=None,
-                   task_type=None,
-                   task_id=None):
+    def _configure(
+        self, session_config=None, cluster_spec=None, task_type=None, task_id=None
+    ):
         """Configures the strategy class with `cluster_spec`.
 
         The strategy object will be re-initialized if `cluster_spec` is passed to
@@ -585,11 +622,11 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
             # Use the num_gpus_per_worker recorded in constructor since _configure
             # doesn't take num_gpus.
             cluster_resolver = SimpleClusterResolver(
-                cluster_spec=multi_worker_util.normalize_cluster_spec(
-                    cluster_spec),
+                cluster_spec=multi_worker_util.normalize_cluster_spec(cluster_spec),
                 task_type=task_type,
                 task_id=task_id,
-                num_accelerators={"GPU": self._num_gpus_per_worker})
+                num_accelerators={"GPU": self._num_gpus_per_worker},
+            )
             self._initialize_multi_worker(cluster_resolver)
 
         if session_config:
@@ -610,10 +647,12 @@ class ParameterServerStrategyExtended(distribute_lib.StrategyExtendedV1):
         del updated_config.device_filters[:]
         if self._task_type in ["chief", "worker"]:
             updated_config.device_filters.extend(
-                ["/job:%s/task:%d" % (self._task_type, self._task_id), "/job:ps"])
+                ["/job:%s/task:%d" % (self._task_type, self._task_id), "/job:ps"]
+            )
         elif self._task_type == "evaluator":
             updated_config.device_filters.append(
-                "/job:%s/task:%d" % (self._task_type, self._task_id))
+                "/job:%s/task:%d" % (self._task_type, self._task_id)
+            )
         return updated_config
 
     def _in_multi_worker_mode(self):
