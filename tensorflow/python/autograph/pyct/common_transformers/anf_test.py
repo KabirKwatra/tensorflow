@@ -34,29 +34,29 @@ from tensorflow.python.platform import test
 def exec_test_function():
     # The point is to test A-normal form conversion of exec
     # pylint: disable=exec-used
-    exec('computed' + 5 + 'stuff', globals(), locals())
+    exec("computed" + 5 + "stuff", globals(), locals())
 
 
 def exec_expected_result():
     # pylint: disable=exec-used
-    tmp_1001 = 'computed' + 5
-    tmp_1002 = tmp_1001 + 'stuff'
+    tmp_1001 = "computed" + 5
+    tmp_1002 = tmp_1001 + "stuff"
     tmp_1003 = globals()
     tmp_1004 = locals()
     exec(tmp_1002, tmp_1003, tmp_1004)
 
 
 class AnfTestBase(test.TestCase):
-
     def _simple_context(self):
         entity_info = transformer.EntityInfo(
-            source_code=None, source_file=None, future_features=(), namespace=None)
+            source_code=None, source_file=None, future_features=(), namespace=None
+        )
         return transformer.Context(entity_info)
 
     def assert_same_ast(self, expected_node, node, msg=None):
-        expected_source = parser.unparse(expected_node, indentation='  ')
+        expected_source = parser.unparse(expected_node, indentation="  ")
         expected_str = textwrap.dedent(expected_source).strip()
-        got_source = parser.unparse(node, indentation='  ')
+        got_source = parser.unparse(node, indentation="  ")
         got_str = textwrap.dedent(got_source).strip()
         self.assertEqual(expected_str, got_str, msg=msg)
 
@@ -79,7 +79,6 @@ class AnfTestBase(test.TestCase):
 
 
 class AnfTransformerTest(AnfTestBase):
-
     def test_basic(self):
         def test_function():
             a = 0
@@ -91,7 +90,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assertEqual(test_function(), result.test_function())
 
     def test_binop_basic(self):
-
         def test_function(x, y, z):
             a = x + y + z
             return a
@@ -104,7 +102,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_if_basic(self):
-
         def test_function(a, b, c, e, f, g):
             if a + b + c:
                 d = e + f + g
@@ -121,7 +118,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_nested_binop_and_return(self):
-
         def test_function(b, c, d, e):
             return (2 * b + c) + (d + e)
 
@@ -135,7 +131,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_function_call_and_expr(self):
-
         def test_function(call_something, a, b, y, z, c, d, e, f, g, h, i):
             call_something(a + b, y * z, kwarg=c + d, *(e + f), **(g + h + i))
 
@@ -146,13 +141,11 @@ class AnfTransformerTest(AnfTestBase):
             tmp_1004 = e + f
             tmp_1005 = c + d
             tmp_1006 = tmp_1001 + i
-            call_something(tmp_1002, tmp_1003, kwarg=tmp_1005,
-                           *tmp_1004, **tmp_1006)
+            call_something(tmp_1002, tmp_1003, kwarg=tmp_1005, *tmp_1004, **tmp_1006)
 
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_with_and_print(self):
-
         def test_function(a, b, c):
             with a + b + c as d:
                 print(2 * d + 1)
@@ -168,7 +161,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_nested_multi_value_assign(self):
-
         def test_function(a, b, c):
             x, y = a, a + b
             (z, y), x = (c, y + b), x + a
@@ -188,7 +180,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_deeply_nested_multi_value_assign(self):
-
         def test_function(a):
             [([(b, c), [d, e]], (f, g)), [(h, i, j), k]] = a
             return [([(b, c), [d, e]], (f, g)), [(h, i, j), k]]
@@ -208,10 +199,10 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_local_definition_and_binary_compare(self):
-
         def test_function():
             def foo(a, b):
                 return 2 * a < b
+
             return foo
 
         def expected_result():
@@ -219,12 +210,12 @@ class AnfTransformerTest(AnfTestBase):
                 tmp_1001 = 2 * a
                 tmp_1002 = tmp_1001 < b
                 return tmp_1002
+
             return foo
 
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_list_literal(self):
-
         def test_function(a, b, c, d, e, f):
             return [a + b, c + d, e + f]
 
@@ -238,7 +229,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_tuple_literal_and_unary(self):
-
         def test_function(a, b, c, d, e, f):
             return (a + b, -(c + d), e + f)
 
@@ -253,7 +243,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_set_literal(self):
-
         def test_function(a, b, c, d, e, f):
             return set(a + b, c + d, e + f)
 
@@ -267,7 +256,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_dict_literal_and_repr(self):
-
         def test_function(foo, bar, baz):
             return repr({foo + bar + baz: 7 | 8})
 
@@ -282,7 +270,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_field_read_and_write(self):
-
         def test_function(a, d):
             a.b.c = d.e.f + 3
 
@@ -295,7 +282,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_subscript_read_and_write(self):
-
         def test_function(a, b, c, d, e, f):
             a[b][c] = d[e][f] + 3
 
@@ -308,7 +294,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_augassign_and_delete(self):
-
         def test_function(a, x, y, z):
             a += x + y + z
             del a
@@ -324,22 +309,20 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_raise_yield_and_raise(self):
-
         def test_function(a, c, some_computed, exception):
             yield a ** c
-            raise some_computed('complicated' + exception)
+            raise some_computed("complicated" + exception)
 
         def expected_result(a, c, some_computed, exception):
             tmp_1001 = a ** c
             yield tmp_1001
-            tmp_1002 = 'complicated' + exception
+            tmp_1002 = "complicated" + exception
             tmp_1003 = some_computed(tmp_1002)
             raise tmp_1003
 
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_with_and_if_with_expressions(self):
-
         def test_function(foo, bar, function, quux, quozzle, w, x, y, z):
             with foo + bar:
                 function(x + y)
@@ -359,11 +342,9 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_exec(self):
-        self.assert_body_anfs_as_expected(
-            exec_expected_result, exec_test_function)
+        self.assert_body_anfs_as_expected(exec_expected_result, exec_test_function)
 
     def test_simple_while_and_assert(self):
-
         def test_function(foo, quux):
             while foo:
                 assert quux
@@ -378,7 +359,6 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_for(self):
-
         def test_function(compute, something, complicated, foo):
             for foo in compute(something + complicated):
                 bar = foo + 1 * 3
@@ -398,7 +378,6 @@ class AnfTransformerTest(AnfTestBase):
     # implemented by this transformer is questionable.  Mostly it's here to spell
     # out what the definition is in these cases.
     def test_controversial(self):
-
         def test_function(b, c, d, f):
             a = c + d
             a.b = c + d
@@ -440,64 +419,61 @@ class AnfNonTransformationTest(AnfTransformerTest):
         # syntax highlights nicely, but Python doesn't try to execute the
         # statements.
         node, _ = parser.parse_entity(test_fn, future_features=())
-        orig_source = parser.unparse(node, indentation='  ')
+        orig_source = parser.unparse(node, indentation="  ")
         orig_str = textwrap.dedent(orig_source).strip()
         config = [(anf.ANY, anf.LEAVE)]  # Configuration to transform nothing
         node = anf.transform(node, self._simple_context(), config=config)
-        new_source = parser.unparse(node, indentation='  ')
+        new_source = parser.unparse(node, indentation="  ")
         new_str = textwrap.dedent(new_source).strip()
         self.assertEqual(orig_str, new_str)
 
 
 class AnfConfiguredTest(AnfTestBase):
-
     def test_constants_in_function_calls(self):
         # An example specific configuration that differs from the default: Moving
         # literals out of being directly passed to functions, but nothing else.
         try:
             # TODO(b/140808434): Fix this.
             # gast pre-0.3
-            literals = (gast.Num, gast.Str, gast.Bytes,
-                        gast.NameConstant, gast.Name)
+            literals = (gast.Num, gast.Str, gast.Bytes, gast.NameConstant, gast.Name)
         except AttributeError:
             # gast 0.3+
             literals = (gast.Constant, gast.Name)
         config = [(anf.ASTEdgePattern(gast.Call, anf.ANY, literals), anf.REPLACE)]
 
         def test_function(x, frob):
-            return frob(x, x+1, 2)
+            return frob(x, x + 1, 2)
 
         def expected_result(x, frob):
             tmp_1001 = 2
-            return frob(x, x+1, tmp_1001)
+            return frob(x, x + 1, tmp_1001)
 
-        self.assert_body_anfs_as_expected(
-            expected_result, test_function, config)
+        self.assert_body_anfs_as_expected(expected_result, test_function, config)
 
     def test_anf_some_function_calls(self):
         # Another example specific configuration that differs from the default:
         # Moving all arguments out of some function calls but leaving others be.
-        whitelist = ['foo']
+        whitelist = ["foo"]
 
         def transform(parent, field, child):
             del field
             del child
             func_name = parent.func.id
             return str(func_name) in whitelist
+
         config = [(anf.ASTEdgePattern(gast.Call, anf.ANY, anf.ANY), transform)]
 
         def test_function(x, foo, bar):
-            y = foo(x, x+1, 2)
-            return bar(y, y+1, 2)
+            y = foo(x, x + 1, 2)
+            return bar(y, y + 1, 2)
 
         def expected_result(x, foo, bar):
-            tmp_1001 = x+1
+            tmp_1001 = x + 1
             tmp_1002 = 2
             y = foo(x, tmp_1001, tmp_1002)
-            return bar(y, y+1, 2)
+            return bar(y, y + 1, 2)
 
-        self.assert_body_anfs_as_expected(
-            expected_result, test_function, config)
+        self.assert_body_anfs_as_expected(expected_result, test_function, config)
 
     def test_touching_name_constant(self):
         # Checking that the nodes for `True`, `False`, and `None` can be manipulated
@@ -515,9 +491,8 @@ class AnfConfiguredTest(AnfTestBase):
             tmp_1003 = None
             return f(tmp_1001, tmp_1002, tmp_1003)
 
-        self.assert_body_anfs_as_expected(
-            expected_result, test_function, config)
+        self.assert_body_anfs_as_expected(expected_result, test_function, config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
