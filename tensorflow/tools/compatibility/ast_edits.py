@@ -42,8 +42,7 @@ WARNING = "WARNING"
 ERROR = "ERROR"
 
 
-ImportRename = collections.namedtuple(
-    "ImportRename", ["new_name", "excluded_prefixes"])
+ImportRename = collections.namedtuple("ImportRename", ["new_name", "excluded_prefixes"])
 
 
 def full_name_node(name, ctx=ast.Load()):
@@ -248,7 +247,7 @@ class _PastaEditVisitor(ast.NodeVisitor):
 
     def __init__(self, api_change_spec):
         self._api_change_spec = api_change_spec
-        self._log = []   # Holds 4-tuples: severity, line, col, msg.
+        self._log = []  # Holds 4-tuples: severity, line, col, msg.
         self._stack = []  # Allow easy access to parents.
 
     # Overridden to maintain a stack of nodes to allow for parent access
@@ -300,8 +299,7 @@ class _PastaEditVisitor(ast.NodeVisitor):
         """Get all list entries indexed by name that apply to full_name or name."""
         # Transformers are indexed to full name, name, or no name
         # as a performance optimization.
-        function_transformers = getattr(self._api_change_spec,
-                                        transformer_field, {})
+        function_transformers = getattr(self._api_change_spec, transformer_field, {})
 
         glob_name = "*." + six.ensure_str(name) if name else None
         transformers = []
@@ -317,8 +315,7 @@ class _PastaEditVisitor(ast.NodeVisitor):
         """Get all dict entries indexed by name that apply to full_name or name."""
         # Transformers are indexed to full name, name, or no name
         # as a performance optimization.
-        function_transformers = getattr(self._api_change_spec,
-                                        transformer_field, {})
+        function_transformers = getattr(self._api_change_spec, transformer_field, {})
 
         glob_name = "*." + six.ensure_str(name) if name else None
         transformers = function_transformers.get("*", {}).copy()
@@ -353,10 +350,13 @@ class _PastaEditVisitor(ast.NodeVisitor):
         function_warnings = self._api_change_spec.function_warnings
         if full_name in function_warnings:
             level, message = function_warnings[full_name]
-            message = six.ensure_str(message).replace(
-                "<function name>", full_name)
-            self.add_log(level, node.lineno, node.col_offset,
-                         "%s requires manual check. %s" % (full_name, message))
+            message = six.ensure_str(message).replace("<function name>", full_name)
+            self.add_log(
+                level,
+                node.lineno,
+                node.col_offset,
+                "%s requires manual check. %s" % (full_name, message),
+            )
             return True
         else:
             return False
@@ -366,12 +366,16 @@ class _PastaEditVisitor(ast.NodeVisitor):
         warnings = self._api_change_spec.module_deprecations
         if full_name in warnings:
             level, message = warnings[full_name]
-            message = six.ensure_str(message).replace("<function name>",
-                                                      six.ensure_str(whole_name))
-            self.add_log(level, node.lineno, node.col_offset,
-                         "Using member %s in deprecated module %s. %s" % (whole_name,
-                                                                          full_name,
-                                                                          message))
+            message = six.ensure_str(message).replace(
+                "<function name>", six.ensure_str(whole_name)
+            )
+            self.add_log(
+                level,
+                node.lineno,
+                node.col_offset,
+                "Using member %s in deprecated module %s. %s"
+                % (whole_name, full_name, message),
+            )
             return True
         else:
             return False
@@ -401,8 +405,9 @@ class _PastaEditVisitor(ast.NodeVisitor):
             warned = self._maybe_add_warning(node, "*." + six.ensure_str(name))
 
         # All arg warnings are handled here, since only we have the args
-        arg_warnings = self._get_applicable_dict("function_arg_warnings",
-                                                 full_name, name)
+        arg_warnings = self._get_applicable_dict(
+            "function_arg_warnings", full_name, name
+        )
 
         variadic_args = uses_star_args_or_kwargs_in_call(node)
 
@@ -411,13 +416,20 @@ class _PastaEditVisitor(ast.NodeVisitor):
             if present:
                 warned = True
                 warning_message = six.ensure_str(warning).replace(
-                    "<function name>", six.ensure_str(full_name or name))
+                    "<function name>", six.ensure_str(full_name or name)
+                )
                 template = "%s called with %s argument, requires manual check: %s"
                 if variadic_args:
-                    template = ("%s called with *args or **kwargs that may include %s, "
-                                "requires manual check: %s")
-                self.add_log(level, node.lineno, node.col_offset,
-                             template % (full_name or name, kwarg, warning_message))
+                    template = (
+                        "%s called with *args or **kwargs that may include %s, "
+                        "requires manual check: %s"
+                    )
+                self.add_log(
+                    level,
+                    node.lineno,
+                    node.col_offset,
+                    template % (full_name or name, kwarg, warning_message),
+                )
 
         return warned
 
@@ -425,8 +437,12 @@ class _PastaEditVisitor(ast.NodeVisitor):
         """Replace node (Attribute or Name) with a node representing full_name."""
         new_name = self._api_change_spec.symbol_renames.get(full_name, None)
         if new_name:
-            self.add_log(INFO, node.lineno, node.col_offset,
-                         "Renamed %r to %r" % (full_name, new_name))
+            self.add_log(
+                INFO,
+                node.lineno,
+                node.col_offset,
+                "Renamed %r to %r" % (full_name, new_name),
+            )
             new_node = full_name_node(new_name, node.ctx)
             ast.copy_location(new_node, node)
             pasta.ast_utils.replace_child(parent, node, new_node)
@@ -446,8 +462,12 @@ class _PastaEditVisitor(ast.NodeVisitor):
                     new_node = ast.Call(node, [], [])
                 pasta.ast_utils.replace_child(parent, node, new_node)
                 ast.copy_location(new_node, node)
-                self.add_log(INFO, node.lineno, node.col_offset,
-                             "Changed %r to a function call" % full_name)
+                self.add_log(
+                    INFO,
+                    node.lineno,
+                    node.col_offset,
+                    "Changed %r to a function call" % full_name,
+                )
                 return True
         return False
 
@@ -457,11 +477,15 @@ class _PastaEditVisitor(ast.NodeVisitor):
 
         if full_name in function_reorders:
             if uses_star_args_in_call(node):
-                self.add_log(WARNING, node.lineno, node.col_offset,
-                             "(Manual check required) upgrading %s may require "
-                             "re-ordering the call arguments, but it was passed "
-                             "variable-length positional *args. The upgrade "
-                             "script cannot handle these automatically." % full_name)
+                self.add_log(
+                    WARNING,
+                    node.lineno,
+                    node.col_offset,
+                    "(Manual check required) upgrading %s may require "
+                    "re-ordering the call arguments, but it was passed "
+                    "variable-length positional *args. The upgrade "
+                    "script cannot handle these automatically." % full_name,
+                )
 
             reordered = function_reorders[full_name]
             new_keywords = []
@@ -475,8 +499,12 @@ class _PastaEditVisitor(ast.NodeVisitor):
                 idx += 1
 
             if new_keywords:
-                self.add_log(INFO, node.lineno, node.col_offset,
-                             "Added keywords to args of function %r" % full_name)
+                self.add_log(
+                    INFO,
+                    node.lineno,
+                    node.col_offset,
+                    "Added keywords to args of function %r" % full_name,
+                )
                 node.args = []
                 node.keywords = new_keywords + (node.keywords or [])
                 return True
@@ -484,19 +512,23 @@ class _PastaEditVisitor(ast.NodeVisitor):
 
     def _maybe_modify_args(self, node, full_name, name):
         """Rename keyword args if the function called full_name requires it."""
-        renamed_keywords = self._get_applicable_dict("function_keyword_renames",
-                                                     full_name, name)
+        renamed_keywords = self._get_applicable_dict(
+            "function_keyword_renames", full_name, name
+        )
 
         if not renamed_keywords:
             return False
 
         if uses_star_kwargs_in_call(node):
-            self.add_log(WARNING, node.lineno, node.col_offset,
-                         "(Manual check required) upgrading %s may require "
-                         "renaming or removing call arguments, but it was passed "
-                         "variable-length *args or **kwargs. The upgrade "
-                         "script cannot handle these automatically." %
-                         (full_name or name))
+            self.add_log(
+                WARNING,
+                node.lineno,
+                node.col_offset,
+                "(Manual check required) upgrading %s may require "
+                "renaming or removing call arguments, but it was passed "
+                "variable-length *args or **kwargs. The upgrade "
+                "script cannot handle these automatically." % (full_name or name),
+            )
         modified = False
         new_keywords = []
         for keyword in node.keywords:
@@ -505,19 +537,25 @@ class _PastaEditVisitor(ast.NodeVisitor):
                 modified = True
                 if renamed_keywords[argkey] is None:
                     lineno = getattr(keyword, "lineno", node.lineno)
-                    col_offset = getattr(
-                        keyword, "col_offset", node.col_offset)
-                    self.add_log(INFO, lineno, col_offset,
-                                 "Removed argument %s for function %s" % (
-                                     argkey, full_name or name))
+                    col_offset = getattr(keyword, "col_offset", node.col_offset)
+                    self.add_log(
+                        INFO,
+                        lineno,
+                        col_offset,
+                        "Removed argument %s for function %s"
+                        % (argkey, full_name or name),
+                    )
                 else:
                     keyword.arg = renamed_keywords[argkey]
                     lineno = getattr(keyword, "lineno", node.lineno)
-                    col_offset = getattr(
-                        keyword, "col_offset", node.col_offset)
-                    self.add_log(INFO, lineno, col_offset,
-                                 "Renamed keyword argument for %s from %s to %s" % (
-                                     full_name, argkey, renamed_keywords[argkey]))
+                    col_offset = getattr(keyword, "col_offset", node.col_offset)
+                    self.add_log(
+                        INFO,
+                        lineno,
+                        col_offset,
+                        "Renamed keyword argument for %s from %s to %s"
+                        % (full_name, argkey, renamed_keywords[argkey]),
+                    )
                     new_keywords.append(keyword)
             else:
                 new_keywords.append(keyword)
@@ -561,19 +599,23 @@ class _PastaEditVisitor(ast.NodeVisitor):
         #
         # These are matched on the old name, since renaming is performed by the
         # Attribute visitor, which happens later.
-        transformers = self._get_applicable_entries("function_transformers",
-                                                    full_name, name)
+        transformers = self._get_applicable_entries(
+            "function_transformers", full_name, name
+        )
 
         parent = self._stack[-2]
 
         if transformers:
             if uses_star_args_or_kwargs_in_call(node):
-                self.add_log(WARNING, node.lineno, node.col_offset,
-                             "(Manual check required) upgrading %s may require "
-                             "modifying call arguments, but it was passed "
-                             "variable-length *args or **kwargs. The upgrade "
-                             "script cannot handle these automatically." %
-                             (full_name or name))
+                self.add_log(
+                    WARNING,
+                    node.lineno,
+                    node.col_offset,
+                    "(Manual check required) upgrading %s may require "
+                    "modifying call arguments, but it was passed "
+                    "variable-length *args or **kwargs. The upgrade "
+                    "script cannot handle these automatically." % (full_name or name),
+                )
 
         for transformer in transformers:
             logs = []
@@ -609,10 +651,9 @@ class _PastaEditVisitor(ast.NodeVisitor):
             i = 2
             while isinstance(self._stack[-i], ast.Attribute):
                 i += 1
-            whole_name = pasta.dump(self._stack[-(i-1)])
+            whole_name = pasta.dump(self._stack[-(i - 1)])
 
-            self._maybe_add_module_deprecation_warning(
-                node, full_name, whole_name)
+            self._maybe_add_module_deprecation_warning(node, full_name, whole_name)
 
         self.generic_visit(node)
 
@@ -625,32 +666,32 @@ class _PastaEditVisitor(ast.NodeVisitor):
         new_aliases = []
         import_updated = False
         import_renames = getattr(self._api_change_spec, "import_renames", {})
-        max_submodule_depth = getattr(self._api_change_spec, "max_submodule_depth",
-                                      1)
-        inserts_after_imports = getattr(self._api_change_spec,
-                                        "inserts_after_imports", {})
+        max_submodule_depth = getattr(self._api_change_spec, "max_submodule_depth", 1)
+        inserts_after_imports = getattr(
+            self._api_change_spec, "inserts_after_imports", {}
+        )
 
         # This loop processes imports in the format
         # import foo as f, bar as b
         for import_alias in node.names:
-            all_import_components = six.ensure_str(
-                import_alias.name).split(".")
+            all_import_components = six.ensure_str(import_alias.name).split(".")
             # Look for rename, starting with longest import levels.
             found_update = False
             for i in reversed(list(range(1, max_submodule_depth + 1))):
                 import_component = all_import_components[0]
                 for j in range(1, min(i, len(all_import_components))):
-                    import_component += "." + \
-                        six.ensure_str(all_import_components[j])
+                    import_component += "." + six.ensure_str(all_import_components[j])
                 import_rename_spec = import_renames.get(import_component, None)
 
                 if not import_rename_spec or excluded_from_module_rename(
-                        import_alias.name, import_rename_spec):
+                    import_alias.name, import_rename_spec
+                ):
                     continue
 
                 new_name = (
-                    import_rename_spec.new_name +
-                    import_alias.name[len(import_component):])
+                    import_rename_spec.new_name
+                    + import_alias.name[len(import_component) :]
+                )
 
                 # If current import is
                 #   import foo
@@ -676,7 +717,8 @@ class _PastaEditVisitor(ast.NodeVisitor):
                     new_line_node = pasta.parse(line_to_insert)
                     ast.copy_location(new_line_node, node)
                     parent.body.insert(
-                        parent.body.index(node) + insert_offset, new_line_node)
+                        parent.body.index(node) + insert_offset, new_line_node
+                    )
                     insert_offset += 1
 
                     # Insert a newline after the import if necessary
@@ -684,18 +726,24 @@ class _PastaEditVisitor(ast.NodeVisitor):
                     if old_suffix is None:
                         old_suffix = os.linesep
                     if os.linesep not in old_suffix:
-                        pasta.base.formatting.set(node, "suffix",
-                                                  six.ensure_str(old_suffix) + os.linesep)
+                        pasta.base.formatting.set(
+                            node, "suffix", six.ensure_str(old_suffix) + os.linesep
+                        )
 
                     # Apply indentation to new node.
-                    pasta.base.formatting.set(new_line_node, "prefix",
-                                              pasta.base.formatting.get(node, "prefix"))
                     pasta.base.formatting.set(
-                        new_line_node, "suffix", os.linesep)
+                        new_line_node,
+                        "prefix",
+                        pasta.base.formatting.get(node, "prefix"),
+                    )
+                    pasta.base.formatting.set(new_line_node, "suffix", os.linesep)
                     self.add_log(
-                        INFO, node.lineno, node.col_offset,
-                        "Adding `%s` after import of %s" %
-                        (new_line_node, import_alias.name))
+                        INFO,
+                        node.lineno,
+                        node.col_offset,
+                        "Adding `%s` after import of %s"
+                        % (new_line_node, import_alias.name),
+                    )
                 # Find one match, break
                 if found_update:
                     break
@@ -712,9 +760,12 @@ class _PastaEditVisitor(ast.NodeVisitor):
             ast.copy_location(new_node, node)
             pasta.ast_utils.replace_child(parent, node, new_node)
             self.add_log(
-                INFO, node.lineno, node.col_offset,
-                "Changed import from %r to %r." %
-                (pasta.dump(node), pasta.dump(new_node)))
+                INFO,
+                node.lineno,
+                node.col_offset,
+                "Changed import from %r to %r."
+                % (pasta.dump(node), pasta.dump(new_node)),
+            )
 
         self.generic_visit(node)
 
@@ -734,8 +785,7 @@ class _PastaEditVisitor(ast.NodeVisitor):
         # i.e. based on foo in foo.bar.
         from_import_first_component = six.ensure_str(from_import).split(".")[0]
         import_renames = getattr(self._api_change_spec, "import_renames", {})
-        import_rename_spec = import_renames.get(
-            from_import_first_component, None)
+        import_rename_spec = import_renames.get(from_import_first_component, None)
         if not import_rename_spec:
             self.generic_visit(node)
             return
@@ -763,32 +813,38 @@ class _PastaEditVisitor(ast.NodeVisitor):
 
         # Replace first component of from-import with new name.
         new_from_import = (
-            import_rename_spec.new_name +
-            from_import[len(from_import_first_component):])
-        updated_node = ast.ImportFrom(
-            new_from_import, updated_aliases, node.level)
+            import_rename_spec.new_name
+            + from_import[len(from_import_first_component) :]
+        )
+        updated_node = ast.ImportFrom(new_from_import, updated_aliases, node.level)
         ast.copy_location(updated_node, node)
         pasta.ast_utils.replace_child(parent, node, updated_node)
 
         # If some imports had to stay the same, add another import for them.
         additional_import_log = ""
         if same_aliases:
-            same_node = ast.ImportFrom(from_import, same_aliases, node.level,
-                                       col_offset=node.col_offset, lineno=node.lineno)
+            same_node = ast.ImportFrom(
+                from_import,
+                same_aliases,
+                node.level,
+                col_offset=node.col_offset,
+                lineno=node.lineno,
+            )
             ast.copy_location(same_node, node)
             parent.body.insert(parent.body.index(updated_node), same_node)
             # Apply indentation to new node.
             pasta.base.formatting.set(
-                same_node, "prefix",
-                pasta.base.formatting.get(updated_node, "prefix"))
+                same_node, "prefix", pasta.base.formatting.get(updated_node, "prefix")
+            )
             additional_import_log = " and %r" % pasta.dump(same_node)
 
         self.add_log(
-            INFO, node.lineno, node.col_offset,
-            "Changed import from %r to %r%s." %
-            (pasta.dump(node),
-             pasta.dump(updated_node),
-             additional_import_log))
+            INFO,
+            node.lineno,
+            node.col_offset,
+            "Changed import from %r to %r%s."
+            % (pasta.dump(node), pasta.dump(updated_node), additional_import_log),
+        )
 
         self.generic_visit(node)
 
@@ -831,7 +887,7 @@ class PastaAnalyzeVisitor(_PastaEditVisitor):
     def __init__(self, api_analysis_spec):
         super(PastaAnalyzeVisitor, self).__init__(NoUpdateSpec())
         self._api_analysis_spec = api_analysis_spec
-        self._results = []   # Holds AnalysisResult objects
+        self._results = []  # Holds AnalysisResult objects
 
     @property
     def results(self):
@@ -844,13 +900,15 @@ class PastaAnalyzeVisitor(_PastaEditVisitor):
         """Handle bare Attributes i.e. [tf.foo, tf.bar]."""
         full_name = self._get_full_name(node)
         if full_name:
-            detection = self._api_analysis_spec.symbols_to_detect.get(
-                full_name, None)
+            detection = self._api_analysis_spec.symbols_to_detect.get(full_name, None)
             if detection:
                 self.add_result(detection)
                 self.add_log(
-                    detection.log_level, node.lineno, node.col_offset,
-                    detection.log_message)
+                    detection.log_level,
+                    node.lineno,
+                    node.col_offset,
+                    detection.log_message,
+                )
 
         self.generic_visit(node)
 
@@ -863,13 +921,15 @@ class PastaAnalyzeVisitor(_PastaEditVisitor):
         for import_alias in node.names:
             # Detect based on full import name and alias)
             full_import = (import_alias.name, import_alias.asname)
-            detection = (self._api_analysis_spec
-                         .imports_to_detect.get(full_import, None))
+            detection = self._api_analysis_spec.imports_to_detect.get(full_import, None)
             if detection:
                 self.add_result(detection)
                 self.add_log(
-                    detection.log_level, node.lineno, node.col_offset,
-                    detection.log_message)
+                    detection.log_level,
+                    node.lineno,
+                    node.col_offset,
+                    detection.log_message,
+                )
 
         self.generic_visit(node)
 
@@ -889,13 +949,15 @@ class PastaAnalyzeVisitor(_PastaEditVisitor):
             # Detect based on full import name(to & as)
             full_module_name = "%s.%s" % (from_import, import_alias.name)
             full_import = (full_module_name, import_alias.asname)
-            detection = (self._api_analysis_spec
-                         .imports_to_detect.get(full_import, None))
+            detection = self._api_analysis_spec.imports_to_detect.get(full_import, None)
             if detection:
                 self.add_result(detection)
                 self.add_log(
-                    detection.log_level, node.lineno, node.col_offset,
-                    detection.log_message)
+                    detection.log_level,
+                    node.lineno,
+                    node.col_offset,
+                    detection.log_message,
+                )
 
         self.generic_visit(node)
 
@@ -905,14 +967,15 @@ class ASTCodeUpgrader(object):
 
     def __init__(self, api_change_spec):
         if not isinstance(api_change_spec, APIChangeSpec):
-            raise TypeError("Must pass APIChangeSpec to ASTCodeUpgrader, got %s" %
-                            type(api_change_spec))
+            raise TypeError(
+                "Must pass APIChangeSpec to ASTCodeUpgrader, got %s"
+                % type(api_change_spec)
+            )
         self._api_change_spec = api_change_spec
 
-    def process_file(self,
-                     in_filename,
-                     out_filename,
-                     no_change_to_outfile_on_error=False):
+    def process_file(
+        self, in_filename, out_filename, no_change_to_outfile_on_error=False
+    ):
         """Process the given python file for incompatible changes.
 
         Args:
@@ -925,10 +988,12 @@ class ASTCodeUpgrader(object):
 
         # Write to a temporary file, just in case we are doing an implace modify.
         # pylint: disable=g-backslash-continuation
-        with open(in_filename, "r") as in_file, \
-                tempfile.NamedTemporaryFile("w", delete=False) as temp_file:
-            ret = self.process_opened_file(in_filename, in_file, out_filename,
-                                           temp_file)
+        with open(in_filename, "r") as in_file, tempfile.NamedTemporaryFile(
+            "w", delete=False
+        ) as temp_file:
+            ret = self.process_opened_file(
+                in_filename, in_file, out_filename, temp_file
+            )
         # pylint: enable=g-backslash-continuation
 
         if no_change_to_outfile_on_error and ret[0] == 0:
@@ -952,25 +1017,23 @@ class ASTCodeUpgrader(object):
             log = ["ERROR: Failed to parse.\n" + traceback.format_exc()]
             return 0, "", log, []
 
-        t, preprocess_logs, preprocess_errors = self._api_change_spec.preprocess(
-            t)
+        t, preprocess_logs, preprocess_errors = self._api_change_spec.preprocess(t)
 
         visitor = _PastaEditVisitor(self._api_change_spec)
         visitor.visit(t)
 
         self._api_change_spec.clear_preprocessing()
 
-        logs = [self.format_log(log, None) for log in (preprocess_logs +
-                                                       visitor.log)]
-        errors = [self.format_log(error, in_filename)
-                  for error in (preprocess_errors +
-                                visitor.warnings_and_errors)]
+        logs = [self.format_log(log, None) for log in (preprocess_logs + visitor.log)]
+        errors = [
+            self.format_log(error, in_filename)
+            for error in (preprocess_errors + visitor.warnings_and_errors)
+        ]
         return 1, pasta.dump(t), logs, errors
 
     def _format_log(self, log, in_filename, out_filename):
         text = six.ensure_str("-" * 80) + "\n"
-        text += "Processing file %r\n outputting to %r\n" % (in_filename,
-                                                             out_filename)
+        text += "Processing file %r\n outputting to %r\n" % (in_filename, out_filename)
         text += six.ensure_str("-" * 80) + "\n\n"
         text += "\n".join(log) + "\n"
         text += six.ensure_str("-" * 80) + "\n\n"
@@ -991,18 +1054,23 @@ class ASTCodeUpgrader(object):
           A tuple representing number of files processed, log of actions, errors
         """
         lines = in_file.readlines()
-        processed_file, new_file_content, log, process_errors = (
-            self.update_string_pasta("".join(lines), in_filename))
+        (
+            processed_file,
+            new_file_content,
+            log,
+            process_errors,
+        ) = self.update_string_pasta("".join(lines), in_filename)
 
         if out_file and processed_file:
             out_file.write(new_file_content)
 
-        return (processed_file,
-                self._format_log(log, in_filename, out_filename),
-                process_errors)
+        return (
+            processed_file,
+            self._format_log(log, in_filename, out_filename),
+            process_errors,
+        )
 
-    def process_tree(self, root_directory, output_root_directory,
-                     copy_other_files):
+    def process_tree(self, root_directory, output_root_directory, copy_other_files):
         """Processes upgrades on an entire tree of python files in place.
 
         Note that only Python files. If you have custom code in other languages,
@@ -1023,16 +1091,19 @@ class ASTCodeUpgrader(object):
 
         # make sure output directory doesn't exist
         if output_root_directory and os.path.exists(output_root_directory):
-            print("Output directory %r must not already exist." %
-                  (output_root_directory))
+            print(
+                "Output directory %r must not already exist." % (output_root_directory)
+            )
             sys.exit(1)
 
         # make sure output directory does not overlap with root_directory
         norm_root = os.path.split(os.path.normpath(root_directory))
         norm_output = os.path.split(os.path.normpath(output_root_directory))
         if norm_root == norm_output:
-            print("Output directory %r same as input directory %r" %
-                  (root_directory, output_root_directory))
+            print(
+                "Output directory %r same as input directory %r"
+                % (root_directory, output_root_directory)
+            )
             sys.exit(1)
 
         # Collect list of files to process (we do this to correctly handle if the
@@ -1040,23 +1111,20 @@ class ASTCodeUpgrader(object):
         files_to_process = []
         files_to_copy = []
         for dir_name, _, file_list in os.walk(root_directory):
-            py_files = [f for f in file_list if six.ensure_str(
-                f).endswith(".py")]
-            copy_files = [
-                f for f in file_list if not six.ensure_str(f).endswith(".py")
-            ]
+            py_files = [f for f in file_list if six.ensure_str(f).endswith(".py")]
+            copy_files = [f for f in file_list if not six.ensure_str(f).endswith(".py")]
             for filename in py_files:
                 fullpath = os.path.join(dir_name, filename)
-                fullpath_output = os.path.join(output_root_directory,
-                                               os.path.relpath(fullpath,
-                                                               root_directory))
+                fullpath_output = os.path.join(
+                    output_root_directory, os.path.relpath(fullpath, root_directory)
+                )
                 files_to_process.append((fullpath, fullpath_output))
             if copy_other_files:
                 for filename in copy_files:
                     fullpath = os.path.join(dir_name, filename)
-                    fullpath_output = os.path.join(output_root_directory,
-                                                   os.path.relpath(
-                                                       fullpath, root_directory))
+                    fullpath_output = os.path.join(
+                        output_root_directory, os.path.relpath(fullpath, root_directory)
+                    )
                     files_to_copy.append((fullpath, fullpath_output))
 
         file_count = 0
@@ -1074,13 +1142,16 @@ class ASTCodeUpgrader(object):
             if os.path.islink(input_path):
                 link_target = os.readlink(input_path)
                 link_target_output = os.path.join(
-                    output_root_directory, os.path.relpath(link_target, root_directory))
+                    output_root_directory, os.path.relpath(link_target, root_directory)
+                )
                 if (link_target, link_target_output) in files_to_process:
                     # Create a link to the new location of the target file
                     os.symlink(link_target_output, output_path)
                 else:
                     report += "Copying symlink %s without modifying its target %s" % (
-                        input_path, link_target)
+                        input_path,
+                        link_target,
+                    )
                     os.symlink(link_target, output_path)
                 continue
 
