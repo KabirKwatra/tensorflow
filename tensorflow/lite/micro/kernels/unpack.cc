@@ -29,89 +29,88 @@ constexpr int kInputTensor = 0;
 template <typename T>
 TfLiteStatus UnpackImpl(TfLiteContext* context, TfLiteNode* node,
                         const TfLiteTensor* input, int output_count, int axis) {
-    const TfLiteTensor* output0 = GetOutput(context, node, 0);
-    const TfLiteIntArray* input_dims = input->dims;
-    const TfLiteIntArray* output_dims = output0->dims;
-    const int dimensions = input_dims->size;
+  const TfLiteTensor* output0 = GetOutput(context, node, 0);
+  const TfLiteIntArray* input_dims = input->dims;
+  const TfLiteIntArray* output_dims = output0->dims;
+  const int dimensions = input_dims->size;
 
-    if (axis < 0) {
-        axis += NumDimensions(input);
+  if (axis < 0) {
+    axis += NumDimensions(input);
+  }
+
+  TFLITE_DCHECK_LT(axis, dimensions);
+
+  int outer_size = 1;
+  for (int i = 0; i < axis; ++i) {
+    outer_size *= input_dims->data[i];
+  }
+  int copy_size = 1;
+  for (int i = axis + 1; i < dimensions; ++i) {
+    copy_size *= input_dims->data[i];
+  }
+  int output_size = 1;
+  for (int i = 0; i < output_dims->size; ++i) {
+    output_size *= output_dims->data[i];
+  }
+  TFLITE_DCHECK_EQ(output_size, copy_size * outer_size);
+
+  const T* input_data = GetTensorData<T>(input);
+
+  for (int i = 0; i < output_count; ++i) {
+    TfLiteTensor* t = GetOutput(context, node, i);
+    T* output_data = GetTensorData<T>(t);
+    for (int k = 0; k < outer_size; ++k) {
+      T* output_ptr = output_data + copy_size * k;
+      int loc = k * output_count * copy_size + i * copy_size;
+      const T* input_ptr = input_data + loc;
+      for (int j = 0; j < copy_size; ++j) output_ptr[j] = input_ptr[j];
     }
+  }
 
-    TFLITE_DCHECK_LT(axis, dimensions);
-
-    int outer_size = 1;
-    for (int i = 0; i < axis; ++i) {
-        outer_size *= input_dims->data[i];
-    }
-    int copy_size = 1;
-    for (int i = axis + 1; i < dimensions; ++i) {
-        copy_size *= input_dims->data[i];
-    }
-    int output_size = 1;
-    for (int i = 0; i < output_dims->size; ++i) {
-        output_size *= output_dims->data[i];
-    }
-    TFLITE_DCHECK_EQ(output_size, copy_size * outer_size);
-
-    const T* input_data = GetTensorData<T>(input);
-
-    for (int i = 0; i < output_count; ++i) {
-        TfLiteTensor* t = GetOutput(context, node, i);
-        T* output_data = GetTensorData<T>(t);
-        for (int k = 0; k < outer_size; ++k) {
-            T* output_ptr = output_data + copy_size * k;
-            int loc = k * output_count * copy_size + i * copy_size;
-            const T* input_ptr = input_data + loc;
-            for (int j = 0; j < copy_size; ++j) output_ptr[j] = input_ptr[j];
-        }
-    }
-
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    TfLiteUnpackParams* data =
-        reinterpret_cast<TfLiteUnpackParams*>(node->builtin_data);
+  TfLiteUnpackParams* data =
+      reinterpret_cast<TfLiteUnpackParams*>(node->builtin_data);
 
-    const TfLiteTensor* input = GetInput(context, node, kInputTensor);
+  const TfLiteTensor* input = GetInput(context, node, kInputTensor);
 
-    switch (input->type) {
+  switch (input->type) {
     case kTfLiteFloat32: {
-        return UnpackImpl<float>(context, node, input, data->num, data->axis);
+      return UnpackImpl<float>(context, node, input, data->num, data->axis);
     }
     case kTfLiteInt32: {
-        return UnpackImpl<int32_t>(context, node, input, data->num, data->axis);
+      return UnpackImpl<int32_t>(context, node, input, data->num, data->axis);
     }
     case kTfLiteUInt8: {
-        return UnpackImpl<uint8_t>(context, node, input, data->num, data->axis);
+      return UnpackImpl<uint8_t>(context, node, input, data->num, data->axis);
     }
     case kTfLiteInt8: {
-        return UnpackImpl<int8_t>(context, node, input, data->num, data->axis);
+      return UnpackImpl<int8_t>(context, node, input, data->num, data->axis);
     }
     default: {
-        TF_LITE_KERNEL_LOG(context, "Type '%s' is not supported by unpack.",
-                           TfLiteTypeGetName(input->type));
-        return kTfLiteError;
+      TF_LITE_KERNEL_LOG(context, "Type '%s' is not supported by unpack.",
+                         TfLiteTypeGetName(input->type));
+      return kTfLiteError;
     }
-    }
+  }
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 }  // namespace
 }  // namespace unpack
 
 TfLiteRegistration* Register_UNPACK() {
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/nullptr,
-                                            /*prepare=*/nullptr,
-                                            /*invoke=*/unpack::Eval,
-                                            /*profiling_string=*/nullptr,
-                                            /*builtin_code=*/0,
-                                            /*custom_name=*/nullptr,
-                                            /*version=*/0
-                                  };
-    return &r;
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/nullptr,
+                                 /*prepare=*/nullptr,
+                                 /*invoke=*/unpack::Eval,
+                                 /*profiling_string=*/nullptr,
+                                 /*builtin_code=*/0,
+                                 /*custom_name=*/nullptr,
+                                 /*version=*/0};
+  return &r;
 }
 
 }  // namespace micro
