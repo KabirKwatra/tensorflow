@@ -51,53 +51,53 @@ namespace {
 // The propagation results should assign quantization types to all the tensors
 // and the two restrictions are respected.
 struct PropagateQuantPass : public FunctionPass<PropagateQuantPass> {
-  explicit PropagateQuantPass() = default;
-  PropagateQuantPass(const PropagateQuantPass &) {}
+    explicit PropagateQuantPass() = default;
+    PropagateQuantPass(const PropagateQuantPass &) {}
 
-  void runOnFunction() override;
+    void runOnFunction() override;
 };
 
 #include "tensorflow/compiler/mlir/lite/quantization/xla/op_quant_spec.inc"
 
 void PropagateQuantPass::runOnFunction() {
-  FuncOp func = getFunction();
-  // TODO(fengliuai): deprecate this old code generation path.
-  // XLA only support uint8/uint16 quantization for now.
-  ApplyQuantizationParamsPropagation(func, /*is_signed*/ false,
-                                     disable_per_channel, GetOpQuantSpec);
+    FuncOp func = getFunction();
+    // TODO(fengliuai): deprecate this old code generation path.
+    // XLA only support uint8/uint16 quantization for now.
+    ApplyQuantizationParamsPropagation(func, /*is_signed*/ false,
+                                       disable_per_channel, GetOpQuantSpec);
 
-  CpuDeviceTarget spec(&getContext());
-  quant::QuantizeContext ctx(func, spec);
+    CpuDeviceTarget spec(&getContext());
+    quant::QuantizeContext ctx(func, spec);
 
-  std::vector<quant::QuantizeRegionOp> work_list = ctx.GetAllOps();
-  bool changed = false;
-  while (!work_list.empty()) {
-    quant::QuantizeRegionOp op = work_list.back();
-    work_list.pop_back();
+    std::vector<quant::QuantizeRegionOp> work_list = ctx.GetAllOps();
+    bool changed = false;
+    while (!work_list.empty()) {
+        quant::QuantizeRegionOp op = work_list.back();
+        work_list.pop_back();
 
-    llvm::SmallVector<Operation *, 4> new_items;
-    if (failed(ctx.Handle(op, &new_items, &changed))) {
-      // The IR is still valid, thus we shouldn't fail.
-      signalPassFailure();
+        llvm::SmallVector<Operation *, 4> new_items;
+        if (failed(ctx.Handle(op, &new_items, &changed))) {
+            // The IR is still valid, thus we shouldn't fail.
+            signalPassFailure();
+        }
+        for (auto item : new_items) {
+            if (auto reg = llvm::dyn_cast_or_null<quant::QuantizeRegionOp>(item))
+                work_list.push_back(reg);
+        }
     }
-    for (auto item : new_items) {
-      if (auto reg = llvm::dyn_cast_or_null<quant::QuantizeRegionOp>(item))
-        work_list.push_back(reg);
+
+    if (!changed) return;
+
+    if (failed(ctx.Finalize())) {
+        signalPassFailure();
     }
-  }
-
-  if (!changed) return;
-
-  if (failed(ctx.Finalize())) {
-    signalPassFailure();
-  }
 }
 
 }  // namespace
 
 // Creates an instance of the xla_hlo dialect quantization propagation pass.
 std::unique_ptr<OpPassBase<FuncOp>> CreatePropagateQuantPass() {
-  return std::make_unique<PropagateQuantPass>();
+    return std::make_unique<PropagateQuantPass>();
 }
 
 static PassRegistration<PropagateQuantPass> pass(
