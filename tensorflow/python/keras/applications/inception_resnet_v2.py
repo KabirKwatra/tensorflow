@@ -35,11 +35,8 @@ from tensorflow.python.keras.utils import data_utils
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.util.tf_export import keras_export
 
-
-BASE_WEIGHT_URL = (
-    "https://storage.googleapis.com/tensorflow/"
-    "keras-applications/inception_resnet_v2/"
-)
+BASE_WEIGHT_URL = ("https://storage.googleapis.com/tensorflow/"
+                   "keras-applications/inception_resnet_v2/")
 layers = None
 
 
@@ -47,16 +44,14 @@ layers = None
     "keras.applications.inception_resnet_v2.InceptionResNetV2",
     "keras.applications.InceptionResNetV2",
 )
-def InceptionResNetV2(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    classifier_activation="softmax",
-    **kwargs
-):
+def InceptionResNetV2(include_top=True,
+                      weights="imagenet",
+                      input_tensor=None,
+                      input_shape=None,
+                      pooling=None,
+                      classes=1000,
+                      classifier_activation="softmax",
+                      **kwargs):
     """Instantiates the Inception-ResNet v2 architecture.
 
     Reference paper:
@@ -141,20 +136,17 @@ def InceptionResNetV2(
     else:
         layers = VersionAwareLayers()
     if kwargs:
-        raise ValueError("Unknown argument(s): %s" % (kwargs,))
+        raise ValueError("Unknown argument(s): %s" % (kwargs, ))
     if not (weights in {"imagenet", None} or os.path.exists(weights)):
-        raise ValueError(
-            "The `weights` argument should be either "
-            "`None` (random initialization), `imagenet` "
-            "(pre-training on ImageNet), "
-            "or the path to the weights file to be loaded."
-        )
+        raise ValueError("The `weights` argument should be either "
+                         "`None` (random initialization), `imagenet` "
+                         "(pre-training on ImageNet), "
+                         "or the path to the weights file to be loaded.")
 
     if weights == "imagenet" and include_top and classes != 1000:
         raise ValueError(
             'If using `weights` as `"imagenet"` with `include_top`'
-            " as true, `classes` should be 1000"
-        )
+            " as true, `classes` should be 1000")
 
     # Determine proper input shape
     input_shape = imagenet_utils.obtain_input_shape(
@@ -198,9 +190,10 @@ def InceptionResNetV2(
 
     # 10x block35 (Inception-ResNet-A block): 35 x 35 x 320
     for block_idx in range(1, 11):
-        x = inception_resnet_block(
-            x, scale=0.17, block_type="block35", block_idx=block_idx
-        )
+        x = inception_resnet_block(x,
+                                   scale=0.17,
+                                   block_type="block35",
+                                   block_idx=block_idx)
 
     # Mixed 6a (Reduction-A block): 17 x 17 x 1088
     branch_0 = conv2d_bn(x, 384, 3, strides=2, padding="valid")
@@ -213,9 +206,10 @@ def InceptionResNetV2(
 
     # 20x block17 (Inception-ResNet-B block): 17 x 17 x 1088
     for block_idx in range(1, 21):
-        x = inception_resnet_block(
-            x, scale=0.1, block_type="block17", block_idx=block_idx
-        )
+        x = inception_resnet_block(x,
+                                   scale=0.1,
+                                   block_type="block17",
+                                   block_idx=block_idx)
 
     # Mixed 7a (Reduction-B block): 8 x 8 x 2080
     branch_0 = conv2d_bn(x, 256, 1)
@@ -231,12 +225,15 @@ def InceptionResNetV2(
 
     # 10x block8 (Inception-ResNet-C block): 8 x 8 x 2080
     for block_idx in range(1, 10):
-        x = inception_resnet_block(
-            x, scale=0.2, block_type="block8", block_idx=block_idx
-        )
-    x = inception_resnet_block(
-        x, scale=1.0, activation=None, block_type="block8", block_idx=10
-    )
+        x = inception_resnet_block(x,
+                                   scale=0.2,
+                                   block_type="block8",
+                                   block_idx=block_idx)
+    x = inception_resnet_block(x,
+                               scale=1.0,
+                               activation=None,
+                               block_type="block8",
+                               block_idx=10)
 
     # Final convolution block: 8 x 8 x 1536
     x = conv2d_bn(x, 1536, 1, name="conv_7b")
@@ -245,9 +242,9 @@ def InceptionResNetV2(
         # Classification block
         x = layers.GlobalAveragePooling2D(name="avg_pool")(x)
         imagenet_utils.validate_activation(classifier_activation, weights)
-        x = layers.Dense(classes, activation=classifier_activation, name="predictions")(
-            x
-        )
+        x = layers.Dense(classes,
+                         activation=classifier_activation,
+                         name="predictions")(x)
     else:
         if pooling == "avg":
             x = layers.GlobalAveragePooling2D()(x)
@@ -290,14 +287,14 @@ def InceptionResNetV2(
 
 
 def conv2d_bn(
-    x,
-    filters,
-    kernel_size,
-    strides=1,
-    padding="same",
-    activation="relu",
-    use_bias=False,
-    name=None,
+        x,
+        filters,
+        kernel_size,
+        strides=1,
+        padding="same",
+        activation="relu",
+        use_bias=False,
+        name=None,
 ):
     """Utility function to apply conv + BN.
 
@@ -326,7 +323,8 @@ def conv2d_bn(
     if not use_bias:
         bn_axis = 1 if backend.image_data_format() == "channels_first" else 3
         bn_name = None if name is None else name + "_bn"
-        x = layers.BatchNormalization(axis=bn_axis, scale=False, name=bn_name)(x)
+        x = layers.BatchNormalization(axis=bn_axis, scale=False,
+                                      name=bn_name)(x)
     if activation is not None:
         ac_name = None if name is None else name + "_ac"
         x = layers.Activation(activation, name=ac_name)(x)
@@ -394,15 +392,14 @@ def inception_resnet_block(x, scale, block_type, block_idx, activation="relu"):
         branch_1 = conv2d_bn(branch_1, 256, [3, 1])
         branches = [branch_0, branch_1]
     else:
-        raise ValueError(
-            "Unknown Inception-ResNet block type. "
-            'Expects "block35", "block17" or "block8", '
-            "but got: " + str(block_type)
-        )
+        raise ValueError("Unknown Inception-ResNet block type. "
+                         'Expects "block35", "block17" or "block8", '
+                         "but got: " + str(block_type))
 
     block_name = block_type + "_" + str(block_idx)
     channel_axis = 1 if backend.image_data_format() == "channels_first" else 3
-    mixed = layers.Concatenate(axis=channel_axis, name=block_name + "_mixed")(branches)
+    mixed = layers.Concatenate(axis=channel_axis,
+                               name=block_name + "_mixed")(branches)
     up = conv2d_bn(
         mixed,
         backend.int_shape(x)[channel_axis],
@@ -425,7 +422,9 @@ def inception_resnet_block(x, scale, block_type, block_idx, activation="relu"):
 
 @keras_export("keras.applications.inception_resnet_v2.preprocess_input")
 def preprocess_input(x, data_format=None):
-    return imagenet_utils.preprocess_input(x, data_format=data_format, mode="tf")
+    return imagenet_utils.preprocess_input(x,
+                                           data_format=data_format,
+                                           mode="tf")
 
 
 @keras_export("keras.applications.inception_resnet_v2.decode_predictions")
@@ -434,6 +433,5 @@ def decode_predictions(preds, top=5):
 
 
 preprocess_input.__doc__ = imagenet_utils.PREPROCESS_INPUT_DOC.format(
-    mode="", ret=imagenet_utils.PREPROCESS_INPUT_RET_DOC_TF
-)
+    mode="", ret=imagenet_utils.PREPROCESS_INPUT_RET_DOC_TF)
 decode_predictions.__doc__ = imagenet_utils.decode_predictions.__doc__

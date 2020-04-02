@@ -61,30 +61,30 @@ class TextEmbeddingModel(tf.train.Checkpoint):
             tf.lookup.TextFileIndex.LINE_NUMBER,
         )
         self._table = tf.lookup.StaticVocabularyTable(
-            self._table_initializer, num_oov_buckets=self._oov_buckets
-        )
+            self._table_initializer, num_oov_buckets=self._oov_buckets)
         self.embeddings = tf.Variable(
-            tf.random.uniform(shape=[self._total_size, emb_dim])
-        )
+            tf.random.uniform(shape=[self._total_size, emb_dim]))
         self.variables = [self.embeddings]
         self.trainable_variables = self.variables
 
     def _tokenize(self, sentences):
         # Perform a minimalistic text preprocessing by removing punctuation and
         # splitting on spaces.
-        normalized_sentences = tf.strings.regex_replace(
-            input=sentences, pattern=r"\pP", rewrite=""
-        )
+        normalized_sentences = tf.strings.regex_replace(input=sentences,
+                                                        pattern=r"\pP",
+                                                        rewrite="")
         normalized_sentences = tf.reshape(normalized_sentences, [-1])
         sparse_tokens = tf.strings.split(normalized_sentences, " ").to_sparse()
 
         # Deal with a corner case: there is one empty sentence.
-        sparse_tokens, _ = tf.sparse.fill_empty_rows(sparse_tokens, tf.constant(""))
+        sparse_tokens, _ = tf.sparse.fill_empty_rows(sparse_tokens,
+                                                     tf.constant(""))
         # Deal with a corner case: all sentences are empty.
         sparse_tokens = tf.sparse.reset_shape(sparse_tokens)
         sparse_token_ids = self._table.lookup(sparse_tokens.values)
 
-        return (sparse_tokens.indices, sparse_token_ids, sparse_tokens.dense_shape)
+        return (sparse_tokens.indices, sparse_token_ids,
+                sparse_tokens.dense_shape)
 
     @tf.function(input_signature=[tf.TensorSpec([None], tf.dtypes.string)])
     def __call__(self, sentences):
@@ -92,9 +92,8 @@ class TextEmbeddingModel(tf.train.Checkpoint):
 
         return tf.nn.safe_embedding_lookup_sparse(
             embedding_weights=self.embeddings,
-            sparse_ids=tf.sparse.SparseTensor(
-                token_ids, token_values, token_dense_shape
-            ),
+            sparse_ids=tf.sparse.SparseTensor(token_ids, token_values,
+                                              token_dense_shape),
             sparse_weights=None,
             combiner="sqrtn",
         )
@@ -104,7 +103,9 @@ def main(argv):
     del argv
 
     vocabulary = ["cat", "is", "on", "the", "mat"]
-    module = TextEmbeddingModel(vocabulary=vocabulary, emb_dim=10, oov_buckets=10)
+    module = TextEmbeddingModel(vocabulary=vocabulary,
+                                emb_dim=10,
+                                oov_buckets=10)
     tf.saved_model.save(module, FLAGS.export_dir)
 
 

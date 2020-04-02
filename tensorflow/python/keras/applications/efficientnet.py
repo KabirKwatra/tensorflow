@@ -35,18 +35,25 @@ from tensorflow.python.keras.utils import data_utils
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.util.tf_export import keras_export
 
-
 BASE_WEIGHTS_PATH = "https://storage.googleapis.com/keras-applications/"
 
 WEIGHTS_HASHES = {
-    "b0": ("902e53a9f72be733fc0bcb005b3ebbac", "50bc09e76180e00e4465e1a485ddc09d"),
-    "b1": ("1d254153d4ab51201f1646940f018540", "74c4e6b3e1f6a1eea24c589628592432"),
-    "b2": ("b15cce36ff4dcbd00b6dd88e7857a6ad", "111f8e2ac8aa800a7a99e3239f7bfb39"),
-    "b3": ("ffd1fdc53d0ce67064dc6a9c7960ede0", "af6d107764bb5b1abb91932881670226"),
-    "b4": ("18c95ad55216b8f92d7e70b3a046e2fc", "ebc24e6d6c33eaebbd558eafbeedf1ba"),
-    "b5": ("ace28f2a6363774853a83a0b21b9421a", "38879255a25d3c92d5e44e04ae6cec6f"),
-    "b6": ("165f6e37dce68623721b423839de8be5", "9ecce42647a20130c1f39a5d4cb75743"),
-    "b7": ("8c03f828fec3ef71311cd463b6759d99", "cbcfe4450ddf6f3ad90b1b398090fe4a"),
+    "b0":
+    ("902e53a9f72be733fc0bcb005b3ebbac", "50bc09e76180e00e4465e1a485ddc09d"),
+    "b1":
+    ("1d254153d4ab51201f1646940f018540", "74c4e6b3e1f6a1eea24c589628592432"),
+    "b2":
+    ("b15cce36ff4dcbd00b6dd88e7857a6ad", "111f8e2ac8aa800a7a99e3239f7bfb39"),
+    "b3":
+    ("ffd1fdc53d0ce67064dc6a9c7960ede0", "af6d107764bb5b1abb91932881670226"),
+    "b4": ("18c95ad55216b8f92d7e70b3a046e2fc",
+           "ebc24e6d6c33eaebbd558eafbeedf1ba"),
+    "b5": ("ace28f2a6363774853a83a0b21b9421a",
+           "38879255a25d3c92d5e44e04ae6cec6f"),
+    "b6": ("165f6e37dce68623721b423839de8be5",
+           "9ecce42647a20130c1f39a5d4cb75743"),
+    "b7": ("8c03f828fec3ef71311cd463b6759d99",
+           "cbcfe4450ddf6f3ad90b1b398090fe4a"),
 }
 
 DEFAULT_BLOCKS_ARGS = [
@@ -124,34 +131,42 @@ DEFAULT_BLOCKS_ARGS = [
 
 CONV_KERNEL_INITIALIZER = {
     "class_name": "VarianceScaling",
-    "config": {"scale": 2.0, "mode": "fan_out", "distribution": "truncated_normal"},
+    "config": {
+        "scale": 2.0,
+        "mode": "fan_out",
+        "distribution": "truncated_normal"
+    },
 }
 
 DENSE_KERNEL_INITIALIZER = {
     "class_name": "VarianceScaling",
-    "config": {"scale": 1.0 / 3.0, "mode": "fan_out", "distribution": "uniform"},
+    "config": {
+        "scale": 1.0 / 3.0,
+        "mode": "fan_out",
+        "distribution": "uniform"
+    },
 }
 
 layers = VersionAwareLayers()
 
 
 def EfficientNet(
-    width_coefficient,
-    depth_coefficient,
-    default_size,
-    dropout_rate=0.2,
-    drop_connect_rate=0.2,
-    depth_divisor=8,
-    activation="swish",
-    blocks_args="default",
-    model_name="efficientnet",
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    classifier_activation="softmax",
+        width_coefficient,
+        depth_coefficient,
+        default_size,
+        dropout_rate=0.2,
+        drop_connect_rate=0.2,
+        depth_divisor=8,
+        activation="swish",
+        blocks_args="default",
+        model_name="efficientnet",
+        include_top=True,
+        weights="imagenet",
+        input_tensor=None,
+        input_shape=None,
+        pooling=None,
+        classes=1000,
+        classifier_activation="softmax",
 ):
     """Instantiates the EfficientNet architecture using given scaling coefficients.
 
@@ -208,18 +223,15 @@ def EfficientNet(
         blocks_args = DEFAULT_BLOCKS_ARGS
 
     if not (weights in {"imagenet", None} or os.path.exists(weights)):
-        raise ValueError(
-            "The `weights` argument should be either "
-            "`None` (random initialization), `imagenet` "
-            "(pre-training on ImageNet), "
-            "or the path to the weights file to be loaded."
-        )
+        raise ValueError("The `weights` argument should be either "
+                         "`None` (random initialization), `imagenet` "
+                         "(pre-training on ImageNet), "
+                         "or the path to the weights file to be loaded.")
 
     if weights == "imagenet" and include_top and classes != 1000:
         raise ValueError(
             'If using `weights` as `"imagenet"` with `include_top`'
-            " as true, `classes` should be 1000"
-        )
+            " as true, `classes` should be 1000")
 
     # Determine proper input shape
     input_shape = imagenet_utils.obtain_input_shape(
@@ -244,7 +256,8 @@ def EfficientNet(
     def round_filters(filters, divisor=depth_divisor):
         """Round number of filters based on depth multiplier."""
         filters *= width_coefficient
-        new_filters = max(divisor, int(filters + divisor / 2) // divisor * divisor)
+        new_filters = max(divisor,
+                          int(filters + divisor / 2) // divisor * divisor)
         # Make sure that round down does not go down by more than 10%.
         if new_filters < 0.9 * filters:
             new_filters += divisor
@@ -259,9 +272,8 @@ def EfficientNet(
     x = layers.Rescaling(1.0 / 255.0)(x)
     x = layers.Normalization(axis=bn_axis)(x)
 
-    x = layers.ZeroPadding2D(
-        padding=imagenet_utils.correct_pad(x, 3), name="stem_conv_pad"
-    )(x)
+    x = layers.ZeroPadding2D(padding=imagenet_utils.correct_pad(x, 3),
+                             name="stem_conv_pad")(x)
     x = layers.Conv2D(
         round_filters(32),
         3,
@@ -290,13 +302,11 @@ def EfficientNet(
             if j > 0:
                 args["strides"] = 1
                 args["filters_in"] = args["filters_out"]
-            x = block(
-                x,
-                activation,
-                drop_connect_rate * b / blocks,
-                name="block{}{}_".format(i + 1, chr(j + 97)),
-                **args
-            )
+            x = block(x,
+                      activation,
+                      drop_connect_rate * b / blocks,
+                      name="block{}{}_".format(i + 1, chr(j + 97)),
+                      **args)
             b += 1
 
     # Build top
@@ -359,17 +369,17 @@ def EfficientNet(
 
 
 def block(
-    inputs,
-    activation="swish",
-    drop_rate=0.0,
-    name="",
-    filters_in=32,
-    filters_out=16,
-    kernel_size=3,
-    strides=1,
-    expand_ratio=1,
-    se_ratio=0.0,
-    id_skip=True,
+        inputs,
+        activation="swish",
+        drop_rate=0.0,
+        name="",
+        filters_in=32,
+        filters_out=16,
+        kernel_size=3,
+        strides=1,
+        expand_ratio=1,
+        se_ratio=0.0,
+        id_skip=True,
 ):
     """An inverted residual block.
 
@@ -409,9 +419,9 @@ def block(
 
     # Depthwise Convolution
     if strides == 2:
-        x = layers.ZeroPadding2D(
-            padding=imagenet_utils.correct_pad(x, kernel_size), name=name + "dwconv_pad"
-        )(x)
+        x = layers.ZeroPadding2D(padding=imagenet_utils.correct_pad(
+            x, kernel_size),
+                                 name=name + "dwconv_pad")(x)
         conv_pad = "valid"
     else:
         conv_pad = "same"
@@ -461,9 +471,9 @@ def block(
     x = layers.BatchNormalization(axis=bn_axis, name=name + "project_bn")(x)
     if id_skip and strides == 1 and filters_in == filters_out:
         if drop_rate > 0:
-            x = layers.Dropout(
-                drop_rate, noise_shape=(None, 1, 1, 1), name=name + "drop"
-            )(x)
+            x = layers.Dropout(drop_rate,
+                               noise_shape=(None, 1, 1, 1),
+                               name=name + "drop")(x)
         x = layers.add([x, inputs], name=name + "add")
     return x
 
@@ -472,232 +482,200 @@ def block(
     "keras.applications.efficientnet.EfficientNetB0",
     "keras.applications.EfficientNetB0",
 )
-def EfficientNetB0(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.0,
-        1.0,
-        224,
-        0.2,
-        model_name="efficientnetb0",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB0(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.0,
+                        1.0,
+                        224,
+                        0.2,
+                        model_name="efficientnetb0",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB1",
     "keras.applications.EfficientNetB1",
 )
-def EfficientNetB1(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.0,
-        1.1,
-        240,
-        0.2,
-        model_name="efficientnetb1",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB1(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.0,
+                        1.1,
+                        240,
+                        0.2,
+                        model_name="efficientnetb1",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB2",
     "keras.applications.EfficientNetB2",
 )
-def EfficientNetB2(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.1,
-        1.2,
-        260,
-        0.3,
-        model_name="efficientnetb2",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB2(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.1,
+                        1.2,
+                        260,
+                        0.3,
+                        model_name="efficientnetb2",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB3",
     "keras.applications.EfficientNetB3",
 )
-def EfficientNetB3(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.2,
-        1.4,
-        300,
-        0.3,
-        model_name="efficientnetb3",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB3(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.2,
+                        1.4,
+                        300,
+                        0.3,
+                        model_name="efficientnetb3",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB4",
     "keras.applications.EfficientNetB4",
 )
-def EfficientNetB4(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.4,
-        1.8,
-        380,
-        0.4,
-        model_name="efficientnetb4",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB4(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.4,
+                        1.8,
+                        380,
+                        0.4,
+                        model_name="efficientnetb4",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB5",
     "keras.applications.EfficientNetB5",
 )
-def EfficientNetB5(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.6,
-        2.2,
-        456,
-        0.4,
-        model_name="efficientnetb5",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB5(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.6,
+                        2.2,
+                        456,
+                        0.4,
+                        model_name="efficientnetb5",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB6",
     "keras.applications.EfficientNetB6",
 )
-def EfficientNetB6(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        1.8,
-        2.6,
-        528,
-        0.5,
-        model_name="efficientnetb6",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB6(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(1.8,
+                        2.6,
+                        528,
+                        0.5,
+                        model_name="efficientnetb6",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export(
     "keras.applications.efficientnet.EfficientNetB7",
     "keras.applications.EfficientNetB7",
 )
-def EfficientNetB7(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    **kwargs
-):
-    return EfficientNet(
-        2.0,
-        3.1,
-        600,
-        0.5,
-        model_name="efficientnetb7",
-        include_top=include_top,
-        weights=weights,
-        input_tensor=input_tensor,
-        input_shape=input_shape,
-        pooling=pooling,
-        classes=classes,
-        **kwargs
-    )
+def EfficientNetB7(include_top=True,
+                   weights="imagenet",
+                   input_tensor=None,
+                   input_shape=None,
+                   pooling=None,
+                   classes=1000,
+                   **kwargs):
+    return EfficientNet(2.0,
+                        3.1,
+                        600,
+                        0.5,
+                        model_name="efficientnetb7",
+                        include_top=include_top,
+                        weights=weights,
+                        input_tensor=input_tensor,
+                        input_shape=input_shape,
+                        pooling=pooling,
+                        classes=classes,
+                        **kwargs)
 
 
 @keras_export("keras.applications.efficientnet.preprocess_input")

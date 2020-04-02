@@ -22,12 +22,10 @@ import tensorflow as tf
 class FunctionTest(tf.test.TestCase):
     def testStandardTrainingLoopInFunction(self):
         layer = tf.keras.layers.Dense(2)
-        dataset = (
-            tf.data.Dataset.from_tensors((tf.ones([784]), tf.ones([], tf.int32)))
-            .map(lambda x, y: (x, y))
-            .repeat(10)
-            .batch(32)
-        )
+        dataset = (tf.data.Dataset.from_tensors(
+            (tf.ones([784]),
+             tf.ones([],
+                     tf.int32))).map(lambda x, y: (x, y)).repeat(10).batch(32))
         optimizer = tf.keras.optimizers.Adam()
 
         @tf.function
@@ -37,9 +35,7 @@ class FunctionTest(tf.test.TestCase):
                     out = layer(x)
                     loss = tf.reduce_mean(
                         tf.nn.sparse_softmax_cross_entropy_with_logits(
-                            logits=out, labels=y
-                        )
-                    )
+                            logits=out, labels=y))
                 layer_variables = layer.trainable_variables
                 gradients = tape.gradient(loss, layer_variables)
                 optimizer.apply_gradients(zip(gradients, layer_variables))

@@ -40,15 +40,15 @@ from tensorflow.python.util.tf_export import tf_export
 @tf_export(v1=["map_fn"])
 @deprecation.deprecated_args(None, "Use fn_output_signature instead", "dtype")
 def map_fn(
-    fn,
-    elems,
-    dtype=None,
-    parallel_iterations=None,
-    back_prop=True,
-    swap_memory=False,
-    infer_shape=True,
-    name=None,
-    fn_output_signature=None,
+        fn,
+        elems,
+        dtype=None,
+        parallel_iterations=None,
+        back_prop=True,
+        swap_memory=False,
+        infer_shape=True,
+        name=None,
+        fn_output_signature=None,
 ):
     """Transforms `elems` by applying `fn` to each element unstacked on axis 0.
 
@@ -375,7 +375,9 @@ def map_fn(
 
     # Flatten the input tensors, and get the TypeSpec for each one.
     elems_flat = nest.flatten(elems)
-    elems_flat_signature = [type_spec.type_spec_from_value(e) for e in elems_flat]
+    elems_flat_signature = [
+        type_spec.type_spec_from_value(e) for e in elems_flat
+    ]
 
     def elems_unflatten(x):
         return nest.pack_sequence_as(elems, x)
@@ -385,9 +387,7 @@ def map_fn(
         # If fn_output_signature was not specified, then assume that it matches the
         # input signature.
         result_flat_signature = [
-            _most_general_compatible_type(
-                s
-            )._unbatch()  # pylint: disable=protected-access
+            _most_general_compatible_type(s)._unbatch()  # pylint: disable=protected-access
             for s in elems_flat_signature
         ]
         result_unflatten = elems_unflatten
@@ -414,14 +414,16 @@ def map_fn(
                 varscope_caching_device_was_none = True
 
         elems_flat = [
-            ops.convert_to_tensor_or_composite(t, name="elem") for t in elems_flat
+            ops.convert_to_tensor_or_composite(t, name="elem")
+            for t in elems_flat
         ]
 
         # Check that inputs are not scalars.
         elems_static_shape = elems_flat[0].shape
         if elems_static_shape.ndims is not None and elems_static_shape.ndims < 1:
             if len(elems_flat) == 1:
-                raise ValueError("elems must be a 1+ dimensional Tensor, not a scalar")
+                raise ValueError(
+                    "elems must be a 1+ dimensional Tensor, not a scalar")
             else:
                 raise ValueError(
                     "elements in elems must be 1+ dimensional Tensors, not scalars"
@@ -433,30 +435,27 @@ def map_fn(
         # Find the number of iterations, n.  (may be known statically.)
         n_static = tensor_shape.Dimension(
             tensor_shape.dimension_value(
-                elems_batchable[0].get_shape().with_rank_at_least(1)[0]
-            )
-        )
+                elems_batchable[0].get_shape().with_rank_at_least(1)[0]))
         for tensor in elems_batchable[1:]:
             n_static.merge_with(
                 tensor_shape.Dimension(
                     tensor_shape.dimension_value(
-                        tensor.get_shape().with_rank_at_least(1)[0]
-                    )
-                )
-            )
+                        tensor.get_shape().with_rank_at_least(1)[0])))
         n = n_static.value or array_ops.shape(elems_batchable[0])[0]
 
         # Convert elems to tensor array.
         # TODO(edloper): Should we set infer_shape=False for composite tensors?
         elems_batchable_ta = [
-            tensor_array_ops.TensorArray(
-                dtype=t.dtype, size=n, dynamic_size=False, infer_shape=True
-            )
+            tensor_array_ops.TensorArray(dtype=t.dtype,
+                                         size=n,
+                                         dynamic_size=False,
+                                         infer_shape=True)
             for t in elems_batchable
         ]
         # Unpack elements
         elems_batchable_ta = [
-            ta.unstack(t) for (ta, t) in zip(elems_batchable_ta, elems_batchable)
+            ta.unstack(t)
+            for (ta, t) in zip(elems_batchable_ta, elems_batchable)
         ]
 
         i = constant_op.constant(0)
@@ -464,12 +463,12 @@ def map_fn(
         # Prepare result tensor array.
         # TODO(edloper): Should we set infer_shape=False for composite tensors?
         result_batchable_dtype = _result_flat_signature_to_batchable_dtype(
-            result_flat_signature
-        )
+            result_flat_signature)
         result_batchable_ta = [
-            tensor_array_ops.TensorArray(
-                dtype=dt, size=n, dynamic_size=False, infer_shape=infer_shape
-            )
+            tensor_array_ops.TensorArray(dtype=dt,
+                                         size=n,
+                                         dynamic_size=False,
+                                         infer_shape=infer_shape)
             for dt in result_batchable_dtype
         ]
 
@@ -489,17 +488,17 @@ def map_fn(
             """
             elems_value_batchable = [ta.read(i) for ta in elems_batchable_ta]
             elems_value_flat = _elems_value_batchable_to_flat(
-                elems_value_batchable, elems_flat_signature
-            )
+                elems_value_batchable, elems_flat_signature)
             elems_value = elems_unflatten(elems_value_flat)
             result_value = fn(elems_value)
-            nest.assert_same_structure(fn_output_signature or elems, result_value)
+            nest.assert_same_structure(fn_output_signature or elems,
+                                       result_value)
             result_value_flat = nest.flatten(result_value)
             result_value_batchable = _result_value_flat_to_batchable(
-                result_value_flat, result_flat_signature
-            )
+                result_value_flat, result_flat_signature)
             tas = [
-                ta.write(i, value) for (ta, value) in zip(tas, result_value_batchable)
+                ta.write(i, value)
+                for (ta, value) in zip(tas, result_value_batchable)
             ]
             return (i + 1, tas)
 
@@ -517,15 +516,16 @@ def map_fn(
         # Update each output tensor w/ static shape info about the outer dimension.
         for r in result_batchable:
             r.set_shape(
-                tensor_shape.TensorShape(n_static).concatenate(r.get_shape()[1:])
-            )
+                tensor_shape.TensorShape(n_static).concatenate(
+                    r.get_shape()[1:]))
 
         # TODO(akshayka): Remove the in_graph_mode check once caching devices are
         # supported in Eager
         if in_graph_mode and varscope_caching_device_was_none:
             varscope.set_caching_device(None)
 
-        result_flat = _result_batchable_to_flat(result_batchable, result_flat_signature)
+        result_flat = _result_batchable_to_flat(result_batchable,
+                                                result_flat_signature)
         result = result_unflatten(result_flat)
         return result
 
@@ -543,9 +543,9 @@ def _most_general_compatible_type(spec):
         return tensor_spec.TensorSpec(None, spec.dtype)
     elif isinstance(spec, ragged_tensor.RaggedTensorSpec):
         # pylint: disable=protected-access
-        return ragged_tensor.RaggedTensorSpec(
-            None, spec._dtype, spec._ragged_rank, spec._row_splits_dtype
-        )
+        return ragged_tensor.RaggedTensorSpec(None, spec._dtype,
+                                              spec._ragged_rank,
+                                              spec._row_splits_dtype)
     elif isinstance(spec, sparse_tensor.SparseTensorSpec):
         # pylint: disable=protected-access
         return sparse_tensor.SparseTensorSpec(None, spec.dtype)
@@ -558,7 +558,7 @@ def _result_flat_signature_to_batchable_dtype(result_flat_signature):
     components = []
     for spec in result_flat_signature:
         if not isinstance(spec, type_spec.BatchableTypeSpec):
-            raise TypeError("map_fn can not generate %s outputs" % (spec,))
+            raise TypeError("map_fn can not generate %s outputs" % (spec, ))
         # pylint: disable=protected-access
         components.extend([s.dtype for s in spec._flat_tensor_specs])
     return components
@@ -570,22 +570,22 @@ def _elems_flat_to_batchable(elems_flat):
     for elems_tensor in elems_flat:
         spec = type_spec.type_spec_from_value(elems_tensor)
         if not isinstance(spec, type_spec.BatchableTypeSpec):
-            raise TypeError(
-                "map_fn can not consume %s inputs: got %r" % (spec, elems_tensor)
-            )
+            raise TypeError("map_fn can not consume %s inputs: got %r" %
+                            (spec, elems_tensor))
         # pylint: disable=protected-access
         elems_batchable.extend(spec._to_batched_tensor_list(elems_tensor))
     return elems_batchable
 
 
-def _elems_value_batchable_to_flat(elems_value_batchable, elems_flat_signature):
+def _elems_value_batchable_to_flat(elems_value_batchable,
+                                   elems_flat_signature):
     """Converts elems_value_batchable -> elems_value_flat."""
     elems_value_flat = []
     i = 0
     for spec in elems_flat_signature:
         # pylint: disable=protected-access
         spec = spec._unbatch()
-        tensor_list = elems_value_batchable[i : i + len(spec._flat_tensor_specs)]
+        tensor_list = elems_value_batchable[i:i + len(spec._flat_tensor_specs)]
         elems_value_flat.append(spec._from_compatible_tensor_list(tensor_list))
         i += len(tensor_list)
     assert i == len(elems_value_batchable)
@@ -604,12 +604,9 @@ def _result_value_flat_to_batchable(result_value_flat, result_flat_signature):
                     "Error in map_fn:\n  Expected `fn` to return a:\n    %s\n"
                     "  But it returned a:\n    %s\n    (value=%s)\n"
                     "  To fix, update the `fn_output_signature` (or `dtype`) "
-                    "argument to `map_fn`."
-                    % (r_spec, type_spec.type_spec_from_value(r_value), r_value)
-                )
-            result_value_batchable.extend(
-                r_spec._to_tensor_list(r_value)
-            )  # pylint: disable=protected-access
+                    "argument to `map_fn`." %
+                    (r_spec, type_spec.type_spec_from_value(r_value), r_value))
+            result_value_batchable.extend(r_spec._to_tensor_list(r_value))  # pylint: disable=protected-access
     return result_value_batchable
 
 
@@ -622,9 +619,7 @@ def _result_batchable_to_flat(result_batchable, result_flat_signature):
         num_tensors = len(spec._flat_tensor_specs)
         result_flat.append(
             spec._batch(None)._from_compatible_tensor_list(
-                result_batchable[i : i + num_tensors]
-            )
-        )
+                result_batchable[i:i + num_tensors]))
         i += num_tensors
     assert i == len(result_batchable)
     return result_flat
@@ -643,15 +638,15 @@ results = tf.nest.map_structure(tf.stop_gradient, tf.map_fn(fn, elems))""",
 )
 @deprecation.deprecated_args(None, "Use fn_output_signature instead", "dtype")
 def map_fn_v2(
-    fn,
-    elems,
-    dtype=None,
-    parallel_iterations=None,
-    back_prop=True,
-    swap_memory=False,
-    infer_shape=True,
-    name=None,
-    fn_output_signature=None,
+        fn,
+        elems,
+        dtype=None,
+        parallel_iterations=None,
+        back_prop=True,
+        swap_memory=False,
+        infer_shape=True,
+        name=None,
+        fn_output_signature=None,
 ):
     """Transform `elems` by applying `fn` to each element unstacked on axis 0."""
     if fn_output_signature is None:

@@ -52,7 +52,8 @@ def as_dense_shapes(shapes, classes):
     ret = nest.pack_sequence_as(
         shapes,
         [
-            tensor_shape.unknown_shape() if c is sparse_tensor.SparseTensor else shape
+            tensor_shape.unknown_shape()
+            if c is sparse_tensor.SparseTensor else shape
             for shape, c in zip(nest.flatten(shapes), nest.flatten(classes))
         ],
     )
@@ -98,8 +99,7 @@ def deserialize_sparse_tensors(tensors, types, shapes, classes):
         types,
         [
             sparse_ops.deserialize_sparse(tensor, dtype=ty, rank=shape.ndims)
-            if c is sparse_tensor.SparseTensor
-            else tensor
+            if c is sparse_tensor.SparseTensor else tensor
             for (tensor, ty, shape, c) in zip(
                 nest.flatten(tensors),
                 nest.flatten(types),
@@ -125,9 +125,8 @@ def get_classes(tensors):
     return nest.pack_sequence_as(
         tensors,
         [
-            sparse_tensor.SparseTensor
-            if isinstance(tensor, sparse_tensor.SparseTensor)
-            else ops.Tensor
+            sparse_tensor.SparseTensor if isinstance(
+                tensor, sparse_tensor.SparseTensor) else ops.Tensor
             for tensor in nest.flatten(tensors)
         ],
     )
@@ -147,8 +146,7 @@ def serialize_many_sparse_tensors(tensors):
         tensors,
         [
             sparse_ops.serialize_many_sparse(tensor, out_type=dtypes.variant)
-            if sparse_tensor.is_sparse(tensor)
-            else tensor
+            if sparse_tensor.is_sparse(tensor) else tensor
             for tensor in nest.flatten(tensors)
         ],
     )
@@ -169,8 +167,7 @@ def serialize_sparse_tensors(tensors):
         tensors,
         [
             sparse_ops.serialize_sparse(tensor, out_type=dtypes.variant)
-            if isinstance(tensor, sparse_tensor.SparseTensor)
-            else tensor
+            if isinstance(tensor, sparse_tensor.SparseTensor) else tensor
             for tensor in nest.flatten(tensors)
         ],
     )

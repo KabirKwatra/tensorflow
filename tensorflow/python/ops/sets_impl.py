@@ -23,18 +23,15 @@ from tensorflow.python.framework import sparse_tensor
 from tensorflow.python.ops import gen_set_ops
 from tensorflow.python.util.tf_export import tf_export
 
-
-_VALID_DTYPES = set(
-    [
-        dtypes.int8,
-        dtypes.int16,
-        dtypes.int32,
-        dtypes.int64,
-        dtypes.uint8,
-        dtypes.uint16,
-        dtypes.string,
-    ]
-)
+_VALID_DTYPES = set([
+    dtypes.int8,
+    dtypes.int16,
+    dtypes.int32,
+    dtypes.int64,
+    dtypes.uint8,
+    dtypes.uint16,
+    dtypes.string,
+])
 
 
 @tf_export("sets.size", v1=["sets.size", "sets.set_size"])
@@ -60,11 +57,11 @@ def set_size(a, validate_indices=True):
     if a.values.dtype.base_dtype not in _VALID_DTYPES:
         raise TypeError("Invalid dtype %s." % a.values.dtype)
     # pylint: disable=protected-access
-    return gen_set_ops.set_size(a.indices, a.values, a.dense_shape, validate_indices)
+    return gen_set_ops.set_size(a.indices, a.values, a.dense_shape,
+                                validate_indices)
 
 
 ops.NotDifferentiable("SetSize")
-
 
 ops.NotDifferentiable("DenseToDenseSetOperation")
 ops.NotDifferentiable("DenseToSparseSetOperation")
@@ -91,8 +88,7 @@ def _convert_to_tensors_or_sparse_tensors(a, b):
     if b.dtype.base_dtype != a.dtype.base_dtype:
         raise TypeError("Types don't match, %s vs %s." % (a.dtype, b.dtype))
     if isinstance(a, sparse_tensor.SparseTensor) and not isinstance(
-        b, sparse_tensor.SparseTensor
-    ):
+            b, sparse_tensor.SparseTensor):
         return b, a, True
     return a, b, False
 
@@ -137,20 +133,19 @@ def _set_operation(a, b, set_operation, validate_indices=True):
         else:
             raise ValueError(
                 "Sparse,Dense is not supported, but Dense,Sparse is. "
-                "Please flip the order of your inputs."
-            )
+                "Please flip the order of your inputs.")
     elif isinstance(b, sparse_tensor.SparseTensor):
         indices, values, shape = gen_set_ops.dense_to_sparse_set_operation(
-            a, b.indices, b.values, b.dense_shape, set_operation, validate_indices
-        )
+            a, b.indices, b.values, b.dense_shape, set_operation,
+            validate_indices)
     else:
         indices, values, shape = gen_set_ops.dense_to_dense_set_operation(
-            a, b, set_operation, validate_indices
-        )
+            a, b, set_operation, validate_indices)
     return sparse_tensor.SparseTensor(indices, values, shape)
 
 
-@tf_export("sets.intersection", v1=["sets.intersection", "sets.set_intersection"])
+@tf_export("sets.intersection",
+           v1=["sets.intersection", "sets.set_intersection"])
 def set_intersection(a, b, validate_indices=True):
     """Compute set intersection of elements in last dimension of `a` and `b`.
 

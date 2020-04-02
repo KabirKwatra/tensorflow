@@ -74,8 +74,7 @@ class WorkerServer(object):
           master_address: The address of the tf.data master server to register with.
         """
         self._server = _pywrap_server_lib.TF_DATA_NewWorkerServer(
-            0, protocol, master_address
-        )
+            0, protocol, master_address)
 
     @property
     def target(self):

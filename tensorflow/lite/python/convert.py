@@ -46,10 +46,9 @@ _quantized_inference_types = [_types_pb2.QUANTIZED_UINT8, _types_pb2.INT8]
 # and it is not post training quantization, the input quantization stats is
 # required.
 def _requires_input_stats(toco_flags):
-    return (
-        toco_flags.inference_type in _quantized_inference_types
-        or toco_flags.inference_input_type in _quantized_inference_types
-    ) and not toco_flags.post_training_quantize
+    return (toco_flags.inference_type in _quantized_inference_types
+            or toco_flags.inference_input_type in _quantized_inference_types
+            ) and not toco_flags.post_training_quantize
 
 
 # Find the toco_from_protos binary using the resource loader if using from
@@ -59,8 +58,7 @@ if lite_constants.EXPERIMENTAL_USE_TOCO_API_DIRECTLY:
     _toco_from_proto_bin = ""
 else:
     _toco_from_proto_bin = _resource_loader.get_path_to_datafile(
-        "../toco/python/toco_from_protos"
-    )
+        "../toco/python/toco_from_protos")
 
 if _toco_from_proto_bin and not _os.path.exists(_toco_from_proto_bin):
     _toco_from_proto_bin = "toco_from_protos"
@@ -127,11 +125,11 @@ def mlir_quantize(input_data_str):
 
 
 def toco_convert_protos(
-    model_flags_str,
-    toco_flags_str,
-    input_data_str,
-    debug_info_str=None,
-    enable_mlir_converter=False,
+        model_flags_str,
+        toco_flags_str,
+        input_data_str,
+        debug_info_str=None,
+        enable_mlir_converter=False,
 ):
     """Convert `input_data_str` according to model and toco parameters.
 
@@ -183,8 +181,7 @@ For example:
 Linux: export PATH=$PATH:~/.local/bin/
 Mac: export PATH=$PATH:~/Library/Python/<version#>/bin
 
-Alternative, use virtualenv."""
-        )
+Alternative, use virtualenv.""")
     # Windows and TemporaryFile are not that useful together,
     # since you cannot have two readers/writers. So we have to
     # make the temporaries and close and delete them explicitly.
@@ -197,14 +194,11 @@ Alternative, use virtualenv."""
     try:
         # Build all input files
         with _tempfile.NamedTemporaryFile(
-            delete=False
-        ) as fp_toco, _tempfile.NamedTemporaryFile(
-            delete=False
-        ) as fp_model, _tempfile.NamedTemporaryFile(
-            delete=False
-        ) as fp_input, _tempfile.NamedTemporaryFile(
-            delete=False
-        ) as fp_debug:
+                delete=False) as fp_toco, _tempfile.NamedTemporaryFile(
+                    delete=False) as fp_model, _tempfile.NamedTemporaryFile(
+                        delete=False
+                    ) as fp_input, _tempfile.NamedTemporaryFile(
+                        delete=False) as fp_debug:
             toco_filename = fp_toco.name
             input_filename = fp_input.name
             model_filename = fp_model.name
@@ -259,14 +253,15 @@ Alternative, use virtualenv."""
         else:
             stdout = _try_convert_to_unicode(stdout)
             stderr = _try_convert_to_unicode(stderr)
-            raise ConverterError("See console for info.\n%s\n%s\n" % (stdout, stderr))
+            raise ConverterError("See console for info.\n%s\n%s\n" %
+                                 (stdout, stderr))
     finally:
         # Must manually cleanup files.
         for filename in [
-            toco_filename,
-            input_filename,
-            model_filename,
-            output_filename,
+                toco_filename,
+                input_filename,
+                model_filename,
+                output_filename,
         ]:
             try:
                 _os.unlink(filename)
@@ -275,28 +270,28 @@ Alternative, use virtualenv."""
 
 
 def build_toco_convert_protos(
-    input_tensors,
-    output_tensors,
-    inference_type=lite_constants.FLOAT,
-    inference_input_type=None,
-    input_format=lite_constants.TENSORFLOW_GRAPHDEF,
-    input_shapes=None,
-    output_format=lite_constants.TFLITE,
-    quantized_input_stats=None,
-    default_ranges_stats=None,
-    drop_control_dependency=True,
-    reorder_across_fake_quant=False,
-    allow_custom_ops=False,
-    custom_opdefs=None,
-    change_concat_input_ranges=False,
-    post_training_quantize=False,
-    quantize_to_float16=False,
-    dump_graphviz_dir=None,
-    dump_graphviz_video=False,
-    target_ops=None,
-    allow_nonexistent_arrays=False,
-    debug_info=None,
-    conversion_summary_dir=None,
+        input_tensors,
+        output_tensors,
+        inference_type=lite_constants.FLOAT,
+        inference_input_type=None,
+        input_format=lite_constants.TENSORFLOW_GRAPHDEF,
+        input_shapes=None,
+        output_format=lite_constants.TFLITE,
+        quantized_input_stats=None,
+        default_ranges_stats=None,
+        drop_control_dependency=True,
+        reorder_across_fake_quant=False,
+        allow_custom_ops=False,
+        custom_opdefs=None,
+        change_concat_input_ranges=False,
+        post_training_quantize=False,
+        quantize_to_float16=False,
+        dump_graphviz_dir=None,
+        dump_graphviz_video=False,
+        target_ops=None,
+        allow_nonexistent_arrays=False,
+        debug_info=None,
+        conversion_summary_dir=None,
 ):
     """Builds protocol buffers describing a conversion of a model using TOCO.
 
@@ -381,8 +376,7 @@ def build_toco_convert_protos(
     toco.inference_type = util.convert_dtype_to_tflite_type(inference_type)
     if inference_input_type:
         toco.inference_input_type = util.convert_dtype_to_tflite_type(
-            inference_input_type
-        )
+            inference_input_type)
     else:
         toco.inference_input_type = toco.inference_type
     toco.drop_control_dependency = drop_control_dependency
@@ -401,7 +395,8 @@ def build_toco_convert_protos(
     if conversion_summary_dir:
         toco.conversion_summary_dir = conversion_summary_dir
     if target_ops:
-        if set(target_ops) == set([OpsSet.TFLITE_BUILTINS, OpsSet.SELECT_TF_OPS]):
+        if set(target_ops) == set(
+            [OpsSet.TFLITE_BUILTINS, OpsSet.SELECT_TF_OPS]):
             toco.enable_select_tf_ops = True
         elif set(target_ops) == set([OpsSet.SELECT_TF_OPS]):
             toco.enable_select_tf_ops = True
@@ -412,10 +407,12 @@ def build_toco_convert_protos(
     for idx, input_tensor in enumerate(input_tensors):
         input_array = model.input_arrays.add()
         input_array.name = util.get_tensor_name(input_tensor)
-        input_array.data_type = util.convert_dtype_to_tflite_type(input_tensor.dtype)
+        input_array.data_type = util.convert_dtype_to_tflite_type(
+            input_tensor.dtype)
 
         if _requires_input_stats(toco) and quantized_input_stats:
-            input_array.mean_value, input_array.std_value = quantized_input_stats[idx]
+            input_array.mean_value, input_array.std_value = quantized_input_stats[
+                idx]
 
         if input_shapes is None:
             shape = input_tensor.shape
@@ -425,9 +422,8 @@ def build_toco_convert_protos(
         # Create shapes with -1 for unknown dimensions.
         dims = []
         for dim in shape:
-            if dim is None or (
-                isinstance(dim, tensor_shape.Dimension) and dim.value is None
-            ):
+            if dim is None or (isinstance(dim, tensor_shape.Dimension)
+                               and dim.value is None):
                 dims.append(-1)
             else:
                 dims.append(int(dim))
@@ -441,14 +437,8 @@ def build_toco_convert_protos(
     return model, toco, debug_info
 
 
-def toco_convert_graph_def(
-    input_data,
-    input_arrays_with_shape,
-    output_arrays,
-    enable_mlir_converter,
-    *args,
-    **kwargs
-):
+def toco_convert_graph_def(input_data, input_arrays_with_shape, output_arrays,
+                           enable_mlir_converter, *args, **kwargs):
     """"Convert a model using TOCO.
 
     This function is used to convert GraphDefs that cannot be loaded into
@@ -477,23 +467,21 @@ def toco_convert_graph_def(
     Raises:
       Defined in `build_toco_convert_protos`.
     """
-    model_flags, toco_flags, _ = build_toco_convert_protos(
-        input_tensors=[], output_tensors=[], *args, **kwargs
-    )
+    model_flags, toco_flags, _ = build_toco_convert_protos(input_tensors=[],
+                                                           output_tensors=[],
+                                                           *args,
+                                                           **kwargs)
 
     for idx, (name, shape) in enumerate(input_arrays_with_shape):
         input_array = model_flags.input_arrays.add()
         if _requires_input_stats(toco_flags):
             if ("quantized_input_stats" not in kwargs) or (
-                not kwargs["quantized_input_stats"]
-            ):
+                    not kwargs["quantized_input_stats"]):
                 raise ValueError(
                     "std_dev and mean must be defined when inference_type "
-                    "or inference_input_type is QUANTIZED_UINT8 or INT8."
-                )
+                    "or inference_input_type is QUANTIZED_UINT8 or INT8.")
             input_array.mean_value, input_array.std_value = kwargs[
-                "quantized_input_stats"
-            ][idx]
+                "quantized_input_stats"][idx]
         input_array.name = name
         input_array.shape.dims.extend(list(map(int, shape)))
 
@@ -509,9 +497,8 @@ def toco_convert_graph_def(
     return data
 
 
-def toco_convert_impl(
-    input_data, input_tensors, output_tensors, enable_mlir_converter, *args, **kwargs
-):
+def toco_convert_impl(input_data, input_tensors, output_tensors,
+                      enable_mlir_converter, *args, **kwargs):
     """"Convert a model using TOCO.
 
     Typically this function is used to convert from TensorFlow GraphDef to TFLite.
@@ -536,8 +523,7 @@ def toco_convert_impl(
       Defined in `build_toco_convert_protos`.
     """
     model_flags, toco_flags, debug_info = build_toco_convert_protos(
-        input_tensors, output_tensors, *args, **kwargs
-    )
+        input_tensors, output_tensors, *args, **kwargs)
     debug_info_str = debug_info.SerializeToString() if debug_info else None
     data = toco_convert_protos(
         model_flags.SerializeToString(),
@@ -575,11 +561,5 @@ def toco_convert(input_data, input_tensors, output_tensors, *args, **kwargs):
       Defined in `build_toco_convert_protos`.
     """
     enable_mlir_converter = kwargs.get("enable_mlir_converter", False)
-    return toco_convert_impl(
-        input_data,
-        input_tensors,
-        output_tensors,
-        enable_mlir_converter,
-        *args,
-        **kwargs
-    )
+    return toco_convert_impl(input_data, input_tensors, output_tensors,
+                             enable_mlir_converter, *args, **kwargs)
