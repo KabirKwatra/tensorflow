@@ -22,18 +22,18 @@ namespace delegates {
 namespace coreml {
 // Builder for Softmax op in CoreML.
 class SoftmaxOpBuilder : public OpBuilder {
- public:
-  explicit SoftmaxOpBuilder(GraphBuilder* graph_builder)
-      : OpBuilder(graph_builder) {}
-  const char* DebugName() override;
+public:
+    explicit SoftmaxOpBuilder(GraphBuilder* graph_builder)
+        : OpBuilder(graph_builder) {}
+    const char* DebugName() override;
 
-  CoreML::Specification::NeuralNetworkLayer* Build() override;
+    CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                              TfLiteContext* context) override;
+    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                                TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 };
 
 }  // namespace coreml

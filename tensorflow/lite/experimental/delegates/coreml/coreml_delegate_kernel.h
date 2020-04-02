@@ -28,38 +28,38 @@ namespace coreml {
 // It is abstracted as a single kernel node in the main TFLite graph and
 // implements Init/Prepare/Invoke as TFLite kernel nodes.
 class CoreMlDelegateKernel {
- public:
-  // Initialize the delegated graph and add required nodes.
-  TfLiteStatus Init(TfLiteContext* context, const TfLiteDelegateParams* params);
+public:
+    // Initialize the delegated graph and add required nodes.
+    TfLiteStatus Init(TfLiteContext* context, const TfLiteDelegateParams* params);
 
-  // Any preparation work needed for the delegated graph.
-  TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node);
+    // Any preparation work needed for the delegated graph.
+    TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node);
 
-  // Allocates delegated tensordefs for graph I/O & execute it.
-  TfLiteStatus Invoke(TfLiteContext* context, TfLiteNode* node);
+    // Allocates delegated tensordefs for graph I/O & execute it.
+    TfLiteStatus Invoke(TfLiteContext* context, TfLiteNode* node);
 
-  ~CoreMlDelegateKernel();
+    ~CoreMlDelegateKernel();
 
- private:
-  // Builds the ML Model protocol buffer
-  TfLiteStatus BuildModel(TfLiteContext* context,
-                          const TfLiteDelegateParams* params);
+private:
+    // Builds the ML Model protocol buffer
+    TfLiteStatus BuildModel(TfLiteContext* context,
+                            const TfLiteDelegateParams* params);
 
-  // Adds the output tensors to the model generated.
-  void AddOutputTensors(const TfLiteIntArray* output_tensors,
-                        TfLiteContext* context);
+    // Adds the output tensors to the model generated.
+    void AddOutputTensors(const TfLiteIntArray* output_tensors,
+                          TfLiteContext* context);
 
-  // Adds the input tensors to the model generated.
-  void AddInputTensors(const TfLiteIntArray* output_tensors,
-                       TfLiteContext* context);
+    // Adds the input tensors to the model generated.
+    void AddInputTensors(const TfLiteIntArray* output_tensors,
+                         TfLiteContext* context);
 
-  std::unique_ptr<delegates::coreml::GraphBuilder> builder_;
-  std::unique_ptr<CoreML::Specification::Model> model_;
-  ::CoreMlExecutor* executor_;
+    std::unique_ptr<delegates::coreml::GraphBuilder> builder_;
+    std::unique_ptr<CoreML::Specification::Model> model_;
+    ::CoreMlExecutor* executor_;
 
-  std::vector<int> input_tensor_ids_;
-  std::vector<TensorData> inputs_;
-  std::vector<TensorData> outputs_;
+    std::vector<int> input_tensor_ids_;
+    std::vector<TensorData> inputs_;
+    std::vector<TensorData> outputs_;
 };
 
 }  // namespace coreml

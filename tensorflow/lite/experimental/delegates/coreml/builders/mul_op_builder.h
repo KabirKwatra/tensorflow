@@ -22,26 +22,26 @@ namespace delegates {
 namespace coreml {
 // Builder for Mul op in CoreML.
 class MulOpBuilder : public OpBuilder {
- public:
-  explicit MulOpBuilder(GraphBuilder* graph_builder)
-      : OpBuilder(graph_builder) {}
-  const char* DebugName() override;
+public:
+    explicit MulOpBuilder(GraphBuilder* graph_builder)
+        : OpBuilder(graph_builder) {}
+    const char* DebugName() override;
 
-  CoreML::Specification::NeuralNetworkLayer* Build() override;
+    CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-  TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
+    TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
 
-  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                              TfLiteContext* context) override;
+    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                                TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 
-  void SetAlpha(float alpha);
+    void SetAlpha(float alpha);
 
- private:
-  // Used for unary mul
-  float alpha_ = 1.0f;
+private:
+    // Used for unary mul
+    float alpha_ = 1.0f;
 };
 
 }  // namespace coreml

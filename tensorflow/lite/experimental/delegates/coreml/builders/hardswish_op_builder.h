@@ -22,20 +22,20 @@ namespace delegates {
 namespace coreml {
 // hswish(x) = x * ReLU6(x + 3) / 6
 class HardSwishOpBuilder : public OpBuilder {
- public:
-  explicit HardSwishOpBuilder(GraphBuilder* graph_builder)
-      : OpBuilder(graph_builder) {}
-  const char* DebugName() override;
+public:
+    explicit HardSwishOpBuilder(GraphBuilder* graph_builder)
+        : OpBuilder(graph_builder) {}
+    const char* DebugName() override;
 
-  CoreML::Specification::NeuralNetworkLayer* Build() override;
+    CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-  TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
+    TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
 
-  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                              TfLiteContext* context) override;
+    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                                TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 };
 
 }  // namespace coreml

@@ -24,65 +24,65 @@ namespace tflite {
 namespace delegates {
 namespace coreml {
 const char* HardSwishOpBuilder::DebugName() {
-  if (!str_debug_name_[0])
-    GetDebugName("HardSwishOpBuilder", node_id_, str_debug_name_);
-  return str_debug_name_;
+    if (!str_debug_name_[0])
+        GetDebugName("HardSwishOpBuilder", node_id_, str_debug_name_);
+    return str_debug_name_;
 }
 
 CoreML::Specification::NeuralNetworkLayer* HardSwishOpBuilder::Build() {
-  layer_->set_name(DebugName());
-  layer_->mutable_multiply()->set_alpha(1.0f / 6.0f);
+    layer_->set_name(DebugName());
+    layer_->mutable_multiply()->set_alpha(1.0f / 6.0f);
 
-  return layer_.release();
+    return layer_.release();
 }
 
 TfLiteStatus HardSwishOpBuilder::PopulateSubgraph(TfLiteContext* context) {
-  // hswish(x) = (x/6) * ReLU6(x+3). main layer_ contains the first part, x/6.
-  // ReLU6(x +3) constructed as add op with fused ReLU6 activation.
-  AddOpBuilder* add_builder = reinterpret_cast<AddOpBuilder*>(
-      graph_builder_->AddBuilder(CreateAddOpBuilder, nullptr));
-  TfLiteAddParams add_param{kTfLiteActRelu6};
-  add_builder->SetBuiltinData(&add_param);
-  add_builder->SetAlpha(3.0f);
-  add_builder->AddInput(layer_->input(0));
-  add_builder->PopulateSubgraph(context);
+    // hswish(x) = (x/6) * ReLU6(x+3). main layer_ contains the first part, x/6.
+    // ReLU6(x +3) constructed as add op with fused ReLU6 activation.
+    AddOpBuilder* add_builder = reinterpret_cast<AddOpBuilder*>(
+                                    graph_builder_->AddBuilder(CreateAddOpBuilder, nullptr));
+    TfLiteAddParams add_param{kTfLiteActRelu6};
+    add_builder->SetBuiltinData(&add_param);
+    add_builder->SetAlpha(3.0f);
+    add_builder->AddInput(layer_->input(0));
+    add_builder->PopulateSubgraph(context);
 
-  // multiplies (x/6) from main layer_ and ReLU6(x+3) from the above code.
-  MulOpBuilder* mul_builder = reinterpret_cast<MulOpBuilder*>(
-      graph_builder_->AddBuilder(CreateMulOpBuilder, nullptr));
-  mul_builder->AddInput(AddOutput());
-  mul_builder->AddInput(add_builder->GetOutput(context));
-  builder_output_ = mul_builder->AddOutput();
-  return kTfLiteOk;
+    // multiplies (x/6) from main layer_ and ReLU6(x+3) from the above code.
+    MulOpBuilder* mul_builder = reinterpret_cast<MulOpBuilder*>(
+                                    graph_builder_->AddBuilder(CreateMulOpBuilder, nullptr));
+    mul_builder->AddInput(AddOutput());
+    mul_builder->AddInput(add_builder->GetOutput(context));
+    builder_output_ = mul_builder->AddOutput();
+    return kTfLiteOk;
 }
 
 TfLiteStatus HardSwishOpBuilder::RegisterInputs(const TfLiteIntArray* inputs,
-                                                TfLiteContext* context) {
-  if (inputs->size != 1) {
-    TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to hardswish!.");
-    return kTfLiteError;
-  }
-  AddInput(inputs->data[0]);
-  return kTfLiteOk;
+        TfLiteContext* context) {
+    if (inputs->size != 1) {
+        TF_LITE_KERNEL_LOG(context, "Wrong # of inputs to hardswish!.");
+        return kTfLiteError;
+    }
+    AddInput(inputs->data[0]);
+    return kTfLiteOk;
 }
 
 TfLiteStatus HardSwishOpBuilder::RegisterOutputs(const TfLiteIntArray* outputs,
-                                                 TfLiteContext* context) {
-  if (outputs->size != 1) {
-    TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to hardswish!.");
-    return kTfLiteError;
-  }
-  TensorID output_tensor = GetOutput(context);
-  if (output_tensor.NodeID() == -1) {
-    TF_LITE_KERNEL_LOG(context, "Failed to build output tensor.");
-    return kTfLiteError;
-  }
-  graph_builder_->AddTensorWithID(outputs->data[0], output_tensor);
-  return kTfLiteOk;
+        TfLiteContext* context) {
+    if (outputs->size != 1) {
+        TF_LITE_KERNEL_LOG(context, "Wrong # of outputs to hardswish!.");
+        return kTfLiteError;
+    }
+    TensorID output_tensor = GetOutput(context);
+    if (output_tensor.NodeID() == -1) {
+        TF_LITE_KERNEL_LOG(context, "Failed to build output tensor.");
+        return kTfLiteError;
+    }
+    graph_builder_->AddTensorWithID(outputs->data[0], output_tensor);
+    return kTfLiteOk;
 }
 
 OpBuilder* CreateHardSwishOpBuilder(GraphBuilder* graph_builder) {
-  return new HardSwishOpBuilder(graph_builder);
+    return new HardSwishOpBuilder(graph_builder);
 }
 }  // namespace coreml
 }  // namespace delegates

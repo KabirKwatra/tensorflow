@@ -24,21 +24,23 @@ namespace tflite {
 namespace delegates {
 namespace coreml {
 class SingleOpModelWithCoreMlDelegate : public tflite::SingleOpModel {
- public:
-  SingleOpModelWithCoreMlDelegate() : delegate_(nullptr, [](TfLiteDelegate*) {}) {}
+public:
+    SingleOpModelWithCoreMlDelegate() : delegate_(nullptr, [](TfLiteDelegate*) {}) {}
 
-  static const char kDelegateName[];
+    static const char kDelegateName[];
 
-  void ApplyDelegateAndInvoke();
+    void ApplyDelegateAndInvoke();
 
-  tflite::Interpreter* interpreter() { return interpreter_.get(); }
+    tflite::Interpreter* interpreter() {
+        return interpreter_.get();
+    }
 
- protected:
-  using SingleOpModel::builder_;
+protected:
+    using SingleOpModel::builder_;
 
- private:
-  tflite::Interpreter::TfLiteDelegatePtr delegate_;
-  TfLiteCoreMlDelegateOptions params_ = {0};
+private:
+    tflite::Interpreter::TfLiteDelegatePtr delegate_;
+    TfLiteCoreMlDelegateOptions params_ = {0};
 };
 
 }  // namespace coreml

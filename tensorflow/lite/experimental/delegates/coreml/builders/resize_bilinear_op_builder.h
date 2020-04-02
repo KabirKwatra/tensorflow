@@ -23,23 +23,23 @@ namespace delegates {
 namespace coreml {
 
 class ResizeBilinearOpBuilder : public OpBuilder {
- public:
-  explicit ResizeBilinearOpBuilder(GraphBuilder* graph_builder)
-      : OpBuilder(graph_builder) {}
+public:
+    explicit ResizeBilinearOpBuilder(GraphBuilder* graph_builder)
+        : OpBuilder(graph_builder) {}
 
-  const char* DebugName() override;
+    const char* DebugName() override;
 
-  CoreML::Specification::NeuralNetworkLayer* Build() override;
+    CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                              TfLiteContext* context) override;
+    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                                TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 
- private:
-  int height_;
-  int width_;
+private:
+    int height_;
+    int width_;
 };
 
 }  // namespace coreml

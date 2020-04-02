@@ -21,15 +21,17 @@ namespace coreml {
 const char SingleOpModelWithCoreMlDelegate::kDelegateName[] = "TfLiteCoreMlDelegate";
 
 void SingleOpModelWithCoreMlDelegate::ApplyDelegateAndInvoke() {
-  auto* delegate_ptr = TfLiteCoreMlDelegateCreate(&params_);
-  ASSERT_TRUE(delegate_ptr != nullptr);
-  delegate_ = tflite::Interpreter::TfLiteDelegatePtr(
-      delegate_ptr, [](TfLiteDelegate* delegate) { TfLiteCoreMlDelegateDelete(delegate); });
-  // Add delegate.
-  // TODO(karimnosseir): This doesn't actually make the test fail, switch to something else.
-  ASSERT_TRUE(interpreter_->ModifyGraphWithDelegate(delegate_.get()) != kTfLiteError);
+    auto* delegate_ptr = TfLiteCoreMlDelegateCreate(&params_);
+    ASSERT_TRUE(delegate_ptr != nullptr);
+    delegate_ = tflite::Interpreter::TfLiteDelegatePtr(
+    delegate_ptr, [](TfLiteDelegate* delegate) {
+        TfLiteCoreMlDelegateDelete(delegate);
+    });
+    // Add delegate.
+    // TODO(karimnosseir): This doesn't actually make the test fail, switch to something else.
+    ASSERT_TRUE(interpreter_->ModifyGraphWithDelegate(delegate_.get()) != kTfLiteError);
 
-  Invoke();
+    Invoke();
 }
 
 }  // namespace coreml
@@ -38,22 +40,22 @@ void SingleOpModelWithCoreMlDelegate::ApplyDelegateAndInvoke() {
 
 @implementation BaseOpTest
 - (void)validateInterpreter:(tflite::Interpreter*)interpreter {
-  // Make sure we have valid interpreter.
-  XCTAssertTrue(interpreter != nullptr);
-  // Make sure graph has one Op which is the delegate node.
-  XCTAssertEqual(interpreter->execution_plan().size(), 1);
-  const int node_index = interpreter->execution_plan()[0];
-  const auto* node_and_reg = interpreter->node_and_registration(node_index);
-  XCTAssertTrue(node_and_reg != nullptr);
-  XCTAssertTrue(node_and_reg->second.custom_name != nullptr);
-  XCTAssertTrue(
-      node_and_reg->second.custom_name ==
-      std::string(tflite::delegates::coreml::SingleOpModelWithCoreMlDelegate::kDelegateName));
+    // Make sure we have valid interpreter.
+    XCTAssertTrue(interpreter != nullptr);
+    // Make sure graph has one Op which is the delegate node.
+    XCTAssertEqual(interpreter->execution_plan().size(), 1);
+    const int node_index = interpreter->execution_plan()[0];
+    const auto* node_and_reg = interpreter->node_and_registration(node_index);
+    XCTAssertTrue(node_and_reg != nullptr);
+    XCTAssertTrue(node_and_reg->second.custom_name != nullptr);
+    XCTAssertTrue(
+        node_and_reg->second.custom_name ==
+        std::string(tflite::delegates::coreml::SingleOpModelWithCoreMlDelegate::kDelegateName));
 }
 
 - (void)invokeAndValidate {
-  _model->ApplyDelegateAndInvoke();
-  [self validateInterpreter:_model->interpreter()];
+    _model->ApplyDelegateAndInvoke();
+    [self validateInterpreter:_model->interpreter()];
 }
 
 @end

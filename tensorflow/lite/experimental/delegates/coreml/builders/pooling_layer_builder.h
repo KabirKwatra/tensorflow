@@ -23,24 +23,24 @@ namespace delegates {
 namespace coreml {
 
 class PoolingLayerBuilder : public OpBuilder {
- public:
-  explicit PoolingLayerBuilder(GraphBuilder* graph_builder,
-                               TfLiteBuiltinOperator pooling_type)
-      : OpBuilder(graph_builder), pooling_type_(pooling_type) {}
+public:
+    explicit PoolingLayerBuilder(GraphBuilder* graph_builder,
+                                 TfLiteBuiltinOperator pooling_type)
+        : OpBuilder(graph_builder), pooling_type_(pooling_type) {}
 
-  const char* DebugName() override;
+    const char* DebugName() override;
 
-  CoreML::Specification::NeuralNetworkLayer* Build() override;
+    CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                              TfLiteContext* context) override;
+    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                                TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 
- private:
-  // Should be one of pooling types.
-  TfLiteBuiltinOperator pooling_type_;
+private:
+    // Should be one of pooling types.
+    TfLiteBuiltinOperator pooling_type_;
 };
 
 }  // namespace coreml

@@ -22,26 +22,26 @@ namespace delegates {
 namespace coreml {
 // Builder for Add op in CoreML.
 class AddOpBuilder : public OpBuilder {
- public:
-  explicit AddOpBuilder(GraphBuilder* graph_builder)
-      : OpBuilder(graph_builder) {}
-  const char* DebugName() override;
+public:
+    explicit AddOpBuilder(GraphBuilder* graph_builder)
+        : OpBuilder(graph_builder) {}
+    const char* DebugName() override;
 
-  CoreML::Specification::NeuralNetworkLayer* Build() override;
+    CoreML::Specification::NeuralNetworkLayer* Build() override;
 
-  TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
+    TfLiteStatus PopulateSubgraph(TfLiteContext* context) override;
 
-  TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
-                              TfLiteContext* context) override;
+    TfLiteStatus RegisterInputs(const TfLiteIntArray* inputs,
+                                TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 
-  void SetAlpha(float alpha);
+    void SetAlpha(float alpha);
 
- private:
-  // Used for unary add
-  float alpha_ = 0.0f;
+private:
+    // Used for unary add
+    float alpha_ = 0.0f;
 };
 
 }  // namespace coreml
