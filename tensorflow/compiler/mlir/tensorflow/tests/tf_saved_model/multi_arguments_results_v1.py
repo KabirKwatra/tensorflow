@@ -64,29 +64,23 @@ def Test():
     tensor_info_t = tf.compat.v1.saved_model.utils.build_tensor_info(t)
 
     return {
-        'key': (tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
-            inputs={
-                'x': tensor_info_x,
-                'y': tensor_info_y
-            },
-            outputs={
-                's': tensor_info_s,
-                't': tensor_info_t
-            },
-            method_name='some_function')),
-        'key2': (tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
-            inputs={
-                'a': tensor_info_y,
-                'b': tensor_info_x,
-            },
-            outputs={
-                'c': tensor_info_t,
-                'd': tensor_info_s,
-            },
-            method_name='reverse_arguments'))
+        "key": (
+            tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
+                inputs={"x": tensor_info_x, "y": tensor_info_y},
+                outputs={"s": tensor_info_s, "t": tensor_info_t},
+                method_name="some_function",
+            )
+        ),
+        "key2": (
+            tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
+                inputs={"a": tensor_info_y, "b": tensor_info_x,},
+                outputs={"c": tensor_info_t, "d": tensor_info_s,},
+                method_name="reverse_arguments",
+            )
+        ),
     }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     common_v1.set_tf_options()
     common_v1.do_test(Test())
