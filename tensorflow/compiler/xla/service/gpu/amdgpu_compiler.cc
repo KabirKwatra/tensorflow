@@ -46,26 +46,26 @@ namespace {
 // AMDGPUCompiler::Compile will return an error when the wanted rocdl file
 // doesn't exist in the folder this function returns.
 string GetROCDLDir(const HloModuleConfig& config) {
-    std::vector<string> potential_rocdl_dirs;
-    const string datadir = config.debug_options().xla_gpu_cuda_data_dir();
-    if (!datadir.empty()) {
-        potential_rocdl_dirs.push_back(datadir);
-    }
-    potential_rocdl_dirs.push_back(tensorflow::RocdlRoot());
+  std::vector<string> potential_rocdl_dirs;
+  const string datadir = config.debug_options().xla_gpu_cuda_data_dir();
+  if (!datadir.empty()) {
+    potential_rocdl_dirs.push_back(datadir);
+  }
+  potential_rocdl_dirs.push_back(tensorflow::RocdlRoot());
 
-    // Tries all potential ROCDL directories in the order they are inserted.
-    // Returns the first directory that exists in the file system.
-    for (const string& potential_rocdl_dir : potential_rocdl_dirs) {
-        if (tensorflow::Env::Default()->IsDirectory(potential_rocdl_dir).ok()) {
-            VLOG(2) << "Found ROCm-Device-Libs dir " << potential_rocdl_dir;
-            return potential_rocdl_dir;
-        }
-        VLOG(2) << "Unable to find potential ROCm-Device-Libs dir "
-                << potential_rocdl_dir;
+  // Tries all potential ROCDL directories in the order they are inserted.
+  // Returns the first directory that exists in the file system.
+  for (const string& potential_rocdl_dir : potential_rocdl_dirs) {
+    if (tensorflow::Env::Default()->IsDirectory(potential_rocdl_dir).ok()) {
+      VLOG(2) << "Found ROCm-Device-Libs dir " << potential_rocdl_dir;
+      return potential_rocdl_dir;
     }
+    VLOG(2) << "Unable to find potential ROCm-Device-Libs dir "
+            << potential_rocdl_dir;
+  }
 
-    // Last resort: maybe in the current folder.
-    return ".";
+  // Last resort: maybe in the current folder.
+  return ".";
 }
 
 }  // namespace
@@ -73,19 +73,19 @@ string GetROCDLDir(const HloModuleConfig& config) {
 Status AMDGPUCompiler::OptimizeHloConvolutionCanonicalization(
     HloModule* hlo_module, se::StreamExecutor* stream_exec,
     se::DeviceMemoryAllocator* device_allocator) {
-    // Convert convolutions into CustomCalls to MIOpen, then canonicalize them
-    // (PadInsertion).
-    HloPassPipeline pipeline("conv_canonicalization");
-    pipeline.AddInvariantCheckerDebug<HloVerifier>(
-        /*layout_sensitive=*/false,
-        /*allow_mixed_precision=*/false);
-    pipeline.AddPass<GpuConvRewriter>();
-    pipeline.AddPass<GpuConvPaddingLegalization>();
+  // Convert convolutions into CustomCalls to MIOpen, then canonicalize them
+  // (PadInsertion).
+  HloPassPipeline pipeline("conv_canonicalization");
+  pipeline.AddInvariantCheckerDebug<HloVerifier>(
+      /*layout_sensitive=*/false,
+      /*allow_mixed_precision=*/false);
+  pipeline.AddPass<GpuConvRewriter>();
+  pipeline.AddPass<GpuConvPaddingLegalization>();
 
-    pipeline.AddPass<HloConstantFolding>();
-    TF_RETURN_IF_ERROR(pipeline.Run(hlo_module).status());
+  pipeline.AddPass<HloConstantFolding>();
+  TF_RETURN_IF_ERROR(pipeline.Run(hlo_module).status());
 
-    return Status::OK();
+  return Status::OK();
 }
 
 AMDGPUCompiler::AMDGPUCompiler()
@@ -93,15 +93,15 @@ AMDGPUCompiler::AMDGPUCompiler()
                   amdgpu::kDataLayout) {}
 
 GpuVersion AMDGPUCompiler::GetGpuVersion(se::StreamExecutor* stream_exec) {
-    int isa_version = 0;
-    if (!stream_exec->GetDeviceDescription().rocm_amdgpu_isa_version(
-                &isa_version)) {
-        LOG(WARNING)
-                << "Couldn't get AMDGPU ISA version for device; assuming gfx803.";
-        isa_version = 803;
-    }
+  int isa_version = 0;
+  if (!stream_exec->GetDeviceDescription().rocm_amdgpu_isa_version(
+          &isa_version)) {
+    LOG(WARNING)
+        << "Couldn't get AMDGPU ISA version for device; assuming gfx803.";
+    isa_version = 803;
+  }
 
-    return isa_version;
+  return isa_version;
 }
 
 StatusOr<std::pair<std::string, std::vector<uint8>>>
@@ -109,27 +109,27 @@ AMDGPUCompiler::CompileTargetBinary(const HloModule* module,
                                     llvm::Module* llvm_module,
                                     GpuVersion gpu_version,
                                     se::StreamExecutor* stream_exec) {
-    if (rocdl_dir_.empty()) {
-        // Compute rocdl_dir_ just once and cache it in this member.
-        rocdl_dir_ = GetROCDLDir(module->config());
-    }
+  if (rocdl_dir_.empty()) {
+    // Compute rocdl_dir_ just once and cache it in this member.
+    rocdl_dir_ = GetROCDLDir(module->config());
+  }
 
-    std::vector<uint8> hsaco;
-    {
-        XLA_SCOPED_LOGGING_TIMER(
-            "AMDGPUCompiler::CompileTargetBinary - CompileToHsaco");
-        TF_ASSIGN_OR_RETURN(hsaco,
-                            amdgpu::CompileToHsaco(llvm_module, gpu_version,
-                                    module->config(), rocdl_dir_));
-    }
+  std::vector<uint8> hsaco;
+  {
+    XLA_SCOPED_LOGGING_TIMER(
+        "AMDGPUCompiler::CompileTargetBinary - CompileToHsaco");
+    TF_ASSIGN_OR_RETURN(hsaco,
+                        amdgpu::CompileToHsaco(llvm_module, gpu_version,
+                                               module->config(), rocdl_dir_));
+  }
 
-    llvm_ir::DumpIrIfEnabled(*module, *llvm_module, /*optimized=*/false);
+  llvm_ir::DumpIrIfEnabled(*module, *llvm_module, /*optimized=*/false);
 
-    if (user_post_optimization_hook_) {
-        user_post_optimization_hook_(*llvm_module);
-    }
+  if (user_post_optimization_hook_) {
+    user_post_optimization_hook_(*llvm_module);
+  }
 
-    return std::pair<std::string, std::vector<uint8>>("", std::move(hsaco));
+  return std::pair<std::string, std::vector<uint8>>("", std::move(hsaco));
 }
 
 }  // namespace gpu
