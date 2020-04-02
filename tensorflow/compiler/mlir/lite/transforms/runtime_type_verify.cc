@@ -25,26 +25,26 @@ namespace {
 // This pass verifies that the operands and results types are supported by
 // TFLite runtime.
 class RuntimeTypeVerifyPass : public mlir::FunctionPass<RuntimeTypeVerifyPass> {
- public:
-  explicit RuntimeTypeVerifyPass() {}
+public:
+    explicit RuntimeTypeVerifyPass() {}
 
- private:
-  void runOnFunction() override;
+private:
+    void runOnFunction() override;
 };
 
 void RuntimeTypeVerifyPass::runOnFunction() {
-  getFunction().walk([&](TflRuntimeVerifyOpInterface op) {
-    if (failed(op.VerifyTflRuntimeTypes(
-            op.getOperation(),
-            /*failure_on_operand_type_mismatch=*/true)))
-      signalPassFailure();
-  });
+    getFunction().walk([&](TflRuntimeVerifyOpInterface op) {
+        if (failed(op.VerifyTflRuntimeTypes(
+                       op.getOperation(),
+                       /*failure_on_operand_type_mismatch=*/true)))
+            signalPassFailure();
+    });
 }
 }  // namespace
 
 // Verifies runtime supports types used.
 std::unique_ptr<OpPassBase<FuncOp>> CreateRuntimeTypeVerifyPass() {
-  return std::make_unique<RuntimeTypeVerifyPass>();
+    return std::make_unique<RuntimeTypeVerifyPass>();
 }
 
 static PassRegistration<RuntimeTypeVerifyPass> pass(
