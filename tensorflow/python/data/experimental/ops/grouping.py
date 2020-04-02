@@ -65,10 +65,7 @@ def group_by_reducer(key_func, reducer):
 
 
 @tf_export("data.experimental.group_by_window")
-def group_by_window(key_func,
-                    reduce_func,
-                    window_size=None,
-                    window_size_func=None):
+def group_by_window(key_func, reduce_func, window_size=None, window_size_func=None):
     """A transformation that groups windows of elements by key and reduces them.
 
     This transformation maps each consecutive element in a dataset to a key
@@ -103,8 +100,11 @@ def group_by_window(key_func,
       ValueError: if neither or both of {`window_size`, `window_size_func`} are
         passed.
     """
-    if (window_size is not None and window_size_func or
-            not (window_size is not None or window_size_func)):
+    if (
+        window_size is not None
+        and window_size_func
+        or not (window_size is not None or window_size_func)
+    ):
         raise ValueError("Must pass either window_size or window_size_func.")
 
     if window_size is not None:
@@ -118,21 +118,22 @@ def group_by_window(key_func,
 
     def _apply_fn(dataset):
         """Function from `Dataset` to `Dataset` that applies the transformation."""
-        return _GroupByWindowDataset(dataset, key_func, reduce_func,
-                                     window_size_func)
+        return _GroupByWindowDataset(dataset, key_func, reduce_func, window_size_func)
 
     return _apply_fn
 
 
 @tf_export("data.experimental.bucket_by_sequence_length")
-def bucket_by_sequence_length(element_length_func,
-                              bucket_boundaries,
-                              bucket_batch_sizes,
-                              padded_shapes=None,
-                              padding_values=None,
-                              pad_to_bucket_boundary=False,
-                              no_padding=False,
-                              drop_remainder=False):
+def bucket_by_sequence_length(
+    element_length_func,
+    bucket_boundaries,
+    bucket_batch_sizes,
+    padded_shapes=None,
+    padding_values=None,
+    pad_to_bucket_boundary=False,
+    no_padding=False,
+    drop_remainder=False,
+):
     """A transformation that buckets elements in a `Dataset` by length.
 
     Elements of the `Dataset` are grouped together by length and then are padded
@@ -177,10 +178,10 @@ def bucket_by_sequence_length(element_length_func,
     with ops.name_scope("bucket_by_seq_length"):
         if len(bucket_batch_sizes) != (len(bucket_boundaries) + 1):
             raise ValueError(
-                "len(bucket_batch_sizes) must equal len(bucket_boundaries) + 1")
+                "len(bucket_batch_sizes) must equal len(bucket_boundaries) + 1"
+            )
 
-        batch_sizes = constant_op.constant(
-            bucket_batch_sizes, dtype=dtypes.int64)
+        batch_sizes = constant_op.constant(bucket_batch_sizes, dtype=dtypes.int64)
 
         def element_to_bucket_id(*args):
             """Return int64 id of the length bucket for this element."""
@@ -191,7 +192,8 @@ def bucket_by_sequence_length(element_length_func,
             buckets_max = boundaries + [np.iinfo(np.int32).max]
             conditions_c = math_ops.logical_and(
                 math_ops.less_equal(buckets_min, seq_length),
-                math_ops.less(seq_length, buckets_max))
+                math_ops.less(seq_length, buckets_max),
+            )
             bucket_id = math_ops.reduce_min(array_ops.where(conditions_c))
 
             return bucket_id
@@ -206,8 +208,7 @@ def bucket_by_sequence_length(element_length_func,
             for shape in nest.flatten(shapes):
                 shape = tensor_shape.TensorShape(shape)
                 shape = [
-                    none_filler if tensor_shape.dimension_value(
-                        d) is None else d
+                    none_filler if tensor_shape.dimension_value(d) is None else d
                     for d in shape
                 ]
                 padded.append(shape)
@@ -220,29 +221,37 @@ def bucket_by_sequence_length(element_length_func,
                 return grouped_dataset.batch(batch_size, drop_remainder=drop_remainder)
             none_filler = None
             if pad_to_bucket_boundary:
-                err_msg = ("When pad_to_bucket_boundary=True, elements must have "
-                           "length < max(bucket_boundaries).")
+                err_msg = (
+                    "When pad_to_bucket_boundary=True, elements must have "
+                    "length < max(bucket_boundaries)."
+                )
                 check = check_ops.assert_less(
                     bucket_id,
-                    constant_op.constant(len(bucket_batch_sizes) - 1,
-                                         dtype=dtypes.int64),
-                    message=err_msg)
+                    constant_op.constant(
+                        len(bucket_batch_sizes) - 1, dtype=dtypes.int64
+                    ),
+                    message=err_msg,
+                )
                 with ops.control_dependencies([check]):
-                    boundaries = constant_op.constant(bucket_boundaries,
-                                                      dtype=dtypes.int64)
+                    boundaries = constant_op.constant(
+                        bucket_boundaries, dtype=dtypes.int64
+                    )
                     bucket_boundary = boundaries[bucket_id]
                     none_filler = bucket_boundary - 1
-            input_shapes = dataset_ops.get_legacy_output_shapes(
-                grouped_dataset)
-            shapes = make_padded_shapes(padded_shapes or input_shapes,
-                                        none_filler=none_filler)
+            input_shapes = dataset_ops.get_legacy_output_shapes(grouped_dataset)
+            shapes = make_padded_shapes(
+                padded_shapes or input_shapes, none_filler=none_filler
+            )
             return grouped_dataset.padded_batch(
-                batch_size, shapes, padding_values, drop_remainder=drop_remainder)
+                batch_size, shapes, padding_values, drop_remainder=drop_remainder
+            )
 
         def _apply_fn(dataset):
             return dataset.apply(
-                group_by_window(element_to_bucket_id, batching_fn,
-                                window_size_func=window_size_fn))
+                group_by_window(
+                    element_to_bucket_id, batching_fn, window_size_func=window_size_fn
+                )
+            )
 
         return _apply_fn
 
@@ -267,27 +276,31 @@ class _GroupByReducerDataset(dataset_ops.UnaryDataset):
             init_func=self._init_func.function,
             reduce_func=self._reduce_func.function,
             finalize_func=self._finalize_func.function,
-            **self._flat_structure)
-        super(_GroupByReducerDataset, self).__init__(
-            input_dataset, variant_tensor)
+            **self._flat_structure
+        )
+        super(_GroupByReducerDataset, self).__init__(input_dataset, variant_tensor)
 
     def _make_key_func(self, key_func, input_dataset):
         """Make wrapping defun for key_func."""
         self._key_func = dataset_ops.StructuredFunctionWrapper(
-            key_func, self._transformation_name(), dataset=input_dataset)
+            key_func, self._transformation_name(), dataset=input_dataset
+        )
         if not self._key_func.output_structure.is_compatible_with(
-                tensor_spec.TensorSpec([], dtypes.int64)):
+            tensor_spec.TensorSpec([], dtypes.int64)
+        ):
             raise ValueError(
                 "`key_func` must return a single tf.int64 tensor. "
                 "Got type=%s and shape=%s"
-                % (self._key_func.output_types, self._key_func.output_shapes))
+                % (self._key_func.output_types, self._key_func.output_shapes)
+            )
 
     def _make_init_func(self, init_func):
         """Make wrapping defun for init_func."""
         self._init_func = dataset_ops.StructuredFunctionWrapper(
             init_func,
             self._transformation_name(),
-            input_structure=tensor_spec.TensorSpec([], dtypes.int64))
+            input_structure=tensor_spec.TensorSpec([], dtypes.int64),
+        )
 
     def _make_reduce_func(self, reduce_func, input_dataset):
         """Make wrapping defun for reduce_func."""
@@ -304,28 +317,31 @@ class _GroupByReducerDataset(dataset_ops.UnaryDataset):
             wrapped_func = dataset_ops.StructuredFunctionWrapper(
                 reduce_func,
                 self._transformation_name(),
-                input_structure=(self._state_structure,
-                                 input_dataset.element_spec),
-                add_to_graph=False)
+                input_structure=(self._state_structure, input_dataset.element_spec),
+                add_to_graph=False,
+            )
 
             # Extract and validate class information from the returned values.
             for new_state_class, state_class in zip(
-                    nest.flatten(wrapped_func.output_classes),
-                    nest.flatten(state_classes)):
+                nest.flatten(wrapped_func.output_classes), nest.flatten(state_classes)
+            ):
                 if not issubclass(new_state_class, state_class):
                     raise TypeError(
                         "The element classes for the new state must match the initial "
-                        "state. Expected %s; got %s." %
-                        (self._state_classes, wrapped_func.output_classes))
+                        "state. Expected %s; got %s."
+                        % (self._state_classes, wrapped_func.output_classes)
+                    )
 
             # Extract and validate type information from the returned values.
             for new_state_type, state_type in zip(
-                    nest.flatten(wrapped_func.output_types), nest.flatten(state_types)):
+                nest.flatten(wrapped_func.output_types), nest.flatten(state_types)
+            ):
                 if new_state_type != state_type:
                     raise TypeError(
                         "The element types for the new state must match the initial "
-                        "state. Expected %s; got %s." %
-                        (self._init_func.output_types, wrapped_func.output_types))
+                        "state. Expected %s; got %s."
+                        % (self._init_func.output_types, wrapped_func.output_types)
+                    )
 
             # Extract shape information from the returned values.
             flat_state_shapes = nest.flatten(state_shapes)
@@ -336,19 +352,23 @@ class _GroupByReducerDataset(dataset_ops.UnaryDataset):
             ]
 
             need_to_rerun = False
-            for original_shape, weakened_shape in zip(flat_state_shapes,
-                                                      weakened_state_shapes):
+            for original_shape, weakened_shape in zip(
+                flat_state_shapes, weakened_state_shapes
+            ):
                 if original_shape.ndims is not None and (
-                        weakened_shape.ndims is None or
-                        original_shape.as_list() != weakened_shape.as_list()):
+                    weakened_shape.ndims is None
+                    or original_shape.as_list() != weakened_shape.as_list()
+                ):
                     need_to_rerun = True
                     break
 
             if need_to_rerun:
                 state_shapes = nest.pack_sequence_as(
-                    self._init_func.output_shapes, weakened_state_shapes)
+                    self._init_func.output_shapes, weakened_state_shapes
+                )
                 self._state_structure = structure.convert_legacy_structure(
-                    state_types, state_shapes, state_classes)
+                    state_types, state_shapes, state_classes
+                )
 
         self._reduce_func = wrapped_func
         self._reduce_func.function.add_to_graph(ops.get_default_graph())
@@ -356,17 +376,17 @@ class _GroupByReducerDataset(dataset_ops.UnaryDataset):
     def _make_finalize_func(self, finalize_func):
         """Make wrapping defun for finalize_func."""
         self._finalize_func = dataset_ops.StructuredFunctionWrapper(
-            finalize_func, self._transformation_name(),
-            input_structure=self._state_structure)
+            finalize_func,
+            self._transformation_name(),
+            input_structure=self._state_structure,
+        )
 
     @property
     def element_spec(self):
         return self._finalize_func.output_structure
 
     def _functions(self):
-        return [
-            self._key_func, self._init_func, self._reduce_func, self._finalize_func
-        ]
+        return [self._key_func, self._init_func, self._reduce_func, self._finalize_func]
 
     def _transformation_name(self):
         return "tf.data.experimental.group_by_reducer()"
@@ -389,51 +409,53 @@ class _GroupByWindowDataset(dataset_ops.UnaryDataset):
             key_func=self._key_func.function,
             reduce_func=self._reduce_func.function,
             window_size_func=self._window_size_func.function,
-            **self._flat_structure)
-        super(_GroupByWindowDataset, self).__init__(
-            input_dataset, variant_tensor)
+            **self._flat_structure
+        )
+        super(_GroupByWindowDataset, self).__init__(input_dataset, variant_tensor)
 
     def _make_window_size_func(self, window_size_func):
         """Make wrapping defun for window_size_func."""
 
         def window_size_func_wrapper(key):
             return ops.convert_to_tensor(window_size_func(key), dtype=dtypes.int64)
+
         self._window_size_func = dataset_ops.StructuredFunctionWrapper(
             window_size_func_wrapper,
             self._transformation_name(),
-            input_structure=tensor_spec.TensorSpec([], dtypes.int64))
+            input_structure=tensor_spec.TensorSpec([], dtypes.int64),
+        )
         if not self._window_size_func.output_structure.is_compatible_with(
-                tensor_spec.TensorSpec([], dtypes.int64)):
+            tensor_spec.TensorSpec([], dtypes.int64)
+        ):
             raise ValueError(
-                "`window_size_func` must return a single tf.int64 scalar tensor.")
+                "`window_size_func` must return a single tf.int64 scalar tensor."
+            )
 
     def _make_key_func(self, key_func, input_dataset):
         """Make wrapping defun for key_func."""
 
         def key_func_wrapper(*args):
             return ops.convert_to_tensor(key_func(*args), dtype=dtypes.int64)
+
         self._key_func = dataset_ops.StructuredFunctionWrapper(
-            key_func_wrapper, self._transformation_name(), dataset=input_dataset)
+            key_func_wrapper, self._transformation_name(), dataset=input_dataset
+        )
         if not self._key_func.output_structure.is_compatible_with(
-                tensor_spec.TensorSpec([], dtypes.int64)):
-            raise ValueError(
-                "`key_func` must return a single tf.int64 scalar tensor.")
+            tensor_spec.TensorSpec([], dtypes.int64)
+        ):
+            raise ValueError("`key_func` must return a single tf.int64 scalar tensor.")
 
     def _make_reduce_func(self, reduce_func, input_dataset):
         """Make wrapping defun for reduce_func."""
-        nested_dataset = dataset_ops.DatasetSpec(
-            input_dataset.element_spec)
-        input_structure = (tensor_spec.TensorSpec(
-            [], dtypes.int64), nested_dataset)
+        nested_dataset = dataset_ops.DatasetSpec(input_dataset.element_spec)
+        input_structure = (tensor_spec.TensorSpec([], dtypes.int64), nested_dataset)
         self._reduce_func = dataset_ops.StructuredFunctionWrapper(
-            reduce_func, self._transformation_name(),
-            input_structure=input_structure)
-        if not isinstance(
-                self._reduce_func.output_structure, dataset_ops.DatasetSpec):
+            reduce_func, self._transformation_name(), input_structure=input_structure
+        )
+        if not isinstance(self._reduce_func.output_structure, dataset_ops.DatasetSpec):
             raise TypeError("`reduce_func` must return a `Dataset` object.")
         # pylint: disable=protected-access
-        self._element_spec = (
-            self._reduce_func.output_structure._element_spec)
+        self._element_spec = self._reduce_func.output_structure._element_spec
 
     @property
     def element_spec(self):

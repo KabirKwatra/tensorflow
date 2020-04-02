@@ -66,18 +66,22 @@ def _generate_defun_backend(unique_api_name, preferred_device, func):
         _DEFUN_DEVICE_ATTRIBUTE: preferred_device,
     }
     return function_eager.defun_with_attributes(
-        func=func, attributes=function_attributes, autograph=False)
+        func=func, attributes=function_attributes, autograph=False
+    )
+
 
 # pylint: disable=protected-access, invalid-name
 @tf_export(v1=["nn.ctc_loss"])
-def ctc_loss(labels,
-             inputs=None,
-             sequence_length=None,
-             preprocess_collapse_repeated=False,
-             ctc_merge_repeated=True,
-             ignore_longer_outputs_than_inputs=False,
-             time_major=True,
-             logits=None):
+def ctc_loss(
+    labels,
+    inputs=None,
+    sequence_length=None,
+    preprocess_collapse_repeated=False,
+    ctc_merge_repeated=True,
+    ignore_longer_outputs_than_inputs=False,
+    time_major=True,
+    logits=None,
+):
     """Computes the CTC (Connectionist Temporal Classification) Loss.
 
     This op implements the CTC loss as presented in (Graves et al., 2016).
@@ -190,18 +194,21 @@ def ctc_loss(labels,
         ignore_longer_outputs_than_inputs,
         time_major,
         logits,
-        use_cudnn=False)
+        use_cudnn=False,
+    )
 
 
-def _ctc_loss_impl(labels,
-                   inputs=None,
-                   sequence_length=None,
-                   preprocess_collapse_repeated=False,
-                   ctc_merge_repeated=True,
-                   ignore_longer_outputs_than_inputs=False,
-                   time_major=True,
-                   logits=None,
-                   use_cudnn=False):
+def _ctc_loss_impl(
+    labels,
+    inputs=None,
+    sequence_length=None,
+    preprocess_collapse_repeated=False,
+    ctc_merge_repeated=True,
+    ignore_longer_outputs_than_inputs=False,
+    time_major=True,
+    logits=None,
+    use_cudnn=False,
+):
     # Helper function of ctc_loss with one additional param:
     # use_cudnn: A bool to enable cuDNN CTC loss operation. If true, the blank
     #   index has to be 0.
@@ -209,12 +216,10 @@ def _ctc_loss_impl(labels,
     # The second, third, etc output tensors contain the gradients.  We use it in
     # _CTCLossGrad() below.
     if not isinstance(labels, sparse_tensor.SparseTensor):
-        raise TypeError(
-            "Expected labels (first argument) to be a SparseTensor")
+        raise TypeError("Expected labels (first argument) to be a SparseTensor")
 
     # For internal calculations, we transpose to [time, batch, num_classes]
-    inputs = deprecation.deprecated_argument_lookup("logits", logits, "inputs",
-                                                    inputs)
+    inputs = deprecation.deprecated_argument_lookup("logits", logits, "inputs", inputs)
     if not time_major:
         inputs = array_ops.transpose(inputs, [1, 0, 2])  # (B,T,N) => (T,B,N)
 
@@ -232,9 +237,11 @@ def _ctc_loss_impl(labels,
         sequence_length,
         preprocess_collapse_repeated=preprocess_collapse_repeated,
         ctc_merge_repeated=ctc_merge_repeated,
-        ignore_longer_outputs_than_inputs=ignore_longer_outputs_than_inputs)
+        ignore_longer_outputs_than_inputs=ignore_longer_outputs_than_inputs,
+    )
 
     return loss
+
 
 # pylint: disable=unused-argument
 
@@ -250,7 +257,8 @@ def _CTCLossGradImpl(op, grad_loss, _):
         op.outputs[1],
         message="Currently there is no way to take the second "
         " derivative of ctc_loss due to the fused implementation's interaction "
-        " with tf.gradients()")
+        " with tf.gradients()",
+    )
     # Return gradient for inputs and None for
     # labels_indices, labels_values and sequence_length
     return [_BroadcastMul(grad_loss, grad_without_gradient), None, None, None]
@@ -329,18 +337,19 @@ def ctc_greedy_decoder(inputs, sequence_length, merge_repeated=True):
           timeframe.
     """
     outputs = gen_ctc_ops.ctc_greedy_decoder(
-        inputs, sequence_length, merge_repeated=merge_repeated)
+        inputs, sequence_length, merge_repeated=merge_repeated
+    )
     (decoded_ix, decoded_val, decoded_shape, log_probabilities) = outputs
-    return ([sparse_tensor.SparseTensor(decoded_ix, decoded_val,
-                                        decoded_shape)], log_probabilities)
+    return (
+        [sparse_tensor.SparseTensor(decoded_ix, decoded_val, decoded_shape)],
+        log_probabilities,
+    )
 
 
 @tf_export(v1=["nn.ctc_beam_search_decoder"])
-def ctc_beam_search_decoder(inputs,
-                            sequence_length,
-                            beam_width=100,
-                            top_paths=1,
-                            merge_repeated=True):
+def ctc_beam_search_decoder(
+    inputs, sequence_length, beam_width=100, top_paths=1, merge_repeated=True
+):
     """Performs beam search decoding on the logits given in input.
 
     **Note** The `ctc_greedy_decoder` is a special case of the
@@ -383,25 +392,30 @@ def ctc_beam_search_decoder(inputs,
           sequence log-probabilities.
     """
 
-    decoded_ixs, decoded_vals, decoded_shapes, log_probabilities = (
-        gen_ctc_ops.ctc_beam_search_decoder(
-            inputs,
-            sequence_length,
-            beam_width=beam_width,
-            top_paths=top_paths,
-            merge_repeated=merge_repeated))
+    (
+        decoded_ixs,
+        decoded_vals,
+        decoded_shapes,
+        log_probabilities,
+    ) = gen_ctc_ops.ctc_beam_search_decoder(
+        inputs,
+        sequence_length,
+        beam_width=beam_width,
+        top_paths=top_paths,
+        merge_repeated=merge_repeated,
+    )
 
-    return ([
-        sparse_tensor.SparseTensor(ix, val, shape)
-        for (ix, val, shape) in zip(decoded_ixs, decoded_vals, decoded_shapes)
-    ], log_probabilities)
+    return (
+        [
+            sparse_tensor.SparseTensor(ix, val, shape)
+            for (ix, val, shape) in zip(decoded_ixs, decoded_vals, decoded_shapes)
+        ],
+        log_probabilities,
+    )
 
 
 @tf_export("nn.ctc_beam_search_decoder", v1=["nn.ctc_beam_search_decoder_v2"])
-def ctc_beam_search_decoder_v2(inputs,
-                               sequence_length,
-                               beam_width=100,
-                               top_paths=1):
+def ctc_beam_search_decoder_v2(inputs, sequence_length, beam_width=100, top_paths=1):
     """Performs beam search decoding on the logits given in input.
 
     **Note** The `ctc_greedy_decoder` is a special case of the
@@ -442,7 +456,8 @@ def ctc_beam_search_decoder_v2(inputs,
         sequence_length=sequence_length,
         beam_width=beam_width,
         top_paths=top_paths,
-        merge_repeated=False)
+        merge_repeated=False,
+    )
 
 
 ops.NotDifferentiable("CTCGreedyDecoder")
@@ -475,29 +490,23 @@ def _ctc_state_trans(label_seq):
         start_to_label = [[1, 0]]
 
         # Blank to label transitions.
-        blank_to_label = array_ops.stack(
-            [label_states[1:], blank_states[:-1]], 1)
+        blank_to_label = array_ops.stack([label_states[1:], blank_states[:-1]], 1)
 
         # Label to blank transitions.
         label_to_blank = array_ops.stack([blank_states, label_states], 1)
 
         # Scatter transitions that don't depend on sequence.
-        indices = array_ops.concat([start_to_label, blank_to_label, label_to_blank],
-                                   0)
+        indices = array_ops.concat([start_to_label, blank_to_label, label_to_blank], 0)
         values = array_ops.ones([_get_dim(indices, 0)])
-        trans = array_ops.scatter_nd(
-            indices, values, shape=[num_states, num_states])
+        trans = array_ops.scatter_nd(indices, values, shape=[num_states, num_states])
         trans += linalg_ops.eye(num_states)  # Self-loops.
 
         # Label to label transitions. Disallow transitions between repeated labels
         # with no blank state in between.
         batch_idx = array_ops.zeros_like(label_states[2:])
-        indices = array_ops.stack([batch_idx, label_states[2:], label_states[1:-1]],
-                                  1)
-        indices = array_ops.tile(
-            array_ops.expand_dims(indices, 0), [batch_size, 1, 1])
-        batch_idx = array_ops.expand_dims(
-            math_ops.range(batch_size), 1) * [1, 0, 0]
+        indices = array_ops.stack([batch_idx, label_states[2:], label_states[1:-1]], 1)
+        indices = array_ops.tile(array_ops.expand_dims(indices, 0), [batch_size, 1, 1])
+        batch_idx = array_ops.expand_dims(math_ops.range(batch_size), 1) * [1, 0, 0]
         indices += array_ops.expand_dims(batch_idx, 1)
         repeats = math_ops.equal(label_seq[:, :-1], label_seq[:, 1:])
         values = 1.0 - math_ops.cast(repeats, dtypes.float32)
@@ -526,23 +535,26 @@ def ctc_state_log_probs(seq_lengths, max_seq_length):
     num_duration_states = 2
     num_states = num_duration_states * num_label_states
     log_0 = math_ops.cast(
-        math_ops.log(math_ops.cast(0, dtypes.float64) + 1e-307), dtypes.float32)
+        math_ops.log(math_ops.cast(0, dtypes.float64) + 1e-307), dtypes.float32
+    )
 
     initial_state_log_probs = array_ops.one_hot(
         indices=array_ops.zeros([batch_size], dtype=dtypes.int32),
         depth=num_states,
         on_value=0.0,
         off_value=log_0,
-        axis=1)
+        axis=1,
+    )
 
     label_final_state_mask = array_ops.one_hot(
-        seq_lengths, depth=num_label_states, axis=0)
-    duration_final_state_mask = array_ops.ones(
-        [num_duration_states, 1, batch_size])
+        seq_lengths, depth=num_label_states, axis=0
+    )
+    duration_final_state_mask = array_ops.ones([num_duration_states, 1, batch_size])
     final_state_mask = duration_final_state_mask * label_final_state_mask
     final_state_log_probs = (1.0 - final_state_mask) * log_0
-    final_state_log_probs = array_ops.reshape(final_state_log_probs,
-                                              [num_states, batch_size])
+    final_state_log_probs = array_ops.reshape(
+        final_state_log_probs, [num_states, batch_size]
+    )
 
     return initial_state_log_probs, array_ops.transpose(final_state_log_probs)
 
@@ -559,8 +571,8 @@ def _ilabel_to_state(labels, num_labels, ilabel_log_probs):
     state_log_probs = math_ops.reduce_sum(ilabel_log_probs * one_hot, axis=3)
     state_log_probs = array_ops.concat([state_log_probs, blank], axis=2)
     return array_ops.pad(
-        state_log_probs, [[0, 0], [0, 0], [1, 0]],
-        constant_values=math_ops.log(0.0))
+        state_log_probs, [[0, 0], [0, 0], [1, 0]], constant_values=math_ops.log(0.0)
+    )
 
 
 def _state_to_olabel(labels, num_labels, states):
@@ -570,15 +582,12 @@ def _state_to_olabel(labels, num_labels, states):
     label_states = states[:, :, 1:num_label_states]
     blank_states = states[:, :, num_label_states:]
     one_hot = array_ops.one_hot(
-        labels - 1,
-        depth=(num_labels - 1),
-        on_value=0.0,
-        off_value=math_ops.log(0.0))
+        labels - 1, depth=(num_labels - 1), on_value=0.0, off_value=math_ops.log(0.0)
+    )
     one_hot = array_ops.expand_dims(one_hot, axis=0)
     label_states = array_ops.expand_dims(label_states, axis=3)
     label_olabels = math_ops.reduce_logsumexp(label_states + one_hot, axis=2)
-    blank_olabels = math_ops.reduce_logsumexp(
-        blank_states, axis=2, keepdims=True)
+    blank_olabels = math_ops.reduce_logsumexp(blank_states, axis=2, keepdims=True)
     return array_ops.concat([blank_olabels, label_olabels], axis=-1)
 
 
@@ -597,34 +606,33 @@ def _state_to_olabel_unique(labels, num_labels, states, unique):
     batch_size = states.shape[1]
     num_states = num_label_states - 1
     batch_state_major = array_ops.transpose(mul_reduce, perm=[1, 2, 0])
-    batch_state_major = array_ops.reshape(batch_state_major,
-                                          [batch_size * num_states, num_frames])
-    batch_offset = math_ops.range(
-        batch_size, dtype=unique_y.dtype) * num_labels
+    batch_state_major = array_ops.reshape(
+        batch_state_major, [batch_size * num_states, num_frames]
+    )
+    batch_offset = math_ops.range(batch_size, dtype=unique_y.dtype) * num_labels
     indices = unique_y + array_ops.expand_dims(batch_offset, axis=-1)
     indices = array_ops.reshape(indices, [-1, 1])
     scatter = array_ops.scatter_nd(
         indices=indices,
         updates=batch_state_major,
-        shape=[batch_size * num_labels, num_frames])
+        shape=[batch_size * num_labels, num_frames],
+    )
     scatter = array_ops.reshape(scatter, [batch_size, num_labels, num_frames])
 
     mask = array_ops.ones_like(batch_state_major, dtype=dtypes.bool)
     mask = array_ops.scatter_nd(
-        indices=indices,
-        updates=mask,
-        shape=[batch_size * num_labels, num_frames])
+        indices=indices, updates=mask, shape=[batch_size * num_labels, num_frames]
+    )
     mask = array_ops.reshape(mask, [batch_size, num_labels, num_frames])
 
     scatter = array_ops.where(
-        mask, scatter,
-        array_ops.fill(array_ops.shape(scatter), math_ops.log(0.0)))
+        mask, scatter, array_ops.fill(array_ops.shape(scatter), math_ops.log(0.0))
+    )
 
     label_olabels = array_ops.transpose(scatter, [2, 0, 1])
     label_olabels = label_olabels[:, :, 1:]
 
-    blank_olabels = math_ops.reduce_logsumexp(
-        blank_states, axis=2, keepdims=True)
+    blank_olabels = math_ops.reduce_logsumexp(blank_states, axis=2, keepdims=True)
 
     return array_ops.concat([blank_olabels, label_olabels], axis=-1)
 
@@ -660,20 +668,22 @@ def ctc_loss_and_grad(logits, labels, label_length, logit_length, unique=None):
     state_log_probs = _ilabel_to_state(labels, num_labels, ilabel_log_probs)
     state_trans_probs = _ctc_state_trans(labels)
     initial_state_log_probs, final_state_log_probs = ctc_state_log_probs(
-        label_length, max_label_seq_length)
+        label_length, max_label_seq_length
+    )
     fwd_bwd_log_probs, log_likelihood = _forward_backward_log(
         state_trans_log_probs=math_ops.log(state_trans_probs),
         initial_state_log_probs=initial_state_log_probs,
         final_state_log_probs=final_state_log_probs,
         observed_log_probs=state_log_probs,
-        sequence_length=logit_length)
+        sequence_length=logit_length,
+    )
 
     if unique:
-        olabel_log_probs = _state_to_olabel_unique(labels, num_labels,
-                                                   fwd_bwd_log_probs, unique)
+        olabel_log_probs = _state_to_olabel_unique(
+            labels, num_labels, fwd_bwd_log_probs, unique
+        )
     else:
-        olabel_log_probs = _state_to_olabel(
-            labels, num_labels, fwd_bwd_log_probs)
+        olabel_log_probs = _state_to_olabel(labels, num_labels, fwd_bwd_log_probs)
 
     grad = math_ops.exp(ilabel_log_probs) - math_ops.exp(olabel_log_probs)
 
@@ -681,8 +691,7 @@ def ctc_loss_and_grad(logits, labels, label_length, logit_length, unique=None):
     # only for ilabel_log_probs because olabel_log_probs already consider the
     # mask. However, it is just safe and clean to apply it for the gradient.
     max_logit_length = _get_dim(logits, 0)
-    logit_mask = array_ops.sequence_mask(logit_length, max_logit_length,
-                                         dtypes.float32)
+    logit_mask = array_ops.sequence_mask(logit_length, max_logit_length, dtypes.float32)
     logit_mask = array_ops.transpose(logit_mask, perm=[1, 0])
     logit_mask = array_ops.expand_dims(logit_mask, axis=2)
     grad *= logit_mask
@@ -698,40 +707,42 @@ def _ctc_loss_grad(op, grad_loss, _):
     return grad
 
 
-def _ctc_loss_op_standard(labels, logits, logit_length, logits_time_major,
-                          blank_index):
+def _ctc_loss_op_standard(labels, logits, logit_length, logits_time_major, blank_index):
     part_before = logits[:, :, :blank_index]
-    part_after = logits[:, :, blank_index + 1:]
-    part_blank = logits[:, :, blank_index:blank_index + 1]
+    part_after = logits[:, :, blank_index + 1 :]
+    part_blank = logits[:, :, blank_index : blank_index + 1]
     logits = array_ops.concat([part_before, part_after, part_blank], axis=2)
     labels = sparse_tensor.SparseTensor(
         labels.indices,
-        array_ops.where(labels.values < blank_index, labels.values,
-                        labels.values - 1), labels.dense_shape)
+        array_ops.where(labels.values < blank_index, labels.values, labels.values - 1),
+        labels.dense_shape,
+    )
     return _ctc_loss_impl(
         labels=labels,
         inputs=logits,
         sequence_length=logit_length,
         time_major=logits_time_major,
-        use_cudnn=False)
+        use_cudnn=False,
+    )
 
 
-def _ctc_loss_op_cudnn(labels, logits, logit_length, logits_time_major,
-                       blank_index):
+def _ctc_loss_op_cudnn(labels, logits, logit_length, logits_time_major, blank_index):
     part_before = logits[:, :, :blank_index]
-    part_after = logits[:, :, blank_index + 1:]
-    part_blank = logits[:, :, blank_index:blank_index + 1]
+    part_after = logits[:, :, blank_index + 1 :]
+    part_blank = logits[:, :, blank_index : blank_index + 1]
     logits = array_ops.concat([part_blank, part_before, part_after], axis=2)
     labels = sparse_tensor.SparseTensor(
         labels.indices,
-        array_ops.where(labels.values < blank_index, labels.values + 1,
-                        labels.values), labels.dense_shape)
+        array_ops.where(labels.values < blank_index, labels.values + 1, labels.values),
+        labels.dense_shape,
+    )
     return _ctc_loss_impl(
         labels=labels,
         inputs=logits,
         sequence_length=logit_length,
         time_major=logits_time_major,
-        use_cudnn=True)
+        use_cudnn=True,
+    )
 
 
 def _ctc_loss_shape(op):
@@ -740,14 +751,16 @@ def _ctc_loss_shape(op):
 
 # pylint: disable=protected-access, invalid-name
 @tf_export(v1=["nn.ctc_loss_v2"])
-def ctc_loss_v2(labels,
-                logits,
-                label_length,
-                logit_length,
-                logits_time_major=True,
-                unique=None,
-                blank_index=None,
-                name=None):
+def ctc_loss_v2(
+    labels,
+    logits,
+    label_length,
+    logit_length,
+    logits_time_major=True,
+    unique=None,
+    blank_index=None,
+    name=None,
+):
     """Computes CTC (Connectionist Temporal Classification) loss.
 
     This op implements the CTC loss as presented in (Graves et al., 2016).
@@ -796,28 +809,35 @@ def ctc_loss_v2(labels,
     if isinstance(labels, sparse_tensor.SparseTensor):
         if blank_index is None:
             raise ValueError(
-                "blank_index must be given when using SparseTensor labels.")
+                "blank_index must be given when using SparseTensor labels."
+            )
 
         if blank_index < 0:
             blank_index += _get_dim(logits, 2)
 
         if blank_index != _get_dim(logits, 2) - 1:
-            logits = array_ops.concat([
-                logits[:, :, :blank_index],
-                logits[:, :, blank_index + 1:],
-                logits[:, :, blank_index:blank_index + 1],
-            ],
-                axis=2)
+            logits = array_ops.concat(
+                [
+                    logits[:, :, :blank_index],
+                    logits[:, :, blank_index + 1 :],
+                    logits[:, :, blank_index : blank_index + 1],
+                ],
+                axis=2,
+            )
             labels = sparse_tensor.SparseTensor(
                 labels.indices,
-                array_ops.where(labels.values < blank_index, labels.values,
-                                labels.values - 1), labels.dense_shape)
+                array_ops.where(
+                    labels.values < blank_index, labels.values, labels.values - 1
+                ),
+                labels.dense_shape,
+            )
 
         return ctc_loss(
             labels=labels,
             inputs=logits,
             sequence_length=logit_length,
-            time_major=logits_time_major)
+            time_major=logits_time_major,
+        )
 
     if blank_index is None:
         blank_index = 0
@@ -830,18 +850,21 @@ def ctc_loss_v2(labels,
         logits_time_major=logits_time_major,
         unique=unique,
         blank_index=blank_index,
-        name=name)
+        name=name,
+    )
 
 
 @tf_export("nn.ctc_loss", v1=[])
-def ctc_loss_v3(labels,
-                logits,
-                label_length,
-                logit_length,
-                logits_time_major=True,
-                unique=None,
-                blank_index=None,
-                name=None):
+def ctc_loss_v3(
+    labels,
+    logits,
+    label_length,
+    logit_length,
+    logits_time_major=True,
+    unique=None,
+    blank_index=None,
+    name=None,
+):
     """Computes CTC (Connectionist Temporal Classification) loss.
 
     This op implements the CTC loss as presented in (Graves et al., 2016).
@@ -890,7 +913,8 @@ def ctc_loss_v3(labels,
     if isinstance(labels, sparse_tensor.SparseTensor):
         if blank_index is None:
             raise ValueError(
-                "blank_index must be given when using SparseTensor labels.")
+                "blank_index must be given when using SparseTensor labels."
+            )
 
         if blank_index < 0:
             blank_index += _get_dim(logits, 2)
@@ -900,15 +924,14 @@ def ctc_loss_v3(labels,
             "logits": logits,
             "logit_length": logit_length,
             "logits_time_major": logits_time_major,
-            "blank_index": blank_index
+            "blank_index": blank_index,
         }
 
         if context.executing_eagerly():
             device_type = _get_context_device_type()
-            can_use_gpu = (
-                # Either user specified GPU or unspecified but GPU is available.
-                (device_type == _GPU_DEVICE_NAME or
-                 (device_type is None and context.num_gpus() > 0)))
+            can_use_gpu = device_type == _GPU_DEVICE_NAME or (
+                device_type is None and context.num_gpus() > 0
+            )
             # Under eager context, check the device placement and prefer the
             if can_use_gpu:
                 res = _ctc_loss_op_cudnn(**params)
@@ -916,10 +939,12 @@ def ctc_loss_v3(labels,
                 res = _ctc_loss_op_standard(**params)
         else:
             api_name = "ctc_loss_" + str(uuid.uuid4())
-            ctc_loss_op_standard = _generate_defun_backend(api_name, _CPU_DEVICE_NAME,
-                                                           _ctc_loss_op_standard)
-            ctc_loss_op_cudnn = _generate_defun_backend(api_name, _GPU_DEVICE_NAME,
-                                                        _ctc_loss_op_cudnn)
+            ctc_loss_op_standard = _generate_defun_backend(
+                api_name, _CPU_DEVICE_NAME, _ctc_loss_op_standard
+            )
+            ctc_loss_op_cudnn = _generate_defun_backend(
+                api_name, _GPU_DEVICE_NAME, _ctc_loss_op_cudnn
+            )
             res = ctc_loss_op_standard(**params)
             function_eager.register(ctc_loss_op_cudnn, **params)
         return res
@@ -935,17 +960,20 @@ def ctc_loss_v3(labels,
         logits_time_major=logits_time_major,
         unique=unique,
         blank_index=blank_index,
-        name=name)
+        name=name,
+    )
 
 
-def ctc_loss_dense(labels,
-                   logits,
-                   label_length,
-                   logit_length,
-                   logits_time_major=True,
-                   unique=None,
-                   blank_index=0,
-                   name=None):
+def ctc_loss_dense(
+    labels,
+    logits,
+    label_length,
+    logit_length,
+    logits_time_major=True,
+    unique=None,
+    blank_index=0,
+    name=None,
+):
     """Computes CTC (Connectionist Temporal Classification) loss.
 
     This op implements the CTC loss as presented in (Graves et al., 2016),
@@ -1003,8 +1031,9 @@ def ctc_loss_dense(labels,
           ([pdf](http://bacchiani.net/resume/papers/ASRU2017.pdf))
     """
 
-    with ops.name_scope(name, "ctc_loss_dense",
-                        [logits, labels, label_length, logit_length]):
+    with ops.name_scope(
+        name, "ctc_loss_dense", [logits, labels, label_length, logit_length]
+    ):
         logits = ops.convert_to_tensor(logits, name="logits")
         labels = ops.convert_to_tensor(labels, name="labels")
         label_length = ops.convert_to_tensor(label_length, name="label_length")
@@ -1016,12 +1045,14 @@ def ctc_loss_dense(labels,
         if blank_index != 0:
             if blank_index < 0:
                 blank_index += _get_dim(logits, 2)
-            logits = array_ops.concat([
-                logits[:, :, blank_index:blank_index + 1],
-                logits[:, :, :blank_index],
-                logits[:, :, blank_index + 1:],
-            ],
-                axis=2)
+            logits = array_ops.concat(
+                [
+                    logits[:, :, blank_index : blank_index + 1],
+                    logits[:, :, :blank_index],
+                    logits[:, :, blank_index + 1 :],
+                ],
+                axis=2,
+            )
             labels = array_ops.where(labels < blank_index, labels + 1, labels)
 
         args = [logits, labels, label_length, logit_length]
@@ -1029,19 +1060,21 @@ def ctc_loss_dense(labels,
         if unique:
             unique_y, unique_idx = unique
             if blank_index != 0:
-                unique_y = array_ops.where(unique_y < blank_index, unique_y + 1,
-                                           unique_y)
+                unique_y = array_ops.where(
+                    unique_y < blank_index, unique_y + 1, unique_y
+                )
                 label_mask_len = math_ops.reduce_max(unique_idx, axis=1) + 1
                 max_label_length = _get_dim(unique_y, 1)
-                label_mask = array_ops.sequence_mask(
-                    label_mask_len, max_label_length)
-                unique_y = array_ops.where(label_mask, unique_y,
-                                           array_ops.zeros_like(unique_y))
+                label_mask = array_ops.sequence_mask(label_mask_len, max_label_length)
+                unique_y = array_ops.where(
+                    label_mask, unique_y, array_ops.zeros_like(unique_y)
+                )
             args.extend([unique_y, unique_idx])
 
         @custom_gradient.custom_gradient
-        def compute_ctc_loss(logits_t, labels_t, label_length_t, logit_length_t,
-                             *unique_t):
+        def compute_ctc_loss(
+            logits_t, labels_t, label_length_t, logit_length_t, *unique_t
+        ):
             """Compute CTC loss."""
             logits_t.set_shape(logits.shape)
             labels_t.set_shape(labels.shape)
@@ -1051,7 +1084,8 @@ def ctc_loss_dense(labels,
                 logits=logits_t,
                 labels=labels_t,
                 label_length=label_length_t,
-                logit_length=logit_length_t)
+                logit_length=logit_length_t,
+            )
             if unique_t:
                 kwargs["unique"] = unique_t
             result = ctc_loss_and_grad(**kwargs)
@@ -1090,11 +1124,13 @@ def collapse_repeated(labels, seq_length, name=None):
         seq_length = ops.convert_to_tensor(seq_length, name="seq_length")
 
         # Mask labels that don't equal previous label.
-        label_mask = array_ops.concat([
-            array_ops.ones_like(labels[:, :1], dtypes.bool),
-            math_ops.not_equal(labels[:, 1:], labels[:, :-1])
-        ],
-            axis=1)
+        label_mask = array_ops.concat(
+            [
+                array_ops.ones_like(labels[:, :1], dtypes.bool),
+                math_ops.not_equal(labels[:, 1:], labels[:, :-1]),
+            ],
+            axis=1,
+        )
 
         # Filter labels that aren't in the original sequence.
         maxlen = _get_dim(labels, 1)
@@ -1103,7 +1139,8 @@ def collapse_repeated(labels, seq_length, name=None):
 
         # Count masks for new sequence lengths.
         new_seq_len = math_ops.reduce_sum(
-            math_ops.cast(label_mask, dtypes.int32), axis=1)
+            math_ops.cast(label_mask, dtypes.int32), axis=1
+        )
 
         # Mask indexes based on sequence length mask.
         new_maxlen = math_ops.reduce_max(new_seq_len)
@@ -1118,15 +1155,19 @@ def collapse_repeated(labels, seq_length, name=None):
         # Scatter to flat shape.
         flat = array_ops.scatter_nd(
             indices=array_ops.expand_dims(
-                array_ops.boolean_mask(idx, flat_idx_mask), axis=1),
+                array_ops.boolean_mask(idx, flat_idx_mask), axis=1
+            ),
             updates=array_ops.boolean_mask(flat_labels, flat_label_mask),
-            shape=array_ops.shape(flat_idx_mask))
+            shape=array_ops.shape(flat_idx_mask),
+        )
 
         # Reshape back to square batch.
         batch_size = _get_dim(labels, 0)
         new_shape = [batch_size, new_maxlen]
-        return (array_ops.reshape(flat, new_shape),
-                math_ops.cast(new_seq_len, seq_length.dtype))
+        return (
+            array_ops.reshape(flat, new_shape),
+            math_ops.cast(new_seq_len, seq_length.dtype),
+        )
 
 
 def dense_labels_to_sparse(dense, length):
@@ -1142,16 +1183,17 @@ def dense_labels_to_sparse(dense, length):
 
     flat_values = array_ops.reshape(dense, [-1])
     flat_indices = math_ops.range(
-        array_ops.shape(flat_values, out_type=dtypes.int64)[0])
+        array_ops.shape(flat_values, out_type=dtypes.int64)[0]
+    )
     mask = array_ops.sequence_mask(length, maxlen=array_ops.shape(dense)[1])
     flat_mask = array_ops.reshape(mask, [-1])
-    indices = array_ops.expand_dims(
-        array_ops.boolean_mask(flat_indices, flat_mask), 1)
+    indices = array_ops.expand_dims(array_ops.boolean_mask(flat_indices, flat_mask), 1)
     values = array_ops.boolean_mask(flat_values, flat_mask)
     sparse = sparse_tensor.SparseTensor(
         indices=indices,
         values=math_ops.cast(values, dtypes.int32),
-        dense_shape=array_ops.shape(flat_values, out_type=dtypes.int64))
+        dense_shape=array_ops.shape(flat_values, out_type=dtypes.int64),
+    )
     reshaped = sparse_ops.sparse_reshape(sparse, array_ops.shape(dense))
     max_length = math_ops.reduce_max(length)
     return sparse_tensor.SparseTensor(
@@ -1159,8 +1201,9 @@ def dense_labels_to_sparse(dense, length):
         values=reshaped.values,
         dense_shape=[
             math_ops.cast(reshaped.dense_shape[0], dtypes.int64),
-            math_ops.cast(max_length, dtypes.int64)
-        ])
+            math_ops.cast(max_length, dtypes.int64),
+        ],
+    )
 
 
 @tf_export("nn.ctc_unique_labels")
@@ -1191,8 +1234,7 @@ def ctc_unique_labels(labels, name=None):
 
         def _unique(x):
             u = array_ops.unique(x)
-            y = array_ops.pad(
-                u.y, [[0, _get_dim(u.idx, 0) - _get_dim(u.y, 0)]])
+            y = array_ops.pad(u.y, [[0, _get_dim(u.idx, 0) - _get_dim(u.y, 0)]])
             y = math_ops.cast(y, dtypes.int64)
             return [y, u.idx]
 
@@ -1218,17 +1260,18 @@ def _sum_states(idx, states):
         num_states = _get_dim(states, 2)
         states = array_ops.expand_dims(states, axis=2)
         one_hot = array_ops.one_hot(
-            idx,
-            depth=num_states,
-            on_value=0.0,
-            off_value=math_ops.log(0.0),
-            axis=1)
+            idx, depth=num_states, on_value=0.0, off_value=math_ops.log(0.0), axis=1
+        )
         return math_ops.reduce_logsumexp(states + one_hot, axis=-1)
 
 
-def _forward_backward_log(state_trans_log_probs, initial_state_log_probs,
-                          final_state_log_probs, observed_log_probs,
-                          sequence_length):
+def _forward_backward_log(
+    state_trans_log_probs,
+    initial_state_log_probs,
+    final_state_log_probs,
+    observed_log_probs,
+    sequence_length,
+):
     """Forward-backward algorithm computed in log domain.
 
     Args:
@@ -1253,11 +1296,11 @@ def _forward_backward_log(state_trans_log_probs, initial_state_log_probs,
         perm = [0, 2, 1]
     else:
         raise ValueError(
-            "state_trans_log_probs rank must be known and == 2 or 3, is: %s" %
-            state_trans_log_probs.shape.ndims)
+            "state_trans_log_probs rank must be known and == 2 or 3, is: %s"
+            % state_trans_log_probs.shape.ndims
+        )
 
-    bwd_state_trans_log_probs = array_ops.transpose(
-        state_trans_log_probs, perm)
+    bwd_state_trans_log_probs = array_ops.transpose(state_trans_log_probs, perm)
     batch_size = _get_dim(observed_log_probs, 1)
 
     def _forward(state_log_prob, obs_log_prob):
@@ -1266,13 +1309,11 @@ def _forward_backward_log(state_trans_log_probs, initial_state_log_probs,
         state_log_prob += state_trans_log_probs
         state_log_prob = math_ops.reduce_logsumexp(state_log_prob, axis=-1)
         state_log_prob += obs_log_prob
-        log_prob_sum = math_ops.reduce_logsumexp(
-            state_log_prob, axis=-1, keepdims=True)
+        log_prob_sum = math_ops.reduce_logsumexp(state_log_prob, axis=-1, keepdims=True)
         state_log_prob -= log_prob_sum
         return state_log_prob
 
-    fwd = _scan(
-        _forward, observed_log_probs, initial_state_log_probs, inclusive=True)
+    fwd = _scan(_forward, observed_log_probs, initial_state_log_probs, inclusive=True)
 
     def _backward(accs, elems):
         """Calculate log probs and cumulative sum masked for sequence length."""
@@ -1284,8 +1325,7 @@ def _forward_backward_log(state_trans_log_probs, initial_state_log_probs,
         state_log_prob += bwd_state_trans_log_probs
         state_log_prob = math_ops.reduce_logsumexp(state_log_prob, axis=-1)
 
-        log_prob_sum = math_ops.reduce_logsumexp(
-            state_log_prob, axis=-1, keepdims=True)
+        log_prob_sum = math_ops.reduce_logsumexp(state_log_prob, axis=-1, keepdims=True)
         state_log_prob -= log_prob_sum
 
         cum_log_sum += array_ops.squeeze(log_prob_sum) * mask
@@ -1300,14 +1340,17 @@ def _forward_backward_log(state_trans_log_probs, initial_state_log_probs,
     mask = array_ops.transpose(mask, perm=[1, 0])
 
     bwd, cum_log_sum = _scan(
-        _backward, (observed_log_probs, mask),
+        _backward,
+        (observed_log_probs, mask),
         (final_state_log_probs, zero_log_sum),
         reverse=True,
-        inclusive=True)
+        inclusive=True,
+    )
 
     fwd_bwd_log_probs = fwd[1:] + bwd[1:]
     fwd_bwd_log_probs_sum = math_ops.reduce_logsumexp(
-        fwd_bwd_log_probs, axis=2, keepdims=True)
+        fwd_bwd_log_probs, axis=2, keepdims=True
+    )
     fwd_bwd_log_probs -= fwd_bwd_log_probs_sum
     fwd_bwd_log_probs += math_ops.log(array_ops.expand_dims(mask, axis=2))
 
@@ -1359,11 +1402,15 @@ def _scan(fn, elems, initial, reverse=False, inclusive=False, final_only=False):
 
     flat_elems = [ops.convert_to_tensor(x) for x in nest.flatten(elems)]
     num_elems = array_ops.shape(flat_elems[0])[0]
-    def pack_elems(x): return nest.pack_sequence_as(
-        structure=elems, flat_sequence=x)
+
+    def pack_elems(x):
+        return nest.pack_sequence_as(structure=elems, flat_sequence=x)
+
     flat_initial = [ops.convert_to_tensor(x) for x in nest.flatten(initial)]
-    def pack(x): return nest.pack_sequence_as(
-        structure=initial, flat_sequence=x)
+
+    def pack(x):
+        return nest.pack_sequence_as(structure=initial, flat_sequence=x)
+
     accum_dtypes = [x.dtype for x in flat_initial]
     num_accums = len(flat_initial)
 
@@ -1371,8 +1418,7 @@ def _scan(fn, elems, initial, reverse=False, inclusive=False, final_only=False):
     if final_only:
         loop_dtypes = [dtypes.int32, dtypes.int32] + accum_dtypes
     else:
-        loop_dtypes = [dtypes.int32, dtypes.int32] + \
-            accum_dtypes + accum_dtypes
+        loop_dtypes = [dtypes.int32, dtypes.int32] + accum_dtypes + accum_dtypes
 
     # TODO(tombagby): Update to tfe.defun
     def cond(i, num_elems, *args):
@@ -1403,24 +1449,27 @@ def _scan(fn, elems, initial, reverse=False, inclusive=False, final_only=False):
         return [i, num_elems] + new_out + flat_accum
 
     init_i = (
-        array_ops.shape(flat_elems[0])[0] -
-        1 if reverse else constant_op.constant(0, dtype=dtypes.int32))
+        array_ops.shape(flat_elems[0])[0] - 1
+        if reverse
+        else constant_op.constant(0, dtype=dtypes.int32)
+    )
     outputs = []
     if not final_only:
-        num_outputs = array_ops.shape(flat_elems[0])[
-            0] + (1 if inclusive else 0)
+        num_outputs = array_ops.shape(flat_elems[0])[0] + (1 if inclusive else 0)
         for initial_accum in flat_initial:
             out_shape = array_ops.concat(
-                [[num_outputs], array_ops.shape(initial_accum)], 0)
-            out = inplace_ops.empty(
-                out_shape, dtype=initial_accum.dtype, init=True)
+                [[num_outputs], array_ops.shape(initial_accum)], 0
+            )
+            out = inplace_ops.empty(out_shape, dtype=initial_accum.dtype, init=True)
             if inclusive:
-                out = inplace_ops.alias_inplace_add(out, init_i + (1 if reverse else 0),
-                                                    initial_accum)
+                out = inplace_ops.alias_inplace_add(
+                    out, init_i + (1 if reverse else 0), initial_accum
+                )
             outputs.append(out)
     loop_in = [init_i, num_elems] + outputs + flat_initial
     hostmem = [
-        i for i, x in enumerate(loop_in)
+        i
+        for i, x in enumerate(loop_in)
         if x.dtype.base_dtype in (dtypes.int32, dtypes.int64)
     ]
 
@@ -1432,13 +1481,11 @@ def _scan(fn, elems, initial, reverse=False, inclusive=False, final_only=False):
         # TODO(tombagby): Update to while_v2.
         cond = function.Defun(*loop_dtypes)(cond)
         body = function.Defun(*loop_dtypes)(body)
-        loop_results = functional_ops.While(
-            loop_in, cond, body, hostmem=hostmem)
-    out = loop_results[2:num_accums + 2]
+        loop_results = functional_ops.While(loop_in, cond, body, hostmem=hostmem)
+    out = loop_results[2 : num_accums + 2]
     return pack(out)
 
 
 def _get_dim(tensor, i):
     """Get value of tensor shape[i] preferring static value if available."""
-    return tensor_shape.dimension_value(
-        tensor.shape[i]) or array_ops.shape(tensor)[i]
+    return tensor_shape.dimension_value(tensor.shape[i]) or array_ops.shape(tensor)[i]

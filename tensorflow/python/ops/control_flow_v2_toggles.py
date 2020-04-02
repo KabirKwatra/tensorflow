@@ -95,4 +95,6 @@ def output_all_intermediates(state):  # pylint: disable=invalid-name
     Args:
       state: True, False or None. None restores the default behavior.
     """
-    control_flow_util_v2._EXPERIMENTAL_OUTPUT_ALL_INTERMEDIATES_OVERRIDE = state  # pylint: disable=protected-access
+    control_flow_util_v2._EXPERIMENTAL_OUTPUT_ALL_INTERMEDIATES_OVERRIDE = (
+        state  # pylint: disable=protected-access
+    )

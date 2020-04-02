@@ -49,10 +49,13 @@ def as_dense_shapes(shapes, classes):
       `tensor_shape.unknown_shape()` at positions where `classes` contains
       `tf.sparse.SparseTensor` and matching contents of `shapes` otherwise
     """
-    ret = nest.pack_sequence_as(shapes, [
-        tensor_shape.unknown_shape() if c is sparse_tensor.SparseTensor else shape
-        for shape, c in zip(nest.flatten(shapes), nest.flatten(classes))
-    ])
+    ret = nest.pack_sequence_as(
+        shapes,
+        [
+            tensor_shape.unknown_shape() if c is sparse_tensor.SparseTensor else shape
+            for shape, c in zip(nest.flatten(shapes), nest.flatten(classes))
+        ],
+    )
     return ret
 
 
@@ -68,10 +71,13 @@ def as_dense_types(types, classes):
       `dtypes.variant` at positions where `classes` contains
       `tf.sparse.SparseTensor` and matching contents of `types` otherwise
     """
-    ret = nest.pack_sequence_as(types, [
-        dtypes.variant if c is sparse_tensor.SparseTensor else ty
-        for ty, c in zip(nest.flatten(types), nest.flatten(classes))
-    ])
+    ret = nest.pack_sequence_as(
+        types,
+        [
+            dtypes.variant if c is sparse_tensor.SparseTensor else ty
+            for ty, c in zip(nest.flatten(types), nest.flatten(classes))
+        ],
+    )
     return ret
 
 
@@ -88,13 +94,20 @@ def deserialize_sparse_tensors(tensors, types, shapes, classes):
       `tensors` with any serialized sparse tensors replaced by their deserialized
       version.
     """
-    ret = nest.pack_sequence_as(types, [
-        sparse_ops.deserialize_sparse(tensor, dtype=ty, rank=shape.ndims)
-        if c is sparse_tensor.SparseTensor else tensor
-        for (tensor, ty, shape, c) in zip(
-            nest.flatten(tensors), nest.flatten(types), nest.flatten(shapes),
-            nest.flatten(classes))
-    ])
+    ret = nest.pack_sequence_as(
+        types,
+        [
+            sparse_ops.deserialize_sparse(tensor, dtype=ty, rank=shape.ndims)
+            if c is sparse_tensor.SparseTensor
+            else tensor
+            for (tensor, ty, shape, c) in zip(
+                nest.flatten(tensors),
+                nest.flatten(types),
+                nest.flatten(shapes),
+                nest.flatten(classes),
+            )
+        ],
+    )
     return ret
 
 
@@ -109,11 +122,15 @@ def get_classes(tensors):
       `tf.sparse.SparseTensor` at positions where `tensors` contains a sparse
       tensor and `tf.Tensor` otherwise.
     """
-    return nest.pack_sequence_as(tensors, [
-        sparse_tensor.SparseTensor
-        if isinstance(tensor, sparse_tensor.SparseTensor) else ops.Tensor
-        for tensor in nest.flatten(tensors)
-    ])
+    return nest.pack_sequence_as(
+        tensors,
+        [
+            sparse_tensor.SparseTensor
+            if isinstance(tensor, sparse_tensor.SparseTensor)
+            else ops.Tensor
+            for tensor in nest.flatten(tensors)
+        ],
+    )
 
 
 def serialize_many_sparse_tensors(tensors):
@@ -126,11 +143,15 @@ def serialize_many_sparse_tensors(tensors):
       `tensors` with any sparse tensors replaced by the serialized batch.
     """
 
-    ret = nest.pack_sequence_as(tensors, [
-        sparse_ops.serialize_many_sparse(tensor, out_type=dtypes.variant)
-        if sparse_tensor.is_sparse(tensor) else tensor
-        for tensor in nest.flatten(tensors)
-    ])
+    ret = nest.pack_sequence_as(
+        tensors,
+        [
+            sparse_ops.serialize_many_sparse(tensor, out_type=dtypes.variant)
+            if sparse_tensor.is_sparse(tensor)
+            else tensor
+            for tensor in nest.flatten(tensors)
+        ],
+    )
     return ret
 
 
@@ -144,9 +165,13 @@ def serialize_sparse_tensors(tensors):
       `tensors` with any sparse tensors replaced by their serialized version.
     """
 
-    ret = nest.pack_sequence_as(tensors, [
-        sparse_ops.serialize_sparse(tensor, out_type=dtypes.variant)
-        if isinstance(tensor, sparse_tensor.SparseTensor) else tensor
-        for tensor in nest.flatten(tensors)
-    ])
+    ret = nest.pack_sequence_as(
+        tensors,
+        [
+            sparse_ops.serialize_sparse(tensor, out_type=dtypes.variant)
+            if isinstance(tensor, sparse_tensor.SparseTensor)
+            else tensor
+            for tensor in nest.flatten(tensors)
+        ],
+    )
     return ret
