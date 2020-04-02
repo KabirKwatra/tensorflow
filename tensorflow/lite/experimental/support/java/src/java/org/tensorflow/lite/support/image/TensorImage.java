@@ -45,7 +45,6 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 // TODO(b/138907116): Support loading images from TensorBuffer with properties.
 // TODO(b/138905544): Support directly loading RGBBytes, YUVBytes and other types if necessary.
 public class TensorImage {
-
   private final ImageContainer container;
 
   /**
@@ -73,8 +72,7 @@ public class TensorImage {
    *     {@link DataType#FLOAT32}.
    */
   public TensorImage(DataType dataType) {
-    SupportPreconditions.checkArgument(
-        dataType == DataType.UINT8 || dataType == DataType.FLOAT32,
+    SupportPreconditions.checkArgument(dataType == DataType.UINT8 || dataType == DataType.FLOAT32,
         "Illegal data type for TensorImage: Only FLOAT32 and UINT8 are accepted");
     container = new ImageContainer(dataType);
   }
@@ -221,10 +219,8 @@ public class TensorImage {
 
   // Requires tensor shape [h, w, 3] or [1, h, w, 3].
   static void checkImageTensorShape(int[] shape) {
-    SupportPreconditions.checkArgument(
-        (shape.length == 3 || (shape.length == 4 && shape[0] == 1))
-            && shape[shape.length - 3] > 0
-            && shape[shape.length - 2] > 0
+    SupportPreconditions.checkArgument((shape.length == 3 || (shape.length == 4 && shape[0] == 1))
+            && shape[shape.length - 3] > 0 && shape[shape.length - 2] > 0
             && shape[shape.length - 1] == 3,
         "Only supports image shape in (h, w, c) or (1, h, w, c), and channels representing R, G, B"
             + " in order.");
@@ -232,7 +228,6 @@ public class TensorImage {
 
   // Handles RGB image data storage strategy of TensorBuffer.
   private static class ImageContainer {
-
     private TensorBuffer bufferImage;
     private boolean isBufferUpdated;
     private Bitmap bitmapImage;
