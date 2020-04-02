@@ -1,16 +1,16 @@
 # Tensorflow Lite Core ML Delegate
 
 TensorFlow Lite Core ML Delegate enables running TensorFlow Lite models on
-[Core ML framework](https://developer.apple.com/documentation/coreml),
-which results in faster model inference on iOS devices.
+[Core ML framework](https://developer.apple.com/documentation/coreml), which
+results in faster model inference on iOS devices.
 
 [TOC]
 
 ## Supported iOS versions and processors
 
-* iOS 12 and later. In the older iOS versions, Core ML delegate will
+- iOS 12 and later. In the older iOS versions, Core ML delegate will
   automatically fallback to CPU.
-* When running on iPhone Xs and later, it will use Neural Engine for faster
+- When running on iPhone Xs and later, it will use Neural Engine for faster
   inference.
 
 ## Update code to use Core ML delegate
@@ -62,43 +62,43 @@ TfLiteCoreMlDelegateDelete(delegate);
 
 Following ops are supported by the Core ML delegate.
 
-*   Add
-    *   Only certain shapes are broadcastable. In Core ML tensor layout,
-        following tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1,
-        1]`, `[B, 1, H, W]`, `[B, 1, 1, 1]`.
-*   AveragePool2D
-*   Concat
-*   Conv2D
-    *   Weights and bias should be constant.
-*   DepthwiseConv2D
-    *   Weights and bias should be constant.
-*   Hardswish
-*   Logistic (aka Sigmoid)
-*   MaxPool2D
-*   Mul
-    *   Only certain shapes are broadcastable. In Core ML tensor layout,
-        following tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1,
-        1]`, `[B, 1, H, W]`, `[B, 1, 1, 1]`.
-*   Relu
-*   ReluN1To1
-*   Relu6
-*   Reshape
-*   ResizeBilinear
-*   SoftMax
-*   Tanh
+- Add
+  - Only certain shapes are broadcastable. In Core ML tensor layout, following
+    tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1, 1]`,
+    `[B, 1, H, W]`, `[B, 1, 1, 1]`.
+- AveragePool2D
+- Concat
+- Conv2D
+  - Weights and bias should be constant.
+- DepthwiseConv2D
+  - Weights and bias should be constant.
+- Hardswish
+- Logistic (aka Sigmoid)
+- MaxPool2D
+- Mul
+  - Only certain shapes are broadcastable. In Core ML tensor layout, following
+    tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1, 1]`,
+    `[B, 1, H, W]`, `[B, 1, 1, 1]`.
+- Relu
+- ReluN1To1
+- Relu6
+- Reshape
+- ResizeBilinear
+- SoftMax
+- Tanh
 
 ## FAQ
 
-* Does Core ML delegate support fallback to CPU if a graph contains unsupported
+- Does Core ML delegate support fallback to CPU if a graph contains unsupported
   ops?
-  * Yes.
-* Does Core ML delegate work on iOS Simulator?
-  * Yes. The library includes x86 and x86_64 targets so it can run on
-    a simulator, but you will not see performance boost over CPU.
-* Does TensorFlow Lite and Core ML delegate support macOS?
-  * TensorFlow Lite is only tested on iOS but not macOS.
-* Are custom TF Lite ops supported?
-  * No, CoreML delegate does not support custom ops and they will fallback to
+  - Yes.
+- Does Core ML delegate work on iOS Simulator?
+  - Yes. The library includes x86 and x86_64 targets so it can run on a
+    simulator, but you will not see performance boost over CPU.
+- Does TensorFlow Lite and Core ML delegate support macOS?
+  - TensorFlow Lite is only tested on iOS but not macOS.
+- Are custom TF Lite ops supported?
+  - No, CoreML delegate does not support custom ops and they will fallback to
     CPU.
 
 ## Appendix

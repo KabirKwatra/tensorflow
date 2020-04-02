@@ -1,6 +1,7 @@
 # TensorFlow Lite delegates
 
 Note: Delegate API is still experimental and is subject to change.
+
 ## What is a TensorFlow Lite delegate?
 
 A TensorFlow Lite delegate is a way to delegate part or all of graph execution
@@ -18,28 +19,28 @@ GPU or DSP, that allows for better performance and higher energy efficiency.
 
 TensorFlow Lite provides the following delegates for hardware acceleration:
 
-*   **GPU delegate for cross platform acceleration** - The GPU delegate can be
-    used on both Android and iOS. It is optimized to run 32-bit and 16-bit float
-    based models where a GPU is available. For an overview of the GPU delegate,
-    see [TensorFlow Lite on GPU](gpu_advanced.md). For step-by-step tutorials on
-    using the GPU delegate with Android and iOS, see
-    [TensorFlow Lite GPU Delegate Tutorial](gpu.md).
-*   **NNAPI delegate for newer Android devices** - The NNAPI delegate can be
-    used to accelerate models on Android devices with GPU, DSP and / or NPU
-    available. It is available in Android 8.1 (API 27+) or higher. For an
-    overview of the NNAPI delegate, step-by-step instructions and best
-    practices, see [TensorFlow Lite NNAPI delegate](nnapi.md).
-*   **Hexagon delegate for older Android devices** - The Hexagon delegate can be
-    used to accelerate models on Android devices with Qualcomm Hexagon DSP. It
-    can be used on devices older version of Android OS that does not fully
-    support NNAPI. See [TensorFlow Lite Hexagon delegate](hexagon_delegate.md)
-    for more detail.
-*   **Core ML delegate for newer iPhones and iPads** - For newer iPhones and
-    iPads where Neural Engine is available, you can use Core ML delegate to
-    accelerate inference for 32-bit float based models. Neural Engine is
-    available Apple mobile devices with A12 SoC or higher. For an overview of
-    the Core ML delegate and step-by-step instructions, see
-    [TensorFlow Lite Core ML delegate](coreml_delegate.md).
+- **GPU delegate for cross platform acceleration** - The GPU delegate can be
+  used on both Android and iOS. It is optimized to run 32-bit and 16-bit float
+  based models where a GPU is available. For an overview of the GPU delegate,
+  see [TensorFlow Lite on GPU](gpu_advanced.md). For step-by-step tutorials on
+  using the GPU delegate with Android and iOS, see
+  [TensorFlow Lite GPU Delegate Tutorial](gpu.md).
+- **NNAPI delegate for newer Android devices** - The NNAPI delegate can be used
+  to accelerate models on Android devices with GPU, DSP and / or NPU available.
+  It is available in Android 8.1 (API 27+) or higher. For an overview of the
+  NNAPI delegate, step-by-step instructions and best practices, see
+  [TensorFlow Lite NNAPI delegate](nnapi.md).
+- **Hexagon delegate for older Android devices** - The Hexagon delegate can be
+  used to accelerate models on Android devices with Qualcomm Hexagon DSP. It can
+  be used on devices older version of Android OS that does not fully support
+  NNAPI. See [TensorFlow Lite Hexagon delegate](hexagon_delegate.md) for more
+  detail.
+- **Core ML delegate for newer iPhones and iPads** - For newer iPhones and iPads
+  where Neural Engine is available, you can use Core ML delegate to accelerate
+  inference for 32-bit float based models. Neural Engine is available Apple
+  mobile devices with A12 SoC or higher. For an overview of the Core ML delegate
+  and step-by-step instructions, see
+  [TensorFlow Lite Core ML delegate](coreml_delegate.md).
 
 ## How do delegates work?
 
