@@ -14,7 +14,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tf 2.0 upgrader."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -23,12 +22,10 @@ import inspect
 import os
 import tempfile
 
-from absl.testing import parameterized
 import six
+from absl.testing import parameterized
+
 import tensorflow.compat.v1 as tf
-
-# OSS TF V2 import placeholder.
-
 from tensorflow.python.framework import test_util
 from tensorflow.python.platform import test as test_lib
 from tensorflow.python.util import tf_decorator
@@ -38,6 +35,7 @@ from tensorflow.tools.common import public_api
 from tensorflow.tools.common import traverse
 from tensorflow.tools.compatibility import ast_edits
 from tensorflow.tools.compatibility import tf_upgrade_v2
+# OSS TF V2 import placeholder.
 
 
 def get_symbol_for_name(root, name):
