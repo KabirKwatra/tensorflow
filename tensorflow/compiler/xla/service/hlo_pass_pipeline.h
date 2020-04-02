@@ -34,104 +34,108 @@ namespace xla {
 
 // Pipeline of HLO passes.
 class HloPassPipeline : public HloPassInterface {
- public:
-  explicit HloPassPipeline(const string& name,
-                           CompilationStats* compilation_stats = nullptr)
-      : name_(name), compilation_stats_(compilation_stats) {
-    if (compilation_stats == nullptr) {
-      empty_compilation_stats_ = CompilationStats::MakeNoopStats();
-      compilation_stats_ = empty_compilation_stats_.get();
+public:
+    explicit HloPassPipeline(const string& name,
+                             CompilationStats* compilation_stats = nullptr)
+        : name_(name), compilation_stats_(compilation_stats) {
+        if (compilation_stats == nullptr) {
+            empty_compilation_stats_ = CompilationStats::MakeNoopStats();
+            compilation_stats_ = empty_compilation_stats_.get();
+        }
     }
-  }
-  absl::string_view name() const override { return name_; }
+    absl::string_view name() const override {
+        return name_;
+    }
 
-  // Add a pass to the pipeline. It should be called with the arguments for the
-  // pass constructor:
-  //
-  //   pipeline.AddPass<FooPass>(constructor_arg1, constructor_arg2);
-  //
-  // Returns a reference to the added pass.
-  template <typename T, typename... Args>
-  T& AddPass(Args&&... args) {
-    CHECK(!run_called_) << "AddPass cannot be called after Run";
-    auto pass = new T(std::forward<Args>(args)...);
-    passes_.push_back(std::unique_ptr<T>(pass));
-    return *pass;
-  }
+    // Add a pass to the pipeline. It should be called with the arguments for the
+    // pass constructor:
+    //
+    //   pipeline.AddPass<FooPass>(constructor_arg1, constructor_arg2);
+    //
+    // Returns a reference to the added pass.
+    template <typename T, typename... Args>
+    T& AddPass(Args&&... args) {
+        CHECK(!run_called_) << "AddPass cannot be called after Run";
+        auto pass = new T(std::forward<Args>(args)...);
+        passes_.push_back(std::unique_ptr<T>(pass));
+        return *pass;
+    }
 
-  // Add an invariant-checking pass to the pipeline. It will be run before and
-  // after each HLO pass. The invariant checking pass must not mutate the graph
-  // (it is required to always return "false" from its Run() method).
-  template <typename T, typename... Args>
-  T& AddInvariantChecker(Args&&... args) {
-    CHECK(!run_called_) << "AddInvariantChecker cannot be called after Run";
-    auto pass = new T(std::forward<Args>(args)...);
-    invariant_checkers_.push_back(std::unique_ptr<T>(pass));
-    return *pass;
-  }
+    // Add an invariant-checking pass to the pipeline. It will be run before and
+    // after each HLO pass. The invariant checking pass must not mutate the graph
+    // (it is required to always return "false" from its Run() method).
+    template <typename T, typename... Args>
+    T& AddInvariantChecker(Args&&... args) {
+        CHECK(!run_called_) << "AddInvariantChecker cannot be called after Run";
+        auto pass = new T(std::forward<Args>(args)...);
+        invariant_checkers_.push_back(std::unique_ptr<T>(pass));
+        return *pass;
+    }
 
-  // Add an invariant-checking pass to the pipeline on debug builds only.
-  template <typename T, typename... Args>
-  void AddInvariantCheckerDebug(Args&&... args) {
+    // Add an invariant-checking pass to the pipeline on debug builds only.
+    template <typename T, typename... Args>
+    void AddInvariantCheckerDebug(Args&&... args) {
 #ifndef NDEBUG
-    AddInvariantChecker<T>(std::forward<Args>(args)...);
+        AddInvariantChecker<T>(std::forward<Args>(args)...);
 #endif  // NDEBUG
-  }
+    }
 
-  StatusOr<bool> Run(HloModule* module) override;
-  StatusOr<bool> RunOnModuleGroup(HloModuleGroup* module_group) override;
+    StatusOr<bool> Run(HloModule* module) override;
+    StatusOr<bool> RunOnModuleGroup(HloModuleGroup* module_group) override;
 
-  bool IsPassPipeline() override { return true; }
+    bool IsPassPipeline() override {
+        return true;
+    }
 
- private:
-  // Returns the set of passes which are enabled. DebugOptions can selectively
-  // disable passes via --xla_disable_hlo_passes flag.
-  std::vector<HloPassInterface*> GetEnabledPasses(
-      const DebugOptions& debug_options);
+private:
+    // Returns the set of passes which are enabled. DebugOptions can selectively
+    // disable passes via --xla_disable_hlo_passes flag.
+    std::vector<HloPassInterface*> GetEnabledPasses(
+        const DebugOptions& debug_options);
 
-  // Maybe dumps the given module or module group depending on flag values
-  // contained in DebugOptions of module config.
-  void MaybeDumpHlo(const HloModuleGroup& module_group,
-                    absl::string_view after_pass_name,
-                    absl::string_view before_pass_name);
-  void MaybeDumpHlo(const HloModule& module, absl::string_view after_pass_name,
-                    absl::string_view before_pass_name);
+    // Maybe dumps the given module or module group depending on flag values
+    // contained in DebugOptions of module config.
+    void MaybeDumpHlo(const HloModuleGroup& module_group,
+                      absl::string_view after_pass_name,
+                      absl::string_view before_pass_name);
+    void MaybeDumpHlo(const HloModule& module, absl::string_view after_pass_name,
+                      absl::string_view before_pass_name);
 
-  // Runs the invariant checker on the given HLO. HloT can be either HloModule
-  // or HloModuleGroup.
-  template <typename HloT>
-  Status RunInvariantCheckers(HloT* hlo, absl::string_view after_pass_name);
+    // Runs the invariant checker on the given HLO. HloT can be either HloModule
+    // or HloModuleGroup.
+    template <typename HloT>
+    Status RunInvariantCheckers(HloT* hlo, absl::string_view after_pass_name);
 
-  // Helper which runs the given pass on the given HLO. HloT can be either
-  // HloModule or HloModuleGroup.
-  template <typename HloT>
-  StatusOr<bool> RunPassesInternal(HloT* hlo,
-                                   absl::Span<HloPassInterface* const> passes);
+    // Helper which runs the given pass on the given HLO. HloT can be either
+    // HloModule or HloModuleGroup.
+    template <typename HloT>
+    StatusOr<bool> RunPassesInternal(HloT* hlo,
+                                     absl::Span<HloPassInterface* const> passes);
 
-  // Helpers which run the given passes on the given HLO construct. These
-  // helpers enable templating of the core of the pipeline logic by providing
-  // HloModule and HloModuleGroup specific methods with the same name.
-  static StatusOr<bool> RunHelper(HloPassInterface* pass, HloModule* module) {
-    TF_ASSIGN_OR_RETURN(bool changed, pass->Run(module));
-    module->Cleanup();
-    return changed;
-  }
-  static StatusOr<bool> RunHelper(HloPassInterface* pass,
-                                  HloModuleGroup* module_group) {
-    TF_ASSIGN_OR_RETURN(bool changed, pass->RunOnModuleGroup(module_group));
-    module_group->Cleanup();
-    return changed;
-  }
+    // Helpers which run the given passes on the given HLO construct. These
+    // helpers enable templating of the core of the pipeline logic by providing
+    // HloModule and HloModuleGroup specific methods with the same name.
+    static StatusOr<bool> RunHelper(HloPassInterface* pass, HloModule* module) {
+        TF_ASSIGN_OR_RETURN(bool changed, pass->Run(module));
+        module->Cleanup();
+        return changed;
+    }
+    static StatusOr<bool> RunHelper(HloPassInterface* pass,
+                                    HloModuleGroup* module_group) {
+        TF_ASSIGN_OR_RETURN(bool changed, pass->RunOnModuleGroup(module_group));
+        module_group->Cleanup();
+        return changed;
+    }
 
-  const string name_;
-  std::vector<std::unique_ptr<HloPassInterface>> passes_;
-  std::vector<std::unique_ptr<HloPassInterface>> invariant_checkers_;
-  bool run_called_ = false;
+    const string name_;
+    std::vector<std::unique_ptr<HloPassInterface>> passes_;
+    std::vector<std::unique_ptr<HloPassInterface>> invariant_checkers_;
+    bool run_called_ = false;
 
-  CompilationStats* compilation_stats_;
-  // Default stats instance for when one is not passed in the constructor.
-  // Use via compilation_stats_, not directly.
-  std::unique_ptr<CompilationStats> empty_compilation_stats_;
+    CompilationStats* compilation_stats_;
+    // Default stats instance for when one is not passed in the constructor.
+    // Use via compilation_stats_, not directly.
+    std::unique_ptr<CompilationStats> empty_compilation_stats_;
 };
 
 }  // namespace xla

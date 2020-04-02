@@ -31,36 +31,36 @@ namespace tensorflow {
 // any concrete implementation. However, in cases where the true concrete class
 // is needed a static_cast can be applied.
 class AbstractTensorHandleInterface {
- public:
-  // Release any underlying resources, including the interface object.
-  //
-  // WARNING: The destructor of this class is marked as protected to disallow
-  // clients from directly destroying this object since it may manage it's own
-  // lifetime through ref counting. Thus this must be allocated on the heap and
-  // clients MUST call Release() in order to destroy an instance of this class.
-  virtual void Release() = 0;
+public:
+    // Release any underlying resources, including the interface object.
+    //
+    // WARNING: The destructor of this class is marked as protected to disallow
+    // clients from directly destroying this object since it may manage it's own
+    // lifetime through ref counting. Thus this must be allocated on the heap and
+    // clients MUST call Release() in order to destroy an instance of this class.
+    virtual void Release() = 0;
 
-  // Returns tensor dtype.
-  virtual tensorflow::DataType DataType() const = 0;
-  // Returns number of dimensions.
-  virtual Status NumDims(int* num_dims) const = 0;
-  // Returns number of elements across all dimensions.
-  virtual Status NumElements(int64* num_elements) const = 0;
-  // Returns size of specified dimension
-  virtual Status Dim(int dim_index, int64* dim) const = 0;
+    // Returns tensor dtype.
+    virtual tensorflow::DataType DataType() const = 0;
+    // Returns number of dimensions.
+    virtual Status NumDims(int* num_dims) const = 0;
+    // Returns number of elements across all dimensions.
+    virtual Status NumElements(int64* num_elements) const = 0;
+    // Returns size of specified dimension
+    virtual Status Dim(int dim_index, int64* dim) const = 0;
 
-  // Returns the device which created the handle.
-  virtual const char* DeviceName(Status* status) const = 0;
-  // Returns the device where the tensor was placed.
-  virtual const char* BackingDeviceName(Status* status) const = 0;
-  // Returns a tensor for the handle. If tensor is remote, it will be copied.
-  virtual AbstractTensorInterface* Resolve(Status* status) = 0;
+    // Returns the device which created the handle.
+    virtual const char* DeviceName(Status* status) const = 0;
+    // Returns the device where the tensor was placed.
+    virtual const char* BackingDeviceName(Status* status) const = 0;
+    // Returns a tensor for the handle. If tensor is remote, it will be copied.
+    virtual AbstractTensorInterface* Resolve(Status* status) = 0;
 
-  // Return a copy of the handle.
-  virtual AbstractTensorHandleInterface* Copy() = 0;
+    // Return a copy of the handle.
+    virtual AbstractTensorHandleInterface* Copy() = 0;
 
- protected:
-  virtual ~AbstractTensorHandleInterface() {}
+protected:
+    virtual ~AbstractTensorHandleInterface() {}
 };
 
 }  // namespace tensorflow
