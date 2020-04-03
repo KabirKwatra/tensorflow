@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for low-level eager execution primitives."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -23,6 +22,7 @@ import traceback
 
 import numpy as np
 
+from tensorflow.python import keras
 from tensorflow.python import pywrap_tfe
 from tensorflow.python.eager import backprop
 from tensorflow.python.eager import context
@@ -39,7 +39,6 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python import keras
 
 
 class Tests(test.TestCase):
