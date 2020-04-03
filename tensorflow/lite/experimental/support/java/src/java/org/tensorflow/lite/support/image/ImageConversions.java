@@ -27,7 +27,6 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
  * This class is an internal helper for {@link org.tensorflow.lite.support.image}.
  */
 class ImageConversions {
-
   /**
    * Converts an Image in a TensorBuffer to a Bitmap, whose memory is already allocated.
    *
@@ -47,20 +46,19 @@ class ImageConversions {
   static void convertTensorBufferToBitmap(TensorBuffer buffer, Bitmap bitmap) {
     if (buffer.getDataType() != DataType.UINT8) {
       // We will add support to FLOAT format conversion in the future, as it may need other configs.
-      throw new UnsupportedOperationException(
-          String.format(
-              "Converting TensorBuffer of type %s to ARGB_8888 Bitmap is not supported yet.",
-              buffer.getDataType()));
+      throw new UnsupportedOperationException(String.format(
+          "Converting TensorBuffer of type %s to ARGB_8888 Bitmap is not supported yet.",
+          buffer.getDataType()));
     }
     int[] shape = buffer.getShape();
     TensorImage.checkImageTensorShape(shape);
     int h = shape[shape.length - 3];
     int w = shape[shape.length - 2];
     if (bitmap.getWidth() != w || bitmap.getHeight() != h) {
-      throw new IllegalArgumentException(String.format(
-          "Given bitmap has different width or height %s with the expected ones %s.",
-          Arrays.toString(new int[]{bitmap.getWidth(), bitmap.getHeight()}),
-          Arrays.toString(new int[]{w, h})));
+      throw new IllegalArgumentException(
+          String.format("Given bitmap has different width or height %s with the expected ones %s.",
+              Arrays.toString(new int[] {bitmap.getWidth(), bitmap.getHeight()}),
+              Arrays.toString(new int[] {w, h})));
     }
     if (!bitmap.isMutable()) {
       throw new IllegalArgumentException("Given bitmap is not mutable");
