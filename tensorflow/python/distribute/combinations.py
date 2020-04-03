@@ -68,10 +68,13 @@ class ClusterParameters(combinations_lib.ParameterModifier):
         strategy = None
         for _, v in kwargs.items():
             if isinstance(v, NamedDistribution):
-                if strategy is not None and _num_total_workers(v.has_chief,
-                                                               v.num_workers) > 1:
-                    raise ValueError("Only support one NamedDistribution for multi worker"
-                                     "tests.")
+                if (
+                    strategy is not None
+                    and _num_total_workers(v.has_chief, v.num_workers) > 1
+                ):
+                    raise ValueError(
+                        "Only support one NamedDistribution for multi worker" "tests."
+                    )
                 strategy = v
         # Always set cluster parameters if they're requested. So that generate()
         # works when there's no startegy in the combinations.
@@ -100,24 +103,32 @@ class NamedGPUCombination(combinations_lib.TestCombination):
     GPU_TEST = "test_gpu" in sys.argv[0]
 
     def should_execute_combination(self, kwargs):
-        distributions = [
-            v for v in kwargs.values() if isinstance(v, NamedDistribution)
-        ]
+        distributions = [v for v in kwargs.values() if isinstance(v, NamedDistribution)]
         required_gpus = kwargs.get("required_gpus", None)
 
         if distributions and required_gpus:
-            raise ValueError("Do not use `required_gpus` and arguments of type "
-                             "NamedDistribution together.")
+            raise ValueError(
+                "Do not use `required_gpus` and arguments of type "
+                "NamedDistribution together."
+            )
 
-        number_of_required_gpus = max([required_gpus or 0] +
-                                      [d.required_gpus or 0 for d in distributions])
+        number_of_required_gpus = max(
+            [required_gpus or 0] + [d.required_gpus or 0 for d in distributions]
+        )
 
         if not number_of_required_gpus and GPUCombination.GPU_TEST:
             return (False, "Test that doesn't require GPUs.")
-        elif (number_of_required_gpus > 0
-              and context.num_gpus() < number_of_required_gpus):
-            return (False, ("Only {} of {} required GPUs are available.".format(
-                context.num_gpus(), number_of_required_gpus)))
+        elif (
+            number_of_required_gpus > 0 and context.num_gpus() < number_of_required_gpus
+        ):
+            return (
+                False,
+                (
+                    "Only {} of {} required GPUs are available.".format(
+                        context.num_gpus(), number_of_required_gpus
+                    )
+                ),
+            )
         else:
             return (True, None)
 
@@ -156,27 +167,32 @@ class NamedTPUCombination(combinations_lib.TestCombination):
     TPU_TEST = "test_tpu" in sys.argv[0]
 
     def should_execute_combination(self, kwargs):
-        distributions = [
-            v for v in kwargs.values() if isinstance(v, NamedDistribution)
-        ]
+        distributions = [v for v in kwargs.values() if isinstance(v, NamedDistribution)]
         # TODO(isaprykin): Migrate all tests away from using 'required_tpu' in favor
         # of 'required_tpus'.
         if "required_tpus" in kwargs and "required_tpu" in kwargs:
-            raise ValueError("Do not use `required_tpu`.  Both `required_tpus` and "
-                             "`required_tpu` were specified.")
+            raise ValueError(
+                "Do not use `required_tpu`.  Both `required_tpus` and "
+                "`required_tpu` were specified."
+            )
         required_tpus = kwargs.get("required_tpus", None) or kwargs.get(
-            "required_tpu", None)
+            "required_tpu", None
+        )
 
         if distributions and required_tpus:
-            raise ValueError("Do not use `required_tpus` and arguments of type "
-                             "NamedDistribution together.")
+            raise ValueError(
+                "Do not use `required_tpus` and arguments of type "
+                "NamedDistribution together."
+            )
 
         # TODO(isaprykin): Add support for a particular number of TPUs.  Right now
         # it's binary.
-        number_of_required_tpus = max([required_tpus or 0] +
-                                      [d.required_tpu or 0 for d in distributions])
-        use_cloud_tpu = any([kwargs.get("use_cloud_tpu")] +
-                            [d.use_cloud_tpu for d in distributions])
+        number_of_required_tpus = max(
+            [required_tpus or 0] + [d.required_tpu or 0 for d in distributions]
+        )
+        use_cloud_tpu = any(
+            [kwargs.get("use_cloud_tpu")] + [d.use_cloud_tpu for d in distributions]
+        )
         tpu = hasattr(FLAGS, "tpu") and FLAGS.tpu or ""
 
         if not number_of_required_tpus and TPUCombination.TPU_TEST:
@@ -211,14 +227,16 @@ class TPUCombination(NamedTPUCombination):
 class NamedDistribution(object):
     """Wraps a `tf.distribute.Strategy` and adds a name for test titles."""
 
-    def __init__(self,
-                 name,
-                 distribution_fn,
-                 required_gpus=None,
-                 required_tpu=False,
-                 use_cloud_tpu=False,
-                 has_chief=False,
-                 num_workers=1):
+    def __init__(
+        self,
+        name,
+        distribution_fn,
+        required_gpus=None,
+        required_tpu=False,
+        use_cloud_tpu=False,
+        has_chief=False,
+        num_workers=1,
+    ):
         """Initialize NamedDistribution.
 
         Args:
@@ -276,7 +294,8 @@ def generate(combinations, test_combinations=()):
     # framework.test_combinations.generate. The order is important since we need
     # framework.test_combinations.generate to apply all parameter modifiers first.
     combination_decorator = combinations_lib.generate(
-        combinations, test_combinations=default_combinations + test_combinations)
+        combinations, test_combinations=default_combinations + test_combinations
+    )
 
     def decorator(test_method_or_class):
         if isinstance(test_method_or_class, type):
@@ -284,10 +303,10 @@ def generate(combinations, test_combinations=()):
             class_object = test_method_or_class
             # Decorate each test method with _multi_worker_test.
             for name, test_method in six.iteritems(class_object.__dict__.copy()):
-                if (name.startswith(unittest.TestLoader.testMethodPrefix) and
-                        isinstance(test_method, types.FunctionType)):
-                    setattr(class_object, name,
-                            _multi_worker_test(test_method))
+                if name.startswith(unittest.TestLoader.testMethodPrefix) and isinstance(
+                    test_method, types.FunctionType
+                ):
+                    setattr(class_object, name, _multi_worker_test(test_method))
             return combination_decorator(class_object)
         else:
             return combination_decorator(_multi_worker_test(test_method_or_class))
@@ -386,19 +405,19 @@ def _multi_worker_test(test_method):
         #                   [sub process]test_method()
         test_id = self.id()
         cluster_spec = multi_worker_test_base.create_cluster_spec(
-            has_chief=has_chief, num_workers=num_workers, num_ps=0, has_eval=False)
-        result = multi_process_runner.run(
-            _test_runner, cluster_spec, args=(test_id,))
+            has_chief=has_chief, num_workers=num_workers, num_ps=0, has_eval=False
+        )
+        result = multi_process_runner.run(_test_runner, cluster_spec, args=(test_id,))
         for was_successful in result.return_value:
             if not was_successful:
-                raise AssertionError(
-                    "some worker failed, see logs for details")
+                raise AssertionError("some worker failed, see logs for details")
 
     argspec = tf_inspect.getfullargspec(test_method)
     decorator_args = (argspec.args or []) + ["has_chief", "num_workers"]
     decorator_argspec = argspec._replace(args=decorator_args)
     return tf_decorator.make_decorator(
-        test_method, decorator, decorator_argspec=decorator_argspec)
+        test_method, decorator, decorator_argspec=decorator_argspec
+    )
 
 
 def _num_total_workers(has_chief, num_workers):
