@@ -39,15 +39,15 @@ namespace {
 
 std::string GetFullyConnectedCode(const DeviceInfo& device_info,
                                   int src_channels, int dst_channels) {
-    bool shared_memory =
-        device_info.IsAppleGPU() &&
-        device_info.apple_info.IsLocalMemoryPreferredOverGlobal();
-    const std::string barrier = device_info.IsWaveSizeEqualTo32()
-                                ? "SIMDGROUP_BARRIER"
-                                : "threadgroup_barrier";
-    const int src_depth = IntegralDivideRoundUp(src_channels, 4);
-    std::stringstream code;
-    code << R"(
+  bool shared_memory =
+      device_info.IsAppleGPU() &&
+      device_info.apple_info.IsLocalMemoryPreferredOverGlobal();
+  const std::string barrier = device_info.IsWaveSizeEqualTo32()
+                                  ? "SIMDGROUP_BARRIER"
+                                  : "threadgroup_barrier";
+  const int src_depth = IntegralDivideRoundUp(src_channels, 4);
+  std::stringstream code;
+  code << R"(
     #include <metal_stdlib>
     using namespace metal;
 
@@ -80,21 +80,21 @@ std::string GetFullyConnectedCode(const DeviceInfo& device_info,
     $1(mem_flags::mem_none);
   }
   )";
-} else {
+  } else {
     code << R"(
   float summa = 0.0f;
   uint counter = ugid.y * $0;
   for (uint i = 0; i < $0; ++i, ++counter) {
     )";
     if (src_depth % 4 != 0) {
-        code << "    if (counter >= params.src_depth) continue;" << std::endl;
+      code << "    if (counter >= params.src_depth) continue;" << std::endl;
     }
     code << "    summa += dot(vector[counter], matrix[counter * "
-         "params.dst_channels + ugid.x]);"
+            "params.dst_channels + ugid.x]);"
          << std::endl;
     code << "  }" << std::endl;
-}
-code << R"(
+  }
+  code << R"(
 
   threadgroup float temp[8][4];
   temp[tid.x][tid.y] = summa;
@@ -116,10 +116,10 @@ code << R"(
   }
 }
   )";
-const int src_depth_sub_groups = shared_memory
-                                 ? IntegralDivideRoundUp(src_depth, 32)
-                                 : IntegralDivideRoundUp(src_depth, 4);
-return absl::Substitute(code.str(), src_depth_sub_groups, barrier);
+  const int src_depth_sub_groups = shared_memory
+                                       ? IntegralDivideRoundUp(src_depth, 32)
+                                       : IntegralDivideRoundUp(src_depth, 4);
+  return absl::Substitute(code.str(), src_depth_sub_groups, barrier);
 }
 }  // namespace
 
@@ -127,80 +127,76 @@ std::vector<ComputeTaskDescriptorPtr> FullyConnected(
     int id, ValueId input_id, ValueId output_id,
     const FullyConnectedAttributes& attr, const DeviceInfo& device_info,
     const RuntimeOptions& options) {
-    auto desc = std::make_shared<ComputeTaskDescriptor>();
-    desc->id = id;
-    desc->is_linkable = false;
-    desc->shader_source = GetFullyConnectedCode(device_info, attr.weights.shape.i,
-                          attr.weights.shape.o);
+  auto desc = std::make_shared<ComputeTaskDescriptor>();
+  desc->id = id;
+  desc->is_linkable = false;
+  desc->shader_source = GetFullyConnectedCode(device_info, attr.weights.shape.i,
+                                              attr.weights.shape.o);
 
-    desc->input_buffers = {
-        {input_id, "device FLT4* const vector"},
-    };
+  desc->input_buffers = {
+      {input_id, "device FLT4* const vector"},
+  };
 
-    desc->output_buffer = {
-        output_id, "device FLT4* result",
-        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-            return CalculateOutputShape(buffers.find(input_id)->second, attr);
+  desc->output_buffer = {
+      output_id, "device FLT4* result",
+      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+        return CalculateOutputShape(buffers.find(input_id)->second, attr);
+      }};
+
+  bool shared_memory =
+      device_info.IsAppleGPU() &&
+      device_info.apple_info.IsLocalMemoryPreferredOverGlobal();
+  const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
+  const int src_depth_aligned = AlignByN(src_depth, shared_memory ? 32 : 4);
+  const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 8);
+
+  int counter = 0;
+  std::vector<float> filters_reordered(dst_channels_aligned *
+                                       src_depth_aligned * 4);
+  for (int j = 0; j < src_depth_aligned; ++j) {
+    for (int i = 0; i < dst_channels_aligned; ++i) {
+      for (int k = 0; k < 4; ++k) {
+        if (j * 4 + k >= attr.weights.shape.i || i >= attr.weights.shape.o) {
+          filters_reordered[counter++] = 0.0f;
+        } else {
+          const int f_index =
+              attr.weights.shape.LinearIndex({i, 0, 0, j * 4 + k});
+          filters_reordered[counter++] = attr.weights.data[f_index];
         }
-    };
-
-    bool shared_memory =
-        device_info.IsAppleGPU() &&
-        device_info.apple_info.IsLocalMemoryPreferredOverGlobal();
-    const int src_depth = IntegralDivideRoundUp(attr.weights.shape.i, 4);
-    const int src_depth_aligned = AlignByN(src_depth, shared_memory ? 32 : 4);
-    const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 8);
-
-    int counter = 0;
-    std::vector<float> filters_reordered(dst_channels_aligned *
-                                         src_depth_aligned * 4);
-    for (int j = 0; j < src_depth_aligned; ++j) {
-        for (int i = 0; i < dst_channels_aligned; ++i) {
-            for (int k = 0; k < 4; ++k) {
-                if (j * 4 + k >= attr.weights.shape.i || i >= attr.weights.shape.o) {
-                    filters_reordered[counter++] = 0.0f;
-                } else {
-                    const int f_index =
-                        attr.weights.shape.LinearIndex({i, 0, 0, j * 4 + k});
-                    filters_reordered[counter++] = attr.weights.data[f_index];
-                }
-            }
-        }
+      }
     }
+  }
 
-    desc->immutable_buffers = {
-        {   "device FLT4* const matrix",
-            GetByteBufferConverted(filters_reordered, options.storage_precision)
-        },
-        {   "device FLT4* const biases",
-            GetByteBufferConvertedResized(attr.bias.data, options.storage_precision,
-                                          attr.weights.shape.o)
-        },
-    };
+  desc->immutable_buffers = {
+      {"device FLT4* const matrix",
+       GetByteBufferConverted(filters_reordered, options.storage_precision)},
+      {"device FLT4* const biases",
+       GetByteBufferConvertedResized(attr.bias.data, options.storage_precision,
+                                     attr.weights.shape.o)},
+  };
 
-    desc->uniform_buffers = {
-        {   "constant uniforms& params",
-            [attr](const std::map<ValueId, BHWC>& buffers) {
-                std::vector<uint32_t> uniform_params{
-                    static_cast<uint32_t>(
-                        IntegralDivideRoundUp(attr.weights.shape.i, 4)),
-                    static_cast<uint32_t>(AlignByN(attr.weights.shape.o, 8)),
-                    static_cast<uint32_t>(attr.weights.shape.o),
-                    static_cast<uint32_t>(0),
-                };
-                return GetByteBuffer(uniform_params);
-            }
-        },
-    };
+  desc->uniform_buffers = {
+      {"constant uniforms& params",
+       [attr](const std::map<ValueId, BHWC>& buffers) {
+         std::vector<uint32_t> uniform_params{
+             static_cast<uint32_t>(
+                 IntegralDivideRoundUp(attr.weights.shape.i, 4)),
+             static_cast<uint32_t>(AlignByN(attr.weights.shape.o, 8)),
+             static_cast<uint32_t>(attr.weights.shape.o),
+             static_cast<uint32_t>(0),
+         };
+         return GetByteBuffer(uniform_params);
+       }},
+  };
 
-    desc->resize_function = [attr](const std::map<ValueId, BHWC>& buffers) {
-        const uint3 groups_size{8, 4, 1};
-        const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 8);
-        int groups_x = IntegralDivideRoundUp(dst_channels_aligned, groups_size.x);
-        return std::make_pair(groups_size, uint3{groups_x, 1, 1});
-    };
+  desc->resize_function = [attr](const std::map<ValueId, BHWC>& buffers) {
+    const uint3 groups_size{8, 4, 1};
+    const int dst_channels_aligned = AlignByN(attr.weights.shape.o, 8);
+    int groups_x = IntegralDivideRoundUp(dst_channels_aligned, groups_size.x);
+    return std::make_pair(groups_size, uint3{groups_x, 1, 1});
+  };
 
-    return {desc};
+  return {desc};
 }
 
 }  // namespace metal

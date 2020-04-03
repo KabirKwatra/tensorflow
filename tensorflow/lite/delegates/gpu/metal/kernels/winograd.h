@@ -26,7 +26,7 @@ namespace gpu {
 namespace metal {
 
 struct Winograd4x4To36Attributes {
-    Padding2D padding;
+  Padding2D padding;
 };
 
 std::vector<ComputeTaskDescriptorPtr> Winograd4x4To36(
@@ -38,8 +38,8 @@ std::vector<ComputeTaskDescriptorPtr> Winograd4x4To36TileX6(
     const Winograd4x4To36Attributes& attr, const RuntimeOptions& options);
 
 struct Winograd36To4x4Attributes {
-    BHWC output_shape;
-    tflite::gpu::Tensor<Linear, DataType::FLOAT32> biases;
+  BHWC output_shape;
+  tflite::gpu::Tensor<Linear, DataType::FLOAT32> biases;
 };
 
 std::vector<ComputeTaskDescriptorPtr> Winograd36To4x4(

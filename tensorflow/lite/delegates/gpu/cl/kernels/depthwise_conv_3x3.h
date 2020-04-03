@@ -36,126 +36,126 @@ namespace gpu {
 namespace cl {
 
 class DepthwiseConv3x3 : public GPUOperation {
-public:
-    DepthwiseConv3x3() = default;
-    absl::Status AddToQueue(CLCommandQueue* queue) override;
-    absl::Status Tune(const TuningParameters& params) override;
+ public:
+  DepthwiseConv3x3() = default;
+  absl::Status AddToQueue(CLCommandQueue* queue) override;
+  absl::Status Tune(const TuningParameters& params) override;
 
-    absl::Status Compile(const CreationContext& creation_context) override;
+  absl::Status Compile(const CreationContext& creation_context) override;
 
-    // Move only
-    DepthwiseConv3x3(DepthwiseConv3x3&& operation);
-    DepthwiseConv3x3& operator=(DepthwiseConv3x3&& operation);
-    DepthwiseConv3x3(const DepthwiseConv3x3&) = delete;
-    DepthwiseConv3x3& operator=(const DepthwiseConv3x3&) = delete;
+  // Move only
+  DepthwiseConv3x3(DepthwiseConv3x3&& operation);
+  DepthwiseConv3x3& operator=(DepthwiseConv3x3&& operation);
+  DepthwiseConv3x3(const DepthwiseConv3x3&) = delete;
+  DepthwiseConv3x3& operator=(const DepthwiseConv3x3&) = delete;
 
-private:
-    explicit DepthwiseConv3x3(const OperationDef& definition,
-                              bool weights_are_buffer, bool local_mem_uploads);
-    template <DataType T>
-    absl::Status UploadWeightsAndBiases(
-        const tflite::gpu::Tensor<OHWI, T>& weights,
-        const tflite::gpu::Tensor<Linear, T>& biases, CLContext* context);
+ private:
+  explicit DepthwiseConv3x3(const OperationDef& definition,
+                            bool weights_are_buffer, bool local_mem_uploads);
+  template <DataType T>
+  absl::Status UploadWeightsAndBiases(
+      const tflite::gpu::Tensor<OHWI, T>& weights,
+      const tflite::gpu::Tensor<Linear, T>& biases, CLContext* context);
 
-    friend absl::Status CreateDepthwiseConv3x3(
-        const CreationContext& creation_context, const OperationDef& definition,
-        const DepthwiseConvolution2DAttributes& attr, DepthwiseConv3x3* result);
+  friend absl::Status CreateDepthwiseConv3x3(
+      const CreationContext& creation_context, const OperationDef& definition,
+      const DepthwiseConvolution2DAttributes& attr, DepthwiseConv3x3* result);
 
-    template <DataType S, typename T>
-    void RearrangeWeightsAndBiasesData(
-        const tflite::gpu::Tensor<OHWI, S>& weights,
-        const tflite::gpu::Tensor<Linear, S>& biases, absl::Span<T> dst);
+  template <DataType S, typename T>
+  void RearrangeWeightsAndBiasesData(
+      const tflite::gpu::Tensor<OHWI, S>& weights,
+      const tflite::gpu::Tensor<Linear, S>& biases, absl::Span<T> dst);
 
-    absl::Status BindArguments();
-    int3 GetGridSize() const;
+  absl::Status BindArguments();
+  int3 GetGridSize() const;
 
-    bool weights_are_buffer_;
-    bool local_mem_uploads_;
-    Texture2D weights_tex2d_;
-    Buffer weights_buf_;
-    cl_mem weights_;
+  bool weights_are_buffer_;
+  bool local_mem_uploads_;
+  Texture2D weights_tex2d_;
+  Buffer weights_buf_;
+  cl_mem weights_;
 
-    CLKernel kernel_;
-    int3 work_group_size_ = int3(8, 4, 1);
+  CLKernel kernel_;
+  int3 work_group_size_ = int3(8, 4, 1);
 };
 
 template <DataType T>
 absl::Status DepthwiseConv3x3::UploadWeightsAndBiases(
     const tflite::gpu::Tensor<OHWI, T>& weights,
     const tflite::gpu::Tensor<Linear, T>& biases, CLContext* context) {
-    const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
-    int texture_width = 10;  // 3x3 kernel + 1 bias
-    int texture_height = src_depth;
-    const int elements_count = texture_width * texture_height;
-    const bool fp32_weights = definition_.precision == CalculationsPrecision::F32;
-    const int float4_size = fp32_weights ? 16 : 8;
+  const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
+  int texture_width = 10;  // 3x3 kernel + 1 bias
+  int texture_height = src_depth;
+  const int elements_count = texture_width * texture_height;
+  const bool fp32_weights = definition_.precision == CalculationsPrecision::F32;
+  const int float4_size = fp32_weights ? 16 : 8;
 
-    if (fp32_weights) {
-        std::vector<float4> gpu_data(elements_count);
-        RearrangeWeightsAndBiasesData(weights, biases, absl::MakeSpan(gpu_data));
-        if (weights_are_buffer_) {
-            RETURN_IF_ERROR(CreateReadOnlyBuffer(float4_size * elements_count,
-                                                 gpu_data.data(), context,
-                                                 &weights_buf_));
-        } else {
-            RETURN_IF_ERROR(CreateTexture2DRGBA(
-                                definition_.GetDataType(), texture_width, texture_height,
-                                gpu_data.data(), context, &weights_tex2d_));
-        }
-    } else {
-        std::vector<half4> gpu_data(elements_count);
-        RearrangeWeightsAndBiasesData(weights, biases, absl::MakeSpan(gpu_data));
-        if (weights_are_buffer_) {
-            RETURN_IF_ERROR(CreateReadOnlyBuffer(float4_size * elements_count,
-                                                 gpu_data.data(), context,
-                                                 &weights_buf_));
-        } else {
-            RETURN_IF_ERROR(CreateTexture2DRGBA(
-                                definition_.GetDataType(), texture_width, texture_height,
-                                gpu_data.data(), context, &weights_tex2d_));
-        }
-    }
-
+  if (fp32_weights) {
+    std::vector<float4> gpu_data(elements_count);
+    RearrangeWeightsAndBiasesData(weights, biases, absl::MakeSpan(gpu_data));
     if (weights_are_buffer_) {
-        weights_ = weights_buf_.GetMemoryPtr();
+      RETURN_IF_ERROR(CreateReadOnlyBuffer(float4_size * elements_count,
+                                           gpu_data.data(), context,
+                                           &weights_buf_));
     } else {
-        weights_ = weights_tex2d_.GetMemoryPtr();
+      RETURN_IF_ERROR(CreateTexture2DRGBA(
+          definition_.GetDataType(), texture_width, texture_height,
+          gpu_data.data(), context, &weights_tex2d_));
     }
+  } else {
+    std::vector<half4> gpu_data(elements_count);
+    RearrangeWeightsAndBiasesData(weights, biases, absl::MakeSpan(gpu_data));
+    if (weights_are_buffer_) {
+      RETURN_IF_ERROR(CreateReadOnlyBuffer(float4_size * elements_count,
+                                           gpu_data.data(), context,
+                                           &weights_buf_));
+    } else {
+      RETURN_IF_ERROR(CreateTexture2DRGBA(
+          definition_.GetDataType(), texture_width, texture_height,
+          gpu_data.data(), context, &weights_tex2d_));
+    }
+  }
 
-    return absl::OkStatus();
+  if (weights_are_buffer_) {
+    weights_ = weights_buf_.GetMemoryPtr();
+  } else {
+    weights_ = weights_tex2d_.GetMemoryPtr();
+  }
+
+  return absl::OkStatus();
 }
 
 template <DataType S, typename T>
 void DepthwiseConv3x3::RearrangeWeightsAndBiasesData(
     const tflite::gpu::Tensor<OHWI, S>& weights,
     const tflite::gpu::Tensor<Linear, S>& biases, absl::Span<T> dst) {
-    const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
+  const int src_depth = IntegralDivideRoundUp(weights.shape.i, 4);
 
-    int counter = 0;
-    for (int s = 0; s < src_depth; ++s) {
-        for (int y = 0; y < 3; ++y) {
-            for (int x = 0; x < 3; ++x) {
-                T filter_val;
-                for (int i = 0; i < 4; ++i) {
-                    const int s_ch = s * 4 + i;
-                    if (s_ch < weights.shape.i) {
-                        const int f_index = weights.shape.LinearIndex({0, y, x, s_ch});
-                        filter_val[i] = weights.data[f_index];
-                    } else {
-                        filter_val[i] = 0.0f;
-                    }
-                }
-                dst[counter++] = filter_val;
-            }
-        }
-
-        T bias_val;
+  int counter = 0;
+  for (int s = 0; s < src_depth; ++s) {
+    for (int y = 0; y < 3; ++y) {
+      for (int x = 0; x < 3; ++x) {
+        T filter_val;
         for (int i = 0; i < 4; ++i) {
-            const int dst_ch = s * 4 + i;
-            bias_val[i] = dst_ch >= biases.shape.v ? 0.0f : biases.data[dst_ch];
+          const int s_ch = s * 4 + i;
+          if (s_ch < weights.shape.i) {
+            const int f_index = weights.shape.LinearIndex({0, y, x, s_ch});
+            filter_val[i] = weights.data[f_index];
+          } else {
+            filter_val[i] = 0.0f;
+          }
         }
-        dst[counter++] = bias_val;
+        dst[counter++] = filter_val;
+      }
     }
+
+    T bias_val;
+    for (int i = 0; i < 4; ++i) {
+      const int dst_ch = s * 4 + i;
+      bias_val[i] = dst_ch >= biases.shape.v ? 0.0f : biases.data[dst_ch];
+    }
+    dst[counter++] = bias_val;
+  }
 }
 
 bool IsDepthwiseConv3x3Supported(const DepthwiseConvolution2DAttributes& attr);
