@@ -22,26 +22,26 @@ namespace data {
 
 // Creates a dataset for reading from the tf.data service.
 class DataServiceDatasetOp : public DatasetOpKernel {
- public:
-  static constexpr const char* const kDatasetType = "DataService";
-  static constexpr const char* const kAddress = "address";
-  static constexpr const char* const kEpochId = "epoch_id";
-  static constexpr const char* const kProtocol = "protocol";
-  static constexpr const char* const kMaxOutstandingRequests =
-      "max_outstanding_requests";
-  static constexpr const char* const kOutputTypes = "output_types";
-  static constexpr const char* const kOutputShapes = "output_shapes";
+public:
+    static constexpr const char* const kDatasetType = "DataService";
+    static constexpr const char* const kAddress = "address";
+    static constexpr const char* const kEpochId = "epoch_id";
+    static constexpr const char* const kProtocol = "protocol";
+    static constexpr const char* const kMaxOutstandingRequests =
+        "max_outstanding_requests";
+    static constexpr const char* const kOutputTypes = "output_types";
+    static constexpr const char* const kOutputShapes = "output_shapes";
 
-  explicit DataServiceDatasetOp(OpKernelConstruction* ctx);
+    explicit DataServiceDatasetOp(OpKernelConstruction* ctx);
 
- protected:
-  void MakeDataset(OpKernelContext* ctx, DatasetBase** output) override;
+protected:
+    void MakeDataset(OpKernelContext* ctx, DatasetBase** output) override;
 
- private:
-  class Dataset;
+private:
+    class Dataset;
 
-  DataTypeVector output_types_;
-  std::vector<PartialTensorShape> output_shapes_;
+    DataTypeVector output_types_;
+    std::vector<PartialTensorShape> output_shapes_;
 };
 
 }  // namespace data
