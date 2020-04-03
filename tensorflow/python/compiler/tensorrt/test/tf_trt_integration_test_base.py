@@ -187,8 +187,10 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
           The test parameters.
         """
 
-        input_mask = [[False] + [True] * (len(shape) - 1) for shape in input_shapes]
-        output_mask = [[False] + [True] * (len(shape) - 1) for shape in output_shapes]
+        input_mask = [[False] + [True] * (len(shape) - 1)
+                      for shape in input_shapes]
+        output_mask = [[False] + [True] * (len(shape) - 1)
+                       for shape in output_shapes]
 
         return self.BuildParamsWithMask(
             graph_fn,
@@ -202,15 +204,15 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         )
 
     def BuildParamsWithMask(
-        self,
-        graph_fn,
-        dtype,
-        input_shapes,
-        output_shapes,
-        input_mask,
-        output_mask,
-        extra_inputs,
-        extra_outputs,
+            self,
+            graph_fn,
+            dtype,
+            input_shapes,
+            output_shapes,
+            input_mask,
+            output_mask,
+            extra_inputs,
+            extra_outputs,
     ):
         """Build test parameters with static or dynamic input shapes.
 
@@ -247,7 +249,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
 
         assert len(input_mask) == len(input_shapes)
         assert len(output_mask) == len(output_shapes)
-        for extra_in_shape, extra_out_shape in zip(extra_inputs, extra_outputs):
+        for extra_in_shape, extra_out_shape in zip(extra_inputs,
+                                                   extra_outputs):
             assert len(input_shapes) == len(extra_in_shape)
             assert len(output_shapes) == len(extra_out_shape)
 
@@ -255,11 +258,13 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             graph_fn=graph_fn,
             input_specs=[
                 self._GetTensorSpec(shape, mask, dtype, "input_%d" % i)
-                for i, (shape, mask) in enumerate(zip(input_shapes, input_mask))
+                for i, (shape,
+                        mask) in enumerate(zip(input_shapes, input_mask))
             ],
             output_specs=[
                 self._GetTensorSpec(shape, mask, dtype, "output_%d" % i)
-                for i, (shape, mask) in enumerate(zip(output_shapes, output_mask))
+                for i, (shape,
+                        mask) in enumerate(zip(output_shapes, output_mask))
             ],
             input_dims=[input_shapes] + extra_inputs,
             expected_output_dims=[output_shapes] + extra_outputs,
@@ -294,11 +299,11 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         return conversion_params
 
     def GetTrtRewriterConfig(
-        self,
-        run_params,
-        conversion_params,
-        disable_non_trt_optimizers=False,
-        use_implicit_batch=True,
+            self,
+            run_params,
+            conversion_params,
+            disable_non_trt_optimizers=False,
+            use_implicit_batch=True,
     ):
         rewriter_config = trt_convert.get_tensorrt_rewriter_config(
             conversion_params=conversion_params,
@@ -307,17 +312,16 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         )
         for optimizer in rewriter_config.custom_optimizers:
             if optimizer.name == "TensorRTOptimizer":
-                optimizer.parameter_map["use_implicit_batch"].b = use_implicit_batch
+                optimizer.parameter_map[
+                    "use_implicit_batch"].b = use_implicit_batch
         return rewriter_config
 
     def ShouldRunTest(self, run_params):
         """Whether to run the test."""
         # Ensure use_calibration=True in case of INT8 precision
         return (
-            (
-                run_params.use_calibration
-                or not IsQuantizationMode(run_params.precision_mode)
-            ),
+            (run_params.use_calibration
+             or not IsQuantizationMode(run_params.precision_mode)),
             "test either calibration or non-INT8",
         )
 
@@ -347,18 +351,18 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         """Get config proto based on specific settings."""
         conversion_params = self.GetConversionParams(run_params)
         if graph_state == GraphState.INFERENCE and run_params.convert_online:
-            rewriter_cfg = trt_convert.get_tensorrt_rewriter_config(conversion_params)
-            graph_options = config_pb2.GraphOptions(rewrite_options=rewriter_cfg)
+            rewriter_cfg = trt_convert.get_tensorrt_rewriter_config(
+                conversion_params)
+            graph_options = config_pb2.GraphOptions(
+                rewrite_options=rewriter_cfg)
         else:
             graph_options = config_pb2.GraphOptions()
             if conversion_params.rewriter_config_template is not None:
                 graph_options.rewrite_options.CopyFrom(
-                    conversion_params.rewriter_config_template
-                )
+                    conversion_params.rewriter_config_template)
 
-        config = config_pb2.ConfigProto(
-            gpu_options=self._GetGPUOptions(), graph_options=graph_options
-        )
+        config = config_pb2.ConfigProto(gpu_options=self._GetGPUOptions(),
+                                        graph_options=graph_options)
         return config
 
     def _GetFeedNames(self):
@@ -372,7 +376,10 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         return [spec.name + ":0" for spec in params.output_specs]
 
     def _GetFeedDict(self, inputs_data):
-        return {name: data for name, data in zip(self._GetFeedNames(), inputs_data)}
+        return {
+            name: data
+            for name, data in zip(self._GetFeedNames(), inputs_data)
+        }
 
     def _RunGraphV1(self, saved_model_dir, inputs_data, config, num_runs=2):
         """Run given graphdef multiple times using TF 1.x runtime."""
@@ -385,37 +392,40 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 vals = []
                 # Run for each input(s) shape
                 for expected_shapes, current_input_data in zip(
-                    params.expected_output_dims, inputs_data
-                ):
+                        params.expected_output_dims, inputs_data):
                     val = None
                     for _ in range(num_runs):
                         new_val = sess.run(
-                            fetches, self._GetFeedDict(current_input_data)
-                        )
+                            fetches, self._GetFeedDict(current_input_data))
                         self.assertEqual(len(expected_shapes), len(new_val))
-                        for expected_shape, actual_val in zip(expected_shapes, new_val):
-                            self.assertEqual(
-                                list(expected_shape), list(actual_val.shape)
-                            )
+                        for expected_shape, actual_val in zip(
+                                expected_shapes, new_val):
+                            self.assertEqual(list(expected_shape),
+                                             list(actual_val.shape))
                         if val is not None:
                             # Some ops may have nondeterministic output. E.g. Conv2D may use
                             # winograd algorithm. So we set atol/rtol be larger than 1.e-06.
-                            self.assertAllClose(
-                                val, new_val, atol=1.0e-05, rtol=1.0e-05
-                            )
+                            self.assertAllClose(val,
+                                                new_val,
+                                                atol=1.0e-05,
+                                                rtol=1.0e-05)
                         val = new_val
                     vals.append(val)
                 return vals
 
-    def _RunGraphV2(self, saved_model_dir, inputs_data, graph_state, num_runs=2):
+    def _RunGraphV2(self,
+                    saved_model_dir,
+                    inputs_data,
+                    graph_state,
+                    num_runs=2):
         """Run given graphdef multiple times using TF 2.0 runtime."""
         params = self._GetParamsCached()
         root = load.load(saved_model_dir)
-        func = root.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        func = root.signatures[
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
         results = []
         for expected_shapes, current_input_data in zip(
-            params.expected_output_dims, inputs_data
-        ):
+                params.expected_output_dims, inputs_data):
             val = None
             for _ in range(num_runs):
                 feed_dict = {
@@ -430,35 +440,42 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 # very expensive, so we convert them to a numpy array first.
                 new_val = [v.numpy() for v in new_val]
                 self.assertEqual(len(expected_shapes), len(new_val))
-                for expected_shape, actual_val in zip(expected_shapes, new_val):
-                    self.assertEqual(list(expected_shape), list(actual_val.shape))
+                for expected_shape, actual_val in zip(expected_shapes,
+                                                      new_val):
+                    self.assertEqual(list(expected_shape),
+                                     list(actual_val.shape))
                 if val is not None:
                     # Some ops may have nondeterministic output. E.g. Conv2D may use
                     # winograd algorithm. So we set atol/rtol be larger than 1.e-06.
-                    self.assertAllClose(val, new_val, atol=1.0e-05, rtol=1.0e-05)
+                    self.assertAllClose(val,
+                                        new_val,
+                                        atol=1.0e-05,
+                                        rtol=1.0e-05)
                 val = new_val
             results.append(val)
 
         return results
 
-    def _RunGraph(
-        self, run_params, saved_model_dir, inputs_data, config, graph_state, num_runs=2
-    ):
+    def _RunGraph(self,
+                  run_params,
+                  saved_model_dir,
+                  inputs_data,
+                  config,
+                  graph_state,
+                  num_runs=2):
         params = self._GetParamsCached()
         for data in inputs_data:
             assert len(params.input_specs) == len(data)
 
         if run_params.is_v2:
-            results = self._RunGraphV2(
-                saved_model_dir, inputs_data, graph_state, num_runs
-            )
+            results = self._RunGraphV2(saved_model_dir, inputs_data,
+                                       graph_state, num_runs)
             gc.collect()  # Force GC to destroy the TRT engine cache.
             return results
         return self._RunGraphV1(saved_model_dir, inputs_data, config, num_runs)
 
-    def _CreateConverter(
-        self, run_params, saved_model_dir, session_config, conversion_params
-    ):
+    def _CreateConverter(self, run_params, saved_model_dir, session_config,
+                         conversion_params):
         """Return a TrtGraphConverter."""
         if run_params.is_v2:
             return trt_convert.TrtGraphConverterV2(
@@ -469,7 +486,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             input_saved_model_dir=saved_model_dir,
             session_config=session_config,
             max_batch_size=conversion_params.max_batch_size,
-            max_workspace_size_bytes=conversion_params.max_workspace_size_bytes,
+            max_workspace_size_bytes=conversion_params.
+            max_workspace_size_bytes,
             precision_mode=conversion_params.precision_mode,
             minimum_segment_size=conversion_params.minimum_segment_size,
             is_dynamic_op=conversion_params.is_dynamic_op,
@@ -477,7 +495,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             use_calibration=conversion_params.use_calibration,
         )
 
-    def _GetCalibratedInferGraph(self, run_params, saved_model_dir, inputs_data):
+    def _GetCalibratedInferGraph(self, run_params, saved_model_dir,
+                                 inputs_data):
         """Return trt converted graphdef in INT8 mode."""
         conversion_params = self.GetConversionParams(run_params)
         logging.info(conversion_params)
@@ -491,22 +510,22 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         assert len(inputs_data) == 1
 
         session_config = self._GetConfigProto(run_params, GraphState.CALIBRATE)
-        logging.info("Running calibration graph, config:\n%s", str(session_config))
+        logging.info("Running calibration graph, config:\n%s",
+                     str(session_config))
 
-        converter = self._CreateConverter(
-            run_params, saved_model_dir, session_config, conversion_params
-        )
+        converter = self._CreateConverter(run_params, saved_model_dir,
+                                          session_config, conversion_params)
         int8_gdef = converter.convert()
-        self._VerifyGraphDef(
-            run_params, saved_model_dir, int8_gdef, GraphState.CALIBRATE
-        )
+        self._VerifyGraphDef(run_params, saved_model_dir, int8_gdef,
+                             GraphState.CALIBRATE)
 
         converter.calibrate(
             fetch_names=self._GetFetchNames(),
             num_runs=5,
             feed_dict_fn=lambda: self._GetFeedDict(inputs_data[0]),
         )
-        trt_saved_model_dir = self._GetSavedModelDir(run_params, GraphState.CALIBRATE)
+        trt_saved_model_dir = self._GetSavedModelDir(run_params,
+                                                     GraphState.CALIBRATE)
         converter.save(trt_saved_model_dir)
         return trt_saved_model_dir
 
@@ -516,17 +535,14 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         logging.info(conversion_params)
 
         session_config = self._GetConfigProto(run_params, GraphState.INFERENCE)
-        logging.info(
-            "Creating TRT graph for inference, config\n%s", str(session_config)
-        )
-        converter = self._CreateConverter(
-            run_params, saved_model_dir, session_config, conversion_params
-        )
+        logging.info("Creating TRT graph for inference, config\n%s",
+                     str(session_config))
+        converter = self._CreateConverter(run_params, saved_model_dir,
+                                          session_config, conversion_params)
         converter.convert()
 
         if trt_convert.is_explicit_batch_mode_enabled(
-            conversion_params.rewriter_config_template
-        ):
+                conversion_params.rewriter_config_template):
             logging.info("Using build mode")
 
             def _BuildInputFn():
@@ -535,7 +551,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
 
             converter.build(input_fn=_BuildInputFn)
 
-        trt_saved_model_dir = self._GetSavedModelDir(run_params, GraphState.INFERENCE)
+        trt_saved_model_dir = self._GetSavedModelDir(run_params,
+                                                     GraphState.INFERENCE)
         converter.save(trt_saved_model_dir)
         return trt_saved_model_dir
 
@@ -554,18 +571,13 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         if not temp_dir:
             return
 
-        graph_name = (
-            self.__class__.__name__
-            + "_"
-            + run_params.test_name
-            + "_"
-            + self._GetGraphStateLabel(graph_state)
-            + ".pbtxt"
-        )
+        graph_name = (self.__class__.__name__ + "_" + run_params.test_name +
+                      "_" + self._GetGraphStateLabel(graph_state) + ".pbtxt")
         logging.info("Writing graph to %s/%s", temp_dir, graph_name)
         graph_io.write_graph(gdef, temp_dir, graph_name)
 
-    def _VerifyConnections(self, expected_engines, original_gdef, converted_gdef):
+    def _VerifyConnections(self, expected_engines, original_gdef,
+                           converted_gdef):
         old_to_new_node_map = {
             self._ToString(node.name): self._ToString(node.name)
             for node in original_gdef.node
@@ -574,7 +586,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             for node_name in node_names:
                 old_to_new_node_map[node_name] = engine_name
         name_to_node_map = {
-            self._ToString(node.name): node for node in original_gdef.node
+            self._ToString(node.name): node
+            for node in original_gdef.node
         }
 
         def _InputName(inp):
@@ -585,18 +598,15 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 inp = inp[1:]
             parts = inp.split(":")
             if len(parts) > 1 and parts[-1].isdigit():
-                inp = inp[: -len(parts[-1]) - 1]
+                inp = inp[:-len(parts[-1]) - 1]
             return (prefix, inp)
 
         # Compute the expected mapping from each node to its input nodes.
         expected_input_map = {}
-        removed_const_nodes = set(
-            [
-                self._ToString(node.name)
-                for node in original_gdef.node
-                if node.op == "Const"
-            ]
-        )
+        removed_const_nodes = set([
+            self._ToString(node.name) for node in original_gdef.node
+            if node.op == "Const"
+        ])
         for node in original_gdef.node:
             name_str = self._ToString(node.name)
             target_node_name = old_to_new_node_map[name_str]
@@ -610,15 +620,16 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 # Add the input only if it's outside the segment (note that it could be
                 # in a different engine).
                 if not is_engine_op or (
-                    mapped_input != target_node_name
-                    and name_to_node_map[inp_name].op != "Const"
-                ):
+                        mapped_input != target_node_name
+                        and name_to_node_map[inp_name].op != "Const"):
                     input_set.add(prefix + mapped_input)
                     if mapped_input in removed_const_nodes:
                         removed_const_nodes.remove(mapped_input)
         # Remove const nodes that have no outputs.
         expected_input_map = {
-            k: v for k, v in expected_input_map.items() if k not in removed_const_nodes
+            k: v
+            for k, v in expected_input_map.items()
+            if k not in removed_const_nodes
         }
 
         # Compute the actual mapping from each node to its input nodes.
@@ -634,8 +645,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         self.assertEqual(
             expected_input_map,
             actual_input_map,
-            msg="\nexpected:\n%s\nvs actual:\n%s"
-            % (sorted(expected_input_map.items()), sorted(actual_input_map.items())),
+            msg="\nexpected:\n%s\nvs actual:\n%s" % (sorted(
+                expected_input_map.items()), sorted(actual_input_map.items())),
         )
 
     def _GetGraphDef(self, run_params, gdef_or_saved_model_dir):
@@ -643,8 +654,7 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             if run_params.is_v2:
                 root = load.load(gdef_or_saved_model_dir)
                 func = root.signatures[
-                    signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
-                ]
+                    signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
                 gdef = func.graph.as_graph_def()
                 # Manually unref the loaded saved model and force GC to destroy the TRT
                 # engine cache after load(). There is currently a reference cycle in 2.0
@@ -655,12 +665,12 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 gc.collect()
                 return gdef
             return saved_model_utils.get_meta_graph_def(
-                gdef_or_saved_model_dir, tag_constants.SERVING
-            ).graph_def
+                gdef_or_saved_model_dir, tag_constants.SERVING).graph_def
         assert isinstance(gdef_or_saved_model_dir, graph_pb2.GraphDef)
         return gdef_or_saved_model_dir
 
-    def _VerifyGraphDefV1(self, run_params, original_gdef, gdef_to_verify, graph_state):
+    def _VerifyGraphDefV1(self, run_params, original_gdef, gdef_to_verify,
+                          graph_state):
         expected_engines = self.ExpectedEnginesToBuild(run_params)
         num_engines = 0
         functions = [f.signature.name for f in gdef_to_verify.library.function]
@@ -674,7 +684,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 self.assertNotEmpty(segment_funcdef_name, node.name)
                 self.assertIn(function_name, functions)
                 if not IsQuantizationWithCalibration and not is_dynamic_engine:
-                    self.assertTrue(len(node.attr["serialized_segment"].s), node.name)
+                    self.assertTrue(len(node.attr["serialized_segment"].s),
+                                    node.name)
                 self.assertIn(node.name, expected_engines)
                 self.assertEqual(
                     self._ToBytes(run_params.precision_mode),
@@ -682,9 +693,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                     node.name,
                 )
 
-                self.assertEqual(
-                    run_params.dynamic_engine, is_dynamic_engine, node.name
-                )
+                self.assertEqual(run_params.dynamic_engine, is_dynamic_engine,
+                                 node.name)
                 self.assertEqual(
                     node.attr["use_calibration"].b,
                     run_params.use_calibration,
@@ -692,10 +702,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 )
 
                 has_calibration_data = len(node.attr["calibration_data"].s)
-                if (
-                    IsQuantizationWithCalibration(run_params)
-                    and graph_state == GraphState.INFERENCE
-                ):
+                if (IsQuantizationWithCalibration(run_params)
+                        and graph_state == GraphState.INFERENCE):
                     self.assertTrue(has_calibration_data, node.name)
                 else:
                     self.assertFalse(has_calibration_data, node.name)
@@ -704,19 +712,23 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         else:
             self.assertEqual(num_engines, len(expected_engines))
             if isinstance(expected_engines, dict):
-                self._VerifyConnections(expected_engines, original_gdef, gdef_to_verify)
+                self._VerifyConnections(expected_engines, original_gdef,
+                                        gdef_to_verify)
             # TODO(aaroey): consider verifying the corresponding TF function.
 
-    def _VerifyGraphDefV2(self, run_params, original_gdef, gdef_to_verify, graph_state):
+    def _VerifyGraphDefV2(self, run_params, original_gdef, gdef_to_verify,
+                          graph_state):
         if graph_state == GraphState.ORIGINAL:
             return
         expected_engines = self.ExpectedEnginesToBuild(run_params)
         all_op_names = [node.name for node in gdef_to_verify.node]
         trt_op_names = [
-            node.name for node in gdef_to_verify.node if node.op == "TRTEngineOp"
+            node.name for node in gdef_to_verify.node
+            if node.op == "TRTEngineOp"
         ]
         for func in gdef_to_verify.library.function:
-            if not re.search(r"TRTEngineOp_\d+_native_segment", func.signature.name):
+            if not re.search(r"TRTEngineOp_\d+_native_segment",
+                             func.signature.name):
                 for node in func.node_def:
                     all_op_names.append(node.name)
                     if node.op == "TRTEngineOp":
@@ -735,43 +747,37 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             # graph.
             unexpected_names = set(nest.flatten(expected_engines.values()))
             self.assertEmpty(
-                [name for name in unexpected_names if name in all_op_names]
-            )
+                [name for name in unexpected_names if name in all_op_names])
             expected_engines = set(expected_engines.keys())
 
         self.assertEqual(set(expected_engines), trt_op_names)
 
     def _VerifyGraphDef(
-        self,
-        run_params,
-        original_gdef_or_saved_model_dir,
-        gdef_or_saved_model_dir_to_verify,
-        graph_state,
+            self,
+            run_params,
+            original_gdef_or_saved_model_dir,
+            gdef_or_saved_model_dir_to_verify,
+            graph_state,
     ):
-        original_gdef = self._GetGraphDef(run_params, original_gdef_or_saved_model_dir)
-        gdef_to_verify = self._GetGraphDef(
-            run_params, gdef_or_saved_model_dir_to_verify
-        )
+        original_gdef = self._GetGraphDef(run_params,
+                                          original_gdef_or_saved_model_dir)
+        gdef_to_verify = self._GetGraphDef(run_params,
+                                           gdef_or_saved_model_dir_to_verify)
         self._WriteGraph(run_params, gdef_to_verify, graph_state)
         if run_params.is_v2:
-            self._VerifyGraphDefV2(
-                run_params, original_gdef, gdef_to_verify, graph_state
-            )
+            self._VerifyGraphDefV2(run_params, original_gdef, gdef_to_verify,
+                                   graph_state)
         else:
-            self._VerifyGraphDefV1(
-                run_params, original_gdef, gdef_to_verify, graph_state
-            )
+            self._VerifyGraphDefV1(run_params, original_gdef, gdef_to_verify,
+                                   graph_state)
 
     def _GetSavedModelDir(self, run_params, graph_state):
         test_tmpdir = os.getenv("TRT_TEST_TMPDIR")
         if test_tmpdir:
             saved_model_dir = os.path.join(
                 test_tmpdir,
-                self.__class__.__name__
-                + "_"
-                + run_params.test_name
-                + "_"
-                + self._GetGraphStateLabel(graph_state),
+                self.__class__.__name__ + "_" + run_params.test_name + "_" +
+                self._GetGraphStateLabel(graph_state),
             )
             try:
                 # For TF 1.x we need to make sure the output directory doesn't exist
@@ -790,30 +796,39 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
         with g.as_default():
             inputs = []
             for spec in params.input_specs:
-                inp = array_ops.placeholder(
-                    dtype=spec.dtype, shape=spec.shape, name=spec.name
-                )
+                inp = array_ops.placeholder(dtype=spec.dtype,
+                                            shape=spec.shape,
+                                            name=spec.name)
                 inputs.append(inp)
             outputs = params.graph_fn(*inputs)
-            if not isinstance(outputs, list) and not isinstance(outputs, tuple):
+            if not isinstance(outputs, list) and not isinstance(
+                    outputs, tuple):
                 outputs = [outputs]
 
         signature_def = signature_def_utils.build_signature_def(
-            inputs={inp.op.name: utils.build_tensor_info(inp) for inp in inputs},
-            outputs={out.op.name: utils.build_tensor_info(out) for out in outputs},
+            inputs={
+                inp.op.name: utils.build_tensor_info(inp)
+                for inp in inputs
+            },
+            outputs={
+                out.op.name: utils.build_tensor_info(out)
+                for out in outputs
+            },
             method_name=signature_constants.PREDICT_METHOD_NAME,
         )
 
-        saved_model_dir = self._GetSavedModelDir(run_params, GraphState.ORIGINAL)
+        saved_model_dir = self._GetSavedModelDir(run_params,
+                                                 GraphState.ORIGINAL)
         saved_model_builder = builder.SavedModelBuilder(saved_model_dir)
-        with self.session(
-            graph=g, config=self._GetConfigProto(run_params, GraphState.ORIGINAL)
-        ) as sess:
+        with self.session(graph=g,
+                          config=self._GetConfigProto(
+                              run_params, GraphState.ORIGINAL)) as sess:
             saved_model_builder.add_meta_graph_and_variables(
                 sess,
                 [tag_constants.SERVING],
                 signature_def_map={
-                    signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def
+                    signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+                    signature_def
                 },
             )
         saved_model_builder.save()
@@ -822,10 +837,10 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
     def _MakeSavedModelV2(self, run_params):
         params = self._GetParamsCached()
         root = tracking.AutoTrackable()
-        root.run = def_function.function(
-            params.graph_fn, input_signature=params.input_specs
-        )
-        saved_model_dir = self._GetSavedModelDir(run_params, GraphState.ORIGINAL)
+        root.run = def_function.function(params.graph_fn,
+                                         input_signature=params.input_specs)
+        saved_model_dir = self._GetSavedModelDir(run_params,
+                                                 GraphState.ORIGINAL)
         logging.info("Saving input SavedModel to %s", saved_model_dir)
         save.save(
             root,
@@ -862,7 +877,8 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
                 # seq = np.arange(np.prod(np_shape))
                 # seq.resize(np_shape)
                 # current_inputs_data.append(scale * seq.astype(np_dtype))
-                data = (scale * np.random.random_sample(np_shape)).astype(np_dtype)
+                data = (scale *
+                        np.random.random_sample(np_shape)).astype(np_dtype)
                 if run_params.is_v2:
                     with ops.device("/GPU:0"):
                         data = ops.convert_to_tensor(data)
@@ -870,36 +886,34 @@ class TfTrtIntegrationTestBase(test_util.TensorFlowTestCase):
             inputs_data.append(current_input_data)
 
         # Verify original graph.
-        self._VerifyGraphDef(
-            run_params, saved_model_dir, saved_model_dir, GraphState.ORIGINAL
-        )
+        self._VerifyGraphDef(run_params, saved_model_dir, saved_model_dir,
+                             GraphState.ORIGINAL)
 
         # Run original graph without trt to get reference result.
         config_no_trt = self._GetConfigProto(run_params, GraphState.ORIGINAL)
-        logging.info("Running original graph w/o trt, config:\n%s", str(config_no_trt))
-        ref_result = self._RunGraph(
-            run_params, saved_model_dir, inputs_data, config_no_trt, GraphState.ORIGINAL
-        )
+        logging.info("Running original graph w/o trt, config:\n%s",
+                     str(config_no_trt))
+        ref_result = self._RunGraph(run_params, saved_model_dir, inputs_data,
+                                    config_no_trt, GraphState.ORIGINAL)
 
         # Run calibration if necessary.
         if IsQuantizationWithCalibration(run_params):
             infer_saved_model_dir = self._GetCalibratedInferGraph(
-                run_params, saved_model_dir, inputs_data
-            )
-            self._VerifyGraphDef(
-                run_params, saved_model_dir, infer_saved_model_dir, GraphState.INFERENCE
-            )
+                run_params, saved_model_dir, inputs_data)
+            self._VerifyGraphDef(run_params, saved_model_dir,
+                                 infer_saved_model_dir, GraphState.INFERENCE)
         elif not run_params.convert_online:
-            infer_saved_model_dir = self._GetInferGraph(run_params, saved_model_dir)
-            self._VerifyGraphDef(
-                run_params, saved_model_dir, infer_saved_model_dir, GraphState.INFERENCE
-            )
+            infer_saved_model_dir = self._GetInferGraph(
+                run_params, saved_model_dir)
+            self._VerifyGraphDef(run_params, saved_model_dir,
+                                 infer_saved_model_dir, GraphState.INFERENCE)
         else:
             infer_saved_model_dir = saved_model_dir
 
         # Run inference.
         infer_config = self._GetConfigProto(run_params, GraphState.INFERENCE)
-        logging.info("Running final inference graph, config:\n%s", str(infer_config))
+        logging.info("Running final inference graph, config:\n%s",
+                     str(infer_config))
         result = self._RunGraph(
             run_params,
             infer_saved_model_dir,
@@ -938,8 +952,7 @@ def _GetTestConfigsV1():
             [convert_online, convert_offline],
             [dynamic_engine, static_engine],
             [no_calibration],
-        )
-    )
+        ))
     # We always run calibration with offline tool.
     # TODO(aaroey): static calibration engine is not supported yet.
     opts.append((INT8, convert_offline, dynamic_engine, use_calibration))
@@ -964,10 +977,8 @@ def _GetTestConfigsV2():
     #   Grappler config in default eager context.
     # - INT8 without calibration behaves like FP32/FP16.
     opts = list(
-        itertools.product(
-            [FP32, FP16, INT8], [convert_offline], [dynamic_engine], [no_calibration]
-        )
-    )
+        itertools.product([FP32, FP16, INT8], [convert_offline],
+                          [dynamic_engine], [no_calibration]))
     # We always run calibration with offline tool.
     # TODO(aaroey): INT8+calibration is not supported yet in V2.
     # opts.append((INT8, convert_offline, dynamic_engine, use_calibration))
@@ -994,7 +1005,8 @@ def _GetTest(run_params):
 def _AddTestsFor(test_class, is_v2):
     """Adds test methods to TfTrtIntegrationTestBase for specific TF version."""
     opts = _GetTestConfigsV2() if is_v2 else _GetTestConfigsV1()
-    for (precision_mode, convert_online, dynamic_engine, use_calibration) in opts:
+    for (precision_mode, convert_online, dynamic_engine,
+         use_calibration) in opts:
         conversion = "OnlineConversion" if convert_online else "OfflineConversion"
         engine_type = "DynamicEngine" if dynamic_engine else "StaticEngine"
         calibration_type = "UseCalibration" if use_calibration else "NoCalibration"
@@ -1014,11 +1026,11 @@ def _AddTestsFor(test_class, is_v2):
             is_v2=is_v2,
         )
         if is_v2:
-            setattr(test_class, test_name, test_util.run_v2_only(_GetTest(run_params)))
+            setattr(test_class, test_name,
+                    test_util.run_v2_only(_GetTest(run_params)))
         else:
-            setattr(
-                test_class, test_name, test_util.run_v1_only("", _GetTest(run_params))
-            )
+            setattr(test_class, test_name,
+                    test_util.run_v1_only("", _GetTest(run_params)))
 
 
 def _AddTests(test_class):
