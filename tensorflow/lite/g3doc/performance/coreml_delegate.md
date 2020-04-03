@@ -1,8 +1,8 @@
 # Tensorflow Lite Core ML Delegate
 
 TensorFlow Lite Core ML Delegate enables running TensorFlow Lite models on
-[Core ML framework](https://developer.apple.com/documentation/coreml),
-which results in faster model inference on iOS devices.
+[Core ML framework](https://developer.apple.com/documentation/coreml), which
+results in faster model inference on iOS devices.
 
 Note: This delegate is in experimental (beta) phase.
 
@@ -10,10 +10,10 @@ Note: Core ML delegate is using Core ML version 2.1.
 
 **Supported iOS versions and devices:**
 
-*   iOS 12 and later. In the older iOS versions, Core ML delegate will
-    automatically fallback to CPU.
-*   When running on iPhone Xs and later, it will use Neural Engine for faster
-    inference.
+- iOS 12 and later. In the older iOS versions, Core ML delegate will
+  automatically fallback to CPU.
+- When running on iPhone Xs and later, it will use Neural Engine for faster
+  inference.
 
 **Supported models**
 
@@ -32,8 +32,8 @@ target 'YourProjectName'
   pod 'TensorFlowLiteSwift', '~> 0.0.1-nightly'
 ```
 
-Note: After updating `Podfile`, you should run `pod cache clean` and `pod
-update` to reflect changes.
+Note: After updating `Podfile`, you should run `pod cache clean` and
+`pod update` to reflect changes.
 
 ### Swift
 
@@ -85,30 +85,30 @@ TfLiteCoreMlDelegateDelete(delegate);
 
 Following ops are supported by the Core ML delegate.
 
-*   `raw_ops.Add`
-    *   Only certain shapes are broadcastable. In Core ML tensor layout,
-        following tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1,
-        1]`, `[B, 1, H, W]`, `[B, 1, 1, 1]`.
-*   `raw_ops.AveragePool2D`
-*   `raw_ops.Concat`
-*   `raw_ops.Conv2D`
-    *   Weights and bias should be constant.
-*   `raw_ops.DepthwiseConv2D`
-    *   Weights and bias should be constant.
-*   `raw_ops.Hardswish`
-*   `raw_ops.Logistic` (aka Sigmoid)
-*   `raw_ops.MaxPool2D`
-*   `raw_ops.Mul`
-    *   Only certain shapes are broadcastable. In Core ML tensor layout,
-        following tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1,
-        1]`, `[B, 1, H, W]`, `[B, 1, 1, 1]`.
-*   `raw_ops.Relu`
-*   `raw_ops.ReluN1To1`
-*   `raw_ops.Relu6`
-*   `raw_ops.Reshape`
-*   `raw_ops.ResizeBilinear`
-*   `raw_ops.SoftMax`
-*   `raw_ops.Tanh`
+- `raw_ops.Add`
+  - Only certain shapes are broadcastable. In Core ML tensor layout, following
+    tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1, 1]`,
+    `[B, 1, H, W]`, `[B, 1, 1, 1]`.
+- `raw_ops.AveragePool2D`
+- `raw_ops.Concat`
+- `raw_ops.Conv2D`
+  - Weights and bias should be constant.
+- `raw_ops.DepthwiseConv2D`
+  - Weights and bias should be constant.
+- `raw_ops.Hardswish`
+- `raw_ops.Logistic` (aka Sigmoid)
+- `raw_ops.MaxPool2D`
+- `raw_ops.Mul`
+  - Only certain shapes are broadcastable. In Core ML tensor layout, following
+    tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1, 1]`,
+    `[B, 1, H, W]`, `[B, 1, 1, 1]`.
+- `raw_ops.Relu`
+- `raw_ops.ReluN1To1`
+- `raw_ops.Relu6`
+- `raw_ops.Reshape`
+- `raw_ops.ResizeBilinear`
+- `raw_ops.SoftMax`
+- `raw_ops.Tanh`
 
 ## Feedback
 
@@ -118,16 +118,16 @@ issue with all the necessary details to reproduce.
 
 ## FAQ
 
-* Does CoreML delegate support fallback to CPU if a graph contains unsupported
+- Does CoreML delegate support fallback to CPU if a graph contains unsupported
   ops?
-  * Yes
-* Does CoreML delegate work on iOS Simulator?
-  * Yes. The library includes x86 and x86_64 targets so it can run on
-    a simulator, but you will not see performance boost over CPU.
-* Does TensorFlow Lite and CoreML delegate support MacOS?
-  * TensorFlow Lite is only tested on iOS but not MacOS.
-* Is custom TF Lite ops supported?
-  * No, CoreML delegate does not support custom ops and they will fallback to
+  - Yes
+- Does CoreML delegate work on iOS Simulator?
+  - Yes. The library includes x86 and x86_64 targets so it can run on a
+    simulator, but you will not see performance boost over CPU.
+- Does TensorFlow Lite and CoreML delegate support MacOS?
+  - TensorFlow Lite is only tested on iOS but not MacOS.
+- Is custom TF Lite ops supported?
+  - No, CoreML delegate does not support custom ops and they will fallback to
     CPU.
 
 ## APIs
