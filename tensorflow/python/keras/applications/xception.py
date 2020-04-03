@@ -37,28 +37,26 @@ from tensorflow.python.keras.utils import data_utils
 from tensorflow.python.keras.utils import layer_utils
 from tensorflow.python.util.tf_export import keras_export
 
-
 TF_WEIGHTS_PATH = (
     "https://storage.googleapis.com/tensorflow/keras-applications/"
-    "xception/xception_weights_tf_dim_ordering_tf_kernels.h5"
-)
+    "xception/xception_weights_tf_dim_ordering_tf_kernels.h5")
 TF_WEIGHTS_PATH_NO_TOP = (
     "https://storage.googleapis.com/tensorflow/keras-applications/"
-    "xception/xception_weights_tf_dim_ordering_tf_kernels_notop.h5"
-)
+    "xception/xception_weights_tf_dim_ordering_tf_kernels_notop.h5")
 
 layers = VersionAwareLayers()
 
 
-@keras_export("keras.applications.xception.Xception", "keras.applications.Xception")
+@keras_export("keras.applications.xception.Xception",
+              "keras.applications.Xception")
 def Xception(
-    include_top=True,
-    weights="imagenet",
-    input_tensor=None,
-    input_shape=None,
-    pooling=None,
-    classes=1000,
-    classifier_activation="softmax",
+        include_top=True,
+        weights="imagenet",
+        input_tensor=None,
+        input_shape=None,
+        pooling=None,
+        classes=1000,
+        classifier_activation="softmax",
 ):
     """Instantiates the Xception architecture.
 
@@ -113,18 +111,15 @@ def Xception(
         using a pretrained top layer.
     """
     if not (weights in {"imagenet", None} or os.path.exists(weights)):
-        raise ValueError(
-            "The `weights` argument should be either "
-            "`None` (random initialization), `imagenet` "
-            "(pre-training on ImageNet), "
-            "or the path to the weights file to be loaded."
-        )
+        raise ValueError("The `weights` argument should be either "
+                         "`None` (random initialization), `imagenet` "
+                         "(pre-training on ImageNet), "
+                         "or the path to the weights file to be loaded.")
 
     if weights == "imagenet" and include_top and classes != 1000:
         raise ValueError(
             'If using `weights` as `"imagenet"` with `include_top`'
-            " as true, `classes` should be 1000"
-        )
+            " as true, `classes` should be 1000")
 
     # Determine proper input shape
     input_shape = imagenet_utils.obtain_input_shape(
@@ -146,75 +141,94 @@ def Xception(
 
     channel_axis = 1 if backend.image_data_format() == "channels_first" else -1
 
-    x = layers.Conv2D(32, (3, 3), strides=(2, 2), use_bias=False, name="block1_conv1")(
-        img_input
-    )
+    x = layers.Conv2D(32, (3, 3),
+                      strides=(2, 2),
+                      use_bias=False,
+                      name="block1_conv1")(img_input)
     x = layers.BatchNormalization(axis=channel_axis, name="block1_conv1_bn")(x)
     x = layers.Activation("relu", name="block1_conv1_act")(x)
     x = layers.Conv2D(64, (3, 3), use_bias=False, name="block1_conv2")(x)
     x = layers.BatchNormalization(axis=channel_axis, name="block1_conv2_bn")(x)
     x = layers.Activation("relu", name="block1_conv2_act")(x)
 
-    residual = layers.Conv2D(
-        128, (1, 1), strides=(2, 2), padding="same", use_bias=False
-    )(x)
+    residual = layers.Conv2D(128, (1, 1),
+                             strides=(2, 2),
+                             padding="same",
+                             use_bias=False)(x)
     residual = layers.BatchNormalization(axis=channel_axis)(residual)
 
-    x = layers.SeparableConv2D(
-        128, (3, 3), padding="same", use_bias=False, name="block2_sepconv1"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block2_sepconv1_bn")(x)
+    x = layers.SeparableConv2D(128, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block2_sepconv1")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block2_sepconv1_bn")(x)
     x = layers.Activation("relu", name="block2_sepconv2_act")(x)
-    x = layers.SeparableConv2D(
-        128, (3, 3), padding="same", use_bias=False, name="block2_sepconv2"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block2_sepconv2_bn")(x)
+    x = layers.SeparableConv2D(128, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block2_sepconv2")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block2_sepconv2_bn")(x)
 
-    x = layers.MaxPooling2D((3, 3), strides=(2, 2), padding="same", name="block2_pool")(
-        x
-    )
+    x = layers.MaxPooling2D((3, 3),
+                            strides=(2, 2),
+                            padding="same",
+                            name="block2_pool")(x)
     x = layers.add([x, residual])
 
-    residual = layers.Conv2D(
-        256, (1, 1), strides=(2, 2), padding="same", use_bias=False
-    )(x)
+    residual = layers.Conv2D(256, (1, 1),
+                             strides=(2, 2),
+                             padding="same",
+                             use_bias=False)(x)
     residual = layers.BatchNormalization(axis=channel_axis)(residual)
 
     x = layers.Activation("relu", name="block3_sepconv1_act")(x)
-    x = layers.SeparableConv2D(
-        256, (3, 3), padding="same", use_bias=False, name="block3_sepconv1"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block3_sepconv1_bn")(x)
+    x = layers.SeparableConv2D(256, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block3_sepconv1")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block3_sepconv1_bn")(x)
     x = layers.Activation("relu", name="block3_sepconv2_act")(x)
-    x = layers.SeparableConv2D(
-        256, (3, 3), padding="same", use_bias=False, name="block3_sepconv2"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block3_sepconv2_bn")(x)
+    x = layers.SeparableConv2D(256, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block3_sepconv2")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block3_sepconv2_bn")(x)
 
-    x = layers.MaxPooling2D((3, 3), strides=(2, 2), padding="same", name="block3_pool")(
-        x
-    )
+    x = layers.MaxPooling2D((3, 3),
+                            strides=(2, 2),
+                            padding="same",
+                            name="block3_pool")(x)
     x = layers.add([x, residual])
 
-    residual = layers.Conv2D(
-        728, (1, 1), strides=(2, 2), padding="same", use_bias=False
-    )(x)
+    residual = layers.Conv2D(728, (1, 1),
+                             strides=(2, 2),
+                             padding="same",
+                             use_bias=False)(x)
     residual = layers.BatchNormalization(axis=channel_axis)(residual)
 
     x = layers.Activation("relu", name="block4_sepconv1_act")(x)
-    x = layers.SeparableConv2D(
-        728, (3, 3), padding="same", use_bias=False, name="block4_sepconv1"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block4_sepconv1_bn")(x)
+    x = layers.SeparableConv2D(728, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block4_sepconv1")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block4_sepconv1_bn")(x)
     x = layers.Activation("relu", name="block4_sepconv2_act")(x)
-    x = layers.SeparableConv2D(
-        728, (3, 3), padding="same", use_bias=False, name="block4_sepconv2"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block4_sepconv2_bn")(x)
+    x = layers.SeparableConv2D(728, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block4_sepconv2")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block4_sepconv2_bn")(x)
 
-    x = layers.MaxPooling2D((3, 3), strides=(2, 2), padding="same", name="block4_pool")(
-        x
-    )
+    x = layers.MaxPooling2D((3, 3),
+                            strides=(2, 2),
+                            padding="same",
+                            name="block4_pool")(x)
     x = layers.add([x, residual])
 
     for i in range(8):
@@ -222,68 +236,78 @@ def Xception(
         prefix = "block" + str(i + 5)
 
         x = layers.Activation("relu", name=prefix + "_sepconv1_act")(x)
-        x = layers.SeparableConv2D(
-            728, (3, 3), padding="same", use_bias=False, name=prefix + "_sepconv1"
-        )(x)
-        x = layers.BatchNormalization(axis=channel_axis, name=prefix + "_sepconv1_bn")(
-            x
-        )
+        x = layers.SeparableConv2D(728, (3, 3),
+                                   padding="same",
+                                   use_bias=False,
+                                   name=prefix + "_sepconv1")(x)
+        x = layers.BatchNormalization(axis=channel_axis,
+                                      name=prefix + "_sepconv1_bn")(x)
         x = layers.Activation("relu", name=prefix + "_sepconv2_act")(x)
-        x = layers.SeparableConv2D(
-            728, (3, 3), padding="same", use_bias=False, name=prefix + "_sepconv2"
-        )(x)
-        x = layers.BatchNormalization(axis=channel_axis, name=prefix + "_sepconv2_bn")(
-            x
-        )
+        x = layers.SeparableConv2D(728, (3, 3),
+                                   padding="same",
+                                   use_bias=False,
+                                   name=prefix + "_sepconv2")(x)
+        x = layers.BatchNormalization(axis=channel_axis,
+                                      name=prefix + "_sepconv2_bn")(x)
         x = layers.Activation("relu", name=prefix + "_sepconv3_act")(x)
-        x = layers.SeparableConv2D(
-            728, (3, 3), padding="same", use_bias=False, name=prefix + "_sepconv3"
-        )(x)
-        x = layers.BatchNormalization(axis=channel_axis, name=prefix + "_sepconv3_bn")(
-            x
-        )
+        x = layers.SeparableConv2D(728, (3, 3),
+                                   padding="same",
+                                   use_bias=False,
+                                   name=prefix + "_sepconv3")(x)
+        x = layers.BatchNormalization(axis=channel_axis,
+                                      name=prefix + "_sepconv3_bn")(x)
 
         x = layers.add([x, residual])
 
-    residual = layers.Conv2D(
-        1024, (1, 1), strides=(2, 2), padding="same", use_bias=False
-    )(x)
+    residual = layers.Conv2D(1024, (1, 1),
+                             strides=(2, 2),
+                             padding="same",
+                             use_bias=False)(x)
     residual = layers.BatchNormalization(axis=channel_axis)(residual)
 
     x = layers.Activation("relu", name="block13_sepconv1_act")(x)
-    x = layers.SeparableConv2D(
-        728, (3, 3), padding="same", use_bias=False, name="block13_sepconv1"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block13_sepconv1_bn")(x)
+    x = layers.SeparableConv2D(728, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block13_sepconv1")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block13_sepconv1_bn")(x)
     x = layers.Activation("relu", name="block13_sepconv2_act")(x)
-    x = layers.SeparableConv2D(
-        1024, (3, 3), padding="same", use_bias=False, name="block13_sepconv2"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block13_sepconv2_bn")(x)
+    x = layers.SeparableConv2D(1024, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block13_sepconv2")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block13_sepconv2_bn")(x)
 
-    x = layers.MaxPooling2D(
-        (3, 3), strides=(2, 2), padding="same", name="block13_pool"
-    )(x)
+    x = layers.MaxPooling2D((3, 3),
+                            strides=(2, 2),
+                            padding="same",
+                            name="block13_pool")(x)
     x = layers.add([x, residual])
 
-    x = layers.SeparableConv2D(
-        1536, (3, 3), padding="same", use_bias=False, name="block14_sepconv1"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block14_sepconv1_bn")(x)
+    x = layers.SeparableConv2D(1536, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block14_sepconv1")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block14_sepconv1_bn")(x)
     x = layers.Activation("relu", name="block14_sepconv1_act")(x)
 
-    x = layers.SeparableConv2D(
-        2048, (3, 3), padding="same", use_bias=False, name="block14_sepconv2"
-    )(x)
-    x = layers.BatchNormalization(axis=channel_axis, name="block14_sepconv2_bn")(x)
+    x = layers.SeparableConv2D(2048, (3, 3),
+                               padding="same",
+                               use_bias=False,
+                               name="block14_sepconv2")(x)
+    x = layers.BatchNormalization(axis=channel_axis,
+                                  name="block14_sepconv2_bn")(x)
     x = layers.Activation("relu", name="block14_sepconv2_act")(x)
 
     if include_top:
         x = layers.GlobalAveragePooling2D(name="avg_pool")(x)
         imagenet_utils.validate_activation(classifier_activation, weights)
-        x = layers.Dense(classes, activation=classifier_activation, name="predictions")(
-            x
-        )
+        x = layers.Dense(classes,
+                         activation=classifier_activation,
+                         name="predictions")(x)
     else:
         if pooling == "avg":
             x = layers.GlobalAveragePooling2D()(x)
@@ -324,7 +348,9 @@ def Xception(
 
 @keras_export("keras.applications.xception.preprocess_input")
 def preprocess_input(x, data_format=None):
-    return imagenet_utils.preprocess_input(x, data_format=data_format, mode="tf")
+    return imagenet_utils.preprocess_input(x,
+                                           data_format=data_format,
+                                           mode="tf")
 
 
 @keras_export("keras.applications.xception.decode_predictions")
@@ -333,6 +359,5 @@ def decode_predictions(preds, top=5):
 
 
 preprocess_input.__doc__ = imagenet_utils.PREPROCESS_INPUT_DOC.format(
-    mode="", ret=imagenet_utils.PREPROCESS_INPUT_RET_DOC_TF
-)
+    mode="", ret=imagenet_utils.PREPROCESS_INPUT_RET_DOC_TF)
 decode_predictions.__doc__ = imagenet_utils.decode_predictions.__doc__

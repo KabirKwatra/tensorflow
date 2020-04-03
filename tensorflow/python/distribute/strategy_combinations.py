@@ -35,8 +35,7 @@ from tensorflow.python.keras.optimizer_v2 import adam as adam_keras_v2
 from tensorflow.python.keras.optimizer_v2 import adamax as adamax_keras_v2
 from tensorflow.python.keras.optimizer_v2 import ftrl as ftrl_keras_v2
 from tensorflow.python.keras.optimizer_v2 import (
-    gradient_descent as gradient_descent_keras_v2,
-)
+    gradient_descent as gradient_descent_keras_v2, )
 from tensorflow.python.keras.optimizer_v2 import nadam as nadam_keras_v2
 from tensorflow.python.keras.optimizer_v2 import rmsprop as rmsprop_keras_v2
 from tensorflow.python.platform import flags
@@ -47,7 +46,6 @@ from tensorflow.python.training import adam
 from tensorflow.python.training import ftrl
 from tensorflow.python.training import gradient_descent
 from tensorflow.python.training import rmsprop
-
 
 FLAGS = flags.FLAGS
 
@@ -74,16 +72,15 @@ def _get_tpu_strategy_creator(steps_per_run, use_single_core=False, **kwargs):
         device_assignment = None
         if use_single_core:
             device_assignment = device_assignment_lib.DeviceAssignment(
-                topology, core_assignment=device_assignment_lib.SINGLE_CORE_ASSIGNMENT
-            )
+                topology,
+                core_assignment=device_assignment_lib.SINGLE_CORE_ASSIGNMENT)
 
         # Steps per run is only supported in TF 1.x
         if tf2.enabled():
             return tpu_lib.TPUStrategy(resolver, device_assignment, **kwargs)
         else:
-            return tpu_lib.TPUStrategyV1(
-                resolver, steps_per_run, device_assignment, **kwargs
-            )
+            return tpu_lib.TPUStrategyV1(resolver, steps_per_run,
+                                         device_assignment, **kwargs)
 
     return _create_tpu_strategy
 
@@ -100,8 +97,9 @@ one_device_strategy = combinations.NamedDistribution(
     required_gpus=None,
 )
 one_device_strategy_gpu = combinations.NamedDistribution(
-    "OneDeviceGPU", lambda: one_device_lib.OneDeviceStrategy("/gpu:0"), required_gpus=1
-)
+    "OneDeviceGPU",
+    lambda: one_device_lib.OneDeviceStrategy("/gpu:0"),
+    required_gpus=1)
 one_device_strategy_on_worker_1 = combinations.NamedDistribution(
     "OneDeviceOnWorker1CPU",
     lambda: one_device_lib.OneDeviceStrategy(
@@ -117,11 +115,11 @@ one_device_strategy_gpu_on_worker_1 = combinations.NamedDistribution(
     required_gpus=1,
 )
 tpu_strategy = combinations.NamedDistribution(
-    "TPU", _get_tpu_strategy_creator(steps_per_run=2), required_tpu=True
-)
+    "TPU", _get_tpu_strategy_creator(steps_per_run=2), required_tpu=True)
 tpu_strategy_one_step = combinations.NamedDistribution(
-    "TPUOneStep", _get_tpu_strategy_creator(steps_per_run=1), required_tpu=True
-)
+    "TPUOneStep",
+    _get_tpu_strategy_creator(steps_per_run=1),
+    required_tpu=True)
 tpu_strategy_one_core = combinations.NamedDistribution(
     "TPUOneCore",
     _get_tpu_strategy_creator(steps_per_run=2, use_single_core=True),
@@ -139,11 +137,11 @@ cloud_tpu_strategy = combinations.NamedDistribution(
     use_cloud_tpu=True,
 )
 mirrored_strategy_with_one_cpu = combinations.NamedDistribution(
-    "Mirrored1CPU", lambda: mirrored_lib.MirroredStrategy(["/cpu:0"])
-)
+    "Mirrored1CPU", lambda: mirrored_lib.MirroredStrategy(["/cpu:0"]))
 mirrored_strategy_with_one_gpu = combinations.NamedDistribution(
-    "Mirrored1GPU", lambda: mirrored_lib.MirroredStrategy(["/gpu:0"]), required_gpus=1
-)
+    "Mirrored1GPU",
+    lambda: mirrored_lib.MirroredStrategy(["/gpu:0"]),
+    required_gpus=1)
 mirrored_strategy_with_gpu_and_cpu = combinations.NamedDistribution(
     "MirroredCPUAndGPU",
     lambda: mirrored_lib.MirroredStrategy(["/gpu:0", "/cpu:0"]),
@@ -160,14 +158,13 @@ mirrored_strategy_with_cpu_1_and_2 = combinations.NamedDistribution(
 )
 central_storage_strategy_with_two_gpus = combinations.NamedDistribution(
     "CentralStorage2GPUs",
-    lambda: central_storage_strategy.CentralStorageStrategy._from_num_gpus(
-        2
-    ),  # pylint: disable=protected-access
+    lambda: central_storage_strategy.CentralStorageStrategy._from_num_gpus(2),  # pylint: disable=protected-access
     required_gpus=2,
 )
 central_storage_strategy_with_gpu_and_cpu = combinations.NamedDistribution(
     "CentralStorageCPUAndGPU",
-    lambda: central_storage_strategy.CentralStorageStrategy(["/gpu:0", "/cpu:0"]),
+    lambda: central_storage_strategy.CentralStorageStrategy(
+        ["/gpu:0", "/cpu:0"]),
     required_gpus=1,
 )
 multi_worker_mirrored_two_workers = combinations.NamedDistribution(
@@ -184,20 +181,16 @@ multi_worker_mirrored_one_chief_one_worker = combinations.NamedDistribution(
 )
 
 gradient_descent_optimizer_v1_fn = combinations.NamedObject(
-    "GradientDescentV1", lambda: gradient_descent.GradientDescentOptimizer(0.001)
-)
+    "GradientDescentV1", lambda: gradient_descent.GradientDescentOptimizer(
+        0.001))
 adagrad_optimizer_v1_fn = combinations.NamedObject(
-    "AdagradV1", lambda: adagrad.AdagradOptimizer(0.001)
-)
+    "AdagradV1", lambda: adagrad.AdagradOptimizer(0.001))
 adam_optimizer_v1_fn = combinations.NamedObject(
-    "AdamV1", lambda: adam.AdamOptimizer(0.001, epsilon=1)
-)
+    "AdamV1", lambda: adam.AdamOptimizer(0.001, epsilon=1))
 ftrl_optimizer_v1_fn = combinations.NamedObject(
-    "FtrlV1", lambda: ftrl.FtrlOptimizer(0.001)
-)
+    "FtrlV1", lambda: ftrl.FtrlOptimizer(0.001))
 rmsprop_optimizer_v1_fn = combinations.NamedObject(
-    "RmsPropV1", lambda: rmsprop.RMSPropOptimizer(0.001)
-)
+    "RmsPropV1", lambda: rmsprop.RMSPropOptimizer(0.001))
 
 # TODO(shiningsun): consider adding the other v1 optimizers
 optimizers_v1 = [
@@ -208,32 +201,26 @@ optimizers_v1 = [
 ]
 
 adadelta_optimizer_keras_v2_fn = combinations.NamedObject(
-    "AdadeltaKerasV2", lambda: adadelta_keras_v2.Adadelta(0.001)
-)
+    "AdadeltaKerasV2", lambda: adadelta_keras_v2.Adadelta(0.001))
 adagrad_optimizer_keras_v2_fn = combinations.NamedObject(
-    "AdagradKerasV2", lambda: adagrad_keras_v2.Adagrad(0.001)
-)
+    "AdagradKerasV2", lambda: adagrad_keras_v2.Adagrad(0.001))
 adam_optimizer_keras_v2_fn = combinations.NamedObject(
-    "AdamKerasV2", lambda: adam_keras_v2.Adam(0.001, epsilon=1.0)
-)
+    "AdamKerasV2", lambda: adam_keras_v2.Adam(0.001, epsilon=1.0))
 adamax_optimizer_keras_v2_fn = combinations.NamedObject(
-    "AdamaxKerasV2", lambda: adamax_keras_v2.Adamax(0.001, epsilon=1.0)
-)
+    "AdamaxKerasV2", lambda: adamax_keras_v2.Adamax(0.001, epsilon=1.0))
 nadam_optimizer_keras_v2_fn = combinations.NamedObject(
-    "NadamKerasV2", lambda: nadam_keras_v2.Nadam(0.001, epsilon=1.0)
-)
+    "NadamKerasV2", lambda: nadam_keras_v2.Nadam(0.001, epsilon=1.0))
 ftrl_optimizer_keras_v2_fn = combinations.NamedObject(
-    "FtrlKerasV2", lambda: ftrl_keras_v2.Ftrl(0.001)
-)
+    "FtrlKerasV2", lambda: ftrl_keras_v2.Ftrl(0.001))
 gradient_descent_optimizer_keras_v2_fn = combinations.NamedObject(
-    "GradientDescentKerasV2", lambda: gradient_descent_keras_v2.SGD(0.001)
-)
+    "GradientDescentKerasV2", lambda: gradient_descent_keras_v2.SGD(0.001))
 rmsprop_optimizer_keras_v2_fn = combinations.NamedObject(
-    "RmsPropKerasV2", lambda: rmsprop_keras_v2.RMSprop(0.001)
-)
+    "RmsPropKerasV2", lambda: rmsprop_keras_v2.RMSprop(0.001))
 
 # TODO(shiningsun): consider adding the other v2 optimizers
-optimizers_v2 = [gradient_descent_optimizer_keras_v2_fn, adagrad_optimizer_keras_v2_fn]
+optimizers_v2 = [
+    gradient_descent_optimizer_keras_v2_fn, adagrad_optimizer_keras_v2_fn
+]
 
 optimizers_v1_and_v2 = optimizers_v1 + optimizers_v2
 
@@ -245,24 +232,23 @@ graph_and_eager_modes = ["graph", "eager"]
 def set_virtual_cpus_to_at_least(num_virtual_cpus):
     """Create virtual CPU devices if they haven't yet been created."""
     if num_virtual_cpus < 1:
-        raise ValueError(
-            "`num_virtual_cpus` must be at least 1 not %r" % (num_virtual_cpus,)
-        )
+        raise ValueError("`num_virtual_cpus` must be at least 1 not %r" %
+                         (num_virtual_cpus, ))
     physical_devices = config.list_physical_devices("CPU")
     if not physical_devices:
         raise RuntimeError("No CPUs found")
     configs = config.get_logical_device_configuration(physical_devices[0])
     if configs is None:
         logical_devices = [
-            context.LogicalDeviceConfiguration() for _ in range(num_virtual_cpus)
+            context.LogicalDeviceConfiguration()
+            for _ in range(num_virtual_cpus)
         ]
-        config.set_logical_device_configuration(physical_devices[0], logical_devices)
+        config.set_logical_device_configuration(physical_devices[0],
+                                                logical_devices)
     else:
         if len(configs) < num_virtual_cpus:
-            raise RuntimeError(
-                "Already configured with %d < %d virtual CPUs"
-                % (len(configs), num_virtual_cpus)
-            )
+            raise RuntimeError("Already configured with %d < %d virtual CPUs" %
+                               (len(configs), num_virtual_cpus))
 
 
 def distributions_and_v1_optimizers():
@@ -335,9 +321,8 @@ multidevice_strategies = [
 
 
 def strategy_minus_tpu_combinations():
-    return combinations.combine(
-        distribution=strategies_minus_tpu, mode=["graph", "eager"]
-    )
+    return combinations.combine(distribution=strategies_minus_tpu,
+                                mode=["graph", "eager"])
 
 
 def tpu_strategy_combinations():
@@ -361,6 +346,5 @@ def all_strategy_minus_default_and_tpu_combinations():
 
 
 def all_strategy_combinations_minus_default():
-    return (
-        all_strategy_minus_default_and_tpu_combinations() + tpu_strategy_combinations()
-    )
+    return (all_strategy_minus_default_and_tpu_combinations() +
+            tpu_strategy_combinations())

@@ -35,49 +35,47 @@ class ClusterParametersTest(test.TestCase, parameterized.TestCase):
     # we should use GPUCombination which contains it.
 
     @framework_combinations.generate(
-        framework_combinations.combine(
-            distribution=[
-                combinations.NamedDistribution(
-                    "HasClusterParams", lambda: None, has_chief=True, num_workers=2
-                ),
-            ]
-        ),
-        test_combinations=(combinations.GPUCombination(),),
+        framework_combinations.combine(distribution=[
+            combinations.NamedDistribution("HasClusterParams",
+                                           lambda: None,
+                                           has_chief=True,
+                                           num_workers=2),
+        ]),
+        test_combinations=(combinations.GPUCombination(), ),
     )
     def testClusterParams(self, distribution, has_chief, num_workers):
         self.assertTrue(has_chief)
         self.assertEqual(num_workers, 2)
 
     @framework_combinations.generate(
-        framework_combinations.combine(
-            distribution=[
-                combinations.NamedDistribution("NoClusterParams", lambda: None),
-            ]
-        ),
-        test_combinations=(combinations.GPUCombination(),),
+        framework_combinations.combine(distribution=[
+            combinations.NamedDistribution("NoClusterParams", lambda: None),
+        ]),
+        test_combinations=(combinations.GPUCombination(), ),
     )
-    def testClusterParamsHasDefault(self, distribution, has_chief, num_workers):
+    def testClusterParamsHasDefault(self, distribution, has_chief,
+                                    num_workers):
         self.assertFalse(has_chief)
         self.assertEqual(num_workers, 1)
 
     @framework_combinations.generate(
         framework_combinations.combine(v=1),
-        test_combinations=(combinations.GPUCombination(),),
+        test_combinations=(combinations.GPUCombination(), ),
     )
     def testClusterParamsNoStrategy(self, v, has_chief, num_workers):
         self.assertFalse(has_chief)
         self.assertEqual(num_workers, 1)
 
     @framework_combinations.generate(
-        framework_combinations.combine(
-            distribution=[
-                combinations.NamedDistribution(
-                    "WithClusterParams", lambda: None, has_chief=True, num_workers=2
-                ),
-                combinations.NamedDistribution("WithoutClusterParams", lambda: None),
-            ]
-        ),
-        test_combinations=(combinations.GPUCombination(),),
+        framework_combinations.combine(distribution=[
+            combinations.NamedDistribution("WithClusterParams",
+                                           lambda: None,
+                                           has_chief=True,
+                                           num_workers=2),
+            combinations.NamedDistribution(
+                "WithoutClusterParams", lambda: None),
+        ]),
+        test_combinations=(combinations.GPUCombination(), ),
     )
     def testClusterParamsAreOptional(self, distribution):
         # If combinations library doesn't raise an exception, the test is passed.
@@ -86,16 +84,13 @@ class ClusterParametersTest(test.TestCase, parameterized.TestCase):
     @framework_combinations.generate(
         framework_combinations.combine(
             ds1=combinations.NamedDistribution(
-                "Strategy1", lambda: None, has_chief=True, num_workers=0
-            ),
+                "Strategy1", lambda: None, has_chief=True, num_workers=0),
             ds2=combinations.NamedDistribution(
-                "Strategy2", lambda: None, has_chief=False, num_workers=1
-            ),
+                "Strategy2", lambda: None, has_chief=False, num_workers=1),
             ds3=combinations.NamedDistribution(
-                "Strategy3", lambda: None, has_chief=True, num_workers=0
-            ),
+                "Strategy3", lambda: None, has_chief=True, num_workers=0),
         ),
-        test_combinations=(combinations.GPUCombination(),),
+        test_combinations=(combinations.GPUCombination(), ),
     )
     def testMultipleDistributionSingleWorker(self, ds1, ds2, ds3):
         # If combinations library doesn't raise an exception, the test is passed.
@@ -109,13 +104,11 @@ class ClusterParametersShouldFailTest(test.TestCase, parameterized.TestCase):
     @framework_combinations.generate(
         framework_combinations.combine(
             ds1=combinations.NamedDistribution(
-                "Strategy1", lambda: None, has_chief=True, num_workers=2
-            ),
+                "Strategy1", lambda: None, has_chief=True, num_workers=2),
             ds2=combinations.NamedDistribution(
-                "Strategy2", lambda: None, has_chief=True, num_workers=2
-            ),
+                "Strategy2", lambda: None, has_chief=True, num_workers=2),
         ),
-        test_combinations=(combinations.GPUCombination(),),
+        test_combinations=(combinations.GPUCombination(), ),
     )
     def testMultipleDistributionMultiWorker(self, ds1, ds2):
         # combinations library should raise an exception.
@@ -129,17 +122,14 @@ class ClusterParametersShouldFailTest(test.TestCase, parameterized.TestCase):
 @absltest.expectedFailure
 class CombinationsExpectedFailureTest(test.TestCase, parameterized.TestCase):
     @combinations.generate(
-        combinations.combine(
-            distribution=[
-                combinations.NamedDistribution(
-                    "OneChiefOneWorker", lambda: None, has_chief=True, num_workers=1
-                ),
-                combinations.NamedDistribution(
-                    "TwoWorkers", lambda: None, has_chief=False, num_workers=2
-                ),
-            ]
-        )
-    )
+        combinations.combine(distribution=[
+            combinations.NamedDistribution("OneChiefOneWorker",
+                                           lambda: None,
+                                           has_chief=True,
+                                           num_workers=1),
+            combinations.NamedDistribution(
+                "TwoWorkers", lambda: None, has_chief=False, num_workers=2),
+        ]))
     def testMultiWorkerCanFail(self, distribution):
         resolver = tfconfig_cluster_resolver.TFConfigClusterResolver()
         # This should fail.
@@ -152,20 +142,14 @@ class CombinationsExpectedFailureTest(test.TestCase, parameterized.TestCase):
 # methods, so we have to decorate the class instead.
 @absltest.expectedFailure
 @combinations.generate(
-    combinations.combine(
-        distribution=[
-            combinations.NamedDistribution(
-                "OneChiefOneWorker", lambda: None, has_chief=True, num_workers=1
-            ),
-            combinations.NamedDistribution(
-                "TwoWorkers", lambda: None, has_chief=False, num_workers=2
-            ),
-        ]
-    )
-)
+    combinations.combine(distribution=[
+        combinations.NamedDistribution(
+            "OneChiefOneWorker", lambda: None, has_chief=True, num_workers=1),
+        combinations.NamedDistribution(
+            "TwoWorkers", lambda: None, has_chief=False, num_workers=2),
+    ]))
 class CombinationsOnClassMultiWorkerExpectedFailureTest(
-    test.TestCase, parameterized.TestCase
-):
+        test.TestCase, parameterized.TestCase):
     def test(self, distribution):
         resolver = tfconfig_cluster_resolver.TFConfigClusterResolver()
         # This should fail.
