@@ -55,34 +55,34 @@ _did_connect_to_cluster = False
 
 # pylint: disable=missing-docstring
 def _get_tpu_strategy_creator(steps_per_run, use_single_core=False, **kwargs):
-  def _create_tpu_strategy():
-    global _did_connect_to_cluster
+    def _create_tpu_strategy():
+        global _did_connect_to_cluster
 
-    # These flags will be defined by tpu_test_wrapper.py.
-    resolver = tpu_cluster_resolver.TPUClusterResolver(
-        tpu=hasattr(FLAGS, "tpu") and FLAGS.tpu or "",
-        zone=hasattr(FLAGS, "zone") and FLAGS.zone or None,
-        project=hasattr(FLAGS, "project") and FLAGS.project or None,
-    )
-    # Only connect once per process, rather than per test method.
-    if hasattr(FLAGS, "tpu") and FLAGS.tpu and not _did_connect_to_cluster:
-      remote.connect_to_cluster(resolver)
-      _did_connect_to_cluster = True
+        # These flags will be defined by tpu_test_wrapper.py.
+        resolver = tpu_cluster_resolver.TPUClusterResolver(
+            tpu=hasattr(FLAGS, "tpu") and FLAGS.tpu or "",
+            zone=hasattr(FLAGS, "zone") and FLAGS.zone or None,
+            project=hasattr(FLAGS, "project") and FLAGS.project or None,
+        )
+        # Only connect once per process, rather than per test method.
+        if hasattr(FLAGS, "tpu") and FLAGS.tpu and not _did_connect_to_cluster:
+            remote.connect_to_cluster(resolver)
+            _did_connect_to_cluster = True
 
-    topology = tpu_strategy_util.initialize_tpu_system(resolver)
-    device_assignment = None
-    if use_single_core:
-      device_assignment = device_assignment_lib.DeviceAssignment(
-          topology, core_assignment=device_assignment_lib.
-          SINGLE_CORE_ASSIGNMENT)
+        topology = tpu_strategy_util.initialize_tpu_system(resolver)
+        device_assignment = None
+        if use_single_core:
+            device_assignment = device_assignment_lib.DeviceAssignment(
+                topology, core_assignment=device_assignment_lib.
+                SINGLE_CORE_ASSIGNMENT)
 
-    # Steps per run is only supported in TF 1.x
-    if tf2.enabled():
-      return tpu_lib.TPUStrategy(resolver, device_assignment, **kwargs)
-    else:
-      return tpu_lib.TPUStrategyV1(resolver, steps_per_run,
-                                   device_assignment, **kwargs)
-  return _create_tpu_strategy
+        # Steps per run is only supported in TF 1.x
+        if tf2.enabled():
+            return tpu_lib.TPUStrategy(resolver, device_assignment, **kwargs)
+        else:
+            return tpu_lib.TPUStrategyV1(resolver, steps_per_run,
+                                         device_assignment, **kwargs)
+    return _create_tpu_strategy
 
 
 # pylint: disable=g-long-lambda
@@ -100,11 +100,13 @@ one_device_strategy_gpu = combinations.NamedDistribution(
     required_gpus=1)
 one_device_strategy_on_worker_1 = combinations.NamedDistribution(
     "OneDeviceOnWorker1CPU",
-    lambda: one_device_lib.OneDeviceStrategy("/job:worker/replica:0/task:1/cpu:0"),  # pylint: disable=line-too-long
+    lambda: one_device_lib.OneDeviceStrategy(
+        "/job:worker/replica:0/task:1/cpu:0"),  # pylint: disable=line-too-long
     required_gpus=None)
 one_device_strategy_gpu_on_worker_1 = combinations.NamedDistribution(
     "OneDeviceOnWorker1GPU",
-    lambda: one_device_lib.OneDeviceStrategy("/job:worker/replica:0/task:1/gpu:0"),  # pylint: disable=line-too-long
+    lambda: one_device_lib.OneDeviceStrategy(
+        "/job:worker/replica:0/task:1/gpu:0"),  # pylint: disable=line-too-long
     required_gpus=1)
 tpu_strategy = combinations.NamedDistribution(
     "TPU", _get_tpu_strategy_creator(steps_per_run=2), required_tpu=True)
@@ -142,7 +144,8 @@ mirrored_strategy_with_cpu_1_and_2 = combinations.NamedDistribution(
     "Mirrored2CPU", lambda: mirrored_lib.MirroredStrategy(["/cpu:1", "/cpu:2"]))
 central_storage_strategy_with_two_gpus = combinations.NamedDistribution(
     "CentralStorage2GPUs",
-    lambda: central_storage_strategy.CentralStorageStrategy._from_num_gpus(2),  # pylint: disable=protected-access
+    lambda: central_storage_strategy.CentralStorageStrategy._from_num_gpus(
+        2),  # pylint: disable=protected-access
     required_gpus=2)
 central_storage_strategy_with_gpu_and_cpu = combinations.NamedDistribution(
     "CentralStorageCPUAndGPU",
@@ -210,57 +213,57 @@ graph_and_eager_modes = ["graph", "eager"]
 # This function should be called in a test's `setUp` method with the
 # maximum value needed in any test.
 def set_virtual_cpus_to_at_least(num_virtual_cpus):
-  """Create virtual CPU devices if they haven't yet been created."""
-  if num_virtual_cpus < 1:
-    raise ValueError("`num_virtual_cpus` must be at least 1 not %r" %
-                     (num_virtual_cpus,))
-  physical_devices = config.list_physical_devices("CPU")
-  if not physical_devices:
-    raise RuntimeError("No CPUs found")
-  configs = config.get_logical_device_configuration(physical_devices[0])
-  if configs is None:
-    logical_devices = [
-        context.LogicalDeviceConfiguration() for _ in range(num_virtual_cpus)
-    ]
-    config.set_logical_device_configuration(physical_devices[0],
-                                            logical_devices)
-  else:
-    if len(configs) < num_virtual_cpus:
-      raise RuntimeError("Already configured with %d < %d virtual CPUs" %
-                         (len(configs), num_virtual_cpus))
+    """Create virtual CPU devices if they haven't yet been created."""
+    if num_virtual_cpus < 1:
+        raise ValueError("`num_virtual_cpus` must be at least 1 not %r" %
+                         (num_virtual_cpus,))
+    physical_devices = config.list_physical_devices("CPU")
+    if not physical_devices:
+        raise RuntimeError("No CPUs found")
+    configs = config.get_logical_device_configuration(physical_devices[0])
+    if configs is None:
+        logical_devices = [
+            context.LogicalDeviceConfiguration() for _ in range(num_virtual_cpus)
+        ]
+        config.set_logical_device_configuration(physical_devices[0],
+                                                logical_devices)
+    else:
+        if len(configs) < num_virtual_cpus:
+            raise RuntimeError("Already configured with %d < %d virtual CPUs" %
+                               (len(configs), num_virtual_cpus))
 
 
 def distributions_and_v1_optimizers():
-  """A common set of combination with DistributionStrategies and Optimizers."""
-  return combinations.combine(
-      distribution=[
-          one_device_strategy,
-          mirrored_strategy_with_gpu_and_cpu,
-          mirrored_strategy_with_two_gpus,
-      ],
-      optimizer_fn=optimizers_v1)
+    """A common set of combination with DistributionStrategies and Optimizers."""
+    return combinations.combine(
+        distribution=[
+            one_device_strategy,
+            mirrored_strategy_with_gpu_and_cpu,
+            mirrored_strategy_with_two_gpus,
+        ],
+        optimizer_fn=optimizers_v1)
 
 
 def distributions_and_v2_optimizers():
-  """A common set of combination with DistributionStrategies and Optimizers."""
-  return combinations.combine(
-      distribution=[
-          one_device_strategy,
-          mirrored_strategy_with_gpu_and_cpu,
-          mirrored_strategy_with_two_gpus,
-      ],
-      optimizer_fn=optimizers_v2)
+    """A common set of combination with DistributionStrategies and Optimizers."""
+    return combinations.combine(
+        distribution=[
+            one_device_strategy,
+            mirrored_strategy_with_gpu_and_cpu,
+            mirrored_strategy_with_two_gpus,
+        ],
+        optimizer_fn=optimizers_v2)
 
 
 def distributions_and_v1_and_v2_optimizers():
-  """A common set of combination with DistributionStrategies and Optimizers."""
-  return combinations.combine(
-      distribution=[
-          one_device_strategy,
-          mirrored_strategy_with_gpu_and_cpu,
-          mirrored_strategy_with_two_gpus,
-      ],
-      optimizer_fn=optimizers_v1_and_v2)
+    """A common set of combination with DistributionStrategies and Optimizers."""
+    return combinations.combine(
+        distribution=[
+            one_device_strategy,
+            mirrored_strategy_with_gpu_and_cpu,
+            mirrored_strategy_with_two_gpus,
+        ],
+        optimizer_fn=optimizers_v1_and_v2)
 
 
 strategies_minus_tpu = [
@@ -292,27 +295,27 @@ multidevice_strategies = [
 
 
 def strategy_minus_tpu_combinations():
-  return combinations.combine(
-      distribution=strategies_minus_tpu, mode=["graph", "eager"])
+    return combinations.combine(
+        distribution=strategies_minus_tpu, mode=["graph", "eager"])
 
 
 def tpu_strategy_combinations():
-  return combinations.combine(distribution=tpu_strategies, mode=["graph"])
+    return combinations.combine(distribution=tpu_strategies, mode=["graph"])
 
 
 def all_strategy_combinations():
-  return strategy_minus_tpu_combinations() + tpu_strategy_combinations()
+    return strategy_minus_tpu_combinations() + tpu_strategy_combinations()
 
 
 def all_strategy_minus_default_and_tpu_combinations():
-  return combinations.combine(
-      distribution=[
-          one_device_strategy, one_device_strategy_gpu,
-          mirrored_strategy_with_gpu_and_cpu, mirrored_strategy_with_two_gpus
-      ],
-      mode=["graph", "eager"])
+    return combinations.combine(
+        distribution=[
+            one_device_strategy, one_device_strategy_gpu,
+            mirrored_strategy_with_gpu_and_cpu, mirrored_strategy_with_two_gpus
+        ],
+        mode=["graph", "eager"])
 
 
 def all_strategy_combinations_minus_default():
-  return (all_strategy_minus_default_and_tpu_combinations() +
-          tpu_strategy_combinations())
+    return (all_strategy_minus_default_and_tpu_combinations() +
+            tpu_strategy_combinations())
