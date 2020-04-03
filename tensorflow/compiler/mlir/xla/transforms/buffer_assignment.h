@@ -42,22 +42,24 @@ namespace xla {
 /// to move alloc and dealloc nodes into the right places you can use the
 /// createBufferAssignmentPass() function.
 class BufferAssignmentPlacer {
- public:
-  /// Creates a new assignment builder.
-  explicit BufferAssignmentPlacer(Operation* op);
+public:
+    /// Creates a new assignment builder.
+    explicit BufferAssignmentPlacer(Operation* op);
 
-  /// Returns the operation this analysis was constructed from.
-  Operation* getOperation() const { return operation; }
+    /// Returns the operation this analysis was constructed from.
+    Operation* getOperation() const {
+        return operation;
+    }
 
-  /// Computes the actual position to place allocs for the given value.
-  OpBuilder::InsertPoint computeAllocPosition(Value value);
+    /// Computes the actual position to place allocs for the given value.
+    OpBuilder::InsertPoint computeAllocPosition(Value value);
 
- private:
-  /// The operation this analysis was constructed from.
-  Operation* operation;
+private:
+    /// The operation this analysis was constructed from.
+    Operation* operation;
 
-  /// The dominator analysis to place allocs in the appropriate blocks.
-  DominanceInfo dominators;
+    /// The dominator analysis to place allocs in the appropriate blocks.
+    DominanceInfo dominators;
 };
 
 /// Helper conversion pattern that encapsulates a BufferAssignmentPlacer
@@ -65,33 +67,33 @@ class BufferAssignmentPlacer {
 template <typename SourceOp>
 class BufferAssignmentOpConversionPattern
     : public OpConversionPattern<SourceOp> {
- public:
-  explicit BufferAssignmentOpConversionPattern(
-      MLIRContext* context_,
-      xla::BufferAssignmentPlacer* bufferAssignment_ = nullptr,
-      PatternBenefit benefit_ = 1)
-      : OpConversionPattern<SourceOp>(context_, benefit_),
-        bufferAssignment(bufferAssignment_) {}
+public:
+    explicit BufferAssignmentOpConversionPattern(
+        MLIRContext* context_,
+        xla::BufferAssignmentPlacer* bufferAssignment_ = nullptr,
+        PatternBenefit benefit_ = 1)
+        : OpConversionPattern<SourceOp>(context_, benefit_),
+          bufferAssignment(bufferAssignment_) {}
 
- protected:
-  xla::BufferAssignmentPlacer* bufferAssignment;
+protected:
+    xla::BufferAssignmentPlacer* bufferAssignment;
 };
 
 // Converts only the tensor-type function and block arguments to memref-type.
 class FunctionAndBlockSignatureConverter
     : public BufferAssignmentOpConversionPattern<FuncOp> {
- public:
-  using BufferAssignmentOpConversionPattern<
-      FuncOp>::BufferAssignmentOpConversionPattern;
+public:
+    using BufferAssignmentOpConversionPattern<
+    FuncOp>::BufferAssignmentOpConversionPattern;
 
-  // Adding functions whose arguments are memref type to the set of legal
-  // operations.
-  static void addDynamicallyLegalFuncOp(ConversionTarget& target);
+    // Adding functions whose arguments are memref type to the set of legal
+    // operations.
+    static void addDynamicallyLegalFuncOp(ConversionTarget& target);
 
-  // Performs the actual signature rewriting step.
-  LogicalResult matchAndRewrite(
-      FuncOp funcOp, ArrayRef<Value> operands,
-      ConversionPatternRewriter& rewriter) const final;
+    // Performs the actual signature rewriting step.
+    LogicalResult matchAndRewrite(
+        FuncOp funcOp, ArrayRef<Value> operands,
+        ConversionPatternRewriter& rewriter) const final;
 };
 
 // This pattern converter transforms a non-void ReturnOpSourceTy into a void
@@ -101,37 +103,37 @@ template <typename ReturnOpSourceTy, typename ReturnOpTargetTy,
           typename CopyOpTy>
 class NonVoidToVoidReturnOpConverter
     : public BufferAssignmentOpConversionPattern<ReturnOpSourceTy> {
- public:
-  using BufferAssignmentOpConversionPattern<
-      ReturnOpSourceTy>::BufferAssignmentOpConversionPattern;
+public:
+    using BufferAssignmentOpConversionPattern<
+    ReturnOpSourceTy>::BufferAssignmentOpConversionPattern;
 
-  // Performs the actual return-op conversion step.
-  LogicalResult matchAndRewrite(
-      ReturnOpSourceTy returnOp, ArrayRef<Value> operands,
-      ConversionPatternRewriter& rewriter) const final {
-    auto numReturnValues = returnOp.getNumOperands();
-    auto funcOp = returnOp.template getParentOfType<FuncOp>();
-    auto numFuncArgs = funcOp.getNumArguments();
-    auto loc = returnOp.getLoc();
+    // Performs the actual return-op conversion step.
+    LogicalResult matchAndRewrite(
+        ReturnOpSourceTy returnOp, ArrayRef<Value> operands,
+        ConversionPatternRewriter& rewriter) const final {
+        auto numReturnValues = returnOp.getNumOperands();
+        auto funcOp = returnOp.template getParentOfType<FuncOp>();
+        auto numFuncArgs = funcOp.getNumArguments();
+        auto loc = returnOp.getLoc();
 
-    // Find the corresponding output buffer for each operand.
-    for (auto operand : llvm::enumerate(operands)) {
-      auto returnArgNumber = numFuncArgs - numReturnValues + operand.index();
-      auto dstBuffer = funcOp.getArgument(returnArgNumber);
-      if (dstBuffer == operand.value()) {
-        continue;
-      }
+        // Find the corresponding output buffer for each operand.
+        for (auto operand : llvm::enumerate(operands)) {
+            auto returnArgNumber = numFuncArgs - numReturnValues + operand.index();
+            auto dstBuffer = funcOp.getArgument(returnArgNumber);
+            if (dstBuffer == operand.value()) {
+                continue;
+            }
 
-      // Insert the copy operation to copy before the return.
-      rewriter.setInsertionPoint(
-          returnOp.getOperation()->getBlock()->getTerminator());
-      rewriter.create<CopyOpTy>(loc, operand.value(),
-                                funcOp.getArgument(returnArgNumber));
+            // Insert the copy operation to copy before the return.
+            rewriter.setInsertionPoint(
+                returnOp.getOperation()->getBlock()->getTerminator());
+            rewriter.create<CopyOpTy>(loc, operand.value(),
+                                      funcOp.getArgument(returnArgNumber));
+        }
+        // Insert the new target return operation.
+        rewriter.replaceOpWithNewOp<ReturnOpTargetTy>(returnOp);
+        return success();
     }
-    // Insert the new target return operation.
-    rewriter.replaceOpWithNewOp<ReturnOpTargetTy>(returnOp);
-    return success();
-  }
 };
 
 }  // namespace xla
