@@ -45,152 +45,142 @@ namespace tensorflow {
 // `PropagateOutputs()` after processing a node, and `SimplePropagatorState`
 // dispatches `TaggedNode`s by adding them to a `TaggedNodeSeq`.
 class SimplePropagatorState {
-public:
-    SimplePropagatorState(const ImmutableExecutorState& immutable_state,
-                          int64 step_id);
-    ~SimplePropagatorState();
+ public:
+  SimplePropagatorState(const ImmutableExecutorState& immutable_state,
+                        int64 step_id);
+  ~SimplePropagatorState();
 
-    // A `TaggedNode` corresponds to a single invocation of a node's kernel,
-    // and it is created when the kernel becomes runnable.
-    struct TaggedNode {
-        const NodeItem* node_item;
+  // A `TaggedNode` corresponds to a single invocation of a node's kernel,
+  // and it is created when the kernel becomes runnable.
+  struct TaggedNode {
+    const NodeItem* node_item;
 
-        explicit TaggedNode(const NodeItem* node_item) : node_item(node_item) {}
+    explicit TaggedNode(const NodeItem* node_item) : node_item(node_item) {}
 
-        const NodeItem& get_node_item() const {
-            return *node_item;
+    const NodeItem& get_node_item() const { return *node_item; }
+
+    bool get_is_dead() const { return false; }
+    int64 get_iter_num() const { return 0; }
+  };
+
+  // A drop-in replacement for std::deque<TaggedNode>.  We typically don't
+  // have that many nodes in the ready queue, so we just use a vector and
+  // don't free up memory from the queue as we consume nodes.
+  // TODO(mrry): Extract this and share it with the version in
+  // `PropagatorState`. The correct constants might be different, since
+  // sizeof(TaggedNode) is smaller in this version.
+  class TaggedNodeReadyQueue {
+   public:
+    TaggedNodeReadyQueue() : front_index_(0) {}
+
+    void push_back(const TaggedNode& node) { ready_.push_back(node); }
+    TaggedNode front() const {
+      DCHECK_LT(front_index_, ready_.size());
+      return ready_[front_index_];
+    }
+    void pop_front() {
+      DCHECK_LT(front_index_, ready_.size());
+      front_index_++;
+      if ((front_index_ == ready_.size()) || (front_index_ > kSpillThreshold)) {
+        if (front_index_ == ready_.size()) {
+          ready_.clear();
+        } else {
+          // Lots of unused entries at beginning of vector: move everything
+          // down to start of vector.
+          ready_.erase(ready_.begin(), ready_.begin() + front_index_);
         }
+        front_index_ = 0;
+      }
+    }
+    bool empty() const { return ready_.empty(); }
 
-        bool get_is_dead() const {
-            return false;
-        }
-        int64 get_iter_num() const {
-            return 0;
-        }
-    };
+   private:
+    // TODO(b/152925936): Re-evaluate these constants with current usage
+    // patterns.
+    static constexpr int kSpillThreshold = 16384;
+    gtl::InlinedVector<TaggedNode, 16> ready_;
+    int front_index_;
+  };
 
-    // A drop-in replacement for std::deque<TaggedNode>.  We typically don't
-    // have that many nodes in the ready queue, so we just use a vector and
-    // don't free up memory from the queue as we consume nodes.
-    // TODO(mrry): Extract this and share it with the version in
-    // `PropagatorState`. The correct constants might be different, since
-    // sizeof(TaggedNode) is smaller in this version.
-    class TaggedNodeReadyQueue {
-    public:
-        TaggedNodeReadyQueue() : front_index_(0) {}
+  // TODO(b/152925936): Re-evaluate this constant with current usage patterns.
+  typedef gtl::InlinedVector<TaggedNode, 8> TaggedNodeSeq;
 
-        void push_back(const TaggedNode& node) {
-            ready_.push_back(node);
-        }
-        TaggedNode front() const {
-            DCHECK_LT(front_index_, ready_.size());
-            return ready_[front_index_];
-        }
-        void pop_front() {
-            DCHECK_LT(front_index_, ready_.size());
-            front_index_++;
-            if ((front_index_ == ready_.size()) || (front_index_ > kSpillThreshold)) {
-                if (front_index_ == ready_.size()) {
-                    ready_.clear();
-                } else {
-                    // Lots of unused entries at beginning of vector: move everything
-                    // down to start of vector.
-                    ready_.erase(ready_.begin(), ready_.begin() + front_index_);
-                }
-                front_index_ = 0;
-            }
-        }
-        bool empty() const {
-            return ready_.empty();
-        }
+  // Creates and adds a `TaggedNode` for each node in `roots` to `*ready`.
+  void ActivateRoots(gtl::ArraySlice<const NodeItem*> roots,
+                     TaggedNodeSeq* ready);
 
-    private:
-        // TODO(b/152925936): Re-evaluate these constants with current usage
-        // patterns.
-        static constexpr int kSpillThreshold = 16384;
-        gtl::InlinedVector<TaggedNode, 16> ready_;
-        int front_index_;
-    };
+  // After processing the outputs, propagates the outputs to their dsts.
+  // Contents of *outputs are left in an indeterminate state after
+  // returning from this method.
+  void PropagateOutputs(const TaggedNode& tagged_node, EntryVector* outputs,
+                        TaggedNodeSeq* ready);
 
-    // TODO(b/152925936): Re-evaluate this constant with current usage patterns.
-    typedef gtl::InlinedVector<TaggedNode, 8> TaggedNodeSeq;
-
-    // Creates and adds a `TaggedNode` for each node in `roots` to `*ready`.
-    void ActivateRoots(gtl::ArraySlice<const NodeItem*> roots,
-                       TaggedNodeSeq* ready);
-
-    // After processing the outputs, propagates the outputs to their dsts.
-    // Contents of *outputs are left in an indeterminate state after
-    // returning from this method.
-    void PropagateOutputs(const TaggedNode& tagged_node, EntryVector* outputs,
-                          TaggedNodeSeq* ready);
-
-    // Returns an array of `Entry` objects corresponding to the inputs of
-    // `tagged_node`.
-    Entry* GetInputTensors(const TaggedNode& tagged_node) {
+  // Returns an array of `Entry` objects corresponding to the inputs of
+  // `tagged_node`.
+  Entry* GetInputTensors(const TaggedNode& tagged_node) {
 #if defined(THREAD_SANITIZER) || defined(DEBUG)
-        // NOTE: This read of `pending_[...]` works around a limitation in TSAN.
-        // To avoid false positive data race reports, we need to perform an atomic
-        // object access that will establish the happens-before relation between
-        // the write to input_tensors_ in `PropagateOutputs()` and the read in
-        // `PrepareInputs()`.
-        CHECK_EQ(pending_[tagged_node.node_item->node_id], 0);
+    // NOTE: This read of `pending_[...]` works around a limitation in TSAN.
+    // To avoid false positive data race reports, we need to perform an atomic
+    // object access that will establish the happens-before relation between
+    // the write to input_tensors_ in `PropagateOutputs()` and the read in
+    // `PrepareInputs()`.
+    CHECK_EQ(pending_[tagged_node.node_item->node_id], 0);
 #endif  // defined(THREAD_SANITIZER) || defined(DEBUG)
-        return input_tensors_.data() + tagged_node.node_item->input_start;
+    return input_tensors_.data() + tagged_node.node_item->input_start;
+  }
+
+  FrameAndIter GetFrameAndIter(const TaggedNode& tagged_node) const {
+    return {0, 0};
+  }
+
+  // Provide debugging output of the state of the executor.
+  void DumpState();
+
+  // For debugging/logging only.
+  void MaybeMarkStarted(const TaggedNode& tagged_node) {
+    // TODO(misard) Replace with a finer-grain enabling flag once we add better
+    // optional debugging support.
+    if (TF_PREDICT_FALSE(vlog_) && VLOG_IS_ON(1)) {
+      mutex_lock l(mu_);
+      (*active_)[tagged_node.node_item->node_id] = true;
     }
-
-    FrameAndIter GetFrameAndIter(const TaggedNode& tagged_node) const {
-        return {0, 0};
+  }
+  void MaybeMarkCompleted(const TaggedNode& tagged_node) {
+    // TODO(misard) Replace with a finer-grain enabling flag once we add better
+    // optional debugging support.
+    if (TF_PREDICT_FALSE(vlog_) && VLOG_IS_ON(1)) {
+      mutex_lock l(mu_);
+      (*active_)[tagged_node.node_item->node_id] = false;
     }
+  }
 
-    // Provide debugging output of the state of the executor.
-    void DumpState();
+ private:
+  SimplePropagatorState(const ImmutableExecutorState& immutable_state_,
+                        int64 step_id,
+                        const ImmutableExecutorState::FrameInfo& finfo);
 
-    // For debugging/logging only.
-    void MaybeMarkStarted(const TaggedNode& tagged_node) {
-        // TODO(misard) Replace with a finer-grain enabling flag once we add better
-        // optional debugging support.
-        if (TF_PREDICT_FALSE(vlog_) && VLOG_IS_ON(1)) {
-            mutex_lock l(mu_);
-            (*active_)[tagged_node.node_item->node_id] = true;
-        }
-    }
-    void MaybeMarkCompleted(const TaggedNode& tagged_node) {
-        // TODO(misard) Replace with a finer-grain enabling flag once we add better
-        // optional debugging support.
-        if (TF_PREDICT_FALSE(vlog_) && VLOG_IS_ON(1)) {
-            mutex_lock l(mu_);
-            (*active_)[tagged_node.node_item->node_id] = false;
-        }
-    }
+  const ImmutableExecutorState& immutable_state_;
+  const int64 step_id_;
+  const bool vlog_;
 
-private:
-    SimplePropagatorState(const ImmutableExecutorState& immutable_state_,
-                          int64 step_id,
-                          const ImmutableExecutorState::FrameInfo& finfo);
+  // The i-th node's j-th input is stored at
+  // `input_tensors[impl_->nodes[i].input_start + j]`.
+  //
+  // NOTE: No need to protect input_tensors[i] by any locks because it
+  // is resized once. Each element of input_tensors is written once by the
+  // source node of an edge and is cleared by the destination of the same
+  // edge. The destination node always runs after the source node, so there
+  // is never concurrent access to the same entry.
+  std::vector<Entry> input_tensors_;
 
-    const ImmutableExecutorState& immutable_state_;
-    const int64 step_id_;
-    const bool vlog_;
+  std::unique_ptr<std::atomic<int32>[]> pending_;
 
-    // The i-th node's j-th input is stored at
-    // `input_tensors[impl_->nodes[i].input_start + j]`.
-    //
-    // NOTE: No need to protect input_tensors[i] by any locks because it
-    // is resized once. Each element of input_tensors is written once by the
-    // source node of an edge and is cleared by the destination of the same
-    // edge. The destination node always runs after the source node, so there
-    // is never concurrent access to the same entry.
-    std::vector<Entry> input_tensors_;
+  // If `vlog_` is true, this stores a bit vector of active nodes, indexed by
+  // node ID.
+  mutex mu_;
+  std::unique_ptr<std::vector<bool>> active_ TF_GUARDED_BY(mu_);
 
-    std::unique_ptr<std::atomic<int32>[]> pending_;
-
-    // If `vlog_` is true, this stores a bit vector of active nodes, indexed by
-    // node ID.
-    mutex mu_;
-    std::unique_ptr<std::vector<bool>> active_ TF_GUARDED_BY(mu_);
-
-    const std::vector<const NodeItem*>* const nodes_;
+  const std::vector<const NodeItem*>* const nodes_;
 };
 
 }  // namespace tensorflow
