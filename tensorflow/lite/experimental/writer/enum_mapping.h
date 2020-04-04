@@ -24,120 +24,120 @@ namespace tflite {
 
 inline ActivationFunctionType TfLiteActivationToSchemaActivation(
     TfLiteFusedActivation act) {
-  switch (act) {
+    switch (act) {
     case kTfLiteActNone:
-      return ActivationFunctionType_NONE;
+        return ActivationFunctionType_NONE;
     case kTfLiteActRelu:
-      return ActivationFunctionType_RELU;
+        return ActivationFunctionType_RELU;
     case kTfLiteActRelu1:
-      return ActivationFunctionType_RELU_N1_TO_1;
+        return ActivationFunctionType_RELU_N1_TO_1;
     case kTfLiteActRelu6:
-      return ActivationFunctionType_RELU6;
+        return ActivationFunctionType_RELU6;
     case kTfLiteActTanh:
-      return ActivationFunctionType_TANH;
+        return ActivationFunctionType_TANH;
     case kTfLiteActSignBit:
-      return ActivationFunctionType_SIGN_BIT;
+        return ActivationFunctionType_SIGN_BIT;
     case kTfLiteActSigmoid:
-      return ActivationFunctionType_NONE;  // TODO(aselle): Add to schema
-  }
-  return ActivationFunctionType_NONE;
+        return ActivationFunctionType_NONE;  // TODO(aselle): Add to schema
+    }
+    return ActivationFunctionType_NONE;
 }
 
 inline Padding TfLitePaddingToSchemaPadding(TfLitePadding padding) {
-  switch (padding) {
+    switch (padding) {
     case kTfLitePaddingUnknown:
-      return Padding_SAME;  // TODO(aselle): Consider an error.
+        return Padding_SAME;  // TODO(aselle): Consider an error.
     case kTfLitePaddingSame:
-      return Padding_SAME;
+        return Padding_SAME;
     case kTfLitePaddingValid:
-      return Padding_VALID;
-  }
-  return Padding_SAME;  // TODO(aselle): Consider an error.
+        return Padding_VALID;
+    }
+    return Padding_SAME;  // TODO(aselle): Consider an error.
 }
 
 inline TensorType TfLiteTypeToSchemaType(TfLiteType type) {
-  switch (type) {
+    switch (type) {
     // case kTfLiteNoType: return TensorType_NONE;
     case kTfLiteNoType:
-      return TensorType_FLOAT32;  // TODO(aselle): Consider an error.
+        return TensorType_FLOAT32;  // TODO(aselle): Consider an error.
     case kTfLiteFloat32:
-      return TensorType_FLOAT32;
+        return TensorType_FLOAT32;
     case kTfLiteFloat16:
-      return TensorType_FLOAT16;
+        return TensorType_FLOAT16;
     case kTfLiteFloat64:
-      return TensorType_FLOAT64;
+        return TensorType_FLOAT64;
     case kTfLiteInt32:
-      return TensorType_INT32;
+        return TensorType_INT32;
     case kTfLiteUInt8:
-      return TensorType_UINT8;
+        return TensorType_UINT8;
     case kTfLiteInt8:
-      return TensorType_INT8;
+        return TensorType_INT8;
     case kTfLiteInt64:
-      return TensorType_INT64;
+        return TensorType_INT64;
     case kTfLiteString:
-      return TensorType_STRING;
+        return TensorType_STRING;
     case kTfLiteBool:
-      return TensorType_BOOL;
+        return TensorType_BOOL;
     case kTfLiteInt16:
-      return TensorType_INT16;
+        return TensorType_INT16;
     case kTfLiteComplex64:
-      return TensorType_COMPLEX64;
-  }
-  // TODO(aselle): consider an error
+        return TensorType_COMPLEX64;
+    }
+    // TODO(aselle): consider an error
 }
 
 inline FullyConnectedOptionsWeightsFormat
 FullyConnectedOptionsWeightsFormatToSchema(
     TfLiteFullyConnectedWeightsFormat format) {
-  switch (format) {
+    switch (format) {
     case kTfLiteFullyConnectedWeightsFormatDefault:
-      return FullyConnectedOptionsWeightsFormat_DEFAULT;
+        return FullyConnectedOptionsWeightsFormat_DEFAULT;
     case kTfLiteFullyConnectedWeightsFormatShuffled4x16Int8:
-      return FullyConnectedOptionsWeightsFormat_SHUFFLED4x16INT8;
-  }
+        return FullyConnectedOptionsWeightsFormat_SHUFFLED4x16INT8;
+    }
 }
 
 inline LSTMKernelType LSTMKernelTypeToSchema(TfLiteLSTMKernelType type) {
-  switch (type) {
+    switch (type) {
     case kTfLiteLSTMFullKernel:
-      return LSTMKernelType_FULL;
+        return LSTMKernelType_FULL;
     case kTfLiteLSTMBasicKernel:
-      return LSTMKernelType_BASIC;
-  }
+        return LSTMKernelType_BASIC;
+    }
 }
 
 inline LSHProjectionType LSHProjectionTypeToSchema(
     TfLiteLSHProjectionType type) {
-  switch (type) {
+    switch (type) {
     case kTfLiteLshProjectionUnknown:
-      return LSHProjectionType_UNKNOWN;
+        return LSHProjectionType_UNKNOWN;
     case kTfLiteLshProjectionSparse:
-      return LSHProjectionType_SPARSE;
+        return LSHProjectionType_SPARSE;
     case kTfLiteLshProjectionDense:
-      return LSHProjectionType_DENSE;
-  }
+        return LSHProjectionType_DENSE;
+    }
 }
 
 inline MirrorPadMode MirrorPaddingModeToSchema(TfLiteMirrorPaddingMode mode) {
-  switch (mode) {
+    switch (mode) {
     case kTfLiteMirrorPaddingUnknown:
-      return MirrorPadMode_REFLECT;  // TODO(aselle): consider an error
+        return MirrorPadMode_REFLECT;  // TODO(aselle): consider an error
     case kTfLiteMirrorPaddingReflect:
-      return MirrorPadMode_REFLECT;
+        return MirrorPadMode_REFLECT;
     case kTfLiteMirrorPaddingSymmetric:
-      return MirrorPadMode_SYMMETRIC;
-  }
+        return MirrorPadMode_SYMMETRIC;
+    }
 }
 
 inline CombinerType CombinerTypeToSchema(TfLiteCombinerType type) {
-  switch (type) {
+    switch (type) {
     case kTfLiteCombinerTypeSum:
-      return CombinerType_SUM;
+        return CombinerType_SUM;
     case kTfLiteCombinerTypeMean:
-      return CombinerType_MEAN;
+        return CombinerType_MEAN;
     case kTfLiteCombinerTypeSqrtn:
-      return CombinerType_SQRTN;
-  }
+        return CombinerType_SQRTN;
+    }
 }
 
 // int
