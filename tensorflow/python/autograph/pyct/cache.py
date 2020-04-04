@@ -31,7 +31,7 @@ class _TransformedFnCache(object):
     kinds of transformation.
     """
 
-    __slots__ = ("_cache",)
+    __slots__ = ("_cache", )
 
     def __init__(self):
         self._cache = weakref.WeakKeyDictionary()
