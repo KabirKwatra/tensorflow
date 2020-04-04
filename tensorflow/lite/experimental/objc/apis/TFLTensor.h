@@ -23,35 +23,35 @@ NS_ASSUME_NONNULL_BEGIN
  * This enum specifies supported TensorFlow Lite tensor data types.
  */
 typedef NS_ENUM(NSUInteger, TFLTensorDataType) {
-    /** Tensor data type not available. This indicates an error with the model. */
-    TFLTensorDataTypeNoType,
+  /** Tensor data type not available. This indicates an error with the model. */
+  TFLTensorDataTypeNoType,
 
-    /** 32-bit single precision floating point. */
-    TFLTensorDataTypeFloat32,
+  /** 32-bit single precision floating point. */
+  TFLTensorDataTypeFloat32,
 
-    /** 16-bit half precision floating point. */
-    TFLTensorDataTypeFloat16,
+  /** 16-bit half precision floating point. */
+  TFLTensorDataTypeFloat16,
 
-    /** 32-bit signed integer. */
-    TFLTensorDataTypeInt32,
+  /** 32-bit signed integer. */
+  TFLTensorDataTypeInt32,
 
-    /** 8-bit unsigned integer. */
-    TFLTensorDataTypeUInt8,
+  /** 8-bit unsigned integer. */
+  TFLTensorDataTypeUInt8,
 
-    /** 64-bit signed integer. */
-    TFLTensorDataTypeInt64,
+  /** 64-bit signed integer. */
+  TFLTensorDataTypeInt64,
 
-    /** Boolean. */
-    TFLTensorDataTypeBool,
+  /** Boolean. */
+  TFLTensorDataTypeBool,
 
-    /** 16-bit signed integer. */
-    TFLTensorDataTypeInt16,
+  /** 16-bit signed integer. */
+  TFLTensorDataTypeInt16,
 
-    /** 8-bit signed integer. */
-    TFLTensorDataTypeInt8,
+  /** 8-bit signed integer. */
+  TFLTensorDataTypeInt8,
 
-    /** 64-bit double precision floating point. */
-    TFLTensorDataTypeFloat64,
+  /** 64-bit double precision floating point. */
+  TFLTensorDataTypeFloat64,
 };
 
 /**
@@ -64,14 +64,14 @@ typedef NS_ENUM(NSUInteger, TFLTensorDataType) {
  */
 @interface TFLTensor : NSObject
 
-    /** Name of the tensor. */
-@property(nonatomic, readonly, copy) NSString *name;
+/** Name of the tensor. */
+@property(nonatomic, readonly, copy) NSString* name;
 
 /** Data type of the tensor. */
 @property(nonatomic, readonly) TFLTensorDataType dataType;
 
 /** Parameters for asymmetric quantization. `nil` if the tensor does not use quantization. */
-@property(nonatomic, readonly, nullable) TFLQuantizationParameters *quantizationParameters;
+@property(nonatomic, readonly, nullable) TFLQuantizationParameters* quantizationParameters;
 
 /** Unavailable. */
 - (instancetype)init NS_UNAVAILABLE;
@@ -87,7 +87,7 @@ typedef NS_ENUM(NSUInteger, TFLTensorDataType) {
  * @return Whether the data was copied into the input tensor successfully. Returns NO if an error
  *     occurred.
  */
-- (BOOL)copyData:(NSData *)data error:(NSError **)error;
+- (BOOL)copyData:(NSData*)data error:(NSError**)error;
 
 /**
  * Retrieves a copy of data in the tensor. For an output tensor, the data is only available after
@@ -98,7 +98,7 @@ typedef NS_ENUM(NSUInteger, TFLTensorDataType) {
  * @return A copy of data in the tensor. `nil` if there is an error in retrieving the data or the
  *     data is not available.
  */
-- (nullable NSData *)dataWithError:(NSError **)error;
+- (nullable NSData*)dataWithError:(NSError**)error;
 
 /**
  * Retrieves the shape of the tensor, an array of positive unsigned integers containing the size
@@ -110,7 +110,7 @@ typedef NS_ENUM(NSUInteger, TFLTensorDataType) {
  *
  * @return The shape of the tensor. `nil` if there is an error in retrieving the shape.
  */
-- (nullable NSArray<NSNumber *> *)shapeWithError:(NSError **)error;
+- (nullable NSArray<NSNumber*>*)shapeWithError:(NSError**)error;
 
 @end
 

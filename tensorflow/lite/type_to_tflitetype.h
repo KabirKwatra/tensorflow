@@ -32,51 +32,51 @@ namespace tflite {
 // casts.
 template <class T>
 constexpr TfLiteType typeToTfLiteType() {
-    return kTfLiteNoType;
+  return kTfLiteNoType;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<int>() {
-    return kTfLiteInt32;
+  return kTfLiteInt32;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<int16_t>() {
-    return kTfLiteInt16;
+  return kTfLiteInt16;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<int64_t>() {
-    return kTfLiteInt64;
+  return kTfLiteInt64;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<float>() {
-    return kTfLiteFloat32;
+  return kTfLiteFloat32;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<unsigned char>() {
-    return kTfLiteUInt8;
+  return kTfLiteUInt8;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<int8_t>() {
-    return kTfLiteInt8;
+  return kTfLiteInt8;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<bool>() {
-    return kTfLiteBool;
+  return kTfLiteBool;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<std::complex<float>>() {
-    return kTfLiteComplex64;
+  return kTfLiteComplex64;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<std::string>() {
-    return kTfLiteString;
+  return kTfLiteString;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<TfLiteFloat16>() {
-    return kTfLiteFloat16;
+  return kTfLiteFloat16;
 }
 template <>
 constexpr TfLiteType typeToTfLiteType<double>() {
-    return kTfLiteFloat64;
+  return kTfLiteFloat64;
 }
 }  // namespace tflite
 #endif  // TENSORFLOW_LITE_TYPE_TO_TFLITETYPE_H_
