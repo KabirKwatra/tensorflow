@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Wraps the body of a converted function with auxiliary constructs."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
