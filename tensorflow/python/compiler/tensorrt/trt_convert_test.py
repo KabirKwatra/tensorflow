@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Utilities to test TF-TensorRT integration."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -23,8 +22,8 @@ import os
 import re
 import tempfile
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.compiler.tf2tensorrt._pywrap_py_utils import is_tensorrt_enabled
 from tensorflow.core.framework import graph_pb2
