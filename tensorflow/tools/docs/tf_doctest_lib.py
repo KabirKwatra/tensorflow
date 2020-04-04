@@ -64,15 +64,17 @@ class _FloatExtractor(object):
       )
       """.format(
             # Digits, a "." and optional more digits: "1.1".
-            digits_dot_maybe_digits=r'(?:[0-9]+\.(?:[0-9]*))',
+            digits_dot_maybe_digits=r"(?:[0-9]+\.(?:[0-9]*))",
             # A "." with trailing digits ".23"
-            dot_digits=r'(?:\.[0-9]+)',
+            dot_digits=r"(?:\.[0-9]+)",
             # digits: "12"
-            digits=r'(?:[0-9]+)',
+            digits=r"(?:[0-9]+)",
             # The exponent: An "e" or "E", optional sign, and at least one digit.
             # "e-123", "E+12", "e12"
-            exponent=r'(?:[eE][-+]?[0-9]+)'),
-        re.VERBOSE)
+            exponent=r"(?:[eE][-+]?[0-9]+)",
+        ),
+        re.VERBOSE,
+    )
 
     def __call__(self, string):
         """Extracts floats from a string.
@@ -113,7 +115,7 @@ class TfDoctestOutputChecker(doctest.OutputChecker, object):
         self.text_good = None
         self.float_size_good = None
 
-    _ADDRESS_RE = re.compile(r'\bat 0x[0-9a-f]*?>')
+    _ADDRESS_RE = re.compile(r"\bat 0x[0-9a-f]*?>")
 
     def _allclose(self, want, got, rtol=1e-3, atol=1e-3):
         return np.allclose(want, got, rtol=rtol, atol=atol)
@@ -154,18 +156,19 @@ class TfDoctestOutputChecker(doctest.OutputChecker, object):
 
         # Replace python's addresses with ellipsis (`...`) since it can change on
         # each execution.
-        want = self._ADDRESS_RE.sub('at ...>', want)
+        want = self._ADDRESS_RE.sub("at ...>", want)
 
         # Separate out the floats, and replace `want` with the wild-card version
         # "result=7.0" => "result=..."
         want_text_parts, self.want_floats = self.extract_floats(want)
-        want_text_wild = '...'.join(want_text_parts)
+        want_text_wild = "...".join(want_text_parts)
 
         # Find the floats in the string returned by the test
         _, self.got_floats = self.extract_floats(got)
 
         self.text_good = super(TfDoctestOutputChecker, self).check_output(
-            want=want_text_wild, got=got, optionflags=optionflags)
+            want=want_text_wild, got=got, optionflags=optionflags
+        )
         if not self.text_good:
             return False
 
@@ -174,7 +177,7 @@ class TfDoctestOutputChecker(doctest.OutputChecker, object):
             # the result. "np.array([ ... ])" matches "np.array([ 1.0, 2.0 ])"
             return True
 
-        self.float_size_good = (self.want_floats.size == self.got_floats.size)
+        self.float_size_good = self.want_floats.size == self.got_floats.size
 
         if self.float_size_good:
             return self._allclose(self.want_floats, self.got_floats)
@@ -190,16 +193,21 @@ class TfDoctestOutputChecker(doctest.OutputChecker, object):
         # anymore.
         if self.text_good:
             if not self.float_size_good:
-                got.append("\n\nCAUTION: tf_doctest doesn't work if *some* of the "
-                           "*float output* is hidden with a \"...\".")
+                got.append(
+                    "\n\nCAUTION: tf_doctest doesn't work if *some* of the "
+                    '*float output* is hidden with a "...".'
+                )
 
-        message = textwrap.dedent("""\n
+        message = textwrap.dedent(
+            """\n
         #############################################################
         Check the documentation
         (https://www.tensorflow.org/community/contribute/docs_ref) on how to write testable docstrings.
-        #############################################################""")
+        #############################################################"""
+        )
 
         got.append(message)
-        got = '\n'.join(got)
-        return (super(TfDoctestOutputChecker,
-                      self).output_difference(example, got, optionflags))
+        got = "\n".join(got)
+        return super(TfDoctestOutputChecker, self).output_difference(
+            example, got, optionflags
+        )

@@ -28,60 +28,62 @@ class MiniModel(tf.keras.Model):
     """
 
     def __init__(self):
-        super(MiniModel, self).__init__(name='')
-        self.fc = tf.keras.layers.Dense(1, name='fc', kernel_initializer='ones',
-                                        bias_initializer='ones')
+        super(MiniModel, self).__init__(name="")
+        self.fc = tf.keras.layers.Dense(
+            1, name="fc", kernel_initializer="ones", bias_initializer="ones"
+        )
 
     def call(self, inputs, training=True):
         return self.fc(inputs)
 
 
 class DefunnedMiniModel(MiniModel):
-
     @tf.function
     def call(self, inputs, training=True):
         return super(DefunnedMiniModel, self).call(inputs, training=training)
 
 
 class ModelWithOptimizer(tf.keras.Model):
-
     def __init__(self):
         super(ModelWithOptimizer, self).__init__()
         self.dense = tf.keras.layers.Dense(1)
         self.optimizer = tf.keras.optimizers.Adam(0.01)
 
     @tf.function(
-        input_signature=(tf.TensorSpec([None, 2], tf.float32),
-                         tf.TensorSpec([None], tf.float32)))
+        input_signature=(
+            tf.TensorSpec([None, 2], tf.float32),
+            tf.TensorSpec([None], tf.float32),
+        )
+    )
     def call(self, x, y):
         with tf.GradientTape() as tape:
-            loss = tf.math.reduce_mean((self.dense(x) - y) ** 2.)
+            loss = tf.math.reduce_mean((self.dense(x) - y) ** 2.0)
         trainable_variables = self.trainable_variables
         gradients = tape.gradient(loss, trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, trainable_variables))
-        return {'loss': loss}
+        return {"loss": loss}
 
 
 class FunctionTest(tf.test.TestCase):
-
     def testFunctionRelaxationLosesInnerDimWithKerasLayer(self):
         layer = tf.keras.layers.Dense(1)
         fn = tf.function(experimental_relax_shapes=True)(layer)
 
         with self.captureWritesToStream(sys.stderr) as printed:
             fn(tf.ones((3, 2)))
-            self.assertNotIn('ValueError', printed.contents())
+            self.assertNotIn("ValueError", printed.contents())
         with self.captureWritesToStream(sys.stderr) as printed:
             # Use batch size 2 to trigger a second cache miss on the shape.
             fn(tf.ones((2, 2)))
-            self.assertNotIn('ValueError', printed.contents())
+            self.assertNotIn("ValueError", printed.contents())
 
         # Shape relaxation passes TensorShape([None, None]), which causes layer
         # matmul to fail, due to incompatible dims.  What would have been a graph
         # build time error (layer would complain about the inner dim being 4).
         with self.captureWritesToStream(sys.stderr) as printed:
-            with self.assertRaisesRegexp(tf.errors.InvalidArgumentError,
-                                         r'Matrix size-incompatible'):
+            with self.assertRaisesRegexp(
+                tf.errors.InvalidArgumentError, r"Matrix size-incompatible"
+            ):
                 fn(tf.ones((3, 4)))
 
     def testDefunKerasModelCall(self):
@@ -101,8 +103,7 @@ class FunctionTest(tf.test.TestCase):
     def testDecoratedMethod(self):
         m = DefunnedMiniModel()
         instance_call_one = m.call(tf.ones([1, 2]), training=True)
-        instance_call_two = m.call(
-            inputs=tf.ones([1, 2]), training=True)
+        instance_call_two = m.call(inputs=tf.ones([1, 2]), training=True)
         class_call = DefunnedMiniModel.call(m, tf.ones([1, 2]), training=True)
         self.assertAllEqual(instance_call_one, instance_call_two)
         self.assertAllEqual(instance_call_one, class_call)
@@ -128,17 +129,20 @@ class FunctionTest(tf.test.TestCase):
     def testDecoratedMethodGetConcreteFunction(self):
         m = DefunnedMiniModel()
         instance_call_one = m.call.get_concrete_function(
-            tf.ones([1, 2]), training=False)
+            tf.ones([1, 2]), training=False
+        )
         instance_call_two = m.call.get_concrete_function(
-            inputs=tf.ones([1, 2]), training=False)
-        self.assertAllEqual(instance_call_one(tf.ones([1, 2])),
-                            instance_call_two(tf.ones([1, 2])))
+            inputs=tf.ones([1, 2]), training=False
+        )
+        self.assertAllEqual(
+            instance_call_one(tf.ones([1, 2])), instance_call_two(tf.ones([1, 2]))
+        )
 
         # Also make sure get_concrete_function works on the class method
+        DefunnedMiniModel.call.get_concrete_function(m, tf.ones([1, 2]), training=False)
         DefunnedMiniModel.call.get_concrete_function(
-            m, tf.ones([1, 2]), training=False)
-        DefunnedMiniModel.call.get_concrete_function(
-            m, inputs=tf.ones([1, 2]), training=True)
+            m, inputs=tf.ones([1, 2]), training=True
+        )
 
     def testDecoratedMethodVariableCleanup(self):
         m = DefunnedMiniModel()
@@ -158,11 +162,11 @@ class FunctionTest(tf.test.TestCase):
     def testStandardTrainingLoopInFunction(self):
         layer = tf.keras.layers.Dense(2)
         dataset = (
-            tf.data.Dataset.from_tensors(
-                (tf.ones([784]), tf.ones([], tf.int32)))
+            tf.data.Dataset.from_tensors((tf.ones([784]), tf.ones([], tf.int32)))
             .map(lambda x, y: (x, y))
             .repeat(10)
-            .batch(32))
+            .batch(32)
+        )
         optimizer = tf.keras.optimizers.Adam()
 
         @tf.function
@@ -172,7 +176,9 @@ class FunctionTest(tf.test.TestCase):
                     out = layer(x)
                     loss = tf.reduce_mean(
                         tf.nn.sparse_softmax_cross_entropy_with_logits(
-                            logits=out, labels=y))
+                            logits=out, labels=y
+                        )
+                    )
                 layer_variables = layer.trainable_variables
                 gradients = tape.gradient(loss, layer_variables)
                 optimizer.apply_gradients(zip(gradients, layer_variables))
@@ -182,11 +188,11 @@ class FunctionTest(tf.test.TestCase):
     def testEarlyStoppingTrainingLoopInFunction(self):
         layer = tf.keras.layers.Dense(2)
         dataset = (
-            tf.data.Dataset.from_tensors(
-                (tf.ones([784]), tf.ones([], tf.int32)))
+            tf.data.Dataset.from_tensors((tf.ones([784]), tf.ones([], tf.int32)))
             .map(lambda x, y: (x, y))
             .repeat(10)
-            .batch(32))
+            .batch(32)
+        )
         optimizer = tf.keras.optimizers.Adam()
 
         @tf.function
@@ -196,7 +202,9 @@ class FunctionTest(tf.test.TestCase):
                     out = layer(x)
                     loss = tf.math.reduce_mean(
                         tf.nn.sparse_softmax_cross_entropy_with_logits(
-                            logits=out, labels=y))
+                            logits=out, labels=y
+                        )
+                    )
                 layer_variables = layer.trainable_variables
                 gradients = tape.gradient(loss, layer_variables)
                 optimizer.apply_gradients(zip(gradients, layer_variables))
@@ -206,11 +214,11 @@ class FunctionTest(tf.test.TestCase):
         train()
 
     def test_optimizer(self):
-        x = tf.constant([[3., 4.]])
-        y = tf.constant([2.])
+        x = tf.constant([[3.0, 4.0]])
+        y = tf.constant([2.0])
         model = ModelWithOptimizer()
         model(x, y)  # pylint:disable=not-callable
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tf.test.main()

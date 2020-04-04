@@ -46,16 +46,13 @@ from tensorflow.python.platform import test
 
 
 class _HasDecoratedMethod(object):
-
     @def_function.function
     def f(self, x):
-        return x * 3.
+        return x * 3.0
 
 
 class DefFunctionTest(test.TestCase, parameterized.TestCase):
-
     def testNoVariables(self):
-
         @def_function.function
         def fn(x):
             return 2 * x
@@ -63,7 +60,6 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(fn(constant_op.constant(4.0)), 8.0)
 
     def testFailIfVariablesAreCreatedMoreThanOnce(self):
-
         @def_function.function
         def fn(x):
             return variables.Variable(1.0) + x
@@ -83,7 +79,6 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             fn(1.0)
 
     def testRange(self):
-
         @def_function.function
         def f(unused_x):
             return 1.0
@@ -140,8 +135,7 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
         init_fn = fn.get_initialization_function(constant_op.constant(1.0))
         self.assertLen(state, 1)
-        self.assertFalse(
-            resource_variable_ops.var_is_initialized_op(state[0].handle))
+        self.assertFalse(resource_variable_ops.var_is_initialized_op(state[0].handle))
         init_fn()
         self.assertEqual(state[0].numpy(), 2.0)
 
@@ -204,13 +198,12 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
                 return state[0] * x
 
             with self.assertRaisesRegexp(
-                    lift_to_graph.UnliftableError, r'transitively.* mul .* x'):
+                lift_to_graph.UnliftableError, r"transitively.* mul .* x"
+            ):
                 fn(constant_op.constant(3.0))
 
     def testMethod(self):
-
         class MyModel(object):
-
             def __init__(self):
                 self.var = None
 
@@ -231,9 +224,11 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_functools_partial(self):
         self.assertAllClose(
-            3.,
-            def_function.function(functools.partial(lambda x, y: x + y, 1.))(
-                constant_op.constant(2.)))
+            3.0,
+            def_function.function(functools.partial(lambda x, y: x + y, 1.0))(
+                constant_op.constant(2.0)
+            ),
+        )
 
     def test_functools_partial_new_default(self):
         def f(x=3, y=7):
@@ -248,28 +243,29 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return x + y
 
         func = def_function.function(
-            functools.partial(f, x=array_ops.zeros([1]), y=array_ops.zeros([1])))
+            functools.partial(f, x=array_ops.zeros([1]), y=array_ops.zeros([1]))
+        )
         self.assertAllEqual(func(), [0.0])
 
     def test_functools_partial_single_positional(self):
         def f(x, y):
             return x + y
 
-        func = def_function.function(
-            functools.partial(f, constant_op.constant(1)))
+        func = def_function.function(functools.partial(f, constant_op.constant(1)))
         self.assertAllEqual(func(5), 6)
 
     def test_complicated_partial_with_defaults(self):
-
         def identity(*args):
             return args
 
-        def dynamic_unroll(core_fn,
-                           input_sequence,
-                           initial_state,
-                           sequence_length=None,
-                           parallel_iterations=1,
-                           swap_memory=False):
+        def dynamic_unroll(
+            core_fn,
+            input_sequence,
+            initial_state,
+            sequence_length=None,
+            parallel_iterations=1,
+            swap_memory=False,
+        ):
             del core_fn
             self.assertIs(None, sequence_length)
             self.assertEqual(1, parallel_iterations)
@@ -280,36 +276,38 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         initial_state = random_ops.random_uniform([1, 1])
 
         func = def_function.function(
-            functools.partial(dynamic_unroll, identity, swap_memory=True))
+            functools.partial(dynamic_unroll, identity, swap_memory=True)
+        )
         func(input_sequence, initial_state)
 
     def test_unspecified_default_argument(self):
         wrapped = def_function.function(
             lambda x, y=2: x + y,
-            input_signature=[tensor_spec.TensorSpec((), dtypes.int32)])
+            input_signature=[tensor_spec.TensorSpec((), dtypes.int32)],
+        )
         self.assertEqual(3, wrapped(constant_op.constant(1)).numpy())
 
     def test_concrete_function_from_signature(self):
-
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)])
+            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)]
+        )
         def compute(x):
-            return 2. * x
+            return 2.0 * x
 
         concrete = compute.get_concrete_function()
-        self.assertAllClose(1., concrete(constant_op.constant(0.5)))
+        self.assertAllClose(1.0, concrete(constant_op.constant(0.5)))
         concrete = compute.get_concrete_function(
-            tensor_spec.TensorSpec(None, dtypes.float32))
-        self.assertAllClose(4., concrete(constant_op.constant(2.)))
+            tensor_spec.TensorSpec(None, dtypes.float32)
+        )
+        self.assertAllClose(4.0, concrete(constant_op.constant(2.0)))
         signature_args, _ = concrete.structured_input_signature
-        self.assertEqual(signature_args,
-                         (tensor_spec.TensorSpec(
-                             None, dtypes.float32, name='x'),))
+        self.assertEqual(
+            signature_args, (tensor_spec.TensorSpec(None, dtypes.float32, name="x"),)
+        )
 
     @test_util.run_in_graph_and_eager_modes
     def test_variable_naming(self):
         class HasVars(module.Module):
-
             def __init__(self):
                 self.x = None
                 self.y = None
@@ -318,23 +316,23 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             @def_function.function
             def make_x(self):
                 if self.x is None:
-                    self.x = variables.Variable(1., name='v')
+                    self.x = variables.Variable(1.0, name="v")
 
             def make_y(self):
                 if self.y is None:
-                    self.y = variables.Variable(1., name='v')
+                    self.y = variables.Variable(1.0, name="v")
 
             def make_z(self):
                 if self.z is None:
-                    with ops.name_scope('z_scope', skip_on_eager=False):
-                        self.z = variables.Variable(1., name='z')
+                    with ops.name_scope("z_scope", skip_on_eager=False):
+                        self.z = variables.Variable(1.0, name="z")
 
         root = HasVars()
         root.make_x()
         root.make_y()
         root.make_z()
-        self.assertEqual('v:0', root.x.name)
-        self.assertEqual('z_scope/z:0', root.z.name)
+        self.assertEqual("v:0", root.x.name)
+        self.assertEqual("z_scope/z:0", root.z.name)
 
     def test_concrete_function_keyword_arguments(self):
         @def_function.function
@@ -342,36 +340,39 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return x
 
         conc = f.get_concrete_function(
-            tensor_spec.TensorSpec(None, dtypes.float32, 'y'))
+            tensor_spec.TensorSpec(None, dtypes.float32, "y")
+        )
         conc(y=constant_op.constant(3.0))
         signature_args, _ = conc.structured_input_signature
-        self.assertEqual('y', signature_args[0].name)
+        self.assertEqual("y", signature_args[0].name)
 
-        conc = f.get_concrete_function(
-            tensor_spec.TensorSpec(None, dtypes.float32))
+        conc = f.get_concrete_function(tensor_spec.TensorSpec(None, dtypes.float32))
         conc(x=constant_op.constant(3.0))
         signature_args, _ = conc.structured_input_signature
-        self.assertEqual('x', signature_args[0].name)
+        self.assertEqual("x", signature_args[0].name)
 
         @def_function.function
         def g(x):
             return x[0]
 
         conc = g.get_concrete_function(
-            [tensor_spec.TensorSpec(None, dtypes.float32, 'z'), 2])
+            [tensor_spec.TensorSpec(None, dtypes.float32, "z"), 2]
+        )
         conc(z=constant_op.constant(3.0))
         signature_args, _ = conc.structured_input_signature
-        self.assertEqual('z', signature_args[0][0].name)
+        self.assertEqual("z", signature_args[0][0].name)
 
         with self.assertRaisesRegexp(
-                ValueError, 'either zero or all names have to be specified'):
-            conc = g.get_concrete_function([
-                tensor_spec.TensorSpec(None, dtypes.float32, 'z'),
-                tensor_spec.TensorSpec(None, dtypes.float32),
-            ])
+            ValueError, "either zero or all names have to be specified"
+        ):
+            conc = g.get_concrete_function(
+                [
+                    tensor_spec.TensorSpec(None, dtypes.float32, "z"),
+                    tensor_spec.TensorSpec(None, dtypes.float32),
+                ]
+            )
 
     def test_error_inner_capture(self):
-
         @def_function.function
         def f(inputs):
             num_steps, _ = inputs.shape[:2]
@@ -380,15 +381,15 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
                 outputs.append(inputs[t])
             return outputs
 
-        with self.assertRaisesRegexp(errors.InaccessibleTensorError,
-                                     'defined in another function or code block'):
+        with self.assertRaisesRegexp(
+            errors.InaccessibleTensorError, "defined in another function or code block"
+        ):
             f(array_ops.zeros(shape=(8, 42, 3)))
 
     def testRuntimeErrorNotSticky(self):
-
         @def_function.function
         def fail(i):
-            control_flow_ops.Assert(math_ops.equal(i, 0), ['ick'])
+            control_flow_ops.Assert(math_ops.equal(i, 0), ["ick"])
 
         fail(constant_op.constant(0))  # OK
         with self.assertRaises(errors.InvalidArgumentError):
@@ -396,7 +397,6 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         fail(constant_op.constant(0))  # OK
 
     def testUnderscoreName(self):
-
         @def_function.function
         def f(_):
             return _ + _
@@ -404,12 +404,11 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(2.0, f(constant_op.constant(1.0)))
 
     def test_serialization_signature_cache(self):
-
         @def_function.function
         def f(x, y):
             return x, y
 
-        f(constant_op.constant([[3., 4.]]), constant_op.constant([2.]))
+        f(constant_op.constant([[3.0, 4.0]]), constant_op.constant([2.0]))
         f(constant_op.constant([[3, 4, 5]]), constant_op.constant([2]))
 
         signatures_args = set()
@@ -421,14 +420,23 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
         self.assertEqual(
             signatures_args,
-            set(((tensor_spec.TensorSpec([1, 2], dtypes.float32, name='x'),
-                  tensor_spec.TensorSpec([1], dtypes.float32, name='y')),
-                 (tensor_spec.TensorSpec([1, 3], dtypes.int32, name='x'),
-                  tensor_spec.TensorSpec([1], dtypes.int32, name='y')))))
+            set(
+                (
+                    (
+                        tensor_spec.TensorSpec([1, 2], dtypes.float32, name="x"),
+                        tensor_spec.TensorSpec([1], dtypes.float32, name="y"),
+                    ),
+                    (
+                        tensor_spec.TensorSpec([1, 3], dtypes.int32, name="x"),
+                        tensor_spec.TensorSpec([1], dtypes.int32, name="y"),
+                    ),
+                )
+            ),
+        )
 
     @test_util.assert_no_garbage_created
     def testFunctionReferenceCycles(self):
-        fn = def_function.function(lambda x: 2. * x)
+        fn = def_function.function(lambda x: 2.0 * x)
         fn(constant_op.constant(4.0))
         weak_fn = weakref.ref(fn)
         del fn
@@ -440,7 +448,7 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
     @test_util.assert_no_garbage_created
     def testMethodReferenceCycles(self):
         has_decorated_method = _HasDecoratedMethod()
-        has_decorated_method.f(constant_op.constant(5.))
+        has_decorated_method.f(constant_op.constant(5.0))
         weak_fn = weakref.ref(has_decorated_method.f)
         del has_decorated_method
         # Tests that the weak reference we made to the function is now dead, which
@@ -450,43 +458,52 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testErrorMessageWhenGraphTensorIsPassedToEager(self):
-
         @def_function.function
         def failing_function():
-            a = constant_op.constant(1.)
+            a = constant_op.constant(1.0)
 
             with ops.init_scope():
                 _ = a + a
 
         with self.assertRaisesRegexp(
-                TypeError,
-                re.compile('An op outside of the function.*passed.*Const', re.DOTALL)):
+            TypeError,
+            re.compile("An op outside of the function.*passed.*Const", re.DOTALL),
+        ):
             failing_function()
 
     def testNonUniqueNamesGetConcreteFunction(self):
         @def_function.function
         def non_unique_arg_names(x, **kwargs):
             a, b, c = x
-            d = kwargs['d']
+            d = kwargs["d"]
             return a + b + c + d
 
         concrete = non_unique_arg_names.get_concrete_function(
-            (tensor_spec.TensorSpec(None, dtypes.float32),
-             tensor_spec.TensorSpec(None, dtypes.float32),
-             tensor_spec.TensorSpec(None, dtypes.float32)),
-            d=tensor_spec.TensorSpec(None, dtypes.float32))
+            (
+                tensor_spec.TensorSpec(None, dtypes.float32),
+                tensor_spec.TensorSpec(None, dtypes.float32),
+                tensor_spec.TensorSpec(None, dtypes.float32),
+            ),
+            d=tensor_spec.TensorSpec(None, dtypes.float32),
+        )
         self.assertAllClose(
-            10.,
-            concrete(x=constant_op.constant(1.),
-                     x_1=constant_op.constant(2.),
-                     x_2=constant_op.constant(3.),
-                     d=constant_op.constant(4.)))
+            10.0,
+            concrete(
+                x=constant_op.constant(1.0),
+                x_1=constant_op.constant(2.0),
+                x_2=constant_op.constant(3.0),
+                d=constant_op.constant(4.0),
+            ),
+        )
         self.assertAllClose(
-            10.,
-            concrete(constant_op.constant(1.),
-                     constant_op.constant(2.),
-                     constant_op.constant(3.),
-                     constant_op.constant(4.)))
+            10.0,
+            concrete(
+                constant_op.constant(1.0),
+                constant_op.constant(2.0),
+                constant_op.constant(3.0),
+                constant_op.constant(4.0),
+            ),
+        )
 
     def testVariableCreatorScope(self):
         created_variables = []
@@ -495,8 +512,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         @def_function.function
         def f():
             if not created_variables:
-                created_variables.append(variables.Variable(1.))
-            return created_variables[0] + 1.
+                created_variables.append(variables.Variable(1.0))
+            return created_variables[0] + 1.0
 
         def capture_creator(next_creator, **kwargs):
             created = next_creator(**kwargs)
@@ -513,16 +530,16 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         @def_function.function
         def add_var(x):
             if not v_holder:
-                v = variables.Variable([1., 2.])
+                v = variables.Variable([1.0, 2.0])
                 v_holder.append(v)
-                already_initialized = variables.Variable(3.)
+                already_initialized = variables.Variable(3.0)
                 with ops.init_scope():
-                    already_initialized.assign(10.)
+                    already_initialized.assign(10.0)
                 v_holder.append(already_initialized)
             return v_holder[0] + v_holder[1] + x
 
-        add_var.get_concrete_function(constant_op.constant(2.))
-        self.assertAllClose([13., 14.], add_var(constant_op.constant(2.)))
+        add_var.get_concrete_function(constant_op.constant(2.0))
+        self.assertAllClose([13.0, 14.0], add_var(constant_op.constant(2.0)))
 
     def testSameVariableTwice(self):
         v = variables.Variable(1.0)
@@ -562,9 +579,11 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return 2 * x
 
         func_a = func.get_concrete_function(
-            tensor_spec.TensorSpec([None], dtypes.int32))
+            tensor_spec.TensorSpec([None], dtypes.int32)
+        )
         func_b = func.get_concrete_function(
-            tensor_spec.TensorSpec([None], dtypes.int32))
+            tensor_spec.TensorSpec([None], dtypes.int32)
+        )
 
         self.assertIs(func_a, func_b)
 
@@ -574,11 +593,11 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         @def_function.function
         def add_var(x):
             if not v_holder:
-                v = variables.Variable([1., 2.])
+                v = variables.Variable([1.0, 2.0])
                 v_holder.append(v)
-                already_initialized = variables.Variable(3.)
+                already_initialized = variables.Variable(3.0)
                 with ops.init_scope():
-                    already_initialized.assign(10.)
+                    already_initialized.assign(10.0)
                 v_holder.append(already_initialized)
             return v_holder[0] + v_holder[1] + x
 
@@ -586,9 +605,9 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         def wrapper(x):
             return add_var(x)
 
-        self.assertAllClose([13., 14.], wrapper(constant_op.constant(2.)))
-        v_holder[1].assign(11.)
-        self.assertAllClose([14., 15.], wrapper(constant_op.constant(2.)))
+        self.assertAllClose([13.0, 14.0], wrapper(constant_op.constant(2.0)))
+        v_holder[1].assign(11.0)
+        self.assertAllClose([14.0, 15.0], wrapper(constant_op.constant(2.0)))
 
     @test_util.run_gpu_only
     def testDeviceAnnotationRespected(self):
@@ -598,17 +617,17 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         def create_variable():
             with ops.init_scope():
                 initial_value = random_ops.random_uniform(
-                    (2, 2), maxval=1000000, dtype=dtypes.int64)
+                    (2, 2), maxval=1000000, dtype=dtypes.int64
+                )
 
             if not a:
-                with ops.device('CPU:0'):
-                    a.append(
-                        resource_variable_ops.ResourceVariable(initial_value))
+                with ops.device("CPU:0"):
+                    a.append(resource_variable_ops.ResourceVariable(initial_value))
 
             return a[0].read_value()
 
         create_variable()
-        self.assertRegexpMatches(a[0].device, 'CPU')
+        self.assertRegexpMatches(a[0].device, "CPU")
 
     @test_util.run_gpu_only
     def testDeviceAnnotationForInitializerRespected(self):
@@ -625,10 +644,10 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
                 if not a:
                     a.append(variables.Variable(initial_value_fn))
 
-        with ops.device('CPU:0'):
+        with ops.device("CPU:0"):
             create_variable()
-        self.assertRegexpMatches(a[0].device, 'CPU')
-        self.assertRegexpMatches(initial_value[0].device, 'CPU')
+        self.assertRegexpMatches(a[0].device, "CPU")
+        self.assertRegexpMatches(initial_value[0].device, "CPU")
 
     def testDecorate(self):
         func = def_function.function(lambda: 1)
@@ -639,18 +658,29 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         func._decorate(decorator)
         self.assertEqual(func().numpy(), 2)
 
-    @parameterized.parameters(*itertools.product(
-        (None, (tensor_spec.TensorSpec([]),)),  # input_signature
-        (True, False),                          # autograph
-        (None, converter.Feature.ALL),          # autograph_options
-        (None, 'foo.bar'),                      # implements
-        (None, True, False),                    # relax_shapes
-        (True, False),                          # compile
-        (True, False),                          # override_function
-    ))
-    def testClone(self, input_signature, autograph, autograph_options, implements,
-                  relax_shapes, compile_, override_function):
-        def original_py_function(x): return x
+    @parameterized.parameters(
+        *itertools.product(
+            (None, (tensor_spec.TensorSpec([]),)),  # input_signature
+            (True, False),  # autograph
+            (None, converter.Feature.ALL),  # autograph_options
+            (None, "foo.bar"),  # implements
+            (None, True, False),  # relax_shapes
+            (True, False),  # compile
+            (True, False),  # override_function
+        )
+    )
+    def testClone(
+        self,
+        input_signature,
+        autograph,
+        autograph_options,
+        implements,
+        relax_shapes,
+        compile_,
+        override_function,
+    ):
+        def original_py_function(x):
+            return x
 
         compile_ = False
         func = def_function.function(
@@ -660,10 +690,14 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             experimental_implements=implements,
             experimental_autograph_options=autograph_options,
             experimental_relax_shapes=relax_shapes,
-            experimental_compile=compile_)
+            experimental_compile=compile_,
+        )
 
         if override_function:
-            def cloned_py_function(x): return x + 1
+
+            def cloned_py_function(x):
+                return x + 1
+
         else:
             cloned_py_function = original_py_function
 
@@ -674,8 +708,7 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(input_signature, cloned._input_signature)
         self.assertEqual(autograph, cloned._autograph)
         self.assertEqual(implements, cloned._implements)
-        self.assertEqual(autograph_options,
-                         cloned._experimental_autograph_options)
+        self.assertEqual(autograph_options, cloned._experimental_autograph_options)
         self.assertEqual(relax_shapes, cloned._experimental_relax_shapes)
         self.assertEqual(compile_, cloned._experimental_compile)
 
@@ -683,8 +716,9 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         # the output of the function if compile is disabled.
         if not compile_:
             x = array_ops.zeros([])
-            self.assertEqual(self.evaluate(cloned(x)),
-                             self.evaluate(cloned_py_function(x)))
+            self.assertEqual(
+                self.evaluate(cloned(x)), self.evaluate(cloned_py_function(x))
+            )
 
     def testLiftPlaceholderInitializedVariable(self):
         with ops.Graph().as_default():
@@ -694,26 +728,26 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             def use_variable():
                 if not var_list:
                     initial_value = array_ops.placeholder(
-                        shape=[], dtype=dtypes.float32)
+                        shape=[], dtype=dtypes.float32
+                    )
                     v = variables.Variable(initial_value)
                     var_list.append(v)
-                return var_list[0] + 1.
+                return var_list[0] + 1.0
 
             var_plus_one = use_variable()
             with self.session() as session:
                 init_op = var_list[0].initializer
-                session.run(init_op, feed_dict={init_op.inputs[1]: 2.})
-                self.assertEqual(3., session.run(var_plus_one))
+                session.run(init_op, feed_dict={init_op.inputs[1]: 2.0})
+                self.assertEqual(3.0, session.run(var_plus_one))
 
     def testDecorate_rejectedAfterTrace(self):
         func = def_function.function(lambda: 1)
         self.assertEqual(func().numpy(), 1)
-        msg = 'Functions cannot be decorated after they have been traced.'
+        msg = "Functions cannot be decorated after they have been traced."
         with self.assertRaisesRegexp(ValueError, msg):
             func._decorate(lambda f: f)
 
     def testGetConcreteFunctionGraphLifetime(self):
-
         @def_function.function
         def func():
             pass
@@ -725,6 +759,6 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertEmpty(graph.captures)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ops.enable_eager_execution()
     test.main()
