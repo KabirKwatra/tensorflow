@@ -32,13 +32,13 @@ class _TransformedFnCache(object):
     kinds of transformation.
     """
 
-    __slots__ = ('_cache',)
+    __slots__ = ("_cache",)
 
     def __init__(self):
         self._cache = weakref.WeakKeyDictionary()
 
     def _get_key(self, entity):
-        raise NotImplementedError('subclasses must override')
+        raise NotImplementedError("subclasses must override")
 
     def has(self, entity, subkey):
         key = self._get_key(entity)
@@ -72,7 +72,7 @@ class CodeObjectCache(_TransformedFnCache):
     """
 
     def _get_key(self, entity):
-        if hasattr(entity, '__code__'):
+        if hasattr(entity, "__code__"):
             return entity.__code__
         else:
             return entity
