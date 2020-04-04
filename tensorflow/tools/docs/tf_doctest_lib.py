@@ -165,9 +165,10 @@ class TfDoctestOutputChecker(doctest.OutputChecker, object):
         # Find the floats in the string returned by the test
         _, self.got_floats = self.extract_floats(got)
 
-        self.text_good = super(TfDoctestOutputChecker, self).check_output(
-            want=want_text_wild, got=got, optionflags=optionflags
-        )
+        self.text_good = super(TfDoctestOutputChecker,
+                               self).check_output(want=want_text_wild,
+                                                  got=got,
+                                                  optionflags=optionflags)
         if not self.text_good:
             return False
 
@@ -194,19 +195,15 @@ class TfDoctestOutputChecker(doctest.OutputChecker, object):
             if not self.float_size_good:
                 got.append(
                     "\n\nCAUTION: tf_doctest doesn't work if *some* of the "
-                    '*float output* is hidden with a "...".'
-                )
+                    '*float output* is hidden with a "...".')
 
-        message = textwrap.dedent(
-            """\n
+        message = textwrap.dedent("""\n
         #############################################################
         Check the documentation
         (https://www.tensorflow.org/community/contribute/docs_ref) on how to write testable docstrings.
-        #############################################################"""
-        )
+        #############################################################""")
 
         got.append(message)
         got = "\n".join(got)
-        return super(TfDoctestOutputChecker, self).output_difference(
-            example, got, optionflags
-        )
+        return super(TfDoctestOutputChecker,
+                     self).output_difference(example, got, optionflags)
