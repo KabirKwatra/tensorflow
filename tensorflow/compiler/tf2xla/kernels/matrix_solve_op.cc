@@ -33,49 +33,49 @@ namespace tensorflow {
 namespace {
 
 class MatrixSolveOp : public XlaOpKernel {
- public:
-  explicit MatrixSolveOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("adjoint", &adjoint_));
-  }
+public:
+    explicit MatrixSolveOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("adjoint", &adjoint_));
+    }
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    const TensorShape matrix_shape = ctx->InputShape(0);
-    int64 matrix_ndims = matrix_shape.dims();
-    OP_REQUIRES(ctx, matrix_ndims >= 2,
-                errors::InvalidArgument(
-                    "Input matrix must have rank >= 2, got ", matrix_ndims));
-    OP_REQUIRES(ctx,
-                matrix_shape.dim_size(matrix_ndims - 2) ==
+    void Compile(XlaOpKernelContext* ctx) override {
+        const TensorShape matrix_shape = ctx->InputShape(0);
+        int64 matrix_ndims = matrix_shape.dims();
+        OP_REQUIRES(ctx, matrix_ndims >= 2,
+                    errors::InvalidArgument(
+                        "Input matrix must have rank >= 2, got ", matrix_ndims));
+        OP_REQUIRES(ctx,
+                    matrix_shape.dim_size(matrix_ndims - 2) ==
                     matrix_shape.dim_size(matrix_ndims - 1),
-                errors::InvalidArgument(
-                    "Input matrices must be square, got",
-                    matrix_shape.dim_size(matrix_ndims - 2),
-                    " != ", matrix_shape.dim_size(matrix_ndims - 1)));
+                    errors::InvalidArgument(
+                        "Input matrices must be square, got",
+                        matrix_shape.dim_size(matrix_ndims - 2),
+                        " != ", matrix_shape.dim_size(matrix_ndims - 1)));
 
-    xla::XlaOp matrix = ctx->Input(0);
-    xla::XlaOp rhs = ctx->Input(1);
+        xla::XlaOp matrix = ctx->Input(0);
+        xla::XlaOp rhs = ctx->Input(1);
 
-    // TODO(b/111271662): Using LU decomposition instead of QR should be faster.
-    auto qr = xla::QRDecomposition(matrix, /*full_matrices=*/false);
-    OP_REQUIRES_OK(ctx, qr.status());
+        // TODO(b/111271662): Using LU decomposition instead of QR should be faster.
+        auto qr = xla::QRDecomposition(matrix, /*full_matrices=*/false);
+        OP_REQUIRES_OK(ctx, qr.status());
 
-    xla::XlaOp inv = xla::TriangularSolve(
-        qr.ValueOrDie().r, xla::TransposeInMinorDims(qr.ValueOrDie().q),
-        /*left_side=*/true,
-        /*lower=*/false, /*unit_diagonal=*/false,
-        /*transpose_a=*/
-        xla::TriangularSolveOptions::NO_TRANSPOSE);
+        xla::XlaOp inv = xla::TriangularSolve(
+                             qr.ValueOrDie().r, xla::TransposeInMinorDims(qr.ValueOrDie().q),
+                             /*left_side=*/true,
+                             /*lower=*/false, /*unit_diagonal=*/false,
+                             /*transpose_a=*/
+                             xla::TriangularSolveOptions::NO_TRANSPOSE);
 
-    xla::XlaOp output =
-        xla::BatchDot(inv, adjoint_, rhs,
-                      /*transpose_y=*/false, xla::PrecisionConfig::HIGHEST);
-    ctx->SetOutput(0, output);
-  }
+        xla::XlaOp output =
+            xla::BatchDot(inv, adjoint_, rhs,
+                          /*transpose_y=*/false, xla::PrecisionConfig::HIGHEST);
+        ctx->SetOutput(0, output);
+    }
 
- private:
-  bool adjoint_;
+private:
+    bool adjoint_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(MatrixSolveOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(MatrixSolveOp);
 };
 
 // TODO(b/111271662): Support integer and complex types.

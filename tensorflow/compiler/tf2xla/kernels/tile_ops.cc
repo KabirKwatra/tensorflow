@@ -33,55 +33,57 @@ namespace {
 
 // --------------------------------------------------------------------------
 class TileOp : public XlaOpKernel {
- public:
-  explicit TileOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+public:
+    explicit TileOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    const TensorShape input_shape = ctx->InputShape("input");
-    const TensorShape multiples_shape = ctx->InputShape("multiples");
+    void Compile(XlaOpKernelContext* ctx) override {
+        const TensorShape input_shape = ctx->InputShape("input");
+        const TensorShape multiples_shape = ctx->InputShape("multiples");
 
-    OP_REQUIRES(
-        ctx, TensorShapeUtils::IsVector(multiples_shape),
-        errors::InvalidArgument("Expected multiples to be 1-D, but got shape ",
-                                multiples_shape.DebugString()));
-    OP_REQUIRES(ctx, input_shape.dims() == multiples_shape.num_elements(),
-                errors::InvalidArgument(
-                    "Expected multiples argument to be a vector of length ",
-                    input_shape.dims(), " but got length ",
-                    multiples_shape.dim_size(0)));
-    const int input_dims = input_shape.dims();
-    auto input = ctx->Input(0);
-    // If input is a scalar then multiples has 0 elements and this is
-    // a NoOp.
-    if (input_dims == 0) {
-      ctx->SetOutput(0, input);
-      return;
+        OP_REQUIRES(
+            ctx, TensorShapeUtils::IsVector(multiples_shape),
+            errors::InvalidArgument("Expected multiples to be 1-D, but got shape ",
+                                    multiples_shape.DebugString()));
+        OP_REQUIRES(ctx, input_shape.dims() == multiples_shape.num_elements(),
+                    errors::InvalidArgument(
+                        "Expected multiples argument to be a vector of length ",
+                        input_shape.dims(), " but got length ",
+                        multiples_shape.dim_size(0)));
+        const int input_dims = input_shape.dims();
+        auto input = ctx->Input(0);
+        // If input is a scalar then multiples has 0 elements and this is
+        // a NoOp.
+        if (input_dims == 0) {
+            ctx->SetOutput(0, input);
+            return;
+        }
+
+        std::vector<int64> multiples;
+        OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntVector("multiples", &multiples));
+        std::vector<int64> output_dims(input_shape.dims());
+        for (int64 i = 0; i < input_shape.dims(); ++i) {
+            OP_REQUIRES(ctx, multiples[i] >= 0,
+                        errors::InvalidArgument("Expected multiples[", i,
+                                                "] >= 0, but got ", output_dims[i]));
+            output_dims[i] = input_shape.dim_size(i) * multiples[i];
+        }
+
+        // If all multiples are 1, than the input is the same as the output.
+        if (absl::c_all_of(multiples,
+        [](int64 multiple) {
+        return multiple == 1;
+    })) {
+            ctx->SetOutput(0, input);
+            return;
+        }
+
+        auto result = BroadcastTo(ctx->Input("input"), output_dims);
+        OP_REQUIRES_OK(ctx, result.status());
+        ctx->SetOutput(0, result.ValueOrDie());
     }
 
-    std::vector<int64> multiples;
-    OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntVector("multiples", &multiples));
-    std::vector<int64> output_dims(input_shape.dims());
-    for (int64 i = 0; i < input_shape.dims(); ++i) {
-      OP_REQUIRES(ctx, multiples[i] >= 0,
-                  errors::InvalidArgument("Expected multiples[", i,
-                                          "] >= 0, but got ", output_dims[i]));
-      output_dims[i] = input_shape.dim_size(i) * multiples[i];
-    }
-
-    // If all multiples are 1, than the input is the same as the output.
-    if (absl::c_all_of(multiples,
-                       [](int64 multiple) { return multiple == 1; })) {
-      ctx->SetOutput(0, input);
-      return;
-    }
-
-    auto result = BroadcastTo(ctx->Input("input"), output_dims);
-    OP_REQUIRES_OK(ctx, result.status());
-    ctx->SetOutput(0, result.ValueOrDie());
-  }
-
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(TileOp);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(TileOp);
 };
 
 REGISTER_XLA_OP(Name("Tile").CompileTimeConstantInput("multiples"), TileOp);

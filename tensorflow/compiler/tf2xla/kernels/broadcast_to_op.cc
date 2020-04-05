@@ -26,19 +26,19 @@ namespace tensorflow {
 namespace {
 
 class BroadcastToOp : public XlaOpKernel {
- public:
-  explicit BroadcastToOp(OpKernelConstruction* context)
-      : XlaOpKernel(context) {}
+public:
+    explicit BroadcastToOp(OpKernelConstruction* context)
+        : XlaOpKernel(context) {}
 
-  void Compile(XlaOpKernelContext* context) override {
-    const TensorShape input_shape = context->InputShape(0);
-    TensorShape output_shape;
-    OP_REQUIRES_OK(context, context->ConstantInputAsShape(1, &output_shape));
+    void Compile(XlaOpKernelContext* context) override {
+        const TensorShape input_shape = context->InputShape(0);
+        TensorShape output_shape;
+        OP_REQUIRES_OK(context, context->ConstantInputAsShape(1, &output_shape));
 
-    auto output = BroadcastTo(context->Input(0), output_shape.dim_sizes());
-    OP_REQUIRES_OK(context, output.status());
-    context->SetOutput(0, output.ValueOrDie());
-  }
+        auto output = BroadcastTo(context->Input(0), output_shape.dim_sizes());
+        OP_REQUIRES_OK(context, output.status());
+        context->SetOutput(0, output.ValueOrDie());
+    }
 };
 
 REGISTER_XLA_OP(Name("BroadcastTo").CompileTimeConstantInput("shape"),

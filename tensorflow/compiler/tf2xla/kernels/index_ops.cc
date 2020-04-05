@@ -39,65 +39,65 @@ XlaArgMinMaxOp::XlaArgMinMaxOp(OpKernelConstruction* ctx, bool is_min)
       is_gpu_(ctx->device_type().type_string() == DEVICE_GPU_XLA_JIT) {}
 
 void XlaArgMinMaxOp::Compile(XlaOpKernelContext* ctx) {
-  const TensorShape input_shape = ctx->InputShape(0);
-  const TensorShape dimension_shape = ctx->InputShape(1);
+    const TensorShape input_shape = ctx->InputShape(0);
+    const TensorShape dimension_shape = ctx->InputShape(1);
 
-  OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(dimension_shape),
-              errors::InvalidArgument(
-                  "dim must be a scalar, but received tensor of shape: ",
-                  dimension_shape.DebugString()));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(dimension_shape),
+                errors::InvalidArgument(
+                    "dim must be a scalar, but received tensor of shape: ",
+                    dimension_shape.DebugString()));
 
-  int64 dim;
-  OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntScalar(1, &dim));
+    int64 dim;
+    OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntScalar(1, &dim));
 
-  const int input_dims = input_shape.dims();
-  const int axis = dim < 0 ? dim + input_dims : dim;
+    const int input_dims = input_shape.dims();
+    const int axis = dim < 0 ? dim + input_dims : dim;
 
-  OP_REQUIRES(
-      ctx, axis >= 0 && axis < input_dims,
-      errors::InvalidArgument("Expected dimension in the range [", -input_dims,
-                              ", ", input_dims, "), but got ", dim));
-  const int64 axis_size = input_shape.dim_size(axis);
-  OP_REQUIRES(
-      ctx, axis_size > 0,
-      errors::InvalidArgument("Reduction axis ", dim, " is empty in shape ",
-                              input_shape.DebugString()));
+    OP_REQUIRES(
+        ctx, axis >= 0 && axis < input_dims,
+        errors::InvalidArgument("Expected dimension in the range [", -input_dims,
+                                ", ", input_dims, "), but got ", dim));
+    const int64 axis_size = input_shape.dim_size(axis);
+    OP_REQUIRES(
+        ctx, axis_size > 0,
+        errors::InvalidArgument("Reduction axis ", dim, " is empty in shape ",
+                                input_shape.DebugString()));
 
-  DataType index_type = output_type(0);
-  xla::PrimitiveType index_xla_type;
-  OP_REQUIRES_OK(ctx, DataTypeToPrimitiveType(index_type, &index_xla_type));
+    DataType index_type = output_type(0);
+    xla::PrimitiveType index_xla_type;
+    OP_REQUIRES_OK(ctx, DataTypeToPrimitiveType(index_type, &index_xla_type));
 
-  xla::XlaOp input = ctx->Input(0);
-  xla::XlaOp output;
-  // One pass ArgMin/ArgMax is slow on GPUs.
-  if (is_min_) {
-    if (is_gpu_) {
-      output = xla::ArgMinTwoPass(input, index_xla_type, axis);
+    xla::XlaOp input = ctx->Input(0);
+    xla::XlaOp output;
+    // One pass ArgMin/ArgMax is slow on GPUs.
+    if (is_min_) {
+        if (is_gpu_) {
+            output = xla::ArgMinTwoPass(input, index_xla_type, axis);
+        } else {
+            output = xla::ArgMin(input, index_xla_type, axis);
+        }
     } else {
-      output = xla::ArgMin(input, index_xla_type, axis);
+        if (is_gpu_) {
+            output = xla::ArgMaxTwoPass(input, index_xla_type, axis);
+        } else {
+            output = xla::ArgMax(input, index_xla_type, axis);
+        }
     }
-  } else {
-    if (is_gpu_) {
-      output = xla::ArgMaxTwoPass(input, index_xla_type, axis);
-    } else {
-      output = xla::ArgMax(input, index_xla_type, axis);
-    }
-  }
 
-  ctx->SetOutput(0, output);
+    ctx->SetOutput(0, output);
 }
 
 XlaArgMaxOp::XlaArgMaxOp(OpKernelConstruction* ctx)
     : XlaArgMinMaxOp(ctx, /*is_min=*/false) {}
 REGISTER_XLA_OP(Name("ArgMax")
-                    .CompileTimeConstantInput("dimension"),
+                .CompileTimeConstantInput("dimension"),
                 XlaArgMaxOp);
 
 namespace {
 
 class XlaArgMinOp : public XlaArgMinMaxOp {
- public:
-  explicit XlaArgMinOp(OpKernelConstruction* ctx);
+public:
+    explicit XlaArgMinOp(OpKernelConstruction* ctx);
 };
 XlaArgMinOp::XlaArgMinOp(OpKernelConstruction* ctx)
     : XlaArgMinMaxOp(ctx, /*is_min=*/true) {}

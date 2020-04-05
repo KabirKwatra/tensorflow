@@ -28,32 +28,32 @@ namespace tensorflow {
 namespace {
 
 class XlaDequantizeOp : public XlaOpKernel {
- public:
-  explicit XlaDequantizeOp(OpKernelConstruction* context)
-      : XlaOpKernel(context) {
-    OP_REQUIRES_OK(context, context->GetAttr("min_range", &min_range_));
-    OP_REQUIRES_OK(context, context->GetAttr("max_range", &max_range_));
-    OP_REQUIRES_OK(context, context->GetAttr("mode", &mode_));
-    OP_REQUIRES_OK(context,
-                   context->GetAttr("transpose_output", &transpose_output_));
-  }
+public:
+    explicit XlaDequantizeOp(OpKernelConstruction* context)
+        : XlaOpKernel(context) {
+        OP_REQUIRES_OK(context, context->GetAttr("min_range", &min_range_));
+        OP_REQUIRES_OK(context, context->GetAttr("max_range", &max_range_));
+        OP_REQUIRES_OK(context, context->GetAttr("mode", &mode_));
+        OP_REQUIRES_OK(context,
+                       context->GetAttr("transpose_output", &transpose_output_));
+    }
 
-  void Compile(XlaOpKernelContext* context) override {
-    const xla::XlaOp& input = context->Input(0);
+    void Compile(XlaOpKernelContext* context) override {
+        const xla::XlaOp& input = context->Input(0);
 
-    xla::QuantizedRange range(min_range_, max_range_);
+        xla::QuantizedRange range(min_range_, max_range_);
 
-    xla::XlaOp output =
-        xla::Dequantize<uint8>(input, range, mode_, transpose_output_);
-    context->SetOutput(0, output);
-  }
+        xla::XlaOp output =
+            xla::Dequantize<uint8>(input, range, mode_, transpose_output_);
+        context->SetOutput(0, output);
+    }
 
- private:
-  float min_range_;
-  float max_range_;
-  bool transpose_output_;
-  string mode_;
-  TF_DISALLOW_COPY_AND_ASSIGN(XlaDequantizeOp);
+private:
+    float min_range_;
+    float max_range_;
+    bool transpose_output_;
+    string mode_;
+    TF_DISALLOW_COPY_AND_ASSIGN(XlaDequantizeOp);
 };
 
 REGISTER_XLA_OP(Name("XlaDequantize"), XlaDequantizeOp);

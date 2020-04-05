@@ -96,7 +96,7 @@ XLAJIT_MAKE_UNARY(Sinh, xla::Sinh(x));
 // This is equivalent to:
 //   max(x, 0) + log1p(exp(-abs(x)))
 XLAJIT_MAKE_UNARY(Softplus, xla::Max(x, xla::ScalarLike(x, 0.0)) +
-                                xla::Log1p(xla::Exp(-xla::Abs(x))));
+                  xla::Log1p(xla::Exp(-xla::Abs(x))));
 
 // softsign(x) = x / (abs(x) + 1)
 XLAJIT_MAKE_UNARY(Softsign, x / (xla::Abs(x) + xla::ScalarLike(x, 1.0)));
@@ -112,8 +112,8 @@ XLAJIT_MAKE_UNARY(Erfc, xla::Erfc(x));
 XLAJIT_MAKE_UNARY(Erfinv, xla::ErfInv(x));
 // ndtri = sqrt(2) * erfinv(2 * x - 1)
 XLAJIT_MAKE_UNARY(Ndtri, xla::ScalarLike(x, std::sqrt(2.0)) *
-                             xla::ErfInv(xla::ScalarLike(x, 2.0) * x -
-                                         xla::ScalarLike(x, 1.0)));
+                  xla::ErfInv(xla::ScalarLike(x, 2.0) * x -
+                              xla::ScalarLike(x, 1.0)));
 XLAJIT_MAKE_UNARY(Lgamma, xla::Lgamma(x));
 XLAJIT_MAKE_UNARY(Digamma, xla::Digamma(x));
 XLAJIT_MAKE_UNARY(BesselI0e, xla::BesselI0e(x));

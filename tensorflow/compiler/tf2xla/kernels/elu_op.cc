@@ -26,19 +26,19 @@ limitations under the License.
 
 namespace xla {
 XlaOp Elu(XlaOp x) {
-  const auto zero = ScalarLike(x, 0);
-  const auto pred = Gt(x, zero);
-  const auto expm1 = Expm1(x);
-  return Select(pred, x, expm1);
+    const auto zero = ScalarLike(x, 0);
+    const auto pred = Gt(x, zero);
+    const auto expm1 = Expm1(x);
+    return Select(pred, x, expm1);
 }
 
 XlaOp Selu(XlaOp x) {
-  const auto zero = ScalarLike(x, 0);
-  const auto scale = ScalarLike(x, 1.0507009873554804934193349852946);
-  const auto scale_alpha = ScalarLike(x, 1.7580993408473768599402175208123);
-  const auto pred = Gt(x, zero);
-  const auto expm1 = Expm1(x);
-  return Select(pred, Mul(scale, x), Mul(scale_alpha, expm1));
+    const auto zero = ScalarLike(x, 0);
+    const auto scale = ScalarLike(x, 1.0507009873554804934193349852946);
+    const auto scale_alpha = ScalarLike(x, 1.7580993408473768599402175208123);
+    const auto pred = Gt(x, zero);
+    const auto expm1 = Expm1(x);
+    return Select(pred, Mul(scale, x), Mul(scale_alpha, expm1));
 }
 }  // namespace xla
 
@@ -46,62 +46,62 @@ namespace tensorflow {
 namespace {
 
 class EluOp : public XlaOpKernel {
- public:
-  explicit EluOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-  // Computes the max of the scalar input x and 0.
-  void Compile(XlaOpKernelContext* ctx) override {
-    ctx->SetOutput(0, xla::Elu(ctx->Input(0)));
-  }
+public:
+    explicit EluOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+    // Computes the max of the scalar input x and 0.
+    void Compile(XlaOpKernelContext* ctx) override {
+        ctx->SetOutput(0, xla::Elu(ctx->Input(0)));
+    }
 };
 
 class EluGradOp : public XlaOpKernel {
- public:
-  explicit EluGradOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-  // Return the lhs (incoming gradient) if the rhs (input feature) > 0,
-  // otherwise return lhs * (1 + rhs).
-  void Compile(XlaOpKernelContext* ctx) override {
-    xla::XlaBuilder* b = ctx->builder();
-    const auto zero = XlaHelpers::Zero(b, input_type(0));
-    const auto one = XlaHelpers::One(b, input_type(0));
-    const auto grad = ctx->Input(0);
-    const auto activation = ctx->Input(1);
-    const auto exp_grad = xla::Mul(grad, xla::Add(activation, one));
-    const auto pred = xla::Gt(activation, zero);
-    ctx->SetOutput(0, xla::Select(pred, grad, exp_grad));
-  }
+public:
+    explicit EluGradOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+    // Return the lhs (incoming gradient) if the rhs (input feature) > 0,
+    // otherwise return lhs * (1 + rhs).
+    void Compile(XlaOpKernelContext* ctx) override {
+        xla::XlaBuilder* b = ctx->builder();
+        const auto zero = XlaHelpers::Zero(b, input_type(0));
+        const auto one = XlaHelpers::One(b, input_type(0));
+        const auto grad = ctx->Input(0);
+        const auto activation = ctx->Input(1);
+        const auto exp_grad = xla::Mul(grad, xla::Add(activation, one));
+        const auto pred = xla::Gt(activation, zero);
+        ctx->SetOutput(0, xla::Select(pred, grad, exp_grad));
+    }
 };
 
 REGISTER_XLA_OP(Name("Elu"), EluOp);
 REGISTER_XLA_OP(Name("EluGrad"), EluGradOp);
 
 class SeluOp : public XlaOpKernel {
- public:
-  explicit SeluOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-  // Computes the max of the scalar input x and 0.
-  void Compile(XlaOpKernelContext* ctx) override {
-    ctx->SetOutput(0, xla::Selu(ctx->Input(0)));
-  }
+public:
+    explicit SeluOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+    // Computes the max of the scalar input x and 0.
+    void Compile(XlaOpKernelContext* ctx) override {
+        ctx->SetOutput(0, xla::Selu(ctx->Input(0)));
+    }
 };
 
 class SeluGradOp : public XlaOpKernel {
- public:
-  explicit SeluGradOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-  // Return the lhs (incoming gradient) if the rhs (input feature) > 0,
-  // otherwise return lhs * (1 + rhs).
-  void Compile(XlaOpKernelContext* ctx) override {
-    xla::XlaBuilder* b = ctx->builder();
-    const auto zero = XlaHelpers::Zero(b, input_type(0));
-    const auto scale = XlaHelpers::FloatLiteral(b, input_type(0),
-            1.0507009873554804934193349852946);
-    const auto scale_alpha = XlaHelpers::FloatLiteral(b, input_type(0),
-            1.7580993408473768599402175208123);
-    const auto grad = ctx->Input(0);
-    const auto activation = ctx->Input(1);
-    const auto lin_grad = xla::Mul(grad, scale);
-    const auto exp_grad = xla::Mul(grad, xla::Add(activation, scale_alpha));
-    const auto pred = xla::Gt(activation, zero);
-    ctx->SetOutput(0, xla::Select(pred, lin_grad, exp_grad));
-  }
+public:
+    explicit SeluGradOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+    // Return the lhs (incoming gradient) if the rhs (input feature) > 0,
+    // otherwise return lhs * (1 + rhs).
+    void Compile(XlaOpKernelContext* ctx) override {
+        xla::XlaBuilder* b = ctx->builder();
+        const auto zero = XlaHelpers::Zero(b, input_type(0));
+        const auto scale = XlaHelpers::FloatLiteral(b, input_type(0),
+                           1.0507009873554804934193349852946);
+        const auto scale_alpha = XlaHelpers::FloatLiteral(b, input_type(0),
+                                 1.7580993408473768599402175208123);
+        const auto grad = ctx->Input(0);
+        const auto activation = ctx->Input(1);
+        const auto lin_grad = xla::Mul(grad, scale);
+        const auto exp_grad = xla::Mul(grad, xla::Add(activation, scale_alpha));
+        const auto pred = xla::Gt(activation, zero);
+        ctx->SetOutput(0, xla::Select(pred, lin_grad, exp_grad));
+    }
 };
 
 REGISTER_XLA_OP(Name("Selu"), SeluOp);

@@ -79,12 +79,12 @@ XLA_MAKE_BINARY(Complex, xla::Complex(lhs, rhs, extend_dimensions));
 // }
 static xla::XlaOp DivNoNanImpl(xla::XlaBuilder* b, DataType dtype, xla::XlaOp x,
                                xla::XlaOp y, const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  auto zero = XlaHelpers::Zero(b, dtype);
-  auto y_equals_0 = xla::Eq(y, zero);
-  auto zeros = xla::ZerosLike(x);
-  auto result = xla::Select(y_equals_0, zeros, xla::Div(x, y));
-  return result;
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    auto zero = XlaHelpers::Zero(b, dtype);
+    auto y_equals_0 = xla::Eq(y, zero);
+    auto zeros = xla::ZerosLike(x);
+    auto result = xla::Select(y_equals_0, zeros, xla::Div(x, y));
+    return result;
 }
 XLA_MAKE_BINARY(DivNoNan,
                 DivNoNanImpl(b, input_type(0), lhs, rhs, broadcast_helper));
@@ -97,12 +97,12 @@ XLA_MAKE_BINARY(DivNoNan,
 // }
 static xla::XlaOp MulNoNanImpl(xla::XlaBuilder* b, DataType dtype, xla::XlaOp x,
                                xla::XlaOp y, const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  auto zero = XlaHelpers::Zero(b, dtype);
-  auto y_equals_0 = xla::Eq(y, zero);
-  auto zeros = xla::ZerosLike(x);
-  auto result = xla::Select(y_equals_0, zeros, xla::Mul(x, y));
-  return result;
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    auto zero = XlaHelpers::Zero(b, dtype);
+    auto y_equals_0 = xla::Eq(y, zero);
+    auto zeros = xla::ZerosLike(x);
+    auto result = xla::Select(y_equals_0, zeros, xla::Mul(x, y));
+    return result;
 }
 XLA_MAKE_BINARY(MulNoNan,
                 MulNoNanImpl(b, input_type(0), lhs, rhs, broadcast_helper));
@@ -120,58 +120,58 @@ XLA_MAKE_BINARY(MulNoNan,
 // }
 static xla::XlaOp FloorDivImpl(xla::XlaBuilder* b, DataType dtype, xla::XlaOp x,
                                xla::XlaOp y, const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  if (DataTypeIsFloating(dtype)) {
-    if (dtype == DataType::DT_BFLOAT16) {
-      // The result of a BF16 division may produce the Ceil of what was
-      // computed by F32 division, so avoid end user confusion by doing the
-      // intermediate divide in F32.
-      return xla::ConvertElementType(
-          xla::Floor(xla::Div(xla::ConvertElementType(x, xla::F32),
-                              xla::ConvertElementType(y, xla::F32))),
-          xla::BF16);
-    } else {
-      return xla::Floor(xla::Div(x, y));
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    if (DataTypeIsFloating(dtype)) {
+        if (dtype == DataType::DT_BFLOAT16) {
+            // The result of a BF16 division may produce the Ceil of what was
+            // computed by F32 division, so avoid end user confusion by doing the
+            // intermediate divide in F32.
+            return xla::ConvertElementType(
+                       xla::Floor(xla::Div(xla::ConvertElementType(x, xla::F32),
+                                           xla::ConvertElementType(y, xla::F32))),
+                       xla::BF16);
+        } else {
+            return xla::Floor(xla::Div(x, y));
+        }
     }
-  }
-  if (DataTypeIsUnsigned(dtype)) {
-    return xla::Div(x, y);
-  }
-  auto zero = XlaHelpers::Zero(b, dtype);
-  auto one = XlaHelpers::One(b, dtype);
-  auto different_sign = xla::Ne(xla::Lt(x, zero), xla::Lt(y, zero));
-  auto abs_x = xla::Abs(x);
-  auto abs_y = xla::Abs(y);
-  auto t = xla::Neg(xla::Sub(xla::Add(abs_x, abs_y), one));
-  return xla::Select(different_sign, xla::Div(t, abs_y), xla::Div(x, y));
+    if (DataTypeIsUnsigned(dtype)) {
+        return xla::Div(x, y);
+    }
+    auto zero = XlaHelpers::Zero(b, dtype);
+    auto one = XlaHelpers::One(b, dtype);
+    auto different_sign = xla::Ne(xla::Lt(x, zero), xla::Lt(y, zero));
+    auto abs_x = xla::Abs(x);
+    auto abs_y = xla::Abs(y);
+    auto t = xla::Neg(xla::Sub(xla::Add(abs_x, abs_y), one));
+    return xla::Select(different_sign, xla::Div(t, abs_y), xla::Div(x, y));
 }
 XLA_MAKE_BINARY(FloorDiv,
                 FloorDivImpl(b, input_type(0), lhs, rhs, broadcast_helper));
 
 xla::XlaOp XlogyImpl(xla::XlaOp x, xla::XlaOp y,
                      const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  auto zero = xla::ZerosLike(x);
-  auto is_zero = xla::Eq(x, zero);
-  return xla::Select(is_zero, zero, xla::Mul(x, xla::Log(y)));
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    auto zero = xla::ZerosLike(x);
+    auto is_zero = xla::Eq(x, zero);
+    return xla::Select(is_zero, zero, xla::Mul(x, xla::Log(y)));
 }
 XLA_MAKE_BINARY(Xlogy, XlogyImpl(lhs, rhs, broadcast_helper));
 
 xla::XlaOp Xlog1pyImpl(xla::XlaOp x, xla::XlaOp y,
                        const BCast& broadcast_helper) {
-  auto non_zero = xla::Mul(x, xla::Log1p(y));
-  auto zero = xla::ZerosLike(non_zero);
-  auto x_is_zero = xla::Eq(x, zero);
-  return xla::Select(x_is_zero, zero, non_zero);
+    auto non_zero = xla::Mul(x, xla::Log1p(y));
+    auto zero = xla::ZerosLike(non_zero);
+    auto x_is_zero = xla::Eq(x, zero);
+    return xla::Select(x_is_zero, zero, non_zero);
 }
 XLA_MAKE_BINARY(Xlog1py, Xlog1pyImpl(lhs, rhs, broadcast_helper));
 
 xla::XlaOp XdivyImpl(xla::XlaOp x, xla::XlaOp y,
                      const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  auto zero = xla::ZerosLike(x);
-  auto is_zero = xla::Eq(x, zero);
-  return xla::Select(is_zero, zero, xla::Div(x, y));
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    auto zero = xla::ZerosLike(x);
+    auto is_zero = xla::Eq(x, zero);
+    return xla::Select(is_zero, zero, xla::Div(x, y));
 }
 XLA_MAKE_BINARY(Xdivy, XdivyImpl(lhs, rhs, broadcast_helper));
 
@@ -181,13 +181,13 @@ XLA_MAKE_BINARY(Xdivy, XdivyImpl(lhs, rhs, broadcast_helper));
 //                                                   : trunc_mod;
 static xla::XlaOp FloorModImpl(xla::XlaBuilder* b, DataType dtype, xla::XlaOp x,
                                xla::XlaOp y, const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  auto zero = XlaHelpers::Zero(b, dtype);
-  auto trunc_mod = xla::Rem(x, y);
-  auto trunc_mod_not_zero = xla::Ne(trunc_mod, zero);
-  auto do_plus = xla::And(xla::Ne(xla::Lt(trunc_mod, zero), xla::Lt(y, zero)),
-                          trunc_mod_not_zero);
-  return xla::Select(do_plus, xla::Add(trunc_mod, y), trunc_mod);
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    auto zero = XlaHelpers::Zero(b, dtype);
+    auto trunc_mod = xla::Rem(x, y);
+    auto trunc_mod_not_zero = xla::Ne(trunc_mod, zero);
+    auto do_plus = xla::And(xla::Ne(xla::Lt(trunc_mod, zero), xla::Lt(y, zero)),
+                            trunc_mod_not_zero);
+    return xla::Select(do_plus, xla::Add(trunc_mod, y), trunc_mod);
 }
 XLA_MAKE_BINARY(FloorMod,
                 FloorModImpl(b, input_type(0), lhs, rhs, broadcast_helper));
@@ -199,8 +199,8 @@ XLA_MAKE_BINARY(BitwiseXor, xla::Xor(lhs, rhs, extend_dimensions));
 XLA_MAKE_BINARY(LeftShift, xla::ShiftLeft(lhs, rhs, extend_dimensions));
 XLA_MAKE_BINARY(RightShift,
                 (DataTypeIsUnsigned(ctx->input_type(0))
-                     ? xla::ShiftRightLogical(lhs, rhs, extend_dimensions)
-                     : xla::ShiftRightArithmetic(lhs, rhs, extend_dimensions)));
+                 ? xla::ShiftRightLogical(lhs, rhs, extend_dimensions)
+                 : xla::ShiftRightArithmetic(lhs, rhs, extend_dimensions)));
 
 XLA_MAKE_BINARY(LogicalAnd, xla::And(lhs, rhs, extend_dimensions));
 XLA_MAKE_BINARY(LogicalOr, xla::Or(lhs, rhs, extend_dimensions));
@@ -241,7 +241,7 @@ XLA_MAKE_BINARY(SoftplusGrad, xla::Mul(lhs, xla::Logistic(rhs)));
 XLA_MAKE_BINARY(SoftsignGrad,
                 xla::Div(lhs,
                          xla::Square(xla::Add(XlaHelpers::One(b, input_type(0)),
-                                              xla::Abs(rhs)))));
+                                     xla::Abs(rhs)))));
 
 XLA_MAKE_BINARY(TanhGrad,
                 xla::Mul(rhs, xla::Sub(XlaHelpers::One(b, input_type(0)),
@@ -251,12 +251,12 @@ XLA_MAKE_BINARY(Pow, xla::Pow(lhs, rhs, extend_dimensions));
 
 xla::XlaOp SquaredDifferenceImpl(DataType dtype, xla::XlaOp x, xla::XlaOp y,
                                  const std::vector<int64>& extend_dimensions) {
-  auto difference = xla::Sub(x, y, extend_dimensions);
-  if (DataTypeIsComplex(dtype)) {
-    return xla::Conj(difference) * difference;
-  } else {
-    return xla::Square(difference);
-  }
+    auto difference = xla::Sub(x, y, extend_dimensions);
+    if (DataTypeIsComplex(dtype)) {
+        return xla::Conj(difference) * difference;
+    } else {
+        return xla::Square(difference);
+    }
 }
 XLA_MAKE_BINARY(SquaredDifference,
                 SquaredDifferenceImpl(input_type(0), lhs, rhs,
@@ -264,24 +264,24 @@ XLA_MAKE_BINARY(SquaredDifference,
 
 xla::XlaOp IgammaImpl(xla::XlaOp x, xla::XlaOp y,
                       const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  return xla::Igamma(x, y);
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    return xla::Igamma(x, y);
 }
 
 XLA_MAKE_BINARY(Igamma, IgammaImpl(lhs, rhs, broadcast_helper));
 
 xla::XlaOp IgammaGradAImpl(xla::XlaOp x, xla::XlaOp y,
                            const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  return xla::IgammaGradA(x, y);
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    return xla::IgammaGradA(x, y);
 }
 
 XLA_MAKE_BINARY(IgammaGradA, IgammaGradAImpl(lhs, rhs, broadcast_helper));
 
 xla::XlaOp RandomGammaGradImpl(xla::XlaOp x, xla::XlaOp y,
                                const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  return xla::RandomGammaGrad(x, y);
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    return xla::RandomGammaGrad(x, y);
 }
 
 XLA_MAKE_BINARY(RandomGammaGrad,
@@ -289,8 +289,8 @@ XLA_MAKE_BINARY(RandomGammaGrad,
 
 xla::XlaOp IgammacImpl(xla::XlaOp x, xla::XlaOp y,
                        const BCast& broadcast_helper) {
-  std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
-  return xla::Igammac(x, y);
+    std::tie(x, y) = XlaBinaryOp::Broadcast(x, y, broadcast_helper);
+    return xla::Igammac(x, y);
 }
 
 XLA_MAKE_BINARY(Igammac, IgammacImpl(lhs, rhs, broadcast_helper));
@@ -298,26 +298,26 @@ XLA_MAKE_BINARY(Igammac, IgammacImpl(lhs, rhs, broadcast_helper));
 #undef XLA_MAKE_BINARY
 
 class ApproximateEqualOp : public XlaOpKernel {
- public:
-  explicit ApproximateEqualOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("tolerance", &tolerance_));
-  }
+public:
+    explicit ApproximateEqualOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("tolerance", &tolerance_));
+    }
 
-  // Computes the max of the scalar input x and 0.
-  void Compile(XlaOpKernelContext* ctx) override {
-    xla::XlaBuilder* b = ctx->builder();
-    auto abs = xla::Abs(xla::Sub(ctx->Input(0), ctx->Input(1)));
-    auto abs_shape = b->GetShape(abs);
-    OP_REQUIRES_OK(ctx, abs_shape.status());
-    auto abs_type = abs_shape.ValueOrDie().element_type();
-    auto result =
-        xla::Lt(abs, xla::ConvertElementType(
-                         xla::ConstantR0<float>(b, tolerance_), abs_type));
-    ctx->SetOutput(0, result);
-  }
+    // Computes the max of the scalar input x and 0.
+    void Compile(XlaOpKernelContext* ctx) override {
+        xla::XlaBuilder* b = ctx->builder();
+        auto abs = xla::Abs(xla::Sub(ctx->Input(0), ctx->Input(1)));
+        auto abs_shape = b->GetShape(abs);
+        OP_REQUIRES_OK(ctx, abs_shape.status());
+        auto abs_type = abs_shape.ValueOrDie().element_type();
+        auto result =
+            xla::Lt(abs, xla::ConvertElementType(
+                        xla::ConstantR0<float>(b, tolerance_), abs_type));
+        ctx->SetOutput(0, result);
+    }
 
- private:
-  float tolerance_;
+private:
+    float tolerance_;
 };
 REGISTER_XLA_OP(Name("ApproximateEqual"), ApproximateEqualOp);
 

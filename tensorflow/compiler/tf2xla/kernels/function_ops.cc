@@ -26,41 +26,41 @@ const char* const kGradientOp = "SymbolicGradient";
 
 // Implementations of _ListToArray and _ArrayToList for functions.
 class PassOn : public XlaOpKernel {
- public:
-  explicit PassOn(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES(ctx, ctx->num_inputs() == ctx->num_outputs(),
-                errors::Internal("#inputs != #outputs : ", ctx->num_inputs(),
-                                 " vs. ", ctx->num_outputs()));
-    for (int i = 0; i < ctx->num_inputs(); ++i) {
-      OP_REQUIRES(
-          ctx, input_type(i) == output_type(i),
-          errors::Internal("Input and output types for position ", i,
-                           " do not match: ", DataTypeString(input_type(i)),
-                           " vs. ", DataTypeString(output_type(i))));
+public:
+    explicit PassOn(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES(ctx, ctx->num_inputs() == ctx->num_outputs(),
+                    errors::Internal("#inputs != #outputs : ", ctx->num_inputs(),
+                                     " vs. ", ctx->num_outputs()));
+        for (int i = 0; i < ctx->num_inputs(); ++i) {
+            OP_REQUIRES(
+                ctx, input_type(i) == output_type(i),
+                errors::Internal("Input and output types for position ", i,
+                                 " do not match: ", DataTypeString(input_type(i)),
+                                 " vs. ", DataTypeString(output_type(i))));
+        }
     }
-  }
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    for (int i = 0; i < ctx->num_inputs(); ++i) {
-      ctx->SetOutput(i, ctx->Input(i));
+    void Compile(XlaOpKernelContext* ctx) override {
+        for (int i = 0; i < ctx->num_inputs(); ++i) {
+            ctx->SetOutput(i, ctx->Input(i));
+        }
     }
-  }
 };
 
 REGISTER_XLA_OP(Name("_ListToArray"), PassOn);
 REGISTER_XLA_OP(Name("_ArrayToList"), PassOn);
 
 class AlwaysFailOp : public OpKernel {
- public:
-  explicit AlwaysFailOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+public:
+    explicit AlwaysFailOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
 
-  ~AlwaysFailOp() override {}
+    ~AlwaysFailOp() override {}
 
-  void Compute(OpKernelContext* ctx) override {
-    ctx->CtxFailure(errors::FailedPrecondition(
-        "Unexpected attempt to compile ", name(), " which is a ", type_string(),
-        ".  These nodes should always be handled by the graph compiler"));
-  }
+    void Compute(OpKernelContext* ctx) override {
+        ctx->CtxFailure(errors::FailedPrecondition(
+                            "Unexpected attempt to compile ", name(), " which is a ", type_string(),
+                            ".  These nodes should always be handled by the graph compiler"));
+    }
 };
 
 // These operations are handled specially in the TF/XLA bridge so their
@@ -70,14 +70,14 @@ class AlwaysFailOp : public OpKernel {
 
 REGISTER_XLA_OP(Name(kGradientOp), AlwaysFailOp);
 REGISTER_XLA_OP(Name("PartitionedCall")
-                    .AllowResourceTypes()
-                    .AllowVariantTypes()
-                    .AllowStringType(),
+                .AllowResourceTypes()
+                .AllowVariantTypes()
+                .AllowStringType(),
                 AlwaysFailOp);
 REGISTER_XLA_OP(Name("StatefulPartitionedCall")
-                    .AllowResourceTypes()
-                    .AllowVariantTypes()
-                    .AllowStringType(),
+                .AllowResourceTypes()
+                .AllowVariantTypes()
+                .AllowStringType(),
                 AlwaysFailOp);
 
 }  // namespace

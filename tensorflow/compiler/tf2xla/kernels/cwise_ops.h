@@ -41,40 +41,40 @@ namespace tensorflow {
 // arithmetic Ops XLA handles the broadcasting automatically given the input
 // tensors.
 class XlaBinaryOp : public XlaOpKernel {
- public:
-  explicit XlaBinaryOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    const DataType lhs = BaseType(input_type(0));
-    const DataType rhs = BaseType(input_type(1));
-    OP_REQUIRES(ctx, lhs == rhs,
-                errors::InvalidArgument("Input types of binary op must match"));
-  }
-  ~XlaBinaryOp() override {}
+public:
+    explicit XlaBinaryOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        const DataType lhs = BaseType(input_type(0));
+        const DataType rhs = BaseType(input_type(1));
+        OP_REQUIRES(ctx, lhs == rhs,
+                    errors::InvalidArgument("Input types of binary op must match"));
+    }
+    ~XlaBinaryOp() override {}
 
-  // Implement the (tensor,tensor)->tensor lambda that should be
-  // applied to the inputs. The desired computation should be added to
-  // 'tc->builder()' and '(lhs,rhs)' are the function's inputs and
-  // (lhs_shape,rhs_shape) are their respective
-  // shapes. 'broadcast_helper' contains metadata about the shapes of
-  // the inputs and the dimensions that need to be broadcast, which
-  // may be useful for Ops that can't use standard XLA automatic
-  // broadcasting. 'extend_dimension' is non-empty if lhs and rhs have
-  // different ranks, and indicates which dimensions of the
-  // higher-rank input should be matched when broadcasting the
-  // lower-rank input. See comment below and the documentation on broadcasting
-  // in the XLA documentation.
-  virtual xla::XlaOp Computation(
-      XlaOpKernelContext* ctx, const xla::XlaOp& lhs,
-      const absl::Span<const int64>& lhs_shape, const xla::XlaOp& rhs,
-      const absl::Span<const int64>& rhs_shape, const BCast& broadcast_helper,
-      const std::vector<int64>& extend_dimensions) = 0;
+    // Implement the (tensor,tensor)->tensor lambda that should be
+    // applied to the inputs. The desired computation should be added to
+    // 'tc->builder()' and '(lhs,rhs)' are the function's inputs and
+    // (lhs_shape,rhs_shape) are their respective
+    // shapes. 'broadcast_helper' contains metadata about the shapes of
+    // the inputs and the dimensions that need to be broadcast, which
+    // may be useful for Ops that can't use standard XLA automatic
+    // broadcasting. 'extend_dimension' is non-empty if lhs and rhs have
+    // different ranks, and indicates which dimensions of the
+    // higher-rank input should be matched when broadcasting the
+    // lower-rank input. See comment below and the documentation on broadcasting
+    // in the XLA documentation.
+    virtual xla::XlaOp Computation(
+        XlaOpKernelContext* ctx, const xla::XlaOp& lhs,
+        const absl::Span<const int64>& lhs_shape, const xla::XlaOp& rhs,
+        const absl::Span<const int64>& rhs_shape, const BCast& broadcast_helper,
+        const std::vector<int64>& extend_dimensions) = 0;
 
-  void Compile(XlaOpKernelContext* ctx) override;
+    void Compile(XlaOpKernelContext* ctx) override;
 
-  // Helper function that performs the broadcasting described by
-  // 'broadcast_helper', yielding arguments 'lhs' and 'rhs' that have the same
-  // shape.
-  static std::pair<xla::XlaOp, xla::XlaOp> Broadcast(
-      xla::XlaOp lhs, xla::XlaOp rhs, const BCast& broadcast_helper);
+    // Helper function that performs the broadcasting described by
+    // 'broadcast_helper', yielding arguments 'lhs' and 'rhs' that have the same
+    // shape.
+    static std::pair<xla::XlaOp, xla::XlaOp> Broadcast(
+        xla::XlaOp lhs, xla::XlaOp rhs, const BCast& broadcast_helper);
 };
 
 }  // namespace tensorflow
