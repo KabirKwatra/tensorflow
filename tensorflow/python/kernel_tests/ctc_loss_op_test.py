@@ -13,13 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tensorflow.ctc_ops.ctc_decoder_ops."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python.eager import backprop
 from tensorflow.python.eager import context
