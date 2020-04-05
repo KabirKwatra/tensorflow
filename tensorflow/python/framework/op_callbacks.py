@@ -106,8 +106,7 @@ def add_op_callback(callback_fn):
     if not callable(callback_fn):
         raise ValueError(
             "Callback function passed to op_callback() is expected to be callable, "
-            "but is not. Received %s" % callback_fn
-        )
+            "but is not. Received %s" % callback_fn)
     ctx = context.context()
     ctx.add_op_callback(callback_fn)
     if ctx.executing_eagerly():
@@ -149,7 +148,12 @@ def clear_op_callbacks():
         remove_op_callback(callback)
 
 
-def invoke_op_callbacks(op_type, inputs, attrs, outputs, op_name=None, graph=None):
+def invoke_op_callbacks(op_type,
+                        inputs,
+                        attrs,
+                        outputs,
+                        op_name=None,
+                        graph=None):
     r"""Invoke the callbacks that exist in the current scope (if any).
 
     If no callbacks are present in the current scope, this method returns
@@ -202,12 +206,12 @@ def invoke_op_callbacks(op_type, inputs, attrs, outputs, op_name=None, graph=Non
                     op_name=op_name,
                     graph=graph,
                 )
-                if new_outputs is not None and len(new_outputs) != len(outputs):
+                if new_outputs is not None and len(new_outputs) != len(
+                        outputs):
                     raise ValueError(
                         "The op callback returned %s tensors, which does not match the "
-                        "original number of outputs of op %s (%d)."
-                        % (len(new_outputs), op_name, len(outputs))
-                    )
+                        "original number of outputs of op %s (%d)." %
+                        (len(new_outputs), op_name, len(outputs)))
             return new_outputs
         finally:
             ctx.invoking_op_callbacks = False
