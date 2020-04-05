@@ -63,13 +63,13 @@ def SimpleSparseTensorFrom(x):
 
 
 def _ctc_loss_v2(
-    labels,
-    inputs,
-    sequence_length,
-    preprocess_collapse_repeated=False,
-    ctc_merge_repeated=True,
-    ignore_longer_outputs_than_inputs=False,
-    time_major=True,
+        labels,
+        inputs,
+        sequence_length,
+        preprocess_collapse_repeated=False,
+        ctc_merge_repeated=True,
+        ignore_longer_outputs_than_inputs=False,
+        time_major=True,
 ):
     """Call ctc_loss_v2 with v1 args."""
     assert not preprocess_collapse_repeated
@@ -86,17 +86,21 @@ def _ctc_loss_v2(
 
 
 class CTCLossTest(test.TestCase):
-    def _testCTCLoss(
-        self, inputs, seq_lens, labels, loss_truth, grad_truth, expected_err_re=None
-    ):
+    def _testCTCLoss(self,
+                     inputs,
+                     seq_lens,
+                     labels,
+                     loss_truth,
+                     grad_truth,
+                     expected_err_re=None):
         self.assertEquals(len(inputs), len(grad_truth))
 
         inputs_t = constant_op.constant(inputs)
 
         with self.cached_session(use_gpu=False) as sess:
-            loss = _ctc_loss_v2(
-                inputs=inputs_t, labels=labels, sequence_length=seq_lens
-            )
+            loss = _ctc_loss_v2(inputs=inputs_t,
+                                labels=labels,
+                                sequence_length=seq_lens)
             grad = gradients_impl.gradients(loss, [inputs_t])[0]
 
             self.assertShapeEqual(loss_truth, loss)
@@ -181,22 +185,52 @@ class CTCLossTest(test.TestCase):
         # dimensions are time x depth
         input_prob_matrix_0 = np.asarray(
             [
-                [0.633766, 0.221185, 0.0917319, 0.0129757, 0.0142857, 0.0260553],
-                [0.111121, 0.588392, 0.278779, 0.0055756, 0.00569609, 0.010436],
-                [0.0357786, 0.633813, 0.321418, 0.00249248, 0.00272882, 0.0037688],
-                [0.0663296, 0.643849, 0.280111, 0.00283995, 0.0035545, 0.00331533],
-                [0.458235, 0.396634, 0.123377, 0.00648837, 0.00903441, 0.00623107],
+                [
+                    0.633766, 0.221185, 0.0917319, 0.0129757, 0.0142857,
+                    0.0260553
+                ],
+                [
+                    0.111121, 0.588392, 0.278779, 0.0055756, 0.00569609,
+                    0.010436
+                ],
+                [
+                    0.0357786, 0.633813, 0.321418, 0.00249248, 0.00272882,
+                    0.0037688
+                ],
+                [
+                    0.0663296, 0.643849, 0.280111, 0.00283995, 0.0035545,
+                    0.00331533
+                ],
+                [
+                    0.458235, 0.396634, 0.123377, 0.00648837, 0.00903441,
+                    0.00623107
+                ],
             ],
             dtype=np.float32,
         )
         input_log_prob_matrix_0 = np.log(input_prob_matrix_0)
         gradient_log_prob_0 = np.asarray(
             [
-                [-0.366234, 0.221185, 0.0917319, 0.0129757, 0.0142857, 0.0260553],
-                [0.111121, -0.411608, 0.278779, 0.0055756, 0.00569609, 0.010436],
-                [0.0357786, 0.633813, -0.678582, 0.00249248, 0.00272882, 0.0037688],
-                [0.0663296, -0.356151, 0.280111, 0.00283995, 0.0035545, 0.00331533],
-                [-0.541765, 0.396634, 0.123377, 0.00648837, 0.00903441, 0.00623107],
+                [
+                    -0.366234, 0.221185, 0.0917319, 0.0129757, 0.0142857,
+                    0.0260553
+                ],
+                [
+                    0.111121, -0.411608, 0.278779, 0.0055756, 0.00569609,
+                    0.010436
+                ],
+                [
+                    0.0357786, 0.633813, -0.678582, 0.00249248, 0.00272882,
+                    0.0037688
+                ],
+                [
+                    0.0663296, -0.356151, 0.280111, 0.00283995, 0.0035545,
+                    0.00331533
+                ],
+                [
+                    -0.541765, 0.396634, 0.123377, 0.00648837, 0.00903441,
+                    0.00623107
+                ],
             ],
             dtype=np.float32,
         )
@@ -211,8 +245,14 @@ class CTCLossTest(test.TestCase):
                 [0.30176, 0.28562, 0.0831517, 0.0862751, 0.0816851, 0.161508],
                 [0.24082, 0.397533, 0.0557226, 0.0546814, 0.0557528, 0.19549],
                 [0.230246, 0.450868, 0.0389607, 0.038309, 0.0391602, 0.202456],
-                [0.280884, 0.429522, 0.0326593, 0.0339046, 0.0326856, 0.190345],
-                [0.423286, 0.315517, 0.0338439, 0.0393744, 0.0339315, 0.154046],
+                [
+                    0.280884, 0.429522, 0.0326593, 0.0339046, 0.0326856,
+                    0.190345
+                ],
+                [
+                    0.423286, 0.315517, 0.0338439, 0.0393744, 0.0339315,
+                    0.154046
+                ],
             ],
             dtype=np.float32,
         )
@@ -221,16 +261,26 @@ class CTCLossTest(test.TestCase):
             [
                 [-0.69824, 0.28562, 0.0831517, 0.0862751, 0.0816851, 0.161508],
                 [0.24082, -0.602467, 0.0557226, 0.0546814, 0.0557528, 0.19549],
-                [0.230246, 0.450868, 0.0389607, 0.038309, 0.0391602, -0.797544],
-                [0.280884, -0.570478, 0.0326593, 0.0339046, 0.0326856, 0.190345],
-                [-0.576714, 0.315517, 0.0338439, 0.0393744, 0.0339315, 0.154046],
+                [
+                    0.230246, 0.450868, 0.0389607, 0.038309, 0.0391602,
+                    -0.797544
+                ],
+                [
+                    0.280884, -0.570478, 0.0326593, 0.0339046, 0.0326856,
+                    0.190345
+                ],
+                [
+                    -0.576714, 0.315517, 0.0338439, 0.0393744, 0.0339315,
+                    0.154046
+                ],
             ],
             dtype=np.float32,
         )
 
         # len max_time_steps array of 2 x depth matrices
         inputs = [
-            np.vstack([input_log_prob_matrix_0[t, :], input_log_prob_matrix_1[t, :]])
+            np.vstack(
+                [input_log_prob_matrix_0[t, :], input_log_prob_matrix_1[t, :]])
             for t in range(5)
         ] + 2 * [np.nan * np.ones((2, depth), np.float32)]
 
@@ -275,9 +325,9 @@ class CTCLossTest(test.TestCase):
         inputs_t_transposed = constant_op.constant(inputs.transpose(1, 0, 2))
 
         with self.session(use_gpu=False) as sess:
-            loss = _ctc_loss_v2(
-                inputs=inputs_t, labels=labels, sequence_length=seq_lens
-            )
+            loss = _ctc_loss_v2(inputs=inputs_t,
+                                labels=labels,
+                                sequence_length=seq_lens)
             loss_transposed = _ctc_loss_v2(
                 inputs=inputs_t_transposed,
                 labels=labels,
@@ -285,7 +335,8 @@ class CTCLossTest(test.TestCase):
                 time_major=False,
             )
 
-            (tf_loss, tf_loss_transposed) = self.evaluate([loss, loss_transposed])
+            (tf_loss,
+             tf_loss_transposed) = self.evaluate([loss, loss_transposed])
             self.assertAllEqual(tf_loss, tf_loss_transposed)
 
     @test_util.run_v1_only("b/120545219")
@@ -297,9 +348,9 @@ class CTCLossTest(test.TestCase):
         v = [1.0]
 
         with self.session(use_gpu=False):
-            loss = _ctc_loss_v2(
-                inputs=inputs_t, labels=labels, sequence_length=seq_lens
-            )
+            loss = _ctc_loss_v2(inputs=inputs_t,
+                                labels=labels,
+                                sequence_length=seq_lens)
             # Taking ths second gradient should fail, since it is not
             # yet supported.
             with self.assertRaisesRegexp(LookupError, "explicitly disabled"):
@@ -307,18 +358,19 @@ class CTCLossTest(test.TestCase):
 
     @test_util.run_v1_only("b/120545219")
     def testEmptyBatch(self):
-        inputs = constant_op.constant([], dtype=dtypes.float32, shape=(1, 0, 2))
+        inputs = constant_op.constant([],
+                                      dtype=dtypes.float32,
+                                      shape=(1, 0, 2))
         sequence_lengths = constant_op.constant([], dtype=dtypes.int32)
         labels = sparse_tensor.SparseTensor(
             indices=constant_op.constant([], shape=(0, 2), dtype=dtypes.int64),
-            values=constant_op.constant([], shape=(0,), dtype=dtypes.int32),
+            values=constant_op.constant([], shape=(0, ), dtype=dtypes.int32),
             dense_shape=[5, 5],
         )
 
         with self.session(use_gpu=False) as sess:
-            with self.assertRaisesRegexp(
-                errors_impl.InvalidArgumentError, "batch_size must not be 0"
-            ):
+            with self.assertRaisesRegexp(errors_impl.InvalidArgumentError,
+                                         "batch_size must not be 0"):
                 sess.run(_ctc_loss_v2(labels, inputs, sequence_lengths))
 
 
@@ -338,14 +390,16 @@ class CTCLossTestV2(test.TestCase):
             maxval=num_labels,
             dtype=dtypes.int64,
         )
-        logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
+        logits = random_ops.random_uniform(
+            [num_frames, batch_size, num_labels])
 
-        label_length = random_ops.random_uniform(
-            [batch_size], minval=2, maxval=max_label_length, dtype=dtypes.int64
-        )
-        label_mask = array_ops.sequence_mask(
-            label_length, maxlen=max_label_length, dtype=label_length.dtype
-        )
+        label_length = random_ops.random_uniform([batch_size],
+                                                 minval=2,
+                                                 maxval=max_label_length,
+                                                 dtype=dtypes.int64)
+        label_mask = array_ops.sequence_mask(label_length,
+                                             maxlen=max_label_length,
+                                             dtype=label_length.dtype)
         labels *= label_mask
         logit_length = [num_frames] * batch_size
 
@@ -367,9 +421,9 @@ class CTCLossTestV2(test.TestCase):
             with self.cached_session():
                 self.assertAllClose(*self.evaluate([loss, ref_loss]))
                 grad = gradients_impl.gradients(loss, [logits])
-                self.assertAllClose(
-                    *self.evaluate([grad, ref_grad]), rtol=2e-06, atol=2e-06
-                )
+                self.assertAllClose(*self.evaluate([grad, ref_grad]),
+                                    rtol=2e-06,
+                                    atol=2e-06)
 
         assert_same_loss_and_grads(
             ctc_ops.ctc_loss_v2(
@@ -378,8 +432,7 @@ class CTCLossTestV2(test.TestCase):
                 label_length=label_length,
                 logit_length=logit_length,
                 blank_index=0,
-            )
-        )
+            ))
 
     @test_util.run_v1_only("b/120545219")
     def testCtcLossDenseIsSameAsCtcLoss(self):
@@ -391,7 +444,8 @@ class CTCLossTestV2(test.TestCase):
             label_length = 5
             minimum_logits_length = 10
             num_frames = minimum_logits_length + batch_size
-            logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
+            logits = random_ops.random_uniform(
+                [num_frames, batch_size, num_labels])
             labels = random_ops.random_uniform(
                 [batch_size, label_length],
                 minval=1,
@@ -399,12 +453,13 @@ class CTCLossTestV2(test.TestCase):
                 dtype=dtypes.int64,
             )
 
-            label_lengths = random_ops.random_uniform(
-                [batch_size], minval=2, maxval=label_length, dtype=dtypes.int64
-            )
-            label_mask = array_ops.sequence_mask(
-                label_lengths, maxlen=label_length, dtype=label_lengths.dtype
-            )
+            label_lengths = random_ops.random_uniform([batch_size],
+                                                      minval=2,
+                                                      maxval=label_length,
+                                                      dtype=dtypes.int64)
+            label_mask = array_ops.sequence_mask(label_lengths,
+                                                 maxlen=label_length,
+                                                 dtype=label_lengths.dtype)
             labels *= label_mask
 
             logit_lengths = math_ops.range(batch_size) + minimum_logits_length
@@ -419,13 +474,14 @@ class CTCLossTestV2(test.TestCase):
 
             # Shift labels down by one (move blank from 0 to num_labels -1)
             tf_ctc_loss_labels = math_ops.cast(labels, dtypes.int32) - 1
-            tf_nn_ctc_logits = array_ops.concat(
-                [logits[:, :, 1:], logits[:, :, 0:1],], axis=2
-            )
+            tf_nn_ctc_logits = array_ops.concat([
+                logits[:, :, 1:],
+                logits[:, :, 0:1],
+            ],
+                                                axis=2)
 
             tf_ctc_loss_labels = ctc_ops.dense_labels_to_sparse(
-                tf_ctc_loss_labels, label_lengths
-            )
+                tf_ctc_loss_labels, label_lengths)
 
             tf_nn_ctc_loss = ctc_ops.ctc_loss(
                 labels=tf_ctc_loss_labels,
@@ -433,16 +489,17 @@ class CTCLossTestV2(test.TestCase):
                 sequence_length=logit_lengths,
                 time_major=True,
             )
-            tf_nn_ctc_grads = gradients_impl.gradients(tf_nn_ctc_loss, [logits])[0]
+            tf_nn_ctc_grads = gradients_impl.gradients(tf_nn_ctc_loss,
+                                                       [logits])[0]
 
             with self.cached_session() as sess:
                 for _ in range(32):
-                    self.assertAllClose(*self.evaluate([ctc_loss, tf_nn_ctc_loss]))
+                    self.assertAllClose(
+                        *self.evaluate([ctc_loss, tf_nn_ctc_loss]))
                     self.assertAllClose(
                         *self.evaluate([ctc_loss_grads, tf_nn_ctc_grads]),
                         rtol=4e-06,
-                        atol=4e-06
-                    )
+                        atol=4e-06)
 
     @test_util.run_v1_only("b/120545219")
     def testCtcLossDenseUniqueFastPathIsSameAsCtcLoss(self):
@@ -452,17 +509,20 @@ class CTCLossTestV2(test.TestCase):
         num_labels = 6
         label_length = 5
         num_frames = 12
-        logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
-        labels = random_ops.random_uniform(
-            [batch_size, label_length], minval=1, maxval=num_labels, dtype=dtypes.int64
-        )
+        logits = random_ops.random_uniform(
+            [num_frames, batch_size, num_labels])
+        labels = random_ops.random_uniform([batch_size, label_length],
+                                           minval=1,
+                                           maxval=num_labels,
+                                           dtype=dtypes.int64)
 
-        label_lengths = random_ops.random_uniform(
-            [batch_size], minval=2, maxval=label_length, dtype=dtypes.int64
-        )
-        label_mask = array_ops.sequence_mask(
-            label_lengths, maxlen=label_length, dtype=label_lengths.dtype
-        )
+        label_lengths = random_ops.random_uniform([batch_size],
+                                                  minval=2,
+                                                  maxval=label_length,
+                                                  dtype=dtypes.int64)
+        label_mask = array_ops.sequence_mask(label_lengths,
+                                             maxlen=label_length,
+                                             dtype=label_lengths.dtype)
         labels *= label_mask
 
         logit_lengths = [num_frames] * batch_size
@@ -478,13 +538,14 @@ class CTCLossTestV2(test.TestCase):
 
         # Shift labels down by one (move blank from 0 to num_labels -1)
         tf_ctc_loss_labels = math_ops.cast(labels, dtypes.int32) - 1
-        tf_nn_ctc_logits = array_ops.concat(
-            [logits[:, :, 1:], logits[:, :, 0:1],], axis=2
-        )
+        tf_nn_ctc_logits = array_ops.concat([
+            logits[:, :, 1:],
+            logits[:, :, 0:1],
+        ],
+                                            axis=2)
 
         tf_ctc_loss_labels = ctc_ops.dense_labels_to_sparse(
-            tf_ctc_loss_labels, label_lengths
-        )
+            tf_ctc_loss_labels, label_lengths)
 
         tf_nn_ctc_loss = ctc_ops.ctc_loss(
             labels=tf_ctc_loss_labels,
@@ -500,8 +561,7 @@ class CTCLossTestV2(test.TestCase):
                 self.assertAllClose(
                     *self.evaluate([ctc_loss_grads, tf_nn_ctc_grads]),
                     rtol=2e-06,
-                    atol=2e-06
-                )
+                    atol=2e-06)
 
     @test_util.run_v1_only("b/120545219")
     def testCtcLossDenseUniqueFastPathWithBlankIndexIsSameAsCtcLoss(self):
@@ -511,7 +571,8 @@ class CTCLossTestV2(test.TestCase):
         num_labels = 6
         label_length = 5
         num_frames = 12
-        logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
+        logits = random_ops.random_uniform(
+            [num_frames, batch_size, num_labels])
         labels = random_ops.random_uniform(
             [batch_size, label_length],
             minval=0,
@@ -519,20 +580,20 @@ class CTCLossTestV2(test.TestCase):
             dtype=dtypes.int64,
         )
 
-        label_lengths = random_ops.random_uniform(
-            [batch_size], minval=2, maxval=label_length, dtype=dtypes.int64
-        )
-        label_mask = array_ops.sequence_mask(
-            label_lengths, maxlen=label_length, dtype=label_lengths.dtype
-        )
+        label_lengths = random_ops.random_uniform([batch_size],
+                                                  minval=2,
+                                                  maxval=label_length,
+                                                  dtype=dtypes.int64)
+        label_mask = array_ops.sequence_mask(label_lengths,
+                                             maxlen=label_length,
+                                             dtype=label_lengths.dtype)
         labels *= label_mask
 
         logit_lengths = [num_frames] * batch_size
 
         tf_ctc_loss_labels = math_ops.cast(labels, dtypes.int32)
         tf_ctc_loss_labels = ctc_ops.dense_labels_to_sparse(
-            tf_ctc_loss_labels, label_lengths
-        )
+            tf_ctc_loss_labels, label_lengths)
 
         tf_nn_ctc_loss = ctc_ops.ctc_loss(
             labels=tf_ctc_loss_labels,
@@ -552,7 +613,8 @@ class CTCLossTestV2(test.TestCase):
             ],
             axis=2,
         )
-        shifted_labels = array_ops.where_v2(labels < blank_index, labels, labels + 1)
+        shifted_labels = array_ops.where_v2(labels < blank_index, labels,
+                                            labels + 1)
 
         ctc_loss = ctc_ops.ctc_loss_dense(
             labels=shifted_labels,
@@ -570,8 +632,7 @@ class CTCLossTestV2(test.TestCase):
                 self.assertAllClose(
                     *self.evaluate([ctc_loss_grads, tf_nn_ctc_grads]),
                     rtol=2e-06,
-                    atol=2e-06
-                )
+                    atol=2e-06)
 
     @test_util.run_v1_only("b/120545219")
     def testCtcLossDenseWithBlankIndexIsSameAsCtcLoss(self):
@@ -581,7 +642,8 @@ class CTCLossTestV2(test.TestCase):
         num_labels = 6
         label_length = 5
         num_frames = 12
-        logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
+        logits = random_ops.random_uniform(
+            [num_frames, batch_size, num_labels])
         labels = random_ops.random_uniform(
             [batch_size, label_length],
             minval=0,
@@ -589,20 +651,20 @@ class CTCLossTestV2(test.TestCase):
             dtype=dtypes.int64,
         )
 
-        label_lengths = random_ops.random_uniform(
-            [batch_size], minval=2, maxval=label_length, dtype=dtypes.int64
-        )
-        label_mask = array_ops.sequence_mask(
-            label_lengths, maxlen=label_length, dtype=label_lengths.dtype
-        )
+        label_lengths = random_ops.random_uniform([batch_size],
+                                                  minval=2,
+                                                  maxval=label_length,
+                                                  dtype=dtypes.int64)
+        label_mask = array_ops.sequence_mask(label_lengths,
+                                             maxlen=label_length,
+                                             dtype=label_lengths.dtype)
         labels *= label_mask
 
         logit_lengths = [num_frames] * batch_size
 
         tf_ctc_loss_labels = math_ops.cast(labels, dtypes.int32)
         tf_ctc_loss_labels = ctc_ops.dense_labels_to_sparse(
-            tf_ctc_loss_labels, label_lengths
-        )
+            tf_ctc_loss_labels, label_lengths)
 
         tf_nn_ctc_loss = ctc_ops.ctc_loss(
             labels=tf_ctc_loss_labels,
@@ -622,7 +684,8 @@ class CTCLossTestV2(test.TestCase):
             ],
             axis=2,
         )
-        shifted_labels = array_ops.where_v2(labels < blank_index, labels, labels + 1)
+        shifted_labels = array_ops.where_v2(labels < blank_index, labels,
+                                            labels + 1)
 
         ctc_loss = ctc_ops.ctc_loss_dense(
             labels=shifted_labels,
@@ -639,8 +702,7 @@ class CTCLossTestV2(test.TestCase):
                 self.assertAllClose(
                     *self.evaluate([ctc_loss_grads, tf_nn_ctc_grads]),
                     rtol=2e-06,
-                    atol=2e-06
-                )
+                    atol=2e-06)
 
     @test_util.run_v1_only("b/120545219")
     def testCtcLossDenseWithNegativeBlankIndexIsSameAsCtcLoss(self):
@@ -651,7 +713,8 @@ class CTCLossTestV2(test.TestCase):
             num_labels = 6
             label_length = 5
             num_frames = 12
-            logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
+            logits = random_ops.random_uniform(
+                [num_frames, batch_size, num_labels])
             labels = random_ops.random_uniform(
                 [batch_size, label_length],
                 minval=0,
@@ -659,12 +722,13 @@ class CTCLossTestV2(test.TestCase):
                 dtype=dtypes.int64,
             )
 
-            label_lengths = random_ops.random_uniform(
-                [batch_size], minval=2, maxval=label_length, dtype=dtypes.int64
-            )
-            label_mask = array_ops.sequence_mask(
-                label_lengths, maxlen=label_length, dtype=label_lengths.dtype
-            )
+            label_lengths = random_ops.random_uniform([batch_size],
+                                                      minval=2,
+                                                      maxval=label_length,
+                                                      dtype=dtypes.int64)
+            label_mask = array_ops.sequence_mask(label_lengths,
+                                                 maxlen=label_length,
+                                                 dtype=label_lengths.dtype)
             labels *= label_mask
 
             logit_lengths = [num_frames] * batch_size
@@ -680,8 +744,7 @@ class CTCLossTestV2(test.TestCase):
 
             tf_ctc_loss_labels = math_ops.cast(labels, dtypes.int32)
             tf_ctc_loss_labels = ctc_ops.dense_labels_to_sparse(
-                tf_ctc_loss_labels, label_lengths
-            )
+                tf_ctc_loss_labels, label_lengths)
 
             tf_nn_ctc_loss = ctc_ops.ctc_loss(
                 labels=tf_ctc_loss_labels,
@@ -689,16 +752,17 @@ class CTCLossTestV2(test.TestCase):
                 sequence_length=logit_lengths,
                 time_major=True,
             )
-            tf_nn_ctc_grads = gradients_impl.gradients(tf_nn_ctc_loss, [logits])[0]
+            tf_nn_ctc_grads = gradients_impl.gradients(tf_nn_ctc_loss,
+                                                       [logits])[0]
 
             with self.cached_session() as sess:
                 for _ in range(32):
-                    self.assertAllClose(*self.evaluate([ctc_loss, tf_nn_ctc_loss]))
+                    self.assertAllClose(
+                        *self.evaluate([ctc_loss, tf_nn_ctc_loss]))
                     self.assertAllClose(
                         *self.evaluate([ctc_loss_grads, tf_nn_ctc_grads]),
                         rtol=2e-06,
-                        atol=2e-06
-                    )
+                        atol=2e-06)
 
     def testCollapseRepeated(self):
         collapsed, new_seq_lengths = ctc_ops.collapse_repeated(
@@ -706,19 +770,21 @@ class CTCLossTestV2(test.TestCase):
             seq_length=[4, 5, 5],
         )
         self.assertAllEqual(new_seq_lengths, [2, 3, 4])
-        self.assertAllEqual(collapsed, [[1, 3, 0, 0], [1, 4, 0, 0], [4, 2, 9, 4]])
+        self.assertAllEqual(collapsed,
+                            [[1, 3, 0, 0], [1, 4, 0, 0], [4, 2, 9, 4]])
 
     def testCollapseRepeatedPreservesDtypes(self):
         collapsed, new_seq_lengths = ctc_ops.collapse_repeated(
             labels=constant_op.constant(
-                [[1, 3, 3, 3, 0], [1, 4, 4, 4, 0], [4, 2, 2, 9, 4]], dtype=dtypes.int64
-            ),
+                [[1, 3, 3, 3, 0], [1, 4, 4, 4, 0], [4, 2, 2, 9, 4]],
+                dtype=dtypes.int64),
             seq_length=constant_op.constant([4, 5, 5], dtype=dtypes.int64),
         )
         self.assertEqual(new_seq_lengths.dtype, dtypes.int64)
         self.assertEqual(collapsed.dtype, dtypes.int64)
         self.assertAllEqual(new_seq_lengths, [2, 3, 4])
-        self.assertAllEqual(collapsed, [[1, 3, 0, 0], [1, 4, 0, 0], [4, 2, 9, 4]])
+        self.assertAllEqual(collapsed,
+                            [[1, 3, 0, 0], [1, 4, 0, 0], [4, 2, 9, 4]])
 
     def testCollapseRepeatedExtraPadding(self):
         collapsed, new_seq_lengths = ctc_ops.collapse_repeated(
@@ -730,7 +796,8 @@ class CTCLossTestV2(test.TestCase):
             seq_length=[4, 5, 5],
         )
         self.assertAllEqual(new_seq_lengths, [2, 3, 4])
-        self.assertAllEqual(collapsed, [[1, 3, 0, 0], [1, 4, 0, 0], [4, 2, 9, 4]])
+        self.assertAllEqual(collapsed,
+                            [[1, 3, 0, 0], [1, 4, 0, 0], [4, 2, 9, 4]])
 
     def testCollapseRepeatedFrontRepeats(self):
         collapsed, new_seq_lengths = ctc_ops.collapse_repeated(
@@ -773,20 +840,24 @@ class CTCLossTestV2(test.TestCase):
             [1, 1, 1, 0],
         ]
         unique, idx = ctc_ops.ctc_unique_labels(labels)
-        self.assertAllEqual([[3, 4, 0, 0], [1, 0, 0, 0],], unique)
-        self.assertAllEqual([[0, 1, 1, 0], [0, 0, 0, 1],], idx)
+        self.assertAllEqual([
+            [3, 4, 0, 0],
+            [1, 0, 0, 0],
+        ], unique)
+        self.assertAllEqual([
+            [0, 1, 1, 0],
+            [0, 0, 0, 1],
+        ], idx)
 
     def testSumStates(self):
         idx = [
             [0, 1, 0, 1],
             [0, 0, 0, 1],
         ]
-        states = math_ops.log(
-            [
-                [[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]],
-                [[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]],
-            ]
-        )
+        states = math_ops.log([
+            [[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]],
+            [[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]],
+        ])
         sum_of_states = math_ops.exp(ctc_ops._sum_states(idx, states))
         self.assertAllClose(
             [
@@ -826,9 +897,15 @@ class CTCLossTestV2(test.TestCase):
         self.assertAllClose(
             blank,
             [
-                [0.16 + 0.17 + 0.18 + 0.19 + 0.20, 0.26 + 0.27 + 0.28 + 0.29 + 0.30],
+                [
+                    0.16 + 0.17 + 0.18 + 0.19 + 0.20,
+                    0.26 + 0.27 + 0.28 + 0.29 + 0.30
+                ],
                 [1.6 + 1.7 + 1.8 + 1.9 + 2.0, 2.6 + 2.7 + 2.8 + 2.9 + 3.0],
-                [16.0 + 17.0 + 18.0 + 19.0 + 20.0, 26.0 + 27.0 + 28.0 + 29.0 + 30.0],
+                [
+                    16.0 + 17.0 + 18.0 + 19.0 + 20.0,
+                    26.0 + 27.0 + 28.0 + 29.0 + 30.0
+                ],
             ],
         )
         self.assertAllClose(
@@ -874,16 +951,21 @@ class CTCLossTestV2(test.TestCase):
         labels = ops.convert_to_tensor(labels)
         states = math_ops.log(states)
         olabel = ctc_ops._state_to_olabel_unique(
-            labels, num_labels, states, ctc_ops.ctc_unique_labels(labels)
-        )
+            labels, num_labels, states, ctc_ops.ctc_unique_labels(labels))
         olabel = math_ops.exp(olabel)
         blank = olabel[:, :, 0]
         self.assertAllClose(
             blank,
             [
-                [0.16 + 0.17 + 0.18 + 0.19 + 0.20, 0.26 + 0.27 + 0.28 + 0.29 + 0.30],
+                [
+                    0.16 + 0.17 + 0.18 + 0.19 + 0.20,
+                    0.26 + 0.27 + 0.28 + 0.29 + 0.30
+                ],
                 [1.6 + 1.7 + 1.8 + 1.9 + 2.0, 2.6 + 2.7 + 2.8 + 2.9 + 3.0],
-                [16.0 + 17.0 + 18.0 + 19.0 + 20.0, 26.0 + 27.0 + 28.0 + 29.0 + 30.0],
+                [
+                    16.0 + 17.0 + 18.0 + 19.0 + 20.0,
+                    26.0 + 27.0 + 28.0 + 29.0 + 30.0
+                ],
             ],
         )
         self.assertAllClose(
@@ -932,8 +1014,7 @@ class CTCLossTestV2(test.TestCase):
         labels = ops.convert_to_tensor(labels)
         states = math_ops.log(states)
         olabel = ctc_ops._state_to_olabel_unique(
-            labels, num_labels, states, ctc_ops.ctc_unique_labels(labels)
-        )
+            labels, num_labels, states, ctc_ops.ctc_unique_labels(labels))
         olabel = math_ops.exp(olabel)
         blank = olabel[:, :, 0]
 
@@ -996,7 +1077,8 @@ class CTCLossTestV2(test.TestCase):
                 constant_op.constant([[0.0, 1.0], [2.0, 3.0], [4.0, 5.0]]),
                 constant_op.constant([23.0, 24.0]),
             )
-            self.assertAllEqual([[23.0, 25.0], [25.0, 28.0], [29.0, 33.0]], out)
+            self.assertAllEqual([[23.0, 25.0], [25.0, 28.0], [29.0, 33.0]],
+                                out)
 
     @test_util.run_deprecated_v1
     def testScanCapturesVariables(self):
@@ -1006,10 +1088,10 @@ class CTCLossTestV2(test.TestCase):
             def fn(accum, elem):
                 return accum + x * elem
 
-            out = ctc_ops._scan(fn, constant_op.constant([0.0, 1.0, 2.0]), 23.0)
-            self.assertAllClose(
-                *sess.run([[23.0 + x * 0.0, 23.0 + x * 1.0, 23.0 + x * 3.0], out])
-            )
+            out = ctc_ops._scan(fn, constant_op.constant([0.0, 1.0, 2.0]),
+                                23.0)
+            self.assertAllClose(*sess.run(
+                [[23.0 + x * 0.0, 23.0 + x * 1.0, 23.0 + x * 3.0], out]))
 
     @test_util.run_deprecated_v1
     def testScanMultipleAccumulators(self):
@@ -1037,10 +1119,10 @@ class CTCLossTestV2(test.TestCase):
                 return accum + (elem_a * elem_b)
 
             elems_a = constant_op.constant([1.0, 2.0, 3.0])
-            elems_b = constant_op.constant([[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]])
-            out = ctc_ops._scan(
-                fn, (elems_a, elems_b), initial=constant_op.constant([0.0, 0.0])
-            )
+            elems_b = constant_op.constant([[1.0, 2.0], [2.0, 3.0], [3.0,
+                                                                     4.0]])
+            out = ctc_ops._scan(fn, (elems_a, elems_b),
+                                initial=constant_op.constant([0.0, 0.0]))
             self.assertAllEqual([[1.0, 2.0], [5.0, 8.0], [14.0, 20.0]], out)
 
 
@@ -1071,20 +1153,23 @@ class CTCLossTestV3(test.TestCase, parameterized.TestCase):
             maxval=num_labels,
             dtype=dtypes.int64,
         )
-        logits = random_ops.random_uniform([num_frames, batch_size, num_labels])
+        logits = random_ops.random_uniform(
+            [num_frames, batch_size, num_labels])
 
-        label_length = random_ops.random_uniform(
-            [batch_size], minval=2, maxval=max_label_length, dtype=dtypes.int64
-        )
-        label_mask = array_ops.sequence_mask(
-            label_length, maxlen=max_label_length, dtype=label_length.dtype
-        )
+        label_length = random_ops.random_uniform([batch_size],
+                                                 minval=2,
+                                                 maxval=max_label_length,
+                                                 dtype=dtypes.int64)
+        label_mask = array_ops.sequence_mask(label_length,
+                                             maxlen=max_label_length,
+                                             dtype=label_length.dtype)
         labels *= label_mask
         logit_length = [num_frames] * batch_size
 
         def ctc_loss_cpu(labels, logits, label_length, logit_length):
             with test_util.device(use_gpu=False):
-                sparse_labels = ctc_ops.dense_labels_to_sparse(labels, label_length)
+                sparse_labels = ctc_ops.dense_labels_to_sparse(
+                    labels, label_length)
                 with backprop.GradientTape() as t:
                     t.watch(logits)
                     ref_loss = ctc_ops.ctc_loss_v3(
@@ -1099,7 +1184,8 @@ class CTCLossTestV3(test.TestCase, parameterized.TestCase):
 
         def ctc_loss_gpu(labels, logits, label_length, logit_length):
             with test_util.device(use_gpu=True):
-                sparse_labels = ctc_ops.dense_labels_to_sparse(labels, label_length)
+                sparse_labels = ctc_ops.dense_labels_to_sparse(
+                    labels, label_length)
                 with backprop.GradientTape() as t:
                     t.watch(logits)
                     loss = ctc_ops.ctc_loss_v3(
@@ -1117,7 +1203,8 @@ class CTCLossTestV3(test.TestCase, parameterized.TestCase):
             ctc_loss_cpu = def_function.function(ctc_loss_cpu)
             ctc_loss_gpu = def_function.function(ctc_loss_gpu)
 
-        ref_loss, ref_grad = ctc_loss_cpu(labels, logits, label_length, logit_length)
+        ref_loss, ref_grad = ctc_loss_cpu(labels, logits, label_length,
+                                          logit_length)
         loss, grad = ctc_loss_gpu(labels, logits, label_length, logit_length)
 
         self.assertAllClose(loss, ref_loss, atol=1e-6)
