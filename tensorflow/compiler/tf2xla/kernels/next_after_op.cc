@@ -23,15 +23,15 @@ namespace tensorflow {
 namespace {
 
 class NextAfterOp : public XlaOpKernel {
-public:
-    explicit NextAfterOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+ public:
+  explicit NextAfterOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        auto lhs = ctx->Input(0);
-        auto rhs = ctx->Input(1);
-        OP_REQUIRES_OK(ctx, BroadcastOpsToSame(&lhs, &rhs));
-        ctx->SetOutput(0, xla::NextAfter(lhs, rhs));
-    }
+  void Compile(XlaOpKernelContext* ctx) override {
+    auto lhs = ctx->Input(0);
+    auto rhs = ctx->Input(1);
+    OP_REQUIRES_OK(ctx, BroadcastOpsToSame(&lhs, &rhs));
+    ctx->SetOutput(0, xla::NextAfter(lhs, rhs));
+  }
 };
 REGISTER_XLA_OP(Name("NextAfter"), NextAfterOp);
 

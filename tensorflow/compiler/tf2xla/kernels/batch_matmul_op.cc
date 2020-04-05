@@ -23,21 +23,21 @@ namespace tensorflow {
 namespace {
 
 class BatchMatMulOp : public XlaOpKernel {
-public:
-    explicit BatchMatMulOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("adj_x", &adj_x_));
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("adj_y", &adj_y_));
-    }
+ public:
+  explicit BatchMatMulOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("adj_x", &adj_x_));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("adj_y", &adj_y_));
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        auto result = xla::BatchDot(MaybeConjugate(ctx->Input(0), adj_x_), adj_x_,
-                                    MaybeConjugate(ctx->Input(1), adj_y_), adj_y_);
-        ctx->SetOutput(0, result);
-    }
+  void Compile(XlaOpKernelContext* ctx) override {
+    auto result = xla::BatchDot(MaybeConjugate(ctx->Input(0), adj_x_), adj_x_,
+                                MaybeConjugate(ctx->Input(1), adj_y_), adj_y_);
+    ctx->SetOutput(0, result);
+  }
 
-private:
-    bool adj_x_;
-    bool adj_y_;
+ private:
+  bool adj_x_;
+  bool adj_y_;
 };
 
 REGISTER_XLA_OP(Name("BatchMatMul"), BatchMatMulOp);

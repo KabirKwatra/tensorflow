@@ -26,13 +26,13 @@ namespace tensorflow {
 namespace {
 
 class CholeskyOp : public XlaOpKernel {
-public:
-    explicit CholeskyOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-    void Compile(XlaOpKernelContext* ctx) override {
-        ctx->SetOutput(0,
-                       xla::Triangle(xla::Cholesky(ctx->Input(0), /*lower=*/true),
-                                     /*lower=*/true));
-    }
+ public:
+  explicit CholeskyOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+  void Compile(XlaOpKernelContext* ctx) override {
+    ctx->SetOutput(0,
+                   xla::Triangle(xla::Cholesky(ctx->Input(0), /*lower=*/true),
+                                 /*lower=*/true));
+  }
 };
 
 REGISTER_XLA_OP(Name("Cholesky").TypeConstraint("T", kFloatTypes), CholeskyOp);

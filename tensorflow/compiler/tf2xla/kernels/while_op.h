@@ -52,20 +52,20 @@ namespace tensorflow {
 // tuple with XLA type (I32, F32, PRED). Note the resource variable appears at
 // the end of both the loop body's input and output argument lists.
 class XlaWhileOp : public XlaOpKernel {
-public:
-    explicit XlaWhileOp(OpKernelConstruction* ctx);
+ public:
+  explicit XlaWhileOp(OpKernelConstruction* ctx);
 
-    void Compile(XlaOpKernelContext* ctx) override;
+  void Compile(XlaOpKernelContext* ctx) override;
 
-private:
-    NameAttrList cond_name_attr_;
-    NameAttrList body_name_attr_;
-    bool has_token_input_output_;
-    std::vector<string> token_input_nodes_;
-    // Whether to propagate compile time consts into the loop body.
-    // This is not supported by default now since it may cause HBM memory
-    // overheads.
-    bool propagate_compile_time_consts_ = false;
+ private:
+  NameAttrList cond_name_attr_;
+  NameAttrList body_name_attr_;
+  bool has_token_input_output_;
+  std::vector<string> token_input_nodes_;
+  // Whether to propagate compile time consts into the loop body.
+  // This is not supported by default now since it may cause HBM memory
+  // overheads.
+  bool propagate_compile_time_consts_ = false;
 };
 
 }  // namespace tensorflow

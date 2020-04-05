@@ -26,23 +26,23 @@ namespace {
 
 // This TensorFlow op supports the Assert primitive.
 class AssertOp : public XlaOpKernel {
-public:
-    explicit AssertOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-    ~AssertOp() override {}
+ public:
+  explicit AssertOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+  ~AssertOp() override {}
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        static mutex mu(tensorflow::LINKER_INITIALIZED);
-        static int log_counter = 0;
+  void Compile(XlaOpKernelContext* ctx) override {
+    static mutex mu(tensorflow::LINKER_INITIALIZED);
+    static int log_counter = 0;
 
-        mutex_lock l(mu);
-        if (log_counter < 20) {
-            ++log_counter;
-            LOG(WARNING) << "Ignoring Assert operator " << name();
-        }
+    mutex_lock l(mu);
+    if (log_counter < 20) {
+      ++log_counter;
+      LOG(WARNING) << "Ignoring Assert operator " << name();
     }
+  }
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(AssertOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(AssertOp);
 };
 
 REGISTER_XLA_OP(Name("Assert").CompilationOnly(), AssertOp);

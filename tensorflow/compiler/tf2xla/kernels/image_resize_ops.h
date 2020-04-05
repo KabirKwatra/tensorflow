@@ -22,38 +22,38 @@ limitations under the License.
 namespace tensorflow {
 
 class ResizeNearestNeighborOp : public XlaOpKernel {
-public:
-    explicit ResizeNearestNeighborOp(OpKernelConstruction* ctx);
-    void Compile(XlaOpKernelContext* ctx) override;
+ public:
+  explicit ResizeNearestNeighborOp(OpKernelConstruction* ctx);
+  void Compile(XlaOpKernelContext* ctx) override;
 
-protected:
-    bool align_corners_ = true;
-    bool half_pixel_centers_ = true;
-    bool is_kernel_bilinear_ = false;
+ protected:
+  bool align_corners_ = true;
+  bool half_pixel_centers_ = true;
+  bool is_kernel_bilinear_ = false;
 };
 
 class ResizeBilinearOp : public XlaOpKernel {
-public:
-    explicit ResizeBilinearOp(OpKernelConstruction* ctx);
+ public:
+  explicit ResizeBilinearOp(OpKernelConstruction* ctx);
 
-    void Compile(XlaOpKernelContext* ctx) override;
+  void Compile(XlaOpKernelContext* ctx) override;
 
-protected:
-    bool align_corners_ = true;
-    bool half_pixel_centers_ = true;
-    bool is_kernel_bilinear_ = true;
+ protected:
+  bool align_corners_ = true;
+  bool half_pixel_centers_ = true;
+  bool is_kernel_bilinear_ = true;
 };
 
 class ResizeBilinearGradOp : public XlaOpKernel {
-public:
-    explicit ResizeBilinearGradOp(OpKernelConstruction* ctx);
+ public:
+  explicit ResizeBilinearGradOp(OpKernelConstruction* ctx);
 
-    void Compile(XlaOpKernelContext* ctx) override;
+  void Compile(XlaOpKernelContext* ctx) override;
 
-protected:
-    bool align_corners_;
-    bool half_pixel_centers_ = true;
-    xla::PrimitiveType output_type_;
+ protected:
+  bool align_corners_;
+  bool half_pixel_centers_ = true;
+  xla::PrimitiveType output_type_;
 };
 
 }  // namespace tensorflow
