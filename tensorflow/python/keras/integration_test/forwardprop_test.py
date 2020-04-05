@@ -28,8 +28,10 @@ def _jvp(f, primals, tangents):
     """Compute the jacobian of `f` at `primals` multiplied by `tangents`."""
     with tf.autodiff.ForwardAccumulator(primals, tangents) as acc:
         primals_out = f(*primals)
-    return primals_out, acc.jvp(
-        primals_out, unconnected_gradients=tf.UnconnectedGradients.ZERO)
+    return (
+        primals_out,
+        acc.jvp(primals_out, unconnected_gradients=tf.UnconnectedGradients.ZERO),
+    )
 
 
 def _jacfwd(f, primals):
@@ -47,8 +49,11 @@ def _jacfwd(f, primals):
             jac_columns.append(
                 tf.nest.map_structure(
                     functools.partial(tf.reshape, shape=[-1]),
-                    _jvp(f, primals, tf.nest.pack_sequence_as(primals,
-                                                              tangent_mask))[1]))
+                    _jvp(f, primals, tf.nest.pack_sequence_as(primals, tangent_mask))[
+                        1
+                    ],
+                )
+            )
         jac_flat.append(tf.stack(jac_columns, axis=1))
         tangent_mask[primal_index] = tf.zeros_like(primal)
     return tf.nest.pack_sequence_as(primals, jac_flat)
@@ -64,7 +69,8 @@ def _grad(f, argnums=0):
         return tape.gradient(
             primals_out,
             params[argnums],
-            unconnected_gradients=tf.UnconnectedGradients.ZERO)
+            unconnected_gradients=tf.UnconnectedGradients.ZERO,
+        )
 
     return _f
 
@@ -88,8 +94,7 @@ def _vectorize_parameters(f, params, use_pfor, dtype):
         full_onehot = tf.one_hot(index, total_size)
         split_onehot = tf.split(full_onehot, parameter_sizes)
         tangents = [
-            tf.reshape(v, tf.shape(param))
-            for param, v in zip(params, split_onehot)
+            tf.reshape(v, tf.shape(param)) for param, v in zip(params, split_onehot)
         ]
         return f(tangents)
 
@@ -117,21 +122,16 @@ def _forward_over_back_hessian(f, params, use_pfor, dtype=None):
       along the second axis.
     """
     return _vectorize_parameters(
-        functools.partial(_hvp, f, params),
-        params, use_pfor=use_pfor, dtype=dtype)
+        functools.partial(_hvp, f, params), params, use_pfor=use_pfor, dtype=dtype
+    )
 
 
-def _test_gradients(testcase,
-                    f,
-                    primals,
-                    order,
-                    delta=1e-3,
-                    rtol=1e-2,
-                    atol=1e-6):
+def _test_gradients(testcase, f, primals, order, delta=1e-3, rtol=1e-2, atol=1e-6):
     """Tests forward/backward jacobians of `f`'s [0, `order`)-order gradients."""
     if order < 1:
         raise ValueError(
-            "`order` should be a positive integer, got '{}'.".format(order))
+            "`order` should be a positive integer, got '{}'.".format(order)
+        )
     if order > 1:
         _test_gradients(
             testcase=testcase,
@@ -140,7 +140,8 @@ def _test_gradients(testcase,
             order=order - 1,
             delta=delta,
             rtol=rtol,
-            atol=atol)
+            atol=atol,
+        )
     sym_jac_back, num_jac = tf.test.compute_gradient(f, primals, delta=delta)
     testcase.assertAllClose(num_jac, sym_jac_back, rtol=rtol, atol=atol)
     sym_jac_fwd = _jacfwd(f, primals)
@@ -150,14 +151,20 @@ def _test_gradients(testcase,
 
 
 class ForwardpropTest(tf.test.TestCase, parameterized.TestCase):
-
-    @parameterized.named_parameters([
-        ("Dense", [[0.1]], functools.partial(tf.keras.layers.Dense, 5)),
-        ("Conv2D",
-         np.reshape(
-             np.arange(start=-1., stop=1., step=2. / (1 * 2 * 4 * 4)),
-             [1, 2, 4, 4]), functools.partial(tf.keras.layers.Conv2D, 2, 2), 1e-3)
-    ])
+    @parameterized.named_parameters(
+        [
+            ("Dense", [[0.1]], functools.partial(tf.keras.layers.Dense, 5)),
+            (
+                "Conv2D",
+                np.reshape(
+                    np.arange(start=-1.0, stop=1.0, step=2.0 / (1 * 2 * 4 * 4)),
+                    [1, 2, 4, 4],
+                ),
+                functools.partial(tf.keras.layers.Conv2D, 2, 2),
+                1e-3,
+            ),
+        ]
+    )
     def testKerasLayers(self, value, op_fn, atol=1e-6):
         layer = op_fn()
         input_value = tf.constant(value, dtype=tf.float32)
@@ -168,37 +175,64 @@ class ForwardpropTest(tf.test.TestCase, parameterized.TestCase):
             v.assign(
                 tf.reshape(
                     tf.range(
-                        -1.,
-                        1.,
-                        2. / tf.size(v, out_type=tf.float32),
-                        dtype=tf.float32), v.shape))
+                        -1.0,
+                        1.0,
+                        2.0 / tf.size(v, out_type=tf.float32),
+                        dtype=tf.float32,
+                    ),
+                    v.shape,
+                )
+            )
         _test_gradients(
-            self, layer, [input_value], atol=atol,
+            self,
+            layer,
+            [input_value],
+            atol=atol,
             # These are linear, so second-order is pretty boring.
-            order=2)
+            order=2,
+        )
 
-    @parameterized.named_parameters([
-        ("NonFused", [[0.1], [0.2], [-0.3]],
-         functools.partial(tf.keras.layers.BatchNormalization, fused=False)),
-        ("Fused", [[[[0.1, 2.]]], [[[0.2, -3.]]], [[[-0.3, 4.]]]],
-         functools.partial(tf.keras.layers.BatchNormalization, fused=True))
-    ])
+    @parameterized.named_parameters(
+        [
+            (
+                "NonFused",
+                [[0.1], [0.2], [-0.3]],
+                functools.partial(tf.keras.layers.BatchNormalization, fused=False),
+            ),
+            (
+                "Fused",
+                [[[[0.1, 2.0]]], [[[0.2, -3.0]]], [[[-0.3, 4.0]]]],
+                functools.partial(tf.keras.layers.BatchNormalization, fused=True),
+            ),
+        ]
+    )
     def testBatchNorm(self, value, op_fn):
         for training in [True, False]:
             layer = op_fn()
             input_value = tf.constant(value, dtype=tf.float32)
             layer.build(input_value.shape)
             _test_gradients(
-                self, functools.partial(layer, training=training), [
-                    input_value],
-                order=2, atol=1e-3)
+                self,
+                functools.partial(layer, training=training),
+                [input_value],
+                order=2,
+                atol=1e-3,
+            )
 
-    @parameterized.named_parameters([
-        ("NonFused", [[0.1], [0.2], [-0.3]],
-         functools.partial(tf.keras.layers.BatchNormalization, fused=False)),
-        ("Fused", [[[[0.1, 2.]]], [[[0.2, -3.]]], [[[-0.3, 4.]]]],
-         functools.partial(tf.keras.layers.BatchNormalization, fused=True))
-    ])
+    @parameterized.named_parameters(
+        [
+            (
+                "NonFused",
+                [[0.1], [0.2], [-0.3]],
+                functools.partial(tf.keras.layers.BatchNormalization, fused=False),
+            ),
+            (
+                "Fused",
+                [[[[0.1, 2.0]]], [[[0.2, -3.0]]], [[[-0.3, 4.0]]]],
+                functools.partial(tf.keras.layers.BatchNormalization, fused=True),
+            ),
+        ]
+    )
     def testBatchNormLayerParamGrads(self, value, op_fn):
         for training in [True, False]:
             layer = op_fn()
@@ -206,29 +240,29 @@ class ForwardpropTest(tf.test.TestCase, parameterized.TestCase):
                 input_value = tf.constant(value, dtype=tf.float32)
                 tape.watch(input_value)
                 output = layer(input_value, training=training)
-            jac_back = tape.jacobian(
-                output, [input_value] + layer.trainable_variables)
+            jac_back = tape.jacobian(output, [input_value] + layer.trainable_variables)
             jac_forward = _jacfwd(
-                lambda *args: layer(args[0],
-                                    training=training),  # pylint:disable=cell-var-from-loop
-                [input_value] + layer.trainable_variables)
+                lambda *args: layer(
+                    args[0], training=training
+                ),  # pylint:disable=cell-var-from-loop
+                [input_value] + layer.trainable_variables,
+            )
             for backward, forward in zip(jac_back, jac_forward):
                 forward = tf.reshape(forward, tf.shape(backward))
                 self.assertAllClose(backward, forward)
 
-    @parameterized.named_parameters([("Function", tf.function),
-                                     ("NoFunction", lambda f: f)])
+    @parameterized.named_parameters(
+        [("Function", tf.function), ("NoFunction", lambda f: f)]
+    )
     def testVariablesHVP(self, decorator):
 
         if tf.test.is_built_with_rocm():
             # TODO(rocm)
             # This test was recently added and has never passed on the
             # ROCm platform. Remove this skip once the test is passing again
-            self.skipTest(
-                "NoFunction decorator test fails on the ROCm platform")
+            self.skipTest("NoFunction decorator test fails on the ROCm platform")
 
         class _Model(tf.Module):
-
             def __init__(self):
                 self._first_dense = tf.keras.layers.Dense(18)
                 self._conv = tf.keras.layers.Conv2D(2, 2)
@@ -245,51 +279,55 @@ class ForwardpropTest(tf.test.TestCase, parameterized.TestCase):
         model = _Model()
 
         def _loss():
-            input_value = tf.constant([[-0.5, 1.], [0.5, -1.]])
-            target = tf.constant([[-1.], [2.]])
-            return tf.math.reduce_sum((model(input_value) - target)**2.)
+            input_value = tf.constant([[-0.5, 1.0], [0.5, -1.0]])
+            target = tf.constant([[-1.0], [2.0]])
+            return tf.math.reduce_sum((model(input_value) - target) ** 2.0)
 
         @decorator
         def _compute_hvps():
             with tf.GradientTape() as tape:
                 loss = _loss()
             vector = tape.gradient(loss, model.trainable_variables)
-            def variable_input_fn(unused_variables): return _loss()
-            forward_over_back_hvp, = _hvp(
-                variable_input_fn, [model.trainable_variables], [vector])
+
+            def variable_input_fn(unused_variables):
+                return _loss()
+
+            (forward_over_back_hvp,) = _hvp(
+                variable_input_fn, [model.trainable_variables], [vector]
+            )
             with tf.GradientTape(persistent=True) as tape:
                 tape.watch(model.trainable_variables)
                 loss = _loss()
                 first_grads = tape.gradient(loss, model.trainable_variables)
             back_over_back_hvp = tape.gradient(
-                first_grads, model.trainable_variables, output_gradients=vector)
+                first_grads, model.trainable_variables, output_gradients=vector
+            )
             return forward_over_back_hvp, back_over_back_hvp
+
         self.assertAllClose(*_compute_hvps(), rtol=1e-5, atol=1e-5)
 
 
 class HessianTests(tf.test.TestCase, parameterized.TestCase):
-
-    @parameterized.named_parameters(
-        [("PFor", True),
-         ("MapFn", False)])
+    @parameterized.named_parameters([("PFor", True), ("MapFn", False)])
     def testHessianOfVariables(self, use_pfor):
         model = tf.keras.layers.Dense(1)
         model.build([None, 2])
 
         def _loss(*unused_args):
-            input_value = tf.constant([[-0.5, 1.], [0.5, -1.]])
-            target = tf.constant([[-1.], [2.]])
-            return tf.math.reduce_sum((model(input_value) - target)**2.)
+            input_value = tf.constant([[-0.5, 1.0], [0.5, -1.0]])
+            target = tf.constant([[-1.0], [2.0]])
+            return tf.math.reduce_sum((model(input_value) - target) ** 2.0)
 
         kernel_hess, bias_hess = _forward_over_back_hessian(
-            _loss, [model.kernel, model.bias],
+            _loss,
+            [model.kernel, model.bias],
             use_pfor=use_pfor,
-            dtype=[tf.float32, tf.float32])
+            dtype=[tf.float32, tf.float32],
+        )
         # 3 total parameters, the whole hessian is the 3x3 concatenation
         self.assertEqual([3, 2, 1], kernel_hess.shape)
         self.assertEqual([3, 1], bias_hess.shape)
-        full_hessian = tf.concat([tf.reshape(kernel_hess, [3, 2]), bias_hess],
-                                 axis=1)
+        full_hessian = tf.concat([tf.reshape(kernel_hess, [3, 2]), bias_hess], axis=1)
         # The full Hessian should be symmetric.
         self.assertAllClose(full_hessian, tf.transpose(full_hessian))
 
