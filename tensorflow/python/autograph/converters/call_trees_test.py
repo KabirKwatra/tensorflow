@@ -40,8 +40,12 @@ class CallTreesTest(converter_testing.TestCase):
             return f(g() + 20) + 4000
 
         with self.converted(test_fn, (functions, call_trees), {}) as result:
-            self.assertEqual(result.test_fn(lambda x: x + 300, lambda: 1), 4321)
-            self.assertListEqual(self.dynamic_calls, [((), None), ((21,), None),])
+            self.assertEqual(result.test_fn(lambda x: x + 300, lambda: 1),
+                             4321)
+            self.assertListEqual(self.dynamic_calls, [
+                ((), None),
+                ((21, ), None),
+            ])
 
     def test_function_with_call_in_argument(self):
         def test_fn(f, g):
@@ -49,7 +53,10 @@ class CallTreesTest(converter_testing.TestCase):
 
         with self.converted(test_fn, (functions, call_trees), {}) as result:
             self.assertEqual(result.test_fn(lambda x: x + 20, lambda: 1), 321)
-            self.assertListEqual(self.dynamic_calls, [((), None), ((1,), None),])
+            self.assertListEqual(self.dynamic_calls, [
+                ((), None),
+                ((1, ), None),
+            ])
 
     def test_function_chaining(self):
         def get_one():
@@ -58,13 +65,15 @@ class CallTreesTest(converter_testing.TestCase):
         def test_fn():
             return get_one().__add__(20)
 
-        with self.converted(
-            test_fn, (functions, call_trees), {"get_one": get_one}, ()
-        ) as result:
+        with self.converted(test_fn, (functions, call_trees),
+                            {"get_one": get_one}, ()) as result:
 
             self.assertEqual(result.test_fn(), 21)
 
-            self.assertListEqual(self.dynamic_calls, [((), None), ((20,), None),])
+            self.assertListEqual(self.dynamic_calls, [
+                ((), None),
+                ((20, ), None),
+            ])
 
     def test_function_with_single_arg(self):
         def test_fn(f, a):
@@ -72,7 +81,7 @@ class CallTreesTest(converter_testing.TestCase):
 
         with self.converted(test_fn, (functions, call_trees), {}) as result:
             self.assertEqual(result.test_fn(lambda a: a, 1), 21)
-            self.assertListEqual(self.dynamic_calls, [((1,), None)])
+            self.assertListEqual(self.dynamic_calls, [((1, ), None)])
 
     def test_function_with_args_only(self):
         def test_fn(f, a, b):
@@ -88,7 +97,7 @@ class CallTreesTest(converter_testing.TestCase):
 
         with self.converted(test_fn, (functions, call_trees), {}) as result:
             self.assertEqual(result.test_fn(lambda a, c: a + c, 1, 20), 321)
-            self.assertListEqual(self.dynamic_calls, [((1,), {"c": 20})])
+            self.assertListEqual(self.dynamic_calls, [((1, ), {"c": 20})])
 
     def test_function_with_kwargs_starargs(self):
         def test_fn(f, a, *args, **kwargs):
@@ -96,12 +105,16 @@ class CallTreesTest(converter_testing.TestCase):
 
         with self.converted(test_fn, (functions, call_trees), {}) as result:
             self.assertEqual(
-                result.test_fn(
-                    lambda *args, **kwargs: 7, 1, *[2, 3], **{"b": 4, "c": 5}
-                ),
+                result.test_fn(lambda *args, **kwargs: 7, 1, *[2, 3], **{
+                    "b": 4,
+                    "c": 5
+                }),
                 12,
             )
-            self.assertListEqual(self.dynamic_calls, [((1, 2, 3), {"b": 4, "c": 5})])
+            self.assertListEqual(self.dynamic_calls, [((1, 2, 3), {
+                "b": 4,
+                "c": 5
+            })])
 
     def test_function_with_starargs_only(self):
         def f(*args):
@@ -111,7 +124,8 @@ class CallTreesTest(converter_testing.TestCase):
             args = [1, 20, 300]
             return f(*args) + 4000
 
-        with self.converted(test_fn, (functions, call_trees), {"f": f}) as result:
+        with self.converted(test_fn, (functions, call_trees),
+                            {"f": f}) as result:
             self.assertEqual(result.test_fn(), 4321)
             self.assertListEqual(self.dynamic_calls, [((1, 20, 300), None)])
 
@@ -137,9 +151,12 @@ class CallTreesTest(converter_testing.TestCase):
 
         with self.converted(test_fn, (functions, call_trees), {}) as result:
             self.assertEqual(
-                result.test_fn(lambda *args, **kwargs: 7, 1, 2, **{"c": 3}), 12
-            )
-            self.assertListEqual(self.dynamic_calls, [((1,), {"b": 2, "c": 3})])
+                result.test_fn(lambda *args, **kwargs: 7, 1, 2, **{"c": 3}),
+                12)
+            self.assertListEqual(self.dynamic_calls, [((1, ), {
+                "b": 2,
+                "c": 3
+            })])
 
     # TODO(b/142586827): Enable this test.
     #   def test_function_with_multiple_kwargs(self):
@@ -181,7 +198,8 @@ class CallTreesTest(converter_testing.TestCase):
         def test_fn():
             return pdb.set_trace()
 
-        with self.converted(test_fn, (functions, call_trees), {"pdb": pdb}) as result:
+        with self.converted(test_fn, (functions, call_trees),
+                            {"pdb": pdb}) as result:
             result.test_fn()
             self.assertListEqual(tracking_list, [1])
 
@@ -194,11 +212,10 @@ class CallTreesTest(converter_testing.TestCase):
                 return self.other_method(a) + 300
 
         tc = TestClass()
-        with self.converted(
-            TestClass.test_method, (functions, call_trees), {}
-        ) as result:
+        with self.converted(TestClass.test_method, (functions, call_trees),
+                            {}) as result:
             self.assertEqual(321, result.test_method(tc, 1))
-            self.assertListEqual(self.dynamic_calls, [((1,), None)])
+            self.assertListEqual(self.dynamic_calls, [((1, ), None)])
 
     def test_object_method(self):
         class TestClass(object):
@@ -209,9 +226,10 @@ class CallTreesTest(converter_testing.TestCase):
                 return self.other_method(a) + 300
 
         tc = TestClass()
-        with self.converted(tc.test_method, (functions, call_trees), {}) as result:
+        with self.converted(tc.test_method, (functions, call_trees),
+                            {}) as result:
             self.assertEqual(321, result.test_method(tc, 1))
-            self.assertListEqual(self.dynamic_calls, [((1,), None)])
+            self.assertListEqual(self.dynamic_calls, [((1, ), None)])
 
 
 if __name__ == "__main__":
