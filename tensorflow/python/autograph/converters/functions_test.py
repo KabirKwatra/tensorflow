@@ -29,10 +29,8 @@ from tensorflow.python.platform import test
 
 
 class FunctionTransformer(converter_testing.TestCase):
-
     @test_util.run_deprecated_v1
     def test_basic(self):
-
         def test_fn(l):
             """Docstring."""
             a = 1
@@ -41,8 +39,8 @@ class FunctionTransformer(converter_testing.TestCase):
 
         with self.converted(test_fn, functions, {}) as result:
             result_op = result.test_fn(constant_op.constant(1))
-            self.assertIn('test_fn/', result_op.op.name)
-            self.assertEqual('Docstring.', result.test_fn.__doc__)
+            self.assertIn("test_fn/", result_op.op.name)
+            self.assertEqual("Docstring.", result.test_fn.__doc__)
 
     @test_util.run_deprecated_v1
     def test_multiline_docstring(self):
@@ -56,78 +54,70 @@ class FunctionTransformer(converter_testing.TestCase):
             """
             return tf.constant(1)
 
-        with self.converted(test_fn, functions, {},
-                            (constant_op.constant,)) as result:
+        with self.converted(test_fn, functions, {}, (constant_op.constant,)) as result:
             result_op = result.test_fn()
-            self.assertIn('test_fn/', result_op.op.name)
-            self.assertIn('First sentence.', result.test_fn.__doc__)
-            self.assertIn('Second sentence.', result.test_fn.__doc__)
+            self.assertIn("test_fn/", result_op.op.name)
+            self.assertIn("First sentence.", result.test_fn.__doc__)
+            self.assertIn("Second sentence.", result.test_fn.__doc__)
 
     @test_util.run_deprecated_v1
     def test_nested_functions(self):
-
         def test_fn(l):
-
             def inner_fn(i):
                 return i + 1
 
             l += 1
             return l, inner_fn(l)
 
-        with self.converted(test_fn, functions, {},
-                            (ops.name_scope,)) as result:
+        with self.converted(test_fn, functions, {}, (ops.name_scope,)) as result:
             first, second = result.test_fn(constant_op.constant(1))
-            self.assertIn('test_fn/', first.op.name)
-            self.assertNotIn('inner_fn', first.op.name)
-            self.assertIn('test_fn/inner_fn/', second.op.inputs[0].name)
+            self.assertIn("test_fn/", first.op.name)
+            self.assertNotIn("inner_fn", first.op.name)
+            self.assertIn("test_fn/inner_fn/", second.op.inputs[0].name)
 
     @test_util.run_deprecated_v1
     def test_conversion_context_preserves_in_inner_functions(self):
-
         def inner_fn_callee():
-            self.assertEqual(
-                ag_ctx.control_status_ctx().status, ag_ctx.Status.DISABLED)
+            self.assertEqual(ag_ctx.control_status_ctx().status, ag_ctx.Status.DISABLED)
 
         def test_fn():
             def inner_fn():
                 inner_fn_callee()
+
             with ag_ctx.ControlStatusCtx(
-                    ag_ctx.Status.DISABLED, converter.ConversionOptions(recursive=True)):
+                ag_ctx.Status.DISABLED, converter.ConversionOptions(recursive=True)
+            ):
                 inner_fn()
 
         ns = {
-            'inner_fn_callee': inner_fn_callee,
-            'ag_ctx': ag_ctx,
-            'converter': converter
+            "inner_fn_callee": inner_fn_callee,
+            "ag_ctx": ag_ctx,
+            "converter": converter,
         }
         with self.converted(test_fn, functions, ns) as result:
             result.test_fn()
 
     @test_util.run_deprecated_v1
     def test_method(self):
-
         class TestClass(object):
-
             def test_fn(self, l):
-
                 def inner_fn(i):
                     return i + 1
 
                 l += 1
                 return l, inner_fn(l)
 
-        ns = {'TestClass': TestClass}
+        ns = {"TestClass": TestClass}
         node, ctx = self.prepare(TestClass, ns)
         node = functions.transform(node, ctx)
 
         with self.compiled(node, {}, (ops.name_scope,)) as result:
             first, second = result.TestClass().test_fn(constant_op.constant(1))
-            self.assertIn('test_fn/', first.op.name)
-            self.assertNotIn('inner_fn', first.op.name)
-            self.assertIn('test_fn/inner_fn/', second.op.inputs[0].name)
+            self.assertIn("test_fn/", first.op.name)
+            self.assertNotIn("inner_fn", first.op.name)
+            self.assertIn("test_fn/inner_fn/", second.op.inputs[0].name)
 
     def test_lambda_in_return_value(self):
-
         def test_fn():
             return lambda x: x + 1
 
@@ -136,5 +126,5 @@ class FunctionTransformer(converter_testing.TestCase):
             self.assertTrue(result_l.fake_autograph_artifact)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
