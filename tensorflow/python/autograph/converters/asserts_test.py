@@ -29,19 +29,19 @@ from tensorflow.python.platform import test
 
 class AssertsTest(converter_testing.TestCase):
 
-  def test_basic(self):
+    def test_basic(self):
 
-    def test_fn(a):
-      assert a, 'testmsg'
-      return a
+        def test_fn(a):
+            assert a, 'testmsg'
+            return a
 
-    with ops.Graph().as_default():
-      with self.converted(test_fn, (functions, asserts), {}) as result:
-        op = result.test_fn(constant_op.constant(False))
+        with ops.Graph().as_default():
+            with self.converted(test_fn, (functions, asserts), {}) as result:
+                op = result.test_fn(constant_op.constant(False))
 
-      with self.assertRaisesRegexp(errors_impl.InvalidArgumentError, 'testmsg'):
-        self.evaluate(op)
+            with self.assertRaisesRegexp(errors_impl.InvalidArgumentError, 'testmsg'):
+                self.evaluate(op)
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()
