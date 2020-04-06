@@ -14,7 +14,6 @@
 # limitations under the License.
 # ==============================================================================
 """TensorFlow Lite tooling helper functionality."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,12 +21,12 @@ from __future__ import print_function
 import enum
 import warnings
 
-from absl import logging
 import six
-from six import PY2
-
+from absl import logging
 from google.protobuf import text_format as _text_format
 from google.protobuf.message import DecodeError
+from six import PY2
+
 from tensorflow.core.framework import graph_pb2 as _graph_pb2
 from tensorflow.lite.experimental.examples.lstm.rnn import (
     dynamic_rnn,
