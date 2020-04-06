@@ -53,21 +53,29 @@ def make_gather_nd_tests(options):
         params = tf.compat.v1.placeholder(
             dtype=parameters["params_dtype"],
             name="params",
-            shape=parameters["params_shape"])
+            shape=parameters["params_shape"],
+        )
         indices = tf.compat.v1.placeholder(
             dtype=parameters["indices_dtype"],
             name="indices",
-            shape=parameters["indices_shape"])
+            shape=parameters["indices_shape"],
+        )
         out = tf.gather_nd(params, indices)
         return [params, indices], [out]
 
     def build_inputs(parameters, sess, inputs, outputs):
-        params = create_tensor_data(parameters["params_dtype"],
-                                    parameters["params_shape"])
-        indices = create_tensor_data(parameters["indices_dtype"],
-                                     parameters["indices_shape"], 0,
-                                     parameters["params_shape"][0] - 1)
-        return [params, indices], sess.run(
-            outputs, feed_dict=dict(zip(inputs, [params, indices])))
+        params = create_tensor_data(
+            parameters["params_dtype"], parameters["params_shape"]
+        )
+        indices = create_tensor_data(
+            parameters["indices_dtype"],
+            parameters["indices_shape"],
+            0,
+            parameters["params_shape"][0] - 1,
+        )
+        return (
+            [params, indices],
+            sess.run(outputs, feed_dict=dict(zip(inputs, [params, indices]))),
+        )
 
     make_zip_of_tests(options, test_parameters, build_graph, build_inputs)
