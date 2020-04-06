@@ -21,24 +21,24 @@ namespace tensorflow {
 namespace {
 
 class QROp : public XlaOpKernel {
- public:
-  explicit QROp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("full_matrices", &full_matrices_));
-  }
-  void Compile(XlaOpKernelContext* ctx) override {
-    auto result = xla::QRDecomposition(ctx->Input(0), full_matrices_);
-    if (!result.ok()) {
-      ctx->SetStatus(result.status());
-      return;
+public:
+    explicit QROp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("full_matrices", &full_matrices_));
     }
-    ctx->SetOutput(0, result.ValueOrDie().q);
-    ctx->SetOutput(1, result.ValueOrDie().r);
-  }
+    void Compile(XlaOpKernelContext* ctx) override {
+        auto result = xla::QRDecomposition(ctx->Input(0), full_matrices_);
+        if (!result.ok()) {
+            ctx->SetStatus(result.status());
+            return;
+        }
+        ctx->SetOutput(0, result.ValueOrDie().q);
+        ctx->SetOutput(1, result.ValueOrDie().r);
+    }
 
- private:
-  // If true, compute full-sized q and r. If false, compute only the leading P
-  // columns of q.
-  bool full_matrices_;
+private:
+    // If true, compute full-sized q and r. If false, compute only the leading P
+    // columns of q.
+    bool full_matrices_;
 };
 
 REGISTER_XLA_OP(Name("Qr").TypeConstraint("T", kFloatTypes), QROp);

@@ -28,41 +28,41 @@ namespace {
 // This TensorFlow op indicates that its input should be treated as a
 // specific return value from a function.
 class RetvalOp : public XlaOpKernel {
- public:
-  explicit RetvalOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("T", &dtype_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("index", &index_));
-  }
-
-  void Compile(XlaOpKernelContext* ctx) override {
-    const Tensor& input = ctx->op_kernel_context()->input(0);
-
-    // Types that cannot be copied using memcpy (like DT_VARIANT types that
-    // represent Tensor Lists) are wrapped in a DT_UINT8 and hence the type
-    // mismatches. Skip the test in such cases. See
-    // XlaOpKernelContext::SetOutputExpression for details.
-    if (DataTypeCanUseMemcpy(dtype_)) {
-      OP_REQUIRES(ctx, input.dtype() == dtype_,
-                  errors::InvalidArgument(
-                      "Type mismatch: actual ", DataTypeString(input.dtype()),
-                      " vs. expect ", DataTypeString(dtype_)));
+public:
+    explicit RetvalOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("T", &dtype_));
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("index", &index_));
     }
-    auto frame = ctx->call_frame();
-    if (frame) {
-      // If 'frame' is non-null, this is an inner function call inside a JIT
-      // compilation.
-      OP_REQUIRES_OK(ctx, frame->SetRetval(index_, input));
-    } else {
-      ctx->xla_context()->SetRetval(index_, ctx->InputExpression(0));
+
+    void Compile(XlaOpKernelContext* ctx) override {
+        const Tensor& input = ctx->op_kernel_context()->input(0);
+
+        // Types that cannot be copied using memcpy (like DT_VARIANT types that
+        // represent Tensor Lists) are wrapped in a DT_UINT8 and hence the type
+        // mismatches. Skip the test in such cases. See
+        // XlaOpKernelContext::SetOutputExpression for details.
+        if (DataTypeCanUseMemcpy(dtype_)) {
+            OP_REQUIRES(ctx, input.dtype() == dtype_,
+                        errors::InvalidArgument(
+                            "Type mismatch: actual ", DataTypeString(input.dtype()),
+                            " vs. expect ", DataTypeString(dtype_)));
+        }
+        auto frame = ctx->call_frame();
+        if (frame) {
+            // If 'frame' is non-null, this is an inner function call inside a JIT
+            // compilation.
+            OP_REQUIRES_OK(ctx, frame->SetRetval(index_, input));
+        } else {
+            ctx->xla_context()->SetRetval(index_, ctx->InputExpression(0));
+        }
     }
-  }
 
- private:
-  // The index of this return value in the returned tuple.
-  int index_;
-  DataType dtype_;
+private:
+    // The index of this return value in the returned tuple.
+    int index_;
+    DataType dtype_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(RetvalOp);
+    TF_DISALLOW_COPY_AND_ASSIGN(RetvalOp);
 };
 
 REGISTER_XLA_OP(

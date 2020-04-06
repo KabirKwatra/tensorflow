@@ -23,72 +23,72 @@ namespace tensorflow {
 namespace {
 
 class XlaSvdOp : public XlaOpKernel {
- public:
-  explicit XlaSvdOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("max_iter", &max_iter_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("epsilon", &epsilon_));
-    string precision_config_attr;
-    OP_REQUIRES_OK(ctx,
-                   ctx->GetAttr("precision_config", &precision_config_attr));
-    OP_REQUIRES(ctx,
-                precision_config_.ParsePartialFromString(precision_config_attr),
-                errors::InvalidArgument("Error parsing precision config."));
-    if (precision_config_.operand_precision_size() == 0) {
-      precision_config_.mutable_operand_precision()->Add(
-          xla::PrecisionConfig::HIGHEST);
+public:
+    explicit XlaSvdOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("max_iter", &max_iter_));
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("epsilon", &epsilon_));
+        string precision_config_attr;
+        OP_REQUIRES_OK(ctx,
+                       ctx->GetAttr("precision_config", &precision_config_attr));
+        OP_REQUIRES(ctx,
+                    precision_config_.ParsePartialFromString(precision_config_attr),
+                    errors::InvalidArgument("Error parsing precision config."));
+        if (precision_config_.operand_precision_size() == 0) {
+            precision_config_.mutable_operand_precision()->Add(
+                xla::PrecisionConfig::HIGHEST);
+        }
     }
-  }
-  void Compile(XlaOpKernelContext* ctx) override {
-    auto result = xla::SVD(ctx->Input(0), max_iter_, epsilon_,
-                           precision_config_.operand_precision(0));
-    ctx->SetOutput(0, result.d);
-    ctx->SetOutput(1, result.u);
-    ctx->SetOutput(2, result.v);
-  }
+    void Compile(XlaOpKernelContext* ctx) override {
+        auto result = xla::SVD(ctx->Input(0), max_iter_, epsilon_,
+                               precision_config_.operand_precision(0));
+        ctx->SetOutput(0, result.d);
+        ctx->SetOutput(1, result.u);
+        ctx->SetOutput(2, result.v);
+    }
 
- private:
-  int32 max_iter_;
-  float epsilon_;
-  xla::PrecisionConfig precision_config_;
+private:
+    int32 max_iter_;
+    float epsilon_;
+    xla::PrecisionConfig precision_config_;
 };
 
 class SvdOp : public XlaOpKernel {
- public:
-  explicit SvdOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("compute_uv", &compute_uv_));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("full_matrices", &full_matrices_));
-  }
-  void Compile(XlaOpKernelContext* ctx) override {
-    const TensorShape input_shape = ctx->InputShape("input");
-    int m = input_shape.dim_size(input_shape.dims() - 2);
-    int n = input_shape.dim_size(input_shape.dims() - 1);
-    // This is based on heuristics that approx log(n) sweep updates are needed.
-    // Note: the heuristics provides no theoretical guarantee, max_iter=100 and
-    // epsilon should be used to determine exit condition.
-    int max_iter = 2 * tensorflow::Log2Ceiling(std::max(m, n));
-    auto result = xla::SVD(ctx->Input(0), max_iter, 1e-6);
-    ctx->SetOutput(0, result.d);
-    if (compute_uv_) {
-      int p = std::min(m, n);
-      if (!full_matrices_) {
-        if (p < m) {
-          result.u = xla::SliceInMinorDims(result.u, {0, 0}, {m, p});
-        }
-        if (p < n) {
-          result.v = xla::SliceInMinorDims(result.v, {0, 0}, {n, p});
-        }
-      }
-      ctx->SetOutput(1, result.u);
-      ctx->SetOutput(2, result.v);
-    } else {
-      ctx->SetOutput(1, xla::ScalarLike(ctx->Input(0), 0.0));
-      ctx->SetOutput(2, xla::ScalarLike(ctx->Input(0), 0.0));
+public:
+    explicit SvdOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("compute_uv", &compute_uv_));
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("full_matrices", &full_matrices_));
     }
-  }
+    void Compile(XlaOpKernelContext* ctx) override {
+        const TensorShape input_shape = ctx->InputShape("input");
+        int m = input_shape.dim_size(input_shape.dims() - 2);
+        int n = input_shape.dim_size(input_shape.dims() - 1);
+        // This is based on heuristics that approx log(n) sweep updates are needed.
+        // Note: the heuristics provides no theoretical guarantee, max_iter=100 and
+        // epsilon should be used to determine exit condition.
+        int max_iter = 2 * tensorflow::Log2Ceiling(std::max(m, n));
+        auto result = xla::SVD(ctx->Input(0), max_iter, 1e-6);
+        ctx->SetOutput(0, result.d);
+        if (compute_uv_) {
+            int p = std::min(m, n);
+            if (!full_matrices_) {
+                if (p < m) {
+                    result.u = xla::SliceInMinorDims(result.u, {0, 0}, {m, p});
+                }
+                if (p < n) {
+                    result.v = xla::SliceInMinorDims(result.v, {0, 0}, {n, p});
+                }
+            }
+            ctx->SetOutput(1, result.u);
+            ctx->SetOutput(2, result.v);
+        } else {
+            ctx->SetOutput(1, xla::ScalarLike(ctx->Input(0), 0.0));
+            ctx->SetOutput(2, xla::ScalarLike(ctx->Input(0), 0.0));
+        }
+    }
 
- private:
-  bool compute_uv_;
-  bool full_matrices_;
+private:
+    bool compute_uv_;
+    bool full_matrices_;
 };
 
 REGISTER_XLA_OP(Name("XlaSvd").TypeConstraint("T", kFloatTypes), XlaSvdOp);

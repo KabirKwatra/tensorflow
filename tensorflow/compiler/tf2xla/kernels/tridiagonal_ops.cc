@@ -25,27 +25,27 @@ namespace tensorflow {
 namespace {
 
 class TridiagonalSolveOp : public XlaOpKernel {
- public:
-  explicit TridiagonalSolveOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-  void Compile(XlaOpKernelContext* ctx) override {
-    auto diagonals = ctx->Input(0);
-    auto rhs = ctx->Input(1);
-    bool partial_pivoting = false;
-    OP_REQUIRES_OK(ctx,
-                   GetNodeAttr(def(), "partial_pivoting", &partial_pivoting));
-    if (partial_pivoting) {
-      ctx->SetStatus(errors::Unimplemented(
-          "Current implementation does not yet support pivoting."));
-      return;
-    }
+public:
+    explicit TridiagonalSolveOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+    void Compile(XlaOpKernelContext* ctx) override {
+        auto diagonals = ctx->Input(0);
+        auto rhs = ctx->Input(1);
+        bool partial_pivoting = false;
+        OP_REQUIRES_OK(ctx,
+                       GetNodeAttr(def(), "partial_pivoting", &partial_pivoting));
+        if (partial_pivoting) {
+            ctx->SetStatus(errors::Unimplemented(
+                               "Current implementation does not yet support pivoting."));
+            return;
+        }
 
-    auto result = xla::tridiagonal::ThomasSolver(diagonals, rhs);
-    if (!result.ok()) {
-      ctx->SetStatus(result.status());
-      return;
+        auto result = xla::tridiagonal::ThomasSolver(diagonals, rhs);
+        if (!result.ok()) {
+            ctx->SetStatus(result.status());
+            return;
+        }
+        ctx->SetOutput(0, result.ValueOrDie());
     }
-    ctx->SetOutput(0, result.ValueOrDie());
-  }
 };
 
 REGISTER_XLA_OP(Name("TridiagonalSolve").TypeConstraint("T", kFloatTypes),

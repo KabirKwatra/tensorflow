@@ -37,24 +37,24 @@ namespace gpu {
 // WhileThunk synchronizes the stream to test the result of the 'condition'
 // computation.
 class WhileThunk : public Thunk {
- public:
-  // Constructs a WhileThunk to compute while instruction 'hlo'.
-  WhileThunk(const BufferAllocation::Slice& condition_result_buffer_index,
-             std::unique_ptr<ThunkSequence> condition_thunk_sequence,
-             std::unique_ptr<ThunkSequence> body_thunk_sequence,
-             const HloInstruction* hlo);
-  WhileThunk(const WhileThunk&) = delete;
-  WhileThunk& operator=(const WhileThunk&) = delete;
+public:
+    // Constructs a WhileThunk to compute while instruction 'hlo'.
+    WhileThunk(const BufferAllocation::Slice& condition_result_buffer_index,
+               std::unique_ptr<ThunkSequence> condition_thunk_sequence,
+               std::unique_ptr<ThunkSequence> body_thunk_sequence,
+               const HloInstruction* hlo);
+    WhileThunk(const WhileThunk&) = delete;
+    WhileThunk& operator=(const WhileThunk&) = delete;
 
-  void ComputeAnnotations() override;
-  Status Initialize(const GpuExecutable& executable,
-                    se::StreamExecutor* executor) override;
-  Status ExecuteOnStream(const ExecuteParams& params) override;
+    void ComputeAnnotations() override;
+    Status Initialize(const GpuExecutable& executable,
+                      se::StreamExecutor* executor) override;
+    Status ExecuteOnStream(const ExecuteParams& params) override;
 
- private:
-  const BufferAllocation::Slice condition_result_buffer_index_;
-  std::unique_ptr<SequentialThunk> condition_thunk_sequence_;
-  std::unique_ptr<SequentialThunk> body_thunk_sequence_;
+private:
+    const BufferAllocation::Slice condition_result_buffer_index_;
+    std::unique_ptr<SequentialThunk> condition_thunk_sequence_;
+    std::unique_ptr<SequentialThunk> body_thunk_sequence_;
 };
 
 }  // namespace gpu

@@ -42,17 +42,17 @@ absl::Span<const DataType> GetXlaConvTypes();
 // ConvOpAttrs contains all of the metadata necessary to specify a TF or XLA
 // convolution.
 struct ConvOpAttrs {
-  // Constructs a ConvOpAttrs, reading most of the attributes from `ctx`.
-  static xla::StatusOr<ConvOpAttrs> Create(int num_spatial_dims, bool depthwise,
-                                           OpKernelConstruction* ctx);
+    // Constructs a ConvOpAttrs, reading most of the attributes from `ctx`.
+    static xla::StatusOr<ConvOpAttrs> Create(int num_spatial_dims, bool depthwise,
+            OpKernelConstruction* ctx);
 
-  bool depthwise;
-  int num_spatial_dims;
-  std::vector<int32> dilations;
-  std::vector<int32> strides;
-  Padding padding;
-  std::vector<int64> explicit_paddings;
-  TensorFormat data_format;
+    bool depthwise;
+    int num_spatial_dims;
+    std::vector<int32> dilations;
+    std::vector<int32> strides;
+    Padding padding;
+    std::vector<int64> explicit_paddings;
+    TensorFormat data_format;
 };
 
 // Creates a new XLA forward or backward convolution with the given inputs and

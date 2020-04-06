@@ -26,79 +26,81 @@ namespace tensorflow {
 namespace {
 
 class XlaPadOp : public XlaOpKernel {
- public:
-  explicit XlaPadOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
+public:
+    explicit XlaPadOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
 
-  void Compile(XlaOpKernelContext* context) override {
-    const TensorShape input_shape = context->InputShape("input");
-    const TensorShape padding_value_shape =
-        context->InputShape("padding_value");
+    void Compile(XlaOpKernelContext* context) override {
+        const TensorShape input_shape = context->InputShape("input");
+        const TensorShape padding_value_shape =
+            context->InputShape("padding_value");
 
-    std::vector<int64> padding_low;
-    std::vector<int64> padding_high;
-    std::vector<int64> padding_interior;
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("padding_low",
-                                                              &padding_low));
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("padding_high",
-                                                              &padding_high));
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntVector(
-                                "padding_interior", &padding_interior));
+        std::vector<int64> padding_low;
+        std::vector<int64> padding_high;
+        std::vector<int64> padding_interior;
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("padding_low",
+                       &padding_low));
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("padding_high",
+                       &padding_high));
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntVector(
+                           "padding_interior", &padding_interior));
 
-    OP_REQUIRES(context, TensorShapeUtils::IsScalar(padding_value_shape),
-                errors::InvalidArgument("padding_value must be a scalar"));
-    const int rank = input_shape.dims();
-    OP_REQUIRES(context, rank == padding_low.size(),
-                errors::InvalidArgument(
-                    "The size of padding_low must be equal to the input "
-                    "rank (",
-                    padding_low.size(), " vs. ", rank, ")"));
-    OP_REQUIRES(context, rank == padding_high.size(),
-                errors::InvalidArgument(
-                    "The size of padding_high must be equal to the input "
-                    "rank (",
-                    padding_high.size(), " vs. ", rank, ")"));
-    OP_REQUIRES(context, rank == padding_interior.size(),
-                errors::InvalidArgument(
-                    "The size of padding_interior must be equal to the input "
-                    "rank (",
-                    padding_interior.size(), " vs. ", rank, ")"));
+        OP_REQUIRES(context, TensorShapeUtils::IsScalar(padding_value_shape),
+                    errors::InvalidArgument("padding_value must be a scalar"));
+        const int rank = input_shape.dims();
+        OP_REQUIRES(context, rank == padding_low.size(),
+                    errors::InvalidArgument(
+                        "The size of padding_low must be equal to the input "
+                        "rank (",
+                        padding_low.size(), " vs. ", rank, ")"));
+        OP_REQUIRES(context, rank == padding_high.size(),
+                    errors::InvalidArgument(
+                        "The size of padding_high must be equal to the input "
+                        "rank (",
+                        padding_high.size(), " vs. ", rank, ")"));
+        OP_REQUIRES(context, rank == padding_interior.size(),
+                    errors::InvalidArgument(
+                        "The size of padding_interior must be equal to the input "
+                        "rank (",
+                        padding_interior.size(), " vs. ", rank, ")"));
 
-    auto non_negative = [](int64 x) { return x >= 0; };
-    OP_REQUIRES(
-        context, absl::c_all_of(padding_low, non_negative),
-        errors::InvalidArgument("padding_low must be non-negative, got [",
-                                absl::StrJoin(padding_low, ","), "]"));
-    OP_REQUIRES(
-        context, absl::c_all_of(padding_high, non_negative),
-        errors::InvalidArgument("padding_high must be non-negative, got [",
-                                absl::StrJoin(padding_high, ","), "]"));
-    OP_REQUIRES(
-        context, absl::c_all_of(padding_interior, non_negative),
-        errors::InvalidArgument("padding_interior must be non-negative, got [",
-                                absl::StrJoin(padding_interior, ","), "]"));
+        auto non_negative = [](int64 x) {
+            return x >= 0;
+        };
+        OP_REQUIRES(
+            context, absl::c_all_of(padding_low, non_negative),
+            errors::InvalidArgument("padding_low must be non-negative, got [",
+                                    absl::StrJoin(padding_low, ","), "]"));
+        OP_REQUIRES(
+            context, absl::c_all_of(padding_high, non_negative),
+            errors::InvalidArgument("padding_high must be non-negative, got [",
+                                    absl::StrJoin(padding_high, ","), "]"));
+        OP_REQUIRES(
+            context, absl::c_all_of(padding_interior, non_negative),
+            errors::InvalidArgument("padding_interior must be non-negative, got [",
+                                    absl::StrJoin(padding_interior, ","), "]"));
 
-    xla::PaddingConfig padding_config;
-    for (int i = 0; i < rank; ++i) {
-      auto* dim = padding_config.add_dimensions();
-      dim->set_edge_padding_low(padding_low[i]);
-      dim->set_edge_padding_high(padding_high[i]);
-      dim->set_interior_padding(padding_interior[i]);
+        xla::PaddingConfig padding_config;
+        for (int i = 0; i < rank; ++i) {
+            auto* dim = padding_config.add_dimensions();
+            dim->set_edge_padding_low(padding_low[i]);
+            dim->set_edge_padding_high(padding_high[i]);
+            dim->set_interior_padding(padding_interior[i]);
+        }
+
+        xla::XlaOp output =
+            xla::Pad(context->Input("input"), context->Input("padding_value"),
+                     padding_config);
+        context->SetOutput(0, output);
     }
 
-    xla::XlaOp output =
-        xla::Pad(context->Input("input"), context->Input("padding_value"),
-                 padding_config);
-    context->SetOutput(0, output);
-  }
-
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(XlaPadOp);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(XlaPadOp);
 };
 
 REGISTER_XLA_OP(Name("XlaPad")
-                    .CompileTimeConstantInput("padding_low")
-                    .CompileTimeConstantInput("padding_high")
-                    .CompileTimeConstantInput("padding_interior"),
+                .CompileTimeConstantInput("padding_low")
+                .CompileTimeConstantInput("padding_high")
+                .CompileTimeConstantInput("padding_interior"),
                 XlaPadOp);
 
 }  // namespace

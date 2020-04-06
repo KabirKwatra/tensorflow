@@ -41,26 +41,26 @@ namespace gpu {
 // buffers of the false operand and that of the parameter instruction of the
 // false computation share the same allocation.
 class ConditionalThunk : public Thunk {
- public:
-  ConditionalThunk(
-      const BufferAllocation::Slice& branch_index_buffer_index,
-      absl::Span<const BufferAllocation::Slice> branch_operand_buffer_indexes,
-      std::vector<ThunkSequence> branch_thunk_sequences,
-      const HloInstruction* hlo);
+public:
+    ConditionalThunk(
+        const BufferAllocation::Slice& branch_index_buffer_index,
+        absl::Span<const BufferAllocation::Slice> branch_operand_buffer_indexes,
+        std::vector<ThunkSequence> branch_thunk_sequences,
+        const HloInstruction* hlo);
 
-  ConditionalThunk(const ConditionalThunk&) = delete;
-  ConditionalThunk& operator=(const ConditionalThunk&) = delete;
+    ConditionalThunk(const ConditionalThunk&) = delete;
+    ConditionalThunk& operator=(const ConditionalThunk&) = delete;
 
-  void ComputeAnnotations() override;
-  Status Initialize(const GpuExecutable& executable,
-                    se::StreamExecutor* executor) override;
-  Status ExecuteOnStream(const ExecuteParams& params) override;
+    void ComputeAnnotations() override;
+    Status Initialize(const GpuExecutable& executable,
+                      se::StreamExecutor* executor) override;
+    Status ExecuteOnStream(const ExecuteParams& params) override;
 
- private:
-  const bool branch_index_is_bool_;
-  BufferAllocation::Slice branch_index_buffer_index_;
-  std::vector<BufferAllocation::Slice> branch_operand_buffer_indexes_;
-  std::vector<std::unique_ptr<SequentialThunk>> branch_thunks_;
+private:
+    const bool branch_index_is_bool_;
+    BufferAllocation::Slice branch_index_buffer_index_;
+    std::vector<BufferAllocation::Slice> branch_operand_buffer_indexes_;
+    std::vector<std::unique_ptr<SequentialThunk>> branch_thunks_;
 };
 
 }  // namespace gpu

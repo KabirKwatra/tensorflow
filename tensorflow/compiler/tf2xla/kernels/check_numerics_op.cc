@@ -22,26 +22,26 @@ namespace tensorflow {
 namespace {
 
 class CheckNumericsOp : public XlaOpKernel {
- public:
-  explicit CheckNumericsOp(OpKernelConstruction* context)
-      : XlaOpKernel(context) {}
+public:
+    explicit CheckNumericsOp(OpKernelConstruction* context)
+        : XlaOpKernel(context) {}
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    // TODO(b/32223192): add a real implementation of CheckNumerics
-    {
-      static mutex mu(tensorflow::LINKER_INITIALIZED);
-      static int log_counter = 0;
-      mutex_lock l(mu);
-      if (log_counter < 20) {
-        ++log_counter;
-        LOG(WARNING) << "Ignoring CheckNumerics operator " << name();
-      }
+    void Compile(XlaOpKernelContext* ctx) override {
+        // TODO(b/32223192): add a real implementation of CheckNumerics
+        {
+            static mutex mu(tensorflow::LINKER_INITIALIZED);
+            static int log_counter = 0;
+            mutex_lock l(mu);
+            if (log_counter < 20) {
+                ++log_counter;
+                LOG(WARNING) << "Ignoring CheckNumerics operator " << name();
+            }
+        }
+        ctx->SetOutput(0, ctx->Input(0));
     }
-    ctx->SetOutput(0, ctx->Input(0));
-  }
 
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(CheckNumericsOp);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(CheckNumericsOp);
 };
 
 REGISTER_XLA_OP(Name("CheckNumerics"), CheckNumericsOp);

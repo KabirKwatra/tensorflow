@@ -29,27 +29,27 @@ SequentialThunk::SequentialThunk(std::vector<std::unique_ptr<Thunk>> thunks,
     : Thunk(Kind::kSequential, hlo), thunks_(std::move(thunks)) {}
 
 void SequentialThunk::ComputeAnnotations() {
-  for (const auto& thunk : thunks_) {
-    thunk->ComputeAnnotations();
-  }
+    for (const auto& thunk : thunks_) {
+        thunk->ComputeAnnotations();
+    }
 }
 
 Status SequentialThunk::Initialize(const GpuExecutable& executable,
                                    se::StreamExecutor* executor) {
-  for (auto& thunk : thunks_) {
-    TF_RETURN_IF_ERROR(thunk->Initialize(executable, executor));
-  }
-  return Status::OK();
+    for (auto& thunk : thunks_) {
+        TF_RETURN_IF_ERROR(thunk->Initialize(executable, executor));
+    }
+    return Status::OK();
 }
 
 Status SequentialThunk::ExecuteOnStream(const ExecuteParams& params) {
-  auto op_profiler =
-      params.profiler->MakeScopedInstructionProfiler(hlo_instruction());
-  for (const auto& thunk : thunks_) {
-    ScopedAnnotation annotation([&] { return thunk->profile_annotation(); });
-    TF_RETURN_IF_ERROR(thunk->ExecuteOnStream(params));
-  }
-  return Status::OK();
+    auto op_profiler =
+        params.profiler->MakeScopedInstructionProfiler(hlo_instruction());
+    for (const auto& thunk : thunks_) {
+        ScopedAnnotation annotation([&] { return thunk->profile_annotation(); });
+        TF_RETURN_IF_ERROR(thunk->ExecuteOnStream(params));
+    }
+    return Status::OK();
 }
 
 }  // namespace gpu

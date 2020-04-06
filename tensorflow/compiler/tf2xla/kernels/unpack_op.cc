@@ -37,52 +37,52 @@ namespace tensorflow {
 namespace {
 
 class UnpackOp : public XlaOpKernel {
- public:
-  explicit UnpackOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("axis", &axis_));
-  }
-
-  void Compile(XlaOpKernelContext* ctx) override {
-    const int num = num_outputs();
-    const TensorShape input_shape = ctx->InputShape(0);
-
-    int axis = axis_;
-    if (axis < 0) axis += input_shape.dims();
-
-    OP_REQUIRES(ctx, 0 <= axis && axis < input_shape.dims(),
-                errors::InvalidArgument("axis = ", axis_, " not in [",
-                                        -input_shape.dims(), ", ",
-                                        input_shape.dims(), ")"));
-
-    OP_REQUIRES(
-        ctx, input_shape.dims() > 0 && input_shape.dim_size(axis) == num,
-        errors::InvalidArgument("Input shape axis ", axis, " must equal ", num,
-                                ", got shape ", input_shape.DebugString()));
-
-    auto output_shape = input_shape;
-    output_shape.RemoveDim(axis);
-
-    auto input = ctx->Input(0);
-
-    std::vector<int64> start_indices(input_shape.dims(), 0);
-    std::vector<int64> limit_indices(input_shape.dims());
-    std::vector<int64> strides(input_shape.dims(), 1);
-    for (int i = 0; i < input_shape.dims(); ++i) {
-      limit_indices[i] = input_shape.dim_size(i);
+public:
+    explicit UnpackOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("axis", &axis_));
     }
 
-    for (int i = 0; i < num; ++i) {
-      start_indices[axis] = i;
-      limit_indices[axis] = i + 1;
-      auto slice = xla::Slice(input, start_indices, limit_indices, strides);
-      // Reshape to drop the 'axis' dimension.
-      auto result = xla::Reshape(slice, output_shape.dim_sizes());
-      ctx->SetOutput(i, result);
-    }
-  }
+    void Compile(XlaOpKernelContext* ctx) override {
+        const int num = num_outputs();
+        const TensorShape input_shape = ctx->InputShape(0);
 
- private:
-  int axis_;
+        int axis = axis_;
+        if (axis < 0) axis += input_shape.dims();
+
+        OP_REQUIRES(ctx, 0 <= axis && axis < input_shape.dims(),
+                    errors::InvalidArgument("axis = ", axis_, " not in [",
+                                            -input_shape.dims(), ", ",
+                                            input_shape.dims(), ")"));
+
+        OP_REQUIRES(
+            ctx, input_shape.dims() > 0 && input_shape.dim_size(axis) == num,
+            errors::InvalidArgument("Input shape axis ", axis, " must equal ", num,
+                                    ", got shape ", input_shape.DebugString()));
+
+        auto output_shape = input_shape;
+        output_shape.RemoveDim(axis);
+
+        auto input = ctx->Input(0);
+
+        std::vector<int64> start_indices(input_shape.dims(), 0);
+        std::vector<int64> limit_indices(input_shape.dims());
+        std::vector<int64> strides(input_shape.dims(), 1);
+        for (int i = 0; i < input_shape.dims(); ++i) {
+            limit_indices[i] = input_shape.dim_size(i);
+        }
+
+        for (int i = 0; i < num; ++i) {
+            start_indices[axis] = i;
+            limit_indices[axis] = i + 1;
+            auto slice = xla::Slice(input, start_indices, limit_indices, strides);
+            // Reshape to drop the 'axis' dimension.
+            auto result = xla::Reshape(slice, output_shape.dim_sizes());
+            ctx->SetOutput(i, result);
+        }
+    }
+
+private:
+    int axis_;
 };
 
 REGISTER_XLA_OP(Name("Unpack"), UnpackOp);

@@ -21,25 +21,25 @@ namespace tensorflow {
 namespace {
 
 class IdentityOp : public XlaOpKernel {
- public:
-  explicit IdentityOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
+public:
+    explicit IdentityOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    for (int i = 0; i < ctx->num_inputs(); ++i) {
-      if (IsTensorListInput(ctx, i)) {
-        ctx->SetTensorListOutput(i, ctx->Input(i));
-      } else {
-        DCHECK(ctx->input_type(i) != DT_VARIANT);
-        // Forwards using the underlying op_kernel_context so both tensor and
-        // resource values are forwarded correctly.
-        ctx->op_kernel_context()->set_output(
-            i, ctx->op_kernel_context()->input(i));
-      }
+    void Compile(XlaOpKernelContext* ctx) override {
+        for (int i = 0; i < ctx->num_inputs(); ++i) {
+            if (IsTensorListInput(ctx, i)) {
+                ctx->SetTensorListOutput(i, ctx->Input(i));
+            } else {
+                DCHECK(ctx->input_type(i) != DT_VARIANT);
+                // Forwards using the underlying op_kernel_context so both tensor and
+                // resource values are forwarded correctly.
+                ctx->op_kernel_context()->set_output(
+                    i, ctx->op_kernel_context()->input(i));
+            }
+        }
     }
-  }
 
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(IdentityOp);
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(IdentityOp);
 };
 
 // XLA_* devices also register a "real" Identity operator so we suppress the
@@ -48,9 +48,9 @@ REGISTER_XLA_OP(
     Name("Identity").AllowResourceTypes().AllowVariantTypes().CompilationOnly(),
     IdentityOp);
 REGISTER_XLA_OP(Name("IdentityN")
-                    .AllowResourceTypes()
-                    .AllowVariantTypes()
-                    .CompilationOnly(),
+                .AllowResourceTypes()
+                .AllowVariantTypes()
+                .CompilationOnly(),
                 IdentityOp);
 REGISTER_XLA_OP(Name("PlaceholderWithDefault"), IdentityOp);
 REGISTER_XLA_OP(Name("PreventGradient"), IdentityOp);

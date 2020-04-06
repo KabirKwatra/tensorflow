@@ -21,10 +21,12 @@ namespace tensorflow {
 namespace {
 
 class NoOp : public OpKernel {
- public:
-  explicit NoOp(OpKernelConstruction* context) : OpKernel(context) {}
-  void Compute(OpKernelContext* context) override {}
-  bool IsExpensive() override { return false; }
+public:
+    explicit NoOp(OpKernelConstruction* context) : OpKernel(context) {}
+    void Compute(OpKernelContext* context) override {}
+    bool IsExpensive() override {
+        return false;
+    }
 };
 
 }  // namespace

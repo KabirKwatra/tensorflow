@@ -25,36 +25,36 @@ namespace tensorflow {
 namespace {
 
 class TopKOp : public XlaOpKernel {
- public:
-  explicit TopKOp(OpKernelConstruction* context) : XlaOpKernel(context) {
-    OP_REQUIRES_OK(context, context->GetAttr("sorted", &sorted_));
-  }
-
-  void Compile(XlaOpKernelContext* context) override {
-    int64 k;
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntScalar(1, &k));
-    OP_REQUIRES(context, k >= 0,
-                errors::InvalidArgument("Need k >= 0, got ", k));
-    const TensorShape input_shape = context->InputShape(0);
-    OP_REQUIRES(context, input_shape.dims() >= 1,
-                errors::InvalidArgument("input must be >= 1-D, got shape ",
-                                        input_shape.DebugString()));
-    int last_dim = input_shape.dims() - 1;
-    int last_dim_size = input_shape.dim_size(last_dim);
-    OP_REQUIRES(
-        context, last_dim_size >= k,
-        errors::InvalidArgument("input must have at least k columns. Had ",
-                                last_dim_size, ", needed ", k));
-    if (last_dim_size < k) {
-      k = last_dim_size;
+public:
+    explicit TopKOp(OpKernelConstruction* context) : XlaOpKernel(context) {
+        OP_REQUIRES_OK(context, context->GetAttr("sorted", &sorted_));
     }
-    xla::XlaOp output_tuple = TopK(context->Input(0), k);
-    context->SetOutput(0, xla::GetTupleElement(output_tuple, 0));
-    context->SetOutput(1, xla::GetTupleElement(output_tuple, 1));
-  }
 
- private:
-  bool sorted_;
+    void Compile(XlaOpKernelContext* context) override {
+        int64 k;
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntScalar(1, &k));
+        OP_REQUIRES(context, k >= 0,
+                    errors::InvalidArgument("Need k >= 0, got ", k));
+        const TensorShape input_shape = context->InputShape(0);
+        OP_REQUIRES(context, input_shape.dims() >= 1,
+                    errors::InvalidArgument("input must be >= 1-D, got shape ",
+                                            input_shape.DebugString()));
+        int last_dim = input_shape.dims() - 1;
+        int last_dim_size = input_shape.dim_size(last_dim);
+        OP_REQUIRES(
+            context, last_dim_size >= k,
+            errors::InvalidArgument("input must have at least k columns. Had ",
+                                    last_dim_size, ", needed ", k));
+        if (last_dim_size < k) {
+            k = last_dim_size;
+        }
+        xla::XlaOp output_tuple = TopK(context->Input(0), k);
+        context->SetOutput(0, xla::GetTupleElement(output_tuple, 0));
+        context->SetOutput(1, xla::GetTupleElement(output_tuple, 1));
+    }
+
+private:
+    bool sorted_;
 };
 
 REGISTER_XLA_OP(Name("TopKV2").CompileTimeConstantInput("k").TypeConstraint(

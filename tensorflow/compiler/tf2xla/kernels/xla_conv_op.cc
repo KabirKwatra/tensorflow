@@ -25,75 +25,76 @@ namespace tensorflow {
 namespace {
 
 class XlaConvOp : public XlaOpKernel {
- public:
-  explicit XlaConvOp(OpKernelConstruction* context) : XlaOpKernel(context) {
-    string dnums_attr;
-    OP_REQUIRES_OK(context, context->GetAttr("dimension_numbers", &dnums_attr));
-    OP_REQUIRES(
-        context, dnums_.ParsePartialFromString(dnums_attr),
-        errors::InvalidArgument("Error parsing convolution dimension numbers"));
-    string precision_config_attr;
-    OP_REQUIRES_OK(
-        context, context->GetAttr("precision_config", &precision_config_attr));
-    OP_REQUIRES(context,
-                precision_config_.ParsePartialFromString(precision_config_attr),
-                errors::InvalidArgument("Error parsing precision config."));
-  }
-
-  void Compile(XlaOpKernelContext* context) override {
-    const TensorShape lhs_shape = context->InputShape(0);
-    const TensorShape rhs_shape = context->InputShape(1);
-    const TensorShape padding_shape = context->InputShape("padding");
-    std::vector<int64> window_strides;
-    std::vector<int64> lhs_dilation;
-    std::vector<int64> rhs_dilation;
-    int64 feature_group_count;
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("window_strides",
-                                                              &window_strides));
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("lhs_dilation",
-                                                              &lhs_dilation));
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("rhs_dilation",
-                                                              &rhs_dilation));
-    OP_REQUIRES_OK(context, context->ConstantInputAsIntScalar(
-                                "feature_group_count", &feature_group_count));
-
-    OP_REQUIRES(context,
-                TensorShapeUtils::IsMatrix(padding_shape) &&
-                    padding_shape.dim_size(1) == 2,
-                errors::InvalidArgument(
-                    "padding must be a matrix with minor dimension 2, got ",
-                    padding_shape.DebugString()));
-    xla::Literal padding_literal;
-    OP_REQUIRES_OK(context, context->ConstantInputAsInt64Literal(
-                                "padding", &padding_literal));
-    std::vector<std::pair<int64, int64>> padding(padding_shape.dim_size(0));
-    for (int i = 0; i < padding.size(); ++i) {
-      padding[i] = {padding_literal.Get<int64>({i, 0}),
-                    padding_literal.Get<int64>({i, 1})};
+public:
+    explicit XlaConvOp(OpKernelConstruction* context) : XlaOpKernel(context) {
+        string dnums_attr;
+        OP_REQUIRES_OK(context, context->GetAttr("dimension_numbers", &dnums_attr));
+        OP_REQUIRES(
+            context, dnums_.ParsePartialFromString(dnums_attr),
+            errors::InvalidArgument("Error parsing convolution dimension numbers"));
+        string precision_config_attr;
+        OP_REQUIRES_OK(
+            context, context->GetAttr("precision_config", &precision_config_attr));
+        OP_REQUIRES(context,
+                    precision_config_.ParsePartialFromString(precision_config_attr),
+                    errors::InvalidArgument("Error parsing precision config."));
     }
 
-    // We do only minimal checking, relying on XLA to check the shape
-    // invariants.
-    xla::XlaOp output = xla::ConvGeneralDilated(
-        context->Input(0), context->Input(1), window_strides, padding,
-        lhs_dilation, rhs_dilation, dnums_, feature_group_count,
-        /*batch_group_count=*/1, &precision_config_);
-    context->SetOutput(0, output);
-  }
+    void Compile(XlaOpKernelContext* context) override {
+        const TensorShape lhs_shape = context->InputShape(0);
+        const TensorShape rhs_shape = context->InputShape(1);
+        const TensorShape padding_shape = context->InputShape("padding");
+        std::vector<int64> window_strides;
+        std::vector<int64> lhs_dilation;
+        std::vector<int64> rhs_dilation;
+        int64 feature_group_count;
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("window_strides",
+                       &window_strides));
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("lhs_dilation",
+                       &lhs_dilation));
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntVector("rhs_dilation",
+                       &rhs_dilation));
+        OP_REQUIRES_OK(context, context->ConstantInputAsIntScalar(
+                           "feature_group_count", &feature_group_count));
 
- private:
-  xla::ConvolutionDimensionNumbers dnums_;
-  xla::PrecisionConfig precision_config_;
+        OP_REQUIRES(context,
+                    TensorShapeUtils::IsMatrix(padding_shape) &&
+                    padding_shape.dim_size(1) == 2,
+                    errors::InvalidArgument(
+                        "padding must be a matrix with minor dimension 2, got ",
+                        padding_shape.DebugString()));
+        xla::Literal padding_literal;
+        OP_REQUIRES_OK(context, context->ConstantInputAsInt64Literal(
+                           "padding", &padding_literal));
+        std::vector<std::pair<int64, int64>> padding(padding_shape.dim_size(0));
+        for (int i = 0; i < padding.size(); ++i) {
+            padding[i] = {padding_literal.Get<int64>({i, 0}),
+                          padding_literal.Get<int64>({i, 1})
+                         };
+        }
 
-  TF_DISALLOW_COPY_AND_ASSIGN(XlaConvOp);
+        // We do only minimal checking, relying on XLA to check the shape
+        // invariants.
+        xla::XlaOp output = xla::ConvGeneralDilated(
+                                context->Input(0), context->Input(1), window_strides, padding,
+                                lhs_dilation, rhs_dilation, dnums_, feature_group_count,
+                                /*batch_group_count=*/1, &precision_config_);
+        context->SetOutput(0, output);
+    }
+
+private:
+    xla::ConvolutionDimensionNumbers dnums_;
+    xla::PrecisionConfig precision_config_;
+
+    TF_DISALLOW_COPY_AND_ASSIGN(XlaConvOp);
 };
 
 REGISTER_XLA_OP(Name("XlaConv")
-                    .CompileTimeConstantInput("window_strides")
-                    .CompileTimeConstantInput("lhs_dilation")
-                    .CompileTimeConstantInput("rhs_dilation")
-                    .CompileTimeConstantInput("feature_group_count")
-                    .CompileTimeConstantInput("padding"),
+                .CompileTimeConstantInput("window_strides")
+                .CompileTimeConstantInput("lhs_dilation")
+                .CompileTimeConstantInput("rhs_dilation")
+                .CompileTimeConstantInput("feature_group_count")
+                .CompileTimeConstantInput("padding"),
                 XlaConvOp);
 
 }  // namespace

@@ -24,26 +24,26 @@ namespace tensorflow {
 namespace {
 
 class L2LossOp : public XlaOpKernel {
- public:
-  explicit L2LossOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+public:
+    explicit L2LossOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    std::vector<int64> dims(ctx->InputShape(0).dims());
-    std::iota(dims.begin(), dims.end(), 0);
+    void Compile(XlaOpKernelContext* ctx) override {
+        std::vector<int64> dims(ctx->InputShape(0).dims());
+        std::iota(dims.begin(), dims.end(), 0);
 
-    DataType dtype = ctx->input_type(0);
-    xla::XlaBuilder* const b = ctx->builder();
+        DataType dtype = ctx->input_type(0);
+        xla::XlaBuilder* const b = ctx->builder();
 
-    //  output = sum(t ** 2) / 2
-    const DataType accumulation_type = XlaHelpers::SumAccumulationType(dtype);
-    auto t = XlaHelpers::ConvertElementType(ctx->Input(0), accumulation_type);
-    auto square = xla::Mul(t, t);
-    auto reduce = xla::Reduce(square, XlaHelpers::Zero(b, accumulation_type),
-                              *ctx->GetOrCreateAdd(accumulation_type), dims);
-    auto deconverted = XlaHelpers::ConvertElementType(reduce, dtype);
-    auto two = XlaHelpers::IntegerLiteral(b, dtype, 2);
-    ctx->SetOutput(0, xla::Div(deconverted, two));
-  }
+        //  output = sum(t ** 2) / 2
+        const DataType accumulation_type = XlaHelpers::SumAccumulationType(dtype);
+        auto t = XlaHelpers::ConvertElementType(ctx->Input(0), accumulation_type);
+        auto square = xla::Mul(t, t);
+        auto reduce = xla::Reduce(square, XlaHelpers::Zero(b, accumulation_type),
+                                  *ctx->GetOrCreateAdd(accumulation_type), dims);
+        auto deconverted = XlaHelpers::ConvertElementType(reduce, dtype);
+        auto two = XlaHelpers::IntegerLiteral(b, dtype, 2);
+        ctx->SetOutput(0, xla::Div(deconverted, two));
+    }
 };
 
 REGISTER_XLA_OP(Name("L2Loss"), L2LossOp);
