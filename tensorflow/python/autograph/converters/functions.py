@@ -28,7 +28,6 @@ from tensorflow.python.autograph.pyct.static_analysis import annos
 
 
 class _Function(object):
-
     def __init__(self):
         self.context_name = None
 
@@ -41,9 +40,10 @@ class FunctionTransformer(converter.Base):
             return node
         node = self.generic_visit(node)
         return templates.replace(
-            'return function_context_name.mark_return_value(value)',
+            "return function_context_name.mark_return_value(value)",
             function_context_name=self.state[_Function].context_name,
-            value=node.value)
+            value=node.value,
+        )
 
     def _function_scope_options(self, fn_scope):
         """Returns the options with which to create function scopes."""
@@ -64,13 +64,15 @@ class FunctionTransformer(converter.Base):
             # TODO(mdan): Fix the tests so that we can always add this decorator.
             if fn_scope.level > 2:
                 return templates.replace_as_expression(
-                    'ag__.autograph_artifact(l)', l=node)
+                    "ag__.autograph_artifact(l)", l=node
+                )
 
             scope = anno.getanno(node, anno.Static.SCOPE)
-            function_context_name = self.ctx.namer.new_symbol('lscope',
-                                                              scope.referenced)
+            function_context_name = self.ctx.namer.new_symbol(
+                "lscope", scope.referenced
+            )
             fn_scope.context_name = function_context_name
-            anno.setanno(node, 'function_context_name', function_context_name)
+            anno.setanno(node, "function_context_name", function_context_name)
 
             template = """
         ag__.with_function_scope(
@@ -80,9 +82,9 @@ class FunctionTransformer(converter.Base):
                 template,
                 options=self._function_scope_options(fn_scope).to_ast(),
                 function_context=function_context_name,
-                function_context_name=gast.Constant(
-                    function_context_name, kind=None),
-                body=node.body)
+                function_context_name=gast.Constant(function_context_name, kind=None),
+                body=node.body,
+            )
 
             return node
 
@@ -90,10 +92,11 @@ class FunctionTransformer(converter.Base):
         with self.state[_Function] as fn_scope:
             scope = anno.getanno(node, annos.NodeAnno.BODY_SCOPE)
 
-            function_context_name = self.ctx.namer.new_symbol('fscope',
-                                                              scope.referenced)
+            function_context_name = self.ctx.namer.new_symbol(
+                "fscope", scope.referenced
+            )
             fn_scope.context_name = function_context_name
-            anno.setanno(node, 'function_context_name', function_context_name)
+            anno.setanno(node, "function_context_name", function_context_name)
 
             node = self.generic_visit(node)
 
@@ -108,13 +111,15 @@ class FunctionTransformer(converter.Base):
                 # prevent double conversion. Double conversion would work too, but this
                 # saves the overhead.
                 node.decorator_list.append(
-                    parser.parse_expression('ag__.autograph_artifact'))
+                    parser.parse_expression("ag__.autograph_artifact")
+                )
 
             docstring_node = None
             if node.body:
                 first_statement = node.body[0]
-                if (isinstance(first_statement, gast.Expr) and
-                        isinstance(first_statement.value, gast.Constant)):
+                if isinstance(first_statement, gast.Expr) and isinstance(
+                    first_statement.value, gast.Constant
+                ):
                     docstring_node = first_statement
                     node.body = node.body[1:]
 
@@ -129,7 +134,8 @@ class FunctionTransformer(converter.Base):
                 context_name=gast.Constant(function_context_name, kind=None),
                 options=self._function_scope_options(fn_scope).to_ast(),
                 function_context=function_context_name,
-                body=node.body)
+                body=node.body,
+            )
 
             if docstring_node is not None:
                 wrapped_body = [docstring_node] + wrapped_body

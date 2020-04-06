@@ -28,7 +28,6 @@ from tensorflow.python.platform import test
 
 
 class MiscTest(test.TestCase):
-
     @test_util.run_deprecated_v1
     def test_alias_single_tensor(self):
         a = constant(1)
@@ -42,7 +41,7 @@ class MiscTest(test.TestCase):
     def test_alias_tensors(self):
         a = constant(1)
         v = Variable(2)
-        s = 'a'
+        s = "a"
         l = [1, 2, 3]
 
         new_a, new_v, new_s, new_l = misc.alias_tensors(a, v, s, l)
@@ -66,9 +65,8 @@ class MiscTest(test.TestCase):
                     results.append(((i, j, k), get_range_as_graph(ti, tj, tk)))
 
         for (i, j, k), result_tensor in results:
-            self.assertEqual(
-                len(list(range(i, j, k))), self.evaluate(result_tensor))
+            self.assertEqual(len(list(range(i, j, k))), self.evaluate(result_tensor))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

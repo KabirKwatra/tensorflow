@@ -99,7 +99,6 @@ _EXCLUDED_OPS = [
     "While",
     "StatelessWhile",
     "Case",
-
     # TF Lite. These ops only appear in OSS.
     # TODO(srbs): Find a better way to filter these out.
     "AudioMicrofrontend",
@@ -155,8 +154,7 @@ class _FunctionCallsTracker(transformer.Base):
     def visit_Name(self, node):
         node = self.generic_visit(node)
         if isinstance(node.ctx, gast.Load) and node.id in self.ctx.info.namespace:
-            anno.setanno(node, "static_value",
-                         self.ctx.info.namespace[node.id])
+            anno.setanno(node, "static_value", self.ctx.info.namespace[node.id])
         return node
 
     def visit_Attribute(self, node):
@@ -164,14 +162,16 @@ class _FunctionCallsTracker(transformer.Base):
         parent_val = anno.getanno(node.value, "static_value", default=None)
         if parent_val is not None:
             if hasattr(parent_val, node.attr):
-                anno.setanno(node, "static_value",
-                             getattr(parent_val, node.attr))
+                anno.setanno(node, "static_value", getattr(parent_val, node.attr))
         return node
 
     def visit_Call(self, node):
         node = self.generic_visit(node)
-        if (node.args and anno.getanno(node.args[0], anno.Basic.QN,
-                                       None) == self.first_argument_name):
+        if (
+            node.args
+            and anno.getanno(node.args[0], anno.Basic.QN, None)
+            == self.first_argument_name
+        ):
             fn_object = anno.getanno(node.func, "static_value", None)
             if fn_object is not None:
                 self.calls.add(fn_object)
@@ -204,7 +204,8 @@ def _live_tensors(f, attr_name="inputs"):
         source_code=None,
         source_file=None,
         future_features=(),
-        namespace=sys.modules[f.__module__].__dict__)
+        namespace=sys.modules[f.__module__].__dict__,
+    )
     ctx = transformer.Context(entity_info, None, None)
 
     graphs = cfg.build(node)
@@ -227,7 +228,7 @@ def _live_tensors(f, attr_name="inputs"):
             return _ALL
     for v in live_vars_in:
         if v in special_tracker.reads:
-            if (v.has_subscript() and v.parent == op_inputs_outputs_name):
+            if v.has_subscript() and v.parent == op_inputs_outputs_name:
                 inputs_outputs_used_qns.add(v)
             elif v == op_inputs_outputs_name:
                 # When op.{attr_name} is used directly, assume all tensors are
@@ -252,7 +253,7 @@ def _live_tensors(f, attr_name="inputs"):
         if not subscript.is_simple():
             # Not a number, assuming it can be anything.
             return _ALL
-        subscript_val, = subscript.qn
+        (subscript_val,) = subscript.qn
         if not isinstance(subscript_val, qual_names.NumberLiteral):
             # Not a number, assuming it can be anything.
             return _ALL
@@ -310,28 +311,30 @@ def get_entries(attr_name):
     for op_type in ops._gradient_registry.list():  # pylint: disable=protected-access
         if op_type in _EXCLUDED_OPS:
             continue
-        num_values = _get_num_inputs_outputs(op_type)[0 if attr_name ==
-                                                      "inputs" else 1]
+        num_values = _get_num_inputs_outputs(op_type)[0 if attr_name == "inputs" else 1]
         gradient_fn = ops._gradient_registry.lookup(
-            op_type)  # pylint: disable=protected-access
+            op_type
+        )  # pylint: disable=protected-access
         if gradient_fn is None:
             # NotDifferentiable
             if num_values != -1:
-                entries[op_type] = "{\"%s\"}," % op_type
+                entries[op_type] = '{"%s"},' % op_type
             continue
         used_tensors = _live_tensors(gradient_fn, attr_name=attr_name)
         if used_tensors is _ALL:
             continue
         elif not used_tensors:
-            entries[op_type] = "{\"%s\"}," % op_type
+            entries[op_type] = '{"%s"},' % op_type
         else:
             all_tensors = set(range(num_values))
             unused_tensors = all_tensors - used_tensors
             if unused_tensors:
                 unused_tensor_list = sorted(list(unused_tensors))
-                entries[op_type] = "{\"%s\", %d, {%s}}," % (
-                    op_type, len(unused_tensor_list), ", ".join(
-                        str(i) for i in unused_tensor_list))
+                entries[op_type] = '{"%s", %d, {%s}},' % (
+                    op_type,
+                    len(unused_tensor_list),
+                    ", ".join(str(i) for i in unused_tensor_list),
+                )
     return entries
 
 
@@ -342,11 +345,11 @@ absl::optional<tensorflow::gtl::FlatSet<int>> {name}(
     const tensorflow::string &op_name) {{
   static std::array<OpIndexInfo, {count}> a = {{{{
 """.format(
-        name=name, count=len(entries) + 1)
+        name=name, count=len(entries) + 1
+    )
     contents += "      "
-    contents += "\n      ".join(entries[op_type]
-                                for op_type in sorted(entries))
-    contents += "\n      {\"VarHandleOp\"},"
+    contents += "\n      ".join(entries[op_type] for op_type in sorted(entries))
+    contents += '\n      {"VarHandleOp"},'
     contents += """
   }};
   static const auto &m = *OpGradientInfoInit(a);
@@ -365,10 +368,8 @@ def get_contents():
     """Returns contents for the generated file."""
     contents = ""
     contents += _GENERATED_FILE_HEADER + _INCLUDES
-    contents += get_function("OpGradientUnusedInputIndices",
-                             get_entries("inputs"))
-    contents += get_function("OpGradientUnusedOutputIndices",
-                             get_entries("outputs"))
+    contents += get_function("OpGradientUnusedInputIndices", get_entries("inputs"))
+    contents += get_function("OpGradientUnusedOutputIndices", get_entries("outputs"))
     return contents
 
 
@@ -379,7 +380,6 @@ def main(output_file):
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("output", metavar="O",
-                            type=str, help="Output file.")
+    arg_parser.add_argument("output", metavar="O", type=str, help="Output file.")
     args = arg_parser.parse_args()
     main(args.output)

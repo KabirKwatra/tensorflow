@@ -28,7 +28,6 @@ from tensorflow.python.platform import test
 
 
 class FlipSignTransformer(transformer.Base):
-
     def visit_BinOp(self, node):
         if isinstance(node.op, gast.Add):
             node.op = gast.Sub()
@@ -36,7 +35,6 @@ class FlipSignTransformer(transformer.Base):
 
 
 class TestTranspiler(transpiler.FunctionTranspiler):
-
     def transform_ast(self, node, ctx):
         return FlipSignTransformer(ctx).visit(node)
 
@@ -46,7 +44,6 @@ global_var_for_test_namespace_collisions = object()
 
 
 class FunctionTranspilerTest(test.TestCase):
-
     def test_basic(self):
         def f(a):
             return a + 1
@@ -100,7 +97,6 @@ class FunctionTranspilerTest(test.TestCase):
         self.assertEqual(f(1), 1 - 2 - 1)
 
     def test_call_tree(self):
-
         def g(a):
             return a + 1
 
@@ -114,7 +110,9 @@ class FunctionTranspilerTest(test.TestCase):
 
     def test_lambda(self):
         b = 2
-        def f(x): return (b + (x if x > 0 else -x))
+
+        def f(x):
+            return b + (x if x > 0 else -x)
 
         tr = TestTranspiler()
         f, _, _ = tr.transform_function(f, object(), None, {})
@@ -147,10 +145,7 @@ class FunctionTranspilerTest(test.TestCase):
 
     def test_lambda_code_with_removable_garbage(self):
         # pylint:disable=g-long-lambda
-        f = (  # intentional wrap
-            lambda x: (
-                x  # intentional wrap
-                + 1),)[0]
+        f = (lambda x: (x + 1),)[0]  # intentional wrap  # intentional wrap
         # pylint:enable=g-long-lambda
 
         tr = TestTranspiler()
@@ -162,7 +157,6 @@ class FunctionTranspilerTest(test.TestCase):
         b = 2
 
         def f(x):
-
             def g(x):
                 return b + x
 
@@ -177,7 +171,9 @@ class FunctionTranspilerTest(test.TestCase):
         b = 2
 
         def f(x):
-            def g(x): return b + x
+            def g(x):
+                return b + x
+
             return g(x)
 
         tr = TestTranspiler()
@@ -186,7 +182,6 @@ class FunctionTranspilerTest(test.TestCase):
         self.assertEqual(f(1), 2 - 1)
 
     def test_concurrency(self):
-
         def f():
             pass
 
@@ -199,8 +194,7 @@ class FunctionTranspilerTest(test.TestCase):
             _, mod, _ = tr.transform_function(f, cache_key, None, {})
             outputs.append(mod.__name__)
 
-        threads = tuple(
-            threading.Thread(target=conversion_thread) for _ in range(10))
+        threads = tuple(threading.Thread(target=conversion_thread) for _ in range(10))
         for t in threads:
             t.start()
         for t in threads:
@@ -211,12 +205,10 @@ class FunctionTranspilerTest(test.TestCase):
         self.assertEqual(len(set(outputs)), 1)
 
     def test_reentrance(self):
-
         def test_fn():
             return 1 + 1
 
         class ReentrantTranspiler(transpiler.FunctionTranspiler):
-
             def __init__(self):
                 super(ReentrantTranspiler, self).__init__()
                 self._recursion_depth = 0
@@ -233,9 +225,7 @@ class FunctionTranspilerTest(test.TestCase):
         self.assertEqual(f(), 0)
 
     def test_namespace_collisions_avoided(self):
-
         class TestClass(object):
-
             def global_var_for_test_namespace_collisions(self):
                 return global_var_for_test_namespace_collisions
 
@@ -243,9 +233,10 @@ class FunctionTranspilerTest(test.TestCase):
         obj = TestClass()
 
         f, _, _ = tr.transform_function(
-            obj.global_var_for_test_namespace_collisions, object(), None, {})
+            obj.global_var_for_test_namespace_collisions, object(), None, {}
+        )
         self.assertIs(f(obj), global_var_for_test_namespace_collisions)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

@@ -35,9 +35,15 @@ from tensorflow.python.autograph.pyct import transformer
 from tensorflow.python.autograph.utils import ag_logging as logging
 
 
-def _wrap_into_factory(nodes, entity_name, inner_factory_name,
-                       outer_factory_name, closure_vars, factory_args,
-                       future_features):
+def _wrap_into_factory(
+    nodes,
+    entity_name,
+    inner_factory_name,
+    outer_factory_name,
+    closure_vars,
+    factory_args,
+    future_features,
+):
     """Wraps an AST into the body of a factory with consistent lexical context.
 
     The AST is expected to define some symbol with a name given by `entity_name`.
@@ -109,15 +115,14 @@ def _wrap_into_factory(nodes, entity_name, inner_factory_name,
         template = """
       var_name = None
     """
-        dummy_closure_defs.extend(
-            templates.replace(template, var_name=var_name))
+        dummy_closure_defs.extend(templates.replace(template, var_name=var_name))
 
     if future_features:
         future_imports = gast.ImportFrom(
-            module='__future__',
-            names=[gast.alias(name=name, asname=None)
-                   for name in future_features],
-            level=0)
+            module="__future__",
+            names=[gast.alias(name=name, asname=None) for name in future_features],
+            level=0,
+        )
     else:
         future_imports = []
 
@@ -143,7 +148,8 @@ def _wrap_into_factory(nodes, entity_name, inner_factory_name,
         factory_args=factory_args,
         future_imports=future_imports,
         inner_factory_name=inner_factory_name,
-        outer_factory_name=outer_factory_name)
+        outer_factory_name=outer_factory_name,
+    )
 
 
 class _TransformedFnFactory(object):
@@ -166,59 +172,64 @@ class _TransformedFnFactory(object):
         self.module = None
         self.source_map = None
 
-    def create(self,
-               nodes,
-               namer,
-               inner_factory_name='inner_factory',
-               outer_factory_name='outer_factory',
-               future_features=()):
+    def create(
+        self,
+        nodes,
+        namer,
+        inner_factory_name="inner_factory",
+        outer_factory_name="outer_factory",
+        future_features=(),
+    ):
         """Initializes a transformed function."""
         if self._unbound_factory is not None:
-            raise ValueError(
-                'double initialization; create a new object instead')
+            raise ValueError("double initialization; create a new object instead")
 
         inner_factory_name = namer.new_symbol(inner_factory_name, ())
         outer_factory_name = namer.new_symbol(outer_factory_name, ())
-        nodes = _wrap_into_factory(nodes, self._name, inner_factory_name,
-                                   outer_factory_name, self._freevars,
-                                   self._extra_locals.keys(), future_features)
+        nodes = _wrap_into_factory(
+            nodes,
+            self._name,
+            inner_factory_name,
+            outer_factory_name,
+            self._freevars,
+            self._extra_locals.keys(),
+            future_features,
+        )
 
-        module, _, source_map = loader.load_ast(
-            nodes, include_source_map=True)
+        module, _, source_map = loader.load_ast(nodes, include_source_map=True)
         outer_factory = getattr(module, outer_factory_name)
         self._unbound_factory = outer_factory()
         self.module = module
         self.source_map = source_map
 
-    def instantiate(self,
-                    globals_,
-                    closure,
-                    defaults=None,
-                    kwdefaults=None):
+    def instantiate(self, globals_, closure, defaults=None, kwdefaults=None):
         """Creates a new instance of the transformed function."""
         if self._unbound_factory is None:
-            raise ValueError('call create first')
+            raise ValueError("call create first")
 
         factory_code = self._unbound_factory.__code__
         factory_freevars = factory_code.co_freevars
         closure_map = dict(zip(self._freevars, closure))
-        factory_closure = tuple(
-            closure_map[name] for name in factory_code.co_freevars)
+        factory_closure = tuple(closure_map[name] for name in factory_code.co_freevars)
         if len(factory_closure) != len(closure):
             raise ValueError(
-                'closure mismatch, requested {}, but source function had {}'.format(
-                    self._freevars, factory_freevars))
+                "closure mismatch, requested {}, but source function had {}".format(
+                    self._freevars, factory_freevars
+                )
+            )
 
         bound_factory = types.FunctionType(
             code=factory_code,
             globals=globals_,
             name=self._name,
             argdefs=(),
-            closure=factory_closure)
+            closure=factory_closure,
+        )
 
         # The lint override is a false positive.
         transformed_entity = bound_factory(
-            **self._extra_locals)  # pylint:disable=not-callable
+            **self._extra_locals
+        )  # pylint:disable=not-callable
 
         if defaults:
             transformed_entity.__defaults__ = defaults
@@ -278,34 +289,34 @@ class FunctionTranspiler(object):
           user_context: The same value that the caller passed to
             `transform_function`.
         """
-        raise NotImplementedError('subclasses must override this')
+        raise NotImplementedError("subclasses must override this")
 
     def get_transformed_name(self, node):
         """Returns a name for the output function. Subclasses may override this."""
         if isinstance(node, gast.Lambda):
-            return 'lam'
+            return "lam"
         elif isinstance(node, gast.FunctionDef):
             # Note that we need to rename the function, to avoid any namespace
             # clashes.
             return node.name
         else:
-            raise ValueError('Unknown node type {}'.format(node))
+            raise ValueError("Unknown node type {}".format(node))
 
     def _erase_arg_defaults(self, node):
         """Erase argde fault expressions, which would otherwise be unbound."""
         args = node.args
         for i in range(len(args.defaults)):
-            args.defaults[i] = parser.parse_expression('None')
+            args.defaults[i] = parser.parse_expression("None")
         for i, d in enumerate(args.kw_defaults):
             if d is not None:
-                args.kw_defaults[i] = parser.parse_expression('None')
+                args.kw_defaults[i] = parser.parse_expression("None")
         return node
 
     def _transform_function(self, fn, user_context):
         """Performs source code transformation on a function."""
         future_features = inspect_utils.getfutureimports(fn)
         node, source = parser.parse_entity(fn, future_features=future_features)
-        logging.log(3, 'Source code of %s:\n\n%s\n', fn, source)
+        logging.log(3, "Source code of %s:\n\n%s\n", fn, source)
 
         # In general, the output of inspect.getsource is inexact for lambdas
         # because it uses regex matching to adjust the exact location around
@@ -313,18 +324,19 @@ class FunctionTranspiler(object):
         # is returned, which we may have trouble disambiguating.
         # For example:
         #   x, y = lambda: 1, lambda: 2
-        is_lambda = fn.__name__ == '<lambda>'
+        is_lambda = fn.__name__ == "<lambda>"
         if is_lambda:
             nodes = ast_util.find_matching_definitions(node, fn)
             if len(nodes) != 1:
                 raise ValueError(
-                    'Unable to identify source code of lambda function {}.'
-                    ' It was defined in this code:\n'
-                    '{}\n'
-                    'This code must contain a single distinguishable lambda.'
-                    ' To avoid this problem, define each lambda in a separate'
-                    ' expression.'.format(fn, source))
-            node, = nodes
+                    "Unable to identify source code of lambda function {}."
+                    " It was defined in this code:\n"
+                    "{}\n"
+                    "This code must contain a single distinguishable lambda."
+                    " To avoid this problem, define each lambda in a separate"
+                    " expression.".format(fn, source)
+                )
+            (node,) = nodes
 
         origin_info.resolve_entity(node, source, fn)
 
@@ -334,9 +346,10 @@ class FunctionTranspiler(object):
         entity_info = transformer.EntityInfo(
             name=new_name,
             source_code=source,
-            source_file='<fragment>',
+            source_file="<fragment>",
             future_features=future_features,
-            namespace=namespace)
+            namespace=namespace,
+        )
         context = transformer.Context(entity_info, namer, user_context)
 
         node = self._erase_arg_defaults(node)
@@ -346,12 +359,11 @@ class FunctionTranspiler(object):
             node = gast.Assign(
                 targets=[
                     gast.Name(
-                        new_name,
-                        ctx=gast.Store(),
-                        annotation=None,
-                        type_comment=None)
+                        new_name, ctx=gast.Store(), annotation=None, type_comment=None
+                    )
                 ],
-                value=node)
+                value=node,
+            )
         else:
             node.name = new_name
 
@@ -359,8 +371,9 @@ class FunctionTranspiler(object):
 
     def _cached_factory(self, fn, cache_subkey):
         cached_factory = self._cache[fn][cache_subkey]
-        logging.log(3, 'Cache hit for %s subkey %s: %s', fn, cache_subkey,
-                    cached_factory)
+        logging.log(
+            3, "Cache hit for %s subkey %s: %s", fn, cache_subkey, cached_factory
+        )
         return cached_factory
 
     def _transformed_factory(self, fn, cache_subkey, user_context, extra_locals):
@@ -373,17 +386,16 @@ class FunctionTranspiler(object):
             if self._cache.has(fn, cache_subkey):
                 return self._cached_factory(fn, cache_subkey)
 
-            logging.log(1, '%s is not cached for subkey %s', fn, cache_subkey)
+            logging.log(1, "%s is not cached for subkey %s", fn, cache_subkey)
             nodes, ctx = self._transform_function(fn, user_context)
 
             if logging.has_verbosity(2):
-                logging.log(2, 'Transformed %s:\n\n%s\n',
-                            fn, parser.unparse(nodes))
+                logging.log(2, "Transformed %s:\n\n%s\n", fn, parser.unparse(nodes))
 
             factory = _TransformedFnFactory(
-                ctx.info.name, fn.__code__.co_freevars, extra_locals)
-            factory.create(nodes, ctx.namer,
-                           future_features=ctx.info.future_features)
+                ctx.info.name, fn.__code__.co_freevars, extra_locals
+            )
+            factory.create(nodes, ctx.namer, future_features=ctx.info.future_features)
             self._cache[fn][cache_subkey] = factory
         return factory
 
@@ -414,12 +426,14 @@ class FunctionTranspiler(object):
                 Dict[origin_info.LineLocation, origin_info.OriginInfo]
 
         """
-        factory = self._transformed_factory(fn, caching_subkey, user_context,
-                                            extra_locals)
+        factory = self._transformed_factory(
+            fn, caching_subkey, user_context, extra_locals
+        )
 
         transformed_fn = factory.instantiate(
             globals_=fn.__globals__,
             closure=fn.__closure__ or (),
             defaults=fn.__defaults__,
-            kwdefaults=getattr(fn, '__kwdefaults__', None))
+            kwdefaults=getattr(fn, "__kwdefaults__", None),
+        )
         return transformed_fn, factory.module, factory.source_map

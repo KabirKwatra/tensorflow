@@ -85,7 +85,7 @@ from tensorflow.python.util.tf_export import tf_export
 # TODO(mdan): Add a test specific to this converter.
 
 
-@tf_export('autograph.experimental.Feature')
+@tf_export("autograph.experimental.Feature")
 class Feature(enum.Enum):
     """This enumeration represents optional conversion options.
 
@@ -116,14 +116,14 @@ class Feature(enum.Enum):
         function they were defined in.
     """
 
-    ALL = 'ALL'
+    ALL = "ALL"
 
-    AUTO_CONTROL_DEPS = 'AUTO_CONTROL_DEPS'
-    ASSERT_STATEMENTS = 'ASSERT_STATEMENTS'
-    BUILTIN_FUNCTIONS = 'BUILTIN_FUNCTIONS'
-    EQUALITY_OPERATORS = 'EQUALITY_OPERATORS'
-    LISTS = 'LISTS'
-    NAME_SCOPES = 'NAME_SCOPES'
+    AUTO_CONTROL_DEPS = "AUTO_CONTROL_DEPS"
+    ASSERT_STATEMENTS = "ASSERT_STATEMENTS"
+    BUILTIN_FUNCTIONS = "BUILTIN_FUNCTIONS"
+    EQUALITY_OPERATORS = "EQUALITY_OPERATORS"
+    LISTS = "LISTS"
+    NAME_SCOPES = "NAME_SCOPES"
 
     @classmethod
     def all(cls):
@@ -155,11 +155,13 @@ class ConversionOptions(object):
         options.
     """
 
-    def __init__(self,
-                 recursive=False,
-                 user_requested=False,
-                 internal_convert_user_code=True,
-                 optional_features=Feature.ALL):
+    def __init__(
+        self,
+        recursive=False,
+        user_requested=False,
+        internal_convert_user_code=True,
+        optional_features=Feature.ALL,
+    ):
         self.recursive = recursive
         self.user_requested = user_requested
         # TODO(mdan): Rename to conversion_recursion_depth?
@@ -173,8 +175,12 @@ class ConversionOptions(object):
         self.optional_features = optional_features
 
     def as_tuple(self):
-        return (self.recursive, self.user_requested,
-                self.internal_convert_user_code, self.optional_features)
+        return (
+            self.recursive,
+            self.user_requested,
+            self.internal_convert_user_code,
+            self.optional_features,
+        )
 
     def __hash__(self):
         return hash(self.as_tuple())
@@ -184,11 +190,12 @@ class ConversionOptions(object):
         return self.as_tuple() == other.as_tuple()
 
     def __str__(self):
-        return 'ConversionOptions[{}]'
+        return "ConversionOptions[{}]"
 
     def uses(self, feature):
-        return (Feature.ALL in self.optional_features or
-                feature in self.optional_features)
+        return (
+            Feature.ALL in self.optional_features or feature in self.optional_features
+        )
 
     def call_options(self):
         """Returns the corresponding options to be used for recursive conversion."""
@@ -196,7 +203,8 @@ class ConversionOptions(object):
             recursive=self.recursive,
             user_requested=False,
             internal_convert_user_code=self.recursive,
-            optional_features=self.optional_features)
+            optional_features=self.optional_features,
+        )
 
     def to_ast(self):
         """Returns a representation of this object as an AST node.
@@ -208,7 +216,7 @@ class ConversionOptions(object):
           ast.Node
         """
         if self == STANDARD_OPTIONS:
-            return parser.parse_expression('ag__.STD')
+            return parser.parse_expression("ag__.STD")
 
         template = """
       ag__.ConversionOptions(
@@ -219,17 +227,19 @@ class ConversionOptions(object):
     """
 
         def list_of_features(values):
-            return parser.parse_expression('({})'.format(', '.join(
-                'ag__.{}'.format(str(v)) for v in values)))
+            return parser.parse_expression(
+                "({})".format(", ".join("ag__.{}".format(str(v)) for v in values))
+            )
 
         expr_ast = templates.replace(
             template,
             recursive_val=parser.parse_expression(str(self.recursive)),
-            user_requested_val=parser.parse_expression(
-                str(self.user_requested)),
+            user_requested_val=parser.parse_expression(str(self.user_requested)),
             internal_convert_user_code_val=parser.parse_expression(
-                str(self.internal_convert_user_code)),
-            optional_features_val=list_of_features(self.optional_features))
+                str(self.internal_convert_user_code)
+            ),
+            optional_features_val=list_of_features(self.optional_features),
+        )
         return expr_ast[0].value
 
 
@@ -237,11 +247,13 @@ STANDARD_OPTIONS = ConversionOptions(
     recursive=True,
     user_requested=False,
     internal_convert_user_code=True,
-    optional_features=None)
+    optional_features=None,
+)
 
 
 class ProgramContext(
-        collections.namedtuple('ProgramContext', ('options', 'autograph_module'))):
+    collections.namedtuple("ProgramContext", ("options", "autograph_module"))
+):
     """ProgramContext keeps track of converting function hierarchies.
 
     This object is mutable, and is updated during conversion. Not thread safe.
@@ -251,6 +263,7 @@ class ProgramContext(
       autograph_module: Module, a reference to the autograph module. This needs to
         be specified by the caller to avoid circular dependencies.
     """
+
     pass
 
 
@@ -295,7 +308,7 @@ class Base(transformer.Base):
 
         arg_values_found = []
         for def_ in defs:
-            if (directive in def_.directives and arg in def_.directives[directive]):
+            if directive in def_.directives and arg in def_.directives[directive]:
                 arg_values_found.append(def_.directives[directive][arg])
 
         if not arg_values_found:
@@ -311,15 +324,21 @@ class Base(transformer.Base):
             if not ast_util.matches(first_value, other_value):
                 qn = anno.getanno(node, anno.Basic.QN)
                 raise ValueError(
-                    '%s has ambiguous annotations for %s(%s): %s, %s' %
-                    (qn, directive.__name__, arg, parser.unparse(other_value).strip(),
-                     parser.unparse(first_value).strip()))
+                    "%s has ambiguous annotations for %s(%s): %s, %s"
+                    % (
+                        qn,
+                        directive.__name__,
+                        arg,
+                        parser.unparse(other_value).strip(),
+                        parser.unparse(first_value).strip(),
+                    )
+                )
         return first_value
 
     def visit(self, node):
         if not self._ast_depth:
             if self._used:
-                raise ValueError('converter objects cannot be reused')
+                raise ValueError("converter objects cannot be reused")
             self._used = True
 
         self._ast_depth += 1
@@ -330,7 +349,6 @@ class Base(transformer.Base):
 
 
 class AnnotatedDef(reaching_definitions.Definition):
-
     def __init__(self):
         super(AnnotatedDef, self).__init__()
         self.directives = {}
@@ -358,10 +376,7 @@ def standard_analysis(node, context, is_initial=False):
     node = liveness.resolve(node, context, graphs)
     if is_initial:
         anno.dup(
-            node,
-            {
-                anno.Static.DEFINITIONS: anno.Static.ORIG_DEFINITIONS,
-            },
+            node, {anno.Static.DEFINITIONS: anno.Static.ORIG_DEFINITIONS,},
         )
     return node
 

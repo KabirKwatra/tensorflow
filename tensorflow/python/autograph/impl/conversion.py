@@ -50,9 +50,8 @@ from tensorflow.python.util import tf_inspect
 
 
 class AutoGraphTranspiler(transpiler.FunctionTranspiler):
-
     def get_transformed_name(self, node):
-        return 'tf__' + super(AutoGraphTranspiler, self).get_transformed_name(node)
+        return "tf__" + super(AutoGraphTranspiler, self).get_transformed_name(node)
 
     def transform_ast(self, node, ctx):
         # TODO(mdan): Insert list_comprehensions somewhere.
@@ -91,25 +90,27 @@ custom_vars = None
 def convert(entity, program_ctx):
     """Applies AutoGraph to entity."""
 
-    if not hasattr(entity, '__code__'):
-        raise ValueError('Cannot apply autograph to a function that doesn\'t '
-                         'expose a __code__ object. If this is a @tf.function,'
-                         ' try passing f.python_function instead.')
+    if not hasattr(entity, "__code__"):
+        raise ValueError(
+            "Cannot apply autograph to a function that doesn't "
+            "expose a __code__ object. If this is a @tf.function,"
+            " try passing f.python_function instead."
+        )
 
     _create_custom_vars(program_ctx)
     transformed, module, source_map = _TRANSPILER.transform_function(
-        entity, program_ctx.options, program_ctx, custom_vars)
+        entity, program_ctx.options, program_ctx, custom_vars
+    )
 
-    assert not hasattr(transformed, 'ag_module')
-    assert not hasattr(transformed, 'ag_source_map')
+    assert not hasattr(transformed, "ag_module")
+    assert not hasattr(transformed, "ag_source_map")
     transformed.ag_module = module
     transformed.ag_source_map = source_map
     return transformed
 
 
 # TODO(mdan): allow_namedtuple_subclass should be hardcoded to True.
-def is_whitelisted(
-        o, check_call_override=True, allow_namedtuple_subclass=False):
+def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False):
     """Checks whether an entity is whitelisted for use in graph mode.
 
     Examples of whitelisted entities include all members of the tensorflow
@@ -135,33 +136,35 @@ def is_whitelisted(
         m = tf_inspect.getmodule(o)
 
     # Examples of callables that lack a __module__ property include builtins.
-    if hasattr(m, '__name__'):
+    if hasattr(m, "__name__"):
         for rule in config.CONVERSION_RULES:
             action = rule.get_action(m)
             if action == config.Action.CONVERT:
-                logging.log(2, 'Not whitelisted: %s: %s', o, rule)
+                logging.log(2, "Not whitelisted: %s: %s", o, rule)
                 return False
             elif action == config.Action.DO_NOT_CONVERT:
-                logging.log(2, 'Whitelisted: %s: %s', o, rule)
+                logging.log(2, "Whitelisted: %s: %s", o, rule)
                 return True
 
     # The check for __code__ below is because isgeneratorfunction crashes
     # without one.
-    if hasattr(o, '__code__') and tf_inspect.isgeneratorfunction(o):
+    if hasattr(o, "__code__") and tf_inspect.isgeneratorfunction(o):
         logging.warn(
-            'Entity %s appears to be a generator function. It will not be converted'
-            ' by AutoGraph.', o)
-        logging.log(
-            2, 'Whitelisted: %s: generator functions are not converted', o)
+            "Entity %s appears to be a generator function. It will not be converted"
+            " by AutoGraph.",
+            o,
+        )
+        logging.log(2, "Whitelisted: %s: generator functions are not converted", o)
         return True
 
-    if (check_call_override and not tf_inspect.isclass(o) and
-            hasattr(o, '__call__')):
+    if check_call_override and not tf_inspect.isclass(o) and hasattr(o, "__call__"):
         # Callable objects: whitelisted if their __call__ method is.
         # The type check avoids infinite recursion around the __call__ method
         # of function objects.
-        if (type(o) != type(o.__call__)) and is_whitelisted(o.__call__):  # pylint: disable=unidiomatic-typecheck
-            logging.log(2, 'Whitelisted: %s: object __call__ whitelisted', o)
+        if (type(o) != type(o.__call__)) and is_whitelisted(
+            o.__call__
+        ):  # pylint: disable=unidiomatic-typecheck
+            logging.log(2, "Whitelisted: %s: object __call__ whitelisted", o)
             return True
 
     owner_class = None
@@ -186,17 +189,16 @@ def is_whitelisted(
             owner_class = o.__self__.target_class
         if owner_class is not None:
             if issubclass(owner_class, unittest.TestCase):
-                logging.log(
-                    2, 'Whitelisted: %s: method of TestCase subclass', o)
+                logging.log(2, "Whitelisted: %s: method of TestCase subclass", o)
                 return True
 
             owner_class = inspect_utils.getdefiningclass(o, owner_class)
             if is_whitelisted(
-                    owner_class,
-                    check_call_override=False,
-                    allow_namedtuple_subclass=True):
-                logging.log(2, 'Whitelisted: %s: owner is whitelisted %s', o,
-                            owner_class)
+                owner_class, check_call_override=False, allow_namedtuple_subclass=True
+            ):
+                logging.log(
+                    2, "Whitelisted: %s: owner is whitelisted %s", o, owner_class
+                )
                 return True
 
     if inspect_utils.isnamedtuple(o):
@@ -205,13 +207,13 @@ def is_whitelisted(
         # graph mode since they are just containers.
         if allow_namedtuple_subclass:
             if not any(inspect_utils.isnamedtuple(base) for base in o.__bases__):
-                logging.log(2, 'Whitelisted: %s: named tuple', o)
+                logging.log(2, "Whitelisted: %s: named tuple", o)
                 return True
         else:
-            logging.log(2, 'Whitelisted: %s: named tuple or subclass', o)
+            logging.log(2, "Whitelisted: %s: named tuple or subclass", o)
             return True
 
-    logging.log(2, 'Not whitelisted: %s: default rule', o)
+    logging.log(2, "Not whitelisted: %s: default rule", o)
     return False
 
 
@@ -238,7 +240,7 @@ def _create_custom_vars(program_ctx):
     if custom_vars is None:
         # Craft a module that exposes parts of the external API as well as certain
         # internal modules.
-        ag_internal = imp.new_module('autograph')
+        ag_internal = imp.new_module("autograph")
         ag_internal.__dict__.update(program_ctx.autograph_module.__dict__)
         ag_internal.ConversionOptions = converter.ConversionOptions
         ag_internal.STD = converter.STANDARD_OPTIONS
@@ -252,4 +254,4 @@ def _create_custom_vars(program_ctx):
         ag_internal.__dict__.update(special_functions.__dict__)
         ag_internal.__dict__.update(operators.__dict__)
 
-        custom_vars = {'ag__': ag_internal}
+        custom_vars = {"ag__": ag_internal}

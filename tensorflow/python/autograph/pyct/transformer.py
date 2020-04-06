@@ -53,8 +53,9 @@ class Context(object):
 # TODO(mdan): Move to a standalone file.
 class EntityInfo(
     collections.namedtuple(
-        'EntityInfo',
-        ('name', 'source_code', 'source_file', 'future_features', 'namespace'))
+        "EntityInfo",
+        ("name", "source_code", "source_file", "future_features", "namespace"),
+    )
 ):
     """Contains information about a Python entity.
 
@@ -72,6 +73,7 @@ class EntityInfo(
       namespace: Dict[str, ], containing symbols visible to the entity (excluding
         parameters).
     """
+
     pass
 
 
@@ -107,9 +109,9 @@ class _StateStack(object):
     def __init__(self, type_):
         # Because we override __setattr__, we need to attach these attributes using
         # the superclass' setattr.
-        object.__setattr__(self, 'type', type_)
-        object.__setattr__(self, '_stack', [])
-        if not hasattr(type_, 'no_root'):
+        object.__setattr__(self, "type", type_)
+        object.__setattr__(self, "_stack", [])
+        if not hasattr(type_, "no_root"):
             self.enter()
 
     def __enter__(self):
@@ -355,7 +357,7 @@ class NodeStateTracker(object):
         # it should be suppressed, in favor of emitting as informative a message
         # about the original error as possible.
         except Exception:
-            return '<could not convert AST to source>'
+            return "<could not convert AST to source>"
 
 
 # TODO(mdan): Rename to PythonCodeTransformer.
@@ -415,9 +417,9 @@ class Base(NodeStateTracker, gast.NodeTransformer):
                         value_el = values.elts[i]
                     else:
                         value_el = gast.Subscript(
-                            values, gast.Index(i), ctx=gast.Store())
-                    self.apply_to_single_assignments(
-                        target_el, value_el, apply_fn)
+                            values, gast.Index(i), ctx=gast.Store()
+                        )
+                    self.apply_to_single_assignments(target_el, value_el, apply_fn)
             else:
                 # TODO(mdan): Look into allowing to rewrite the AST here.
                 apply_fn(target, values)
@@ -429,9 +431,10 @@ class Base(NodeStateTracker, gast.NodeTransformer):
             # call `visit`.  The error needs to be raised before the exception handler
             # below is installed, because said handler will mess up if `node` is not,
             # in fact, a node.
-            msg = ('invalid value for "node": expected "ast.AST", got "{}"; to'
-                   ' visit lists of nodes, use "visit_block" instead').format(
-                       type(node))
+            msg = (
+                'invalid value for "node": expected "ast.AST", got "{}"; to'
+                ' visit lists of nodes, use "visit_block" instead'
+            ).format(type(node))
             raise ValueError(msg)
 
         if anno.hasanno(node, anno.Basic.SKIP_PROCESSING):
@@ -450,20 +453,23 @@ class Base(NodeStateTracker, gast.NodeTransformer):
 
             # Adjust for consistency: replacing the value of an Expr with
             # an Assign node removes the need for the Expr node.
-            if (processing_expr_node and isinstance(result, gast.Expr) and
-                    (result.value is not entry_expr_value)):
+            if (
+                processing_expr_node
+                and isinstance(result, gast.Expr)
+                and (result.value is not entry_expr_value)
+            ):
                 # When the replacement is a list, it is assumed that the list came
                 # from a template that contained a number of statements, which
                 # themselves are standalone and don't require an enclosing Expr.
-                if isinstance(result.value,
-                              (list, tuple, gast.Assign, gast.AugAssign)):
+                if isinstance(result.value, (list, tuple, gast.Assign, gast.AugAssign)):
                     result = result.value
 
             # By default, all replacements receive the origin info of the replaced
             # node.
             if result is not node and result is not None:
                 inherited_origin = anno.getanno(
-                    node, anno.Basic.ORIGIN, default=parent_origin)
+                    node, anno.Basic.ORIGIN, default=parent_origin
+                )
                 if inherited_origin is not None:
                     nodes_to_adjust = result
                     if isinstance(result, (list, tuple)):
@@ -472,8 +478,7 @@ class Base(NodeStateTracker, gast.NodeTransformer):
                         nodes_to_adjust = (result,)
                     for n in nodes_to_adjust:
                         if not anno.hasanno(n, anno.Basic.ORIGIN):
-                            anno.setanno(n, anno.Basic.ORIGIN,
-                                         inherited_origin)
+                            anno.setanno(n, anno.Basic.ORIGIN, inherited_origin)
         finally:
             self.ctx.current_origin = parent_origin
 
@@ -512,7 +517,7 @@ class CodeGenerator(NodeStateTracker, gast.NodeVisitor):
     def __init__(self, ctx):
         super(CodeGenerator, self).__init__(ctx)
 
-        self._output_code = ''
+        self._output_code = ""
         self.source_map = {}
 
     def emit(self, code):
@@ -539,7 +544,8 @@ class CodeGenerator(NodeStateTracker, gast.NodeVisitor):
             eof_after = len(self._output_code)
             if eof_before - eof_after:
                 inherited_origin = anno.getanno(
-                    node, anno.Basic.ORIGIN, default=parent_origin)
+                    node, anno.Basic.ORIGIN, default=parent_origin
+                )
                 if inherited_origin is not None:
                     self.source_map[(eof_before, eof_after)] = inherited_origin
         finally:

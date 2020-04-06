@@ -34,7 +34,6 @@ global_b = 17
 
 
 class LivenessAnalyzerTestBase(test.TestCase):
-
     def _parse_and_analyze(self, test_fn):
         # TODO(mdan): Use a custom FunctionTransformer here.
         node, source = parser.parse_entity(test_fn, future_features=())
@@ -43,7 +42,8 @@ class LivenessAnalyzerTestBase(test.TestCase):
             source_code=source,
             source_file=None,
             future_features=(),
-            namespace={})
+            namespace={},
+        )
         node = qual_names.resolve(node)
         namer = naming.Namer({})
         ctx = transformer.Context(entity_info, namer, None)
@@ -72,9 +72,7 @@ class LivenessAnalyzerTestBase(test.TestCase):
 
 
 class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
-
     def test_live_out_try_block(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 try:
@@ -86,11 +84,10 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], 'x')
-        self.assertHasLiveOut(fn_body[0].body[0], 'x')
+        self.assertHasLiveOut(fn_body[0], "x")
+        self.assertHasLiveOut(fn_body[0].body[0], "x")
 
     def test_live_out_if_inside_except(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 try:
@@ -103,12 +100,11 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], 'x')
-        self.assertHasLiveOut(fn_body[0].body[0], 'x')
-        self.assertHasLiveOut(fn_body[0].body[0].handlers[0].body[0], 'x')
+        self.assertHasLiveOut(fn_body[0], "x")
+        self.assertHasLiveOut(fn_body[0].body[0], "x")
+        self.assertHasLiveOut(fn_body[0].body[0].handlers[0].body[0], "x")
 
     def test_live_out_stacked_if(self):
-
         def test_fn(x, a):
             if a > 0:
                 x = 0
@@ -119,11 +115,10 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], ('a', 'x'))
-        self.assertHasLiveOut(fn_body[1], 'x')
+        self.assertHasLiveOut(fn_body[0], ("a", "x"))
+        self.assertHasLiveOut(fn_body[1], "x")
 
     def test_live_out_stacked_if_else(self):
-
         def test_fn(x, a):
             if a > 0:
                 x = 0
@@ -136,11 +131,10 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], 'a')
-        self.assertHasLiveOut(fn_body[1], 'x')
+        self.assertHasLiveOut(fn_body[0], "a")
+        self.assertHasLiveOut(fn_body[1], "x")
 
     def test_live_out_for_basic(self):
-
         def test_fn(x, a):
             for i in range(a):
                 x += i
@@ -149,10 +143,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], 'x')
+        self.assertHasLiveOut(fn_body[0], "x")
 
     def test_live_out_for_iterate(self):
-
         def test_fn(x, a):
             for i in range(a):
                 x += i
@@ -161,10 +154,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], ('x', 'i'))
+        self.assertHasLiveOut(fn_body[0], ("x", "i"))
 
     def test_live_out_attributes(self):
-
         def test_fn(x, a):
             if a > 0:
                 x.y = 0
@@ -173,10 +165,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], ('x.y', 'x'))
+        self.assertHasLiveOut(fn_body[0], ("x.y", "x"))
 
     def test_live_out_nested_functions(self):
-
         def test_fn(a, b):
             if b:
                 a = []
@@ -189,10 +180,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], 'a')
+        self.assertHasLiveOut(fn_body[0], "a")
 
     def test_live_out_nested_functions_isolation(self):
-
         def test_fn(b):
             if b:
                 a = 0  # pylint:disable=unused-variable
@@ -207,10 +197,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveOut(fn_body[0], 'max')
+        self.assertHasLiveOut(fn_body[0], "max")
 
     def test_live_out_deletion(self):
-
         def test_fn(x, y, a):
             for _ in a:
                 if x:
@@ -224,7 +213,6 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         self.assertHasLiveOut(fn_body[0], ())
 
     def test_live_in_pass(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 pass
@@ -233,12 +221,11 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'x'))
-        self.assertHasLiveIn(fn_body[0].body[0], ('x',))
-        self.assertHasLiveIn(fn_body[1], ('x',))
+        self.assertHasLiveIn(fn_body[0], ("a", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0], ("x",))
+        self.assertHasLiveIn(fn_body[1], ("x",))
 
     def test_live_in_raise(self):
-
         def test_fn(x, a, b, c):
             if a > 0:
                 b = b + 1
@@ -248,12 +235,11 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'b', 'c', 'x'))
-        self.assertHasLiveIn(fn_body[0].body[0], ('b', 'c'))
-        self.assertHasLiveIn(fn_body[1], ('x',))
+        self.assertHasLiveIn(fn_body[0], ("a", "b", "c", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0], ("b", "c"))
+        self.assertHasLiveIn(fn_body[1], ("x",))
 
     def test_live_out_except_variable(self):
-
         def test_fn(x, a):
             try:
                 pass
@@ -267,10 +253,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         # Note: 'a' is not live because there is no raise statement inside the
         # try, and we discount the possibility of other code in the try block
         # raising an error.
-        self.assertHasLiveIn(fn_body[0], ('b', 'x'))
+        self.assertHasLiveIn(fn_body[0], ("b", "x"))
 
     def test_live_in_return_statement(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 return x
@@ -279,12 +264,11 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'x'))
-        self.assertHasLiveIn(fn_body[0].body[0], ('x',))
-        self.assertHasLiveIn(fn_body[1], ('x',))
+        self.assertHasLiveIn(fn_body[0], ("a", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0], ("x",))
+        self.assertHasLiveIn(fn_body[1], ("x",))
 
     def test_live_in_try_block(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 try:
@@ -296,12 +280,11 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'x'))
-        self.assertHasLiveIn(fn_body[0].body[0], ('x',))
-        self.assertHasLiveIn(fn_body[1], ('x',))
+        self.assertHasLiveIn(fn_body[0], ("a", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0], ("x",))
+        self.assertHasLiveIn(fn_body[1], ("x",))
 
     def test_live_in_try_orelse(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 try:
@@ -315,12 +298,11 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'b', 'x'))
-        self.assertHasLiveIn(fn_body[0].body[0], ('b', 'x'))
-        self.assertHasLiveIn(fn_body[1], ('x',))
+        self.assertHasLiveIn(fn_body[0], ("a", "b", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0], ("b", "x"))
+        self.assertHasLiveIn(fn_body[1], ("x",))
 
     def test_live_in_if_inside_except(self):
-
         def test_fn(x, a, b, c):  # pylint:disable=unused-argument
             if a > 0:
                 try:
@@ -333,14 +315,12 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'b', 'x'))
-        self.assertHasLiveIn(fn_body[0].body[0], ('b', 'x'))
-        self.assertHasLiveIn(
-            fn_body[0].body[0].handlers[0].body[0], ('b', 'x'))
-        self.assertHasLiveIn(fn_body[1], ('x',))
+        self.assertHasLiveIn(fn_body[0], ("a", "b", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0], ("b", "x"))
+        self.assertHasLiveIn(fn_body[0].body[0].handlers[0].body[0], ("b", "x"))
+        self.assertHasLiveIn(fn_body[1], ("x",))
 
     def test_live_in_stacked_if(self):
-
         def test_fn(x, a, b, c):
             if a > 0:
                 x = b
@@ -351,11 +331,10 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'b', 'c', 'x'))
-        self.assertHasLiveIn(fn_body[1], ('c', 'x'))
+        self.assertHasLiveIn(fn_body[0], ("a", "b", "c", "x"))
+        self.assertHasLiveIn(fn_body[1], ("c", "x"))
 
     def test_live_in_stacked_if_else(self):
-
         def test_fn(x, a, b, c, d):
             if a > 1:
                 x = b
@@ -368,11 +347,10 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'b', 'c', 'd'))
-        self.assertHasLiveIn(fn_body[1], ('d', 'x'))
+        self.assertHasLiveIn(fn_body[0], ("a", "b", "c", "d"))
+        self.assertHasLiveIn(fn_body[1], ("d", "x"))
 
     def test_live_in_for_basic(self):
-
         def test_fn(x, y, a):
             for i in a:
                 x = i
@@ -383,10 +361,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'y', 'z'))
+        self.assertHasLiveIn(fn_body[0], ("a", "y", "z"))
 
     def test_live_in_for_nested(self):
-
         def test_fn(x, y, a):
             for i in a:
                 for j in i:
@@ -398,10 +375,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'y', 'z'))
+        self.assertHasLiveIn(fn_body[0], ("a", "y", "z"))
 
     def test_live_in_deletion(self):
-
         def test_fn(x, y, a):
             for _ in a:
                 if x:
@@ -412,10 +388,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('a', 'x', 'y'))
+        self.assertHasLiveIn(fn_body[0], ("a", "x", "y"))
 
     def test_live_in_generator_comprehension(self):
-
         def test_fn(y):
             if all(x for x in y):
                 return
@@ -423,10 +398,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('all', 'y'))
+        self.assertHasLiveIn(fn_body[0], ("all", "y"))
 
     def test_live_in_list_comprehension(self):
-
         def test_fn(y):
             if [x for x in y]:
                 return
@@ -434,20 +408,18 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('y',))
+        self.assertHasLiveIn(fn_body[0], ("y",))
 
     def test_live_in_list_comprehension_expression(self):
-
         def test_fn(y, s):
             s += foo([x for x in y])  # pylint:disable=undefined-variable
 
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('y', 'foo', 's'))
+        self.assertHasLiveIn(fn_body[0], ("y", "foo", "s"))
 
     def test_live_in_set_comprehension(self):
-
         def test_fn(y):
             if {x for x in y}:
                 return
@@ -455,10 +427,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('y',))
+        self.assertHasLiveIn(fn_body[0], ("y",))
 
     def test_live_in_dict_comprehension(self):
-
         def test_fn(y):
             if {k: v for k, v in y}:
                 return
@@ -466,10 +437,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasLiveIn(fn_body[0], ('y',))
+        self.assertHasLiveIn(fn_body[0], ("y",))
 
     def test_global_symbol(self):
-
         def test_fn(c):
             global global_a
             global global_b
@@ -481,9 +451,9 @@ class LivenessAnalyzerTest(LivenessAnalyzerTestBase):
 
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
-        self.assertHasLiveOut(fn_body[2], ('global_b',))
-        self.assertHasLiveIn(fn_body[2], ('global_a', 'c'))
+        self.assertHasLiveOut(fn_body[2], ("global_b",))
+        self.assertHasLiveIn(fn_body[2], ("global_a", "c"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
