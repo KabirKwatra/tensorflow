@@ -64,7 +64,8 @@ class MiscTest(test.TestCase):
                     results.append(((i, j, k), get_range_as_graph(ti, tj, tk)))
 
         for (i, j, k), result_tensor in results:
-            self.assertEqual(len(list(range(i, j, k))), self.evaluate(result_tensor))
+            self.assertEqual(len(list(range(i, j, k))),
+                             self.evaluate(result_tensor))
 
 
 if __name__ == "__main__":

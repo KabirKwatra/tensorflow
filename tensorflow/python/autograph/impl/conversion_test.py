@@ -38,8 +38,8 @@ from tensorflow.python.platform import test
 class ConversionTest(test.TestCase):
     def _simple_program_ctx(self):
         return converter.ProgramContext(
-            options=converter.ConversionOptions(recursive=True), autograph_module=api
-        )
+            options=converter.ConversionOptions(recursive=True),
+            autograph_module=api)
 
     def test_is_whitelisted(self):
         def test_fn():
@@ -65,9 +65,8 @@ class ConversionTest(test.TestCase):
 
         whitelisted_mod = imp.new_module("test_whitelisted_call")
         sys.modules["test_whitelisted_call"] = whitelisted_mod
-        config.CONVERSION_RULES = (
-            config.DoNotConvert("test_whitelisted_call"),
-        ) + config.CONVERSION_RULES
+        config.CONVERSION_RULES = (config.DoNotConvert(
+            "test_whitelisted_call"), ) + config.CONVERSION_RULES
 
         class TestClass(object):
             def __call__(self):
@@ -108,7 +107,8 @@ class ConversionTest(test.TestCase):
 
         bound_method = types.MethodType(
             test_fn,
-            function.TfMethodTarget(weakref.ref(test_obj), test_obj.member_function),
+            function.TfMethodTarget(weakref.ref(test_obj),
+                                    test_obj.member_function),
         )
 
         self.assertTrue(conversion.is_whitelisted(bound_method))

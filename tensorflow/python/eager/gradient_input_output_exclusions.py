@@ -152,8 +152,10 @@ class _FunctionCallsTracker(transformer.Base):
 
     def visit_Name(self, node):
         node = self.generic_visit(node)
-        if isinstance(node.ctx, gast.Load) and node.id in self.ctx.info.namespace:
-            anno.setanno(node, "static_value", self.ctx.info.namespace[node.id])
+        if isinstance(node.ctx,
+                      gast.Load) and node.id in self.ctx.info.namespace:
+            anno.setanno(node, "static_value",
+                         self.ctx.info.namespace[node.id])
         return node
 
     def visit_Attribute(self, node):
@@ -161,16 +163,14 @@ class _FunctionCallsTracker(transformer.Base):
         parent_val = anno.getanno(node.value, "static_value", default=None)
         if parent_val is not None:
             if hasattr(parent_val, node.attr):
-                anno.setanno(node, "static_value", getattr(parent_val, node.attr))
+                anno.setanno(node, "static_value",
+                             getattr(parent_val, node.attr))
         return node
 
     def visit_Call(self, node):
         node = self.generic_visit(node)
-        if (
-            node.args
-            and anno.getanno(node.args[0], anno.Basic.QN, None)
-            == self.first_argument_name
-        ):
+        if (node.args and anno.getanno(node.args[0], anno.Basic.QN,
+                                       None) == self.first_argument_name):
             fn_object = anno.getanno(node.func, "static_value", None)
             if fn_object is not None:
                 self.calls.add(fn_object)
@@ -215,7 +215,7 @@ def _live_tensors(f, attr_name="inputs"):
     op_arg_name = anno.getanno(node.args.args[0], anno.Basic.QN)
     op_inputs_outputs_name = qual_names.QN(op_arg_name, attr=attr_name)
 
-    special_tracker = _SubscriptUseTracker(ctx, (op_inputs_outputs_name,))
+    special_tracker = _SubscriptUseTracker(ctx, (op_inputs_outputs_name, ))
     node = special_tracker.visit(node)
 
     live_vars_in = anno.getanno(node.body[0], anno.Static.LIVE_VARS_IN)
@@ -252,7 +252,7 @@ def _live_tensors(f, attr_name="inputs"):
         if not subscript.is_simple():
             # Not a number, assuming it can be anything.
             return _ALL
-        (subscript_val,) = subscript.qn
+        (subscript_val, ) = subscript.qn
         if not isinstance(subscript_val, qual_names.NumberLiteral):
             # Not a number, assuming it can be anything.
             return _ALL
@@ -310,10 +310,9 @@ def get_entries(attr_name):
     for op_type in ops._gradient_registry.list():  # pylint: disable=protected-access
         if op_type in _EXCLUDED_OPS:
             continue
-        num_values = _get_num_inputs_outputs(op_type)[0 if attr_name == "inputs" else 1]
-        gradient_fn = ops._gradient_registry.lookup(
-            op_type
-        )  # pylint: disable=protected-access
+        num_values = _get_num_inputs_outputs(op_type)[0 if attr_name ==
+                                                      "inputs" else 1]
+        gradient_fn = ops._gradient_registry.lookup(op_type)  # pylint: disable=protected-access
         if gradient_fn is None:
             # NotDifferentiable
             if num_values != -1:
@@ -343,11 +342,10 @@ def get_function(name, entries):
 absl::optional<tensorflow::gtl::FlatSet<int>> {name}(
     const tensorflow::string &op_name) {{
   static std::array<OpIndexInfo, {count}> a = {{{{
-""".format(
-        name=name, count=len(entries) + 1
-    )
+""".format(name=name, count=len(entries) + 1)
     contents += "      "
-    contents += "\n      ".join(entries[op_type] for op_type in sorted(entries))
+    contents += "\n      ".join(entries[op_type]
+                                for op_type in sorted(entries))
     contents += '\n      {"VarHandleOp"},'
     contents += """
   }};
@@ -367,8 +365,10 @@ def get_contents():
     """Returns contents for the generated file."""
     contents = ""
     contents += _GENERATED_FILE_HEADER + _INCLUDES
-    contents += get_function("OpGradientUnusedInputIndices", get_entries("inputs"))
-    contents += get_function("OpGradientUnusedOutputIndices", get_entries("outputs"))
+    contents += get_function("OpGradientUnusedInputIndices",
+                             get_entries("inputs"))
+    contents += get_function("OpGradientUnusedOutputIndices",
+                             get_entries("outputs"))
     return contents
 
 
@@ -379,6 +379,9 @@ def main(output_file):
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("output", metavar="O", type=str, help="Output file.")
+    arg_parser.add_argument("output",
+                            metavar="O",
+                            type=str,
+                            help="Output file.")
     args = arg_parser.parse_args()
     main(args.output)

@@ -35,13 +35,13 @@ from tensorflow.python.autograph.utils import ag_logging as logging
 
 
 def _wrap_into_factory(
-    nodes,
-    entity_name,
-    inner_factory_name,
-    outer_factory_name,
-    closure_vars,
-    factory_args,
-    future_features,
+        nodes,
+        entity_name,
+        inner_factory_name,
+        outer_factory_name,
+        closure_vars,
+        factory_args,
+        future_features,
 ):
     """Wraps an AST into the body of a factory with consistent lexical context.
 
@@ -114,12 +114,15 @@ def _wrap_into_factory(
         template = """
       var_name = None
     """
-        dummy_closure_defs.extend(templates.replace(template, var_name=var_name))
+        dummy_closure_defs.extend(
+            templates.replace(template, var_name=var_name))
 
     if future_features:
         future_imports = gast.ImportFrom(
             module="__future__",
-            names=[gast.alias(name=name, asname=None) for name in future_features],
+            names=[
+                gast.alias(name=name, asname=None) for name in future_features
+            ],
             level=0,
         )
     else:
@@ -172,16 +175,17 @@ class _TransformedFnFactory(object):
         self.source_map = None
 
     def create(
-        self,
-        nodes,
-        namer,
-        inner_factory_name="inner_factory",
-        outer_factory_name="outer_factory",
-        future_features=(),
+            self,
+            nodes,
+            namer,
+            inner_factory_name="inner_factory",
+            outer_factory_name="outer_factory",
+            future_features=(),
     ):
         """Initializes a transformed function."""
         if self._unbound_factory is not None:
-            raise ValueError("double initialization; create a new object instead")
+            raise ValueError(
+                "double initialization; create a new object instead")
 
         inner_factory_name = namer.new_symbol(inner_factory_name, ())
         outer_factory_name = namer.new_symbol(outer_factory_name, ())
@@ -209,13 +213,12 @@ class _TransformedFnFactory(object):
         factory_code = self._unbound_factory.__code__
         factory_freevars = factory_code.co_freevars
         closure_map = dict(zip(self._freevars, closure))
-        factory_closure = tuple(closure_map[name] for name in factory_code.co_freevars)
+        factory_closure = tuple(closure_map[name]
+                                for name in factory_code.co_freevars)
         if len(factory_closure) != len(closure):
             raise ValueError(
-                "closure mismatch, requested {}, but source function had {}".format(
-                    self._freevars, factory_freevars
-                )
-            )
+                "closure mismatch, requested {}, but source function had {}".
+                format(self._freevars, factory_freevars))
 
         bound_factory = types.FunctionType(
             code=factory_code,
@@ -226,9 +229,7 @@ class _TransformedFnFactory(object):
         )
 
         # The lint override is a false positive.
-        transformed_entity = bound_factory(
-            **self._extra_locals
-        )  # pylint:disable=not-callable
+        transformed_entity = bound_factory(**self._extra_locals)  # pylint:disable=not-callable
 
         if defaults:
             transformed_entity.__defaults__ = defaults
@@ -333,9 +334,8 @@ class FunctionTranspiler(object):
                     "{}\n"
                     "This code must contain a single distinguishable lambda."
                     " To avoid this problem, define each lambda in a separate"
-                    " expression.".format(fn, source)
-                )
-            (node,) = nodes
+                    " expression.".format(fn, source))
+            (node, ) = nodes
 
         origin_info.resolve_entity(node, source, fn)
 
@@ -357,9 +357,10 @@ class FunctionTranspiler(object):
         if is_lambda:
             node = gast.Assign(
                 targets=[
-                    gast.Name(
-                        new_name, ctx=gast.Store(), annotation=None, type_comment=None
-                    )
+                    gast.Name(new_name,
+                              ctx=gast.Store(),
+                              annotation=None,
+                              type_comment=None)
                 ],
                 value=node,
             )
@@ -370,12 +371,12 @@ class FunctionTranspiler(object):
 
     def _cached_factory(self, fn, cache_subkey):
         cached_factory = self._cache[fn][cache_subkey]
-        logging.log(
-            3, "Cache hit for %s subkey %s: %s", fn, cache_subkey, cached_factory
-        )
+        logging.log(3, "Cache hit for %s subkey %s: %s", fn, cache_subkey,
+                    cached_factory)
         return cached_factory
 
-    def _transformed_factory(self, fn, cache_subkey, user_context, extra_locals):
+    def _transformed_factory(self, fn, cache_subkey, user_context,
+                             extra_locals):
         """Returns the transformed function factory for a given input."""
         if self._cache.has(fn, cache_subkey):
             return self._cached_factory(fn, cache_subkey)
@@ -389,16 +390,20 @@ class FunctionTranspiler(object):
             nodes, ctx = self._transform_function(fn, user_context)
 
             if logging.has_verbosity(2):
-                logging.log(2, "Transformed %s:\n\n%s\n", fn, parser.unparse(nodes))
+                logging.log(2, "Transformed %s:\n\n%s\n", fn,
+                            parser.unparse(nodes))
 
-            factory = _TransformedFnFactory(
-                ctx.info.name, fn.__code__.co_freevars, extra_locals
-            )
-            factory.create(nodes, ctx.namer, future_features=ctx.info.future_features)
+            factory = _TransformedFnFactory(ctx.info.name,
+                                            fn.__code__.co_freevars,
+                                            extra_locals)
+            factory.create(nodes,
+                           ctx.namer,
+                           future_features=ctx.info.future_features)
             self._cache[fn][cache_subkey] = factory
         return factory
 
-    def transform_function(self, fn, caching_subkey, user_context, extra_locals):
+    def transform_function(self, fn, caching_subkey, user_context,
+                           extra_locals):
         """Transforms a function.
 
         The `caching_subkey` argument allows mapping each function to multiple
@@ -425,9 +430,8 @@ class FunctionTranspiler(object):
                 Dict[origin_info.LineLocation, origin_info.OriginInfo]
 
         """
-        factory = self._transformed_factory(
-            fn, caching_subkey, user_context, extra_locals
-        )
+        factory = self._transformed_factory(fn, caching_subkey, user_context,
+                                            extra_locals)
 
         transformed_fn = factory.instantiate(
             globals_=fn.__globals__,

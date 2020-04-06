@@ -50,7 +50,8 @@ from tensorflow.python.util import tf_inspect
 
 class AutoGraphTranspiler(transpiler.FunctionTranspiler):
     def get_transformed_name(self, node):
-        return "tf__" + super(AutoGraphTranspiler, self).get_transformed_name(node)
+        return "tf__" + super(AutoGraphTranspiler,
+                              self).get_transformed_name(node)
 
     def transform_ast(self, node, ctx):
         # TODO(mdan): Insert list_comprehensions somewhere.
@@ -80,7 +81,6 @@ class AutoGraphTranspiler(transpiler.FunctionTranspiler):
 _TRANSPILER = AutoGraphTranspiler()
 _WHITELIST_CACHE = cache.UnboundInstanceCache()
 
-
 custom_vars = None
 
 
@@ -90,16 +90,13 @@ def convert(entity, program_ctx):
     """Applies AutoGraph to entity."""
 
     if not hasattr(entity, "__code__"):
-        raise ValueError(
-            "Cannot apply autograph to a function that doesn't "
-            "expose a __code__ object. If this is a @tf.function,"
-            " try passing f.python_function instead."
-        )
+        raise ValueError("Cannot apply autograph to a function that doesn't "
+                         "expose a __code__ object. If this is a @tf.function,"
+                         " try passing f.python_function instead.")
 
     _create_custom_vars(program_ctx)
     transformed, module, source_map = _TRANSPILER.transform_function(
-        entity, program_ctx.options, program_ctx, custom_vars
-    )
+        entity, program_ctx.options, program_ctx, custom_vars)
 
     assert not hasattr(transformed, "ag_module")
     assert not hasattr(transformed, "ag_source_map")
@@ -109,7 +106,9 @@ def convert(entity, program_ctx):
 
 
 # TODO(mdan): allow_namedtuple_subclass should be hardcoded to True.
-def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False):
+def is_whitelisted(o,
+                   check_call_override=True,
+                   allow_namedtuple_subclass=False):
     """Checks whether an entity is whitelisted for use in graph mode.
 
     Examples of whitelisted entities include all members of the tensorflow
@@ -153,16 +152,17 @@ def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False)
             " by AutoGraph.",
             o,
         )
-        logging.log(2, "Whitelisted: %s: generator functions are not converted", o)
+        logging.log(2,
+                    "Whitelisted: %s: generator functions are not converted",
+                    o)
         return True
 
-    if check_call_override and not tf_inspect.isclass(o) and hasattr(o, "__call__"):
+    if check_call_override and not tf_inspect.isclass(o) and hasattr(
+            o, "__call__"):
         # Callable objects: whitelisted if their __call__ method is.
         # The type check avoids infinite recursion around the __call__ method
         # of function objects.
-        if (type(o) != type(o.__call__)) and is_whitelisted(
-            o.__call__
-        ):  # pylint: disable=unidiomatic-typecheck
+        if (type(o) != type(o.__call__)) and is_whitelisted(o.__call__):  # pylint: disable=unidiomatic-typecheck
             logging.log(2, "Whitelisted: %s: object __call__ whitelisted", o)
             return True
 
@@ -188,16 +188,16 @@ def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False)
             owner_class = o.__self__.target_class
         if owner_class is not None:
             if issubclass(owner_class, unittest.TestCase):
-                logging.log(2, "Whitelisted: %s: method of TestCase subclass", o)
+                logging.log(2, "Whitelisted: %s: method of TestCase subclass",
+                            o)
                 return True
 
             owner_class = inspect_utils.getdefiningclass(o, owner_class)
-            if is_whitelisted(
-                owner_class, check_call_override=False, allow_namedtuple_subclass=True
-            ):
-                logging.log(
-                    2, "Whitelisted: %s: owner is whitelisted %s", o, owner_class
-                )
+            if is_whitelisted(owner_class,
+                              check_call_override=False,
+                              allow_namedtuple_subclass=True):
+                logging.log(2, "Whitelisted: %s: owner is whitelisted %s", o,
+                            owner_class)
                 return True
 
     if inspect_utils.isnamedtuple(o):
@@ -205,7 +205,8 @@ def is_whitelisted(o, check_call_override=True, allow_namedtuple_subclass=False)
         # because they don't expose source code. But we assume they are safe for
         # graph mode since they are just containers.
         if allow_namedtuple_subclass:
-            if not any(inspect_utils.isnamedtuple(base) for base in o.__bases__):
+            if not any(
+                    inspect_utils.isnamedtuple(base) for base in o.__bases__):
                 logging.log(2, "Whitelisted: %s: named tuple", o)
                 return True
         else:

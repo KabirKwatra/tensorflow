@@ -144,7 +144,7 @@ class FunctionTranspilerTest(test.TestCase):
 
     def test_lambda_code_with_removable_garbage(self):
         # pylint:disable=g-long-lambda
-        f = (lambda x: (x + 1),)[0]  # intentional wrap  # intentional wrap
+        f = (lambda x: (x + 1), )[0]  # intentional wrap  # intentional wrap
         # pylint:enable=g-long-lambda
 
         tr = TestTranspiler()
@@ -193,7 +193,8 @@ class FunctionTranspilerTest(test.TestCase):
             _, mod, _ = tr.transform_function(f, cache_key, None, {})
             outputs.append(mod.__name__)
 
-        threads = tuple(threading.Thread(target=conversion_thread) for _ in range(10))
+        threads = tuple(
+            threading.Thread(target=conversion_thread) for _ in range(10))
         for t in threads:
             t.start()
         for t in threads:
@@ -232,8 +233,7 @@ class FunctionTranspilerTest(test.TestCase):
         obj = TestClass()
 
         f, _, _ = tr.transform_function(
-            obj.global_var_for_test_namespace_collisions, object(), None, {}
-        )
+            obj.global_var_for_test_namespace_collisions, object(), None, {})
         self.assertIs(f(obj), global_var_for_test_namespace_collisions)
 
 

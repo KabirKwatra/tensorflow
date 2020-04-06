@@ -92,26 +92,27 @@ class TransformerTest(test.TestCase):
         self.assertDifferentAnno(fn_body[0], outer_while_body[0], "loop_state")
 
         first_if_body = outer_while_body[1].body
-        self.assertDifferentAnno(outer_while_body[0], first_if_body[0], "cond_state")
-        self.assertSameAnno(outer_while_body[0], first_if_body[0], "loop_state")
+        self.assertDifferentAnno(outer_while_body[0], first_if_body[0],
+                                 "cond_state")
+        self.assertSameAnno(outer_while_body[0], first_if_body[0],
+                            "loop_state")
 
         first_inner_while_body = first_if_body[1].body
-        self.assertSameAnno(first_if_body[0], first_inner_while_body[0], "cond_state")
-        self.assertDifferentAnno(
-            first_if_body[0], first_inner_while_body[0], "loop_state"
-        )
+        self.assertSameAnno(first_if_body[0], first_inner_while_body[0],
+                            "cond_state")
+        self.assertDifferentAnno(first_if_body[0], first_inner_while_body[0],
+                                 "loop_state")
 
         second_if_body = outer_while_body[2].body
-        self.assertDifferentAnno(first_if_body[0], second_if_body[0], "cond_state")
+        self.assertDifferentAnno(first_if_body[0], second_if_body[0],
+                                 "cond_state")
         self.assertSameAnno(first_if_body[0], second_if_body[0], "loop_state")
 
         second_inner_while_body = second_if_body[1].body
-        self.assertDifferentAnno(
-            first_inner_while_body[0], second_inner_while_body[0], "cond_state"
-        )
-        self.assertDifferentAnno(
-            first_inner_while_body[0], second_inner_while_body[0], "loop_state"
-        )
+        self.assertDifferentAnno(first_inner_while_body[0],
+                                 second_inner_while_body[0], "cond_state")
+        self.assertDifferentAnno(first_inner_while_body[0],
+                                 second_inner_while_body[0], "loop_state")
 
     def test_state_tracking_context_manager(self):
         class CondState(object):
@@ -145,16 +146,18 @@ class TransformerTest(test.TestCase):
         self.assertSameAnno(outer_if_body[0], outer_if_body[2], "cond_state")
 
         inner_if_body = outer_if_body[1].body
-        self.assertDifferentAnno(inner_if_body[0], outer_if_body[0], "cond_state")
+        self.assertDifferentAnno(inner_if_body[0], outer_if_body[0],
+                                 "cond_state")
 
     def test_visit_block_postprocessing(self):
         class TestTransformer(transformer.Base):
             def _process_body_item(self, node):
                 if isinstance(node, gast.Assign) and (node.value.id == "y"):
                     if_node = gast.If(
-                        gast.Name(
-                            "x", ctx=gast.Load(), annotation=None, type_comment=None
-                        ),
+                        gast.Name("x",
+                                  ctx=gast.Load(),
+                                  annotation=None,
+                                  type_comment=None),
                         [node],
                         [],
                     )
@@ -163,8 +166,7 @@ class TransformerTest(test.TestCase):
 
             def visit_FunctionDef(self, node):
                 node.body = self.visit_block(
-                    node.body, after_visit=self._process_body_item
-                )
+                    node.body, after_visit=self._process_body_item)
                 return node
 
         def test_function(x, y):
@@ -239,7 +241,8 @@ class TransformerTest(test.TestCase):
         # The message should reference the exception actually raised, not anything
         # from the exception handler.
         expected_substring = "I blew up"
-        self.assertTrue(expected_substring in obtained_message, obtained_message)
+        self.assertTrue(expected_substring in obtained_message,
+                        obtained_message)
 
     def test_origin_info_propagated_to_new_nodes(self):
         class TestTransformer(transformer.Base):
@@ -261,8 +264,7 @@ class TransformerTest(test.TestCase):
         created_pass_node = node.body[1]
         # Takes the line number of the if statement.
         self.assertEqual(
-            anno.getanno(created_pass_node, anno.Basic.ORIGIN).loc.lineno, 102
-        )
+            anno.getanno(created_pass_node, anno.Basic.ORIGIN).loc.lineno, 102)
 
     def test_origin_info_preserved_in_moved_nodes(self):
         class TestTransformer(transformer.Base):
@@ -285,10 +287,10 @@ class TransformerTest(test.TestCase):
         assign_node = node.body[1]
         aug_assign_node = node.body[2]
         # Keep their original line numbers.
-        self.assertEqual(anno.getanno(assign_node, anno.Basic.ORIGIN).loc.lineno, 103)
         self.assertEqual(
-            anno.getanno(aug_assign_node, anno.Basic.ORIGIN).loc.lineno, 104
-        )
+            anno.getanno(assign_node, anno.Basic.ORIGIN).loc.lineno, 103)
+        self.assertEqual(
+            anno.getanno(aug_assign_node, anno.Basic.ORIGIN).loc.lineno, 104)
 
 
 class CodeGeneratorTest(test.TestCase):
@@ -316,7 +318,8 @@ class CodeGeneratorTest(test.TestCase):
                 self.emit("if ")
                 # This is just for simplifity. A real generator will walk the tree and
                 # emit proper code.
-                self.emit(parser.unparse(node.test, include_encoding_marker=False))
+                self.emit(
+                    parser.unparse(node.test, include_encoding_marker=False))
                 self.emit(" {\n")
                 self.visit_block(node.body)
                 self.emit("} else {\n")
@@ -339,21 +342,19 @@ class CodeGeneratorTest(test.TestCase):
 
         self.assertEqual(
             tg.code_buffer,
-            "\n".join(
-                [
-                    "x = 1",
-                    "if (x > 0) {",
-                    "x = 2",
-                    "if (x > 1) {",
-                    "x = 3",
-                    "} else {",
-                    "}",
-                    "} else {",
-                    "}",
-                    "return x",
-                    "",
-                ]
-            ),
+            "\n".join([
+                "x = 1",
+                "if (x > 0) {",
+                "x = 2",
+                "if (x > 1) {",
+                "x = 3",
+                "} else {",
+                "}",
+                "} else {",
+                "}",
+                "return x",
+                "",
+            ]),
         )
         # TODO(mdan): Test the source map.
 

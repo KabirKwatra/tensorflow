@@ -144,7 +144,11 @@ class AnfTransformerTest(AnfTestBase):
             tmp_1004 = e + f
             tmp_1005 = c + d
             tmp_1006 = tmp_1001 + i
-            call_something(tmp_1002, tmp_1003, kwarg=tmp_1005, *tmp_1004, **tmp_1006)
+            call_something(tmp_1002,
+                           tmp_1003,
+                           kwarg=tmp_1005,
+                           *tmp_1004,
+                           **tmp_1006)
 
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
@@ -313,11 +317,11 @@ class AnfTransformerTest(AnfTestBase):
 
     def test_raise_yield_and_raise(self):
         def test_function(a, c, some_computed, exception):
-            yield a ** c
+            yield a**c
             raise some_computed("complicated" + exception)
 
         def expected_result(a, c, some_computed, exception):
-            tmp_1001 = a ** c
+            tmp_1001 = a**c
             yield tmp_1001
             tmp_1002 = "complicated" + exception
             tmp_1003 = some_computed(tmp_1002)
@@ -345,7 +349,8 @@ class AnfTransformerTest(AnfTestBase):
         self.assert_body_anfs_as_expected(expected_result, test_function)
 
     def test_exec(self):
-        self.assert_body_anfs_as_expected(exec_expected_result, exec_test_function)
+        self.assert_body_anfs_as_expected(exec_expected_result,
+                                          exec_test_function)
 
     def test_simple_while_and_assert(self):
         def test_function(foo, quux):
@@ -438,11 +443,13 @@ class AnfConfiguredTest(AnfTestBase):
         try:
             # TODO(b/140808434): Fix this.
             # gast pre-0.3
-            literals = (gast.Num, gast.Str, gast.Bytes, gast.NameConstant, gast.Name)
+            literals = (gast.Num, gast.Str, gast.Bytes, gast.NameConstant,
+                        gast.Name)
         except AttributeError:
             # gast 0.3+
             literals = (gast.Constant, gast.Name)
-        config = [(anf.ASTEdgePattern(gast.Call, anf.ANY, literals), anf.REPLACE)]
+        config = [(anf.ASTEdgePattern(gast.Call, anf.ANY,
+                                      literals), anf.REPLACE)]
 
         def test_function(x, frob):
             return frob(x, x + 1, 2)
@@ -451,7 +458,8 @@ class AnfConfiguredTest(AnfTestBase):
             tmp_1001 = 2
             return frob(x, x + 1, tmp_1001)
 
-        self.assert_body_anfs_as_expected(expected_result, test_function, config)
+        self.assert_body_anfs_as_expected(expected_result, test_function,
+                                          config)
 
     def test_anf_some_function_calls(self):
         # Another example specific configuration that differs from the default:
@@ -476,14 +484,16 @@ class AnfConfiguredTest(AnfTestBase):
             y = foo(x, tmp_1001, tmp_1002)
             return bar(y, y + 1, 2)
 
-        self.assert_body_anfs_as_expected(expected_result, test_function, config)
+        self.assert_body_anfs_as_expected(expected_result, test_function,
+                                          config)
 
     def test_touching_name_constant(self):
         # Checking that the nodes for `True`, `False`, and `None` can be manipulated
         # by a configuration.  This is non-trivial, because in Python 2 those are
         # represented as `Name`, which is the same node type as variable references.
         specials = (gast.Name, gast.Constant)
-        config = [(anf.ASTEdgePattern(gast.Call, anf.ANY, specials), anf.REPLACE)]
+        config = [(anf.ASTEdgePattern(gast.Call, anf.ANY,
+                                      specials), anf.REPLACE)]
 
         def test_function(f):
             return f(True, False, None)
@@ -494,7 +504,8 @@ class AnfConfiguredTest(AnfTestBase):
             tmp_1003 = None
             return f(tmp_1001, tmp_1002, tmp_1003)
 
-        self.assert_body_anfs_as_expected(expected_result, test_function, config)
+        self.assert_body_anfs_as_expected(expected_result, test_function,
+                                          config)
 
 
 if __name__ == "__main__":

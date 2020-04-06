@@ -133,7 +133,7 @@ class Feature(enum.Enum):
     def all_but(cls, exclude):
         """Returns a tuple that enables all but the excluded options."""
         if not isinstance(exclude, (list, tuple, set)):
-            exclude = (exclude,)
+            exclude = (exclude, )
         return tuple(set(cls.all()) - set(exclude) - {cls.ALL})
 
 
@@ -155,11 +155,11 @@ class ConversionOptions(object):
     """
 
     def __init__(
-        self,
-        recursive=False,
-        user_requested=False,
-        internal_convert_user_code=True,
-        optional_features=Feature.ALL,
+            self,
+            recursive=False,
+            user_requested=False,
+            internal_convert_user_code=True,
+            optional_features=Feature.ALL,
     ):
         self.recursive = recursive
         self.user_requested = user_requested
@@ -169,7 +169,7 @@ class ConversionOptions(object):
         if optional_features is None:
             optional_features = ()
         elif isinstance(optional_features, Feature):
-            optional_features = (optional_features,)
+            optional_features = (optional_features, )
         optional_features = frozenset(optional_features)
         self.optional_features = optional_features
 
@@ -192,9 +192,8 @@ class ConversionOptions(object):
         return "ConversionOptions[{}]"
 
     def uses(self, feature):
-        return (
-            Feature.ALL in self.optional_features or feature in self.optional_features
-        )
+        return (Feature.ALL in self.optional_features
+                or feature in self.optional_features)
 
     def call_options(self):
         """Returns the corresponding options to be used for recursive conversion."""
@@ -226,17 +225,16 @@ class ConversionOptions(object):
     """
 
         def list_of_features(values):
-            return parser.parse_expression(
-                "({})".format(", ".join("ag__.{}".format(str(v)) for v in values))
-            )
+            return parser.parse_expression("({})".format(", ".join(
+                "ag__.{}".format(str(v)) for v in values)))
 
         expr_ast = templates.replace(
             template,
             recursive_val=parser.parse_expression(str(self.recursive)),
-            user_requested_val=parser.parse_expression(str(self.user_requested)),
+            user_requested_val=parser.parse_expression(str(
+                self.user_requested)),
             internal_convert_user_code_val=parser.parse_expression(
-                str(self.internal_convert_user_code)
-            ),
+                str(self.internal_convert_user_code)),
             optional_features_val=list_of_features(self.optional_features),
         )
         return expr_ast[0].value
@@ -251,8 +249,8 @@ STANDARD_OPTIONS = ConversionOptions(
 
 
 class ProgramContext(
-    collections.namedtuple("ProgramContext", ("options", "autograph_module"))
-):
+        collections.namedtuple("ProgramContext",
+                               ("options", "autograph_module"))):
     """ProgramContext keeps track of converting function hierarchies.
 
     This object is mutable, and is updated during conversion. Not thread safe.
@@ -307,7 +305,8 @@ class Base(transformer.Base):
 
         arg_values_found = []
         for def_ in defs:
-            if directive in def_.directives and arg in def_.directives[directive]:
+            if directive in def_.directives and arg in def_.directives[
+                    directive]:
                 arg_values_found.append(def_.directives[directive][arg])
 
         if not arg_values_found:
@@ -323,15 +322,13 @@ class Base(transformer.Base):
             if not ast_util.matches(first_value, other_value):
                 qn = anno.getanno(node, anno.Basic.QN)
                 raise ValueError(
-                    "%s has ambiguous annotations for %s(%s): %s, %s"
-                    % (
+                    "%s has ambiguous annotations for %s(%s): %s, %s" % (
                         qn,
                         directive.__name__,
                         arg,
                         parser.unparse(other_value).strip(),
                         parser.unparse(first_value).strip(),
-                    )
-                )
+                    ))
         return first_value
 
     def visit(self, node):
@@ -375,7 +372,10 @@ def standard_analysis(node, context, is_initial=False):
     node = liveness.resolve(node, context, graphs)
     if is_initial:
         anno.dup(
-            node, {anno.Static.DEFINITIONS: anno.Static.ORIG_DEFINITIONS,},
+            node,
+            {
+                anno.Static.DEFINITIONS: anno.Static.ORIG_DEFINITIONS,
+            },
         )
     return node
 

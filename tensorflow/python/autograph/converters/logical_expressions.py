@@ -32,7 +32,6 @@ from tensorflow.python.autograph.pyct import templates
 # Used to signal that an operand is safe for non-lazy evaluation.
 SAFE_BOOLEAN_OPERAND = "SAFE_BOOLEAN_OPERAND"
 
-
 LOGICAL_OPERATORS = {
     gast.And: "ag__.and_",
     gast.Not: "ag__.not_",
@@ -69,19 +68,23 @@ class LogicalExpressionTransformer(converter.Base):
         )
 
     def _as_binary_operation(self, op, arg1, arg2):
-        template = templates.replace_as_expression("arg1 is arg2", arg1=arg1, arg2=arg2)
+        template = templates.replace_as_expression("arg1 is arg2",
+                                                   arg1=arg1,
+                                                   arg2=arg2)
         template.ops[0] = op
         return template
 
     def _as_unary_function(self, func_name, arg):
         return templates.replace_as_expression(
-            "func_name(arg)", func_name=parser.parse_expression(func_name), arg=arg
-        )
+            "func_name(arg)",
+            func_name=parser.parse_expression(func_name),
+            arg=arg)
 
     def visit_Compare(self, node):
         node = self.generic_visit(node)
 
-        if not self.ctx.user.options.uses(converter.Feature.EQUALITY_OPERATORS):
+        if not self.ctx.user.options.uses(
+                converter.Feature.EQUALITY_OPERATORS):
             return node
 
         ops_and_comps = list(zip(node.ops, node.comparators))
@@ -94,7 +97,8 @@ class LogicalExpressionTransformer(converter.Base):
             op, right = ops_and_comps.pop(0)
             overload = self._overload_of(op)
             if overload is not None:
-                binary_comparison = self._as_binary_function(overload, left, right)
+                binary_comparison = self._as_binary_function(
+                    overload, left, right)
             else:
                 binary_comparison = self._as_binary_operation(op, left, right)
             if op_tree is not None:

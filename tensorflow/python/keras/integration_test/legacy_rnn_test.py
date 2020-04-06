@@ -27,8 +27,7 @@ class KerasNetworkTFRNNs(tf.keras.Model):
     def __init__(self, name=None):
         super(KerasNetworkTFRNNs, self).__init__(name=name)
         self._cell = tf.nn.rnn_cell.MultiRNNCell(
-            [tf.nn.rnn_cell.LSTMCell(1) for _ in range(2)]
-        )
+            [tf.nn.rnn_cell.LSTMCell(1) for _ in range(2)])
 
     def call(self, inputs):
         return self._cell(inputs, self._cell.get_initial_state(inputs))
@@ -38,8 +37,7 @@ class KerasNetworkKerasRNNs(tf.keras.Model):
     def __init__(self, name=None):
         super(KerasNetworkKerasRNNs, self).__init__(name=name)
         self._cell = tf.keras.layers.StackedRNNCells(
-            [tf.keras.layers.LSTMCell(1) for _ in range(2)]
-        )
+            [tf.keras.layers.LSTMCell(1) for _ in range(2)])
 
     def call(self, inputs):
         return self._cell(inputs, self._cell.get_initial_state(inputs))
@@ -66,19 +64,22 @@ class LegacyRNNTest(tf.test.TestCase):
             y_train = tf.keras.utils.to_categorical(y_train)
             cell = tf.keras.layers.SimpleRNNCell(output_shape)
 
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             predict = tf.placeholder(tf.float32, shape=(None, output_shape))
 
             outputs, state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
-            self.assertEqual(outputs.shape.as_list(), [None, timestep, output_shape])
+            self.assertEqual(outputs.shape.as_list(),
+                             [None, timestep, output_shape])
             self.assertEqual(state.shape.as_list(), [None, output_shape])
             loss = tf.losses.softmax_cross_entropy(predict, state)
             train_op = tf.train.GradientDescentOptimizer(0.001).minimize(loss)
 
             sess.run([tf.global_variables_initializer()])
-            _, outputs, state = sess.run(
-                [train_op, outputs, state], {inputs: x_train, predict: y_train}
-            )
+            _, outputs, state = sess.run([train_op, outputs, state], {
+                inputs: x_train,
+                predict: y_train
+            })
 
             self.assertEqual(len(outputs), batch)
             self.assertEqual(len(state), batch)
@@ -98,19 +99,22 @@ class LegacyRNNTest(tf.test.TestCase):
             y_train = tf.keras.utils.to_categorical(y_train)
             cell = tf.keras.layers.GRUCell(output_shape)
 
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             predict = tf.placeholder(tf.float32, shape=(None, output_shape))
 
             outputs, state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
-            self.assertEqual(outputs.shape.as_list(), [None, timestep, output_shape])
+            self.assertEqual(outputs.shape.as_list(),
+                             [None, timestep, output_shape])
             self.assertEqual(state.shape.as_list(), [None, output_shape])
             loss = tf.losses.softmax_cross_entropy(predict, state)
             train_op = tf.train.GradientDescentOptimizer(0.001).minimize(loss)
 
             sess.run([tf.global_variables_initializer()])
-            _, outputs, state = sess.run(
-                [train_op, outputs, state], {inputs: x_train, predict: y_train}
-            )
+            _, outputs, state = sess.run([train_op, outputs, state], {
+                inputs: x_train,
+                predict: y_train
+            })
 
             self.assertEqual(len(outputs), batch)
             self.assertEqual(len(state), batch)
@@ -130,11 +134,13 @@ class LegacyRNNTest(tf.test.TestCase):
             y_train = tf.keras.utils.to_categorical(y_train)
             cell = tf.keras.layers.LSTMCell(output_shape)
 
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             predict = tf.placeholder(tf.float32, shape=(None, output_shape))
 
             outputs, state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
-            self.assertEqual(outputs.shape.as_list(), [None, timestep, output_shape])
+            self.assertEqual(outputs.shape.as_list(),
+                             [None, timestep, output_shape])
             self.assertEqual(len(state), 2)
             self.assertEqual(state[0].shape.as_list(), [None, output_shape])
             self.assertEqual(state[1].shape.as_list(), [None, output_shape])
@@ -142,9 +148,10 @@ class LegacyRNNTest(tf.test.TestCase):
             train_op = tf.train.GradientDescentOptimizer(0.001).minimize(loss)
 
             sess.run([tf.global_variables_initializer()])
-            _, outputs, state = sess.run(
-                [train_op, outputs, state], {inputs: x_train, predict: y_train}
-            )
+            _, outputs, state = sess.run([train_op, outputs, state], {
+                inputs: x_train,
+                predict: y_train
+            })
 
             self.assertEqual(len(outputs), batch)
             self.assertEqual(len(state), 2)
@@ -164,32 +171,35 @@ class LegacyRNNTest(tf.test.TestCase):
                 num_classes=output_shape,
             )
             y_train = tf.keras.utils.to_categorical(y_train)
-            cell = tf.keras.layers.StackedRNNCells(
-                [
-                    tf.keras.layers.LSTMCell(2 * output_shape),
-                    tf.keras.layers.LSTMCell(output_shape),
-                ]
-            )
+            cell = tf.keras.layers.StackedRNNCells([
+                tf.keras.layers.LSTMCell(2 * output_shape),
+                tf.keras.layers.LSTMCell(output_shape),
+            ])
 
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             predict = tf.placeholder(tf.float32, shape=(None, output_shape))
 
             outputs, state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
-            self.assertEqual(outputs.shape.as_list(), [None, timestep, output_shape])
+            self.assertEqual(outputs.shape.as_list(),
+                             [None, timestep, output_shape])
             self.assertEqual(len(state), 2)
             state = tf.nest.flatten(state)
             self.assertEqual(len(state), 4)
-            self.assertEqual(state[0].shape.as_list(), [None, 2 * output_shape])
-            self.assertEqual(state[1].shape.as_list(), [None, 2 * output_shape])
+            self.assertEqual(state[0].shape.as_list(),
+                             [None, 2 * output_shape])
+            self.assertEqual(state[1].shape.as_list(),
+                             [None, 2 * output_shape])
             self.assertEqual(state[2].shape.as_list(), [None, output_shape])
             self.assertEqual(state[3].shape.as_list(), [None, output_shape])
             loss = tf.losses.softmax_cross_entropy(predict, state[2])
             train_op = tf.train.GradientDescentOptimizer(0.001).minimize(loss)
 
             sess.run([tf.global_variables_initializer()])
-            _, outputs, state = sess.run(
-                [train_op, outputs, state], {inputs: x_train, predict: y_train}
-            )
+            _, outputs, state = sess.run([train_op, outputs, state], {
+                inputs: x_train,
+                predict: y_train
+            })
 
             self.assertEqual(len(outputs), batch)
             self.assertEqual(len(state), 4)
@@ -212,7 +222,8 @@ class LegacyRNNTest(tf.test.TestCase):
             y_train = tf.keras.utils.to_categorical(y_train)
             cell = tf.keras.layers.SimpleRNNCell(output_shape)
 
-            inputs = [tf.placeholder(tf.float32, shape=(None, input_shape))] * timestep
+            inputs = [tf.placeholder(tf.float32, shape=(None, input_shape))
+                      ] * timestep
             predict = tf.placeholder(tf.float32, shape=(None, output_shape))
 
             outputs, state = tf.nn.static_rnn(cell, inputs, dtype=tf.float32)
@@ -247,15 +258,22 @@ class LegacyRNNTest(tf.test.TestCase):
         weights = fix_weights_generator.get_weights()
 
         with self.session(graph=tf.Graph()) as sess:
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             cell = tf.keras.layers.SimpleRNNCell(output_shape)
-            tf_out, tf_state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
+            tf_out, tf_state = tf.nn.dynamic_rnn(cell,
+                                                 inputs,
+                                                 dtype=tf.float32)
             cell.set_weights(weights)
-            [tf_out, tf_state] = sess.run([tf_out, tf_state], {inputs: x_train})
+            [tf_out, tf_state] = sess.run([tf_out, tf_state],
+                                          {inputs: x_train})
         with self.session(graph=tf.Graph()) as sess:
-            k_input = tf.keras.Input(shape=(timestep, input_shape), dtype=tf.float32)
+            k_input = tf.keras.Input(shape=(timestep, input_shape),
+                                     dtype=tf.float32)
             cell = tf.keras.layers.SimpleRNNCell(output_shape)
-            layer = tf.keras.layers.RNN(cell, return_sequences=True, return_state=True)
+            layer = tf.keras.layers.RNN(cell,
+                                        return_sequences=True,
+                                        return_state=True)
             keras_out = layer(k_input)
             cell.set_weights(weights)
             k_out, k_state = sess.run(keras_out, {k_input: x_train})
@@ -283,27 +301,35 @@ class LegacyRNNTest(tf.test.TestCase):
         tf_weights = [np.concatenate((kernel, recurrent_kernel)), bias]
 
         with self.session(graph=tf.Graph()) as sess:
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             cell = tf.keras.layers.SimpleRNNCell(output_shape)
             k_out, k_state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
             cell.set_weights(keras_weights)
             [k_out, k_state] = sess.run([k_out, k_state], {inputs: x_train})
         with self.session(graph=tf.Graph()) as sess:
-            inputs = tf.placeholder(tf.float32, shape=(None, timestep, input_shape))
+            inputs = tf.placeholder(tf.float32,
+                                    shape=(None, timestep, input_shape))
             cell = tf.nn.rnn_cell.BasicRNNCell(output_shape)
-            tf_out, tf_state = tf.nn.dynamic_rnn(cell, inputs, dtype=tf.float32)
+            tf_out, tf_state = tf.nn.dynamic_rnn(cell,
+                                                 inputs,
+                                                 dtype=tf.float32)
             cell.set_weights(tf_weights)
-            [tf_out, tf_state] = sess.run([tf_out, tf_state], {inputs: x_train})
+            [tf_out, tf_state] = sess.run([tf_out, tf_state],
+                                          {inputs: x_train})
 
         self.assertAllClose(tf_out, k_out, atol=1e-5)
         self.assertAllClose(tf_state, k_state, atol=1e-5)
 
     def testRNNCellSerialization(self):
         for cell in [
-            tf.nn.rnn_cell.LSTMCell(32, use_peepholes=True, cell_clip=True),
-            tf.nn.rnn_cell.BasicLSTMCell(32, dtype=tf.float32),
-            tf.nn.rnn_cell.BasicRNNCell(32, activation="relu", dtype=tf.float32),
-            tf.nn.rnn_cell.GRUCell(32, dtype=tf.float32),
+                tf.nn.rnn_cell.LSTMCell(32, use_peepholes=True,
+                                        cell_clip=True),
+                tf.nn.rnn_cell.BasicLSTMCell(32, dtype=tf.float32),
+                tf.nn.rnn_cell.BasicRNNCell(32,
+                                            activation="relu",
+                                            dtype=tf.float32),
+                tf.nn.rnn_cell.GRUCell(32, dtype=tf.float32),
         ]:
             with self.cached_session():
                 x = tf.keras.Input((None, 5))
@@ -357,17 +383,21 @@ class LegacyRNNTest(tf.test.TestCase):
         # Most importantly, this doesn't fail due to variable scope reuse issues.
         kn1_new(z)  # pylint:disable=not-callable
 
-        self.assertTrue(all("kn1_new" in v.name for v in kn1_new._cell.variables))
-        self.assertTrue(all("kn2_new" in v.name for v in kn2_new._cell.variables))
+        self.assertTrue(
+            all("kn1_new" in v.name for v in kn1_new._cell.variables))
+        self.assertTrue(
+            all("kn2_new" in v.name for v in kn2_new._cell.variables))
 
 
 def get_test_data(train_samples, test_samples, input_shape, num_classes):
     num_sample = train_samples + test_samples
-    templates = 2 * num_classes * np.random.random((num_classes,) + input_shape)
-    y = np.random.randint(0, num_classes, size=(num_sample,))
-    x = np.zeros((num_sample,) + input_shape, dtype=np.float32)
+    templates = 2 * num_classes * np.random.random((num_classes, ) +
+                                                   input_shape)
+    y = np.random.randint(0, num_classes, size=(num_sample, ))
+    x = np.zeros((num_sample, ) + input_shape, dtype=np.float32)
     for i in range(num_sample):
-        x[i] = templates[y[i]] + np.random.normal(loc=0, scale=1.0, size=input_shape)
+        x[i] = templates[y[i]] + np.random.normal(
+            loc=0, scale=1.0, size=input_shape)
     return (
         (x[:train_samples], y[:train_samples]),
         (x[train_samples:], y[train_samples:]),
