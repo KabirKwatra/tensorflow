@@ -38,91 +38,92 @@ from tensorflow.python.platform import test
 
 class ConversionTest(test.TestCase):
 
-  def _simple_program_ctx(self):
-    return converter.ProgramContext(
-        options=converter.ConversionOptions(recursive=True),
-        autograph_module=api)
+    def _simple_program_ctx(self):
+        return converter.ProgramContext(
+            options=converter.ConversionOptions(recursive=True),
+            autograph_module=api)
 
-  def test_is_whitelisted(self):
+    def test_is_whitelisted(self):
 
-    def test_fn():
-      return constant_op.constant(1)
+        def test_fn():
+            return constant_op.constant(1)
 
-    self.assertFalse(conversion.is_whitelisted(test_fn))
-    self.assertTrue(conversion.is_whitelisted(utils))
-    self.assertTrue(conversion.is_whitelisted(constant_op.constant))
+        self.assertFalse(conversion.is_whitelisted(test_fn))
+        self.assertTrue(conversion.is_whitelisted(utils))
+        self.assertTrue(conversion.is_whitelisted(constant_op.constant))
 
-  def test_is_whitelisted_tensorflow_like(self):
+    def test_is_whitelisted_tensorflow_like(self):
 
-    tf_like = imp.new_module('tensorflow_foo')
-    def test_fn():
-      pass
-    tf_like.test_fn = test_fn
-    test_fn.__module__ = tf_like
+        tf_like = imp.new_module('tensorflow_foo')
 
-    self.assertFalse(conversion.is_whitelisted(tf_like.test_fn))
+        def test_fn():
+            pass
+        tf_like.test_fn = test_fn
+        test_fn.__module__ = tf_like
 
-  def test_is_whitelisted_callable_whitelisted_call(self):
+        self.assertFalse(conversion.is_whitelisted(tf_like.test_fn))
 
-    whitelisted_mod = imp.new_module('test_whitelisted_call')
-    sys.modules['test_whitelisted_call'] = whitelisted_mod
-    config.CONVERSION_RULES = ((config.DoNotConvert('test_whitelisted_call'),) +
-                               config.CONVERSION_RULES)
+    def test_is_whitelisted_callable_whitelisted_call(self):
 
-    class TestClass(object):
+        whitelisted_mod = imp.new_module('test_whitelisted_call')
+        sys.modules['test_whitelisted_call'] = whitelisted_mod
+        config.CONVERSION_RULES = ((config.DoNotConvert('test_whitelisted_call'),) +
+                                   config.CONVERSION_RULES)
 
-      def __call__(self):
-        pass
+        class TestClass(object):
 
-      def whitelisted_method(self):
-        pass
+            def __call__(self):
+                pass
 
-    TestClass.__module__ = 'test_whitelisted_call'
-    if six.PY2:
-      TestClass.__call__.__func__.__module__ = 'test_whitelisted_call'
-    else:
-      TestClass.__call__.__module__ = 'test_whitelisted_call'
+            def whitelisted_method(self):
+                pass
 
-    class Subclass(TestClass):
+        TestClass.__module__ = 'test_whitelisted_call'
+        if six.PY2:
+            TestClass.__call__.__func__.__module__ = 'test_whitelisted_call'
+        else:
+            TestClass.__call__.__module__ = 'test_whitelisted_call'
 
-      def converted_method(self):
-        pass
+        class Subclass(TestClass):
 
-    tc = Subclass()
+            def converted_method(self):
+                pass
 
-    self.assertTrue(conversion.is_whitelisted(TestClass.__call__))
-    self.assertTrue(conversion.is_whitelisted(tc))
-    self.assertTrue(conversion.is_whitelisted(tc.__call__))
-    self.assertTrue(conversion.is_whitelisted(tc.whitelisted_method))
-    self.assertFalse(conversion.is_whitelisted(Subclass))
-    self.assertFalse(conversion.is_whitelisted(tc.converted_method))
+        tc = Subclass()
 
-  def test_is_whitelisted_tfmethodwrapper(self):
-    class TestClass(object):
+        self.assertTrue(conversion.is_whitelisted(TestClass.__call__))
+        self.assertTrue(conversion.is_whitelisted(tc))
+        self.assertTrue(conversion.is_whitelisted(tc.__call__))
+        self.assertTrue(conversion.is_whitelisted(tc.whitelisted_method))
+        self.assertFalse(conversion.is_whitelisted(Subclass))
+        self.assertFalse(conversion.is_whitelisted(tc.converted_method))
 
-      def member_function(self):
-        pass
+    def test_is_whitelisted_tfmethodwrapper(self):
+        class TestClass(object):
 
-    TestClass.__module__ = 'test_whitelisted_call'
-    test_obj = TestClass()
+            def member_function(self):
+                pass
 
-    def test_fn(self):
-      del self
+        TestClass.__module__ = 'test_whitelisted_call'
+        test_obj = TestClass()
 
-    bound_method = types.MethodType(
-        test_fn,
-        function.TfMethodTarget(
-            weakref.ref(test_obj), test_obj.member_function))
+        def test_fn(self):
+            del self
 
-    self.assertTrue(conversion.is_whitelisted(bound_method))
+        bound_method = types.MethodType(
+            test_fn,
+            function.TfMethodTarget(
+                weakref.ref(test_obj), test_obj.member_function))
 
-  def test_is_whitelisted_pybind(self):
-    test_object = pybind_for_testing.TestClassDef()
-    with test.mock.patch.object(config, 'CONVERSION_RULES', ()):
-      # TODO(mdan): This should return True for functions and methods.
-      # Note: currently, native bindings are whitelisted by a separate check.
-      self.assertFalse(conversion.is_whitelisted(test_object.method))
+        self.assertTrue(conversion.is_whitelisted(bound_method))
+
+    def test_is_whitelisted_pybind(self):
+        test_object = pybind_for_testing.TestClassDef()
+        with test.mock.patch.object(config, 'CONVERSION_RULES', ()):
+            # TODO(mdan): This should return True for functions and methods.
+            # Note: currently, native bindings are whitelisted by a separate check.
+            self.assertFalse(conversion.is_whitelisted(test_object.method))
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()

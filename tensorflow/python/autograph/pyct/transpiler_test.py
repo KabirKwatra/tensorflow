@@ -29,16 +29,16 @@ from tensorflow.python.platform import test
 
 class FlipSignTransformer(transformer.Base):
 
-  def visit_BinOp(self, node):
-    if isinstance(node.op, gast.Add):
-      node.op = gast.Sub()
-    return self.generic_visit(node)
+    def visit_BinOp(self, node):
+        if isinstance(node.op, gast.Add):
+            node.op = gast.Sub()
+        return self.generic_visit(node)
 
 
 class TestTranspiler(transpiler.FunctionTranspiler):
 
-  def transform_ast(self, node, ctx):
-    return FlipSignTransformer(ctx).visit(node)
+    def transform_ast(self, node, ctx):
+        return FlipSignTransformer(ctx).visit(node)
 
 
 global_var_for_test_global = 1
@@ -47,203 +47,205 @@ global_var_for_test_namespace_collisions = object()
 
 class FunctionTranspilerTest(test.TestCase):
 
-  def test_basic(self):
-    def f(a):
-      return a + 1
+    def test_basic(self):
+        def f(a):
+            return a + 1
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 0)
+        self.assertEqual(f(1), 0)
 
-  def test_closure(self):
-    b = 1
+    def test_closure(self):
+        b = 1
 
-    def f(a):
-      return a + b
+        def f(a):
+            return a + b
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 0)
-    b = 2
-    self.assertEqual(f(1), -1)
+        self.assertEqual(f(1), 0)
+        b = 2
+        self.assertEqual(f(1), -1)
 
-  def test_global(self):
-    def f(a):
-      return a + global_var_for_test_global
+    def test_global(self):
+        def f(a):
+            return a + global_var_for_test_global
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    global global_var_for_test_global
-    global_var_for_test_global = 1
-    self.assertEqual(f(1), 0)
-    global_var_for_test_global = 2
-    self.assertEqual(f(1), -1)
+        global global_var_for_test_global
+        global_var_for_test_global = 1
+        self.assertEqual(f(1), 0)
+        global_var_for_test_global = 2
+        self.assertEqual(f(1), -1)
 
-  def test_defaults(self):
-    b = 2
-    c = 1
+    def test_defaults(self):
+        b = 2
+        c = 1
 
-    def f(a, d=c + 1):
-      return a + b + d
+        def f(a, d=c + 1):
+            return a + b + d
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 1 - 2 - 2)
-    c = 0
-    self.assertEqual(f(1), 1 - 2 - 2)  # Defaults are evaluated at definition.
-    b = 1
-    self.assertEqual(f(1), 1 - 2 - 1)
+        self.assertEqual(f(1), 1 - 2 - 2)
+        c = 0
+        # Defaults are evaluated at definition.
+        self.assertEqual(f(1), 1 - 2 - 2)
+        b = 1
+        self.assertEqual(f(1), 1 - 2 - 1)
 
-  def test_call_tree(self):
+    def test_call_tree(self):
 
-    def g(a):
-      return a + 1
+        def g(a):
+            return a + 1
 
-    def f(a):
-      return g(a) + 1
+        def f(a):
+            return g(a) + 1
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 1 - 1 + 1)  # Only f is converted.
+        self.assertEqual(f(1), 1 - 1 + 1)  # Only f is converted.
 
-  def test_lambda(self):
-    b = 2
-    f = lambda x: (b + (x if x > 0 else -x))
+    def test_lambda(self):
+        b = 2
+        def f(x): return (b + (x if x > 0 else -x))
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 2 - 1)
-    self.assertEqual(f(-1), 2 - 1)
+        self.assertEqual(f(1), 2 - 1)
+        self.assertEqual(f(-1), 2 - 1)
 
-    b = 3
+        b = 3
 
-    self.assertEqual(f(1), 3 - 1)
-    self.assertEqual(f(-1), 3 - 1)
+        self.assertEqual(f(1), 3 - 1)
+        self.assertEqual(f(-1), 3 - 1)
 
-  def test_multiple_lambdas(self):
-    a, b = 1, 2
-    # This can be disambiguated by the argument names.
-    f, _ = (lambda x: a + x, lambda y: b * y)
+    def test_multiple_lambdas(self):
+        a, b = 1, 2
+        # This can be disambiguated by the argument names.
+        f, _ = (lambda x: a + x, lambda y: b * y)
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 1 - 1)
+        self.assertEqual(f(1), 1 - 1)
 
-  def test_multiple_lambdas_indistinguishable_definitions(self):
-    a, b = 1, 2
-    f, _ = (lambda x: a * x, lambda x: b * x)
+    def test_multiple_lambdas_indistinguishable_definitions(self):
+        a, b = 1, 2
+        f, _ = (lambda x: a * x, lambda x: b * x)
 
-    tr = TestTranspiler()
-    with self.assertRaises(ValueError):
-      tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        with self.assertRaises(ValueError):
+            tr.transform_function(f, object(), None, {})
 
-  def test_lambda_code_with_removable_garbage(self):
-    # pylint:disable=g-long-lambda
-    f = (  # intentional wrap
-        lambda x: (
-            x  # intentional wrap
-            + 1),)[0]
-    # pylint:enable=g-long-lambda
+    def test_lambda_code_with_removable_garbage(self):
+        # pylint:disable=g-long-lambda
+        f = (  # intentional wrap
+            lambda x: (
+                x  # intentional wrap
+                + 1),)[0]
+        # pylint:enable=g-long-lambda
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 1 - 1)
+        self.assertEqual(f(1), 1 - 1)
 
-  def test_nested_functions(self):
-    b = 2
+    def test_nested_functions(self):
+        b = 2
 
-    def f(x):
+        def f(x):
 
-      def g(x):
-        return b + x
+            def g(x):
+                return b + x
 
-      return g(x)
+            return g(x)
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 2 - 1)
+        self.assertEqual(f(1), 2 - 1)
 
-  def test_nested_lambda(self):
-    b = 2
+    def test_nested_lambda(self):
+        b = 2
 
-    def f(x):
-      g = lambda x: b + x
-      return g(x)
+        def f(x):
+            def g(x): return b + x
+            return g(x)
 
-    tr = TestTranspiler()
-    f, _, _ = tr.transform_function(f, object(), None, {})
+        tr = TestTranspiler()
+        f, _, _ = tr.transform_function(f, object(), None, {})
 
-    self.assertEqual(f(1), 2 - 1)
+        self.assertEqual(f(1), 2 - 1)
 
-  def test_concurrency(self):
+    def test_concurrency(self):
 
-    def f():
-      pass
+        def f():
+            pass
 
-    outputs = []
+        outputs = []
 
-    tr = TestTranspiler()
-    cache_key = object()
-    def conversion_thread():
-      _, mod, _ = tr.transform_function(f, cache_key, None, {})
-      outputs.append(mod.__name__)
+        tr = TestTranspiler()
+        cache_key = object()
 
-    threads = tuple(
-        threading.Thread(target=conversion_thread) for _ in range(10))
-    for t in threads:
-      t.start()
-    for t in threads:
-      t.join()
+        def conversion_thread():
+            _, mod, _ = tr.transform_function(f, cache_key, None, {})
+            outputs.append(mod.__name__)
 
-    # Races would potentially create multiple functions / modules
-    # (non-deterministically, but with high likelihood).
-    self.assertEqual(len(set(outputs)), 1)
+        threads = tuple(
+            threading.Thread(target=conversion_thread) for _ in range(10))
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
 
-  def test_reentrance(self):
+        # Races would potentially create multiple functions / modules
+        # (non-deterministically, but with high likelihood).
+        self.assertEqual(len(set(outputs)), 1)
 
-    def test_fn():
-      return 1 + 1
+    def test_reentrance(self):
 
-    class ReentrantTranspiler(transpiler.FunctionTranspiler):
+        def test_fn():
+            return 1 + 1
 
-      def __init__(self):
-        super(ReentrantTranspiler, self).__init__()
-        self._recursion_depth = 0
+        class ReentrantTranspiler(transpiler.FunctionTranspiler):
 
-      def transform_ast(self, node, ctx):
-        self._recursion_depth += 1
-        if self._recursion_depth < 2:
-          self.transform_function(test_fn, object(), None, {})
-        return FlipSignTransformer(ctx).visit(node)
+            def __init__(self):
+                super(ReentrantTranspiler, self).__init__()
+                self._recursion_depth = 0
 
-    tr = ReentrantTranspiler()
+            def transform_ast(self, node, ctx):
+                self._recursion_depth += 1
+                if self._recursion_depth < 2:
+                    self.transform_function(test_fn, object(), None, {})
+                return FlipSignTransformer(ctx).visit(node)
 
-    f, _, _ = tr.transform_function(test_fn, object(), None, {})
-    self.assertEqual(f(), 0)
+        tr = ReentrantTranspiler()
 
-  def test_namespace_collisions_avoided(self):
+        f, _, _ = tr.transform_function(test_fn, object(), None, {})
+        self.assertEqual(f(), 0)
 
-    class TestClass(object):
+    def test_namespace_collisions_avoided(self):
 
-      def global_var_for_test_namespace_collisions(self):
-        return global_var_for_test_namespace_collisions
+        class TestClass(object):
 
-    tr = TestTranspiler()
-    obj = TestClass()
+            def global_var_for_test_namespace_collisions(self):
+                return global_var_for_test_namespace_collisions
 
-    f, _, _ = tr.transform_function(
-        obj.global_var_for_test_namespace_collisions, object(), None, {})
-    self.assertIs(f(obj), global_var_for_test_namespace_collisions)
+        tr = TestTranspiler()
+        obj = TestClass()
+
+        f, _, _ = tr.transform_function(
+            obj.global_var_for_test_namespace_collisions, object(), None, {})
+        self.assertIs(f(obj), global_var_for_test_namespace_collisions)
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()
