@@ -58,7 +58,6 @@ Note that pyct contains a small number of transformers used for static analysis.
 These implement transformer.Base, rather than converter.Base, to avoid a
 dependency on AutoGraph.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Converter for logical expressions, e.g. `a and b -> tf.logical_and(a, b)`."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
