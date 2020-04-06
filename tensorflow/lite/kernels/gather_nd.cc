@@ -28,139 +28,138 @@ constexpr int kIndices = 1;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-    TF_LITE_ENSURE_EQ(context, NumInputs(node), 2);
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
+  TF_LITE_ENSURE_EQ(context, NumInputs(node), 2);
+  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
 
-    const TfLiteTensor* params = GetInput(context, node, kParams);
-    const TfLiteTensor* indices = GetInput(context, node, kIndices);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* params = GetInput(context, node, kParams);
+  const TfLiteTensor* indices = GetInput(context, node, kIndices);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    switch (params->type) {
+  switch (params->type) {
     case kTfLiteFloat32:
     case kTfLiteUInt8:
     case kTfLiteInt8:
     case kTfLiteInt64:
     case kTfLiteInt32:
     case kTfLiteString:
-        break;
+      break;
     default:
-        context->ReportError(
-            context, "Params of type '%s' are not supported by gather_nd.",
-            TfLiteTypeGetName(params->type));
-        return kTfLiteError;
-    }
-    switch (indices->type) {
+      context->ReportError(
+          context, "Params of type '%s' are not supported by gather_nd.",
+          TfLiteTypeGetName(params->type));
+      return kTfLiteError;
+  }
+  switch (indices->type) {
     case kTfLiteInt64:
     case kTfLiteInt32:
-        break;
+      break;
     default:
-        context->ReportError(
-            context, "Indices of type '%s' are not supported by gather_nd.",
-            TfLiteTypeGetName(indices->type));
-        return kTfLiteError;
-    }
+      context->ReportError(
+          context, "Indices of type '%s' are not supported by gather_nd.",
+          TfLiteTypeGetName(indices->type));
+      return kTfLiteError;
+  }
 
-    const int params_rank = NumDimensions(params);
-    const int indices_rank = NumDimensions(indices);
-    const int indices_nd = SizeOfDimension(indices, indices_rank - 1);
-    if (params_rank < 1) {
-        context->ReportError(context, "Params must be at least a vector.");
-        return kTfLiteError;
-    }
-    if (indices_rank < 1) {
-        context->ReportError(context, "Indices must be at least a vector.");
-        return kTfLiteError;
-    }
-    if (indices_nd > params_rank) {
-        context->ReportError(
-            context, "Index innermost dimension length must be <= params rank.");
-        return kTfLiteError;
-    }
+  const int params_rank = NumDimensions(params);
+  const int indices_rank = NumDimensions(indices);
+  const int indices_nd = SizeOfDimension(indices, indices_rank - 1);
+  if (params_rank < 1) {
+    context->ReportError(context, "Params must be at least a vector.");
+    return kTfLiteError;
+  }
+  if (indices_rank < 1) {
+    context->ReportError(context, "Indices must be at least a vector.");
+    return kTfLiteError;
+  }
+  if (indices_nd > params_rank) {
+    context->ReportError(
+        context, "Index innermost dimension length must be <= params rank.");
+    return kTfLiteError;
+  }
 
-    // Assign to output the input type.
-    output->type = params->type;
+  // Assign to output the input type.
+  output->type = params->type;
 
-    // The result shape is
-    // indices.shape[:-1] + params.shape[indices.shape[-1]:]
-    const int output_rank = indices_rank + params_rank - indices_nd - 1;
-    TfLiteIntArray* output_shape = TfLiteIntArrayCreate(output_rank);
-    int output_index = 0;
-    for (int i = 0; i < indices_rank - 1; ++i) {
-        output_shape->data[output_index++] = indices->dims->data[i];
-    }
-    for (int i = indices_nd; i < params_rank; ++i) {
-        output_shape->data[output_index++] = params->dims->data[i];
-    }
-    return context->ResizeTensor(context, output, output_shape);
+  // The result shape is
+  // indices.shape[:-1] + params.shape[indices.shape[-1]:]
+  const int output_rank = indices_rank + params_rank - indices_nd - 1;
+  TfLiteIntArray* output_shape = TfLiteIntArrayCreate(output_rank);
+  int output_index = 0;
+  for (int i = 0; i < indices_rank - 1; ++i) {
+    output_shape->data[output_index++] = indices->dims->data[i];
+  }
+  for (int i = indices_nd; i < params_rank; ++i) {
+    output_shape->data[output_index++] = params->dims->data[i];
+  }
+  return context->ResizeTensor(context, output, output_shape);
 }
 
 template <typename ParamsT, typename IndicesT>
 TfLiteStatus GatherNd(const TfLiteTensor* params, const TfLiteTensor* indices,
                       TfLiteTensor* output) {
-    reference_ops::GatherNd(
-        GetTensorShape(params), GetTensorData<ParamsT>(params),
-        GetTensorShape(indices), GetTensorData<IndicesT>(indices),
-        GetTensorShape(output), GetTensorData<ParamsT>(output));
-    return kTfLiteOk;
+  reference_ops::GatherNd(
+      GetTensorShape(params), GetTensorData<ParamsT>(params),
+      GetTensorShape(indices), GetTensorData<IndicesT>(indices),
+      GetTensorShape(output), GetTensorData<ParamsT>(output));
+  return kTfLiteOk;
 }
 
 template <typename IndicesT>
 TfLiteStatus GatherNdString(const TfLiteTensor* params,
                             const TfLiteTensor* indices, TfLiteTensor* output) {
-    reference_ops::GatherNdString(
-        GetTensorShape(params), params, GetTensorShape(indices),
-        GetTensorData<IndicesT>(indices), GetTensorShape(output), output);
-    return kTfLiteOk;
+  reference_ops::GatherNdString(
+      GetTensorShape(params), params, GetTensorShape(indices),
+      GetTensorData<IndicesT>(indices), GetTensorShape(output), output);
+  return kTfLiteOk;
 }
 
 template <typename IndicesT>
 TfLiteStatus EvalGatherNd(TfLiteContext* context, const TfLiteTensor* params,
                           const TfLiteTensor* indices, TfLiteTensor* output) {
-    switch (params->type) {
+  switch (params->type) {
     case kTfLiteFloat32:
-        return GatherNd<float, IndicesT>(params, indices, output);
+      return GatherNd<float, IndicesT>(params, indices, output);
     case kTfLiteUInt8:
-        return GatherNd<uint8_t, IndicesT>(params, indices, output);
+      return GatherNd<uint8_t, IndicesT>(params, indices, output);
     case kTfLiteInt8:
-        return GatherNd<int8_t, IndicesT>(params, indices, output);
+      return GatherNd<int8_t, IndicesT>(params, indices, output);
     case kTfLiteInt32:
-        return GatherNd<int32_t, IndicesT>(params, indices, output);
+      return GatherNd<int32_t, IndicesT>(params, indices, output);
     case kTfLiteInt64:
-        return GatherNd<int64_t, IndicesT>(params, indices, output);
+      return GatherNd<int64_t, IndicesT>(params, indices, output);
     case kTfLiteString:
-        return GatherNdString<IndicesT>(params, indices, output);
+      return GatherNdString<IndicesT>(params, indices, output);
     default:
-        context->ReportError(context,
-                             "Params type '%s' are not supported by gather_nd.",
-                             TfLiteTypeGetName(params->type));
-        return kTfLiteError;
-    }
+      context->ReportError(context,
+                           "Params type '%s' are not supported by gather_nd.",
+                           TfLiteTypeGetName(params->type));
+      return kTfLiteError;
+  }
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    const TfLiteTensor* params = GetInput(context, node, kParams);
-    const TfLiteTensor* indices = GetInput(context, node, kIndices);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* params = GetInput(context, node, kParams);
+  const TfLiteTensor* indices = GetInput(context, node, kIndices);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    switch (indices->type) {
+  switch (indices->type) {
     case kTfLiteInt32:
-        return EvalGatherNd<int32_t>(context, params, indices, output);
+      return EvalGatherNd<int32_t>(context, params, indices, output);
     case kTfLiteInt64:
-        return EvalGatherNd<int64_t>(context, params, indices, output);
+      return EvalGatherNd<int64_t>(context, params, indices, output);
     default:
-        context->ReportError(
-            context, "Indices of type '%s' are not supported by gather_nd.",
-            TfLiteTypeGetName(indices->type));
-        return kTfLiteError;
-    }
+      context->ReportError(
+          context, "Indices of type '%s' are not supported by gather_nd.",
+          TfLiteTypeGetName(indices->type));
+      return kTfLiteError;
+  }
 }
 }  // namespace gather_nd
 
 TfLiteRegistration* Register_GATHER_ND() {
-    static TfLiteRegistration r = {/*init*/ nullptr, /*free*/ nullptr,
-                                            gather_nd::Prepare, gather_nd::Eval
-                                  };
-    return &r;
+  static TfLiteRegistration r = {/*init*/ nullptr, /*free*/ nullptr,
+                                 gather_nd::Prepare, gather_nd::Eval};
+  return &r;
 }
 }  // namespace builtin
 }  // namespace ops
