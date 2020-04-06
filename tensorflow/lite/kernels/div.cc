@@ -29,9 +29,9 @@ namespace div {
 
 // This file has three implementation of Div.
 enum KernelType {
-    kReference,
-    kGenericOptimized,  // Neon-free
-    kNeonOptimized,
+  kReference,
+  kGenericOptimized,  // Neon-free
+  kNeonOptimized,
 };
 
 constexpr int kInputTensor1 = 0;
@@ -39,62 +39,62 @@ constexpr int kInputTensor2 = 1;
 constexpr int kOutputTensor = 0;
 
 struct OpData {
-    bool requires_broadcast;
+  bool requires_broadcast;
 
-    // Parameters used in the quantized paths where the output is 8bit
-    int32 output_activation_min;
-    int32 output_activation_max;
+  // Parameters used in the quantized paths where the output is 8bit
+  int32 output_activation_min;
+  int32 output_activation_max;
 
-    // Parameters used in all quantized paths
-    int32_t output_multiplier;
-    int output_shift;
+  // Parameters used in all quantized paths
+  int32_t output_multiplier;
+  int output_shift;
 };
 
 void* Init(TfLiteContext* context, const char* buffer, size_t length) {
-    auto* data = new OpData;
-    data->requires_broadcast = false;
-    return data;
+  auto* data = new OpData;
+  data->requires_broadcast = false;
+  return data;
 }
 
 void Free(TfLiteContext* context, void* buffer) {
-    delete reinterpret_cast<OpData*>(buffer);
+  delete reinterpret_cast<OpData*>(buffer);
 }
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-    auto* params = reinterpret_cast<TfLiteDivParams*>(node->builtin_data);
-    OpData* data = reinterpret_cast<OpData*>(node->user_data);
+  auto* params = reinterpret_cast<TfLiteDivParams*>(node->builtin_data);
+  OpData* data = reinterpret_cast<OpData*>(node->user_data);
 
-    TF_LITE_ENSURE_EQ(context, NumInputs(node), 2);
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
+  TF_LITE_ENSURE_EQ(context, NumInputs(node), 2);
+  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
 
-    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    TF_LITE_ENSURE_EQ(context, input1->type, input2->type);
-    output->type = input2->type;
+  TF_LITE_ENSURE_EQ(context, input1->type, input2->type);
+  output->type = input2->type;
 
-    data->requires_broadcast = !HaveSameShapes(input1, input2);
+  data->requires_broadcast = !HaveSameShapes(input1, input2);
 
-    TfLiteIntArray* output_size = nullptr;
-    if (data->requires_broadcast) {
-        TF_LITE_ENSURE_OK(context, CalculateShapeForBroadcast(
-                              context, input1, input2, &output_size));
-    } else {
-        output_size = TfLiteIntArrayCopy(input1->dims);
-    }
+  TfLiteIntArray* output_size = nullptr;
+  if (data->requires_broadcast) {
+    TF_LITE_ENSURE_OK(context, CalculateShapeForBroadcast(
+                                   context, input1, input2, &output_size));
+  } else {
+    output_size = TfLiteIntArrayCopy(input1->dims);
+  }
 
-    if (output->type == kTfLiteUInt8) {
-        TF_LITE_ENSURE_STATUS(CalculateActivationRangeQuantized(
-                                  context, params->activation, output, &data->output_activation_min,
-                                  &data->output_activation_max));
-        const double real_multiplier =
-            input1->params.scale / (input2->params.scale * output->params.scale);
-        QuantizeMultiplier(real_multiplier, &data->output_multiplier,
-                           &data->output_shift);
-    }
+  if (output->type == kTfLiteUInt8) {
+    TF_LITE_ENSURE_STATUS(CalculateActivationRangeQuantized(
+        context, params->activation, output, &data->output_activation_min,
+        &data->output_activation_max));
+    const double real_multiplier =
+        input1->params.scale / (input2->params.scale * output->params.scale);
+    QuantizeMultiplier(real_multiplier, &data->output_multiplier,
+                       &data->output_shift);
+  }
 
-    return context->ResizeTensor(context, output, output_size);
+  return context->ResizeTensor(context, output, output_size);
 }
 
 template <KernelType kernel_type>
@@ -112,35 +112,35 @@ void EvalDiv(TfLiteContext* context, TfLiteNode* node, TfLiteDivParams* params,
                GetTensorData<data_type>(input1), GetTensorShape(input2), \
                GetTensorData<data_type>(input2), GetTensorShape(output), \
                GetTensorData<data_type>(output))
-    if (output->type == kTfLiteInt32) {
-        if (kernel_type == kReference) {
-            if (data->requires_broadcast) {
-                TF_LITE_DIV(reference_ops, BroadcastDivSlow, int32_t);
-            } else {
-                TF_LITE_DIV(reference_ops, Div, int32_t);
-            }
-        } else {
-            if (data->requires_broadcast) {
-                TF_LITE_DIV(optimized_ops, BroadcastDivSlow, int32_t);
-            } else {
-                TF_LITE_DIV(optimized_ops, Div, int32_t);
-            }
-        }
-    } else if (output->type == kTfLiteFloat32) {
-        if (kernel_type == kReference) {
-            if (data->requires_broadcast) {
-                TF_LITE_DIV(reference_ops, BroadcastDivSlow, float);
-            } else {
-                TF_LITE_DIV(reference_ops, Div, float);
-            }
-        } else {
-            if (data->requires_broadcast) {
-                TF_LITE_DIV(optimized_ops, BroadcastDivSlow, float);
-            } else {
-                TF_LITE_DIV(optimized_ops, Div, float);
-            }
-        }
+  if (output->type == kTfLiteInt32) {
+    if (kernel_type == kReference) {
+      if (data->requires_broadcast) {
+        TF_LITE_DIV(reference_ops, BroadcastDivSlow, int32_t);
+      } else {
+        TF_LITE_DIV(reference_ops, Div, int32_t);
+      }
+    } else {
+      if (data->requires_broadcast) {
+        TF_LITE_DIV(optimized_ops, BroadcastDivSlow, int32_t);
+      } else {
+        TF_LITE_DIV(optimized_ops, Div, int32_t);
+      }
     }
+  } else if (output->type == kTfLiteFloat32) {
+    if (kernel_type == kReference) {
+      if (data->requires_broadcast) {
+        TF_LITE_DIV(reference_ops, BroadcastDivSlow, float);
+      } else {
+        TF_LITE_DIV(reference_ops, Div, float);
+      }
+    } else {
+      if (data->requires_broadcast) {
+        TF_LITE_DIV(optimized_ops, BroadcastDivSlow, float);
+      } else {
+        TF_LITE_DIV(optimized_ops, Div, float);
+      }
+    }
+  }
 #undef TF_LITE_DIV
 }
 
@@ -149,99 +149,96 @@ TfLiteStatus EvalQuantized(TfLiteContext* context, TfLiteNode* node,
                            TfLiteDivParams* params, const OpData* data,
                            const TfLiteTensor* input1,
                            const TfLiteTensor* input2, TfLiteTensor* output) {
-    if (input1->type == kTfLiteUInt8 && input2->type == kTfLiteUInt8 &&
-            output->type == kTfLiteUInt8) {
-        tflite::ArithmeticParams op_params;
-        SetActivationParams(data->output_activation_min,
-                            data->output_activation_max, &op_params);
-        op_params.input1_offset = -input1->params.zero_point;
-        op_params.input2_offset = -input2->params.zero_point;
-        op_params.output_offset = output->params.zero_point;
-        op_params.output_multiplier = data->output_multiplier;
-        op_params.output_shift = data->output_shift;
-        bool need_broadcast = optimized_ops::ProcessBroadcastShapes(
-                                  GetTensorShape(input1), GetTensorShape(input2), &op_params);
+  if (input1->type == kTfLiteUInt8 && input2->type == kTfLiteUInt8 &&
+      output->type == kTfLiteUInt8) {
+    tflite::ArithmeticParams op_params;
+    SetActivationParams(data->output_activation_min,
+                        data->output_activation_max, &op_params);
+    op_params.input1_offset = -input1->params.zero_point;
+    op_params.input2_offset = -input2->params.zero_point;
+    op_params.output_offset = output->params.zero_point;
+    op_params.output_multiplier = data->output_multiplier;
+    op_params.output_shift = data->output_shift;
+    bool need_broadcast = optimized_ops::ProcessBroadcastShapes(
+        GetTensorShape(input1), GetTensorShape(input2), &op_params);
 #define TF_LITE_DIV(type, opname, dtype)                             \
   type::opname(op_params, GetTensorShape(input1),                    \
                GetTensorData<dtype>(input1), GetTensorShape(input2), \
                GetTensorData<dtype>(input2), GetTensorShape(output), \
                GetTensorData<dtype>(output))
-        if (kernel_type == kReference) {
-            if (need_broadcast) {
-                TF_LITE_DIV(reference_ops, BroadcastDivSlow, uint8_t);
-            } else {
-                TF_LITE_DIV(reference_ops, Div, uint8_t);
-            }
-        } else {
-            if (need_broadcast) {
-                TF_LITE_DIV(optimized_ops, BroadcastDivSlow, uint8_t);
-            } else {
-                TF_LITE_DIV(optimized_ops, Div, uint8_t);
-            }
-        }
-#undef TF_LITE_DIV
+    if (kernel_type == kReference) {
+      if (need_broadcast) {
+        TF_LITE_DIV(reference_ops, BroadcastDivSlow, uint8_t);
+      } else {
+        TF_LITE_DIV(reference_ops, Div, uint8_t);
+      }
     } else {
-        context->ReportError(
-            context, "Unsupported combination of input and output types in Div.");
-        return kTfLiteError;
+      if (need_broadcast) {
+        TF_LITE_DIV(optimized_ops, BroadcastDivSlow, uint8_t);
+      } else {
+        TF_LITE_DIV(optimized_ops, Div, uint8_t);
+      }
     }
-    return kTfLiteOk;
+#undef TF_LITE_DIV
+  } else {
+    context->ReportError(
+        context, "Unsupported combination of input and output types in Div.");
+    return kTfLiteError;
+  }
+  return kTfLiteOk;
 }
 
 template <KernelType kernel_type>
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-    auto* params = reinterpret_cast<TfLiteDivParams*>(node->builtin_data);
-    OpData* data = reinterpret_cast<OpData*>(node->user_data);
+  auto* params = reinterpret_cast<TfLiteDivParams*>(node->builtin_data);
+  OpData* data = reinterpret_cast<OpData*>(node->user_data);
 
-    const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
-    const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
-    TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
+  const TfLiteTensor* input1 = GetInput(context, node, kInputTensor1);
+  const TfLiteTensor* input2 = GetInput(context, node, kInputTensor2);
+  TfLiteTensor* output = GetOutput(context, node, kOutputTensor);
 
-    if (output->type == kTfLiteFloat32 || output->type == kTfLiteInt32) {
-        EvalDiv<kernel_type>(context, node, params, data, input1, input2, output);
-    } else if (output->type == kTfLiteUInt8) {
-        TF_LITE_ENSURE_OK(
-            context, EvalQuantized<kernel_type>(context, node, params, data, input1,
-                                                input2, output));
-    } else {
-        context->ReportError(
-            context,
-            "Div only supports FLOAT32, INT32 and quantized UINT8 now, got %d.",
-            output->type);
-        return kTfLiteError;
-    }
+  if (output->type == kTfLiteFloat32 || output->type == kTfLiteInt32) {
+    EvalDiv<kernel_type>(context, node, params, data, input1, input2, output);
+  } else if (output->type == kTfLiteUInt8) {
+    TF_LITE_ENSURE_OK(
+        context, EvalQuantized<kernel_type>(context, node, params, data, input1,
+                                            input2, output));
+  } else {
+    context->ReportError(
+        context,
+        "Div only supports FLOAT32, INT32 and quantized UINT8 now, got %d.",
+        output->type);
+    return kTfLiteError;
+  }
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 }  // namespace div
 
 TfLiteRegistration* Register_DIV_REF() {
-    static TfLiteRegistration r = {div::Init, div::Free, div::Prepare,
-                                   div::Eval<div::kReference>
-                                  };
-    return &r;
+  static TfLiteRegistration r = {div::Init, div::Free, div::Prepare,
+                                 div::Eval<div::kReference>};
+  return &r;
 }
 
 TfLiteRegistration* Register_DIV_GENERIC_OPT() {
-    static TfLiteRegistration r = {div::Init, div::Free, div::Prepare,
-                                   div::Eval<div::kGenericOptimized>
-                                  };
-    return &r;
+  static TfLiteRegistration r = {div::Init, div::Free, div::Prepare,
+                                 div::Eval<div::kGenericOptimized>};
+  return &r;
 }
 
 TfLiteRegistration* Register_DIV_NEON_OPT() {
-    static TfLiteRegistration r = {div::Init, div::Free, div::Prepare,
-                                   div::Eval<div::kNeonOptimized>
-                                  };
-    return &r;
+  static TfLiteRegistration r = {div::Init, div::Free, div::Prepare,
+                                 div::Eval<div::kNeonOptimized>};
+  return &r;
 }
 
 TfLiteRegistration* Register_DIV() {
 #ifdef USE_NEON
-    return Register_DIV_NEON_OPT();
+  return Register_DIV_NEON_OPT();
 #else
-    return Register_DIV_GENERIC_OPT();
+  return Register_DIV_GENERIC_OPT();
 #endif
 }
 
