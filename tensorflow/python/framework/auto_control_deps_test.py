@@ -39,7 +39,6 @@ from tensorflow.python.training import momentum
 
 
 class AutomaticControlDependenciesTest(test.TestCase):
-
     def testBasic(self):
         with context.graph_mode(), self.cached_session():
             v = resource_variable_ops.ResourceVariable(1.0)
@@ -57,9 +56,11 @@ class AutomaticControlDependenciesTest(test.TestCase):
             self.evaluate(variables.global_variables_initializer())
             with acd.AutomaticControlDependencies():
                 read_op1 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 read_op2 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
             self.assertNotIn(read_op1, read_op2.control_inputs)
             self.assertNotIn(read_op2, read_op1.control_inputs)
@@ -70,11 +71,14 @@ class AutomaticControlDependenciesTest(test.TestCase):
             self.evaluate(variables.global_variables_initializer())
             with acd.AutomaticControlDependencies():
                 read_op1 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 read_op2 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 assign_op = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
             # Writes should have control deps from "all" reads since last write
             # or start of the code block.
             self.assertIn(read_op1, assign_op.control_inputs)
@@ -89,11 +93,14 @@ class AutomaticControlDependenciesTest(test.TestCase):
             self.evaluate(variables.global_variables_initializer())
             with acd.AutomaticControlDependencies():
                 assign_op = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
                 read_op1 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 read_op2 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
             # Reads should have a control dep from the last write.
             self.assertIn(assign_op, read_op1.control_inputs)
             self.assertIn(assign_op, read_op2.control_inputs)
@@ -107,11 +114,14 @@ class AutomaticControlDependenciesTest(test.TestCase):
             self.evaluate(variables.global_variables_initializer())
             with acd.AutomaticControlDependencies() as c:
                 read_op1 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 read_op2 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 assign_op = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
             # Reads must not be in `ops_which_must_run` since those get added to the
             # `control_outputs`.
             self.assertNotIn(read_op1, c.ops_which_must_run)
@@ -126,21 +136,29 @@ class AutomaticControlDependenciesTest(test.TestCase):
             with acd.AutomaticControlDependencies() as c:
                 # 2 reads -> 2 writes -> 2 reads -> 2 writes.
                 read_op1 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 read_op2 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 assign_op1 = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
                 assign_op2 = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
                 read_op3 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 read_op4 = gen_resource_variable_ops.read_variable_op(
-                    v.handle, v.dtype).op
+                    v.handle, v.dtype
+                ).op
                 assign_op3 = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
                 assign_op4 = gen_resource_variable_ops.assign_variable_op(
-                    v.handle, v + 1)
+                    v.handle, v + 1
+                )
 
             # Verify the control edges.
             self.assertIn(read_op1, assign_op1.control_inputs)
@@ -171,12 +189,10 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
         @def_function.function
         def read_var_in_while():
-            gen_resource_variable_ops.read_variable_op(
-                v.handle, v.dtype, name="read1")
+            gen_resource_variable_ops.read_variable_op(v.handle, v.dtype, name="read1")
 
             result = build_functional_op(v)
-            gen_resource_variable_ops.read_variable_op(
-                v.handle, v.dtype, name="read2")
+            gen_resource_variable_ops.read_variable_op(v.handle, v.dtype, name="read2")
             gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
             return result
 
@@ -185,7 +201,8 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
         def get_op(op_type, sub_name):
             operations = [
-                op for op in func_graph.get_operations()
+                op
+                for op in func_graph.get_operations()
                 if op.type == op_type and sub_name in op.name
             ]
             assert len(operations) == 1
@@ -205,21 +222,18 @@ class AutomaticControlDependenciesTest(test.TestCase):
         self.assertIn(functional_op, assign_op.control_inputs)
 
     def testVariableReadInWhileLoop(self):
-
         def build_functional_op(v):
-
             def body(_):
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return control_flow_ops.while_loop(
-                lambda i: True, body, [0.0], maximum_iterations=1)
+                lambda i: True, body, [0.0], maximum_iterations=1
+            )
 
         self._testVariableReadInFunctionalOp(build_functional_op, "While")
 
     def testVariableReadInCondTrueBranch(self):
-
         def build_functional_op(v):
-
             def then_branch():
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
@@ -227,14 +241,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return array_ops.zeros([], v.dtype)
 
             return control_flow_ops.cond(
-                constant_op.constant(True), then_branch, else_branch)
+                constant_op.constant(True), then_branch, else_branch
+            )
 
         self._testVariableReadInFunctionalOp(build_functional_op, "If")
 
     def testVariableReadInCondFalseBranch(self):
-
         def build_functional_op(v):
-
             def then_branch():
                 return array_ops.zeros([], v.dtype)
 
@@ -242,14 +255,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return control_flow_ops.cond(
-                constant_op.constant(False), then_branch, else_branch)
+                constant_op.constant(False), then_branch, else_branch
+            )
 
         self._testVariableReadInFunctionalOp(build_functional_op, "If")
 
     def testVariableReadInCaseBranch0(self):
-
         def build_functional_op(v):
-
             def branch0():
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
@@ -257,14 +269,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return array_ops.zeros([], v.dtype)
 
             return control_flow_ops.switch_case(
-                constant_op.constant(0), [branch0, branch1])
+                constant_op.constant(0), [branch0, branch1]
+            )
 
         self._testVariableReadInFunctionalOp(build_functional_op, "Case")
 
     def testVariableReadInCaseBranch1(self):
-
         def build_functional_op(v):
-
             def branch0():
                 return array_ops.zeros([], v.dtype)
 
@@ -272,30 +283,27 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return control_flow_ops.switch_case(
-                constant_op.constant(0), [branch0, branch1])
+                constant_op.constant(0), [branch0, branch1]
+            )
 
         self._testVariableReadInFunctionalOp(build_functional_op, "Case")
 
     def testVariableReadInFunction(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_read():
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return fn_with_read()
 
-        self._testVariableReadInFunctionalOp(build_functional_op,
-                                             "StatefulPartitionedCall")
+        self._testVariableReadInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def testVariableReadInNestedFunction(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_read():
-
                 @def_function.function
                 def inner_fn():
                     return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
@@ -304,57 +312,58 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
             return fn_with_read()
 
-        self._testVariableReadInFunctionalOp(build_functional_op,
-                                             "StatefulPartitionedCall")
+        self._testVariableReadInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def testVariableReadInWhileInInnerFunc(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_read():
-
                 @def_function.function
                 def inner_fn():
-
                     def body(_):
-                        return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
+                        return gen_resource_variable_ops.read_variable_op(
+                            v.handle, v.dtype
+                        )
 
                     return control_flow_ops.while_loop(
-                        lambda i: True, body, [0.0], maximum_iterations=1)
+                        lambda i: True, body, [0.0], maximum_iterations=1
+                    )
 
                 return inner_fn()
 
             return fn_with_read()
 
-        self._testVariableReadInFunctionalOp(build_functional_op,
-                                             "StatefulPartitionedCall")
+        self._testVariableReadInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def testVariableReadInCondInInnerFunc(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_read():
-
                 @def_function.function
                 def inner_fn():
-
                     def then_branch():
-                        return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
+                        return gen_resource_variable_ops.read_variable_op(
+                            v.handle, v.dtype
+                        )
 
                     def else_branch():
                         return array_ops.zeros([], v.dtype)
 
                     return control_flow_ops.cond(
-                        constant_op.constant(True), then_branch, else_branch)
+                        constant_op.constant(True), then_branch, else_branch
+                    )
 
                 return inner_fn()
 
             return fn_with_read()
 
-        self._testVariableReadInFunctionalOp(build_functional_op,
-                                             "StatefulPartitionedCall")
+        self._testVariableReadInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def _testVariableWriteInFunctionalOp(self, build_functional_op, op_type):
         v = resource_variable_ops.ResourceVariable(1.0)
@@ -362,12 +371,10 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
         @def_function.function
         def write_var_in_while():
-            gen_resource_variable_ops.read_variable_op(
-                v.handle, v.dtype, name="read1")
+            gen_resource_variable_ops.read_variable_op(v.handle, v.dtype, name="read1")
 
             result = build_functional_op(v)
-            gen_resource_variable_ops.read_variable_op(
-                v.handle, v.dtype, name="read2")
+            gen_resource_variable_ops.read_variable_op(v.handle, v.dtype, name="read2")
             gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
             return result
 
@@ -376,7 +383,8 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
         def get_op(op_type, sub_name):
             operations = [
-                op for op in func_graph.get_operations()
+                op
+                for op in func_graph.get_operations()
                 if op.type == op_type and sub_name in op.name
             ]
             assert len(operations) == 1
@@ -394,22 +402,19 @@ class AutomaticControlDependenciesTest(test.TestCase):
         self.assertIn(functional_op, assign_op.control_inputs)
 
     def testVariableWriteInWhileLoop(self):
-
         def build_functional_op(v):
-
             def body(_):
                 gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return control_flow_ops.while_loop(
-                lambda i: True, body, [0.0], maximum_iterations=1)
+                lambda i: True, body, [0.0], maximum_iterations=1
+            )
 
         self._testVariableWriteInFunctionalOp(build_functional_op, "While")
 
     def testVariableWriteInCondTrueBranch(self):
-
         def build_functional_op(v):
-
             def then_branch():
                 gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
@@ -418,14 +423,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return array_ops.zeros([], v.dtype)
 
             return control_flow_ops.cond(
-                constant_op.constant(True), then_branch, else_branch)
+                constant_op.constant(True), then_branch, else_branch
+            )
 
         self._testVariableWriteInFunctionalOp(build_functional_op, "If")
 
     def testVariableWriteInCondFalseBranch(self):
-
         def build_functional_op(v):
-
             def then_branch():
                 return array_ops.zeros([], v.dtype)
 
@@ -434,14 +438,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return control_flow_ops.cond(
-                constant_op.constant(False), then_branch, else_branch)
+                constant_op.constant(False), then_branch, else_branch
+            )
 
         self._testVariableWriteInFunctionalOp(build_functional_op, "If")
 
     def testVariableWriteInCaseBranch0(self):
-
         def build_functional_op(v):
-
             def branch0():
                 gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
@@ -450,14 +453,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return array_ops.zeros([], v.dtype)
 
             return control_flow_ops.switch_case(
-                constant_op.constant(0), [branch0, branch1])
+                constant_op.constant(0), [branch0, branch1]
+            )
 
         self._testVariableWriteInFunctionalOp(build_functional_op, "Case")
 
     def testVariableWriteInCaseBranch1(self):
-
         def build_functional_op(v):
-
             def branch0():
                 return array_ops.zeros([], v.dtype)
 
@@ -466,14 +468,13 @@ class AutomaticControlDependenciesTest(test.TestCase):
                 return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
             return control_flow_ops.switch_case(
-                constant_op.constant(0), [branch0, branch1])
+                constant_op.constant(0), [branch0, branch1]
+            )
 
         self._testVariableWriteInFunctionalOp(build_functional_op, "Case")
 
     def testVariableWriteInFunction(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_write():
                 gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
@@ -481,81 +482,77 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
             return fn_with_write()
 
-        self._testVariableWriteInFunctionalOp(build_functional_op,
-                                              "StatefulPartitionedCall")
+        self._testVariableWriteInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def testVariableWriteInNestedFunction(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_write():
-
                 @def_function.function
                 def inner_fn():
-                    gen_resource_variable_ops.assign_variable_op(
-                        v.handle, v + 1)
+                    gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
                     return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
 
                 return inner_fn()
 
             return fn_with_write()
 
-        self._testVariableWriteInFunctionalOp(build_functional_op,
-                                              "StatefulPartitionedCall")
+        self._testVariableWriteInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def testVariableWriteInWhileInInnerFunc(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_write():
-
                 @def_function.function
                 def inner_fn():
-
                     def body(_):
-                        gen_resource_variable_ops.assign_variable_op(
-                            v.handle, v + 1)
-                        return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
+                        gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
+                        return gen_resource_variable_ops.read_variable_op(
+                            v.handle, v.dtype
+                        )
 
                     return control_flow_ops.while_loop(
-                        lambda i: True, body, [0.0], maximum_iterations=1)
+                        lambda i: True, body, [0.0], maximum_iterations=1
+                    )
 
                 return inner_fn()
 
             return fn_with_write()
 
-        self._testVariableWriteInFunctionalOp(build_functional_op,
-                                              "StatefulPartitionedCall")
+        self._testVariableWriteInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     def testVariableWriteInCondInInnerFunc(self):
-
         def build_functional_op(v):
-
             @def_function.function
             def fn_with_write():
-
                 @def_function.function
                 def inner_fn():
-
                     def then_branch():
-                        gen_resource_variable_ops.assign_variable_op(
-                            v.handle, v + 1)
-                        return gen_resource_variable_ops.read_variable_op(v.handle, v.dtype)
+                        gen_resource_variable_ops.assign_variable_op(v.handle, v + 1)
+                        return gen_resource_variable_ops.read_variable_op(
+                            v.handle, v.dtype
+                        )
 
                     def else_branch():
                         return array_ops.zeros([], v.dtype)
 
                     return control_flow_ops.cond(
-                        constant_op.constant(True), then_branch, else_branch)
+                        constant_op.constant(True), then_branch, else_branch
+                    )
 
                 return inner_fn()
 
             return fn_with_write()
 
-        self._testVariableWriteInFunctionalOp(build_functional_op,
-                                              "StatefulPartitionedCall")
+        self._testVariableWriteInFunctionalOp(
+            build_functional_op, "StatefulPartitionedCall"
+        )
 
     @test_util.run_v1_only("b/120545219")
     def testCondMustRun(self):
@@ -617,7 +614,6 @@ class AutomaticControlDependenciesTest(test.TestCase):
                     return 1.0
 
                 def false_fn():
-
                     def inner_true_fn():
                         v.assign(v * 2, name="false_true")
                         return 2.0
@@ -709,8 +705,12 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
         @function.defun
         def loop():
-            def c(i, x): return i < n
-            def b(i, x): return (i + 1, x + 1)
+            def c(i, x):
+                return i < n
+
+            def b(i, x):
+                return (i + 1, x + 1)
+
             i, out = control_flow_ops.while_loop(c, b, (0, x))
             return i, out
 
@@ -733,7 +733,7 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
     def testOptimizerInDefun(self):
         def loss(v):
-            return v**2
+            return v ** 2
 
         optimizer = momentum.MomentumOptimizer(learning_rate=1.0, momentum=1.0)
 
@@ -751,10 +751,9 @@ class AutomaticControlDependenciesTest(test.TestCase):
         optimizer = momentum.MomentumOptimizer(learning_rate=1.0, momentum=1.0)
         optimizer.apply_gradients = function.defun(optimizer.apply_gradients)
         v = resource_variable_ops.ResourceVariable(1.0)
-        grad = backprop.implicit_grad(lambda v: v**2)(v)
+        grad = backprop.implicit_grad(lambda v: v ** 2)(v)
 
-        with self.assertRaisesRegexp(TypeError,
-                                     '.*must return zero or more Tensors.*'):
+        with self.assertRaisesRegexp(TypeError, ".*must return zero or more Tensors.*"):
             # TODO(akshayka): We might want to allow defun-ing Python functions
             # that return operations (and just execute the op instead of running it).
             optimizer.apply_gradients(grad)
@@ -763,7 +762,7 @@ class AutomaticControlDependenciesTest(test.TestCase):
     # building.
     def testOptimizerNonSlotVarsInDefunNoError(self):
         def loss(v):
-            return v**2
+            return v ** 2
 
         optimizer = adam.AdamOptimizer(learning_rate=1.0)
 
@@ -780,7 +779,7 @@ class AutomaticControlDependenciesTest(test.TestCase):
         v = resource_variable_ops.ResourceVariable(1.0)
 
         def loss():
-            return v**2
+            return v ** 2
 
         optimizer = momentum.MomentumOptimizer(learning_rate=1.0, momentum=1.0)
 
@@ -797,8 +796,9 @@ class AutomaticControlDependenciesTest(test.TestCase):
 
         @def_function.function
         def inner(var1, var2):
-            return (resource_variable_ops.read_variable_op(var1, dtypes.float32) +
-                    resource_variable_ops.read_variable_op(var2, dtypes.float32))
+            return resource_variable_ops.read_variable_op(
+                var1, dtypes.float32
+            ) + resource_variable_ops.read_variable_op(var2, dtypes.float32)
 
         @def_function.function
         def outer():
@@ -807,6 +807,6 @@ class AutomaticControlDependenciesTest(test.TestCase):
         self.assertEqual(self.evaluate(outer()), 2.0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ops.enable_eager_execution()
     test.main()
