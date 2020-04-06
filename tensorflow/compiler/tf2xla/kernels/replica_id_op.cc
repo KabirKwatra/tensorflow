@@ -21,16 +21,16 @@ namespace tensorflow {
 namespace {
 
 class XlaReplicaIdOp : public XlaOpKernel {
-public:
-    explicit XlaReplicaIdOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-    void Compile(XlaOpKernelContext* ctx) override;
+ public:
+  explicit XlaReplicaIdOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+  void Compile(XlaOpKernelContext* ctx) override;
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(XlaReplicaIdOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaReplicaIdOp);
 };
 
 void XlaReplicaIdOp::Compile(XlaOpKernelContext* ctx) {
-    ctx->SetOutput(0, xla::ReplicaId(ctx->builder()));
+  ctx->SetOutput(0, xla::ReplicaId(ctx->builder()));
 }
 
 REGISTER_XLA_OP(Name("XlaReplicaId"), XlaReplicaIdOp);

@@ -22,62 +22,62 @@ namespace {
 
 // Operator to convert sparse representations to dense.
 class SparseToDenseOp : public XlaOpKernel {
-public:
-    explicit SparseToDenseOp(OpKernelConstruction* context)
-        : XlaOpKernel(context) {}
+ public:
+  explicit SparseToDenseOp(OpKernelConstruction* context)
+      : XlaOpKernel(context) {}
 
-    void Compile(XlaOpKernelContext* context) override {
-        // sparse_indices
-        const TensorShape indices_shape = context->InputShape(0);
-        OP_REQUIRES(context, indices_shape.dims() <= 2,
-                    errors::InvalidArgument(
-                        "sparse_indices should be a scalar, vector, or matrix, "
-                        "got shape ",
-                        indices_shape.DebugString()));
-        const int64 num_elems =
-            indices_shape.dims() > 0 ? indices_shape.dim_size(0) : 1;
-        const int64 num_dims =
-            indices_shape.dims() > 1 ? indices_shape.dim_size(1) : 1;
+  void Compile(XlaOpKernelContext* context) override {
+    // sparse_indices
+    const TensorShape indices_shape = context->InputShape(0);
+    OP_REQUIRES(context, indices_shape.dims() <= 2,
+                errors::InvalidArgument(
+                    "sparse_indices should be a scalar, vector, or matrix, "
+                    "got shape ",
+                    indices_shape.DebugString()));
+    const int64 num_elems =
+        indices_shape.dims() > 0 ? indices_shape.dim_size(0) : 1;
+    const int64 num_dims =
+        indices_shape.dims() > 1 ? indices_shape.dim_size(1) : 1;
 
-        // output_shape
-        TensorShape output_shape;
-        OP_REQUIRES_OK(context, context->ConstantInputAsShape(1, &output_shape));
-        OP_REQUIRES(context, output_shape.dims() == num_dims,
-                    errors::InvalidArgument(
-                        "output_shape has incorrect number of elements: ",
-                        output_shape.num_elements(), " should be: ", num_dims));
+    // output_shape
+    TensorShape output_shape;
+    OP_REQUIRES_OK(context, context->ConstantInputAsShape(1, &output_shape));
+    OP_REQUIRES(context, output_shape.dims() == num_dims,
+                errors::InvalidArgument(
+                    "output_shape has incorrect number of elements: ",
+                    output_shape.num_elements(), " should be: ", num_dims));
 
-        // sparse_values
-        const TensorShape sparse_values_shape = context->InputShape(2);
-        const int64 num_values = sparse_values_shape.num_elements();
-        OP_REQUIRES(
-            context,
-            sparse_values_shape.dims() == 0 ||
+    // sparse_values
+    const TensorShape sparse_values_shape = context->InputShape(2);
+    const int64 num_values = sparse_values_shape.num_elements();
+    OP_REQUIRES(
+        context,
+        sparse_values_shape.dims() == 0 ||
             (sparse_values_shape.dims() == 1 && num_values == num_elems),
-            errors::InvalidArgument("sparse_values has incorrect shape ",
-                                    sparse_values_shape.DebugString(),
-                                    ", should be [] or [", num_elems, "]"));
+        errors::InvalidArgument("sparse_values has incorrect shape ",
+                                sparse_values_shape.DebugString(),
+                                ", should be [] or [", num_elems, "]"));
 
-        // default_value
-        const TensorShape default_value_shape = context->InputShape(3);
-        OP_REQUIRES(context, TensorShapeUtils::IsScalar(default_value_shape),
-                    errors::InvalidArgument("default_value should be a scalar."));
+    // default_value
+    const TensorShape default_value_shape = context->InputShape(3);
+    OP_REQUIRES(context, TensorShapeUtils::IsScalar(default_value_shape),
+                errors::InvalidArgument("default_value should be a scalar."));
 
-        xla::XlaOp indices = context->Input(0);
-        xla::XlaOp sparse_values = context->Input(2);
-        xla::XlaOp default_value = context->Input(3);
+    xla::XlaOp indices = context->Input(0);
+    xla::XlaOp sparse_values = context->Input(2);
+    xla::XlaOp default_value = context->Input(3);
 
-        if (sparse_values_shape.dims() == 0 && num_elems != 1) {
-            sparse_values = Broadcast(sparse_values, {num_elems});
-        }
-        xla::XlaBuilder* builder = context->builder();
-        auto buffer = Broadcast(default_value, output_shape.dim_sizes());
-
-        auto result = XlaScatter(buffer, sparse_values, indices,
-                                 /*indices_are_vectors=*/indices_shape.dims() > 1,
-                                 /*combiner=*/ {}, builder);
-        context->SetOutput(0, builder->ReportErrorOrReturn(result));
+    if (sparse_values_shape.dims() == 0 && num_elems != 1) {
+      sparse_values = Broadcast(sparse_values, {num_elems});
     }
+    xla::XlaBuilder* builder = context->builder();
+    auto buffer = Broadcast(default_value, output_shape.dim_sizes());
+
+    auto result = XlaScatter(buffer, sparse_values, indices,
+                             /*indices_are_vectors=*/indices_shape.dims() > 1,
+                             /*combiner=*/{}, builder);
+    context->SetOutput(0, builder->ReportErrorOrReturn(result));
+  }
 };
 
 REGISTER_XLA_OP(Name("SparseToDense").CompileTimeConstantInput("output_shape"),

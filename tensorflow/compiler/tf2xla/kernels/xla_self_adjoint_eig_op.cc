@@ -22,39 +22,39 @@ namespace tensorflow {
 namespace {
 
 class XlaSelfAdjointEigOp : public XlaOpKernel {
-public:
-    explicit XlaSelfAdjointEigOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("lower", &lower_));
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("max_iter", &max_iter_));
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("epsilon", &epsilon_));
-    }
-    void Compile(XlaOpKernelContext* ctx) override {
-        auto result =
-            xla::SelfAdjointEig(ctx->Input(0), lower_, max_iter_, epsilon_);
-        ctx->SetOutput(0, result.w);
-        ctx->SetOutput(1, result.v);
-    }
+ public:
+  explicit XlaSelfAdjointEigOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("lower", &lower_));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("max_iter", &max_iter_));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("epsilon", &epsilon_));
+  }
+  void Compile(XlaOpKernelContext* ctx) override {
+    auto result =
+        xla::SelfAdjointEig(ctx->Input(0), lower_, max_iter_, epsilon_);
+    ctx->SetOutput(0, result.w);
+    ctx->SetOutput(1, result.v);
+  }
 
-private:
-    bool lower_;
-    int32 max_iter_;
-    float epsilon_;
+ private:
+  bool lower_;
+  int32 max_iter_;
+  float epsilon_;
 };
 
 class SelfAdjointEigV2Op : public XlaOpKernel {
-public:
-    explicit SelfAdjointEigV2Op(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-    void Compile(XlaOpKernelContext* ctx) override {
-        const TensorShape input_shape = ctx->InputShape("input");
-        int n = input_shape.dim_size(input_shape.dims() - 1);
-        // This is based on heuristics that approx log(n) sweep updates are needed.
-        // Note: the heuristics provides no theoretical guarantee, max_iter=100 and
-        // epsilon should be used to determine exit condition.
-        int max_iter = 2 * tensorflow::Log2Ceiling(n);
-        auto result = xla::SelfAdjointEig(ctx->Input(0), true, max_iter, 1e-6);
-        ctx->SetOutput(0, result.w);
-        ctx->SetOutput(1, result.v);
-    }
+ public:
+  explicit SelfAdjointEigV2Op(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+  void Compile(XlaOpKernelContext* ctx) override {
+    const TensorShape input_shape = ctx->InputShape("input");
+    int n = input_shape.dim_size(input_shape.dims() - 1);
+    // This is based on heuristics that approx log(n) sweep updates are needed.
+    // Note: the heuristics provides no theoretical guarantee, max_iter=100 and
+    // epsilon should be used to determine exit condition.
+    int max_iter = 2 * tensorflow::Log2Ceiling(n);
+    auto result = xla::SelfAdjointEig(ctx->Input(0), true, max_iter, 1e-6);
+    ctx->SetOutput(0, result.w);
+    ctx->SetOutput(1, result.v);
+  }
 };
 
 REGISTER_XLA_OP(Name("XlaSelfAdjointEig").TypeConstraint("T", kFloatTypes),

@@ -25,38 +25,38 @@ namespace tensorflow {
 namespace {
 
 class XlaDotOp : public XlaOpKernel {
-public:
-    explicit XlaDotOp(OpKernelConstruction* context) : XlaOpKernel(context) {
-        string dnums_attr;
-        OP_REQUIRES_OK(context, context->GetAttr("dimension_numbers", &dnums_attr));
-        OP_REQUIRES(
-            context, dnums_.ParsePartialFromString(dnums_attr),
-            errors::InvalidArgument("Error parsing convolution dimension numbers"));
-        string precision_config_attr;
-        OP_REQUIRES_OK(
-            context, context->GetAttr("precision_config", &precision_config_attr));
-        OP_REQUIRES(
-            context,
-            precision_config_.ParsePartialFromString(precision_config_attr),
-            errors::InvalidArgument("Error parsing convolution dimension numbers"));
-    }
+ public:
+  explicit XlaDotOp(OpKernelConstruction* context) : XlaOpKernel(context) {
+    string dnums_attr;
+    OP_REQUIRES_OK(context, context->GetAttr("dimension_numbers", &dnums_attr));
+    OP_REQUIRES(
+        context, dnums_.ParsePartialFromString(dnums_attr),
+        errors::InvalidArgument("Error parsing convolution dimension numbers"));
+    string precision_config_attr;
+    OP_REQUIRES_OK(
+        context, context->GetAttr("precision_config", &precision_config_attr));
+    OP_REQUIRES(
+        context,
+        precision_config_.ParsePartialFromString(precision_config_attr),
+        errors::InvalidArgument("Error parsing convolution dimension numbers"));
+  }
 
-    void Compile(XlaOpKernelContext* context) override {
-        const TensorShape lhs_shape = context->InputShape(0);
-        const TensorShape rhs_shape = context->InputShape(1);
+  void Compile(XlaOpKernelContext* context) override {
+    const TensorShape lhs_shape = context->InputShape(0);
+    const TensorShape rhs_shape = context->InputShape(1);
 
-        // We do only minimal checking, relying on XLA to check the shape
-        // invariants.
-        xla::XlaOp output = xla::DotGeneral(context->Input(0), context->Input(1),
-                                            dnums_, &precision_config_);
-        context->SetOutput(0, output);
-    }
+    // We do only minimal checking, relying on XLA to check the shape
+    // invariants.
+    xla::XlaOp output = xla::DotGeneral(context->Input(0), context->Input(1),
+                                        dnums_, &precision_config_);
+    context->SetOutput(0, output);
+  }
 
-private:
-    xla::DotDimensionNumbers dnums_;
-    xla::PrecisionConfig precision_config_;
+ private:
+  xla::DotDimensionNumbers dnums_;
+  xla::PrecisionConfig precision_config_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(XlaDotOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaDotOp);
 };
 
 REGISTER_XLA_OP(Name("XlaDot"), XlaDotOp);

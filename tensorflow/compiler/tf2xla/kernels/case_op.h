@@ -42,23 +42,23 @@ namespace tensorflow {
 // It is the user's responsibility to ensure that each non-variable _Arg matches
 // the corresponding _Retval.
 class XlaCaseOp : public XlaOpKernel {
-public:
-    explicit XlaCaseOp(OpKernelConstruction* ctx);
+ public:
+  explicit XlaCaseOp(OpKernelConstruction* ctx);
 
-    void Compile(XlaOpKernelContext* ctx) override;
+  void Compile(XlaOpKernelContext* ctx) override;
 
-private:
-    TF_DISALLOW_COPY_AND_ASSIGN(XlaCaseOp);
+ private:
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaCaseOp);
 
-    std::vector<NameAttrList> branches_;
-    DataTypeVector input_types_;
-    DataTypeVector output_types_;
-    bool has_token_input_output_;
-    std::vector<string> token_input_nodes_;
-    // Whether to propagate compile time consts into the cond branches.
-    // This is not supported by default now since it may cause HBM memory
-    // overheads.
-    bool propagate_compile_time_consts_ = false;
+  std::vector<NameAttrList> branches_;
+  DataTypeVector input_types_;
+  DataTypeVector output_types_;
+  bool has_token_input_output_;
+  std::vector<string> token_input_nodes_;
+  // Whether to propagate compile time consts into the cond branches.
+  // This is not supported by default now since it may cause HBM memory
+  // overheads.
+  bool propagate_compile_time_consts_ = false;
 };
 
 }  // namespace tensorflow

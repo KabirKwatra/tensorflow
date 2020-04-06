@@ -34,89 +34,89 @@ constexpr std::array<DataType, 2> kListDiffTypes = {DT_INT32, DT_INT64};
 
 // ListDiffOp is an XLA kernel that supports constant-only x and y input.
 class ListDiffOp : public XlaOpKernel {
-public:
-    explicit ListDiffOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
+ public:
+  explicit ListDiffOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
 
-    void Compile(XlaOpKernelContext* context) override {
-        OP_REQUIRES(context, TensorShapeUtils::IsVector(context->InputShape(0)),
-                    errors::InvalidArgument("ListDiff expects x as a vector, not ",
-                                            context->InputShape(0).DebugString()));
+  void Compile(XlaOpKernelContext* context) override {
+    OP_REQUIRES(context, TensorShapeUtils::IsVector(context->InputShape(0)),
+                errors::InvalidArgument("ListDiff expects x as a vector, not ",
+                                        context->InputShape(0).DebugString()));
 
-        OP_REQUIRES(context, TensorShapeUtils::IsVector(context->InputShape(1)),
-                    errors::InvalidArgument("ListDiff expects y as a vector, not ",
-                                            context->InputShape(1).DebugString()));
+    OP_REQUIRES(context, TensorShapeUtils::IsVector(context->InputShape(1)),
+                errors::InvalidArgument("ListDiff expects y as a vector, not ",
+                                        context->InputShape(1).DebugString()));
 
-        DataType val_type = context->expected_output_dtype(0);
-        DataType idx_type = context->expected_output_dtype(1);
+    DataType val_type = context->expected_output_dtype(0);
+    DataType idx_type = context->expected_output_dtype(1);
 
-        Status status;
-        switch (val_type) {
-        case DT_INT32:
-            status = ListDiffWithIndexType<int32>(context, idx_type);
-            break;
-        case DT_INT64:
-            status = ListDiffWithIndexType<int64>(context, idx_type);
-            break;
-        default:
-            // This should never happen since we restrict this kernel to only match
-            // inputs with supported Tensor datatype.
-            status = errors::InvalidArgument("ListDiff expects x and y as either ",
-                                             "int32 or int64, not ",
-                                             DataTypeString(val_type));
-        }
-        OP_REQUIRES_OK(context, status);
+    Status status;
+    switch (val_type) {
+      case DT_INT32:
+        status = ListDiffWithIndexType<int32>(context, idx_type);
+        break;
+      case DT_INT64:
+        status = ListDiffWithIndexType<int64>(context, idx_type);
+        break;
+      default:
+        // This should never happen since we restrict this kernel to only match
+        // inputs with supported Tensor datatype.
+        status = errors::InvalidArgument("ListDiff expects x and y as either ",
+                                         "int32 or int64, not ",
+                                         DataTypeString(val_type));
+    }
+    OP_REQUIRES_OK(context, status);
+  }
+
+ private:
+  template <typename Tval, typename Tidx>
+  Status ListDiff(XlaOpKernelContext* context) {
+    std::vector<int64> x_input, y_input;
+    TF_RETURN_IF_ERROR(context->ConstantInputAsIntVector(0, &x_input));
+    TF_RETURN_IF_ERROR(context->ConstantInputAsIntVector(1, &y_input));
+
+    std::unordered_set<Tval> y_input_set;
+    y_input_set.reserve(y_input.size());
+    for (auto y : y_input) {
+      y_input_set.insert(y);
     }
 
-private:
-    template <typename Tval, typename Tidx>
-    Status ListDiff(XlaOpKernelContext* context) {
-        std::vector<int64> x_input, y_input;
-        TF_RETURN_IF_ERROR(context->ConstantInputAsIntVector(0, &x_input));
-        TF_RETURN_IF_ERROR(context->ConstantInputAsIntVector(1, &y_input));
-
-        std::unordered_set<Tval> y_input_set;
-        y_input_set.reserve(y_input.size());
-        for (auto y : y_input) {
-            y_input_set.insert(y);
-        }
-
-        std::vector<Tval> val_output;
-        std::vector<Tidx> idx_output;
-        auto x_size = x_input.size();
-        for (Tidx i = 0; i < x_size; ++i) {
-            if (y_input_set.count(x_input[i]) > 0) {
-                continue;
-            }
-            val_output.push_back(x_input[i]);
-            idx_output.push_back(i);
-        }
-
-        context->SetOutput(0,
-                           xla::ConstantR1<Tval>(context->builder(), val_output));
-        context->SetOutput(1,
-                           xla::ConstantR1<Tidx>(context->builder(), idx_output));
-        return Status::OK();
+    std::vector<Tval> val_output;
+    std::vector<Tidx> idx_output;
+    auto x_size = x_input.size();
+    for (Tidx i = 0; i < x_size; ++i) {
+      if (y_input_set.count(x_input[i]) > 0) {
+        continue;
+      }
+      val_output.push_back(x_input[i]);
+      idx_output.push_back(i);
     }
 
-    template <typename Tval>
-    Status ListDiffWithIndexType(XlaOpKernelContext* context, DataType idx_type) {
-        switch (idx_type) {
-        case DT_INT32:
-            return ListDiff<Tval, int32>(context);
-        case DT_INT64:
-            return ListDiff<Tval, int64>(context);
-        default:
-            return errors::InvalidArgument(
-                       "ListDiff expects idx_out as either int32 or int64, not ",
-                       DataTypeString(idx_type));
-        }
+    context->SetOutput(0,
+                       xla::ConstantR1<Tval>(context->builder(), val_output));
+    context->SetOutput(1,
+                       xla::ConstantR1<Tidx>(context->builder(), idx_output));
+    return Status::OK();
+  }
+
+  template <typename Tval>
+  Status ListDiffWithIndexType(XlaOpKernelContext* context, DataType idx_type) {
+    switch (idx_type) {
+      case DT_INT32:
+        return ListDiff<Tval, int32>(context);
+      case DT_INT64:
+        return ListDiff<Tval, int64>(context);
+      default:
+        return errors::InvalidArgument(
+            "ListDiff expects idx_out as either int32 or int64, not ",
+            DataTypeString(idx_type));
     }
+  }
 };
 
 REGISTER_XLA_OP(Name("ListDiff")
-                .TypeConstraint("T", kListDiffTypes)
-                .CompileTimeConstantInput("x")
-                .CompileTimeConstantInput("y"),
+                    .TypeConstraint("T", kListDiffTypes)
+                    .CompileTimeConstantInput("x")
+                    .CompileTimeConstantInput("y"),
                 ListDiffOp);
 
 }  // namespace

@@ -32,82 +32,82 @@ namespace {
 // are considered, and their sorted nature is not fully exploited.
 void BuildLowerUpperBoundOp(XlaOpKernelContext* ctx, DataType out_dtype,
                             xla::ComparisonDirection comparison_direction) {
-    const TensorShape sorted_inputs_shape = ctx->InputShape("sorted_inputs");
-    const TensorShape values_shape = ctx->InputShape("values");
-    const xla::XlaOp sorted_inputs = ctx->Input("sorted_inputs");
-    const xla::XlaOp values = ctx->Input("values");
+  const TensorShape sorted_inputs_shape = ctx->InputShape("sorted_inputs");
+  const TensorShape values_shape = ctx->InputShape("values");
+  const xla::XlaOp sorted_inputs = ctx->Input("sorted_inputs");
+  const xla::XlaOp values = ctx->Input("values");
 
-    // We are assuming both inputs are 2D, which they will be given the current
-    // implementation of tf.searchsorted.
-    OP_REQUIRES(ctx, sorted_inputs_shape.dims() == 2,
-                errors::FailedPrecondition("sorted_inputs must be 2D"));
-    OP_REQUIRES(ctx, values_shape.dims() == 2,
-                errors::FailedPrecondition("values must be 2D"));
+  // We are assuming both inputs are 2D, which they will be given the current
+  // implementation of tf.searchsorted.
+  OP_REQUIRES(ctx, sorted_inputs_shape.dims() == 2,
+              errors::FailedPrecondition("sorted_inputs must be 2D"));
+  OP_REQUIRES(ctx, values_shape.dims() == 2,
+              errors::FailedPrecondition("values must be 2D"));
 
-    // Add a new inner dimension to values, to allow broadcasting along the inner
-    // dimension of sorted_sequence.
-    auto new_values_shape = values_shape;
-    new_values_shape.InsertDim(/* d */ 2, /* size */ 1);
-    auto values_reshaped = xla::Reshape(values, new_values_shape.dim_sizes());
+  // Add a new inner dimension to values, to allow broadcasting along the inner
+  // dimension of sorted_sequence.
+  auto new_values_shape = values_shape;
+  new_values_shape.InsertDim(/* d */ 2, /* size */ 1);
+  auto values_reshaped = xla::Reshape(values, new_values_shape.dim_sizes());
 
-    // Add a new penultimate dimension to sorted_inputs, to allow broadcasting of
-    // sorted_sequence entries for each value.
-    auto new_sorted_inputs_shape = sorted_inputs_shape;
-    new_sorted_inputs_shape.InsertDim(/* d */ 1, /* size */ 1);
-    auto sorted_inputs_reshaped =
-        xla::Reshape(sorted_inputs, new_sorted_inputs_shape.dim_sizes());
+  // Add a new penultimate dimension to sorted_inputs, to allow broadcasting of
+  // sorted_sequence entries for each value.
+  auto new_sorted_inputs_shape = sorted_inputs_shape;
+  new_sorted_inputs_shape.InsertDim(/* d */ 1, /* size */ 1);
+  auto sorted_inputs_reshaped =
+      xla::Reshape(sorted_inputs, new_sorted_inputs_shape.dim_sizes());
 
-    // We are relying on broadcasting to compare each value against each entry in
-    // the associated sorted_inputs row.
-    // The reshapes above leave the tensors with equal rank of 3, so broadcast
-    // dimensions are not explicitly specified.
-    auto comparison = xla::Compare(values_reshaped, sorted_inputs_reshaped, {},
-                                   comparison_direction);
+  // We are relying on broadcasting to compare each value against each entry in
+  // the associated sorted_inputs row.
+  // The reshapes above leave the tensors with equal rank of 3, so broadcast
+  // dimensions are not explicitly specified.
+  auto comparison = xla::Compare(values_reshaped, sorted_inputs_reshaped, {},
+                                 comparison_direction);
 
-    const DataType accumulation_type = XlaHelpers::SumAccumulationType(out_dtype);
+  const DataType accumulation_type = XlaHelpers::SumAccumulationType(out_dtype);
 
-    // Convert boolean comparison results to integers so we can sum them.
-    auto comparison_int =
-        XlaHelpers::ConvertElementType(comparison, accumulation_type);
+  // Convert boolean comparison results to integers so we can sum them.
+  auto comparison_int =
+      XlaHelpers::ConvertElementType(comparison, accumulation_type);
 
-    // Sum the comparison results over the inner dimension to find the index for
-    // each value.
-    xla::XlaBuilder* builder = ctx->builder();
-    auto reduced =
-        xla::Reduce(comparison_int, XlaHelpers::Zero(builder, accumulation_type),
-                    *ctx->GetOrCreateAdd(accumulation_type), {2});
+  // Sum the comparison results over the inner dimension to find the index for
+  // each value.
+  xla::XlaBuilder* builder = ctx->builder();
+  auto reduced =
+      xla::Reduce(comparison_int, XlaHelpers::Zero(builder, accumulation_type),
+                  *ctx->GetOrCreateAdd(accumulation_type), {2});
 
-    ctx->SetOutput(0, reduced);
+  ctx->SetOutput(0, reduced);
 }
 
 class LowerBoundOp : public XlaOpKernel {
-public:
-    explicit LowerBoundOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("out_type", &out_dtype_));
-    }
+ public:
+  explicit LowerBoundOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("out_type", &out_dtype_));
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        BuildLowerUpperBoundOp(ctx, out_dtype_, xla::ComparisonDirection::kGt);
-    }
+  void Compile(XlaOpKernelContext* ctx) override {
+    BuildLowerUpperBoundOp(ctx, out_dtype_, xla::ComparisonDirection::kGt);
+  }
 
-private:
-    DataType out_dtype_;
+ private:
+  DataType out_dtype_;
 };
 
 REGISTER_XLA_OP(Name("LowerBound"), LowerBoundOp);
 
 class UpperBoundOp : public XlaOpKernel {
-public:
-    explicit UpperBoundOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("out_type", &out_dtype_));
-    }
+ public:
+  explicit UpperBoundOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("out_type", &out_dtype_));
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        BuildLowerUpperBoundOp(ctx, out_dtype_, xla::ComparisonDirection::kGe);
-    }
+  void Compile(XlaOpKernelContext* ctx) override {
+    BuildLowerUpperBoundOp(ctx, out_dtype_, xla::ComparisonDirection::kGe);
+  }
 
-private:
-    DataType out_dtype_;
+ private:
+  DataType out_dtype_;
 };
 
 REGISTER_XLA_OP(Name("UpperBound"), UpperBoundOp);

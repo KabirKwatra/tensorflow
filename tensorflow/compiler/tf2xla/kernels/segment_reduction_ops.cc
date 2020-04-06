@@ -25,87 +25,83 @@ namespace tensorflow {
 namespace {
 
 class UnsortedSegmentReduce : public XlaOpKernel {
-public:
-    explicit UnsortedSegmentReduce(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        DataType dtype;
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("T", &dtype));
-        OP_REQUIRES_OK(ctx, DataTypeToPrimitiveType(dtype, &type_));
-    }
+ public:
+  explicit UnsortedSegmentReduce(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    DataType dtype;
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("T", &dtype));
+    OP_REQUIRES_OK(ctx, DataTypeToPrimitiveType(dtype, &type_));
+  }
 
-    // The initial value to initialize elements of the output to.
-    virtual xla::XlaOp InitialValue(xla::XlaBuilder* builder) = 0;
+  // The initial value to initialize elements of the output to.
+  virtual xla::XlaOp InitialValue(xla::XlaBuilder* builder) = 0;
 
-    // A function to combine two scalars with the same index (e.g., sum).
-    virtual xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) = 0;
+  // A function to combine two scalars with the same index (e.g., sum).
+  virtual xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) = 0;
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        // output = unsorted_segment_sum(data, indices, num_segments)
-        // Compute a tensor such that:
-        //    output[i] = sum over {j where indices[j] == i} of data[j]
-        //    output[i] == 0 if i does not appear in indices
-        //
-        // Contrast with segment_sum(), which assumes indices are sorted and that
-        // max(indices)+1 is the desired size of the output.
-        //
-        // The returned output tensor has the same type as data, and the same shape
-        // as data with the first indices.rank dimensions are replaced
-        // by a single dimension with size num_segments.
-        auto data = ctx->Input(0);
-        TensorShape data_shape = ctx->InputShape(0);
+  void Compile(XlaOpKernelContext* ctx) override {
+    // output = unsorted_segment_sum(data, indices, num_segments)
+    // Compute a tensor such that:
+    //    output[i] = sum over {j where indices[j] == i} of data[j]
+    //    output[i] == 0 if i does not appear in indices
+    //
+    // Contrast with segment_sum(), which assumes indices are sorted and that
+    // max(indices)+1 is the desired size of the output.
+    //
+    // The returned output tensor has the same type as data, and the same shape
+    // as data with the first indices.rank dimensions are replaced
+    // by a single dimension with size num_segments.
+    auto data = ctx->Input(0);
+    TensorShape data_shape = ctx->InputShape(0);
 
-        auto indices = ctx->Input(1);
-        TensorShape indices_shape = ctx->InputShape(1);
+    auto indices = ctx->Input(1);
+    TensorShape indices_shape = ctx->InputShape(1);
 
-        int64 num_segments;
-        OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntScalar(2, &num_segments));
+    int64 num_segments;
+    OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntScalar(2, &num_segments));
 
-        OP_REQUIRES(ctx, data_shape.dims() >= indices_shape.dims(),
-                    errors::InvalidArgument(type_string(),
-                                            " requires that indices' rank be"
-                                            " less than or equal to data's rank."));
-        // Validate that indices.shape is a prefix of data.shape.
-        for (int d = 0; d < indices_shape.dims(); ++d) {
-            OP_REQUIRES(
-                ctx, (data_shape.dim_size(d) == indices_shape.dim_size(d)),
+    OP_REQUIRES(ctx, data_shape.dims() >= indices_shape.dims(),
                 errors::InvalidArgument(type_string(),
-                                        " requires indices shape to be prefix"
-                                        " of data_shape, but dimension ",
-                                        d, " differs ", data_shape.dim_size(d),
-                                        " vs. ", indices_shape.dim_size(d)));
-        }
-        xla::XlaBuilder* builder = ctx->builder();
-        TensorShape buffer_shape = data_shape;
-        buffer_shape.RemoveDimRange(0, indices_shape.dims());
-        buffer_shape.InsertDim(0, num_segments);
-        auto buffer =
-            xla::Broadcast(InitialValue(builder), buffer_shape.dim_sizes());
-
-        auto combiner = [this](xla::XlaOp a, xla::XlaOp b,
-        xla::XlaBuilder* builder) {
-            return Combine(a, b);
-        };
-
-        auto result = XlaScatter(buffer, /*updates=*/data, indices,
-                                 /*indices_are_vectors=*/false, combiner, builder);
-        OP_REQUIRES_OK(ctx, result.status());
-        ctx->SetOutput(0, result.ValueOrDie());
+                                        " requires that indices' rank be"
+                                        " less than or equal to data's rank."));
+    // Validate that indices.shape is a prefix of data.shape.
+    for (int d = 0; d < indices_shape.dims(); ++d) {
+      OP_REQUIRES(
+          ctx, (data_shape.dim_size(d) == indices_shape.dim_size(d)),
+          errors::InvalidArgument(type_string(),
+                                  " requires indices shape to be prefix"
+                                  " of data_shape, but dimension ",
+                                  d, " differs ", data_shape.dim_size(d),
+                                  " vs. ", indices_shape.dim_size(d)));
     }
+    xla::XlaBuilder* builder = ctx->builder();
+    TensorShape buffer_shape = data_shape;
+    buffer_shape.RemoveDimRange(0, indices_shape.dims());
+    buffer_shape.InsertDim(0, num_segments);
+    auto buffer =
+        xla::Broadcast(InitialValue(builder), buffer_shape.dim_sizes());
 
-protected:
-    xla::PrimitiveType type_;
+    auto combiner = [this](xla::XlaOp a, xla::XlaOp b,
+                           xla::XlaBuilder* builder) { return Combine(a, b); };
+
+    auto result = XlaScatter(buffer, /*updates=*/data, indices,
+                             /*indices_are_vectors=*/false, combiner, builder);
+    OP_REQUIRES_OK(ctx, result.status());
+    ctx->SetOutput(0, result.ValueOrDie());
+  }
+
+ protected:
+  xla::PrimitiveType type_;
 };
 
 class UnsortedSegmentSum : public UnsortedSegmentReduce {
-public:
-    explicit UnsortedSegmentSum(OpKernelConstruction* ctx)
-        : UnsortedSegmentReduce(ctx) {}
+ public:
+  explicit UnsortedSegmentSum(OpKernelConstruction* ctx)
+      : UnsortedSegmentReduce(ctx) {}
 
-    xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
-        return xla::Zero(builder, type_);
-    };
-    xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override {
-        return a + b;
-    };
+  xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
+    return xla::Zero(builder, type_);
+  };
+  xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override { return a + b; };
 };
 
 REGISTER_XLA_OP(
@@ -113,16 +109,14 @@ REGISTER_XLA_OP(
     UnsortedSegmentSum);
 
 class UnsortedSegmentProd : public UnsortedSegmentReduce {
-public:
-    explicit UnsortedSegmentProd(OpKernelConstruction* ctx)
-        : UnsortedSegmentReduce(ctx) {}
+ public:
+  explicit UnsortedSegmentProd(OpKernelConstruction* ctx)
+      : UnsortedSegmentReduce(ctx) {}
 
-    xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
-        return xla::One(builder, type_);
-    };
-    xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override {
-        return a * b;
-    };
+  xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
+    return xla::One(builder, type_);
+  };
+  xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override { return a * b; };
 };
 
 REGISTER_XLA_OP(
@@ -130,16 +124,16 @@ REGISTER_XLA_OP(
     UnsortedSegmentProd);
 
 class UnsortedSegmentMin : public UnsortedSegmentReduce {
-public:
-    explicit UnsortedSegmentMin(OpKernelConstruction* ctx)
-        : UnsortedSegmentReduce(ctx) {}
+ public:
+  explicit UnsortedSegmentMin(OpKernelConstruction* ctx)
+      : UnsortedSegmentReduce(ctx) {}
 
-    xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
-        return xla::MaxFiniteValue(builder, type_);
-    };
-    xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override {
-        return xla::Min(a, b);
-    };
+  xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
+    return xla::MaxFiniteValue(builder, type_);
+  };
+  xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override {
+    return xla::Min(a, b);
+  };
 };
 
 REGISTER_XLA_OP(
@@ -147,16 +141,16 @@ REGISTER_XLA_OP(
     UnsortedSegmentMin);
 
 class UnsortedSegmentMax : public UnsortedSegmentReduce {
-public:
-    explicit UnsortedSegmentMax(OpKernelConstruction* ctx)
-        : UnsortedSegmentReduce(ctx) {}
+ public:
+  explicit UnsortedSegmentMax(OpKernelConstruction* ctx)
+      : UnsortedSegmentReduce(ctx) {}
 
-    xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
-        return xla::MinFiniteValue(builder, type_);
-    };
-    xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override {
-        return xla::Max(a, b);
-    };
+  xla::XlaOp InitialValue(xla::XlaBuilder* builder) override {
+    return xla::MinFiniteValue(builder, type_);
+  };
+  xla::XlaOp Combine(xla::XlaOp a, xla::XlaOp b) override {
+    return xla::Max(a, b);
+  };
 };
 
 REGISTER_XLA_OP(

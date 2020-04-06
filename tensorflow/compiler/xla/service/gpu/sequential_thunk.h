@@ -31,24 +31,22 @@ namespace gpu {
 // the sub-thunks sequentially. This is useful to implement instructions that
 // require multiple kernel launches or library calls.
 class SequentialThunk : public Thunk {
-public:
-    SequentialThunk(std::vector<std::unique_ptr<Thunk>> thunks,
-                    const HloInstruction* hlo);
-    SequentialThunk(const SequentialThunk&) = delete;
-    SequentialThunk& operator=(const SequentialThunk&) = delete;
+ public:
+  SequentialThunk(std::vector<std::unique_ptr<Thunk>> thunks,
+                  const HloInstruction* hlo);
+  SequentialThunk(const SequentialThunk&) = delete;
+  SequentialThunk& operator=(const SequentialThunk&) = delete;
 
-    const std::vector<std::unique_ptr<Thunk>>& thunks() const {
-        return thunks_;
-    }
+  const std::vector<std::unique_ptr<Thunk>>& thunks() const { return thunks_; }
 
-    void ComputeAnnotations() override;
-    Status Initialize(const GpuExecutable& executable,
-                      se::StreamExecutor* executor) override;
-    Status ExecuteOnStream(const ExecuteParams& params) override;
+  void ComputeAnnotations() override;
+  Status Initialize(const GpuExecutable& executable,
+                    se::StreamExecutor* executor) override;
+  Status ExecuteOnStream(const ExecuteParams& params) override;
 
-private:
-    // The list of sub-thunks.
-    std::vector<std::unique_ptr<Thunk>> thunks_;
+ private:
+  // The list of sub-thunks.
+  std::vector<std::unique_ptr<Thunk>> thunks_;
 };
 
 }  // namespace gpu

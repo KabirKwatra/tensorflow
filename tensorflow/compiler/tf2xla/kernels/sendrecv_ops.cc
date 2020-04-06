@@ -27,56 +27,56 @@ namespace tensorflow {
 namespace {
 
 class SendOp : public XlaOpKernel {
-public:
-    explicit SendOp(OpKernelConstruction* ctx);
-    void Compile(XlaOpKernelContext* ctx) override;
+ public:
+  explicit SendOp(OpKernelConstruction* ctx);
+  void Compile(XlaOpKernelContext* ctx) override;
 
-private:
-    string tensor_name_;
+ private:
+  string tensor_name_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(SendOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(SendOp);
 };
 
 SendOp::SendOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("tensor_name", &tensor_name_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr("tensor_name", &tensor_name_));
 }
 
 void SendOp::Compile(XlaOpKernelContext* ctx) {
-    XlaCompiler* compiler = ctx->compiler();
-    xla::ChannelHandle channel;
-    OP_REQUIRES_OK(ctx, compiler->GetChannelHandle(tensor_name_, &channel));
-    xla::Send(ctx->Input(0), channel);
+  XlaCompiler* compiler = ctx->compiler();
+  xla::ChannelHandle channel;
+  OP_REQUIRES_OK(ctx, compiler->GetChannelHandle(tensor_name_, &channel));
+  xla::Send(ctx->Input(0), channel);
 }
 
 REGISTER_XLA_OP(Name("XlaSend"), SendOp);
 
 class RecvOp : public XlaOpKernel {
-public:
-    explicit RecvOp(OpKernelConstruction* ctx);
-    void Compile(XlaOpKernelContext* ctx) override;
+ public:
+  explicit RecvOp(OpKernelConstruction* ctx);
+  void Compile(XlaOpKernelContext* ctx) override;
 
-private:
-    string tensor_name_;
-    xla::Shape shape_;
+ private:
+  string tensor_name_;
+  xla::Shape shape_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(RecvOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(RecvOp);
 };
 
 RecvOp::RecvOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("tensor_name", &tensor_name_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr("tensor_name", &tensor_name_));
 
-    TensorShape tensor_shape;
-    DataType dtype;
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &tensor_shape));
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("dtype", &dtype));
-    OP_REQUIRES_OK(ctx, TensorShapeToXLAShape(dtype, tensor_shape, &shape_));
+  TensorShape tensor_shape;
+  DataType dtype;
+  OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &tensor_shape));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr("dtype", &dtype));
+  OP_REQUIRES_OK(ctx, TensorShapeToXLAShape(dtype, tensor_shape, &shape_));
 }
 
 void RecvOp::Compile(XlaOpKernelContext* ctx) {
-    XlaCompiler* compiler = ctx->compiler();
-    xla::ChannelHandle channel;
-    OP_REQUIRES_OK(ctx, compiler->GetChannelHandle(tensor_name_, &channel));
-    ctx->SetOutput(0, xla::Recv(ctx->builder(), shape_, channel));
+  XlaCompiler* compiler = ctx->compiler();
+  xla::ChannelHandle channel;
+  OP_REQUIRES_OK(ctx, compiler->GetChannelHandle(tensor_name_, &channel));
+  ctx->SetOutput(0, xla::Recv(ctx->builder(), shape_, channel));
 }
 
 REGISTER_XLA_OP(Name("XlaRecv"), RecvOp);

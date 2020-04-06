@@ -22,33 +22,33 @@ namespace tensorflow {
 namespace {
 
 class XlaSortOp : public XlaOpKernel {
-public:
-    explicit XlaSortOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
+ public:
+  explicit XlaSortOp(OpKernelConstruction* context) : XlaOpKernel(context) {}
 
-    void Compile(XlaOpKernelContext* context) override {
-        context->SetOutput(0, xla::Sort({context->Input("input")},
-                                        xla::CreateScalarLtComputation(
-        {context->InputXlaType("input")},
-        context->builder())));
-    }
+  void Compile(XlaOpKernelContext* context) override {
+    context->SetOutput(0, xla::Sort({context->Input("input")},
+                                    xla::CreateScalarLtComputation(
+                                        {context->InputXlaType("input")},
+                                        context->builder())));
+  }
 };
 
 REGISTER_XLA_OP(Name("XlaSort"), XlaSortOp);
 
 class XlaKeyValueSortOp : public XlaOpKernel {
-public:
-    explicit XlaKeyValueSortOp(OpKernelConstruction* context)
-        : XlaOpKernel(context) {}
+ public:
+  explicit XlaKeyValueSortOp(OpKernelConstruction* context)
+      : XlaOpKernel(context) {}
 
-    void Compile(XlaOpKernelContext* context) override {
-        xla::XlaOp result = xla::Sort(
+  void Compile(XlaOpKernelContext* context) override {
+    xla::XlaOp result = xla::Sort(
         {context->Input("keys"), context->Input("values")},
         xla::CreateScalarLtComputation(
-        {context->InputXlaType("keys"), context->InputXlaType("values")},
-        context->builder()));
-        context->SetOutput(0, xla::GetTupleElement(result, 0));
-        context->SetOutput(1, xla::GetTupleElement(result, 1));
-    }
+            {context->InputXlaType("keys"), context->InputXlaType("values")},
+            context->builder()));
+    context->SetOutput(0, xla::GetTupleElement(result, 0));
+    context->SetOutput(1, xla::GetTupleElement(result, 1));
+  }
 };
 
 REGISTER_XLA_OP(Name("XlaKeyValueSort"), XlaKeyValueSortOp);

@@ -70,8 +70,8 @@ Status GetLeadingDimForTensorList(xla::XlaOp list, int64* leading_dim);
 // Returns TensorList shape for the element shape.
 // Element shape must be a normal tensor shape.
 Status GetTensorListShapeFromElementShape(const xla::Shape& element_shape,
-        int64 leading_dim,
-        xla::Shape* tensor_list_shape);
+                                          int64 leading_dim,
+                                          xla::Shape* tensor_list_shape);
 
 // Returns a TensorList filled by zeros with the given shape.
 Status CreateZerosTensorListWithShape(xla::XlaBuilder* b,
@@ -83,8 +83,8 @@ Status CreateZerosTensorListWithShape(xla::XlaBuilder* b,
 // Input can be initialized or uninitialized TensorList.
 // "element" can be normal tensor or TensorList.
 Status GetInitializedTensorListForElement(xla::XlaOp list, xla::XlaOp element,
-        bool element_is_tensor_list,
-        xla::XlaOp* initialized_list);
+                                          bool element_is_tensor_list,
+                                          xla::XlaOp* initialized_list);
 
 // Executes TensorListPushBack with given TensorList and element.
 // Input must be an initialized TensorList.

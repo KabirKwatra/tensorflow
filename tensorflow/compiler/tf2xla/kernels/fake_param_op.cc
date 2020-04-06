@@ -26,24 +26,24 @@ namespace tensorflow {
 // This OpKernel implements the FakeParam Op for XLA JIT devices. Create zeros
 // with the appropriate shape for FakeParam op.
 class XlaFakeParamOp : public XlaOpKernel {
-public:
-    explicit XlaFakeParamOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        DataType dtype;
-        TensorShape tensor_shape;
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("dtype", &dtype));
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &tensor_shape));
-        OP_REQUIRES_OK(ctx, TensorShapeToXLAShape(dtype, tensor_shape, &shape_));
-    }
+ public:
+  explicit XlaFakeParamOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    DataType dtype;
+    TensorShape tensor_shape;
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("dtype", &dtype));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &tensor_shape));
+    OP_REQUIRES_OK(ctx, TensorShapeToXLAShape(dtype, tensor_shape, &shape_));
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        xla::XlaBuilder* b = ctx->builder();
-        ctx->SetOutput(0, xla::Zeros(b, shape_));
-    }
+  void Compile(XlaOpKernelContext* ctx) override {
+    xla::XlaBuilder* b = ctx->builder();
+    ctx->SetOutput(0, xla::Zeros(b, shape_));
+  }
 
-private:
-    xla::Shape shape_;
+ private:
+  xla::Shape shape_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(XlaFakeParamOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaFakeParamOp);
 };
 
 REGISTER_XLA_OP(Name("FakeParam"), XlaFakeParamOp);

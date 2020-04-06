@@ -35,88 +35,85 @@ using XlaUnaryOpGenerator = std::function<xla::XlaOp(xla::XlaOp)>;
 using XlaOpGeneratorMap = absl::flat_hash_map<string, XlaUnaryOpGenerator>;
 
 void PopulateXlaOpGeneratorMap(XlaOpGeneratorMap* op_generator_map) {
-    auto add_xla_op_generator = [&](std::string name,
-    XlaUnaryOpGenerator xla_op_generator) {
-        CHECK(op_generator_map->insert({name, xla_op_generator}).second);
-    };
+  auto add_xla_op_generator = [&](std::string name,
+                                  XlaUnaryOpGenerator xla_op_generator) {
+    CHECK(op_generator_map->insert({name, xla_op_generator}).second);
+  };
 
 #define ADD_XLA_OP_GENERATOR(Name) add_xla_op_generator(#Name, xla::Name);
 
-    ADD_XLA_OP_GENERATOR(Abs);
-    ADD_XLA_OP_GENERATOR(Acos);
-    ADD_XLA_OP_GENERATOR(Acosh);
-    ADD_XLA_OP_GENERATOR(Asin);
-    ADD_XLA_OP_GENERATOR(Asinh);
-    ADD_XLA_OP_GENERATOR(Atan);
-    ADD_XLA_OP_GENERATOR(Atanh);
-    ADD_XLA_OP_GENERATOR(Ceil);
-    ADD_XLA_OP_GENERATOR(Cos);
-    ADD_XLA_OP_GENERATOR(Cosh);
-    ADD_XLA_OP_GENERATOR(Expm1);
-    ADD_XLA_OP_GENERATOR(Exp);
-    ADD_XLA_OP_GENERATOR(Floor);
-    add_xla_op_generator(
-    "Inv", [](xla::XlaOp x) {
-        return xla::ScalarLike(x, 1.0) / x;
-    });
-    ADD_XLA_OP_GENERATOR(Log);
-    ADD_XLA_OP_GENERATOR(Log1p);
-    ADD_XLA_OP_GENERATOR(Neg);
-    ADD_XLA_OP_GENERATOR(Reciprocal);
-    add_xla_op_generator("Rint", xla::RoundToEven);
-    ADD_XLA_OP_GENERATOR(Round);
-    ADD_XLA_OP_GENERATOR(Rsqrt);
-    add_xla_op_generator("Sigmoid", xla::Logistic);
-    ADD_XLA_OP_GENERATOR(Sin);
-    ADD_XLA_OP_GENERATOR(Sinh);
-    ADD_XLA_OP_GENERATOR(Sqrt);
-    ADD_XLA_OP_GENERATOR(Square);
-    ADD_XLA_OP_GENERATOR(Tan);
-    ADD_XLA_OP_GENERATOR(Tanh);
+  ADD_XLA_OP_GENERATOR(Abs);
+  ADD_XLA_OP_GENERATOR(Acos);
+  ADD_XLA_OP_GENERATOR(Acosh);
+  ADD_XLA_OP_GENERATOR(Asin);
+  ADD_XLA_OP_GENERATOR(Asinh);
+  ADD_XLA_OP_GENERATOR(Atan);
+  ADD_XLA_OP_GENERATOR(Atanh);
+  ADD_XLA_OP_GENERATOR(Ceil);
+  ADD_XLA_OP_GENERATOR(Cos);
+  ADD_XLA_OP_GENERATOR(Cosh);
+  ADD_XLA_OP_GENERATOR(Expm1);
+  ADD_XLA_OP_GENERATOR(Exp);
+  ADD_XLA_OP_GENERATOR(Floor);
+  add_xla_op_generator(
+      "Inv", [](xla::XlaOp x) { return xla::ScalarLike(x, 1.0) / x; });
+  ADD_XLA_OP_GENERATOR(Log);
+  ADD_XLA_OP_GENERATOR(Log1p);
+  ADD_XLA_OP_GENERATOR(Neg);
+  ADD_XLA_OP_GENERATOR(Reciprocal);
+  add_xla_op_generator("Rint", xla::RoundToEven);
+  ADD_XLA_OP_GENERATOR(Round);
+  ADD_XLA_OP_GENERATOR(Rsqrt);
+  add_xla_op_generator("Sigmoid", xla::Logistic);
+  ADD_XLA_OP_GENERATOR(Sin);
+  ADD_XLA_OP_GENERATOR(Sinh);
+  ADD_XLA_OP_GENERATOR(Sqrt);
+  ADD_XLA_OP_GENERATOR(Square);
+  ADD_XLA_OP_GENERATOR(Tan);
+  ADD_XLA_OP_GENERATOR(Tanh);
 
-    ADD_XLA_OP_GENERATOR(Elu);
-    ADD_XLA_OP_GENERATOR(Relu);
-    ADD_XLA_OP_GENERATOR(Relu6);
-    ADD_XLA_OP_GENERATOR(Selu);
+  ADD_XLA_OP_GENERATOR(Elu);
+  ADD_XLA_OP_GENERATOR(Relu);
+  ADD_XLA_OP_GENERATOR(Relu6);
+  ADD_XLA_OP_GENERATOR(Selu);
 
 #undef ADD_XLA_OP_GENERATOR
 }
 
 const XlaOpGeneratorMap& GetXlaOpGeneratorMap() {
-    static XlaOpGeneratorMap* result = []() {
-        auto* result = new XlaOpGeneratorMap;
-        PopulateXlaOpGeneratorMap(result);
-        return result;
-    }
-    ();
+  static XlaOpGeneratorMap* result = []() {
+    auto* result = new XlaOpGeneratorMap;
+    PopulateXlaOpGeneratorMap(result);
+    return result;
+  }();
 
-    return *result;
+  return *result;
 }
 
 class UnaryOpsCompositionOp : public XlaOpKernel {
-public:
-    explicit UnaryOpsCompositionOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("op_names", &op_names_));
+ public:
+  explicit UnaryOpsCompositionOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("op_names", &op_names_));
 
-        const XlaOpGeneratorMap& op_generator_map = GetXlaOpGeneratorMap();
-        for (absl::string_view op_name : op_names_) {
-            OP_REQUIRES(ctx, op_generator_map.contains(op_name),
-                        errors::Unimplemented(
-                            op_name, " not supported in _UnaryOpsComposition"));
-        }
+    const XlaOpGeneratorMap& op_generator_map = GetXlaOpGeneratorMap();
+    for (absl::string_view op_name : op_names_) {
+      OP_REQUIRES(ctx, op_generator_map.contains(op_name),
+                  errors::Unimplemented(
+                      op_name, " not supported in _UnaryOpsComposition"));
     }
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        xla::XlaOp x = ctx->Input(0);
-        const XlaOpGeneratorMap& op_generator_map = GetXlaOpGeneratorMap();
-        for (absl::string_view op_name : op_names_) {
-            x = op_generator_map.find(op_name)->second(x);
-        }
-        ctx->SetOutput(0, x);
+  void Compile(XlaOpKernelContext* ctx) override {
+    xla::XlaOp x = ctx->Input(0);
+    const XlaOpGeneratorMap& op_generator_map = GetXlaOpGeneratorMap();
+    for (absl::string_view op_name : op_names_) {
+      x = op_generator_map.find(op_name)->second(x);
     }
+    ctx->SetOutput(0, x);
+  }
 
-private:
-    std::vector<string> op_names_;
+ private:
+  std::vector<string> op_names_;
 };
 
 REGISTER_XLA_OP(Name("_UnaryOpsComposition"), UnaryOpsCompositionOp);

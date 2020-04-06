@@ -24,56 +24,56 @@ namespace tensorflow {
 namespace {
 
 class OneHotOp : public XlaOpKernel {
-public:
-    explicit OneHotOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("axis", &axis_));
-    }
+ public:
+  explicit OneHotOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("axis", &axis_));
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        const TensorShape indices_shape = ctx->InputShape(0);
-        const TensorShape depth_shape = ctx->InputShape(1);
-        const TensorShape on_value_shape = ctx->InputShape(2);
-        const TensorShape off_value_shape = ctx->InputShape(3);
+  void Compile(XlaOpKernelContext* ctx) override {
+    const TensorShape indices_shape = ctx->InputShape(0);
+    const TensorShape depth_shape = ctx->InputShape(1);
+    const TensorShape on_value_shape = ctx->InputShape(2);
+    const TensorShape off_value_shape = ctx->InputShape(3);
 
-        const int indices_dims = indices_shape.dims();
-        const int output_dims = indices_dims + 1;
+    const int indices_dims = indices_shape.dims();
+    const int output_dims = indices_dims + 1;
 
-        // Preliminary validation of sizes.
-        OP_REQUIRES(
-            ctx, axis_ == -1 || (axis_ >= 0 && axis_ < output_dims),
-            errors::InvalidArgument("Expected axis to be -1 or between [0, ",
-                                    output_dims, ").  But received: ", axis_));
-        OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(depth_shape),
-                    errors::InvalidArgument("depth must be a scalar, but got: ",
-                                            depth_shape.DebugString()));
-        OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(on_value_shape),
-                    errors::InvalidArgument("on_value must be a scalar, but got: ",
-                                            on_value_shape.DebugString()));
-        OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(off_value_shape),
-                    errors::InvalidArgument("off_value must be a scalar, but got: ",
-                                            off_value_shape.DebugString()));
+    // Preliminary validation of sizes.
+    OP_REQUIRES(
+        ctx, axis_ == -1 || (axis_ >= 0 && axis_ < output_dims),
+        errors::InvalidArgument("Expected axis to be -1 or between [0, ",
+                                output_dims, ").  But received: ", axis_));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(depth_shape),
+                errors::InvalidArgument("depth must be a scalar, but got: ",
+                                        depth_shape.DebugString()));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(on_value_shape),
+                errors::InvalidArgument("on_value must be a scalar, but got: ",
+                                        on_value_shape.DebugString()));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(off_value_shape),
+                errors::InvalidArgument("off_value must be a scalar, but got: ",
+                                        off_value_shape.DebugString()));
 
-        const int axis = (axis_ == -1) ? indices_dims : axis_;
+    const int axis = (axis_ == -1) ? indices_dims : axis_;
 
-        // The one-hot dimension.
-        int64 depth;
-        OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntScalar(1, &depth));
-        OP_REQUIRES(
-            ctx, depth >= 0,
-            errors::InvalidArgument("depth must be non-negative, got: ", depth));
+    // The one-hot dimension.
+    int64 depth;
+    OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntScalar(1, &depth));
+    OP_REQUIRES(
+        ctx, depth >= 0,
+        errors::InvalidArgument("depth must be non-negative, got: ", depth));
 
-        xla::XlaOp one_hot;
-        OP_REQUIRES_OK(
-            ctx, XlaHelpers::OneHot(ctx->builder(), depth, axis, input_type(0),
-                                    indices_shape, ctx->Input(0), ctx->Input(2),
-                                    ctx->Input(3), &one_hot));
-        ctx->SetOutput(0, one_hot);
-    }
+    xla::XlaOp one_hot;
+    OP_REQUIRES_OK(
+        ctx, XlaHelpers::OneHot(ctx->builder(), depth, axis, input_type(0),
+                                indices_shape, ctx->Input(0), ctx->Input(2),
+                                ctx->Input(3), &one_hot));
+    ctx->SetOutput(0, one_hot);
+  }
 
-private:
-    int32 axis_;
+ private:
+  int32 axis_;
 
-    TF_DISALLOW_COPY_AND_ASSIGN(OneHotOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(OneHotOp);
 };
 
 REGISTER_XLA_OP(Name("OneHot").CompileTimeConstantInput("depth"), OneHotOp);

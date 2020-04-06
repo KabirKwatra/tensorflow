@@ -29,35 +29,35 @@ namespace tensorflow {
 namespace {
 
 class EmptyOp : public XlaOpKernel {
-public:
-    explicit EmptyOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("dtype", &dtype_));
-        OP_REQUIRES_OK(ctx, DataTypeToPrimitiveType(dtype_, &type_));
-        OP_REQUIRES_OK(ctx, ctx->GetAttr("init", &init_));
-    }
+ public:
+  explicit EmptyOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("dtype", &dtype_));
+    OP_REQUIRES_OK(ctx, DataTypeToPrimitiveType(dtype_, &type_));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("init", &init_));
+  }
 
-    void Compile(XlaOpKernelContext* ctx) override {
-        // The output of this Op is a tensor of shape 'shape' with each
-        // element set to the default value of 'dtype'. If 'init' is false then
-        // the result values may be left undefined, though we don't do that here.
-        const TensorShape shape_shape = ctx->InputShape("shape");
-        OP_REQUIRES(
-            ctx, TensorShapeUtils::IsVector(shape_shape),
-            errors::InvalidArgument("shape must be a vector of int32, got shape ",
-                                    shape_shape.DebugString()));
+  void Compile(XlaOpKernelContext* ctx) override {
+    // The output of this Op is a tensor of shape 'shape' with each
+    // element set to the default value of 'dtype'. If 'init' is false then
+    // the result values may be left undefined, though we don't do that here.
+    const TensorShape shape_shape = ctx->InputShape("shape");
+    OP_REQUIRES(
+        ctx, TensorShapeUtils::IsVector(shape_shape),
+        errors::InvalidArgument("shape must be a vector of int32, got shape ",
+                                shape_shape.DebugString()));
 
-        std::vector<int64> shape;
-        OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntVector("shape", &shape));
+    std::vector<int64> shape;
+    OP_REQUIRES_OK(ctx, ctx->ConstantInputAsIntVector("shape", &shape));
 
-        auto default_value = xla::Zero(ctx->builder(), type_);
-        auto result = xla::Broadcast(default_value, shape);
-        ctx->SetOutput(0, result);
-    }
+    auto default_value = xla::Zero(ctx->builder(), type_);
+    auto result = xla::Broadcast(default_value, shape);
+    ctx->SetOutput(0, result);
+  }
 
-private:
-    DataType dtype_;
-    xla::PrimitiveType type_;
-    bool init_;
+ private:
+  DataType dtype_;
+  xla::PrimitiveType type_;
+  bool init_;
 };
 
 REGISTER_XLA_OP(Name("Empty").CompileTimeConstantInput("shape"), EmptyOp);
