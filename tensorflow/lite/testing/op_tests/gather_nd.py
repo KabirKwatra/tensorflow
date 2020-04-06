@@ -64,9 +64,8 @@ def make_gather_nd_tests(options):
         return [params, indices], [out]
 
     def build_inputs(parameters, sess, inputs, outputs):
-        params = create_tensor_data(
-            parameters["params_dtype"], parameters["params_shape"]
-        )
+        params = create_tensor_data(parameters["params_dtype"],
+                                    parameters["params_shape"])
         indices = create_tensor_data(
             parameters["indices_dtype"],
             parameters["indices_shape"],
