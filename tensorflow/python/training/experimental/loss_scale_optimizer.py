@@ -27,7 +27,7 @@ from tensorflow.python.training.experimental import loss_scale as loss_scale_mod
 from tensorflow.python.util.tf_export import tf_export
 
 
-@tf_export(v1=['train.experimental.MixedPrecisionLossScaleOptimizer'])
+@tf_export(v1=["train.experimental.MixedPrecisionLossScaleOptimizer"])
 class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
     """An optimizer that applies loss scaling.
 
@@ -59,32 +59,34 @@ class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
 
     def __init__(self, opt, loss_scale):
         if not isinstance(opt, optimizer.Optimizer):
-            raise ValueError('"opt" must be an instance of Optimizer, but got: %s' %
-                             type(opt))
+            raise ValueError(
+                '"opt" must be an instance of Optimizer, but got: %s' % type(opt)
+            )
         self._optimizer = opt
 
         use_locking = opt._use_locking  # pylint: disable=protected-access
         name = opt.get_name()
-        super(MixedPrecisionLossScaleOptimizer,
-              self).__init__(use_locking, name)
+        super(MixedPrecisionLossScaleOptimizer, self).__init__(use_locking, name)
 
         self._loss_scale = loss_scale_module.get(loss_scale)
         if self._loss_scale is None:
-            raise ValueError('loss_scale cannot be None')
-        self._track_trackable(self._optimizer, 'base_optimizer')
-        self._track_trackable(self._loss_scale, 'loss_scale')
+            raise ValueError("loss_scale cannot be None")
+        self._track_trackable(self._optimizer, "base_optimizer")
+        self._track_trackable(self._loss_scale, "loss_scale")
 
     def _doing_dynamic_loss_scaling(self):
         """Check if `_loss_scale` dynamically manages the loss scale."""
         return isinstance(self._loss_scale, loss_scale_module.DynamicLossScale)
 
-    def compute_gradients(self,
-                          loss,
-                          var_list=None,
-                          gate_gradients=optimizer.Optimizer.GATE_OP,
-                          aggregation_method=None,
-                          colocate_gradients_with_ops=False,
-                          grad_loss=None):
+    def compute_gradients(
+        self,
+        loss,
+        var_list=None,
+        gate_gradients=optimizer.Optimizer.GATE_OP,
+        aggregation_method=None,
+        colocate_gradients_with_ops=False,
+        grad_loss=None,
+    ):
         """Compute gradients of `loss` for the variables in `var_list`.
 
         This adjusts the dynamic range of the gradient evaluation by scaling up
@@ -119,7 +121,8 @@ class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
             gate_gradients=gate_gradients,
             aggregation_method=aggregation_method,
             colocate_gradients_with_ops=colocate_gradients_with_ops,
-            grad_loss=grad_loss)
+            grad_loss=grad_loss,
+        )
 
         grads = [g for g, _ in grads_and_vars]
         variables = [v for _, v in grads_and_vars]
@@ -129,9 +132,11 @@ class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
     def _scale_loss(self, loss):
         loss_scale = self._loss_scale()
         if callable(loss):
+
             def new_loss():
                 loss_val = loss()
                 return loss_val * math_ops.cast(loss_scale, loss_val.dtype)
+
             return new_loss
         else:
             return loss * math_ops.cast(loss_scale, loss.dtype)
@@ -173,8 +178,7 @@ class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
           RuntimeError: If you should use `_distributed_apply()` instead.
         """
         if distribution_strategy_context.in_cross_replica_context():
-            raise ValueError(
-                'apply_gradients() must be called in a replica context.')
+            raise ValueError("apply_gradients() must be called in a replica context.")
 
         if not self._doing_dynamic_loss_scaling():
             return self._optimizer.apply_gradients(grads_and_vars, global_step, name)
@@ -184,13 +188,12 @@ class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
 
         # TODO(nluehr) cleanup GraphKeys.TRAIN_OP
         return replica_context.merge_call(
-            self._distributed_apply, args=(grads_and_vars, global_step, name))
+            self._distributed_apply, args=(grads_and_vars, global_step, name)
+        )
 
-    def _distributed_apply(self,
-                           distribution,
-                           grads_and_vars,
-                           global_step=None,
-                           name=None):
+    def _distributed_apply(
+        self, distribution, grads_and_vars, global_step=None, name=None
+    ):
         """A version of `apply_gradients` for cross replica context.
 
         When users are in a cross replica strategy, they must call this rather than
@@ -212,42 +215,43 @@ class MixedPrecisionLossScaleOptimizer(optimizer.Optimizer):
         """
         name = name if name is not None else self.get_name()
         grads = [g for g, _ in grads_and_vars]
-        loss_scale_update_op, should_apply_grads = (
-            self._loss_scale.update(grads))
+        loss_scale_update_op, should_apply_grads = self._loss_scale.update(grads)
 
         def apply_fn():
-            return self._apply_gradients(distribution, grads_and_vars, global_step,
-                                         name + '-wrapped')
+            return self._apply_gradients(
+                distribution, grads_and_vars, global_step, name + "-wrapped"
+            )
 
-        maybe_apply_op = smart_cond.smart_cond(should_apply_grads, apply_fn,
-                                               control_flow_ops.no_op)
-        return control_flow_ops.group(
-            maybe_apply_op, loss_scale_update_op, name=name)
+        maybe_apply_op = smart_cond.smart_cond(
+            should_apply_grads, apply_fn, control_flow_ops.no_op
+        )
+        return control_flow_ops.group(maybe_apply_op, loss_scale_update_op, name=name)
 
     def _apply_gradients(self, distribution, grads_and_vars, global_step, name):
         """Unconditionally apply gradients in cross replica context."""
         update_ops = distribution.extended.call_for_each_replica(
-            self._optimizer.apply_gradients,
-            args=(grads_and_vars, global_step, name))
+            self._optimizer.apply_gradients, args=(grads_and_vars, global_step, name)
+        )
         return distribution.group(update_ops)
 
     def _apply_sparse(self, grad, var):
         """This function should never be called."""
-        raise RuntimeError('This function should never be called')
+        raise RuntimeError("This function should never be called")
 
     def _apply_dense(self, grad, var):
         """This function should never be called."""
-        raise RuntimeError('This function should never be called')
+        raise RuntimeError("This function should never be called")
 
     def _resource_apply_sparse(self, grad, handle, indices):
         """This function should never be called."""
-        raise RuntimeError('This function should never be called')
+        raise RuntimeError("This function should never be called")
 
     def _resource_apply_dense(self, grad, handle):
         """This function should never be called."""
-        raise RuntimeError('This function should never be called')
+        raise RuntimeError("This function should never be called")
 
     def variables(self):
         """Returns the variables of the Optimizer."""
-        return (self._optimizer.variables() +
-                list(self._loss_scale._weights.values()))  # pylint: disable=protected-access
+        return self._optimizer.variables() + list(
+            self._loss_scale._weights.values()
+        )  # pylint: disable=protected-access
