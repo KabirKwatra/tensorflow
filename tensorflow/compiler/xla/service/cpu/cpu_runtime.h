@@ -88,12 +88,12 @@ XfeedManager* GetXfeedManager(int device_ordinal);
 
 extern "C" {
 
-    extern xla::int64 __xla_cpu_runtime_TracingStart(
-        const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
-        const char* name);
-    extern void __xla_cpu_runtime_TracingEnd(
-        const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
-        xla::int64 id);
+extern xla::int64 __xla_cpu_runtime_TracingStart(
+    const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
+    const char* name);
+extern void __xla_cpu_runtime_TracingEnd(
+    const void* /* xla::ExecutableRunOptions* */ run_options_ptr,
+    xla::int64 id);
 
 // Some things common to all of the runtime entry points below:
 //
@@ -118,9 +118,9 @@ extern "C" {
 // not of the correct length in bytes. Checking the shape rather than
 // the length would be more exact, but the length check is chosen as a
 // tradeoff between error checking and speed/simplicity.
-    extern void* __xla_cpu_runtime_AcquireInfeedBufferForDequeue(
-        const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
-        const void* shape, xla::int32 shape_length);
+extern void* __xla_cpu_runtime_AcquireInfeedBufferForDequeue(
+    const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
+    const void* shape, xla::int32 shape_length);
 
 // Relinquishes the next infeed buffer that was returned by
 // __xla_cpu_runtime_AcquireInfeedBufferForDequeue. Once this call
@@ -134,15 +134,15 @@ extern "C" {
 // by the compiled code until it has been used. If zero-copy infeed is
 // implemented we will add support for multiple outstanding buffers
 // that can be returned out of order.
-    extern void __xla_cpu_runtime_ReleaseInfeedBufferAfterDequeue(
-        const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
-        void* buffer_ptr, const void* shape_ptr, xla::int32 shape_length);
+extern void __xla_cpu_runtime_ReleaseInfeedBufferAfterDequeue(
+    const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
+    void* buffer_ptr, const void* shape_ptr, xla::int32 shape_length);
 
 // Blocks until the next outfeed buffer is available to be populated, then
 // returns it.
-    extern void* __xla_cpu_runtime_AcquireOutfeedBufferForPopulation(
-        const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
-        const void* shape_ptr, xla::int32 shape_length);
+extern void* __xla_cpu_runtime_AcquireOutfeedBufferForPopulation(
+    const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
+    const void* shape_ptr, xla::int32 shape_length);
 
 // Relinquishes the outfeed buffer after it has been populated.
 // buffer_ptr must have been previously returned by
@@ -153,9 +153,9 @@ extern "C" {
 // buffer_ptr. This function must be called before the next buffer is
 // acquired, i.e., there may only be one outstanding outfeed buffer in
 // use by the runtime.
-    extern void __xla_cpu_runtime_ReleaseOutfeedBufferAfterPopulation(
-        const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
-        void* buffer_ptr, const void* shape_ptr, xla::int32 shape_length);
+extern void __xla_cpu_runtime_ReleaseOutfeedBufferAfterPopulation(
+    const xla::ExecutableRunOptions* run_options, xla::int32 buffer_length,
+    void* buffer_ptr, const void* shape_ptr, xla::int32 shape_length);
 
 // Perform all reduce on a CPU.
 //
@@ -164,22 +164,22 @@ extern "C" {
 // channel_id_present, op_id: whether op_id is a channel ID or a module ID.
 // reduction_kind: operator used for a reduction, cf. ReductionKind.
 // shape_ptr: shape of all input/output buffers.
-    extern void __xla_cpu_runtime_AllReduce(
-        const xla::ExecutableRunOptions* run_options,
-        const void* replica_groups_str, xla::int32 replica_groups_str_size,
-        xla::int32 channel_id_present, xla::int64 op_id, xla::int32 reduction_kind,
-        const void* shape_ptr, xla::int32 shape_length, xla::int32 num_buffers,
-        void** input_buffers, void** output_buffers);
+extern void __xla_cpu_runtime_AllReduce(
+    const xla::ExecutableRunOptions* run_options,
+    const void* replica_groups_str, xla::int32 replica_groups_str_size,
+    xla::int32 channel_id_present, xla::int64 op_id, xla::int32 reduction_kind,
+    const void* shape_ptr, xla::int32 shape_length, xla::int32 num_buffers,
+    void** input_buffers, void** output_buffers);
 
-    extern void __xla_cpu_runtime_CollectivePermute(
-        const xla::ExecutableRunOptions* run_options, xla::int32 channel_id_present,
-        xla::int64 op_id, xla::int32 byte_size, void* input_buffer,
-        void* output_buffer, const void* source_target_pairs,
-        xla::int32 source_target_pairs_size);
+extern void __xla_cpu_runtime_CollectivePermute(
+    const xla::ExecutableRunOptions* run_options, xla::int32 channel_id_present,
+    xla::int64 op_id, xla::int32 byte_size, void* input_buffer,
+    void* output_buffer, const void* source_target_pairs,
+    xla::int32 source_target_pairs_size);
 
 // Write the replica ID into the output buffer.
-    extern void __xla_cpu_runtime_ReplicaId(
-        const xla::ExecutableRunOptions* run_options, void* output_buffer);
+extern void __xla_cpu_runtime_ReplicaId(
+    const xla::ExecutableRunOptions* run_options, void* output_buffer);
 
 }  // extern "C"
 

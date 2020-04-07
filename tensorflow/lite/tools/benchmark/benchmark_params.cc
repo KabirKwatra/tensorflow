@@ -26,50 +26,50 @@ namespace benchmark {
 
 void BenchmarkParam::AssertHasSameType(BenchmarkParam::ParamType a,
                                        BenchmarkParam::ParamType b) {
-    TFLITE_BENCHMARK_CHECK(a == b) << "Type mismatch while accessing parameter.";
+  TFLITE_BENCHMARK_CHECK(a == b) << "Type mismatch while accessing parameter.";
 }
 
 template <>
 BenchmarkParam::ParamType BenchmarkParam::GetValueType<int32_t>() {
-    return BenchmarkParam::ParamType::TYPE_INT32;
+  return BenchmarkParam::ParamType::TYPE_INT32;
 }
 
 template <>
 BenchmarkParam::ParamType BenchmarkParam::GetValueType<bool>() {
-    return BenchmarkParam::ParamType::TYPE_BOOL;
+  return BenchmarkParam::ParamType::TYPE_BOOL;
 }
 
 template <>
 BenchmarkParam::ParamType BenchmarkParam::GetValueType<float>() {
-    return BenchmarkParam::ParamType::TYPE_FLOAT;
+  return BenchmarkParam::ParamType::TYPE_FLOAT;
 }
 
 template <>
 BenchmarkParam::ParamType BenchmarkParam::GetValueType<std::string>() {
-    return BenchmarkParam::ParamType::TYPE_STRING;
+  return BenchmarkParam::ParamType::TYPE_STRING;
 }
 
 void BenchmarkParams::AssertParamExists(const std::string& name) const {
-    TFLITE_BENCHMARK_CHECK(HasParam(name)) << name << " was not found.";
+  TFLITE_BENCHMARK_CHECK(HasParam(name)) << name << " was not found.";
 }
 
 void BenchmarkParams::Set(const BenchmarkParams& other) {
-    for (const auto& param : params_) {
-        const BenchmarkParam* other_param = other.GetParam(param.first);
-        if (other_param == nullptr) continue;
-        param.second->Set(*other_param);
-    }
+  for (const auto& param : params_) {
+    const BenchmarkParam* other_param = other.GetParam(param.first);
+    if (other_param == nullptr) continue;
+    param.second->Set(*other_param);
+  }
 }
 
 void BenchmarkParams::Merge(const BenchmarkParams& other, bool overwrite) {
-    for (const auto& one : other.params_) {
-        auto it = params_.find(one.first);
-        if (it == params_.end()) {
-            AddParam(one.first, one.second->Clone());
-        } else if (overwrite) {
-            it->second->Set(*one.second);
-        }
+  for (const auto& one : other.params_) {
+    auto it = params_.find(one.first);
+    if (it == params_.end()) {
+      AddParam(one.first, one.second->Clone());
+    } else if (overwrite) {
+      it->second->Set(*one.second);
     }
+  }
 }
 
 }  // namespace benchmark
