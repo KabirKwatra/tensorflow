@@ -70,8 +70,8 @@ class _Merge(Layer):
             return self._compute_elemwise_op_output_shape(shape2, shape1)
         elif not shape2:
             return shape1
-        output_shape = list(shape1[:-len(shape2)])
-        for i, j in zip(shape1[-len(shape2):], shape2):
+        output_shape = list(shape1[: -len(shape2)])
+        for i, j in zip(shape1[-len(shape2) :], shape2):
             if i is None or j is None:
                 output_shape.append(None)
             elif i == 1:
@@ -81,8 +81,9 @@ class _Merge(Layer):
             else:
                 if i != j:
                     raise ValueError(
-                        'Operands could not be broadcast '
-                        'together with shapes ' + str(shape1) + ' ' + str(shape2))
+                        "Operands could not be broadcast "
+                        "together with shapes " + str(shape1) + " " + str(shape2)
+                    )
                 output_shape.append(i)
         return tuple(output_shape)
 
@@ -90,17 +91,19 @@ class _Merge(Layer):
     def build(self, input_shape):
         # Used purely for shape validation.
         if not isinstance(input_shape[0], tuple):
-            raise ValueError(
-                'A merge layer should be called on a list of inputs.')
+            raise ValueError("A merge layer should be called on a list of inputs.")
         if len(input_shape) < 2:
-            raise ValueError('A merge layer should be called '
-                             'on a list of at least 2 inputs. '
-                             'Got ' + str(len(input_shape)) + ' inputs.')
+            raise ValueError(
+                "A merge layer should be called "
+                "on a list of at least 2 inputs. "
+                "Got " + str(len(input_shape)) + " inputs."
+            )
         batch_sizes = {s[0] for s in input_shape if s} - {None}
         if len(batch_sizes) > 1:
             raise ValueError(
-                'Can not merge tensors with different '
-                'batch sizes. Got tensors with shapes : ' + str(input_shape))
+                "Can not merge tensors with different "
+                "batch sizes. Got tensors with shapes : " + str(input_shape)
+            )
         if input_shape[0] is None:
             output_shape = None
         else:
@@ -110,8 +113,7 @@ class _Merge(Layer):
                 shape = None
             else:
                 shape = input_shape[i][1:]
-            output_shape = self._compute_elemwise_op_output_shape(
-                output_shape, shape)
+            output_shape = self._compute_elemwise_op_output_shape(output_shape, shape)
         # If the inputs have different ranks, we have to reshape them
         # to make them broadcastable.
         if None not in input_shape and len(set(map(len, input_shape))) == 1:
@@ -121,8 +123,7 @@ class _Merge(Layer):
 
     def call(self, inputs):
         if not isinstance(inputs, (list, tuple)):
-            raise ValueError(
-                'A merge layer should be called on a list of inputs.')
+            raise ValueError("A merge layer should be called on a list of inputs.")
         if self._reshape_required:
             reshaped_inputs = []
             input_ndims = list(map(K.ndim, inputs))
@@ -147,22 +148,21 @@ class _Merge(Layer):
                         x_shape = array_ops.shape(x)
                         batch_size = x_shape[0]
                         new_shape = K.concatenate(
-                            [x_shape[1:],
-                             array_ops.expand_dims(batch_size, axis=-1)])
+                            [x_shape[1:], array_ops.expand_dims(batch_size, axis=-1)]
+                        )
                         x_transposed = array_ops.reshape(
                             x,
                             array_ops.stack(
-                                [batch_size, math_ops.reduce_prod(x_shape[1:])], axis=0))
-                        x_transposed = array_ops.transpose(
-                            x_transposed, perm=(1, 0))
-                        x_transposed = array_ops.reshape(
-                            x_transposed, new_shape)
+                                [batch_size, math_ops.reduce_prod(x_shape[1:])], axis=0
+                            ),
+                        )
+                        x_transposed = array_ops.transpose(x_transposed, perm=(1, 0))
+                        x_transposed = array_ops.reshape(x_transposed, new_shape)
                         reshaped_inputs.append(x_transposed)
                         transposed = True
                     elif x_ndim > 1:
                         dims = list(range(1, x_ndim)) + [0]
-                        reshaped_inputs.append(
-                            array_ops.transpose(x, perm=dims))
+                        reshaped_inputs.append(array_ops.transpose(x, perm=dims))
                         transposed = True
                     else:
                         # We don't transpose inputs if they are 1D vectors or scalars.
@@ -175,10 +175,12 @@ class _Merge(Layer):
                         y_shape = array_ops.shape(y)
                         y_ndim = array_ops.shape(y_shape)[0]
                         batch_size = y_shape[y_ndim - 1]
-                        new_shape = K.concatenate([
-                            array_ops.expand_dims(
-                                batch_size, axis=-1), y_shape[:y_ndim - 1]
-                        ])
+                        new_shape = K.concatenate(
+                            [
+                                array_ops.expand_dims(batch_size, axis=-1),
+                                y_shape[: y_ndim - 1],
+                            ]
+                        )
                         y = array_ops.reshape(y, (-1, batch_size))
                         y = array_ops.transpose(y, perm=(1, 0))
                         y = array_ops.reshape(y, new_shape)
@@ -200,8 +202,7 @@ class _Merge(Layer):
                 shape = None
             else:
                 shape = input_shape[i][1:]
-            output_shape = self._compute_elemwise_op_output_shape(
-                output_shape, shape)
+            output_shape = self._compute_elemwise_op_output_shape(output_shape, shape)
         batch_sizes = {s[0] for s in input_shape if s is not None} - {None}
         if len(batch_sizes) == 1:
             output_shape = (list(batch_sizes)[0],) + output_shape
@@ -213,20 +214,20 @@ class _Merge(Layer):
         if mask is None:
             return None
         if not isinstance(mask, (tuple, list)):
-            raise ValueError('`mask` should be a list.')
+            raise ValueError("`mask` should be a list.")
         if not isinstance(inputs, (tuple, list)):
-            raise ValueError('`inputs` should be a list.')
+            raise ValueError("`inputs` should be a list.")
         if len(mask) != len(inputs):
-            raise ValueError('The lists `inputs` and `mask` '
-                             'should have the same length.')
+            raise ValueError(
+                "The lists `inputs` and `mask` " "should have the same length."
+            )
         if all(m is None for m in mask):
             return None
-        masks = [array_ops.expand_dims(m, axis=0)
-                 for m in mask if m is not None]
+        masks = [array_ops.expand_dims(m, axis=0) for m in mask if m is not None]
         return K.all(K.concatenate(masks, axis=0), axis=0, keepdims=False)
 
 
-@keras_export('keras.layers.Add')
+@keras_export("keras.layers.Add")
 class Add(_Merge):
     """Layer that adds a list of inputs.
 
@@ -263,7 +264,7 @@ class Add(_Merge):
         return output
 
 
-@keras_export('keras.layers.Subtract')
+@keras_export("keras.layers.Subtract")
 class Subtract(_Merge):
     """Layer that subtracts two inputs.
 
@@ -292,17 +293,19 @@ class Subtract(_Merge):
     def build(self, input_shape):
         super(Subtract, self).build(input_shape)
         if len(input_shape) != 2:
-            raise ValueError('A `Subtract` layer should be called '
-                             'on exactly 2 inputs')
+            raise ValueError(
+                "A `Subtract` layer should be called " "on exactly 2 inputs"
+            )
 
     def _merge_function(self, inputs):
         if len(inputs) != 2:
-            raise ValueError('A `Subtract` layer should be called '
-                             'on exactly 2 inputs')
+            raise ValueError(
+                "A `Subtract` layer should be called " "on exactly 2 inputs"
+            )
         return inputs[0] - inputs[1]
 
 
-@keras_export('keras.layers.Multiply')
+@keras_export("keras.layers.Multiply")
 class Multiply(_Merge):
     """Layer that multiplies (element-wise) a list of inputs.
 
@@ -332,7 +335,7 @@ class Multiply(_Merge):
         return output
 
 
-@keras_export('keras.layers.Average')
+@keras_export("keras.layers.Average")
 class Average(_Merge):
     """Layer that averages a list of inputs element-wise.
 
@@ -369,7 +372,7 @@ class Average(_Merge):
         return output / len(inputs)
 
 
-@keras_export('keras.layers.Maximum')
+@keras_export("keras.layers.Maximum")
 class Maximum(_Merge):
     """Layer that computes the maximum (element-wise) a list of inputs.
 
@@ -399,7 +402,7 @@ class Maximum(_Merge):
         return output
 
 
-@keras_export('keras.layers.Minimum')
+@keras_export("keras.layers.Minimum")
 class Minimum(_Merge):
     """Layer that computes the minimum (element-wise) a list of inputs.
 
@@ -429,7 +432,7 @@ class Minimum(_Merge):
         return output
 
 
-@keras_export('keras.layers.Concatenate')
+@keras_export("keras.layers.Concatenate")
 class Concatenate(_Merge):
     """Layer that concatenates a list of inputs.
 
@@ -499,8 +502,10 @@ class Concatenate(_Merge):
     def build(self, input_shape):
         # Used purely for shape validation.
         if not isinstance(input_shape[0], tuple) or len(input_shape) < 2:
-            raise ValueError('A `Concatenate` layer should be called '
-                             'on a list of at least 2 inputs')
+            raise ValueError(
+                "A `Concatenate` layer should be called "
+                "on a list of at least 2 inputs"
+            )
         if all(shape is None for shape in input_shape):
             return
         reduced_inputs_shapes = [list(shape) for shape in input_shape]
@@ -510,9 +515,10 @@ class Concatenate(_Merge):
             shape_set.add(tuple(reduced_inputs_shapes[i]))
 
         if len(shape_set) != 1:
-            err_msg = ('A `Concatenate` layer requires inputs with matching shapes '
-                       'except for the concat axis. Got inputs shapes: %s' %
-                       input_shape)
+            err_msg = (
+                "A `Concatenate` layer requires inputs with matching shapes "
+                "except for the concat axis. Got inputs shapes: %s" % input_shape
+            )
             # Make sure all the shapes have same ranks.
             ranks = set(len(shape) for shape in shape_set)
             if len(ranks) != 1:
@@ -523,7 +529,8 @@ class Concatenate(_Merge):
                 # Skip the Nones in the shape since they are dynamic, also the axis for
                 # concat has been removed above.
                 unique_dims = set(
-                    shape[axis] for shape in shape_set if shape[axis] is not None)
+                    shape[axis] for shape in shape_set if shape[axis] is not None
+                )
                 if len(unique_dims) > 1:
                     raise ValueError(err_msg)
 
@@ -533,8 +540,9 @@ class Concatenate(_Merge):
     @tf_utils.shape_type_conversion
     def compute_output_shape(self, input_shape):
         if not isinstance(input_shape, (tuple, list)):
-            raise ValueError('A `Concatenate` layer should be called '
-                             'on a list of inputs.')
+            raise ValueError(
+                "A `Concatenate` layer should be called " "on a list of inputs."
+            )
         input_shapes = input_shape
         output_shape = list(input_shapes[0])
         for shape in input_shapes[1:]:
@@ -548,12 +556,13 @@ class Concatenate(_Merge):
         if mask is None:
             return None
         if not isinstance(mask, (tuple, list)):
-            raise ValueError('`mask` should be a list.')
+            raise ValueError("`mask` should be a list.")
         if not isinstance(inputs, (tuple, list)):
-            raise ValueError('`inputs` should be a list.')
+            raise ValueError("`inputs` should be a list.")
         if len(mask) != len(inputs):
-            raise ValueError('The lists `inputs` and `mask` '
-                             'should have the same length.')
+            raise ValueError(
+                "The lists `inputs` and `mask` " "should have the same length."
+            )
         if all(m is None for m in mask):
             return None
         # Make a list of masks while making sure
@@ -563,7 +572,7 @@ class Concatenate(_Merge):
         for input_i, mask_i in zip(inputs, mask):
             if mask_i is None:
                 # Input is unmasked. Append all 1s to masks,
-                masks.append(array_ops.ones_like(input_i, dtype='bool'))
+                masks.append(array_ops.ones_like(input_i, dtype="bool"))
             elif K.ndim(mask_i) < K.ndim(input_i):
                 # Mask is smaller than the input, expand it
                 masks.append(array_ops.expand_dims(mask_i, axis=-1))
@@ -574,13 +583,13 @@ class Concatenate(_Merge):
 
     def get_config(self):
         config = {
-            'axis': self.axis,
+            "axis": self.axis,
         }
         base_config = super(Concatenate, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.Dot')
+@keras_export("keras.layers.Dot")
 class Dot(_Merge):
     """Layer that computes a dot product between samples in two tensors.
 
@@ -648,14 +657,17 @@ class Dot(_Merge):
         super(Dot, self).__init__(**kwargs)
         if not isinstance(axes, int):
             if not isinstance(axes, (list, tuple)):
-                raise TypeError('Invalid type for `axes` - '
-                                'should be a list or an int.')
+                raise TypeError(
+                    "Invalid type for `axes` - " "should be a list or an int."
+                )
             if len(axes) != 2:
-                raise ValueError('Invalid format for `axes` - '
-                                 'should contain two elements.')
+                raise ValueError(
+                    "Invalid format for `axes` - " "should contain two elements."
+                )
             if not isinstance(axes[0], int) or not isinstance(axes[1], int):
-                raise ValueError('Invalid format for `axes` - '
-                                 'list elements should be "int".')
+                raise ValueError(
+                    "Invalid format for `axes` - " 'list elements should be "int".'
+                )
         self.axes = axes
         self.normalize = normalize
         self.supports_masking = True
@@ -666,8 +678,7 @@ class Dot(_Merge):
     def build(self, input_shape):
         # Used purely for shape validation.
         if not isinstance(input_shape[0], tuple) or len(input_shape) != 2:
-            raise ValueError('A `Dot` layer should be called '
-                             'on a list of 2 inputs.')
+            raise ValueError("A `Dot` layer should be called " "on a list of 2 inputs.")
         shape1 = input_shape[0]
         shape2 = input_shape[1]
         if shape1 is None or shape2 is None:
@@ -680,15 +691,16 @@ class Dot(_Merge):
         else:
             axes = self.axes
         if shape1[axes[0]] != shape2[axes[1]]:
-            raise ValueError('Dimension incompatibility '
-                             '%s != %s. ' % (shape1[axes[0]], shape2[axes[1]]) +
-                             'Layer shapes: %s, %s. ' % (shape1, shape2) +
-                             'Chosen axes: %s, %s' % (axes[0], axes[1]))
+            raise ValueError(
+                "Dimension incompatibility "
+                "%s != %s. " % (shape1[axes[0]], shape2[axes[1]])
+                + "Layer shapes: %s, %s. " % (shape1, shape2)
+                + "Chosen axes: %s, %s" % (axes[0], axes[1])
+            )
 
     def _merge_function(self, inputs):
         if len(inputs) != 2:
-            raise ValueError(
-                'A `Dot` layer should be called on exactly 2 inputs')
+            raise ValueError("A `Dot` layer should be called on exactly 2 inputs")
         x1 = inputs[0]
         x2 = inputs[1]
         if isinstance(self.axes, int):
@@ -712,8 +724,7 @@ class Dot(_Merge):
     @tf_utils.shape_type_conversion
     def compute_output_shape(self, input_shape):
         if not isinstance(input_shape, (tuple, list)) or len(input_shape) != 2:
-            raise ValueError('A `Dot` layer should be called '
-                             'on a list of 2 inputs.')
+            raise ValueError("A `Dot` layer should be called " "on a list of 2 inputs.")
         shape1 = list(input_shape[0])
         shape2 = list(input_shape[1])
         if isinstance(self.axes, int):
@@ -736,14 +747,14 @@ class Dot(_Merge):
 
     def get_config(self):
         config = {
-            'axes': self.axes,
-            'normalize': self.normalize,
+            "axes": self.axes,
+            "normalize": self.normalize,
         }
         base_config = super(Dot, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
-@keras_export('keras.layers.add')
+@keras_export("keras.layers.add")
 def add(inputs, **kwargs):
     """Functional interface to the `tf.keras.layers.Add` layer.
 
@@ -777,7 +788,7 @@ def add(inputs, **kwargs):
     return Add(**kwargs)(inputs)
 
 
-@keras_export('keras.layers.subtract')
+@keras_export("keras.layers.subtract")
 def subtract(inputs, **kwargs):
     """Functional interface to the `Subtract` layer.
 
@@ -806,7 +817,7 @@ def subtract(inputs, **kwargs):
     return Subtract(**kwargs)(inputs)
 
 
-@keras_export('keras.layers.multiply')
+@keras_export("keras.layers.multiply")
 def multiply(inputs, **kwargs):
     """Functional interface to the `Multiply` layer.
 
@@ -820,7 +831,7 @@ def multiply(inputs, **kwargs):
     return Multiply(**kwargs)(inputs)
 
 
-@keras_export('keras.layers.average')
+@keras_export("keras.layers.average")
 def average(inputs, **kwargs):
     """Functional interface to the `tf.keras.layers.Average` layer.
 
@@ -856,7 +867,7 @@ def average(inputs, **kwargs):
     return Average(**kwargs)(inputs)
 
 
-@keras_export('keras.layers.maximum')
+@keras_export("keras.layers.maximum")
 def maximum(inputs, **kwargs):
     """Functional interface to compute maximum (element-wise) list of `inputs`.
 
@@ -888,7 +899,7 @@ def maximum(inputs, **kwargs):
     return Maximum(**kwargs)(inputs)
 
 
-@keras_export('keras.layers.minimum')
+@keras_export("keras.layers.minimum")
 def minimum(inputs, **kwargs):
     """Functional interface to the `Minimum` layer.
 
@@ -902,7 +913,7 @@ def minimum(inputs, **kwargs):
     return Minimum(**kwargs)(inputs)
 
 
-@keras_export('keras.layers.concatenate')
+@keras_export("keras.layers.concatenate")
 def concatenate(inputs, axis=-1, **kwargs):
     """Functional interface to the `Concatenate` layer.
 
@@ -937,7 +948,7 @@ def concatenate(inputs, axis=-1, **kwargs):
     return Concatenate(axis=axis, **kwargs)(inputs)
 
 
-@keras_export('keras.layers.dot')
+@keras_export("keras.layers.dot")
 def dot(inputs, axes, normalize=False, **kwargs):
     """Functional interface to the `Dot` layer.
 
