@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tensorflow.learning.training_ops."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -26,12 +25,11 @@ from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import test_util
 from tensorflow.python.framework.test_util import TensorFlowTestCase
-
-# Import resource_variable_ops for the variables-to-tensor implicit conversion.
 from tensorflow.python.ops import resource_variable_ops  # pylint: disable=unused-import
 from tensorflow.python.ops import variables
 from tensorflow.python.platform import googletest
 from tensorflow.python.training import training_ops
+# Import resource_variable_ops for the variables-to-tensor implicit conversion.
 
 
 class TrainingOpsTest(TensorFlowTestCase):
