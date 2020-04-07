@@ -49,8 +49,7 @@ def _infer_fft_length_for_irfft(input_tensor, fft_rank):
 
     # If any dim is unknown, fall back to tensor-based math.
     if not fft_shape.is_fully_defined():
-        fft_length = _array_ops.unstack(
-            _array_ops.shape(input_tensor)[-fft_rank:])
+        fft_length = _array_ops.unstack(_array_ops.shape(input_tensor)[-fft_rank:])
         fft_length[-1] = _math_ops.maximum(0, 2 * (fft_length[-1] - 1))
         return _array_ops.stack(fft_length)
 
@@ -66,8 +65,9 @@ def _maybe_pad_for_rfft(input_tensor, fft_rank, fft_length, is_reverse=False):
     fft_shape = _tensor_util.constant_value_as_shape(fft_length)
 
     # Edge case: skip padding empty tensors.
-    if (input_tensor.shape.ndims is not None and
-            any(dim.value == 0 for dim in input_tensor.shape.dims)):
+    if input_tensor.shape.ndims is not None and any(
+        dim.value == 0 for dim in input_tensor.shape.dims
+    ):
         return input_tensor
 
     # If we know the shapes ahead of time, we can either skip or pre-compute the
@@ -75,20 +75,23 @@ def _maybe_pad_for_rfft(input_tensor, fft_rank, fft_length, is_reverse=False):
     # TensorFlow.
     if fft_shape.is_fully_defined() and input_tensor.shape.ndims is not None:
         # Slice the last FFT-rank dimensions from input_tensor's shape.
-        input_fft_shape = input_tensor.shape[-fft_shape.ndims:]
+        input_fft_shape = input_tensor.shape[-fft_shape.ndims :]
 
         if input_fft_shape.is_fully_defined():
             # In reverse, we only pad the inner-most dimension to fft_length / 2 + 1.
             if is_reverse:
                 fft_shape = fft_shape[:-1].concatenate(
-                    fft_shape.dims[-1].value // 2 + 1)
+                    fft_shape.dims[-1].value // 2 + 1
+                )
 
-            paddings = [[0, max(fft_dim.value - input_dim.value, 0)]
-                        for fft_dim, input_dim in zip(
-                            fft_shape.dims, input_fft_shape.dims)]
+            paddings = [
+                [0, max(fft_dim.value - input_dim.value, 0)]
+                for fft_dim, input_dim in zip(fft_shape.dims, input_fft_shape.dims)
+            ]
             if any(pad > 0 for _, pad in paddings):
-                outer_paddings = [[0, 0]] * max((input_tensor.shape.ndims -
-                                                 fft_shape.ndims), 0)
+                outer_paddings = [[0, 0]] * max(
+                    (input_tensor.shape.ndims - fft_shape.ndims), 0
+                )
                 return _array_ops.pad(input_tensor, outer_paddings + paddings)
             return input_tensor
 
@@ -100,12 +103,10 @@ def _maybe_pad_for_rfft(input_tensor, fft_rank, fft_length, is_reverse=False):
     outer_paddings = _array_ops.zeros([outer_dims], fft_length.dtype)
     # In reverse, we only pad the inner-most dimension to fft_length / 2 + 1.
     if is_reverse:
-        fft_length = _array_ops.concat([fft_length[:-1],
-                                        fft_length[-1:] // 2 + 1], 0)
+        fft_length = _array_ops.concat([fft_length[:-1], fft_length[-1:] // 2 + 1], 0)
     fft_paddings = _math_ops.maximum(0, fft_length - input_fft_shape)
     paddings = _array_ops.concat([outer_paddings, fft_paddings], 0)
-    paddings = _array_ops.stack([_array_ops.zeros_like(paddings), paddings],
-                                axis=1)
+    paddings = _array_ops.stack([_array_ops.zeros_like(paddings), paddings], axis=1)
     return _array_ops.pad(input_tensor, paddings)
 
 
@@ -114,14 +115,15 @@ def _rfft_wrapper(fft_fn, fft_rank, default_name):
 
     def _rfft(input_tensor, fft_length=None, name=None):
         """Wrapper around gen_spectral_ops.rfft* that infers fft_length argument."""
-        with _ops.name_scope(name, default_name,
-                             [input_tensor, fft_length]) as name:
-            input_tensor = _ops.convert_to_tensor(input_tensor,
-                                                  preferred_dtype=_dtypes.float32)
+        with _ops.name_scope(name, default_name, [input_tensor, fft_length]) as name:
+            input_tensor = _ops.convert_to_tensor(
+                input_tensor, preferred_dtype=_dtypes.float32
+            )
             if input_tensor.dtype not in (_dtypes.float32, _dtypes.float64):
                 raise ValueError(
-                    "RFFT requires tf.float32 or tf.float64 inputs, got: %s" %
-                    input_tensor)
+                    "RFFT requires tf.float32 or tf.float64 inputs, got: %s"
+                    % input_tensor
+                )
             real_dtype = input_tensor.dtype
             if real_dtype == _dtypes.float32:
                 complex_dtype = _dtypes.complex64
@@ -133,13 +135,13 @@ def _rfft_wrapper(fft_fn, fft_rank, default_name):
                 fft_length = _infer_fft_length_for_rfft(input_tensor, fft_rank)
             else:
                 fft_length = _ops.convert_to_tensor(fft_length, _dtypes.int32)
-            input_tensor = _maybe_pad_for_rfft(
-                input_tensor, fft_rank, fft_length)
+            input_tensor = _maybe_pad_for_rfft(input_tensor, fft_rank, fft_length)
 
             fft_length_static = _tensor_util.constant_value(fft_length)
             if fft_length_static is not None:
                 fft_length = fft_length_static
             return fft_fn(input_tensor, fft_length, Tcomplex=complex_dtype, name=name)
+
     _rfft.__doc__ = fft_fn.__doc__
     return _rfft
 
@@ -149,28 +151,30 @@ def _irfft_wrapper(ifft_fn, fft_rank, default_name):
 
     def _irfft(input_tensor, fft_length=None, name=None):
         """Wrapper irfft* that infers fft_length argument."""
-        with _ops.name_scope(name, default_name,
-                             [input_tensor, fft_length]) as name:
-            input_tensor = _ops.convert_to_tensor(input_tensor,
-                                                  preferred_dtype=_dtypes.complex64)
+        with _ops.name_scope(name, default_name, [input_tensor, fft_length]) as name:
+            input_tensor = _ops.convert_to_tensor(
+                input_tensor, preferred_dtype=_dtypes.complex64
+            )
             input_tensor.shape.with_rank_at_least(fft_rank)
             if input_tensor.dtype not in (_dtypes.complex64, _dtypes.complex128):
                 raise ValueError(
-                    "IRFFT requires tf.complex64 or tf.complex128 inputs, got: %s" %
-                    input_tensor)
+                    "IRFFT requires tf.complex64 or tf.complex128 inputs, got: %s"
+                    % input_tensor
+                )
             complex_dtype = input_tensor.dtype
             real_dtype = complex_dtype.real_dtype
             if fft_length is None:
-                fft_length = _infer_fft_length_for_irfft(
-                    input_tensor, fft_rank)
+                fft_length = _infer_fft_length_for_irfft(input_tensor, fft_rank)
             else:
                 fft_length = _ops.convert_to_tensor(fft_length, _dtypes.int32)
-            input_tensor = _maybe_pad_for_rfft(input_tensor, fft_rank, fft_length,
-                                               is_reverse=True)
+            input_tensor = _maybe_pad_for_rfft(
+                input_tensor, fft_rank, fft_length, is_reverse=True
+            )
             fft_length_static = _tensor_util.constant_value(fft_length)
             if fft_length_static is not None:
                 fft_length = fft_length_static
             return ifft_fn(input_tensor, fft_length, Treal=real_dtype, name=name)
+
     _irfft.__doc__ = ifft_fn.__doc__
     return _irfft
 
@@ -210,9 +214,9 @@ def _fft_grad(_, grad):
 @_ops.RegisterGradient("IFFT")
 def _ifft_grad(_, grad):
     rsize = _math_ops.cast(
-        1. / _math_ops.cast(_fft_size_for_grad(grad, 1),
-                            grad.dtype.real_dtype),
-        grad.dtype)
+        1.0 / _math_ops.cast(_fft_size_for_grad(grad, 1), grad.dtype.real_dtype),
+        grad.dtype,
+    )
     return fft(grad) * rsize
 
 
@@ -225,9 +229,9 @@ def _fft2d_grad(_, grad):
 @_ops.RegisterGradient("IFFT2D")
 def _ifft2d_grad(_, grad):
     rsize = _math_ops.cast(
-        1. / _math_ops.cast(_fft_size_for_grad(grad, 2),
-                            grad.dtype.real_dtype),
-        grad.dtype)
+        1.0 / _math_ops.cast(_fft_size_for_grad(grad, 2), grad.dtype.real_dtype),
+        grad.dtype,
+    )
     return fft2d(grad) * rsize
 
 
@@ -240,9 +244,9 @@ def _fft3d_grad(_, grad):
 @_ops.RegisterGradient("IFFT3D")
 def _ifft3d_grad(_, grad):
     rsize = _math_ops.cast(
-        1. / _math_ops.cast(_fft_size_for_grad(grad, 3),
-                            grad.dtype.real_dtype),
-        grad.dtype)
+        1.0 / _math_ops.cast(_fft_size_for_grad(grad, 3), grad.dtype.real_dtype),
+        grad.dtype,
+    )
     return fft3d(grad) * rsize
 
 
@@ -262,12 +266,17 @@ def _rfft_grad_helper(rank, irfft_fn):
         def _tile_for_broadcasting(matrix, t):
             expanded = _array_ops.reshape(
                 matrix,
-                _array_ops.concat([
-                    _array_ops.ones([_array_ops.rank(t) - 2], _dtypes.int32),
-                    _array_ops.shape(matrix)
-                ], 0))
+                _array_ops.concat(
+                    [
+                        _array_ops.ones([_array_ops.rank(t) - 2], _dtypes.int32),
+                        _array_ops.shape(matrix),
+                    ],
+                    0,
+                ),
+            )
             return _array_ops.tile(
-                expanded, _array_ops.concat([_array_ops.shape(t)[:-2], [1, 1]], 0))
+                expanded, _array_ops.concat([_array_ops.shape(t)[:-2], [1, 1]], 0)
+            )
 
         def _mask_matrix(length):
             """Computes t_n = exp(sqrt(-1) * pi * n^2 / line_len)."""
@@ -278,16 +287,19 @@ def _rfft_grad_helper(rank, irfft_fn):
             # for n = 0, 1,..., line_len-1.
             # For n > 2, use t_n = t_{n-1}^2 / t_{n-2} * t_1^2
             a = _array_ops.tile(
-                _array_ops.expand_dims(_math_ops.range(length), 0), (length, 1))
+                _array_ops.expand_dims(_math_ops.range(length), 0), (length, 1)
+            )
             b = _array_ops.transpose(a, [1, 0])
             return _math_ops.exp(
-                -2j * np.pi * _math_ops.cast(a * b, complex_dtype) /
-                _math_ops.cast(length, complex_dtype))
+                -2j
+                * np.pi
+                * _math_ops.cast(a * b, complex_dtype)
+                / _math_ops.cast(length, complex_dtype)
+            )
 
         def _ymask(length):
             """A sequence of [1+0j, -1+0j, 1+0j, -1+0j, ...] with length `length`."""
-            return _math_ops.cast(1 - 2 * (_math_ops.range(length) % 2),
-                                  complex_dtype)
+            return _math_ops.cast(1 - 2 * (_math_ops.range(length) % 2), complex_dtype)
 
         y0 = grad[..., 0:1]
         if rank == 1:
@@ -310,19 +322,21 @@ def _rfft_grad_helper(rank, irfft_fn):
             inner_dim = input_shape[-1]
             ym_term = _array_ops.tile(
                 ym_term,
-                _array_ops.concat([
-                    _array_ops.ones(
-                        [_array_ops.rank(grad) - 1], _dtypes.int32),
-                    [inner_dim]
-                ], 0)) * _ymask(inner_dim)
+                _array_ops.concat(
+                    [
+                        _array_ops.ones([_array_ops.rank(grad) - 1], _dtypes.int32),
+                        [inner_dim],
+                    ],
+                    0,
+                ),
+            ) * _ymask(inner_dim)
 
             extra_terms += is_even * ym_term
 
         # The gradient of RFFT is the IRFFT of the incoming gradient times a scaling
         # factor, plus some additional terms to make up for the components dropped
         # due to Hermitian symmetry.
-        input_size = _math_ops.cast(
-            _fft_size_for_grad(op.inputs[0], rank), real_dtype)
+        input_size = _math_ops.cast(_fft_size_for_grad(op.inputs[0], rank), real_dtype)
         the_irfft = irfft_fn(grad, fft_length)
         return 0.5 * (the_irfft * input_size + _math_ops.real(extra_terms)), None
 
@@ -352,12 +366,17 @@ def _irfft_grad_helper(rank, rfft_fn):
         is_odd = _math_ops.mod(fft_length[-1], 2)
         input_last_dimension = _array_ops.shape(op.inputs[0])[-1]
         mask = _array_ops.concat(
-            [[1.0], 2.0 * _array_ops.ones(
-                [input_last_dimension - 2 + is_odd], real_dtype),
-             _array_ops.ones([1 - is_odd], real_dtype)], 0)
+            [
+                [1.0],
+                2.0 * _array_ops.ones([input_last_dimension - 2 + is_odd], real_dtype),
+                _array_ops.ones([1 - is_odd], real_dtype),
+            ],
+            0,
+        )
 
-        rsize = _math_ops.reciprocal(_math_ops.cast(
-            _fft_size_for_grad(grad, rank), real_dtype))
+        rsize = _math_ops.reciprocal(
+            _math_ops.cast(_fft_size_for_grad(grad, rank), real_dtype)
+        )
 
         # The gradient of IRFFT is the RFFT of the incoming gradient times a scaling
         # factor and a mask. The mask scales the gradient for the Hermitian
