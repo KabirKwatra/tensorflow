@@ -30,8 +30,7 @@ except ImportError:
 
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.preprocessing.image_dataset import (
-    image_dataset_from_directory,
-)  # pylint: disable=unused-import
+    image_dataset_from_directory, )  # pylint: disable=unused-import
 from tensorflow.python.keras.utils import data_utils
 from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import keras_export
@@ -87,7 +86,10 @@ def array_to_img(x, data_format=None, scale=True, dtype=None):
         if dtype is None:
             dtype = backend.floatx()
         kwargs["dtype"] = dtype
-    return image.array_to_img(x, data_format=data_format, scale=scale, **kwargs)
+    return image.array_to_img(x,
+                              data_format=data_format,
+                              scale=scale,
+                              **kwargs)
 
 
 @keras_export("keras.preprocessing.image.img_to_array")
@@ -132,7 +134,8 @@ def img_to_array(img, data_format=None, dtype=None):
 
 
 @keras_export("keras.preprocessing.image.save_img")
-def save_img(path, x, data_format=None, file_format=None, scale=True, **kwargs):
+def save_img(path, x, data_format=None, file_format=None, scale=True,
+             **kwargs):
     """Saves an image stored as a Numpy array to a path or file object.
 
     Arguments:
@@ -149,14 +152,19 @@ def save_img(path, x, data_format=None, file_format=None, scale=True, **kwargs):
     """
     if data_format is None:
         data_format = backend.image_data_format()
-    image.save_img(
-        path, x, data_format=data_format, file_format=file_format, scale=scale, **kwargs
-    )
+    image.save_img(path,
+                   x,
+                   data_format=data_format,
+                   file_format=file_format,
+                   scale=scale,
+                   **kwargs)
 
 
-def load_img(
-    path, grayscale=False, color_mode="rgb", target_size=None, interpolation="nearest"
-):
+def load_img(path,
+             grayscale=False,
+             color_mode="rgb",
+             target_size=None,
+             interpolation="nearest"):
     """Loads an image into PIL format.
 
     Usage:
@@ -252,51 +260,50 @@ class DirectoryIterator(image.DirectoryIterator, Iterator):
     """
 
     def __init__(
-        self,
-        directory,
-        image_data_generator,
-        target_size=(256, 256),
-        color_mode="rgb",
-        classes=None,
-        class_mode="categorical",
-        batch_size=32,
-        shuffle=True,
-        seed=None,
-        data_format=None,
-        save_to_dir=None,
-        save_prefix="",
-        save_format="png",
-        follow_links=False,
-        subset=None,
-        interpolation="nearest",
-        dtype=None,
+            self,
+            directory,
+            image_data_generator,
+            target_size=(256, 256),
+            color_mode="rgb",
+            classes=None,
+            class_mode="categorical",
+            batch_size=32,
+            shuffle=True,
+            seed=None,
+            data_format=None,
+            save_to_dir=None,
+            save_prefix="",
+            save_format="png",
+            follow_links=False,
+            subset=None,
+            interpolation="nearest",
+            dtype=None,
     ):
         if data_format is None:
             data_format = backend.image_data_format()
         kwargs = {}
-        if "dtype" in tf_inspect.getfullargspec(image.ImageDataGenerator.__init__)[0]:
+        if "dtype" in tf_inspect.getfullargspec(
+                image.ImageDataGenerator.__init__)[0]:
             if dtype is None:
                 dtype = backend.floatx()
             kwargs["dtype"] = dtype
-        super(DirectoryIterator, self).__init__(
-            directory,
-            image_data_generator,
-            target_size=target_size,
-            color_mode=color_mode,
-            classes=classes,
-            class_mode=class_mode,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            seed=seed,
-            data_format=data_format,
-            save_to_dir=save_to_dir,
-            save_prefix=save_prefix,
-            save_format=save_format,
-            follow_links=follow_links,
-            subset=subset,
-            interpolation=interpolation,
-            **kwargs
-        )
+        super(DirectoryIterator, self).__init__(directory,
+                                                image_data_generator,
+                                                target_size=target_size,
+                                                color_mode=color_mode,
+                                                classes=classes,
+                                                class_mode=class_mode,
+                                                batch_size=batch_size,
+                                                shuffle=shuffle,
+                                                seed=seed,
+                                                data_format=data_format,
+                                                save_to_dir=save_to_dir,
+                                                save_prefix=save_prefix,
+                                                save_format=save_format,
+                                                follow_links=follow_links,
+                                                subset=subset,
+                                                interpolation=interpolation,
+                                                **kwargs)
 
 
 @keras_export("keras.preprocessing.image.NumpyArrayIterator")
@@ -331,43 +338,42 @@ class NumpyArrayIterator(image.NumpyArrayIterator, Iterator):
     """
 
     def __init__(
-        self,
-        x,
-        y,
-        image_data_generator,
-        batch_size=32,
-        shuffle=False,
-        sample_weight=None,
-        seed=None,
-        data_format=None,
-        save_to_dir=None,
-        save_prefix="",
-        save_format="png",
-        subset=None,
-        dtype=None,
+            self,
+            x,
+            y,
+            image_data_generator,
+            batch_size=32,
+            shuffle=False,
+            sample_weight=None,
+            seed=None,
+            data_format=None,
+            save_to_dir=None,
+            save_prefix="",
+            save_format="png",
+            subset=None,
+            dtype=None,
     ):
         if data_format is None:
             data_format = backend.image_data_format()
         kwargs = {}
-        if "dtype" in tf_inspect.getfullargspec(image.NumpyArrayIterator.__init__)[0]:
+        if "dtype" in tf_inspect.getfullargspec(
+                image.NumpyArrayIterator.__init__)[0]:
             if dtype is None:
                 dtype = backend.floatx()
             kwargs["dtype"] = dtype
-        super(NumpyArrayIterator, self).__init__(
-            x,
-            y,
-            image_data_generator,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            sample_weight=sample_weight,
-            seed=seed,
-            data_format=data_format,
-            save_to_dir=save_to_dir,
-            save_prefix=save_prefix,
-            save_format=save_format,
-            subset=subset,
-            **kwargs
-        )
+        super(NumpyArrayIterator, self).__init__(x,
+                                                 y,
+                                                 image_data_generator,
+                                                 batch_size=batch_size,
+                                                 shuffle=shuffle,
+                                                 sample_weight=sample_weight,
+                                                 seed=seed,
+                                                 data_format=data_format,
+                                                 save_to_dir=save_to_dir,
+                                                 save_prefix=save_prefix,
+                                                 save_format=save_format,
+                                                 subset=subset,
+                                                 **kwargs)
 
 
 @keras_export("keras.preprocessing.image.ImageDataGenerator")
@@ -543,34 +549,35 @@ class ImageDataGenerator(image.ImageDataGenerator):
     """
 
     def __init__(
-        self,
-        featurewise_center=False,
-        samplewise_center=False,
-        featurewise_std_normalization=False,
-        samplewise_std_normalization=False,
-        zca_whitening=False,
-        zca_epsilon=1e-6,
-        rotation_range=0,
-        width_shift_range=0.0,
-        height_shift_range=0.0,
-        brightness_range=None,
-        shear_range=0.0,
-        zoom_range=0.0,
-        channel_shift_range=0.0,
-        fill_mode="nearest",
-        cval=0.0,
-        horizontal_flip=False,
-        vertical_flip=False,
-        rescale=None,
-        preprocessing_function=None,
-        data_format=None,
-        validation_split=0.0,
-        dtype=None,
+            self,
+            featurewise_center=False,
+            samplewise_center=False,
+            featurewise_std_normalization=False,
+            samplewise_std_normalization=False,
+            zca_whitening=False,
+            zca_epsilon=1e-6,
+            rotation_range=0,
+            width_shift_range=0.0,
+            height_shift_range=0.0,
+            brightness_range=None,
+            shear_range=0.0,
+            zoom_range=0.0,
+            channel_shift_range=0.0,
+            fill_mode="nearest",
+            cval=0.0,
+            horizontal_flip=False,
+            vertical_flip=False,
+            rescale=None,
+            preprocessing_function=None,
+            data_format=None,
+            validation_split=0.0,
+            dtype=None,
     ):
         if data_format is None:
             data_format = backend.image_data_format()
         kwargs = {}
-        if "dtype" in tf_inspect.getfullargspec(image.ImageDataGenerator.__init__)[0]:
+        if "dtype" in tf_inspect.getfullargspec(
+                image.ImageDataGenerator.__init__)[0]:
             if dtype is None:
                 dtype = backend.floatx()
             kwargs["dtype"] = dtype
@@ -596,17 +603,20 @@ class ImageDataGenerator(image.ImageDataGenerator):
             preprocessing_function=preprocessing_function,
             data_format=data_format,
             validation_split=validation_split,
-            **kwargs
-        )
+            **kwargs)
 
 
 keras_export("keras.preprocessing.image.random_rotation")(random_rotation)
 keras_export("keras.preprocessing.image.random_shift")(random_shift)
 keras_export("keras.preprocessing.image.random_shear")(random_shear)
 keras_export("keras.preprocessing.image.random_zoom")(random_zoom)
-keras_export("keras.preprocessing.image.apply_channel_shift")(apply_channel_shift)
-keras_export("keras.preprocessing.image.random_channel_shift")(random_channel_shift)
-keras_export("keras.preprocessing.image.apply_brightness_shift")(apply_brightness_shift)
+keras_export("keras.preprocessing.image.apply_channel_shift")(
+    apply_channel_shift)
+keras_export("keras.preprocessing.image.random_channel_shift")(
+    random_channel_shift)
+keras_export("keras.preprocessing.image.apply_brightness_shift")(
+    apply_brightness_shift)
 keras_export("keras.preprocessing.image.random_brightness")(random_brightness)
-keras_export("keras.preprocessing.image.apply_affine_transform")(apply_affine_transform)
+keras_export("keras.preprocessing.image.apply_affine_transform")(
+    apply_affine_transform)
 keras_export("keras.preprocessing.image.load_img")(load_img)

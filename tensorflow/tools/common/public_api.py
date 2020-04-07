@@ -42,7 +42,11 @@ class PublicAPIVisitor(object):
 
         # Modules/classes we want to suppress entirely.
         self._private_map = {
-            "tf": ["compiler", "core", "python",],
+            "tf": [
+                "compiler",
+                "core",
+                "python",
+            ],
             # Some implementations have this internal module that we shouldn't
             # expose.
             "tf.flags": ["cpp_flags"],
@@ -103,30 +107,30 @@ class PublicAPIVisitor(object):
         """Return whether a name is private."""
         # TODO(wicke): Find out what names to exclude.
         del obj  # Unused.
-        return (path in self._private_map and name in self._private_map[path]) or (
-            six.ensure_str(name).startswith("_")
-            and not re.match("__.*__$", six.ensure_str(name))
-            or name in ["__base__", "__class__"]
-        )
+        return (path in self._private_map and name in self._private_map[path]
+                ) or (six.ensure_str(name).startswith("_")
+                      and not re.match("__.*__$", six.ensure_str(name))
+                      or name in ["__base__", "__class__"])
 
     def _do_not_descend(self, path, name):
         """Safely queries if a specific fully qualified name should be excluded."""
-        return (
-            path in self._do_not_descend_map and name in self._do_not_descend_map[path]
-        )
+        return (path in self._do_not_descend_map
+                and name in self._do_not_descend_map[path])
 
     def __call__(self, path, parent, children):
         """Visitor interface, see `traverse` for details."""
 
         # Avoid long waits in cases of pretty unambiguous failure.
-        if tf_inspect.ismodule(parent) and len(six.ensure_str(path).split(".")) > 10:
+        if tf_inspect.ismodule(parent) and len(
+                six.ensure_str(path).split(".")) > 10:
             raise RuntimeError(
                 "Modules nested too deep:\n%s.%s\n\nThis is likely a "
-                "problem with an accidental public import." % (self._root_name, path)
-            )
+                "problem with an accidental public import." %
+                (self._root_name, path))
 
         # Includes self._root_name
-        full_path = ".".join([self._root_name, path]) if path else self._root_name
+        full_path = ".".join([self._root_name, path
+                              ]) if path else self._root_name
 
         # Remove things that are not visible.
         for name, child in list(children):
