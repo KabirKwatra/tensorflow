@@ -77,9 +77,8 @@ def softmax(x, axis=-1):
         s = math_ops.reduce_sum(e, axis=axis, keepdims=True)
         return e / s
     else:
-        raise ValueError(
-            "Cannot apply softmax to a tensor that is 1D. " "Received input: %s" % (x,)
-        )
+        raise ValueError("Cannot apply softmax to a tensor that is 1D. "
+                         "Received input: %s" % (x, ))
 
 
 @keras_export("keras.activations.elu")
@@ -373,7 +372,8 @@ def serialize(activation):
     Raises:
         ValueError: The input function is not a valid one.
     """
-    if hasattr(activation, "__name__") and activation.__name__ in _TF_ACTIVATIONS_V2:
+    if hasattr(activation,
+               "__name__") and activation.__name__ in _TF_ACTIVATIONS_V2:
         return _TF_ACTIVATIONS_V2[activation.__name__]
     return serialize_keras_object(activation)
 
@@ -457,6 +457,4 @@ def get(identifier):
     else:
         raise TypeError(
             "Could not interpret activation function identifier: {}".format(
-                repr(identifier)
-            )
-        )
+                repr(identifier)))
