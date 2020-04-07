@@ -34,40 +34,40 @@ namespace xla {
 namespace mlir_gpu {
 
 class HloDialectEmitter : public DfsHloVisitorWithDefault {
- public:
-  HloDialectEmitter(xla::mlir_gpu::EmissionContext* emission_context,
-                    ::mlir::Region* region,
-                    llvm::ArrayRef<::mlir::Value> arguments)
-      : emission_context_(emission_context),
-        builder_(region),
-        arguments_(arguments) {}
+public:
+    HloDialectEmitter(xla::mlir_gpu::EmissionContext* emission_context,
+                      ::mlir::Region* region,
+                      llvm::ArrayRef<::mlir::Value> arguments)
+        : emission_context_(emission_context),
+          builder_(region),
+          arguments_(arguments) {}
 
-  HloDialectEmitter(xla::mlir_gpu::EmissionContext* emission_context,
-                    ::mlir::OpBuilder builder,
-                    llvm::ArrayRef<::mlir::Value> arguments)
-      : emission_context_(emission_context),
-        builder_(builder),
-        arguments_(arguments) {}
+    HloDialectEmitter(xla::mlir_gpu::EmissionContext* emission_context,
+                      ::mlir::OpBuilder builder,
+                      llvm::ArrayRef<::mlir::Value> arguments)
+        : emission_context_(emission_context),
+          builder_(builder),
+          arguments_(arguments) {}
 
-  StatusOr<mlir::Value> EmitComputation(const HloComputation& computation);
+    StatusOr<mlir::Value> EmitComputation(const HloComputation& computation);
 
-  Status DefaultAction(HloInstruction* instr) override;
-  Status HandleBroadcast(HloInstruction* instr) override;
-  Status HandleCompare(HloInstruction* instr) override;
-  Status HandleConcatenate(HloInstruction* instr) override;
-  Status HandleConstant(HloInstruction* instr) override;
-  Status HandleIota(HloInstruction* instr) override;
-  Status HandleParameter(HloInstruction* instr) override;
-  Status HandleReduce(HloInstruction* instr) override;
+    Status DefaultAction(HloInstruction* instr) override;
+    Status HandleBroadcast(HloInstruction* instr) override;
+    Status HandleCompare(HloInstruction* instr) override;
+    Status HandleConcatenate(HloInstruction* instr) override;
+    Status HandleConstant(HloInstruction* instr) override;
+    Status HandleIota(HloInstruction* instr) override;
+    Status HandleParameter(HloInstruction* instr) override;
+    Status HandleReduce(HloInstruction* instr) override;
 
- private:
-  mlir::Location getLocation(const HloInstruction* instr) const;
+private:
+    mlir::Location getLocation(const HloInstruction* instr) const;
 
-  xla::mlir_gpu::EmissionContext* emission_context_;
-  ::mlir::OpBuilder builder_;
-  llvm::ArrayRef<::mlir::Value> arguments_;
-  absl::flat_hash_map<const xla::HloInstruction*, ::mlir::Value>
-      instruction_to_values_;
+    xla::mlir_gpu::EmissionContext* emission_context_;
+    ::mlir::OpBuilder builder_;
+    llvm::ArrayRef<::mlir::Value> arguments_;
+    absl::flat_hash_map<const xla::HloInstruction*, ::mlir::Value>
+    instruction_to_values_;
 };
 
 }  // namespace mlir_gpu
