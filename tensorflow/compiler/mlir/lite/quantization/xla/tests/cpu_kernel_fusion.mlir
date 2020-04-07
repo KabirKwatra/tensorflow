@@ -111,4 +111,3 @@ func @biased_conv(%arg0: tensor<1x14x14x32xf32>, %arg1: tensor<5x5x32x64xf32>, %
 // CHECK: "quant.region"
 // CHECK: logical_kernel = "generic.biased_conv"
 }
-
