@@ -51,79 +51,67 @@ namespace cpu {
 //
 
 class IrFunction {
-public:
-    IrFunction(const string& function_name, llvm::Function::LinkageTypes linkage,
-               const HloModuleConfig& module_config, llvm::Module* llvm_module,
-               llvm::IRBuilder<>* b, int64 num_dynamic_loop_bounds);
-    ~IrFunction();
+ public:
+  IrFunction(const string& function_name, llvm::Function::LinkageTypes linkage,
+             const HloModuleConfig& module_config, llvm::Module* llvm_module,
+             llvm::IRBuilder<>* b, int64 num_dynamic_loop_bounds);
+  ~IrFunction();
 
-    // Emit ir to read and return the set of ir values representing the dynamic
-    // loop bounds argument of this function.
-    // Each element in returned vector is a pair of ir values representing
-    // the loop bounds for a specific dimension, where the first element of the
-    // pair is the dimension start index, and the second element of the pair
-    // is the dimension limit.
-    // EX: [dimension_i_index_start_ir_value, dimension_i_index_limit_ir_value]
-    //
-    DynamicLoopBounds GetDynamicLoopBounds();
+  // Emit ir to read and return the set of ir values representing the dynamic
+  // loop bounds argument of this function.
+  // Each element in returned vector is a pair of ir values representing
+  // the loop bounds for a specific dimension, where the first element of the
+  // pair is the dimension start index, and the second element of the pair
+  // is the dimension limit.
+  // EX: [dimension_i_index_start_ir_value, dimension_i_index_limit_ir_value]
+  //
+  DynamicLoopBounds GetDynamicLoopBounds();
 
-    // Returns the encapculated llvm::Function.
-    llvm::Function* function() {
-        return function_;
-    }
+  // Returns the encapculated llvm::Function.
+  llvm::Function* function() { return function_; }
 
-    // Get the llvm::Value* that represents this functions "retval" argument.
-    llvm::Argument* result_arg() {
-        return result_arg_;
-    }
+  // Get the llvm::Value* that represents this functions "retval" argument.
+  llvm::Argument* result_arg() { return result_arg_; }
 
-    // Get the xla::ExecutableRunOptions that represents this functions
-    // "run_options" argument.
-    llvm::Value* exec_run_options_arg() {
-        return exec_run_options_arg_;
-    }
+  // Get the xla::ExecutableRunOptions that represents this functions
+  // "run_options" argument.
+  llvm::Value* exec_run_options_arg() { return exec_run_options_arg_; }
 
-    // Get the llvm::Value* that represents this functions parameters argument.
-    llvm::Value* parameters_arg() {
-        return parameters_arg_;
-    }
+  // Get the llvm::Value* that represents this functions parameters argument.
+  llvm::Value* parameters_arg() { return parameters_arg_; }
 
-    // Get the llvm::Value* that represents this functions "buffer_table"
-    // argument.
-    llvm::Value* buffer_table_arg() {
-        return buffer_table_arg_;
-    }
+  // Get the llvm::Value* that represents this functions "buffer_table"
+  // argument.
+  llvm::Value* buffer_table_arg() { return buffer_table_arg_; }
 
-    // Get the llvm::Value* that represents this functions "prof_counters"
-    // argument.
-    llvm::Value* profile_counters_arg() {
-        return profile_counters_arg_;
-    }
+  // Get the llvm::Value* that represents this functions "prof_counters"
+  // argument.
+  llvm::Value* profile_counters_arg() { return profile_counters_arg_; }
 
-private:
-    // Initialize an llvm::Function with standard signature based on arguments.
-    void Initialize(const string& function_name,
-                    llvm::Function::LinkageTypes linkage,
-                    const HloModuleConfig& module_config);
+ private:
+  // Initialize an llvm::Function with standard signature based on arguments.
+  void Initialize(const string& function_name,
+                  llvm::Function::LinkageTypes linkage,
+                  const HloModuleConfig& module_config);
 
-    // Emit ir to read and return the ir value for the dynamic loop bound at
-    // 'offset' from the "dynamic_loop_bounds" argument of this function.
-    llvm::Value* GetDynamicLoopBound(int64 offset);
+  // Emit ir to read and return the ir value for the dynamic loop bound at
+  // 'offset' from the "dynamic_loop_bounds" argument of this function.
+  llvm::Value* GetDynamicLoopBound(int64 offset);
 
-    llvm::IRBuilder<>* b_;
-    llvm::Module* llvm_module_;
-    llvm::IRBuilder<>::InsertPointGuard caller_insert_point_guard_;
+  llvm::IRBuilder<>* b_;
+  llvm::Module* llvm_module_;
+  llvm::IRBuilder<>::InsertPointGuard caller_insert_point_guard_;
 
-    int64 num_dynamic_loop_bounds_ = 0;
-    // Encapsulated llvm::Function.
-    llvm::Function* function_;
-    // Function argument IR values.
-    llvm::Argument* result_arg_;
-    llvm::Value* exec_run_options_arg_;
-    llvm::Value* parameters_arg_;
-    llvm::Value* buffer_table_arg_;
-    llvm::Value* dynamic_loop_bounds_arg_ = nullptr;
-    llvm::Value* profile_counters_arg_;
+  int64 num_dynamic_loop_bounds_ = 0;
+  // Encapsulated llvm::Function.
+  llvm::Function* function_;
+  // Function argument IR values.
+  llvm::Argument* result_arg_;
+  llvm::Value* exec_run_options_arg_;
+  llvm::Value* parameters_arg_;
+  llvm::Value* buffer_table_arg_;
+  llvm::Value* dynamic_loop_bounds_arg_ = nullptr;
+  llvm::Value* profile_counters_arg_;
 };
 
 // Returns arguments in `arguments` encoded as a single buffer, suitable for a
