@@ -27,41 +27,41 @@ FunctionHandleCache::FunctionHandleCache(FunctionLibraryRuntime* lib)
           strings::Printf("%lld", static_cast<long long>(random::New64()))) {}
 
 FunctionHandleCache::~FunctionHandleCache() {
-  Status s = Clear();
-  if (!s.ok()) {
-    LOG(ERROR) << "Failed to clear function handle cache: " << s.ToString();
-  }
+    Status s = Clear();
+    if (!s.ok()) {
+        LOG(ERROR) << "Failed to clear function handle cache: " << s.ToString();
+    }
 }
 
 Status FunctionHandleCache::Instantiate(
     const string& function_name, AttrSlice attrs,
     FunctionLibraryRuntime::InstantiateOptions options,
     FunctionLibraryRuntime::Handle* handle) {
-  string key = Canonicalize(function_name, attrs, options);
-  FunctionLibraryRuntime::Handle h;
-  {
-    tf_shared_lock l(mu_);
-    h = gtl::FindWithDefault(handles_, key, kInvalidHandle);
-  }
-  if (h == kInvalidHandle) {
-    options.state_handle = state_handle_;
-    TF_RETURN_IF_ERROR(
-        lib_->Instantiate(function_name, attrs, options, handle));
-    mutex_lock l(mu_);
-    handles_[key] = *handle;
-  } else {
-    *handle = h;
-  }
-  return Status::OK();
+    string key = Canonicalize(function_name, attrs, options);
+    FunctionLibraryRuntime::Handle h;
+    {
+        tf_shared_lock l(mu_);
+        h = gtl::FindWithDefault(handles_, key, kInvalidHandle);
+    }
+    if (h == kInvalidHandle) {
+        options.state_handle = state_handle_;
+        TF_RETURN_IF_ERROR(
+            lib_->Instantiate(function_name, attrs, options, handle));
+        mutex_lock l(mu_);
+        handles_[key] = *handle;
+    } else {
+        *handle = h;
+    }
+    return Status::OK();
 }
 
 Status FunctionHandleCache::Clear() {
-  mutex_lock l(mu_);
-  for (const auto& entry : handles_) {
-    TF_RETURN_IF_ERROR(lib_->ReleaseHandle(entry.second));
-  }
-  handles_.clear();
-  return Status::OK();
+    mutex_lock l(mu_);
+    for (const auto& entry : handles_) {
+        TF_RETURN_IF_ERROR(lib_->ReleaseHandle(entry.second));
+    }
+    handles_.clear();
+    return Status::OK();
 }
 
 }  // namespace data
