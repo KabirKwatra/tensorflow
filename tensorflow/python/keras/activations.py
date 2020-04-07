@@ -36,11 +36,11 @@ from tensorflow.python.util.tf_export import keras_export
 # This dict maps the activation function name from its v2 version to its
 # canonical name.
 _TF_ACTIVATIONS_V2 = {
-    'softmax_v2': 'softmax',
+    "softmax_v2": "softmax",
 }
 
 
-@keras_export('keras.activations.softmax')
+@keras_export("keras.activations.softmax")
 def softmax(x, axis=-1):
     """Softmax converts a real vector to a vector of categorical probabilities.
 
@@ -77,11 +77,12 @@ def softmax(x, axis=-1):
         s = math_ops.reduce_sum(e, axis=axis, keepdims=True)
         return e / s
     else:
-        raise ValueError('Cannot apply softmax to a tensor that is 1D. '
-                         'Received input: %s' % (x,))
+        raise ValueError(
+            "Cannot apply softmax to a tensor that is 1D. " "Received input: %s" % (x,)
+        )
 
 
-@keras_export('keras.activations.elu')
+@keras_export("keras.activations.elu")
 def elu(x, alpha=1.0):
     """Exponential linear unit.
 
@@ -99,7 +100,7 @@ def elu(x, alpha=1.0):
     return K.elu(x, alpha)
 
 
-@keras_export('keras.activations.selu')
+@keras_export("keras.activations.selu")
 def selu(x):
     """Scaled Exponential Linear Unit (SELU).
 
@@ -152,7 +153,7 @@ def selu(x):
     return nn.selu(x)
 
 
-@keras_export('keras.activations.softplus')
+@keras_export("keras.activations.softplus")
 def softplus(x):
     """Softplus activation function, `softplus(x) = log(exp(x) + 1)`.
 
@@ -165,7 +166,7 @@ def softplus(x):
     return nn.softplus(x)
 
 
-@keras_export('keras.activations.softsign')
+@keras_export("keras.activations.softsign")
 def softsign(x):
     """Softsign activation function, `softsign(x) = x / (abs(x) + 1)`.
 
@@ -178,7 +179,7 @@ def softsign(x):
     return nn.softsign(x)
 
 
-@keras_export('keras.activations.swish')
+@keras_export("keras.activations.swish")
 def swish(x):
     """Swish activation function.
 
@@ -194,8 +195,8 @@ def swish(x):
     return nn.swish(x)
 
 
-@keras_export('keras.activations.relu')
-def relu(x, alpha=0., max_value=None, threshold=0):
+@keras_export("keras.activations.relu")
+def relu(x, alpha=0.0, max_value=None, threshold=0):
     """Applies the rectified linear unit activation function.
 
     With default values, this returns the standard ReLU activation:
@@ -234,7 +235,7 @@ def relu(x, alpha=0., max_value=None, threshold=0):
     return K.relu(x, alpha=alpha, max_value=max_value, threshold=threshold)
 
 
-@keras_export('keras.activations.tanh')
+@keras_export("keras.activations.tanh")
 def tanh(x):
     """Hyperbolic tangent activation function.
 
@@ -255,7 +256,7 @@ def tanh(x):
     return nn.tanh(x)
 
 
-@keras_export('keras.activations.sigmoid')
+@keras_export("keras.activations.sigmoid")
 def sigmoid(x):
     """Sigmoid activation function, `sigmoid(x) = 1 / (1 + exp(-x))`.
 
@@ -282,7 +283,7 @@ def sigmoid(x):
     return nn.sigmoid(x)
 
 
-@keras_export('keras.activations.exponential')
+@keras_export("keras.activations.exponential")
 def exponential(x):
     """Exponential activation function.
 
@@ -302,7 +303,7 @@ def exponential(x):
     return math_ops.exp(x)
 
 
-@keras_export('keras.activations.hard_sigmoid')
+@keras_export("keras.activations.hard_sigmoid")
 def hard_sigmoid(x):
     """Hard sigmoid activation function.
 
@@ -328,7 +329,7 @@ def hard_sigmoid(x):
     return K.hard_sigmoid(x)
 
 
-@keras_export('keras.activations.linear')
+@keras_export("keras.activations.linear")
 def linear(x):
     """Linear activation function (pass-through).
 
@@ -348,7 +349,7 @@ def linear(x):
     return x
 
 
-@keras_export('keras.activations.serialize')
+@keras_export("keras.activations.serialize")
 def serialize(activation):
     """Returns the string identifier of an activation function.
 
@@ -372,13 +373,12 @@ def serialize(activation):
     Raises:
         ValueError: The input function is not a valid one.
     """
-    if (hasattr(activation, '__name__') and
-            activation.__name__ in _TF_ACTIVATIONS_V2):
+    if hasattr(activation, "__name__") and activation.__name__ in _TF_ACTIVATIONS_V2:
         return _TF_ACTIVATIONS_V2[activation.__name__]
     return serialize_keras_object(activation)
 
 
-@keras_export('keras.activations.deserialize')
+@keras_export("keras.activations.deserialize")
 def deserialize(name, custom_objects=None):
     """Returns activation function given a string identifier.
 
@@ -412,10 +412,11 @@ def deserialize(name, custom_objects=None):
         name,
         module_objects=globals(),
         custom_objects=custom_objects,
-        printable_module_name='activation function')
+        printable_module_name="activation function",
+    )
 
 
-@keras_export('keras.activations.get')
+@keras_export("keras.activations.get")
 def get(identifier):
     """Returns function.
 
@@ -455,5 +456,7 @@ def get(identifier):
         return identifier
     else:
         raise TypeError(
-            'Could not interpret activation function identifier: {}'.format(
-                repr(identifier)))
+            "Could not interpret activation function identifier: {}".format(
+                repr(identifier)
+            )
+        )
