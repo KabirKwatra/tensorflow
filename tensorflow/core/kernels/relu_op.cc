@@ -18,12 +18,13 @@ limitations under the License.
 #define EIGEN_USE_THREADS
 
 #include "tensorflow/core/kernels/relu_op.h"
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+
 #include "tensorflow/core/framework/numeric_op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/lib/core/errors.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
 
@@ -191,18 +192,18 @@ TF_CALL_GPU_NUMBER_TYPES(REGISTER_GPU_KERNELS);
 template <typename Device>
 class ReluOp<Device, qint8>
     : public UnaryElementWiseOp<qint8, ReluOp<Device, qint8>> {
-public:
-    using UnaryElementWiseOp<qint8, ReluOp<Device, qint8>>::UnaryElementWiseOp;
+ public:
+  using UnaryElementWiseOp<qint8, ReluOp<Device, qint8>>::UnaryElementWiseOp;
 
-    void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
-        auto flat_input = input.flat<qint8>();
-        OP_REQUIRES(context, (flat_input.size() % 4) == 0,
-                    errors::InvalidArgument(
-                        "Tensor size must be a multiple of 4 for Relu<qint8>. Got ",
-                        flat_input.size()));
-        functor::Relu<Device, qint8> func;
-        func(context->eigen_device<Device>(), flat_input, output->flat<qint8>());
-    }
+  void Operate(OpKernelContext* context, const Tensor& input, Tensor* output) {
+    auto flat_input = input.flat<qint8>();
+    OP_REQUIRES(context, (flat_input.size() % 4) == 0,
+                errors::InvalidArgument(
+                    "Tensor size must be a multiple of 4 for Relu<qint8>. Got ",
+                    flat_input.size()));
+    functor::Relu<Device, qint8> func;
+    func(context->eigen_device<Device>(), flat_input, output->flat<qint8>());
+  }
 };
 
 REGISTER_KERNEL_BUILDER(
