@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Operations for linear algebra."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -28,13 +27,11 @@ from tensorflow.python.ops import gen_linalg_ops
 from tensorflow.python.ops import linalg_ops_impl
 from tensorflow.python.ops import map_fn
 from tensorflow.python.ops import math_ops
-
-# pylint: disable=wildcard-import
 from tensorflow.python.ops.gen_linalg_ops import *
-
-# pylint: enable=wildcard-import
 from tensorflow.python.util import deprecation
 from tensorflow.python.util.tf_export import tf_export
+# pylint: disable=wildcard-import
+# pylint: enable=wildcard-import
 
 # Names below are lower_case.
 # pylint: disable=invalid-name
