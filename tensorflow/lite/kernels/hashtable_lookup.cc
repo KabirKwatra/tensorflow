@@ -52,101 +52,101 @@ namespace builtin {
 namespace {
 
 int greater(const void* a, const void* b) {
-  return *static_cast<const int*>(a) - *static_cast<const int*>(b);
+    return *static_cast<const int*>(a) - *static_cast<const int*>(b);
 }
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
-  TF_LITE_ENSURE_EQ(context, NumInputs(node), 3);
-  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 2);
+    TF_LITE_ENSURE_EQ(context, NumInputs(node), 3);
+    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 2);
 
-  const TfLiteTensor* lookup = GetInput(context, node, 0);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(lookup), 1);
-  TF_LITE_ENSURE_EQ(context, lookup->type, kTfLiteInt32);
+    const TfLiteTensor* lookup = GetInput(context, node, 0);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(lookup), 1);
+    TF_LITE_ENSURE_EQ(context, lookup->type, kTfLiteInt32);
 
-  const TfLiteTensor* key = GetInput(context, node, 1);
-  TF_LITE_ENSURE_EQ(context, NumDimensions(key), 1);
-  TF_LITE_ENSURE_EQ(context, key->type, kTfLiteInt32);
+    const TfLiteTensor* key = GetInput(context, node, 1);
+    TF_LITE_ENSURE_EQ(context, NumDimensions(key), 1);
+    TF_LITE_ENSURE_EQ(context, key->type, kTfLiteInt32);
 
-  const TfLiteTensor* value = GetInput(context, node, 2);
-  TF_LITE_ENSURE(context, NumDimensions(value) >= 1);
-  TF_LITE_ENSURE_EQ(context, SizeOfDimension(key, 0),
-                    SizeOfDimension(value, 0));
-  if (value->type == kTfLiteString) {
-    TF_LITE_ENSURE_EQ(context, NumDimensions(value), 1);
-  }
-
-  TfLiteTensor* hits = GetOutput(context, node, 1);
-  TF_LITE_ENSURE_EQ(context, hits->type, kTfLiteUInt8);
-  TfLiteIntArray* hitSize = TfLiteIntArrayCreate(1);
-  hitSize->data[0] = SizeOfDimension(lookup, 0);
-
-  TfLiteTensor* output = GetOutput(context, node, 0);
-  TF_LITE_ENSURE_EQ(context, value->type, output->type);
-
-  TfLiteStatus status = kTfLiteOk;
-  if (output->type != kTfLiteString) {
-    TfLiteIntArray* outputSize = TfLiteIntArrayCreate(NumDimensions(value));
-    outputSize->data[0] = SizeOfDimension(lookup, 0);
-    for (int i = 1; i < NumDimensions(value); i++) {
-      outputSize->data[i] = SizeOfDimension(value, i);
+    const TfLiteTensor* value = GetInput(context, node, 2);
+    TF_LITE_ENSURE(context, NumDimensions(value) >= 1);
+    TF_LITE_ENSURE_EQ(context, SizeOfDimension(key, 0),
+                      SizeOfDimension(value, 0));
+    if (value->type == kTfLiteString) {
+        TF_LITE_ENSURE_EQ(context, NumDimensions(value), 1);
     }
-    status = context->ResizeTensor(context, output, outputSize);
-  }
-  if (context->ResizeTensor(context, hits, hitSize) != kTfLiteOk) {
-    status = kTfLiteError;
-  }
-  return status;
+
+    TfLiteTensor* hits = GetOutput(context, node, 1);
+    TF_LITE_ENSURE_EQ(context, hits->type, kTfLiteUInt8);
+    TfLiteIntArray* hitSize = TfLiteIntArrayCreate(1);
+    hitSize->data[0] = SizeOfDimension(lookup, 0);
+
+    TfLiteTensor* output = GetOutput(context, node, 0);
+    TF_LITE_ENSURE_EQ(context, value->type, output->type);
+
+    TfLiteStatus status = kTfLiteOk;
+    if (output->type != kTfLiteString) {
+        TfLiteIntArray* outputSize = TfLiteIntArrayCreate(NumDimensions(value));
+        outputSize->data[0] = SizeOfDimension(lookup, 0);
+        for (int i = 1; i < NumDimensions(value); i++) {
+            outputSize->data[i] = SizeOfDimension(value, i);
+        }
+        status = context->ResizeTensor(context, output, outputSize);
+    }
+    if (context->ResizeTensor(context, hits, hitSize) != kTfLiteOk) {
+        status = kTfLiteError;
+    }
+    return status;
 }
 
 TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
-  TfLiteTensor* output = GetOutput(context, node, 0);
-  TfLiteTensor* hits = GetOutput(context, node, 1);
-  const TfLiteTensor* lookup = GetInput(context, node, 0);
-  const TfLiteTensor* key = GetInput(context, node, 1);
-  const TfLiteTensor* value = GetInput(context, node, 2);
+    TfLiteTensor* output = GetOutput(context, node, 0);
+    TfLiteTensor* hits = GetOutput(context, node, 1);
+    const TfLiteTensor* lookup = GetInput(context, node, 0);
+    const TfLiteTensor* key = GetInput(context, node, 1);
+    const TfLiteTensor* value = GetInput(context, node, 2);
 
-  const int num_rows = SizeOfDimension(value, 0);
-  const int row_bytes = value->bytes / num_rows;
-  void* pointer = nullptr;
-  DynamicBuffer buf;
+    const int num_rows = SizeOfDimension(value, 0);
+    const int row_bytes = value->bytes / num_rows;
+    void* pointer = nullptr;
+    DynamicBuffer buf;
 
-  for (int i = 0; i < SizeOfDimension(lookup, 0); i++) {
-    int idx = -1;
-    pointer = bsearch(&(lookup->data.i32[i]), key->data.i32, num_rows,
-                      sizeof(int32_t), greater);
-    if (pointer != nullptr) {
-      idx = (reinterpret_cast<char*>(pointer) - (key->data.raw)) /
-            sizeof(int32_t);
+    for (int i = 0; i < SizeOfDimension(lookup, 0); i++) {
+        int idx = -1;
+        pointer = bsearch(&(lookup->data.i32[i]), key->data.i32, num_rows,
+                          sizeof(int32_t), greater);
+        if (pointer != nullptr) {
+            idx = (reinterpret_cast<char*>(pointer) - (key->data.raw)) /
+                  sizeof(int32_t);
+        }
+
+        if (idx >= num_rows || idx < 0) {
+            if (output->type == kTfLiteString) {
+                buf.AddString(nullptr, 0);
+            } else {
+                memset(output->data.raw + i * row_bytes, 0, row_bytes);
+            }
+            hits->data.uint8[i] = 0;
+        } else {
+            if (output->type == kTfLiteString) {
+                buf.AddString(GetString(value, idx));
+            } else {
+                memcpy(output->data.raw + i * row_bytes,
+                       value->data.raw + idx * row_bytes, row_bytes);
+            }
+            hits->data.uint8[i] = 1;
+        }
+    }
+    if (output->type == kTfLiteString) {
+        buf.WriteToTensorAsVector(output);
     }
 
-    if (idx >= num_rows || idx < 0) {
-      if (output->type == kTfLiteString) {
-        buf.AddString(nullptr, 0);
-      } else {
-        memset(output->data.raw + i * row_bytes, 0, row_bytes);
-      }
-      hits->data.uint8[i] = 0;
-    } else {
-      if (output->type == kTfLiteString) {
-        buf.AddString(GetString(value, idx));
-      } else {
-        memcpy(output->data.raw + i * row_bytes,
-               value->data.raw + idx * row_bytes, row_bytes);
-      }
-      hits->data.uint8[i] = 1;
-    }
-  }
-  if (output->type == kTfLiteString) {
-    buf.WriteToTensorAsVector(output);
-  }
-
-  return kTfLiteOk;
+    return kTfLiteOk;
 }
 }  // namespace
 
 TfLiteRegistration* Register_HASHTABLE_LOOKUP() {
-  static TfLiteRegistration r = {nullptr, nullptr, Prepare, Eval};
-  return &r;
+    static TfLiteRegistration r = {nullptr, nullptr, Prepare, Eval};
+    return &r;
 }
 
 }  // namespace builtin
