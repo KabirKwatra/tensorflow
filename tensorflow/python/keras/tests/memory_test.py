@@ -44,7 +44,6 @@ class SingleLayerNet(keras.Model):
 
 
 class MemoryTest(test.TestCase):
-
     def testMemoryLeakInSimpleModelForwardOnly(self):
         if not memory_test_util.memory_profiler_is_available():
             self.skipTest("memory_profiler required to run this test")

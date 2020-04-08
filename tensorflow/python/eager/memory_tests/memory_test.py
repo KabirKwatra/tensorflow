@@ -38,7 +38,6 @@ from tensorflow.python.ops.variables import Variable
 
 
 class MemoryTest(test.TestCase):
-
     def testMemoryLeakAnonymousVariable(self):
         if not memory_test_util.memory_profiler_is_available():
             self.skipTest("memory_profiler required to run this test")
@@ -54,7 +53,6 @@ class MemoryTest(test.TestCase):
             self.skipTest("memory_profiler required to run this test")
 
         def f():
-
             @def_function.function
             def graph(x):
                 return x * x + x
@@ -62,21 +60,20 @@ class MemoryTest(test.TestCase):
             graph(constant_op.constant(42))
 
         memory_test_util.assert_no_leak(
-            f, num_iters=1000, increase_threshold_absolute_mb=30)
+            f, num_iters=1000, increase_threshold_absolute_mb=30
+        )
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testNestedFunctionsDeleted(self):
-
         @def_function.function
         def f(x):
-
             @def_function.function
             def my_sin(x):
                 return math_ops.sin(x)
 
             return my_sin(x)
 
-        x = constant_op.constant(1.)
+        x = constant_op.constant(1.0)
         with backprop.GradientTape() as t1:
             t1.watch(x)
             with backprop.GradientTape() as t2:
@@ -96,10 +93,8 @@ class MemoryTest(test.TestCase):
             self.skipTest("memory_profiler required to run this test")
 
         def f():
-
             @def_function.function(autograph=False)
             def graph(x):
-
                 @def_function.function(autograph=False)
                 def cubed(a):
                     return a * a * a
@@ -113,7 +108,8 @@ class MemoryTest(test.TestCase):
             return graph(constant_op.constant(1.5))[0].numpy()
 
         memory_test_util.assert_no_leak(
-            f, num_iters=300, increase_threshold_absolute_mb=50)
+            f, num_iters=300, increase_threshold_absolute_mb=50
+        )
 
 
 if __name__ == "__main__":

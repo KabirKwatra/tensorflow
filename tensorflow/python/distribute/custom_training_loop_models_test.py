@@ -36,7 +36,6 @@ from tensorflow.python.util import nest
 
 
 class CustomModel(module.Module):
-
     def __init__(self, name=None):
         super(CustomModel, self).__init__(name=name)
         with self.name_scope:
@@ -52,16 +51,14 @@ class CustomModel(module.Module):
 
 
 class KerasModelsTest(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_single_keras_layer_experimental_run(self, distribution):
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = keras.layers.Dense(4, name="dense")
@@ -76,22 +73,19 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                 grads = tape.gradient(loss, model.variables)
                 return grads
 
-            outputs = distribution.run(
-                step_fn, args=(next(iterator),))
-            return nest.map_structure(distribution.experimental_local_results,
-                                      outputs)
+            outputs = distribution.run(step_fn, args=(next(iterator),))
+            return nest.map_structure(distribution.experimental_local_results, outputs)
 
         train_step(input_iterator)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_keras_model_creation_experimental_run(self, distribution):
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = self._get_model()
@@ -106,22 +100,19 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                 grads = tape.gradient(loss, model.variables)
                 return grads
 
-            outputs = distribution.run(
-                step_fn, args=(next(iterator),))
-            return nest.map_structure(distribution.experimental_local_results,
-                                      outputs)
+            outputs = distribution.run(step_fn, args=(next(iterator),))
+            return nest.map_structure(distribution.experimental_local_results, outputs)
 
         train_step(input_iterator)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_keras_model_optimizer_experimental_run(self, distribution):
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = self._get_model()
@@ -138,23 +129,19 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                 optimizer.apply_gradients(zip(grads, model.variables))
                 return loss
 
-            outputs = distribution.run(
-                step_fn, args=(next(iterator),))
-            return nest.map_structure(distribution.experimental_local_results,
-                                      outputs)
+            outputs = distribution.run(step_fn, args=(next(iterator),))
+            return nest.map_structure(distribution.experimental_local_results, outputs)
 
         train_step(input_iterator)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_keras_subclass_model_optimizer_experimental_run(self, distribution):
         def get_subclass_model():
-
             class KerasSubclassModel(keras.Model):
-
                 def __init__(self):
                     super(KerasSubclassModel, self).__init__()
                     self.l = keras.layers.Dense(4, name="dense")
@@ -163,9 +150,9 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                     return self.l(x)
 
             return KerasSubclassModel()
+
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = get_subclass_model()
@@ -182,22 +169,19 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                 optimizer.apply_gradients(zip(grads, model.variables))
                 return loss
 
-            outputs = distribution.run(
-                step_fn, args=(next(iterator),))
-            return nest.map_structure(distribution.experimental_local_results,
-                                      outputs)
+            outputs = distribution.run(step_fn, args=(next(iterator),))
+            return nest.map_structure(distribution.experimental_local_results, outputs)
 
         train_step(input_iterator)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_keras_model_optimizer_experimental_run_loop(self, distribution):
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = self._get_model()
@@ -221,17 +205,16 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_batch_norm_with_dynamic_batch(self, distribution):
         inputs = np.zeros((10, 3, 3, 3), dtype=np.float32)
         targets = np.zeros((10, 4), dtype=np.float32)
         dataset = dataset_ops.Dataset.from_tensor_slices((inputs, targets))
         dataset = dataset.repeat()
         dataset = dataset.batch(10, drop_remainder=False)
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             x = keras.layers.Input(shape=(3, 3, 3), name="input")
@@ -258,9 +241,9 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_lstm(self, distribution):
 
         batch_size = 32
@@ -269,23 +252,20 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
             model = keras.models.Sequential()
             # We only have LSTM variables so we can detect no gradient issues more
             # easily.
-            model.add(
-                keras.layers.LSTM(1, return_sequences=False, input_shape=(10, 1)))
+            model.add(keras.layers.LSTM(1, return_sequences=False, input_shape=(10, 1)))
             return model
 
         def create_lstm_data():
             seq_length = 10
 
-            x_train = np.random.rand(
-                batch_size, seq_length, 1).astype("float32")
+            x_train = np.random.rand(batch_size, seq_length, 1).astype("float32")
             y_train = np.random.rand(batch_size, 1).astype("float32")
             return x_train, y_train
 
         x, y = create_lstm_data()
         dataset = dataset_ops.Dataset.from_tensor_slices((x, y))
         dataset = dataset.batch(batch_size, drop_remainder=True)
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = create_lstm_model()
@@ -293,27 +273,29 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
         @def_function.function
         def train_step(input_iterator):
-
             def step_fn(inputs):
                 inps, targ = inputs
                 with backprop.GradientTape() as tape:
                     output = model(inps)
                     loss = math_ops.reduce_mean(
                         keras.losses.binary_crossentropy(
-                            y_true=targ, y_pred=output, from_logits=False))
+                            y_true=targ, y_pred=output, from_logits=False
+                        )
+                    )
                 grads = tape.gradient(loss, model.variables)
                 optimizer.apply_gradients(zip(grads, model.variables))
                 return loss
 
-            outputs = distribution.run(
-                step_fn, args=(next(input_iterator),))
+            outputs = distribution.run(step_fn, args=(next(input_iterator),))
             return distribution.experimental_local_results(outputs)
 
         train_step(input_iterator)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies, mode=["eager"]))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_nested_tf_functions(self, distribution):
         # The test builds two computations with keras layers, one with nested
         # tf.function, and the other without nested tf.function. We run these
@@ -322,11 +304,9 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
         inputs = np.random.random((10, 3)).astype(np.float32)
         targets = np.ones((10, 4), dtype=np.float32)
-        dataset = dataset_ops.Dataset.from_tensor_slices(
-            (inputs, targets)).repeat()
+        dataset = dataset_ops.Dataset.from_tensor_slices((inputs, targets)).repeat()
         dataset = dataset.batch(10, drop_remainder=True)
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         def get_model():
             x = keras.layers.Input(shape=(3,), name="input")
@@ -336,8 +316,7 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
         with distribution.scope():
             model = get_model()
-            optimizer = keras.optimizer_v2.gradient_descent.SGD(
-                0.1, momentum=0.01)
+            optimizer = keras.optimizer_v2.gradient_descent.SGD(0.1, momentum=0.01)
             weights_file = os.path.join(self.get_temp_dir(), ".h5")
             model.save_weights(weights_file)
             model2 = get_model()
@@ -353,7 +332,6 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
         @def_function.function
         def train_step_without_nested_tf_function(inputs):
-
             def step_fn(inputs):
                 images, targets = inputs
                 with backprop.GradientTape() as tape:
@@ -370,7 +348,6 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
         @def_function.function
         def train_step_with_nested_tf_function(inputs):
-
             def step_fn(inputs):
                 images, targets = inputs
                 with backprop.GradientTape() as tape:
@@ -391,20 +368,18 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.all_strategies,
-            mode=["eager"]
-        ))
+            distribution=strategy_combinations.all_strategies, mode=["eager"]
+        )
+    )
     def test_customized_tf_module_experimental_run(self, distribution):
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         with distribution.scope():
             model = CustomModel()
 
         @def_function.function
         def train_step(iterator):
-
             def step_fn(inputs):
                 images, targets = inputs
                 with backprop.GradientTape() as tape:
@@ -413,30 +388,29 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                 grads = tape.gradient(loss, model.variables)
                 return grads
 
-            outputs = distribution.run(
-                step_fn, args=(next(iterator),))
-            return nest.map_structure(distribution.experimental_local_results,
-                                      outputs)
+            outputs = distribution.run(step_fn, args=(next(iterator),))
+            return nest.map_structure(distribution.experimental_local_results, outputs)
 
         train_step(input_iterator)
 
     @combinations.generate(
         combinations.combine(
-            distribution=strategy_combinations.tpu_strategies, mode=["eager"]))
+            distribution=strategy_combinations.tpu_strategies, mode=["eager"]
+        )
+    )
     def test_tf_function_experimental_compile(self, distribution):
         dataset = self._get_dataset()
-        input_iterator = iter(
-            distribution.experimental_distribute_dataset(dataset))
+        input_iterator = iter(distribution.experimental_distribute_dataset(dataset))
 
         class CustomDense(keras.layers.Layer):
-
             def __init__(self, num_outputs):
                 super(CustomDense, self).__init__()
                 self.num_outputs = num_outputs
 
             def build(self, input_shape):
                 self.kernel = self.add_variable(
-                    "kernel", shape=[int(input_shape[-1]), self.num_outputs])
+                    "kernel", shape=[int(input_shape[-1]), self.num_outputs]
+                )
 
             @def_function.function(experimental_compile=True)
             def call(self, inputs):
@@ -457,10 +431,8 @@ class KerasModelsTest(test.TestCase, parameterized.TestCase):
                 grads = tape.gradient(loss, model.variables)
                 return grads
 
-            outputs = distribution.run(
-                step_fn, args=(next(iterator),))
-            return nest.map_structure(distribution.experimental_local_results,
-                                      outputs)
+            outputs = distribution.run(step_fn, args=(next(iterator),))
+            return nest.map_structure(distribution.experimental_local_results, outputs)
 
         train_step(input_iterator)
 
