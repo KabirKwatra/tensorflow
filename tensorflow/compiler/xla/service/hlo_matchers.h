@@ -25,108 +25,110 @@ namespace xla {
 namespace testing {
 
 class HloMatcher : public ::testing::MatcherInterface<const HloInstruction*> {
- public:
-  HloMatcher(HloOpcode opcode,
-             std::vector<::testing::Matcher<const HloInstruction*>> operands)
-      : opcode_(opcode), operands_(operands) {}
+public:
+    HloMatcher(HloOpcode opcode,
+               std::vector<::testing::Matcher<const HloInstruction*>> operands)
+        : opcode_(opcode), operands_(operands) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
 
-  void DescribeTo(::std::ostream* os) const override;
+    void DescribeTo(::std::ostream* os) const override;
 
- private:
-  HloOpcode opcode_;
-  std::vector<::testing::Matcher<const HloInstruction*>> operands_;
+private:
+    HloOpcode opcode_;
+    std::vector<::testing::Matcher<const HloInstruction*>> operands_;
 };
 
 // Custom matcher for parameters, which accepts a parameter number.
 class HloParameterMatcher : public HloMatcher {
- public:
-  explicit HloParameterMatcher(int64 parameter_number)
-      : HloMatcher(HloOpcode::kParameter, /*operands=*/{}),
-        parameter_number_(parameter_number) {}
+public:
+    explicit HloParameterMatcher(int64 parameter_number)
+        : HloMatcher(HloOpcode::kParameter, /*operands=*/{}),
+    parameter_number_(parameter_number) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
 
- private:
-  int64 parameter_number_;
+private:
+    int64 parameter_number_;
 };
 
 // Custom matcher for comparisons, which accepts a comparison direction.
 class HloComparisonMatcher : public HloMatcher {
- public:
-  explicit HloComparisonMatcher(
-      ComparisonDirection direction,
-      std::vector<::testing::Matcher<const HloInstruction*>> operands)
-      : HloMatcher(HloOpcode::kCompare, operands), direction_(direction) {}
+public:
+    explicit HloComparisonMatcher(
+        ComparisonDirection direction,
+        std::vector<::testing::Matcher<const HloInstruction*>> operands)
+        : HloMatcher(HloOpcode::kCompare, operands), direction_(direction) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
 
- private:
-  ComparisonDirection direction_;
+private:
+    ComparisonDirection direction_;
 };
 
 // Custom matcher for get-tuple-element instructions, which accepts a tuple
 // index to match.
 class HloGetTupleElementMatcher : public HloMatcher {
- public:
-  HloGetTupleElementMatcher(::testing::Matcher<const HloInstruction*> operand,
-                            int64 tuple_index)
-      : HloMatcher(HloOpcode::kGetTupleElement, /*operands=*/{operand}),
-        tuple_index_(tuple_index) {}
+public:
+    HloGetTupleElementMatcher(::testing::Matcher<const HloInstruction*> operand,
+                              int64 tuple_index)
+        : HloMatcher(HloOpcode::kGetTupleElement, { /*operands=*/
+        operand
+    }),
+    tuple_index_(tuple_index) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
 
- private:
-  int64 tuple_index_;
+private:
+    int64 tuple_index_;
 };
 
 // Custom matcher for custom-call instructions, which accepts a matcher for its
 // call target.
 class HloCustomCallMatcher : public HloMatcher {
- public:
-  HloCustomCallMatcher(
-      ::testing::Matcher<string> call_target_matcher,
-      std::vector<::testing::Matcher<const HloInstruction*>> operands)
-      : HloMatcher(HloOpcode::kCustomCall, operands),
-        call_target_matcher_(call_target_matcher) {}
+public:
+    HloCustomCallMatcher(
+        ::testing::Matcher<string> call_target_matcher,
+        std::vector<::testing::Matcher<const HloInstruction*>> operands)
+        : HloMatcher(HloOpcode::kCustomCall, operands),
+          call_target_matcher_(call_target_matcher) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
-  void DescribeTo(std::ostream* os) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
+    void DescribeTo(std::ostream* os) const override;
 
- private:
-  ::testing::Matcher<string> call_target_matcher_;
+private:
+    ::testing::Matcher<string> call_target_matcher_;
 };
 
 class HloShapeMatcher
     : public ::testing::MatcherInterface<const HloInstruction*> {
- public:
-  explicit HloShapeMatcher(const Shape& shape) : shape_(shape) {}
+public:
+    explicit HloShapeMatcher(const Shape& shape) : shape_(shape) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
-  void DescribeTo(std::ostream* os) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
+    void DescribeTo(std::ostream* os) const override;
 
- private:
-  Shape shape_;
+private:
+    Shape shape_;
 };
 
 class HloShapeAndLayoutMatcher
     : public ::testing::MatcherInterface<const HloInstruction*> {
- public:
-  explicit HloShapeAndLayoutMatcher(const Shape& shape) : shape_(shape) {}
+public:
+    explicit HloShapeAndLayoutMatcher(const Shape& shape) : shape_(shape) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
-  void DescribeTo(std::ostream* os) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
+    void DescribeTo(std::ostream* os) const override;
 
- private:
-  Shape shape_;
+private:
+    Shape shape_;
 };
 
 // Verify the sharding of an instruction against the provided HloSharding. If a
@@ -134,58 +136,61 @@ class HloShapeAndLayoutMatcher
 // is present for an instruction.
 class HloShardingMatcher
     : public ::testing::MatcherInterface<const HloInstruction*> {
- public:
-  explicit HloShardingMatcher(const absl::optional<HloSharding>& sharding)
-      : sharding_(sharding) {}
+public:
+    explicit HloShardingMatcher(const absl::optional<HloSharding>& sharding)
+        : sharding_(sharding) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
-  void DescribeTo(std::ostream* os) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
+    void DescribeTo(std::ostream* os) const override;
 
- private:
-  absl::optional<HloSharding> sharding_;
+private:
+    absl::optional<HloSharding> sharding_;
 };
 
 // Matches a Dot HLO instruction with specific LHS and RHS contracting
 // dimensions.
 class HloDotWithContractingDimsMatcher : public HloMatcher {
- public:
-  explicit HloDotWithContractingDimsMatcher(
-      ::testing::Matcher<const HloInstruction*> lhs,
-      ::testing::Matcher<const HloInstruction*> rhs, int64 lhs_contracting_dim,
-      int64 rhs_contracting_dim)
-      : HloMatcher(HloOpcode::kDot, /*operands=*/{lhs, rhs}),
-        lhs_contracting_dim_(lhs_contracting_dim),
-        rhs_contracting_dim_(rhs_contracting_dim) {}
+public:
+    explicit HloDotWithContractingDimsMatcher(
+        ::testing::Matcher<const HloInstruction*> lhs,
+        ::testing::Matcher<const HloInstruction*> rhs, int64 lhs_contracting_dim,
+        int64 rhs_contracting_dim)
+        : HloMatcher(HloOpcode::kDot, { /*operands=*/
+        lhs, rhs
+    }),
+    lhs_contracting_dim_(lhs_contracting_dim),
+    rhs_contracting_dim_(rhs_contracting_dim) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
-  void DescribeTo(std::ostream* os) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
+    void DescribeTo(std::ostream* os) const override;
 
- private:
-  int64 lhs_contracting_dim_;
-  int64 rhs_contracting_dim_;
+private:
+    int64 lhs_contracting_dim_;
+    int64 rhs_contracting_dim_;
 };
 
 // Custom matcher for asynchronous copy (CopyStart/CopyDone pair) with specified
 // source and destination memory spaces.
 class HloAsyncCopyMatcher : public HloMatcher {
- public:
-  HloAsyncCopyMatcher(int64 to_space, int64 from_space,
-                      ::testing::Matcher<const HloInstruction*> operand)
-      : HloMatcher(HloOpcode::kCopyDone,
-                   {::testing::MakeMatcher(
-                       new HloMatcher(HloOpcode::kCopyStart, {operand}))}),
-        to_space_(to_space),
-        from_space_(from_space) {}
+public:
+    HloAsyncCopyMatcher(int64 to_space, int64 from_space,
+                        ::testing::Matcher<const HloInstruction*> operand)
+        : HloMatcher(HloOpcode::kCopyDone,
+    {   ::testing::MakeMatcher(
+            new HloMatcher(HloOpcode::kCopyStart, {operand}))
+    }),
+    to_space_(to_space),
+    from_space_(from_space) {}
 
-  bool MatchAndExplain(const HloInstruction* instruction,
-                       ::testing::MatchResultListener* listener) const override;
-  void DescribeTo(std::ostream* os) const override;
+    bool MatchAndExplain(const HloInstruction* instruction,
+                         ::testing::MatchResultListener* listener) const override;
+    void DescribeTo(std::ostream* os) const override;
 
- private:
-  int64 to_space_;
-  int64 from_space_;
+private:
+    int64 to_space_;
+    int64 from_space_;
 };
 
 // HloInstruction* matchers for opcode and operands. Example:
@@ -288,44 +293,44 @@ HLO_MATCHER(Xor);
 //  - Parameter() matches any parameter.
 inline ::testing::Matcher<const ::xla::HloInstruction*> Parameter(
     int64 parameter_number) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloParameterMatcher(parameter_number));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloParameterMatcher(parameter_number));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> Parameter() {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloMatcher(HloOpcode::kParameter, {}));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloMatcher(HloOpcode::kParameter, {}));
 }
 
 // Comparison matchers below do not require any additional arguments.
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> Eq(M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
-      ComparisonDirection::kEq, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
+                                      ComparisonDirection::kEq, {operands...}));
 }
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> Ne(M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
-      ComparisonDirection::kNe, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
+                                      ComparisonDirection::kNe, {operands...}));
 }
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> Ge(M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
-      ComparisonDirection::kGe, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
+                                      ComparisonDirection::kGe, {operands...}));
 }
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> Gt(M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
-      ComparisonDirection::kGt, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
+                                      ComparisonDirection::kGt, {operands...}));
 }
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> Le(M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
-      ComparisonDirection::kLe, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
+                                      ComparisonDirection::kLe, {operands...}));
 }
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> Lt(M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
-      ComparisonDirection::kLt, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloComparisonMatcher(
+                                      ComparisonDirection::kLt, {operands...}));
 }
 
 // GetTupleElement(operand, N) matches a GTE instruction which gets the N'th
@@ -333,17 +338,17 @@ inline ::testing::Matcher<const ::xla::HloInstruction*> Lt(M... operands) {
 // operation on operand, and GetTupleElement() matches any GTE operation at all.
 inline ::testing::Matcher<const ::xla::HloInstruction*> GetTupleElement(
     ::testing::Matcher<const HloInstruction*> operand, int64 tuple_index) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloGetTupleElementMatcher(operand, tuple_index));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloGetTupleElementMatcher(operand, tuple_index));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> GetTupleElement(
     ::testing::Matcher<const HloInstruction*> operand) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloMatcher(HloOpcode::kGetTupleElement, {operand}));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloMatcher(HloOpcode::kGetTupleElement, {operand}));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> GetTupleElement() {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloMatcher(HloOpcode::kGetTupleElement, {}));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloMatcher(HloOpcode::kGetTupleElement, {}));
 }
 
 // - CustomCall(T, operand1, ..., operandN) matches a CustomCall with call
@@ -356,8 +361,8 @@ inline ::testing::Matcher<const ::xla::HloInstruction*> GetTupleElement() {
 template <typename... M>
 inline ::testing::Matcher<const ::xla::HloInstruction*> CustomCall(
     ::testing::Matcher<string> call_target_matcher, M... operands) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloCustomCallMatcher(
-      call_target_matcher, {operands...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloCustomCallMatcher(
+                                      call_target_matcher, {operands...}));
 }
 // This overload of CustomCall(A, B, C, ...) exists iff A is not convertible to
 // ::testing::Matcher<string>.  In that case, we want to prefer the overload
@@ -368,59 +373,59 @@ template <typename FirstM, typename... M,
               void>::type*>
 inline ::testing::Matcher<const ::xla::HloInstruction*> CustomCall(
     FirstM operands_first, M... operands_rest) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloMatcher(
-      HloOpcode::kCustomCall, {operands_first, operands_rest...}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloMatcher(
+                                      HloOpcode::kCustomCall, {operands_first, operands_rest...}));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> CustomCall() {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloMatcher(HloOpcode::kCustomCall, {}));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloMatcher(HloOpcode::kCustomCall, {}));
 }
 
 // Verifies the shape or the shape and the layout of an HLO instruction against
 // the provided shape object.
 inline ::testing::Matcher<const ::xla::HloInstruction*> Shape(
     const class Shape& shape) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloShapeMatcher(shape));
+    return ::testing::MakeMatcher(new ::xla::testing::HloShapeMatcher(shape));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> Shape(
     absl::string_view shape) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloShapeMatcher(ParseShape(shape).ValueOrDie()));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloShapeMatcher(ParseShape(shape).ValueOrDie()));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> ShapeWithLayout(
     const class Shape& shape) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloShapeAndLayoutMatcher(shape));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloShapeAndLayoutMatcher(shape));
 }
 inline ::testing::Matcher<const ::xla::HloInstruction*> ShapeWithLayout(
     absl::string_view shape) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloShapeAndLayoutMatcher(
-      ParseShape(shape).ValueOrDie()));
+    return ::testing::MakeMatcher(new ::xla::testing::HloShapeAndLayoutMatcher(
+                                      ParseShape(shape).ValueOrDie()));
 }
 
 // Verifies the value of the HloSharing against the provided sharding object.
 inline ::testing::Matcher<const ::xla::HloInstruction*> Sharding(
     const HloSharding& sharding) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloShardingMatcher(sharding));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloShardingMatcher(sharding));
 }
 // Matcher for Sharding from sharding string
 inline ::testing::Matcher<const ::xla::HloInstruction*> Sharding(
     absl::string_view sharding) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloShardingMatcher(
-      ParseSharding(sharding).ValueOrDie()));
+    return ::testing::MakeMatcher(new ::xla::testing::HloShardingMatcher(
+                                      ParseSharding(sharding).ValueOrDie()));
 }
 // Verifies that no HloSharding is set for an HLO instruction.
 inline ::testing::Matcher<const ::xla::HloInstruction*> NoSharding() {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloShardingMatcher(absl::nullopt));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloShardingMatcher(absl::nullopt));
 }
 
 inline ::testing::Matcher<const ::xla::HloInstruction*> Dot(
     ::testing::Matcher<const HloInstruction*> lhs_matcher,
     ::testing::Matcher<const HloInstruction*> rhs_matcher) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloMatcher(
-      ::xla::HloOpcode::kDot, {lhs_matcher, rhs_matcher}));
+    return ::testing::MakeMatcher(new ::xla::testing::HloMatcher(
+                                      ::xla::HloOpcode::kDot, {lhs_matcher, rhs_matcher}));
 }
 
 // Matches a Dot HLO instruction if it has exactly one lhs contracting dimension
@@ -435,9 +440,9 @@ inline ::testing::Matcher<const ::xla::HloInstruction*> Dot(
     ::testing::Matcher<const HloInstruction*> lhs_matcher,
     ::testing::Matcher<const HloInstruction*> rhs_matcher,
     int64 lhs_contracting_dim, int64 rhs_contracting_dim) {
-  return ::testing::MakeMatcher(
-      new ::xla::testing::HloDotWithContractingDimsMatcher(
-          lhs_matcher, rhs_matcher, lhs_contracting_dim, rhs_contracting_dim));
+    return ::testing::MakeMatcher(
+               new ::xla::testing::HloDotWithContractingDimsMatcher(
+                   lhs_matcher, rhs_matcher, lhs_contracting_dim, rhs_contracting_dim));
 }
 
 // Matcher for asynchronous copies from one memory space to another. Implies
@@ -446,8 +451,8 @@ inline ::testing::Matcher<const ::xla::HloInstruction*> Dot(
 inline ::testing::Matcher<const ::xla::HloInstruction*> AsyncCopy(
     int64 to_space, int64 from_space,
     ::testing::Matcher<const HloInstruction*> operand_matcher) {
-  return ::testing::MakeMatcher(new ::xla::testing::HloAsyncCopyMatcher(
-      to_space, from_space, operand_matcher));
+    return ::testing::MakeMatcher(new ::xla::testing::HloAsyncCopyMatcher(
+                                      to_space, from_space, operand_matcher));
 }
 
 #undef HLO_MATCHER
@@ -456,10 +461,10 @@ inline ::testing::Matcher<const ::xla::HloInstruction*> AsyncCopy(
 // Helper to convert smart to raw pointers for matching.
 template <typename Container>
 std::vector<const HloInstruction*> Pointers(const Container& container) {
-  std::vector<const HloInstruction*> result;
-  result.reserve(container.size());
-  for (const auto& entry : container) result.push_back(entry.get());
-  return result;
+    std::vector<const HloInstruction*> result;
+    result.reserve(container.size());
+    for (const auto& entry : container) result.push_back(entry.get());
+    return result;
 }
 
 }  // namespace testing
