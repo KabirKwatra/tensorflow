@@ -45,7 +45,7 @@ OverviewPageRunEnvironment ComputeRunEnvironment(
     const RunEnvironment& run_environment);
 
 OverviewPage ConvertOpStatsToOverviewPage(const OpStats& op_stats,
-        HardwareType hardware_type);
+                                          HardwareType hardware_type);
 
 void SetRemarks(const OpStats& op_stats, OverviewPageAnalysis* analysis);
 
