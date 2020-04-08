@@ -18,4 +18,4 @@ limitations under the License.
 // This logic allows Python to import _pywrap_tensorflow_internal.so by
 // creating a PyInit function and exposing it. It is required in opensource
 // only.
-PYBIND11_MODULE(_pywrap_tensorflow_internal, m) {};
+PYBIND11_MODULE(_pywrap_tensorflow_internal, m){};
