@@ -60,17 +60,19 @@ from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import resource_variable_ops
 
-
 CPU = "/device:CPU:0"
 GPU = "/device:GPU:0"
 GLOBAL_TEST_VALUE = None
 
 
-def c_tfe_py_fastpath_execute(a, b, transpose_a=False, transpose_b=False, name=None):
+def c_tfe_py_fastpath_execute(a,
+                              b,
+                              transpose_a=False,
+                              transpose_b=False,
+                              name=None):
     ctx = context.context()
-    assert (
-        ctx.executing_eagerly()
-    ), "The prototype doesn't contain C code for graph construction"
+    assert (ctx.executing_eagerly()
+            ), "The prototype doesn't contain C code for graph construction"
     try:
         return pywrap_tfe.TFE_Py_FastPathExecute(
             ctx._handle,
@@ -131,8 +133,10 @@ class MicroBenchmarks(test.Benchmark):
             iters=num_iters,
             wall_time=mean_us,
             extras={
-                "examples_per_sec": float("{0:.3f}".format(num_iters / total_time)),
-                "us_per_example": float("{0:.3f}".format(total_time * 1e6 / num_iters)),
+                "examples_per_sec":
+                float("{0:.3f}".format(num_iters / total_time)),
+                "us_per_example":
+                float("{0:.3f}".format(total_time * 1e6 / num_iters)),
             },
         )
 
@@ -227,46 +231,46 @@ class MicroBenchmarks(test.Benchmark):
         self._benchmark_add(tensor_a, tensor_b)
 
     def benchmark_create_float_tensor_from_list_CPU(self):
-        self._benchmark_create_tensor([[3.0]], dtypes.float32.as_datatype_enum, CPU)
+        self._benchmark_create_tensor([[3.0]], dtypes.float32.as_datatype_enum,
+                                      CPU)
 
     def benchmark_create_float_tensor_from_np_array_CPU(self):
-        self._benchmark_create_tensor(
-            np.array([[3.0]], dtype=np.float32), dtypes.float32.as_datatype_enum, CPU
-        )
+        self._benchmark_create_tensor(np.array([[3.0]], dtype=np.float32),
+                                      dtypes.float32.as_datatype_enum, CPU)
 
     def benchmark_create_int32_tensor_from_list_CPU(self):
-        self._benchmark_create_tensor([[3]], dtypes.int32.as_datatype_enum, CPU)
+        self._benchmark_create_tensor([[3]], dtypes.int32.as_datatype_enum,
+                                      CPU)
 
     def benchmark_create_int32_tensor_from_np_array_CPU(self):
-        self._benchmark_create_tensor(
-            np.array([[3]], dtype=np.int32), dtypes.int32.as_datatype_enum, CPU
-        )
+        self._benchmark_create_tensor(np.array([[3]], dtype=np.int32),
+                                      dtypes.int32.as_datatype_enum, CPU)
 
     def benchmark_create_float_tensor_from_list_GPU(self):
         if not context.num_gpus():
             return
-        self._benchmark_create_tensor([[3.0]], dtypes.float32.as_datatype_enum, GPU)
+        self._benchmark_create_tensor([[3.0]], dtypes.float32.as_datatype_enum,
+                                      GPU)
 
     def benchmark_create_float_tensor_from_np_array_GPU(self):
         if not context.num_gpus():
             return
-        self._benchmark_create_tensor(
-            np.array([[3.0]], dtype=np.float32), dtypes.float32.as_datatype_enum, GPU
-        )
+        self._benchmark_create_tensor(np.array([[3.0]], dtype=np.float32),
+                                      dtypes.float32.as_datatype_enum, GPU)
 
     def benchmark_create_int32_tensor_from_list_GPU(self):
         # int32's are kept on host memory even when executing on GPU.
         if not context.num_gpus():
             return
-        self._benchmark_create_tensor([[3]], dtypes.int32.as_datatype_enum, GPU)
+        self._benchmark_create_tensor([[3]], dtypes.int32.as_datatype_enum,
+                                      GPU)
 
     def benchmark_create_int32_tensor_from_np_array_GPU(self):
         # int32's are kept on host memory even when executing on GPU.
         if not context.num_gpus():
             return
-        self._benchmark_create_tensor(
-            np.array([[3]], dtype=np.int32), dtypes.int32.as_datatype_enum, GPU
-        )
+        self._benchmark_create_tensor(np.array([[3]], dtype=np.int32),
+                                      dtypes.int32.as_datatype_enum, GPU)
 
     def benchmark_index_tensor_with_literal(self):
         def func():
@@ -347,7 +351,8 @@ class MicroBenchmarks(test.Benchmark):
         inputs = [m]
 
         def f():
-            pywrap_tfe.TFE_Py_Execute(ctx_handle, None, "Identity", inputs, attrs, 1)
+            pywrap_tfe.TFE_Py_Execute(ctx_handle, None, "Identity", inputs,
+                                      attrs, 1)
 
         self._run(f, 30000)
 
@@ -355,7 +360,8 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(CPU):
             m = gen_array_ops.identity(self._m_2)
             self._run(
-                lambda: backprop.gradients_function(gen_array_ops.identity, [0])(m),
+                lambda: backprop.gradients_function(gen_array_ops.identity,
+                                                    [0])(m),
                 30000,
             )
 
@@ -375,7 +381,8 @@ class MicroBenchmarks(test.Benchmark):
     def benchmark_tf_gradient_function_no_op(self):
         with context.device(CPU):
             m = gen_array_ops.identity(self._m_2)
-            self._run(lambda: backprop.gradients_function(lambda x: x, [0])(m), 30000)
+            self._run(lambda: backprop.gradients_function(lambda x: x, [0])(m),
+                      30000)
 
     def _benchmark_np_matmul(self, m, transpose_b, num_iters):
         a = m.cpu().numpy()
@@ -386,7 +393,11 @@ class MicroBenchmarks(test.Benchmark):
 
         self._run(func, num_iters)
 
-    def _benchmark_tf_matmul(self, m, transpose_b, num_iters, execution_mode=None):
+    def _benchmark_tf_matmul(self,
+                             m,
+                             transpose_b,
+                             num_iters,
+                             execution_mode=None):
         def func():
             return math_ops.matmul(m, m, transpose_b=transpose_b)
 
@@ -398,7 +409,8 @@ class MicroBenchmarks(test.Benchmark):
 
         self._run(func, num_iters)
 
-    def _benchmark_tfe_py_fastpath_execute_matmul(self, m, transpose_b, num_iters):
+    def _benchmark_tfe_py_fastpath_execute_matmul(self, m, transpose_b,
+                                                  num_iters):
         def func():
             c_tfe_py_fastpath_execute(m, m, transpose_b=transpose_b)
 
@@ -420,11 +432,16 @@ class MicroBenchmarks(test.Benchmark):
         )
 
         def func():
-            pywrap_tfe.TFE_Py_Execute(ctx_handle, device, "MatMul", inputs, attrs, 1)
+            pywrap_tfe.TFE_Py_Execute(ctx_handle, device, "MatMul", inputs,
+                                      attrs, 1)
 
         self._run(func, num_iters)
 
-    def _benchmark_defun_matmul(self, m, transpose_b, num_iters, execution_mode=None):
+    def _benchmark_defun_matmul(self,
+                                m,
+                                transpose_b,
+                                num_iters,
+                                execution_mode=None):
         f = function.defun(math_ops.matmul)
 
         def func():
@@ -447,9 +464,11 @@ class MicroBenchmarks(test.Benchmark):
             func()
         self._run(func, num_iters)
 
-    def _benchmark_defun_matmul_forward_backward(
-        self, m, transpose_b, num_iters, execution_mode=None
-    ):
+    def _benchmark_defun_matmul_forward_backward(self,
+                                                 m,
+                                                 transpose_b,
+                                                 num_iters,
+                                                 execution_mode=None):
         f = function.defun(math_ops.matmul)
 
         def func():
@@ -464,14 +483,16 @@ class MicroBenchmarks(test.Benchmark):
         self._run(m.value, num_iters)
 
     def _benchmark_matmul_read_variable(self, m, num_iters):
-        self._benchmark_gen_math_ops_matmul(m, transpose_b=False, num_iters=num_iters)
+        self._benchmark_gen_math_ops_matmul(m,
+                                            transpose_b=False,
+                                            num_iters=num_iters)
 
     def _benchmark_matmul_read_variable_with_tape(self, m, num_iters):
         with backprop.GradientTape() as tape:
             tape.watch(m)
-            self._benchmark_gen_math_ops_matmul(
-                m, transpose_b=False, num_iters=num_iters
-            )
+            self._benchmark_gen_math_ops_matmul(m,
+                                                transpose_b=False,
+                                                num_iters=num_iters)
 
     def _benchmark_read_variable_with_tape(self, m, num_iters):
         with backprop.GradientTape() as tape:
@@ -480,16 +501,16 @@ class MicroBenchmarks(test.Benchmark):
 
     # Benchmarks for A^2, A of dimension 2 by 2.
     def benchmark_np_matmul_2_by_2(self):
-        self._benchmark_np_matmul(
-            self._m_2_by_2, transpose_b=False, num_iters=self._num_iters_2_by_2
-        )
+        self._benchmark_np_matmul(self._m_2_by_2,
+                                  transpose_b=False,
+                                  num_iters=self._num_iters_2_by_2)
 
     def benchmark_tf_matmul_2_by_2_CPU(self):
         with context.device(CPU):
             m = self._m_2_by_2.cpu()
-            self._benchmark_tf_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+            self._benchmark_tf_matmul(m,
+                                      transpose_b=False,
+                                      num_iters=self._num_iters_2_by_2)
 
     def benchmark_tf_matmul_2_by_2_CPU_async(self):
         with context.device(CPU):
@@ -505,29 +526,26 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(CPU):
             m = self._m_2_by_2.cpu()
             self._benchmark_gen_math_ops_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+                m, transpose_b=False, num_iters=self._num_iters_2_by_2)
 
     def benchmark_tfe_py_fastpath_execute_matmul_2_by_2_CPU(self):
         with context.device(CPU):
             m = self._m_2_by_2.cpu()
             self._benchmark_tfe_py_fastpath_execute_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+                m, transpose_b=False, num_iters=self._num_iters_2_by_2)
 
     def benchmark_tfe_py_execute_matmul_2_by_2_CPU(self):
         with context.device(CPU):
             m = self._m_2_by_2.cpu()
             self._benchmark_tfe_py_execute_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+                m, transpose_b=False, num_iters=self._num_iters_2_by_2)
 
     def benchmark_defun_matmul_2_by_2_CPU(self):
         with context.device(CPU):
             m = self._m_2_by_2.cpu()
-            self._benchmark_defun_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+            self._benchmark_defun_matmul(m,
+                                         transpose_b=False,
+                                         num_iters=self._num_iters_2_by_2)
 
     def benchmark_defun_matmul_2_by_2_CPU_async(self):
         with context.device(CPU):
@@ -543,8 +561,7 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(CPU):
             m = self._m_2_by_2.cpu()
             self._benchmark_defun_matmul_forward_backward(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+                m, transpose_b=False, num_iters=self._num_iters_2_by_2)
 
     def benchmark_defun_matmul_forward_backward_2_by_2_CPU_async(self):
         with context.device(CPU):
@@ -561,9 +578,9 @@ class MicroBenchmarks(test.Benchmark):
             return
         with context.device(GPU):
             m = self._m_2_by_2.gpu()
-            self._benchmark_tf_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+            self._benchmark_tf_matmul(m,
+                                      transpose_b=False,
+                                      num_iters=self._num_iters_2_by_2)
 
     def benchmark_tf_matmul_2_by_2_GPU_async(self):
         if not context.num_gpus():
@@ -583,8 +600,7 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(GPU):
             m = self._m_2_by_2.gpu()
             self._benchmark_gen_math_ops_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+                m, transpose_b=False, num_iters=self._num_iters_2_by_2)
 
     def benchmark_tfe_py_execute_matmul_2_by_2_GPU(self):
         if not context.num_gpus():
@@ -592,17 +608,16 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(GPU):
             m = self._m_2_by_2.gpu()
             self._benchmark_tfe_py_execute_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+                m, transpose_b=False, num_iters=self._num_iters_2_by_2)
 
     def benchmark_defun_matmul_2_by_2_GPU(self):
         if not context.num_gpus():
             return
         with context.device(GPU):
             m = self._m_2_by_2.gpu()
-            self._benchmark_defun_matmul(
-                m, transpose_b=False, num_iters=self._num_iters_2_by_2
-            )
+            self._benchmark_defun_matmul(m,
+                                         transpose_b=False,
+                                         num_iters=self._num_iters_2_by_2)
 
     def benchmark_defun_matmul_2_by_2_GPU_async(self):
         if not context.num_gpus():
@@ -618,22 +633,22 @@ class MicroBenchmarks(test.Benchmark):
 
     def benchmark_nested_defun_matmul_2_by_2(self):
         m = self._m_2_by_2.cpu()
-        self._benchmark_nested_defun_matmul(
-            m, transpose_b=False, num_iters=self._num_iters_2_by_2
-        )
+        self._benchmark_nested_defun_matmul(m,
+                                            transpose_b=False,
+                                            num_iters=self._num_iters_2_by_2)
 
     # Benchmarks for AA.T, A of dimension 100 by 784.
     def benchmark_np_matmul_100_by_784(self):
-        self._benchmark_np_matmul(
-            self._m_100_by_784, transpose_b=True, num_iters=self._num_iters_100_by_784
-        )
+        self._benchmark_np_matmul(self._m_100_by_784,
+                                  transpose_b=True,
+                                  num_iters=self._num_iters_100_by_784)
 
     def benchmark_tf_matmul_100_by_784_CPU(self):
         with context.device(CPU):
             m = self._m_100_by_784.cpu()
-            self._benchmark_tf_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+            self._benchmark_tf_matmul(m,
+                                      transpose_b=True,
+                                      num_iters=self._num_iters_100_by_784)
 
     def benchmark_tf_matmul_100_by_784_CPU_async(self):
         with context.device(CPU):
@@ -649,38 +664,35 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(CPU):
             m = self._m_100_by_784.cpu()
             self._benchmark_gen_math_ops_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+                m, transpose_b=True, num_iters=self._num_iters_100_by_784)
 
     def benchmark_tfe_py_fastpath_execute_matmul_100_by_784_CPU(self):
         with context.device(CPU):
             m = self._m_100_by_784.cpu()
             self._benchmark_tfe_py_fastpath_execute_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+                m, transpose_b=True, num_iters=self._num_iters_100_by_784)
 
     def benchmark_tfe_py_execute_matmul_100_by_784_CPU(self):
         with context.device(CPU):
             m = self._m_100_by_784.cpu()
             self._benchmark_tfe_py_execute_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+                m, transpose_b=True, num_iters=self._num_iters_100_by_784)
 
     def benchmark_defun_matmul_100_by_784_CPU(self):
         with context.device(CPU):
             m = self._m_100_by_784.cpu()
-            self._benchmark_defun_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+            self._benchmark_defun_matmul(m,
+                                         transpose_b=True,
+                                         num_iters=self._num_iters_100_by_784)
 
     def benchmark_tf_matmul_100_by_784_GPU(self):
         if not context.num_gpus():
             return
         with context.device(GPU):
             m = self._m_100_by_784.gpu()
-            self._benchmark_tf_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+            self._benchmark_tf_matmul(m,
+                                      transpose_b=True,
+                                      num_iters=self._num_iters_100_by_784)
 
     def benchmark_tf_matmul_100_by_784_GPU_async(self):
         if not context.num_gpus():
@@ -700,8 +712,7 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(GPU):
             m = self._m_100_by_784.gpu()
             self._benchmark_gen_math_ops_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+                m, transpose_b=True, num_iters=self._num_iters_100_by_784)
 
     def benchmark_tfe_py_execute_matmul_100_by_784_GPU(self):
         if not context.num_gpus():
@@ -709,23 +720,21 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(GPU):
             m = self._m_100_by_784.gpu()
             self._benchmark_tfe_py_execute_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+                m, transpose_b=True, num_iters=self._num_iters_100_by_784)
 
     def benchmark_defun_matmul_100_by_784_GPU(self):
         if not context.num_gpus():
             return
         with context.device(GPU):
             m = self._m_100_by_784.gpu()
-            self._benchmark_defun_matmul(
-                m, transpose_b=True, num_iters=self._num_iters_100_by_784
-            )
+            self._benchmark_defun_matmul(m,
+                                         transpose_b=True,
+                                         num_iters=self._num_iters_100_by_784)
 
     def benchmark_nested_defun_matmul_100_by_784(self):
         m = self._m_100_by_784.gpu()
         self._benchmark_nested_defun_matmul(
-            m, transpose_b=True, num_iters=self._num_iters_100_by_784
-        )
+            m, transpose_b=True, num_iters=self._num_iters_100_by_784)
 
     def _benchmark_forwardprop_matmul_CPU(self, shape):
         with ops.device(CPU):
@@ -806,7 +815,8 @@ class MicroBenchmarks(test.Benchmark):
         self._benchmark_forwardprop_in_defun_matmul_CPU(shape=(256, 2096))
 
     def benchmark_forwardprop_in_defun_of_defun_matmul_256_by_2096_CPU(self):
-        self._benchmark_forwardprop_in_defun_of_defun_matmul_CPU(shape=(256, 2096))
+        self._benchmark_forwardprop_in_defun_of_defun_matmul_CPU(shape=(256,
+                                                                        2096))
 
     def benchmark_forwardprop_of_defun_matmul_256_by_2096_CPU(self):
         self._benchmark_forwardprop_of_defun_matmul_CPU(shape=(256, 2096))
@@ -818,14 +828,16 @@ class MicroBenchmarks(test.Benchmark):
         self._benchmark_forwardprop_in_defun_matmul_CPU(shape=(100, 784))
 
     def benchmark_forwardprop_in_defun_of_defun_matmul_100_by_784_CPU(self):
-        self._benchmark_forwardprop_in_defun_of_defun_matmul_CPU(shape=(100, 784))
+        self._benchmark_forwardprop_in_defun_of_defun_matmul_CPU(shape=(100,
+                                                                        784))
 
     def benchmark_forwardprop_of_defun_matmul_100_by_784_CPU(self):
         self._benchmark_forwardprop_of_defun_matmul_CPU(shape=(100, 784))
 
-    def _benchmark_tf_reduce_logsumexp(
-        self, device=CPU, execution_mode=None, defunc=False
-    ):
+    def _benchmark_tf_reduce_logsumexp(self,
+                                       device=CPU,
+                                       execution_mode=None,
+                                       defunc=False):
         with context.device(device):
             x = constant_op.constant([[1, 0.0], [0.0, 0.0]])
             if defunc:
@@ -851,21 +863,23 @@ class MicroBenchmarks(test.Benchmark):
         self._benchmark_tf_reduce_logsumexp(device=GPU)
 
     def benchmark_tf_reduce_logsumexp_GPU_async(self):
-        self._benchmark_tf_reduce_logsumexp(device=GPU, execution_mode=context.ASYNC)
+        self._benchmark_tf_reduce_logsumexp(device=GPU,
+                                            execution_mode=context.ASYNC)
 
     def benchmark_tf_reduce_logsumexp_CPU_defunc(self):
         self._benchmark_tf_reduce_logsumexp(defunc=True)
 
     def benchmark_tf_reduce_logsumexp_CPU_async_defun(self):
-        self._benchmark_tf_reduce_logsumexp(execution_mode=context.ASYNC, defunc=True)
+        self._benchmark_tf_reduce_logsumexp(execution_mode=context.ASYNC,
+                                            defunc=True)
 
     def benchmark_tf_reduce_logsumexp_GPU_defun(self):
         self._benchmark_tf_reduce_logsumexp(device=GPU, defunc=True)
 
     def benchmark_tf_reduce_logsumexp_GPU_async_defun(self):
-        self._benchmark_tf_reduce_logsumexp(
-            device=GPU, execution_mode=context.ASYNC, defunc=True
-        )
+        self._benchmark_tf_reduce_logsumexp(device=GPU,
+                                            execution_mode=context.ASYNC,
+                                            defunc=True)
 
     def _benchmark_tf_tensordot(self, device=CPU, execution_mode=None):
         with context.device(device):
@@ -964,9 +978,10 @@ class MicroBenchmarks(test.Benchmark):
         m = resource_variable_ops.ResourceVariable(self._m_2_by_2)
         self._benchmark_tf_zeros_like(m, device=GPU)
 
-    def _benchmark_tf_random_uniform_2_by_2(
-        self, shape=(2, 2), dtype=dtypes.int32, device=CPU
-    ):
+    def _benchmark_tf_random_uniform_2_by_2(self,
+                                            shape=(2, 2),
+                                            dtype=dtypes.int32,
+                                            device=CPU):
         with context.device(device):
 
             def func():
@@ -984,7 +999,8 @@ class MicroBenchmarks(test.Benchmark):
         self._benchmark_tf_random_uniform_2_by_2(dtype=dtypes.float32)
 
     def benchmark_tf_random_uniform_2_by_2_float_GPU(self):
-        self._benchmark_tf_random_uniform_2_by_2(dtype=dtypes.float32, device=GPU)
+        self._benchmark_tf_random_uniform_2_by_2(dtype=dtypes.float32,
+                                                 device=GPU)
 
     def benchmark_tf_random_uniform_2_by_2_default_setting_CPU(self):
         with context.device(CPU):
@@ -1002,9 +1018,10 @@ class MicroBenchmarks(test.Benchmark):
 
             self._run(func, num_iters=self._num_iters_2_by_2)
 
-    def _benchmark_tf_dropout_2_by_2(
-        self, is_rate_tensor=True, noise_shape=None, device=CPU
-    ):
+    def _benchmark_tf_dropout_2_by_2(self,
+                                     is_rate_tensor=True,
+                                     noise_shape=None,
+                                     device=CPU):
         if is_rate_tensor:
             rate = constant_op.constant(0.5, dtype=dtypes.float32)
         else:
@@ -1012,9 +1029,9 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(device):
 
             def func():
-                return nn_ops.dropout(
-                    self._m_2_by_2, rate=rate, noise_shape=noise_shape
-                )
+                return nn_ops.dropout(self._m_2_by_2,
+                                      rate=rate,
+                                      noise_shape=noise_shape)
 
             self._run(func, num_iters=self._num_iters_2_by_2)
 
@@ -1030,9 +1047,12 @@ class MicroBenchmarks(test.Benchmark):
     def benchmark_tf_dropout_2_by_2_GPU(self):
         self._benchmark_tf_dropout_2_by_2(device=GPU)
 
-    def _benchmark_transpose(
-        self, m, num_iters, perm=None, conjugate=False, execution_mode=None
-    ):
+    def _benchmark_transpose(self,
+                             m,
+                             num_iters,
+                             perm=None,
+                             conjugate=False,
+                             execution_mode=None):
         def func():
             return array_ops.transpose(m, perm, conjugate)
 
@@ -1090,8 +1110,8 @@ class MicroBenchmarks(test.Benchmark):
             return None
 
         defined = function.defun(
-            func, input_signature=[tensor_spec.TensorSpec([], dtypes.float32)] * 8
-        )
+            func,
+            input_signature=[tensor_spec.TensorSpec([], dtypes.float32)] * 8)
         t = constant_op.constant(0.0)
 
         def signature_computation():
@@ -1105,8 +1125,8 @@ class MicroBenchmarks(test.Benchmark):
             return None
 
         defined = function.defun(
-            func, input_signature=[tensor_spec.TensorSpec([], dtypes.float32)] * 8
-        )
+            func,
+            input_signature=[tensor_spec.TensorSpec([], dtypes.float32)] * 8)
         t = constant_op.constant(0.0)
 
         def signature_computation():
@@ -1117,14 +1137,14 @@ class MicroBenchmarks(test.Benchmark):
     def benchmark_matmul_read_variable_op_2_by_2_CPU(self):
         with context.device(CPU):
             m = resource_variable_ops.ResourceVariable(self._m_2_by_2)
-            self._benchmark_matmul_read_variable(m, num_iters=self._num_iters_2_by_2)
+            self._benchmark_matmul_read_variable(
+                m, num_iters=self._num_iters_2_by_2)
 
     def benchmark_matmul_read_variable_op_with_tape_2_by_2_CPU(self):
         with context.device(CPU):
             m = resource_variable_ops.ResourceVariable(self._m_2_by_2)
             self._benchmark_matmul_read_variable_with_tape(
-                m, num_iters=self._num_iters_2_by_2
-            )
+                m, num_iters=self._num_iters_2_by_2)
 
     def benchmark_read_variable_op_2_by_2_CPU(self):
         with context.device(CPU):
@@ -1141,20 +1161,24 @@ class MicroBenchmarks(test.Benchmark):
     def benchmark_read_variable_op_with_tape_2_by_2_CPU(self):
         with context.device(CPU):
             m = resource_variable_ops.ResourceVariable(self._m_2_by_2)
-            self._benchmark_read_variable_with_tape(m, num_iters=self._num_iters_2_by_2)
+            self._benchmark_read_variable_with_tape(
+                m, num_iters=self._num_iters_2_by_2)
 
     def benchmark_read_variable_op_with_tape_2_by_2_GPU(self):
         if not context.num_gpus():
             return
         with context.device(GPU):
             m = resource_variable_ops.ResourceVariable(self._m_2_by_2.gpu())
-            self._benchmark_read_variable_with_tape(m, num_iters=self._num_iters_2_by_2)
+            self._benchmark_read_variable_with_tape(
+                m, num_iters=self._num_iters_2_by_2)
 
     def benchmarkScan(self):
         elems = math_ops.range(1600)
 
         def scan():
-            return functional_ops.scan(lambda a, x: a + x, elems, parallel_iterations=1)
+            return functional_ops.scan(lambda a, x: a + x,
+                                       elems,
+                                       parallel_iterations=1)
 
         self._run(scan, 100)
 
@@ -1163,7 +1187,9 @@ class MicroBenchmarks(test.Benchmark):
 
         @function.defun
         def scan():
-            return functional_ops.scan(lambda a, x: a + x, elems, parallel_iterations=1)
+            return functional_ops.scan(lambda a, x: a + x,
+                                       elems,
+                                       parallel_iterations=1)
 
         self._run(scan, 100)
 
@@ -1197,11 +1223,13 @@ class MicroBenchmarks(test.Benchmark):
 
     def benchmark_constant_20x20x20_double_list_to_float32_tensor(self):
         xs = [[[np.linspace(0, 1, 21).tolist()] * 20] * 20]
-        self._run(lambda: constant_op.constant(xs, dtype=dtypes.float32), 10000)
+        self._run(lambda: constant_op.constant(xs, dtype=dtypes.float32),
+                  10000)
 
     def benchmark_constant_20x20x20_double_list_to_float64_tensor(self):
         xs = [[[np.linspace(0, 1, 21).tolist()] * 20] * 20]
-        self._run(lambda: constant_op.constant(xs, dtype=dtypes.float64), 10000)
+        self._run(lambda: constant_op.constant(xs, dtype=dtypes.float64),
+                  10000)
 
     def _benchmarkFunctionWithResourceInputs(self, num_resources, num_iters):
         @def_function.function
@@ -1211,7 +1239,8 @@ class MicroBenchmarks(test.Benchmark):
         with context.device(CPU):
             resources = []
             for _ in range(num_resources):
-                resources.append(resource_variable_ops.ResourceVariable(self._m_2))
+                resources.append(
+                    resource_variable_ops.ResourceVariable(self._m_2))
             self._run(lambda: add_all(resources), num_iters)
 
     def benchmarkFunctionWithFiveResourceInputs(self):
@@ -1238,9 +1267,8 @@ class MicroBenchmarks(test.Benchmark):
                     def else_branch():
                         return 0.0
 
-                    return control_flow_ops.cond(
-                        constant_op.constant(True), then_branch, else_branch
-                    )
+                    return control_flow_ops.cond(constant_op.constant(True),
+                                                 then_branch, else_branch)
 
                 return fn_with_many_reads_inner()
 
