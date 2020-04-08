@@ -32,24 +32,24 @@ namespace profiler {
 // ProfileSession is go/thread-safe and synchronizes access to ProfilerInterface
 // instances.
 class ProfilerInterface {
- public:
-  virtual ~ProfilerInterface() = default;
+public:
+    virtual ~ProfilerInterface() = default;
 
-  // Starts profiling.
-  virtual Status Start() = 0;
+    // Starts profiling.
+    virtual Status Start() = 0;
 
-  // Stops profiling.
-  virtual Status Stop() = 0;
+    // Stops profiling.
+    virtual Status Stop() = 0;
 
-  // Saves collected profile data into run_metadata.
-  // After this or the overload below are called once, subsequent calls might
-  // return empty data.
-  virtual Status CollectData(RunMetadata* run_metadata) = 0;
+    // Saves collected profile data into run_metadata.
+    // After this or the overload below are called once, subsequent calls might
+    // return empty data.
+    virtual Status CollectData(RunMetadata* run_metadata) = 0;
 
-  // Saves collected profile data into XSpace.
-  // After this or the overload above are called once, subsequent calls might
-  // return empty data.
-  virtual Status CollectData(XSpace* space) = 0;
+    // Saves collected profile data into XSpace.
+    // After this or the overload above are called once, subsequent calls might
+    // return empty data.
+    virtual Status CollectData(XSpace* space) = 0;
 };
 
 }  // namespace profiler

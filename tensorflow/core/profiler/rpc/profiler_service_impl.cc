@@ -35,53 +35,53 @@ namespace {
 Status CollectDataToResponse(const ProfileRequest& req,
                              ProfilerSession* profiler,
                              ProfileResponse* response) {
-  profiler::XSpace xspace;
-  TF_RETURN_IF_ERROR(profiler->CollectData(&xspace));
-  TF_RETURN_IF_ERROR(
-      profiler::ConvertXSpaceToProfileResponse(xspace, req, response));
-  return Status::OK();
+    profiler::XSpace xspace;
+    TF_RETURN_IF_ERROR(profiler->CollectData(&xspace));
+    TF_RETURN_IF_ERROR(
+        profiler::ConvertXSpaceToProfileResponse(xspace, req, response));
+    return Status::OK();
 }
 
 class ProfilerServiceImpl : public grpc::ProfilerService::Service {
- public:
-  ::grpc::Status Monitor(::grpc::ServerContext* ctx, const MonitorRequest* req,
-                         MonitorResponse* response) override {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "unimplemented.");
-  }
-
-  ::grpc::Status Profile(::grpc::ServerContext* ctx, const ProfileRequest* req,
-                         ProfileResponse* response) override {
-    VLOG(1) << "Received a profile request: " << req->DebugString();
-    std::unique_ptr<ProfilerSession> profiler =
-        ProfilerSession::Create(req->opts());
-    Status status = profiler->Status();
-    if (!status.ok()) {
-      return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                            status.error_message());
+public:
+    ::grpc::Status Monitor(::grpc::ServerContext* ctx, const MonitorRequest* req,
+                           MonitorResponse* response) override {
+        return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "unimplemented.");
     }
 
-    Env* env = Env::Default();
-    for (size_t i = 0; i < req->duration_ms(); ++i) {
-      env->SleepForMicroseconds(EnvTime::kMillisToMicros);
-      if (ctx->IsCancelled()) {
-        return ::grpc::Status::CANCELLED;
-      }
-    }
+    ::grpc::Status Profile(::grpc::ServerContext* ctx, const ProfileRequest* req,
+                           ProfileResponse* response) override {
+        VLOG(1) << "Received a profile request: " << req->DebugString();
+        std::unique_ptr<ProfilerSession> profiler =
+            ProfilerSession::Create(req->opts());
+        Status status = profiler->Status();
+        if (!status.ok()) {
+            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
+                                  status.error_message());
+        }
 
-    status = CollectDataToResponse(*req, profiler.get(), response);
-    if (!status.ok()) {
-      return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                            status.error_message());
-    }
+        Env* env = Env::Default();
+        for (size_t i = 0; i < req->duration_ms(); ++i) {
+            env->SleepForMicroseconds(EnvTime::kMillisToMicros);
+            if (ctx->IsCancelled()) {
+                return ::grpc::Status::CANCELLED;
+            }
+        }
 
-    return ::grpc::Status::OK;
-  }
+        status = CollectDataToResponse(*req, profiler.get(), response);
+        if (!status.ok()) {
+            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
+                                  status.error_message());
+        }
+
+        return ::grpc::Status::OK;
+    }
 };
 
 }  // namespace
 
 std::unique_ptr<grpc::ProfilerService::Service> CreateProfilerService() {
-  return MakeUnique<ProfilerServiceImpl>();
+    return MakeUnique<ProfilerServiceImpl>();
 }
 
 }  // namespace tensorflow
