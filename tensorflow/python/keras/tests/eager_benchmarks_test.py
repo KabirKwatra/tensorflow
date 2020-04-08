@@ -48,19 +48,23 @@ from tensorflow.python.training import gradient_descent
 
 
 class SubclassedKerasModel(keras.Model):
-
     def __init__(self, initializer="ones"):
         super(SubclassedKerasModel, self).__init__()
         self.layer_a = keras.layers.Dense(
-            64, kernel_initializer=initializer, bias_initializer="zeros")
+            64, kernel_initializer=initializer, bias_initializer="zeros"
+        )
         self.layer_b = keras.layers.Dense(
-            128, kernel_initializer=initializer, bias_initializer="zeros")
+            128, kernel_initializer=initializer, bias_initializer="zeros"
+        )
         self.layer_c = keras.layers.Dense(
-            256, kernel_initializer=initializer, bias_initializer="zeros")
+            256, kernel_initializer=initializer, bias_initializer="zeros"
+        )
         self.layer_d = keras.layers.Dense(
-            256, kernel_initializer=initializer, bias_initializer="zeros")
+            256, kernel_initializer=initializer, bias_initializer="zeros"
+        )
         self.layer_e = keras.layers.Dense(
-            10, kernel_initializer=initializer, bias_initializer="zeros")
+            10, kernel_initializer=initializer, bias_initializer="zeros"
+        )
 
     def call(self, x):
         x = self.layer_a(x)
@@ -73,31 +77,51 @@ class SubclassedKerasModel(keras.Model):
 def make_keras_model(initializer="ones"):
     model_input = keras.Input(shape=(10,))
     x = keras.layers.Dense(
-        64, kernel_initializer=initializer, bias_initializer="zeros")(model_input)
+        64, kernel_initializer=initializer, bias_initializer="zeros"
+    )(model_input)
     x = keras.layers.Dense(
-        128, kernel_initializer=initializer, bias_initializer="zeros")(x)
+        128, kernel_initializer=initializer, bias_initializer="zeros"
+    )(x)
     x = keras.layers.Dense(
-        256, kernel_initializer=initializer, bias_initializer="zeros")(x)
+        256, kernel_initializer=initializer, bias_initializer="zeros"
+    )(x)
     x = keras.layers.Dense(
-        256, kernel_initializer=initializer, bias_initializer="zeros")(x)
+        256, kernel_initializer=initializer, bias_initializer="zeros"
+    )(x)
     x = keras.layers.Dense(
-        10, kernel_initializer=initializer, bias_initializer="zeros")(x)
+        10, kernel_initializer=initializer, bias_initializer="zeros"
+    )(x)
     return keras.Model(inputs=model_input, outputs=x)
 
 
 def make_sequential_keras_model(initializer="ones"):
     model = keras.models.Sequential()
-    model.add(keras.layers.Dense(
-        64, kernel_initializer=initializer, bias_initializer="zeros",
-        input_shape=(10,)))
-    model.add(keras.layers.Dense(
-        128, kernel_initializer=initializer, bias_initializer="zeros"))
-    model.add(keras.layers.Dense(
-        256, kernel_initializer=initializer, bias_initializer="zeros"))
-    model.add(keras.layers.Dense(
-        256, kernel_initializer=initializer, bias_initializer="zeros"))
-    model.add(keras.layers.Dense(
-        10, kernel_initializer=initializer, bias_initializer="zeros"))
+    model.add(
+        keras.layers.Dense(
+            64,
+            kernel_initializer=initializer,
+            bias_initializer="zeros",
+            input_shape=(10,),
+        )
+    )
+    model.add(
+        keras.layers.Dense(
+            128, kernel_initializer=initializer, bias_initializer="zeros"
+        )
+    )
+    model.add(
+        keras.layers.Dense(
+            256, kernel_initializer=initializer, bias_initializer="zeros"
+        )
+    )
+    model.add(
+        keras.layers.Dense(
+            256, kernel_initializer=initializer, bias_initializer="zeros"
+        )
+    )
+    model.add(
+        keras.layers.Dense(10, kernel_initializer=initializer, bias_initializer="zeros")
+    )
     return model
 
 
@@ -119,7 +143,6 @@ def run_benchmark(func, num_iters, execution_mode=None):
 
 
 class MicroBenchmarks(test.Benchmark):
-
     def _run(self, func, num_iters, execution_mode=None):
         total_time = run_benchmark(func, num_iters, execution_mode)
         mean_us = total_time * 1e6 / num_iters
@@ -127,17 +150,18 @@ class MicroBenchmarks(test.Benchmark):
             iters=num_iters,
             wall_time=mean_us,
             extras={
-                "examples_per_sec":
-                    float("{0:.3f}".format(num_iters / total_time)),
-                "us_per_example":
-                    float("{0:.3f}".format(total_time * 1e6 / num_iters))
-            })
+                "examples_per_sec": float("{0:.3f}".format(num_iters / total_time)),
+                "us_per_example": float("{0:.3f}".format(total_time * 1e6 / num_iters)),
+            },
+        )
 
     def benchmark_keras_model_subclassed(self):
         model = SubclassedKerasModel()
         data = random_ops.random_uniform((10, 10))
 
-        def func(): return model(data)
+        def func():
+            return model(data)
+
         # First call is more expensive (creates variables etc.), discount that.
         func()
 
@@ -151,7 +175,10 @@ class MicroBenchmarks(test.Benchmark):
     def benchmark_keras_model_functional(self):
         model = make_keras_model()
         data = random_ops.random_uniform((10, 10))
-        def func(): return model(data)
+
+        def func():
+            return model(data)
+
         # Symmetry with benchmark_keras_model_subclassed
         func()
         assert np.equal(func(), SubclassedKerasModel()(data)).all()
@@ -160,7 +187,10 @@ class MicroBenchmarks(test.Benchmark):
     def benchmark_keras_model_sequential(self):
         model = make_sequential_keras_model()
         data = random_ops.random_uniform((10, 10))
-        def func(): return model(data)
+
+        def func():
+            return model(data)
+
         # Symmetry with benchmark_keras_model_functional
         func()
         assert np.equal(func(), make_keras_model()(data)).all()
@@ -172,9 +202,13 @@ class MicroBenchmarks(test.Benchmark):
         dataset = dataset_ops.Dataset.from_tensors((data, labels)).repeat()
         model.compile(
             gradient_descent.GradientDescentOptimizer(learning_rate=0.001),
-            loss="mse", run_eagerly=run_eagerly)
+            loss="mse",
+            run_eagerly=run_eagerly,
+        )
 
-        def func(): return model.fit(dataset, epochs=1, steps_per_epoch=1000, verbose=0)
+        def func():
+            return model.fit(dataset, epochs=1, steps_per_epoch=1000, verbose=0)
+
         # First call is more expensive (creates variables etc.), discount that.
         model.fit(dataset, epochs=1, steps_per_epoch=1, verbose=0)
 
@@ -186,9 +220,13 @@ class MicroBenchmarks(test.Benchmark):
         dataset = dataset_ops.Dataset.from_tensors((data, labels)).repeat()
         model.compile(
             gradient_descent.GradientDescentOptimizer(learning_rate=0.001),
-            loss="mse", run_eagerly=run_eagerly)
+            loss="mse",
+            run_eagerly=run_eagerly,
+        )
 
-        def func(): return model.evaluate(dataset, steps=1000, verbose=0)
+        def func():
+            return model.evaluate(dataset, steps=1000, verbose=0)
+
         # First call is more expensive (creates variables etc.), discount that.
         model.evaluate(dataset, steps=1, verbose=0)
 
@@ -199,9 +237,13 @@ class MicroBenchmarks(test.Benchmark):
         dataset = dataset_ops.Dataset.from_tensors(data).repeat()
         model.compile(
             gradient_descent.GradientDescentOptimizer(learning_rate=0.001),
-            loss="mse", run_eagerly=run_eagerly)
+            loss="mse",
+            run_eagerly=run_eagerly,
+        )
 
-        def func(): return model.predict(dataset, steps=1000, verbose=0)
+        def func():
+            return model.predict(dataset, steps=1000, verbose=0)
+
         # First call is more expensive (creates variables etc.), discount that.
         model.predict(dataset, steps=1, verbose=0)
 
@@ -241,8 +283,7 @@ class MicroBenchmarks(test.Benchmark):
         model = make_keras_model(initializer="glorot_uniform")
         self._benchmark_keras_model_fit(model, run_eagerly=True)
 
-    def benchmark_keras_model_functional_fit_run_model_eagerly_with_profiler(
-            self):
+    def benchmark_keras_model_functional_fit_run_model_eagerly_with_profiler(self):
         profiler.start()
         model = make_keras_model(initializer="glorot_uniform")
         self._benchmark_keras_model_fit(model, run_eagerly=True)
