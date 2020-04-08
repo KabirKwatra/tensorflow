@@ -28,11 +28,11 @@ namespace xla_hlo {
 namespace {
 
 struct TestUnfuseBatchNormPass : public OperationPass<TestUnfuseBatchNormPass> {
-  void runOnOperation() override {
-    OwningRewritePatternList patterns;
-    PopulateUnfuseBatchNormPatterns(&getContext(), &patterns);
-    applyPatternsGreedily(getOperation(), patterns);
-  }
+    void runOnOperation() override {
+        OwningRewritePatternList patterns;
+        PopulateUnfuseBatchNormPatterns(&getContext(), &patterns);
+        applyPatternsGreedily(getOperation(), patterns);
+    }
 };
 
 }  // namespace

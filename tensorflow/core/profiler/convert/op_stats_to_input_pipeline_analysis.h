@@ -31,7 +31,7 @@ namespace profiler {
 // Computes the summary of step time in milliseconds.
 StepSummary ComputeStepTimeSummaryInMs(
     const ::tensorflow::protobuf::RepeatedPtrField<PerCoreStepInfo>&
-        grouped_by_step);
+    grouped_by_step);
 
 void GenerateHostResult(const OpMetricsDb& host_tf_metrics_db,
                         InputPipelineAnalysisResult* result);
@@ -41,7 +41,7 @@ InputPipelineAnalysisRecommendation GenerateRecommendation();
 // Returns the performance bottleneck of the program executed.
 BottleneckAnalysis ComputeBottleneckAnalysis(
     const ::tensorflow::protobuf::RepeatedPtrField<::google::protobuf::Any>&
-        any_step_details);
+    any_step_details);
 
 InputPipelineAnalysisResult ConvertOpStatsToInputPipelineAnalysis(
     const OpStats& op_stats, const HardwareType& hardware_type);
