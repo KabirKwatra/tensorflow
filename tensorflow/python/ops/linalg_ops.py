@@ -61,9 +61,10 @@ def _RegularizedGramianCholesky(matrix, l2_regularizer, first_kind):
         dimensions contain the Cholesky factors \\(L\\) described above.
     """
 
-    gramian = math_ops.matmul(
-        matrix, matrix, adjoint_a=first_kind, adjoint_b=not first_kind
-    )
+    gramian = math_ops.matmul(matrix,
+                              matrix,
+                              adjoint_a=first_kind,
+                              adjoint_b=not first_kind)
     if isinstance(l2_regularizer, ops.Tensor) or l2_regularizer != 0:
         matrix_shape = array_ops.shape(matrix)
         batch_shape = matrix_shape[:-2]
@@ -73,16 +74,14 @@ def _RegularizedGramianCholesky(matrix, l2_regularizer, first_kind):
             small_dim = matrix_shape[-2]
         identity = eye(small_dim, batch_shape=batch_shape, dtype=matrix.dtype)
         small_dim_static = matrix.shape[-1 if first_kind else -2]
-        identity.set_shape(
-            matrix.shape[:-2].concatenate([small_dim_static, small_dim_static])
-        )
+        identity.set_shape(matrix.shape[:-2].concatenate(
+            [small_dim_static, small_dim_static]))
         gramian += l2_regularizer * identity
     return gen_linalg_ops.cholesky(gramian)
 
 
-@tf_export(
-    "linalg.triangular_solve", v1=["linalg.triangular_solve", "matrix_triangular_solve"]
-)
+@tf_export("linalg.triangular_solve",
+           v1=["linalg.triangular_solve", "matrix_triangular_solve"])
 def matrix_triangular_solve(matrix, rhs, lower=True, adjoint=False, name=None):
     """Solve systems of linear equations with upper or lower triangular matrices.
 
@@ -138,12 +137,14 @@ def matrix_triangular_solve(matrix, rhs, lower=True, adjoint=False, name=None):
 
     """
     with ops.name_scope(name, "triangular_solve", [matrix, rhs]):
-        return gen_linalg_ops.matrix_triangular_solve(
-            matrix, rhs, lower=lower, adjoint=adjoint
-        )
+        return gen_linalg_ops.matrix_triangular_solve(matrix,
+                                                      rhs,
+                                                      lower=lower,
+                                                      adjoint=adjoint)
 
 
-@tf_export("linalg.cholesky_solve", v1=["linalg.cholesky_solve", "cholesky_solve"])
+@tf_export("linalg.cholesky_solve",
+           v1=["linalg.cholesky_solve", "cholesky_solve"])
 @deprecation.deprecated_endpoints("cholesky_solve")
 def cholesky_solve(chol, rhs, name=None):
     """Solves systems of linear eqns `A X = RHS`, given Cholesky factorizations.
@@ -180,13 +181,23 @@ def cholesky_solve(chol, rhs, name=None):
     # 1. Solve C y = rhs for y, thus y = C^* x
     # 2. Solve C^* x = y for x
     with ops.name_scope(name, "cholesky_solve", [chol, rhs]):
-        y = gen_linalg_ops.matrix_triangular_solve(chol, rhs, adjoint=False, lower=True)
-        x = gen_linalg_ops.matrix_triangular_solve(chol, y, adjoint=True, lower=True)
+        y = gen_linalg_ops.matrix_triangular_solve(chol,
+                                                   rhs,
+                                                   adjoint=False,
+                                                   lower=True)
+        x = gen_linalg_ops.matrix_triangular_solve(chol,
+                                                   y,
+                                                   adjoint=True,
+                                                   lower=True)
         return x
 
 
 @tf_export("eye", "linalg.eye")
-def eye(num_rows, num_columns=None, batch_shape=None, dtype=dtypes.float32, name=None):
+def eye(num_rows,
+        num_columns=None,
+        batch_shape=None,
+        dtype=dtypes.float32,
+        name=None):
     """Construct an identity matrix, or a batch of matrices.
 
     See also `tf.ones`, `tf.zeros`, `tf.fill`, `tf.one_hot`.
@@ -325,21 +336,26 @@ def matrix_solve_ls(matrix, rhs, l2_regularizer=0.0, fast=True, name=None):
 
     def _overdetermined(matrix, rhs, l2_regularizer):
         """Computes (A^H*A + l2_regularizer)^{-1} * A^H * rhs."""
-        chol = _RegularizedGramianCholesky(
-            matrix, l2_regularizer=l2_regularizer, first_kind=True
-        )
-        return cholesky_solve(chol, math_ops.matmul(matrix, rhs, adjoint_a=True))
+        chol = _RegularizedGramianCholesky(matrix,
+                                           l2_regularizer=l2_regularizer,
+                                           first_kind=True)
+        return cholesky_solve(chol, math_ops.matmul(matrix,
+                                                    rhs,
+                                                    adjoint_a=True))
 
     def _underdetermined(matrix, rhs, l2_regularizer):
         """Computes A^H * (A*A^H + l2_regularizer)^{-1} * rhs."""
-        chol = _RegularizedGramianCholesky(
-            matrix, l2_regularizer=l2_regularizer, first_kind=False
-        )
-        return math_ops.matmul(matrix, cholesky_solve(chol, rhs), adjoint_a=True)
+        chol = _RegularizedGramianCholesky(matrix,
+                                           l2_regularizer=l2_regularizer,
+                                           first_kind=False)
+        return math_ops.matmul(matrix,
+                               cholesky_solve(chol, rhs),
+                               adjoint_a=True)
 
     def _composite_impl(matrix, rhs, l2_regularizer):
         """Composite implementation of matrix_solve_ls that supports GPU."""
-        with ops.name_scope(name, "matrix_solve_ls", [matrix, rhs, l2_regularizer]):
+        with ops.name_scope(name, "matrix_solve_ls",
+                            [matrix, rhs, l2_regularizer]):
             matrix_shape = matrix.get_shape()[-2:]
             if matrix_shape.is_fully_defined():
                 if matrix_shape[-2] >= matrix_shape[-1]:
@@ -359,18 +375,18 @@ def matrix_solve_ls(matrix, rhs, l2_regularizer=0.0, fast=True, name=None):
     matrix = ops.convert_to_tensor(matrix, name="matrix")
     if matrix.dtype == dtypes.complex128 and l2_regularizer != 0:
         # TODO(rmlarsen): Investigate and fix accuracy bug.
-        raise NotImplementedError(
-            "matrix_solve_ls is currently disabled for "
-            "complex128 and l2_regularizer != 0 due to "
-            "poor accuracy."
-        )
+        raise NotImplementedError("matrix_solve_ls is currently disabled for "
+                                  "complex128 and l2_regularizer != 0 due to "
+                                  "poor accuracy.")
     tensor_shape = matrix.get_shape()
     if _use_composite_impl(fast, tensor_shape):
         return _composite_impl(matrix, rhs, l2_regularizer)
     else:
-        return gen_linalg_ops.matrix_solve_ls(
-            matrix, rhs, l2_regularizer, fast=fast, name=name
-        )
+        return gen_linalg_ops.matrix_solve_ls(matrix,
+                                              rhs,
+                                              l2_regularizer,
+                                              fast=fast,
+                                              name=name)
 
 
 @tf_export("linalg.eig", "eig", v1=[])
@@ -399,7 +415,10 @@ def eig(tensor, name=None):
         out_dtype = dtypes.complex64
     elif tensor.dtype == dtypes.float64 or tensor.dtype == dtypes.complex128:
         out_dtype = dtypes.complex128
-    e, v = gen_linalg_ops.eig(tensor, Tout=out_dtype, compute_v=True, name=name)
+    e, v = gen_linalg_ops.eig(tensor,
+                              Tout=out_dtype,
+                              compute_v=True,
+                              name=name)
     return e, v
 
 
@@ -425,7 +444,10 @@ def eigvals(tensor, name=None):
         out_dtype = dtypes.complex64
     elif tensor.dtype == dtypes.float64 or tensor.dtype == dtypes.complex128:
         out_dtype = dtypes.complex128
-    e, _ = gen_linalg_ops.eig(tensor, Tout=out_dtype, compute_v=False, name=name)
+    e, _ = gen_linalg_ops.eig(tensor,
+                              Tout=out_dtype,
+                              compute_v=False,
+                              name=name)
     return e
 
 
@@ -448,7 +470,9 @@ def self_adjoint_eig(tensor, name=None):
       v: Eigenvectors. Shape is `[..., N, N]`. The columns of the inner most
         matrices contain eigenvectors of the corresponding matrices in `tensor`
     """
-    e, v = gen_linalg_ops.self_adjoint_eig_v2(tensor, compute_v=True, name=name)
+    e, v = gen_linalg_ops.self_adjoint_eig_v2(tensor,
+                                              compute_v=True,
+                                              name=name)
     return e, v
 
 
@@ -471,7 +495,9 @@ def self_adjoint_eigvals(tensor, name=None):
       e: Eigenvalues. Shape is `[..., N]`. The vector `e[..., :]` contains the `N`
         eigenvalues of `tensor[..., :, :]`.
     """
-    e, _ = gen_linalg_ops.self_adjoint_eig_v2(tensor, compute_v=False, name=name)
+    e, _ = gen_linalg_ops.self_adjoint_eig_v2(tensor,
+                                              compute_v=False,
+                                              name=name)
     return e
 
 
@@ -537,9 +563,10 @@ def svd(tensor, full_matrices=False, compute_uv=True, name=None):
     ```
     @end_compatibility
     """
-    s, u, v = gen_linalg_ops.svd(
-        tensor, compute_uv=compute_uv, full_matrices=full_matrices, name=name
-    )
+    s, u, v = gen_linalg_ops.svd(tensor,
+                                 compute_uv=compute_uv,
+                                 full_matrices=full_matrices,
+                                 name=name)
     if compute_uv:
         return math_ops.real(s), u, v
     else:
@@ -606,15 +633,24 @@ def norm_v2(tensor, ord="euclidean", axis=None, keepdims=None, name=None):
        higher order tensors.
     @end_compatibility
     """
-    return norm(tensor=tensor, ord=ord, axis=axis, keepdims=keepdims, name=name)
+    return norm(tensor=tensor,
+                ord=ord,
+                axis=axis,
+                keepdims=keepdims,
+                name=name)
 
 
 # pylint: disable=redefined-builtin
 @tf_export(v1=["norm", "linalg.norm"])
-@deprecation.deprecated_args(
-    None, "keep_dims is deprecated, use keepdims instead", "keep_dims"
-)
-def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims=None):
+@deprecation.deprecated_args(None,
+                             "keep_dims is deprecated, use keepdims instead",
+                             "keep_dims")
+def norm(tensor,
+         ord="euclidean",
+         axis=None,
+         keepdims=None,
+         name=None,
+         keep_dims=None):
     r"""Computes the norm of vectors, matrices, and tensors.
 
     This function can compute several different vector norms (the 1-norm, the
@@ -673,31 +709,25 @@ def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims
        higher order tensors.
     @end_compatibility
     """
-    keepdims = deprecation.deprecated_argument_lookup(
-        "keepdims", keepdims, "keep_dims", keep_dims
-    )
+    keepdims = deprecation.deprecated_argument_lookup("keepdims", keepdims,
+                                                      "keep_dims", keep_dims)
     if keepdims is None:
         keepdims = False
 
-    is_matrix_norm = (isinstance(axis, tuple) or isinstance(axis, list)) and len(
-        axis
-    ) == 2
+    is_matrix_norm = (isinstance(axis, tuple)
+                      or isinstance(axis, list)) and len(axis) == 2
     if is_matrix_norm:
         axis = tuple(axis)
-        if (
-            not isinstance(axis[0], int)
-            or not isinstance(axis[1], int)
-            or axis[0] == axis[1]
-        ):
+        if (not isinstance(axis[0], int) or not isinstance(axis[1], int)
+                or axis[0] == axis[1]):
             raise ValueError(
                 "'axis' must be None, an integer, or a tuple of 2 unique integers"
             )
         supported_matrix_norms = ["euclidean", "fro", 1, 2, np.inf]
         if ord not in supported_matrix_norms:
             raise ValueError(
-                "'ord' must be a supported matrix norm in %s, got %s"
-                % (supported_matrix_norms, ord)
-            )
+                "'ord' must be a supported matrix norm in %s, got %s" %
+                (supported_matrix_norms, ord))
     else:
         if not (isinstance(axis, int) or axis is None):
             raise ValueError(
@@ -705,10 +735,12 @@ def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims
             )
 
         supported_vector_norms = ["euclidean", 1, 2, np.inf]
-        if (not np.isreal(ord) or ord <= 0) and ord not in supported_vector_norms:
-            raise ValueError("'ord' must be a supported vector norm, got %s" % ord)
+        if (not np.isreal(ord)
+                or ord <= 0) and ord not in supported_vector_norms:
+            raise ValueError("'ord' must be a supported vector norm, got %s" %
+                             ord)
         if axis is not None:
-            axis = (axis,)
+            axis = (axis, )
 
     with ops.name_scope(name, "norm", [tensor]):
         tensor = ops.convert_to_tensor(tensor)
@@ -717,15 +749,15 @@ def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims
             if is_matrix_norm and ord in [2, 2.0]:
                 rank = array_ops.rank(tensor)
                 positive_axis = map_fn.map_fn(
-                    lambda i: control_flow_ops.cond(
-                        i >= 0, lambda: i, lambda: i + rank
-                    ),
+                    lambda i: control_flow_ops.cond(i >= 0, lambda: i, lambda:
+                                                    i + rank),
                     ops.convert_to_tensor(axis),
                 )
                 axes = math_ops.range(rank)
-                perm_before = array_ops.concat(
-                    [array_ops.setdiff1d(axes, positive_axis)[0], positive_axis], axis=0
-                )
+                perm_before = array_ops.concat([
+                    array_ops.setdiff1d(axes, positive_axis)[0], positive_axis
+                ],
+                                               axis=0)
                 perm_after = map_fn.map_fn(
                     lambda i: math_ops.cast(
                         array_ops.squeeze(
@@ -738,7 +770,8 @@ def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims
                 permed = array_ops.transpose(tensor, perm=perm_before)
                 matrix_2_norm = array_ops.expand_dims(
                     math_ops.reduce_max(
-                        math_ops.abs(gen_linalg_ops.svd(permed, compute_uv=False)[0]),
+                        math_ops.abs(
+                            gen_linalg_ops.svd(permed, compute_uv=False)[0]),
                         axis=-1,
                         keepdims=True,
                     ),
@@ -747,10 +780,9 @@ def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims
                 result = array_ops.transpose(matrix_2_norm, perm=perm_after)
             else:
                 result = math_ops.sqrt(
-                    math_ops.reduce_sum(
-                        tensor * math_ops.conj(tensor), axis, keepdims=True
-                    )
-                )
+                    math_ops.reduce_sum(tensor * math_ops.conj(tensor),
+                                        axis,
+                                        keepdims=True))
                 # TODO(rmlarsen): Replace with the following, once gradients are defined
                 # result = math_ops.reduce_euclidean_norm(tensor, axis, keepdims=True)
         else:
@@ -759,16 +791,22 @@ def norm(tensor, ord="euclidean", axis=None, keepdims=None, name=None, keep_dims
                 sum_axis = None if axis is None else axis[0]
                 result = math_ops.reduce_sum(result, sum_axis, keepdims=True)
                 if is_matrix_norm:
-                    result = math_ops.reduce_max(result, axis[-1], keepdims=True)
+                    result = math_ops.reduce_max(result,
+                                                 axis[-1],
+                                                 keepdims=True)
             elif ord == np.inf:
                 if is_matrix_norm:
-                    result = math_ops.reduce_sum(result, axis[1], keepdims=True)
+                    result = math_ops.reduce_sum(result,
+                                                 axis[1],
+                                                 keepdims=True)
                 max_axis = None if axis is None else axis[0]
                 result = math_ops.reduce_max(result, max_axis, keepdims=True)
             else:
                 # General p-norms (positive p only)
                 result = math_ops.pow(
-                    math_ops.reduce_sum(math_ops.pow(result, ord), axis, keepdims=True),
+                    math_ops.reduce_sum(math_ops.pow(result, ord),
+                                        axis,
+                                        keepdims=True),
                     1.0 / ord,
                 )
         if not keepdims:

@@ -58,9 +58,9 @@ class MemoryTest(test.TestCase):
 
             graph(constant_op.constant(42))
 
-        memory_test_util.assert_no_leak(
-            f, num_iters=1000, increase_threshold_absolute_mb=30
-        )
+        memory_test_util.assert_no_leak(f,
+                                        num_iters=1000,
+                                        increase_threshold_absolute_mb=30)
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testNestedFunctionsDeleted(self):
@@ -106,9 +106,9 @@ class MemoryTest(test.TestCase):
 
             return graph(constant_op.constant(1.5))[0].numpy()
 
-        memory_test_util.assert_no_leak(
-            f, num_iters=300, increase_threshold_absolute_mb=50
-        )
+        memory_test_util.assert_no_leak(f,
+                                        num_iters=300,
+                                        increase_threshold_absolute_mb=50)
 
 
 if __name__ == "__main__":

@@ -68,9 +68,8 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.default_test_combinations())
     def testFromTensorSlicesDatasetOfOrderedDict(self):
         dss = [
-            dataset_ops.Dataset.range(10).map(
-                lambda x: collections.OrderedDict([("x", x)])
-            )
+            dataset_ops.Dataset.range(
+                10).map(lambda x: collections.OrderedDict([("x", x)]))
             for _ in range(10)
         ]
         ds = dataset_ops.Dataset.from_tensor_slices(dss)
@@ -78,7 +77,8 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
         self.assertDatasetProduces(
             ds,
             expected_output=[
-                collections.OrderedDict([("x", x)]) for x in list(range(10)) * 10
+                collections.OrderedDict([("x", x)])
+                for x in list(range(10)) * 10
             ],
         )
 
@@ -177,8 +177,7 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
         self.assertEqual(
             [
                 tensor_shape.TensorShape(c.dense_shape[1:])
-                if sparse_tensor.is_sparse(c)
-                else c.shape[1:]
+                if sparse_tensor.is_sparse(c) else c.shape[1:]
                 for c in components
             ],
             [shape for shape in dataset_ops.get_legacy_output_shapes(dataset)],
@@ -225,8 +224,7 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
         for i in range(3):
             results = self.evaluate(get_next())
             for component, result_component in zip(
-                (list(zip(*components[:3]))[i] + expected[i]), results
-            ):
+                (list(zip(*components[:3]))[i] + expected[i]), results):
                 self.assertValuesEqual(component, result_component)
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
@@ -237,14 +235,14 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
         dataset = dataset_ops.Dataset.from_tensor_slices(components)
         get_next = self.getNext(dataset)
 
-        self.assertEqual(
-            dtypes.int32, dataset_ops.get_legacy_output_types(dataset)["foo"]
-        )
-        self.assertEqual(
-            dtypes.float32, dataset_ops.get_legacy_output_types(dataset)["bar"]
-        )
-        self.assertEqual((), dataset_ops.get_legacy_output_shapes(dataset)["foo"])
-        self.assertEqual((1,), dataset_ops.get_legacy_output_shapes(dataset)["bar"])
+        self.assertEqual(dtypes.int32,
+                         dataset_ops.get_legacy_output_types(dataset)["foo"])
+        self.assertEqual(dtypes.float32,
+                         dataset_ops.get_legacy_output_types(dataset)["bar"])
+        self.assertEqual((),
+                         dataset_ops.get_legacy_output_shapes(dataset)["foo"])
+        self.assertEqual((1, ),
+                         dataset_ops.get_legacy_output_shapes(dataset)["bar"])
 
         for i in range(3):
             results = self.evaluate(get_next())
@@ -342,8 +340,7 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
         for i in range(3):
             results = self.evaluate(get_next())
             for component, result_component in zip(
-                (list(zip(*components[:3]))[i] + expected[i]), results
-            ):
+                (list(zip(*components[:3]))[i] + expected[i]), results):
                 self.assertValuesEqual(component, result_component)
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
@@ -356,11 +353,13 @@ class FromTensorSlicesTest(test_base.DatasetTestBase, parameterized.TestCase):
             np.tile(np.array([[4], [65536]], dtype=np.uint32), 2),
             np.tile(np.array([[8], [4294967296]], dtype=np.uint64), 2),
         )
-        expected_types = (dtypes.uint8, dtypes.uint16, dtypes.uint32, dtypes.uint64)
+        expected_types = (dtypes.uint8, dtypes.uint16, dtypes.uint32,
+                          dtypes.uint64)
         expected_output = [tuple([c[i] for c in components]) for i in range(2)]
 
         dataset = dataset_ops.Dataset.from_tensor_slices(components)
-        self.assertEqual(expected_types, dataset_ops.get_legacy_output_types(dataset))
+        self.assertEqual(expected_types,
+                         dataset_ops.get_legacy_output_types(dataset))
         self.assertDatasetProduces(dataset, expected_output)
 
 
