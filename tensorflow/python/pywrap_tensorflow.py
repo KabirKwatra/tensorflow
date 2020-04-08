@@ -20,13 +20,13 @@ from __future__ import print_function
 
 # Python2.7 does not have a ModuleNotFoundError.
 try:
-  ModuleNotFoundError
+    ModuleNotFoundError
 except NameError:
-  ModuleNotFoundError = ImportError
+    ModuleNotFoundError = ImportError
 
 # pylint: disable=wildcard-import,g-import-not-at-top,line-too-long,undefined-variable
 try:
-  from tensorflow.python._pywrap_tensorflow_internal import *
+    from tensorflow.python._pywrap_tensorflow_internal import *
 # This try catch logic is because there is no bazel equivalent for py_extension.
 # Externally in opensource we must enable exceptions to load the shared object
 # by exposing the PyInit symbols with pybind. This error will only be
@@ -34,4 +34,4 @@ try:
 
 # This logic is used in other internal projects using py_extension.
 except ModuleNotFoundError:
-  pass
+    pass
