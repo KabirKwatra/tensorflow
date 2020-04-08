@@ -14,7 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 #include "mlir/IR/PatternMatch.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Pass/Pass.h"        // from @llvm-project
 #include "tensorflow/compiler/mlir/tensorflow/transforms/decompose_resource_ops.h"
 #include "tensorflow/compiler/mlir/tensorflow/transforms/passes.h"
 
@@ -40,19 +40,19 @@ namespace {
 // which automatically locks all resource variables.
 struct DecomposeResourceOps
     : public PassWrapper<DecomposeResourceOps, FunctionPass> {
-    void runOnFunction() override {
-        // Add lowering patterns to the list.
-        OwningRewritePatternList patterns;
-        mlir::TF::PopulateDecomposeResourceOpsPatterns(&getContext(), &patterns);
+  void runOnFunction() override {
+    // Add lowering patterns to the list.
+    OwningRewritePatternList patterns;
+    mlir::TF::PopulateDecomposeResourceOpsPatterns(&getContext(), &patterns);
 
-        applyPatternsGreedily(getFunction(), patterns);
-    }
+    applyPatternsGreedily(getFunction(), patterns);
+  }
 };
 
 }  // namespace
 
 std::unique_ptr<OperationPass<FuncOp>> CreateDecomposeResourceOpsPass() {
-    return std::make_unique<DecomposeResourceOps>();
+  return std::make_unique<DecomposeResourceOps>();
 }
 
 }  // namespace TFDevice

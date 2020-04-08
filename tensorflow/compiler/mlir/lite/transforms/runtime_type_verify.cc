@@ -14,7 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 #include "mlir/IR/OperationSupport.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Pass/Pass.h"            // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/ir/tfl_ops.h"
 
 namespace mlir {
@@ -26,26 +26,26 @@ namespace {
 // TFLite runtime.
 class RuntimeTypeVerifyPass
     : public mlir::PassWrapper<RuntimeTypeVerifyPass, FunctionPass> {
-public:
-    explicit RuntimeTypeVerifyPass() {}
+ public:
+  explicit RuntimeTypeVerifyPass() {}
 
-private:
-    void runOnFunction() override;
+ private:
+  void runOnFunction() override;
 };
 
 void RuntimeTypeVerifyPass::runOnFunction() {
-    getFunction().walk([&](TflRuntimeVerifyOpInterface op) {
-        if (failed(op.VerifyTflRuntimeTypes(
-                       op.getOperation(),
-                       /*failure_on_operand_type_mismatch=*/true)))
-            signalPassFailure();
-    });
+  getFunction().walk([&](TflRuntimeVerifyOpInterface op) {
+    if (failed(op.VerifyTflRuntimeTypes(
+            op.getOperation(),
+            /*failure_on_operand_type_mismatch=*/true)))
+      signalPassFailure();
+  });
 }
 }  // namespace
 
 // Verifies runtime supports types used.
 std::unique_ptr<OperationPass<FuncOp>> CreateRuntimeTypeVerifyPass() {
-    return std::make_unique<RuntimeTypeVerifyPass>();
+  return std::make_unique<RuntimeTypeVerifyPass>();
 }
 
 static PassRegistration<RuntimeTypeVerifyPass> pass(

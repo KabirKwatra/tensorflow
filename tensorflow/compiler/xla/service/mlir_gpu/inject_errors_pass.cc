@@ -22,17 +22,17 @@ namespace {
 
 struct InjectErrorsForTestingPass
     : public PassWrapper<InjectErrorsForTestingPass, FunctionPass> {
-    void runOnFunction() override {
-        getFunction().getBody().walk([&](Operation *op) {
-            op->emitError() << "failed for testing: " << op->getName();
-        });
-    }
+  void runOnFunction() override {
+    getFunction().getBody().walk([&](Operation *op) {
+      op->emitError() << "failed for testing: " << op->getName();
+    });
+  }
 };
 
 }  // namespace
 
 std::unique_ptr<OperationPass<FuncOp>> createInjectErrorsForTestingPass() {
-    return std::make_unique<InjectErrorsForTestingPass>();
+  return std::make_unique<InjectErrorsForTestingPass>();
 }
 
 static PassRegistration<InjectErrorsForTestingPass> pass(

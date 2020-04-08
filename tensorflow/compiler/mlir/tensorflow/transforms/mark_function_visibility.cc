@@ -26,37 +26,37 @@ namespace {
 
 LogicalResult MarkFunctionVisibility(
     ModuleOp module, llvm::function_ref<bool(FuncOp func)> IsExternalVisible) {
-    LogicalResult result = success();
+  LogicalResult result = success();
 
-    for (auto func : module.getOps<FuncOp>()) {
-        FuncOp::Visibility old_visibility = func.getVisibility();
+  for (auto func : module.getOps<FuncOp>()) {
+    FuncOp::Visibility old_visibility = func.getVisibility();
 
-        FuncOp::Visibility visibility = IsExternalVisible(func)
+    FuncOp::Visibility visibility = IsExternalVisible(func)
                                         ? FuncOp::Visibility::Public
                                         : FuncOp::Visibility::Private;
 
-        auto get_visibility_name = [](FuncOp::Visibility v) {
-            return v == FuncOp::Visibility::Public
-                   ? "public"
-                   : v == FuncOp::Visibility::Private ? "private" : "nested";
-        };
+    auto get_visibility_name = [](FuncOp::Visibility v) {
+      return v == FuncOp::Visibility::Public
+                 ? "public"
+                 : v == FuncOp::Visibility::Private ? "private" : "nested";
+    };
 
-        if (old_visibility != SymbolTable::Visibility::Public &&
-                old_visibility != visibility) {
-            result = func.emitError()
-                     << "can't overwrite the visibility of function "
-                     << func.getName() << " with "
-                     << get_visibility_name(old_visibility) << " visibility";
-        }
-
-        LLVM_DEBUG(llvm::dbgs()
-                   << "function " << func.getName() << " has "
-                   << get_visibility_name(visibility) << " visibility \n");
-
-        func.setVisibility(visibility);
+    if (old_visibility != SymbolTable::Visibility::Public &&
+        old_visibility != visibility) {
+      result = func.emitError()
+               << "can't overwrite the visibility of function "
+               << func.getName() << " with "
+               << get_visibility_name(old_visibility) << " visibility";
     }
 
-    return result;
+    LLVM_DEBUG(llvm::dbgs()
+               << "function " << func.getName() << " has "
+               << get_visibility_name(visibility) << " visibility \n");
+
+    func.setVisibility(visibility);
+  }
+
+  return result;
 }
 
 }  // anonymous namespace
@@ -65,36 +65,36 @@ namespace TF {
 
 LogicalResult MarkFunctionVisibilityUsingEntryFunctionSpecification(
     ModuleOp module) {
-    auto HasEntryFunctionSpecification = [](FuncOp func) -> bool {
-        auto attrs = func.getAttrOfType<mlir::DictionaryAttr>("tf.entry_function");
-        return attrs && !attrs.empty();
-    };
-    return MarkFunctionVisibility(module, HasEntryFunctionSpecification);
+  auto HasEntryFunctionSpecification = [](FuncOp func) -> bool {
+    auto attrs = func.getAttrOfType<mlir::DictionaryAttr>("tf.entry_function");
+    return attrs && !attrs.empty();
+  };
+  return MarkFunctionVisibility(module, HasEntryFunctionSpecification);
 }
 
 namespace {
 struct MarkFunctionVisibilityUsingEntryFunctionSpecificationPass
     : public PassWrapper<
-      MarkFunctionVisibilityUsingEntryFunctionSpecificationPass,
-      OperationPass<ModuleOp>> {
-    void runOnOperation() override {
-        if (failed(MarkFunctionVisibilityUsingEntryFunctionSpecification(
-                       getOperation()))) {
-            signalPassFailure();
-        }
+          MarkFunctionVisibilityUsingEntryFunctionSpecificationPass,
+          OperationPass<ModuleOp>> {
+  void runOnOperation() override {
+    if (failed(MarkFunctionVisibilityUsingEntryFunctionSpecification(
+            getOperation()))) {
+      signalPassFailure();
     }
+  }
 };
 }  // namespace
 
 static PassRegistration<
-MarkFunctionVisibilityUsingEntryFunctionSpecificationPass>
-pass("tf-mark-func-visibility",
-     "Use tf.entry_function to mark function visibility.");
+    MarkFunctionVisibilityUsingEntryFunctionSpecificationPass>
+    pass("tf-mark-func-visibility",
+         "Use tf.entry_function to mark function visibility.");
 
 std::unique_ptr<OperationPass<ModuleOp>>
 CreateMarkFunctionVisibilityUsingEntryFunctionSpecificationPass() {
-    return std::make_unique<
-           MarkFunctionVisibilityUsingEntryFunctionSpecificationPass>();
+  return std::make_unique<
+      MarkFunctionVisibilityUsingEntryFunctionSpecificationPass>();
 }
 
 }  // namespace TF
@@ -103,21 +103,21 @@ namespace tf_saved_model {
 
 static LogicalResult MarkFunctionVisibilityUsingSavedModelLinkage(
     ModuleOp module) {
-    if (!tf_saved_model::HasTfSavedModelSemantics(module)) {
-        return success();
-    }
-    return MarkFunctionVisibility(module, tf_saved_model::IsExported);
+  if (!tf_saved_model::HasTfSavedModelSemantics(module)) {
+    return success();
+  }
+  return MarkFunctionVisibility(module, tf_saved_model::IsExported);
 }
 
 namespace {
 struct MarkFunctionVisibilityUsingSavedModelLinkagePass
     : public PassWrapper<MarkFunctionVisibilityUsingSavedModelLinkagePass,
-      OperationPass<ModuleOp>> {
-    void runOnOperation() override {
-        if (failed(MarkFunctionVisibilityUsingSavedModelLinkage(getOperation()))) {
-            signalPassFailure();
-        }
+                         OperationPass<ModuleOp>> {
+  void runOnOperation() override {
+    if (failed(MarkFunctionVisibilityUsingSavedModelLinkage(getOperation()))) {
+      signalPassFailure();
     }
+  }
 };
 }  // namespace
 
@@ -127,7 +127,7 @@ static PassRegistration<MarkFunctionVisibilityUsingSavedModelLinkagePass> pass(
 
 std::unique_ptr<OperationPass<ModuleOp>>
 CreateMarkFunctionVisibilityUsingSavedModelLinkagePass() {
-    return std::make_unique<MarkFunctionVisibilityUsingSavedModelLinkagePass>();
+  return std::make_unique<MarkFunctionVisibilityUsingSavedModelLinkagePass>();
 }
 
 }  // namespace tf_saved_model

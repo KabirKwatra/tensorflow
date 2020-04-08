@@ -20,17 +20,17 @@ namespace {
 
 struct IdentifyDilatedConvPass
     : public PassWrapper<IdentifyDilatedConvPass, FunctionPass> {
-    void runOnFunction() override;
+  void runOnFunction() override;
 };
 
 void IdentifyDilatedConvPass::runOnFunction() {
-    OwningRewritePatternList patterns;
-    auto func = getFunction();
+  OwningRewritePatternList patterns;
+  auto func = getFunction();
 
-    patterns.insert<ConvertTFDilatedConvOp<TF::Conv2DOp>,
-                    ConvertTFDilatedConvOp<TF::DepthwiseConv2dNativeOp>>(
-                        &getContext());
-    applyPatternsGreedily(func, patterns);
+  patterns.insert<ConvertTFDilatedConvOp<TF::Conv2DOp>,
+                  ConvertTFDilatedConvOp<TF::DepthwiseConv2dNativeOp>>(
+      &getContext());
+  applyPatternsGreedily(func, patterns);
 }
 }  // namespace
 

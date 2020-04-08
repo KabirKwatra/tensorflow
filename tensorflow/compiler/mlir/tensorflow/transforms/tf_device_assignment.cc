@@ -25,41 +25,41 @@ namespace {
 
 class SimpleTFDeviceAssignmentPass
     : public PassWrapper<SimpleTFDeviceAssignmentPass, FunctionPass> {
-public:
-    SimpleTFDeviceAssignmentPass() = default;
-    SimpleTFDeviceAssignmentPass(const SimpleTFDeviceAssignmentPass&) {}
-    explicit SimpleTFDeviceAssignmentPass(llvm::StringRef default_device) {
-        default_device_ = std::string(default_device);
-    }
+ public:
+  SimpleTFDeviceAssignmentPass() = default;
+  SimpleTFDeviceAssignmentPass(const SimpleTFDeviceAssignmentPass&) {}
+  explicit SimpleTFDeviceAssignmentPass(llvm::StringRef default_device) {
+    default_device_ = std::string(default_device);
+  }
 
-    void runOnFunction() override {
-        Builder builder(&getContext());
-        Dialect* tf = getContext().getRegisteredDialect<TensorFlowDialect>();
-        getFunction().walk([&](Operation* op) {
-            if (auto device_attr = op->getAttrOfType<StringAttr>("device")) {
-                // We assign default device to ops with device attribute that is empty.
-                if (device_attr.getValue() == "") {
-                    op->setAttr("device", builder.getStringAttr(default_device_));
-                }
-            } else if (op->getDialect() == tf) {
-                // Assign default device to all ops in Tensorflow dialect that do not
-                // have device attribute.
-                op->setAttr("device", builder.getStringAttr(default_device_));
-            }
-        });
-    }
+  void runOnFunction() override {
+    Builder builder(&getContext());
+    Dialect* tf = getContext().getRegisteredDialect<TensorFlowDialect>();
+    getFunction().walk([&](Operation* op) {
+      if (auto device_attr = op->getAttrOfType<StringAttr>("device")) {
+        // We assign default device to ops with device attribute that is empty.
+        if (device_attr.getValue() == "") {
+          op->setAttr("device", builder.getStringAttr(default_device_));
+        }
+      } else if (op->getDialect() == tf) {
+        // Assign default device to all ops in Tensorflow dialect that do not
+        // have device attribute.
+        op->setAttr("device", builder.getStringAttr(default_device_));
+      }
+    });
+  }
 
-private:
-    Option<std::string> default_device_{
-        *this, "default-device", llvm::cl::desc("The default device to assign."),
-        llvm::cl::init("cpu")};
+ private:
+  Option<std::string> default_device_{
+      *this, "default-device", llvm::cl::desc("The default device to assign."),
+      llvm::cl::init("cpu")};
 };
 
 }  // namespace
 
 std::unique_ptr<OperationPass<FuncOp>> CreateSimpleTFDeviceAssignmentPass(
-llvm::StringRef default_device) {
-    return std::make_unique<SimpleTFDeviceAssignmentPass>(default_device);
+    llvm::StringRef default_device) {
+  return std::make_unique<SimpleTFDeviceAssignmentPass>(default_device);
 }
 
 static PassRegistration<SimpleTFDeviceAssignmentPass> pass(
