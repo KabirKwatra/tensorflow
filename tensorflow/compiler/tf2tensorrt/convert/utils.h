@@ -30,16 +30,16 @@ namespace tensorflow {
 namespace tensorrt {
 
 class IONamePrefixes {
-public:
-    static constexpr const char* const kInputPHName = "TensorRTInputPH_";
-    static constexpr const char* const kOutputPHName = "TensorRTOutputPH_";
+ public:
+  static constexpr const char* const kInputPHName = "TensorRTInputPH_";
+  static constexpr const char* const kOutputPHName = "TensorRTOutputPH_";
 };
 
 template <typename T>
 struct TrtDestroyer {
-    void operator()(T* t) {
-        if (t) t->destroy();
-    }
+  void operator()(T* t) {
+    if (t) t->destroy();
+  }
 };
 
 template <typename T>
@@ -54,9 +54,9 @@ Status TrtPrecisionModeFromName(const string& name, TrtPrecisionMode* mode);
 // Define a hash function for vector<TensorShape> because it is used as the key
 // for the engine cache.
 struct VectorTensorShapeHasher {
-    std::size_t operator()(const std::vector<TensorShape>& key) const {
-        return std::hash<std::string>()(TensorShapeUtils::ShapeListString(key));
-    }
+  std::size_t operator()(const std::vector<TensorShape>& key) const {
+    return std::hash<std::string>()(TensorShapeUtils::ShapeListString(key));
+  }
 };
 
 #if GOOGLE_CUDA && GOOGLE_TENSORRT
@@ -79,23 +79,23 @@ string DebugString(const std::vector<TensorShape>& shapes);
 string DebugString(const std::vector<PartialTensorShape>& shapes);
 
 inline bool HasStaticShape(const nvinfer1::Dims& dims) {
-    if (dims.nbDims < 0) return false;
-    for (int d = 0; d < dims.nbDims; ++d) {
-        if (dims.d[d] < 0) return false;
-    }
-    return true;
+  if (dims.nbDims < 0) return false;
+  for (int d = 0; d < dims.nbDims; ++d) {
+    if (dims.d[d] < 0) return false;
+  }
+  return true;
 }
 
 template <typename TensorShapeType>
 inline nvinfer1::Dims TensorShapeToTrtDims(const TensorShapeType& shape,
-        bool ignore_first_dim) {
-    nvinfer1::Dims trt_dims;
-    const int offset = (ignore_first_dim ? 1 : 0);
-    for (int i = offset; i < shape.dims(); i++) {
-        trt_dims.d[i - offset] = shape.dim_size(i);
-    }
-    trt_dims.nbDims = shape.dims() - offset;
-    return trt_dims;
+                                           bool ignore_first_dim) {
+  nvinfer1::Dims trt_dims;
+  const int offset = (ignore_first_dim ? 1 : 0);
+  for (int i = offset; i < shape.dims(); i++) {
+    trt_dims.d[i - offset] = shape.dim_size(i);
+  }
+  trt_dims.nbDims = shape.dims() - offset;
+  return trt_dims;
 }
 
 Status TrtDimsToTensorShape(const std::vector<int>& trt_dims,

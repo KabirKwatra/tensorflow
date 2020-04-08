@@ -33,16 +33,14 @@ namespace tensorrt {
 
 // Input/output data format for OpConverterTest::BuildAndRun().
 struct InputOutputData {
-    void* Buffer() const {
-        return const_cast<char*>(tensor.tensor_data().data());
-    }
+  void* Buffer() const {
+    return const_cast<char*>(tensor.tensor_data().data());
+  }
 
-    size_t TotalBytes() const {
-        return tensor.TotalBytes();
-    }
+  size_t TotalBytes() const { return tensor.TotalBytes(); }
 
-    string name;
-    Tensor tensor;
+  string name;
+  Tensor tensor;
 };
 
 using DataVec = std::vector<InputOutputData>;
