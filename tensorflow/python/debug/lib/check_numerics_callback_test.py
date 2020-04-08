@@ -45,32 +45,35 @@ from tensorflow.python.platform import test as test_lib
 
 
 class LimitStringLengthTest(test_util.TensorFlowTestCase):
-
     def testLimitStringLengthWithExplicitLimit(self):
+        self.assertEqual(check_numerics_callback.limit_string_length("", max_len=2), "")
         self.assertEqual(
-            check_numerics_callback.limit_string_length("", max_len=2), "")
+            check_numerics_callback.limit_string_length("e", max_len=2), "e"
+        )
         self.assertEqual(
-            check_numerics_callback.limit_string_length("e", max_len=2), "e")
+            check_numerics_callback.limit_string_length("de", max_len=2), "de"
+        )
         self.assertEqual(
-            check_numerics_callback.limit_string_length("de", max_len=2), "de")
-        self.assertEqual(
-            check_numerics_callback.limit_string_length("abcde", max_len=2),
-            "...de")
+            check_numerics_callback.limit_string_length("abcde", max_len=2), "...de"
+        )
 
     def testLimitStringLengthWithNoLimit(self):
-        self.assertEqual(check_numerics_callback.limit_string_length(
-            "A" * 100 + "B", max_len=None), "A" * 100 + "B")
         self.assertEqual(
-            check_numerics_callback.limit_string_length("", max_len=None), "")
+            check_numerics_callback.limit_string_length("A" * 100 + "B", max_len=None),
+            "A" * 100 + "B",
+        )
+        self.assertEqual(
+            check_numerics_callback.limit_string_length("", max_len=None), ""
+        )
 
     def testLimitStringLengthWithDefaultLimit(self):
         self.assertEqual(
             check_numerics_callback.limit_string_length("A" * 50 + "B"),
-            "..." + "A" * 49 + "B")
+            "..." + "A" * 49 + "B",
+        )
 
 
 class CheckNumericsCallbackTest(test_util.TensorFlowTestCase):
-
     def tearDown(self):
         check_numerics_callback.disable_check_numerics()
         super(CheckNumericsCallbackTest, self).tearDown()
@@ -91,21 +94,20 @@ class CheckNumericsCallbackTest(test_util.TensorFlowTestCase):
         check_numerics_callback.enable_check_numerics()
 
         model = models.Sequential()
-        model.add(layers.Dense(
-            units=100,
-            input_shape=(5,),
-            use_bias=False,
-            activation="relu",
-            kernel_initializer="ones"))
+        model.add(
+            layers.Dense(
+                units=100,
+                input_shape=(5,),
+                use_bias=False,
+                activation="relu",
+                kernel_initializer="ones",
+            )
+        )
         model.add(layers.BatchNormalization())
         model.add(layers.Dropout(0.5))
-        model.add(layers.Dense(
-            units=1,
-            activation="linear",
-            kernel_initializer="ones"))
+        model.add(layers.Dense(units=1, activation="linear", kernel_initializer="ones"))
 
-        model.compile(
-            loss="mse", optimizer=optimizer_v2.gradient_descent.SGD(1e-3))
+        model.compile(loss="mse", optimizer=optimizer_v2.gradient_descent.SGD(1e-3))
 
         batch_size = 16
         xs = np.zeros([batch_size, 5])
@@ -141,19 +143,17 @@ class CheckNumericsCallbackTest(test_util.TensorFlowTestCase):
         check_numerics_callback.enable_check_numerics()
 
         tensor = constant_op.constant(
-            [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
+            [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+        )
 
         def map_fn(x):
             return math_ops.log(math_ops.square(x) + 1)
 
-        dataset = dataset_ops.Dataset.from_tensor_slices(tensor).batch(2).map(
-            map_fn)
+        dataset = dataset_ops.Dataset.from_tensor_slices(tensor).batch(2).map(map_fn)
         iterator = dataset_ops.make_one_shot_iterator(dataset)
 
-        self.assertAllClose(self.evaluate(
-            iterator.get_next()), np.log([1.25, 2]))
-        self.assertAllClose(self.evaluate(
-            iterator.get_next()), np.log([3.25, 5]))
+        self.assertAllClose(self.evaluate(iterator.get_next()), np.log([1.25, 2]))
+        self.assertAllClose(self.evaluate(iterator.get_next()), np.log([3.25, 5]))
 
     @test_util.run_in_graph_and_eager_modes
     def testMobileNetV2Fit(self):
@@ -189,8 +189,7 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
             func()
         except errors.InvalidArgumentError as error:
             caught = error
-        self.assertTrue(
-            caught, "Failed to catch expected InvalidArgumentError")
+        self.assertTrue(caught, "Failed to catch expected InvalidArgumentError")
         return caught.message
 
     def testCatchEagerOpFloat32Inf(self):
@@ -199,12 +198,10 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         x = constant_op.constant([2.0, 3.0])
         y = constant_op.constant([1.0, 0.0])
-        message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: x / y)
+        message = self._assertRaisesInvalidArgumentErrorAndGetMessage(lambda: x / y)
 
         # Check the content of the error message.
-        self.assertTrue(
-            re.search(r"eagerly-executing op.*\"RealDiv\"", message))
+        self.assertTrue(re.search(r"eagerly-executing op.*\"RealDiv\"", message))
         self.assertTrue(re.search(r"dtype.*float32", message))
         self.assertIn("shape: (2,)\n", message)
         self.assertIn("# of +Inf elements: 1\n", message)
@@ -218,12 +215,10 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         x = constant_op.constant([2.0, 3.0])
         y = constant_op.constant([1.0, 0.0])
-        message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: x / y)
+        message = self._assertRaisesInvalidArgumentErrorAndGetMessage(lambda: x / y)
 
         # Check the content of the error message.
-        self.assertTrue(
-            re.search(r"eagerly-executing op.*\"RealDiv\"", message))
+        self.assertTrue(re.search(r"eagerly-executing op.*\"RealDiv\"", message))
         self.assertTrue(re.search(r"dtype.*float32", message))
         self.assertIn("shape: (2,)\n", message)
         self.assertIn("# of +Inf elements: 1\n", message)
@@ -237,9 +232,9 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         def log1p(x):
             y = 1.0 + x
             return math_ops.log(y)
+
         x = constant_op.constant([[-1.0]], dtype=dtypes.float16)
-        message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: log1p(x))
+        message = self._assertRaisesInvalidArgumentErrorAndGetMessage(lambda: log1p(x))
 
         # Check the content of the error message.
         self.assertTrue(re.search(r"eagerly-executing op.*\"Log\"", message))
@@ -255,19 +250,18 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         model = models.Sequential()
         # Use weight initializers for deterministic behavior during test.
-        model.add(layers.Dense(
-            units=100,
-            input_shape=(5,),
-            activation="relu",
-            kernel_initializer="ones"))
-        model.add(layers.Dense(
-            units=1,
-            activation="linear",
-            kernel_initializer="ones"))
+        model.add(
+            layers.Dense(
+                units=100,
+                input_shape=(5,),
+                activation="relu",
+                kernel_initializer="ones",
+            )
+        )
+        model.add(layers.Dense(units=1, activation="linear", kernel_initializer="ones"))
 
-        lr = 1e3    # Intentionally huge learning rate.
-        model.compile(
-            loss="mse", optimizer=optimizer_v2.gradient_descent.SGD(lr))
+        lr = 1e3  # Intentionally huge learning rate.
+        model.compile(loss="mse", optimizer=optimizer_v2.gradient_descent.SGD(lr))
 
         batch_size = 16
         xs = np.zeros([batch_size, 5])
@@ -278,7 +272,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         epochs = 100
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: model.fit(xs, ys, epochs=epochs, verbose=0))
+            lambda: model.fit(xs, ys, epochs=epochs, verbose=0)
+        )
 
         # Check the content of the error message.
         # Let's not hardcode the op name for future-proof.
@@ -302,16 +297,19 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         """Test catching infinites generated in a FuncGraph."""
 
         check_numerics_callback.enable_check_numerics()
+
         @def_function.function
         def divide_sum_with_diff(x, y):
             w1 = x + y
             w2 = x - y
             u = w1 / w2
             return u * 2.0
+
         x = constant_op.constant(2.0, dtype=dtypes.float64)
         y = constant_op.constant(2.0, dtype=dtypes.float64)
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: self.evaluate(divide_sum_with_diff(x, y)))
+            lambda: self.evaluate(divide_sum_with_diff(x, y))
+        )
 
         # Check the content of the error message.
         self.assertTrue(re.search(r"graph op.*\"RealDiv\"", message))
@@ -327,7 +325,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
     @test_util.run_in_graph_and_eager_modes
     @test_util.disable_xla(
-        "TODO(b/141100809): XLA has no way to assert inside of a kernel.")
+        "TODO(b/141100809): XLA has no way to assert inside of a kernel."
+    )
     def testControlFlowGraphWithNaNBFloat16(self):
         """Test catching bfloat16 NaNs in a control-flow-v2 FuncGraph."""
         check_numerics_callback.enable_check_numerics()
@@ -341,7 +340,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         x = constant_op.constant([1.0, 2.0, 3.0], dtype=dtypes.bfloat16)
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: self.evaluate(my_conditional(x)))
+            lambda: self.evaluate(my_conditional(x))
+        )
         # Check the content of the error message.
         self.assertTrue(re.search(r"graph op.*\"Log\"", message))
         self.assertTrue(re.search(r"dtype.*bfloat16", message))
@@ -358,7 +358,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
     @test_util.run_in_graph_and_eager_modes
     @test_util.disable_xla(
         "There is a small inconsistency in the step at which overflow happens: "
-        "128 (without XLA) and 127 (with XLA).")
+        "128 (without XLA) and 127 (with XLA)."
+    )
     def testOverflowInTfFunction(self):
         """Test catching Infinity caused by overflow in a tf.function with while."""
         check_numerics_callback.enable_check_numerics()
@@ -379,7 +380,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
             self.evaluate([counter.initializer, accum.initializer])
 
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: self.evaluate(accumulation_function(counter, lim, accum)))
+            lambda: self.evaluate(accumulation_function(counter, lim, accum))
+        )
 
         self.assertAllClose(self.evaluate(counter), 128)
         # Check the content of the error message.
@@ -402,7 +404,6 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         check_numerics_callback.enable_check_numerics()
 
         class DivByXLayer(layers.Layer):
-
             @def_function.function
             def call(self, x):
                 """The computation performed by the for-test custom layer.
@@ -432,7 +433,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         xs = np.zeros([1, 5])
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: model.predict(xs))
+            lambda: model.predict(xs)
+        )
 
         # Check the content of the error message.
         self.assertTrue(re.search(r"graph op.*\"RealDiv\"", message))
@@ -480,7 +482,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
 
         xs = np.zeros([1, 5])
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: model.predict(xs))
+            lambda: model.predict(xs)
+        )
 
         # Check the content of the error message.
         self.assertTrue(re.search(r"graph op.*\"RealDiv\"", message))
@@ -506,7 +509,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         iterator = dataset_ops.make_one_shot_iterator(dataset)
 
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: self.evaluate(iterator.get_next()))
+            lambda: self.evaluate(iterator.get_next())
+        )
 
         # Check the content of the error message.
         self.assertTrue(re.search(r"graph op.*\"Log\"", message))
@@ -514,8 +518,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         self.assertIn("shape: (2, 2)\n", message)
         self.assertTrue(re.search(r"Input tensor.*Tensor.*Log/x:0", message))
         self.assertIn(
-            "-> |   return math_ops.log([[-1.0, 1.0], [3.0, 5.0]]) + casted_x",
-            message)
+            "-> |   return math_ops.log([[-1.0, 1.0], [3.0, 5.0]]) + casted_x", message
+        )
 
     @test_util.run_in_graph_and_eager_modes
     def testCustomGradientWithNaNWithTfFunction(self):
@@ -525,10 +529,12 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         @custom_gradient.custom_gradient
         def func_with_bad_grad(x):
             output = math_ops.sin(x)
+
             @def_function.function
             def grad(dy):
                 # `dy` will come in as 1.0. Taking log of -1.0 leads to NaN.
                 return math_ops.log(-dy)
+
             return output, grad
 
         x = constant_op.constant(-2.0, dtype=dtypes.float16)
@@ -537,7 +543,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
             return func_with_bad_grad(x)
 
         message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-            lambda: gradient_checker_v2.compute_gradient(f, [x]))
+            lambda: gradient_checker_v2.compute_gradient(f, [x])
+        )
 
         # Check the content of the error message.
         self.assertTrue(re.search(r"graph op.*\"Log\"", message))
@@ -567,12 +574,17 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
             tape.watch(x)
             y = loss(x)
             message = self._assertRaisesInvalidArgumentErrorAndGetMessage(
-                lambda: self.evaluate(tape.gradient(y, x)))
+                lambda: self.evaluate(tape.gradient(y, x))
+            )
             # Check the content of the error message.
             # Assume the op Reciprocal or Xdivy is used in the gradient function for
             # asin().
-            self.assertTrue((re.search(r"graph op.*\"Reciprocal\"", message) or
-                             re.search(r"graph op.*\"Xdivy\"", message)))
+            self.assertTrue(
+                (
+                    re.search(r"graph op.*\"Reciprocal\"", message)
+                    or re.search(r"graph op.*\"Xdivy\"", message)
+                )
+            )
             self.assertTrue(re.search(r"dtype.*float32", message))
 
     @test_util.run_in_graph_and_eager_modes
@@ -588,7 +600,8 @@ class CheckNumericsCallbackUnhealthyTest(test_util.TensorFlowTestCase):
         # Calling fused_batch_norm with an empty input should output a NaN in the
         # latter four outputs without triggering the check_numerics callback
         batch_norm_res = gen_nn_ops._fused_batch_norm(
-            x=x, scale=scale, offset=offset, mean=[], variance=[])
+            x=x, scale=scale, offset=offset, mean=[], variance=[]
+        )
 
         _, batch_mean, batch_variance, _, _ = self.evaluate(batch_norm_res)
 
