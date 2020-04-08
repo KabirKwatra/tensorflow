@@ -22,10 +22,10 @@ class OpKernelContext;
 class Tensor;
 
 // Reshapes the input indices and input shape to the target shape.
-void ReshapeSparseTensor(OpKernelContext *context,
-                         const Tensor &input_indices_in,
-                         const Tensor &input_shape_in,
-                         const Tensor &target_shape_in, int output_indices_idx,
+void ReshapeSparseTensor(OpKernelContext* context,
+                         const Tensor& input_indices_in,
+                         const Tensor& input_shape_in,
+                         const Tensor& target_shape_in, int output_indices_idx,
                          int output_shape_idx);
 
 }  // namespace tensorflow

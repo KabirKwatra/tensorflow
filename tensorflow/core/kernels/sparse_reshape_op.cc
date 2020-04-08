@@ -30,14 +30,14 @@ limitations under the License.
 namespace tensorflow {
 
 class SparseReshapeOp : public OpKernel {
-public:
-    explicit SparseReshapeOp(OpKernelConstruction* context) : OpKernel(context) {}
+ public:
+  explicit SparseReshapeOp(OpKernelConstruction* context) : OpKernel(context) {}
 
-    void Compute(OpKernelContext* context) override {
-        ReshapeSparseTensor(context, context->input(0), context->input(1),
-                            context->input(2), 0 /* output indices index */,
-                            1 /* output shape index */);
-    }
+  void Compute(OpKernelContext* context) override {
+    ReshapeSparseTensor(context, context->input(0), context->input(1),
+                        context->input(2), 0 /* output indices index */,
+                        1 /* output shape index */);
+  }
 };
 
 REGISTER_KERNEL_BUILDER(Name("SparseReshape").Device(DEVICE_CPU),

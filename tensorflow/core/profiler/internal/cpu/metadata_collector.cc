@@ -34,64 +34,64 @@ namespace {
 //
 // Thread-safety: This class is go/thread-compatible.
 class MetadataCollector : public ProfilerInterface {
-public:
-    MetadataCollector() = default;
+ public:
+  MetadataCollector() = default;
 
-    Status Start() override {
-        if (!trace_active_) {
-            xla::gpu::GpuDebugInfoManager::Get()->StartTracing();
-            trace_active_ = true;
-        }
-        return Status::OK();
+  Status Start() override {
+    if (!trace_active_) {
+      xla::gpu::GpuDebugInfoManager::Get()->StartTracing();
+      trace_active_ = true;
     }
+    return Status::OK();
+  }
 
-    Status Stop() override {
-        if (trace_active_) {
-            xla::gpu::GpuDebugInfoManager::Get()->StopTracing(&debug_info_);
-            trace_active_ = false;
-        }
-        return Status::OK();
+  Status Stop() override {
+    if (trace_active_) {
+      xla::gpu::GpuDebugInfoManager::Get()->StopTracing(&debug_info_);
+      trace_active_ = false;
     }
+    return Status::OK();
+  }
 
-    Status CollectData(RunMetadata* run_metadata) override {
-        return Status::OK();  // legacy session is not supported.
+  Status CollectData(RunMetadata* run_metadata) override {
+    return Status::OK();  // legacy session is not supported.
+  }
+
+  Status CollectData(XSpace* space) override {
+    if (!debug_info_.empty()) {
+      XPlane* plane = GetOrCreatePlane(space, kMetadataPlane);
+      plane->set_id(kMetadataPlaneId);
+      XPlaneBuilder xplane(plane);
+      for (auto& p : debug_info_) {
+        std::string hlo_proto;
+        p.hlo_proto->SerializeToString(&hlo_proto);
+        p.hlo_proto.reset();
+        xplane.AddStatValue(*xplane.GetOrCreateStatMetadata(kHloProto),
+                            std::move(hlo_proto), /*is_bytes=*/true);
+      }
+      debug_info_.clear();
     }
+    return Status::OK();
+  }
 
-    Status CollectData(XSpace* space) override {
-        if (!debug_info_.empty()) {
-            XPlane* plane = GetOrCreatePlane(space, kMetadataPlane);
-            plane->set_id(kMetadataPlaneId);
-            XPlaneBuilder xplane(plane);
-            for (auto& p : debug_info_) {
-                std::string hlo_proto;
-                p.hlo_proto->SerializeToString(&hlo_proto);
-                p.hlo_proto.reset();
-                xplane.AddStatValue(*xplane.GetOrCreateStatMetadata(kHloProto),
-                                    std::move(hlo_proto), /*is_bytes=*/true);
-            }
-            debug_info_.clear();
-        }
-        return Status::OK();
-    }
+ private:
+  std::vector<xla::gpu::GpuModuleDebugInfo> debug_info_;
+  bool trace_active_ = false;
 
-private:
-    std::vector<xla::gpu::GpuModuleDebugInfo> debug_info_;
-    bool trace_active_ = false;
-
-    TF_DISALLOW_COPY_AND_ASSIGN(MetadataCollector);
+  TF_DISALLOW_COPY_AND_ASSIGN(MetadataCollector);
 };
 
 std::unique_ptr<ProfilerInterface> CreatMetadataCollector(
     const ProfileOptions& options) {
-    return options.enable_hlo_proto() ? absl::make_unique<MetadataCollector>()
-           : nullptr;
+  return options.enable_hlo_proto() ? absl::make_unique<MetadataCollector>()
+                                    : nullptr;
 }
 
 }  // namespace
 
 auto register_metadata_collector_factory = [] {
-    RegisterProfilerFactory(&CreatMetadataCollector);
-    return 0;
+  RegisterProfilerFactory(&CreatMetadataCollector);
+  return 0;
 }();
 
 }  // namespace profiler
