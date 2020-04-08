@@ -27,8 +27,7 @@ from tensorflow.python.framework import smart_cond
 from tensorflow.python.keras import backend
 from tensorflow.python.keras import optimizers
 from tensorflow.python.keras.mixed_precision.experimental import (
-    loss_scale as keras_loss_scale_module,
-)
+    loss_scale as keras_loss_scale_module, )
 from tensorflow.python.keras.optimizer_v2 import optimizer_v2
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import math_ops
@@ -128,21 +127,17 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
         if not isinstance(optimizer, optimizer_v2.OptimizerV2):
             raise ValueError(
                 '"optimizer" must be an instance of OptimizerV2, but '
-                "got: %s" % optimizer
-            )
+                "got: %s" % optimizer)
         if optimizer.clipnorm is not None:
             raise ValueError(
                 "LossScaleOptimizer does not support wrapping "
                 "optimizers with a clipnorm. Optimizer %s has clipnorm "
-                "%s" % (optimizer, optimizer.clipnorm)
-            )
+                "%s" % (optimizer, optimizer.clipnorm))
 
         if optimizer.clipvalue is not None:
-            raise ValueError(
-                "LossScaleOptimizer does not support wrapping "
-                "optimizers with a clipvalue. Optimizer %s has "
-                "clipvalue %s" % (optimizer, optimizer.clipvalue)
-            )
+            raise ValueError("LossScaleOptimizer does not support wrapping "
+                             "optimizers with a clipvalue. Optimizer %s has "
+                             "clipvalue %s" % (optimizer, optimizer.clipvalue))
         self._raise_if_strategy_unsupported()
 
         self.clipnorm = None
@@ -152,7 +147,8 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
         self._loss_scale = keras_loss_scale_module.get(loss_scale)
         if self._loss_scale is None:
             raise ValueError("loss_scale cannot be None.")
-        for weight in loss_scale_module.get_loss_scale_weights(self._loss_scale):
+        for weight in loss_scale_module.get_loss_scale_weights(
+                self._loss_scale):
             # We cannot call `track_variable` in the LossScale class itself, because a
             # file outside of Keras cannot depend on a Keras file. Calling it here
             # instead is OK, because a variable only needs to be tracked if used with
@@ -225,14 +221,16 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
         loss_scale = self._loss_scale()
         loss_scale_reciprocal = 1.0 / loss_scale
         return [
-            _multiply_gradient(g, loss_scale_reciprocal) if g is not None else None
-            for g in grads
+            _multiply_gradient(g, loss_scale_reciprocal)
+            if g is not None else None for g in grads
         ]
 
     def _compute_gradients(self, loss, var_list, grad_loss=None):
         loss = self.get_scaled_loss(loss)
         grads_and_vars = self._optimizer._compute_gradients(
-            loss, var_list, grad_loss  # pylint: disable=protected-access
+            loss,
+            var_list,
+            grad_loss  # pylint: disable=protected-access
         )
         grads = [g for g, _ in grads_and_vars]
         variables = [v for _, v in grads_and_vars]
@@ -245,15 +243,15 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
         return self.get_unscaled_gradients(grads)
 
     def _create_all_weights(self, var_list):
-        self._optimizer._create_all_weights(
-            var_list
-        )  # pylint: disable=protected-access
+        self._optimizer._create_all_weights(var_list)  # pylint: disable=protected-access
 
-    def apply_gradients(
-        self, grads_and_vars, name=None, experimental_aggregate_gradients=True
-    ):
+    def apply_gradients(self,
+                        grads_and_vars,
+                        name=None,
+                        experimental_aggregate_gradients=True):
         if distribution_strategy_context.in_cross_replica_context():
-            raise ValueError("apply_gradients() must be called in a replica context.")
+            raise ValueError(
+                "apply_gradients() must be called in a replica context.")
         # We check for the strategy here despite already checking in the constructor
         # as frequently the optimizer is created outside the strategy's scope.
         self._raise_if_strategy_unsupported()
@@ -264,11 +262,11 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
             args=(grads_and_vars, name, experimental_aggregate_gradients),
         )
 
-    def _apply_gradients_cross_replica(
-        self, distribution, grads_and_vars, name, experimental_aggregate_gradients
-    ):
+    def _apply_gradients_cross_replica(self, distribution, grads_and_vars,
+                                       name, experimental_aggregate_gradients):
         grads = [g for g, _ in grads_and_vars]
-        loss_scale_update_op, should_apply_grads = self._loss_scale.update(grads)
+        loss_scale_update_op, should_apply_grads = self._loss_scale.update(
+            grads)
 
         def apply_fn():
             # We do not want DistributionStrategy to unwrap any MirroredVariables in
@@ -279,21 +277,20 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
             wrapped_vars = _UnwrapPreventer([v for _, v in grads_and_vars])
             return distribution.extended.call_for_each_replica(
                 self._apply_gradients,
-                args=(grads, wrapped_vars, name, experimental_aggregate_gradients),
+                args=(grads, wrapped_vars, name,
+                      experimental_aggregate_gradients),
             )
 
         # Note: We must call this cond() in a cross-replica context.
         # DistributionStrategy does not support having a cond in a replica context
         # with a branch that calls `merge_call`, and self._optimizer.apply_gradients
         # calls `merge_call`.
-        maybe_apply_op = smart_cond.smart_cond(
-            should_apply_grads, apply_fn, control_flow_ops.no_op
-        )
+        maybe_apply_op = smart_cond.smart_cond(should_apply_grads, apply_fn,
+                                               control_flow_ops.no_op)
         return control_flow_ops.group(maybe_apply_op, loss_scale_update_op)
 
-    def _apply_gradients(
-        self, grads, wrapped_vars, name, experimental_aggregate_gradients
-    ):
+    def _apply_gradients(self, grads, wrapped_vars, name,
+                         experimental_aggregate_gradients):
         # TODO(reedwm): This will raise a fairly cryptic error message if
         # self._optimizer.apply_gradients does not take
         # experimental_aggregate_gradients.
@@ -305,7 +302,8 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
 
     def get_config(self):
         serialized_optimizer = optimizers.serialize(self._optimizer)
-        serialized_loss_scale = keras_loss_scale_module.serialize(self._loss_scale)
+        serialized_loss_scale = keras_loss_scale_module.serialize(
+            self._loss_scale)
         return {
             "optimizer": serialized_optimizer,
             "loss_scale": serialized_loss_scale,
@@ -315,19 +313,17 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
     def from_config(cls, config, custom_objects=None):
         config = config.copy()  # Make a copy, since we mutate config
         config["optimizer"] = optimizers.deserialize(
-            config["optimizer"], custom_objects=custom_objects
-        )
+            config["optimizer"], custom_objects=custom_objects)
         config["loss_scale"] = keras_loss_scale_module.deserialize(
-            config["loss_scale"], custom_objects=custom_objects
-        )
+            config["loss_scale"], custom_objects=custom_objects)
         return cls(**config)
 
     def _raise_if_strategy_unsupported(self):
         if not strategy_supports_loss_scaling():
             strategy = distribution_strategy_context.get_strategy()
             if isinstance(
-                strategy, (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)
-            ):
+                    strategy,
+                (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)):
                 raise ValueError(
                     "Loss scaling is not supported with TPUStrategy. Loss scaling is "
                     "unnecessary with TPUs, since they support bfloat16 instead of "
@@ -338,8 +334,8 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
                 raise ValueError(
                     "Loss scaling is not supported with the "
                     "tf.distribute.Strategy: %s. Try using a different "
-                    "Strategy, e.g. a MirroredStrategy" % strategy.__class__.__name__
-                )
+                    "Strategy, e.g. a MirroredStrategy" %
+                    strategy.__class__.__name__)
 
     # Delegations: We delegate most OptimizerV2 methods to the wrapped optimizer
     # below.
@@ -369,9 +365,7 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
         return self._optimizer.set_weights(weights)
 
     def _aggregate_gradients(self, grads_and_vars):
-        return self._optimizer._aggregate_gradients(
-            grads_and_vars
-        )  # pylint: disable=protected-access
+        return self._optimizer._aggregate_gradients(grads_and_vars)  # pylint: disable=protected-access
 
     # For the most part, we only expose methods in the base OptimizerV2, not
     # individual subclasses like Adam. However, although "learning_rate" and "lr"
@@ -403,15 +397,13 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
         # both optimizers share slot variables.
         raise AttributeError(
             "You cannot call get_slot on a LossScaleOptimizer. This limitation "
-            "will be removed in the future."
-        )
+            "will be removed in the future.")
 
     def add_slot(self, var, slot_name, initializer="zeros"):
         # We disallow adding a slot for consistency with `get_slot`.
         raise AttributeError(
             "You cannot call add_slot on a LossScaleOptimizer. This limitation "
-            "will be removed in the future."
-        )
+            "will be removed in the future.")
 
     # We do not override some OptimizerV2 methods. For each, we describe why we do
     # not delegate them to self._optimizer:
@@ -431,18 +423,17 @@ class LossScaleOptimizer(optimizer_v2.OptimizerV2):
 
 
 # pylint: disable=protected-access
-mixed_precision._register_wrapper_optimizer_cls(
-    optimizer_v2.OptimizerV2, LossScaleOptimizer
-)
+mixed_precision._register_wrapper_optimizer_cls(optimizer_v2.OptimizerV2,
+                                                LossScaleOptimizer)
 
 
 def _multiply_gradient(gradient, scale):
     """Multiply a (possibly sparse) gradient by the given scale factor."""
     scale = math_ops.cast(scale, gradient.dtype)
     if isinstance(gradient, ops.IndexedSlices):
-        return ops.IndexedSlices(
-            gradient.values * scale, gradient.indices, dense_shape=gradient.dense_shape
-        )
+        return ops.IndexedSlices(gradient.values * scale,
+                                 gradient.indices,
+                                 dense_shape=gradient.dense_shape)
     else:
         return gradient * scale
 

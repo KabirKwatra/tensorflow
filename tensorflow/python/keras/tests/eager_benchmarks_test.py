@@ -50,21 +50,21 @@ from tensorflow.python.training import gradient_descent
 class SubclassedKerasModel(keras.Model):
     def __init__(self, initializer="ones"):
         super(SubclassedKerasModel, self).__init__()
-        self.layer_a = keras.layers.Dense(
-            64, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-        self.layer_b = keras.layers.Dense(
-            128, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-        self.layer_c = keras.layers.Dense(
-            256, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-        self.layer_d = keras.layers.Dense(
-            256, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-        self.layer_e = keras.layers.Dense(
-            10, kernel_initializer=initializer, bias_initializer="zeros"
-        )
+        self.layer_a = keras.layers.Dense(64,
+                                          kernel_initializer=initializer,
+                                          bias_initializer="zeros")
+        self.layer_b = keras.layers.Dense(128,
+                                          kernel_initializer=initializer,
+                                          bias_initializer="zeros")
+        self.layer_c = keras.layers.Dense(256,
+                                          kernel_initializer=initializer,
+                                          bias_initializer="zeros")
+        self.layer_d = keras.layers.Dense(256,
+                                          kernel_initializer=initializer,
+                                          bias_initializer="zeros")
+        self.layer_e = keras.layers.Dense(10,
+                                          kernel_initializer=initializer,
+                                          bias_initializer="zeros")
 
     def call(self, x):
         x = self.layer_a(x)
@@ -75,22 +75,22 @@ class SubclassedKerasModel(keras.Model):
 
 
 def make_keras_model(initializer="ones"):
-    model_input = keras.Input(shape=(10,))
-    x = keras.layers.Dense(
-        64, kernel_initializer=initializer, bias_initializer="zeros"
-    )(model_input)
-    x = keras.layers.Dense(
-        128, kernel_initializer=initializer, bias_initializer="zeros"
-    )(x)
-    x = keras.layers.Dense(
-        256, kernel_initializer=initializer, bias_initializer="zeros"
-    )(x)
-    x = keras.layers.Dense(
-        256, kernel_initializer=initializer, bias_initializer="zeros"
-    )(x)
-    x = keras.layers.Dense(
-        10, kernel_initializer=initializer, bias_initializer="zeros"
-    )(x)
+    model_input = keras.Input(shape=(10, ))
+    x = keras.layers.Dense(64,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros")(model_input)
+    x = keras.layers.Dense(128,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros")(x)
+    x = keras.layers.Dense(256,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros")(x)
+    x = keras.layers.Dense(256,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros")(x)
+    x = keras.layers.Dense(10,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros")(x)
     return keras.Model(inputs=model_input, outputs=x)
 
 
@@ -101,27 +101,24 @@ def make_sequential_keras_model(initializer="ones"):
             64,
             kernel_initializer=initializer,
             bias_initializer="zeros",
-            input_shape=(10,),
-        )
-    )
+            input_shape=(10, ),
+        ))
     model.add(
-        keras.layers.Dense(
-            128, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-    )
+        keras.layers.Dense(128,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros"))
     model.add(
-        keras.layers.Dense(
-            256, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-    )
+        keras.layers.Dense(256,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros"))
     model.add(
-        keras.layers.Dense(
-            256, kernel_initializer=initializer, bias_initializer="zeros"
-        )
-    )
+        keras.layers.Dense(256,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros"))
     model.add(
-        keras.layers.Dense(10, kernel_initializer=initializer, bias_initializer="zeros")
-    )
+        keras.layers.Dense(10,
+                           kernel_initializer=initializer,
+                           bias_initializer="zeros"))
     return model
 
 
@@ -150,8 +147,10 @@ class MicroBenchmarks(test.Benchmark):
             iters=num_iters,
             wall_time=mean_us,
             extras={
-                "examples_per_sec": float("{0:.3f}".format(num_iters / total_time)),
-                "us_per_example": float("{0:.3f}".format(total_time * 1e6 / num_iters)),
+                "examples_per_sec":
+                float("{0:.3f}".format(num_iters / total_time)),
+                "us_per_example":
+                float("{0:.3f}".format(total_time * 1e6 / num_iters)),
             },
         )
 
@@ -207,7 +206,10 @@ class MicroBenchmarks(test.Benchmark):
         )
 
         def func():
-            return model.fit(dataset, epochs=1, steps_per_epoch=1000, verbose=0)
+            return model.fit(dataset,
+                             epochs=1,
+                             steps_per_epoch=1000,
+                             verbose=0)
 
         # First call is more expensive (creates variables etc.), discount that.
         model.fit(dataset, epochs=1, steps_per_epoch=1, verbose=0)
@@ -283,7 +285,8 @@ class MicroBenchmarks(test.Benchmark):
         model = make_keras_model(initializer="glorot_uniform")
         self._benchmark_keras_model_fit(model, run_eagerly=True)
 
-    def benchmark_keras_model_functional_fit_run_model_eagerly_with_profiler(self):
+    def benchmark_keras_model_functional_fit_run_model_eagerly_with_profiler(
+            self):
         profiler.start()
         model = make_keras_model(initializer="glorot_uniform")
         self._benchmark_keras_model_fit(model, run_eagerly=True)
