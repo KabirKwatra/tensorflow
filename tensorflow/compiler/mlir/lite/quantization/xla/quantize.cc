@@ -33,45 +33,48 @@ namespace mlir {
 namespace xla_hlo {
 
 static void RegisterDialects() {
-  static bool init_once = []() {
-    mlir::registerDialect<mlir::xla_hlo::XlaHloDialect>();
-    mlir::registerDialect<mlir::StandardOpsDialect>();
-    mlir::registerDialect<mlir::quant::QuantizationDialect>();
-    return true;
-  }();
-  (void)init_once;
+    static bool init_once = []() {
+        mlir::registerDialect<mlir::xla_hlo::XlaHloDialect>();
+        mlir::registerDialect<mlir::StandardOpsDialect>();
+        mlir::registerDialect<mlir::quant::QuantizationDialect>();
+        return true;
+    }
+    ();
+    (void)init_once;
 }
 
 // Quantizes the model in the computation.
 tensorflow::Status XlaQuantize(const tensorflow::tf2xla::Config& config,
                                xla::XlaComputation* computation) {
-  TF_ASSIGN_OR_RETURN(std::unique_ptr<xla::HloSnapshot> snapshot,
-                      computation->Snapshot());
+    TF_ASSIGN_OR_RETURN(std::unique_ptr<xla::HloSnapshot> snapshot,
+                        computation->Snapshot());
 
-  RegisterDialects();
-  MLIRContext context;
-  OwningModuleRef module = ModuleOp::create(UnknownLoc::get(&context));
-  auto status = xla::ConvertHloToMlirHlo(
-      module.get(), snapshot->mutable_hlo()->mutable_hlo_module());
-  if (!status.ok()) {
-    LOG(ERROR) << "Hlo module import failed: " << status;
-    return status;
-  }
+    RegisterDialects();
+    MLIRContext context;
+    OwningModuleRef module = ModuleOp::create(UnknownLoc::get(&context));
+    auto status = xla::ConvertHloToMlirHlo(
+                      module.get(), snapshot->mutable_hlo()->mutable_hlo_module());
+    if (!status.ok()) {
+        LOG(ERROR) << "Hlo module import failed: " << status;
+        return status;
+    }
 
-  PassManager pm(&context);
-  pm.addPass(createCanonicalizerPass());
-  pm.addPass(createInlinerPass());
-  pm.addPass(createSymbolDCEPass());
-  pm.addNestedPass<FuncOp>(createCSEPass());
-  pm.addNestedPass<FuncOp>(CreateCpuKernelFusionPass());
+    PassManager pm(&context);
+    pm.addPass(createCanonicalizerPass());
+    pm.addPass(createInlinerPass());
+    pm.addPass(createSymbolDCEPass());
+    pm.addNestedPass<FuncOp>(createCSEPass());
+    pm.addNestedPass<FuncOp>(CreateCpuKernelFusionPass());
 
-  mlir::StatusScopedDiagnosticHandler diag_handler(&context);
-  LogicalResult result = pm.run(module.get());
-  (void)result;
+    mlir::StatusScopedDiagnosticHandler diag_handler(&context);
+    LogicalResult result = pm.run(module.get());
+    (void)result;
 
-  module->walk([&](quant::QuantizeRegionOp op) { op.dump(); });
+    module->walk([&](quant::QuantizeRegionOp op) {
+        op.dump();
+    });
 
-  return tensorflow::Status::OK();
+    return tensorflow::Status::OK();
 }
 
 }  // namespace xla_hlo
