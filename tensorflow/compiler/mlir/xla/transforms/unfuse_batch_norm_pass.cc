@@ -29,11 +29,11 @@ namespace {
 
 struct TestUnfuseBatchNormPass
     : public PassWrapper<TestUnfuseBatchNormPass, OperationPass<>> {
-  void runOnOperation() override {
-    OwningRewritePatternList patterns;
-    PopulateUnfuseBatchNormPatterns(&getContext(), &patterns);
-    applyPatternsGreedily(getOperation(), patterns);
-  }
+    void runOnOperation() override {
+        OwningRewritePatternList patterns;
+        PopulateUnfuseBatchNormPatterns(&getContext(), &patterns);
+        applyPatternsGreedily(getOperation(), patterns);
+    }
 };
 
 }  // namespace
