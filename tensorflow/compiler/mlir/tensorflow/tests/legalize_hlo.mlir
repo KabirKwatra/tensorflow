@@ -1492,4 +1492,3 @@ func @complex(%arg0: tensor<3xf32>, %arg1: tensor<3xf32>) -> tensor<3xcomplex<f3
 // CHECK:           [[VAL_369:%.*]] = "tf.Complex"([[VAL_367]], [[VAL_368]]) : (tensor<3xf32>, tensor<3xf32>) -> tensor<3xcomplex<f32>>
 // CHECK:           return [[VAL_369]] : tensor<3xcomplex<f32>>
 // CHECK:         }
-

@@ -61,4 +61,3 @@ func @inline_into_island() -> (tensor<2xi32>, tensor<2xi32>) {
   }
   return %0#1, %0#1 : tensor<2xi32>, tensor<2xi32>
 }
-
