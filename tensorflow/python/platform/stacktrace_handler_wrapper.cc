@@ -19,6 +19,6 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_stacktrace_handler, m) {
-  m.def("InstallStacktraceHandler",
-        &tensorflow::testing::InstallStacktraceHandler);
+    m.def("InstallStacktraceHandler",
+          &tensorflow::testing::InstallStacktraceHandler);
 };

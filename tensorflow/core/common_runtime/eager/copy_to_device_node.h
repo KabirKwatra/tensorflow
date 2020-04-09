@@ -25,60 +25,64 @@ limitations under the License.
 namespace tensorflow {
 
 class CopyToDeviceNode : public EagerNode {
- public:
-  CopyToDeviceNode(TensorHandle* src, TensorHandle* dst, Device* dstd,
-                   const EagerContext& ctx, bool async, bool mirror)
-      : EagerNode(),
-        src_(src),
-        dst_(dst),
-        dstd_(dstd),
-        ctx_(ctx),
-        async_(async),
-        mirror_(mirror) {
-    if (async_) {
-      src_->Ref();
-      dst_->Ref();
+public:
+    CopyToDeviceNode(TensorHandle* src, TensorHandle* dst, Device* dstd,
+                     const EagerContext& ctx, bool async, bool mirror)
+        : EagerNode(),
+          src_(src),
+          dst_(dst),
+          dstd_(dstd),
+          ctx_(ctx),
+          async_(async),
+          mirror_(mirror) {
+        if (async_) {
+            src_->Ref();
+            dst_->Ref();
+        }
     }
-  }
 
-  ~CopyToDeviceNode() override {
-    if (async_) {
-      src_->Unref();
-      dst_->Unref();
+    ~CopyToDeviceNode() override {
+        if (async_) {
+            src_->Unref();
+            dst_->Unref();
+        }
     }
-  }
 
-  Status Run() override {
-    tensorflow::Tensor tensor;
-    ScopedMemoryDebugAnnotation op_annotation(
-        "eager::CopyToDeviceNode", "dynamic", tensor.dtype(), &tensor.shape());
-    TF_RETURN_IF_ERROR(src_->CopyToDevice(ctx_, dstd_, &tensor));
-    if (!async_ && mirror_) {
-      return dst_->AddLocalMirror(std::move(tensor), dstd_);
-    } else {
-      return dst_->SetTensor(std::move(tensor), dstd_);
+    Status Run() override {
+        tensorflow::Tensor tensor;
+        ScopedMemoryDebugAnnotation op_annotation(
+            "eager::CopyToDeviceNode", "dynamic", tensor.dtype(), &tensor.shape());
+        TF_RETURN_IF_ERROR(src_->CopyToDevice(ctx_, dstd_, &tensor));
+        if (!async_ && mirror_) {
+            return dst_->AddLocalMirror(std::move(tensor), dstd_);
+        } else {
+            return dst_->SetTensor(std::move(tensor), dstd_);
+        }
     }
-  }
 
-  void Abort(Status status) override { dst_->Poison(status, dstd_); }
+    void Abort(Status status) override {
+        dst_->Poison(status, dstd_);
+    }
 
-  string DebugString() const override {
-    string out = "[CopyToDeviceNode]";
-    strings::StrAppend(&out, " src_tensor: ", src_->DebugString());
-    strings::StrAppend(&out, ", dst_tensor: ", dst_->DebugString());
-    strings::StrAppend(&out, ", dst_device: ", dstd_ ? dstd_->name() : "[]");
-    return out;
-  }
+    string DebugString() const override {
+        string out = "[CopyToDeviceNode]";
+        strings::StrAppend(&out, " src_tensor: ", src_->DebugString());
+        strings::StrAppend(&out, ", dst_tensor: ", dst_->DebugString());
+        strings::StrAppend(&out, ", dst_device: ", dstd_ ? dstd_->name() : "[]");
+        return out;
+    }
 
-  TensorHandle* dst() { return dst_; }
+    TensorHandle* dst() {
+        return dst_;
+    }
 
- private:
-  TensorHandle* src_;
-  TensorHandle* dst_;
-  Device* dstd_;
-  const EagerContext& ctx_;
-  bool async_;
-  bool mirror_;
+private:
+    TensorHandle* src_;
+    TensorHandle* dst_;
+    Device* dstd_;
+    const EagerContext& ctx_;
+    bool async_;
+    bool mirror_;
 };
 
 }  // namespace tensorflow

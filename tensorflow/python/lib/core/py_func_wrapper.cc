@@ -19,7 +19,7 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_py_func, m) {
-  m.def("initialize_py_trampoline", [](py::object trampoline) {
-    return tensorflow::InitializePyTrampoline(trampoline.ptr());
-  });
+    m.def("initialize_py_trampoline", [](py::object trampoline) {
+        return tensorflow::InitializePyTrampoline(trampoline.ptr());
+    });
 }

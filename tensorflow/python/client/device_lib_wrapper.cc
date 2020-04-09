@@ -28,31 +28,31 @@ limitations under the License.
 namespace py = ::pybind11;
 
 PYBIND11_MODULE(_pywrap_device_lib, m) {
-  m.def("list_devices", [](py::object serialized_config) {
-    tensorflow::ConfigProto config;
-    if (!serialized_config.is_none()) {
-      config.ParseFromString(
-          static_cast<std::string>(serialized_config.cast<py::bytes>()));
-    }
+    m.def("list_devices", [](py::object serialized_config) {
+        tensorflow::ConfigProto config;
+        if (!serialized_config.is_none()) {
+            config.ParseFromString(
+                static_cast<std::string>(serialized_config.cast<py::bytes>()));
+        }
 
-    tensorflow::SessionOptions options;
-    options.config = config;
-    std::vector<std::unique_ptr<tensorflow::Device>> devices;
-    tensorflow::MaybeRaiseFromStatus(tensorflow::DeviceFactory::AddDevices(
-        options, /*name_prefix=*/"", &devices));
+        tensorflow::SessionOptions options;
+        options.config = config;
+        std::vector<std::unique_ptr<tensorflow::Device>> devices;
+        tensorflow::MaybeRaiseFromStatus(tensorflow::DeviceFactory::AddDevices(
+                                             options, /*name_prefix=*/"", &devices));
 
-    py::list results;
-    std::string serialized_attr;
-    for (const auto& device : devices) {
-      if (!device->attributes().SerializeToString(&serialized_attr)) {
-        tensorflow::MaybeRaiseFromStatus(tensorflow::errors::Internal(
-            "Could not serialize DeviceAttributes to bytes"));
-      }
+        py::list results;
+        std::string serialized_attr;
+        for (const auto& device : devices) {
+            if (!device->attributes().SerializeToString(&serialized_attr)) {
+                tensorflow::MaybeRaiseFromStatus(tensorflow::errors::Internal(
+                                                     "Could not serialize DeviceAttributes to bytes"));
+            }
 
-      // The default type caster for std::string assumes its contents
-      // is UTF8-encoded.
-      results.append(py::bytes(serialized_attr));
-    }
-    return results;
-  });
+            // The default type caster for std::string assumes its contents
+            // is UTF8-encoded.
+            results.append(py::bytes(serialized_attr));
+        }
+        return results;
+    });
 }

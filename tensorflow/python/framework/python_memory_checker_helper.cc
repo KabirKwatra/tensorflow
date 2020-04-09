@@ -18,5 +18,7 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_python_memory_checker_helper, m) {
-  m.def("mark_stack_trace_and_call", [](py::function func) { func(); });
+    m.def("mark_stack_trace_and_call", [](py::function func) {
+        func();
+    });
 };

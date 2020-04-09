@@ -26,26 +26,32 @@ namespace {
 
 // Helper to implement TraceMe as a context manager in Python.
 class TraceMeWrapper {
- public:
-  explicit TraceMeWrapper(const tensorflow::string& name) : name_(name) {}
+public:
+    explicit TraceMeWrapper(const tensorflow::string& name) : name_(name) {}
 
-  void Enter() { traceme_.emplace(std::move(name_)); }
+    void Enter() {
+        traceme_.emplace(std::move(name_));
+    }
 
-  void Exit() { traceme_.reset(); }
+    void Exit() {
+        traceme_.reset();
+    }
 
-  static bool IsEnabled() { return tensorflow::profiler::TraceMe::Active(); }
+    static bool IsEnabled() {
+        return tensorflow::profiler::TraceMe::Active();
+    }
 
- private:
-  tensorflow::string name_;
-  absl::optional<tensorflow::profiler::TraceMe> traceme_;
+private:
+    tensorflow::string name_;
+    absl::optional<tensorflow::profiler::TraceMe> traceme_;
 };
 
 }  // namespace
 
 PYBIND11_MODULE(_pywrap_traceme, m) {
-  py::class_<TraceMeWrapper> traceme_class(m, "TraceMe");
-  traceme_class.def(py::init<const tensorflow::string&>())
-      .def("Enter", &TraceMeWrapper::Enter)
-      .def("Exit", &TraceMeWrapper::Exit)
-      .def_static("IsEnabled", &TraceMeWrapper::IsEnabled);
+    py::class_<TraceMeWrapper> traceme_class(m, "TraceMe");
+    traceme_class.def(py::init<const tensorflow::string&>())
+    .def("Enter", &TraceMeWrapper::Enter)
+    .def("Exit", &TraceMeWrapper::Exit)
+    .def_static("IsEnabled", &TraceMeWrapper::IsEnabled);
 };

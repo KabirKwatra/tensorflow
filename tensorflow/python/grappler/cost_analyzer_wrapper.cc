@@ -28,31 +28,31 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_cost_analyzer, m) {
-  m.def("GenerateCostReport",
-        [](const py::bytes& serialized_metagraph, bool per_node_report,
-           bool verbose, tensorflow::grappler::Cluster* cluster) -> py::bytes {
-          tensorflow::MetaGraphDef metagraph;
-          if (!metagraph.ParseFromString(serialized_metagraph)) {
+    m.def("GenerateCostReport",
+          [](const py::bytes& serialized_metagraph, bool per_node_report,
+    bool verbose, tensorflow::grappler::Cluster* cluster) -> py::bytes {
+        tensorflow::MetaGraphDef metagraph;
+        if (!metagraph.ParseFromString(serialized_metagraph)) {
             return "The MetaGraphDef could not be parsed as a valid protocol "
-                   "buffer";
-          }
+            "buffer";
+        }
 
-          tensorflow::grappler::ItemConfig cfg;
-          cfg.apply_optimizations = false;
-          std::unique_ptr<tensorflow::grappler::GrapplerItem> item =
-              tensorflow::grappler::GrapplerItemFromMetaGraphDef(
-                  "metagraph", metagraph, cfg);
-          if (item == nullptr) {
+        tensorflow::grappler::ItemConfig cfg;
+        cfg.apply_optimizations = false;
+        std::unique_ptr<tensorflow::grappler::GrapplerItem> item =
+        tensorflow::grappler::GrapplerItemFromMetaGraphDef(
+            "metagraph", metagraph, cfg);
+        if (item == nullptr) {
             return "Error: failed to preprocess metagraph: check your log file "
-                   "for errors";
-          }
+            "for errors";
+        }
 
-          std::string suffix;
-          tensorflow::grappler::CostAnalyzer analyzer(*item, cluster, suffix);
+        std::string suffix;
+        tensorflow::grappler::CostAnalyzer analyzer(*item, cluster, suffix);
 
-          std::stringstream os;
-          tensorflow::MaybeRaiseFromStatus(
-              analyzer.GenerateReport(os, per_node_report, verbose));
-          return py::bytes(os.str());
-        });
+        std::stringstream os;
+        tensorflow::MaybeRaiseFromStatus(
+            analyzer.GenerateReport(os, per_node_report, verbose));
+        return py::bytes(os.str());
+    });
 }

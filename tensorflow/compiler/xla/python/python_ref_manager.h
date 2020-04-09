@@ -36,44 +36,44 @@ namespace xla {
 // This class holds references to Python objects outside a GIL scope, that can
 // be collected later when the GIL is held by calling CollectGarbage().
 class PythonRefManager {
- public:
-  PythonRefManager() = default;
+public:
+    PythonRefManager() = default;
 
-  // Holds references to a set of pybind11::objects, adding the references to
-  // the PythonRefManager on destruction.
-  class ManagedPyObjects {
-   public:
-    ManagedPyObjects() = default;
-    ManagedPyObjects(PythonRefManager* manager,
-                     absl::Span<pybind11::object> objects);
+    // Holds references to a set of pybind11::objects, adding the references to
+    // the PythonRefManager on destruction.
+    class ManagedPyObjects {
+    public:
+        ManagedPyObjects() = default;
+        ManagedPyObjects(PythonRefManager* manager,
+                         absl::Span<pybind11::object> objects);
 
-    ~ManagedPyObjects();
+        ~ManagedPyObjects();
 
-    ManagedPyObjects(const ManagedPyObjects& other) = delete;
-    ManagedPyObjects(ManagedPyObjects&& other) = default;
-    ManagedPyObjects& operator=(const ManagedPyObjects& other) = delete;
-    ManagedPyObjects& operator=(ManagedPyObjects&& other) = default;
+        ManagedPyObjects(const ManagedPyObjects& other) = delete;
+        ManagedPyObjects(ManagedPyObjects&& other) = default;
+        ManagedPyObjects& operator=(const ManagedPyObjects& other) = delete;
+        ManagedPyObjects& operator=(ManagedPyObjects&& other) = default;
 
-   private:
-    PythonRefManager* manager_ = nullptr;
-    absl::InlinedVector<pybind11::object, 1> objects_;
-  };
+    private:
+        PythonRefManager* manager_ = nullptr;
+        absl::InlinedVector<pybind11::object, 1> objects_;
+    };
 
-  // Creates a managed std::shared_ptr to an object. When the shared_ptr is
-  // destroyed, the reference to 'object' will be added to python_garbage_,
-  // and collected next time CollectGarbage() is called.
-  std::shared_ptr<ManagedPyObjects> ManageReference(pybind11::object object);
-  std::shared_ptr<ManagedPyObjects> ManageReferences(
-      absl::Span<pybind11::object> objects);
+    // Creates a managed std::shared_ptr to an object. When the shared_ptr is
+    // destroyed, the reference to 'object' will be added to python_garbage_,
+    // and collected next time CollectGarbage() is called.
+    std::shared_ptr<ManagedPyObjects> ManageReference(pybind11::object object);
+    std::shared_ptr<ManagedPyObjects> ManageReferences(
+        absl::Span<pybind11::object> objects);
 
-  // Releases the contents of python_garbage_. Requires that the GIL is held.
-  // The client calls this method during API entry points where the GIL is held
-  // to free any garbage that has accumulated.
-  void CollectGarbage();
+    // Releases the contents of python_garbage_. Requires that the GIL is held.
+    // The client calls this method during API entry points where the GIL is held
+    // to free any garbage that has accumulated.
+    void CollectGarbage();
 
- private:
-  absl::Mutex mu_;
-  std::deque<pybind11::object> python_garbage_ ABSL_GUARDED_BY(mu_);
+private:
+    absl::Mutex mu_;
+    std::deque<pybind11::object> python_garbage_ ABSL_GUARDED_BY(mu_);
 };
 
 // A global PythonRefManager. Unless `CollectGarbage()` is called before

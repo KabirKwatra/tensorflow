@@ -25,25 +25,25 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_stat_summarizer, m) {
-  py::class_<tensorflow::StatSummarizer> stat_summ_class(m, "StatSummarizer",
-                                                         py::dynamic_attr());
-  stat_summ_class
-      .def(py::init([](std::string graph_def_serialized) {
+    py::class_<tensorflow::StatSummarizer> stat_summ_class(m, "StatSummarizer",
+            py::dynamic_attr());
+    stat_summ_class
+    .def(py::init([](std::string graph_def_serialized) {
         tensorflow::GraphDef proto;
         proto.ParseFromString(graph_def_serialized);
         return new tensorflow::StatSummarizer(proto);
-      }))
-      .def(py::init([]() {
+    }))
+    .def(py::init([]() {
         return new tensorflow::StatSummarizer(
-            tensorflow::StatSummarizerOptions());
-      }))
-      .def("ProcessStepStats", &tensorflow::StatSummarizer::ProcessStepStats)
-      .def("GetOutputString", &tensorflow::StatSummarizer::GetOutputString)
-      .def("PrintStepStats", &tensorflow::StatSummarizer::PrintStepStats)
-      .def("ProcessStepStatsStr", [](tensorflow::StatSummarizer& self,
-                                     const std::string& step_stats_str) {
+                   tensorflow::StatSummarizerOptions());
+    }))
+    .def("ProcessStepStats", &tensorflow::StatSummarizer::ProcessStepStats)
+    .def("GetOutputString", &tensorflow::StatSummarizer::GetOutputString)
+    .def("PrintStepStats", &tensorflow::StatSummarizer::PrintStepStats)
+    .def("ProcessStepStatsStr", [](tensorflow::StatSummarizer& self,
+    const std::string& step_stats_str) {
         tensorflow::StepStats step_stats;
         step_stats.ParseFromString(step_stats_str);
         self.ProcessStepStats(step_stats);
-      });
+    });
 };

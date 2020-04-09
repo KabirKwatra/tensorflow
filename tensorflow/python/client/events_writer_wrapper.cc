@@ -24,25 +24,31 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_events_writer, m) {
-  py::class_<tensorflow::EventsWriter> events_writer_class(m, "EventsWriter");
-  events_writer_class.def(py::init<const std::string&>())
-      .def("InitWithSuffix",
-           [](tensorflow::EventsWriter& self, const std::string& suffix) {
-             return self.InitWithSuffix(suffix);
-           })
-      .def("FileName",
-           [](tensorflow::EventsWriter& self) { return self.FileName(); })
-      .def("_WriteSerializedEvent",
-           [](tensorflow::EventsWriter& self, const std::string& event_str) {
-             self.WriteSerializedEvent(event_str);
-           })
-      .def("Flush", [](tensorflow::EventsWriter& self) { return self.Flush(); })
-      .def("Close", [](tensorflow::EventsWriter& self) { return self.Close(); })
-      .def("WriteEvent",
-           [](tensorflow::EventsWriter& self, const py::object obj) {
-             // Verify the proto type is an event prior to writing.
-             tensorflow::CheckProtoType(obj, "tensorflow.Event");
-             self.WriteSerializedEvent(
-                 obj.attr("SerializeToString")().cast<std::string>());
-           });
+    py::class_<tensorflow::EventsWriter> events_writer_class(m, "EventsWriter");
+    events_writer_class.def(py::init<const std::string&>())
+    .def("InitWithSuffix",
+    [](tensorflow::EventsWriter& self, const std::string& suffix) {
+        return self.InitWithSuffix(suffix);
+    })
+    .def("FileName",
+    [](tensorflow::EventsWriter& self) {
+        return self.FileName();
+    })
+    .def("_WriteSerializedEvent",
+    [](tensorflow::EventsWriter& self, const std::string& event_str) {
+        self.WriteSerializedEvent(event_str);
+    })
+    .def("Flush", [](tensorflow::EventsWriter& self) {
+        return self.Flush();
+    })
+    .def("Close", [](tensorflow::EventsWriter& self) {
+        return self.Close();
+    })
+    .def("WriteEvent",
+    [](tensorflow::EventsWriter& self, const py::object obj) {
+        // Verify the proto type is an event prior to writing.
+        tensorflow::CheckProtoType(obj, "tensorflow.Event");
+        self.WriteSerializedEvent(
+            obj.attr("SerializeToString")().cast<std::string>());
+    });
 };

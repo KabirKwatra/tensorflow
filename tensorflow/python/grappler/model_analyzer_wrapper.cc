@@ -25,30 +25,30 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_model_analyzer, m) {
-  m.def("GenerateModelReport",
-        [](const py::bytes& serialized_metagraph, bool assume_valid_feeds,
-           bool debug) -> py::bytes {
-          tensorflow::MetaGraphDef metagraph;
-          if (!metagraph.ParseFromString(serialized_metagraph)) {
+    m.def("GenerateModelReport",
+          [](const py::bytes& serialized_metagraph, bool assume_valid_feeds,
+    bool debug) -> py::bytes {
+        tensorflow::MetaGraphDef metagraph;
+        if (!metagraph.ParseFromString(serialized_metagraph)) {
             return "The MetaGraphDef could not be parsed as a valid protocol "
-                   "buffer";
-          }
+            "buffer";
+        }
 
-          tensorflow::grappler::ItemConfig cfg;
-          cfg.apply_optimizations = false;
-          std::unique_ptr<tensorflow::grappler::GrapplerItem> item =
-              tensorflow::grappler::GrapplerItemFromMetaGraphDef(
-                  "metagraph", metagraph, cfg);
-          if (item == nullptr) {
+        tensorflow::grappler::ItemConfig cfg;
+        cfg.apply_optimizations = false;
+        std::unique_ptr<tensorflow::grappler::GrapplerItem> item =
+        tensorflow::grappler::GrapplerItemFromMetaGraphDef(
+            "metagraph", metagraph, cfg);
+        if (item == nullptr) {
             return "Error: failed to preprocess metagraph: check your log file "
-                   "for errors";
-          }
+            "for errors";
+        }
 
-          tensorflow::grappler::ModelAnalyzer analyzer(*item);
+        tensorflow::grappler::ModelAnalyzer analyzer(*item);
 
-          std::ostringstream os;
-          tensorflow::MaybeRaiseFromStatus(
-              analyzer.GenerateReport(debug, assume_valid_feeds, os));
-          return py::bytes(os.str());
-        });
+        std::ostringstream os;
+        tensorflow::MaybeRaiseFromStatus(
+            analyzer.GenerateReport(debug, assume_valid_feeds, os));
+        return py::bytes(os.str());
+    });
 }

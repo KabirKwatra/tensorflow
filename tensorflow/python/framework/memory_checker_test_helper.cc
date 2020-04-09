@@ -20,15 +20,17 @@ limitations under the License.
 namespace py = pybind11;
 
 class MemoryCheckerTestHelper {
- public:
-  void ListPushBack(int x) { list_.push_back(x); }
+public:
+    void ListPushBack(int x) {
+        list_.push_back(x);
+    }
 
- private:
-  std::list<int> list_;
+private:
+    std::list<int> list_;
 };
 
 PYBIND11_MODULE(_memory_checker_test_helper, m) {
-  py::class_<MemoryCheckerTestHelper>(m, "MemoryCheckerTestHelper")
-      .def(py::init())
-      .def("list_push_back", &MemoryCheckerTestHelper::ListPushBack);
+    py::class_<MemoryCheckerTestHelper>(m, "MemoryCheckerTestHelper")
+    .def(py::init())
+    .def("list_push_back", &MemoryCheckerTestHelper::ListPushBack);
 };

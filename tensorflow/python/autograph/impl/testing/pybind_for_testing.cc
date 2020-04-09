@@ -22,18 +22,20 @@ namespace autograph {
 namespace py = pybind11;
 
 class TestClassDef {
- public:
-  TestClassDef() = default;
+public:
+    TestClassDef() = default;
 
-  py::object Method() const;
+    py::object Method() const;
 };
 
-py::object TestClassDef::Method() const { return py::none(); }
+py::object TestClassDef::Method() const {
+    return py::none();
+}
 
 PYBIND11_MODULE(pybind_for_testing, m) {
-  py::class_<TestClassDef>(m, "TestClassDef")
-      .def(py::init<>())
-      .def("method", &TestClassDef::Method);
+    py::class_<TestClassDef>(m, "TestClassDef")
+    .def(py::init<>())
+    .def("method", &TestClassDef::Method);
 }
 
 }  // namespace autograph

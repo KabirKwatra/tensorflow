@@ -21,15 +21,15 @@ namespace py = pybind11;
 using tflite::sparsification_wrapper::SparsificationWrapper;
 
 PYBIND11_MODULE(_pywrap_tensorflow_lite_sparsification_wrapper, m) {
-  m.doc() = R"pbdoc(
+    m.doc() = R"pbdoc(
     _pywrap_tensorflow_lite_sparsification_wrapper
     -----
   )pbdoc";
-  py::class_<SparsificationWrapper>(m, "SparsificationWrapper")
-      .def(py::init([](py::handle& data) {
+    py::class_<SparsificationWrapper>(m, "SparsificationWrapper")
+    .def(py::init([](py::handle& data) {
         return ::SparsificationWrapper::CreateWrapperCPPFromBuffer(data.ptr());
-      }))
-      .def("SparsifyModel", [](SparsificationWrapper& self) {
+    }))
+    .def("SparsifyModel", [](SparsificationWrapper& self) {
         return tensorflow::pyo_or_throw(self.SparsifyModel());
-      });
+    });
 }
