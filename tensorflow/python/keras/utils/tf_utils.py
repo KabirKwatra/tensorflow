@@ -60,10 +60,14 @@ def smart_cond(pred, true_fn=None, false_fn=None, name=None):
       TypeError: If `true_fn` or `false_fn` is not callable.
     """
     if isinstance(pred, variables.Variable):
-        return control_flow_ops.cond(
-            pred, true_fn=true_fn, false_fn=false_fn, name=name
-        )
-    return smart_module.smart_cond(pred, true_fn=true_fn, false_fn=false_fn, name=name)
+        return control_flow_ops.cond(pred,
+                                     true_fn=true_fn,
+                                     false_fn=false_fn,
+                                     name=name)
+    return smart_module.smart_cond(pred,
+                                   true_fn=true_fn,
+                                   false_fn=false_fn,
+                                   name=name)
 
 
 def constant_value(pred):
@@ -117,7 +121,8 @@ def get_reachable_from_inputs(inputs, targets=None):
     inputs = nest.flatten(inputs, expand_composites=True)
     reachable = object_identity.ObjectIdentitySet(inputs)
     if targets:
-        remaining_targets = object_identity.ObjectIdentitySet(nest.flatten(targets))
+        remaining_targets = object_identity.ObjectIdentitySet(
+            nest.flatten(targets))
     queue = inputs[:]
 
     while queue:
@@ -138,7 +143,8 @@ def get_reachable_from_inputs(inputs, targets=None):
         elif tensor_util.is_tensor(x):
             outputs = x.consumers()
         else:
-            raise TypeError("Expected Operation, Variable, or Tensor, got " + str(x))
+            raise TypeError("Expected Operation, Variable, or Tensor, got " +
+                            str(x))
 
         for y in outputs:
             if y not in reachable:
@@ -177,8 +183,7 @@ def map_structure_with_atomic(is_atomic_fn, map_fn, nested):
     # Recursively convert.
     if not nest.is_sequence(nested):
         raise ValueError(
-            "Received non-atomic and non-sequence element: {}".format(nested)
-        )
+            "Received non-atomic and non-sequence element: {}".format(nested))
     if nest._is_mapping(nested):
         values = [nested[k] for k in nest._sorted(nested)]
     else:
@@ -225,7 +230,8 @@ def convert_shapes(input_shape, to_tuples=True):
     """
 
     def _is_shape_component(value):
-        return value is None or isinstance(value, (int, tensor_shape.Dimension))
+        return value is None or isinstance(value,
+                                           (int, tensor_shape.Dimension))
 
     def _is_atomic_shape(input_shape):
         # Ex: TensorShape or (None, 10, 32) or 5 or `None`
@@ -234,8 +240,7 @@ def convert_shapes(input_shape, to_tuples=True):
         if isinstance(input_shape, tensor_shape.TensorShape):
             return True
         if isinstance(input_shape, (tuple, list)) and all(
-            _is_shape_component(ele) for ele in input_shape
-        ):
+                _is_shape_component(ele) for ele in input_shape):
             return True
         return False
 
@@ -245,7 +250,8 @@ def convert_shapes(input_shape, to_tuples=True):
             input_shape = tuple(input_shape.as_list())
         return input_shape
 
-    return map_structure_with_atomic(_is_atomic_shape, _convert_shape, input_shape)
+    return map_structure_with_atomic(_is_atomic_shape, _convert_shape,
+                                     input_shape)
 
 
 class ListWrapper(object):
@@ -273,11 +279,8 @@ def convert_inner_node_data(nested, wrap=False):
     def _is_serialized_node_data(nested):
         # Node data can be of form `[layer_name, node_id, tensor_id]` or
         # `[layer_name, node_id, tensor_id, kwargs]`.
-        if (
-            isinstance(nested, list)
-            and (len(nested) in [3, 4])
-            and isinstance(nested[0], six.string_types)
-        ):
+        if (isinstance(nested, list) and (len(nested) in [3, 4])
+                and isinstance(nested[0], six.string_types)):
             return True
         return False
 
@@ -302,7 +305,8 @@ def convert_inner_node_data(nested, wrap=False):
                 return nested.as_list()
             return nested
 
-    return map_structure_with_atomic(_is_atomic_nested, _convert_object_or_list, nested)
+    return map_structure_with_atomic(_is_atomic_nested,
+                                     _convert_object_or_list, nested)
 
 
 def shape_type_conversion(fn):
@@ -358,9 +362,8 @@ def is_symbolic_tensor(tensor):
         # TODO(omalleyt): We need a better way to check this in order to
         # enable `run_eagerly=True` for Models containing Layers that
         # return Variables as outputs.
-        return (
-            getattr(tensor, "_keras_history", False) or not context.executing_eagerly()
-        )
+        return (getattr(tensor, "_keras_history", False)
+                or not context.executing_eagerly())
     if isinstance(tensor, composite_tensor.CompositeTensor):
         component_tensors = nest.flatten(tensor, expand_composites=True)
         return any(hasattr(t, "graph") for t in component_tensors)
@@ -440,8 +443,7 @@ def assert_no_legacy_layers(layers):
             "framework (for instance using the Network, Model, or Sequential "
             "classes), please use the tf.keras.layers implementation instead. "
             "(Or, if writing custom layers, subclass from tf.keras.layers rather "
-            "than tf.layers)".format(layer_str)
-        )
+            "than tf.layers)".format(layer_str))
 
 
 @tf_contextlib.contextmanager
@@ -456,8 +458,7 @@ def maybe_init_scope(layer):
     """
     # Don't open an init_scope in V1 mode or when using legacy tf.layers.
     if ops.executing_eagerly_outside_functions() and getattr(
-        layer, "_keras_style", True
-    ):
+            layer, "_keras_style", True):
         with ops.init_scope():
             yield
     else:
@@ -477,7 +478,8 @@ def graph_context_for_symbolic_tensors(*args, **kwargs):
 def dataset_is_infinite(dataset):
     """True if the passed dataset is infinite."""
     if ops.executing_eagerly_outside_functions():
-        return math_ops.equal(cardinality.cardinality(dataset), cardinality.INFINITE)
+        return math_ops.equal(cardinality.cardinality(dataset),
+                              cardinality.INFINITE)
     else:
         dataset_size = K.get_session().run(cardinality.cardinality(dataset))
         return dataset_size == cardinality.INFINITE
@@ -503,9 +505,7 @@ def get_tensor_spec(t, dynamic_batch=False, name=None):
     shape = dynamic_batch_spec._shape.as_list()  # pylint: disable=protected-access
     if shape:
         shape[0] = None
-        dynamic_batch_spec._shape = tensor_shape.TensorShape(
-            shape
-        )  # pylint: disable=protected-access
+        dynamic_batch_spec._shape = tensor_shape.TensorShape(shape)  # pylint: disable=protected-access
     return dynamic_batch_spec
 
 
