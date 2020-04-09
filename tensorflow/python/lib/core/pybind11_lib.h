@@ -30,11 +30,11 @@ namespace py = pybind11;
 // `ptr` for further, custom use. SWIG wrapped objects' layout is documented
 // here: http://www.swig.org/Doc4.0/Python.html#Python_nn28
 typedef struct {
-    PyObject_HEAD void* ptr;  // This is the pointer to the actual C++ obj.
-    void* ty;
-    int own;
-    PyObject* next;
-    PyObject* dict;
+  PyObject_HEAD void* ptr;  // This is the pointer to the actual C++ obj.
+  void* ty;
+  int own;
+  PyObject* next;
+  PyObject* dict;
 } SwigPyObject;
 
 namespace tensorflow {
@@ -42,22 +42,22 @@ namespace tensorflow {
 // Convert PyObject* to py::object with no error handling.
 
 inline py::object pyo(PyObject* ptr) {
-    return py::reinterpret_steal<py::object>(ptr);
+  return py::reinterpret_steal<py::object>(ptr);
 }
 
 // Raise an exception if the PyErrOccurred flag is set or else return the Python
 // object.
 
 inline py::object pyo_or_throw(PyObject* ptr) {
-    if (PyErr_Occurred() || ptr == nullptr) {
-        throw py::error_already_set();
-    }
-    return pyo(ptr);
+  if (PyErr_Occurred() || ptr == nullptr) {
+    throw py::error_already_set();
+  }
+  return pyo(ptr);
 }
 
 void throwTypeError(const char* error_message) {
-    PyErr_SetString(PyExc_TypeError, error_message);
-    throw pybind11::error_already_set();
+  PyErr_SetString(PyExc_TypeError, error_message);
+  throw pybind11::error_already_set();
 }
 
 }  // namespace tensorflow

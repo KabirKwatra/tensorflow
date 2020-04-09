@@ -40,41 +40,41 @@ namespace py = pybind11;
 
 void DetectDevices(
     std::unordered_map<std::string, tensorflow::DeviceProperties>* device_map) {
-    tensorflow::SessionOptions options;
-    std::vector<std::unique_ptr<tensorflow::Device>> devices;
-    if (!tensorflow::DeviceFactory::AddDevices(options, "", &devices).ok()) {
-        return;
-    }
+  tensorflow::SessionOptions options;
+  std::vector<std::unique_ptr<tensorflow::Device>> devices;
+  if (!tensorflow::DeviceFactory::AddDevices(options, "", &devices).ok()) {
+    return;
+  }
 
-    for (const std::unique_ptr<tensorflow::Device>& device : devices) {
-        tensorflow::DeviceProperties& prop = (*device_map)[device->name()];
-        prop = tensorflow::grappler::GetDeviceInfo(device->parsed_name());
+  for (const std::unique_ptr<tensorflow::Device>& device : devices) {
+    tensorflow::DeviceProperties& prop = (*device_map)[device->name()];
+    prop = tensorflow::grappler::GetDeviceInfo(device->parsed_name());
 
-        // Overwrite the memory limit since users might have requested to use only a
-        // fraction of the available device memory.
-        const tensorflow::DeviceAttributes& attr = device->attributes();
-        prop.set_memory_size(attr.memory_limit());
-    }
+    // Overwrite the memory limit since users might have requested to use only a
+    // fraction of the available device memory.
+    const tensorflow::DeviceAttributes& attr = device->attributes();
+    prop.set_memory_size(attr.memory_limit());
+  }
 }
 
 PYBIND11_MODULE(_pywrap_tf_optimizer, m) {
-    m.def(
-        "TF_OptimizeGraph",
-        [](tensorflow::grappler::Cluster* cluster,
-           const py::bytes& serialized_config_proto,
-           const py::bytes& serialized_metagraph, bool verbose,
-           const std::string& graph_id,
-    bool strip_default_attributes) -> py::bytes {
+  m.def(
+      "TF_OptimizeGraph",
+      [](tensorflow::grappler::Cluster* cluster,
+         const py::bytes& serialized_config_proto,
+         const py::bytes& serialized_metagraph, bool verbose,
+         const std::string& graph_id,
+         bool strip_default_attributes) -> py::bytes {
         tensorflow::ConfigProto config_proto;
         if (!config_proto.ParseFromString(serialized_config_proto)) {
-            throw std::invalid_argument(
-                "The ConfigProto could not be parsed as a valid protocol buffer");
+          throw std::invalid_argument(
+              "The ConfigProto could not be parsed as a valid protocol buffer");
         }
         tensorflow::MetaGraphDef metagraph;
         if (!metagraph.ParseFromString(serialized_metagraph)) {
-            throw std::invalid_argument(
-                "The MetaGraphDef could not be parsed as a valid protocol "
-                "buffer");
+          throw std::invalid_argument(
+              "The MetaGraphDef could not be parsed as a valid protocol "
+              "buffer");
         }
 
         tensorflow::grappler::ItemConfig item_config;
@@ -83,11 +83,11 @@ PYBIND11_MODULE(_pywrap_tf_optimizer, m) {
         item_config.apply_optimizations = false;
         item_config.ignore_user_placement = false;
         std::unique_ptr<tensorflow::grappler::GrapplerItem> grappler_item =
-        tensorflow::grappler::GrapplerItemFromMetaGraphDef(
-            graph_id, metagraph, item_config);
+            tensorflow::grappler::GrapplerItemFromMetaGraphDef(
+                graph_id, metagraph, item_config);
         if (!grappler_item) {
-            throw std::invalid_argument(
-                "Failed to import metagraph, check error log for more info.");
+          throw std::invalid_argument(
+              "Failed to import metagraph, check error log for more info.");
         }
 
         tensorflow::DeviceBase* cpu_device = nullptr;
@@ -97,12 +97,12 @@ PYBIND11_MODULE(_pywrap_tf_optimizer, m) {
         MaybeRaiseRegisteredFromStatus(
             optimizer.Optimize(cluster, *grappler_item, &out_graph));
         if (strip_default_attributes) {
-            tensorflow::StripDefaultAttributes(*tensorflow::OpRegistry::Global(),
-                                               out_graph.mutable_node());
+          tensorflow::StripDefaultAttributes(*tensorflow::OpRegistry::Global(),
+                                             out_graph.mutable_node());
         }
         if (verbose) {
-            optimizer.PrintResult();
+          optimizer.PrintResult();
         }
         return out_graph.SerializeAsString();
-    });
+      });
 }

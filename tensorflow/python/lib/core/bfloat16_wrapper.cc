@@ -17,8 +17,8 @@ limitations under the License.
 #include "tensorflow/python/lib/core/bfloat16.h"
 
 PYBIND11_MODULE(_pywrap_bfloat16, m) {
-    tensorflow::RegisterNumpyBfloat16();
+  tensorflow::RegisterNumpyBfloat16();
 
-    m.def("TF_bfloat16_type",
-          [] { return pybind11::handle(tensorflow::Bfloat16PyType()); });
+  m.def("TF_bfloat16_type",
+        [] { return pybind11::handle(tensorflow::Bfloat16PyType()); });
 }

@@ -30,38 +30,38 @@ namespace py = pybind11;
 using FormatConverterFp32 = FormatConverter<float>;
 
 PYBIND11_MODULE(format_converter_extension, m) {
-    m.doc() = "Python wrapper for the tflite sparse tensor converter.";
+  m.doc() = "Python wrapper for the tflite sparse tensor converter.";
 
-    py::enum_<TfLiteStatus>(m, "TfLiteStatus")
-    .value("TF_LITE_OK", TfLiteStatus::kTfLiteOk)
-    .value("TF_LITE_ERROR", TfLiteStatus::kTfLiteError)
-    .export_values();
+  py::enum_<TfLiteStatus>(m, "TfLiteStatus")
+      .value("TF_LITE_OK", TfLiteStatus::kTfLiteOk)
+      .value("TF_LITE_ERROR", TfLiteStatus::kTfLiteError)
+      .export_values();
 
-    py::enum_<TfLiteDimensionType>(m, "TfLiteDimensionType")
-    .value("TF_LITE_DIM_DENSE", TfLiteDimensionType::kTfLiteDimDense)
-    .value("TF_LITE_DIM_SPARSE_CSR", TfLiteDimensionType::kTfLiteDimSparseCSR)
-    .export_values();
+  py::enum_<TfLiteDimensionType>(m, "TfLiteDimensionType")
+      .value("TF_LITE_DIM_DENSE", TfLiteDimensionType::kTfLiteDimDense)
+      .value("TF_LITE_DIM_SPARSE_CSR", TfLiteDimensionType::kTfLiteDimSparseCSR)
+      .export_values();
 
-    py::class_<FormatConverterFp32>(m, "FormatConverterFp32")
-    .def(py::init</*shape=*/const std::vector<int>&,
-         /*traversal_order=*/const std::vector<int>&,
-         /*format=*/const std::vector<TfLiteDimensionType>&,
-         /*block_size=*/const std::vector<int>&,
-         /*block_map=*/const std::vector<int>&>())
-    .def(py::init</*shape=*/const std::vector<int>&,
-         /*sparsity=*/const TfLiteSparsity&>())
-    .def("GetData", &FormatConverterFp32::GetData)
-    .def("GetDimMetadata", &FormatConverterFp32::GetDimMetadata)
-    .def("DenseToSparse",
-    [](FormatConverterFp32& converter, py::buffer buf) {
-        py::buffer_info buffer_info = buf.request();
-        return converter.DenseToSparse(
-                   static_cast<float*>(buffer_info.ptr));
-    })
-    .def("SparseToDense", [](FormatConverterFp32& converter, py::buffer buf) {
+  py::class_<FormatConverterFp32>(m, "FormatConverterFp32")
+      .def(py::init</*shape=*/const std::vector<int>&,
+                    /*traversal_order=*/const std::vector<int>&,
+                    /*format=*/const std::vector<TfLiteDimensionType>&,
+                    /*block_size=*/const std::vector<int>&,
+                    /*block_map=*/const std::vector<int>&>())
+      .def(py::init</*shape=*/const std::vector<int>&,
+                    /*sparsity=*/const TfLiteSparsity&>())
+      .def("GetData", &FormatConverterFp32::GetData)
+      .def("GetDimMetadata", &FormatConverterFp32::GetDimMetadata)
+      .def("DenseToSparse",
+           [](FormatConverterFp32& converter, py::buffer buf) {
+             py::buffer_info buffer_info = buf.request();
+             return converter.DenseToSparse(
+                 static_cast<float*>(buffer_info.ptr));
+           })
+      .def("SparseToDense", [](FormatConverterFp32& converter, py::buffer buf) {
         py::buffer_info buffer_info = buf.request();
         return converter.SparseToDense(static_cast<float*>(buffer_info.ptr));
-    });
+      });
 }
 
 }  // namespace

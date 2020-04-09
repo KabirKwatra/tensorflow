@@ -23,21 +23,21 @@ namespace tensorflow {
 
 inline void CheckProtoType(const pybind11::handle& py_object,
                            const std::string expected_proto_type) {
-    // Check the name of the proto object.
-    if (pybind11::hasattr(py_object, "DESCRIPTOR")) {
-        pybind11::handle descriptor = pybind11::getattr(py_object, "DESCRIPTOR");
-        std::string py_object_type =
-            pybind11::cast<std::string>(pybind11::getattr(descriptor, "full_name"));
+  // Check the name of the proto object.
+  if (pybind11::hasattr(py_object, "DESCRIPTOR")) {
+    pybind11::handle descriptor = pybind11::getattr(py_object, "DESCRIPTOR");
+    std::string py_object_type =
+        pybind11::cast<std::string>(pybind11::getattr(descriptor, "full_name"));
 
-        if (py_object_type == expected_proto_type) {
-            return;
-        }
-        throw pybind11::type_error(absl::StrCat("Expected an ", expected_proto_type,
-                                                " proto, but got ",
-                                                py_object_type));
+    if (py_object_type == expected_proto_type) {
+      return;
     }
-    throw pybind11::type_error(absl::StrCat(
-                                   std::string(py_object.get_type().str()), " is not a valid proto."));
+    throw pybind11::type_error(absl::StrCat("Expected an ", expected_proto_type,
+                                            " proto, but got ",
+                                            py_object_type));
+  }
+  throw pybind11::type_error(absl::StrCat(
+      std::string(py_object.get_type().str()), " is not a valid proto."));
 }
 
 }  // namespace tensorflow

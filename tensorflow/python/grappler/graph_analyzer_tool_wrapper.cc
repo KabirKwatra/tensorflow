@@ -17,6 +17,6 @@ limitations under the License.
 #include "tensorflow/core/grappler/graph_analyzer/graph_analyzer_tool.h"
 
 PYBIND11_MODULE(_pywrap_graph_analyzer_tool, m) {
-    m.def("GraphAnalyzer",
-          &tensorflow::grappler::graph_analyzer::GraphAnalyzerTool);
+  m.def("GraphAnalyzer",
+        &tensorflow::grappler::graph_analyzer::GraphAnalyzerTool);
 }

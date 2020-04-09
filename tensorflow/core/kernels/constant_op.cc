@@ -24,7 +24,6 @@ limitations under the License.
 
 #include "tensorflow/core/kernels/constant_op.h"
 
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/framework/bounds_check.h"
 #include "tensorflow/core/framework/node_def.pb.h"
@@ -38,6 +37,7 @@ limitations under the License.
 #include "tensorflow/core/graph/graph_node_util.h"
 #include "tensorflow/core/kernels/fill_functor.h"
 #include "tensorflow/core/platform/macros.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 #ifdef TENSORFLOW_USE_SYCL
 #include "tensorflow/core/common_runtime/sycl/sycl_util.h"
@@ -49,22 +49,22 @@ namespace {
 
 NodeDef StripTensorDataFromNodeDef(OpKernelConstruction* ctx) {
 #ifndef TENSORFLOW_LITE_PROTOS
-    DCHECK_EQ(NodeDef::descriptor()->field_count(), 6)
-            << "The NodeDef format has changed, and the attr-stripping code may need "
-            << "to be updated.";
+  DCHECK_EQ(NodeDef::descriptor()->field_count(), 6)
+      << "The NodeDef format has changed, and the attr-stripping code may need "
+      << "to be updated.";
 #endif
-    const NodeDef& original = ctx->def();
-    NodeDef ret;
-    ret.set_name(original.name());
-    ret.set_op(original.op());
-    ret.set_device(original.device());
-    // Strip the "value" attr from the returned NodeDef.
-    // NOTE(mrry): The present implementation of `OpKernel::OpKernel()` only uses
-    // attrs that affect the cardinality of list-typed inputs and outputs, so it
-    // is safe to drop other attrs from the NodeDef.
-    AddNodeAttr("dtype", ctx->output_type(0), &ret);
-    MergeDebugInfo(original, &ret);
-    return ret;
+  const NodeDef& original = ctx->def();
+  NodeDef ret;
+  ret.set_name(original.name());
+  ret.set_op(original.op());
+  ret.set_device(original.device());
+  // Strip the "value" attr from the returned NodeDef.
+  // NOTE(mrry): The present implementation of `OpKernel::OpKernel()` only uses
+  // attrs that affect the cardinality of list-typed inputs and outputs, so it
+  // is safe to drop other attrs from the NodeDef.
+  AddNodeAttr("dtype", ctx->output_type(0), &ret);
+  MergeDebugInfo(original, &ret);
+  return ret;
 }
 
 }  // namespace
@@ -72,23 +72,23 @@ NodeDef StripTensorDataFromNodeDef(OpKernelConstruction* ctx) {
 ConstantOp::ConstantOp(OpKernelConstruction* ctx)
     : OpKernel(ctx, StripTensorDataFromNodeDef(ctx), false),
       tensor_(ctx->output_type(0)) {
-    const TensorProto* proto = nullptr;
-    ScopedMemoryDebugAnnotation op_annotation(name_view().data());
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("value", &proto));
-    OP_REQUIRES_OK(ctx, ctx->device()->MakeTensorFromProto(
-                       *proto, AllocatorAttributes(), &tensor_));
-    OP_REQUIRES(
-        ctx, ctx->output_type(0) == tensor_.dtype(),
-        errors::InvalidArgument("Type mismatch between value (",
-                                DataTypeString(tensor_.dtype()), ") and dtype (",
-                                DataTypeString(ctx->output_type(0)), ")"));
+  const TensorProto* proto = nullptr;
+  ScopedMemoryDebugAnnotation op_annotation(name_view().data());
+  OP_REQUIRES_OK(ctx, ctx->GetAttr("value", &proto));
+  OP_REQUIRES_OK(ctx, ctx->device()->MakeTensorFromProto(
+                          *proto, AllocatorAttributes(), &tensor_));
+  OP_REQUIRES(
+      ctx, ctx->output_type(0) == tensor_.dtype(),
+      errors::InvalidArgument("Type mismatch between value (",
+                              DataTypeString(tensor_.dtype()), ") and dtype (",
+                              DataTypeString(ctx->output_type(0)), ")"));
 }
 
 void ConstantOp::Compute(OpKernelContext* ctx) {
-    ctx->set_output(0, tensor_);
-    if (TF_PREDICT_FALSE(ctx->track_allocations())) {
-        ctx->record_persistent_memory_allocation(tensor_.AllocatedBytes());
-    }
+  ctx->set_output(0, tensor_);
+  if (TF_PREDICT_FALSE(ctx->track_allocations())) {
+    ctx->record_persistent_memory_allocation(tensor_.AllocatedBytes());
+  }
 }
 
 ConstantOp::~ConstantOp() {}
@@ -153,39 +153,39 @@ typedef Eigen::SyclDevice SYCLDevice;
 
 template <typename Device, typename T, typename Index>
 class FillOp : public OpKernel {
-public:
-    explicit FillOp(OpKernelConstruction* context) : OpKernel(context) {}
+ public:
+  explicit FillOp(OpKernelConstruction* context) : OpKernel(context) {}
 
-    void Compute(OpKernelContext* context) override {
-        const Tensor& Tdims = context->input(0);
-        OP_REQUIRES(
-            context,
-            // TODO(rmlarsen): Disallow legacy use of scalars to represent shape.
-            (TensorShapeUtils::IsVector(Tdims.shape()) ||
-             TensorShapeUtils::IsScalar(Tdims.shape())),
-            errors::InvalidArgument("dims must represent a vector, got shape ",
-                                    Tdims.shape().DebugString()));
-        const Tensor& Tvalue = context->input(1);
-        OP_REQUIRES(
-            context,
-            // TODO(rmlarsen): Disallow legacy use of length-1 vector to represent
-            // scalar.
-            TensorShapeUtils::IsScalar(Tvalue.shape()) ||
+  void Compute(OpKernelContext* context) override {
+    const Tensor& Tdims = context->input(0);
+    OP_REQUIRES(
+        context,
+        // TODO(rmlarsen): Disallow legacy use of scalars to represent shape.
+        (TensorShapeUtils::IsVector(Tdims.shape()) ||
+         TensorShapeUtils::IsScalar(Tdims.shape())),
+        errors::InvalidArgument("dims must represent a vector, got shape ",
+                                Tdims.shape().DebugString()));
+    const Tensor& Tvalue = context->input(1);
+    OP_REQUIRES(
+        context,
+        // TODO(rmlarsen): Disallow legacy use of length-1 vector to represent
+        // scalar.
+        TensorShapeUtils::IsScalar(Tvalue.shape()) ||
             (TensorShapeUtils::IsVector(Tvalue.shape()) &&
              Tvalue.shape().dim_size(0) == 1),
-            errors::InvalidArgument("value must represent a scalar, got shape ",
-                                    Tvalue.shape().DebugString()));
-        auto dims = Tdims.flat<Index>();
-        TensorShape shape;
-        OP_REQUIRES_OK(context, TensorShapeUtils::MakeShape(
-                           reinterpret_cast<const Index*>(dims.data()),
-                           dims.size(), &shape));
-        Tensor* out = nullptr;
-        OP_REQUIRES_OK(context, context->allocate_output(0, shape, &out));
-        functor::FillFunctor<Device, T> functor;
-        functor(context->eigen_device<Device>(), out->flat<T>(),
-                Tvalue.scalar<T>());
-    }
+        errors::InvalidArgument("value must represent a scalar, got shape ",
+                                Tvalue.shape().DebugString()));
+    auto dims = Tdims.flat<Index>();
+    TensorShape shape;
+    OP_REQUIRES_OK(context, TensorShapeUtils::MakeShape(
+                                reinterpret_cast<const Index*>(dims.data()),
+                                dims.size(), &shape));
+    Tensor* out = nullptr;
+    OP_REQUIRES_OK(context, context->allocate_output(0, shape, &out));
+    functor::FillFunctor<Device, T> functor;
+    functor(context->eigen_device<Device>(), out->flat<T>(),
+            Tvalue.scalar<T>());
+  }
 };
 
 #define REGISTER_KERNEL(D, TYPE)                                   \
@@ -221,12 +221,12 @@ REGISTER_KERNEL(SYCL, int16);
 REGISTER_KERNEL(SYCL, int64);
 
 REGISTER_KERNEL_BUILDER(Name("Fill")
-                        .Device(DEVICE_SYCL)
-                        .TypeConstraint<int32>("T")
-                        .TypeConstraint<int32>("index_type")
-                        .HostMemory("dims")
-                        .HostMemory("value")
-                        .HostMemory("output"),
+                            .Device(DEVICE_SYCL)
+                            .TypeConstraint<int32>("T")
+                            .TypeConstraint<int32>("index_type")
+                            .HostMemory("dims")
+                            .HostMemory("value")
+                            .HostMemory("output"),
                         FillOp<CPUDevice, int32, int32>);
 #undef REGISTER_KERNEL_SYCL
 #endif  // TENSORFLOW_USE_SYCL
@@ -251,12 +251,12 @@ REGISTER_KERNEL(GPU, bool);
 // TODO(b/25387198): Also enable int32 in device memory. This kernel
 // registration requires all int32 inputs and outputs to be in host memory.
 REGISTER_KERNEL_BUILDER(Name("Fill")
-                        .Device(DEVICE_GPU)
-                        .TypeConstraint<int32>("T")
-                        .TypeConstraint<int32>("index_type")
-                        .HostMemory("dims")
-                        .HostMemory("value")
-                        .HostMemory("output"),
+                            .Device(DEVICE_GPU)
+                            .TypeConstraint<int32>("T")
+                            .TypeConstraint<int32>("index_type")
+                            .HostMemory("dims")
+                            .HostMemory("value")
+                            .HostMemory("output"),
                         FillOp<CPUDevice, int32, int32>);
 #endif
 
@@ -264,34 +264,34 @@ REGISTER_KERNEL_BUILDER(Name("Fill")
 
 template <typename Device, typename T>
 class ZerosLikeOp : public OpKernel {
-public:
-    explicit ZerosLikeOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+ public:
+  explicit ZerosLikeOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
 
-    void Compute(OpKernelContext* ctx) override {
-        const Tensor& input = ctx->input(0);
-        const Device& d = ctx->eigen_device<Device>();
-        if (std::is_same<T, Variant>::value) {
-            OP_REQUIRES(
-                ctx, input.dims() == 0,
-                errors::InvalidArgument("ZerosLike non-scalar Tensor with "
-                                        "dtype=DT_VARIANT is not supported."));
-            const Variant& v = input.scalar<Variant>()();
-            // DT_VARIANT tensors must be allocated on CPU since they wrap C++
-            // objects which can not be efficiently represented in GPU memory.
-            int numa_node = ctx->device()->NumaNode();
-            Tensor out(cpu_allocator(numa_node), DT_VARIANT, TensorShape({}));
-            Variant* out_v = &(out.scalar<Variant>()());
-            OP_REQUIRES_OK(ctx, UnaryOpVariant<Device>(
-                               ctx, ZEROS_LIKE_VARIANT_UNARY_OP, v, out_v));
-            ctx->set_output(0, out);
-        } else {
-            Tensor* out = nullptr;
-            OP_REQUIRES_OK(ctx, ctx->forward_input_or_allocate_output(
-            {0}, 0, input.shape(), &out));
-            functor::SetZeroFunctor<Device, T> f;
-            f(d, out->flat<T>());
-        }
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor& input = ctx->input(0);
+    const Device& d = ctx->eigen_device<Device>();
+    if (std::is_same<T, Variant>::value) {
+      OP_REQUIRES(
+          ctx, input.dims() == 0,
+          errors::InvalidArgument("ZerosLike non-scalar Tensor with "
+                                  "dtype=DT_VARIANT is not supported."));
+      const Variant& v = input.scalar<Variant>()();
+      // DT_VARIANT tensors must be allocated on CPU since they wrap C++
+      // objects which can not be efficiently represented in GPU memory.
+      int numa_node = ctx->device()->NumaNode();
+      Tensor out(cpu_allocator(numa_node), DT_VARIANT, TensorShape({}));
+      Variant* out_v = &(out.scalar<Variant>()());
+      OP_REQUIRES_OK(ctx, UnaryOpVariant<Device>(
+                              ctx, ZEROS_LIKE_VARIANT_UNARY_OP, v, out_v));
+      ctx->set_output(0, out);
+    } else {
+      Tensor* out = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->forward_input_or_allocate_output(
+                              {0}, 0, input.shape(), &out));
+      functor::SetZeroFunctor<Device, T> f;
+      f(d, out->flat<T>());
     }
+  }
 };
 
 #define REGISTER_KERNEL(type, dev)                                      \
@@ -310,9 +310,9 @@ REGISTER_KERNEL(float, SYCL);
 REGISTER_KERNEL(double, SYCL);
 REGISTER_KERNEL(int64, SYCL);
 REGISTER_KERNEL_BUILDER(Name("ZerosLike")
-                        .Device(DEVICE_SYCL)
-                        .TypeConstraint<int32>("T")
-                        .HostMemory("y"),
+                            .Device(DEVICE_SYCL)
+                            .TypeConstraint<int32>("T")
+                            .HostMemory("y"),
                         ZerosLikeOp<CPUDevice, int32>);
 #endif  // TENSORFLOW_USE_SYCL
 
@@ -328,9 +328,9 @@ REGISTER_KERNEL(complex128, GPU);
 REGISTER_KERNEL(int64, GPU);
 REGISTER_KERNEL(Variant, GPU);
 REGISTER_KERNEL_BUILDER(Name("ZerosLike")
-                        .Device(DEVICE_GPU)
-                        .TypeConstraint<int32>("T")
-                        .HostMemory("y"),
+                            .Device(DEVICE_GPU)
+                            .TypeConstraint<int32>("T")
+                            .HostMemory("y"),
                         ZerosLikeOp<CPUDevice, int32>);
 #endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 
@@ -338,17 +338,17 @@ REGISTER_KERNEL_BUILDER(Name("ZerosLike")
 
 template <typename Device, typename T>
 class OnesLikeOp : public OpKernel {
-public:
-    explicit OnesLikeOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+ public:
+  explicit OnesLikeOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
 
-    void Compute(OpKernelContext* ctx) override {
-        const Tensor& input = ctx->input(0);
-        Tensor* out = nullptr;
-        OP_REQUIRES_OK(ctx, ctx->forward_input_or_allocate_output(
-        {0}, 0, input.shape(), &out));
-        functor::SetOneFunctor<Device, T> f;
-        f(ctx->eigen_device<Device>(), out->flat<T>());
-    }
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor& input = ctx->input(0);
+    Tensor* out = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->forward_input_or_allocate_output(
+                            {0}, 0, input.shape(), &out));
+    functor::SetOneFunctor<Device, T> f;
+    f(ctx->eigen_device<Device>(), out->flat<T>());
+  }
 };
 
 #define REGISTER_KERNEL(type, dev)                                     \
@@ -364,9 +364,9 @@ TF_CALL_POD_TYPES(REGISTER_CPU);
 REGISTER_KERNEL(float, SYCL);
 REGISTER_KERNEL(bool, SYCL);
 REGISTER_KERNEL_BUILDER(Name("OnesLike")
-                        .Device(DEVICE_SYCL)
-                        .TypeConstraint<int32>("T")
-                        .HostMemory("y"),
+                            .Device(DEVICE_SYCL)
+                            .TypeConstraint<int32>("T")
+                            .HostMemory("y"),
                         OnesLikeOp<CPUDevice, int32>);
 #endif  // TENSORFLOW_USE_SYCL
 
@@ -381,31 +381,31 @@ REGISTER_KERNEL(complex64, GPU);
 REGISTER_KERNEL(complex128, GPU);
 REGISTER_KERNEL(int64, GPU);
 REGISTER_KERNEL_BUILDER(Name("OnesLike")
-                        .Device(DEVICE_GPU)
-                        .TypeConstraint<int32>("T")
-                        .HostMemory("y"),
+                            .Device(DEVICE_GPU)
+                            .TypeConstraint<int32>("T")
+                            .HostMemory("y"),
                         OnesLikeOp<CPUDevice, int32>);
 #endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 
 #undef REGISTER_KERNEL
 
 PlaceholderOp::PlaceholderOp(OpKernelConstruction* ctx) : OpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &expected_shape_));
+  OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &expected_shape_));
 }
 
 void PlaceholderOp::Compute(OpKernelContext* ctx) {
-    if (expected_shape_.dims() > 0) {
-        OP_REQUIRES(ctx, false,
-                    errors::InvalidArgument(
-                        "You must feed a value for placeholder tensor '", name(),
-                        "' with dtype ", DataTypeString(output_type(0)),
-                        " and shape ", expected_shape_.DebugString()));
-    } else {
-        OP_REQUIRES(ctx, false,
-                    errors::InvalidArgument(
-                        "You must feed a value for placeholder tensor '", name(),
-                        "' with dtype ", DataTypeString(output_type(0))));
-    }
+  if (expected_shape_.dims() > 0) {
+    OP_REQUIRES(ctx, false,
+                errors::InvalidArgument(
+                    "You must feed a value for placeholder tensor '", name(),
+                    "' with dtype ", DataTypeString(output_type(0)),
+                    " and shape ", expected_shape_.DebugString()));
+  } else {
+    OP_REQUIRES(ctx, false,
+                errors::InvalidArgument(
+                    "You must feed a value for placeholder tensor '", name(),
+                    "' with dtype ", DataTypeString(output_type(0))));
+  }
 }
 
 REGISTER_KERNEL_BUILDER(Name("Placeholder").Device(DEVICE_CPU), PlaceholderOp);

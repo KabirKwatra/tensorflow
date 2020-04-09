@@ -24,93 +24,93 @@ limitations under the License.
 #include "tensorflow/python/lib/core/pybind11_status.h"
 
 PYBIND11_MODULE(_pywrap_debug_events_writer, m) {
-    namespace py = pybind11;
-    using namespace tensorflow;         // NOLINT(build/namespaces)
-    using namespace tensorflow::tfdbg;  // NOLINT(build/namespaces)
+  namespace py = pybind11;
+  using namespace tensorflow;         // NOLINT(build/namespaces)
+  using namespace tensorflow::tfdbg;  // NOLINT(build/namespaces)
 
-    m.def("Init",
-    [](const std::string& dump_root, const int64 circular_buffer_size) {
-        DebugEventsWriter* writer = DebugEventsWriter::GetDebugEventsWriter(
-                                        dump_root, circular_buffer_size);
-        if (!writer->Init().ok()) {
+  m.def("Init",
+        [](const std::string& dump_root, const int64 circular_buffer_size) {
+          DebugEventsWriter* writer = DebugEventsWriter::GetDebugEventsWriter(
+              dump_root, circular_buffer_size);
+          if (!writer->Init().ok()) {
             throw py::value_error(tensorflow::strings::Printf(
-                                      "Failed to initialize debug events writer at: %s",
-                                      dump_root.c_str()));
-        }
-    });
-    m.def("WriteSourceFile",
-    [](const std::string& dump_root, const py::object obj) {
-        CheckProtoType(obj, "tensorflow.DebugEvent");
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->WriteSerializedNonExecutionDebugEvent(
-            obj.attr("SerializeToString")().cast<std::string>(),
-            tfdbg::DebugEventFileType::SOURCE_FILES);
-    });
-    m.def("WriteStackFrameWithId",
-    [](const std::string& dump_root, const py::object& obj) {
-        CheckProtoType(obj, "tensorflow.DebugEvent");
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->WriteSerializedNonExecutionDebugEvent(
-            obj.attr("SerializeToString")().cast<std::string>(),
-            tfdbg::DebugEventFileType::STACK_FRAMES);
-    });
-    m.def("WriteGraphOpCreation",
-    [](const std::string& dump_root, const py::object& obj) {
-        CheckProtoType(obj, "tensorflow.DebugEvent");
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->WriteSerializedNonExecutionDebugEvent(
-            obj.attr("SerializeToString")().cast<std::string>(),
-            tfdbg::DebugEventFileType::GRAPHS);
-    });
-    m.def("WriteDebuggedGraph",
-    [](const std::string& dump_root, const py::object& obj) {
-        CheckProtoType(obj, "tensorflow.DebugEvent");
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->WriteSerializedNonExecutionDebugEvent(
-            obj.attr("SerializeToString")().cast<std::string>(),
-            tfdbg::DebugEventFileType::GRAPHS);
-    });
-    m.def("WriteExecution",
-    [](const std::string& dump_root, const py::object& obj) {
-        CheckProtoType(obj, "tensorflow.DebugEvent");
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->WriteSerializedExecutionDebugEvent(
-            obj.attr("SerializeToString")().cast<std::string>(),
-            tfdbg::DebugEventFileType::EXECUTION);
-    });
-    m.def("WriteGraphExecutionTrace",
-    [](const std::string& dump_root, const py::object& obj) {
-        CheckProtoType(obj, "tensorflow.DebugEvent");
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->WriteSerializedExecutionDebugEvent(
-            obj.attr("SerializeToString")().cast<std::string>(),
-            tfdbg::DebugEventFileType::GRAPH_EXECUTION_TRACES);
-    });
-    m.def("RegisterDeviceAndGetId",
-    [](const std::string& dump_root, const std::string& device_name) {
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        return writer->RegisterDeviceAndGetId(device_name);
-    });
-    m.def("FlushNonExecutionFiles", [](const std::string& dump_root) {
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->FlushNonExecutionFiles();
-    });
-    m.def("FlushExecutionFiles", [](const std::string& dump_root) {
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->FlushExecutionFiles();
-    });
-    m.def("Close", [](const std::string& dump_root) {
-        DebugEventsWriter* writer =
-            DebugEventsWriter::GetDebugEventsWriter(dump_root);
-        writer->Close();
-    });
+                "Failed to initialize debug events writer at: %s",
+                dump_root.c_str()));
+          }
+        });
+  m.def("WriteSourceFile",
+        [](const std::string& dump_root, const py::object obj) {
+          CheckProtoType(obj, "tensorflow.DebugEvent");
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          writer->WriteSerializedNonExecutionDebugEvent(
+              obj.attr("SerializeToString")().cast<std::string>(),
+              tfdbg::DebugEventFileType::SOURCE_FILES);
+        });
+  m.def("WriteStackFrameWithId",
+        [](const std::string& dump_root, const py::object& obj) {
+          CheckProtoType(obj, "tensorflow.DebugEvent");
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          writer->WriteSerializedNonExecutionDebugEvent(
+              obj.attr("SerializeToString")().cast<std::string>(),
+              tfdbg::DebugEventFileType::STACK_FRAMES);
+        });
+  m.def("WriteGraphOpCreation",
+        [](const std::string& dump_root, const py::object& obj) {
+          CheckProtoType(obj, "tensorflow.DebugEvent");
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          writer->WriteSerializedNonExecutionDebugEvent(
+              obj.attr("SerializeToString")().cast<std::string>(),
+              tfdbg::DebugEventFileType::GRAPHS);
+        });
+  m.def("WriteDebuggedGraph",
+        [](const std::string& dump_root, const py::object& obj) {
+          CheckProtoType(obj, "tensorflow.DebugEvent");
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          writer->WriteSerializedNonExecutionDebugEvent(
+              obj.attr("SerializeToString")().cast<std::string>(),
+              tfdbg::DebugEventFileType::GRAPHS);
+        });
+  m.def("WriteExecution",
+        [](const std::string& dump_root, const py::object& obj) {
+          CheckProtoType(obj, "tensorflow.DebugEvent");
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          writer->WriteSerializedExecutionDebugEvent(
+              obj.attr("SerializeToString")().cast<std::string>(),
+              tfdbg::DebugEventFileType::EXECUTION);
+        });
+  m.def("WriteGraphExecutionTrace",
+        [](const std::string& dump_root, const py::object& obj) {
+          CheckProtoType(obj, "tensorflow.DebugEvent");
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          writer->WriteSerializedExecutionDebugEvent(
+              obj.attr("SerializeToString")().cast<std::string>(),
+              tfdbg::DebugEventFileType::GRAPH_EXECUTION_TRACES);
+        });
+  m.def("RegisterDeviceAndGetId",
+        [](const std::string& dump_root, const std::string& device_name) {
+          DebugEventsWriter* writer =
+              DebugEventsWriter::GetDebugEventsWriter(dump_root);
+          return writer->RegisterDeviceAndGetId(device_name);
+        });
+  m.def("FlushNonExecutionFiles", [](const std::string& dump_root) {
+    DebugEventsWriter* writer =
+        DebugEventsWriter::GetDebugEventsWriter(dump_root);
+    writer->FlushNonExecutionFiles();
+  });
+  m.def("FlushExecutionFiles", [](const std::string& dump_root) {
+    DebugEventsWriter* writer =
+        DebugEventsWriter::GetDebugEventsWriter(dump_root);
+    writer->FlushExecutionFiles();
+  });
+  m.def("Close", [](const std::string& dump_root) {
+    DebugEventsWriter* writer =
+        DebugEventsWriter::GetDebugEventsWriter(dump_root);
+    writer->Close();
+  });
 };

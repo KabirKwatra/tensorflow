@@ -27,20 +27,20 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_tfcompile, m) {
-    m.doc() = R"pbdoc(
+  m.doc() = R"pbdoc(
     _pywrap_tfcompile
     -----
   )pbdoc";
 
-    m.def(
-        "Compile",
-        [](std::string graph, std::string config, std::string target_triple,
-           std::string target_cpu, std::string target_features,
-           std::string entry_point, std::string cpp_class,
-           std::string out_function_object, std::string out_metadata_object,
-           std::string out_header, std::string out_session_module,
-           std::string mlir_components, bool gen_name_to_index,
-    bool gen_program_shape) {
+  m.def(
+      "Compile",
+      [](std::string graph, std::string config, std::string target_triple,
+         std::string target_cpu, std::string target_features,
+         std::string entry_point, std::string cpp_class,
+         std::string out_function_object, std::string out_metadata_object,
+         std::string out_header, std::string out_session_module,
+         std::string mlir_components, bool gen_name_to_index,
+         bool gen_program_shape) {
         tensorflow::tfcompile::MainFlags flags;
         flags.graph = std::move(graph);
         flags.config = std::move(config);
@@ -60,13 +60,13 @@ PYBIND11_MODULE(_pywrap_tfcompile, m) {
         flags.gen_program_shape = gen_program_shape;
 
         tensorflow::MaybeRaiseFromStatus(tensorflow::tfcompile::Main(flags));
-    },
-    py::arg("graph") = "", py::arg("config") = "",
-    py::arg("target_triple") = "x86_64-pc-linux", py::arg("target_cpu") = "",
-    py::arg("target_features") = "", py::arg("entry_point") = "entry",
-    py::arg("cpp_class") = "", py::arg("out_function_object") = "out_model.o",
-    py::arg("out_metadata_object") = "out_helper.o",
-    py::arg("out_header") = "out.h", py::arg("out_session_module") = "",
-    py::arg("mlir_components") = "", py::arg("gen_name_to_index") = false,
-    py::arg("gen_program_shape") = false);
+      },
+      py::arg("graph") = "", py::arg("config") = "",
+      py::arg("target_triple") = "x86_64-pc-linux", py::arg("target_cpu") = "",
+      py::arg("target_features") = "", py::arg("entry_point") = "entry",
+      py::arg("cpp_class") = "", py::arg("out_function_object") = "out_model.o",
+      py::arg("out_metadata_object") = "out_helper.o",
+      py::arg("out_header") = "out.h", py::arg("out_session_module") = "",
+      py::arg("mlir_components") = "", py::arg("gen_name_to_index") = false,
+      py::arg("gen_program_shape") = false);
 }

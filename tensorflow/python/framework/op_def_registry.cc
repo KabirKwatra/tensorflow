@@ -22,22 +22,22 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_op_def_registry, m) {
-    m.def("get", [](const std::string& name) {
-        const tensorflow::OpDef* op_def = nullptr;
-        auto status = tensorflow::OpRegistry::Global()->LookUpOpDef(name, &op_def);
-        if (!status.ok()) return py::reinterpret_borrow<py::object>(py::none());
+  m.def("get", [](const std::string& name) {
+    const tensorflow::OpDef* op_def = nullptr;
+    auto status = tensorflow::OpRegistry::Global()->LookUpOpDef(name, &op_def);
+    if (!status.ok()) return py::reinterpret_borrow<py::object>(py::none());
 
-        tensorflow::OpDef stripped_op_def = *op_def;
-        tensorflow::RemoveNonDeprecationDescriptionsFromOpDef(&stripped_op_def);
+    tensorflow::OpDef stripped_op_def = *op_def;
+    tensorflow::RemoveNonDeprecationDescriptionsFromOpDef(&stripped_op_def);
 
-        tensorflow::MaybeRaiseFromStatus(status);
-        std::string serialized_op_def;
-        if (!stripped_op_def.SerializeToString(&serialized_op_def)) {
-            throw std::runtime_error("Failed to serialize OpDef to string");
-        }
+    tensorflow::MaybeRaiseFromStatus(status);
+    std::string serialized_op_def;
+    if (!stripped_op_def.SerializeToString(&serialized_op_def)) {
+      throw std::runtime_error("Failed to serialize OpDef to string");
+    }
 
-        // Explicitly convert to py::bytes because std::string is implicitly
-        // convertable to py::str by default.
-        return py::reinterpret_borrow<py::object>(py::bytes(serialized_op_def));
-    });
+    // Explicitly convert to py::bytes because std::string is implicitly
+    // convertable to py::str by default.
+    return py::reinterpret_borrow<py::object>(py::bytes(serialized_op_def));
+  });
 }

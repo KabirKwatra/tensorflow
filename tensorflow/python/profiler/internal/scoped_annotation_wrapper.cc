@@ -26,34 +26,30 @@ namespace {
 
 // Helper to implement ScopedAnnotation as a context manager in Python.
 class ScopedAnnotationWrapper {
-public:
-    explicit ScopedAnnotationWrapper(const tensorflow::string& name)
-        : name_(name) {}
+ public:
+  explicit ScopedAnnotationWrapper(const tensorflow::string& name)
+      : name_(name) {}
 
-    void Enter() {
-        annotation_.emplace(std::move(name_));
-    }
+  void Enter() { annotation_.emplace(std::move(name_)); }
 
-    void Exit() {
-        annotation_.reset();
-    }
+  void Exit() { annotation_.reset(); }
 
-    static bool IsEnabled() {
-        return tensorflow::profiler::ScopedAnnotation::IsEnabled();
-    }
+  static bool IsEnabled() {
+    return tensorflow::profiler::ScopedAnnotation::IsEnabled();
+  }
 
-private:
-    tensorflow::string name_;
-    absl::optional<tensorflow::profiler::ScopedAnnotation> annotation_;
+ private:
+  tensorflow::string name_;
+  absl::optional<tensorflow::profiler::ScopedAnnotation> annotation_;
 };
 
 }  // namespace
 
 PYBIND11_MODULE(_pywrap_scoped_annotation, m) {
-    py::class_<ScopedAnnotationWrapper> scoped_annotation_class(
-        m, "ScopedAnnotation");
-    scoped_annotation_class.def(py::init<const tensorflow::string&>())
-    .def("Enter", &ScopedAnnotationWrapper::Enter)
-    .def("Exit", &ScopedAnnotationWrapper::Exit)
-    .def_static("IsEnabled", &ScopedAnnotationWrapper::IsEnabled);
+  py::class_<ScopedAnnotationWrapper> scoped_annotation_class(
+      m, "ScopedAnnotation");
+  scoped_annotation_class.def(py::init<const tensorflow::string&>())
+      .def("Enter", &ScopedAnnotationWrapper::Enter)
+      .def("Exit", &ScopedAnnotationWrapper::Exit)
+      .def_static("IsEnabled", &ScopedAnnotationWrapper::IsEnabled);
 };

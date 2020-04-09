@@ -21,47 +21,47 @@ limitations under the License.
 #include "tensorflow/python/lib/core/safe_ptr.h"
 
 PYBIND11_MODULE(_pywrap_mlir, m) {
-    m.def("ImportGraphDef",
-    [](const std::string &graphdef, const std::string &pass_pipeline) {
-        tensorflow::Safe_TF_StatusPtr status =
-            tensorflow::make_safe(TF_NewStatus());
-        std::string output =
-            tensorflow::ImportGraphDef(graphdef, pass_pipeline, status.get());
-        tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
-        return output;
-    });
+  m.def("ImportGraphDef",
+        [](const std::string& graphdef, const std::string& pass_pipeline) {
+          tensorflow::Safe_TF_StatusPtr status =
+              tensorflow::make_safe(TF_NewStatus());
+          std::string output =
+              tensorflow::ImportGraphDef(graphdef, pass_pipeline, status.get());
+          tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
+          return output;
+        });
 
-    m.def("ExperimentalConvertSavedModelToMlir",
-          [](const std::string &saved_model_path,
-    const std::string &exported_names, bool show_debug_info) {
-        tensorflow::Safe_TF_StatusPtr status =
-            tensorflow::make_safe(TF_NewStatus());
-        std::string output = tensorflow::ExperimentalConvertSavedModelToMlir(
-                                 saved_model_path, exported_names, show_debug_info, status.get());
-        tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
-        return output;
-    });
+  m.def("ExperimentalConvertSavedModelToMlir",
+        [](const std::string& saved_model_path,
+           const std::string& exported_names, bool show_debug_info) {
+          tensorflow::Safe_TF_StatusPtr status =
+              tensorflow::make_safe(TF_NewStatus());
+          std::string output = tensorflow::ExperimentalConvertSavedModelToMlir(
+              saved_model_path, exported_names, show_debug_info, status.get());
+          tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
+          return output;
+        });
 
-    m.def("ExperimentalConvertSavedModelV1ToMlir",
-          [](const std::string &saved_model_path, const std::string &tags,
-    bool show_debug_info) {
-        tensorflow::Safe_TF_StatusPtr status =
-            tensorflow::make_safe(TF_NewStatus());
-        std::string output =
-            tensorflow::ExperimentalConvertSavedModelV1ToMlir(
-                saved_model_path, tags, show_debug_info, status.get());
-        tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
-        return output;
-    });
+  m.def("ExperimentalConvertSavedModelV1ToMlir",
+        [](const std::string& saved_model_path, const std::string& tags,
+           bool show_debug_info) {
+          tensorflow::Safe_TF_StatusPtr status =
+              tensorflow::make_safe(TF_NewStatus());
+          std::string output =
+              tensorflow::ExperimentalConvertSavedModelV1ToMlir(
+                  saved_model_path, tags, show_debug_info, status.get());
+          tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
+          return output;
+        });
 
-    m.def("ExperimentalRunPassPipeline",
-          [](const std::string &mlir_txt, const std::string &pass_pipeline,
-    bool show_debug_info) {
-        tensorflow::Safe_TF_StatusPtr status =
-            tensorflow::make_safe(TF_NewStatus());
-        std::string output = tensorflow::ExperimentalRunPassPipeline(
-                                 mlir_txt, pass_pipeline, show_debug_info, status.get());
-        tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
-        return output;
-    });
+  m.def("ExperimentalRunPassPipeline",
+        [](const std::string& mlir_txt, const std::string& pass_pipeline,
+           bool show_debug_info) {
+          tensorflow::Safe_TF_StatusPtr status =
+              tensorflow::make_safe(TF_NewStatus());
+          std::string output = tensorflow::ExperimentalRunPassPipeline(
+              mlir_txt, pass_pipeline, show_debug_info, status.get());
+          tensorflow::MaybeRaiseRegisteredFromTFStatus(status.get());
+          return output;
+        });
 };
