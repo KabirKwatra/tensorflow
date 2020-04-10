@@ -36,11 +36,12 @@ from tensorflow.python.util import deprecation
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import tf_export
 
-
 # TensorInfo helpers.
 
 
-@tf_export(v1=["saved_model.build_tensor_info", "saved_model.utils.build_tensor_info"])
+@tf_export(v1=[
+    "saved_model.build_tensor_info", "saved_model.utils.build_tensor_info"
+])
 @deprecation.deprecated(
     None,
     "This function will only be available through the v1 compatibility "
@@ -69,8 +70,7 @@ def build_tensor_info(tensor):
 def build_tensor_info_internal(tensor):
     """Utility function to build TensorInfo proto from a Tensor."""
     if isinstance(tensor, composite_tensor.CompositeTensor) and not isinstance(
-        tensor, sparse_tensor.SparseTensor
-    ):
+            tensor, sparse_tensor.SparseTensor):
         return _build_composite_tensor_info_internal(tensor)
 
     tensor_info = meta_graph_pb2.TensorInfo(
@@ -95,8 +95,7 @@ def _build_composite_tensor_info_internal(tensor):
     tensor_info.composite_tensor.type_spec.CopyFrom(spec_proto.type_spec_value)
     for component in nest.flatten(tensor, expand_composites=True):
         tensor_info.composite_tensor.components.add().CopyFrom(
-            build_tensor_info_internal(component)
-        )
+            build_tensor_info_internal(component))
     return tensor_info
 
 
@@ -136,12 +135,10 @@ def build_tensor_info_from_op(op):
     )
 
 
-@tf_export(
-    v1=[
-        "saved_model.get_tensor_from_tensor_info",
-        "saved_model.utils.get_tensor_from_tensor_info",
-    ]
-)
+@tf_export(v1=[
+    "saved_model.get_tensor_from_tensor_info",
+    "saved_model.utils.get_tensor_from_tensor_info",
+])
 @deprecation.deprecated(
     None,
     "This function will only be available through the v1 compatibility "
@@ -171,8 +168,7 @@ def get_tensor_from_tensor_info(tensor_info, graph=None, import_scope=None):
 
     def _get_tensor(name):
         return graph.get_tensor_by_name(
-            ops.prepend_name_scope(name, import_scope=import_scope)
-        )
+            ops.prepend_name_scope(name, import_scope=import_scope))
 
     encoding = tensor_info.WhichOneof("encoding")
     if encoding == "name":
@@ -186,8 +182,7 @@ def get_tensor_from_tensor_info(tensor_info, graph=None, import_scope=None):
     elif encoding == "composite_tensor":
         struct_coder = nested_structure_coder.StructureCoder()
         spec_proto = struct_pb2.StructuredValue(
-            type_spec_value=tensor_info.composite_tensor.type_spec
-        )
+            type_spec_value=tensor_info.composite_tensor.type_spec)
         spec = struct_coder.decode_proto(spec_proto)
         components = [
             _get_tensor(component.name)
@@ -216,8 +211,7 @@ def get_element_from_tensor_info(tensor_info, graph=None, import_scope=None):
     """
     graph = graph or ops.get_default_graph()
     return graph.as_graph_element(
-        ops.prepend_name_scope(tensor_info.name, import_scope=import_scope)
-    )
+        ops.prepend_name_scope(tensor_info.name, import_scope=import_scope))
 
 
 # Path helpers.
@@ -233,9 +227,8 @@ def get_or_create_variables_dir(export_dir):
 
 def get_variables_dir(export_dir):
     """Return variables sub-directory in the SavedModel."""
-    return os.path.join(
-        compat.as_text(export_dir), compat.as_text(constants.VARIABLES_DIRECTORY)
-    )
+    return os.path.join(compat.as_text(export_dir),
+                        compat.as_text(constants.VARIABLES_DIRECTORY))
 
 
 def get_variables_path(export_dir):
@@ -258,9 +251,8 @@ def get_or_create_assets_dir(export_dir):
 
 def get_assets_dir(export_dir):
     """Return path to asset directory in the SavedModel."""
-    return os.path.join(
-        compat.as_text(export_dir), compat.as_text(constants.ASSETS_DIRECTORY)
-    )
+    return os.path.join(compat.as_text(export_dir),
+                        compat.as_text(constants.ASSETS_DIRECTORY))
 
 
 def get_or_create_debug_dir(export_dir):
@@ -275,6 +267,5 @@ def get_or_create_debug_dir(export_dir):
 
 def get_debug_dir(export_dir):
     """Returns path to the debug sub-directory in the SavedModel."""
-    return os.path.join(
-        compat.as_text(export_dir), compat.as_text(constants.DEBUG_DIRECTORY)
-    )
+    return os.path.join(compat.as_text(export_dir),
+                        compat.as_text(constants.DEBUG_DIRECTORY))
