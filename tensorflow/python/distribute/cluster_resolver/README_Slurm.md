@@ -40,20 +40,17 @@ be automatically exposed to processes according to specification by setting
 
 ## Basic example
 
--   Slurm allocation in shell `salloc --nodes=2 -t 01:30:00 --ntasks-per-node=2
-    --gres=gpu:k80:4 --exclusive`
--   Run the example `srun python tf_example.py`
--   Creating cluster in Python `import tensorflow as tf cluster_resolver =
-    tf.distribute.cluster_resolver.SlurmClusterResolver() strategy =
-    tf.distribute.experimental.MultiWorkerMirroredStrategy(cluster_resolver=cluster_resolver)
-    with strategy.scope(): # Load and compile model and data`
+- Slurm allocation in shell
+  `salloc --nodes=2 -t 01:30:00 --ntasks-per-node=2 --gres=gpu:k80:4 --exclusive`
+- Run the example `srun python tf_example.py`
+- Creating cluster in Python
+  `import tensorflow as tf cluster_resolver = tf.distribute.cluster_resolver.SlurmClusterResolver() strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy(cluster_resolver=cluster_resolver) with strategy.scope(): # Load and compile model and data`
 
 The above example will allocate 4 jobs on 2 nodes with each node having 2 jobs
 and 4 GPUs. `cluster_resolver.cluster_spec()` will return a cluster
 specification object in protobuf format with the following value (host names may
-vary): `job { name: "worker" tasks { key: 0 value: "t02n13:8888" } tasks { key:
-1 value: "t02n13:8889" } tasks { key: 2 value: "t02n41:8888" } tasks { key: 3
-value: "t02n41:8889" } }`
+vary):
+`job { name: "worker" tasks { key: 0 value: "t02n13:8888" } tasks { key: 1 value: "t02n13:8889" } tasks { key: 2 value: "t02n41:8888" } tasks { key: 3 value: "t02n41:8889" } }`
 
 The `job_name` will be `worker` for all nodes and `task_index` will be `0` to
 `3`. Also GPUs will be allocated automatically, so the first job on each node
@@ -61,20 +58,18 @@ will see GPU 0 and 1, and the second GPU 2 and 3.
 
 ## Advanced example
 
--   Assuming the same job parameters (`salloc` & `srun`) as above
--   Creating cluster in Python ``` cluster_resolver =
-    tf.contrib.cluster_resolver.SlurmClusterResolver( {'ps': 1, 'worker': 3},
-    port_base=1337, tasks_per_node=2, gpus_per_node=2, gpus_per_task=1,
-    auto_set_gpu=False)
+- Assuming the same job parameters (`salloc` & `srun`) as above
+- Creating cluster in Python ``` cluster_resolver =
+  tf.contrib.cluster_resolver.SlurmClusterResolver( {'ps': 1, 'worker': 3},
+  port_base=1337, tasks_per_node=2, gpus_per_node=2, gpus_per_task=1,
+  auto_set_gpu=False)
 
 cluster = cluster_resolver.cluster_spec() job_name, task_index =
 cluster_resolver.get_task_info() ```
 
 In this case 1 parameter server job and 3 worker jobs are used. The resulting
-protobuf specification will look similar to this: `job { name: "ps" tasks { key:
-0 value: "t02n13:1337" } } job { name: "worker" tasks { key: 0 value:
-"t02n13:1338" } tasks { key: 1 value: "t02n41:1337" } tasks { key: 2 value:
-"t02n41:1338" } }`
+protobuf specification will look similar to this:
+`job { name: "ps" tasks { key: 0 value: "t02n13:1337" } } job { name: "worker" tasks { key: 0 value: "t02n13:1338" } tasks { key: 1 value: "t02n41:1337" } tasks { key: 2 value: "t02n41:1338" } }`
 
 The value of `job_name` will be `ps` for `t02n13:1337` and `worker` for all
 others. There will be no GPU allocation done by the cluster resolver, so this
@@ -87,11 +82,11 @@ will be used per task.
 The class `SlurmClusterResolver` provides some methods that are meant to be
 overwritten by deriving classes:
 
--   `_resolve_own_rank`
--   `_resolve_num_tasks`
--   `_resolve_hostlist`
--   `_resolve_task_configuration`
+- `_resolve_own_rank`
+- `_resolve_num_tasks`
+- `_resolve_hostlist`
+- `_resolve_task_configuration`
 
-    Those can be used to implement a cluster resolver that gets information from
-    a different source, e.g. via MPI, a file or other environment variables. See
-    the documentation of these methods on what to return.
+  Those can be used to implement a cluster resolver that gets information from a
+  different source, e.g. via MPI, a file or other environment variables. See the
+  documentation of these methods on what to return.
