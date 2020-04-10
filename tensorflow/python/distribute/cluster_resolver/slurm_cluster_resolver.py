@@ -22,11 +22,9 @@ import re
 import subprocess
 
 from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (
-    ClusterResolver,
-)
+    ClusterResolver, )
 from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (
-    format_master_url,
-)
+    format_master_url, )
 from tensorflow.python.training.server_lib import ClusterSpec
 from tensorflow.python.util.tf_export import tf_export
 
@@ -82,9 +80,8 @@ def expand_hostlist(hostlist):
             if m.group(3) is None:
                 hosts.append(prefix)
             else:
-                hosts.extend(
-                    prefix + str(i) for i in expand_range_expression(m.group(3))
-                )
+                hosts.extend(prefix + str(i)
+                             for i in expand_range_expression(m.group(3)))
     except Exception as e:
         raise ValueError('Invalid hostlist format "%s": %s' % (hostlist, e))
     return hosts
@@ -106,9 +103,8 @@ def expand_tasks_per_node(tasks_per_node):
             num_repetitions = int(m.group(3) or 1)
             result.extend([num_tasks] * num_repetitions)
     except Exception as e:
-        raise ValueError(
-            'Invalid tasks-per-node list format "%s": %s' % (tasks_per_node, e)
-        )
+        raise ValueError('Invalid tasks-per-node list format "%s": %s' %
+                         (tasks_per_node, e))
     return result
 
 
@@ -127,9 +123,8 @@ def _get_slurm_var(name):
     try:
         return os.environ[name]
     except KeyError:
-        raise RuntimeError(
-            "%s not found in environment. " "Not running inside a SLURM step?" % name
-        )
+        raise RuntimeError("%s not found in environment. "
+                           "Not running inside a SLURM step?" % name)
 
 
 def get_num_slurm_tasks():
@@ -154,15 +149,12 @@ def _get_num_nvidia_gpus():
     except KeyError:
         pass  # Ignore and fallback to using nvidia-smi
     try:
-        output = subprocess.check_output(
-            ["nvidia-smi", "--list-gpus"], encoding="utf-8"
-        )
+        output = subprocess.check_output(["nvidia-smi", "--list-gpus"],
+                                         encoding="utf-8")
         return sum(l.startswith("GPU ") for l in output.strip().split("\n"))
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            "Could not get number of GPUs from nvidia-smi. "
-            "Maybe it is missing?\nOutput: %s" % e.output
-        )
+        raise RuntimeError("Could not get number of GPUs from nvidia-smi. "
+                           "Maybe it is missing?\nOutput: %s" % e.output)
 
 
 def get_num_gpus():
@@ -186,14 +178,14 @@ class SlurmClusterResolver(ClusterResolver):
     """
 
     def __init__(
-        self,
-        jobs=None,
-        port_base=8888,
-        gpus_per_node=None,
-        gpus_per_task=None,
-        tasks_per_node=None,
-        auto_set_gpu=True,
-        rpc_layer="grpc",
+            self,
+            jobs=None,
+            port_base=8888,
+            gpus_per_node=None,
+            gpus_per_task=None,
+            tasks_per_node=None,
+            auto_set_gpu=True,
+            rpc_layer="grpc",
     ):
         """Creates a new SlurmClusterResolver object.
 
@@ -256,7 +248,10 @@ class SlurmClusterResolver(ClusterResolver):
         else:
             # User can pass a fixed number of tasks per node
             hostlist = self._resolve_hostlist()
-            self._task_configuration = {host: int(tasks_per_node) for host in hostlist}
+            self._task_configuration = {
+                host: int(tasks_per_node)
+                for host in hostlist
+            }
 
         max_tasks_per_node = max(self._task_configuration.values())
         num_tasks = sum(self._task_configuration.values())
@@ -282,9 +277,7 @@ class SlurmClusterResolver(ClusterResolver):
         if sum(self._jobs.values()) != num_tasks:
             raise RuntimeError(
                 "Requested {} tasks but only {} were assigned.".format(
-                    sum(self._jobs.values()), num_tasks
-                )
-            )
+                    sum(self._jobs.values()), num_tasks))
 
     def _resolve_own_rank(self):
         """Return the rank of the current task in range [0, num_tasks)"""
@@ -307,8 +300,12 @@ class SlurmClusterResolver(ClusterResolver):
         Returns a dictionary mapping each hostname to the number of tasks.
         """
         hostlist = self._resolve_hostlist()
-        tasks_per_node = expand_tasks_per_node(_get_slurm_var("STEP_TASKS_PER_NODE"))
-        return {host: num_tasks for (host, num_tasks) in zip(hostlist, tasks_per_node)}
+        tasks_per_node = expand_tasks_per_node(
+            _get_slurm_var("STEP_TASKS_PER_NODE"))
+        return {
+            host: num_tasks
+            for (host, num_tasks) in zip(hostlist, tasks_per_node)
+        }
 
     def cluster_spec(self):
         """Returns a ClusterSpec object based on the latest instance group info.
@@ -333,14 +330,15 @@ class SlurmClusterResolver(ClusterResolver):
         # Sort to make sure the order is the same for each run
         for host, num_tasks in sorted(self._task_configuration.items()):
             for port_offset, gpu_offset in zip(
-                range(num_tasks), range(0, self._gpus_per_node, self._gpus_per_task)
-            ):
+                    range(num_tasks),
+                    range(0, self._gpus_per_node, self._gpus_per_task)):
 
                 host_addr = "%s:%d" % (host, self._port_base + port_offset)
                 task_list.append(host_addr)
                 gpu_id_list = []
 
-                for gpu_id in range(gpu_offset, gpu_offset + self._gpus_per_task):
+                for gpu_id in range(gpu_offset,
+                                    gpu_offset + self._gpus_per_task):
                     gpu_id_list.append(str(gpu_id))
 
                 self._gpu_allocation.append(",".join(gpu_id_list))
@@ -353,8 +351,7 @@ class SlurmClusterResolver(ClusterResolver):
             cluster_rank_offset_end = cluster_rank_offset_start + num_tasks
 
             self._cluster_allocation[task_type] = task_list[
-                cluster_rank_offset_start:cluster_rank_offset_end
-            ]
+                cluster_rank_offset_start:cluster_rank_offset_end]
 
             if cluster_rank_offset_start <= self._rank < cluster_rank_offset_end:
                 self.task_type = task_type
@@ -363,7 +360,8 @@ class SlurmClusterResolver(ClusterResolver):
             cluster_rank_offset_start = cluster_rank_offset_end
 
         if self._auto_set_gpu is True:
-            os.environ["CUDA_VISIBLE_DEVICES"] = self._gpu_allocation[self._rank]
+            os.environ["CUDA_VISIBLE_DEVICES"] = self._gpu_allocation[
+                self._rank]
 
         return ClusterSpec(self._cluster_allocation)
 
@@ -404,7 +402,8 @@ class SlurmClusterResolver(ClusterResolver):
 
         return ""
 
-    def num_accelerators(self, task_type=None, task_id=None, config_proto=None):
+    def num_accelerators(self, task_type=None, task_id=None,
+                         config_proto=None):
         # Unused, since this is set in __init__ manually.
         del task_type, task_id, config_proto
         return {"GPU": self._gpus_per_task}
