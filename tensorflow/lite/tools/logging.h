@@ -32,43 +32,41 @@ namespace logging {
 //
 // Used for TFLITE_LOG and TFLITE_BENCHMARK_CHECK macros.
 class LoggingWrapper {
-public:
-    enum class LogSeverity : int {
-        INFO = 0,
-        WARN = 1,
-        ERROR = 2,
-        FATAL = 3,
-    };
-    LoggingWrapper(LogSeverity severity)
-        : severity_(severity), should_log_(true) {}
-    LoggingWrapper(LogSeverity severity, bool log)
-        : severity_(severity), should_log_(log) {}
-    std::stringstream& Stream() {
-        return stream_;
+ public:
+  enum class LogSeverity : int {
+    INFO = 0,
+    WARN = 1,
+    ERROR = 2,
+    FATAL = 3,
+  };
+  LoggingWrapper(LogSeverity severity)
+      : severity_(severity), should_log_(true) {}
+  LoggingWrapper(LogSeverity severity, bool log)
+      : severity_(severity), should_log_(log) {}
+  std::stringstream& Stream() { return stream_; }
+  ~LoggingWrapper() {
+    if (should_log_) {
+      switch (severity_) {
+        case LogSeverity::INFO:
+        case LogSeverity::WARN:
+          std::cout << stream_.str() << std::endl;
+          break;
+        case LogSeverity::ERROR:
+          std::cerr << stream_.str() << std::endl;
+          break;
+        case LogSeverity::FATAL:
+          std::cerr << stream_.str() << std::endl;
+          std::flush(std::cerr);
+          std::abort();
+          break;
+      }
     }
-    ~LoggingWrapper() {
-        if (should_log_) {
-            switch (severity_) {
-            case LogSeverity::INFO:
-            case LogSeverity::WARN:
-                std::cout << stream_.str() << std::endl;
-                break;
-            case LogSeverity::ERROR:
-                std::cerr << stream_.str() << std::endl;
-                break;
-            case LogSeverity::FATAL:
-                std::cerr << stream_.str() << std::endl;
-                std::flush(std::cerr);
-                std::abort();
-                break;
-            }
-        }
-    }
+  }
 
-private:
-    std::stringstream stream_;
-    LogSeverity severity_;
-    bool should_log_;
+ private:
+  std::stringstream stream_;
+  LogSeverity severity_;
+  bool should_log_;
 };
 }  // namespace logging
 }  // namespace tflite

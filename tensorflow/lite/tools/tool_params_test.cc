@@ -23,48 +23,48 @@ namespace tools {
 namespace {
 
 TEST(ToolParams, SetTest) {
-    ToolParams params;
-    params.AddParam("some-int1", ToolParam::Create<int>(13));
-    params.AddParam("some-int2", ToolParam::Create<int>(17));
+  ToolParams params;
+  params.AddParam("some-int1", ToolParam::Create<int>(13));
+  params.AddParam("some-int2", ToolParam::Create<int>(17));
 
-    ToolParams others;
-    others.AddParam("some-int1", ToolParam::Create<int>(19));
-    others.AddParam("some-bool", ToolParam::Create<bool>(true));
+  ToolParams others;
+  others.AddParam("some-int1", ToolParam::Create<int>(19));
+  others.AddParam("some-bool", ToolParam::Create<bool>(true));
 
-    params.Set(others);
-    EXPECT_EQ(19, params.Get<int>("some-int1"));
-    EXPECT_EQ(17, params.Get<int>("some-int2"));
-    EXPECT_FALSE(params.HasParam("some-bool"));
+  params.Set(others);
+  EXPECT_EQ(19, params.Get<int>("some-int1"));
+  EXPECT_EQ(17, params.Get<int>("some-int2"));
+  EXPECT_FALSE(params.HasParam("some-bool"));
 }
 
 TEST(ToolParams, MergeTestOverwriteTrue) {
-    ToolParams params;
-    params.AddParam("some-int1", ToolParam::Create<int>(13));
-    params.AddParam("some-int2", ToolParam::Create<int>(17));
+  ToolParams params;
+  params.AddParam("some-int1", ToolParam::Create<int>(13));
+  params.AddParam("some-int2", ToolParam::Create<int>(17));
 
-    ToolParams others;
-    others.AddParam("some-int1", ToolParam::Create<int>(19));
-    others.AddParam("some-bool", ToolParam::Create<bool>(true));
+  ToolParams others;
+  others.AddParam("some-int1", ToolParam::Create<int>(19));
+  others.AddParam("some-bool", ToolParam::Create<bool>(true));
 
-    params.Merge(others, true /* overwrite */);
-    EXPECT_EQ(19, params.Get<int>("some-int1"));
-    EXPECT_EQ(17, params.Get<int>("some-int2"));
-    EXPECT_TRUE(params.Get<bool>("some-bool"));
+  params.Merge(others, true /* overwrite */);
+  EXPECT_EQ(19, params.Get<int>("some-int1"));
+  EXPECT_EQ(17, params.Get<int>("some-int2"));
+  EXPECT_TRUE(params.Get<bool>("some-bool"));
 }
 
 TEST(ToolParams, MergeTestOverwriteFalse) {
-    ToolParams params;
-    params.AddParam("some-int1", ToolParam::Create<int>(13));
-    params.AddParam("some-int2", ToolParam::Create<int>(17));
+  ToolParams params;
+  params.AddParam("some-int1", ToolParam::Create<int>(13));
+  params.AddParam("some-int2", ToolParam::Create<int>(17));
 
-    ToolParams others;
-    others.AddParam("some-int1", ToolParam::Create<int>(19));
-    others.AddParam("some-bool", ToolParam::Create<bool>(true));
+  ToolParams others;
+  others.AddParam("some-int1", ToolParam::Create<int>(19));
+  others.AddParam("some-bool", ToolParam::Create<bool>(true));
 
-    params.Merge(others);  // default overwrite is false
-    EXPECT_EQ(13, params.Get<int>("some-int1"));
-    EXPECT_EQ(17, params.Get<int>("some-int2"));
-    EXPECT_TRUE(params.Get<bool>("some-bool"));
+  params.Merge(others);  // default overwrite is false
+  EXPECT_EQ(13, params.Get<int>("some-int1"));
+  EXPECT_EQ(17, params.Get<int>("some-int2"));
+  EXPECT_TRUE(params.Get<bool>("some-bool"));
 }
 }  // namespace
 }  // namespace tools

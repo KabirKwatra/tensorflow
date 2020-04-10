@@ -31,61 +31,61 @@ ProfilingListener::ProfilingListener(
       csv_file_path_(csv_file_path),
       interpreter_(interpreter),
       profiler_(max_num_entries) {
-    TFLITE_TOOLS_CHECK(interpreter);
-    interpreter_->SetProfiler(&profiler_);
+  TFLITE_TOOLS_CHECK(interpreter);
+  interpreter_->SetProfiler(&profiler_);
 
-    // We start profiling here in order to catch events that are recorded during
-    // the benchmark run preparation stage where TFLite interpreter is
-    // initialized and model graph is prepared.
-    profiler_.Reset();
-    profiler_.StartProfiling();
+  // We start profiling here in order to catch events that are recorded during
+  // the benchmark run preparation stage where TFLite interpreter is
+  // initialized and model graph is prepared.
+  profiler_.Reset();
+  profiler_.StartProfiling();
 }
 
 void ProfilingListener::OnBenchmarkStart(const BenchmarkParams& params) {
-    // At this point, we have completed the preparation for benchmark runs
-    // including TFLite interpreter initialization etc. So we are going to process
-    // profiling events recorded during this stage.
-    profiler_.StopProfiling();
-    auto profile_events = profiler_.GetProfileEvents();
-    init_summarizer_.ProcessProfiles(profile_events, *interpreter_);
-    profiler_.Reset();
+  // At this point, we have completed the preparation for benchmark runs
+  // including TFLite interpreter initialization etc. So we are going to process
+  // profiling events recorded during this stage.
+  profiler_.StopProfiling();
+  auto profile_events = profiler_.GetProfileEvents();
+  init_summarizer_.ProcessProfiles(profile_events, *interpreter_);
+  profiler_.Reset();
 }
 
 void ProfilingListener::OnSingleRunStart(RunType run_type) {
-    if (run_type == REGULAR) {
-        profiler_.Reset();
-        profiler_.StartProfiling();
-    }
+  if (run_type == REGULAR) {
+    profiler_.Reset();
+    profiler_.StartProfiling();
+  }
 }
 
 void ProfilingListener::OnSingleRunEnd() {
-    profiler_.StopProfiling();
-    auto profile_events = profiler_.GetProfileEvents();
-    run_summarizer_.ProcessProfiles(profile_events, *interpreter_);
+  profiler_.StopProfiling();
+  auto profile_events = profiler_.GetProfileEvents();
+  run_summarizer_.ProcessProfiles(profile_events, *interpreter_);
 }
 
 void ProfilingListener::OnBenchmarkEnd(const BenchmarkResults& results) {
-    std::ofstream output_file(csv_file_path_);
-    std::ostream* output_stream = nullptr;
-    if (output_file.good()) {
-        output_stream = &output_file;
-    }
-    if (init_summarizer_.HasProfiles()) {
-        WriteOutput("Profiling Info for Benchmark Initialization:",
-                    init_summarizer_.GetOutputString(),
-                    output_stream == nullptr ? &TFLITE_LOG(INFO) : output_stream);
-    }
-    if (run_summarizer_.HasProfiles()) {
-        WriteOutput("Operator-wise Profiling Info for Regular Benchmark Runs:",
-                    run_summarizer_.GetOutputString(),
-                    output_stream == nullptr ? &TFLITE_LOG(INFO) : output_stream);
-    }
+  std::ofstream output_file(csv_file_path_);
+  std::ostream* output_stream = nullptr;
+  if (output_file.good()) {
+    output_stream = &output_file;
+  }
+  if (init_summarizer_.HasProfiles()) {
+    WriteOutput("Profiling Info for Benchmark Initialization:",
+                init_summarizer_.GetOutputString(),
+                output_stream == nullptr ? &TFLITE_LOG(INFO) : output_stream);
+  }
+  if (run_summarizer_.HasProfiles()) {
+    WriteOutput("Operator-wise Profiling Info for Regular Benchmark Runs:",
+                run_summarizer_.GetOutputString(),
+                output_stream == nullptr ? &TFLITE_LOG(INFO) : output_stream);
+  }
 }
 
 void ProfilingListener::WriteOutput(const std::string& header,
                                     const string& data, std::ostream* stream) {
-    (*stream) << header << std::endl;
-    (*stream) << data << std::endl;
+  (*stream) << header << std::endl;
+  (*stream) << data << std::endl;
 }
 
 }  // namespace benchmark
