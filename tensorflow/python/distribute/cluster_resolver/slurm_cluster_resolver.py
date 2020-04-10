@@ -13,14 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Implementation of Cluster Resolvers for Slurm workload manager."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import os
-import subprocess
 import re
+import subprocess
 
 from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (
     ClusterResolver,
