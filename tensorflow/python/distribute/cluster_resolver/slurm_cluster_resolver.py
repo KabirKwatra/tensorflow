@@ -22,8 +22,12 @@ import os
 import subprocess
 import re
 
-from tensorflow.python.distribute.cluster_resolver.cluster_resolver import ClusterResolver
-from tensorflow.python.distribute.cluster_resolver.cluster_resolver import format_master_url
+from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (
+    ClusterResolver,
+)
+from tensorflow.python.distribute.cluster_resolver.cluster_resolver import (
+    format_master_url,
+)
 from tensorflow.python.training.server_lib import ClusterSpec
 from tensorflow.python.util.tf_export import tf_export
 
@@ -39,18 +43,18 @@ def expand_hostlist(hostlist):
     def split_hostlist(hostlist):
         """Split hostlist at commas outside of range expressions ('[3-5]')"""
         in_brackets = False
-        cur_host = ''
+        cur_host = ""
         for c in hostlist:
             if in_brackets:
-                assert c != '['
-                if c == ']':
+                assert c != "["
+                if c == "]":
                     in_brackets = False
-            elif c == '[':
+            elif c == "[":
                 in_brackets = True
-            elif c == ',':
-                assert cur_host != ''
+            elif c == ",":
+                assert cur_host != ""
                 yield cur_host
-                cur_host = ''
+                cur_host = ""
                 continue
             cur_host += c
         if cur_host:
@@ -58,8 +62,8 @@ def expand_hostlist(hostlist):
 
     def expand_range_expression(range_exp):
         """Expand a range expression like '3-5' to values 3,4,5"""
-        for part in range_exp.split(','):
-            sub_range = part.split('-')
+        for part in range_exp.split(","):
+            sub_range = part.split("-")
             if len(sub_range) == 1:
                 sub_range = sub_range * 2
             else:
@@ -72,15 +76,16 @@ def expand_hostlist(hostlist):
         for part in split_hostlist(hostlist):
             # Match prefix (anything but a range expression) and range expression
             # Both are optional
-            m = re.match(r'([^,[\]]*)(\[([^\]]+)\])?$', part)
+            m = re.match(r"([^,[\]]*)(\[([^\]]+)\])?$", part)
             if m is None:
-                raise ValueError('Invalid part: %s' % part)
-            prefix = m.group(1) or ''
+                raise ValueError("Invalid part: %s" % part)
+            prefix = m.group(1) or ""
             if m.group(3) is None:
                 hosts.append(prefix)
             else:
                 hosts.extend(
-                    prefix + str(i) for i in expand_range_expression(m.group(3)))
+                    prefix + str(i) for i in expand_range_expression(m.group(3))
+                )
     except Exception as e:
         raise ValueError('Invalid hostlist format "%s": %s' % (hostlist, e))
     return hosts
@@ -95,15 +100,16 @@ def expand_tasks_per_node(tasks_per_node):
     """
     result = []
     try:
-        for part in tasks_per_node.split(','):
-            m = re.match(r'(\d+)(\(x(\d+)\))?$', part)
+        for part in tasks_per_node.split(","):
+            m = re.match(r"(\d+)(\(x(\d+)\))?$", part)
             assert m is not None
             num_tasks = int(m.group(1))
             num_repetitions = int(m.group(3) or 1)
             result.extend([num_tasks] * num_repetitions)
     except Exception as e:
-        raise ValueError('Invalid tasks-per-node list format "%s": %s' %
-                         (tasks_per_node, e))
+        raise ValueError(
+            'Invalid tasks-per-node list format "%s": %s' % (tasks_per_node, e)
+        )
     return result
 
 
@@ -118,12 +124,13 @@ def _get_slurm_var(name):
     Raises:
       RuntimeError if variable is not found
     """
-    name = 'SLURM_' + name
+    name = "SLURM_" + name
     try:
         return os.environ[name]
     except KeyError:
-        raise RuntimeError('%s not found in environment. '
-                           'Not running inside a SLURM step?' % name)
+        raise RuntimeError(
+            "%s not found in environment. " "Not running inside a SLURM step?" % name
+        )
 
 
 def get_num_slurm_tasks():
@@ -132,7 +139,7 @@ def get_num_slurm_tasks():
     Returns:
       The number of tasks as an int
     """
-    return int(_get_slurm_var('STEP_NUM_TASKS'))
+    return int(_get_slurm_var("STEP_NUM_TASKS"))
 
 
 def _get_num_nvidia_gpus():
@@ -144,16 +151,19 @@ def _get_num_nvidia_gpus():
       RuntimeError if executing nvidia-smi failed
     """
     try:
-        return len(os.environ['CUDA_VISIBLE_DEVICES'].split(','))
+        return len(os.environ["CUDA_VISIBLE_DEVICES"].split(","))
     except KeyError:
         pass  # Ignore and fallback to using nvidia-smi
     try:
-        output = subprocess.check_output(['nvidia-smi', '--list-gpus'],
-                                         encoding='utf-8')
-        return sum(l.startswith('GPU ') for l in output.strip().split('\n'))
+        output = subprocess.check_output(
+            ["nvidia-smi", "--list-gpus"], encoding="utf-8"
+        )
+        return sum(l.startswith("GPU ") for l in output.strip().split("\n"))
     except subprocess.CalledProcessError as e:
-        raise RuntimeError('Could not get number of GPUs from nvidia-smi. '
-                           'Maybe it is missing?\nOutput: %s' % e.output)
+        raise RuntimeError(
+            "Could not get number of GPUs from nvidia-smi. "
+            "Maybe it is missing?\nOutput: %s" % e.output
+        )
 
 
 def get_num_gpus():
@@ -164,7 +174,7 @@ def get_num_gpus():
     return _get_num_nvidia_gpus()
 
 
-@tf_export('distribute.cluster_resolver.SlurmClusterResolver')
+@tf_export("distribute.cluster_resolver.SlurmClusterResolver")
 class SlurmClusterResolver(ClusterResolver):
     """ClusterResolver for system with Slurm workload manager.
 
@@ -176,14 +186,16 @@ class SlurmClusterResolver(ClusterResolver):
     used for distributed TensorFlow.
     """
 
-    def __init__(self,
-                 jobs=None,
-                 port_base=8888,
-                 gpus_per_node=None,
-                 gpus_per_task=None,
-                 tasks_per_node=None,
-                 auto_set_gpu=True,
-                 rpc_layer='grpc'):
+    def __init__(
+        self,
+        jobs=None,
+        port_base=8888,
+        gpus_per_node=None,
+        gpus_per_task=None,
+        tasks_per_node=None,
+        auto_set_gpu=True,
+        rpc_layer="grpc",
+    ):
         """Creates a new SlurmClusterResolver object.
 
         For any parameter not set it will query the environment for the value.
@@ -232,7 +244,7 @@ class SlurmClusterResolver(ClusterResolver):
         self._rank = self._resolve_own_rank()
 
         if jobs is None:
-            jobs = {'worker': self._resolve_num_tasks()}
+            jobs = {"worker": self._resolve_num_tasks()}
 
         self._jobs = jobs
         self._port_base = port_base
@@ -245,9 +257,7 @@ class SlurmClusterResolver(ClusterResolver):
         else:
             # User can pass a fixed number of tasks per node
             hostlist = self._resolve_hostlist()
-            self._task_configuration = {
-                host: int(tasks_per_node) for host in hostlist
-            }
+            self._task_configuration = {host: int(tasks_per_node) for host in hostlist}
 
         max_tasks_per_node = max(self._task_configuration.values())
         num_tasks = sum(self._task_configuration.values())
@@ -268,15 +278,18 @@ class SlurmClusterResolver(ClusterResolver):
         self._cluster_allocation = {}
 
         if max_tasks_per_node * self._gpus_per_task > self._gpus_per_node:
-            raise RuntimeError('Requested more GPUs per node then available.')
+            raise RuntimeError("Requested more GPUs per node then available.")
 
         if sum(self._jobs.values()) != num_tasks:
-            raise RuntimeError('Requested {} tasks but only {} were assigned.'.format(
-                sum(self._jobs.values()), num_tasks))
+            raise RuntimeError(
+                "Requested {} tasks but only {} were assigned.".format(
+                    sum(self._jobs.values()), num_tasks
+                )
+            )
 
     def _resolve_own_rank(self):
         """Return the rank of the current task in range [0, num_tasks)"""
-        return int(_get_slurm_var('PROCID'))
+        return int(_get_slurm_var("PROCID"))
 
     def _resolve_num_tasks(self):
         """Return the number of tasks for the current job step"""
@@ -284,7 +297,7 @@ class SlurmClusterResolver(ClusterResolver):
 
     def _resolve_hostlist(self):
         """Return a list of hostnames for nodes running the current job step"""
-        return expand_hostlist(_get_slurm_var('STEP_NODELIST'))
+        return expand_hostlist(_get_slurm_var("STEP_NODELIST"))
 
     def _resolve_task_configuration(self):
         """Create a mapping of hostnames to the number of tasks allocated on it
@@ -295,11 +308,8 @@ class SlurmClusterResolver(ClusterResolver):
         Returns a dictionary mapping each hostname to the number of tasks.
         """
         hostlist = self._resolve_hostlist()
-        tasks_per_node = expand_tasks_per_node(
-            _get_slurm_var('STEP_TASKS_PER_NODE'))
-        return {
-            host: num_tasks for (host, num_tasks) in zip(hostlist, tasks_per_node)
-        }
+        tasks_per_node = expand_tasks_per_node(_get_slurm_var("STEP_TASKS_PER_NODE"))
+        return {host: num_tasks for (host, num_tasks) in zip(hostlist, tasks_per_node)}
 
     def cluster_spec(self):
         """Returns a ClusterSpec object based on the latest instance group info.
@@ -324,16 +334,17 @@ class SlurmClusterResolver(ClusterResolver):
         # Sort to make sure the order is the same for each run
         for host, num_tasks in sorted(self._task_configuration.items()):
             for port_offset, gpu_offset in zip(
-                    range(num_tasks), range(0, self._gpus_per_node, self._gpus_per_task)):
+                range(num_tasks), range(0, self._gpus_per_node, self._gpus_per_task)
+            ):
 
-                host_addr = '%s:%d' % (host, self._port_base + port_offset)
+                host_addr = "%s:%d" % (host, self._port_base + port_offset)
                 task_list.append(host_addr)
                 gpu_id_list = []
 
                 for gpu_id in range(gpu_offset, gpu_offset + self._gpus_per_task):
                     gpu_id_list.append(str(gpu_id))
 
-                self._gpu_allocation.append(','.join(gpu_id_list))
+                self._gpu_allocation.append(",".join(gpu_id_list))
 
         cluster_rank_offset_start = 0
         cluster_rank_offset_end = 0
@@ -342,8 +353,9 @@ class SlurmClusterResolver(ClusterResolver):
         for task_type, num_tasks in sorted(self._jobs.items()):
             cluster_rank_offset_end = cluster_rank_offset_start + num_tasks
 
-            self._cluster_allocation[task_type] = (
-                task_list[cluster_rank_offset_start:cluster_rank_offset_end])
+            self._cluster_allocation[task_type] = task_list[
+                cluster_rank_offset_start:cluster_rank_offset_end
+            ]
 
             if cluster_rank_offset_start <= self._rank < cluster_rank_offset_end:
                 self.task_type = task_type
@@ -352,7 +364,7 @@ class SlurmClusterResolver(ClusterResolver):
             cluster_rank_offset_start = cluster_rank_offset_end
 
         if self._auto_set_gpu is True:
-            os.environ['CUDA_VISIBLE_DEVICES'] = self._gpu_allocation[self._rank]
+            os.environ["CUDA_VISIBLE_DEVICES"] = self._gpu_allocation[self._rank]
 
         return ClusterSpec(self._cluster_allocation)
 
@@ -388,14 +400,12 @@ class SlurmClusterResolver(ClusterResolver):
         if task_type is not None and task_id is not None:
             return format_master_url(
                 self.cluster_spec().task_address(task_type, task_id),
-                rpc_layer or self.rpc_layer)
+                rpc_layer or self.rpc_layer,
+            )
 
-        return ''
+        return ""
 
-    def num_accelerators(self,
-                         task_type=None,
-                         task_id=None,
-                         config_proto=None):
+    def num_accelerators(self, task_type=None, task_id=None, config_proto=None):
         # Unused, since this is set in __init__ manually.
         del task_type, task_id, config_proto
-        return {'GPU': self._gpus_per_task}
+        return {"GPU": self._gpus_per_task}
