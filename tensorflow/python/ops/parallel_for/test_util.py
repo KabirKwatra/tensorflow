@@ -31,7 +31,7 @@ class PForTestCase(test.TestCase):
 
     def _run_targets(self, targets1, targets2=None, run_init=True):
         targets1 = nest.flatten(targets1)
-        targets2 = ([] if targets2 is None else nest.flatten(targets2))
+        targets2 = [] if targets2 is None else nest.flatten(targets2)
         assert len(targets1) == len(targets2) or not targets2
         if run_init:
             init = variables.global_variables_initializer()
@@ -45,24 +45,30 @@ class PForTestCase(test.TestCase):
         n = len(outputs) // 2
         for i in range(n):
             if outputs[i + n].dtype != np.object:
-                self.assertAllClose(
-                    outputs[i + n], outputs[i], rtol=rtol, atol=atol)
+                self.assertAllClose(outputs[i + n], outputs[i], rtol=rtol, atol=atol)
             else:
                 self.assertAllEqual(outputs[i + n], outputs[i])
 
-    def _test_loop_fn(self,
-                      loop_fn,
-                      iters,
-                      parallel_iterations=None,
-                      fallback_to_while_loop=False,
-                      rtol=1e-4,
-                      atol=1e-5):
+    def _test_loop_fn(
+        self,
+        loop_fn,
+        iters,
+        parallel_iterations=None,
+        fallback_to_while_loop=False,
+        rtol=1e-4,
+        atol=1e-5,
+    ):
         t1 = pfor_control_flow_ops.pfor(
             loop_fn,
             iters=iters,
             fallback_to_while_loop=fallback_to_while_loop,
-            parallel_iterations=parallel_iterations)
+            parallel_iterations=parallel_iterations,
+        )
         loop_fn_dtypes = nest.map_structure(lambda x: x.dtype, t1)
-        t2 = pfor_control_flow_ops.for_loop(loop_fn, loop_fn_dtypes, iters=iters,
-                                            parallel_iterations=parallel_iterations)
+        t2 = pfor_control_flow_ops.for_loop(
+            loop_fn,
+            loop_fn_dtypes,
+            iters=iters,
+            parallel_iterations=parallel_iterations,
+        )
         self.run_and_assert_equal(t1, t2, rtol=rtol, atol=atol)
