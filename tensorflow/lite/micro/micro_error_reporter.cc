@@ -23,16 +23,16 @@ namespace tflite {
 
 int MicroErrorReporter::Report(const char* format, va_list args) {
 #ifndef TF_LITE_STRIP_ERROR_STRINGS
-    // Only pulling in the implementation of this function for builds where we
-    // expect to make use of it to be extra cautious about not increasing the code
-    // size.
-    static constexpr int kMaxLogLen = 256;
-    char log_buffer[kMaxLogLen];
-    MicroVsnprintf(log_buffer, kMaxLogLen, format, args);
-    DebugLog(log_buffer);
-    DebugLog("\r\n");
+  // Only pulling in the implementation of this function for builds where we
+  // expect to make use of it to be extra cautious about not increasing the code
+  // size.
+  static constexpr int kMaxLogLen = 256;
+  char log_buffer[kMaxLogLen];
+  MicroVsnprintf(log_buffer, kMaxLogLen, format, args);
+  DebugLog(log_buffer);
+  DebugLog("\r\n");
 #endif
-    return 0;
+  return 0;
 }
 
 }  // namespace tflite

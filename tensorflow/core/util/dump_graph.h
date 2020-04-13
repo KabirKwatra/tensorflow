@@ -57,7 +57,7 @@ void SetGraphDumper(
     std::function<Status(const Graph& graph,
                          const FunctionLibraryDefinition* flib_def,
                          WritableFile*)>
-    dumper,
+        dumper,
     string suffix = ".pbtxt");
 
 }  // namespace tensorflow

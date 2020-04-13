@@ -27,75 +27,69 @@ namespace tensorflow {
 namespace {
 
 void ExpectHasSubstr(const string& s, const string& expected) {
-    EXPECT_TRUE(absl::StrContains(s, expected))
-            << "'" << s << "' does not contain '" << expected << "'";
+  EXPECT_TRUE(absl::StrContains(s, expected))
+      << "'" << s << "' does not contain '" << expected << "'";
 }
 
 // WritableFile that simply concats into string.
 class StringWritableFile : public WritableFile {
-public:
-    explicit StringWritableFile(string* str) : str_(*str) {}
+ public:
+  explicit StringWritableFile(string* str) : str_(*str) {}
 
-    Status Append(StringPiece data) override {
-        absl::StrAppend(&str_, data);
-        return Status::OK();
-    }
+  Status Append(StringPiece data) override {
+    absl::StrAppend(&str_, data);
+    return Status::OK();
+  }
 
-    Status Close() override {
-        return Status::OK();
-    }
+  Status Close() override { return Status::OK(); }
 
-    Status Flush() override {
-        return Status::OK();
-    }
+  Status Flush() override { return Status::OK(); }
 
-    Status Name(StringPiece* result) const override {
-        *result = "(string)";
-        return Status::OK();
-    }
+  Status Name(StringPiece* result) const override {
+    *result = "(string)";
+    return Status::OK();
+  }
 
-    Status Sync() override {
-        return Status::OK();
-    }
+  Status Sync() override { return Status::OK(); }
 
-    Status Tell(int64* position) override {
-        return errors::Unimplemented("Stream not seekable");
-    }
+  Status Tell(int64* position) override {
+    return errors::Unimplemented("Stream not seekable");
+  }
 
-private:
-    string& str_;
+ private:
+  string& str_;
 };
 
 TEST(Dump, TexualIrToFileSuccess) {
-    Graph graph(OpRegistry::Global());
-    Node* node;
-    TF_CHECK_OK(NodeBuilder("A", "NoOp").Finalize(&graph, &node));
+  Graph graph(OpRegistry::Global());
+  Node* node;
+  TF_CHECK_OK(NodeBuilder("A", "NoOp").Finalize(&graph, &node));
 
-    setenv("TF_DUMP_GRAPH_PREFIX", testing::TmpDir().c_str(), 1);
-    UseMlirForGraphDump(MlirDumpConfig());
-    string ret = DumpGraphToFile("tir", graph);
-    ASSERT_EQ(ret, io::JoinPath(testing::TmpDir(), "tir.mlir"));
+  setenv("TF_DUMP_GRAPH_PREFIX", testing::TmpDir().c_str(), 1);
+  UseMlirForGraphDump(MlirDumpConfig());
+  string ret = DumpGraphToFile("tir", graph);
+  ASSERT_EQ(ret, io::JoinPath(testing::TmpDir(), "tir.mlir"));
 
-    string actual;
-    TF_ASSERT_OK(ReadFileToString(Env::Default(), ret, &actual));
-    string expected_substr = R"(tf_executor.island)";
-    ExpectHasSubstr(actual, expected_substr);
+  string actual;
+  TF_ASSERT_OK(ReadFileToString(Env::Default(), ret, &actual));
+  string expected_substr = R"(tf_executor.island)";
+  ExpectHasSubstr(actual, expected_substr);
 }
 
 TEST(Dump, TexualIrWithOptions) {
-    Graph graph(OpRegistry::Global());
-    Node* node;
-    TF_ASSERT_OK(NodeBuilder("A", "Placeholder")
-                 .Attr("dtype", DT_FLOAT)
-                 .Finalize(&graph, &node));
+  Graph graph(OpRegistry::Global());
+  Node* node;
+  TF_ASSERT_OK(NodeBuilder("A", "Placeholder")
+                   .Attr("dtype", DT_FLOAT)
+                   .Finalize(&graph, &node));
 
-    string actual;
-    StringWritableFile file(&actual);
-    TF_ASSERT_OK(DumpTextualIRToFile(MlirDumpConfig().emit_location_information(),
-                                     graph, /*flib_def=*/nullptr, &file));
+  string actual;
+  StringWritableFile file(&actual);
+  TF_ASSERT_OK(DumpTextualIRToFile(MlirDumpConfig().emit_location_information(),
+                                   graph, /*flib_def=*/nullptr, &file));
 
-    string expected_substr = R"(loc("A"))";
-    ExpectHasSubstr(actual, expected_substr);
+  string expected_substr = R"(loc("A"))";
+  ExpectHasSubstr(actual, expected_substr);
 }
 
 }  // namespace

@@ -35,22 +35,22 @@ Status DumpTextualIRToFile(const MlirDumpConfig& config, const Graph& graph,
 
 // Config of the textual dump.
 struct MlirDumpConfig {
-    // The limit of element size that gets printed.
-    MlirDumpConfig& elide_large_attributes(int large_element_limit = 16) {
-        this->op_printing_flags.elideLargeElementsAttrs(large_element_limit);
-        return *this;
-    }
+  // The limit of element size that gets printed.
+  MlirDumpConfig& elide_large_attributes(int large_element_limit = 16) {
+    this->op_printing_flags.elideLargeElementsAttrs(large_element_limit);
+    return *this;
+  }
 
-    // Enable printing of debug information. If 'pretty_form' is set to true,
-    // debug information is printed in a more readable 'pretty' form but this
-    // pretty form is not parsable (so only for human readability).
-    MlirDumpConfig& emit_location_information(bool pretty_form = false) {
-        this->op_printing_flags.enableDebugInfo(pretty_form);
-        return *this;
-    }
+  // Enable printing of debug information. If 'pretty_form' is set to true,
+  // debug information is printed in a more readable 'pretty' form but this
+  // pretty form is not parsable (so only for human readability).
+  MlirDumpConfig& emit_location_information(bool pretty_form = false) {
+    this->op_printing_flags.enableDebugInfo(pretty_form);
+    return *this;
+  }
 
-    // Op printing flags.
-    mlir::OpPrintingFlags op_printing_flags = llvm::None;
+  // Op printing flags.
+  mlir::OpPrintingFlags op_printing_flags = llvm::None;
 };
 
 // Change DumpGraphToFile to dump MLIR textual IR instead of protobuf.
