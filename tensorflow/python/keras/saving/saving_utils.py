@@ -20,6 +20,7 @@ from __future__ import print_function
 import collections
 import copy
 import os
+
 import six
 
 from tensorflow.python.eager import def_function

@@ -13,13 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 """Profiler client APIs."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 from tensorflow.python.profiler.internal import _pywrap_profiler
-
 from tensorflow.python.util.tf_export import tf_export
 
 _GRPC_PREFIX = "grpc://"
