@@ -45,23 +45,31 @@ class ArrayTest(PForTestCase):
                 for axis in [0, 2, -1]:
                     outputs.append(array_ops.gather(y, 2, axis=axis))
                     outputs.append(
-                        array_ops.gather(y, math_ops.cast(2, dtypes.int64), axis=axis)
-                    )
+                        array_ops.gather(y,
+                                         math_ops.cast(2, dtypes.int64),
+                                         axis=axis))
                     outputs.append(
-                        array_ops.gather(y, 2, axis=math_ops.cast(axis, dtypes.int64))
-                    )
+                        array_ops.gather(y,
+                                         2,
+                                         axis=math_ops.cast(
+                                             axis, dtypes.int64)))
                     outputs.append(
-                        array_ops.gather(y, math_ops.cast(i, dtypes.int64), axis=axis)
-                    )
+                        array_ops.gather(y,
+                                         math_ops.cast(i, dtypes.int64),
+                                         axis=axis))
                     outputs.append(array_ops.gather(y, [i], axis=axis))
                     outputs.append(array_ops.gather(y, [i, 2], axis=axis))
-                    outputs.append(array_ops.gather(y, [[2, i], [i, 1]], axis=axis))
+                    outputs.append(
+                        array_ops.gather(y, [[2, i], [i, 1]], axis=axis))
 
-                outputs.append(array_ops.gather(y, [0, 1, 2], axis=1, batch_dims=1))
-                outputs.append(array_ops.gather(y, [i, 1, 2], axis=2, batch_dims=1))
                 outputs.append(
-                    array_ops.gather(y, [[2, i], [i, 1], [2, 1]], axis=-1, batch_dims=1)
-                )
+                    array_ops.gather(y, [0, 1, 2], axis=1, batch_dims=1))
+                outputs.append(
+                    array_ops.gather(y, [i, 1, 2], axis=2, batch_dims=1))
+                outputs.append(
+                    array_ops.gather(y, [[2, i], [i, 1], [2, 1]],
+                                     axis=-1,
+                                     batch_dims=1))
 
             return outputs
 
@@ -75,7 +83,8 @@ class ArrayTest(PForTestCase):
             x_i = array_ops.gather(x, i)
             outputs.append(array_ops.gather_nd(x_i, [0], batch_dims=0))
             outputs.append(array_ops.gather_nd(x_i, [i], batch_dims=0))
-            outputs.append(array_ops.gather_nd(x_i, [[i], [i], [i]], batch_dims=1))
+            outputs.append(
+                array_ops.gather_nd(x_i, [[i], [i], [i]], batch_dims=1))
             return outputs
 
         self._test_loop_fn(loop_fn, 3)
@@ -85,7 +94,8 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x_i = array_ops.gather(x, i)
-            return array_ops.shape(x_i), array_ops.shape(x_i, out_type=dtypes.int64)
+            return array_ops.shape(x_i), array_ops.shape(x_i,
+                                                         out_type=dtypes.int64)
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -94,7 +104,8 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x_i = array_ops.gather(x, i)
-            return array_ops.size(x_i), array_ops.size(x_i, out_type=dtypes.int64)
+            return array_ops.size(x_i), array_ops.size(x_i,
+                                                       out_type=dtypes.int64)
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -126,7 +137,8 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x1 = array_ops.gather(x, i)
-            return array_ops.reshape(x1, [-1]), array_ops.reshape(x1, [1, 3, 1, -1])
+            return array_ops.reshape(x1, [-1]), array_ops.reshape(
+                x1, [1, 3, 1, -1])
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -153,37 +165,45 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x1 = array_ops.gather(x, i)
-            return array_ops.expand_dims(x1, axis=-1), array_ops.expand_dims(x1, axis=1)
+            return array_ops.expand_dims(x1, axis=-1), array_ops.expand_dims(
+                x1, axis=1)
 
         self._test_loop_fn(loop_fn, 3)
 
     def test_one_hot(self):
-        indices = random_ops.random_uniform(
-            [3, 2, 3], minval=0, maxval=4, dtype=dtypes.int32
-        )
+        indices = random_ops.random_uniform([3, 2, 3],
+                                            minval=0,
+                                            maxval=4,
+                                            dtype=dtypes.int32)
 
         def loop_fn(i):
             indices_i = array_ops.gather(indices, i)
             return (
-                array_ops.one_hot(indices_i, depth=4, on_value=2.0, off_value=-2.0),
+                array_ops.one_hot(indices_i,
+                                  depth=4,
+                                  on_value=2.0,
+                                  off_value=-2.0),
                 array_ops.one_hot(indices_i, depth=4, axis=1),
             )
 
         self._test_loop_fn(loop_fn, 3)
 
     def test_searchsorted(self):
-        sorted_inputs = math_ops.cumsum(random_ops.random_uniform([3, 2, 4]), axis=-1)
+        sorted_inputs = math_ops.cumsum(random_ops.random_uniform([3, 2, 4]),
+                                        axis=-1)
         values = random_ops.random_uniform([2, 3], minval=-1, maxval=4.5)
 
         def loop_fn(i):
             inputs_i = array_ops.gather(sorted_inputs, i)
             return [
-                array_ops.searchsorted(
-                    inputs_i, values, out_type=dtypes.int32, side="left"
-                ),  # creates LowerBound op.
-                array_ops.searchsorted(
-                    inputs_i, values, out_type=dtypes.int64, side="right"
-                ),
+                array_ops.searchsorted(inputs_i,
+                                       values,
+                                       out_type=dtypes.int32,
+                                       side="left"),  # creates LowerBound op.
+                array_ops.searchsorted(inputs_i,
+                                       values,
+                                       out_type=dtypes.int64,
+                                       side="right"),
             ]  # creates UpperBound op.
 
         self._test_loop_fn(loop_fn, 3)
@@ -213,8 +233,11 @@ class ArrayTest(PForTestCase):
             x1 = array_ops.gather(x, i)
             return array_ops.tile(x1, [i, 1])
 
-        with self.assertRaisesRegexp(ValueError, "expected to be loop invariant"):
-            pfor_control_flow_ops.pfor(loop_fn, 2, fallback_to_while_loop=False)
+        with self.assertRaisesRegexp(ValueError,
+                                     "expected to be loop invariant"):
+            pfor_control_flow_ops.pfor(loop_fn,
+                                       2,
+                                       fallback_to_while_loop=False)
 
     def test_pack(self):
         x = random_ops.random_uniform([3, 2, 3])
@@ -231,7 +254,10 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x_i = array_ops.gather(x, i)
-            return array_ops.unstack(x_i, 4, axis=-1), array_ops.unstack(x_i, 3, axis=1)
+            return array_ops.unstack(x_i, 4,
+                                     axis=-1), array_ops.unstack(x_i,
+                                                                 3,
+                                                                 axis=1)
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -250,7 +276,9 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x1 = array_ops.gather(x, i)
-            return array_ops.split(x1, 2, axis=0), array_ops.split(x1, 3, axis=-1)
+            return array_ops.split(x1, 2, axis=0), array_ops.split(x1,
+                                                                   3,
+                                                                   axis=-1)
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -318,7 +346,7 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x1 = array_ops.gather(x, i)
-            z = (array_ops.zeros_like(x1),)
+            z = (array_ops.zeros_like(x1), )
             return z, z + x1
 
         self._test_loop_fn(loop_fn, 3)
@@ -368,9 +396,9 @@ class ArrayTest(PForTestCase):
         for num_lower, num_upper in ((0, -1), (-1, 0), (1, 1)):
             # pylint: disable=cell-var-from-loop
             def loop_fn(i):
-                return array_ops.matrix_band_part(
-                    array_ops.gather(x, i), num_lower=num_lower, num_upper=num_upper
-                )
+                return array_ops.matrix_band_part(array_ops.gather(x, i),
+                                                  num_lower=num_lower,
+                                                  num_upper=num_upper)
 
             # pylint: enable=cell-var-from-loop
 
@@ -381,9 +409,11 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             diagonal = array_ops.gather(x, i)
-            return array_ops.matrix_diag(
-                diagonal, k=(0, 1), num_rows=4, num_cols=5, align="RIGHT_LEFT"
-            )
+            return array_ops.matrix_diag(diagonal,
+                                         k=(0, 1),
+                                         num_rows=4,
+                                         num_cols=5,
+                                         align="RIGHT_LEFT")
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -392,16 +422,17 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             input = array_ops.gather(x, i)  # pylint: disable=redefined-builtin
-            return array_ops.matrix_diag_part(
-                input, k=(-2, 0), padding_value=3, align="RIGHT_LEFT"
-            )
+            return array_ops.matrix_diag_part(input,
+                                              k=(-2, 0),
+                                              padding_value=3,
+                                              align="RIGHT_LEFT")
 
         self._test_loop_fn(loop_fn, 3)
 
     def test_diag(self):
         for x in (
-            random_ops.random_uniform([3, 4]),
-            random_ops.random_uniform([3, 4, 2]),
+                random_ops.random_uniform([3, 4]),
+                random_ops.random_uniform([3, 4, 2]),
         ):
             # pylint: disable=cell-var-from-loop
             def loop_fn(i):
@@ -413,8 +444,8 @@ class ArrayTest(PForTestCase):
 
     def test_diag_part(self):
         for x in (
-            random_ops.random_uniform([3, 2, 2]),
-            random_ops.random_uniform([3, 4, 2, 4, 2]),
+                random_ops.random_uniform([3, 2, 2]),
+                random_ops.random_uniform([3, 4, 2, 4, 2]),
         ):
             # pylint: disable=cell-var-from-loop
             def loop_fn(i):
@@ -441,17 +472,20 @@ class ArrayTest(PForTestCase):
             k = (-1, 1)
             band_i = array_ops.gather(bands, i)
             for align in ["RIGHT_LEFT", "LEFT_RIGHT"]:
-                results.extend(
-                    [
-                        array_ops.matrix_set_diag(matrix_i, band_i, k=k, align=align),
-                        array_ops.matrix_set_diag(
-                            matrices[0, ...], band_i, k=k, align=align
-                        ),
-                        array_ops.matrix_set_diag(
-                            matrix_i, bands[0, ...], k=k, align=align
-                        ),
-                    ]
-                )
+                results.extend([
+                    array_ops.matrix_set_diag(matrix_i,
+                                              band_i,
+                                              k=k,
+                                              align=align),
+                    array_ops.matrix_set_diag(matrices[0, ...],
+                                              band_i,
+                                              k=k,
+                                              align=align),
+                    array_ops.matrix_set_diag(matrix_i,
+                                              bands[0, ...],
+                                              k=k,
+                                              align=align),
+                ])
             return results
 
         self._test_loop_fn(loop_fn, 3)
@@ -475,13 +509,14 @@ class ArrayTest(PForTestCase):
 
         def loop_fn(i):
             x_i = array_ops.gather(x, i)
-            return x_i[i : i + 1, ...]
+            return x_i[i:i + 1, ...]
 
         # Test the fallback to while loop for a ConversionNotImplementedError is
         # handled.
         self._test_loop_fn(loop_fn, 3, fallback_to_while_loop=True)
         # Without fallback, ValueError is thrown.
-        with self.assertRaisesRegexp(ValueError, "expected to be loop invariant"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "expected to be loop invariant"):
             self._test_loop_fn(loop_fn, 3, fallback_to_while_loop=False)
 
     def test_depth_to_space(self):

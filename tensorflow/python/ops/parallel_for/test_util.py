@@ -44,18 +44,21 @@ class PForTestCase(test.TestCase):
         n = len(outputs) // 2
         for i in range(n):
             if outputs[i + n].dtype != np.object:
-                self.assertAllClose(outputs[i + n], outputs[i], rtol=rtol, atol=atol)
+                self.assertAllClose(outputs[i + n],
+                                    outputs[i],
+                                    rtol=rtol,
+                                    atol=atol)
             else:
                 self.assertAllEqual(outputs[i + n], outputs[i])
 
     def _test_loop_fn(
-        self,
-        loop_fn,
-        iters,
-        parallel_iterations=None,
-        fallback_to_while_loop=False,
-        rtol=1e-4,
-        atol=1e-5,
+            self,
+            loop_fn,
+            iters,
+            parallel_iterations=None,
+            fallback_to_while_loop=False,
+            rtol=1e-4,
+            atol=1e-5,
     ):
         t1 = pfor_control_flow_ops.pfor(
             loop_fn,

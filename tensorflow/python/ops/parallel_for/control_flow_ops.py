@@ -69,9 +69,8 @@ def for_loop(loop_fn, loop_fn_dtypes, iters, parallel_iterations=None):
         if len(fn_output) != len(flat_loop_fn_dtypes):
             raise ValueError(
                 "Number of expected outputs, %d, does not match the number of "
-                "actual outputs, %d, from loop_fn"
-                % (len(flat_loop_fn_dtypes), len(fn_output))
-            )
+                "actual outputs, %d, from loop_fn" %
+                (len(flat_loop_fn_dtypes), len(fn_output)))
         outputs = []
         del is_none_list[:]
         is_none_list.extend(x is None for x in fn_output)
@@ -87,21 +86,18 @@ def for_loop(loop_fn, loop_fn_dtypes, iters, parallel_iterations=None):
         extra_args = {"parallel_iterations": parallel_iterations}
     else:
         extra_args = {}
-    ta_list = control_flow_ops.while_loop(
-        lambda i, *ta: i < iters,
-        while_body,
-        [0]
-        + [
-            tensor_array_ops.TensorArray(dtype.base_dtype, iters)
-            for dtype in flat_loop_fn_dtypes
-        ],
-        **extra_args
-    )[1:]
+    ta_list = control_flow_ops.while_loop(lambda i, *ta: i < iters, while_body,
+                                          [0] + [
+                                              tensor_array_ops.TensorArray(
+                                                  dtype.base_dtype, iters)
+                                              for dtype in flat_loop_fn_dtypes
+                                          ], **extra_args)[1:]
 
     # TODO(rachelim): enable this for sparse tensors
 
     output = [
-        None if is_none else ta.concat() for ta, is_none in zip(ta_list, is_none_list)
+        None if is_none else ta.concat()
+        for ta, is_none in zip(ta_list, is_none_list)
     ]
     assert len(output) in (0, len(flat_loop_fn_dtypes))
     if not output:
@@ -114,7 +110,8 @@ def for_loop(loop_fn, loop_fn_dtypes, iters, parallel_iterations=None):
 def _flatten_first_two_dims(x):
     """Flattens the first two dimensions of x into a single dimension."""
     old_shape = array_ops.shape(x)
-    new_shape = array_ops.concat([[old_shape[0] * old_shape[1]], old_shape[2:]], axis=0)
+    new_shape = array_ops.concat(
+        [[old_shape[0] * old_shape[1]], old_shape[2:]], axis=0)
     return array_ops.reshape(x, new_shape)
 
 
@@ -125,9 +122,7 @@ def _is_under_xla_context():
     """Check if we are currently inside an XLA compile context."""
     g = ops.get_default_graph()
     while g is not None:
-        control_flow_context = (
-            g._get_control_flow_context()
-        )  # pylint: disable=protected-access
+        control_flow_context = (g._get_control_flow_context())  # pylint: disable=protected-access
         while control_flow_context is not None:
             if control_flow_context.IsXLAContext():
                 return True
@@ -138,7 +133,8 @@ def _is_under_xla_context():
     return False
 
 
-def pfor(loop_fn, iters, fallback_to_while_loop=True, parallel_iterations=None):
+def pfor(loop_fn, iters, fallback_to_while_loop=True,
+         parallel_iterations=None):
     """Equivalent to running `loop_fn` `iters` times and stacking the outputs.
 
     `pfor` has functionality similar to `for_loop`, i.e. running `loop_fn` `iters`
@@ -207,8 +203,7 @@ def pfor(loop_fn, iters, fallback_to_while_loop=True, parallel_iterations=None):
                 "It looks like tf.function behavior was disabled, perhaps using "
                 "tf.config.experimental_run_functions_eagerly. Vectorization "
                 "primitives (e.g. tf.vectorized_map) require tf.function to work. "
-                "These primitives will override the disable."
-            )
+                "These primitives will override the disable.")
             def_function.run_functions_eagerly(False)
         f = def_function.function(f)
     outputs = f()
@@ -225,9 +220,8 @@ def _loop_fn_has_config(loop_fn):
     elif isinstance(loop_fn, functools.partial):
         fn = loop_fn.func
         argspec = tf_inspect.getargspec(fn)
-        return (
-            PFOR_CONFIG_ARG in argspec.args and PFOR_CONFIG_ARG not in loop_fn.keywords
-        )
+        return (PFOR_CONFIG_ARG in argspec.args
+                and PFOR_CONFIG_ARG not in loop_fn.keywords)
     else:
         loop_class = tf_decorator.unwrap(loop_fn)[1]
         if not hasattr(loop_class, "__call__"):
@@ -236,9 +230,11 @@ def _loop_fn_has_config(loop_fn):
         return PFOR_CONFIG_ARG in argspec.args
 
 
-def _pfor_impl(
-    loop_fn, iters, fallback_to_while_loop, parallel_iterations=None, pfor_config=None
-):
+def _pfor_impl(loop_fn,
+               iters,
+               fallback_to_while_loop,
+               parallel_iterations=None,
+               pfor_config=None):
     """Implementation of pfor."""
     assert not context.executing_eagerly()
     loop_fn_has_config = _loop_fn_has_config(loop_fn)
@@ -250,7 +246,8 @@ def _pfor_impl(
             if pfor_config is None:
                 pfor_config = PForConfig()
                 pfor_config._set_iters(iters)  # pylint: disable=protected-access
-            loop_fn_outputs = loop_fn(loop_var, **{PFOR_CONFIG_ARG: pfor_config})
+            loop_fn_outputs = loop_fn(loop_var,
+                                      **{PFOR_CONFIG_ARG: pfor_config})
         else:
             assert pfor_config is None
             loop_fn_outputs = loop_fn(loop_var)
@@ -259,26 +256,28 @@ def _pfor_impl(
     tmp_loop_fn_outputs = []
     for loop_fn_output in nest.flatten(loop_fn_outputs):
         if loop_fn_output is not None and not isinstance(
-            loop_fn_output, (ops.Operation, ops.Tensor, sparse_tensor.SparseTensor)
-        ):
+                loop_fn_output,
+            (ops.Operation, ops.Tensor, sparse_tensor.SparseTensor)):
             if isinstance(loop_fn_output, indexed_slices.IndexedSlices):
                 logging.warn(
                     "Converting %s to a dense representation may make it slow."
                     " Alternatively, output the indices and values of the"
                     " IndexedSlices separately, and handle the vectorized"
-                    " outputs directly." % loop_fn_output
-                )
+                    " outputs directly." % loop_fn_output)
             loop_fn_output = ops.convert_to_tensor(loop_fn_output)
         tmp_loop_fn_outputs.append(loop_fn_output)
-    loop_fn_outputs = nest.pack_sequence_as(loop_fn_outputs, tmp_loop_fn_outputs)
+    loop_fn_outputs = nest.pack_sequence_as(loop_fn_outputs,
+                                            tmp_loop_fn_outputs)
 
     new_ops = set(ops.get_default_graph().get_operations()) - existing_ops
     iters = ops.convert_to_tensor(iters)
     if parallel_iterations is not None:
         if parallel_iterations < 1:
-            raise ValueError("parallel_iterations must be None or a positive integer")
+            raise ValueError(
+                "parallel_iterations must be None or a positive integer")
         if parallel_iterations == 1:
-            raise ValueError("Found parallel_iterations == 1. Use for_loop instead.")
+            raise ValueError(
+                "Found parallel_iterations == 1. Use for_loop instead.")
         iters_value = tensor_util.constant_value(iters)
         if iters_value is not None and iters_value < parallel_iterations:
             parallel_iterations = None
@@ -296,13 +295,10 @@ def _pfor_impl(
                 outputs.append(converter.convert(loop_fn_output))
             return nest.pack_sequence_as(loop_fn_outputs, outputs)
     else:
-        if (
-            pfor_config is not None and pfor_config._has_reductions()
-        ):  # pylint: disable=protected-access
+        if (pfor_config is not None and pfor_config._has_reductions()):  # pylint: disable=protected-access
             raise ValueError(
                 "Setting parallel_iterations currently unsupported if"
-                " reductions across iterations are performed."
-            )
+                " reductions across iterations are performed.")
         num_tiled_iterations = iters // parallel_iterations
         num_remaining_iterations = iters % parallel_iterations
         # TODO(agarwal): Avoid calling loop_fn twice. Generate the loop body inside
@@ -322,7 +318,8 @@ def _pfor_impl(
 
         with ops.name_scope("pfor_tiled"):
             loop_fn_dtypes = [
-                ops.convert_to_tensor(x).dtype for x in flattened_loop_fn_outputs
+                ops.convert_to_tensor(x).dtype
+                for x in flattened_loop_fn_outputs
             ]
 
             def tiled_loop_body(j):
@@ -331,8 +328,7 @@ def _pfor_impl(
                 def tiled_loop_fn(i, pfor_config=None):
                     if loop_fn_has_config:
                         return nest.flatten(
-                            loop_fn(i + offset, pfor_config=pfor_config)
-                        )
+                            loop_fn(i + offset, pfor_config=pfor_config))
                     else:
                         return nest.flatten(loop_fn(i + offset))
 
@@ -358,13 +354,14 @@ def _pfor_impl(
                     math_ops.equal(num_remaining_iterations, 0),
                     lambda: tiled_outputs,
                     lambda: [
-                        array_ops.concat([x, y], axis=0)
-                        for x, y in zip(remaining_outputs, tiled_outputs)
+                        array_ops.concat([x, y], axis=0) for x, y in zip(
+                            remaining_outputs, tiled_outputs)
                     ],
                 )
             else:
                 outputs = tiled_outputs
-            return nest.pack_sequence_as(loop_fn_outputs, nest.flatten(outputs))
+            return nest.pack_sequence_as(loop_fn_outputs,
+                                         nest.flatten(outputs))
 
 
 @tf_export("vectorized_map")
@@ -456,7 +453,8 @@ def vectorized_map(fn, elems, fallback_to_while_loop=True):
     """
 
     def loop_fn(i):
-        gathered_elems = nest.map_structure(lambda x: array_ops.gather(x, i), elems)
+        gathered_elems = nest.map_structure(lambda x: array_ops.gather(x, i),
+                                            elems)
         return fn(gathered_elems)
 
     batch_size = None
@@ -465,4 +463,6 @@ def vectorized_map(fn, elems, fallback_to_while_loop=True):
         batch_size = first_elem.shape.as_list()[0]
     if batch_size is None:
         batch_size = array_ops.shape(first_elem)[0]
-    return pfor(loop_fn, batch_size, fallback_to_while_loop=fallback_to_while_loop)
+    return pfor(loop_fn,
+                batch_size,
+                fallback_to_while_loop=fallback_to_while_loop)
