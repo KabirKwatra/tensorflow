@@ -25,12 +25,12 @@ _GRPC_PREFIX = "grpc://"
 
 @tf_export("profiler.experimental.client.trace", v1=[])
 def trace(
-    service_addr,
-    logdir,
-    duration_ms,
-    worker_list="",
-    num_tracing_attempts=3,
-    options=None,
+        service_addr,
+        logdir,
+        duration_ms,
+        worker_list="",
+        num_tracing_attempts=3,
+        options=None,
 ):
     """Sends grpc requests to profiler server to perform on-demand profiling.
 
@@ -127,10 +127,9 @@ def monitor(service_addr, duration_ms, level=1):
 
 
     """
-    return _pywrap_profiler.monitor(
-        _strip_prefix(service_addr, _GRPC_PREFIX), duration_ms, level, True
-    )
+    return _pywrap_profiler.monitor(_strip_prefix(service_addr, _GRPC_PREFIX),
+                                    duration_ms, level, True)
 
 
 def _strip_prefix(s, prefix):
-    return s[len(prefix) :] if s.startswith(prefix) else s
+    return s[len(prefix):] if s.startswith(prefix) else s

@@ -33,12 +33,12 @@ class ProfilerClientTest(test_util.TensorFlowTestCase):
 
     def testStartTracing_ProcessInvalidAddressWithOptions(self):
         with self.assertRaises(errors.UnavailableError):
-            options = profiler.ProfilerOptions(
-                host_tracer_level=3, device_tracer_level=0
-            )
-            profiler_client.trace(
-                "localhost:6006", tempfile.mkdtemp(), 2000, options=options
-            )
+            options = profiler.ProfilerOptions(host_tracer_level=3,
+                                               device_tracer_level=0)
+            profiler_client.trace("localhost:6006",
+                                  tempfile.mkdtemp(),
+                                  2000,
+                                  options=options)
 
     def testMonitor_ProcessInvalidAddress(self):
         with self.assertRaises(errors.UnavailableError):
