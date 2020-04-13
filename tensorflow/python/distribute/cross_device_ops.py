@@ -52,9 +52,8 @@ def check_destinations(destinations):
       Boolean which is True if `destinations` is not empty.
     """
     # Calling bool() on a ResourceVariable is not allowed.
-    if isinstance(
-        destinations, (resource_variable_ops.BaseResourceVariable, ops.Tensor)
-    ):
+    if isinstance(destinations,
+                  (resource_variable_ops.BaseResourceVariable, ops.Tensor)):
         return bool(destinations.device)
     return bool(destinations)
 
@@ -62,7 +61,7 @@ def check_destinations(destinations):
 def validate_destinations(destinations):
     """Validates the `destination` is one of expected types."""
     if not isinstance(
-        destinations,
+            destinations,
         (
             value_lib.DistributedValues,
             ops.Tensor,
@@ -73,20 +72,19 @@ def validate_destinations(destinations):
     ) and not resource_variable_ops.is_resource_variable(destinations):
         raise ValueError(
             "destinations must be one of a `DistributedValues` object,"
-            " a tf.Variable object, or a device string."
-        )
+            " a tf.Variable object, or a device string.")
 
     if not check_destinations(destinations):
         raise ValueError("destinations can not be empty")
 
 
-def reduce_non_distributed_value(reduce_op, value, destinations, num_replicas_in_graph):
+def reduce_non_distributed_value(reduce_op, value, destinations,
+                                 num_replicas_in_graph):
     """Reduce a non-DistributedValue `value` to `destinations`."""
     if isinstance(value, value_lib.DistributedValues):
         raise ValueError(
             "You are passing a `DistributedValue` to "
-            "`reduce_non_distributed_value`, which is not allowed."
-        )
+            "`reduce_non_distributed_value`, which is not allowed.")
 
     # If the same value is present on all replicas then the PerReplica value will
     # be a single value. We also handle the case when `value` is a single value
@@ -105,8 +103,7 @@ def reduce_non_distributed_value(reduce_op, value, destinations, num_replicas_in
         # clearly defined.
         raise ValueError(
             "A non-DistributedValues value %s cannot be reduced with "
-            "the given reduce op %s." % (value, reduce_op)
-        )
+            "the given reduce op %s." % (value, reduce_op))
     else:
         validate_destinations(destinations)
         return simple_broadcast(value, destinations)
@@ -117,18 +114,16 @@ def _make_tensor_into_per_replica(input_tensor):
     if isinstance(input_tensor, (tuple, list)):
         raise ValueError(
             "Cannot convert `input_tensor` to a `PerReplica` object, "
-            "got %r but expected a object that is not a tuple or list."
-            % (input_tensor,)
-        )
+            "got %r but expected a object that is not a tuple or list." %
+            (input_tensor, ))
     if isinstance(input_tensor, value_lib.PerReplica):
         return input_tensor
     elif hasattr(input_tensor, "device"):
-        return value_lib.PerReplica((input_tensor,))
+        return value_lib.PerReplica((input_tensor, ))
     else:
         raise ValueError(
             "Cannot convert `input_tensor` to a `PerReplica` object "
-            "because it doesn't have device set."
-        )
+            "because it doesn't have device set.")
 
 
 def _normalize_value_destination_pairs(value_destination_pairs):
@@ -142,13 +137,11 @@ def _normalize_value_destination_pairs(value_destination_pairs):
     for pair in value_destination_pairs:
         if not isinstance(pair, tuple):
             raise ValueError(
-                "Each element of `value_destination_pairs` should be a tuple."
-            )
+                "Each element of `value_destination_pairs` should be a tuple.")
         if len(pair) != 2:
             raise ValueError(
                 "Each element of `value_destination_pairs` should be a "
-                "tuple of size 2."
-            )
+                "tuple of size 2.")
 
         per_replica = _make_tensor_into_per_replica(pair[0])
         result.append((per_replica, pair[1]))
@@ -164,7 +157,9 @@ def _validate_value_destination_pairs(value_destination_pairs):
         return False
     if not all(isinstance(pair, tuple) for pair in value_destination_pairs):
         return False
-    if not all(isinstance(v[0], value_lib.PerReplica) for v in value_destination_pairs):
+    if not all(
+            isinstance(v[0], value_lib.PerReplica)
+            for v in value_destination_pairs):
         return False
     return True
 
@@ -175,8 +170,8 @@ def get_devices_from(destinations):
     if isinstance(destinations, value_lib.DistributedValues):
         return destinations._devices  # pylint: disable=protected-access
     elif isinstance(destinations, six.string_types):
-        return (device_util.resolve(destinations),)
-    return (device_util.resolve(destinations.device),)
+        return (device_util.resolve(destinations), )
+    return (device_util.resolve(destinations.device), )
 
 
 def _devices_match(left, right):
@@ -187,9 +182,8 @@ def _all_devices_match(value_destination_pairs):
     if not all(_devices_match(v, d) for v, d in value_destination_pairs):
         return False
     if not all(
-        _devices_match(v, value_destination_pairs[0][0])
-        for v, _ in value_destination_pairs[1:]
-    ):
+            _devices_match(v, value_destination_pairs[0][0])
+            for v, _ in value_destination_pairs[1:]):
         return False
     return True
 
@@ -199,18 +193,18 @@ def simple_broadcast(value, destinations, always_mirrored=False):
     devices = get_devices_from(destinations)
     if len(devices) == 1 and not always_mirrored:
         return cross_device_utils.copy_tensor_or_indexed_slices_to_device(
-            value, devices[0]
-        )
+            value, devices[0])
     else:
         value_updates = []
         for d in devices:
             value_updates.append(
-                cross_device_utils.copy_tensor_or_indexed_slices_to_device(value, d)
-            )
+                cross_device_utils.copy_tensor_or_indexed_slices_to_device(
+                    value, d))
         return value_lib.regroup(value_updates, wrap_class=value_lib.Mirrored)
 
 
-def _simple_reduce(per_replica_value, reduce_to_device, accumulation_fn, reduce_op):
+def _simple_reduce(per_replica_value, reduce_to_device, accumulation_fn,
+                   reduce_op):
     # pylint: disable=g-missing-docstring
     all_values = per_replica_value.values
     if not all_values:
@@ -220,14 +214,13 @@ def _simple_reduce(per_replica_value, reduce_to_device, accumulation_fn, reduce_
     with ops.device(reduce_to_device):
         with context.device_policy(context.DEVICE_PLACEMENT_SILENT):
             reduced = cross_device_utils.aggregate_tensors_or_indexed_slices(
-                all_values, accumulation_fn
-            )
+                all_values, accumulation_fn)
             if reduce_op == reduce_util.ReduceOp.MEAN:
                 reduced = cross_device_utils.divide_by_n_tensors_or_indexed_slices(
-                    reduced, count
-                )
+                    reduced, count)
             elif reduce_op != reduce_util.ReduceOp.SUM:
-                raise ValueError("`reduce_op` must be Reduce.SUM or Reduce.MEAN.")
+                raise ValueError(
+                    "`reduce_op` must be Reduce.SUM or Reduce.MEAN.")
     return reduced
 
 
@@ -243,9 +236,11 @@ class CrossDeviceOps(object):
         # Returns 1 by default, the value may be overridden by sub classes.
         return 1
 
-    def reduce(
-        self, reduce_op, per_replica_value, destinations, experimental_hints=None
-    ):
+    def reduce(self,
+               reduce_op,
+               per_replica_value,
+               destinations,
+               experimental_hints=None):
         """Reduce `per_replica_value` to `destinations`.
 
         It runs the reduction operation defined by `reduce_op` and put the
@@ -268,27 +263,28 @@ class CrossDeviceOps(object):
             object or if destinations aren't strings, Variables or DistributedValues
         """
         if not isinstance(per_replica_value, value_lib.DistributedValues):
-            per_replica_value = _make_tensor_into_per_replica(per_replica_value)
+            per_replica_value = _make_tensor_into_per_replica(
+                per_replica_value)
 
         validate_destinations(destinations)
 
         # Shortcut if `per_replica_value` only contains one value.
-        if (
-            self._num_between_graph_workers == 1
-            and len(per_replica_value.values) == 1
-            and _devices_match(per_replica_value, destinations)
-        ):
+        if (self._num_between_graph_workers == 1
+                and len(per_replica_value.values) == 1
+                and _devices_match(per_replica_value, destinations)):
             with ops.device(per_replica_value.values[0].device):
                 v = array_ops.identity(per_replica_value.values[0])
-            return value_lib.regroup((v,), wrap_class=value_lib.Mirrored)
+            return value_lib.regroup((v, ), wrap_class=value_lib.Mirrored)
 
         if experimental_hints is None:
             experimental_hints = collective_util.Hints()
-        return self.reduce_implementation(
-            reduce_op, per_replica_value, destinations, experimental_hints
-        )
+        return self.reduce_implementation(reduce_op, per_replica_value,
+                                          destinations, experimental_hints)
 
-    def batch_reduce(self, reduce_op, value_destination_pairs, experimental_hints=None):
+    def batch_reduce(self,
+                     reduce_op,
+                     value_destination_pairs,
+                     experimental_hints=None):
         """Reduce PerReplica objects in a batch.
 
         Reduce each first element in `value_destination_pairs` to each second
@@ -318,18 +314,15 @@ class CrossDeviceOps(object):
             # If the first element of each pair is a tensor, we try to turn it into a
             # PerReplica object.
             value_destination_pairs = _normalize_value_destination_pairs(
-                value_destination_pairs
-            )
+                value_destination_pairs)
 
         for _, d in value_destination_pairs:
             validate_destinations(d)
 
         # Shortcut all PerReplica objects only contain one value.
-        if (
-            self._num_between_graph_workers == 1
-            and _all_devices_match(value_destination_pairs)
-            and len(value_destination_pairs[0][0].values) == 1
-        ):
+        if (self._num_between_graph_workers == 1
+                and _all_devices_match(value_destination_pairs)
+                and len(value_destination_pairs[0][0].values) == 1):
             return [
                 value_lib.regroup(v.values, wrap_class=value_lib.Mirrored)
                 for v, _ in value_destination_pairs
@@ -337,9 +330,9 @@ class CrossDeviceOps(object):
 
         if experimental_hints is None:
             experimental_hints = collective_util.Hints()
-        return self.batch_reduce_implementation(
-            reduce_op, value_destination_pairs, experimental_hints
-        )
+        return self.batch_reduce_implementation(reduce_op,
+                                                value_destination_pairs,
+                                                experimental_hints)
 
     def broadcast(self, tensor, destinations):
         """Broadcast the `tensor` to destinations.
@@ -355,9 +348,8 @@ class CrossDeviceOps(object):
         return self.broadcast_implementation(tensor, destinations)
 
     @doc_controls.for_subclass_implementers
-    def reduce_implementation(
-        self, reduce_op, per_replica_value, destinations, experimental_hints
-    ):
+    def reduce_implementation(self, reduce_op, per_replica_value, destinations,
+                              experimental_hints):
         """The implementation of reduce of `per_replica_value` to `destinations`.
 
         Overriding this method is useful for subclass implementers.
@@ -380,12 +372,12 @@ class CrossDeviceOps(object):
           ValueError: if per_replica_value can't be converted to a PerReplica
             object.
         """
-        raise NotImplementedError("_reduce method must be implemented in descendants.")
+        raise NotImplementedError(
+            "_reduce method must be implemented in descendants.")
 
     @doc_controls.for_subclass_implementers
-    def batch_reduce_implementation(
-        self, reduce_op, value_destination_pairs, experimental_hints
-    ):
+    def batch_reduce_implementation(self, reduce_op, value_destination_pairs,
+                                    experimental_hints):
         """Implementation of reduce PerReplica objects in a batch.
 
         Overriding this method is useful for subclass implementers.
@@ -451,9 +443,8 @@ class ReductionToOneDevice(CrossDeviceOps):
         self.accumulation_fn = accumulation_fn or math_ops.add_n
         super(ReductionToOneDevice, self).__init__()
 
-    def reduce_implementation(
-        self, reduce_op, per_replica_value, destinations, experimental_hints
-    ):
+    def reduce_implementation(self, reduce_op, per_replica_value, destinations,
+                              experimental_hints):
         del experimental_hints  # Unused.
         if check_destinations(destinations):
             devices = get_devices_from(destinations)
@@ -465,18 +456,17 @@ class ReductionToOneDevice(CrossDeviceOps):
             "Reduce to %s then broadcast to %r." % (reduce_to_device, devices),
             10,
         )
-        reduced = _simple_reduce(
-            per_replica_value, reduce_to_device, self.accumulation_fn, reduce_op
-        )
+        reduced = _simple_reduce(per_replica_value, reduce_to_device,
+                                 self.accumulation_fn, reduce_op)
         return self.broadcast(reduced, destinations)
 
-    def batch_reduce_implementation(
-        self, reduce_op, value_destination_pairs, experimental_hints
-    ):
+    def batch_reduce_implementation(self, reduce_op, value_destination_pairs,
+                                    experimental_hints):
         return [
-            self.reduce_implementation(
-                reduce_op, t, destinations=v, experimental_hints=experimental_hints
-            )
+            self.reduce_implementation(reduce_op,
+                                       t,
+                                       destinations=v,
+                                       experimental_hints=experimental_hints)
             for t, v in value_destination_pairs
         ]
 
@@ -509,9 +499,10 @@ def _group_value_by_device(per_replica_values):
     return grouped
 
 
-def _ungroup_and_make_mirrored(
-    grouped_reduced, destinations, reduce_op, num_between_graph_workers=1
-):
+def _ungroup_and_make_mirrored(grouped_reduced,
+                               destinations,
+                               reduce_op,
+                               num_between_graph_workers=1):
     """Ungroup results from all-reduce and make Mirrored objects.
 
     Each all-reduce result will be divided by the number of destinations before
@@ -530,7 +521,8 @@ def _ungroup_and_make_mirrored(
     Returns:
       a list of Mirrored objects.
     """
-    num_replicas = len(get_devices_from(destinations)) * num_between_graph_workers
+    num_replicas = len(
+        get_devices_from(destinations)) * num_between_graph_workers
     index = [[] for _ in range(len(grouped_reduced[0]))]
     for per_replica_reduced in grouped_reduced:
         for i, (v, _) in enumerate(per_replica_reduced):
@@ -570,12 +562,17 @@ class _ConcatAndSplitPacker(object):
             with ops.colocate_with(device_grads_and_vars[0][0]):
                 # Flatten all the grads.
                 flat_grads = [
-                    array_ops.reshape(g, [-1]) for g, _ in device_grads_and_vars
+                    array_ops.reshape(g, [-1])
+                    for g, _ in device_grads_and_vars
                 ]
                 # Remember the original shape of all the grads.
-                device_shapes = [array_ops.shape(g) for g, _ in device_grads_and_vars]
+                device_shapes = [
+                    array_ops.shape(g) for g, _ in device_grads_and_vars
+                ]
                 # Remember the original sizes of all the grads.
-                device_sizes = [array_ops.size(g) for g, _ in device_grads_and_vars]
+                device_sizes = [
+                    array_ops.size(g) for g, _ in device_grads_and_vars
+                ]
                 # Concat all the flat grads into a big flat tensor.
                 concat_grads = array_ops.concat(flat_grads, 0)
 
@@ -590,16 +587,21 @@ class _ConcatAndSplitPacker(object):
                 # all gradient shapes are defined, we use another method to get the
                 # total size.
                 # TODO(yuefengz): move this logic to array_ops.size.
-                if all(g.shape.is_fully_defined() for g, _ in device_grads_and_vars):
-                    total_grad_size = sum(
-                        [g.shape.num_elements() for g, _ in device_grads_and_vars]
-                    )
+                if all(g.shape.is_fully_defined()
+                       for g, _ in device_grads_and_vars):
+                    total_grad_size = sum([
+                        g.shape.num_elements()
+                        for g, _ in device_grads_and_vars
+                    ])
                 else:
                     total_grad_size = array_ops.size(concat_grads)
 
                 split_size = total_grad_size // num_splits
-                split_size_last = total_grad_size - split_size * (num_splits - 1)
-                split_sizes = [split_size] * (num_splits - 1) + [split_size_last]
+                split_size_last = total_grad_size - split_size * (num_splits -
+                                                                  1)
+                split_sizes = [split_size] * (num_splits - 1) + [
+                    split_size_last
+                ]
                 grad_packs = array_ops.split(concat_grads, split_sizes)
 
                 # Ready to aggregate the repacked gradients, with fake variables.
@@ -616,15 +618,15 @@ class _ConcatAndSplitPacker(object):
         """Reverse the pack."""
         aggregated_device_grads = []
         for (
-            summed_device_grad_packs,
-            device_grads_and_vars,
-            device_shapes,
-            device_sizes,
+                summed_device_grad_packs,
+                device_grads_and_vars,
+                device_shapes,
+                device_sizes,
         ) in zip(
-            summed_device_grad_packs,
-            self.grouped_grads_and_vars,
-            self.all_device_shapes,
-            self.all_device_sizes,
+                summed_device_grad_packs,
+                self.grouped_grads_and_vars,
+                self.all_device_shapes,
+                self.all_device_sizes,
         ):
             # pylint: enable=line-too-long
             # Reverse the packing operations in the previous steps. Form the
@@ -637,7 +639,8 @@ class _ConcatAndSplitPacker(object):
                 device_grads_concat = array_ops.concat(device_grad_packs, 0)
 
                 # Split the tensors back into their original sizes.
-                grads_with_sizes = array_ops.split(device_grads_concat, device_sizes)
+                grads_with_sizes = array_ops.split(device_grads_concat,
+                                                   device_sizes)
 
                 # Reshape the tensors back into their original shapes.
                 grads_with_shapes = [
@@ -648,7 +651,8 @@ class _ConcatAndSplitPacker(object):
                 # Form the list with the original list of variables.
                 summed_device_grads = [
                     (g, v)
-                    for g, (_, v) in zip(grads_with_shapes, device_grads_and_vars)
+                    for g, (_,
+                            v) in zip(grads_with_shapes, device_grads_and_vars)
                 ]
                 aggregated_device_grads.append(summed_device_grads)
         return aggregated_device_grads
@@ -691,27 +695,24 @@ class AllReduceCrossDeviceOps(CrossDeviceOps):
         self._simple_cross_replica_ops = ReductionToOneDevice()
         super(AllReduceCrossDeviceOps, self).__init__()
 
-    def reduce_implementation(
-        self, reduce_op, per_replica_value, destinations, experimental_hints
-    ):
+    def reduce_implementation(self, reduce_op, per_replica_value, destinations,
+                              experimental_hints):
         del experimental_hints  # Unused.
         if _devices_match(per_replica_value, destinations):
             return self._batch_all_reduce(reduce_op, [per_replica_value])[0]
         else:
             return self._simple_cross_replica_ops.reduce(
-                reduce_op, per_replica_value, destinations
-            )
+                reduce_op, per_replica_value, destinations)
 
-    def batch_reduce_implementation(
-        self, reduce_op, value_destination_pairs, experimental_hints
-    ):
+    def batch_reduce_implementation(self, reduce_op, value_destination_pairs,
+                                    experimental_hints):
         if _all_devices_match(value_destination_pairs):
             return self._batch_all_reduce(
-                reduce_op, [v[0] for v in value_destination_pairs]
-            )
+                reduce_op, [v[0] for v in value_destination_pairs])
         else:
             return [
-                self.reduce_implementation(reduce_op, value, dest, experimental_hints)
+                self.reduce_implementation(reduce_op, value, dest,
+                                           experimental_hints)
                 for value, dest in value_destination_pairs
             ]
 
@@ -728,12 +729,12 @@ class AllReduceCrossDeviceOps(CrossDeviceOps):
         else:
             dense_results = []
         if sparse_values:
-            sparse_results = self._do_batch_all_reduce_sparse(reduce_op, sparse_values)
+            sparse_results = self._do_batch_all_reduce_sparse(
+                reduce_op, sparse_values)
         else:
             sparse_results = []
         return cross_device_utils.stitch_values(
-            ((dense_results, dense_indices), (sparse_results, sparse_indices))
-        )
+            ((dense_results, dense_indices), (sparse_results, sparse_indices)))
 
     def _do_batch_all_reduce(self, reduce_op, dense_values):
         """Run batch all-reduces."""
@@ -747,7 +748,8 @@ class AllReduceCrossDeviceOps(CrossDeviceOps):
         destinations = dense_values[0]._devices  # pylint: disable=protected-access
         grouped = _group_value_by_device(dense_values)
 
-        device_grad_packs, tensor_packer = _pack_tensors(grouped, self._num_packs)
+        device_grad_packs, tensor_packer = _pack_tensors(
+            grouped, self._num_packs)
 
         # The actual aggregation of the repacked gradients. Note that they are
         # sharded among different aggregation trees. So it is important to strike
@@ -755,14 +757,12 @@ class AllReduceCrossDeviceOps(CrossDeviceOps):
         if self._all_reduce_alg == "nccl":
             # TODO(yuefengz): merge this into the all-reduce library.
             reduced = cross_device_utils.aggregate_gradients_using_nccl(
-                device_grad_packs
-            )
+                device_grad_packs)
         else:
             # TODO(yuefengz): check that gpu ids in `destinations` are in ascending
             # order.
             reduced = cross_device_utils.aggregate_gradients_using_hierarchical_copy(
-                destinations, device_grad_packs
-            )
+                destinations, device_grad_packs)
 
         reduced = _unpack_tensors(reduced, tensor_packer)
         return _ungroup_and_make_mirrored(reduced, dense_values[0], reduce_op)
@@ -771,22 +771,21 @@ class AllReduceCrossDeviceOps(CrossDeviceOps):
         """Run batch all-reduce for sparse values."""
         logging.log_first_n(
             logging.WARN,
-            "Efficient allreduce is not supported for %d IndexedSlices"
-            % len(sparse_values),
+            "Efficient allreduce is not supported for %d IndexedSlices" %
+            len(sparse_values),
             10,
         )
         # Use `sparse_values` as destinations to do all-reduces. It is effectively
         # an allgather under the hood but not an efficient one.
         return self._simple_cross_replica_ops.batch_reduce(
-            reduce_op, zip(sparse_values, sparse_values)
-        )
+            reduce_op, zip(sparse_values, sparse_values))
 
 
 # For compatibility with code using the old name of `AllReduceCrossDeviceOps`.
 AllReduceCrossTowerOps = AllReduceCrossDeviceOps
 
-
-AllReduceSpecTuple = collections.namedtuple("AllReduceSpecTuple", "alg shards limit")
+AllReduceSpecTuple = collections.namedtuple("AllReduceSpecTuple",
+                                            "alg shards limit")
 
 
 @tf_export("distribute.NcclAllReduce")
@@ -809,11 +808,10 @@ class NcclAllReduce(AllReduceCrossDeviceOps):
         """
         if num_packs < 0:
             raise ValueError(
-                "NCCL all-reduce requires num_packs >= 0, but {} is specified".format(
-                    num_packs
-                )
-            )
-        super(NcclAllReduce, self).__init__(all_reduce_alg="nccl", num_packs=num_packs)
+                "NCCL all-reduce requires num_packs >= 0, but {} is specified".
+                format(num_packs))
+        super(NcclAllReduce, self).__init__(all_reduce_alg="nccl",
+                                            num_packs=num_packs)
 
 
 @tf_export("distribute.HierarchicalCopyAllReduce")
@@ -841,24 +839,22 @@ class HierarchicalCopyAllReduce(AllReduceCrossDeviceOps):
         """
         if num_packs < 0:
             raise ValueError(
-                "HierarchicalCopy requires num_packs >= 0, but {} is specified".format(
-                    num_packs
-                )
-            )
-        super(HierarchicalCopyAllReduce, self).__init__(
-            all_reduce_alg="hierarchical_copy", num_packs=num_packs
-        )
+                "HierarchicalCopy requires num_packs >= 0, but {} is specified"
+                .format(num_packs))
+        super(HierarchicalCopyAllReduce,
+              self).__init__(all_reduce_alg="hierarchical_copy",
+                             num_packs=num_packs)
 
 
 class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
     """All-reduce algorithms for distributed TensorFlow."""
 
     def __init__(
-        self,
-        worker_devices,
-        num_gpus_per_worker,
-        all_reduce_spec=("pscpu/pscpu", 2, -1),
-        num_packs=0,
+            self,
+            worker_devices,
+            num_gpus_per_worker,
+            all_reduce_spec=("pscpu/pscpu", 2, -1),
+            num_packs=0,
     ):
         """Initialize the all-reduce algorithm.
 
@@ -896,12 +892,12 @@ class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
             # TODO(yuefengz): support namedtuple.
             if not isinstance(spec, tuple):
                 raise ValueError(
-                    "A tuple is expected for all-reduce spec: %r" % all_reduce_spec
-                )
+                    "A tuple is expected for all-reduce spec: %r" %
+                    all_reduce_spec)
             if not spec or len(spec) > 3:
                 raise ValueError(
-                    "Too many elements in the all-reduce spec tuple: %r" % spec
-                )
+                    "Too many elements in the all-reduce spec tuple: %r" %
+                    spec)
             if len(spec) == 1:
                 return AllReduceSpecTuple(spec[0], 1, -1)
             elif len(spec) == 2:
@@ -911,9 +907,11 @@ class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
 
         self._all_reduce_spec = []
         if isinstance(all_reduce_spec, six.string_types):
-            self._all_reduce_spec.append(AllReduceSpecTuple(all_reduce_spec, 1, -1))
+            self._all_reduce_spec.append(
+                AllReduceSpecTuple(all_reduce_spec, 1, -1))
         elif isinstance(all_reduce_spec, tuple):
-            self._all_reduce_spec.append(validate_and_complete_spec(all_reduce_spec))
+            self._all_reduce_spec.append(
+                validate_and_complete_spec(all_reduce_spec))
         elif isinstance(all_reduce_spec, list):
             self._all_reduce_spec = [
                 validate_and_complete_spec(spec) for spec in all_reduce_spec
@@ -924,8 +922,8 @@ class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
         logging.log_first_n(
             logging.INFO,
             "Distributed batch_all_reduce: %d all-reduces with "
-            "allreduce_spec = %r, num_packs = %d"
-            % (len(per_replica_values), self._all_reduce_spec, self._num_packs),
+            "allreduce_spec = %r, num_packs = %d" %
+            (len(per_replica_values), self._all_reduce_spec, self._num_packs),
             10,
         )
 
@@ -946,13 +944,12 @@ class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
                 this_grads = remaining_grads
                 remaining_grads = []
             else:
-                (this_grads, remaining_grads) = cross_device_utils.split_grads_by_size(
-                    spec_tuple.limit, remaining_grads
-                )
+                (this_grads,
+                 remaining_grads) = cross_device_utils.split_grads_by_size(
+                     spec_tuple.limit, remaining_grads)
             if this_grads:
                 device_grad_packs, tensor_packer = _pack_tensors(
-                    this_grads, self._num_packs
-                )
+                    this_grads, self._num_packs)
                 range_agg_grads = cross_device_utils.sum_gradients_all_reduce(
                     self._worker_devices,
                     device_grad_packs,
@@ -961,7 +958,8 @@ class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
                     spec_tuple.shards,
                     range(self._num_gpus_per_worker),
                 )
-                range_agg_grads = _unpack_tensors(range_agg_grads, tensor_packer)
+                range_agg_grads = _unpack_tensors(range_agg_grads,
+                                                  tensor_packer)
 
                 if not aggregated_grads:
                     aggregated_grads = range_agg_grads
@@ -971,9 +969,8 @@ class MultiWorkerAllReduce(AllReduceCrossDeviceOps):
                         aggregated_grads[i] += range_agg_grad
         assert not remaining_grads
 
-        return _ungroup_and_make_mirrored(
-            aggregated_grads, per_replica_values[0], reduce_op
-        )
+        return _ungroup_and_make_mirrored(aggregated_grads,
+                                          per_replica_values[0], reduce_op)
 
 
 @tf_export("distribute.experimental.CollectiveCommunication")
@@ -1002,11 +999,11 @@ class CollectiveAllReduce(CrossDeviceOps):
     """
 
     def __init__(
-        self,
-        num_workers=1,
-        num_gpus_per_worker=0,
-        collective_keys=None,
-        communication=CollectiveCommunication.AUTO,
+            self,
+            num_workers=1,
+            num_gpus_per_worker=0,
+            collective_keys=None,
+            communication=CollectiveCommunication.AUTO,
     ):
         """Initializes the object.
 
@@ -1018,7 +1015,8 @@ class CollectiveAllReduce(CrossDeviceOps):
         """
         self._num_workers = num_workers
         self._num_gpus_per_worker = num_gpus_per_worker
-        self._collective_keys = collective_keys or cross_device_utils.CollectiveKeys()
+        self._collective_keys = collective_keys or cross_device_utils.CollectiveKeys(
+        )
         self._communication = communication
         super(CollectiveAllReduce, self).__init__()
 
@@ -1026,17 +1024,15 @@ class CollectiveAllReduce(CrossDeviceOps):
     def _num_between_graph_workers(self):
         return self._num_workers
 
-    def reduce_implementation(
-        self, reduce_op, per_replica_value, destinations, experimental_hints
-    ):
-        all_reduced = self._batch_all_reduce(
-            reduce_op, [per_replica_value], experimental_hints
-        )[0]
+    def reduce_implementation(self, reduce_op, per_replica_value, destinations,
+                              experimental_hints):
+        all_reduced = self._batch_all_reduce(reduce_op, [per_replica_value],
+                                             experimental_hints)[0]
         devices = get_devices_from(destinations)
 
-        if isinstance(all_reduced, value_lib.Mirrored) and (
-            all_reduced._devices == devices
-        ):  # pylint: disable=protected-access
+        if isinstance(
+                all_reduced,
+                value_lib.Mirrored) and (all_reduced._devices == devices):  # pylint: disable=protected-access
             return all_reduced
 
         # Convert `all_reduced` to a `Mirrored` object, as a simple and uniform
@@ -1058,19 +1054,16 @@ class CollectiveAllReduce(CrossDeviceOps):
                     else:
                         # TODO(josh11b): Once we add support for model parallelism, get the
                         # copy from the corresponding replica instead of the primary.
-                        index.append(
-                            array_ops.identity(all_reduced._primary)
-                        )  # pylint: disable=protected-access
+                        index.append(array_ops.identity(all_reduced._primary))  # pylint: disable=protected-access
         return value_lib.regroup(index, wrap_class=value_lib.Mirrored)
 
-    def batch_reduce_implementation(
-        self, reduce_op, value_destination_pairs, experimental_hints
-    ):
+    def batch_reduce_implementation(self, reduce_op, value_destination_pairs,
+                                    experimental_hints):
         all_devices_match = _all_devices_match(value_destination_pairs)
         if all_devices_match:
             return self._batch_all_reduce(
-                reduce_op, [v[0] for v in value_destination_pairs], experimental_hints
-            )
+                reduce_op, [v[0] for v in value_destination_pairs],
+                experimental_hints)
         else:
             if not all_devices_match:
                 logging.log_first_n(
@@ -1081,11 +1074,13 @@ class CollectiveAllReduce(CrossDeviceOps):
                 )
 
             return [
-                self.reduce_implementation(reduce_op, value, dest, experimental_hints)
+                self.reduce_implementation(reduce_op, value, dest,
+                                           experimental_hints)
                 for value, dest in value_destination_pairs
             ]
 
-    def _batch_all_reduce(self, reduce_op, per_replica_values, experimental_hints):
+    def _batch_all_reduce(self, reduce_op, per_replica_values,
+                          experimental_hints):
         """All reduce algorithm in a batch."""
         (
             dense_values,
@@ -1095,21 +1090,19 @@ class CollectiveAllReduce(CrossDeviceOps):
         ) = cross_device_utils.split_by_sparsity(per_replica_values)
         if dense_values:
             dense_results = self._do_batch_all_reduce_dense(
-                reduce_op, dense_values, experimental_hints
-            )
+                reduce_op, dense_values, experimental_hints)
         else:
             dense_results = []
         if sparse_values:
-            sparse_results = self._do_batch_all_reduce_sparse(reduce_op, sparse_values)
+            sparse_results = self._do_batch_all_reduce_sparse(
+                reduce_op, sparse_values)
         else:
             sparse_results = []
         return cross_device_utils.stitch_values(
-            ((dense_results, dense_indices), (sparse_results, sparse_indices))
-        )
+            ((dense_results, dense_indices), (sparse_results, sparse_indices)))
 
-    def _do_batch_all_reduce_dense(
-        self, reduce_op, per_replica_values, experimental_hints
-    ):
+    def _do_batch_all_reduce_dense(self, reduce_op, per_replica_values,
+                                   experimental_hints):
         """All-reduce across all workers in a batch."""
 
         batch_size = len(per_replica_values)
@@ -1132,8 +1125,8 @@ class CollectiveAllReduce(CrossDeviceOps):
         #
         # TODO(b/147393503): explore solutions for optimal ordering.
         packs = cross_device_utils.pack_by_size(
-            list(reversed(per_replica_values)), experimental_hints.bytes_per_pack
-        )
+            list(reversed(per_replica_values)),
+            experimental_hints.bytes_per_pack)
 
         if batch_size > 1:
             logging.info(
@@ -1148,8 +1141,8 @@ class CollectiveAllReduce(CrossDeviceOps):
             logging.log_first_n(
                 logging.INFO,
                 "Collective batch_all_reduce: %d all-reduces, "
-                "num_workers = %d, communication_hint = %s, num_packs = %d"
-                % (batch_size, self._num_workers, communication, len(packs)),
+                "num_workers = %d, communication_hint = %s, num_packs = %d" %
+                (batch_size, self._num_workers, communication, len(packs)),
                 10,
             )
 
@@ -1164,10 +1157,8 @@ class CollectiveAllReduce(CrossDeviceOps):
                     for per_replica in pack:
                         # Add control dependencies per device from the last gradients to the
                         # current set, in order to serialize NCCL launches.
-                        if (
-                            communication == CollectiveCommunication.NCCL.value
-                            and reduced_values
-                        ):
+                        if (communication == CollectiveCommunication.NCCL.value
+                                and reduced_values):
                             control_inputs = [g for g in reduced_values[-1]]
                         else:
                             control_inputs = None
@@ -1180,8 +1171,7 @@ class CollectiveAllReduce(CrossDeviceOps):
                                 "Id",
                                 communication,
                                 control_inputs,
-                            )
-                        )
+                            ))
             return reduced_values
 
         if context.executing_eagerly():
@@ -1197,7 +1187,8 @@ class CollectiveAllReduce(CrossDeviceOps):
                 for i, v in enumerate(value):
                     with ops.device(v.device):
                         value[i] = v / num_replicas
-            mirrored.append(value_lib.regroup(value, wrap_class=value_lib.Mirrored))
+            mirrored.append(
+                value_lib.regroup(value, wrap_class=value_lib.Mirrored))
         return mirrored
 
     def _do_batch_all_reduce_sparse(self, reduce_op, per_replica_values):
@@ -1206,8 +1197,8 @@ class CollectiveAllReduce(CrossDeviceOps):
         logging.log_first_n(
             logging.INFO,
             "Collective batch_all_reduce for IndexedSlices: "
-            "%d all-reduces, num_workers = %d"
-            % (len(per_replica_values), self._num_workers),
+            "%d all-reduces, num_workers = %d" %
+            (len(per_replica_values), self._num_workers),
             10,
         )
 
@@ -1216,10 +1207,8 @@ class CollectiveAllReduce(CrossDeviceOps):
         # For now, we use NCCL only when batch_size > 1.
         # TODO(b/132575814): switch to NCCL for all collectives when communication
         # is NCCL.
-        if (
-            self._communication == CollectiveCommunication.NCCL
-            and len(per_replica_values) == 1
-        ):
+        if (self._communication == CollectiveCommunication.NCCL
+                and len(per_replica_values) == 1):
             communication_hint = CollectiveCommunication.AUTO.value
 
         gathered_values = []
@@ -1231,8 +1220,7 @@ class CollectiveAllReduce(CrossDeviceOps):
                         self._num_workers,
                         self._collective_keys,
                         communication_hint,
-                    )
-                )
+                    ))
 
         mirrored = []
         for value in gathered_values:
@@ -1242,7 +1230,8 @@ class CollectiveAllReduce(CrossDeviceOps):
                 for i, v in enumerate(value):
                     with ops.device(v.device):
                         value[i].values = value[i].values / num_replicas
-            mirrored.append(value_lib.regroup(value, wrap_class=value_lib.Mirrored))
+            mirrored.append(
+                value_lib.regroup(value, wrap_class=value_lib.Mirrored))
         return mirrored
 
 
@@ -1259,18 +1248,20 @@ def choose_the_best(devices, session_config=None):
     """
     requested_devices = set(device_util.canonicalize(d) for d in devices)
     if ops.executing_eagerly_outside_functions():
-        logical_gpus = context.context().list_logical_devices(device_type="GPU")
-        physical_gpus = context.context().list_physical_devices(device_type="GPU")
+        logical_gpus = context.context().list_logical_devices(
+            device_type="GPU")
+        physical_gpus = context.context().list_physical_devices(
+            device_type="GPU")
         if len(logical_gpus) != len(physical_gpus):
             logging.warning(
                 "NCCL is not supported when using virtual GPUs, falling"
-                "back to reduction to one device"
-            )
+                "back to reduction to one device")
             return ReductionToOneDevice()
 
         machine_devices = context.context().list_logical_devices()
     else:
-        machine_devices = device_lib.list_local_devices(session_config=session_config)
+        machine_devices = device_lib.list_local_devices(
+            session_config=session_config)
     using_devices = set()
     for d in machine_devices:
         if device_util.canonicalize(d.name) in requested_devices:
@@ -1286,8 +1277,7 @@ def choose_the_best(devices, session_config=None):
     if any("gpu" not in d.lower() for d in requested_devices):
         logging.warning(
             "There are non-GPU devices in `tf.distribute.Strategy`, "
-            "not using nccl allreduce."
-        )
+            "not using nccl allreduce.")
         return ReductionToOneDevice()
 
     if kernels.get_registered_kernels_for_op("NcclAllReduce"):

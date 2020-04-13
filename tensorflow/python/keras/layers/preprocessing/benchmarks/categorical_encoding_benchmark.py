@@ -39,13 +39,11 @@ v2_compat.enable_v2_behavior()
 class BenchmarkLayer(benchmark.Benchmark):
     """Benchmark the layer forward pass."""
 
-    def run_dataset_implementation(
-        self, output_mode, batch_size, sequence_length, max_tokens
-    ):
-        input_t = keras.Input(shape=(sequence_length,), dtype=dtypes.int32)
+    def run_dataset_implementation(self, output_mode, batch_size,
+                                   sequence_length, max_tokens):
+        input_t = keras.Input(shape=(sequence_length, ), dtype=dtypes.int32)
         layer = categorical_encoding.CategoricalEncoding(
-            max_tokens=max_tokens, output_mode=output_mode
-        )
+            max_tokens=max_tokens, output_mode=output_mode)
         _ = layer(input_t)
 
         num_repeats = 5
@@ -58,8 +56,7 @@ class BenchmarkLayer(benchmark.Benchmark):
                     minval=0,
                     maxval=max_tokens - 1,
                     dtype=dtypes.int32,
-                )
-            )
+                ))
             ds = ds.shuffle(batch_size * 100)
             ds = ds.batch(batch_size)
             num_batches = 5

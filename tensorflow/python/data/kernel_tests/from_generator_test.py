@@ -33,14 +33,11 @@ from tensorflow.python.platform import test
 
 
 class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
-    def _testFromGenerator(
-        self, generator, elem_sequence, num_repeats, requires_initialization
-    ):
-        dataset = (
-            dataset_ops.Dataset.from_generator(generator, output_types=dtypes.int64)
-            .repeat(num_repeats)
-            .prefetch(5)
-        )
+    def _testFromGenerator(self, generator, elem_sequence, num_repeats,
+                           requires_initialization):
+        dataset = (dataset_ops.Dataset.from_generator(
+            generator,
+            output_types=dtypes.int64).repeat(num_repeats).prefetch(5))
         self.assertDatasetProduces(
             dataset,
             elem_sequence * num_repeats,
@@ -51,11 +48,9 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(
-                num_repeats=[1, 5], requires_initialization=[True, False]
-            ),
-        )
-    )
+            combinations.combine(num_repeats=[1, 5],
+                                 requires_initialization=[True, False]),
+        ))
     def testFromGeneratorUsingFn(self, num_repeats, requires_initialization):
         def generator():
             for i in range(1, 100):
@@ -72,11 +67,9 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(
-                num_repeats=[1, 5], requires_initialization=[True, False]
-            ),
-        )
-    )
+            combinations.combine(num_repeats=[1, 5],
+                                 requires_initialization=[True, False]),
+        ))
     def testFromGeneratorUsingList(self, num_repeats, requires_initialization):
         def generator():
             return [[i] * i for i in range(1, 100)]
@@ -92,12 +85,11 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(
-                num_repeats=[1, 5], requires_initialization=[True, False]
-            ),
-        )
-    )
-    def testFromGeneratorUsingNdarray(self, num_repeats, requires_initialization):
+            combinations.combine(num_repeats=[1, 5],
+                                 requires_initialization=[True, False]),
+        ))
+    def testFromGeneratorUsingNdarray(self, num_repeats,
+                                      requires_initialization):
         def generator():
             return np.arange(100, dtype=np.int64)
 
@@ -112,14 +104,11 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(
-                num_repeats=[1, 5], requires_initialization=[True, False]
-            ),
-        )
-    )
-    def testFromGeneratorUsingGeneratorExpression(
-        self, num_repeats, requires_initialization
-    ):
+            combinations.combine(num_repeats=[1, 5],
+                                 requires_initialization=[True, False]),
+        ))
+    def testFromGeneratorUsingGeneratorExpression(self, num_repeats,
+                                                  requires_initialization):
         # NOTE(mrry): Generator *expressions* are not repeatable (or in general
         # reusable), because they eagerly evaluate the `for` expression as
         # `iter(range(1, 100))` and discard the means of reconstructing
@@ -143,7 +132,7 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         def generator():
             for i in range(1, 10):
-                yield ([i] * i, [i, i ** 2, i ** 3])
+                yield ([i] * i, [i, i**2, i**3])
 
         input_list = list(generator())
 
@@ -155,19 +144,14 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         # interleave, we create the possibility of parallel (modulo GIL)
         # invocations to several iterators created by the same dataset.
         def interleave_fn(_):
-            return (
-                dataset_ops.Dataset.from_generator(
-                    generator,
-                    output_types=(dtypes.int64, dtypes.int64),
-                    output_shapes=([None], [3]),
-                )
-                .repeat(num_inner_repeats)
-                .prefetch(5)
-            )
+            return (dataset_ops.Dataset.from_generator(
+                generator,
+                output_types=(dtypes.int64, dtypes.int64),
+                output_shapes=([None], [3]),
+            ).repeat(num_inner_repeats).prefetch(5))
 
         dataset = dataset_ops.Dataset.range(num_outer_repeats).interleave(
-            interleave_fn, cycle_length=10, block_length=len(input_list)
-        )
+            interleave_fn, cycle_length=10, block_length=len(input_list))
         get_next = self.getNext(dataset)
         for _ in range(num_inner_repeats * num_outer_repeats):
             for elem in input_list:
@@ -216,12 +200,11 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         # iterators to be active concurrently.
         def interleave_fn(_):
             return dataset_ops.Dataset.from_generator(
-                generator, output_types=dtypes.int64, output_shapes=[]
-            ).prefetch(2)
+                generator, output_types=dtypes.int64,
+                output_shapes=[]).prefetch(2)
 
         dataset = dataset_ops.Dataset.range(num_parallel_iterators).interleave(
-            interleave_fn, cycle_length=num_parallel_iterators, block_length=1
-        )
+            interleave_fn, cycle_length=num_parallel_iterators, block_length=1)
         get_next = self.getNext(dataset)
 
         for elem in [0, 1]:
@@ -238,9 +221,9 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield [3]
 
         for dtype in [dtypes.int8, dtypes.int32, dtypes.int64]:
-            dataset = dataset_ops.Dataset.from_generator(
-                generator, output_types=dtype, output_shapes=[1]
-            )
+            dataset = dataset_ops.Dataset.from_generator(generator,
+                                                         output_types=dtype,
+                                                         output_shapes=[1])
             get_next = self.getNext(dataset)
 
             for expected in [[1], [2], [3]]:
@@ -258,29 +241,49 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield u"baz"
 
         dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=dtypes.string, output_shapes=[]
-        )
-        self.assertDatasetProduces(dataset, expected_output=[b"foo", b"bar", b"baz"])
+            generator, output_types=dtypes.string, output_shapes=[])
+        self.assertDatasetProduces(dataset,
+                                   expected_output=[b"foo", b"bar", b"baz"])
 
     @combinations.generate(test_base.default_test_combinations())
     def testFromGeneratorDatastructures(self):
         # Tests multiple datastructures.
         def generator():
-            yield {"a": "foo", "b": [1, 2], "c": (9,)}
+            yield {"a": "foo", "b": [1, 2], "c": (9, )}
             yield {"a": "bar", "b": [3], "c": (7, 6)}
             yield {"a": "baz", "b": [5, 6], "c": (5, 4)}
 
         dataset = dataset_ops.Dataset.from_generator(
             generator,
-            output_types={"a": dtypes.string, "b": dtypes.int32, "c": dtypes.int32},
-            output_shapes={"a": [], "b": [None], "c": [None]},
+            output_types={
+                "a": dtypes.string,
+                "b": dtypes.int32,
+                "c": dtypes.int32
+            },
+            output_shapes={
+                "a": [],
+                "b": [None],
+                "c": [None]
+            },
         )
         self.assertDatasetProduces(
             dataset,
             expected_output=[
-                {"a": b"foo", "b": [1, 2], "c": [9]},
-                {"a": b"bar", "b": [3], "c": [7, 6]},
-                {"a": b"baz", "b": [5, 6], "c": [5, 4]},
+                {
+                    "a": b"foo",
+                    "b": [1, 2],
+                    "c": [9]
+                },
+                {
+                    "a": b"bar",
+                    "b": [3],
+                    "c": [7, 6]
+                },
+                {
+                    "a": b"baz",
+                    "b": [5, 6],
+                    "c": [5, 4]
+                },
             ],
         )
 
@@ -292,9 +295,9 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield "ERROR"
             yield np.array([7, 8, 9], dtype=np.int64)
 
-        dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=dtypes.int64, output_shapes=[3]
-        )
+        dataset = dataset_ops.Dataset.from_generator(generator,
+                                                     output_types=dtypes.int64,
+                                                     output_shapes=[3])
 
         get_next = self.getNext(dataset)
 
@@ -314,9 +317,9 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield np.array([7, 8, 9, 10], dtype=np.int64)
             yield np.array([11, 12, 13], dtype=np.int64)
 
-        dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=dtypes.int64, output_shapes=[3]
-        )
+        dataset = dataset_ops.Dataset.from_generator(generator,
+                                                     output_types=dtypes.int64,
+                                                     output_shapes=[3])
         get_next = self.getNext(dataset)
 
         self.assertAllEqual([1, 2, 3], self.evaluate(get_next()))
@@ -337,19 +340,16 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield 9, 10
 
         dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=(dtypes.int64, dtypes.int64)
-        )
+            generator, output_types=(dtypes.int64, dtypes.int64))
         get_next = self.getNext(dataset)
 
         self.assertEqual((1, 2), self.evaluate(get_next()))
         self.assertEqual((3, 4), self.evaluate(get_next()))
         with self.assertRaisesOpError(
-            r"The expected structure was \(tf\.int64, tf\.int64\)"
-        ):
+                r"The expected structure was \(tf\.int64, tf\.int64\)"):
             self.evaluate(get_next())
         with self.assertRaisesOpError(
-            r"The expected structure was \(tf\.int64, tf\.int64\)"
-        ):
+                r"The expected structure was \(tf\.int64, tf\.int64\)"):
             self.evaluate(get_next())
         self.assertEqual((9, 10), self.evaluate(get_next()))
         with self.assertRaises(errors.OutOfRangeError):
@@ -361,9 +361,8 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield 1
             yield [2, 3]
 
-        dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=dtypes.int64
-        )
+        dataset = dataset_ops.Dataset.from_generator(generator,
+                                                     output_types=dtypes.int64)
         self.assertDatasetProduces(dataset, expected_output=[1, [2, 3]])
 
     @combinations.generate(test_base.default_test_combinations())
@@ -373,9 +372,8 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             yield 1
             yield 2
 
-        dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=dtypes.int64
-        )
+        dataset = dataset_ops.Dataset.from_generator(generator,
+                                                     output_types=dtypes.int64)
         get_next = self.getNext(dataset)
         self.assertAllEqual(0, self.evaluate(get_next()))
         self.assertAllEqual(1, self.evaluate(get_next()))
@@ -399,8 +397,7 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 event.set()
 
         dataset = dataset_ops.Dataset.from_generator(
-            GeneratorWrapper, output_types=dtypes.int64
-        ).take(2)
+            GeneratorWrapper, output_types=dtypes.int64).take(2)
         get_next = self.getNext(dataset)
 
         self.assertAllEqual(42, self.evaluate(get_next()))
@@ -422,13 +419,12 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 generator_with_arg,
                 output_types=dtypes.int64,
                 output_shapes=(),
-                args=(elem,),
+                args=(elem, ),
             )
 
         dataset = dataset_ops.Dataset.range(5).flat_map(flat_map_fn)
         self.assertDatasetProduces(
-            dataset, expected_output=[1, 2, 2, 3, 3, 3, 4, 4, 4, 4]
-        )
+            dataset, expected_output=[1, 2, 2, 3, 3, 3, 4, 4, 4, 4])
 
     @combinations.generate(test_base.default_test_combinations())
     def testFromGeneratorWithTwoArgs(self):
@@ -444,12 +440,10 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 args=(elem, message),
             )
 
-        dataset = dataset_ops.Dataset.zip(
-            (
-                dataset_ops.Dataset.range(5),
-                dataset_ops.Dataset.from_tensors("Hi!").repeat(None),
-            )
-        ).flat_map(flat_map_fn)
+        dataset = dataset_ops.Dataset.zip((
+            dataset_ops.Dataset.range(5),
+            dataset_ops.Dataset.from_tensors("Hi!").repeat(None),
+        )).flat_map(flat_map_fn)
 
         self.assertDatasetProduces(
             dataset,
@@ -481,14 +475,12 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 event.set()
                 return 0
 
-            return script_ops.py_func(
-                finalize_py_func, [], [dtypes.int64], stateful=True
-            )
+            return script_ops.py_func(finalize_py_func, [], [dtypes.int64],
+                                      stateful=True)
 
         dummy = constant_op.constant(37)
         dataset = dataset_ops._GeneratorDataset(
-            dummy, lambda x: x, lambda x: x, finalize_fn
-        ).take(2)
+            dummy, lambda x: x, lambda x: x, finalize_fn).take(2)
         get_next = self.getNext(dataset)
 
         self.assertAllEqual(37, self.evaluate(get_next()))
@@ -503,11 +495,10 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 yield [20]
 
         dataset = dataset_ops.Dataset.from_generator(
-            generator, output_types=(dtypes.int64)
-        )
-        get_next = self.getNext(
-            dataset, requires_initialization=True, shared_name="shared_dataset"
-        )
+            generator, output_types=(dtypes.int64))
+        get_next = self.getNext(dataset,
+                                requires_initialization=True,
+                                shared_name="shared_dataset")
 
         self.assertAllEqual([20], self.evaluate(get_next()))
 
@@ -518,9 +509,10 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 yield [20]
 
         with self.assertRaisesRegexp(
-            TypeError, r"Cannot convert value \[tf.int64\] to a TensorFlow DType"
-        ):
-            dataset_ops.Dataset.from_generator(generator, output_types=[dtypes.int64])
+                TypeError,
+                r"Cannot convert value \[tf.int64\] to a TensorFlow DType"):
+            dataset_ops.Dataset.from_generator(generator,
+                                               output_types=[dtypes.int64])
 
     @combinations.generate(test_base.default_test_combinations())
     def testDimensionIsListError(self):
@@ -529,11 +521,10 @@ class FromGeneratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 yield [20]
 
         with self.assertRaisesRegexp(
-            TypeError, r"Failed to convert '\[\[1\]\]' to a shape"
-        ):
-            dataset_ops.Dataset.from_generator(
-                generator, output_types=(dtypes.int64), output_shapes=[[1]]
-            )
+                TypeError, r"Failed to convert '\[\[1\]\]' to a shape"):
+            dataset_ops.Dataset.from_generator(generator,
+                                               output_types=(dtypes.int64),
+                                               output_shapes=[[1]])
 
 
 if __name__ == "__main__":
