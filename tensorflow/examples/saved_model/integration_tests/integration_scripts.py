@@ -23,7 +23,6 @@ This allows to wire this into existing building systems without having to depend
 on data dependencies. And as so allow to keep a fixed binary size and allows
 interop with GPU tests.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -35,8 +34,8 @@ import sys
 
 from absl import app
 from absl import flags as absl_flags
-import tensorflow.compat.v2 as tf
 
+import tensorflow.compat.v2 as tf
 from tensorflow.python.platform import tf_logging as logging
 
 

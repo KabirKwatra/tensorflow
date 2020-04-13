@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Definition of XLA test case."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

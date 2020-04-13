@@ -19,7 +19,6 @@ attempts to import this module. If this file is made available through the BUILD
 rule, then this function is overridden and will instead cause Tensorflow graphs
 to be compiled with MLIR bridge.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

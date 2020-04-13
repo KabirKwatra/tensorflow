@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Utils related to tf.distribute.strategy."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

@@ -13,14 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Classes for different algorithms of reduction and broadcasting."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import collections
-
 import enum
+
 import six
 
 from tensorflow.python.client import device_lib
