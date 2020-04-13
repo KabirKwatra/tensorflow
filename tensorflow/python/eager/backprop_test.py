@@ -18,8 +18,8 @@ from __future__ import print_function
 
 import functools
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.python import pywrap_tfe
 from tensorflow.python.eager import backprop
