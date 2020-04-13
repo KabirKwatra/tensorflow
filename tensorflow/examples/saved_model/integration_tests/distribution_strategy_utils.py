@@ -40,8 +40,7 @@ if "test_tpu" in sys.argv[0]:
 
 
 named_strategies = collections.OrderedDict(
-    [(None, None)] +
-    [(str(s), s) for s in _strategies]
+    [(None, None)] + [(str(s), s) for s in _strategies]
 )
 
 
@@ -50,8 +49,7 @@ class MaybeDistributionScope(object):
 
     @staticmethod
     def from_name(name):
-        return MaybeDistributionScope(named_strategies[name].strategy if name
-                                      else None)
+        return MaybeDistributionScope(named_strategies[name].strategy if name else None)
 
     def __init__(self, distribution):
         self._distribution = distribution

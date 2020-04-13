@@ -39,11 +39,13 @@ v2_compat.enable_v2_behavior()
 class BenchmarkLayer(benchmark.Benchmark):
     """Benchmark the layer forward pass."""
 
-    def run_dataset_implementation(self, output_mode, batch_size, sequence_length,
-                                   max_tokens):
+    def run_dataset_implementation(
+        self, output_mode, batch_size, sequence_length, max_tokens
+    ):
         input_t = keras.Input(shape=(sequence_length,), dtype=dtypes.int32)
         layer = categorical_encoding.CategoricalEncoding(
-            max_tokens=max_tokens, output_mode=output_mode)
+            max_tokens=max_tokens, output_mode=output_mode
+        )
         _ = layer(input_t)
 
         num_repeats = 5
@@ -51,10 +53,13 @@ class BenchmarkLayer(benchmark.Benchmark):
         ends = []
         for _ in range(num_repeats):
             ds = dataset_ops.Dataset.from_tensor_slices(
-                random_ops.random_uniform([batch_size * 10, sequence_length],
-                                          minval=0,
-                                          maxval=max_tokens - 1,
-                                          dtype=dtypes.int32))
+                random_ops.random_uniform(
+                    [batch_size * 10, sequence_length],
+                    minval=0,
+                    maxval=max_tokens - 1,
+                    dtype=dtypes.int32,
+                )
+            )
             ds = ds.shuffle(batch_size * 100)
             ds = ds.batch(batch_size)
             num_batches = 5
@@ -69,7 +74,10 @@ class BenchmarkLayer(benchmark.Benchmark):
 
         avg_time = np.mean(np.array(ends) - np.array(starts)) / num_batches
         name = "categorical_encoding|batch_%s|seq_length_%s|%s_max_tokens" % (
-            batch_size, sequence_length, max_tokens)
+            batch_size,
+            sequence_length,
+            max_tokens,
+        )
         self.report_benchmark(iters=num_repeats, wall_time=avg_time, name=name)
 
     def benchmark_vocab_size_by_batch(self):
@@ -80,7 +88,8 @@ class BenchmarkLayer(benchmark.Benchmark):
                         output_mode="count",
                         batch_size=batch,
                         sequence_length=sequence_length,
-                        max_tokens=num_tokens)
+                        max_tokens=num_tokens,
+                    )
 
 
 if __name__ == "__main__":
