@@ -41,37 +41,38 @@ from tensorflow.python.platform import tf_logging as logging
 
 
 class TestCase(tf.test.TestCase):
-  """Base class to write SavedModel integration tests."""
+    """Base class to write SavedModel integration tests."""
 
-  def assertCommandSucceeded(self, script_name, **flags):
-    """Runs an integration test script with given flags."""
-    run_script = sys.argv[0]
-    if run_script.endswith(".py"):
-      command_parts = [sys.executable, run_script]
-    else:
-      command_parts = [run_script]
-    command_parts.append("--alsologtostderr")  # For visibility in sponge.
-    for flag_key, flag_value in flags.items():
-      command_parts.append("--%s=%s" % (flag_key, flag_value))
+    def assertCommandSucceeded(self, script_name, **flags):
+        """Runs an integration test script with given flags."""
+        run_script = sys.argv[0]
+        if run_script.endswith(".py"):
+            command_parts = [sys.executable, run_script]
+        else:
+            command_parts = [run_script]
+        command_parts.append("--alsologtostderr")  # For visibility in sponge.
+        for flag_key, flag_value in flags.items():
+            command_parts.append("--%s=%s" % (flag_key, flag_value))
 
-    # TODO(b/143247229): Remove forwarding this flag once the BUILD rule
-    # `distribute_py_test()` stops setting it.
-    deepsea_flag_name = "register_deepsea_platform"
-    deepsea_flag_value = getattr(absl_flags.FLAGS, deepsea_flag_name, None)
-    if deepsea_flag_value is not None:
-      command_parts.append("--%s=%s" % (deepsea_flag_name,
-                                        str(deepsea_flag_value).lower()))
+        # TODO(b/143247229): Remove forwarding this flag once the BUILD rule
+        # `distribute_py_test()` stops setting it.
+        deepsea_flag_name = "register_deepsea_platform"
+        deepsea_flag_value = getattr(absl_flags.FLAGS, deepsea_flag_name, None)
+        if deepsea_flag_value is not None:
+            command_parts.append("--%s=%s" % (deepsea_flag_name,
+                                              str(deepsea_flag_value).lower()))
 
-    env = dict(TF2_BEHAVIOR="enabled", SCRIPT_NAME=script_name)
-    logging.info("Running %s with added environment variables %s" %
-                 (command_parts, env))
-    subprocess.check_call(command_parts, env=dict(os.environ, **env))
+        env = dict(TF2_BEHAVIOR="enabled", SCRIPT_NAME=script_name)
+        logging.info("Running %s with added environment variables %s" %
+                     (command_parts, env))
+        subprocess.check_call(command_parts, env=dict(os.environ, **env))
 
 
 def MaybeRunScriptInstead():
-  if "SCRIPT_NAME" in os.environ:
-    # Append current path to import path and execute `SCRIPT_NAME` main.
-    sys.path.extend([os.path.dirname(__file__)])
-    module_name = os.environ["SCRIPT_NAME"]
-    retval = app.run(importlib.import_module(module_name).main)  # pylint: disable=assignment-from-no-return
-    sys.exit(retval)
+    if "SCRIPT_NAME" in os.environ:
+        # Append current path to import path and execute `SCRIPT_NAME` main.
+        sys.path.extend([os.path.dirname(__file__)])
+        module_name = os.environ["SCRIPT_NAME"]
+        retval = app.run(importlib.import_module(
+            module_name).main)  # pylint: disable=assignment-from-no-return
+        sys.exit(retval)
