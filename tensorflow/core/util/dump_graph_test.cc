@@ -27,37 +27,37 @@ namespace tensorflow {
 namespace {
 
 TEST(DumpGraph, DumpGraphToFileSuccess) {
-  Graph graph(OpRegistry::Global());
-  Node* node;
-  TF_CHECK_OK(NodeBuilder("A", "NoOp").Finalize(&graph, &node));
+    Graph graph(OpRegistry::Global());
+    Node* node;
+    TF_CHECK_OK(NodeBuilder("A", "NoOp").Finalize(&graph, &node));
 
-  setenv("TF_DUMP_GRAPH_PREFIX", testing::TmpDir().c_str(), 1);
-  string ret = DumpGraphToFile("graph", graph);
-  EXPECT_EQ(ret, io::JoinPath(testing::TmpDir(), "graph.pbtxt"));
-  ret = DumpGraphToFile("graph", graph);
-  EXPECT_EQ(ret, io::JoinPath(testing::TmpDir(), "graph_1.pbtxt"));
+    setenv("TF_DUMP_GRAPH_PREFIX", testing::TmpDir().c_str(), 1);
+    string ret = DumpGraphToFile("graph", graph);
+    EXPECT_EQ(ret, io::JoinPath(testing::TmpDir(), "graph.pbtxt"));
+    ret = DumpGraphToFile("graph", graph);
+    EXPECT_EQ(ret, io::JoinPath(testing::TmpDir(), "graph_1.pbtxt"));
 
-  GraphDef gdef;
-  TF_ASSERT_OK(ReadTextProto(
-      Env::Default(), io::JoinPath(testing::TmpDir(), "graph.pbtxt"), &gdef));
-  string read, written;
-  gdef.AppendToString(&read);
-  graph.ToGraphDefDebug().AppendToString(&written);
-  EXPECT_EQ(read, written);
+    GraphDef gdef;
+    TF_ASSERT_OK(ReadTextProto(
+                     Env::Default(), io::JoinPath(testing::TmpDir(), "graph.pbtxt"), &gdef));
+    string read, written;
+    gdef.AppendToString(&read);
+    graph.ToGraphDefDebug().AppendToString(&written);
+    EXPECT_EQ(read, written);
 }
 
 TEST(DumpGraph, DumpGraphToFileNoEnvPrefix) {
-  Graph graph(OpRegistry::Global());
-  unsetenv("TF_DUMP_GRAPH_PREFIX");
-  string ret = DumpGraphToFile("graph", graph);
-  EXPECT_TRUE(str_util::StrContains(ret, "TF_DUMP_GRAPH_PREFIX not specified"));
+    Graph graph(OpRegistry::Global());
+    unsetenv("TF_DUMP_GRAPH_PREFIX");
+    string ret = DumpGraphToFile("graph", graph);
+    EXPECT_TRUE(str_util::StrContains(ret, "TF_DUMP_GRAPH_PREFIX not specified"));
 }
 
 TEST(DumpGraph, DumpFunctionDefToFileSuccess) {
-  FunctionDef fdef;
-  setenv("TF_DUMP_GRAPH_PREFIX", testing::TmpDir().c_str(), 1);
-  string ret = DumpFunctionDefToFile("function", fdef);
-  EXPECT_EQ(ret, io::JoinPath(testing::TmpDir(), "function.pbtxt"));
+    FunctionDef fdef;
+    setenv("TF_DUMP_GRAPH_PREFIX", testing::TmpDir().c_str(), 1);
+    string ret = DumpFunctionDefToFile("function", fdef);
+    EXPECT_EQ(ret, io::JoinPath(testing::TmpDir(), "function.pbtxt"));
 }
 
 }  // namespace
