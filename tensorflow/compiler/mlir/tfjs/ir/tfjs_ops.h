@@ -22,12 +22,12 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_TFJS_IR_TFJS_OPS_H_
 #define TENSORFLOW_COMPILER_MLIR_TFJS_IR_TFJS_OPS_H_
 
-#include "mlir/Dialect/Traits.h"  // from @llvm-project
-#include "mlir/IR/Dialect.h"  // from @llvm-project
-#include "mlir/IR/OpImplementation.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
+#include "mlir/Dialect/Traits.h"          // from @llvm-project
+#include "mlir/IR/Dialect.h"              // from @llvm-project
+#include "mlir/IR/OpImplementation.h"     // from @llvm-project
+#include "mlir/IR/StandardTypes.h"        // from @llvm-project
 #include "mlir/Interfaces/SideEffects.h"  // from @llvm-project
-#include "mlir/Support/LLVM.h"  // from @llvm-project
+#include "mlir/Support/LLVM.h"            // from @llvm-project
 namespace mlir {
 namespace tfjs {
 

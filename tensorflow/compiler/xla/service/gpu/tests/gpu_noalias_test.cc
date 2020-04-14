@@ -32,26 +32,26 @@ namespace gpu {
 class GpuNoAliasTest : public GpuCodegenTest {};
 
 TEST_F(GpuNoAliasTest, Concat) {
-    HloComputation::Builder builder(TestName());
+  HloComputation::Builder builder(TestName());
 
-    auto param_shape = ShapeUtil::MakeShape(F32, {2, 2});
-    HloInstruction* param_x = builder.AddInstruction(
-                                  HloInstruction::CreateParameter(0, param_shape, "x"));
-    HloInstruction* param_y = builder.AddInstruction(
-                                  HloInstruction::CreateParameter(1, param_shape, "y"));
-    HloInstruction* concat =
-        builder.AddInstruction(HloInstruction::CreateConcatenate(
-                                   ShapeUtil::MakeShape(F32, {2, 4}), {param_x, param_y}, 1));
-    builder.AddInstruction(HloInstruction::CreateConcatenate(
-                               ShapeUtil::MakeShape(F32, {2, 6}), {concat, param_x}, 1));
+  auto param_shape = ShapeUtil::MakeShape(F32, {2, 2});
+  HloInstruction* param_x = builder.AddInstruction(
+      HloInstruction::CreateParameter(0, param_shape, "x"));
+  HloInstruction* param_y = builder.AddInstruction(
+      HloInstruction::CreateParameter(1, param_shape, "y"));
+  HloInstruction* concat =
+      builder.AddInstruction(HloInstruction::CreateConcatenate(
+          ShapeUtil::MakeShape(F32, {2, 4}), {param_x, param_y}, 1));
+  builder.AddInstruction(HloInstruction::CreateConcatenate(
+      ShapeUtil::MakeShape(F32, {2, 6}), {concat, param_x}, 1));
 
-    std::unique_ptr<HloComputation> computation = builder.Build();
+  std::unique_ptr<HloComputation> computation = builder.Build();
 
-    auto hlo_module = CreateNewVerifiedModule();
-    hlo_module->AddEntryComputation(std::move(computation));
+  auto hlo_module = CreateNewVerifiedModule();
+  hlo_module->AddEntryComputation(std::move(computation));
 
-    CompileAndVerifyIr(std::move(hlo_module),
-                       R"(
+  CompileAndVerifyIr(std::move(hlo_module),
+                     R"(
 ; CHECK: %[[x_gep:.*]] = getelementptr inbounds [2 x [2 x float]], [2 x [2 x float]]* %x{{.*}}, i32 0
 ; CHECK: load float, float* %[[x_gep]], {{.*}}, !noalias ![[param_noalias:.*]]
 ; CHECK: %[[y_gep:.*]] = getelementptr inbounds [2 x [2 x float]], [2 x [2 x float]]* %y{{.*}}, i32 0
@@ -61,7 +61,7 @@ TEST_F(GpuNoAliasTest, Concat) {
 ; CHECK: store float {{.*}}, float* %[[result_gep]], align 4, !alias.scope ![[param_noalias]]
 ; CHECK: ![[param_noalias]] = !{![[retval_buffer:.*]]}
       )",
-                       /*match_optimized_ir=*/false);
+                     /*match_optimized_ir=*/false);
 }
 
 }  // namespace gpu
