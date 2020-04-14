@@ -33,7 +33,7 @@ void FakeCustomCallTarget(float* out, float** in) {}
 XLA_CPU_REGISTER_CUSTOM_CALL_TARGET(FakeCustomCallTarget);
 
 TEST_F(AliasAnalysisTest, EmbeddedComputationParamsMayAliasTemps) {
-  const char* hlo_string = R"(
+    const char* hlo_string = R"(
 HloModule while
 
 body {

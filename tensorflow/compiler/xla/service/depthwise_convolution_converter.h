@@ -26,22 +26,22 @@ limitations under the License.
 namespace xla {
 
 class DepthwiseConvolutionConverter : public HloModulePass {
- public:
-  explicit DepthwiseConvolutionConverter(
-      std::function<bool(HloInstruction*)> is_cost_viable)
-      : is_cost_viable_(is_cost_viable) {}
+public:
+    explicit DepthwiseConvolutionConverter(
+        std::function<bool(HloInstruction*)> is_cost_viable)
+        : is_cost_viable_(is_cost_viable) {}
 
-  absl::string_view name() const override {
-    return "depthwise-convolution-converter";
-  }
+    absl::string_view name() const override {
+        return "depthwise-convolution-converter";
+    }
 
-  // Run convolution rewriting on the given computation. Returns whether the
-  // computation was changed.
-  StatusOr<bool> Run(HloModule* module) override;
+    // Run convolution rewriting on the given computation. Returns whether the
+    // computation was changed.
+    StatusOr<bool> Run(HloModule* module) override;
 
-  // Lambda containing cost model that decides whether to expand
-  // batch_group_count.
-  std::function<bool(HloInstruction*)> is_cost_viable_;
+    // Lambda containing cost model that decides whether to expand
+    // batch_group_count.
+    std::function<bool(HloInstruction*)> is_cost_viable_;
 };
 
 }  // namespace xla
