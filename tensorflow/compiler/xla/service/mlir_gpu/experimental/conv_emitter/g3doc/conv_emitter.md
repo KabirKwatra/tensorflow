@@ -7,11 +7,11 @@ TODO(timshen): Change once all patches are checked in.
 
 The convolution emitter is a prototype with the following goals:
 
-*   The top priority is performance.
-*   It supports arbitrarily sophiscated layouts.
-*   It supports platform-specific high-performance instructions.
-*   It is as portable as possible.
-*   It enables fusion support in the future.
+- The top priority is performance.
+- It supports arbitrarily sophiscated layouts.
+- It supports platform-specific high-performance instructions.
+- It is as portable as possible.
+- It enables fusion support in the future.
 
 ## Current Design
 
@@ -19,14 +19,14 @@ The convolution emitter is a prototype with the following goals:
 
 The prototype consists of the following components:
 
-*   The emitter currently focuses on NVIDIA Volta architecture and N(C/4)HW4
-    layout.
-*   An MLIR-based emitter. It takes a set of tuning parameters and a convolution
-    configuration, then produces a NVVM device function.
-*   An autotuner, which generates tuning parameters given a convolution
-    configuration.
-*   A test framework, which executes the generated device function with random
-    inputs, and compares the result against cuDNN.
+- The emitter currently focuses on NVIDIA Volta architecture and N(C/4)HW4
+  layout.
+- An MLIR-based emitter. It takes a set of tuning parameters and a convolution
+  configuration, then produces a NVVM device function.
+- An autotuner, which generates tuning parameters given a convolution
+  configuration.
+- A test framework, which executes the generated device function with random
+  inputs, and compares the result against cuDNN.
 
 ### The Emitter - Naive Implementation
 
@@ -59,9 +59,9 @@ func @Conv(%input : memref<128x1x224x224xvector<4xf16>>,
 
 A few extensions are used in the example above:
 
-*   affine.padded.load allows out-of-bounds access, in which case the result is
-    always 0.
-*   The "reduce" operation produces the sum of elements in a vector.
+- affine.padded.load allows out-of-bounds access, in which case the result is
+  always 0.
+- The "reduce" operation produces the sum of elements in a vector.
 
 Also notice that the input element type is vector<4xf16> only because the
 current implementation does so. A MemRef with <...x4xf16> should work as well,
@@ -122,10 +122,10 @@ Also notice that to keep the code pattern clean and neat, tiling is implemented
 in the following way. Defining "simple loop" as a loop with lower bound 0, and
 step 1, the tiling:
 
-*   only takes simple loops.
-*   only produces simple loops.
-*   no extra operation is generated. All altered index calculations are done in
-    each user AffineMaps.
+- only takes simple loops.
+- only produces simple loops.
+- no extra operation is generated. All altered index calculations are done in
+  each user AffineMaps.
 
 The contracting dimensions (%c, %fh, %fw) are also tiled for once. The
 significance will be seen later in shared memory promotion.
@@ -134,9 +134,9 @@ significance will be seen later in shared memory promotion.
 
 This step splits the body of the (%n1, %o1, %oh1, %ow1) loop into several parts:
 
-*   The code that sets the accumulators to 0.
-*   The actual convolution computation code.
-*   The code that writes back accumulators to the %output buffer.
+- The code that sets the accumulators to 0.
+- The actual convolution computation code.
+- The code that writes back accumulators to the %output buffer.
 
 This transformation "vectorizes" the accumulator accordingly as the `alloc()`
 gets hoisted out of the `affine.parallel` op.
@@ -313,12 +313,11 @@ the best set of parameters.
 
 ## Future Improvements
 
-*   Explore Linalg/Vector for a higher-level naive implementation. MMA
-    instruction handling would be much easier with high-level functional
-    constructs.
-*   Explore other layouts. The current layout corresponds to NVIDIA
-    `CUDNN_TENSOR_NCHW_VECT_C` but for fp16s.
-*   Iron out GPU dialect related lowering. Annotations like `ptx_grid` and
-    `ptx_block` should be generalized to more architectures.
-*   Speed up autotuning through more pruning.
-*   Support dynamic shapes.
+- Explore Linalg/Vector for a higher-level naive implementation. MMA instruction
+  handling would be much easier with high-level functional constructs.
+- Explore other layouts. The current layout corresponds to NVIDIA
+  `CUDNN_TENSOR_NCHW_VECT_C` but for fp16s.
+- Iron out GPU dialect related lowering. Annotations like `ptx_grid` and
+  `ptx_block` should be generalized to more architectures.
+- Speed up autotuning through more pruning.
+- Support dynamic shapes.
