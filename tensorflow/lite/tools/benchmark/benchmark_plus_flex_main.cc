@@ -21,13 +21,15 @@ namespace tflite {
 namespace benchmark {
 
 int Main(int argc, char** argv) {
-  ::tflite::InitTensorFlow();
-  TFLITE_LOG(INFO) << "STARTING!";
-  BenchmarkTfLiteModel benchmark;
-  benchmark.Run(argc, argv);
-  return 0;
+    ::tflite::InitTensorFlow();
+    TFLITE_LOG(INFO) << "STARTING!";
+    BenchmarkTfLiteModel benchmark;
+    benchmark.Run(argc, argv);
+    return 0;
 }
 }  // namespace benchmark
 }  // namespace tflite
 
-int main(int argc, char** argv) { return tflite::benchmark::Main(argc, argv); }
+int main(int argc, char** argv) {
+    return tflite::benchmark::Main(argc, argv);
+}

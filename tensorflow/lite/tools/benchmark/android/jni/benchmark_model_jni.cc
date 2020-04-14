@@ -29,31 +29,31 @@ namespace benchmark {
 namespace {
 
 class AndroidBenchmarkLoggingListener : public BenchmarkListener {
-  void OnBenchmarkEnd(const BenchmarkResults& results) override {
-    auto inference_us = results.inference_time_us();
-    auto init_us = results.startup_latency_us();
-    auto warmup_us = results.warmup_time_us();
-    std::stringstream results_output;
-    results_output << "Average inference timings in us: "
-                   << "Warmup: " << warmup_us.avg() << ", "
-                   << "Init: " << init_us << ", "
-                   << "Inference: " << inference_us.avg();
-    results_output << "Overall " << results.overall_mem_usage();
+    void OnBenchmarkEnd(const BenchmarkResults& results) override {
+        auto inference_us = results.inference_time_us();
+        auto init_us = results.startup_latency_us();
+        auto warmup_us = results.warmup_time_us();
+        std::stringstream results_output;
+        results_output << "Average inference timings in us: "
+                       << "Warmup: " << warmup_us.avg() << ", "
+                       << "Init: " << init_us << ", "
+                       << "Inference: " << inference_us.avg();
+        results_output << "Overall " << results.overall_mem_usage();
 
 #ifdef __ANDROID__
-    __android_log_print(ANDROID_LOG_ERROR, "tflite", "%s",
-                        results_output.str().c_str());
+        __android_log_print(ANDROID_LOG_ERROR, "tflite", "%s",
+                            results_output.str().c_str());
 #else
-    fprintf(stderr, "%s", results_output.str().c_str());
+        fprintf(stderr, "%s", results_output.str().c_str());
 #endif
-  }
+    }
 };
 
 void Run(int argc, char** argv) {
-  BenchmarkTfLiteModel benchmark;
-  AndroidBenchmarkLoggingListener listener;
-  benchmark.AddListener(&listener);
-  benchmark.Run(argc, argv);
+    BenchmarkTfLiteModel benchmark;
+    AndroidBenchmarkLoggingListener listener;
+    benchmark.AddListener(&listener);
+    benchmark.Run(argc, argv);
 }
 
 }  // namespace
@@ -66,26 +66,26 @@ extern "C" {
 
 JNIEXPORT void JNICALL
 Java_org_tensorflow_lite_benchmark_BenchmarkModel_nativeRun(JNIEnv* env,
-                                                            jclass clazz,
-                                                            jstring args_obj) {
-  const char* args_chars = env->GetStringUTFChars(args_obj, nullptr);
+        jclass clazz,
+        jstring args_obj) {
+    const char* args_chars = env->GetStringUTFChars(args_obj, nullptr);
 
-  // Split the args string into individual arg tokens.
-  std::istringstream iss(args_chars);
-  std::vector<std::string> args_split{std::istream_iterator<std::string>(iss),
-                                      {}};
+    // Split the args string into individual arg tokens.
+    std::istringstream iss(args_chars);
+    std::vector<std::string> args_split{std::istream_iterator<std::string>(iss),
+                                        {}};
 
-  // Construct a fake argv command-line object for the benchmark.
-  std::vector<char*> argv;
-  std::string arg0 = "(BenchmarkModelAndroid)";
-  argv.push_back(const_cast<char*>(arg0.data()));
-  for (auto& arg : args_split) {
-    argv.push_back(const_cast<char*>(arg.data()));
-  }
+    // Construct a fake argv command-line object for the benchmark.
+    std::vector<char*> argv;
+    std::string arg0 = "(BenchmarkModelAndroid)";
+    argv.push_back(const_cast<char*>(arg0.data()));
+    for (auto& arg : args_split) {
+        argv.push_back(const_cast<char*>(arg.data()));
+    }
 
-  tflite::benchmark::Run(static_cast<int>(argv.size()), argv.data());
+    tflite::benchmark::Run(static_cast<int>(argv.size()), argv.data());
 
-  env->ReleaseStringUTFChars(args_obj, args_chars);
+    env->ReleaseStringUTFChars(args_obj, args_chars);
 }
 
 #ifdef __cplusplus

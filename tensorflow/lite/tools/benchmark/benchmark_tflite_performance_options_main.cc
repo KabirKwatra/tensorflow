@@ -21,13 +21,15 @@ namespace tflite {
 namespace benchmark {
 
 int Main(int argc, char** argv) {
-  TFLITE_LOG(INFO) << "STARTING!";
-  BenchmarkTfLiteModel benchmark;
-  BenchmarkPerformanceOptions all_options_benchmark(&benchmark);
-  all_options_benchmark.Run(argc, argv);
-  return EXIT_SUCCESS;
+    TFLITE_LOG(INFO) << "STARTING!";
+    BenchmarkTfLiteModel benchmark;
+    BenchmarkPerformanceOptions all_options_benchmark(&benchmark);
+    all_options_benchmark.Run(argc, argv);
+    return EXIT_SUCCESS;
 }
 }  // namespace benchmark
 }  // namespace tflite
 
-int main(int argc, char** argv) { return tflite::benchmark::Main(argc, argv); }
+int main(int argc, char** argv) {
+    return tflite::benchmark::Main(argc, argv);
+}
