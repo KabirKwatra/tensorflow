@@ -21,12 +21,8 @@ limitations under the License.
 
 namespace tflite {
 
-int32_t ticks_per_second() {
-    return CLOCKS_PER_SEC;
-}
+int32_t ticks_per_second() { return CLOCKS_PER_SEC; }
 
-int32_t GetCurrentTimeTicks() {
-    return clock();
-}
+int32_t GetCurrentTimeTicks() { return clock(); }
 
 }  // namespace tflite
