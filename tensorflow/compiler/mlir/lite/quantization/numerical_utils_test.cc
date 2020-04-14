@@ -26,30 +26,30 @@ namespace quant {
 namespace {
 
 double ComposeScale(const QuantizedMultiplier& input) {
-  return input.first * exp2(-31 + input.second);
+    return input.first * exp2(-31 + input.second);
 }
 
 TEST(DecomposeScale, QuantizeMultiplier) {
-  // Decompose multiplier larger than 1.
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e6)), 1.0e6);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e3)), 1.0e3);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(10.)), 10.);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(5.)), 5.);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(2.)), 2.);
+    // Decompose multiplier larger than 1.
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e6)), 1.0e6);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e3)), 1.0e3);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(10.)), 10.);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(5.)), 5.);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(2.)), 2.);
 
-  // Decompose multiplier between 1.0 and 1e-6.
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(0.0)), 0.0);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0)), 1.0);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-1)), 1.0e-1);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-2)), 1.0e-2);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-3)), 1.0e-3);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-4)), 1.0e-4);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-5)), 1.0e-5);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-6)), 1.0e-6);
+    // Decompose multiplier between 1.0 and 1e-6.
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(0.0)), 0.0);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0)), 1.0);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-1)), 1.0e-1);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-2)), 1.0e-2);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-3)), 1.0e-3);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-4)), 1.0e-4);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-5)), 1.0e-5);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-6)), 1.0e-6);
 
-  // When scale is smaller than 1.0e-6, it is decomposed to {0, 0}.
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-7)), 0.0);
-  ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-8)), 0.0);
+    // When scale is smaller than 1.0e-6, it is decomposed to {0, 0}.
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-7)), 0.0);
+    ASSERT_FLOAT_EQ(ComposeScale(QuantizeMultiplier(1.0e-8)), 0.0);
 }
 
 }  // namespace
