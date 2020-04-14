@@ -52,7 +52,10 @@ class LoaderTest(test.TestCase):
             name="f",
             args=gast.arguments(
                 args=[
-                    gast.Name("a", ctx=gast.Param(), annotation=None, type_comment=None)
+                    gast.Name("a",
+                              ctx=gast.Param(),
+                              annotation=None,
+                              type_comment=None)
                 ],
                 posonlyargs=[],
                 vararg=None,
@@ -65,12 +68,12 @@ class LoaderTest(test.TestCase):
                 gast.Return(
                     gast.BinOp(
                         op=gast.Add(),
-                        left=gast.Name(
-                            "a", ctx=gast.Load(), annotation=None, type_comment=None
-                        ),
+                        left=gast.Name("a",
+                                       ctx=gast.Load(),
+                                       annotation=None,
+                                       type_comment=None),
                         right=gast.Constant(1, kind=None),
-                    )
-                )
+                    ))
             ],
             decorator_list=[],
             returns=None,
@@ -84,27 +87,25 @@ class LoaderTest(test.TestCase):
       def f(a):
           return (a + 1)
     """
-        self.assertEqual(textwrap.dedent(expected_source).strip(), source.strip())
+        self.assertEqual(
+            textwrap.dedent(expected_source).strip(), source.strip())
         self.assertEqual(2, module.f(1))
         with open(module.__file__, "r") as temp_output:
             self.assertEqual(
-                textwrap.dedent(expected_source).strip(), temp_output.read().strip()
-            )
+                textwrap.dedent(expected_source).strip(),
+                temp_output.read().strip())
 
     def test_load_source(self):
-        test_source = textwrap.dedent(
-            u"""
+        test_source = textwrap.dedent(u"""
       # coding=utf-8
       def f(a):
         '日本語 Δθₜ ← Δθₜ₋₁ + ∇Q(sₜ, aₜ)(rₜ + γₜ₊₁ max Q(⋅))'
         return a + 1
-    """
-        )
+    """)
         module, _ = loader.load_source(test_source, delete_on_exit=True)
         self.assertEqual(module.f(1), 2)
-        self.assertEqual(
-            module.f.__doc__, "日本語 Δθₜ ← Δθₜ₋₁ + ∇Q(sₜ, aₜ)(rₜ + γₜ₊₁ max Q(⋅))"
-        )
+        self.assertEqual(module.f.__doc__,
+                         "日本語 Δθₜ ← Δθₜ₋₁ + ∇Q(sₜ, aₜ)(rₜ + γₜ₊₁ max Q(⋅))")
 
     def test_cleanup(self):
         test_source = textwrap.dedent("")

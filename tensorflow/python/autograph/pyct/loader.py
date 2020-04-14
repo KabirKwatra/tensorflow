@@ -50,8 +50,10 @@ def load_source(source, delete_on_exit):
     """Loads the given source code as a Python module."""
     # TODO(mdan): Drop the linter verride once the CI stops running Py2.
     with tempfile.NamedTemporaryFile(  # pylint:disable=unexpected-keyword-arg
-        mode="w", suffix=".py", delete=False, encoding="utf-8"
-    ) as f:
+            mode="w",
+            suffix=".py",
+            delete=False,
+            encoding="utf-8") as f:
         module_name = os.path.basename(f.name[:-3])
         file_name = f.name
         f.write(source)
@@ -67,7 +69,10 @@ def load_source(source, delete_on_exit):
     return module, file_name
 
 
-def load_ast(nodes, indentation="  ", include_source_map=False, delete_on_exit=True):
+def load_ast(nodes,
+             indentation="  ",
+             include_source_map=False,
+             delete_on_exit=True):
     """Loads the given AST as a Python module.
 
     Compiling the AST code this way ensures that the source code is readable by
@@ -88,13 +93,14 @@ def load_ast(nodes, indentation="  ", include_source_map=False, delete_on_exit=T
       will be None.
     """
     if not isinstance(nodes, (list, tuple)):
-        nodes = (nodes,)
+        nodes = (nodes, )
 
     source = parser.unparse(nodes, indentation=indentation)
     module, _ = load_source(source, delete_on_exit)
 
     if include_source_map:
-        source_map = origin_info.create_source_map(nodes, source, module.__file__)
+        source_map = origin_info.create_source_map(nodes, source,
+                                                   module.__file__)
     else:
         source_map = None
 

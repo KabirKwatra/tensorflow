@@ -52,20 +52,23 @@ if platform.system() == "Windows":
         ToolSubst("not.exe", unresolved="fatal"),
     ]
 
-    llvm_config.config.substitutions.append(("%python", '"%s"' % (sys.executable)))
+    llvm_config.config.substitutions.append(
+        ("%python", '"%s"' % (sys.executable)))
 
-    llvm_config.add_tool_substitutions(
-        tool_patterns, [llvm_config.config.llvm_tools_dir]
-    )
+    llvm_config.add_tool_substitutions(tool_patterns,
+                                       [llvm_config.config.llvm_tools_dir])
 else:
     llvm_config.use_default_substitutions()
 
-llvm_config.config.substitutions.append(("%tfrt_bindir", "tensorflow/compiler/aot"))
+llvm_config.config.substitutions.append(
+    ("%tfrt_bindir", "tensorflow/compiler/aot"))
 
 # Tweak the PATH to include the tools dir.
 llvm_config.with_environment("PATH", config.llvm_tools_dir, append_path=True)
 
-tool_dirs = config.mlir_tf_tools_dirs + [config.mlir_tools_dir, config.llvm_tools_dir]
+tool_dirs = config.mlir_tf_tools_dirs + [
+    config.mlir_tools_dir, config.llvm_tools_dir
+]
 tool_names = [
     "mlir-opt",
     "mlir-translate",
