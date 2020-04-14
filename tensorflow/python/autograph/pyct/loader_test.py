@@ -31,14 +31,12 @@ from tensorflow.python.util import tf_inspect
 
 
 class LoaderTest(test.TestCase):
-
     def test_parse_load_identity(self):
-
         def test_fn(x):
             a = True
-            b = ''
+            b = ""
             if a:
-                b = (x + 1)
+                b = x + 1
             return b
 
         node, _ = parser.parse_entity(test_fn, future_features=())
@@ -47,36 +45,38 @@ class LoaderTest(test.TestCase):
         # astunparse uses fixed 4-space indenting.
         self.assertEqual(
             textwrap.dedent(tf_inspect.getsource(test_fn)),
-            tf_inspect.getsource(module.test_fn).replace('    ', '  '))
+            tf_inspect.getsource(module.test_fn).replace("    ", "  "),
+        )
 
     def test_load_ast(self):
         node = gast.FunctionDef(
-            name='f',
+            name="f",
             args=gast.arguments(
                 args=[
-                    gast.Name(
-                        'a', ctx=gast.Param(), annotation=None, type_comment=None)
+                    gast.Name("a", ctx=gast.Param(), annotation=None, type_comment=None)
                 ],
                 posonlyargs=[],
                 vararg=None,
                 kwonlyargs=[],
                 kw_defaults=[],
                 kwarg=None,
-                defaults=[]),
+                defaults=[],
+            ),
             body=[
                 gast.Return(
                     gast.BinOp(
                         op=gast.Add(),
                         left=gast.Name(
-                            'a',
-                            ctx=gast.Load(),
-                            annotation=None,
-                            type_comment=None),
-                        right=gast.Constant(1, kind=None)))
+                            "a", ctx=gast.Load(), annotation=None, type_comment=None
+                        ),
+                        right=gast.Constant(1, kind=None),
+                    )
+                )
             ],
             decorator_list=[],
             returns=None,
-            type_comment=None)
+            type_comment=None,
+        )
 
         module, source, _ = loader.load_ast(node)
 
@@ -85,34 +85,35 @@ class LoaderTest(test.TestCase):
       def f(a):
           return (a + 1)
     """
-        self.assertEqual(
-            textwrap.dedent(expected_source).strip(),
-            source.strip())
+        self.assertEqual(textwrap.dedent(expected_source).strip(), source.strip())
         self.assertEqual(2, module.f(1))
-        with open(module.__file__, 'r') as temp_output:
+        with open(module.__file__, "r") as temp_output:
             self.assertEqual(
-                textwrap.dedent(expected_source).strip(),
-                temp_output.read().strip())
+                textwrap.dedent(expected_source).strip(), temp_output.read().strip()
+            )
 
     def test_load_source(self):
-        test_source = textwrap.dedent(u"""
+        test_source = textwrap.dedent(
+            u"""
       # coding=utf-8
       def f(a):
         '日本語 Δθₜ ← Δθₜ₋₁ + ∇Q(sₜ, aₜ)(rₜ + γₜ₊₁ max Q(⋅))'
         return a + 1
-    """)
+    """
+        )
         module, _ = loader.load_source(test_source, delete_on_exit=True)
         self.assertEqual(module.f(1), 2)
         self.assertEqual(
-            module.f.__doc__, '日本語 Δθₜ ← Δθₜ₋₁ + ∇Q(sₜ, aₜ)(rₜ + γₜ₊₁ max Q(⋅))')
+            module.f.__doc__, "日本語 Δθₜ ← Δθₜ₋₁ + ∇Q(sₜ, aₜ)(rₜ + γₜ₊₁ max Q(⋅))"
+        )
 
     def test_cleanup(self):
-        test_source = textwrap.dedent('')
+        test_source = textwrap.dedent("")
         _, filename = loader.load_source(test_source, delete_on_exit=True)
         # Clean up the file before loader.py tries to remove it, to check that the
         # latter can deal with that situation.
         os.unlink(filename)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
