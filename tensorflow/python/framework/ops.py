@@ -36,14 +36,8 @@ from tensorflow.core.framework import node_def_pb2
 from tensorflow.core.framework import op_def_pb2
 from tensorflow.core.framework import versions_pb2
 from tensorflow.core.protobuf import config_pb2
-
-# pywrap_tensorflow must be imported first to avoid profobuf issues.
-# (b/143110113)
-# pylint: disable=invalid-import-order,g-bad-import-order,unused-import
 from tensorflow.python import pywrap_tensorflow
 from tensorflow.python import pywrap_tfe
-
-# pylint: enable=invalid-import-order,g-bad-import-order,unused-import
 from tensorflow.python import tf2
 from tensorflow.python.client import pywrap_tf_session
 from tensorflow.python.eager import context
@@ -79,6 +73,10 @@ from tensorflow.python.util.deprecation import deprecated_args
 from tensorflow.python.util.lazy_loader import LazyLoader
 from tensorflow.python.util.tf_export import kwarg_only
 from tensorflow.python.util.tf_export import tf_export
+# pywrap_tensorflow must be imported first to avoid profobuf issues.
+# (b/143110113)
+# pylint: disable=invalid-import-order,g-bad-import-order,unused-import
+# pylint: enable=invalid-import-order,g-bad-import-order,unused-import
 
 ag_ctx = LazyLoader("ag_ctx", globals(), "tensorflow.python.autograph.core.ag_ctx")
 
