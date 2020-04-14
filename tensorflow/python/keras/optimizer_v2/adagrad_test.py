@@ -48,7 +48,12 @@ def adagrad_update_numpy(param, accum, g_t, lr=0.001, epsilon=1e-7):
     return param_t, accum_t
 
 
-def sparse_adagrad_update_numpy(param, accum, gindexs, gvalues, lr=0.001, epsilon=1e-7):
+def sparse_adagrad_update_numpy(param,
+                                accum,
+                                gindexs,
+                                gvalues,
+                                lr=0.001,
+                                epsilon=1e-7):
     accum_t = copy.deepcopy(accum)
     param_t = copy.deepcopy(param)
     # first loop accumulates repeated indices if necessary.
@@ -60,8 +65,7 @@ def sparse_adagrad_update_numpy(param, accum, gindexs, gvalues, lr=0.001, epsilo
         gindex = gindexs[i]
         gvalue = gvalues[i]
         param_t[gindex] = param_t[gindex] - lr * gvalue / (
-            np.sqrt(accum_t[gindex]) + epsilon
-        )
+            np.sqrt(accum_t[gindex]) + epsilon)
     return param_t, accum_t
 
 
@@ -90,8 +94,7 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
 
             if not context.executing_eagerly():
                 ada_update = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 self.evaluate(variables.global_variables_initializer())
 
             # Fetch params to validate initial values
@@ -104,15 +107,16 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 if not context.executing_eagerly():
                     self.evaluate(ada_update)
                 else:
-                    ada_opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
+                    ada_opt.apply_gradients(zip([grads0, grads1],
+                                                [var0, var1]))
                 var0_np, accum0_np = adagrad_update_numpy(
-                    var0_np, accum0_np, grads0_np, 3.0
-                )
+                    var0_np, accum0_np, grads0_np, 3.0)
                 var1_np, accum1_np = adagrad_update_numpy(
-                    var1_np, accum1_np, grads1_np, 3.0
-                )
-                self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
-                self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
+                    var1_np, accum1_np, grads1_np, 3.0)
+                self.assertAllCloseAccordingToType(var0_np,
+                                                   self.evaluate(var0))
+                self.assertAllCloseAccordingToType(var1_np,
+                                                   self.evaluate(var1))
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def testBasic(self):
@@ -143,8 +147,7 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
 
             if not context.executing_eagerly():
                 ada_update = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 self.evaluate(variables.global_variables_initializer())
 
             # Fetch params to validate initial values
@@ -157,16 +160,17 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 if not context.executing_eagerly():
                     self.evaluate(ada_update)
                 else:
-                    ada_opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
+                    ada_opt.apply_gradients(zip([grads0, grads1],
+                                                [var0, var1]))
                 lr_np = learning_rate / (1 + decay * t)
                 var0_np, accum0_np = adagrad_update_numpy(
-                    var0_np, accum0_np, grads0_np, lr_np
-                )
+                    var0_np, accum0_np, grads0_np, lr_np)
                 var1_np, accum1_np = adagrad_update_numpy(
-                    var1_np, accum1_np, grads1_np, lr_np
-                )
-                self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
-                self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
+                    var1_np, accum1_np, grads1_np, lr_np)
+                self.assertAllCloseAccordingToType(var0_np,
+                                                   self.evaluate(var0))
+                self.assertAllCloseAccordingToType(var1_np,
+                                                   self.evaluate(var1))
 
     def testBasicWithLargeEpsilon(self):
         var0_np = np.array([1.0, 2.0])
@@ -186,7 +190,8 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
         accum1_np = np.array([0.1, 0.1])
 
         if not context.executing_eagerly():
-            ada_update = ada_opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
+            ada_update = ada_opt.apply_gradients(
+                zip([grads0, grads1], [var0, var1]))
             self.evaluate(variables.global_variables_initializer())
 
         # Fetch params to validate initial values
@@ -200,12 +205,10 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 self.evaluate(ada_update)
             else:
                 ada_opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
-            var0_np, accum0_np = adagrad_update_numpy(
-                var0_np, accum0_np, grads0_np, 3.0, 1.0
-            )
-            var1_np, accum1_np = adagrad_update_numpy(
-                var1_np, accum1_np, grads1_np, 3.0, 1.0
-            )
+            var0_np, accum0_np = adagrad_update_numpy(var0_np, accum0_np,
+                                                      grads0_np, 3.0, 1.0)
+            var1_np, accum1_np = adagrad_update_numpy(var1_np, accum1_np,
+                                                      grads1_np, 3.0, 1.0)
             self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
             self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
 
@@ -223,8 +226,7 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
             learning_rate = 3.0
             decay = 0.5
             lr_schedule = learning_rate_schedule.InverseTimeDecay(
-                learning_rate, decay_steps=1.0, decay_rate=decay
-            )
+                learning_rate, decay_steps=1.0, decay_rate=decay)
 
             ada_opt = adagrad.Adagrad(lr_schedule)
 
@@ -233,8 +235,7 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
 
             if not context.executing_eagerly():
                 ada_update = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 self.evaluate(variables.global_variables_initializer())
 
             # Fetch params to validate initial values
@@ -247,44 +248,42 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 if not context.executing_eagerly():
                     self.evaluate(ada_update)
                 else:
-                    ada_opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
+                    ada_opt.apply_gradients(zip([grads0, grads1],
+                                                [var0, var1]))
                 lr_np = learning_rate / (1 + decay * t)
                 var0_np, accum0_np = adagrad_update_numpy(
-                    var0_np, accum0_np, grads0_np, lr_np
-                )
+                    var0_np, accum0_np, grads0_np, lr_np)
                 var1_np, accum1_np = adagrad_update_numpy(
-                    var1_np, accum1_np, grads1_np, lr_np
-                )
-                self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
-                self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
+                    var1_np, accum1_np, grads1_np, lr_np)
+                self.assertAllCloseAccordingToType(var0_np,
+                                                   self.evaluate(var0))
+                self.assertAllCloseAccordingToType(var1_np,
+                                                   self.evaluate(var1))
 
     def testMinimizeSparseResourceVariable(self):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
         with ops.Graph().as_default():
             for dtype in _DATA_TYPES:
                 var0 = resource_variable_ops.ResourceVariable(
-                    [[1.0, 2.0], [3.0, 4.0]], dtype=dtype
-                )
+                    [[1.0, 2.0], [3.0, 4.0]], dtype=dtype)
                 x = constant_op.constant([[4.0], [5.0]], dtype=dtype)
 
                 def loss():
                     pred = math_ops.matmul(
-                        embedding_ops.embedding_lookup([var0], [0]), x
-                    )  # pylint: disable=cell-var-from-loop
+                        embedding_ops.embedding_lookup([var0], [0]), x)  # pylint: disable=cell-var-from-loop
                     return pred * pred
 
                 sgd_op = adagrad.Adagrad(1.0).minimize(loss, var_list=[var0])
                 self.evaluate(variables.global_variables_initializer())
                 # Fetch params to validate initial values
-                self.assertAllCloseAccordingToType(
-                    [[1.0, 2.0], [3.0, 4.0]], self.evaluate(var0)
-                )
+                self.assertAllCloseAccordingToType([[1.0, 2.0], [3.0, 4.0]],
+                                                   self.evaluate(var0))
                 # Run 1 step of sgd
                 self.evaluate(sgd_op)
                 # Validate updated params
-                self.assertAllCloseAccordingToType(
-                    [[0, 1], [3, 4]], self.evaluate(var0), atol=0.01
-                )
+                self.assertAllCloseAccordingToType([[0, 1], [3, 4]],
+                                                   self.evaluate(var0),
+                                                   atol=0.01)
 
     def testTensorLearningRate(self):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
@@ -302,8 +301,7 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 learning_rate = constant_op.constant(3.0)
                 ada_opt = adagrad.Adagrad(learning_rate)
                 ada_update = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 self.evaluate(variables.global_variables_initializer())
                 # Fetch params to validate initial values
                 self.assertAllClose([1.0, 2.0], self.evaluate(var0))
@@ -314,13 +312,13 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 for _ in range(3):
                     self.evaluate(ada_update)
                     var0_np, accum0_np = adagrad_update_numpy(
-                        var0_np, accum0_np, grads0_np, learning_rate
-                    )
+                        var0_np, accum0_np, grads0_np, learning_rate)
                     var1_np, accum1_np = adagrad_update_numpy(
-                        var1_np, accum1_np, grads1_np, learning_rate
-                    )
-                    self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
-                    self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
+                        var1_np, accum1_np, grads1_np, learning_rate)
+                    self.assertAllCloseAccordingToType(var0_np,
+                                                       self.evaluate(var0))
+                    self.assertAllCloseAccordingToType(var1_np,
+                                                       self.evaluate(var1))
 
     def testSparseBasic(self):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
@@ -329,7 +327,8 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 var0_np = np.array([1.0, 1.0, 2.0], dtype=dtype.as_numpy_dtype)
                 grads0_np = np.array([0.1, 0, 0.1], dtype=dtype.as_numpy_dtype)
                 var1_np = np.array([3.0, 3.0, 4.0], dtype=dtype.as_numpy_dtype)
-                grads1_np = np.array([0.01, 0, 0.01], dtype=dtype.as_numpy_dtype)
+                grads1_np = np.array([0.01, 0, 0.01],
+                                     dtype=dtype.as_numpy_dtype)
 
                 var0 = resource_variable_ops.ResourceVariable(var0_np)
                 var1 = resource_variable_ops.ResourceVariable(var1_np)
@@ -348,16 +347,17 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 learning_rate = 3.0
                 ada_opt = adagrad.Adagrad(learning_rate)
                 ada_update = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 self.evaluate(variables.global_variables_initializer())
 
                 # Fetch params to validate initial values
                 self.assertAllClose([1.0, 1.0, 2.0], self.evaluate(var0))
                 self.assertAllClose([3.0, 3.0, 4.0], self.evaluate(var1))
 
-                accum0_np = np.array([0.1, 0.1, 0.1], dtype=dtype.as_numpy_dtype)
-                accum1_np = np.array([0.1, 0.1, 0.1], dtype=dtype.as_numpy_dtype)
+                accum0_np = np.array([0.1, 0.1, 0.1],
+                                     dtype=dtype.as_numpy_dtype)
+                accum1_np = np.array([0.1, 0.1, 0.1],
+                                     dtype=dtype.as_numpy_dtype)
 
                 # Run 3 step of sgd
                 for _ in range(3):
@@ -377,8 +377,10 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                         grads1_np[grads1_np_indices],
                         learning_rate,
                     )
-                    self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
-                    self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
+                    self.assertAllCloseAccordingToType(var0_np,
+                                                       self.evaluate(var0))
+                    self.assertAllCloseAccordingToType(var1_np,
+                                                       self.evaluate(var1))
 
     def testSparseSingleVarDim(self):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
@@ -416,7 +418,8 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                         learning_rate,
                         epsilon=1.0,
                     )
-                    self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
+                    self.assertAllCloseAccordingToType(var0_np,
+                                                       self.evaluate(var0))
 
     def testSparseRepeatedIndices(self):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
@@ -425,13 +428,12 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 var_np = np.array([[1.0], [2.0]], dtype=dtype.as_numpy_dtype)
 
                 repeated_index_update_var = resource_variable_ops.ResourceVariable(
-                    var_np, dtype=dtype
-                )
+                    var_np, dtype=dtype)
                 aggregated_update_var = resource_variable_ops.ResourceVariable(
-                    var_np, dtype=dtype
-                )
+                    var_np, dtype=dtype)
                 grad_repeated_index = ops.IndexedSlices(
-                    constant_op.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
+                    constant_op.constant([0.1, 0.1], shape=[2, 1],
+                                         dtype=dtype),
                     constant_op.constant([1, 1]),
                     constant_op.constant([2, 1]),
                 )
@@ -440,12 +442,12 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                     constant_op.constant([1]),
                     constant_op.constant([2, 1]),
                 )
-                repeated_update = adagrad.Adagrad(3.0).apply_gradients(
-                    [(grad_repeated_index, repeated_index_update_var)]
-                )
-                aggregated_update = adagrad.Adagrad(3.0).apply_gradients(
-                    [(grad_aggregated, aggregated_update_var)]
-                )
+                repeated_update = adagrad.Adagrad(3.0).apply_gradients([
+                    (grad_repeated_index, repeated_index_update_var)
+                ])
+                aggregated_update = adagrad.Adagrad(3.0).apply_gradients([
+                    (grad_aggregated, aggregated_update_var)
+                ])
                 self.evaluate(variables.global_variables_initializer())
                 self.assertAllClose(
                     self.evaluate(aggregated_update_var),
@@ -464,39 +466,32 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
         with ops.Graph().as_default():
             for dtype in _DATA_TYPES:
                 var_repeated = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype
-                )
+                    [1.0, 2.0], dtype=dtype)
 
                 def loss_repeated():
                     return math_ops.reduce_sum(  # pylint: disable=g-long-lambda
-                        embedding_ops.embedding_lookup(var_repeated, [0, 0])
-                    )  # pylint: disable=cell-var-from-loop
+                        embedding_ops.embedding_lookup(var_repeated, [0, 0]))  # pylint: disable=cell-var-from-loop
 
                 var_aggregated = resource_variable_ops.ResourceVariable(
-                    [1.0, 2.0], dtype=dtype
-                )
+                    [1.0, 2.0], dtype=dtype)
 
                 def loss_aggregated():
                     return 2 * math_ops.reduce_sum(  # pylint: disable=g-long-lambda
-                        embedding_ops.embedding_lookup(var_aggregated, [0])
-                    )  # pylint: disable=cell-var-from-loop
+                        embedding_ops.embedding_lookup(var_aggregated, [0]))  # pylint: disable=cell-var-from-loop
 
                 update_op_repeated = adagrad.Adagrad(2.0).minimize(
-                    loss_repeated, var_list=[var_repeated]
-                )
+                    loss_repeated, var_list=[var_repeated])
                 update_op_aggregated = adagrad.Adagrad(2.0).minimize(
-                    loss_aggregated, var_list=[var_aggregated]
-                )
+                    loss_aggregated, var_list=[var_aggregated])
                 self.evaluate(variables.global_variables_initializer())
                 self.assertAllCloseAccordingToType(
-                    self.evaluate(var_repeated), self.evaluate(var_aggregated)
-                )
+                    self.evaluate(var_repeated), self.evaluate(var_aggregated))
                 for _ in range(3):
                     self.evaluate(update_op_repeated)
                     self.evaluate(update_op_aggregated)
                     self.assertAllCloseAccordingToType(
-                        self.evaluate(var_repeated), self.evaluate(var_aggregated)
-                    )
+                        self.evaluate(var_repeated),
+                        self.evaluate(var_aggregated))
 
     def testSparseStability(self):
         # TODO(tanzheny, omalleyt): Fix test in eager mode.
@@ -504,30 +499,26 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
             for dtype in [dtypes.half]:
                 shape = [1, 6]
                 var0_np = np.array(
-                    [
-                        [
-                            0.00872496,
-                            -0.106952,
-                            0.110467,
-                            0.226505,
-                            -0.0147257,
-                            -0.0105945,
-                        ]
-                    ],
+                    [[
+                        0.00872496,
+                        -0.106952,
+                        0.110467,
+                        0.226505,
+                        -0.0147257,
+                        -0.0105945,
+                    ]],
                     dtype=dtype.as_numpy_dtype,
                 )
                 var0 = resource_variable_ops.ResourceVariable(var0_np)
                 grads0_np = np.array(
-                    [
-                        [
-                            -5.91278e-05,
-                            5.31673e-05,
-                            -2.5779e-06,
-                            4.29153e-05,
-                            -8.4877e-05,
-                            -9.48906e-05,
-                        ]
-                    ],
+                    [[
+                        -5.91278e-05,
+                        5.31673e-05,
+                        -2.5779e-06,
+                        4.29153e-05,
+                        -8.4877e-05,
+                        -9.48906e-05,
+                    ]],
                     dtype=dtype.as_numpy_dtype,
                 )
                 grads0 = ops.IndexedSlices(
@@ -543,21 +534,17 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                     self.evaluate(init)
                     self.evaluate(ada_update)
                     self.assertAllCloseAccordingToType(
-                        np.array([[0.1, 0.1, 0.1, 0.1, 0.1, 0.1]]), self.evaluate(slot0)
-                    )
+                        np.array([[0.1, 0.1, 0.1, 0.1, 0.1, 0.1]]),
+                        self.evaluate(slot0))
                     self.assertAllCloseAccordingToType(
-                        np.array(
-                            [
-                                [
-                                    0.00891194,
-                                    -0.10712013,
-                                    0.11047515,
-                                    0.22636929,
-                                    -0.0144573,
-                                    -0.01029443,
-                                ]
-                            ]
-                        ),
+                        np.array([[
+                            0.00891194,
+                            -0.10712013,
+                            0.11047515,
+                            0.22636929,
+                            -0.0144573,
+                            -0.01029443,
+                        ]]),
                         self.evaluate(var0),
                     )
 
@@ -580,11 +567,9 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 # Apply the optimizer twice.  Both applications will use
                 # the same accums.
                 ada_update1 = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 ada_update2 = ada_opt.apply_gradients(
-                    zip([grads0, grads1], [var0, var1])
-                )
+                    zip([grads0, grads1], [var0, var1]))
                 slot0 = ada_opt.get_slot(var0, "accumulator")
                 self.assertEqual(slot0.shape, var0.shape)
                 slot1 = ada_opt.get_slot(var1, "accumulator")
@@ -603,13 +588,13 @@ class AdagradOptimizerTest(test.TestCase, parameterized.TestCase):
                 accum1_np = np.array([0.1, 0.1], dtype=dtype.as_numpy_dtype)
                 for _ in range(3):
                     var0_np, accum0_np = adagrad_update_numpy(
-                        var0_np, accum0_np, grads0_np, learning_rate
-                    )
+                        var0_np, accum0_np, grads0_np, learning_rate)
                     var1_np, accum1_np = adagrad_update_numpy(
-                        var1_np, accum1_np, grads1_np, learning_rate
-                    )
-                self.assertAllCloseAccordingToType(var0_np, self.evaluate(var0))
-                self.assertAllCloseAccordingToType(var1_np, self.evaluate(var1))
+                        var1_np, accum1_np, grads1_np, learning_rate)
+                self.assertAllCloseAccordingToType(var0_np,
+                                                   self.evaluate(var0))
+                self.assertAllCloseAccordingToType(var1_np,
+                                                   self.evaluate(var1))
 
     def testConstructAdagradWithLR(self):
         opt = adagrad.Adagrad(lr=1.0)
