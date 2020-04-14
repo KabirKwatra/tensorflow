@@ -22,17 +22,15 @@ namespace tflite {
 namespace benchmark {
 
 int Main(int argc, char** argv) {
-    TFLITE_LOG(INFO) << "STARTING!";
-    BenchmarkTfLiteModel benchmark;
-    if (benchmark.Run(argc, argv) != kTfLiteOk) {
-        TFLITE_LOG(ERROR) << "Benchmarking failed.";
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
+  TFLITE_LOG(INFO) << "STARTING!";
+  BenchmarkTfLiteModel benchmark;
+  if (benchmark.Run(argc, argv) != kTfLiteOk) {
+    TFLITE_LOG(ERROR) << "Benchmarking failed.";
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
 }
 }  // namespace benchmark
 }  // namespace tflite
 
-int main(int argc, char** argv) {
-    return tflite::benchmark::Main(argc, argv);
-}
+int main(int argc, char** argv) { return tflite::benchmark::Main(argc, argv); }
