@@ -222,4 +222,3 @@ func @const_high_rank_tensor() -> tensor<2x3xi32> {
   // CHECK-NEXT: return [[CST]]
   return %0 : tensor<2x3xi32>
 }
-

@@ -428,7 +428,7 @@ func @neg(%input: memref<2x2xi32>,
 
 // CHECK: linalg.generic
 // CHECK-NEXT: ^bb0(%[[OPERAND_IN:.*]]: i32, %[[RESULT_OUT:.*]]):
-// CHECK-NEXT:   %[[L0:.*]] = constant 0 : i32 
+// CHECK-NEXT:   %[[L0:.*]] = constant 0 : i32
 // CHECK-NEXT:   %[[RESULT:.*]] = subi %[[L0]], %[[OPERAND_IN]] : i32
 // CHECK-NEXT:   linalg.yield %[[RESULT]] : i32
 
