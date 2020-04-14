@@ -34,87 +34,89 @@ from tensorflow.python.eager import test
         ],
         mode=["eager", "graph"]))
 class OneDeviceStrategyTest(
-    strategy_test_lib.DistributionTestBase,
-    strategy_test_lib.OneDeviceDistributionTestBase):
+        strategy_test_lib.DistributionTestBase,
+        strategy_test_lib.OneDeviceDistributionTestBase):
 
-  def testMinimizeLoss(self, distribution):
-    if context.executing_eagerly():
-      self._test_minimize_loss_eager(distribution)
-    else:
-      self._test_minimize_loss_graph(distribution)
+    def testMinimizeLoss(self, distribution):
+        if context.executing_eagerly():
+            self._test_minimize_loss_eager(distribution)
+        else:
+            self._test_minimize_loss_graph(distribution)
 
-  def testReplicaId(self, distribution):
-    self._test_replica_id(distribution)
+    def testReplicaId(self, distribution):
+        self._test_replica_id(distribution)
 
-  def testCallAndMergeExceptions(self, distribution):
-    self._test_call_and_merge_exceptions(distribution)
+    def testCallAndMergeExceptions(self, distribution):
+        self._test_call_and_merge_exceptions(distribution)
 
-  def testReplicateDataset(self, distribution):
-    if tf2.enabled() and not context.executing_eagerly():
-      self.skipTest("Skipping test since we do not support graph mode in TF 2")
-    dataset_fn = lambda: dataset_ops.Dataset.range(10)
-    expected_values = [[i] for i in range(10)]
-    input_fn = self._input_fn_to_test_input_context(
-        dataset_fn,
-        expected_num_replicas_in_sync=1,
-        expected_num_input_pipelines=1,
-        expected_input_pipeline_id=0)
-    self._test_input_fn_iterable(distribution, input_fn, expected_values)
+    def testReplicateDataset(self, distribution):
+        if tf2.enabled() and not context.executing_eagerly():
+            self.skipTest(
+                "Skipping test since we do not support graph mode in TF 2")
 
-  def testMakeInputFnIteratorWithDataset(self, distribution):
-    dataset_fn = lambda: dataset_ops.Dataset.range(10)
-    expected_values = [[i] for i in range(10)]
-    input_fn = self._input_fn_to_test_input_context(
-        dataset_fn,
-        expected_num_replicas_in_sync=1,
-        expected_num_input_pipelines=1,
-        expected_input_pipeline_id=0)
-    iterator = distribution.make_input_fn_iterator(input_fn)
-    self._test_input_fn_iterator(
-        iterator, distribution.extended.worker_devices, expected_values)
+        def dataset_fn(): return dataset_ops.Dataset.range(10)
+        expected_values = [[i] for i in range(10)]
+        input_fn = self._input_fn_to_test_input_context(
+            dataset_fn,
+            expected_num_replicas_in_sync=1,
+            expected_num_input_pipelines=1,
+            expected_input_pipeline_id=0)
+        self._test_input_fn_iterable(distribution, input_fn, expected_values)
 
-  def testMakeInputFnIteratorWithCallable(self, distribution):
-    def fn():
-      dataset = dataset_ops.Dataset.range(10)
-      it = dataset_ops.make_one_shot_iterator(dataset)
-      return it.get_next
-    expected_values = [[i] for i in range(10)]
-    input_fn = self._input_fn_to_test_input_context(
-        fn,
-        expected_num_replicas_in_sync=1,
-        expected_num_input_pipelines=1,
-        expected_input_pipeline_id=0)
-    iterator = distribution.make_input_fn_iterator(input_fn)
-    self._test_input_fn_iterator(
-        iterator, distribution.extended.worker_devices, expected_values,
-        test_reinitialize=False, ignore_order=True)
+    def testMakeInputFnIteratorWithDataset(self, distribution):
+        def dataset_fn(): return dataset_ops.Dataset.range(10)
+        expected_values = [[i] for i in range(10)]
+        input_fn = self._input_fn_to_test_input_context(
+            dataset_fn,
+            expected_num_replicas_in_sync=1,
+            expected_num_input_pipelines=1,
+            expected_input_pipeline_id=0)
+        iterator = distribution.make_input_fn_iterator(input_fn)
+        self._test_input_fn_iterator(
+            iterator, distribution.extended.worker_devices, expected_values)
 
-  def testNumpyDataset(self, distribution):
-    self._test_numpy_dataset(distribution)
+    def testMakeInputFnIteratorWithCallable(self, distribution):
+        def fn():
+            dataset = dataset_ops.Dataset.range(10)
+            it = dataset_ops.make_one_shot_iterator(dataset)
+            return it.get_next
+        expected_values = [[i] for i in range(10)]
+        input_fn = self._input_fn_to_test_input_context(
+            fn,
+            expected_num_replicas_in_sync=1,
+            expected_num_input_pipelines=1,
+            expected_input_pipeline_id=0)
+        iterator = distribution.make_input_fn_iterator(input_fn)
+        self._test_input_fn_iterator(
+            iterator, distribution.extended.worker_devices, expected_values,
+            test_reinitialize=False, ignore_order=True)
 
-  def testRun(self, distribution):
-    self._test_run(distribution)
+    def testNumpyDataset(self, distribution):
+        self._test_numpy_dataset(distribution)
 
-  def testAllReduceSum(self, distribution):
-    self._test_all_reduce_sum(distribution)
+    def testRun(self, distribution):
+        self._test_run(distribution)
 
-  def testAllReduceSumGradients(self, distribution):
-    self._test_all_reduce_sum_gradients(distribution)
+    def testAllReduceSum(self, distribution):
+        self._test_all_reduce_sum(distribution)
 
-  def testAllReduceSumGradientTape(self, distribution):
-    self._test_all_reduce_sum_gradient_tape(distribution)
+    def testAllReduceSumGradients(self, distribution):
+        self._test_all_reduce_sum_gradients(distribution)
 
-  def testAllReduceMean(self, distribution):
-    self._test_all_reduce_mean(distribution)
+    def testAllReduceSumGradientTape(self, distribution):
+        self._test_all_reduce_sum_gradient_tape(distribution)
 
-  def testAllReduceMeanGradients(self, distribution):
-    self._test_all_reduce_mean_gradients(distribution)
+    def testAllReduceMean(self, distribution):
+        self._test_all_reduce_mean(distribution)
 
-  def testAllReduceMeanGradientTape(self, distribution):
-    self._test_all_reduce_mean_gradient_tape(distribution)
+    def testAllReduceMeanGradients(self, distribution):
+        self._test_all_reduce_mean_gradients(distribution)
 
-  def testTrainableVariables(self, distribution):
-    self._test_trainable_variable(distribution)
+    def testAllReduceMeanGradientTape(self, distribution):
+        self._test_all_reduce_mean_gradient_tape(distribution)
+
+    def testTrainableVariables(self, distribution):
+        self._test_trainable_variable(distribution)
 
 
 @combinations.generate(
@@ -125,15 +127,16 @@ class OneDeviceStrategyTest(
         ],
         mode=["eager", "graph"]))
 class OneDeviceStrategyOnRemoteWorkerTest(
-    strategy_test_lib.DistributionTestBase,
-    strategy_test_lib.OneDeviceDistributionTestBase):
+        strategy_test_lib.DistributionTestBase,
+        strategy_test_lib.OneDeviceDistributionTestBase):
 
-  def testDeviceAndInputDeviceAreColocated(self, distribution):
-    self._test_device_and_input_device_are_colocated(distribution)
+    def testDeviceAndInputDeviceAreColocated(self, distribution):
+        self._test_device_and_input_device_are_colocated(distribution)
 
-  def testDeviceAndInputDeviceAreColocatedWithFunction(self, distribution):
-    self._test_device_and_input_device_are_colocated_with_function(distribution)
+    def testDeviceAndInputDeviceAreColocatedWithFunction(self, distribution):
+        self._test_device_and_input_device_are_colocated_with_function(
+            distribution)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
