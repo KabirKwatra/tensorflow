@@ -30,13 +30,15 @@ from tensorflow.python.eager import test
     combinations.combine(
         distribution=[
             strategy_combinations.one_device_strategy,
-            strategy_combinations.one_device_strategy_gpu
+            strategy_combinations.one_device_strategy_gpu,
         ],
-        mode=["eager", "graph"]))
+        mode=["eager", "graph"],
+    )
+)
 class OneDeviceStrategyTest(
-        strategy_test_lib.DistributionTestBase,
-        strategy_test_lib.OneDeviceDistributionTestBase):
-
+    strategy_test_lib.DistributionTestBase,
+    strategy_test_lib.OneDeviceDistributionTestBase,
+):
     def testMinimizeLoss(self, distribution):
         if context.executing_eagerly():
             self._test_minimize_loss_eager(distribution)
@@ -51,45 +53,57 @@ class OneDeviceStrategyTest(
 
     def testReplicateDataset(self, distribution):
         if tf2.enabled() and not context.executing_eagerly():
-            self.skipTest(
-                "Skipping test since we do not support graph mode in TF 2")
+            self.skipTest("Skipping test since we do not support graph mode in TF 2")
 
-        def dataset_fn(): return dataset_ops.Dataset.range(10)
+        def dataset_fn():
+            return dataset_ops.Dataset.range(10)
+
         expected_values = [[i] for i in range(10)]
         input_fn = self._input_fn_to_test_input_context(
             dataset_fn,
             expected_num_replicas_in_sync=1,
             expected_num_input_pipelines=1,
-            expected_input_pipeline_id=0)
+            expected_input_pipeline_id=0,
+        )
         self._test_input_fn_iterable(distribution, input_fn, expected_values)
 
     def testMakeInputFnIteratorWithDataset(self, distribution):
-        def dataset_fn(): return dataset_ops.Dataset.range(10)
+        def dataset_fn():
+            return dataset_ops.Dataset.range(10)
+
         expected_values = [[i] for i in range(10)]
         input_fn = self._input_fn_to_test_input_context(
             dataset_fn,
             expected_num_replicas_in_sync=1,
             expected_num_input_pipelines=1,
-            expected_input_pipeline_id=0)
+            expected_input_pipeline_id=0,
+        )
         iterator = distribution.make_input_fn_iterator(input_fn)
         self._test_input_fn_iterator(
-            iterator, distribution.extended.worker_devices, expected_values)
+            iterator, distribution.extended.worker_devices, expected_values
+        )
 
     def testMakeInputFnIteratorWithCallable(self, distribution):
         def fn():
             dataset = dataset_ops.Dataset.range(10)
             it = dataset_ops.make_one_shot_iterator(dataset)
             return it.get_next
+
         expected_values = [[i] for i in range(10)]
         input_fn = self._input_fn_to_test_input_context(
             fn,
             expected_num_replicas_in_sync=1,
             expected_num_input_pipelines=1,
-            expected_input_pipeline_id=0)
+            expected_input_pipeline_id=0,
+        )
         iterator = distribution.make_input_fn_iterator(input_fn)
         self._test_input_fn_iterator(
-            iterator, distribution.extended.worker_devices, expected_values,
-            test_reinitialize=False, ignore_order=True)
+            iterator,
+            distribution.extended.worker_devices,
+            expected_values,
+            test_reinitialize=False,
+            ignore_order=True,
+        )
 
     def testNumpyDataset(self, distribution):
         self._test_numpy_dataset(distribution)
@@ -123,19 +137,20 @@ class OneDeviceStrategyTest(
     combinations.combine(
         distribution=[
             strategy_combinations.one_device_strategy_on_worker_1,
-            strategy_combinations.one_device_strategy_gpu_on_worker_1
+            strategy_combinations.one_device_strategy_gpu_on_worker_1,
         ],
-        mode=["eager", "graph"]))
+        mode=["eager", "graph"],
+    )
+)
 class OneDeviceStrategyOnRemoteWorkerTest(
-        strategy_test_lib.DistributionTestBase,
-        strategy_test_lib.OneDeviceDistributionTestBase):
-
+    strategy_test_lib.DistributionTestBase,
+    strategy_test_lib.OneDeviceDistributionTestBase,
+):
     def testDeviceAndInputDeviceAreColocated(self, distribution):
         self._test_device_and_input_device_are_colocated(distribution)
 
     def testDeviceAndInputDeviceAreColocatedWithFunction(self, distribution):
-        self._test_device_and_input_device_are_colocated_with_function(
-            distribution)
+        self._test_device_and_input_device_are_colocated_with_function(distribution)
 
 
 if __name__ == "__main__":
