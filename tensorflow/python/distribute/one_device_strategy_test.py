@@ -33,11 +33,10 @@ from tensorflow.python.eager import test
             strategy_combinations.one_device_strategy_gpu,
         ],
         mode=["eager", "graph"],
-    )
-)
+    ))
 class OneDeviceStrategyTest(
-    strategy_test_lib.DistributionTestBase,
-    strategy_test_lib.OneDeviceDistributionTestBase,
+        strategy_test_lib.DistributionTestBase,
+        strategy_test_lib.OneDeviceDistributionTestBase,
 ):
     def testMinimizeLoss(self, distribution):
         if context.executing_eagerly():
@@ -53,7 +52,8 @@ class OneDeviceStrategyTest(
 
     def testReplicateDataset(self, distribution):
         if tf2.enabled() and not context.executing_eagerly():
-            self.skipTest("Skipping test since we do not support graph mode in TF 2")
+            self.skipTest(
+                "Skipping test since we do not support graph mode in TF 2")
 
         def dataset_fn():
             return dataset_ops.Dataset.range(10)
@@ -79,9 +79,9 @@ class OneDeviceStrategyTest(
             expected_input_pipeline_id=0,
         )
         iterator = distribution.make_input_fn_iterator(input_fn)
-        self._test_input_fn_iterator(
-            iterator, distribution.extended.worker_devices, expected_values
-        )
+        self._test_input_fn_iterator(iterator,
+                                     distribution.extended.worker_devices,
+                                     expected_values)
 
     def testMakeInputFnIteratorWithCallable(self, distribution):
         def fn():
@@ -140,17 +140,17 @@ class OneDeviceStrategyTest(
             strategy_combinations.one_device_strategy_gpu_on_worker_1,
         ],
         mode=["eager", "graph"],
-    )
-)
+    ))
 class OneDeviceStrategyOnRemoteWorkerTest(
-    strategy_test_lib.DistributionTestBase,
-    strategy_test_lib.OneDeviceDistributionTestBase,
+        strategy_test_lib.DistributionTestBase,
+        strategy_test_lib.OneDeviceDistributionTestBase,
 ):
     def testDeviceAndInputDeviceAreColocated(self, distribution):
         self._test_device_and_input_device_are_colocated(distribution)
 
     def testDeviceAndInputDeviceAreColocatedWithFunction(self, distribution):
-        self._test_device_and_input_device_are_colocated_with_function(distribution)
+        self._test_device_and_input_device_are_colocated_with_function(
+            distribution)
 
 
 if __name__ == "__main__":
