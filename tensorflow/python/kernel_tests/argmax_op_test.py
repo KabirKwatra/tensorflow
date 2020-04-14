@@ -29,9 +29,13 @@ from tensorflow.python.platform import test
 
 
 class ArgMaxTest(test.TestCase):
-    def _testArg(
-        self, method, x, axis, expected_values, use_gpu=False, expected_err_re=None
-    ):
+    def _testArg(self,
+                 method,
+                 x,
+                 axis,
+                 expected_values,
+                 use_gpu=False,
+                 expected_err_re=None):
         with self.session(use_gpu=use_gpu):
             ans = method(x, axis=axis)
             if expected_err_re is None:
@@ -44,11 +48,17 @@ class ArgMaxTest(test.TestCase):
                 with self.assertRaisesOpError(expected_err_re):
                     self.evaluate(ans)
 
-    def _testBothArg(self, method, x, axis, expected_values, expected_err_re=None):
+    def _testBothArg(self,
+                     method,
+                     x,
+                     axis,
+                     expected_values,
+                     expected_err_re=None):
         self._testArg(method, x, axis, expected_values, True, expected_err_re)
         # Compilation time is too large with XLA/CPU autojit.
         if not test_util.is_xla_enabled():
-            self._testArg(method, x, axis, expected_values, False, expected_err_re)
+            self._testArg(method, x, axis, expected_values, False,
+                          expected_err_re)
 
     def _testBasic(self, dtype):
         x = np.arange(200, dtype=np.float32).astype(np.bool_).astype(dtype)
@@ -68,9 +78,8 @@ class ArgMaxTest(test.TestCase):
 
     def _testDim(self, dtype):
         shape = (3, 2, 4, 5, 6, 3, 7)
-        x = np.arange(
-            functools.reduce(lambda x, y: x * y, shape), dtype=np.float32
-        ).astype(dtype)
+        x = np.arange(functools.reduce(lambda x, y: x * y, shape),
+                      dtype=np.float32).astype(dtype)
         np.random.shuffle(x)
         x = x.reshape(shape)
 
@@ -125,8 +134,7 @@ class ArgMaxTest(test.TestCase):
         with self.cached_session():
             for op in math_ops.argmin, math_ops.argmax:
                 with self.assertRaisesOpError(
-                    r"Reduction axis 0 is empty in shape \[0\]"
-                ):
+                        r"Reduction axis 0 is empty in shape \[0\]"):
                     op([], 0).eval()
 
     @test_util.run_deprecated_v1
