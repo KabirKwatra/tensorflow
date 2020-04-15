@@ -14,7 +14,6 @@
 # ==============================================================================
 """Tests for pfor and for_loop."""
 # pylint: disable=g-direct-tensorflow-import
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,8 +21,8 @@ from __future__ import print_function
 import functools
 import time
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.core.example import example_pb2
 from tensorflow.core.example import feature_pb2
