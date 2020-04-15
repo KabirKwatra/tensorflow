@@ -29,7 +29,7 @@ class ModuleTest(tf.test.TestCase):
         self.assertEmpty(m.variables)
         self.assertLen(m.submodules, 2)
 
-        inputs = tf.keras.layers.Input((1,))
+        inputs = tf.keras.layers.Input((1, ))
         m.a(inputs)
         m.b(inputs)
 
@@ -42,17 +42,16 @@ class ModuleTest(tf.test.TestCase):
 
     def test_model_discover_submodule(self):
         m = tf.keras.models.Sequential(
-            layers=[tf.keras.layers.Dense(1), tf.keras.layers.Dense(2)]
-        )
+            layers=[tf.keras.layers.Dense(1),
+                    tf.keras.layers.Dense(2)])
 
         self.assertEqual(m.submodules, (m.layers[0], m.layers[1]))
-        m(tf.keras.layers.Input((1,)))
+        m(tf.keras.layers.Input((1, )))
         self.assertLen(m.variables, 4)
 
     def test_model_wrapped_in_module_discovers_submodules(self):
         linear = tf.keras.models.Sequential(
-            [tf.keras.layers.Dense(units=1, input_shape=[1])]
-        )
+            [tf.keras.layers.Dense(units=1, input_shape=[1])])
         linear.compile(optimizer="sgd", loss="mean_squared_error")
         m = tf.Module()
         m.l = linear

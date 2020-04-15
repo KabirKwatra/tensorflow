@@ -62,7 +62,8 @@ class TestModuleNaming(test_util.TensorFlowTestCase):
         mod = SubclassedReturnsNameScopeModule()
         for _ in range(3):
             self.assertEqual(mod.alternative_forward(), mod.name_scope.name)
-            self.assertEqual(mod.alternative_alternative_forward(), mod.name_scope.name)
+            self.assertEqual(mod.alternative_alternative_forward(),
+                             mod.name_scope.name)
 
     def test_submodule_created_late(self):
         m = TreeModule()
@@ -191,7 +192,8 @@ class VariableNamingTest(test_util.TensorFlowTestCase):
         mod = RecursiveModule(3)
         self.assertEqual(mod.w.name, "badger/mushroom:0")
         self.assertEqual(mod.child.w.name, "badger/badger/mushroom:0")
-        self.assertEqual(mod.child.child.w.name, "badger/badger/badger/mushroom:0")
+        self.assertEqual(mod.child.child.w.name,
+                         "badger/badger/badger/mushroom:0")
 
 
 class NameScopeTest(test_util.TensorFlowTestCase):
@@ -221,13 +223,16 @@ class VariableTrackingTest(test_util.TensorFlowTestCase):
         m = RecursiveModule(3)
         self.assertEqual(m.variables, (m.w, m.child.w, m.child.child.w))
         self.assertEqual(m.child.variables, (m.child.w, m.child.child.w))
-        self.assertEqual(m.child.child.variables, (m.child.child.w,))
+        self.assertEqual(m.child.child.variables, (m.child.child.w, ))
 
     def test_trainable_variables(self):
         m = RecursiveModule(3)
-        self.assertEqual(m.trainable_variables, (m.w, m.child.w, m.child.child.w))
-        self.assertEqual(m.child.trainable_variables, (m.child.w, m.child.child.w))
-        self.assertEqual(m.child.child.trainable_variables, (m.child.child.w,))
+        self.assertEqual(m.trainable_variables,
+                         (m.w, m.child.w, m.child.child.w))
+        self.assertEqual(m.child.trainable_variables,
+                         (m.child.w, m.child.child.w))
+        self.assertEqual(m.child.child.trainable_variables,
+                         (m.child.child.w, ))
 
     def test_trainable_variables_ignores_non_trainable(self):
         m = RecursiveModule(3, trainable=False)
@@ -237,14 +242,12 @@ class VariableTrackingTest(test_util.TensorFlowTestCase):
 
     def test_supports_distributed_variables(self):
         mirrored = distributed_values.MirroredVariable(
-            None, [variables.Variable(1.0)], variables.VariableAggregation.SUM
-        )
-        tpu = tpu_values.TPUMirroredVariable(
-            strategy=None, values=[variables.Variable(42.0)], aggregation=None
-        )
+            None, [variables.Variable(1.0)], variables.VariableAggregation.SUM)
+        tpu = tpu_values.TPUMirroredVariable(strategy=None,
+                                             values=[variables.Variable(42.0)],
+                                             aggregation=None)
         aggregating = distributed_values.AggregatingVariable(
-            strategy=None, v=variables.Variable(1.0), aggregation=None
-        )
+            strategy=None, v=variables.Variable(1.0), aggregation=None)
 
         m = module.Module()
         m.a = mirrored
@@ -276,12 +279,10 @@ class ForwardMethodsTest(test_util.TensorFlowTestCase):
 
     def testEntersNameScope_call(self):
         mod = ModuleWithFunctionAnnotatedCall()
-        self.assertEqual(
-            self.evaluate(mod.forward()), b"module_with_function_annotated_call/"
-        )
-        self.assertEqual(
-            self.evaluate(mod.forward_ag()), b"module_with_function_annotated_call/"
-        )
+        self.assertEqual(self.evaluate(mod.forward()),
+                         b"module_with_function_annotated_call/")
+        self.assertEqual(self.evaluate(mod.forward_ag()),
+                         b"module_with_function_annotated_call/")
 
     def testEntersNameScope_concreteFunction(self):
         mod = ModuleWithFunctionAnnotatedCall()
@@ -337,7 +338,9 @@ class RecursiveModule(module.Module):
             self.child = None
             if depth > 1:
                 self.child = RecursiveModule(depth - 1, trainable=trainable)
-            self.w = variables.Variable(1.0, trainable=trainable, name="mushroom")
+            self.w = variables.Variable(1.0,
+                                        trainable=trainable,
+                                        name="mushroom")
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -350,7 +353,7 @@ class AbstractModule(module.Module):
 class ConcreteModule(AbstractModule):
     @module.Module.with_name_scope
     def __call__(self, x):
-        return x ** 2, get_name_scope()
+        return x**2, get_name_scope()
 
 
 class TreeModule(module.Module):
@@ -439,7 +442,8 @@ def mk_index_dict(v):
 
 
 class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
-    @parameterized.parameters(lambda v: NamedPair(*v), list, tuple, mk_index_dict)
+    @parameterized.parameters(lambda v: NamedPair(*v), list, tuple,
+                              mk_index_dict)
     def test_flatten(self, container_type):
         parent = SimpleModule(container_type=container_type)
         child = parent.c
@@ -451,14 +455,18 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
 
         self.assertEqual(
             list(parent._flatten(predicate=is_member)),
-            [parent.a[0], parent.a[1], parent.z, child.a[0], child.a[1], child.z],
+            [
+                parent.a[0], parent.a[1], parent.z, child.a[0], child.a[1],
+                child.z
+            ],
         )
 
     def test_attribute_traversal_key(self):
         mod = LayerModule()
         self.assertEqual(
             mod.variables,
-            mod._trainable_variables + mod._non_trainable_variables + [mod._bonus],
+            mod._trainable_variables + mod._non_trainable_variables +
+            [mod._bonus],
         )
 
     def test_attributes_to_ignore(self):
@@ -467,8 +475,7 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
                 itertools.chain(
                     ("dangerous_submodule", "dangerous_variable"),
                     module.Module._TF_MODULE_IGNORED_PROPERTIES,
-                )
-            )
+                ))
 
         mod = DangerousModule()
         mod.dangerous_submodule = module.Module()
@@ -486,12 +493,13 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
         mod.encoder.w = [({"k": mod.w}, {"k": mod.w})]
         mod.decoder = mod.encoder
 
-        state_dict = dict(mod._flatten(with_path=True, predicate=module._is_variable))
+        state_dict = dict(
+            mod._flatten(with_path=True, predicate=module._is_variable))
 
         self.assertEqual(
             state_dict,
             {
-                ("w",): mod.w,
+                ("w", ): mod.w,
                 ("encoder", "w", 0, 0, "k"): mod.encoder.w[0][0]["k"],
                 ("encoder", "w", 0, 1, "k"): mod.encoder.w[0][1]["k"],
                 ("decoder", "w", 0, 0, "k"): mod.decoder.w[0][0]["k"],
@@ -511,7 +519,8 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
 
         m = module.Module()
         m.layers = {non_orderable(): None, non_orderable(): None}
-        with self.assertRaisesRegexp(ValueError, "Error processing property 'layers'"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "Error processing property 'layers'"):
             m.variables  # pylint: disable=pointless-statement
 
 
@@ -531,14 +540,15 @@ class LayerModule(module.Module):
     @property
     def variables(self):
         def key_function(name):
-            indexes = {"_trainable_variables": 0, "_non_trainable_variables": 1}
+            indexes = {
+                "_trainable_variables": 0,
+                "_non_trainable_variables": 1
+            }
             return indexes.get(name, 2), name
 
         return list(
-            self._flatten(
-                predicate=module._is_variable, attribute_traversal_key=key_function
-            )
-        )
+            self._flatten(predicate=module._is_variable,
+                          attribute_traversal_key=key_function))
 
 
 class MemberType(object):
