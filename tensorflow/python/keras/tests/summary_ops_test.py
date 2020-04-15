@@ -50,18 +50,21 @@ class SummaryOpsTest(test_util.TensorFlowTestCase):
 
     @test_util.run_v2_only
     def testKerasModel(self):
-        model = Sequential(
-            [Dense(10, input_shape=(100,)), Activation("relu", name="my_relu")]
-        )
+        model = Sequential([
+            Dense(10, input_shape=(100, )),
+            Activation("relu", name="my_relu")
+        ])
         event = self.keras_model(name="my_name", data=model, step=1)
         first_val = event.summary.value[0]
-        self.assertEqual(model.to_json(), first_val.tensor.string_val[0].decode())
+        self.assertEqual(model.to_json(),
+                         first_val.tensor.string_val[0].decode())
 
     @test_util.run_v2_only
     def testKerasModel_usesDefaultStep(self):
-        model = Sequential(
-            [Dense(10, input_shape=(100,)), Activation("relu", name="my_relu")]
-        )
+        model = Sequential([
+            Dense(10, input_shape=(100, )),
+            Activation("relu", name="my_relu")
+        ])
         try:
             summary_ops.set_step(42)
             event = self.keras_model(name="my_name", data=model)
@@ -75,7 +78,7 @@ class SummaryOpsTest(test_util.TensorFlowTestCase):
         class SimpleSubclass(Model):
             def __init__(self):
                 super(SimpleSubclass, self).__init__(name="subclass")
-                self.dense = Dense(10, input_shape=(100,))
+                self.dense = Dense(10, input_shape=(100, ))
                 self.activation = Activation("relu", name="my_relu")
 
             def call(self, inputs):
@@ -85,11 +88,9 @@ class SummaryOpsTest(test_util.TensorFlowTestCase):
         model = SimpleSubclass()
         with test.mock.patch.object(logging, "warn") as mock_log:
             self.assertFalse(
-                summary_ops.keras_model(name="my_name", data=model, step=1)
-            )
-            self.assertRegexpMatches(
-                str(mock_log.call_args), "Model failed to serialize as JSON."
-            )
+                summary_ops.keras_model(name="my_name", data=model, step=1))
+            self.assertRegexpMatches(str(mock_log.call_args),
+                                     "Model failed to serialize as JSON.")
 
     @test_util.run_v2_only
     def testKerasModel_otherExceptions(self):
@@ -99,8 +100,8 @@ class SummaryOpsTest(test_util.TensorFlowTestCase):
             with test.mock.patch.object(logging, "warn") as mock_log:
                 mock_to_json.side_effect = Exception("oops")
                 self.assertFalse(
-                    summary_ops.keras_model(name="my_name", data=model, step=1)
-                )
+                    summary_ops.keras_model(name="my_name", data=model,
+                                            step=1))
                 self.assertRegexpMatches(
                     str(mock_log.call_args),
                     "Model failed to serialize as JSON. Ignoring... oops",
