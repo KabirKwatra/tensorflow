@@ -38,7 +38,6 @@ from tensorflow.python.platform import test
 
 
 class TestModuleNaming(test_util.TensorFlowTestCase):
-
     def test_single_name(self):
         mod = module.Module(name="simple")
         self.assertEqual(mod.name, "simple")
@@ -64,8 +63,7 @@ class TestModuleNaming(test_util.TensorFlowTestCase):
         mod = SubclassedReturnsNameScopeModule()
         for _ in range(3):
             self.assertEqual(mod.alternative_forward(), mod.name_scope.name)
-            self.assertEqual(mod.alternative_alternative_forward(),
-                             mod.name_scope.name)
+            self.assertEqual(mod.alternative_alternative_forward(), mod.name_scope.name)
 
     def test_submodule_created_late(self):
         m = TreeModule()
@@ -166,7 +164,6 @@ class TestModuleNaming(test_util.TensorFlowTestCase):
         scope_names = []
 
         class GetAttrModule(module.Module):
-
             def __getattr__(self, name):
                 scope_names.append((name, get_name_scope()))
                 return super(GetAttrModule, self).__getattr__(name)
@@ -180,7 +177,6 @@ class TestModuleNaming(test_util.TensorFlowTestCase):
         scope_names = []
 
         class GetAttributeModule(module.Module):
-
             def __getattribute__(self, name):
                 scope_names.append((name, get_name_scope()))
                 return super(GetAttributeModule, self).__getattribute__(name)
@@ -192,17 +188,14 @@ class TestModuleNaming(test_util.TensorFlowTestCase):
 
 
 class VariableNamingTest(test_util.TensorFlowTestCase):
-
     def test_variable_names(self):
         mod = RecursiveModule(3)
         self.assertEqual(mod.w.name, "badger/mushroom:0")
         self.assertEqual(mod.child.w.name, "badger/badger/mushroom:0")
-        self.assertEqual(mod.child.child.w.name,
-                         "badger/badger/badger/mushroom:0")
+        self.assertEqual(mod.child.child.w.name, "badger/badger/badger/mushroom:0")
 
 
 class NameScopeTest(test_util.TensorFlowTestCase):
-
     @test_util.run_deprecated_v1
     def test_not_memoized_in_tf1(self):
         if tf2.enabled():
@@ -225,7 +218,6 @@ class NameScopeTest(test_util.TensorFlowTestCase):
 
 
 class VariableTrackingTest(test_util.TensorFlowTestCase):
-
     def test_variables(self):
         m = RecursiveModule(3)
         self.assertEqual(m.variables, (m.w, m.child.w, m.child.child.w))
@@ -234,10 +226,8 @@ class VariableTrackingTest(test_util.TensorFlowTestCase):
 
     def test_trainable_variables(self):
         m = RecursiveModule(3)
-        self.assertEqual(m.trainable_variables,
-                         (m.w, m.child.w, m.child.child.w))
-        self.assertEqual(m.child.trainable_variables,
-                         (m.child.w, m.child.child.w))
+        self.assertEqual(m.trainable_variables, (m.w, m.child.w, m.child.child.w))
+        self.assertEqual(m.child.trainable_variables, (m.child.w, m.child.child.w))
         self.assertEqual(m.child.child.trainable_variables, (m.child.child.w,))
 
     def test_trainable_variables_ignores_non_trainable(self):
@@ -248,11 +238,14 @@ class VariableTrackingTest(test_util.TensorFlowTestCase):
 
     def test_supports_distributed_variables(self):
         mirrored = distributed_values.MirroredVariable(
-            None, [variables.Variable(1.)], variables.VariableAggregation.SUM)
+            None, [variables.Variable(1.0)], variables.VariableAggregation.SUM
+        )
         tpu = tpu_values.TPUMirroredVariable(
-            strategy=None, values=[variables.Variable(42.)], aggregation=None)
+            strategy=None, values=[variables.Variable(42.0)], aggregation=None
+        )
         aggregating = distributed_values.AggregatingVariable(
-            strategy=None, v=variables.Variable(1.), aggregation=None)
+            strategy=None, v=variables.Variable(1.0), aggregation=None
+        )
 
         m = module.Module()
         m.a = mirrored
@@ -262,7 +255,6 @@ class VariableTrackingTest(test_util.TensorFlowTestCase):
 
 
 class ModuleTrackingTest(test_util.TensorFlowTestCase):
-
     def test_submodules(self):
         m = RecursiveModule(3)
         self.assertEqual(list(m.submodules), [m.child, m.child.child])
@@ -278,7 +270,6 @@ class ModuleTrackingTest(test_util.TensorFlowTestCase):
 
 
 class ForwardMethodsTest(test_util.TensorFlowTestCase):
-
     def testFunctionType(self):
         mod = ModuleWithFunctionAnnotatedCall()
         self.assertIsInstance(mod.forward, def_function.Function)
@@ -286,21 +277,26 @@ class ForwardMethodsTest(test_util.TensorFlowTestCase):
 
     def testEntersNameScope_call(self):
         mod = ModuleWithFunctionAnnotatedCall()
-        self.assertEqual(self.evaluate(mod.forward()),
-                         b"module_with_function_annotated_call/")
-        self.assertEqual(self.evaluate(mod.forward_ag()),
-                         b"module_with_function_annotated_call/")
+        self.assertEqual(
+            self.evaluate(mod.forward()), b"module_with_function_annotated_call/"
+        )
+        self.assertEqual(
+            self.evaluate(mod.forward_ag()), b"module_with_function_annotated_call/"
+        )
 
     def testEntersNameScope_concreteFunction(self):
         mod = ModuleWithFunctionAnnotatedCall()
-        self.assertEqual(self.evaluate(mod.forward.get_concrete_function()()),
-                         b"module_with_function_annotated_call/")
-        self.assertEqual(self.evaluate(mod.forward_ag.get_concrete_function()()),
-                         b"module_with_function_annotated_call/")
+        self.assertEqual(
+            self.evaluate(mod.forward.get_concrete_function()()),
+            b"module_with_function_annotated_call/",
+        )
+        self.assertEqual(
+            self.evaluate(mod.forward_ag.get_concrete_function()()),
+            b"module_with_function_annotated_call/",
+        )
 
 
 class AbcTest(test_util.TensorFlowTestCase):
-
     def testAbstract(self):
         msg = "Can't instantiate .* abstract methods"
         with self.assertRaisesRegexp(TypeError, msg):
@@ -308,8 +304,8 @@ class AbcTest(test_util.TensorFlowTestCase):
 
     def testConcrete(self):
         mod = ConcreteModule()
-        x, scope_name = mod(2.)
-        self.assertEqual(x, 4.)
+        x, scope_name = mod(2.0)
+        self.assertEqual(x, 4.0)
         self.assertEqual(scope_name, "concrete_module/")
         self.assertEqual(get_name_scope(), "")
 
@@ -325,7 +321,6 @@ class ErrorModuleError(Exception):
 
 
 class ErrorModule(module.Module):
-
     def __init__(self, call_super, raise_in_constructor=True):
         if call_super:
             super(ErrorModule, self).__init__()
@@ -337,34 +332,29 @@ class ErrorModule(module.Module):
 
 
 class RecursiveModule(module.Module):
-
     def __init__(self, depth, trainable=True):
         super(RecursiveModule, self).__init__(name="badger")
         with self.name_scope:
             self.child = None
             if depth > 1:
                 self.child = RecursiveModule(depth - 1, trainable=trainable)
-            self.w = variables.Variable(
-                1.0, trainable=trainable, name="mushroom")
+            self.w = variables.Variable(1.0, trainable=trainable, name="mushroom")
 
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractModule(module.Module):
-
     @abc.abstractmethod
     def __call__(self, x):
         pass
 
 
 class ConcreteModule(AbstractModule):
-
     @module.Module.with_name_scope
     def __call__(self, x):
         return x ** 2, get_name_scope()
 
 
 class TreeModule(module.Module):
-
     def __init__(self, name=None):
         super(TreeModule, self).__init__(name=name)
         self._leaves = []
@@ -377,7 +367,6 @@ class TreeModule(module.Module):
 
 
 class ReturnsNameScopeModule(module.Module):
-
     @module.Module.with_name_scope
     def alternative_forward(self):
         return get_name_scope()
@@ -388,28 +377,24 @@ class ReturnsNameScopeModule(module.Module):
 
 
 class SubclassedReturnsNameScopeModule(ReturnsNameScopeModule):
-
     @module.Module.with_name_scope
     def alternative_alternative_forward(self):
         return get_name_scope()
 
 
 class PropertyThrowsWhenCalledModule(module.Module):
-
     @property
     def raise_assertion_error(self):
         raise AssertionError
 
 
 class ModuleOverridingNameScope(ReturnsNameScopeModule):
-
     @property
     def name_scope(self):
         return ops.name_scope("yolo/", skip_on_eager=False)
 
 
 class ModuleWithFunctionAnnotatedCall(module.Module):
-
     @def_function.function(autograph=False)
     @module.Module.with_name_scope
     def forward(self):
@@ -422,7 +407,6 @@ class ModuleWithFunctionAnnotatedCall(module.Module):
 
 
 class PropertyModule(module.Module):
-
     def __init__(self):
         super(PropertyModule, self).__init__()
         self._setter_scope_name = None
@@ -451,11 +435,11 @@ class PropertyModule(module.Module):
 NamedPair = collections.namedtuple("NamedPair", ("first", "second"))
 
 
-def mk_index_dict(v): return dict(enumerate(v))
+def mk_index_dict(v):
+    return dict(enumerate(v))
 
 
 class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
-
     @parameterized.parameters(lambda v: NamedPair(*v), list, tuple, mk_index_dict)
     def test_flatten(self, container_type):
         parent = SimpleModule(container_type=container_type)
@@ -463,29 +447,34 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
 
         self.assertEqual(
             list(parent._flatten(recursive=False, predicate=is_member)),
-            [parent.a[0], parent.a[1], parent.z])
+            [parent.a[0], parent.a[1], parent.z],
+        )
 
         self.assertEqual(
             list(parent._flatten(predicate=is_member)),
-            [parent.a[0], parent.a[1], parent.z, child.a[0], child.a[1], child.z])
+            [parent.a[0], parent.a[1], parent.z, child.a[0], child.a[1], child.z],
+        )
 
     def test_attribute_traversal_key(self):
         mod = LayerModule()
         self.assertEqual(
             mod.variables,
-            mod._trainable_variables + mod._non_trainable_variables + [mod._bonus])
+            mod._trainable_variables + mod._non_trainable_variables + [mod._bonus],
+        )
 
     def test_attributes_to_ignore(self):
         class DangerousModule(module.Module):
-            _TF_MODULE_IGNORED_PROPERTIES = frozenset(itertools.chain(
-                ("dangerous_submodule", "dangerous_variable"),
-                module.Module._TF_MODULE_IGNORED_PROPERTIES
-            ))
+            _TF_MODULE_IGNORED_PROPERTIES = frozenset(
+                itertools.chain(
+                    ("dangerous_submodule", "dangerous_variable"),
+                    module.Module._TF_MODULE_IGNORED_PROPERTIES,
+                )
+            )
 
         mod = DangerousModule()
         mod.dangerous_submodule = module.Module()
-        mod.dangerous_variable = variables.Variable(1.)
-        mod.normal_variable = variables.Variable(2.)
+        mod.dangerous_variable = variables.Variable(1.0)
+        mod.normal_variable = variables.Variable(2.0)
 
         self.assertEmpty(mod.submodules)
         self.assertLen(mod.variables, 1)
@@ -493,23 +482,27 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
 
     def test_with_path(self):
         mod = module.Module()
-        mod.w = variables.Variable(1.)
+        mod.w = variables.Variable(1.0)
         mod.encoder = module.Module()
         mod.encoder.w = [({"k": mod.w}, {"k": mod.w})]
         mod.decoder = mod.encoder
 
-        state_dict = dict(
-            mod._flatten(with_path=True, predicate=module._is_variable))
+        state_dict = dict(mod._flatten(with_path=True, predicate=module._is_variable))
 
-        self.assertEqual(state_dict,
-                         {("w",): mod.w,
-                          ("encoder", "w", 0, 0, "k"): mod.encoder.w[0][0]["k"],
-                          ("encoder", "w", 0, 1, "k"): mod.encoder.w[0][1]["k"],
-                          ("decoder", "w", 0, 0, "k"): mod.decoder.w[0][0]["k"],
-                          ("decoder", "w", 0, 1, "k"): mod.decoder.w[0][1]["k"]},)
+        self.assertEqual(
+            state_dict,
+            {
+                ("w",): mod.w,
+                ("encoder", "w", 0, 0, "k"): mod.encoder.w[0][0]["k"],
+                ("encoder", "w", 0, 1, "k"): mod.encoder.w[0][1]["k"],
+                ("decoder", "w", 0, 0, "k"): mod.decoder.w[0][0]["k"],
+                ("decoder", "w", 0, 1, "k"): mod.decoder.w[0][1]["k"],
+            },
+        )
 
     def test_raises_error_with_path(self):
         if six.PY2:
+
             class NonOrderable(object):
                 __lt__ = None
 
@@ -519,45 +512,43 @@ class FlattenTest(parameterized.TestCase, test_util.TensorFlowTestCase):
 
         m = module.Module()
         m.layers = {non_orderable(): None, non_orderable(): None}
-        with self.assertRaisesRegexp(ValueError,
-                                     "Error processing property 'layers'"):
+        with self.assertRaisesRegexp(ValueError, "Error processing property 'layers'"):
             m.variables  # pylint: disable=pointless-statement
 
 
 class LayerModule(module.Module):
-
     def __init__(self):
         super(LayerModule, self).__init__()
         self._trainable_variables = [
-            variables.Variable(1., name="a"),
-            variables.Variable(2., name="b"),
+            variables.Variable(1.0, name="a"),
+            variables.Variable(2.0, name="b"),
         ]
         self._non_trainable_variables = [
-            variables.Variable(3., name="c"),
-            variables.Variable(4., name="d"),
+            variables.Variable(3.0, name="c"),
+            variables.Variable(4.0, name="d"),
         ]
-        self._bonus = variables.Variable(5., name="e")
+        self._bonus = variables.Variable(5.0, name="e")
 
     @property
     def variables(self):
         def key_function(name):
-            indexes = {"_trainable_variables": 0,
-                       "_non_trainable_variables": 1}
+            indexes = {"_trainable_variables": 0, "_non_trainable_variables": 1}
             return indexes.get(name, 2), name
 
         return list(
             self._flatten(
-                predicate=module._is_variable,
-                attribute_traversal_key=key_function))
+                predicate=module._is_variable, attribute_traversal_key=key_function
+            )
+        )
 
 
 class MemberType(object):
     """A simple type to search for."""
+
     pass
 
 
 class SimpleModule(module.Module):
-
     def __init__(self, create_child=True, container_type=list):
         super(SimpleModule, self).__init__()
         self.z = MemberType()
@@ -566,7 +557,8 @@ class SimpleModule(module.Module):
             self.c = SimpleModule(create_child=False)
 
 
-def is_member(v): return isinstance(v, MemberType)
+def is_member(v):
+    return isinstance(v, MemberType)
 
 
 if __name__ == "__main__":
