@@ -40,7 +40,6 @@ class TestKerasModelClass(tf.keras.Model):
 
 
 class GradientsTest(tf.test.TestCase):
-
     def _TestVariablesGradient(self, inputs, test_model, vars_to_grad):
         """Returns gradients of `test_model` with respect to `vars_to_grad`."""
 
@@ -63,16 +62,18 @@ class GradientsTest(tf.test.TestCase):
         test_input = tf.constant(tf.zeros((10, 10), dtype=np.float32))
         # Ensures keras model is initialized.
         test_model(test_input)  # pylint: disable=not-callable
-        grads_re, grads = self._TestVariablesGradient(test_input, test_model,
-                                                      test_input)
+        grads_re, grads = self._TestVariablesGradient(
+            test_input, test_model, test_input
+        )
 
         grads_re = self.evaluate(grads_re)
         grads = self.evaluate(grads)
         for g, g_re in zip(grads, grads_re):
             self.assertAllClose(g, g_re)
 
-        grads_re, grads = self._TestVariablesGradient(test_input, test_model,
-                                                      test_model.variables)
+        grads_re, grads = self._TestVariablesGradient(
+            test_input, test_model, test_model.variables
+        )
 
         grads_re = self.evaluate(grads_re)
         grads = self.evaluate(grads)
