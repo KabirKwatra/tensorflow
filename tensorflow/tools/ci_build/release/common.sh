@@ -81,7 +81,7 @@ function install_bazelisk {
 # Install the given bazel version on linux
 function update_bazel_linux {
   if [[ -z "$1" ]]; then
-    BAZEL_VERSION=${LATEST_BAZEL_VERSION}
+    BAZEL_VERSION=$LATEST_BAZEL_VERSION
   else
     BAZEL_VERSION=$1
   fi
@@ -89,10 +89,10 @@ function update_bazel_linux {
   mkdir ~/bazel
 
   pushd ~/bazel
-  readable_run wget https://github.com/bazelbuild/bazel/releases/download/"${BAZEL_VERSION}"/bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh
+  readable_run wget https://github.com/bazelbuild/bazel/releases/download/"$BAZEL_VERSION"/bazel-"$BAZEL_VERSION"-installer-linux-x86_64.sh
   chmod +x bazel-*.sh
-  ./bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh --user
-  rm bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh
+  ./bazel-"$BAZEL_VERSION"-installer-linux-x86_64.sh --user
+  rm bazel-"$BAZEL_VERSION"-installer-linux-x86_64.sh
   popd
 
   PATH="/home/kbuilder/bin:$PATH"
@@ -131,21 +131,21 @@ function install_pip_deps {
 
   # LINT.IfChange(ubuntu_pip_installations)
   # TODO(aselle): Change all these to be --user instead of sudo.
-  ${SUDO_CMD} ${PIP_CMD} install astunparse==1.6.3
-  ${SUDO_CMD} ${PIP_CMD} install keras_preprocessing==1.1.0 --no-deps
-  "${PIP_CMD}" install numpy==1.16.0 --user
-  "${PIP_CMD}" install PyYAML==3.13 --user
-  ${SUDO_CMD} ${PIP_CMD} install gast==0.3.3
-  ${SUDO_CMD} ${PIP_CMD} install h5py==2.10.0
-  ${SUDO_CMD} ${PIP_CMD} install six==1.12.0
-  ${SUDO_CMD} ${PIP_CMD} install grpcio
-  ${SUDO_CMD} ${PIP_CMD} install portpicker
-  ${SUDO_CMD} ${PIP_CMD} install scipy
-  ${SUDO_CMD} ${PIP_CMD} install scikit-learn
-  ${SUDO_CMD} ${PIP_CMD} install --upgrade tb-nightly
-  ${PIP_CMD} install --user --upgrade attrs
-  ${PIP_CMD} install --user --upgrade tf-estimator-nightly
-  ${PIP_CMD} install --user --upgrade "future>=0.17.1"
+  "$SUDO_CMD" "$PIP_CMD" install astunparse==1.6.3
+  "$SUDO_CMD" "$PIP_CMD" install keras_preprocessing==1.1.0 --no-deps
+  "$PIP_CMD" install numpy==1.16.0 --user
+  "$PIP_CMD" install PyYAML==3.13 --user
+  "$SUDO_CMD" "$PIP_CMD" install gast==0.3.3
+  "$SUDO_CMD" "$PIP_CMD" install h5py==2.10.0
+  "$SUDO_CMD" "$PIP_CMD" install six==1.12.0
+  "$SUDO_CMD" "$PIP_CMD" install grpcio
+  "$SUDO_CMD" "$PIP_CMD" install portpicker
+  "$SUDO_CMD" "$PIP_CMD" install scipy
+  "$SUDO_CMD" "$PIP_CMD" install scikit-learn
+  "$SUDO_CMD" "$PIP_CMD" install --upgrade tb-nightly
+  "$PIP_CMD" install --user --upgrade attrs
+  "$PIP_CMD" install --user --upgrade tf-estimator-nightly
+  "$PIP_CMD" install --user --upgrade "future>=0.17.1"
   # LINT.ThenChange(:ubuntu_16_pip_installations)
 }
 
@@ -163,21 +163,21 @@ function install_ubuntu_16_pip_deps {
   done
 
   # LINT.IfChange(ubuntu_16_pip_installations)
-  "${PIP_CMD}" install astunparse==1.6.3 --user
-  "${PIP_CMD}" install --user --upgrade attrs
-  "${PIP_CMD}" install keras_preprocessing==1.1.0 --no-deps --user
-  "${PIP_CMD}" install numpy==1.16.0 --user
-  "${PIP_CMD}" install --user --upgrade "future>=0.17.1"
-  "${PIP_CMD}" install gast==0.3.3 --user
-  "${PIP_CMD}" install h5py==2.10.0 --user
-  "${PIP_CMD}" install six==1.12.0 --user
-  "${PIP_CMD}" install grpcio --user
-  "${PIP_CMD}" install portpicker --user
-  "${PIP_CMD}" install scipy --user
-  "${PIP_CMD}" install scikit-learn --user
-  "${PIP_CMD}" install PyYAML==3.13 --user
-  "${PIP_CMD}" install --user --upgrade tf-estimator-nightly
-  "${PIP_CMD}" install --user --upgrade tb-nightly
+  "$PIP_CMD" install astunparse==1.6.3 --user
+  "$PIP_CMD" install --user --upgrade attrs
+  "$PIP_CMD" install keras_preprocessing==1.1.0 --no-deps --user
+  "$PIP_CMD" install numpy==1.16.0 --user
+  "$PIP_CMD" install --user --upgrade "future>=0.17.1"
+  "$PIP_CMD" install gast==0.3.3 --user
+  "$PIP_CMD" install h5py==2.10.0 --user
+  "$PIP_CMD" install six==1.12.0 --user
+  "$PIP_CMD" install grpcio --user
+  "$PIP_CMD" install portpicker --user
+  "$PIP_CMD" install scipy --user
+  "$PIP_CMD" install scikit-learn --user
+  "$PIP_CMD" install PyYAML==3.13 --user
+  "$PIP_CMD" install --user --upgrade tf-estimator-nightly
+  "$PIP_CMD" install --user --upgrade tb-nightly
   # LINT.ThenChange(:ubuntu_pip_installations)
 }
 
@@ -207,19 +207,19 @@ function install_macos_pip_deps {
    fi
 
   # TODO(aselle): Change all these to be --user instead of sudo.
-  ${SUDO_CMD} ${PIP_CMD} install --upgrade setuptools==39.1.0
-  ${SUDO_CMD} ${PIP_CMD} install keras_preprocessing==1.1.0 --no-deps
-  ${SUDO_CMD} ${PIP_CMD} install --upgrade mock portpicker scipy grpcio
-  ${SUDO_CMD} ${PIP_CMD} install six==1.12.0
-  ${SUDO_CMD} ${PIP_CMD} install scikit-learn
-  ${SUDO_CMD} ${PIP_CMD} install numpy==1.16.0
-  ${SUDO_CMD} ${PIP_CMD} install gast==0.3.3
-  ${SUDO_CMD} ${PIP_CMD} install h5py==2.10.0
-  ${SUDO_CMD} ${PIP_CMD} install --upgrade grpcio
-  ${SUDO_CMD} ${PIP_CMD} install --upgrade tb-nightly
-  ${PIP_CMD} install --user --upgrade attrs
-  ${PIP_CMD} install --user --upgrade tf-estimator-nightly
-  ${PIP_CMD} install --user --upgrade "future>=0.17.1"
+  "$SUDO_CMD" "$PIP_CMD" install --upgrade setuptools==39.1.0
+  "$SUDO_CMD" "$PIP_CMD" install keras_preprocessing==1.1.0 --no-deps
+  "$SUDO_CMD" "$PIP_CMD" install --upgrade mock portpicker scipy grpcio
+  "$SUDO_CMD" "$PIP_CMD" install six==1.12.0
+  "$SUDO_CMD" "$PIP_CMD" install scikit-learn
+  "$SUDO_CMD" "$PIP_CMD" install numpy==1.16.0
+  "$SUDO_CMD" "$PIP_CMD" install gast==0.3.3
+  "$SUDO_CMD" "$PIP_CMD" install h5py==2.10.0
+  "$SUDO_CMD" "$PIP_CMD" install --upgrade grpcio
+  "$SUDO_CMD" "$PIP_CMD" install --upgrade tb-nightly
+  "$PIP_CMD" install --user --upgrade attrs
+  "$PIP_CMD" install --user --upgrade tf-estimator-nightly
+  "$PIP_CMD" install --user --upgrade "future>=0.17.1"
 }
 
 function maybe_skip_v1 {
@@ -241,30 +241,30 @@ function copy_to_new_project_name {
   WHL_PATH="$1"
   NEW_PROJECT_NAME="$2"
 
-  ORIGINAL_WHL_NAME=$(basename "${WHL_PATH}")
-  ORIGINAL_WHL_DIR=$(realpath "$(dirname "${WHL_PATH}")")
-  ORIGINAL_PROJECT_NAME="$(echo "${ORIGINAL_WHL_NAME}" | cut -d '-' -f 1)"
-  FULL_TAG="$(echo "${ORIGINAL_WHL_NAME}" | cut -d '-' -f 2-)"
-  NEW_WHL_NAME="${NEW_PROJECT_NAME}-${FULL_TAG}"
-  VERSION="$(echo "${FULL_TAG}" | cut -d '-' -f 1)"
+  ORIGINAL_WHL_NAME=$(basename "$WHL_PATH")
+  ORIGINAL_WHL_DIR=$(realpath "$(dirname "$WHL_PATH")")
+  ORIGINAL_PROJECT_NAME="$(echo "$ORIGINAL_WHL_NAME" | cut -d '-' -f 1)"
+  FULL_TAG="$(echo "$ORIGINAL_WHL_NAME" | cut -d '-' -f 2-)"
+  NEW_WHL_NAME="$NEW_PROJECT_NAME-$FULL_TAG"
+  VERSION="$(echo "$FULL_TAG" | cut -d '-' -f 1)"
 
   TMP_DIR="$(mktemp -d)"
-  cp "${WHL_PATH}" "${TMP_DIR}"
-  pushd "${TMP_DIR}"
-  unzip -q "${ORIGINAL_WHL_NAME}"
+  cp "$WHL_PATH" "$TMP_DIR"
+  pushd "$TMP_DIR"
+  unzip -q "$ORIGINAL_WHL_NAME"
 
-  ORIGINAL_WHL_DIR_PREFIX="${ORIGINAL_PROJECT_NAME}-${VERSION}"
-  NEW_WHL_DIR_PREFIX="${NEW_PROJECT_NAME}-${VERSION}"
-  mv "${ORIGINAL_WHL_DIR_PREFIX}.dist-info" "${NEW_WHL_DIR_PREFIX}.dist-info"
-  mv "${ORIGINAL_WHL_DIR_PREFIX}.data" "${NEW_WHL_DIR_PREFIX}.data" || echo
-  sed -i.bak "s/${ORIGINAL_PROJECT_NAME}/${NEW_PROJECT_NAME}/g" "${NEW_WHL_DIR_PREFIX}.dist-info/RECORD"
+  ORIGINAL_WHL_DIR_PREFIX="$ORIGINAL_PROJECT_NAME-$VERSION"
+  NEW_WHL_DIR_PREFIX="$NEW_PROJECT_NAME-$VERSION"
+  mv "$ORIGINAL_WHL_DIR_PREFIX.dist-info" "$NEW_WHL_DIR_PREFIX.dist-info"
+  mv "$ORIGINAL_WHL_DIR_PREFIX.data" "$NEW_WHL_DIR_PREFIX.data" || echo
+  sed -i.bak "s/$ORIGINAL_PROJECT_NAME/$NEW_PROJECT_NAME/g" "$NEW_WHL_DIR_PREFIX.dist-info/RECORD"
 
   ORIGINAL_PROJECT_NAME_DASH="${ORIGINAL_PROJECT_NAME//_/-}"
   NEW_PROJECT_NAME_DASH="${NEW_PROJECT_NAME//_/-}"
-  sed -i.bak "s/${ORIGINAL_PROJECT_NAME_DASH}/${NEW_PROJECT_NAME_DASH}/g" "${NEW_WHL_DIR_PREFIX}.dist-info/METADATA"
+  sed -i.bak "s/$ORIGINAL_PROJECT_NAME_DASH/$NEW_PROJECT_NAME_DASH/g" "$NEW_WHL_DIR_PREFIX.dist-info/METADATA"
 
-  zip -rq "${NEW_WHL_NAME}" "${NEW_WHL_DIR_PREFIX}.dist-info" "${NEW_WHL_DIR_PREFIX}.data" "tensorflow" "tensorflow_core"
-  mv "${NEW_WHL_NAME}" "${ORIGINAL_WHL_DIR}"
+  zip -rq "$NEW_WHL_NAME" "$NEW_WHL_DIR_PREFIX.dist-info" "$NEW_WHL_DIR_PREFIX.data" "tensorflow" "tensorflow_core"
+  mv "$NEW_WHL_NAME" "$ORIGINAL_WHL_DIR"
   popd
-  rm -rf "${TMP_DIR}"
+  rm -rf "$TMP_DIR"
 }
