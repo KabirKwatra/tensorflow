@@ -36,7 +36,6 @@ global_b = 17
 
 
 class ReachingDefinitionsAnalyzerTestBase(test.TestCase):
-
     def _parse_and_analyze(self, test_fn):
         # TODO(mdan): Use a custom FunctionTransformer here.
         node, source = parser.parse_entity(test_fn, future_features=())
@@ -45,14 +44,16 @@ class ReachingDefinitionsAnalyzerTestBase(test.TestCase):
             source_code=source,
             source_file=None,
             future_features=(),
-            namespace={})
+            namespace={},
+        )
         node = qual_names.resolve(node)
         namer = naming.Namer({})
         ctx = transformer.Context(entity_info, namer, None)
         node = activity.resolve(node, ctx)
         graphs = cfg.build(node)
-        node = reaching_definitions.resolve(node, ctx, graphs,
-                                            reaching_definitions.Definition)
+        node = reaching_definitions.resolve(
+            node, ctx, graphs, reaching_definitions.Definition
+        )
         return node
 
     def assertHasDefs(self, node, num):
@@ -75,20 +76,20 @@ class ReachingDefinitionsAnalyzerTestBase(test.TestCase):
         self.assertHasDefs(second, 1)
         self.assertIs(
             anno.getanno(first, anno.Static.DEFINITIONS)[0],
-            anno.getanno(second, anno.Static.DEFINITIONS)[0])
+            anno.getanno(second, anno.Static.DEFINITIONS)[0],
+        )
 
     def assertNotSameDef(self, first, second):
         self.assertHasDefs(first, 1)
         self.assertHasDefs(second, 1)
         self.assertIsNot(
             anno.getanno(first, anno.Static.DEFINITIONS)[0],
-            anno.getanno(second, anno.Static.DEFINITIONS)[0])
+            anno.getanno(second, anno.Static.DEFINITIONS)[0],
+        )
 
 
 class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
-
     def test_conditional(self):
-
         def test_fn(a, b):
             a = []
             if b:
@@ -103,10 +104,9 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[1].body[0].targets[0], 1)
         self.assertHasDefs(fn_body[2].value, 2)
 
-        self.assertHasDefinedIn(fn_body[1], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[1], ("a", "b"))
 
     def test_try_in_conditional(self):
-
         def test_fn(a, b):  # pylint:disable=unused-argument
             a = []
             if b:
@@ -119,11 +119,10 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasDefinedIn(fn_body[1], ('a', 'b'))
-        self.assertHasDefinedIn(fn_body[1].body[0], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[1], ("a", "b"))
+        self.assertHasDefinedIn(fn_body[1].body[0], ("a", "b"))
 
     def test_conditional_in_try_in_conditional(self):
-
         def test_fn(a, b):
             a = []
             if b:
@@ -137,13 +136,12 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasDefinedIn(fn_body[1], ('a', 'b'))
-        self.assertHasDefinedIn(fn_body[1].body[0], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[1], ("a", "b"))
+        self.assertHasDefinedIn(fn_body[1].body[0], ("a", "b"))
         # Note: `TestException` and `e` are not tracked.
-        self.assertHasDefinedIn(fn_body[1].body[0].body[0], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[1].body[0].body[0], ("a", "b"))
 
     def test_conditional_in_except_in_conditional(self):
-
         def test_fn(a, b):
             a = []
             if b:
@@ -157,14 +155,12 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         node = self._parse_and_analyze(test_fn)
         fn_body = node.body
 
-        self.assertHasDefinedIn(fn_body[1], ('a', 'b'))
-        self.assertHasDefinedIn(fn_body[1].body[0], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[1], ("a", "b"))
+        self.assertHasDefinedIn(fn_body[1].body[0], ("a", "b"))
         # Note: `TestException` and `e` are not tracked.
-        self.assertHasDefinedIn(
-            fn_body[1].body[0].handlers[0].body[0], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[1].body[0].handlers[0].body[0], ("a", "b"))
 
     def test_while(self):
-
         def test_fn(a):
             max(a)
             while True:
@@ -184,7 +180,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[2].value, 2)
 
     def test_while_else(self):
-
         def test_fn(x, i):
             y = 0
             while x:
@@ -207,7 +202,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[2].value.elts[1], 2)
 
     def test_for_else(self):
-
         def test_fn(x, i):
             y = 0
             for i in x:
@@ -232,7 +226,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[2].value.elts[1], 2)
 
     def test_nested_functions(self):
-
         def test_fn(a, b):
             a = []
             if b:
@@ -258,7 +251,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertSameDef(inner_fn_body[0].value, def_of_a_in_if)
 
     def test_nested_functions_isolation(self):
-
         def test_fn(a):
             a = 0
 
@@ -278,7 +270,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertNotSameDef(parent_return.value, child_return.value)
 
     def test_function_call_in_with(self):
-
         def foo(_):
             pass
 
@@ -293,7 +284,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[0].items[0].context_expr.args[0], 1)
 
     def test_mutation_subscript(self):
-
         def test_fn(a):
             l = []
             l[0] = a
@@ -309,7 +299,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertSameDef(creation, use)
 
     def test_deletion_partial(self):
-
         def test_fn(a):
             a = 0
             if a:
@@ -328,7 +317,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertSameDef(use, second_def)
 
     def test_deletion_total(self):
-
         def test_fn(a):
             if a:
                 a = 0
@@ -344,7 +332,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(use, 0)
 
     def test_replacement(self):
-
         def foo(a):
             return a
 
@@ -364,7 +351,6 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertSameDef(target, retval)
 
     def test_comprehension_leaking(self):
-
         def test_fn(a):
             _ = [x for x in a]
             return x  # pylint:disable=undefined-loop-variable
@@ -384,10 +370,10 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
             self.assertHasDefs(retval, 0)
 
     def test_function_definition(self):
-
         def test_fn():
             def a():
                 pass
+
             if a:  # pylint:disable=using-constant-test
                 a = None
             return a
@@ -399,10 +385,9 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[1].body[0].targets[0], 1)
         self.assertHasDefs(fn_body[2].value, 2)
 
-        self.assertHasDefinedIn(fn_body[1], ('a',))
+        self.assertHasDefinedIn(fn_body[1], ("a",))
 
     def test_global(self):
-
         def test_fn():
             global global_a
             global global_b
@@ -420,8 +405,8 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
 
         self.assertSameDef(fn_body[2].test, fn_body[3].value.elts[0])
 
-        self.assertHasDefinedIn(fn_body[2], ('global_a', 'global_b'))
+        self.assertHasDefinedIn(fn_body[2], ("global_a", "global_b"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

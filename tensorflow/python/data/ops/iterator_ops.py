@@ -58,7 +58,8 @@ GET_NEXT_CALL_WARNING_MESSAGE = (
     "exhaustion. If this is the case, restructure your code to call "
     "`next_element = iterator.get_next()` once outside the loop, and use "
     "`next_element` as the input to some computation that is invoked inside "
-    "the loop.")
+    "the loop."
+)
 
 # Collection of all IteratorResources in the `Graph`.
 GLOBAL_ITERATORS = "iterators"
@@ -77,8 +78,14 @@ def _device_stack_is_empty():
 class Iterator(trackable.Trackable):
     """Represents the state of iterating through a `Dataset`."""
 
-    def __init__(self, iterator_resource, initializer, output_types,
-                 output_shapes, output_classes):
+    def __init__(
+        self,
+        iterator_resource,
+        initializer,
+        output_types,
+        output_shapes,
+        output_classes,
+    ):
         """Creates a new iterator from the given iterator resource.
 
         Note: Most users will not call this initializer directly, and will
@@ -100,28 +107,28 @@ class Iterator(trackable.Trackable):
         self._iterator_resource = iterator_resource
         self._initializer = initializer
 
-        if (output_types is None or output_shapes is None
-                or output_classes is None):
-            raise ValueError("If `structure` is not specified, all of "
-                             "`output_types`, `output_shapes`, and `output_classes`"
-                             " must be specified.")
+        if output_types is None or output_shapes is None or output_classes is None:
+            raise ValueError(
+                "If `structure` is not specified, all of "
+                "`output_types`, `output_shapes`, and `output_classes`"
+                " must be specified."
+            )
         self._element_spec = structure.convert_legacy_structure(
-            output_types, output_shapes, output_classes)
-        self._flat_tensor_shapes = structure.get_flat_tensor_shapes(
-            self._element_spec)
-        self._flat_tensor_types = structure.get_flat_tensor_types(
-            self._element_spec)
+            output_types, output_shapes, output_classes
+        )
+        self._flat_tensor_shapes = structure.get_flat_tensor_shapes(self._element_spec)
+        self._flat_tensor_types = structure.get_flat_tensor_types(self._element_spec)
 
         self._string_handle = gen_dataset_ops.iterator_to_string_handle(
-            self._iterator_resource)
+            self._iterator_resource
+        )
         self._get_next_call_count = 0
         ops.add_to_collection(GLOBAL_ITERATORS, self._iterator_resource)
 
     @staticmethod
-    def from_structure(output_types,
-                       output_shapes=None,
-                       shared_name=None,
-                       output_classes=None):
+    def from_structure(
+        output_types, output_shapes=None, shared_name=None, output_classes=None
+    ):
         """Creates a new, uninitialized `Iterator` with the given structure.
 
         This iterator-constructing method can be used to create an iterator that
@@ -190,17 +197,18 @@ class Iterator(trackable.Trackable):
         output_types = nest.map_structure(dtypes.as_dtype, output_types)
         if output_shapes is None:
             output_shapes = nest.map_structure(
-                lambda _: tensor_shape.TensorShape(None), output_types)
+                lambda _: tensor_shape.TensorShape(None), output_types
+            )
         else:
-            output_shapes = nest.map_structure_up_to(output_types,
-                                                     tensor_shape.as_shape,
-                                                     output_shapes)
+            output_shapes = nest.map_structure_up_to(
+                output_types, tensor_shape.as_shape, output_shapes
+            )
         if output_classes is None:
-            output_classes = nest.map_structure(
-                lambda _: ops.Tensor, output_types)
+            output_classes = nest.map_structure(lambda _: ops.Tensor, output_types)
         nest.assert_same_structure(output_types, output_shapes)
         output_structure = structure.convert_legacy_structure(
-            output_types, output_shapes, output_classes)
+            output_types, output_shapes, output_classes
+        )
         if shared_name is None:
             shared_name = ""
         if _device_stack_is_empty():
@@ -208,25 +216,24 @@ class Iterator(trackable.Trackable):
                 iterator_resource = gen_dataset_ops.iterator_v2(
                     container="",
                     shared_name=shared_name,
-                    output_types=structure.get_flat_tensor_types(
-                        output_structure),
-                    output_shapes=structure.get_flat_tensor_shapes(
-                        output_structure))
+                    output_types=structure.get_flat_tensor_types(output_structure),
+                    output_shapes=structure.get_flat_tensor_shapes(output_structure),
+                )
         else:
             iterator_resource = gen_dataset_ops.iterator_v2(
                 container="",
                 shared_name=shared_name,
                 output_types=structure.get_flat_tensor_types(output_structure),
-                output_shapes=structure.get_flat_tensor_shapes(
-                    output_structure))
-        return Iterator(iterator_resource, None, output_types, output_shapes,
-                        output_classes)
+                output_shapes=structure.get_flat_tensor_shapes(output_structure),
+            )
+        return Iterator(
+            iterator_resource, None, output_types, output_shapes, output_classes
+        )
 
     @staticmethod
-    def from_string_handle(string_handle,
-                           output_types,
-                           output_shapes=None,
-                           output_classes=None):
+    def from_string_handle(
+        string_handle, output_types, output_shapes=None, output_classes=None
+    ):
         """Creates a new, uninitialized `Iterator` based on the given handle.
 
         This method allows you to define a "feedable" iterator where you can choose
@@ -275,33 +282,35 @@ class Iterator(trackable.Trackable):
         output_types = nest.map_structure(dtypes.as_dtype, output_types)
         if output_shapes is None:
             output_shapes = nest.map_structure(
-                lambda _: tensor_shape.TensorShape(None), output_types)
+                lambda _: tensor_shape.TensorShape(None), output_types
+            )
         else:
-            output_shapes = nest.map_structure_up_to(output_types,
-                                                     tensor_shape.as_shape,
-                                                     output_shapes)
+            output_shapes = nest.map_structure_up_to(
+                output_types, tensor_shape.as_shape, output_shapes
+            )
         if output_classes is None:
-            output_classes = nest.map_structure(
-                lambda _: ops.Tensor, output_types)
+            output_classes = nest.map_structure(lambda _: ops.Tensor, output_types)
         nest.assert_same_structure(output_types, output_shapes)
         output_structure = structure.convert_legacy_structure(
-            output_types, output_shapes, output_classes)
-        string_handle = ops.convert_to_tensor(
-            string_handle, dtype=dtypes.string)
+            output_types, output_shapes, output_classes
+        )
+        string_handle = ops.convert_to_tensor(string_handle, dtype=dtypes.string)
         if _device_stack_is_empty():
             with ops.device("/cpu:0"):
                 iterator_resource = gen_dataset_ops.iterator_from_string_handle_v2(
                     string_handle,
-                    output_types=structure.get_flat_tensor_types(
-                        output_structure),
-                    output_shapes=structure.get_flat_tensor_shapes(output_structure))
+                    output_types=structure.get_flat_tensor_types(output_structure),
+                    output_shapes=structure.get_flat_tensor_shapes(output_structure),
+                )
         else:
             iterator_resource = gen_dataset_ops.iterator_from_string_handle_v2(
                 string_handle,
                 output_types=structure.get_flat_tensor_types(output_structure),
-                output_shapes=structure.get_flat_tensor_shapes(output_structure))
-        return Iterator(iterator_resource, None, output_types, output_shapes,
-                        output_classes)
+                output_shapes=structure.get_flat_tensor_shapes(output_structure),
+            )
+        return Iterator(
+            iterator_resource, None, output_types, output_shapes, output_classes
+        )
 
     @property
     def initializer(self):
@@ -341,41 +350,49 @@ class Iterator(trackable.Trackable):
             # pylint: disable=protected-access
             dataset_output_types = nest.map_structure(
                 lambda component_spec: component_spec._to_legacy_output_types(),
-                dataset.element_spec)
+                dataset.element_spec,
+            )
             dataset_output_shapes = nest.map_structure(
                 lambda component_spec: component_spec._to_legacy_output_shapes(),
-                dataset.element_spec)
+                dataset.element_spec,
+            )
             dataset_output_classes = nest.map_structure(
                 lambda component_spec: component_spec._to_legacy_output_classes(),
-                dataset.element_spec)
+                dataset.element_spec,
+            )
             # pylint: enable=protected-access
 
             nest.assert_same_structure(self.output_types, dataset_output_types)
-            nest.assert_same_structure(
-                self.output_shapes, dataset_output_shapes)
+            nest.assert_same_structure(self.output_shapes, dataset_output_shapes)
             for iterator_class, dataset_class in zip(
-                    nest.flatten(self.output_classes),
-                    nest.flatten(dataset_output_classes)):
+                nest.flatten(self.output_classes), nest.flatten(dataset_output_classes)
+            ):
                 if iterator_class is not dataset_class:
                     raise TypeError(
                         "Expected output classes %r but got dataset with output class %r."
-                        % (self.output_classes, dataset_output_classes))
+                        % (self.output_classes, dataset_output_classes)
+                    )
             for iterator_dtype, dataset_dtype in zip(
-                    nest.flatten(self.output_types), nest.flatten(dataset_output_types)):
+                nest.flatten(self.output_types), nest.flatten(dataset_output_types)
+            ):
                 if iterator_dtype != dataset_dtype:
                     raise TypeError(
-                        "Expected output types %r but got dataset with output types %r." %
-                        (self.output_types, dataset_output_types))
+                        "Expected output types %r but got dataset with output types %r."
+                        % (self.output_types, dataset_output_types)
+                    )
             for iterator_shape, dataset_shape in zip(
-                nest.flatten(self.output_shapes), nest.flatten(
-                    dataset_output_shapes)):
+                nest.flatten(self.output_shapes), nest.flatten(dataset_output_shapes)
+            ):
                 if not iterator_shape.is_compatible_with(dataset_shape):
-                    raise TypeError("Expected output shapes compatible with %r but got "
-                                    "dataset with output shapes %r." %
-                                    (self.output_shapes, dataset_output_shapes))
+                    raise TypeError(
+                        "Expected output shapes compatible with %r but got "
+                        "dataset with output shapes %r."
+                        % (self.output_shapes, dataset_output_shapes)
+                    )
         with ops.colocate_with(self._iterator_resource):
             return gen_dataset_ops.make_iterator(
-                dataset._variant_tensor, self._iterator_resource, name=name)  # pylint: disable=protected-access
+                dataset._variant_tensor, self._iterator_resource, name=name
+            )  # pylint: disable=protected-access
 
     def get_next(self, name=None):
         """Returns a nested structure of `tf.Tensor`s representing the next element.
@@ -430,7 +447,8 @@ class Iterator(trackable.Trackable):
             self._iterator_resource,
             output_types=self._flat_tensor_types,
             output_shapes=self._flat_tensor_shapes,
-            name=name)
+            name=name,
+        )
         return structure.from_tensor_list(self._element_spec, flat_ret)
 
     def string_handle(self, name=None):
@@ -446,11 +464,13 @@ class Iterator(trackable.Trackable):
             return self._string_handle
         else:
             return gen_dataset_ops.iterator_to_string_handle(
-                self._iterator_resource, name=name)
+                self._iterator_resource, name=name
+            )
 
     @property
     @deprecation.deprecated(
-        None, "Use `tf.compat.v1.data.get_output_classes(iterator)`.")
+        None, "Use `tf.compat.v1.data.get_output_classes(iterator)`."
+    )
     def output_classes(self):
         """Returns the class of each component of an element of this iterator.
 
@@ -461,13 +481,14 @@ class Iterator(trackable.Trackable):
           component of an element of this dataset.
         """
         return nest.map_structure(
-            lambda component_spec: component_spec._to_legacy_output_classes(
-            ),  # pylint: disable=protected-access
-            self._element_spec)
+            lambda component_spec: component_spec._to_legacy_output_classes(),  # pylint: disable=protected-access
+            self._element_spec,
+        )
 
     @property
     @deprecation.deprecated(
-        None, "Use `tf.compat.v1.data.get_output_shapes(iterator)`.")
+        None, "Use `tf.compat.v1.data.get_output_shapes(iterator)`."
+    )
     def output_shapes(self):
         """Returns the shape of each component of an element of this iterator.
 
@@ -476,13 +497,12 @@ class Iterator(trackable.Trackable):
           component of an element of this dataset.
         """
         return nest.map_structure(
-            lambda component_spec: component_spec._to_legacy_output_shapes(
-            ),  # pylint: disable=protected-access
-            self._element_spec)
+            lambda component_spec: component_spec._to_legacy_output_shapes(),  # pylint: disable=protected-access
+            self._element_spec,
+        )
 
     @property
-    @deprecation.deprecated(
-        None, "Use `tf.compat.v1.data.get_output_types(iterator)`.")
+    @deprecation.deprecated(None, "Use `tf.compat.v1.data.get_output_types(iterator)`.")
     def output_types(self):
         """Returns the type of each component of an element of this iterator.
 
@@ -491,9 +511,9 @@ class Iterator(trackable.Trackable):
           of an element of this dataset.
         """
         return nest.map_structure(
-            lambda component_spec: component_spec._to_legacy_output_types(
-            ),  # pylint: disable=protected-access
-            self._element_spec)
+            lambda component_spec: component_spec._to_legacy_output_types(),  # pylint: disable=protected-access
+            self._element_spec,
+        )
 
     @property
     def element_spec(self):
@@ -506,7 +526,6 @@ class Iterator(trackable.Trackable):
         return self._element_spec
 
     def _gather_saveables_for_checkpoint(self):
-
         def _saveable_factory(name):
             return _IteratorSaveable(self._iterator_resource, name)
 
@@ -544,11 +563,13 @@ class IteratorResourceDeleter(object):
             if self._eager_mode:
                 with context.eager_mode():
                     gen_dataset_ops.delete_iterator(
-                        handle=self._handle, deleter=self._deleter)
+                        handle=self._handle, deleter=self._deleter
+                    )
             else:
                 with context.graph_mode():
                     gen_dataset_ops.delete_iterator(
-                        handle=self._handle, deleter=self._deleter)
+                        handle=self._handle, deleter=self._deleter
+                    )
 
 
 class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
@@ -560,11 +581,9 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
     in eager mode and inside of tf.functions.
     """
 
-    def __init__(self,
-                 dataset=None,
-                 components=None,
-                 element_spec=None,
-                 job_token=None):
+    def __init__(
+        self, dataset=None, components=None, element_spec=None, job_token=None
+    ):
         """Creates a new iterator from the given dataset.
 
         If `dataset` is not specified, the iterator will be created from the given
@@ -587,27 +606,33 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
             `components` and `element_spec` is provided.
         """
 
-        error_message = ("Either `dataset` or both `components` and "
-                         "`element_spec` need to be provided.")
+        error_message = (
+            "Either `dataset` or both `components` and "
+            "`element_spec` need to be provided."
+        )
 
         self._device = context.context().device_name
         self._job_token = job_token
 
         if dataset is None:
-            if (components is None or element_spec is None):
+            if components is None or element_spec is None:
                 raise ValueError(error_message)
             # pylint: disable=protected-access
             self._element_spec = element_spec
             self._flat_output_types = structure.get_flat_tensor_types(
-                self._element_spec)
+                self._element_spec
+            )
             self._flat_output_shapes = structure.get_flat_tensor_shapes(
-                self._element_spec)
+                self._element_spec
+            )
             self._iterator_resource, self._deleter = components
         else:
-            if (components is not None or element_spec is not None):
+            if components is not None or element_spec is not None:
                 raise ValueError(error_message)
-            if (_device_stack_is_empty() or
-                    context.context().device_spec.device_type != "CPU"):
+            if (
+                _device_stack_is_empty()
+                or context.context().device_spec.device_type != "CPU"
+            ):
                 with ops.device("/cpu:0"):
                     self._create_iterator(dataset)
             else:
@@ -625,26 +650,28 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
 
         ds_variant = dataset._variant_tensor
         self._element_spec = dataset.element_spec
-        self._flat_output_types = structure.get_flat_tensor_types(
-            self._element_spec)
-        self._flat_output_shapes = structure.get_flat_tensor_shapes(
-            self._element_spec)
+        self._flat_output_types = structure.get_flat_tensor_types(self._element_spec)
+        self._flat_output_shapes = structure.get_flat_tensor_shapes(self._element_spec)
         with ops.colocate_with(ds_variant):
-            self._iterator_resource, self._deleter = (
-                gen_dataset_ops.anonymous_iterator_v2(
-                    output_types=self._flat_output_types,
-                    output_shapes=self._flat_output_shapes))
+            (
+                self._iterator_resource,
+                self._deleter,
+            ) = gen_dataset_ops.anonymous_iterator_v2(
+                output_types=self._flat_output_types,
+                output_shapes=self._flat_output_shapes,
+            )
             if self._job_token is None:
-                gen_dataset_ops.make_iterator(
-                    ds_variant, self._iterator_resource)
+                gen_dataset_ops.make_iterator(ds_variant, self._iterator_resource)
             else:
                 gen_experimental_dataset_ops.make_data_service_iterator(
-                    ds_variant, self._job_token, self._iterator_resource)
+                    ds_variant, self._job_token, self._iterator_resource
+                )
             # Delete the resource when this object is deleted
             self._resource_deleter = IteratorResourceDeleter(
                 handle=self._iterator_resource,
                 device=self._device,
-                deleter=self._deleter)
+                deleter=self._deleter,
+            )
 
     def __iter__(self):
         return self
@@ -660,7 +687,8 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
                 ret = gen_dataset_ops.iterator_get_next(
                     self._iterator_resource,
                     output_types=self._flat_output_types,
-                    output_shapes=self._flat_output_shapes)
+                    output_shapes=self._flat_output_shapes,
+                )
             return structure.from_compatible_tensor_list(self._element_spec, ret)
 
         # This runs in sync mode as iterators use an error status to communicate
@@ -674,11 +702,14 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
                 ret = gen_dataset_ops.iterator_get_next(
                     self._iterator_resource,
                     output_types=self._flat_output_types,
-                    output_shapes=self._flat_output_shapes)
+                    output_shapes=self._flat_output_shapes,
+                )
 
             try:
                 # Fast path for the case `self._structure` is not a nested structure.
-                return self._element_spec._from_compatible_tensor_list(ret)  # pylint: disable=protected-access
+                return self._element_spec._from_compatible_tensor_list(
+                    ret
+                )  # pylint: disable=protected-access
             except AttributeError:
                 return structure.from_compatible_tensor_list(self._element_spec, ret)
 
@@ -695,7 +726,8 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
 
     @property
     @deprecation.deprecated(
-        None, "Use `tf.compat.v1.data.get_output_classes(iterator)`.")
+        None, "Use `tf.compat.v1.data.get_output_classes(iterator)`."
+    )
     def output_classes(self):
         """Returns the class of each component of an element of this iterator.
 
@@ -706,13 +738,14 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
           component of an element of this dataset.
         """
         return nest.map_structure(
-            lambda component_spec: component_spec._to_legacy_output_classes(
-            ),  # pylint: disable=protected-access
-            self._element_spec)
+            lambda component_spec: component_spec._to_legacy_output_classes(),  # pylint: disable=protected-access
+            self._element_spec,
+        )
 
     @property
     @deprecation.deprecated(
-        None, "Use `tf.compat.v1.data.get_output_shapes(iterator)`.")
+        None, "Use `tf.compat.v1.data.get_output_shapes(iterator)`."
+    )
     def output_shapes(self):
         """Returns the shape of each component of an element of this iterator.
 
@@ -721,13 +754,12 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
           component of an element of this dataset.
         """
         return nest.map_structure(
-            lambda component_spec: component_spec._to_legacy_output_shapes(
-            ),  # pylint: disable=protected-access
-            self._element_spec)
+            lambda component_spec: component_spec._to_legacy_output_shapes(),  # pylint: disable=protected-access
+            self._element_spec,
+        )
 
     @property
-    @deprecation.deprecated(
-        None, "Use `tf.compat.v1.data.get_output_types(iterator)`.")
+    @deprecation.deprecated(None, "Use `tf.compat.v1.data.get_output_types(iterator)`.")
     def output_types(self):
         """Returns the type of each component of an element of this iterator.
 
@@ -736,9 +768,9 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
           of an element of this dataset.
         """
         return nest.map_structure(
-            lambda component_spec: component_spec._to_legacy_output_types(
-            ),  # pylint: disable=protected-access
-            self._element_spec)
+            lambda component_spec: component_spec._to_legacy_output_types(),  # pylint: disable=protected-access
+            self._element_spec,
+        )
 
     @property
     def element_spec(self):
@@ -766,7 +798,6 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
         return self._next_internal()
 
     def _gather_saveables_for_checkpoint(self):
-
         def _saveable_factory(name):
             """Returns a SaveableObject for serialization/deserialization."""
             policy = None
@@ -774,9 +805,8 @@ class OwnedIterator(trackable.Trackable, composite_tensor.CompositeTensor):
                 policy = self._dataset.options().experimental_external_state_policy
             if policy:
                 return _IteratorSaveable(
-                    self._iterator_resource,
-                    name,
-                    external_state_policy=policy)
+                    self._iterator_resource, name, external_state_policy=policy
+                )
             else:
                 return _IteratorSaveable(self._iterator_resource, name)
 
@@ -807,13 +837,15 @@ class IteratorSpec(type_spec.TypeSpec):
         )
 
     def _to_components(self, value):
-        return (value._iterator_resource, value._deleter)  # pylint: disable=protected-access
+        return (
+            value._iterator_resource,
+            value._deleter,
+        )  # pylint: disable=protected-access
 
     def _from_components(self, components):
         return OwnedIterator(
-            dataset=None,
-            components=components,
-            element_spec=self._element_spec)
+            dataset=None, components=components, element_spec=self._element_spec
+        )
 
     @staticmethod
     def from_value(value):
@@ -825,18 +857,21 @@ class _IteratorSaveable(BaseSaverBuilder.SaveableObject):
     """SaveableObject for saving/restoring iterator state."""
 
     def __init__(
-            self,
-            iterator_resource,
-            name,
-            external_state_policy=distribute_options.ExternalStatePolicy.FAIL):
+        self,
+        iterator_resource,
+        name,
+        external_state_policy=distribute_options.ExternalStatePolicy.FAIL,
+    ):
         serialized_iterator = gen_dataset_ops.serialize_iterator(
-            iterator_resource, external_state_policy=external_state_policy.value)
+            iterator_resource, external_state_policy=external_state_policy.value
+        )
         specs = [
             BaseSaverBuilder.SaveSpec(
                 serialized_iterator,
                 "",
                 name + "_STATE",
-                device=iterator_resource.device)
+                device=iterator_resource.device,
+            )
         ]
         super(_IteratorSaveable, self).__init__(iterator_resource, specs, name)
 
@@ -863,7 +898,8 @@ def get_next_as_optional(iterator):
     return optional_ops._OptionalImpl(
         gen_dataset_ops.iterator_get_next_as_optional(
             iterator._iterator_resource,
-            output_types=structure.get_flat_tensor_types(
-                iterator.element_spec),
-            output_shapes=structure.get_flat_tensor_shapes(
-                iterator.element_spec)), iterator.element_spec)
+            output_types=structure.get_flat_tensor_types(iterator.element_spec),
+            output_shapes=structure.get_flat_tensor_shapes(iterator.element_spec),
+        ),
+        iterator.element_spec,
+    )

@@ -22,7 +22,9 @@ import functools
 import six
 
 from tensorflow.python import tf2
-from tensorflow.python.data.experimental.ops.distribute_options import ExternalStatePolicy
+from tensorflow.python.data.experimental.ops.distribute_options import (
+    ExternalStatePolicy,
+)
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.ops import iterator_ops
 from tensorflow.python.eager import context
@@ -41,18 +43,22 @@ class ProcessingMode(object):
         if mode not in valid_modes:
             raise TypeError(
                 "{0} is not a valid processing mode. Valid modes: {1}".format(
-                    mode, valid_modes))
+                    mode, valid_modes
+                )
+            )
 
 
 class _DataServiceDatasetV2(dataset_ops.DatasetSource):
     """A `Dataset` that reads elements from the tf.data service."""
 
-    def __init__(self,
-                 input_dataset,
-                 dataset_id,
-                 address,
-                 protocol,
-                 max_outstanding_requests=None):
+    def __init__(
+        self,
+        input_dataset,
+        dataset_id,
+        address,
+        protocol,
+        max_outstanding_requests=None,
+    ):
         """Constructs a _DataServiceDatasetV2.
 
         Args:
@@ -81,7 +87,8 @@ class _DataServiceDatasetV2(dataset_ops.DatasetSource):
             address=address,
             protocol=protocol,
             max_outstanding_requests=max_outstanding_requests,
-            **self._flat_structure)
+            **self._flat_structure
+        )
         super(_DataServiceDatasetV2, self).__init__(variant_tensor)
 
     @property
@@ -105,15 +112,17 @@ class _DataServiceDatasetV1(dataset_ops.DatasetV1Adapter):
     """A `Dataset` that executes its input through the tf.data service."""
 
     @functools.wraps(_DataServiceDatasetV2.__init__)
-    def __init__(self, input_dataset, dataset_id, address, protocol,
-                 max_outstanding_requests):
+    def __init__(
+        self, input_dataset, dataset_id, address, protocol, max_outstanding_requests
+    ):
 
         self._wrapped = _DataServiceDatasetV2(
             input_dataset=input_dataset,
             dataset_id=dataset_id,
             address=address,
             protocol=protocol,
-            max_outstanding_requests=max_outstanding_requests)
+            max_outstanding_requests=max_outstanding_requests,
+        )
         super(_DataServiceDatasetV1, self).__init__(self._wrapped)
 
     @property
@@ -173,24 +182,24 @@ def distribute(service, max_outstanding_requests=None):
     """
     if not isinstance(service, six.string_types):
         raise ValueError(
-            "service must be a string, but service was of type {0}. service={1}"
-            .format(type(service), service))
+            "service must be a string, but service was of type {0}. service={1}".format(
+                type(service), service
+            )
+        )
     if not service:
         raise ValueError("service must not be empty")
     parts = service.split("://")
     if len(parts) == 1:
-        raise ValueError("service string %s does not begin with a protocol. "
-                         "The service should be in the format "
-                         "<protocol>://<address>, e.g. grpc://localhost:5000" %
-                         service)
+        raise ValueError(
+            "service string %s does not begin with a protocol. "
+            "The service should be in the format "
+            "<protocol>://<address>, e.g. grpc://localhost:5000" % service
+        )
     if len(parts) > 2:
-        raise ValueError("malformed service string has multiple '://': %s" %
-                         service)
+        raise ValueError("malformed service string has multiple '://': %s" % service)
     protocol, address = parts
-    address = ops.convert_to_tensor(
-        address, dtype=dtypes.string, name="address")
-    protocol = ops.convert_to_tensor(
-        protocol, dtype=dtypes.string, name="protocol")
+    address = ops.convert_to_tensor(address, dtype=dtypes.string, name="address")
+    protocol = ops.convert_to_tensor(protocol, dtype=dtypes.string, name="protocol")
 
     def _apply_fn(dataset):
         external_state_policy = dataset.options().experimental_external_state_policy
@@ -200,13 +209,15 @@ def distribute(service, max_outstanding_requests=None):
             dataset._variant_tensor,  # pylint: disable=protected-access
             address=address,
             protocol=protocol,
-            external_state_policy=external_state_policy.value)
+            external_state_policy=external_state_policy.value,
+        )
         return _DataServiceDataset(
             input_dataset=dataset,
             dataset_id=dataset_id,
             address=address,
             protocol=protocol,
-            max_outstanding_requests=max_outstanding_requests)
+            max_outstanding_requests=max_outstanding_requests,
+        )
 
     return _apply_fn
 
@@ -252,16 +263,19 @@ def create_job(dataset, processing_mode):
     datasets = _find_data_service_datasets(dataset)
     if len(datasets) > 1:
         raise ValueError(
-            "Datasets containing multiple calls to .distribute(...) are " +
-            "not supported")
+            "Datasets containing multiple calls to .distribute(...) are "
+            + "not supported"
+        )
     if not datasets:
-        raise ValueError(
-            "Dataset does not contain any distribute() transformations")
+        raise ValueError("Dataset does not contain any distribute() transformations")
     ProcessingMode.validate(processing_mode)
     data_service_dataset = datasets[0]
     return gen_experimental_dataset_ops.create_job(
-        data_service_dataset.dataset_id, data_service_dataset.address,
-        data_service_dataset.protocol, processing_mode)
+        data_service_dataset.dataset_id,
+        data_service_dataset.address,
+        data_service_dataset.protocol,
+        processing_mode,
+    )
 
 
 def create_iterator(dataset, job_token):
@@ -280,8 +294,10 @@ def create_iterator(dataset, job_token):
     if context.executing_eagerly() or ops.inside_function():
         return iterator_ops.OwnedIterator(dataset, job_token=job_token)
     else:
-        raise RuntimeError("create_iterator() is only supported inside of "
-                           "tf.function or when eager execution is enabled.")
+        raise RuntimeError(
+            "create_iterator() is only supported inside of "
+            "tf.function or when eager execution is enabled."
+        )
 
 
 def _find_data_service_datasets(dataset):
@@ -299,8 +315,7 @@ def _find_data_service_datasets(dataset):
         d = to_check.pop()
         if isinstance(d, dataset_ops.DatasetV1Adapter):
             d = d._dataset  # pylint: disable=protected-access
-        if isinstance(d, _DataServiceDatasetV1) or isinstance(
-                d, _DataServiceDatasetV2):
+        if isinstance(d, _DataServiceDatasetV1) or isinstance(d, _DataServiceDatasetV2):
             result.append(d)
         to_check.extend(d._inputs())  # pylint: disable=protected-access
     return result
