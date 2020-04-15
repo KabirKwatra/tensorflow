@@ -25,26 +25,26 @@ using ops::Placeholder;
 using ops::Roll;
 
 class ManipGradTest : public ::testing::Test {
- protected:
-  ManipGradTest() : scope_(Scope::NewRootScope()) {}
+protected:
+    ManipGradTest() : scope_(Scope::NewRootScope()) {}
 
-  void RunTest(const Output& x, const TensorShape& x_shape, const Output& y,
-               const TensorShape& y_shape) {
-    TF_ASSERT_OK(scope_.status());
-    float max_error;
-    TF_ASSERT_OK((ComputeGradientError<float, float, float>(
-        scope_, {x}, {x_shape}, {y}, {y_shape}, &max_error)));
-    EXPECT_LT(max_error, 1e-4);
-  }
+    void RunTest(const Output& x, const TensorShape& x_shape, const Output& y,
+                 const TensorShape& y_shape) {
+        TF_ASSERT_OK(scope_.status());
+        float max_error;
+        TF_ASSERT_OK((ComputeGradientError<float, float, float>(
+                          scope_, {x}, {x_shape}, {y}, {y_shape}, &max_error)));
+        EXPECT_LT(max_error, 1e-4);
+    }
 
-  Scope scope_;
+    Scope scope_;
 };
 
 TEST_F(ManipGradTest, RollGrad) {
-  TensorShape shape({5, 4, 3});
-  auto x = Placeholder(scope_, DT_FLOAT, Placeholder::Shape(shape));
-  auto y = Roll(scope_, x, {2, 1}, {0, 1});
-  RunTest(x, shape, y, shape);
+    TensorShape shape({5, 4, 3});
+    auto x = Placeholder(scope_, DT_FLOAT, Placeholder::Shape(shape));
+    auto y = Roll(scope_, x, {2, 1}, {0, 1});
+    RunTest(x, shape, y, shape);
 }
 
 }  // namespace

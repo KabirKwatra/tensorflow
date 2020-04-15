@@ -34,38 +34,38 @@ namespace functor {
 // from reduction_gpu_kernels.cu.h.
 template <typename T>
 struct RowMaxReduction<GPUDevice, T> {
-  // Computes the maximum across the rows of logits
-  //
-  // logits: batch_size, num_classes.
-  // maximum: temporary tensor, dims: batch_size, 1
-  static inline void Compute(OpKernelContext* ctx,
-                             typename TTypes<T>::ConstMatrix logits,
-                             typename TTypes<T>::Vec maximum) {
-    const int kBatchDim = 0;
-    const int kClassDim = 1;
-    const int rows = logits.dimension(kBatchDim);
-    const int cols = logits.dimension(kClassDim);
+    // Computes the maximum across the rows of logits
+    //
+    // logits: batch_size, num_classes.
+    // maximum: temporary tensor, dims: batch_size, 1
+    static inline void Compute(OpKernelContext* ctx,
+                               typename TTypes<T>::ConstMatrix logits,
+                               typename TTypes<T>::Vec maximum) {
+        const int kBatchDim = 0;
+        const int kClassDim = 1;
+        const int rows = logits.dimension(kBatchDim);
+        const int cols = logits.dimension(kClassDim);
 
-    typedef const Eigen::array<TTypes<float>::Tensor::Index, 1>& ReductionAxes;
-    Constants<GPUDevice> constants;
-    gpuprim::Max op;
-    functor::ReduceImpl<T, gpuprim::Max, T*, const T*, ReductionAxes>(
-        ctx, maximum.data(), logits.data(), 2, rows, cols, 1, 1, constants.kOne,
-        op);
-  }
+        typedef const Eigen::array<TTypes<float>::Tensor::Index, 1>& ReductionAxes;
+        Constants<GPUDevice> constants;
+        gpuprim::Max op;
+        functor::ReduceImpl<T, gpuprim::Max, T*, const T*, ReductionAxes>(
+            ctx, maximum.data(), logits.data(), 2, rows, cols, 1, 1, constants.kOne,
+            op);
+    }
 };
 
 // Partial specialization for a GPUDevice, that uses the Eigen implementation
 // from XentEigenImpl.
 template <typename T, typename Index>
 struct SparseXentFunctor<GPUDevice, T, Index> {
-  void operator()(OpKernelContext* ctx, typename TTypes<T>::ConstMatrix logits,
-                  typename TTypes<Index>::ConstVec labels,
-                  typename TTypes<T>::Vec scratch, typename TTypes<T>::Vec loss,
-                  typename TTypes<T>::Matrix backprop) {
-    SparseXentEigenImpl<GPUDevice, T, Index>::Compute(ctx, logits, labels,
-                                                      scratch, loss, backprop);
-  }
+    void operator()(OpKernelContext* ctx, typename TTypes<T>::ConstMatrix logits,
+                    typename TTypes<Index>::ConstVec labels,
+                    typename TTypes<T>::Vec scratch, typename TTypes<T>::Vec loss,
+                    typename TTypes<T>::Matrix backprop) {
+        SparseXentEigenImpl<GPUDevice, T, Index>::Compute(ctx, logits, labels,
+                scratch, loss, backprop);
+    }
 };
 }  // end namespace functor
 

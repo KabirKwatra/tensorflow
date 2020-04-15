@@ -29,28 +29,28 @@ namespace tensorflow {
 namespace {
 
 class EnsureShapeOp : public XlaOpKernel {
- public:
-  explicit EnsureShapeOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
-    OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &expected_shape_));
-  }
+public:
+    explicit EnsureShapeOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+        OP_REQUIRES_OK(ctx, ctx->GetAttr("shape", &expected_shape_));
+    }
 
-  void Compile(XlaOpKernelContext* ctx) override {
-    const TensorShape shape = ctx->InputShape(0);
+    void Compile(XlaOpKernelContext* ctx) override {
+        const TensorShape shape = ctx->InputShape(0);
 
-    // valiate shape
-    OP_REQUIRES(
-        ctx, expected_shape_.IsCompatibleWith(shape),
-        errors::InvalidArgument("Shape of tensor ", this->def().input(0), " ",
-                                shape.DebugString(),
-                                " is not compatible with expected shape ",
-                                expected_shape_.DebugString(), "."));
+        // valiate shape
+        OP_REQUIRES(
+            ctx, expected_shape_.IsCompatibleWith(shape),
+            errors::InvalidArgument("Shape of tensor ", this->def().input(0), " ",
+                                    shape.DebugString(),
+                                    " is not compatible with expected shape ",
+                                    expected_shape_.DebugString(), "."));
 
-    // If shape matches, outputs the tensor.
-    ctx->SetOutput(0, ctx->Input(0));
-  }
+        // If shape matches, outputs the tensor.
+        ctx->SetOutput(0, ctx->Input(0));
+    }
 
- private:
-  PartialTensorShape expected_shape_;
+private:
+    PartialTensorShape expected_shape_;
 };
 
 REGISTER_XLA_OP(Name("EnsureShape"), EnsureShapeOp);

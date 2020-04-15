@@ -31,54 +31,54 @@ limitations under the License.
 
 namespace tflite {
 class SingleOpModelWithHexagon : public SingleOpModel {
- public:
-  SingleOpModelWithHexagon() : delegate_(nullptr, [](TfLiteDelegate*) {}) {}
+public:
+    SingleOpModelWithHexagon() : delegate_(nullptr, [](TfLiteDelegate*) {}) {}
 
-  void ApplyDelegateAndInvoke() {
-    static const char kDelegateName[] = "TfLiteHexagonDelegate";
+    void ApplyDelegateAndInvoke() {
+        static const char kDelegateName[] = "TfLiteHexagonDelegate";
 
-    // Make sure we set the environment.
-    setenv(
-        "ADSP_LIBRARY_PATH",
-        "/data/local/tmp/hexagon_delegate_test;/system/lib/rfsa/adsp;/system/"
-        "vendor/lib/rfsa/adsp;/dsp",
-        1 /*overwrite*/);
+        // Make sure we set the environment.
+        setenv(
+            "ADSP_LIBRARY_PATH",
+            "/data/local/tmp/hexagon_delegate_test;/system/lib/rfsa/adsp;/system/"
+            "vendor/lib/rfsa/adsp;/dsp",
+            1 /*overwrite*/);
 
-    // For tests, we use one-op-models.
-    params_.min_nodes_per_partition = 1;
-    auto* delegate_ptr = TfLiteHexagonDelegateCreate(&params_);
-    ASSERT_TRUE(delegate_ptr != nullptr);
-    delegate_ = Interpreter::TfLiteDelegatePtr(
+        // For tests, we use one-op-models.
+        params_.min_nodes_per_partition = 1;
+        auto* delegate_ptr = TfLiteHexagonDelegateCreate(&params_);
+        ASSERT_TRUE(delegate_ptr != nullptr);
+        delegate_ = Interpreter::TfLiteDelegatePtr(
         delegate_ptr, [](TfLiteDelegate* delegate) {
-          TfLiteHexagonDelegateDelete(delegate);
-          // Turn off the fast rpc and cleanup.
-          // Any communication with the DSP will fail unless new
-          // HexagonDelegateInit called.
-          TfLiteHexagonTearDown();
+            TfLiteHexagonDelegateDelete(delegate);
+            // Turn off the fast rpc and cleanup.
+            // Any communication with the DSP will fail unless new
+            // HexagonDelegateInit called.
+            TfLiteHexagonTearDown();
         });
-    TfLiteHexagonInit();
-    // Make sure we have valid interpreter.
-    ASSERT_TRUE(interpreter_ != nullptr);
-    // Add delegate.
-    EXPECT_TRUE(interpreter_->ModifyGraphWithDelegate(delegate_.get()) !=
-                kTfLiteError);
-    // Make sure graph has one Op which is the delegate node.
-    ASSERT_EQ(1, interpreter_->execution_plan().size());
-    const int node = interpreter_->execution_plan()[0];
-    const auto* node_and_reg = interpreter_->node_and_registration(node);
-    ASSERT_TRUE(node_and_reg != nullptr);
-    ASSERT_TRUE(node_and_reg->second.custom_name != nullptr);
-    ASSERT_STREQ(kDelegateName, node_and_reg->second.custom_name);
+        TfLiteHexagonInit();
+        // Make sure we have valid interpreter.
+        ASSERT_TRUE(interpreter_ != nullptr);
+        // Add delegate.
+        EXPECT_TRUE(interpreter_->ModifyGraphWithDelegate(delegate_.get()) !=
+                    kTfLiteError);
+        // Make sure graph has one Op which is the delegate node.
+        ASSERT_EQ(1, interpreter_->execution_plan().size());
+        const int node = interpreter_->execution_plan()[0];
+        const auto* node_and_reg = interpreter_->node_and_registration(node);
+        ASSERT_TRUE(node_and_reg != nullptr);
+        ASSERT_TRUE(node_and_reg->second.custom_name != nullptr);
+        ASSERT_STREQ(kDelegateName, node_and_reg->second.custom_name);
 
-    Invoke();
-  }
+        Invoke();
+    }
 
- protected:
-  using SingleOpModel::builder_;
+protected:
+    using SingleOpModel::builder_;
 
- private:
-  Interpreter::TfLiteDelegatePtr delegate_;
-  TfLiteHexagonDelegateOptions params_ = {0};
+private:
+    Interpreter::TfLiteDelegatePtr delegate_;
+    TfLiteHexagonDelegateOptions params_ = {0};
 };
 }  // namespace tflite
 

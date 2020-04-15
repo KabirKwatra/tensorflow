@@ -35,29 +35,29 @@ limitations under the License.
 extern "C" {
 #endif  // __cplusplus
 struct TFL_CAPI_EXPORT TfLiteHexagonDelegateOptions {
-  // This corresponds to the debug level in the hexagon SDK. 0 (default)
-  // means no debug.
-  int debug_level;
-  // This corresponds to powersave_level in the hexagon SDK.
-  // where 0 (default) means high performance which means more power
-  // consumption.
-  int powersave_level;
-  // If set to true, performance information about the graph will be dumped
-  // to Standard output, this includes cpu cycles.
-  // WARNING: Experimental and subject to change anytime.
-  bool print_graph_profile;
-  // If set to true, graph structure will be dumped to Standard output.
-  // This is usually beneficial to see what actual nodes executed on
-  // the DSP. Combining with 'debug_level' more information will be printed.
-  // WARNING: Experimental and subject to change anytime.
-  bool print_graph_debug;
-  // This sets the maximum number of Hexagon graphs created with
-  // hexagon_nn_init. Each graph corresponds to one delegated node subset in the
-  // TFLite model.
-  int max_delegated_partitions;
-  // This sets the minimum number of nodes per graph created with
-  // hexagon_nn_init. Defaults to 2.
-  int min_nodes_per_partition;
+    // This corresponds to the debug level in the hexagon SDK. 0 (default)
+    // means no debug.
+    int debug_level;
+    // This corresponds to powersave_level in the hexagon SDK.
+    // where 0 (default) means high performance which means more power
+    // consumption.
+    int powersave_level;
+    // If set to true, performance information about the graph will be dumped
+    // to Standard output, this includes cpu cycles.
+    // WARNING: Experimental and subject to change anytime.
+    bool print_graph_profile;
+    // If set to true, graph structure will be dumped to Standard output.
+    // This is usually beneficial to see what actual nodes executed on
+    // the DSP. Combining with 'debug_level' more information will be printed.
+    // WARNING: Experimental and subject to change anytime.
+    bool print_graph_debug;
+    // This sets the maximum number of Hexagon graphs created with
+    // hexagon_nn_init. Each graph corresponds to one delegated node subset in the
+    // TFLite model.
+    int max_delegated_partitions;
+    // This sets the minimum number of nodes per graph created with
+    // hexagon_nn_init. Defaults to 2.
+    int min_nodes_per_partition;
 };
 
 // Return a delegate that uses Hexagon SDK for ops execution.
