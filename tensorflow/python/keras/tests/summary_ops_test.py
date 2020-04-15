@@ -35,113 +35,114 @@ from tensorflow.python.platform import tf_logging as logging
 
 class SummaryOpsTest(test_util.TensorFlowTestCase):
 
-  def tearDown(self):
-    super(SummaryOpsTest, self).tearDown()
-    summary_ops.trace_off()
+    def tearDown(self):
+        super(SummaryOpsTest, self).tearDown()
+        summary_ops.trace_off()
 
-  def keras_model(self, *args, **kwargs):
-    logdir = self.get_temp_dir()
-    writer = summary_ops.create_file_writer(logdir)
-    with writer.as_default():
-      summary_ops.keras_model(*args, **kwargs)
-    writer.close()
-    events = events_from_logdir(logdir)
-    # The first event contains no summary values. The written content goes to
-    # the second event.
-    return events[1]
+    def keras_model(self, *args, **kwargs):
+        logdir = self.get_temp_dir()
+        writer = summary_ops.create_file_writer(logdir)
+        with writer.as_default():
+            summary_ops.keras_model(*args, **kwargs)
+        writer.close()
+        events = events_from_logdir(logdir)
+        # The first event contains no summary values. The written content goes to
+        # the second event.
+        return events[1]
 
-  @test_util.run_v2_only
-  def testKerasModel(self):
-    model = Sequential(
-        [Dense(10, input_shape=(100,)),
-         Activation('relu', name='my_relu')])
-    event = self.keras_model(name='my_name', data=model, step=1)
-    first_val = event.summary.value[0]
-    self.assertEqual(model.to_json(), first_val.tensor.string_val[0].decode())
+    @test_util.run_v2_only
+    def testKerasModel(self):
+        model = Sequential(
+            [Dense(10, input_shape=(100,)),
+             Activation('relu', name='my_relu')])
+        event = self.keras_model(name='my_name', data=model, step=1)
+        first_val = event.summary.value[0]
+        self.assertEqual(
+            model.to_json(), first_val.tensor.string_val[0].decode())
 
-  @test_util.run_v2_only
-  def testKerasModel_usesDefaultStep(self):
-    model = Sequential(
-        [Dense(10, input_shape=(100,)),
-         Activation('relu', name='my_relu')])
-    try:
-      summary_ops.set_step(42)
-      event = self.keras_model(name='my_name', data=model)
-      self.assertEqual(42, event.step)
-    finally:
-      # Reset to default state for other tests.
-      summary_ops.set_step(None)
+    @test_util.run_v2_only
+    def testKerasModel_usesDefaultStep(self):
+        model = Sequential(
+            [Dense(10, input_shape=(100,)),
+             Activation('relu', name='my_relu')])
+        try:
+            summary_ops.set_step(42)
+            event = self.keras_model(name='my_name', data=model)
+            self.assertEqual(42, event.step)
+        finally:
+            # Reset to default state for other tests.
+            summary_ops.set_step(None)
 
-  @test_util.run_v2_only
-  def testKerasModel_subclass(self):
+    @test_util.run_v2_only
+    def testKerasModel_subclass(self):
 
-    class SimpleSubclass(Model):
+        class SimpleSubclass(Model):
 
-      def __init__(self):
-        super(SimpleSubclass, self).__init__(name='subclass')
-        self.dense = Dense(10, input_shape=(100,))
-        self.activation = Activation('relu', name='my_relu')
+            def __init__(self):
+                super(SimpleSubclass, self).__init__(name='subclass')
+                self.dense = Dense(10, input_shape=(100,))
+                self.activation = Activation('relu', name='my_relu')
 
-      def call(self, inputs):
-        x = self.dense(inputs)
-        return self.activation(x)
+            def call(self, inputs):
+                x = self.dense(inputs)
+                return self.activation(x)
 
-    model = SimpleSubclass()
-    with test.mock.patch.object(logging, 'warn') as mock_log:
-      self.assertFalse(
-          summary_ops.keras_model(name='my_name', data=model, step=1))
-      self.assertRegexpMatches(
-          str(mock_log.call_args), 'Model failed to serialize as JSON.')
+        model = SimpleSubclass()
+        with test.mock.patch.object(logging, 'warn') as mock_log:
+            self.assertFalse(
+                summary_ops.keras_model(name='my_name', data=model, step=1))
+            self.assertRegexpMatches(
+                str(mock_log.call_args), 'Model failed to serialize as JSON.')
 
-  @test_util.run_v2_only
-  def testKerasModel_otherExceptions(self):
-    model = Sequential()
+    @test_util.run_v2_only
+    def testKerasModel_otherExceptions(self):
+        model = Sequential()
 
-    with test.mock.patch.object(model, 'to_json') as mock_to_json:
-      with test.mock.patch.object(logging, 'warn') as mock_log:
-        mock_to_json.side_effect = Exception('oops')
-        self.assertFalse(
-            summary_ops.keras_model(name='my_name', data=model, step=1))
-        self.assertRegexpMatches(
-            str(mock_log.call_args),
-            'Model failed to serialize as JSON. Ignoring... oops')
+        with test.mock.patch.object(model, 'to_json') as mock_to_json:
+            with test.mock.patch.object(logging, 'warn') as mock_log:
+                mock_to_json.side_effect = Exception('oops')
+                self.assertFalse(
+                    summary_ops.keras_model(name='my_name', data=model, step=1))
+                self.assertRegexpMatches(
+                    str(mock_log.call_args),
+                    'Model failed to serialize as JSON. Ignoring... oops')
 
 
 def events_from_file(filepath):
-  """Returns all events in a single event file.
+    """Returns all events in a single event file.
 
-  Args:
-    filepath: Path to the event file.
+    Args:
+      filepath: Path to the event file.
 
-  Returns:
-    A list of all tf.Event protos in the event file.
-  """
-  records = list(tf_record.tf_record_iterator(filepath))
-  result = []
-  for r in records:
-    event = event_pb2.Event()
-    event.ParseFromString(r)
-    result.append(event)
-  return result
+    Returns:
+      A list of all tf.Event protos in the event file.
+    """
+    records = list(tf_record.tf_record_iterator(filepath))
+    result = []
+    for r in records:
+        event = event_pb2.Event()
+        event.ParseFromString(r)
+        result.append(event)
+    return result
 
 
 def events_from_logdir(logdir):
-  """Returns all events in the single eventfile in logdir.
+    """Returns all events in the single eventfile in logdir.
 
-  Args:
-    logdir: The directory in which the single event file is sought.
+    Args:
+      logdir: The directory in which the single event file is sought.
 
-  Returns:
-    A list of all tf.Event protos from the single event file.
+    Returns:
+      A list of all tf.Event protos from the single event file.
 
-  Raises:
-    AssertionError: If logdir does not contain exactly one file.
-  """
-  assert gfile.Exists(logdir)
-  files = gfile.ListDirectory(logdir)
-  assert len(files) == 1, 'Found not exactly one file in logdir: %s' % files
-  return events_from_file(os.path.join(logdir, files[0]))
+    Raises:
+      AssertionError: If logdir does not contain exactly one file.
+    """
+    assert gfile.Exists(logdir)
+    files = gfile.ListDirectory(logdir)
+    assert len(files) == 1, 'Found not exactly one file in logdir: %s' % files
+    return events_from_file(os.path.join(logdir, files[0]))
 
 
 if __name__ == '__main__':
-  test.main()
+    test.main()
