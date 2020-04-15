@@ -63,87 +63,83 @@ namespace tflite {
 // A description of a single command line flag, holding its name, type, usage
 // text, and a pointer to the corresponding variable.
 class Flag {
-public:
-    enum FlagType {
-        POSITIONAL = 0,
-        REQUIRED,
-        OPTIONAL,
-    };
+ public:
+  enum FlagType {
+    POSITIONAL = 0,
+    REQUIRED,
+    OPTIONAL,
+  };
 
-    // The order of the positional flags is the same as they are added.
-    // Positional flags are supposed to be required.
-    template <typename T>
-    static Flag CreateFlag(const char* name, T* val, const char* usage,
-                           FlagType flag_type = OPTIONAL) {
-        return Flag(
-        name, [val](const T& v) {
-            *val = v;
-        }, *val, usage, flag_type);
-    }
+  // The order of the positional flags is the same as they are added.
+  // Positional flags are supposed to be required.
+  template <typename T>
+  static Flag CreateFlag(const char* name, T* val, const char* usage,
+                         FlagType flag_type = OPTIONAL) {
+    return Flag(
+        name, [val](const T& v) { *val = v; }, *val, usage, flag_type);
+  }
 
-    Flag(const char* name, const std::function<void(const int32_t&)>& hook,
-         int32_t default_value, const std::string& usage_text,
-         FlagType flag_type);
-    Flag(const char* name, const std::function<void(const int64_t&)>& hook,
-         int64_t default_value, const std::string& usage_text,
-         FlagType flag_type);
-    Flag(const char* name, const std::function<void(const float&)>& hook,
-         float default_value, const std::string& usage_text, FlagType flag_type);
-    Flag(const char* name, const std::function<void(const bool&)>& hook,
-         bool default_value, const std::string& usage_text, FlagType flag_type);
-    Flag(const char* name, const std::function<void(const std::string&)>& hook,
-         const std::string& default_value, const std::string& usage_text,
-         FlagType flag_type);
+  Flag(const char* name, const std::function<void(const int32_t&)>& hook,
+       int32_t default_value, const std::string& usage_text,
+       FlagType flag_type);
+  Flag(const char* name, const std::function<void(const int64_t&)>& hook,
+       int64_t default_value, const std::string& usage_text,
+       FlagType flag_type);
+  Flag(const char* name, const std::function<void(const float&)>& hook,
+       float default_value, const std::string& usage_text, FlagType flag_type);
+  Flag(const char* name, const std::function<void(const bool&)>& hook,
+       bool default_value, const std::string& usage_text, FlagType flag_type);
+  Flag(const char* name, const std::function<void(const std::string&)>& hook,
+       const std::string& default_value, const std::string& usage_text,
+       FlagType flag_type);
 
-    FlagType GetFlagType() const {
-        return flag_type_;
-    }
+  FlagType GetFlagType() const { return flag_type_; }
 
-private:
-    friend class Flags;
+ private:
+  friend class Flags;
 
-    bool Parse(const std::string& arg, bool* value_parsing_ok) const;
+  bool Parse(const std::string& arg, bool* value_parsing_ok) const;
 
-    std::string name_;
-    enum {
-        TYPE_INT32,
-        TYPE_INT64,
-        TYPE_BOOL,
-        TYPE_STRING,
-        TYPE_FLOAT,
-    } type_;
+  std::string name_;
+  enum {
+    TYPE_INT32,
+    TYPE_INT64,
+    TYPE_BOOL,
+    TYPE_STRING,
+    TYPE_FLOAT,
+  } type_;
 
-    std::string GetTypeName() const;
+  std::string GetTypeName() const;
 
-    std::function<bool(const std::string&)> value_hook_;
-    std::string default_for_display_;
+  std::function<bool(const std::string&)> value_hook_;
+  std::string default_for_display_;
 
-    std::string usage_text_;
-    FlagType flag_type_;
+  std::string usage_text_;
+  FlagType flag_type_;
 };
 
 class Flags {
-public:
-    // Parse the command line represented by argv[0, ..., (*argc)-1] to find flag
-    // instances matching flags in flaglist[].  Update the variables associated
-    // with matching flags, and remove the matching arguments from (*argc, argv).
-    // Return true iff all recognized flag values were parsed correctly, and the
-    // first remaining argument is not "--help".
-    // Note:
-    // 1. when there are duplicate args in argv for the same flag, the flag value
-    // and the parse result will be based on the 1st arg.
-    // 2. when there are duplicate flags in flag_list (i.e. two flags having the
-    // same name), all of them will be checked against the arg list and the parse
-    // result will be false if any of the parsing fails.
-    // See *Duplicate* unit tests in command_line_flags_test.cc for the
-    // illustration of such behaviors.
-    static bool Parse(int* argc, const char** argv,
-                      const std::vector<Flag>& flag_list);
+ public:
+  // Parse the command line represented by argv[0, ..., (*argc)-1] to find flag
+  // instances matching flags in flaglist[].  Update the variables associated
+  // with matching flags, and remove the matching arguments from (*argc, argv).
+  // Return true iff all recognized flag values were parsed correctly, and the
+  // first remaining argument is not "--help".
+  // Note:
+  // 1. when there are duplicate args in argv for the same flag, the flag value
+  // and the parse result will be based on the 1st arg.
+  // 2. when there are duplicate flags in flag_list (i.e. two flags having the
+  // same name), all of them will be checked against the arg list and the parse
+  // result will be false if any of the parsing fails.
+  // See *Duplicate* unit tests in command_line_flags_test.cc for the
+  // illustration of such behaviors.
+  static bool Parse(int* argc, const char** argv,
+                    const std::vector<Flag>& flag_list);
 
-    // Return a usage message with command line cmdline, and the
-    // usage_text strings in flag_list[].
-    static std::string Usage(const std::string& cmdline,
-                             const std::vector<Flag>& flag_list);
+  // Return a usage message with command line cmdline, and the
+  // usage_text strings in flag_list[].
+  static std::string Usage(const std::string& cmdline,
+                           const std::vector<Flag>& flag_list);
 };
 }  // namespace tflite
 
