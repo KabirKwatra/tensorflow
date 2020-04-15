@@ -37,4 +37,4 @@ chmod +x /bazel/bazel-*.sh
 rm -f /bazel/bazel-"$BAZEL_VERSION"-installer-linux-x86_64.sh
 
 # Enable bazel auto completion.
-echo "source /usr/local/lib/bazel/bin/bazel-complete.bash" >> ~/.bashrc
+echo "source /usr/local/lib/bazel/bin/bazel-complete.bash" >>~/.bashrc

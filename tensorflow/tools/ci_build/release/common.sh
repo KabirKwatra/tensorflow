@@ -26,7 +26,7 @@ LATEST_BAZEL_VERSION=3.0.0
 
 # Run flaky functions with retries.
 # run_with_retry cmd
-function run_with_retry {
+function run_with_retry() {
   eval "$1"
   # If the command fails retry again in 60 seconds.
   if [[ $? -ne 0 ]]; then
@@ -36,12 +36,13 @@ function run_with_retry {
 }
 
 function die() {
-  echo "$@" 1>&2 ; exit 1;
+  echo "$@" 1>&2
+  exit 1
 }
 
 # A small utility to run the command and only print logs if the command fails.
 # On success, all logs are hidden.
-function readable_run {
+function readable_run() {
   # Disable debug mode to avoid printing of variables here.
   set +x
   result=$("$@" 2>&1) || die "$result"
@@ -52,22 +53,22 @@ function readable_run {
 
 # LINT.IfChange
 # Redirect bazel output dir b/73748835
-function set_bazel_outdir {
+function set_bazel_outdir() {
   mkdir -p /tmpfs/bazel_output
   export TEST_TMPDIR=/tmpfs/bazel_output
 }
 
 # Downloads bazelisk to ~/bin as `bazel`.
-function install_bazelisk {
+function install_bazelisk() {
   date
   case "$(uname -s)" in
     Darwin) local name=bazelisk-darwin-amd64 ;;
-    Linux)  local name=bazelisk-linux-amd64  ;;
+    Linux) local name=bazelisk-linux-amd64 ;;
     *) die "Unknown OS: $(uname -s)" ;;
   esac
   mkdir -p "$HOME/bin"
   wget --no-verbose -O "$HOME/bin/bazel" \
-      "https://github.com/bazelbuild/bazelisk/releases/download/v1.3.0/$name"
+    "https://github.com/bazelbuild/bazelisk/releases/download/v1.3.0/$name"
   chmod u+x "$HOME/bin/bazel"
   if [[ ! ":$PATH:" =~ :"$HOME"/bin/?: ]]; then
     PATH="$HOME/bin:$PATH"
@@ -79,7 +80,7 @@ function install_bazelisk {
 }
 
 # Install the given bazel version on linux
-function update_bazel_linux {
+function update_bazel_linux() {
   if [[ -z "$1" ]]; then
     BAZEL_VERSION=$LATEST_BAZEL_VERSION
   else
@@ -103,17 +104,17 @@ function update_bazel_linux {
 # LINT.ThenChange(
 #   //tensorflow_estimator/google/kokoro/common.sh)
 
-function install_pip2 {
+function install_pip2() {
   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
   sudo python2 get-pip.py
 }
 
-function install_pip3.5 {
+function install_pip3.5() {
   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
   sudo python3.5 get-pip.py
 }
 
-function install_pip_deps {
+function install_pip_deps() {
   SUDO_CMD=""
   PIP_CMD="pip"
 
@@ -149,7 +150,7 @@ function install_pip_deps {
   # LINT.ThenChange(:ubuntu_16_pip_installations)
 }
 
-function install_ubuntu_16_pip_deps {
+function install_ubuntu_16_pip_deps() {
   PIP_CMD="pip"
 
   while true; do
@@ -181,7 +182,7 @@ function install_ubuntu_16_pip_deps {
   # LINT.ThenChange(:ubuntu_pip_installations)
 }
 
-function install_macos_pip_deps {
+function install_macos_pip_deps() {
   SUDO_CMD=""
   PIP_CMD="pip"
 
@@ -200,11 +201,11 @@ function install_macos_pip_deps {
     shift
   done
 
-   # High Sierra pip for Python2.7 installs don't work as expected.
-   if [[ "${PIP_CMD}" == "pip" ]]; then
+  # High Sierra pip for Python2.7 installs don't work as expected.
+  if [[ "${PIP_CMD}" == "pip" ]]; then
     PIP_CMD="python -m pip"
     SUDO_CMD="sudo -H "
-   fi
+  fi
 
   # TODO(aselle): Change all these to be --user instead of sudo.
   "$SUDO_CMD" "$PIP_CMD" install --upgrade setuptools==39.1.0
@@ -222,7 +223,7 @@ function install_macos_pip_deps {
   "$PIP_CMD" install --user --upgrade "future>=0.17.1"
 }
 
-function maybe_skip_v1 {
+function maybe_skip_v1() {
   # If we are building with v2 by default, skip tests with v1only tag.
   if grep -q "build --config=v2" ".bazelrc"; then
     echo ",-v1only"
@@ -237,7 +238,7 @@ function maybe_skip_v1 {
 # will create a wheel with the same tags, but new project name under the same
 # directory at
 # test_dir/tf_nightly_cpu-1.15.0.dev20190813-cp35-cp35m-manylinux2010_x86_64.whl
-function copy_to_new_project_name {
+function copy_to_new_project_name() {
   WHL_PATH="$1"
   NEW_PROJECT_NAME="$2"
 
