@@ -54,7 +54,8 @@ class Analyzer(cfg.GraphVisitor):
         if anno.hasanno(node.ast_node, anno.Static.SCOPE):
             node_scope = anno.getanno(node.ast_node, anno.Static.SCOPE)
 
-            gen = node_scope.read | self.extra_gen.get(node.ast_node, frozenset())
+            gen = node_scope.read | self.extra_gen.get(node.ast_node,
+                                                       frozenset())
             # TODO(mdan): verify whether composites' parents need to be added.
             # E.g. whether x needs to be added if x.y is live. Theoretically the
             # activity analysis should have both so that wouldn't be needed.
@@ -136,7 +137,7 @@ class WholeTreeAnalyzer(transformer.Base):
                 #
                 # Hence we use discard and not remove below.
                 child_in_state.discard(qn)
-            parent_analyzer.extra_gen[node] = frozenset(child_in_state,)
+            parent_analyzer.extra_gen[node] = frozenset(child_in_state, )
 
         self.analyzers[node] = analyzer
         self.current_analyzer = parent_analyzer
@@ -155,11 +156,8 @@ class Annotator(transformer.Base):
 
     def visit(self, node):
         node = super(Annotator, self).visit(node)
-        if (
-            self.current_analyzer is not None
-            and isinstance(node, gast.stmt)
-            and node in self.current_analyzer.graph.index
-        ):
+        if (self.current_analyzer is not None and isinstance(node, gast.stmt)
+                and node in self.current_analyzer.graph.index):
             cfg_node = self.current_analyzer.graph.index[node]
             anno.setanno(
                 node,
@@ -191,8 +189,7 @@ class Annotator(transformer.Base):
         else:
             assert anno.hasanno(entry_node, anno.Static.LIVE_VARS_IN), (
                 "If not matching a CFG node, must be a block statement:"
-                " {}".format(entry_node)
-            )
+                " {}".format(entry_node))
             stmt_live_in = anno.getanno(entry_node, anno.Static.LIVE_VARS_IN)
         anno.setanno(node, anno.Static.LIVE_VARS_IN, stmt_live_in)
         return node

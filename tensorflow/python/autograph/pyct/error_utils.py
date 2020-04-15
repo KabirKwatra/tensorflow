@@ -23,18 +23,17 @@ from tensorflow.python.autograph.pyct import origin_info
 
 
 class FrameInfo(
-    collections.namedtuple(
-        "FrameInfo",
-        (
-            "filename",
-            "lineno",
-            "function_name",
-            "code",
-            "is_converted",
-            "is_whitelisted",
-        ),
-    )
-):
+        collections.namedtuple(
+            "FrameInfo",
+            (
+                "filename",
+                "lineno",
+                "function_name",
+                "code",
+                "is_converted",
+                "is_whitelisted",
+            ),
+        )):
 
     __slots__ = ()
 
@@ -171,12 +170,10 @@ class ErrorMetadataBase(object):
 
     __slots__ = ("translated_stack", "cause_message")
 
-    def __init__(
-        self, callsite_tb, cause_metadata, cause_message, source_map, converter_filename
-    ):
+    def __init__(self, callsite_tb, cause_metadata, cause_message, source_map,
+                 converter_filename):
         translated_stack = _stack_trace_inside_mapped_code(
-            callsite_tb, source_map, converter_filename
-        )
+            callsite_tb, source_map, converter_filename)
 
         if cause_metadata is None:
             self.translated_stack = translated_stack
@@ -184,8 +181,7 @@ class ErrorMetadataBase(object):
         else:
             # Daisy chain the translated stacks.
             self.translated_stack = cause_metadata.translated_stack + (
-                translated_stack[-1],
-            )
+                translated_stack[-1], )
             self.cause_message = cause_metadata.cause_message
 
     def get_message(self):
@@ -196,9 +192,9 @@ class ErrorMetadataBase(object):
         lines.append("")
 
         for frame_info in reversed(self.translated_stack):
-            formatted_line = "    {}:{} {}".format(
-                frame_info.filename, frame_info.lineno, frame_info.function_name
-            )
+            formatted_line = "    {}:{} {}".format(frame_info.filename,
+                                                   frame_info.lineno,
+                                                   frame_info.function_name)
             if frame_info.is_converted:
                 formatted_line += "  *"
             elif frame_info.is_whitelisted:
@@ -229,7 +225,8 @@ class ErrorMetadataBase(object):
         if preferred_type in KNOWN_STRING_CONSTRUCTOR_ERRORS:
             return preferred_type(self.get_message())
         elif preferred_type is KeyError:
-            return MultilineMessageKeyError(self.get_message(), self.cause_message)
+            return MultilineMessageKeyError(self.get_message(),
+                                            self.cause_message)
         return None
 
     def to_exception(self, source_error):
