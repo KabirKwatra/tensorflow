@@ -30,11 +30,9 @@ notable exception:
    to any except or finally block)
 TODO(mdan): Consider adding the edges above. They'd only add ~O(n) edges.
 """
-
 # TODO(mdan): The notion of 'statements' below is inaccurate.
 # They should rather be called 'block statements', because they include
 # statements that may have a body, e.g. if and while.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
