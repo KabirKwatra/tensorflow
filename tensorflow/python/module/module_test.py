@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for `tf.Module`."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -22,8 +21,8 @@ import abc
 import collections
 import itertools
 
-from absl.testing import parameterized
 import six
+from absl.testing import parameterized
 
 from tensorflow.python import tf2
 from tensorflow.python.distribute import tpu_values
