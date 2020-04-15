@@ -31,7 +31,7 @@ class TestKerasModelClass(tf.keras.Model):
     def build(self, input_shape):
         self.weight = self.add_weight(
             name="test_keras_var",
-            shape=(self.width,),
+            shape=(self.width, ),
             dtype=tf.float32,
             trainable=True,
         )
@@ -63,18 +63,16 @@ class GradientsTest(tf.test.TestCase):
         test_input = tf.constant(tf.zeros((10, 10), dtype=np.float32))
         # Ensures keras model is initialized.
         test_model(test_input)  # pylint: disable=not-callable
-        grads_re, grads = self._TestVariablesGradient(
-            test_input, test_model, test_input
-        )
+        grads_re, grads = self._TestVariablesGradient(test_input, test_model,
+                                                      test_input)
 
         grads_re = self.evaluate(grads_re)
         grads = self.evaluate(grads)
         for g, g_re in zip(grads, grads_re):
             self.assertAllClose(g, g_re)
 
-        grads_re, grads = self._TestVariablesGradient(
-            test_input, test_model, test_model.variables
-        )
+        grads_re, grads = self._TestVariablesGradient(test_input, test_model,
+                                                      test_model.variables)
 
         grads_re = self.evaluate(grads_re)
         grads = self.evaluate(grads)

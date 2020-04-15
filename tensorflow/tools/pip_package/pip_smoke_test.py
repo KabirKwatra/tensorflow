@@ -56,7 +56,8 @@ def BuildPyTestDependencies():
     # Build list of test targets,
     # python - attr(manual|pno_pip)
     targets = " + ".join(python_targets)
-    targets += ' - attr(tags, "manual|no_pip", %s)' % " + ".join(tensorflow_targets)
+    targets += ' - attr(tags, "manual|no_pip", %s)' % " + ".join(
+        tensorflow_targets)
     query_kind = "kind(py_test, %s)" % targets
     # Skip benchmarks etc.
     query_filter = 'filter("^((?!benchmark).)*$", %s)' % query_kind
@@ -112,11 +113,11 @@ def main():
 
     # pip_package_dependencies_list is the list of included files in pip packages
     pip_package_dependencies = subprocess.check_output(
-        ["bazel", "cquery", PIP_PACKAGE_QUERY_EXPRESSION]
-    )
+        ["bazel", "cquery", PIP_PACKAGE_QUERY_EXPRESSION])
     if isinstance(pip_package_dependencies, bytes):
         pip_package_dependencies = pip_package_dependencies.decode("utf-8")
-    pip_package_dependencies_list = pip_package_dependencies.strip().split("\n")
+    pip_package_dependencies_list = pip_package_dependencies.strip().split(
+        "\n")
     pip_package_dependencies_list = [
         x.split()[0] for x in pip_package_dependencies_list
     ]
@@ -125,19 +126,21 @@ def main():
     # tf_py_test_dependencies is the list of dependencies for all python
     # tests in tensorflow
     tf_py_test_dependencies = subprocess.check_output(
-        ["bazel", "cquery", PY_TEST_QUERY_EXPRESSION]
-    )
+        ["bazel", "cquery", PY_TEST_QUERY_EXPRESSION])
     if isinstance(tf_py_test_dependencies, bytes):
         tf_py_test_dependencies = tf_py_test_dependencies.decode("utf-8")
     tf_py_test_dependencies_list = tf_py_test_dependencies.strip().split("\n")
     tf_py_test_dependencies_list = [
         x.split()[0] for x in tf_py_test_dependencies.strip().split("\n")
     ]
-    print("Pytest dependency subset size: %d" % len(tf_py_test_dependencies_list))
+    print("Pytest dependency subset size: %d" %
+          len(tf_py_test_dependencies_list))
 
     missing_dependencies = []
     # File extensions and endings to ignore
-    ignore_extensions = ["_test", "_test.py", "_test_gpu", "_test_gpu.py", "_test_lib"]
+    ignore_extensions = [
+        "_test", "_test.py", "_test_gpu", "_test_gpu.py", "_test_lib"
+    ]
 
     ignored_files_count = 0
     blacklisted_dependencies_count = len(DEPENDENCY_BLACKLIST)
@@ -152,15 +155,13 @@ def main():
 
             # Check if the dependency is in the pip package, the dependency blacklist,
             # or should be ignored because of its file extension.
-            if not (
-                ignore
-                or dependency in pip_package_dependencies_list
-                or dependency in DEPENDENCY_BLACKLIST
-            ):
+            if not (ignore or dependency in pip_package_dependencies_list
+                    or dependency in DEPENDENCY_BLACKLIST):
                 missing_dependencies.append(dependency)
 
     print("Ignored files count: %d" % ignored_files_count)
-    print("Blacklisted dependencies count: %d" % blacklisted_dependencies_count)
+    print("Blacklisted dependencies count: %d" %
+          blacklisted_dependencies_count)
     if missing_dependencies:
         print("Missing the following dependencies from pip_packages:")
         for missing_dependency in missing_dependencies:
@@ -170,17 +171,16 @@ def main():
                 " + ".join(PYTHON_TARGETS),
                 missing_dependency,
             )
-            affected_tests = subprocess.check_output(["bazel", "cquery", rdep_query])
+            affected_tests = subprocess.check_output(
+                ["bazel", "cquery", rdep_query])
             affected_tests_list = affected_tests.split("\n")[:-2]
             print("\n".join(affected_tests_list))
 
-        raise RuntimeError(
-            """
+        raise RuntimeError("""
     One or more added test dependencies are not in the pip package.
 If these test dependencies need to be in TensorFlow pip package, please add them to //tensorflow/tools/pip_package/BUILD.
 Else either blacklist the dependencies in //tensorflow/tools/pip_package/pip_smoke_test.py
-or add no_pip tag to the test."""
-        )
+or add no_pip tag to the test.""")
 
     else:
         print("TEST PASSED")
