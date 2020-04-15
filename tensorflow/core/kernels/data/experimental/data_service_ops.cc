@@ -28,130 +28,130 @@ namespace tensorflow {
 namespace data {
 namespace {
 Status ParseProcessingMode(const tstring& s, ProcessingMode* mode) {
-    if (s == "parallel_epochs") {
-        *mode = ProcessingMode::PARALLEL_EPOCHS;
-    } else if (s == "one_epoch") {
-        *mode = ProcessingMode::ONE_EPOCH;
-    } else {
-        return errors::InvalidArgument("Unrecognized processing mode: ", s);
-    }
-    return Status::OK();
+  if (s == "parallel_epochs") {
+    *mode = ProcessingMode::PARALLEL_EPOCHS;
+  } else if (s == "one_epoch") {
+    *mode = ProcessingMode::ONE_EPOCH;
+  } else {
+    return errors::InvalidArgument("Unrecognized processing mode: ", s);
+  }
+  return Status::OK();
 }
 }  // namespace
 
 RegisterDatasetOp::RegisterDatasetOp(OpKernelConstruction* ctx)
     : OpKernel(ctx) {
-    int64 external_state_policy_int;
-    OP_REQUIRES_OK(
-        ctx, ctx->GetAttr(kExternalStatePolicy, &external_state_policy_int));
-    external_state_policy_ =
-        SerializationContext::ExternalStatePolicy(external_state_policy_int);
+  int64 external_state_policy_int;
+  OP_REQUIRES_OK(
+      ctx, ctx->GetAttr(kExternalStatePolicy, &external_state_policy_int));
+  external_state_policy_ =
+      SerializationContext::ExternalStatePolicy(external_state_policy_int);
 }
 
 void RegisterDatasetOp::Compute(OpKernelContext* ctx) {
-    DatasetBase* dataset;
-    OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
+  DatasetBase* dataset;
+  OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
 
-    tstring address;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
-    OP_REQUIRES(ctx, !address.empty(),
-                errors::InvalidArgument(kAddress, " must be non-empty."));
+  tstring address;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
+  OP_REQUIRES(ctx, !address.empty(),
+              errors::InvalidArgument(kAddress, " must be non-empty."));
 
-    tstring protocol;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
-    OP_REQUIRES(ctx, !protocol.empty(),
-                errors::InvalidArgument(kProtocol, " must be non-empty."));
+  tstring protocol;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
+  OP_REQUIRES(ctx, !protocol.empty(),
+              errors::InvalidArgument(kProtocol, " must be non-empty."));
 
-    SerializationContext::Params params;
-    params.external_state_policy = external_state_policy_;
-    SerializationContext serialization_ctx(params);
-    GraphDef graph_def;
-    OP_REQUIRES_OK(
-        ctx, AsGraphDef(ctx, dataset, std::move(serialization_ctx), &graph_def));
+  SerializationContext::Params params;
+  params.external_state_policy = external_state_policy_;
+  SerializationContext serialization_ctx(params);
+  GraphDef graph_def;
+  OP_REQUIRES_OK(
+      ctx, AsGraphDef(ctx, dataset, std::move(serialization_ctx), &graph_def));
 
-    // ::grpc::ChannelArguments args;
-    std::shared_ptr<::grpc::ChannelCredentials> credentials;
-    OP_REQUIRES_OK(
-        ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
-    auto channel = ::grpc::CreateChannel(address, credentials);
-    auto master_stub = MasterService::NewStub(channel);
-    GetOrRegisterDatasetRequest req;
-    *req.mutable_dataset()->mutable_graph() = graph_def;
-    GetOrRegisterDatasetResponse resp;
-    grpc::ClientContext client_ctx;
-    auto status = master_stub->GetOrRegisterDataset(&client_ctx, req, &resp);
-    if (!status.ok()) {
-        ctx->CtxFailure(grpc_util::WrapError("Failed to register dataset", status));
-        return;
-    }
-    Tensor* output;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
-    auto output_dataset_id = output->tensor<int64, 0>();
-    output_dataset_id() = resp.dataset_id();
+  // ::grpc::ChannelArguments args;
+  std::shared_ptr<::grpc::ChannelCredentials> credentials;
+  OP_REQUIRES_OK(
+      ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
+  auto channel = ::grpc::CreateChannel(address, credentials);
+  auto master_stub = MasterService::NewStub(channel);
+  GetOrRegisterDatasetRequest req;
+  *req.mutable_dataset()->mutable_graph() = graph_def;
+  GetOrRegisterDatasetResponse resp;
+  grpc::ClientContext client_ctx;
+  auto status = master_stub->GetOrRegisterDataset(&client_ctx, req, &resp);
+  if (!status.ok()) {
+    ctx->CtxFailure(grpc_util::WrapError("Failed to register dataset", status));
+    return;
+  }
+  Tensor* output;
+  OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
+  auto output_dataset_id = output->tensor<int64, 0>();
+  output_dataset_id() = resp.dataset_id();
 }
 
 CreateJobOp::CreateJobOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
 
 void CreateJobOp::Compute(OpKernelContext* ctx) {
-    int64 dataset_id;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kDatasetId, &dataset_id));
+  int64 dataset_id;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kDatasetId, &dataset_id));
 
-    tstring address;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
-    OP_REQUIRES(ctx, !address.empty(),
-                errors::InvalidArgument(kAddress, " must be non-empty."));
+  tstring address;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kAddress, &address));
+  OP_REQUIRES(ctx, !address.empty(),
+              errors::InvalidArgument(kAddress, " must be non-empty."));
 
-    tstring protocol;
-    OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
-    OP_REQUIRES(ctx, !protocol.empty(),
-                errors::InvalidArgument(kProtocol, " must be non-empty."));
+  tstring protocol;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kProtocol, &protocol));
+  OP_REQUIRES(ctx, !protocol.empty(),
+              errors::InvalidArgument(kProtocol, " must be non-empty."));
 
-    tstring processing_mode_str;
-    OP_REQUIRES_OK(
-        ctx, ParseScalarArgument(ctx, kProcessingMode, &processing_mode_str));
-    ProcessingMode processing_mode;
-    OP_REQUIRES_OK(ctx,
-                   ParseProcessingMode(processing_mode_str, &processing_mode));
+  tstring processing_mode_str;
+  OP_REQUIRES_OK(
+      ctx, ParseScalarArgument(ctx, kProcessingMode, &processing_mode_str));
+  ProcessingMode processing_mode;
+  OP_REQUIRES_OK(ctx,
+                 ParseProcessingMode(processing_mode_str, &processing_mode));
 
-    std::shared_ptr<::grpc::ChannelCredentials> credentials;
-    OP_REQUIRES_OK(
-        ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
-    auto channel = ::grpc::CreateChannel(address, credentials);
-    auto master_stub = MasterService::NewStub(channel);
-    CreateJobRequest req;
-    req.set_dataset_id(dataset_id);
-    req.set_processing_mode(ProcessingModeDef(processing_mode));
-    CreateJobResponse resp;
-    grpc::ClientContext client_ctx;
-    auto status = master_stub->CreateJob(&client_ctx, req, &resp);
-    if (!status.ok()) {
-        ctx->CtxFailure(grpc_util::WrapError(
-                            absl::StrCat("Failed to begin epoch for dataset id ", dataset_id),
-                            status));
-        return;
-    }
-    JobToken token(resp.job_id());
-    Tensor* output;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
-    auto output_token = output->tensor<Variant, 0>();
-    output_token() = token;
+  std::shared_ptr<::grpc::ChannelCredentials> credentials;
+  OP_REQUIRES_OK(
+      ctx, CredentialsFactory::CreateClientCredentials(protocol, &credentials));
+  auto channel = ::grpc::CreateChannel(address, credentials);
+  auto master_stub = MasterService::NewStub(channel);
+  CreateJobRequest req;
+  req.set_dataset_id(dataset_id);
+  req.set_processing_mode(ProcessingModeDef(processing_mode));
+  CreateJobResponse resp;
+  grpc::ClientContext client_ctx;
+  auto status = master_stub->CreateJob(&client_ctx, req, &resp);
+  if (!status.ok()) {
+    ctx->CtxFailure(grpc_util::WrapError(
+        absl::StrCat("Failed to begin epoch for dataset id ", dataset_id),
+        status));
+    return;
+  }
+  JobToken token(resp.job_id());
+  Tensor* output;
+  OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape{}, &output));
+  auto output_token = output->tensor<Variant, 0>();
+  output_token() = token;
 }
 
 Status MakeDataServiceIteratorOp::DoCompute(OpKernelContext* ctx) {
-    DatasetBase* dataset;
-    TF_RETURN_IF_ERROR(GetDatasetFromVariantTensor(ctx->input(0), &dataset));
+  DatasetBase* dataset;
+  TF_RETURN_IF_ERROR(GetDatasetFromVariantTensor(ctx->input(0), &dataset));
 
-    const Tensor* token_tensor;
-    TF_RETURN_IF_ERROR(ctx->input(kJobToken, &token_tensor));
-    JobToken token = *token_tensor->scalar<Variant>()().get<JobToken>();
+  const Tensor* token_tensor;
+  TF_RETURN_IF_ERROR(ctx->input(kJobToken, &token_tensor));
+  JobToken token = *token_tensor->scalar<Variant>()().get<JobToken>();
 
-    IteratorResource* iterator_resource;
-    TF_RETURN_IF_ERROR(
-        LookupResource(ctx, HandleFromInput(ctx, 2), &iterator_resource));
+  IteratorResource* iterator_resource;
+  TF_RETURN_IF_ERROR(
+      LookupResource(ctx, HandleFromInput(ctx, 2), &iterator_resource));
 
-    core::ScopedUnref unref_iterator(iterator_resource);
+  core::ScopedUnref unref_iterator(iterator_resource);
 
-    return iterator_resource->SetIteratorFromDataset(ctx, dataset, token);
+  return iterator_resource->SetIteratorFromDataset(ctx, dataset, token);
 }
 
 REGISTER_KERNEL_BUILDER(Name("RegisterDataset").Device(DEVICE_CPU),

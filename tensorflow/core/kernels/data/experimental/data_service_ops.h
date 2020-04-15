@@ -30,25 +30,25 @@ namespace data {
 // error out when the dataset contains external state.
 // The op produces a dataset id for identifying the registered dataset.
 class RegisterDatasetOp : public OpKernel {
-public:
-    static constexpr const char* const kAddress = "address";
-    static constexpr const char* const kProtocol = "protocol";
-    static constexpr const char* const kExternalStatePolicy =
-        "external_state_policy";
+ public:
+  static constexpr const char* const kAddress = "address";
+  static constexpr const char* const kProtocol = "protocol";
+  static constexpr const char* const kExternalStatePolicy =
+      "external_state_policy";
 
-    explicit RegisterDatasetOp(OpKernelConstruction* ctx);
+  explicit RegisterDatasetOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 
-private:
-    SerializationContext::ExternalStatePolicy external_state_policy_;
+ private:
+  SerializationContext::ExternalStatePolicy external_state_policy_;
 };
 
 enum class ProcessingMode : int64 {
-    // Each tf.data worker processes an entire epoch.
-    PARALLEL_EPOCHS = 0,
-    // Processing of an epoch is distributed across all tf.data workers.
-    ONE_EPOCH = 1,
+  // Each tf.data worker processes an entire epoch.
+  PARALLEL_EPOCHS = 0,
+  // Processing of an epoch is distributed across all tf.data workers.
+  ONE_EPOCH = 1,
 };
 
 // Creates a token for reading from the tf.data service.
@@ -59,15 +59,15 @@ enum class ProcessingMode : int64 {
 // The processing_mode defines how the tf.data service should produce data for
 // the token.
 class CreateJobOp : public OpKernel {
-public:
-    static constexpr const char* const kDatasetId = "dataset_id";
-    static constexpr const char* const kAddress = "address";
-    static constexpr const char* const kProtocol = "protocol";
-    static constexpr const char* const kProcessingMode = "processing_mode";
+ public:
+  static constexpr const char* const kDatasetId = "dataset_id";
+  static constexpr const char* const kAddress = "address";
+  static constexpr const char* const kProtocol = "protocol";
+  static constexpr const char* const kProcessingMode = "processing_mode";
 
-    explicit CreateJobOp(OpKernelConstruction* ctx);
+  explicit CreateJobOp(OpKernelConstruction* ctx);
 
-    void Compute(OpKernelContext* ctx) override;
+  void Compute(OpKernelContext* ctx) override;
 };
 
 // Creates a new iterator for iterating over a tf.data service dataset.
@@ -76,14 +76,14 @@ public:
 // may read from the same epoch, causing the elements of the epoch to be split
 // across all iterators.
 class MakeDataServiceIteratorOp : public MakeIteratorOp {
-public:
-    static constexpr const char* const kJobToken = "job_token";
+ public:
+  static constexpr const char* const kJobToken = "job_token";
 
-    explicit MakeDataServiceIteratorOp(OpKernelConstruction* ctx)
-        : MakeIteratorOp(ctx) {}
+  explicit MakeDataServiceIteratorOp(OpKernelConstruction* ctx)
+      : MakeIteratorOp(ctx) {}
 
-protected:
-    Status DoCompute(OpKernelContext* ctx) override;
+ protected:
+  Status DoCompute(OpKernelContext* ctx) override;
 };
 
 }  // namespace data
