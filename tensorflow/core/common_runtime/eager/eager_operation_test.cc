@@ -23,29 +23,29 @@ namespace tensorflow {
 namespace {
 
 TEST(EagerOperationTest, DeviceName) {
-  StaticDeviceMgr device_mgr(DeviceFactory::NewDevice(
-      "CPU", {}, "/job:localhost/replica:0/task:0/device:CPU:0"));
-  auto ctx = new EagerContext(
-      SessionOptions(),
-      tensorflow::ContextDevicePlacementPolicy::DEVICE_PLACEMENT_SILENT,
-      tensorflow::ContextMirroringPolicy::MIRRORING_NONE, false, false,
-      &device_mgr, false, nullptr, nullptr, nullptr);
+    StaticDeviceMgr device_mgr(DeviceFactory::NewDevice(
+                                   "CPU", {}, "/job:localhost/replica:0/task:0/device:CPU:0"));
+    auto ctx = new EagerContext(
+        SessionOptions(),
+        tensorflow::ContextDevicePlacementPolicy::DEVICE_PLACEMENT_SILENT,
+        tensorflow::ContextMirroringPolicy::MIRRORING_NONE, false, false,
+        &device_mgr, false, nullptr, nullptr, nullptr);
 
-  auto op = new EagerOperation(ctx);
+    auto op = new EagerOperation(ctx);
 
-  TF_ASSERT_OK(op->SetDeviceName("/device:DONTHAVE"));
-  EXPECT_EQ("/device:DONTHAVE:*", op->DeviceName());
+    TF_ASSERT_OK(op->SetDeviceName("/device:DONTHAVE"));
+    EXPECT_EQ("/device:DONTHAVE:*", op->DeviceName());
 
-  TF_ASSERT_OK(op->SetDeviceName(""));
-  EXPECT_EQ("", op->DeviceName());
+    TF_ASSERT_OK(op->SetDeviceName(""));
+    EXPECT_EQ("", op->DeviceName());
 
-  TF_ASSERT_OK(op->SetDeviceName("/job:localhost"));
-  EXPECT_EQ("/job:localhost", op->DeviceName());
+    TF_ASSERT_OK(op->SetDeviceName("/job:localhost"));
+    EXPECT_EQ("/job:localhost", op->DeviceName());
 
-  EXPECT_NE(Status::OK(), op->SetDeviceName("/not/a/valid/name"));
+    EXPECT_NE(Status::OK(), op->SetDeviceName("/not/a/valid/name"));
 
-  delete op;
-  ctx->Unref();
+    delete op;
+    ctx->Unref();
 }
 
 }  // namespace
