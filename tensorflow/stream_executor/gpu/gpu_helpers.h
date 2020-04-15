@@ -40,14 +40,14 @@ namespace gpu {
 // device memory.
 template <typename T>
 const T* GpuMemory(const DeviceMemory<T>& mem) {
-  return static_cast<const T*>(mem.opaque());
+    return static_cast<const T*>(mem.opaque());
 }
 
 // Converts a (non-const) DeviceMemory pointer reference to its underlying typed
 // pointer in CUDA device memory.
 template <typename T>
 T* GpuMemoryMutable(DeviceMemory<T>* mem) {
-  return static_cast<T*>(mem->opaque());
+    return static_cast<T*>(mem->opaque());
 }
 
 static_assert(
@@ -66,17 +66,17 @@ static_assert(offsetof(GpuDoubleComplexType, x) == 0,
 
 template <typename T>
 struct GpuComplexT {
-  typedef T type;
+    typedef T type;
 };
 
 template <>
 struct GpuComplexT<std::complex<float>> {
-  typedef GpuComplexType type;
+    typedef GpuComplexType type;
 };
 
 template <>
 struct GpuComplexT<std::complex<double>> {
-  typedef GpuDoubleComplexType type;
+    typedef GpuDoubleComplexType type;
 };
 
 // Converts pointers of std::complex<> to pointers of
@@ -85,28 +85,28 @@ struct GpuComplexT<std::complex<double>> {
 
 template <typename T>
 inline const typename GpuComplexT<T>::type* GpuComplex(const T* p) {
-  auto* result = reinterpret_cast<const typename GpuComplexT<T>::type*>(p);
-  CHECK_EQ(reinterpret_cast<uintptr_t>(p) % alignof(*result), 0)
-      << "Source pointer is not aligned by " << alignof(*result);
-  return result;
+    auto* result = reinterpret_cast<const typename GpuComplexT<T>::type*>(p);
+    CHECK_EQ(reinterpret_cast<uintptr_t>(p) % alignof(*result), 0)
+            << "Source pointer is not aligned by " << alignof(*result);
+    return result;
 }
 
 template <typename T>
 inline typename GpuComplexT<T>::type* GpuComplex(T* p) {
-  auto* result = reinterpret_cast<typename GpuComplexT<T>::type*>(p);
-  CHECK_EQ(reinterpret_cast<uintptr_t>(p) % alignof(*result), 0)
-      << "Source pointer is not aligned by " << alignof(*result);
-  return result;
+    auto* result = reinterpret_cast<typename GpuComplexT<T>::type*>(p);
+    CHECK_EQ(reinterpret_cast<uintptr_t>(p) % alignof(*result), 0)
+            << "Source pointer is not aligned by " << alignof(*result);
+    return result;
 }
 
 // Converts values of std::complex<float/double> to values of
 // GpuComplexType/GpuDoubleComplexType.
 inline GpuComplexType GpuComplexValue(std::complex<float> val) {
-  return {val.real(), val.imag()};
+    return {val.real(), val.imag()};
 }
 
 inline GpuDoubleComplexType GpuComplexValue(std::complex<double> val) {
-  return {val.real(), val.imag()};
+    return {val.real(), val.imag()};
 }
 
 }  // namespace gpu
