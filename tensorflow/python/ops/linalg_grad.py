@@ -52,8 +52,7 @@ def _MatrixInverseGrad(op, grad):
     """Gradient for MatrixInverse."""
     ainv = op.outputs[0]
     return -math_ops.matmul(
-        ainv, math_ops.matmul(grad, ainv, adjoint_b=True), adjoint_a=True
-    )
+        ainv, math_ops.matmul(grad, ainv, adjoint_b=True), adjoint_a=True)
 
 
 @ops.RegisterGradient("Einsum")
@@ -138,12 +137,12 @@ def _EinsumGrad(op, grad):
         # labels. If the same label appears multiple times, get the left-most axis.
         reduced_axes = [_GetAxisFromLabel(subscripts, s) for s in reduced_subs]
         # Get the corresponding dimensions for each reduced axis.
-        reduced_dims = array_ops.stack([input_shape[ax] for ax in reduced_axes])
+        reduced_dims = array_ops.stack(
+            [input_shape[ax] for ax in reduced_axes])
         return reduced_subs, reduced_dims, reduced_axes
 
-    def _GetGradReduced(
-        output_grad, output_subs, input_subs, input_shape, reduced_label_set
-    ):
+    def _GetGradReduced(output_grad, output_subs, input_subs, input_shape,
+                        reduced_label_set):
         """Returns the gradient wrt input for a unary einsum with reductions.
 
         Args:
@@ -158,18 +157,15 @@ def _EinsumGrad(op, grad):
         # 'd' are reduced with input_shape [2,2,5,5,3,4]. Then obtain the reduced
         # subscripts "bd", corresponding dimensions [5,4] and axes [2,5].
         reduced_subs, reduced_dims, reduced_axes = _GetReducedSubscripts(
-            reduced_label_set, input_shape, input_subs
-        )
+            reduced_label_set, input_shape, input_subs)
         # Whether either the input or the output subscripts have a repeated label.
         # This is true for "aabbcd->ca" or "abd->cca" but false for "abcd->ca".
-        has_repeated_labels = len(set(input_subs)) + len(set(output_subs)) < len(
-            input_subs
-        ) + len(output_subs)
+        has_repeated_labels = len(set(input_subs)) + len(
+            set(output_subs)) < len(input_subs) + len(output_subs)
         # Compute the input subscripts without the reduced axis labels, e.g. "aac"
         # for the equation "aabbcd->ca".
         input_subs_without_reduced_labels = "".join(
-            [s for s in input_subs if s not in reduced_label_set]
-        )
+            [s for s in input_subs if s not in reduced_label_set])
 
         # The gradient wrt the input for the equation "abc->ac" (or, equivalently
         # reduce_sum(..., axis=1)) is just the gradient of the output tiled N times
@@ -185,13 +181,11 @@ def _EinsumGrad(op, grad):
             # for the equation "abcd->ac" with input shape [2,5,3,4], we get the
             # reduced shape [2,1,3,1].
             reduced_shape = math_ops.reduced_shape(
-                input_shape, ops.convert_to_tensor(reduced_axes)
-            )
+                input_shape, ops.convert_to_tensor(reduced_axes))
             # Reshaping the gradient (wrt "ac") to [2,1,3,1] and broadcasting it to
             # the shape [2,5,3,4] results in the gradient wrt "abcd".
             return array_ops.broadcast_to(
-                array_ops.reshape(output_grad, reduced_shape), input_shape
-            )
+                array_ops.reshape(output_grad, reduced_shape), input_shape)
 
         # If we *do* have traces or transpose operations, then prepend the extra
         # reduced dimensions to the front. E.g. Given the equation "aabbcd->ca" we'd
@@ -200,8 +194,7 @@ def _EinsumGrad(op, grad):
         # Obtain the input shape with reduced dimensions prepended, viz. [5,4,3,2].
         # This is the shape of the intermediate "bdca".
         grad_shape_with_reduced_labels = array_ops.concat(
-            [reduced_dims, array_ops.shape(output_grad)], axis=0
-        )
+            [reduced_dims, array_ops.shape(output_grad)], axis=0)
         # Obtain the output shape of the reduction-only equation "bdca->ca" as if
         # keepdims=True; viz. [1,1,3,2]. Since we prepended the reduced labels, we
         # just have to prepend that many 1s to the output shape.
@@ -221,13 +214,11 @@ def _EinsumGrad(op, grad):
         # Compute the VJP for the final step (viz. "aabbcd->bdca"). We can use
         # einsum with the input and output subscripts reversed (viz. "bdca->aabbcd")
         # since the output axis labels now appear in the input subscripts.
-        return gen_linalg_ops.einsum(
-            [broadcasted_grad], "{}->{}".format(reduced_subs + output_subs, input_subs)
-        )
+        return gen_linalg_ops.einsum([broadcasted_grad], "{}->{}".format(
+            reduced_subs + output_subs, input_subs))
 
-    def _GetGradWrt(
-        output_grad, other_operand, input_shape, input_subs, other_subs, output_subs
-    ):
+    def _GetGradWrt(output_grad, other_operand, input_shape, input_subs,
+                    other_subs, output_subs):
         """Returns the gradient wrt an input operand for a binary einsum.
 
         This function does not handle (un)broadcasting. This must be done separately
@@ -281,11 +272,11 @@ def _EinsumGrad(op, grad):
         # output subscripts or the other operand's subscript. E.g. the set {'b'} for
         # the equation "abc,cd->ad".
         reduced_label_set = set(input_subs).difference(
-            set(output_subs + other_subs + ".")
-        )
+            set(output_subs + other_subs + "."))
         # Obtain the input subscripts with the reduced axis labels removed. E.g.
         # "ac" in the above example.
-        left_subs = "".join(s for s in input_subs if s not in reduced_label_set)
+        left_subs = "".join(s for s in input_subs
+                            if s not in reduced_label_set)
 
         # Compute the gradient wrt the input, without accounting for the operation
         # "abc->ac". So, now we have the VJP of the operation "ac,cd->ad".
@@ -300,9 +291,8 @@ def _EinsumGrad(op, grad):
         # Otherwise, we currently have the gradient wrt the output of the reduction
         # operation "abc->ac". Invoke the subroutine for the gradient for unary
         # einsum with reductions.
-        return _GetGradReduced(
-            grad_reduced, left_subs, input_subs, input_shape, reduced_label_set
-        )
+        return _GetGradReduced(grad_reduced, left_subs, input_subs,
+                               input_shape, reduced_label_set)
 
     equation = op.get_attr("equation")
     if isinstance(equation, bytes):
@@ -318,18 +308,17 @@ def _EinsumGrad(op, grad):
         # the output subscripts.
         input_shape = array_ops.shape(op.inputs[0])
         # Find the axis labels which appear only in the input.
-        reduced_label_set = set(input_subs).difference(set(output_subs + ellipsis))
+        reduced_label_set = set(input_subs).difference(
+            set(output_subs + ellipsis))
         if not reduced_label_set:
             # Return the einsum given by the reversed equation, since we don't have
             # reduced axes.
-            return gen_linalg_ops.einsum(
-                [grad], "{}->{}".format(output_subs, input_subs)
-            )
+            return gen_linalg_ops.einsum([grad], "{}->{}".format(
+                output_subs, input_subs))
         # We do have reduced axes, so we invoke the subroutine for reduced unary
         # einsums.
-        return _GetGradReduced(
-            grad, output_subs, input_subs, input_shape, reduced_label_set
-        )
+        return _GetGradReduced(grad, output_subs, input_subs, input_shape,
+                               reduced_label_set)
 
     x_subs, y_subs = input_subs.split(",")
     # Add ellipsis for broadcasted dimensions if any operand does not have it.
@@ -364,19 +353,19 @@ def _EinsumGrad(op, grad):
     # If the static batch shapes are equal, we don't need to unbroadcast.
     x_shape_static = x.get_shape()
     y_shape_static = y.get_shape()
-    if (
-        x_shape_static.is_fully_defined()
-        and y_shape_static.is_fully_defined()
-        and x_shape_static[bx_start:bx_end] == y_shape_static[by_start:by_end]
-    ):
+    if (x_shape_static.is_fully_defined()
+            and y_shape_static.is_fully_defined() and
+            x_shape_static[bx_start:bx_end] == y_shape_static[by_start:by_end]
+        ):
         return grad_x, grad_y
 
     # Sum the gradient across the broadcasted axes.
-    rx, ry = array_ops.broadcast_gradient_args(
-        x_shape[bx_start:bx_end], y_shape[by_start:by_end]
-    )
-    grad_x = array_ops.reshape(math_ops.reduce_sum(grad_x, bx_start + rx), x_shape)
-    grad_y = array_ops.reshape(math_ops.reduce_sum(grad_y, by_start + ry), y_shape)
+    rx, ry = array_ops.broadcast_gradient_args(x_shape[bx_start:bx_end],
+                                               y_shape[by_start:by_end])
+    grad_x = array_ops.reshape(math_ops.reduce_sum(grad_x, bx_start + rx),
+                               x_shape)
+    grad_y = array_ops.reshape(math_ops.reduce_sum(grad_y, by_start + ry),
+                               y_shape)
     return grad_x, grad_y
 
 
@@ -387,8 +376,7 @@ def _MatrixDeterminantGrad(op, grad):
     c = op.outputs[0]
     a_adj_inv = linalg_ops.matrix_inverse(a, adjoint=True)
     multipliers = array_ops.reshape(
-        grad * c, array_ops.concat([array_ops.shape(c), [1, 1]], 0)
-    )
+        grad * c, array_ops.concat([array_ops.shape(c), [1, 1]], 0))
     return multipliers * a_adj_inv
 
 
@@ -412,20 +400,18 @@ def _MatrixSquareRootGrad(op, grad):
 
         shape_slice_size = [math_ops.subtract(array_ops.size(b1_shape), 2)]
         shape_slice = array_ops.slice(
-            b1_shape, [0], shape_slice_size
-        )  # Same for both batches
+            b1_shape, [0], shape_slice_size)  # Same for both batches
         b1_reshape_shape = array_ops.concat(
-            [shape_slice, [b1_order], [1], [b1_order], [1]], 0
-        )
+            [shape_slice, [b1_order], [1], [b1_order], [1]], 0)
         b2_reshape_shape = array_ops.concat(
-            [shape_slice, [1], [b2_order], [1], [b2_order]], 0
-        )
+            [shape_slice, [1], [b2_order], [1], [b2_order]], 0)
 
         b1_reshape = array_ops.reshape(b1, b1_reshape_shape)
         b2_reshape = array_ops.reshape(b2, b2_reshape_shape)
 
         order_prod = b1_order * b2_order
-        kprod_shape = array_ops.concat([shape_slice, [order_prod], [order_prod]], 0)
+        kprod_shape = array_ops.concat(
+            [shape_slice, [order_prod], [order_prod]], 0)
         return array_ops.reshape(b1_reshape * b2_reshape, kprod_shape)
 
     sqrtm = op.outputs[0]  # R
@@ -467,8 +453,7 @@ def _LogMatrixDeterminantGrad(op, _, grad_b):
     c = op.outputs[1]
     a_adj_inv = linalg_ops.matrix_inverse(a, adjoint=True)
     multipliers = array_ops.reshape(
-        grad_b, array_ops.concat([array_ops.shape(c), [1, 1]], 0)
-    )
+        grad_b, array_ops.concat([array_ops.shape(c), [1, 1]], 0))
     return multipliers * a_adj_inv
 
 
@@ -481,16 +466,15 @@ def _CholeskyGrad(op, grad):
     num_rows = array_ops.shape(l)[-1]
     batch_shape = array_ops.shape(l)[:-2]
     l_inverse = linalg_ops.matrix_triangular_solve(
-        l, linalg_ops.eye(num_rows, batch_shape=batch_shape, dtype=l.dtype)
-    )
+        l, linalg_ops.eye(num_rows, batch_shape=batch_shape, dtype=l.dtype))
 
     middle = math_ops.matmul(l, grad, adjoint_a=True)
-    middle = array_ops.matrix_set_diag(middle, 0.5 * array_ops.matrix_diag_part(middle))
+    middle = array_ops.matrix_set_diag(
+        middle, 0.5 * array_ops.matrix_diag_part(middle))
     middle = array_ops.matrix_band_part(middle, -1, 0)
 
     grad_a = math_ops.matmul(
-        math_ops.matmul(l_inverse, middle, adjoint_a=True), l_inverse
-    )
+        math_ops.matmul(l_inverse, middle, adjoint_a=True), l_inverse)
 
     grad_a += _linalg.adjoint(grad_a)
     return grad_a * 0.5
@@ -501,18 +485,16 @@ def _QrGrad(op, dq, dr):
     """Gradient for Qr."""
     q, r = op.outputs
     if q.dtype.is_complex:
-        raise NotImplementedError("QrGrad not implemented for dtype: %s" % q.dtype)
-    if (
-        r.shape.ndims is None
-        or r.shape.as_list()[-2] is None
-        or r.shape.as_list()[-1] is None
-    ):
-        raise NotImplementedError("QrGrad not implemented with dynamic shapes.")
+        raise NotImplementedError("QrGrad not implemented for dtype: %s" %
+                                  q.dtype)
+    if (r.shape.ndims is None or r.shape.as_list()[-2] is None
+            or r.shape.as_list()[-1] is None):
+        raise NotImplementedError(
+            "QrGrad not implemented with dynamic shapes.")
     if r.shape.dims[-2].value != r.shape.dims[-1].value:
         raise NotImplementedError(
             "QrGrad not implemented when ncols > nrows "
-            "or full_matrices is true and ncols != nrows."
-        )
+            "or full_matrices is true and ncols != nrows.")
 
     qdq = math_ops.matmul(q, dq, adjoint_a=True)
     qdq_ = qdq - _linalg.adjoint(qdq)
@@ -523,10 +505,10 @@ def _QrGrad(op, dq, dr):
     def _TriangularSolve(x, r):
         """Equiv to matmul(x, adjoint(matrix_inverse(r))) if r is upper-tri."""
         return _linalg.adjoint(
-            linalg_ops.matrix_triangular_solve(
-                r, _linalg.adjoint(x), lower=False, adjoint=False
-            )
-        )
+            linalg_ops.matrix_triangular_solve(r,
+                                               _linalg.adjoint(x),
+                                               lower=False,
+                                               adjoint=False))
 
     grad_a = math_ops.matmul(q, dr + _TriangularSolve(tril, r))
     grad_b = _TriangularSolve(dq - math_ops.matmul(q, qdq), r)
@@ -572,14 +554,14 @@ def _MatrixSolveLsGrad(op, grad):
         l2_regularizer = math_ops.cast(op.inputs[2], a.dtype.base_dtype)
         # pylint: disable=protected-access
         chol = linalg_ops._RegularizedGramianCholesky(
-            a, l2_regularizer=l2_regularizer, first_kind=True
-        )
+            a, l2_regularizer=l2_regularizer, first_kind=True)
         # pylint: enable=protected-access
         # Temporary z = (A^T * A + lambda * I)^{-1} * grad.
         z = linalg_ops.cholesky_solve(chol, grad)
         xzt = math_ops.matmul(x, z, adjoint_b=True)
         zx_sym = xzt + array_ops.matrix_transpose(xzt)
-        grad_a = -math_ops.matmul(a, zx_sym) + math_ops.matmul(b, z, adjoint_b=True)
+        grad_a = -math_ops.matmul(a, zx_sym) + math_ops.matmul(
+            b, z, adjoint_b=True)
         grad_b = math_ops.matmul(a, z)
         return (grad_a, grad_b, None)
 
@@ -597,8 +579,7 @@ def _MatrixSolveLsGrad(op, grad):
         l2_regularizer = math_ops.cast(op.inputs[2], a.dtype.base_dtype)
         # pylint: disable=protected-access
         chol = linalg_ops._RegularizedGramianCholesky(
-            a, l2_regularizer=l2_regularizer, first_kind=False
-        )
+            a, l2_regularizer=l2_regularizer, first_kind=False)
         # pylint: enable=protected-access
         grad_b = linalg_ops.cholesky_solve(chol, math_ops.matmul(a, grad))
         # Temporary tmp = (A * A^T + lambda * I)^{-1} * B.
@@ -638,9 +619,10 @@ def _MatrixTriangularSolveGrad(op, grad):
     adjoint_a = op.get_attr("adjoint")
     lower_a = op.get_attr("lower")
     c = op.outputs[0]
-    grad_b = linalg_ops.matrix_triangular_solve(
-        a, grad, lower=lower_a, adjoint=not adjoint_a
-    )
+    grad_b = linalg_ops.matrix_triangular_solve(a,
+                                                grad,
+                                                lower=lower_a,
+                                                adjoint=not adjoint_a)
     if adjoint_a:
         grad_a = -math_ops.matmul(c, grad_b, adjoint_b=True)
     else:
@@ -650,11 +632,8 @@ def _MatrixTriangularSolveGrad(op, grad):
     else:
         grad_a = array_ops.matrix_band_part(grad_a, 0, -1)
     # If the static batch shapes are equal, we don't need to unbroadcast.
-    if (
-        a.shape.is_fully_defined()
-        and b.shape.is_fully_defined()
-        and a.shape[:-2] == b.shape[:-2]
-    ):
+    if (a.shape.is_fully_defined() and b.shape.is_fully_defined()
+            and a.shape[:-2] == b.shape[:-2]):
         return grad_a, grad_b
     a_shape = array_ops.shape(a)
     b_shape = array_ops.shape(b)
@@ -699,17 +678,18 @@ def _EigGrad(op, grad_e, grad_v):
             # up to arbitrary rotation in a (k-dimensional) subspace.
             f = array_ops.matrix_set_diag(
                 _SafeReciprocal(
-                    array_ops.expand_dims(e, -2) - array_ops.expand_dims(e, -1)
-                ),
+                    array_ops.expand_dims(e, -2) -
+                    array_ops.expand_dims(e, -1)),
                 array_ops.zeros_like(e),
             )
             f = math_ops.conj(f)
             vgv = math_ops.matmul(vt, grad_v)
             mid = array_ops.matrix_diag(grad_e)
             diag_grad_part = array_ops.matrix_diag(
-                array_ops.matrix_diag_part(math_ops.cast(math_ops.real(vgv), vgv.dtype))
-            )
-            mid += f * (vgv - math_ops.matmul(math_ops.matmul(vt, v), diag_grad_part))
+                array_ops.matrix_diag_part(
+                    math_ops.cast(math_ops.real(vgv), vgv.dtype)))
+            mid += f * (
+                vgv - math_ops.matmul(math_ops.matmul(vt, v), diag_grad_part))
             # vt is formally invertible as long as the original matrix is
             # diagonalizable. However, in practice, vt may
             # be ill-conditioned when matrix original matrix is close to
@@ -723,8 +703,7 @@ def _EigGrad(op, grad_e, grad_v):
             # be ill-conditioned when matrix original matrix is close to
             # non-diagonalizable one
             grad_a = linalg_ops.matrix_solve(
-                vt, math_ops.matmul(array_ops.matrix_diag(grad_e), vt)
-            )
+                vt, math_ops.matmul(array_ops.matrix_diag(grad_e), vt))
         return math_ops.cast(grad_a, op.inputs[0].dtype)
 
 
@@ -746,15 +725,15 @@ def _SelfAdjointEigV2Grad(op, grad_e, grad_v):
             # up to arbitrary rotation in a (k-dimensional) subspace.
             f = array_ops.matrix_set_diag(
                 _SafeReciprocal(
-                    array_ops.expand_dims(e, -2) - array_ops.expand_dims(e, -1)
-                ),
+                    array_ops.expand_dims(e, -2) -
+                    array_ops.expand_dims(e, -1)),
                 array_ops.zeros_like(e),
             )
             grad_a = math_ops.matmul(
                 v,
                 math_ops.matmul(
-                    array_ops.matrix_diag(grad_e)
-                    + f * math_ops.matmul(v, grad_v, adjoint_a=True),
+                    array_ops.matrix_diag(grad_e) +
+                    f * math_ops.matmul(v, grad_v, adjoint_a=True),
                     v,
                     adjoint_b=True,
                 ),
@@ -762,14 +741,16 @@ def _SelfAdjointEigV2Grad(op, grad_e, grad_v):
         else:
             _, v = linalg_ops.self_adjoint_eig(op.inputs[0])
             grad_a = math_ops.matmul(
-                v, math_ops.matmul(array_ops.matrix_diag(grad_e), v, adjoint_b=True)
-            )
+                v,
+                math_ops.matmul(array_ops.matrix_diag(grad_e),
+                                v,
+                                adjoint_b=True))
         # The forward op only depends on the lower triangular part of a, so here we
         # symmetrize and take the lower triangle
-        grad_a = array_ops.matrix_band_part(grad_a + _linalg.adjoint(grad_a), -1, 0)
+        grad_a = array_ops.matrix_band_part(grad_a + _linalg.adjoint(grad_a),
+                                            -1, 0)
         grad_a = array_ops.matrix_set_diag(
-            grad_a, 0.5 * array_ops.matrix_diag_part(grad_a)
-        )
+            grad_a, 0.5 * array_ops.matrix_diag_part(grad_a))
         return grad_a
 
 
@@ -792,7 +773,8 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
 
     if not op.get_attr("compute_uv"):
         s, u, v = linalg_ops.svd(a, compute_uv=True)
-        grad_a = math_ops.matmul(u, math_ops.matmul(grad_s_mat, v, adjoint_b=True))
+        grad_a = math_ops.matmul(
+            u, math_ops.matmul(grad_s_mat, v, adjoint_b=True))
         grad_a.set_shape(a_shape)
         return grad_a
 
@@ -802,9 +784,8 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
     grad_v_shape = grad_v.get_shape().with_rank_at_least(2)
     m = a_shape.dims[-2].merge_with(grad_u_shape[-2])
     n = a_shape.dims[-1].merge_with(grad_v_shape[-2])
-    batch_shape = (
-        a_shape[:-2].merge_with(grad_u_shape[:-2]).merge_with(grad_v_shape[:-2])
-    )
+    batch_shape = (a_shape[:-2].merge_with(grad_u_shape[:-2]).merge_with(
+        grad_v_shape[:-2]))
     a_shape = batch_shape.concatenate([m, n])
 
     m = a_shape.dims[-2].value
@@ -813,8 +794,7 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
     if m is None or n is None:
         raise NotImplementedError(
             "SVD gradient has not been implemented for input with unknown "
-            "inner matrix shape."
-        )
+            "inner matrix shape.")
 
     s = op.outputs[0]
     u = op.outputs[1]
@@ -834,8 +814,7 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
         if full_matrices and abs(m - n) > 1:
             raise NotImplementedError(
                 "svd gradient is not implemented for abs(m - n) > 1 "
-                "when full_matrices is True"
-            )
+                "when full_matrices is True")
         s_mat = array_ops.matrix_diag(s)
         s2 = math_ops.square(s)
 
@@ -850,8 +829,7 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
         s_shape = array_ops.shape(s)
         f = array_ops.matrix_set_diag(
             _SafeReciprocal(
-                array_ops.expand_dims(s2, -2) - array_ops.expand_dims(s2, -1)
-            ),
+                array_ops.expand_dims(s2, -2) - array_ops.expand_dims(s2, -1)),
             array_ops.zeros_like(s),
         )
         s_inv_mat = array_ops.matrix_diag(_SafeReciprocal(s))
@@ -865,13 +843,12 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
         f_u = f * u_gu
         f_v = f * v_gv
 
-        term1_nouv = (
-            grad_s_mat
-            + math_ops.matmul(f_u + _linalg.adjoint(f_u), s_mat)
-            + math_ops.matmul(s_mat, f_v + _linalg.adjoint(f_v))
-        )
+        term1_nouv = (grad_s_mat +
+                      math_ops.matmul(f_u + _linalg.adjoint(f_u), s_mat) +
+                      math_ops.matmul(s_mat, f_v + _linalg.adjoint(f_v)))
 
-        term1 = math_ops.matmul(u, math_ops.matmul(term1_nouv, v1, adjoint_b=True))
+        term1 = math_ops.matmul(
+            u, math_ops.matmul(term1_nouv, v1, adjoint_b=True))
 
         if m == n:
             grad_a_before_transpose = term1
@@ -893,19 +870,19 @@ def _SvdGrad(op, grad_s, grad_u, grad_v):
             grad_a_before_transpose = term1 + term2
 
         if a.dtype.is_complex:
-            eye = _linalg.eye(s_shape[-1], batch_shape=s_shape[:-1], dtype=a.dtype)
+            eye = _linalg.eye(s_shape[-1],
+                              batch_shape=s_shape[:-1],
+                              dtype=a.dtype)
             l = eye * v_gv
             term3_nouv = math_ops.matmul(s_inv_mat, _linalg.adjoint(l) - l)
-            term3 = (
-                1
-                / 2.0
-                * math_ops.matmul(u, math_ops.matmul(term3_nouv, v1, adjoint_b=True))
-            )
+            term3 = (1 / 2.0 * math_ops.matmul(
+                u, math_ops.matmul(term3_nouv, v1, adjoint_b=True)))
 
             grad_a_before_transpose += term3
 
         if use_adjoint:
-            grad_a = array_ops.matrix_transpose(grad_a_before_transpose, conjugate=True)
+            grad_a = array_ops.matrix_transpose(grad_a_before_transpose,
+                                                conjugate=True)
         else:
             grad_a = grad_a_before_transpose
 
@@ -917,7 +894,8 @@ def _LeftShift(x):
     """Shifts next-to-last dimension to the left, adding zero on the right."""
     rank = array_ops.rank(x)
     zeros = array_ops.zeros((rank - 2, 2), dtype=dtypes.int32)
-    pad = array_ops.concat([zeros, array_ops.constant([[0, 1], [0, 0]])], axis=0)
+    pad = array_ops.concat([zeros, array_ops.constant([[0, 1], [0, 0]])],
+                           axis=0)
     return array_ops.pad(x[..., 1:, :], pad)
 
 
@@ -925,7 +903,8 @@ def _RightShift(x):
     """Shifts next-to-last dimension to the right, adding zero on the left."""
     rank = array_ops.rank(x)
     zeros = array_ops.zeros((rank - 2, 2), dtype=dtypes.int32)
-    pad = array_ops.concat([zeros, array_ops.constant([[1, 0], [0, 0]])], axis=0)
+    pad = array_ops.concat([zeros, array_ops.constant([[1, 0], [0, 0]])],
+                           axis=0)
     return array_ops.pad(x[..., :-1, :], pad)
 
 
@@ -940,11 +919,8 @@ def _TridiagonalMatMulGrad(op, grad):
     superdiag_grad = math_ops.reduce_sum(_LeftShift(rhs_conj) * grad, axis=-1)
     maindiag_grad = math_ops.reduce_sum(rhs_conj * grad, axis=-1)
     subdiag_grad = math_ops.reduce_sum(_RightShift(rhs_conj) * grad, axis=-1)
-    rhs_grad = (
-        _RightShift(superdiag_conj * grad)
-        + maindiag_conj * grad
-        + _LeftShift(subdiag_conj * grad)
-    )
+    rhs_grad = (_RightShift(superdiag_conj * grad) + maindiag_conj * grad +
+                _LeftShift(subdiag_conj * grad))
 
     superdiag_grad = array_ops.expand_dims(superdiag_grad, -2)
     maindiag_grad = array_ops.expand_dims(maindiag_grad, -2)
@@ -966,9 +942,9 @@ def _TridiagonalSolveGrad(op, grad):
     # So constructing the transposed matrix in Python.
     diags_transposed = _TransposeTridiagonalMatrix(diags)
 
-    grad_rhs = linalg_ops.tridiagonal_solve(
-        diags_transposed, grad, partial_pivoting=partial_pivoting
-    )
+    grad_rhs = linalg_ops.tridiagonal_solve(diags_transposed,
+                                            grad,
+                                            partial_pivoting=partial_pivoting)
     grad_diags = -_MatmulExtractingThreeDiagonals(grad_rhs, x)
     return grad_diags, grad_rhs
 
@@ -989,15 +965,18 @@ def _TransposeTridiagonalMatrix(diags):
     if diags.shape.is_fully_defined():
         # For fully defined tensor we can concat with a tensor of zeros, which is
         # faster than using array_ops.pad().
-        zeros = array_ops.zeros(list(diags.shape[:-2]) + [1], dtype=diags.dtype)
+        zeros = array_ops.zeros(list(diags.shape[:-2]) + [1],
+                                dtype=diags.dtype)
         superdiag = array_ops.concat((diags[..., 2, 1:], zeros), axis=-1)
         subdiag = array_ops.concat((zeros, diags[..., 0, :-1]), axis=-1)
     else:
         rank = array_ops.rank(diags)
         zeros = array_ops.zeros((rank - 2, 2), dtype=dtypes.int32)
-        superdiag_pad = array_ops.concat((zeros, array_ops.constant([[0, 1]])), axis=0)
+        superdiag_pad = array_ops.concat((zeros, array_ops.constant([[0, 1]])),
+                                         axis=0)
         superdiag = array_ops.pad(diags[..., 2, 1:], superdiag_pad)
-        subdiag_pad = array_ops.concat((zeros, array_ops.constant([[1, 0]])), axis=0)
+        subdiag_pad = array_ops.concat((zeros, array_ops.constant([[1, 0]])),
+                                       axis=0)
         subdiag = array_ops.pad(diags[..., 0, :-1], subdiag_pad)
     return array_ops.stack([superdiag, diag, subdiag], axis=-2)
 
@@ -1021,26 +1000,23 @@ def _MatmulExtractingThreeDiagonals(x, y_tr):
     diag = math_ops.reduce_sum(x * y_tr, axis=-1)
 
     if y_tr.shape.is_fully_defined():
-        zeros = array_ops.zeros(list(x.shape[:-2]) + [1, x.shape[-1]], dtype=x.dtype)
-        superdiag = math_ops.reduce_sum(
-            x * array_ops.concat((y_tr[..., 1:, :], zeros), axis=-2), axis=-1
-        )
-        subdiag = math_ops.reduce_sum(
-            x * array_ops.concat((zeros, y_tr[..., :-1, :]), axis=-2), axis=-1
-        )
+        zeros = array_ops.zeros(list(x.shape[:-2]) + [1, x.shape[-1]],
+                                dtype=x.dtype)
+        superdiag = math_ops.reduce_sum(x * array_ops.concat(
+            (y_tr[..., 1:, :], zeros), axis=-2),
+                                        axis=-1)
+        subdiag = math_ops.reduce_sum(x * array_ops.concat(
+            (zeros, y_tr[..., :-1, :]), axis=-2),
+                                      axis=-1)
     else:
         rank = array_ops.rank(y_tr)
         zeros = array_ops.zeros((rank - 2, 2), dtype=dtypes.int32)
         superdiag_pad = array_ops.concat(
-            (zeros, array_ops.constant([[0, 1], [0, 0]])), axis=0
-        )
+            (zeros, array_ops.constant([[0, 1], [0, 0]])), axis=0)
         superdiag = math_ops.reduce_sum(
-            x * array_ops.pad(y_tr[..., 1:, :], superdiag_pad), axis=-1
-        )
+            x * array_ops.pad(y_tr[..., 1:, :], superdiag_pad), axis=-1)
         subdiag_pad = array_ops.concat(
-            (zeros, array_ops.constant([[1, 0], [0, 0]])), axis=0
-        )
+            (zeros, array_ops.constant([[1, 0], [0, 0]])), axis=0)
         subdiag = math_ops.reduce_sum(
-            x * array_ops.pad(y_tr[..., :-1, :], subdiag_pad), axis=-1
-        )
+            x * array_ops.pad(y_tr[..., :-1, :], subdiag_pad), axis=-1)
     return array_ops.stack([superdiag, diag, subdiag], axis=-2)
