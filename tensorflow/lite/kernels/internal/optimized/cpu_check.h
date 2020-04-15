@@ -26,11 +26,11 @@ limitations under the License.
 namespace tflite {
 
 struct CpuFlags {
-    bool neon_dotprod = false;
+  bool neon_dotprod = false;
 };
 
 inline void GetCpuFlags(CpuFlags* cpu_flags) {
-    cpu_flags->neon_dotprod = ruy::DetectDotprod();
+  cpu_flags->neon_dotprod = ruy::DetectDotprod();
 }
 
 }  // namespace tflite
