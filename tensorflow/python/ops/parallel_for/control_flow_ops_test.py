@@ -91,7 +91,9 @@ class PForTest(PForTestCase):
 
             # pylint: enable=cell-var-from-loop
 
-            self._test_loop_fn(loop_fn, 8, parallel_iterations=parallel_iterations)
+            self._test_loop_fn(loop_fn,
+                               8,
+                               parallel_iterations=parallel_iterations)
             self._test_loop_fn(
                 loop_fn,
                 4 * constant_op.constant(2),
@@ -102,9 +104,10 @@ class PForTest(PForTestCase):
         with self.assertRaisesRegexp(ValueError, "positive integer"):
             pfor_control_flow_ops.pfor(lambda i: 1, 8, parallel_iterations=0)
         with self.assertRaisesRegexp(TypeError, "positive integer"):
-            pfor_control_flow_ops.for_loop(
-                lambda i: 1, dtypes.int32, 8, parallel_iterations=0
-            )
+            pfor_control_flow_ops.for_loop(lambda i: 1,
+                                           dtypes.int32,
+                                           8,
+                                           parallel_iterations=0)
 
     def test_parallel_iterations_one(self):
         with self.assertRaisesRegexp(ValueError, "Use for_loop instead"):
@@ -115,15 +118,15 @@ class PForTest(PForTestCase):
             return math_ops.reduce_mean(x, axis=0, keepdims=True)
 
         result = pfor_control_flow_ops.vectorized_map(
-            compute, array_ops.ones((10, 5, 3))
-        )
+            compute, array_ops.ones((10, 5, 3)))
         self.run_and_assert_equal(result, array_ops.ones((10, 1, 3)))
 
     def test_vectorized_map_with_dynamic_shape(self):
         def compute(x):
             return math_ops.reduce_mean(x, axis=0, keepdims=True)
 
-        x = array_ops.placeholder_with_default(array_ops.ones((10, 5, 3)), shape=None)
+        x = array_ops.placeholder_with_default(array_ops.ones((10, 5, 3)),
+                                               shape=None)
         result = pfor_control_flow_ops.vectorized_map(compute, x)
         self.run_and_assert_equal(result, array_ops.ones((10, 1, 3)))
 
@@ -142,7 +145,8 @@ class PForTest(PForTestCase):
         self.assertTrue(def_function.functions_run_eagerly())
         self.assertAllEqual(
             [0, 1, 4, 9],
-            pfor_control_flow_ops.vectorized_map(lambda x: x * x, math_ops.range(4)),
+            pfor_control_flow_ops.vectorized_map(lambda x: x * x,
+                                                 math_ops.range(4)),
         )
         self.assertTrue(def_function.functions_run_eagerly())
 
@@ -151,17 +155,19 @@ class PForTest(PForTestCase):
 class IndexedSlicesTest(PForTestCase):
     def test_indexed_slices(self):
         def loop_fn(i):
-            return indexed_slices.IndexedSlices(
-                indices=i, values=array_ops.reshape(i, [1]), dense_shape=[3, 1]
-            )
+            return indexed_slices.IndexedSlices(indices=i,
+                                                values=array_ops.reshape(
+                                                    i, [1]),
+                                                dense_shape=[3, 1])
 
         self._test_loop_fn(loop_fn, 2)
 
     def test_indexed_slices_components(self):
         def loop_fn(i):
-            slices = indexed_slices.IndexedSlices(
-                indices=i, values=array_ops.reshape(i, [1]), dense_shape=[3, 1]
-            )
+            slices = indexed_slices.IndexedSlices(indices=i,
+                                                  values=array_ops.reshape(
+                                                      i, [1]),
+                                                  dense_shape=[3, 1])
             # Note that returning the components inside the slice avoids
             # densification, which may be more efficient.
             return slices.values, slices.indices
@@ -265,8 +271,7 @@ class ReductionTest(PForTestCase):
             return pfor_config.reduce_sum(x_i)
 
         with self.assertRaisesRegexp(
-            ValueError, "parallel_iterations currently unsupported"
-        ):
+                ValueError, "parallel_iterations currently unsupported"):
             pfor_control_flow_ops.pfor(loop_fn, 8, parallel_iterations=2)
 
 
@@ -274,7 +279,9 @@ class ReductionTest(PForTestCase):
 class BitwiseTest(PForTestCase):
     def test_unary_cwise(self):
         for op in [bitwise_ops.invert]:
-            x = random_ops.random_uniform([7, 3, 5], maxval=10, dtype=dtypes.int32)
+            x = random_ops.random_uniform([7, 3, 5],
+                                          maxval=10,
+                                          dtype=dtypes.int32)
 
             # pylint: disable=cell-var-from-loop
             def loop_fn(i):
@@ -294,8 +301,12 @@ class BitwiseTest(PForTestCase):
             bitwise_ops.right_shift,
         ]
         for op in binary_ops:
-            x = random_ops.random_uniform([7, 3, 5], maxval=10, dtype=dtypes.int32)
-            y = random_ops.random_uniform([3, 5], maxval=10, dtype=dtypes.int32)
+            x = random_ops.random_uniform([7, 3, 5],
+                                          maxval=10,
+                                          dtype=dtypes.int32)
+            y = random_ops.random_uniform([3, 5],
+                                          maxval=10,
+                                          dtype=dtypes.int32)
 
             output_dtypes = []
 
@@ -303,7 +314,13 @@ class BitwiseTest(PForTestCase):
             def loop_fn(i):
                 x1 = array_ops.gather(x, i)
                 y1 = array_ops.gather(y, i)
-                outputs = [op(x, y), op(x1, y), op(x, y1), op(x1, y1), op(x1, x1)]
+                outputs = [
+                    op(x, y),
+                    op(x1, y),
+                    op(x, y1),
+                    op(x1, y1),
+                    op(x1, x1)
+                ]
                 del output_dtypes[:]
                 output_dtypes.extend(t.dtype for t in outputs)
                 return outputs
@@ -350,9 +367,11 @@ class NNTest(PForTestCase):
 
         def loop_fn(i):
             x1 = array_ops.gather(x, i)
-            return nn.conv2d(
-                x1, filt, strides=[1, 2, 2, 1], padding="VALID", data_format="NHWC"
-            )
+            return nn.conv2d(x1,
+                             filt,
+                             strides=[1, 2, 2, 1],
+                             padding="VALID",
+                             data_format="NHWC")
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -391,8 +410,7 @@ class NNTest(PForTestCase):
                     strides=[1, 2, 2, 1],
                     padding="VALID",
                     data_format="NHWC",
-                )
-                for inp in [x_i, x_0]
+                ) for inp in [x_i, x_0]
             ]
 
         self._test_loop_fn(loop_fn, 3)
@@ -406,9 +424,11 @@ class NNTest(PForTestCase):
         def loop_fn(i):
             with g:
                 x1 = array_ops.gather(x, i)
-                output = nn.avg_pool(
-                    x1, ksize, strides=[1, 2, 2, 1], padding="VALID", data_format="NHWC"
-                )
+                output = nn.avg_pool(x1,
+                                     ksize,
+                                     strides=[1, 2, 2, 1],
+                                     padding="VALID",
+                                     data_format="NHWC")
                 loss = nn.l2_loss(output)
             return output, g.gradient(loss, x1)
 
@@ -424,9 +444,11 @@ class NNTest(PForTestCase):
         def loop_fn(i):
             with g:
                 x1 = array_ops.gather(x, i)
-                output = nn.avg_pool3d(
-                    x1, ksize, strides=strides, padding="VALID", data_format="NDHWC"
-                )
+                output = nn.avg_pool3d(x1,
+                                       ksize,
+                                       strides=strides,
+                                       padding="VALID",
+                                       data_format="NDHWC")
                 loss = nn.l2_loss(output)
             return output, g.gradient(loss, x1)
 
@@ -442,9 +464,11 @@ class NNTest(PForTestCase):
         def loop_fn(i):
             with g:
                 x1 = array_ops.gather(x, i)
-                output = nn.max_pool(
-                    x1, ksize, strides=strides, padding="VALID", data_format="NHWC"
-                )
+                output = nn.max_pool(x1,
+                                     ksize,
+                                     strides=strides,
+                                     padding="VALID",
+                                     data_format="NHWC")
                 loss = nn.l2_loss(output)
                 ones = array_ops.ones_like(output)
                 g.watch(ones)
@@ -464,9 +488,11 @@ class NNTest(PForTestCase):
         def loop_fn(i):
             with g:
                 x1 = array_ops.gather(x, i)
-                output = gen_nn_ops.max_pool_v2(
-                    x1, ksize, strides=strides, padding="VALID", data_format="NHWC"
-                )
+                output = gen_nn_ops.max_pool_v2(x1,
+                                                ksize,
+                                                strides=strides,
+                                                padding="VALID",
+                                                data_format="NHWC")
                 loss = nn.l2_loss(output)
                 ones = array_ops.ones_like(output)
                 g.watch(ones)
@@ -488,9 +514,11 @@ class NNTest(PForTestCase):
         def loop_fn(i):
             with g:
                 x1 = array_ops.gather(x, i)
-                output = nn.max_pool3d(
-                    x1, ksize, strides=strides, padding="VALID", data_format="NDHWC"
-                )
+                output = nn.max_pool3d(x1,
+                                       ksize,
+                                       strides=strides,
+                                       padding="VALID",
+                                       data_format="NDHWC")
                 loss = nn.l2_loss(output)
                 ones = array_ops.ones_like(output)
                 g.watch(ones)
@@ -516,8 +544,10 @@ class NNTest(PForTestCase):
                     g.watch(scale)
                     offset = random_ops.random_uniform([2])
                     g.watch(offset)
-                    mean = None if is_training else random_ops.random_uniform([2])
-                    variance = None if is_training else random_ops.random_uniform([2])
+                    mean = None if is_training else random_ops.random_uniform(
+                        [2])
+                    variance = None if is_training else random_ops.random_uniform(
+                        [2])
 
                 # pylint: disable=cell-var-from-loop
                 def loop_fn(i):
@@ -588,9 +618,8 @@ class NNTest(PForTestCase):
             with g:
                 logits_i = array_ops.gather(logits, i)
                 labels_i = array_ops.gather(labels, i)
-                loss = nn.softmax_cross_entropy_with_logits(
-                    labels=labels_i, logits=logits_i
-                )
+                loss = nn.softmax_cross_entropy_with_logits(labels=labels_i,
+                                                            logits=logits_i)
                 total_loss = math_ops.reduce_sum(loss)
             return loss, g.gradient(total_loss, logits_i)
 
@@ -598,14 +627,15 @@ class NNTest(PForTestCase):
 
     def test_sparse_softmax_cross_entropy_with_logits(self):
         logits = random_ops.random_uniform([3, 2, 4])
-        labels = random_ops.random_uniform(shape=[3, 2], maxval=4, dtype=dtypes.int32)
+        labels = random_ops.random_uniform(shape=[3, 2],
+                                           maxval=4,
+                                           dtype=dtypes.int32)
 
         def loop_fn(i):
             logits_i = array_ops.gather(logits, i)
             labels_i = array_ops.gather(labels, i)
-            loss = nn.sparse_softmax_cross_entropy_with_logits(
-                labels=labels_i, logits=logits_i
-            )
+            loss = nn.sparse_softmax_cross_entropy_with_logits(labels=labels_i,
+                                                               logits=logits_i)
             return loss
 
         self._test_loop_fn(loop_fn, 3)
@@ -727,18 +757,18 @@ class StatelessRandomTest(PForTestCase):
             seeds_0 = array_ops.gather(seeds, 0)
             seeds_i = array_ops.gather(seeds, i)
             return (
-                stateless_random_ops.stateless_categorical(
-                    logits=logits_i, num_samples=3, seed=seeds_i
-                ),
-                stateless_random_ops.stateless_categorical(
-                    logits=logits_i, num_samples=3, seed=seeds_0
-                ),
-                stateless_random_ops.stateless_categorical(
-                    logits=logits_0, num_samples=3, seed=seeds_i
-                ),
-                stateless_random_ops.stateless_categorical(
-                    logits=logits_0, num_samples=3, seed=seeds_0
-                ),
+                stateless_random_ops.stateless_categorical(logits=logits_i,
+                                                           num_samples=3,
+                                                           seed=seeds_i),
+                stateless_random_ops.stateless_categorical(logits=logits_i,
+                                                           num_samples=3,
+                                                           seed=seeds_0),
+                stateless_random_ops.stateless_categorical(logits=logits_0,
+                                                           num_samples=3,
+                                                           seed=seeds_i),
+                stateless_random_ops.stateless_categorical(logits=logits_0,
+                                                           num_samples=3,
+                                                           seed=seeds_0),
             )
 
         self._test_loop_fn(loop_fn, 2)
@@ -751,7 +781,9 @@ class LoggingTest(PForTestCase):
 
         def loop_fn(i):
             x1 = array_ops.gather(x, i)
-            return logging_ops.Print(x1, [x1, "x1", array_ops.shape(x1)], summarize=10)
+            return logging_ops.Print(x1,
+                                     [x1, "x1", array_ops.shape(x1)],
+                                     summarize=10)
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -768,11 +800,10 @@ class TensorArrayTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_create_outside_and_read(self):
 
-        ta = (
-            tensor_array_ops.TensorArray(dtypes.int32, 2, clear_after_read=False)
-            .write(0, 0)
-            .write(1, 1)
-        )
+        ta = (tensor_array_ops.TensorArray(dtypes.int32,
+                                           2,
+                                           clear_after_read=False).write(
+                                               0, 0).write(1, 1))
 
         def loop_fn(i):
             return ta.read(i), ta.read(0)
@@ -782,11 +813,10 @@ class TensorArrayTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_create_outside_and_gather(self):
 
-        ta = (
-            tensor_array_ops.TensorArray(dtypes.int32, 2, clear_after_read=False)
-            .write(0, 0)
-            .write(1, 1)
-        )
+        ta = (tensor_array_ops.TensorArray(dtypes.int32,
+                                           2,
+                                           clear_after_read=False).write(
+                                               0, 0).write(1, 1))
 
         def loop_fn(i):
             return ta.gather([i]), ta.gather([0, 1])
@@ -796,24 +826,27 @@ class TensorArrayTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_create_outside_and_write_and_scatter(self):
 
-        t = tensor_array_ops.TensorArray(dtypes.int32, 10, clear_after_read=False)
+        t = tensor_array_ops.TensorArray(dtypes.int32,
+                                         10,
+                                         clear_after_read=False)
         handle = t.handle
 
         def loop_fn(i):
             ta = t.write(i + 2, 2 * i).write(i, 5)
-            ta = ta.scatter([4 + i], [4]).scatter([6 + i, 8 + i], [6 + i, 8 + i])
+            ta = ta.scatter([4 + i], [4]).scatter([6 + i, 8 + i],
+                                                  [6 + i, 8 + i])
             return ta.flow
 
         t1 = pfor_control_flow_ops.pfor(loop_fn, iters=2)
-        out1 = tensor_array_ops.TensorArray(
-            dtypes.int32, handle=handle, flow=t1[-1]
-        ).stack()
+        out1 = tensor_array_ops.TensorArray(dtypes.int32,
+                                            handle=handle,
+                                            flow=t1[-1]).stack()
         output1 = self._run_targets(out1)
 
         t2 = pfor_control_flow_ops.for_loop(loop_fn, dtypes.float32, iters=2)
-        out2 = tensor_array_ops.TensorArray(
-            dtypes.int32, handle=handle, flow=t2[-1]
-        ).stack()
+        out2 = tensor_array_ops.TensorArray(dtypes.int32,
+                                            handle=handle,
+                                            flow=t2[-1]).stack()
         output2 = self._run_targets(out2)
         self.assertAllClose(output2, output1)
 
@@ -821,7 +854,8 @@ class TensorArrayTest(PForTestCase):
     def test_create_inside_and_write(self):
         def loop_fn(i):
             # TODO(agarwal): switching the order of writes to ta1 does not work.
-            ta1 = tensor_array_ops.TensorArray(dtypes.int32, 2).write(0, i).write(1, 1)
+            ta1 = tensor_array_ops.TensorArray(dtypes.int32,
+                                               2).write(0, i).write(1, 1)
             ta2 = tensor_array_ops.TensorArray(dtypes.int32, 1).write(0, 1)
             return ta1.stack(), ta2.stack()
 
@@ -831,16 +865,12 @@ class TensorArrayTest(PForTestCase):
     def test_create_inside_and_scatter(self):
         def loop_fn(i):
             # TODO(agarwal): switching the order of scatter to ta1 does not work.
-            ta1 = (
-                tensor_array_ops.TensorArray(dtypes.int32, 2)
-                .scatter([0], [[i, 2]])
-                .scatter([1], [[1, 2]])
-            )
-            ta2 = (
-                tensor_array_ops.TensorArray(dtypes.int32, 2)
-                .scatter([0], [3])
-                .scatter([1], [4])
-            )
+            ta1 = (tensor_array_ops.TensorArray(dtypes.int32, 2).scatter(
+                [0], [[i, 2]]).scatter([1], [[1, 2]]))
+            ta2 = (tensor_array_ops.TensorArray(dtypes.int32,
+                                                2).scatter([0],
+                                                           [3]).scatter([1],
+                                                                        [4]))
             return ta1.stack(), ta2.stack()
 
         self._test_loop_fn(loop_fn, 3)
@@ -848,16 +878,14 @@ class TensorArrayTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_create_inside_and_read(self):
         def loop_fn(i):
-            ta1 = (
-                tensor_array_ops.TensorArray(dtypes.int32, 2, clear_after_read=False)
-                .write(0, i)
-                .write(1, 1)
-            )
-            ta2 = (
-                tensor_array_ops.TensorArray(dtypes.int32, 2, clear_after_read=False)
-                .write(0, 1)
-                .write(1, 2)
-            )
+            ta1 = (tensor_array_ops.TensorArray(dtypes.int32,
+                                                2,
+                                                clear_after_read=False).write(
+                                                    0, i).write(1, 1))
+            ta2 = (tensor_array_ops.TensorArray(dtypes.int32,
+                                                2,
+                                                clear_after_read=False).write(
+                                                    0, 1).write(1, 2))
             # TODO(agarwal): ta1.read(i) currently is not supported.
             return ta1.read(0), ta2.read(0), ta2.read(i)
 
@@ -866,16 +894,14 @@ class TensorArrayTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_create_inside_and_gather(self):
         def loop_fn(i):
-            ta1 = (
-                tensor_array_ops.TensorArray(dtypes.int32, 2, clear_after_read=False)
-                .write(0, i)
-                .write(1, 1)
-            )
-            ta2 = (
-                tensor_array_ops.TensorArray(dtypes.int32, 2, clear_after_read=False)
-                .write(0, 1)
-                .write(1, 2)
-            )
+            ta1 = (tensor_array_ops.TensorArray(dtypes.int32,
+                                                2,
+                                                clear_after_read=False).write(
+                                                    0, i).write(1, 1))
+            ta2 = (tensor_array_ops.TensorArray(dtypes.int32,
+                                                2,
+                                                clear_after_read=False).write(
+                                                    0, 1).write(1, 2))
             # TODO(agarwal): ta1.read(i) currently is not supported.
             return ta1.gather([0, 1]), ta2.gather([0, 1]), ta2.gather([i])
 
@@ -884,9 +910,9 @@ class TensorArrayTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_grad(self):
         x = random_ops.random_uniform([3, 2])
-        ta = tensor_array_ops.TensorArray(
-            dtypes.float32, 3, clear_after_read=False
-        ).unstack(x)
+        ta = tensor_array_ops.TensorArray(dtypes.float32,
+                                          3,
+                                          clear_after_read=False).unstack(x)
         y = math_ops.square(ta.stack())
 
         def loop_fn(i):
@@ -983,7 +1009,8 @@ class WhileV1Test(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_invariant_while(self):
         def loop_fn(_):
-            return control_flow_ops.while_loop(lambda j: j < 4, lambda j: j + 1, [0])
+            return control_flow_ops.while_loop(lambda j: j < 4, lambda j: j +
+                                               1, [0])
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -991,9 +1018,8 @@ class WhileV1Test(PForTestCase):
     def test_invariant_while_with_control_dependency(self):
         def loop_fn(i):
             with ops.control_dependencies([i]):
-                return control_flow_ops.while_loop(
-                    lambda j: j < 4, lambda j: j + 1, [0]
-                )
+                return control_flow_ops.while_loop(lambda j: j < 4, lambda j: j
+                                                   + 1, [0])
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -1011,9 +1037,8 @@ class WhileV1Test(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_while_unstacked_condition(self):
         def loop_fn(i):
-            return control_flow_ops.while_loop(
-                lambda j, x: j < 4, lambda j, x: (j + 1, x + i), [0, 0]
-            )
+            return control_flow_ops.while_loop(lambda j, x: j < 4, lambda j, x:
+                                               (j + 1, x + i), [0, 0])
 
         self._test_loop_fn(loop_fn, 3)
 
@@ -1042,8 +1067,8 @@ class WhileV1Test(PForTestCase):
 
         # out = x @ y @ y @ y @ y, where @ is matmul operator.
         _, out = control_flow_ops.while_loop(
-            lambda i, _: i < 4, lambda i, out: (i + 1, math_ops.matmul(out, y)), [0, x]
-        )
+            lambda i, _: i < 4, lambda i, out: (i + 1, math_ops.matmul(out, y)
+                                                ), [0, x])
 
         def loop_fn(i):
             out_i = array_ops.gather(out, i, axis=1)
@@ -1090,7 +1115,8 @@ class WhileV1Test(PForTestCase):
             def body(j, s):
                 return j + 1, s + ta.read(j)
 
-            _, s = control_flow_ops.while_loop(lambda j, _: j < i, body, (0, 0))
+            _, s = control_flow_ops.while_loop(lambda j, _: j < i, body,
+                                               (0, 0))
             return s
 
         self._test_loop_fn(loop_fn, 3)
@@ -1120,13 +1146,14 @@ class WhileV1Test(PForTestCase):
 
         with session.Session() as sess:
             # out is [x, x, x]. Hence the gradients should be [1, 1, 1].
-            self.assertAllEqual(
-                [1, 1, 1], sess.run(pfor_control_flow_ops.pfor(loop_fn, 3))
-            )
+            self.assertAllEqual([1, 1, 1],
+                                sess.run(pfor_control_flow_ops.pfor(
+                                    loop_fn, 3)))
 
     @test_util.run_v1_only("b/122612051")
     def test_tensor_array_grad(self):
-        inp = constant_op.constant(np.random.rand(3, 4, 2), dtype=dtypes.float32)
+        inp = constant_op.constant(np.random.rand(3, 4, 2),
+                                   dtype=dtypes.float32)
         ta = tensor_array_ops.TensorArray(dtypes.float32, size=3)
         ta = ta.unstack(inp)
 
@@ -1136,9 +1163,8 @@ class WhileV1Test(PForTestCase):
                 value = array_ops.gather(array_ops.reshape(value, [4, 2]), i)
                 return j + 1, x + value
 
-            _, out = control_flow_ops.while_loop(
-                lambda j, _: j < 3, body, (0, array_ops.zeros([2]))
-            )
+            _, out = control_flow_ops.while_loop(lambda j, _: j < 3, body,
+                                                 (0, array_ops.zeros([2])))
             out = math_ops.reduce_prod(out)
             return out, gradient_ops.gradients(out, inp)[0]
 
@@ -1154,8 +1180,7 @@ class WhileV1Test(PForTestCase):
 
         with session.Session() as sess:
             v1, v2, v1_grad, v2_grad = sess.run(
-                [pfor_out, real_out, sum_pfor_out_grad, real_out_grad]
-            )
+                [pfor_out, real_out, sum_pfor_out_grad, real_out_grad])
             self.assertAllClose(v1, v2)
             self.assertAllClose(v1_grad, v2_grad)
 
@@ -1163,20 +1188,22 @@ class WhileV1Test(PForTestCase):
 def dynamic_lstm_input_fn(batch_size, state_size, max_steps):
     # We make inputs and sequence_length constant so that multiple session.run
     # calls produce the same result.
-    inputs = constant_op.constant(
-        np.random.rand(batch_size, max_steps, state_size), dtype=dtypes.float32
-    )
-    sequence_length = np.random.randint(0, size=[batch_size], high=max_steps + 1)
+    inputs = constant_op.constant(np.random.rand(batch_size, max_steps,
+                                                 state_size),
+                                  dtype=dtypes.float32)
+    sequence_length = np.random.randint(0,
+                                        size=[batch_size],
+                                        high=max_steps + 1)
     sequence_length = constant_op.constant(sequence_length, dtype=dtypes.int32)
     return inputs, sequence_length
 
 
 def create_dynamic_lstm(cell_fn, batch_size, state_size, max_steps):
     cell = cell_fn(state_size)
-    inputs, sequence_length = dynamic_lstm_input_fn(batch_size, state_size, max_steps)
+    inputs, sequence_length = dynamic_lstm_input_fn(batch_size, state_size,
+                                                    max_steps)
     inputs_ta = tensor_array_ops.TensorArray(
-        dtypes.float32, size=max_steps, element_shape=[batch_size, state_size]
-    )
+        dtypes.float32, size=max_steps, element_shape=[batch_size, state_size])
     inputs_time_major = array_ops.transpose(inputs, [1, 0, 2])
     inputs_ta = inputs_ta.unstack(inputs_time_major)
     zeros = array_ops.zeros([state_size])
@@ -1185,7 +1212,8 @@ def create_dynamic_lstm(cell_fn, batch_size, state_size, max_steps):
         sequence_length_i = array_ops.gather(sequence_length, i)
 
         def body_fn(t, state, ta):
-            inputs_t = array_ops.expand_dims(array_ops.gather(inputs_ta.read(t), i), 0)
+            inputs_t = array_ops.expand_dims(
+                array_ops.gather(inputs_ta.read(t), i), 0)
             output, new_state = cell(inputs_t, state)
             output = array_ops.reshape(output, [-1])
             # TODO(agarwal): one optimization that dynamic_rnn uses is to avoid the
@@ -1209,7 +1237,10 @@ def create_dynamic_lstm(cell_fn, batch_size, state_size, max_steps):
         _, state, ta = control_flow_ops.while_loop(
             condition_fn,
             body_fn,
-            [0, initial_state, tensor_array_ops.TensorArray(dtypes.float32, max_steps)],
+            [
+                0, initial_state,
+                tensor_array_ops.TensorArray(dtypes.float32, max_steps)
+            ],
         )
 
         new_state = [array_ops.reshape(x, [-1]) for x in nest.flatten(state)]
@@ -1238,9 +1269,8 @@ class StatelessIfTest(PForTestCase):
             x_i = array_ops.gather(x, i)
             # Note that the output has a combination of then and else branches being
             # loop variant / invariant.
-            return cond_v2.cond_v2(
-                x_i < y, lambda: (y - x_i, y, 1.0, 2.0), lambda: (x_i - y, 0.0, y, 3.0)
-            )
+            return cond_v2.cond_v2(x_i < y, lambda: (y - x_i, y, 1.0, 2.0),
+                                   lambda: (x_i - y, 0.0, y, 3.0))
 
         self._test_loop_fn(loop_fn, iters=5)
 
@@ -1254,9 +1284,8 @@ class StatelessIfTest(PForTestCase):
             x_i = array_ops.gather(x, i)
             # Note that the output has a combination of then and else branches being
             # loop variant / invariant.
-            return cond_v2.cond_v2(
-                z < y, lambda: (y - x_i, y, 1.0, 2.0), lambda: (x_i - y, 0.0, y, 3.0)
-            )
+            return cond_v2.cond_v2(z < y, lambda: (y - x_i, y, 1.0, 2.0),
+                                   lambda: (x_i - y, 0.0, y, 3.0))
 
         self._test_loop_fn(loop_fn, iters=5)
 
@@ -1295,12 +1324,14 @@ class IfTest(PForTestCase):
 class RNNTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_dynamic_rnn(self):
-        pfor_outputs, tf_outputs = create_dynamic_lstm(rnn_cell.BasicRNNCell, 3, 5, 7)
+        pfor_outputs, tf_outputs = create_dynamic_lstm(rnn_cell.BasicRNNCell,
+                                                       3, 5, 7)
         self.run_and_assert_equal(pfor_outputs, tf_outputs)
 
     @test_util.run_v1_only("b/122612051")
     def test_dynamic_lstm(self):
-        pfor_outputs, tf_outputs = create_dynamic_lstm(rnn_cell.BasicLSTMCell, 3, 5, 7)
+        pfor_outputs, tf_outputs = create_dynamic_lstm(rnn_cell.BasicLSTMCell,
+                                                       3, 5, 7)
         self.run_and_assert_equal(pfor_outputs, tf_outputs)
 
 
@@ -1349,7 +1380,8 @@ class Benchmarks(test.Benchmark):
                 return x_i + y_i
 
             pfor_outputs = pfor_control_flow_ops.pfor(loop_fn, n)
-            while_outputs = pfor_control_flow_ops.for_loop(loop_fn, dtypes.float32, n)
+            while_outputs = pfor_control_flow_ops.for_loop(
+                loop_fn, dtypes.float32, n)
             manual = x + y
 
             self._run(manual, 1000, name="manual_add")
@@ -1368,7 +1400,8 @@ class Benchmarks(test.Benchmark):
                 return math_ops.matmul(x_i, y)
 
             pfor_outputs = pfor_control_flow_ops.pfor(loop_fn, n)
-            while_outputs = pfor_control_flow_ops.for_loop(loop_fn, dtypes.float32, n)
+            while_outputs = pfor_control_flow_ops.for_loop(
+                loop_fn, dtypes.float32, n)
             manual = math_ops.matmul(x, y)
 
             self._run(manual, 1000, name="manual_matmul")
@@ -1386,8 +1419,8 @@ class Benchmarks(test.Benchmark):
 
             def pfor_map_fn(f, x):
                 return pfor_control_flow_ops.pfor(
-                    lambda i: f(array_ops.gather(x, i)), array_ops.shape(x)[0]
-                )
+                    lambda i: f(array_ops.gather(x, i)),
+                    array_ops.shape(x)[0])
 
             map_output = map_fn.map_fn(fn, inp)
             pfor_output = pfor_map_fn(fn, inp)
@@ -1400,23 +1433,20 @@ class Benchmarks(test.Benchmark):
 
             def loop_fn(i):
                 _, s = control_flow_ops.while_loop(
-                    lambda t, x: t < i, lambda t, x: (t + 1, x + i), [0, 0]
-                )
+                    lambda t, x: t < i, lambda t, x: (t + 1, x + i), [0, 0])
                 return s
 
             iters = 50
             pfor_output = pfor_control_flow_ops.pfor(loop_fn, iters)
             for_loop_output = pfor_control_flow_ops.for_loop(
-                loop_fn, dtypes.int32, iters
-            )
+                loop_fn, dtypes.int32, iters)
             self._run(pfor_output, 100, name="pfor_basic")
             self._run(for_loop_output, 100, name="for_loop_basic")
 
     def benchmark_dynamic_rnn(self):
         with ops.Graph().as_default():
             pfor_outputs, tf_outputs = create_dynamic_lstm(
-                rnn_cell.BasicRNNCell, 128, 512, 16
-            )
+                rnn_cell.BasicRNNCell, 128, 512, 16)
             self._run(pfor_outputs, 100, name="pfor_rnn")
             self._run(tf_outputs, 100, name="tf_rnn")
 
@@ -1429,8 +1459,7 @@ class Benchmarks(test.Benchmark):
             def loop_fn(i, pfor_config):
                 x_i = array_ops.gather(x, i)
                 return math_ops.reduce_sum(
-                    math_ops.matmul(pfor_config.reduce_concat(x_i), w)
-                )
+                    math_ops.matmul(pfor_config.reduce_concat(x_i), w))
 
             # Note that output_reduction will be tiled, so there may be some minor
             # overheads compared to output_no_reduction.
@@ -1448,9 +1477,8 @@ class SparseTest(PForTestCase):
         num_iters = array_ops.placeholder(dtypes.int32)
 
         def loop_fn(_):
-            return sparse_tensor.SparseTensor(
-                [[0], [1], [2]], [4, 5, 6], [3]
-            )  # [0, 2, 0]
+            return sparse_tensor.SparseTensor([[0], [1], [2]], [4, 5, 6],
+                                              [3])  # [0, 2, 0]
 
         pfor = pfor_control_flow_ops.pfor(loop_fn, num_iters)
         with self.cached_session() as sess:
@@ -1461,9 +1489,8 @@ class SparseTest(PForTestCase):
         num_iters = 10
 
         def loop_fn(_):
-            return sparse_tensor.SparseTensor(
-                [[0], [1], [2]], [4, 5, 6], [3]
-            )  # [0, 2, 0]
+            return sparse_tensor.SparseTensor([[0], [1], [2]], [4, 5, 6],
+                                              [3])  # [0, 2, 0]
 
         pfor = pfor_control_flow_ops.pfor(loop_fn, num_iters)
 
@@ -1504,9 +1531,9 @@ class SparseTest(PForTestCase):
 
         # Expected result: identity matrix size num_iters * num_iters
         pfor = pfor_control_flow_ops.pfor(loop_fn, num_iters)
-        manual = sparse_tensor.SparseTensor(
-            [[i, i] for i in range(num_iters)], [1] * num_iters, (num_iters, num_iters)
-        )
+        manual = sparse_tensor.SparseTensor([[i, i] for i in range(num_iters)],
+                                            [1] * num_iters,
+                                            (num_iters, num_iters))
         self.run_and_assert_equal(pfor, manual)
 
     @test_util.run_v1_only("b/122612051")
@@ -1538,9 +1565,9 @@ class SparseTest(PForTestCase):
 
         # Expected result: [[1, 0, 0, ...], [1, 0, 0, ...], ...]
         pfor = pfor_control_flow_ops.pfor(loop_fn, num_iters)
-        manual = sparse_tensor.SparseTensor(
-            [[i, 0] for i in range(num_iters)], [1] * num_iters, (num_iters, num_iters)
-        )
+        manual = sparse_tensor.SparseTensor([[i, 0] for i in range(num_iters)],
+                                            [1] * num_iters,
+                                            (num_iters, num_iters))
         self.run_and_assert_equal(pfor, manual)
 
     @test_util.run_v1_only("b/122612051")
@@ -1577,30 +1604,22 @@ class ParsingTest(PForTestCase):
     @test_util.run_v1_only("b/122612051")
     def test_parse_single_example(self):
         def _int64_feature(*values):
-            return feature_pb2.Feature(int64_list=feature_pb2.Int64List(value=values))
+            return feature_pb2.Feature(int64_list=feature_pb2.Int64List(
+                value=values))
 
         def _bytes_feature(*values):
-            return feature_pb2.Feature(
-                bytes_list=feature_pb2.BytesList(
-                    value=[v.encode("utf-8") for v in values]
-                )
-            )
+            return feature_pb2.Feature(bytes_list=feature_pb2.BytesList(
+                value=[v.encode("utf-8") for v in values]))
 
-        examples = constant_op.constant(
-            [
-                example_pb2.Example(
-                    features=feature_pb2.Features(
-                        feature={
-                            "dense_int": _int64_feature(i),
-                            "dense_str": _bytes_feature(str(i)),
-                            "sparse_int": _int64_feature(i, i * 2, i * 4, i * 8),
-                            "sparse_str": _bytes_feature(*["abc"] * i),
-                        }
-                    )
-                ).SerializeToString()
-                for i in range(10)
-            ]
-        )
+        examples = constant_op.constant([
+            example_pb2.Example(features=feature_pb2.Features(
+                feature={
+                    "dense_int": _int64_feature(i),
+                    "dense_str": _bytes_feature(str(i)),
+                    "sparse_int": _int64_feature(i, i * 2, i * 4, i * 8),
+                    "sparse_str": _bytes_feature(*["abc"] * i),
+                })).SerializeToString() for i in range(10)
+        ])
 
         features = {
             "dense_int": parsing_ops.FixedLenFeature((), dtypes.int64, 0),
@@ -1701,12 +1720,12 @@ class PartitionedCallTest(PForTestCase):
 
 class SpectralTest(PForTestCase, parameterized.TestCase):
     @parameterized.parameters(
-        (fft_ops.fft,),
-        (fft_ops.fft2d,),
-        (fft_ops.fft3d,),
-        (fft_ops.ifft,),
-        (fft_ops.ifft2d,),
-        (fft_ops.ifft3d,),
+        (fft_ops.fft, ),
+        (fft_ops.fft2d, ),
+        (fft_ops.fft3d, ),
+        (fft_ops.ifft, ),
+        (fft_ops.ifft2d, ),
+        (fft_ops.ifft3d, ),
     )
     def test_fft(self, op_func):
         shape = [2, 3, 4, 3, 4]
@@ -1719,7 +1738,9 @@ class SpectralTest(PForTestCase, parameterized.TestCase):
         self._test_loop_fn(loop_fn, 2)
 
     @parameterized.parameters(
-        (fft_ops.rfft,), (fft_ops.rfft2d,), (fft_ops.rfft3d,),
+        (fft_ops.rfft, ),
+        (fft_ops.rfft2d, ),
+        (fft_ops.rfft3d, ),
     )
     def test_rfft(self, op_func):
         for dtype in (dtypes.float32, dtypes.float64):
@@ -1735,7 +1756,9 @@ class SpectralTest(PForTestCase, parameterized.TestCase):
             self._test_loop_fn(loop_fn, 2)
 
     @parameterized.parameters(
-        (fft_ops.irfft,), (fft_ops.irfft2d,), (fft_ops.irfft3d,),
+        (fft_ops.irfft, ),
+        (fft_ops.irfft2d, ),
+        (fft_ops.irfft3d, ),
     )
     def test_irfft(self, op_func):
         if config.list_physical_devices("GPU"):
@@ -1743,7 +1766,8 @@ class SpectralTest(PForTestCase, parameterized.TestCase):
             self.skipTest("b/149957923: irfft vectorization flaky")
         for dtype in (dtypes.complex64, dtypes.complex128):
             shape = [2, 3, 4, 3, 4]
-            x = np.random.uniform(size=shape) + 1j * np.random.uniform(size=shape)
+            x = np.random.uniform(
+                size=shape) + 1j * np.random.uniform(size=shape)
             x = math_ops.cast(x, dtype=dtype)
 
             # pylint: disable=cell-var-from-loop
@@ -1780,8 +1804,8 @@ class VariableTest(PForTestCase):
 
         # Note that this error is only raised under v2 behavior.
         with self.assertRaisesRegexp(
-            ValueError,
-            "tf.function-decorated function tried to create variables on non-first",
+                ValueError,
+                "tf.function-decorated function tried to create variables on non-first",
         ):
             pfor_control_flow_ops.vectorized_map(f, x)
 

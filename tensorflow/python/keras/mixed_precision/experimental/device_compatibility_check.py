@@ -25,15 +25,13 @@ from tensorflow.python.framework import config
 from tensorflow.python.framework import gpu_util
 from tensorflow.python.platform import tf_logging
 
-
 _COMPAT_CHECK_PREFIX = "Mixed precision compatibility check (mixed_float16): "
 _COMPAT_CHECK_OK_PREFIX = _COMPAT_CHECK_PREFIX + "OK"
 _COMPAT_CHECK_WARNING_PREFIX = _COMPAT_CHECK_PREFIX + "WARNING"
 _COMPAT_CHECK_WARNING_SUFFIX = (
     "If you will use compatible GPU(s) not attached to this host, e.g. by "
     "running a multi-worker model, you can ignore this warning. This message "
-    "will only be logged once"
-)
+    "will only be logged once")
 
 
 def _dedup_strings(device_strs):
@@ -81,15 +79,16 @@ def _log_device_compatibility_check(policy_name, device_attr_list):
             name, cc = gpu_util.compute_capability_from_device_desc(device)
             name = name or "Unknown GPU"
             if cc:
-                device_str = "%s, compute capability %s.%s" % (name, cc[0], cc[1])
+                device_str = "%s, compute capability %s.%s" % (name, cc[0],
+                                                               cc[1])
                 if cc >= (7, 0):
                     supported_device_strs.append(device_str)
                 else:
                     unsupported_device_strs.append(device_str)
             else:
                 unsupported_device_strs.append(
-                    name + ", no compute capability (probably not an Nvidia GPU)"
-                )
+                    name +
+                    ", no compute capability (probably not an Nvidia GPU)")
 
     if unsupported_device_strs:
         warning_str = _COMPAT_CHECK_WARNING_PREFIX + "\n"
@@ -97,28 +96,22 @@ def _log_device_compatibility_check(policy_name, device_attr_list):
             warning_str += (
                 "Some of your GPUs may run slowly with dtype policy "
                 "mixed_float16 because they do not all have compute "
-                "capability of at least 7.0. Your GPUs:\n"
-            )
+                "capability of at least 7.0. Your GPUs:\n")
         elif len(unsupported_device_strs) == 1:
             warning_str += (
                 "Your GPU may run slowly with dtype policy mixed_float16 "
                 "because it does not have compute capability of at least "
-                "7.0. Your GPU:\n"
-            )
+                "7.0. Your GPU:\n")
         else:
-            warning_str += (
-                "Your GPUs may run slowly with dtype policy "
-                "mixed_float16 because they do not have compute "
-                "capability of at least 7.0. Your GPUs:\n"
-            )
-        for device_str in _dedup_strings(
-            supported_device_strs + unsupported_device_strs
-        ):
+            warning_str += ("Your GPUs may run slowly with dtype policy "
+                            "mixed_float16 because they do not have compute "
+                            "capability of at least 7.0. Your GPUs:\n")
+        for device_str in _dedup_strings(supported_device_strs +
+                                         unsupported_device_strs):
             warning_str += "  " + device_str + "\n"
         warning_str += (
             "See https://developer.nvidia.com/cuda-gpus for a list of "
-            "GPUs and their compute capabilities.\n"
-        )
+            "GPUs and their compute capabilities.\n")
         warning_str += _COMPAT_CHECK_WARNING_SUFFIX
         tf_logging.warn(warning_str)
     elif not supported_device_strs:
@@ -127,23 +120,21 @@ def _log_device_compatibility_check(policy_name, device_attr_list):
             "The dtype policy mixed_float16 may run slowly because "
             "this machine does not have a GPU. Only Nvidia GPUs with "
             "compute capability of at least 7.0 run quickly with "
-            "mixed_float16.\n%s"
-            % (_COMPAT_CHECK_WARNING_PREFIX, _COMPAT_CHECK_WARNING_SUFFIX)
-        )
+            "mixed_float16.\n%s" %
+            (_COMPAT_CHECK_WARNING_PREFIX, _COMPAT_CHECK_WARNING_SUFFIX))
     elif len(supported_device_strs) == 1:
         tf_logging.info(
             "%s\n"
             "Your GPU will likely run quickly with dtype policy "
             "mixed_float16 as it has compute capability of at least "
-            "7.0. Your GPU: %s" % (_COMPAT_CHECK_OK_PREFIX, supported_device_strs[0])
-        )
+            "7.0. Your GPU: %s" %
+            (_COMPAT_CHECK_OK_PREFIX, supported_device_strs[0]))
     else:
         tf_logging.info(
             "%s\n"
             "Your GPUs will likely run quickly with dtype policy "
             "mixed_float16 as they all have compute capability of at "
-            "least 7.0" % _COMPAT_CHECK_OK_PREFIX
-        )
+            "least 7.0" % _COMPAT_CHECK_OK_PREFIX)
 
 
 _logged_compatibility_check = False
@@ -181,6 +172,5 @@ def log_device_compatibility_check(policy_name, skip_local):
         tf_logging.warn(
             "%s\n"
             "The dtype policy mixed_float16 may run slowly because "
-            "this machine does not have a GPU.\n%s"
-            % (_COMPAT_CHECK_WARNING_PREFIX, _COMPAT_CHECK_WARNING_SUFFIX)
-        )
+            "this machine does not have a GPU.\n%s" %
+            (_COMPAT_CHECK_WARNING_PREFIX, _COMPAT_CHECK_WARNING_SUFFIX))

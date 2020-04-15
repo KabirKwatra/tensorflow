@@ -69,10 +69,11 @@ class _NodeState(object):
         if init_from:
             if isinstance(init_from, _NodeState):
                 self.value = {
-                    s: set(other_infos) for s, other_infos in init_from.value.items()
+                    s: set(other_infos)
+                    for s, other_infos in init_from.value.items()
                 }
             elif isinstance(init_from, dict):
-                self.value = {s: set((init_from[s],)) for s in init_from}
+                self.value = {s: set((init_from[s], )) for s in init_from}
             else:
                 assert False, init_from
         else:
@@ -222,7 +223,8 @@ class TreeAnnotator(transformer.Base):
         analyzer = Analyzer(subgraph, self.definition_factory)
         if parent_analyzer is not None:
             # Wire the state between the two subgraphs' analyzers.
-            parent_out_state = parent_analyzer.out[parent_analyzer.graph.index[node]]
+            parent_out_state = parent_analyzer.out[
+                parent_analyzer.graph.index[node]]
             # Exception: symbols modified in the child function are local to it
             body_scope = anno.getanno(node, annos.NodeAnno.BODY_SCOPE)
             parent_out_state -= body_scope.modified
@@ -252,8 +254,7 @@ class TreeAnnotator(transformer.Base):
         cfg_node = self.current_cfg_node
 
         assert cfg_node is not None, (
-            "name node, %s, outside of any statement?" % node.id
-        )
+            "name node, %s, outside of any statement?" % node.id)
 
         qn = anno.getanno(node, anno.Basic.QN)
         if isinstance(node.ctx, gast.Load):
@@ -276,7 +277,8 @@ class TreeAnnotator(transformer.Base):
         node_defined_in = set()
         for p in preds:
             node_defined_in |= set(self.current_analyzer.out[p].value.keys())
-        anno.setanno(node, anno.Static.DEFINED_VARS_IN, frozenset(node_defined_in))
+        anno.setanno(node, anno.Static.DEFINED_VARS_IN,
+                     frozenset(node_defined_in))
 
     def visit_If(self, node):
         self._aggregate_predecessors_defined_in(node)
@@ -315,10 +317,8 @@ class TreeAnnotator(transformer.Base):
     def visit(self, node):
         parent = self.current_cfg_node
 
-        if (
-            self.current_analyzer is not None
-            and node in self.current_analyzer.graph.index
-        ):
+        if (self.current_analyzer is not None
+                and node in self.current_analyzer.graph.index):
             self.current_cfg_node = self.current_analyzer.graph.index[node]
         node = super(TreeAnnotator, self).visit(node)
 

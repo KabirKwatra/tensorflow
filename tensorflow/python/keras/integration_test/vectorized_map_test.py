@@ -37,7 +37,8 @@ class VectorizedMapTest(tf.test.TestCase):
         inputs = tf.random.uniform([batch_size, num_features])
         labels = tf.random.uniform([batch_size, 1])
         per_example_gradients = tf.vectorized_map(model_fn, (inputs, labels))
-        self.assertEqual(per_example_gradients[0].shape, (batch_size, num_features, 1))
+        self.assertEqual(per_example_gradients[0].shape,
+                         (batch_size, num_features, 1))
         self.assertEqual(per_example_gradients[1].shape, (batch_size, 1))
 
 
