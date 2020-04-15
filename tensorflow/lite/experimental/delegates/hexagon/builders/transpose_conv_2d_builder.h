@@ -24,36 +24,36 @@ namespace delegates {
 namespace hexagon {
 
 class TransposeConv2dOpBuilder : public OpBuilder {
-public:
-    explicit TransposeConv2dOpBuilder(GraphBuilder* graph_builder, int op_type)
-        : OpBuilder(graph_builder, op_type) {}
-    TfLiteStatus PopulateSubGraph(const TfLiteIntArray* inputs,
-                                  const TfLiteIntArray* outputs,
-                                  TfLiteContext* context) override;
+ public:
+  explicit TransposeConv2dOpBuilder(GraphBuilder* graph_builder, int op_type)
+      : OpBuilder(graph_builder, op_type) {}
+  TfLiteStatus PopulateSubGraph(const TfLiteIntArray* inputs,
+                                const TfLiteIntArray* outputs,
+                                TfLiteContext* context) override;
 
-    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                                 TfLiteContext* context) override;
+  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                               TfLiteContext* context) override;
 
-    ~TransposeConv2dOpBuilder();
+  ~TransposeConv2dOpBuilder();
 
-private:
-    // TODO(b/142009955): Combine into common util for all types of Conv.
-    TfLiteStatus ProcessPerChannelQuantizedWeights(const TfLiteIntArray* inputs,
-            const TfLiteIntArray* outputs,
-            TfLiteContext* context,
-            float* weights_min,
-            float* weights_max);
+ private:
+  // TODO(b/142009955): Combine into common util for all types of Conv.
+  TfLiteStatus ProcessPerChannelQuantizedWeights(const TfLiteIntArray* inputs,
+                                                 const TfLiteIntArray* outputs,
+                                                 TfLiteContext* context,
+                                                 float* weights_min,
+                                                 float* weights_max);
 
-    TensorID node_output_;
-    std::vector<float> transposed_weights_;
-    std::vector<int> stride_shape_;
-    std::vector<int> weight_shape_, bias_shape_;
-    std::vector<int> bias_data_;
+  TensorID node_output_;
+  std::vector<float> transposed_weights_;
+  std::vector<int> stride_shape_;
+  std::vector<int> weight_shape_, bias_shape_;
+  std::vector<int> bias_data_;
 
-    // Non-null only if node has per-channel quantized weights/biases.
-    OpBuilder* channel_scales_node_ = nullptr;
-    float* scales_data_ = nullptr;
-    int num_scale_values_ = 1;
+  // Non-null only if node has per-channel quantized weights/biases.
+  OpBuilder* channel_scales_node_ = nullptr;
+  float* scales_data_ = nullptr;
+  int num_scale_values_ = 1;
 };
 
 }  // namespace hexagon

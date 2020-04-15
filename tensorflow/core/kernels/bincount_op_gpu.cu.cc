@@ -35,69 +35,69 @@ namespace functor {
 
 template <typename T>
 struct BincountFunctor<GPUDevice, T> {
-    static Status Compute(OpKernelContext* context,
-                          const typename TTypes<int32, 1>::ConstTensor& arr,
-                          const typename TTypes<T, 1>::ConstTensor& weights,
-                          typename TTypes<T, 1>::Tensor& output) {
-        if (weights.size() != 0) {
-            return errors::InvalidArgument(
-                       "Weights should not be passed as it should be "
-                       "handled by unsorted_segment_sum");
-        }
-        if (output.size() == 0) {
-            return Status::OK();
-        }
-        // In case weight.size() == 0, use CUB
-        size_t temp_storage_bytes = 0;
-        const int32* d_samples = arr.data();
-        T* d_histogram = output.data();
-        int num_levels = output.size() + 1;
-        int32 lower_level = 0;
-        int32 upper_level = output.size();
-        int num_samples = arr.size();
-        const gpuStream_t& stream = GetGpuStream(context);
-
-        // The first HistogramEven is to obtain the temp storage size required
-        // with d_temp_storage = NULL passed to the call.
-        auto err = gpuprim::DeviceHistogram::HistogramEven(
-                       /* d_temp_storage */ NULL,
-                       /* temp_storage_bytes */ temp_storage_bytes,
-                       /* d_samples */ d_samples,
-                       /* d_histogram */ d_histogram,
-                       /* num_levels */ num_levels,
-                       /* lower_level */ lower_level,
-                       /* upper_level */ upper_level,
-                       /* num_samples */ num_samples,
-                       /* stream */ stream);
-        if (err != gpuSuccess) {
-            return errors::Internal(
-                       "Could not launch HistogramEven to get temp storage: ",
-                       GpuGetErrorString(err), ".");
-        }
-        Tensor temp_storage;
-        TF_RETURN_IF_ERROR(context->allocate_temp(
-                               DataTypeToEnum<int8>::value,
-                               TensorShape({static_cast<int64>(temp_storage_bytes)}), &temp_storage));
-
-        void* d_temp_storage = temp_storage.flat<int8>().data();
-        // The second HistogramEven is to actual run with d_temp_storage
-        // allocated with temp_storage_bytes.
-        err = gpuprim::DeviceHistogram::HistogramEven(
-                  /* d_temp_storage */ d_temp_storage,
-                  /* temp_storage_bytes */ temp_storage_bytes,
-                  /* d_samples */ d_samples,
-                  /* d_histogram */ d_histogram,
-                  /* num_levels */ num_levels,
-                  /* lower_level */ lower_level,
-                  /* upper_level */ upper_level,
-                  /* num_samples */ num_samples,
-                  /* stream */ stream);
-        if (err != gpuSuccess) {
-            return errors::Internal(
-                       "Could not launch HistogramEven: ", GpuGetErrorString(err), ".");
-        }
-        return Status::OK();
+  static Status Compute(OpKernelContext* context,
+                        const typename TTypes<int32, 1>::ConstTensor& arr,
+                        const typename TTypes<T, 1>::ConstTensor& weights,
+                        typename TTypes<T, 1>::Tensor& output) {
+    if (weights.size() != 0) {
+      return errors::InvalidArgument(
+          "Weights should not be passed as it should be "
+          "handled by unsorted_segment_sum");
     }
+    if (output.size() == 0) {
+      return Status::OK();
+    }
+    // In case weight.size() == 0, use CUB
+    size_t temp_storage_bytes = 0;
+    const int32* d_samples = arr.data();
+    T* d_histogram = output.data();
+    int num_levels = output.size() + 1;
+    int32 lower_level = 0;
+    int32 upper_level = output.size();
+    int num_samples = arr.size();
+    const gpuStream_t& stream = GetGpuStream(context);
+
+    // The first HistogramEven is to obtain the temp storage size required
+    // with d_temp_storage = NULL passed to the call.
+    auto err = gpuprim::DeviceHistogram::HistogramEven(
+        /* d_temp_storage */ NULL,
+        /* temp_storage_bytes */ temp_storage_bytes,
+        /* d_samples */ d_samples,
+        /* d_histogram */ d_histogram,
+        /* num_levels */ num_levels,
+        /* lower_level */ lower_level,
+        /* upper_level */ upper_level,
+        /* num_samples */ num_samples,
+        /* stream */ stream);
+    if (err != gpuSuccess) {
+      return errors::Internal(
+          "Could not launch HistogramEven to get temp storage: ",
+          GpuGetErrorString(err), ".");
+    }
+    Tensor temp_storage;
+    TF_RETURN_IF_ERROR(context->allocate_temp(
+        DataTypeToEnum<int8>::value,
+        TensorShape({static_cast<int64>(temp_storage_bytes)}), &temp_storage));
+
+    void* d_temp_storage = temp_storage.flat<int8>().data();
+    // The second HistogramEven is to actual run with d_temp_storage
+    // allocated with temp_storage_bytes.
+    err = gpuprim::DeviceHistogram::HistogramEven(
+        /* d_temp_storage */ d_temp_storage,
+        /* temp_storage_bytes */ temp_storage_bytes,
+        /* d_samples */ d_samples,
+        /* d_histogram */ d_histogram,
+        /* num_levels */ num_levels,
+        /* lower_level */ lower_level,
+        /* upper_level */ upper_level,
+        /* num_samples */ num_samples,
+        /* stream */ stream);
+    if (err != gpuSuccess) {
+      return errors::Internal(
+          "Could not launch HistogramEven: ", GpuGetErrorString(err), ".");
+    }
+    return Status::OK();
+  }
 };
 
 }  // end namespace functor

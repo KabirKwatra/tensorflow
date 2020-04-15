@@ -17,7 +17,6 @@ limitations under the License.
 
 #define EIGEN_USE_GPU
 
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/framework/tensor.h"
@@ -27,6 +26,7 @@ limitations under the License.
 #include "tensorflow/core/platform/logging.h"
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
 
@@ -37,79 +37,79 @@ namespace functor {
 // TODO(yongtang) int64 of atomicAdd is not supported yet.
 template <typename T, typename Tout>
 struct HistogramFixedWidthFunctor<GPUDevice, T, Tout> {
-    static Status Compute(OpKernelContext* context,
-                          const typename TTypes<T, 1>::ConstTensor& values,
-                          const typename TTypes<T, 1>::ConstTensor& value_range,
-                          int32 nbins, typename TTypes<Tout, 1>::Tensor& out) {
-        tensorflow::AllocatorAttributes pinned_allocator;
-        pinned_allocator.set_on_host(true);
-        pinned_allocator.set_gpu_compatible(true);
+  static Status Compute(OpKernelContext* context,
+                        const typename TTypes<T, 1>::ConstTensor& values,
+                        const typename TTypes<T, 1>::ConstTensor& value_range,
+                        int32 nbins, typename TTypes<Tout, 1>::Tensor& out) {
+    tensorflow::AllocatorAttributes pinned_allocator;
+    pinned_allocator.set_on_host(true);
+    pinned_allocator.set_gpu_compatible(true);
 
-        Tensor levels_tensor;
-        TF_RETURN_IF_ERROR(context->allocate_temp(
-                               DataTypeToEnum<T>::value, TensorShape({nbins + 1}), &levels_tensor,
-                               pinned_allocator));
-        auto levels = levels_tensor.flat<T>();
+    Tensor levels_tensor;
+    TF_RETURN_IF_ERROR(context->allocate_temp(
+        DataTypeToEnum<T>::value, TensorShape({nbins + 1}), &levels_tensor,
+        pinned_allocator));
+    auto levels = levels_tensor.flat<T>();
 
-        const double step = static_cast<double>(value_range(1) - value_range(0)) /
-                            static_cast<double>(nbins);
-        levels(0) = std::numeric_limits<T>::lowest();
-        for (int i = 1; i < nbins; i++) {
-            levels(i) =
-                static_cast<T>(static_cast<double>(value_range(0)) + step * i);
-        }
-        levels(nbins) = std::numeric_limits<T>::max();
-
-        size_t temp_storage_bytes = 0;
-        const T* d_samples = values.data();
-        Tout* d_histogram = out.data();
-        int num_levels = levels.size();
-        T* d_levels = levels.data();
-        int num_samples = values.size();
-        const gpuStream_t& stream = GetGpuStream(context);
-
-        // The first HistogramRange is to obtain the temp storage size required
-        // with d_temp_storage = NULL passed to the call.
-        auto err = gpuprim::DeviceHistogram::HistogramRange(
-                       /* d_temp_storage */ NULL,
-                       /* temp_storage_bytes */ temp_storage_bytes,
-                       /* d_samples */ d_samples,
-                       /* d_histogram */ d_histogram,
-                       /* num_levels */ num_levels,
-                       /* d_levels */ d_levels,
-                       /* num_samples */ num_samples,
-                       /* stream */ stream);
-        if (err != gpuSuccess) {
-            return errors::Internal(
-                       "Could not launch HistogramRange to get temp storage: ",
-                       GpuGetErrorString(err), ".");
-        }
-
-        Tensor temp_storage;
-        TF_RETURN_IF_ERROR(context->allocate_temp(
-                               DataTypeToEnum<int8>::value,
-                               TensorShape({static_cast<int64>(temp_storage_bytes)}), &temp_storage));
-
-        void* d_temp_storage = temp_storage.flat<int8>().data();
-
-        // The second HistogramRange is to actual run with d_temp_storage
-        // allocated with temp_storage_bytes.
-        err = gpuprim::DeviceHistogram::HistogramRange(
-                  /* d_temp_storage */ d_temp_storage,
-                  /* temp_storage_bytes */ temp_storage_bytes,
-                  /* d_samples */ d_samples,
-                  /* d_histogram */ d_histogram,
-                  /* num_levels */ num_levels,
-                  /* d_levels */ d_levels,
-                  /* num_samples */ num_samples,
-                  /* stream */ stream);
-        if (err != gpuSuccess) {
-            return errors::Internal(
-                       "Could not launch HistogramRange: ", GpuGetErrorString(err), ".");
-        }
-
-        return Status::OK();
+    const double step = static_cast<double>(value_range(1) - value_range(0)) /
+                        static_cast<double>(nbins);
+    levels(0) = std::numeric_limits<T>::lowest();
+    for (int i = 1; i < nbins; i++) {
+      levels(i) =
+          static_cast<T>(static_cast<double>(value_range(0)) + step * i);
     }
+    levels(nbins) = std::numeric_limits<T>::max();
+
+    size_t temp_storage_bytes = 0;
+    const T* d_samples = values.data();
+    Tout* d_histogram = out.data();
+    int num_levels = levels.size();
+    T* d_levels = levels.data();
+    int num_samples = values.size();
+    const gpuStream_t& stream = GetGpuStream(context);
+
+    // The first HistogramRange is to obtain the temp storage size required
+    // with d_temp_storage = NULL passed to the call.
+    auto err = gpuprim::DeviceHistogram::HistogramRange(
+        /* d_temp_storage */ NULL,
+        /* temp_storage_bytes */ temp_storage_bytes,
+        /* d_samples */ d_samples,
+        /* d_histogram */ d_histogram,
+        /* num_levels */ num_levels,
+        /* d_levels */ d_levels,
+        /* num_samples */ num_samples,
+        /* stream */ stream);
+    if (err != gpuSuccess) {
+      return errors::Internal(
+          "Could not launch HistogramRange to get temp storage: ",
+          GpuGetErrorString(err), ".");
+    }
+
+    Tensor temp_storage;
+    TF_RETURN_IF_ERROR(context->allocate_temp(
+        DataTypeToEnum<int8>::value,
+        TensorShape({static_cast<int64>(temp_storage_bytes)}), &temp_storage));
+
+    void* d_temp_storage = temp_storage.flat<int8>().data();
+
+    // The second HistogramRange is to actual run with d_temp_storage
+    // allocated with temp_storage_bytes.
+    err = gpuprim::DeviceHistogram::HistogramRange(
+        /* d_temp_storage */ d_temp_storage,
+        /* temp_storage_bytes */ temp_storage_bytes,
+        /* d_samples */ d_samples,
+        /* d_histogram */ d_histogram,
+        /* num_levels */ num_levels,
+        /* d_levels */ d_levels,
+        /* num_samples */ num_samples,
+        /* stream */ stream);
+    if (err != gpuSuccess) {
+      return errors::Internal(
+          "Could not launch HistogramRange: ", GpuGetErrorString(err), ".");
+    }
+
+    return Status::OK();
+  }
 };
 
 }  // end namespace functor
