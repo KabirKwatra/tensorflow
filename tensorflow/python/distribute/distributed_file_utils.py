@@ -89,9 +89,7 @@ def write_dirpath(dirpath, strategy):
         # If strategy is still not available, this is not in distributed training.
         # Fallback to original dirpath.
         return dirpath
-    if (
-        not strategy.extended._in_multi_worker_mode()
-    ):  # pylint: disable=protected-access
+    if (not strategy.extended._in_multi_worker_mode()):  # pylint: disable=protected-access
         return dirpath
     if strategy.extended.should_checkpoint:
         return dirpath
@@ -116,10 +114,9 @@ def remove_temp_dirpath(dirpath, strategy):
         return
     # TODO(anjalisridhar): Consider removing the check for multi worker mode since
     # it is redundant when used with the should_checkpoint property.
-    if (
-        strategy.extended._in_multi_worker_mode()
-        and not strategy.extended.should_checkpoint  # pylint: disable=protected-access
-    ):
+    if (strategy.extended._in_multi_worker_mode()
+            and not strategy.extended.should_checkpoint  # pylint: disable=protected-access
+        ):
         # If this worker is not chief and hence should not save file, remove
         # the temporary directory.
         file_io.delete_recursively(_get_temp_dir(dirpath, strategy))

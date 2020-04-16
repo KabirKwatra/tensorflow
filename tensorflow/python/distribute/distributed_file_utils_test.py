@@ -54,11 +54,10 @@ class DistributedFileUtilsTest(test.TestCase):
         filepath = os.path.join(dirpath, "foo.bar")
         strategy = DistributedFileUtilsTest.MockedChiefStrategy()
         self.assertEqual(
-            distributed_file_utils.write_filepath(filepath, strategy), filepath
-        )
+            distributed_file_utils.write_filepath(filepath, strategy),
+            filepath)
         self.assertEqual(
-            distributed_file_utils.write_dirpath(dirpath, strategy), dirpath
-        )
+            distributed_file_utils.write_dirpath(dirpath, strategy), dirpath)
 
     def testWorkerWriteDirAndFilePath(self):
         dirpath = self.get_temp_dir()
@@ -81,7 +80,8 @@ class DistributedFileUtilsTest(test.TestCase):
         self.assertFalse(os.path.exists(file_to_write))
         self._write_dummy_file(file_to_write)
         self.assertTrue(os.path.exists(file_to_write))
-        distributed_file_utils.remove_temp_dir_with_filepath(file_to_write, strategy)
+        distributed_file_utils.remove_temp_dir_with_filepath(
+            file_to_write, strategy)
         self.assertTrue(os.path.exists(file_to_write))
 
     def testWorkerDoesRemoveFilePath(self):
@@ -92,7 +92,8 @@ class DistributedFileUtilsTest(test.TestCase):
         self.assertFalse(os.path.exists(file_to_write))
         self._write_dummy_file(file_to_write)
         self.assertTrue(os.path.exists(file_to_write))
-        distributed_file_utils.remove_temp_dir_with_filepath(file_to_write, strategy)
+        distributed_file_utils.remove_temp_dir_with_filepath(
+            file_to_write, strategy)
         self.assertFalse(os.path.exists(file_to_write))
 
     def testWorkerDoesRemoveDirPath(self):
