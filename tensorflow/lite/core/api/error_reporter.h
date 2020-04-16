@@ -33,11 +33,11 @@ namespace tflite {
 /// For example, if you have a GUI program, you might redirect to a buffer
 /// that drives a GUI error log box.
 class ErrorReporter {
- public:
-  virtual ~ErrorReporter() {}
-  virtual int Report(const char* format, va_list args) = 0;
-  int Report(const char* format, ...);
-  int ReportError(void*, const char* format, ...);
+public:
+    virtual ~ErrorReporter() {}
+    virtual int Report(const char* format, va_list args) = 0;
+    int Report(const char* format, ...);
+    int ReportError(void*, const char* format, ...);
 };
 
 }  // namespace tflite

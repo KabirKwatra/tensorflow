@@ -30,74 +30,74 @@ namespace gpu {
 namespace {
 
 class DelegateContext {
- public:
-  bool Init(TfLiteContext* context,
-            const TfLiteDelegateParams* delegate_params) {
-    auto denormalized_graph =
-        reinterpret_cast<GraphFloat32*>(delegate_params->delegate->data_);
-    return denormalized_graph
+public:
+    bool Init(TfLiteContext* context,
+              const TfLiteDelegateParams* delegate_params) {
+        auto denormalized_graph =
+            reinterpret_cast<GraphFloat32*>(delegate_params->delegate->data_);
+        return denormalized_graph
                ? BuildModel(context, delegate_params, denormalized_graph).ok()
                : false;
-  }
+    }
 };
 
 TfLiteStatus DelegatePrepare(TfLiteContext* context, TfLiteDelegate* delegate) {
-  const TfLiteRegistration kRegistration = {
-      .init = [](TfLiteContext* context, const char* buffer, size_t) -> void* {
-        auto* delegate_context = new DelegateContext();
-        if (!delegate_context->Init(
-                context,
-                reinterpret_cast<const TfLiteDelegateParams*>(buffer))) {
-          delete delegate_context;
-          return nullptr;
-        }
-        return delegate_context;
-      },
-      .free = [](TfLiteContext* context, void* buffer) -> void {
-        delete reinterpret_cast<DelegateContext*>(buffer);
-      },
-      .prepare = [](TfLiteContext* context, TfLiteNode* node) -> TfLiteStatus {
-        return node->user_data ? kTfLiteOk : kTfLiteError;
-      },
-      .invoke = nullptr,
-  };
+    const TfLiteRegistration kRegistration = {
+        .init = [](TfLiteContext* context, const char* buffer, size_t) -> void* {
+            auto* delegate_context = new DelegateContext();
+            if (!delegate_context->Init(
+                        context,
+                        reinterpret_cast<const TfLiteDelegateParams*>(buffer))) {
+                delete delegate_context;
+                return nullptr;
+            }
+            return delegate_context;
+        },
+        .free = [](TfLiteContext* context, void* buffer) -> void {
+            delete reinterpret_cast<DelegateContext*>(buffer);
+        },
+        .prepare = [](TfLiteContext* context, TfLiteNode* node) -> TfLiteStatus {
+            return node->user_data ? kTfLiteOk : kTfLiteError;
+        },
+        .invoke = nullptr,
+    };
 
-  TfLiteIntArray* ops_to_replace = GetOpsToReplace(context);
-  const auto status = context->ReplaceNodeSubsetsWithDelegateKernels(
-      context, kRegistration, ops_to_replace, delegate);
-  TfLiteIntArrayFree(ops_to_replace);
-  return status;
+    TfLiteIntArray* ops_to_replace = GetOpsToReplace(context);
+    const auto status = context->ReplaceNodeSubsetsWithDelegateKernels(
+                            context, kRegistration, ops_to_replace, delegate);
+    TfLiteIntArrayFree(ops_to_replace);
+    return status;
 }
 }  // namespace
 
 absl::Status BuildFromFlatBuffer(const tflite::FlatBufferModel& flatbuffer,
                                  GraphFloat32* graph) {
-  ops::builtin::BuiltinOpResolver op_resolver;
-  std::unique_ptr<tflite::Interpreter> interpreter;
-  tflite::InterpreterBuilder interpreter_builder(flatbuffer, op_resolver);
-  if (interpreter_builder(&interpreter) != kTfLiteOk || !interpreter) {
-    return absl::InternalError("Unable to prepare TfLite interpreter.");
-  }
-  interpreter->UseNNAPI(false);
-  TfLiteDelegate delegate;
-  delegate.data_ = graph;
-  delegate.flags = kTfLiteDelegateFlagsNone;
-  delegate.Prepare = DelegatePrepare;
-  delegate.CopyFromBufferHandle = nullptr;
-  delegate.CopyToBufferHandle = nullptr;
-  delegate.FreeBufferHandle = nullptr;
+    ops::builtin::BuiltinOpResolver op_resolver;
+    std::unique_ptr<tflite::Interpreter> interpreter;
+    tflite::InterpreterBuilder interpreter_builder(flatbuffer, op_resolver);
+    if (interpreter_builder(&interpreter) != kTfLiteOk || !interpreter) {
+        return absl::InternalError("Unable to prepare TfLite interpreter.");
+    }
+    interpreter->UseNNAPI(false);
+    TfLiteDelegate delegate;
+    delegate.data_ = graph;
+    delegate.flags = kTfLiteDelegateFlagsNone;
+    delegate.Prepare = DelegatePrepare;
+    delegate.CopyFromBufferHandle = nullptr;
+    delegate.CopyToBufferHandle = nullptr;
+    delegate.FreeBufferHandle = nullptr;
 
-  if (interpreter->ModifyGraphWithDelegate(&delegate) != kTfLiteOk) {
-    return absl::InternalError("Conversion from TfLite model failed.");
-  }
+    if (interpreter->ModifyGraphWithDelegate(&delegate) != kTfLiteOk) {
+        return absl::InternalError("Conversion from TfLite model failed.");
+    }
 
-  NullTransformationReporter reporter;
-  ModelTransformer transformer(graph, &reporter);
-  if (!ApplyGeneralTransformations(&transformer)) {
-    return absl::InternalError("Graph general transformations failed");
-  }
+    NullTransformationReporter reporter;
+    ModelTransformer transformer(graph, &reporter);
+    if (!ApplyGeneralTransformations(&transformer)) {
+        return absl::InternalError("Graph general transformations failed");
+    }
 
-  return absl::OkStatus();
+    return absl::OkStatus();
 }
 
 }  // namespace gpu

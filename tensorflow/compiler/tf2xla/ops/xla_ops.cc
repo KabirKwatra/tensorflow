@@ -29,24 +29,24 @@ namespace {
 // Helper shape function for operators that return an output with the same rank
 // as their first input.
 Status UnchangedRank(shape_inference::InferenceContext* c) {
-  if (c->RankKnown(c->input(0))) {
-    c->set_output(0, c->UnknownShapeOfRank(c->Rank(c->input(0))));
-  } else {
-    c->set_output(0, c->input(0));
-  }
-  return Status::OK();
+    if (c->RankKnown(c->input(0))) {
+        c->set_output(0, c->UnknownShapeOfRank(c->Rank(c->input(0))));
+    } else {
+        c->set_output(0, c->input(0));
+    }
+    return Status::OK();
 }
 
 REGISTER_OP("XlaBroadcastHelper")
-    .Input("lhs: T")
-    .Input("rhs: T")
-    .Input("broadcast_dims: Tindices")
-    .Attr("T: numbertype")
-    .Attr("Tindices: {int32, int64}")
-    .Output("lhs_output: T")
-    .Output("rhs_output: T")
-    .SetShapeFn(shape_inference::UnknownShape)
-    .Doc(R"doc(
+.Input("lhs: T")
+.Input("rhs: T")
+.Input("broadcast_dims: Tindices")
+.Attr("T: numbertype")
+.Attr("Tindices: {int32, int64}")
+.Output("lhs_output: T")
+.Output("rhs_output: T")
+.SetShapeFn(shape_inference::UnknownShape)
+.Doc(R"doc(
 Helper operator for performing XLA-style broadcasts
 
 Broadcasts `lhs` and `rhs` to the same rank, by adding size 1 dimensions to
