@@ -27,37 +27,31 @@ namespace tflite {
 // though we have enough information about lifetimes of the tensors to do so.
 // This makes it pretty wasteful, so we should use a more intelligent method.
 class SimpleMemoryAllocator {
-public:
-    SimpleMemoryAllocator(ErrorReporter* error_reporter, uint8_t* buffer_head,
-                          uint8_t* buffer_tail)
-        : error_reporter_(error_reporter),
-          head_(buffer_head),
-          tail_(buffer_tail) {}
-    SimpleMemoryAllocator(ErrorReporter* error_reporter, uint8_t* buffer,
-                          size_t buffer_size)
-        : SimpleMemoryAllocator(error_reporter, buffer, buffer + buffer_size) {}
+ public:
+  SimpleMemoryAllocator(ErrorReporter* error_reporter, uint8_t* buffer_head,
+                        uint8_t* buffer_tail)
+      : error_reporter_(error_reporter),
+        head_(buffer_head),
+        tail_(buffer_tail) {}
+  SimpleMemoryAllocator(ErrorReporter* error_reporter, uint8_t* buffer,
+                        size_t buffer_size)
+      : SimpleMemoryAllocator(error_reporter, buffer, buffer + buffer_size) {}
 
-    // Allocates memory starting at the head of the arena (lowest address and
-    // moving upwards).
-    uint8_t* AllocateFromHead(size_t size, size_t alignment);
-    // Allocates memory starting at the tail of the arena (highest address and
-    // moving downwards).
-    uint8_t* AllocateFromTail(size_t size, size_t alignment);
+  // Allocates memory starting at the head of the arena (lowest address and
+  // moving upwards).
+  uint8_t* AllocateFromHead(size_t size, size_t alignment);
+  // Allocates memory starting at the tail of the arena (highest address and
+  // moving downwards).
+  uint8_t* AllocateFromTail(size_t size, size_t alignment);
 
-    uint8_t* GetHead() const {
-        return head_;
-    }
-    uint8_t* GetTail() const {
-        return tail_;
-    }
-    size_t GetAvailableMemory() const {
-        return tail_ - head_;
-    }
+  uint8_t* GetHead() const { return head_; }
+  uint8_t* GetTail() const { return tail_; }
+  size_t GetAvailableMemory() const { return tail_ - head_; }
 
-private:
-    ErrorReporter* error_reporter_;
-    uint8_t* head_;
-    uint8_t* tail_;
+ private:
+  ErrorReporter* error_reporter_;
+  uint8_t* head_;
+  uint8_t* tail_;
 };
 
 // Allocate a SimpleMemoryAllocator from the buffer and then return the pointer

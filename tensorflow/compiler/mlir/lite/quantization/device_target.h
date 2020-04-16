@@ -26,13 +26,13 @@ limitations under the License.
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
-#include "mlir/Dialect/Quant/QuantOps.h"  // from @llvm-project
+#include "mlir/Dialect/Quant/QuantOps.h"    // from @llvm-project
 #include "mlir/Dialect/Quant/QuantTypes.h"  // from @llvm-project
-#include "mlir/IR/Attributes.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
-#include "mlir/Support/LogicalResult.h"  // from @llvm-project
+#include "mlir/IR/Attributes.h"             // from @llvm-project
+#include "mlir/IR/MLIRContext.h"            // from @llvm-project
+#include "mlir/IR/StandardTypes.h"          // from @llvm-project
+#include "mlir/IR/Types.h"                  // from @llvm-project
+#include "mlir/Support/LogicalResult.h"     // from @llvm-project
 #include "tensorflow/compiler/mlir/lite/quantization/numerical_utils.h"
 
 namespace mlir {
@@ -44,7 +44,7 @@ using AdjacentOperations = llvm::SmallVectorImpl<Operation*>;
 using QuantizedMultipliers = llvm::SmallVector<QuantizedMultiplier, 4>;
 using QuantizedRanges = llvm::SmallVector<QuantizedRange, 4>;
 using ScaleFn = std::function<LogicalResult(QuantizeContext*, Operation*,
-                AdjacentOperations*, bool*)>;
+                                            AdjacentOperations*, bool*)>;
 
 using ScaleDecomposeFn =
     std::function<LogicalResult(Operation*, QuantizedMultipliers*,
@@ -53,141 +53,133 @@ using ScaleDecomposeFn =
 static const QuantizedMultiplier kUnitQuantizedMultiplier{1, 0};
 
 enum class ScaleConstraintType {
-    OutputInputSameScale,
-    OutputInputFreeScale,
-    CustomScale,
+  OutputInputSameScale,
+  OutputInputFreeScale,
+  CustomScale,
 };
 
 // Each kernel signature has its own specification for scales.
 struct KernelSpec {
-    // Scale constraint
-    ScaleConstraintType type;
+  // Scale constraint
+  ScaleConstraintType type;
 
-    // Custom function to derive the scales. Only available when the scale
-    // constraint is `CustomScale`.
-    ScaleFn scale_fn;
+  // Custom function to derive the scales. Only available when the scale
+  // constraint is `CustomScale`.
+  ScaleFn scale_fn;
 };
 
 class KernelSpecs {
-public:
-    using Signature = llvm::SmallVector<quant::AnyQuantizedType, 4>;
+ public:
+  using Signature = llvm::SmallVector<quant::AnyQuantizedType, 4>;
 
-    // Returns the kernel specification for the kernel signature.
-    Optional<KernelSpec> Find(const Signature& signature) const {
-        auto spec_it = all_signatures_.find(signature);
-        if (spec_it != all_signatures_.end()) {
-            return spec_it->second;
-        } else {
-            return llvm::None;
-        }
+  // Returns the kernel specification for the kernel signature.
+  Optional<KernelSpec> Find(const Signature& signature) const {
+    auto spec_it = all_signatures_.find(signature);
+    if (spec_it != all_signatures_.end()) {
+      return spec_it->second;
+    } else {
+      return llvm::None;
     }
+  }
 
-    ScaleDecomposeFn GetDecomposeFn() const {
-        return decompose_fn_;
+  ScaleDecomposeFn GetDecomposeFn() const { return decompose_fn_; }
+
+  // Adds the kernel signature with the kernel specification.
+  LogicalResult Add(const Signature& signature, const KernelSpec& spec) {
+    if (all_signatures_.insert({signature, spec}).second) return success();
+    return failure();
+  }
+
+  KernelSpecs& WithSignature(const KernelSpecs::Signature& signature,
+                             const ScaleFn& fn) {
+    Add(signature, {ScaleConstraintType::CustomScale, fn});
+    return *this;
+  }
+
+  KernelSpecs& WithImpl(const ScaleDecomposeFn& dfn) {
+    decompose_fn_ = dfn;
+    return *this;
+  }
+
+ private:
+  // The signature is pattern match based.
+  struct SignatureInfo : public llvm::DenseMapInfo<Signature> {
+    static inline Signature getEmptyKey() { return {}; }
+    static inline Signature getTombstoneKey() { return {nullptr}; }
+    static unsigned getHashValue(Signature val) {
+      return llvm::hash_combine_range(val.begin(), val.end());
     }
-
-    // Adds the kernel signature with the kernel specification.
-    LogicalResult Add(const Signature& signature, const KernelSpec& spec) {
-        if (all_signatures_.insert({signature, spec}).second) return success();
-        return failure();
+    static bool isEqual(Signature LHS, Signature RHS) {
+      if (RHS == getEmptyKey()) return LHS == getEmptyKey();
+      if (RHS == getTombstoneKey()) return LHS == getTombstoneKey();
+      if (LHS.size() != RHS.size()) return false;
+      for (auto arg : llvm::zip(LHS, RHS)) {
+        if (std::get<0>(arg) != std::get<1>(arg)) return false;
+      }
+      return true;
     }
+  };
 
-    KernelSpecs& WithSignature(const KernelSpecs::Signature& signature,
-                               const ScaleFn& fn) {
-        Add(signature, {ScaleConstraintType::CustomScale, fn});
-        return *this;
-    }
+  // Maps the signature to the kernel spec. Note that the matching is
+  // pattern match based.
+  llvm::DenseMap<Signature, KernelSpec, SignatureInfo> all_signatures_;
 
-    KernelSpecs& WithImpl(const ScaleDecomposeFn& dfn) {
-        decompose_fn_ = dfn;
-        return *this;
-    }
-
-private:
-    // The signature is pattern match based.
-    struct SignatureInfo : public llvm::DenseMapInfo<Signature> {
-        static inline Signature getEmptyKey() {
-            return {};
-        }
-        static inline Signature getTombstoneKey() {
-            return {nullptr};
-        }
-        static unsigned getHashValue(Signature val) {
-            return llvm::hash_combine_range(val.begin(), val.end());
-        }
-        static bool isEqual(Signature LHS, Signature RHS) {
-            if (RHS == getEmptyKey()) return LHS == getEmptyKey();
-            if (RHS == getTombstoneKey()) return LHS == getTombstoneKey();
-            if (LHS.size() != RHS.size()) return false;
-            for (auto arg : llvm::zip(LHS, RHS)) {
-                if (std::get<0>(arg) != std::get<1>(arg)) return false;
-            }
-            return true;
-        }
-    };
-
-    // Maps the signature to the kernel spec. Note that the matching is
-    // pattern match based.
-    llvm::DenseMap<Signature, KernelSpec, SignatureInfo> all_signatures_;
-
-    // A method to compute the effective multipliers. This is independent on the
-    // bits of the ports, thus all the signature shares the same here.
-    ScaleDecomposeFn decompose_fn_;
+  // A method to compute the effective multipliers. This is independent on the
+  // bits of the ports, thus all the signature shares the same here.
+  ScaleDecomposeFn decompose_fn_;
 };
 
 class DeviceTarget {
-public:
-    explicit DeviceTarget(MLIRContext* ctx);
+ public:
+  explicit DeviceTarget(MLIRContext* ctx);
 
-    // Retrieves the kernel spec for the quant region op.
-    Optional<KernelSpec> GetKernelSpec(quant::QuantizeRegionOp op) const;
+  // Retrieves the kernel spec for the quant region op.
+  Optional<KernelSpec> GetKernelSpec(quant::QuantizeRegionOp op) const;
 
-    // Retrieves the scale decomposition function for the quant region op.
-    ScaleDecomposeFn GetDecomposeFn(quant::QuantizeRegionOp op) const;
+  // Retrieves the scale decomposition function for the quant region op.
+  ScaleDecomposeFn GetDecomposeFn(quant::QuantizeRegionOp op) const;
 
-protected:
-    // Adds the kernel spec with the custom scale function for the kernel.
-    LogicalResult RegisterKernel(llvm::StringRef kernel,
-                                 const KernelSpecs::Signature& signature,
-                                 const ScaleFn& fn, const ScaleDecomposeFn& dfn);
+ protected:
+  // Adds the kernel spec with the custom scale function for the kernel.
+  LogicalResult RegisterKernel(llvm::StringRef kernel,
+                               const KernelSpecs::Signature& signature,
+                               const ScaleFn& fn, const ScaleDecomposeFn& dfn);
 
-    // Adds the kernel spec with the scale constraint type for the kernel.
-    LogicalResult RegisterKernel(llvm::StringRef kernel,
-                                 const KernelSpecs::Signature& signature,
-                                 const ScaleConstraintType constraint);
+  // Adds the kernel spec with the scale constraint type for the kernel.
+  LogicalResult RegisterKernel(llvm::StringRef kernel,
+                               const KernelSpecs::Signature& signature,
+                               const ScaleConstraintType constraint);
 
-    // Adds the kernel with the name. Retrun an existing one if it has been
-    // added before.
-    KernelSpecs& RegisterKernel(llvm::StringRef kernel) {
-        return specs_[kernel];
-    }
+  // Adds the kernel with the name. Retrun an existing one if it has been
+  // added before.
+  KernelSpecs& RegisterKernel(llvm::StringRef kernel) { return specs_[kernel]; }
 
-    // converts specification to signature:
-    // - UniformedQuantizedType -> AnyQuantizedType
-    // - AnyQuantizedType (int) -> AnyQuantizedType
-    // - Float -> {}
-    void AppendToSignature(ArrayAttr specs_attr,
-                           KernelSpecs::Signature* signature) const;
+  // converts specification to signature:
+  // - UniformedQuantizedType -> AnyQuantizedType
+  // - AnyQuantizedType (int) -> AnyQuantizedType
+  // - Float -> {}
+  void AppendToSignature(ArrayAttr specs_attr,
+                         KernelSpecs::Signature* signature) const;
 
-    // For "mulmat->add" type of kernels, convert the scales of all the ports to
-    // multipliers.
-    static LogicalResult DecomposeMultiplyAccumulateScale(
-        Operation* op, quant::QuantizedMultipliers* input_multipliers,
-        quant::QuantizedMultipliers* output_multipliers,
-        quant::QuantizedRanges* output_ranges);
+  // For "mulmat->add" type of kernels, convert the scales of all the ports to
+  // multipliers.
+  static LogicalResult DecomposeMultiplyAccumulateScale(
+      Operation* op, quant::QuantizedMultipliers* input_multipliers,
+      quant::QuantizedMultipliers* output_multipliers,
+      quant::QuantizedRanges* output_ranges);
 
-    // A set of parameters are required to build the signatures.
-    FloatType f32_;
-    IntegerType i8_;
-    int64_t i8_min_, i8_max_;
-    AnyQuantizedType any_, qi8_, qi8n_;
+  // A set of parameters are required to build the signatures.
+  FloatType f32_;
+  IntegerType i8_;
+  int64_t i8_min_, i8_max_;
+  AnyQuantizedType any_, qi8_, qi8n_;
 
-private:
-    // Maps the kernel names to all the available kernels.
-    llvm::StringMap<KernelSpecs> specs_;
+ private:
+  // Maps the kernel names to all the available kernels.
+  llvm::StringMap<KernelSpecs> specs_;
 
-    // Points to the global MLIRContext.
-    MLIRContext* ctx_;
+  // Points to the global MLIRContext.
+  MLIRContext* ctx_;
 };
 
 }  // namespace quant

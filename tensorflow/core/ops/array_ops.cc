@@ -40,387 +40,387 @@ namespace {
 
 Status GetAxisForPackAndUnpack(InferenceContext* c, int32 rank_after_pack,
                                int32* axis) {
-    TF_RETURN_IF_ERROR(c->GetAttr("axis", axis));
-    if (*axis < -1 * rank_after_pack || *axis >= rank_after_pack) {
-        return errors::InvalidArgument("Invalid axis: ", *axis, "; must be in [",
-                                       -1 * rank_after_pack, ",", rank_after_pack,
-                                       ")");
-    }
-    if (*axis < 0) *axis = (rank_after_pack + *axis);
-    return Status::OK();
+  TF_RETURN_IF_ERROR(c->GetAttr("axis", axis));
+  if (*axis < -1 * rank_after_pack || *axis >= rank_after_pack) {
+    return errors::InvalidArgument("Invalid axis: ", *axis, "; must be in [",
+                                   -1 * rank_after_pack, ",", rank_after_pack,
+                                   ")");
+  }
+  if (*axis < 0) *axis = (rank_after_pack + *axis);
+  return Status::OK();
 }
 
 template <typename T>
 std::vector<int64> AsInt64(const Tensor* tensor, int64 num_elements) {
-    std::vector<int64> ret(num_elements);
-    auto data = tensor->vec<T>();
-    for (int64 i = 0; i < num_elements; ++i) {
-        ret[i] = data(i);
-    }
-    return ret;
+  std::vector<int64> ret(num_elements);
+  auto data = tensor->vec<T>();
+  for (int64 i = 0; i < num_elements; ++i) {
+    ret[i] = data(i);
+  }
+  return ret;
 }
 
 template <typename T>
 Status PadKnown(InferenceContext* c, ShapeHandle input,
                 const Tensor* paddings_t, int64 num_dims) {
-    // paddings_t is known.
-    std::vector<DimensionHandle> dims(num_dims);
-    auto paddings_data = paddings_t->matrix<T>();
-    for (int64 i = 0; i < num_dims; ++i) {
-        const T pad0 = paddings_data(i, 0);
-        const T pad1 = paddings_data(i, 1);
-        if (pad0 < 0 || pad1 < 0) {
-            return errors::InvalidArgument("Paddings must be non-negative");
-        }
-        TF_RETURN_IF_ERROR(c->Add(c->Dim(input, i), pad0 + pad1, &dims[i]));
+  // paddings_t is known.
+  std::vector<DimensionHandle> dims(num_dims);
+  auto paddings_data = paddings_t->matrix<T>();
+  for (int64 i = 0; i < num_dims; ++i) {
+    const T pad0 = paddings_data(i, 0);
+    const T pad1 = paddings_data(i, 1);
+    if (pad0 < 0 || pad1 < 0) {
+      return errors::InvalidArgument("Paddings must be non-negative");
     }
-    c->set_output(0, c->MakeShape(dims));
-    return Status::OK();
+    TF_RETURN_IF_ERROR(c->Add(c->Dim(input, i), pad0 + pad1, &dims[i]));
+  }
+  c->set_output(0, c->MakeShape(dims));
+  return Status::OK();
 }
 
 Status PadShapeFn(InferenceContext* c) {
-    // Paddings is a matrix of [input_rank, 2].
-    ShapeHandle paddings;
-    TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &paddings));
-    DimensionHandle unused;
-    TF_RETURN_IF_ERROR(c->WithValue(c->Dim(paddings, 1), 2, &unused));
+  // Paddings is a matrix of [input_rank, 2].
+  ShapeHandle paddings;
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &paddings));
+  DimensionHandle unused;
+  TF_RETURN_IF_ERROR(c->WithValue(c->Dim(paddings, 1), 2, &unused));
 
-    // n_dim and input.rank are equivalent.
-    ShapeHandle input = c->input(0);
-    DimensionHandle n_dim = c->Dim(paddings, 0);
+  // n_dim and input.rank are equivalent.
+  ShapeHandle input = c->input(0);
+  DimensionHandle n_dim = c->Dim(paddings, 0);
+  if (c->ValueKnown(n_dim)) {
+    TF_RETURN_IF_ERROR(c->WithRank(input, c->Value(n_dim), &input));
+  } else if (c->RankKnown(input)) {
+    TF_RETURN_IF_ERROR(c->WithValue(n_dim, c->Rank(input), &n_dim));
+  }
+
+  const Tensor* paddings_t = c->input_tensor(1);
+
+  // paddings_t is unknown
+  if (paddings_t == nullptr) {
     if (c->ValueKnown(n_dim)) {
-        TF_RETURN_IF_ERROR(c->WithRank(input, c->Value(n_dim), &input));
-    } else if (c->RankKnown(input)) {
-        TF_RETURN_IF_ERROR(c->WithValue(n_dim, c->Rank(input), &n_dim));
-    }
-
-    const Tensor* paddings_t = c->input_tensor(1);
-
-    // paddings_t is unknown
-    if (paddings_t == nullptr) {
-        if (c->ValueKnown(n_dim)) {
-            // Make output with n_dim unknown dims.
-            c->set_output(0, c->UnknownShapeOfRank(c->Value(n_dim)));
-        } else {
-            c->set_output(0, c->UnknownShape());
-        }
-        return Status::OK();
-    }
-
-    const int64 num_dims = paddings_t->shape().dim_size(0);
-    TF_RETURN_IF_ERROR(c->WithRank(input, num_dims, &input));
-    TF_RETURN_IF_ERROR(c->WithValue(n_dim, num_dims, &n_dim));
-
-    if (paddings_t->dtype() == DT_INT32) {
-        return PadKnown<int32>(c, input, paddings_t, num_dims);
+      // Make output with n_dim unknown dims.
+      c->set_output(0, c->UnknownShapeOfRank(c->Value(n_dim)));
     } else {
-        return PadKnown<int64>(c, input, paddings_t, num_dims);
+      c->set_output(0, c->UnknownShape());
     }
+    return Status::OK();
+  }
+
+  const int64 num_dims = paddings_t->shape().dim_size(0);
+  TF_RETURN_IF_ERROR(c->WithRank(input, num_dims, &input));
+  TF_RETURN_IF_ERROR(c->WithValue(n_dim, num_dims, &n_dim));
+
+  if (paddings_t->dtype() == DT_INT32) {
+    return PadKnown<int32>(c, input, paddings_t, num_dims);
+  } else {
+    return PadKnown<int64>(c, input, paddings_t, num_dims);
+  }
 }
 
 Status TransposeShapeFn(InferenceContext* c) {
-    ShapeHandle input = c->input(0);
-    ShapeHandle perm_shape = c->input(1);
-    const Tensor* perm = c->input_tensor(1);
-    DimensionHandle perm_elems = c->NumElements(perm_shape);
-    // If we don't have rank information on the input or value information on
-    // perm we can't return any shape information, otherwise we have enough
-    // information to at least find the rank of the output.
-    if (!c->RankKnown(input) && !c->ValueKnown(perm_elems) && perm == nullptr) {
-        c->set_output(0, c->UnknownShape());
-        return Status::OK();
-    }
-
-    // Find our value of the rank.
-    int64 rank;
-    if (c->RankKnown(input)) {
-        rank = c->Rank(input);
-    } else if (c->ValueKnown(perm_elems)) {
-        rank = c->Value(perm_elems);
-    } else {
-        rank = perm->NumElements();
-    }
-    if (!c->RankKnown(input) && rank < 2) {
-        // A permutation array containing a single element is ambiguous. It could
-        // indicate either a scalar or a 1-dimensional array, both of which the
-        // transpose op returns unchanged.
-        c->set_output(0, input);
-        return Status::OK();
-    }
-
-    std::vector<DimensionHandle> dims;
-    dims.resize(rank);
-    TF_RETURN_IF_ERROR(c->WithRank(input, rank, &input));
-    // Ensure that perm is a vector and has rank elements.
-    TF_RETURN_IF_ERROR(c->WithRank(perm_shape, 1, &perm_shape));
-    TF_RETURN_IF_ERROR(c->WithValue(perm_elems, rank, &perm_elems));
-
-    // If we know the rank of the input and the value of perm, we can return
-    // all shape information, otherwise we can only return rank information,
-    // but no information for the dimensions.
-    if (perm != nullptr) {
-        std::vector<int64> data;
-        if (perm->dtype() == DT_INT32) {
-            data = AsInt64<int32>(perm, rank);
-        } else {
-            data = AsInt64<int64>(perm, rank);
-        }
-
-        for (int32 i = 0; i < rank; ++i) {
-            int64 in_idx = data[i];
-            if (in_idx >= rank) {
-                return errors::InvalidArgument("perm dim ", in_idx,
-                                               " is out of range of input rank ", rank);
-            }
-            dims[i] = c->Dim(input, in_idx);
-        }
-    } else {
-        for (int i = 0; i < rank; ++i) {
-            dims[i] = c->UnknownDim();
-        }
-    }
-
-    c->set_output(0, c->MakeShape(dims));
+  ShapeHandle input = c->input(0);
+  ShapeHandle perm_shape = c->input(1);
+  const Tensor* perm = c->input_tensor(1);
+  DimensionHandle perm_elems = c->NumElements(perm_shape);
+  // If we don't have rank information on the input or value information on
+  // perm we can't return any shape information, otherwise we have enough
+  // information to at least find the rank of the output.
+  if (!c->RankKnown(input) && !c->ValueKnown(perm_elems) && perm == nullptr) {
+    c->set_output(0, c->UnknownShape());
     return Status::OK();
+  }
+
+  // Find our value of the rank.
+  int64 rank;
+  if (c->RankKnown(input)) {
+    rank = c->Rank(input);
+  } else if (c->ValueKnown(perm_elems)) {
+    rank = c->Value(perm_elems);
+  } else {
+    rank = perm->NumElements();
+  }
+  if (!c->RankKnown(input) && rank < 2) {
+    // A permutation array containing a single element is ambiguous. It could
+    // indicate either a scalar or a 1-dimensional array, both of which the
+    // transpose op returns unchanged.
+    c->set_output(0, input);
+    return Status::OK();
+  }
+
+  std::vector<DimensionHandle> dims;
+  dims.resize(rank);
+  TF_RETURN_IF_ERROR(c->WithRank(input, rank, &input));
+  // Ensure that perm is a vector and has rank elements.
+  TF_RETURN_IF_ERROR(c->WithRank(perm_shape, 1, &perm_shape));
+  TF_RETURN_IF_ERROR(c->WithValue(perm_elems, rank, &perm_elems));
+
+  // If we know the rank of the input and the value of perm, we can return
+  // all shape information, otherwise we can only return rank information,
+  // but no information for the dimensions.
+  if (perm != nullptr) {
+    std::vector<int64> data;
+    if (perm->dtype() == DT_INT32) {
+      data = AsInt64<int32>(perm, rank);
+    } else {
+      data = AsInt64<int64>(perm, rank);
+    }
+
+    for (int32 i = 0; i < rank; ++i) {
+      int64 in_idx = data[i];
+      if (in_idx >= rank) {
+        return errors::InvalidArgument("perm dim ", in_idx,
+                                       " is out of range of input rank ", rank);
+      }
+      dims[i] = c->Dim(input, in_idx);
+    }
+  } else {
+    for (int i = 0; i < rank; ++i) {
+      dims[i] = c->UnknownDim();
+    }
+  }
+
+  c->set_output(0, c->MakeShape(dims));
+  return Status::OK();
 }
 
 Status SetOutputShapeForReshape(InferenceContext* c) {
-    ShapeHandle in = c->input(0);
-    ShapeHandle out;
-    TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(1, &out));
+  ShapeHandle in = c->input(0);
+  ShapeHandle out;
+  TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(1, &out));
 
-    if (!c->RankKnown(out)) {
-        // We have no information about the shape of the output.
-        c->set_output(0, out);
-        return Status::OK();
-    }
-    if (c->RankKnown(in)) {
-        // We don't know the number of output elements, but we can try to infer
-        // the missing dimension.
-        bool too_many_unknown = false;
-        int32 out_unknown_idx = -1;
-
-        DimensionHandle known_out_elems = c->NumElements(out);
-        if (!c->ValueKnown(known_out_elems)) {
-            known_out_elems = c->MakeDim(1);
-            for (int32 i = 0; i < c->Rank(out); ++i) {
-                DimensionHandle dim = c->Dim(out, i);
-                if (!c->ValueKnown(dim)) {
-                    if (out_unknown_idx >= 0) {
-                        too_many_unknown = true;
-                        break;
-                    }
-                    out_unknown_idx = i;
-                } else {
-                    TF_RETURN_IF_ERROR(
-                        c->Multiply(known_out_elems, dim, &known_out_elems));
-                }
-            }
-        }
-        int32 in_unknown_idx = -1;
-        DimensionHandle known_in_elems = c->NumElements(in);
-        if (!c->ValueKnown(known_in_elems)) {
-            known_in_elems = c->MakeDim(1);
-            for (int32 i = 0; i < c->Rank(in); ++i) {
-                DimensionHandle dim = c->Dim(in, i);
-                if (!c->ValueKnown(dim)) {
-                    if (in_unknown_idx >= 0) {
-                        too_many_unknown = true;
-                        break;
-                    }
-                    in_unknown_idx = i;
-                } else {
-                    TF_RETURN_IF_ERROR(c->Multiply(known_in_elems, dim, &known_in_elems));
-                }
-            }
-        }
-
-        if (!too_many_unknown) {
-            if (in_unknown_idx < 0 && out_unknown_idx < 0) {
-                // Just check that the dimensions match.
-                if (c->Value(known_in_elems) != c->Value(known_out_elems)) {
-                    return errors::InvalidArgument(
-                               "Cannot reshape a tensor with ", c->DebugString(known_in_elems),
-                               " elements to shape ", c->DebugString(out), " (",
-                               c->DebugString(known_out_elems), " elements)");
-                }
-            } else if (in_unknown_idx < 0 && out_unknown_idx >= 0 &&
-                       c->Value(known_out_elems) > 0) {
-                // Input fully known, infer the one missing output dim
-                DimensionHandle inferred_dim;
-                TF_RETURN_IF_ERROR(c->Divide(known_in_elems, c->Value(known_out_elems),
-                                             true /* evenly_divisible */,
-                                             &inferred_dim));
-                TF_RETURN_IF_ERROR(
-                    c->ReplaceDim(out, out_unknown_idx, inferred_dim, &out));
-
-            } else if (in_unknown_idx >= 0 && out_unknown_idx < 0 &&
-                       c->Value(known_in_elems) != 0) {
-                // Output fully known, infer the one missing input dim
-                DimensionHandle inferred_dim;
-                TF_RETURN_IF_ERROR(c->Divide(known_out_elems, c->Value(known_in_elems),
-                                             true /* evenly_divisible */,
-                                             &inferred_dim));
-                DimensionHandle unknown_in_dim = c->Dim(in, in_unknown_idx);
-                TF_RETURN_IF_ERROR(
-                    c->Merge(unknown_in_dim, inferred_dim, &unknown_in_dim));
-            } else if (in_unknown_idx >= 0 && out_unknown_idx >= 0) {
-                // Exactly one unknown dimension in both input and output. These 2 are
-                // equal iff the known elements are equal.
-                if (c->Value(known_in_elems) == c->Value(known_out_elems)) {
-                    DimensionHandle unknown_in_dim = c->Dim(in, in_unknown_idx);
-                    TF_RETURN_IF_ERROR(
-                        c->ReplaceDim(out, out_unknown_idx, unknown_in_dim, &out));
-                }
-            }
-        }
-    }
+  if (!c->RankKnown(out)) {
+    // We have no information about the shape of the output.
     c->set_output(0, out);
     return Status::OK();
+  }
+  if (c->RankKnown(in)) {
+    // We don't know the number of output elements, but we can try to infer
+    // the missing dimension.
+    bool too_many_unknown = false;
+    int32 out_unknown_idx = -1;
+
+    DimensionHandle known_out_elems = c->NumElements(out);
+    if (!c->ValueKnown(known_out_elems)) {
+      known_out_elems = c->MakeDim(1);
+      for (int32 i = 0; i < c->Rank(out); ++i) {
+        DimensionHandle dim = c->Dim(out, i);
+        if (!c->ValueKnown(dim)) {
+          if (out_unknown_idx >= 0) {
+            too_many_unknown = true;
+            break;
+          }
+          out_unknown_idx = i;
+        } else {
+          TF_RETURN_IF_ERROR(
+              c->Multiply(known_out_elems, dim, &known_out_elems));
+        }
+      }
+    }
+    int32 in_unknown_idx = -1;
+    DimensionHandle known_in_elems = c->NumElements(in);
+    if (!c->ValueKnown(known_in_elems)) {
+      known_in_elems = c->MakeDim(1);
+      for (int32 i = 0; i < c->Rank(in); ++i) {
+        DimensionHandle dim = c->Dim(in, i);
+        if (!c->ValueKnown(dim)) {
+          if (in_unknown_idx >= 0) {
+            too_many_unknown = true;
+            break;
+          }
+          in_unknown_idx = i;
+        } else {
+          TF_RETURN_IF_ERROR(c->Multiply(known_in_elems, dim, &known_in_elems));
+        }
+      }
+    }
+
+    if (!too_many_unknown) {
+      if (in_unknown_idx < 0 && out_unknown_idx < 0) {
+        // Just check that the dimensions match.
+        if (c->Value(known_in_elems) != c->Value(known_out_elems)) {
+          return errors::InvalidArgument(
+              "Cannot reshape a tensor with ", c->DebugString(known_in_elems),
+              " elements to shape ", c->DebugString(out), " (",
+              c->DebugString(known_out_elems), " elements)");
+        }
+      } else if (in_unknown_idx < 0 && out_unknown_idx >= 0 &&
+                 c->Value(known_out_elems) > 0) {
+        // Input fully known, infer the one missing output dim
+        DimensionHandle inferred_dim;
+        TF_RETURN_IF_ERROR(c->Divide(known_in_elems, c->Value(known_out_elems),
+                                     true /* evenly_divisible */,
+                                     &inferred_dim));
+        TF_RETURN_IF_ERROR(
+            c->ReplaceDim(out, out_unknown_idx, inferred_dim, &out));
+
+      } else if (in_unknown_idx >= 0 && out_unknown_idx < 0 &&
+                 c->Value(known_in_elems) != 0) {
+        // Output fully known, infer the one missing input dim
+        DimensionHandle inferred_dim;
+        TF_RETURN_IF_ERROR(c->Divide(known_out_elems, c->Value(known_in_elems),
+                                     true /* evenly_divisible */,
+                                     &inferred_dim));
+        DimensionHandle unknown_in_dim = c->Dim(in, in_unknown_idx);
+        TF_RETURN_IF_ERROR(
+            c->Merge(unknown_in_dim, inferred_dim, &unknown_in_dim));
+      } else if (in_unknown_idx >= 0 && out_unknown_idx >= 0) {
+        // Exactly one unknown dimension in both input and output. These 2 are
+        // equal iff the known elements are equal.
+        if (c->Value(known_in_elems) == c->Value(known_out_elems)) {
+          DimensionHandle unknown_in_dim = c->Dim(in, in_unknown_idx);
+          TF_RETURN_IF_ERROR(
+              c->ReplaceDim(out, out_unknown_idx, unknown_in_dim, &out));
+        }
+      }
+    }
+  }
+  c->set_output(0, out);
+  return Status::OK();
 }
 
 }  // namespace
 
 REGISTER_OP("ParallelConcat")
-.Input("values: N * T")
-.Output("output: T")
-.Attr("N: int >= 1")
-.Attr("T: type")
-.Attr("shape: shape")
-.SetShapeFn([](InferenceContext* c) {
-    // Validate that the shape attr is correct.
-    PartialTensorShape shape;
-    TF_RETURN_IF_ERROR(c->GetAttr("shape", &shape));
-    ShapeHandle passed_shape;
-    TF_RETURN_IF_ERROR(
-        c->MakeShapeFromPartialTensorShape(shape, &passed_shape));
-    if (!c->FullyDefined(passed_shape)) {
+    .Input("values: N * T")
+    .Output("output: T")
+    .Attr("N: int >= 1")
+    .Attr("T: type")
+    .Attr("shape: shape")
+    .SetShapeFn([](InferenceContext* c) {
+      // Validate that the shape attr is correct.
+      PartialTensorShape shape;
+      TF_RETURN_IF_ERROR(c->GetAttr("shape", &shape));
+      ShapeHandle passed_shape;
+      TF_RETURN_IF_ERROR(
+          c->MakeShapeFromPartialTensorShape(shape, &passed_shape));
+      if (!c->FullyDefined(passed_shape)) {
         return errors::InvalidArgument("shape attr must be fully defined.");
-    }
-    ShapeHandle cur;
-    TF_RETURN_IF_ERROR(c->ReplaceDim(
-                           passed_shape, 0, c->MakeDim(shape_inference::DimensionOrConstant(1)),
-                           &cur));
-    for (int i = 0; i < c->num_inputs(); ++i) {
+      }
+      ShapeHandle cur;
+      TF_RETURN_IF_ERROR(c->ReplaceDim(
+          passed_shape, 0, c->MakeDim(shape_inference::DimensionOrConstant(1)),
+          &cur));
+      for (int i = 0; i < c->num_inputs(); ++i) {
         if (!c->FullyDefined(c->input(i))) {
-            return errors::InvalidArgument(
-                       "All input shapes must be fully defined.");
+          return errors::InvalidArgument(
+              "All input shapes must be fully defined.");
         }
         DimensionHandle unused;
         if (!c->WithValue(c->Dim(c->input(i), 0), 1, &unused).ok()) {
-            return errors::InvalidArgument("Size of first dimension must be 1.");
+          return errors::InvalidArgument("Size of first dimension must be 1.");
         }
         TF_RETURN_WITH_CONTEXT_IF_ERROR(c->Merge(c->input(i), cur, &cur),
                                         "From merging shape ", i,
                                         " with other shapes.");
-    }
+      }
 
-    c->set_output(0, passed_shape);
+      c->set_output(0, passed_shape);
 
-    return Status::OK();
-});
+      return Status::OK();
+    });
 
 REGISTER_OP("Pack")
-.Input("values: N * T")
-.Output("output: T")
-.Attr("N: int >= 1")
-.Attr("T: type")
-.Attr("axis: int = 0")
-.SetShapeFn([](InferenceContext* c) {
-    // Validate shapes of all inputs are compatible
-    ShapeHandle cur = c->input(c->num_inputs() - 1);
-    for (int i = c->num_inputs() - 2; i >= 0; --i) {
+    .Input("values: N * T")
+    .Output("output: T")
+    .Attr("N: int >= 1")
+    .Attr("T: type")
+    .Attr("axis: int = 0")
+    .SetShapeFn([](InferenceContext* c) {
+      // Validate shapes of all inputs are compatible
+      ShapeHandle cur = c->input(c->num_inputs() - 1);
+      for (int i = c->num_inputs() - 2; i >= 0; --i) {
         TF_RETURN_WITH_CONTEXT_IF_ERROR(c->Merge(c->input(i), cur, &cur),
                                         "From merging shape ", i,
                                         " with other shapes.");
-    }
-    if (!c->RankKnown(cur)) {
+      }
+      if (!c->RankKnown(cur)) {
         c->set_output(0, c->UnknownShape());
         return Status::OK();
-    }
-    // Determine the axis that will be added, converting from negative
-    // axes to a positive point per negative indexing rules.
-    int32 rank = c->Rank(cur);
-    int32 axis;
-    TF_RETURN_IF_ERROR(GetAxisForPackAndUnpack(c, rank + 1, &axis));
+      }
+      // Determine the axis that will be added, converting from negative
+      // axes to a positive point per negative indexing rules.
+      int32 rank = c->Rank(cur);
+      int32 axis;
+      TF_RETURN_IF_ERROR(GetAxisForPackAndUnpack(c, rank + 1, &axis));
 
-    // Copy all dimensions over, inserting a dimension of value #inputs
-    // at <axis>.
-    std::vector<DimensionHandle> dims;
-    int index = 0;
-    while (index < axis) dims.push_back(c->Dim(cur, index++));
-    dims.push_back(c->MakeDim(c->num_inputs()));
-    while (index < rank) dims.push_back(c->Dim(cur, index++));
+      // Copy all dimensions over, inserting a dimension of value #inputs
+      // at <axis>.
+      std::vector<DimensionHandle> dims;
+      int index = 0;
+      while (index < axis) dims.push_back(c->Dim(cur, index++));
+      dims.push_back(c->MakeDim(c->num_inputs()));
+      while (index < rank) dims.push_back(c->Dim(cur, index++));
 
-    c->set_output(0, c->MakeShape(dims));
-    for (int i = 0; i < c->num_inputs(); ++i) {
+      c->set_output(0, c->MakeShape(dims));
+      for (int i = 0; i < c->num_inputs(); ++i) {
         auto* shape_and_type = c->input_handle_shapes_and_types(i);
         if (shape_and_type) {
-            if (!c->RelaxOutputHandleShapesAndMergeTypes(0, *shape_and_type)) {
-                c->set_output_handle_shapes_and_types(
-                    0, std::vector<shape_inference::ShapeAndType>({}));
-                break;
-            }
+          if (!c->RelaxOutputHandleShapesAndMergeTypes(0, *shape_and_type)) {
+            c->set_output_handle_shapes_and_types(
+                0, std::vector<shape_inference::ShapeAndType>({}));
+            break;
+          }
         }
-    }
-    return Status::OK();
-});
+      }
+      return Status::OK();
+    });
 
 REGISTER_OP("DeepCopy")
-.Input("x: T")
-.Output("y: T")
-.Attr("T: type")
-.SetIsStateful()
-.SetShapeFn(UnchangedShape);
+    .Input("x: T")
+    .Output("y: T")
+    .Attr("T: type")
+    .SetIsStateful()
+    .SetShapeFn(UnchangedShape);
 
 REGISTER_OP("InplaceUpdate")
-.Input("x: T")
-.Input("i: int32")
-.Input("v: T")
-.Output("y: T")
-.Attr("T: type")
-.SetShapeFn(UnchangedShape);
+    .Input("x: T")
+    .Input("i: int32")
+    .Input("v: T")
+    .Output("y: T")
+    .Attr("T: type")
+    .SetShapeFn(UnchangedShape);
 
 REGISTER_OP("InplaceAdd")
-.Input("x: T")
-.Input("i: int32")
-.Input("v: T")
-.Output("y: T")
-.Attr("T: type")
-.SetShapeFn(UnchangedShape);
+    .Input("x: T")
+    .Input("i: int32")
+    .Input("v: T")
+    .Output("y: T")
+    .Attr("T: type")
+    .SetShapeFn(UnchangedShape);
 
 REGISTER_OP("InplaceSub")
-.Input("x: T")
-.Input("i: int32")
-.Input("v: T")
-.Output("y: T")
-.Attr("T: type")
-.SetShapeFn(UnchangedShape);
+    .Input("x: T")
+    .Input("i: int32")
+    .Input("v: T")
+    .Output("y: T")
+    .Attr("T: type")
+    .SetShapeFn(UnchangedShape);
 
 REGISTER_OP("Empty")
-.Input("shape: int32")
-.Output("output: dtype")
-.Attr("dtype: type")
-.Attr("init: bool = false")
-.SetIsStateful()
-.SetShapeFn([](InferenceContext* c) {
-    ShapeHandle out;
-    TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(0, &out));
-    c->set_output(0, out);
-    return Status::OK();
-});
+    .Input("shape: int32")
+    .Output("output: dtype")
+    .Attr("dtype: type")
+    .Attr("init: bool = false")
+    .SetIsStateful()
+    .SetShapeFn([](InferenceContext* c) {
+      ShapeHandle out;
+      TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(0, &out));
+      c->set_output(0, out);
+      return Status::OK();
+    });
 
 // --------------------------------------------------------------------------
 REGISTER_OP("Unpack")
-.Input("value: T")
-.Output("output: num * T")
-.Attr("num: int >= 0")
-.Attr("T: type")
-.Attr("axis: int = 0")
-.SetShapeFn([](InferenceContext* c) {
-    ShapeHandle s = c->input(0);
-    ShapeHandle out;
-    if (c->RankKnown(s)) {
+    .Input("value: T")
+    .Output("output: num * T")
+    .Attr("num: int >= 0")
+    .Attr("T: type")
+    .Attr("axis: int = 0")
+    .SetShapeFn([](InferenceContext* c) {
+      ShapeHandle s = c->input(0);
+      ShapeHandle out;
+      if (c->RankKnown(s)) {
         // Determine the axis that will be removed, converting from negative
         // axes to a positive point per negative indexing rules.
         int32 rank = c->Rank(s);
@@ -435,115 +435,115 @@ REGISTER_OP("Unpack")
         // Copy all dimensions, removing the <axis> dimension.
         std::vector<DimensionHandle> dims;
         for (int i = 0; i < rank; ++i) {
-            if (i != axis) dims.push_back(c->Dim(s, i));
+          if (i != axis) dims.push_back(c->Dim(s, i));
         }
         out = c->MakeShape(dims);
-    } else {
+      } else {
         // All outputs are the same shape, but it's not known.
         out = c->UnknownShape();
-    }
-    for (int i = 0; i < c->num_outputs(); ++i) c->set_output(i, out);
-    return Status::OK();
-});
+      }
+      for (int i = 0; i < c->num_outputs(); ++i) c->set_output(i, out);
+      return Status::OK();
+    });
 
 REGISTER_OP("UnravelIndex")
-.Input("indices: Tidx")
-.Input("dims: Tidx")
-.Output("output: Tidx")
-.Attr("Tidx: {int32, int64} = DT_INT32")
-.SetShapeFn([](InferenceContext* c) {
-    ShapeHandle indices = c->input(0);
-    ShapeHandle dims;
-    TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 1, &dims));
-    if (c->RankKnown(indices) && c->Rank(indices) == 0) {
+    .Input("indices: Tidx")
+    .Input("dims: Tidx")
+    .Output("output: Tidx")
+    .Attr("Tidx: {int32, int64} = DT_INT32")
+    .SetShapeFn([](InferenceContext* c) {
+      ShapeHandle indices = c->input(0);
+      ShapeHandle dims;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 1, &dims));
+      if (c->RankKnown(indices) && c->Rank(indices) == 0) {
         c->set_output(0, c->Vector(c->Dim(dims, 0)));
-    } else if (c->RankKnown(indices)) {
+      } else if (c->RankKnown(indices)) {
         c->set_output(0, c->Matrix(c->Dim(dims, 0), c->NumElements(indices)));
-    } else {
+      } else {
         c->set_output(0, c->UnknownShape());
-    }
-    return Status::OK();
-});
+      }
+      return Status::OK();
+    });
 
 REGISTER_OP("BroadcastTo")
-.Input("input: T")
-.Input("shape: Tidx")
-.Output("output: T")
-.Attr("T: type")
-.Attr("Tidx: {int32, int64} = DT_INT32")
-.SetShapeFn([](InferenceContext* c) {
-    ShapeHandle shape_in = c->input(1);
-    TF_RETURN_IF_ERROR(c->WithRank(shape_in, 1, &shape_in));
-    ShapeHandle out;
-    TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(1, &out));
-    if (!c->RankKnown(out)) {
+    .Input("input: T")
+    .Input("shape: Tidx")
+    .Output("output: T")
+    .Attr("T: type")
+    .Attr("Tidx: {int32, int64} = DT_INT32")
+    .SetShapeFn([](InferenceContext* c) {
+      ShapeHandle shape_in = c->input(1);
+      TF_RETURN_IF_ERROR(c->WithRank(shape_in, 1, &shape_in));
+      ShapeHandle out;
+      TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(1, &out));
+      if (!c->RankKnown(out)) {
         // We have no information about the shape of the output.
         c->set_output(0, out);
         return Status::OK();
-    }
+      }
 
-    ShapeHandle in = c->input(0);
-    if (!c->RankKnown(in)) {
+      ShapeHandle in = c->input(0);
+      if (!c->RankKnown(in)) {
         // We have no information about the shape of the input,
         // nothing to do here.
         c->set_output(0, out);
         return Status::OK();
-    }
-    int out_rank = c->Rank(out);
-    TF_RETURN_IF_ERROR(c->WithRankAtMost(in, out_rank, &in));
-    int in_rank = c->Rank(in);
-    for (int i = 0; i < in_rank; ++i) {
+      }
+      int out_rank = c->Rank(out);
+      TF_RETURN_IF_ERROR(c->WithRankAtMost(in, out_rank, &in));
+      int in_rank = c->Rank(in);
+      for (int i = 0; i < in_rank; ++i) {
         auto in_dim = c->Dim(in, in_rank - i - 1);
         if (c->Value(in_dim) > 1) {
-            // If the input dimension is greater than 1 then the output dimension
-            // must be equal to it, since we only broadcast "from left to right".
-            auto out_dim = c->Dim(out, out_rank - i - 1);
-            TF_RETURN_IF_ERROR(c->Merge(in_dim, out_dim, &out_dim));
-            TF_RETURN_IF_ERROR(
-                c->ReplaceDim(out, out_rank - i - 1, out_dim, &out));
+          // If the input dimension is greater than 1 then the output dimension
+          // must be equal to it, since we only broadcast "from left to right".
+          auto out_dim = c->Dim(out, out_rank - i - 1);
+          TF_RETURN_IF_ERROR(c->Merge(in_dim, out_dim, &out_dim));
+          TF_RETURN_IF_ERROR(
+              c->ReplaceDim(out, out_rank - i - 1, out_dim, &out));
         }
-    }
-    c->set_output(0, out);
-    return Status::OK();
-});
+      }
+      c->set_output(0, out);
+      return Status::OK();
+    });
 
 // --------------------------------------------------------------------------
 // TODO(josh11b): Remove the >= 2 constraint, once we can rewrite the graph
 // in the N == 1 case to remove the node.
 REGISTER_OP("Concat")
-.Input("concat_dim: int32")
-.Input("values: N * T")
-.Output("output: T")
-.Attr("N: int >= 2")
-.Attr("T: type")
-.SetShapeFn([](InferenceContext* c) {
-    return shape_inference::ConcatShape(c, c->num_inputs() - 1);
-});
+    .Input("concat_dim: int32")
+    .Input("values: N * T")
+    .Output("output: T")
+    .Attr("N: int >= 2")
+    .Attr("T: type")
+    .SetShapeFn([](InferenceContext* c) {
+      return shape_inference::ConcatShape(c, c->num_inputs() - 1);
+    });
 
 REGISTER_OP("ConcatV2")
-.Input("values: N * T")
-.Input("axis: Tidx")
-.Output("output: T")
-.Attr("N: int >= 2")
-.Attr("T: type")
-.Attr("Tidx: {int32, int64} = DT_INT32")
-.SetShapeFn(shape_inference::ConcatV2Shape);
+    .Input("values: N * T")
+    .Input("axis: Tidx")
+    .Output("output: T")
+    .Attr("N: int >= 2")
+    .Attr("T: type")
+    .Attr("Tidx: {int32, int64} = DT_INT32")
+    .SetShapeFn(shape_inference::ConcatV2Shape);
 
 // TODO(vivek.v.rane@intel.com): Prefix the op names with underscore if the ops
 // are not to be made user-accessible.
 #ifdef INTEL_MKL
 REGISTER_OP("_MklConcatV2")
-.Input("values: N * T")
-.Input("axis: Tidx")
-.Input("mkl_values: N * uint8")
-.Input("mkl_axis: uint8")
-.Output("output: T")
-.Output("mkl_output: uint8")
-.Attr("N: int >= 2")
-.Attr("T: type")
-.Attr("Tidx: {int32, int64} = DT_INT32")
-.SetShapeFn(shape_inference::ConcatV2Shape)
-.Doc(R"doc(
+    .Input("values: N * T")
+    .Input("axis: Tidx")
+    .Input("mkl_values: N * uint8")
+    .Input("mkl_axis: uint8")
+    .Output("output: T")
+    .Output("mkl_output: uint8")
+    .Attr("N: int >= 2")
+    .Attr("T: type")
+    .Attr("Tidx: {int32, int64} = DT_INT32")
+    .SetShapeFn(shape_inference::ConcatV2Shape)
+    .Doc(R"doc(
 MKL version of ConcatV2 operator. Uses MKL DNN APIs to perform concatenation.
 
 NOTE Do not invoke this operator directly in Python. Graph rewrite pass is
