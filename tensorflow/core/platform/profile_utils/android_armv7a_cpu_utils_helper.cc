@@ -39,95 +39,95 @@ namespace profile_utils {
 /* static */ constexpr int64 AndroidArmV7ACpuUtilsHelper::INVALID_CPU_FREQUENCY;
 
 void AndroidArmV7ACpuUtilsHelper::ResetClockCycle() {
-  if (!is_initialized_) {
-    return;
-  }
-  ioctl(fd_, PERF_EVENT_IOC_RESET, 0);
+    if (!is_initialized_) {
+        return;
+    }
+    ioctl(fd_, PERF_EVENT_IOC_RESET, 0);
 }
 
 uint64 AndroidArmV7ACpuUtilsHelper::GetCurrentClockCycle() {
-  if (!is_initialized_) {
-    return 1;  // DUMMY
-  }
-  long long count;
-  read(fd_, &count, sizeof(long long));
-  return static_cast<uint64>(count);
+    if (!is_initialized_) {
+        return 1;  // DUMMY
+    }
+    long long count;
+    read(fd_, &count, sizeof(long long));
+    return static_cast<uint64>(count);
 }
 
 void AndroidArmV7ACpuUtilsHelper::EnableClockCycleProfiling(const bool enable) {
-  if (!is_initialized_) {
-    // Initialize here to avoid unnecessary initialization
-    InitializeInternal();
-  }
-  if (enable) {
-    const int64 cpu0_scaling_min = ReadCpuFrequencyFile(0, "scaling_min");
-    const int64 cpu0_scaling_max = ReadCpuFrequencyFile(0, "scaling_max");
-    if (cpu0_scaling_max != cpu0_scaling_min) {
-      LOG(WARNING) << "You enabled clock cycle profile but frequency may "
-                   << "be scaled. (max = " << cpu0_scaling_max << ", min "
-                   << cpu0_scaling_min << ")";
+    if (!is_initialized_) {
+        // Initialize here to avoid unnecessary initialization
+        InitializeInternal();
     }
-    ResetClockCycle();
-    ioctl(fd_, PERF_EVENT_IOC_ENABLE, 0);
-  } else {
-    ioctl(fd_, PERF_EVENT_IOC_DISABLE, 0);
-  }
+    if (enable) {
+        const int64 cpu0_scaling_min = ReadCpuFrequencyFile(0, "scaling_min");
+        const int64 cpu0_scaling_max = ReadCpuFrequencyFile(0, "scaling_max");
+        if (cpu0_scaling_max != cpu0_scaling_min) {
+            LOG(WARNING) << "You enabled clock cycle profile but frequency may "
+                         << "be scaled. (max = " << cpu0_scaling_max << ", min "
+                         << cpu0_scaling_min << ")";
+        }
+        ResetClockCycle();
+        ioctl(fd_, PERF_EVENT_IOC_ENABLE, 0);
+    } else {
+        ioctl(fd_, PERF_EVENT_IOC_DISABLE, 0);
+    }
 }
 
 int64 AndroidArmV7ACpuUtilsHelper::CalculateCpuFrequency() {
-  return ReadCpuFrequencyFile(0, "scaling_cur");
+    return ReadCpuFrequencyFile(0, "scaling_cur");
 }
 
 void AndroidArmV7ACpuUtilsHelper::InitializeInternal() {
-  perf_event_attr pe;
+    perf_event_attr pe;
 
-  memset(&pe, 0, sizeof(perf_event_attr));
-  pe.type = PERF_TYPE_HARDWARE;
-  pe.size = sizeof(perf_event_attr);
-  pe.config = PERF_COUNT_HW_CPU_CYCLES;
-  pe.disabled = 1;
-  pe.exclude_kernel = 1;
-  pe.exclude_hv = 1;
+    memset(&pe, 0, sizeof(perf_event_attr));
+    pe.type = PERF_TYPE_HARDWARE;
+    pe.size = sizeof(perf_event_attr);
+    pe.config = PERF_COUNT_HW_CPU_CYCLES;
+    pe.disabled = 1;
+    pe.exclude_kernel = 1;
+    pe.exclude_hv = 1;
 
-  fd_ = OpenPerfEvent(&pe, 0, -1, -1, 0);
-  if (fd_ == INVALID_FD) {
-    LOG(WARNING) << "Error opening perf event";
-    is_initialized_ = false;
-  } else {
-    is_initialized_ = true;
-  }
+    fd_ = OpenPerfEvent(&pe, 0, -1, -1, 0);
+    if (fd_ == INVALID_FD) {
+        LOG(WARNING) << "Error opening perf event";
+        is_initialized_ = false;
+    } else {
+        is_initialized_ = true;
+    }
 }
 
 int AndroidArmV7ACpuUtilsHelper::OpenPerfEvent(perf_event_attr *const hw_event,
-                                               const pid_t pid, const int cpu,
-                                               const int group_fd,
-                                               const unsigned long flags) {
-  const int ret =
-      syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
-  return ret;
+        const pid_t pid, const int cpu,
+        const int group_fd,
+        const unsigned long flags) {
+    const int ret =
+        syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
+    return ret;
 }
 
 int64 AndroidArmV7ACpuUtilsHelper::ReadCpuFrequencyFile(
     const int cpu_id, const char *const type) {
-  const string file_path = strings::Printf(
-      "/sys/devices/system/cpu/cpu%d/cpufreq/%s_freq", cpu_id, type);
-  FILE *fp = fopen(file_path.c_str(), "r");
-  if (fp == nullptr) {
-    return INVALID_CPU_FREQUENCY;
-  }
-  int64_t freq_in_khz = INVALID_CPU_FREQUENCY;
-  const int retval = fscanf(fp, "%" SCNd64, &freq_in_khz);
-  if (retval < 0) {
-    LOG(WARNING) << "Failed to \"" << file_path << "\"";
+    const string file_path = strings::Printf(
+                                 "/sys/devices/system/cpu/cpu%d/cpufreq/%s_freq", cpu_id, type);
+    FILE *fp = fopen(file_path.c_str(), "r");
+    if (fp == nullptr) {
+        return INVALID_CPU_FREQUENCY;
+    }
+    int64_t freq_in_khz = INVALID_CPU_FREQUENCY;
+    const int retval = fscanf(fp, "%" SCNd64, &freq_in_khz);
+    if (retval < 0) {
+        LOG(WARNING) << "Failed to \"" << file_path << "\"";
+        fclose(fp);
+        return INVALID_CPU_FREQUENCY;
+    }
     fclose(fp);
-    return INVALID_CPU_FREQUENCY;
-  }
-  fclose(fp);
-  return freq_in_khz * 1000;  // The file contains cpu frequency in khz
+    return freq_in_khz * 1000;  // The file contains cpu frequency in khz
 }
 
 }  // namespace profile_utils
 }  // namespace tensorflow
 
 #endif  // defined(__ANDROID__) && (__ANDROID_API__ >= 21) &&
-        // (defined(__ARM_ARCH_7A__) || defined(__aarch64__))
+// (defined(__ARM_ARCH_7A__) || defined(__aarch64__))
