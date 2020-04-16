@@ -34,7 +34,7 @@ namespace data {
 
 /* static */ constexpr const char* const DatasetToGraphOp::kAllowStateful;
 /* static */ constexpr const char* const
-DatasetToGraphOp::kStripDeviceAssignment;
+    DatasetToGraphOp::kStripDeviceAssignment;
 /* static */ constexpr const char* const DatasetToGraphOp::kExternalStatePolicy;
 /* static */ constexpr const char* const DatasetToGraphOp::kDatasetToGraph;
 /* static */ constexpr const char* const DatasetFromGraphOp::kGraphDef;
@@ -48,108 +48,107 @@ constexpr char kPyFunc[] = "PyFunc";
 // description of the following op.
 DatasetToGraphOp::DatasetToGraphOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), op_version_(ctx->def().op() == kDatasetToGraph ? 1 : 2) {
-    if (op_version_ == 2) {
-        if (ctx->HasAttr(kExternalStatePolicy)) {
-            int64 state_change_option;
-            OP_REQUIRES_OK(ctx,
-                           ctx->GetAttr(kExternalStatePolicy, &state_change_option));
-            external_state_policy_ =
-                SerializationContext::ExternalStatePolicy(state_change_option);
-        }
-    } else {
-        if (ctx->HasAttr(kAllowStateful)) {
-            bool allow_stateful;
-            OP_REQUIRES_OK(ctx, ctx->GetAttr(kAllowStateful, &allow_stateful));
-            if (allow_stateful) {
-                external_state_policy_ =
-                    SerializationContext::ExternalStatePolicy::kWarn;
-            } else {
-                external_state_policy_ =
-                    SerializationContext::ExternalStatePolicy::kFail;
-            }
-        }
+  if (op_version_ == 2) {
+    if (ctx->HasAttr(kExternalStatePolicy)) {
+      int64 state_change_option;
+      OP_REQUIRES_OK(ctx,
+                     ctx->GetAttr(kExternalStatePolicy, &state_change_option));
+      external_state_policy_ =
+          SerializationContext::ExternalStatePolicy(state_change_option);
     }
+  } else {
+    if (ctx->HasAttr(kAllowStateful)) {
+      bool allow_stateful;
+      OP_REQUIRES_OK(ctx, ctx->GetAttr(kAllowStateful, &allow_stateful));
+      if (allow_stateful) {
+        external_state_policy_ =
+            SerializationContext::ExternalStatePolicy::kWarn;
+      } else {
+        external_state_policy_ =
+            SerializationContext::ExternalStatePolicy::kFail;
+      }
+    }
+  }
 
-    if (ctx->HasAttr(kStripDeviceAssignment)) {
-        OP_REQUIRES_OK(
-            ctx, ctx->GetAttr(kStripDeviceAssignment, &strip_device_assignment_));
-    }
+  if (ctx->HasAttr(kStripDeviceAssignment)) {
+    OP_REQUIRES_OK(
+        ctx, ctx->GetAttr(kStripDeviceAssignment, &strip_device_assignment_));
+  }
 }
 
 void DatasetToGraphOp::Compute(OpKernelContext* ctx) {
-    DatasetBase* dataset;
-    OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
-    SerializationContext::Params params;
-    params.external_state_policy = external_state_policy_;
+  DatasetBase* dataset;
+  OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
+  SerializationContext::Params params;
+  params.external_state_policy = external_state_policy_;
 
-    GraphDef graph_def;
-    Status s = AsGraphDef(ctx, dataset, SerializationContext(params), &graph_def);
-    if (!s.ok()) {
-        ctx->CtxFailure(errors::FailedPrecondition(
-                            "Failed to serialize the input pipeline graph: ", s.error_message()));
-        return;
-    }
-    if (strip_device_assignment_) {
-        auto library = graph_def.mutable_library();
-        for (auto& function : (*library->mutable_function())) {
-            for (auto& node : (*function.mutable_node_def())) {
-                // We do not strip the device assignment from `PyFunc` ops because they
-                // need to be pinned to a host that is known to have Python interpreter.
-                if (!node.device().empty() && node.op() != kPyFunc) {
-                    *node.mutable_device() = DeviceNameUtils::LocalName(node.device());
-                }
-            }
+  GraphDef graph_def;
+  Status s = AsGraphDef(ctx, dataset, SerializationContext(params), &graph_def);
+  if (!s.ok()) {
+    ctx->CtxFailure(errors::FailedPrecondition(
+        "Failed to serialize the input pipeline graph: ", s.error_message()));
+    return;
+  }
+  if (strip_device_assignment_) {
+    auto library = graph_def.mutable_library();
+    for (auto& function : (*library->mutable_function())) {
+      for (auto& node : (*function.mutable_node_def())) {
+        // We do not strip the device assignment from `PyFunc` ops because they
+        // need to be pinned to a host that is known to have Python interpreter.
+        if (!node.device().empty() && node.op() != kPyFunc) {
+          *node.mutable_device() = DeviceNameUtils::LocalName(node.device());
         }
+      }
     }
+  }
 
-    Tensor* result;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({}), &result));
-    result->scalar<tstring>()() = graph_def.SerializeAsString();
+  Tensor* result;
+  OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({}), &result));
+  result->scalar<tstring>()() = graph_def.SerializeAsString();
 }
 
 void DatasetCardinalityOp::Compute(OpKernelContext* ctx) {
-    DatasetBase* dataset;
-    OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
-    Tensor* result;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({}), &result));
-    result->scalar<int64>()() = dataset->Cardinality();
+  DatasetBase* dataset;
+  OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &dataset));
+  Tensor* result;
+  OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({}), &result));
+  result->scalar<int64>()() = dataset->Cardinality();
 }
 
 void DatasetFromGraphOp::Compute(OpKernelContext* ctx) {
-    tstring graph_def_string;
-    OP_REQUIRES_OK(ctx,
-                   ParseScalarArgument(ctx, kGraphDef, &graph_def_string));
-    GraphDef graph_def;
-    OP_REQUIRES(ctx, graph_def.ParseFromString(graph_def_string),
-                errors::InvalidArgument("Could not parse GraphDef"));
-    string output_node;
-    for (const auto& node : graph_def.node()) {
-        if (node.op() == FunctionLibraryDefinition::kRetOp) {
-            output_node = node.input(0);
-        }
+  tstring graph_def_string;
+  OP_REQUIRES_OK(ctx, ParseScalarArgument(ctx, kGraphDef, &graph_def_string));
+  GraphDef graph_def;
+  OP_REQUIRES(ctx, graph_def.ParseFromString(graph_def_string),
+              errors::InvalidArgument("Could not parse GraphDef"));
+  string output_node;
+  for (const auto& node : graph_def.node()) {
+    if (node.op() == FunctionLibraryDefinition::kRetOp) {
+      output_node = node.input(0);
     }
-    Graph graph(OpRegistry::Global());
-    OP_REQUIRES_OK(ctx, ImportGraphDef({}, graph_def, &graph, nullptr));
+  }
+  Graph graph(OpRegistry::Global());
+  OP_REQUIRES_OK(ctx, ImportGraphDef({}, graph_def, &graph, nullptr));
 
-    FunctionLibraryRuntime* flr;
-    std::unique_ptr<FunctionLibraryDefinition> flib_def(nullptr);
-    std::unique_ptr<ProcessFunctionLibraryRuntime> pflr(nullptr);
-    OP_REQUIRES_OK(ctx,
-                   ctx->function_library()->Clone(&flib_def, &pflr, &flr, true));
+  FunctionLibraryRuntime* flr;
+  std::unique_ptr<FunctionLibraryDefinition> flib_def(nullptr);
+  std::unique_ptr<ProcessFunctionLibraryRuntime> pflr(nullptr);
+  OP_REQUIRES_OK(ctx,
+                 ctx->function_library()->Clone(&flib_def, &pflr, &flr, true));
 
-    // Some function names may be duplicated (for example, if the serialized
-    // graph has an optimized function that retains its original name). We
-    // override functions in flib_def in the event of conflict. It is
-    // safe to assume that any node in the serialized graph is referring to the
-    // serialized function when there is a conflict.
-    OP_REQUIRES_OK(ctx,
-                   AddToFunctionLibrary(flib_def.get(), graph_def.library()));
+  // Some function names may be duplicated (for example, if the serialized
+  // graph has an optimized function that retains its original name). We
+  // override functions in flib_def in the event of conflict. It is
+  // safe to assume that any node in the serialized graph is referring to the
+  // serialized function when there is a conflict.
+  OP_REQUIRES_OK(ctx,
+                 AddToFunctionLibrary(flib_def.get(), graph_def.library()));
 
-    std::vector<Tensor> outputs;
-    GraphRunner graph_runner(flr->device());
-    OP_REQUIRES_OK(ctx,
-                   graph_runner.Run(&graph, flr, {}, {output_node}, &outputs));
-    OP_REQUIRES_OK(ctx, ctx->set_output(kHandle, outputs[0]));
+  std::vector<Tensor> outputs;
+  GraphRunner graph_runner(flr->device());
+  OP_REQUIRES_OK(ctx,
+                 graph_runner.Run(&graph, flr, {}, {output_node}, &outputs));
+  OP_REQUIRES_OK(ctx, ctx->set_output(kHandle, outputs[0]));
 }
 
 REGISTER_KERNEL_BUILDER(Name("DatasetToGraph").Device(DEVICE_CPU),

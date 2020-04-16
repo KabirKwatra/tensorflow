@@ -47,7 +47,7 @@ typedef struct TF_ExecutionContextOptions TF_ExecutionContextOptions;
 void TF_DeleteExecutionContextOptions(TF_ExecutionContextOptions*);
 
 TF_ExecutionContext* TF_NewExecutionContext(TF_ExecutionContextOptions*,
-        TF_Status* s);
+                                            TF_Status* s);
 void TF_DeleteExecutionContext(TF_ExecutionContext*);
 
 TF_AbstractOp* TF_NewAbstractOp(TF_ExecutionContext* ctx);
@@ -84,7 +84,7 @@ TF_AbstractFunction* TF_ExecutionContextToFunction(
     const TF_AbstractTensor* outputs, TF_Status* status);
 void TF_DeleteAbstractFunction(TF_AbstractFunction*);
 void TF_ExecutionContextRegisterFunction(TF_ExecutionContext*,
-        TF_AbstractFunction*, TF_Status*);
+                                         TF_AbstractFunction*, TF_Status*);
 
 // TF_ExecuteOperation will, if in eager mode, execute, if in graph mode, maybe
 // capture some inputs and then add a node in the graph, and after
@@ -108,7 +108,7 @@ void TF_AbstractTensorSetEagerTensor(
     TF_AbstractTensor* at, TFE_TensorHandle* t,
     TF_Status* s);  // `at` takes ownership of `t`.
 TFE_TensorHandle* TF_AbstractTensorGetEagerTensor(TF_AbstractTensor* at,
-        TF_Status* s);
+                                                  TF_Status* s);
 TFE_Context* TF_ExecutionContextGetTFEContext(TF_ExecutionContext*);
 
 #ifdef __cplusplus

@@ -22,27 +22,27 @@ namespace py = pybind11;
 
 namespace tensorflow {
 static PyObject* DoQuantizeTrainingOnGraphDefHelper(const string& input_graph,
-        int num_bits) {
-    string result;
-    // TODO(suharshs): Make the QuantizeAndDequantizeV2 configurable.
-    tensorflow::MaybeRaiseFromStatus(
-        tensorflow::DoQuantizeTrainingOnSerializedGraphDef(
-            input_graph, num_bits, "QuantizeAndDequantizeV2", &result));
+                                                    int num_bits) {
+  string result;
+  // TODO(suharshs): Make the QuantizeAndDequantizeV2 configurable.
+  tensorflow::MaybeRaiseFromStatus(
+      tensorflow::DoQuantizeTrainingOnSerializedGraphDef(
+          input_graph, num_bits, "QuantizeAndDequantizeV2", &result));
 
-    PyObject* py_str = PyBytes_FromStringAndSize(result.data(), result.size());
-    if (!py_str) {
-        tensorflow::MaybeRaiseFromStatus(tensorflow::errors::Internal(
-                                             "Failed to generate serialized string of the rewritten graph."));
-    }
-    return py_str;
+  PyObject* py_str = PyBytes_FromStringAndSize(result.data(), result.size());
+  if (!py_str) {
+    tensorflow::MaybeRaiseFromStatus(tensorflow::errors::Internal(
+        "Failed to generate serialized string of the rewritten graph."));
+  }
+  return py_str;
 }
 }  // namespace tensorflow
 
 PYBIND11_MODULE(_pywrap_quantize_training, m) {
-    m.def("DoQuantizeTrainingOnGraphDefHelper",
-    [](const py::object input_graph, int num_bits) {
-        return tensorflow::PyoOrThrow(
-                   tensorflow::DoQuantizeTrainingOnGraphDefHelper(
-                       input_graph.cast<std::string>(), num_bits));
-    });
+  m.def("DoQuantizeTrainingOnGraphDefHelper",
+        [](const py::object input_graph, int num_bits) {
+          return tensorflow::PyoOrThrow(
+              tensorflow::DoQuantizeTrainingOnGraphDefHelper(
+                  input_graph.cast<std::string>(), num_bits));
+        });
 };

@@ -53,45 +53,45 @@ namespace detail {
 
 template <>
 struct type_caster<tensorflow::TensorShape> {
-public:
-    PYBIND11_TYPE_CASTER(tensorflow::TensorShape, _("tensorflow::TensorShape"));
+ public:
+  PYBIND11_TYPE_CASTER(tensorflow::TensorShape, _("tensorflow::TensorShape"));
 
-    static handle cast(const tensorflow::TensorShape& src,
-                       return_value_policy unused_policy, handle unused_handle) {
-        // TODO(amitpatankar): Simplify handling TensorShape as output later.
-        size_t dims = src.dims();
-        tensorflow::Safe_PyObjectPtr value(PyList_New(dims));
-        for (size_t i = 0; i < dims; ++i) {
+  static handle cast(const tensorflow::TensorShape& src,
+                     return_value_policy unused_policy, handle unused_handle) {
+    // TODO(amitpatankar): Simplify handling TensorShape as output later.
+    size_t dims = src.dims();
+    tensorflow::Safe_PyObjectPtr value(PyList_New(dims));
+    for (size_t i = 0; i < dims; ++i) {
 #if PY_MAJOR_VERSION >= 3
-            tensorflow::Safe_PyObjectPtr dim_value(
-                tensorflow::make_safe(PyLong_FromLong(src.dim_size(i))));
+      tensorflow::Safe_PyObjectPtr dim_value(
+          tensorflow::make_safe(PyLong_FromLong(src.dim_size(i))));
 #else
-            tensorflow::Safe_PyObjectPtr dim_value(
-                tensorflow::make_safe(PyInt_FromLong(src.dim_size(i))));
+      tensorflow::Safe_PyObjectPtr dim_value(
+          tensorflow::make_safe(PyInt_FromLong(src.dim_size(i))));
 #endif
-            PyList_SET_ITEM(value.get(), i, dim_value.release());
-        }
-
-        return value.release();
+      PyList_SET_ITEM(value.get(), i, dim_value.release());
     }
+
+    return value.release();
+  }
 };
 
 template <>
 struct type_caster<tensorflow::DataType> {
-public:
-    PYBIND11_TYPE_CASTER(tensorflow::DataType, _("tensorflow::DataType"));
+ public:
+  PYBIND11_TYPE_CASTER(tensorflow::DataType, _("tensorflow::DataType"));
 
-    static handle cast(const tensorflow::DataType& src,
-                       return_value_policy unused_policy, handle unused_handle) {
+  static handle cast(const tensorflow::DataType& src,
+                     return_value_policy unused_policy, handle unused_handle) {
 #if PY_MAJOR_VERSION >= 3
-        tensorflow::Safe_PyObjectPtr value(
-            tensorflow::make_safe(PyLong_FromLong(src)));
+    tensorflow::Safe_PyObjectPtr value(
+        tensorflow::make_safe(PyLong_FromLong(src)));
 #else
-        tensorflow::Safe_PyObjectPtr value(
-            tensorflow::make_safe(PyInt_FromLong(src)));
+    tensorflow::Safe_PyObjectPtr value(
+        tensorflow::make_safe(PyInt_FromLong(src)));
 #endif
-        return value.release();
-    }
+    return value.release();
+  }
 };
 
 }  // namespace detail
@@ -101,30 +101,30 @@ namespace tensorflow {
 
 static py::object CheckpointReader_GetTensor(
     tensorflow::checkpoint::CheckpointReader* reader, const string& name) {
-    Safe_TF_StatusPtr status = make_safe(TF_NewStatus());
-    PyObject* py_obj = Py_None;
-    std::unique_ptr<tensorflow::Tensor> tensor;
-    reader->GetTensor(name, &tensor, status.get());
+  Safe_TF_StatusPtr status = make_safe(TF_NewStatus());
+  PyObject* py_obj = Py_None;
+  std::unique_ptr<tensorflow::Tensor> tensor;
+  reader->GetTensor(name, &tensor, status.get());
 
-    // Error handling if unable to get Tensor.
-    tensorflow::MaybeRaiseFromTFStatus(status.get());
+  // Error handling if unable to get Tensor.
+  tensorflow::MaybeRaiseFromTFStatus(status.get());
 
-    tensorflow::MaybeRaiseFromStatus(
-        tensorflow::TensorToNdarray(*tensor, &py_obj));
+  tensorflow::MaybeRaiseFromStatus(
+      tensorflow::TensorToNdarray(*tensor, &py_obj));
 
-    return tensorflow::PyoOrThrow(
-               PyArray_Return(reinterpret_cast<PyArrayObject*>(py_obj)));
+  return tensorflow::PyoOrThrow(
+      PyArray_Return(reinterpret_cast<PyArrayObject*>(py_obj)));
 }
 
 }  // namespace tensorflow
 
 PYBIND11_MODULE(_pywrap_checkpoint_reader, m) {
-    // Initialization code to use numpy types in the type casters.
-    import_array1();
-    py::class_<tensorflow::checkpoint::CheckpointReader> checkpoint_reader_class(
-        m, "CheckpointReader");
-    checkpoint_reader_class
-    .def(py::init([](const std::string& filename) {
+  // Initialization code to use numpy types in the type casters.
+  import_array1();
+  py::class_<tensorflow::checkpoint::CheckpointReader> checkpoint_reader_class(
+      m, "CheckpointReader");
+  checkpoint_reader_class
+      .def(py::init([](const std::string& filename) {
         tensorflow::Safe_TF_StatusPtr status =
             tensorflow::make_safe(TF_NewStatus());
         // pybind11 support smart pointers and will own freeing the memory when
@@ -135,16 +135,16 @@ PYBIND11_MODULE(_pywrap_checkpoint_reader, m) {
                 filename, status.get());
         tensorflow::MaybeRaiseFromTFStatus(status.get());
         return checkpoint;
-    }))
-    .def("debug_string",
-    [](tensorflow::checkpoint::CheckpointReader& self) {
-        return py::bytes(self.DebugString());
-    })
-    .def("get_variable_to_shape_map",
-         &tensorflow::checkpoint::CheckpointReader::GetVariableToShapeMap)
-    .def("_GetVariableToDataTypeMap",
-         &tensorflow::checkpoint::CheckpointReader::GetVariableToDataTypeMap)
-    .def("_HasTensor", &tensorflow::checkpoint::CheckpointReader::HasTensor)
-    .def_static("CheckpointReader_GetTensor",
-                &tensorflow::CheckpointReader_GetTensor);
+      }))
+      .def("debug_string",
+           [](tensorflow::checkpoint::CheckpointReader& self) {
+             return py::bytes(self.DebugString());
+           })
+      .def("get_variable_to_shape_map",
+           &tensorflow::checkpoint::CheckpointReader::GetVariableToShapeMap)
+      .def("_GetVariableToDataTypeMap",
+           &tensorflow::checkpoint::CheckpointReader::GetVariableToDataTypeMap)
+      .def("_HasTensor", &tensorflow::checkpoint::CheckpointReader::HasTensor)
+      .def_static("CheckpointReader_GetTensor",
+                  &tensorflow::CheckpointReader_GetTensor);
 };
