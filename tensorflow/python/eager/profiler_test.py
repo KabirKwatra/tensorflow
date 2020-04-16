@@ -31,10 +31,9 @@ from tensorflow.python.profiler import traceme
 
 
 class ProfilerTest(test_util.TensorFlowTestCase):
-
     def test_profile(self):
         profiler.start()
-        with traceme.TraceMe('three_times_five'):
+        with traceme.TraceMe("three_times_five"):
             three = constant_op.constant(3)
             five = constant_op.constant(5)
             product = three * five
@@ -45,15 +44,14 @@ class ProfilerTest(test_util.TensorFlowTestCase):
         profile_result = profiler.stop()
         profile_pb = trace_events_pb2.Trace()
         profile_pb.ParseFromString(profile_result)
-        devices = frozenset(
-            device.name for device in profile_pb.devices.values())
-        self.assertIn('/host:CPU', devices)
-        if not test_util.IsBuiltWithROCm() and config.list_physical_devices('GPU'):
+        devices = frozenset(device.name for device in profile_pb.devices.values())
+        self.assertIn("/host:CPU", devices)
+        if not test_util.IsBuiltWithROCm() and config.list_physical_devices("GPU"):
             # device tracing is not yet supported on the ROCm platform
-            self.assertIn('/device:GPU:0', devices)
+            self.assertIn("/device:GPU:0", devices)
         events = frozenset(event.name for event in profile_pb.trace_events)
-        self.assertIn('three_times_five', events)
-        self.assertIn('Mul', events)
+        self.assertIn("three_times_five", events)
+        self.assertIn("Mul", events)
         with self.assertRaises(profiler.ProfilerNotRunningError):
             profiler.stop()
 
@@ -66,10 +64,10 @@ class ProfilerTest(test_util.TensorFlowTestCase):
         self.assertEqual(len(file_list), 2)
         for file_name in gfile.ListDirectory(logdir):
             if gfile.IsDirectory(os.path.join(logdir, file_name)):
-                self.assertEqual(file_name, 'plugins')
+                self.assertEqual(file_name, "plugins")
             else:
-                self.assertTrue(file_name.endswith('.profile-empty'))
+                self.assertTrue(file_name.endswith(".profile-empty"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

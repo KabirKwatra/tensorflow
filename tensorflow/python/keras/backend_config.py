@@ -20,16 +20,16 @@ from __future__ import print_function
 from tensorflow.python.util.tf_export import keras_export
 
 # The type of float to use throughout a session.
-_FLOATX = 'float32'
+_FLOATX = "float32"
 
 # Epsilon fuzz factor used throughout the codebase.
 _EPSILON = 1e-7
 
 # Default image data format, one of "channels_last", "channels_first".
-_IMAGE_DATA_FORMAT = 'channels_last'
+_IMAGE_DATA_FORMAT = "channels_last"
 
 
-@keras_export('keras.backend.epsilon')
+@keras_export("keras.backend.epsilon")
 def epsilon():
     """Returns the value of the fuzz factor used in numeric expressions.
 
@@ -43,7 +43,7 @@ def epsilon():
     return _EPSILON
 
 
-@keras_export('keras.backend.set_epsilon')
+@keras_export("keras.backend.set_epsilon")
 def set_epsilon(value):
     """Sets the value of the fuzz factor used in numeric expressions.
 
@@ -62,7 +62,7 @@ def set_epsilon(value):
     _EPSILON = value
 
 
-@keras_export('keras.backend.floatx')
+@keras_export("keras.backend.floatx")
 def floatx():
     """Returns the default float type, as a string.
 
@@ -78,7 +78,7 @@ def floatx():
     return _FLOATX
 
 
-@keras_export('keras.backend.set_floatx')
+@keras_export("keras.backend.set_floatx")
 def set_floatx(value):
     """Sets the default float type.
 
@@ -104,12 +104,12 @@ def set_floatx(value):
         ValueError: In case of invalid value.
     """
     global _FLOATX
-    if value not in {'float16', 'float32', 'float64'}:
-        raise ValueError('Unknown floatx type: ' + str(value))
+    if value not in {"float16", "float32", "float64"}:
+        raise ValueError("Unknown floatx type: " + str(value))
     _FLOATX = str(value)
 
 
-@keras_export('keras.backend.image_data_format')
+@keras_export("keras.backend.image_data_format")
 def image_data_format():
     """Returns the default image data format convention.
 
@@ -123,7 +123,7 @@ def image_data_format():
     return _IMAGE_DATA_FORMAT
 
 
-@keras_export('keras.backend.set_image_data_format')
+@keras_export("keras.backend.set_image_data_format")
 def set_image_data_format(data_format):
     """Sets the value of the image data format convention.
 
@@ -142,6 +142,6 @@ def set_image_data_format(data_format):
         ValueError: In case of invalid `data_format` value.
     """
     global _IMAGE_DATA_FORMAT
-    if data_format not in {'channels_last', 'channels_first'}:
-        raise ValueError('Unknown data_format: ' + str(data_format))
+    if data_format not in {"channels_last", "channels_first"}:
+        raise ValueError("Unknown data_format: " + str(data_format))
     _IMAGE_DATA_FORMAT = str(data_format)

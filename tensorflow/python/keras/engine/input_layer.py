@@ -30,7 +30,7 @@ from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export('keras.layers.InputLayer')
+@keras_export("keras.layers.InputLayer")
 class InputLayer(base_layer.Layer):
     """Layer to be used as an entry point into a Network (a graph of layers).
 
@@ -85,38 +85,48 @@ class InputLayer(base_layer.Layer):
         name: Optional name of the layer (string).
     """
 
-    def __init__(self,
-                 input_shape=None,
-                 batch_size=None,
-                 dtype=None,
-                 input_tensor=None,
-                 sparse=False,
-                 name=None,
-                 ragged=False,
-                 **kwargs):
+    def __init__(
+        self,
+        input_shape=None,
+        batch_size=None,
+        dtype=None,
+        input_tensor=None,
+        sparse=False,
+        name=None,
+        ragged=False,
+        **kwargs
+    ):
         strategy = distribution_strategy_context.get_strategy()
-        if strategy and batch_size is not None and \
-                distributed_training_utils.global_batch_size_supported(strategy):
+        if (
+            strategy
+            and batch_size is not None
+            and distributed_training_utils.global_batch_size_supported(strategy)
+        ):
             if batch_size % strategy.num_replicas_in_sync != 0:
-                raise ValueError('The `batch_size` argument ({}) must be divisible by '
-                                 'the number of replicas ({})'.format(
-                                     batch_size, strategy.num_replicas_in_sync))
+                raise ValueError(
+                    "The `batch_size` argument ({}) must be divisible by "
+                    "the number of replicas ({})".format(
+                        batch_size, strategy.num_replicas_in_sync
+                    )
+                )
             batch_size = batch_size // strategy.num_replicas_in_sync
 
-        if 'batch_input_shape' in kwargs:
-            batch_input_shape = kwargs.pop('batch_input_shape')
+        if "batch_input_shape" in kwargs:
+            batch_input_shape = kwargs.pop("batch_input_shape")
             if input_shape and batch_input_shape:
-                raise ValueError('Only provide the input_shape OR '
-                                 'batch_input_shape argument to '
-                                 'InputLayer, not both at the same time.')
+                raise ValueError(
+                    "Only provide the input_shape OR "
+                    "batch_input_shape argument to "
+                    "InputLayer, not both at the same time."
+                )
             batch_size = batch_input_shape[0]
             input_shape = batch_input_shape[1:]
         if kwargs:
-            raise ValueError('Unrecognized keyword arguments:', kwargs.keys())
+            raise ValueError("Unrecognized keyword arguments:", kwargs.keys())
 
         if not name:
-            prefix = 'input'
-            name = prefix + '_' + str(backend.get_uid(prefix))
+            prefix = "input"
+            name = prefix + "_" + str(backend.get_uid(prefix))
 
         if not dtype:
             if input_tensor is None:
@@ -124,8 +134,10 @@ class InputLayer(base_layer.Layer):
             else:
                 dtype = backend.dtype(input_tensor)
         elif input_tensor is not None and input_tensor.dtype != dtype:
-            raise ValueError('`input_tensor.dtype` differs from `dtype`: %s vs. %s' %
-                             (input_tensor.dtype, dtype))
+            raise ValueError(
+                "`input_tensor.dtype` differs from `dtype`: %s vs. %s"
+                % (input_tensor.dtype, dtype)
+            )
         super(InputLayer, self).__init__(dtype=dtype, name=name)
         self.built = True
         self.sparse = sparse
@@ -151,16 +163,19 @@ class InputLayer(base_layer.Layer):
                     dtype=dtype,
                     name=self.name,
                     sparse=sparse,
-                    ragged=ragged)
+                    ragged=ragged,
+                )
 
             self.is_placeholder = True
             self._batch_input_shape = batch_input_shape
         else:
             if not tf_utils.is_symbolic_tensor(input_tensor):
-                raise ValueError('You should not pass an EagerTensor to `Input`. '
-                                 'For example, instead of creating an '
-                                 'InputLayer, you should instantiate your model and '
-                                 'directly call it on your input.')
+                raise ValueError(
+                    "You should not pass an EagerTensor to `Input`. "
+                    "For example, instead of creating an "
+                    "InputLayer, you should instantiate your model and "
+                    "directly call it on your input."
+                )
             self.is_placeholder = False
             self._batch_input_shape = tuple(input_tensor.shape.as_list())
 
@@ -174,15 +189,16 @@ class InputLayer(base_layer.Layer):
             node_indices=[],
             tensor_indices=[],
             input_tensors=[input_tensor],
-            output_tensors=[input_tensor])
+            output_tensors=[input_tensor],
+        )
 
     def get_config(self):
         config = {
-            'batch_input_shape': self._batch_input_shape,
-            'dtype': self.dtype,
-            'sparse': self.sparse,
-            'ragged': self.ragged,
-            'name': self.name
+            "batch_input_shape": self._batch_input_shape,
+            "dtype": self.dtype,
+            "sparse": self.sparse,
+            "ragged": self.ragged,
+            "name": self.name,
         }
         return config
 
@@ -191,16 +207,17 @@ class InputLayer(base_layer.Layer):
         return layer_serialization.InputLayerSavedModelSaver(self)
 
 
-@keras_export('keras.Input', 'keras.layers.Input')
+@keras_export("keras.Input", "keras.layers.Input")
 def Input(  # pylint: disable=invalid-name
-        shape=None,
-        batch_size=None,
-        name=None,
-        dtype=None,
-        sparse=False,
-        tensor=None,
-        ragged=False,
-        **kwargs):
+    shape=None,
+    batch_size=None,
+    name=None,
+    dtype=None,
+    sparse=False,
+    tensor=None,
+    ragged=False,
+    **kwargs
+):
     """`Input()` is used to instantiate a Keras tensor.
 
     A Keras tensor is a TensorFlow symbolic tensor object,
@@ -265,31 +282,37 @@ def Input(  # pylint: disable=invalid-name
       ValueError: if any unrecognized parameters are provided.
     """
     if sparse and ragged:
-        raise ValueError(
-            'Cannot set both sparse and ragged to True in a Keras input.')
+        raise ValueError("Cannot set both sparse and ragged to True in a Keras input.")
 
-    input_layer_config = {'name': name, 'dtype': dtype, 'sparse': sparse,
-                          'ragged': ragged, 'input_tensor': tensor}
+    input_layer_config = {
+        "name": name,
+        "dtype": dtype,
+        "sparse": sparse,
+        "ragged": ragged,
+        "input_tensor": tensor,
+    }
 
-    batch_input_shape = kwargs.pop('batch_input_shape',
-                                   kwargs.pop('batch_shape', None))
+    batch_input_shape = kwargs.pop("batch_input_shape", kwargs.pop("batch_shape", None))
     if shape is not None and batch_input_shape is not None:
-        raise ValueError('Only provide the `shape` OR `batch_input_shape` argument '
-                         'to Input, not both at the same time.')
+        raise ValueError(
+            "Only provide the `shape` OR `batch_input_shape` argument "
+            "to Input, not both at the same time."
+        )
     if batch_input_shape is None and shape is None and tensor is None:
-        raise ValueError('Please provide to Input either a `shape`'
-                         ' or a `tensor` argument. Note that '
-                         '`shape` does not include the batch '
-                         'dimension.')
+        raise ValueError(
+            "Please provide to Input either a `shape`"
+            " or a `tensor` argument. Note that "
+            "`shape` does not include the batch "
+            "dimension."
+        )
     if kwargs:
-        raise ValueError('Unrecognized keyword arguments:', kwargs.keys())
+        raise ValueError("Unrecognized keyword arguments:", kwargs.keys())
 
     if batch_input_shape:
         shape = batch_input_shape[1:]
-        input_layer_config.update({'batch_input_shape': batch_input_shape})
+        input_layer_config.update({"batch_input_shape": batch_input_shape})
     else:
-        input_layer_config.update(
-            {'batch_size': batch_size, 'input_shape': shape})
+        input_layer_config.update({"batch_size": batch_size, "input_shape": shape})
     input_layer = InputLayer(**input_layer_config)
 
     # Return tensor including `_keras_history`.
