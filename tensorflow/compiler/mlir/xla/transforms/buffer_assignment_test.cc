@@ -34,121 +34,123 @@ namespace {
 /// Buffer Assignment.
 struct BufferAssignmentPreparationTestPass
     : mlir::PassWrapper<BufferAssignmentPreparationTestPass, FunctionPass> {
-  /// This dialect independent unary operation has been defined only for testing
-  /// buffer assignment.
-  class BufferAssignmentTestUnaryOp
-      : public Op<BufferAssignmentTestUnaryOp, OpTrait::OneResult,
-                  OpTrait::OneOperand> {
-   public:
-    using Op::Op;
-    static StringRef getOperationName() {
-      return "buffer_assignment_test.unary";
-    }
-    static void build(Builder* b, OperationState& state, Value source) {
-      state.addOperands(source);
-    }
-  };
+    /// This dialect independent unary operation has been defined only for testing
+    /// buffer assignment.
+    class BufferAssignmentTestUnaryOp
+        : public Op<BufferAssignmentTestUnaryOp, OpTrait::OneResult,
+          OpTrait::OneOperand> {
+    public:
+        using Op::Op;
+        static StringRef getOperationName() {
+            return "buffer_assignment_test.unary";
+        }
+        static void build(Builder* b, OperationState& state, Value source) {
+            state.addOperands(source);
+        }
+    };
 
-  /// This dialect independent lowered unary operation has been defined only for
-  /// testing buffer assignment.
-  class BufferAssignmentTestUnaryLoweredOp
-      : public Op<BufferAssignmentTestUnaryLoweredOp, OpTrait::ZeroResult,
-                  OpTrait::NOperands<2>::Impl> {
-   public:
-    using Op::Op;
-    static StringRef getOperationName() {
-      return "buffer_assignment_test.unary_lowered";
-    }
-    static void build(Builder* b, OperationState& state, Value source,
-                      Value target) {
-      state.addOperands(source);
-      state.addOperands(target);
-    }
-  };
+    /// This dialect independent lowered unary operation has been defined only for
+    /// testing buffer assignment.
+    class BufferAssignmentTestUnaryLoweredOp
+        : public Op<BufferAssignmentTestUnaryLoweredOp, OpTrait::ZeroResult,
+          OpTrait::NOperands<2>::Impl> {
+    public:
+        using Op::Op;
+        static StringRef getOperationName() {
+            return "buffer_assignment_test.unary_lowered";
+        }
+        static void build(Builder* b, OperationState& state, Value source,
+                          Value target) {
+            state.addOperands(source);
+            state.addOperands(target);
+        }
+    };
 
-  /// This dialect independent copy operation has been defined only for testing
-  /// NonVoidToVoidReturnOpConverter
-  class BufferAssignmentTestCopyOp
-      : public Op<BufferAssignmentTestCopyOp, OpTrait::ZeroResult,
-                  OpTrait::NOperands<2>::Impl> {
-   public:
-    using Op::Op;
-    static StringRef getOperationName() {
-      return "buffer_assignment_test.copy";
-    }
-    static void build(Builder* b, OperationState& state, Value from, Value to) {
-      state.addOperands(from);
-      state.addOperands(to);
-    }
-  };
+    /// This dialect independent copy operation has been defined only for testing
+    /// NonVoidToVoidReturnOpConverter
+    class BufferAssignmentTestCopyOp
+        : public Op<BufferAssignmentTestCopyOp, OpTrait::ZeroResult,
+          OpTrait::NOperands<2>::Impl> {
+    public:
+        using Op::Op;
+        static StringRef getOperationName() {
+            return "buffer_assignment_test.copy";
+        }
+        static void build(Builder* b, OperationState& state, Value from, Value to) {
+            state.addOperands(from);
+            state.addOperands(to);
+        }
+    };
 
-  /// A simple converter that legalizes a BufferAssignmentTestUnaryOp to a
-  /// BufferAssignmentTestUnaryLoweredOp and creates buffer allocation for
-  /// the result of the computation.
-  class TestUnaryOpConverter : public BufferAssignmentOpConversionPattern<
-                                   BufferAssignmentTestUnaryOp> {
-   public:
-    using BufferAssignmentOpConversionPattern<
+    /// A simple converter that legalizes a BufferAssignmentTestUnaryOp to a
+    /// BufferAssignmentTestUnaryLoweredOp and creates buffer allocation for
+    /// the result of the computation.
+    class TestUnaryOpConverter : public BufferAssignmentOpConversionPattern<
+        BufferAssignmentTestUnaryOp> {
+    public:
+        using BufferAssignmentOpConversionPattern<
         BufferAssignmentTestUnaryOp>::BufferAssignmentOpConversionPattern;
 
-    // Performs the actual legalization conversion step.
-    LogicalResult matchAndRewrite(
-        BufferAssignmentTestUnaryOp op, ArrayRef<Value> operands,
-        ConversionPatternRewriter& rewriter) const final {
-      // Create a new buffer allocation using the current BufferAssignmentPlacer
-      // instance.
-      auto result = op.getResult();
-      auto result_type = result.getType().dyn_cast<ShapedType>();
-      auto memref_type =
-          MemRefType::get(result_type.getShape(), result_type.getElementType());
-      rewriter.restoreInsertionPoint(
-          bufferAssignment->computeAllocPosition(result));
-      auto alloc = rewriter.create<AllocOp>(op.getLoc(), memref_type);
+        // Performs the actual legalization conversion step.
+        LogicalResult matchAndRewrite(
+            BufferAssignmentTestUnaryOp op, ArrayRef<Value> operands,
+            ConversionPatternRewriter& rewriter) const final {
+            // Create a new buffer allocation using the current BufferAssignmentPlacer
+            // instance.
+            auto result = op.getResult();
+            auto result_type = result.getType().dyn_cast<ShapedType>();
+            auto memref_type =
+                MemRefType::get(result_type.getShape(), result_type.getElementType());
+            rewriter.restoreInsertionPoint(
+                bufferAssignment->computeAllocPosition(result));
+            auto alloc = rewriter.create<AllocOp>(op.getLoc(), memref_type);
 
-      // Create the lowered operation and replace the old operation with a
-      // reference to the allocated buffer.
-      rewriter.create<BufferAssignmentTestUnaryLoweredOp>(op.getLoc(),
-                                                          operands[0], alloc);
-      rewriter.replaceOp(op, {alloc});
-      return success();
-    }
-  };
+            // Create the lowered operation and replace the old operation with a
+            // reference to the allocated buffer.
+            rewriter.create<BufferAssignmentTestUnaryLoweredOp>(op.getLoc(),
+                    operands[0], alloc);
+            rewriter.replaceOp(op, {alloc});
+            return success();
+        }
+    };
 
-  void runOnFunction() override {
-    OwningRewritePatternList patterns;
-    auto funcOp = getOperation();
-    auto context = funcOp.getContext();
-    ConversionTarget target(*context);
-    BufferAssignmentPlacer bufferAssignmentPlacer(funcOp);
+    void runOnFunction() override {
+        OwningRewritePatternList patterns;
+        auto funcOp = getOperation();
+        auto context = funcOp.getContext();
+        ConversionTarget target(*context);
+        BufferAssignmentPlacer bufferAssignmentPlacer(funcOp);
 
-    // Specifying the legal and illegal operations.
-    context->allowUnregisteredDialects(true);
-    target.addIllegalOp<BufferAssignmentTestUnaryOp>();
-    target.addLegalOp<BufferAssignmentTestUnaryLoweredOp>();
-    target.addLegalOp<BufferAssignmentTestCopyOp>();
-    target.addLegalOp<AllocOp>();
-    target.addLegalOp<DeallocOp>();
-    // TODO(dfki): ReturnOp can also be changed to TestReturnOp like
-    // BufferAssignmentTestCopyOp.
-    target.addDynamicallyLegalOp<ReturnOp>(
-        [](ReturnOp returnOp) { return returnOp.getNumOperands() == 0; });
-    FunctionAndBlockSignatureConverter::addDynamicallyLegalFuncOp(target);
+        // Specifying the legal and illegal operations.
+        context->allowUnregisteredDialects(true);
+        target.addIllegalOp<BufferAssignmentTestUnaryOp>();
+        target.addLegalOp<BufferAssignmentTestUnaryLoweredOp>();
+        target.addLegalOp<BufferAssignmentTestCopyOp>();
+        target.addLegalOp<AllocOp>();
+        target.addLegalOp<DeallocOp>();
+        // TODO(dfki): ReturnOp can also be changed to TestReturnOp like
+        // BufferAssignmentTestCopyOp.
+        target.addDynamicallyLegalOp<ReturnOp>(
+        [](ReturnOp returnOp) {
+            return returnOp.getNumOperands() == 0;
+        });
+        FunctionAndBlockSignatureConverter::addDynamicallyLegalFuncOp(target);
 
-    // Adding patterns for testing this pass.
-    // clang-format off
-    patterns.insert<
+        // Adding patterns for testing this pass.
+        // clang-format off
+        patterns.insert<
         FunctionAndBlockSignatureConverter,
         TestUnaryOpConverter,
         NonVoidToVoidReturnOpConverter
-          <ReturnOp, ReturnOp, BufferAssignmentTestCopyOp>
-    >(context, &bufferAssignmentPlacer);
-    // clang-format on
+        <ReturnOp, ReturnOp, BufferAssignmentTestCopyOp>
+        >(context, &bufferAssignmentPlacer);
+        // clang-format on
 
-    if (failed(applyPartialConversion(funcOp, target, patterns, nullptr))) {
-      funcOp.emitOpError()
-          << "Failed to apply buffer assignment preparation steps";
-    }
-  };
+        if (failed(applyPartialConversion(funcOp, target, patterns, nullptr))) {
+            funcOp.emitOpError()
+                    << "Failed to apply buffer assignment preparation steps";
+        }
+    };
 };
 }  // namespace
 
@@ -160,10 +162,10 @@ struct BufferAssignmentPreparationTestPass
 static PassPipelineRegistration<> buffer_assignment_test_pass(
     "test-buffer-assignment",
     "Tests buffer assignment helper methods and buffer assignment pass.",
-    [](mlir::OpPassManager& pm) {
-      pm.addPass(absl::make_unique<BufferAssignmentPreparationTestPass>());
-      pm.addPass(createBufferAssignmentPass());
-    });
+[](mlir::OpPassManager& pm) {
+    pm.addPass(absl::make_unique<BufferAssignmentPreparationTestPass>());
+    pm.addPass(createBufferAssignmentPass());
+});
 
 }  // namespace xla
 }  // namespace mlir

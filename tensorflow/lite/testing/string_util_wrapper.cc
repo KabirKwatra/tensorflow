@@ -21,17 +21,17 @@ limitations under the License.
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pywrap_string_util, m) {
-  m.doc() = R"pbdoc(
+    m.doc() = R"pbdoc(
     _pywrap_string_util
     -----
   )pbdoc";
-  m.def(
-      "SerializeAsHexString",
-      [](py::handle& string_tensor) {
+    m.def(
+        "SerializeAsHexString",
+    [](py::handle& string_tensor) {
         return tensorflow::PyoOrThrow(
-            tflite::testing::python::SerializeAsHexString(string_tensor.ptr()));
-      },
-      R"pbdoc(
+                   tflite::testing::python::SerializeAsHexString(string_tensor.ptr()));
+    },
+    R"pbdoc(
       Serializes TF Lite dynamic buffer format as a HexString.
     )pbdoc");
 }

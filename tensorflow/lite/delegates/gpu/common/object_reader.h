@@ -32,65 +32,65 @@ namespace gpu {
 // the mapping between the original tensors (fixed-point) & GPU values (fp) is
 // stored in quant_conversion_map.
 class ObjectReader {
- public:
-  static absl::Status ReadNonConstantTensor(
-      TfLiteContext* context,
-      std::unordered_map<int, Value<TensorRef<BHWC>>*>* tensor_to_value,
-      std::unordered_map<int, int>* quant_conversion_map, GraphFloat32* graph,
-      uint32_t tensor_idx, Value<TensorRef<BHWC>>** value = nullptr);
+public:
+    static absl::Status ReadNonConstantTensor(
+        TfLiteContext* context,
+        std::unordered_map<int, Value<TensorRef<BHWC>>*>* tensor_to_value,
+        std::unordered_map<int, int>* quant_conversion_map, GraphFloat32* graph,
+        uint32_t tensor_idx, Value<TensorRef<BHWC>>** value = nullptr);
 
-  ObjectReader(
-      GraphFloat32* graph, TfLiteContext* context, const TfLiteNode* node,
-      std::unordered_map<int, Value<TensorRef<BHWC>>*>* tensor_to_value,
-      std::unordered_map<int, int>* quant_conversion_map = nullptr)
-      : graph_(graph),
-        context_(context),
-        node_(node),
-        tensor_to_value_(tensor_to_value),
-        quant_conversion_map_(quant_conversion_map) {}
+    ObjectReader(
+        GraphFloat32* graph, TfLiteContext* context, const TfLiteNode* node,
+        std::unordered_map<int, Value<TensorRef<BHWC>>*>* tensor_to_value,
+        std::unordered_map<int, int>* quant_conversion_map = nullptr)
+        : graph_(graph),
+          context_(context),
+          node_(node),
+          tensor_to_value_(tensor_to_value),
+          quant_conversion_map_(quant_conversion_map) {}
 
-  absl::Status ReadValue(uint32_t idx, Value<TensorRef<BHWC>>** value);
+    absl::Status ReadValue(uint32_t idx, Value<TensorRef<BHWC>>** value);
 
-  absl::Status ReadValueByTensorIdx(uint32_t tensor_idx,
-                                    Value<TensorRef<BHWC>>** value);
+    absl::Status ReadValueByTensorIdx(uint32_t tensor_idx,
+                                      Value<TensorRef<BHWC>>** value);
 
-  int GetNumberOfRuntimeInputs() const;
+    int GetNumberOfRuntimeInputs() const;
 
-  absl::Status GetTensorDims(uint32_t idx, TfLiteIntArray* dimensions) const;
+    absl::Status GetTensorDims(uint32_t idx, TfLiteIntArray* dimensions) const;
 
-  template <typename TensorT>
-  absl::Status ReadTensor(uint32_t idx, TensorT* t) const {
-    const int32_t tensor_idx = node_->inputs->data[idx];
-    const TfLiteTensor* tflite_tensor = context_->tensors + tensor_idx;
-    t->data.resize(NumElements(tflite_tensor));
-    RETURN_IF_ERROR(CreateVectorCopyData(*tflite_tensor, &t->data[0]));
+    template <typename TensorT>
+    absl::Status ReadTensor(uint32_t idx, TensorT* t) const {
+        const int32_t tensor_idx = node_->inputs->data[idx];
+        const TfLiteTensor* tflite_tensor = context_->tensors + tensor_idx;
+        t->data.resize(NumElements(tflite_tensor));
+        RETURN_IF_ERROR(CreateVectorCopyData(*tflite_tensor, &t->data[0]));
 
-    // Axis and data layout depend on operation this tensor is used in. So,
-    // postpone resolutions until operations are parsed.
-    t->id = tensor_idx;
-    return SetAllDimensions(tflite_tensor->dims, &t->shape);
-  }
+        // Axis and data layout depend on operation this tensor is used in. So,
+        // postpone resolutions until operations are parsed.
+        t->id = tensor_idx;
+        return SetAllDimensions(tflite_tensor->dims, &t->shape);
+    }
 
-  absl::Status AddOutput(const Node* node, int id);
+    absl::Status AddOutput(const Node* node, int id);
 
-  absl::Status AddOutputs(const Node* node);
+    absl::Status AddOutputs(const Node* node);
 
-  absl::Status AddInput(const Node* node, uint32_t idx);
+    absl::Status AddInput(const Node* node, uint32_t idx);
 
-  TfLiteTensor* GetInputTensor(int index) const;
+    TfLiteTensor* GetInputTensor(int index) const;
 
-  TfLiteTensor* GetOutputTensor(int index) const;
+    TfLiteTensor* GetOutputTensor(int index) const;
 
-  absl::Status VerifyInputsConstsOutputs(const TfLiteNode* node,
-                                         int runtime_inputs, int const_inputs,
-                                         int outputs);
+    absl::Status VerifyInputsConstsOutputs(const TfLiteNode* node,
+                                           int runtime_inputs, int const_inputs,
+                                           int outputs);
 
- private:
-  GraphFloat32* graph_;
-  TfLiteContext* context_;
-  const TfLiteNode* node_;
-  std::unordered_map<int, Value<TensorRef<BHWC>>*>* tensor_to_value_;
-  std::unordered_map<int, int>* quant_conversion_map_;
+private:
+    GraphFloat32* graph_;
+    TfLiteContext* context_;
+    const TfLiteNode* node_;
+    std::unordered_map<int, Value<TensorRef<BHWC>>*>* tensor_to_value_;
+    std::unordered_map<int, int>* quant_conversion_map_;
 };
 
 }  // namespace gpu

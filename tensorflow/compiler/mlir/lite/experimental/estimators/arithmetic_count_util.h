@@ -17,29 +17,29 @@ limitations under the License.
 
 // For add/mul/div/sub and other broadcastable ops.
 class ArithmeticCountUtilHelper {
- public:
-  static bool GetArithmeticCountForBroadcastableOp(mlir::Operation* op,
-                                                   int64_t* count) {
-    auto output = op->getResult(0);
-    auto output_type = output.getType().dyn_cast_or_null<RankedTensorType>();
-    if (!output_type || !output_type.hasStaticShape()) return false;
+public:
+    static bool GetArithmeticCountForBroadcastableOp(mlir::Operation* op,
+            int64_t* count) {
+        auto output = op->getResult(0);
+        auto output_type = output.getType().dyn_cast_or_null<RankedTensorType>();
+        if (!output_type || !output_type.hasStaticShape()) return false;
 
-    *count = output_type.getNumElements();
-    return true;
-  }
-
-  static bool GetInputTensorTotalSize(mlir::Operation* op, int64_t* count) {
-    int64_t total_count = 0;
-    for (auto input : op->getOperands()) {
-      auto input_type = input.getType().dyn_cast_or_null<RankedTensorType>();
-      if (!input_type || !input_type.hasStaticShape()) {
-        return false;
-      }
-      total_count += input_type.getNumElements();
+        *count = output_type.getNumElements();
+        return true;
     }
-    *count = total_count;
-    return true;
-  }
+
+    static bool GetInputTensorTotalSize(mlir::Operation* op, int64_t* count) {
+        int64_t total_count = 0;
+        for (auto input : op->getOperands()) {
+            auto input_type = input.getType().dyn_cast_or_null<RankedTensorType>();
+            if (!input_type || !input_type.hasStaticShape()) {
+                return false;
+            }
+            total_count += input_type.getNumElements();
+        }
+        *count = total_count;
+        return true;
+    }
 };
 
 #endif  // TENSORFLOW_COMPILER_MLIR_LITE_EXPERIMENTAL_ESTIMATORS_ARITHMETIC_COUNT_UTIL_H_

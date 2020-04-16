@@ -33,31 +33,31 @@ XlaComputation CreateScalarComputation(const string& name, PrimitiveType type,
 
 // Creates a scalar add computation and returns it.
 XlaComputation CreateScalarAddComputation(PrimitiveType type,
-                                          XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Creates a scalar multiply computation and returns it.
 XlaComputation CreateScalarMultiplyComputation(PrimitiveType type,
-                                               XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Creates a scalar ge computation and returns it.
 XlaComputation CreateScalarGeComputation(PrimitiveType type,
-                                         XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Creates a scalar max computation and returns it.
 XlaComputation CreateScalarMaxComputation(PrimitiveType type,
-                                          XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Creates a scalar min computation and returns it.
 XlaComputation CreateScalarMinComputation(PrimitiveType type,
-                                          XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Creates a scalar logical AND computation and returns it.
 XlaComputation CreateScalarAndComputation(PrimitiveType type,
-                                          XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Creates a scalar logical OR computation and returns it.
 XlaComputation CreateScalarOrComputation(PrimitiveType type,
-                                         XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // This is to be used for general purpose "identity" like reductions with zero
 // for any type (ie. boolean operations for PRED and Add for real numbers).
@@ -69,7 +69,7 @@ XlaComputation CreateScalarOrComputation(PrimitiveType type,
 // This functionality is used for operations that are similar to a slice,
 // gather, or broadcast, but are created through a reduction.
 XlaComputation CreateScalarIdentityWithZeroComputation(PrimitiveType type,
-                                                       XlaBuilder* builder);
+        XlaBuilder* builder);
 
 // Returns whether any predicate in "predicates" is set.
 //

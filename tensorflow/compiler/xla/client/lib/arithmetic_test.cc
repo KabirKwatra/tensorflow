@@ -30,70 +30,70 @@ namespace xla {
 namespace {
 
 class ArithmeticTest : public ClientLibraryTestBase {
- public:
-  template <typename NativeT>
-  void TestArgMin(std::initializer_list<std::initializer_list<NativeT>> input,
-                  absl::Span<NativeT const> expected_output, int axis) {
-    return TestArgMinMax(input, expected_output, axis, /*is_min=*/true);
-  }
-
-  template <typename NativeT>
-  void TestArgMax(std::initializer_list<std::initializer_list<NativeT>> input,
-                  absl::Span<NativeT const> expected_output, int axis) {
-    return TestArgMinMax(input, expected_output, axis, /*is_min=*/false);
-  }
-
- private:
-  // Test ArgMin/ArgMax implementation, both single- and two- pass.
-  template <typename NativeT>
-  void TestArgMinMax(
-      std::initializer_list<std::initializer_list<NativeT>> input,
-      absl::Span<NativeT const> expected_output, int axis, bool is_min) {
-    if (is_min) {
-      TestArgMinMaxImpl(input, expected_output, axis, &ArgMin);
-      TestArgMinMaxImpl(input, expected_output, axis,
-                        [](XlaOp op, PrimitiveType type, int axis) {
-                          return ArgMinTwoPass(op, type, axis);
-                        });
-    } else {
-      TestArgMinMaxImpl(input, expected_output, axis, &ArgMax);
-      TestArgMinMaxImpl(input, expected_output, axis,
-                        [](XlaOp op, PrimitiveType type, int axis) {
-                          return ArgMaxTwoPass(op, type, axis);
-                        });
+public:
+    template <typename NativeT>
+    void TestArgMin(std::initializer_list<std::initializer_list<NativeT>> input,
+                    absl::Span<NativeT const> expected_output, int axis) {
+        return TestArgMinMax(input, expected_output, axis, /*is_min=*/true);
     }
-  }
 
-  template <typename NativeT>
-  void TestArgMinMaxImpl(
-      std::initializer_list<std::initializer_list<NativeT>> input,
-      absl::Span<NativeT const> expected_output, int axis,
-      std::function<void(XlaOp, PrimitiveType, int)> MinMaxImpl) {
-    XlaBuilder builder(TestName());
-    XlaOp x = ConstantR2<NativeT>(&builder, input);
-    MinMaxImpl(x, primitive_util::NativeToPrimitiveType<NativeT>(), axis);
-    ComputeAndCompareR1<NativeT>(&builder, expected_output, {});
-  }
+    template <typename NativeT>
+    void TestArgMax(std::initializer_list<std::initializer_list<NativeT>> input,
+                    absl::Span<NativeT const> expected_output, int axis) {
+        return TestArgMinMax(input, expected_output, axis, /*is_min=*/false);
+    }
+
+private:
+    // Test ArgMin/ArgMax implementation, both single- and two- pass.
+    template <typename NativeT>
+    void TestArgMinMax(
+        std::initializer_list<std::initializer_list<NativeT>> input,
+        absl::Span<NativeT const> expected_output, int axis, bool is_min) {
+        if (is_min) {
+            TestArgMinMaxImpl(input, expected_output, axis, &ArgMin);
+            TestArgMinMaxImpl(input, expected_output, axis,
+            [](XlaOp op, PrimitiveType type, int axis) {
+                return ArgMinTwoPass(op, type, axis);
+            });
+        } else {
+            TestArgMinMaxImpl(input, expected_output, axis, &ArgMax);
+            TestArgMinMaxImpl(input, expected_output, axis,
+            [](XlaOp op, PrimitiveType type, int axis) {
+                return ArgMaxTwoPass(op, type, axis);
+            });
+        }
+    }
+
+    template <typename NativeT>
+    void TestArgMinMaxImpl(
+        std::initializer_list<std::initializer_list<NativeT>> input,
+        absl::Span<NativeT const> expected_output, int axis,
+        std::function<void(XlaOp, PrimitiveType, int)> MinMaxImpl) {
+        XlaBuilder builder(TestName());
+        XlaOp x = ConstantR2<NativeT>(&builder, input);
+        MinMaxImpl(x, primitive_util::NativeToPrimitiveType<NativeT>(), axis);
+        ComputeAndCompareR1<NativeT>(&builder, expected_output, {});
+    }
 };
 
 XLA_TEST_F(ArithmeticTest, ArgMinR2Axis0) {
-  TestArgMin<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {0, 1, 2},
-                    /*axis=*/0);
+    TestArgMin<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {0, 1, 2},
+    /*axis=*/0);
 }
 
 XLA_TEST_F(ArithmeticTest, ArgMinR2Axis1) {
-  TestArgMin<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {0, 1, 1},
-                    /*axis=*/1);
+    TestArgMin<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {0, 1, 1},
+    /*axis=*/1);
 }
 
 XLA_TEST_F(ArithmeticTest, ArgMaxR2Axis0) {
-  TestArgMax<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {2, 0, 1},
-                    /*axis=*/0);
+    TestArgMax<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {2, 0, 1},
+    /*axis=*/0);
 }
 
 XLA_TEST_F(ArithmeticTest, ArgMaxR2Axis1) {
-  TestArgMax<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {1, 0, 0},
-                    /*axis=*/1);
+    TestArgMax<int32>({{1, 7, 4}, {6, 3, 5}, {8, 3, 3}}, {1, 0, 0},
+    /*axis=*/1);
 }
 
 }  // namespace

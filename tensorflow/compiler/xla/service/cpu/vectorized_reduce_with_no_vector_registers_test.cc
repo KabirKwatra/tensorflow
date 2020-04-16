@@ -26,32 +26,32 @@ namespace {
 class CodegenReduceOnArchWithNoVectorRegisters : public HloTestBase {};
 
 StatusOr<unsigned> GetTargetVectorRegisterByteSize(std::string triple) {
-  // Unfortunately we need a lot of boilerplate to get to an
-  // llvm::TargetMachine.
+    // Unfortunately we need a lot of boilerplate to get to an
+    // llvm::TargetMachine.
 
-  std::string error;
-  const llvm::Target* target =
-      llvm::TargetRegistry::lookupTarget(triple, error);
-  if (target == nullptr) {
-    return InternalError("TargetRegistry::lookupTarget failed: %s", error);
-  }
+    std::string error;
+    const llvm::Target* target =
+        llvm::TargetRegistry::lookupTarget(triple, error);
+    if (target == nullptr) {
+        return InternalError("TargetRegistry::lookupTarget failed: %s", error);
+    }
 
-  llvm::LLVMContext context;
-  llvm::Module module("test", context);
-  llvm::Function* function = llvm::Function::Create(
-      llvm::FunctionType::get(llvm::Type::getVoidTy(context), {}),
-      llvm::GlobalValue::ExternalLinkage, "test", &module);
+    llvm::LLVMContext context;
+    llvm::Module module("test", context);
+    llvm::Function* function = llvm::Function::Create(
+                                   llvm::FunctionType::get(llvm::Type::getVoidTy(context), {}),
+                                   llvm::GlobalValue::ExternalLinkage, "test", &module);
 
-  std::unique_ptr<llvm::TargetMachine> target_machine =
-      absl::WrapUnique(target->createTargetMachine(
-          /*TT=*/triple, /*CPU=*/"", /*Features=*/"", llvm::TargetOptions{},
-          /*RM=*/llvm::None));
-  cpu::LLVMTargetMachineFeatures target_machine_features(target_machine.get());
-  return target_machine_features.vector_register_byte_size(*function);
+    std::unique_ptr<llvm::TargetMachine> target_machine =
+        absl::WrapUnique(target->createTargetMachine(
+                             /*TT=*/triple, /*CPU=*/"", /*Features=*/"", llvm::TargetOptions{},
+                             /*RM=*/llvm::None));
+    cpu::LLVMTargetMachineFeatures target_machine_features(target_machine.get());
+    return target_machine_features.vector_register_byte_size(*function);
 }
 
 TEST_F(CodegenReduceOnArchWithNoVectorRegisters, Test) {
-  absl::string_view text = R"(
+    absl::string_view text = R"(
 HloModule Reduce
 
 add {
