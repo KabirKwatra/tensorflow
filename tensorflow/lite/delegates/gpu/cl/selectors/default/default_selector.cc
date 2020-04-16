@@ -33,8 +33,8 @@ absl::Status SelectDefault(const CreationContext& creation_context,
                            const std::vector<Value*>& inputs,
                            const std::vector<Value*>& outputs, const Node& node,
                            GPUOperationsSubgraph* gpu_subgraph) {
-    return absl::UnimplementedError(
-               absl::StrCat("No selector for ", node.operation.type));
+  return absl::UnimplementedError(
+      absl::StrCat("No selector for ", node.operation.type));
 }
 
 }  // namespace cl

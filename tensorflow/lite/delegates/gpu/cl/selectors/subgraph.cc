@@ -28,17 +28,17 @@ namespace cl {
 std::unique_ptr<GPUOperation>* InitSingleOpSubgraph(
     const std::vector<Value*>& inputs, const std::vector<Value*>& outputs,
     GPUOperationsSubgraph* gpu_subgraph) {
-    gpu_subgraph->operations.clear();
-    gpu_subgraph->new_tensors.clear();
-    gpu_subgraph->operations.push_back({});
-    for (int i = 0; i < inputs.size(); ++i) {
-        gpu_subgraph->operations[0].input_ids.push_back(i);
-    }
-    for (int i = 0; i < outputs.size(); ++i) {
-        gpu_subgraph->operations[0].output_ids.push_back(i);
-    }
+  gpu_subgraph->operations.clear();
+  gpu_subgraph->new_tensors.clear();
+  gpu_subgraph->operations.push_back({});
+  for (int i = 0; i < inputs.size(); ++i) {
+    gpu_subgraph->operations[0].input_ids.push_back(i);
+  }
+  for (int i = 0; i < outputs.size(); ++i) {
+    gpu_subgraph->operations[0].output_ids.push_back(i);
+  }
 
-    return &gpu_subgraph->operations[0].operation;
+  return &gpu_subgraph->operations[0].operation;
 }
 
 }  // namespace cl
