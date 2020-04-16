@@ -50,8 +50,7 @@ final class ModelMetadataInfo {
     assertTFLiteMetadata(buffer);
 
     modelMetadata = ModelMetadata.getRootAsModelMetadata(buffer);
-    checkArgument(
-        modelMetadata.subgraphMetadataLength() > 0,
+    checkArgument(modelMetadata.subgraphMetadataLength() > 0,
         "The metadata flatbuffer does not contain any subgraph metadata.");
 
     inputsMetadata = getInputsMetadata(modelMetadata);
@@ -71,8 +70,7 @@ final class ModelMetadataInfo {
    */
   @Nullable
   TensorMetadata getInputTensorMetadata(int inputIndex) {
-    checkArgument(
-        inputIndex >= 0 && inputIndex < inputsMetadata.size(),
+    checkArgument(inputIndex >= 0 && inputIndex < inputsMetadata.size(),
         "The inputIndex specified is invalid.");
     return inputsMetadata.get(inputIndex);
   }
@@ -95,8 +93,7 @@ final class ModelMetadataInfo {
    */
   @Nullable
   TensorMetadata getOutputTensorMetadata(int outputIndex) {
-    checkArgument(
-        outputIndex >= 0 && outputIndex < outputsMetadata.size(),
+    checkArgument(outputIndex >= 0 && outputIndex < outputsMetadata.size(),
         "The outputIndex specified is invalid.");
     return outputsMetadata.get(outputIndex);
   }
@@ -110,8 +107,7 @@ final class ModelMetadataInfo {
    */
   private static void assertTFLiteMetadata(ByteBuffer buffer) {
     checkNotNull(buffer, "Metadata flatbuffer cannot be null.");
-    checkArgument(
-        ModelMetadata.ModelMetadataBufferHasIdentifier(buffer),
+    checkArgument(ModelMetadata.ModelMetadataBufferHasIdentifier(buffer),
         "The identifier of the metadata is invalid. The buffer may not be a valid TFLite metadata"
             + " flatbuffer.");
   }
