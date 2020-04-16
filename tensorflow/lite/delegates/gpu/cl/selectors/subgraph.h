@@ -28,18 +28,18 @@ namespace gpu {
 namespace cl {
 
 struct GPUOperationWithRefs {
-  std::unique_ptr<GPUOperation> operation;
+    std::unique_ptr<GPUOperation> operation;
 
-  // input and output ids can be positive or negative.
-  // if we have positive id, we will use preallocated tensor from GraphFloat32
-  // otherwise, we will use ids for newly allocated tensors
-  std::vector<int> input_ids;
-  std::vector<int> output_ids;
+    // input and output ids can be positive or negative.
+    // if we have positive id, we will use preallocated tensor from GraphFloat32
+    // otherwise, we will use ids for newly allocated tensors
+    std::vector<int> input_ids;
+    std::vector<int> output_ids;
 };
 
 struct GPUOperationsSubgraph {
-  std::vector<GPUOperationWithRefs> operations;
-  std::vector<std::pair<BHWC, TensorDescriptor>> new_tensors;
+    std::vector<GPUOperationWithRefs> operations;
+    std::vector<std::pair<BHWC, TensorDescriptor>> new_tensors;
 };
 
 std::unique_ptr<GPUOperation>* InitSingleOpSubgraph(
