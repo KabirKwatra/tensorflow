@@ -20,6 +20,7 @@ from __future__ import print_function
 import contextlib
 import os
 import uuid
+
 from tensorflow.python.distribute import multi_worker_util
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
