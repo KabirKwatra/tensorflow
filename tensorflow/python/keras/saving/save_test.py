@@ -53,7 +53,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         if h5py is not None:
             self.assertTrue(
                 h5py.is_hdf5(path),
-                "Model saved at path {} is not a valid hdf5 file.".format(path),
+                "Model saved at path {} is not a valid hdf5 file.".format(
+                    path),
             )
 
     def assert_saved_model(self, path):
@@ -71,8 +72,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         save.save_model(self.model, path, save_format="h5")
         self.assert_h5_format(path)
         with self.assertRaisesRegexp(
-            NotImplementedError,
-            "requires the model to be a Functional model or a Sequential model.",
+                NotImplementedError,
+                "requires the model to be a Functional model or a Sequential model.",
         ):
             save.save_model(self.subclassed_model, path, save_format="h5")
 
@@ -81,7 +82,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         path = os.path.join(self.get_temp_dir(), "model")
         save.save_model(self.model, path, save_format="tf")
         self.assert_saved_model(path)
-        with self.assertRaisesRegexp(ValueError, "input shapes have not been set"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "input shapes have not been set"):
             save.save_model(self.subclassed_model, path, save_format="tf")
         self.subclassed_model.predict(np.random.random((3, 5)))
         save.save_model(self.subclassed_model, path, save_format="tf")
@@ -105,20 +107,24 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         # See https://github.com/tensorflow/tensorflow/issues/35731 for details.
         inputs = keras.Input([10, 91], name="train_input")
         rnn_layers = [
-            keras.layers.LSTMCell(size, recurrent_dropout=0, name="rnn_cell%d" % i)
+            keras.layers.LSTMCell(size,
+                                  recurrent_dropout=0,
+                                  name="rnn_cell%d" % i)
             for i, size in enumerate([512, 512])
         ]
-        rnn_output = keras.layers.RNN(
-            rnn_layers, return_sequences=True, name="rnn_layer"
-        )(inputs)
-        pred_feat = keras.layers.Dense(91, name="prediction_features")(rnn_output)
+        rnn_output = keras.layers.RNN(rnn_layers,
+                                      return_sequences=True,
+                                      name="rnn_layer")(inputs)
+        pred_feat = keras.layers.Dense(91,
+                                       name="prediction_features")(rnn_output)
         pred = keras.layers.Softmax()(pred_feat)
         model = keras.Model(inputs=[inputs], outputs=[pred, pred_feat])
         path = os.path.join(self.get_temp_dir(), "model_path.h5")
         model.save(path)
 
         # Make sure the variable name is unique.
-        self.assertNotEqual(rnn_layers[0].kernel.name, rnn_layers[1].kernel.name)
+        self.assertNotEqual(rnn_layers[0].kernel.name,
+                            rnn_layers[1].kernel.name)
         self.assertIn("rnn_cell1", rnn_layers[1].kernel.name)
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
@@ -160,7 +166,8 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
             class CustomLoss(losses.MeanSquaredError):
                 pass
 
-            model = sequential.Sequential([core.Dense(units=1, input_shape=(1,))])
+            model = sequential.Sequential(
+                [core.Dense(units=1, input_shape=(1, ))])
             model.compile(optimizer="sgd", loss=CustomLoss())
             model.fit(np.zeros([10, 1]), np.zeros([10, 1]))
 

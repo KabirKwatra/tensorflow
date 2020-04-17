@@ -37,13 +37,11 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
             feature_column_lib.numeric_column("a"),
             feature_column_lib.indicator_column(
                 feature_column_lib.categorical_column_with_vocabulary_list(
-                    "b", ["one", "two"]
-                )
-            ),
+                    "b", ["one", "two"])),
         ]
         input_layers = {
-            "a": keras.layers.Input(shape=(1,), name="a"),
-            "b": keras.layers.Input(shape=(1,), name="b", dtype="string"),
+            "a": keras.layers.Input(shape=(1, ), name="a"),
+            "b": keras.layers.Input(shape=(1, ), name="b", dtype="string"),
         }
 
         fc_layer = feature_column_lib.DenseFeatures(cols)(input_layers)
@@ -68,23 +66,29 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
             if not context.executing_eagerly():
                 self.evaluate(lookup_ops.tables_initializer())
 
-            self.assertLen(loaded_model.predict({"a": inputs_a, "b": inputs_b}), 10)
+            self.assertLen(
+                loaded_model.predict({
+                    "a": inputs_a,
+                    "b": inputs_b
+                }), 10)
 
     @combinations.generate(combinations.combine(mode=["graph", "eager"]))
     def test_saving_with_sequence_features(self):
         cols = [
             feature_column_lib.sequence_numeric_column("a"),
             feature_column_lib.indicator_column(
-                feature_column_lib.sequence_categorical_column_with_vocabulary_list(
-                    "b", ["one", "two"]
-                )
-            ),
+                feature_column_lib.
+                sequence_categorical_column_with_vocabulary_list(
+                    "b", ["one", "two"])),
         ]
         input_layers = {
-            "a": keras.layers.Input(shape=(None, 1), sparse=True, name="a"),
-            "b": keras.layers.Input(
-                shape=(None, 1), sparse=True, name="b", dtype="string"
-            ),
+            "a":
+            keras.layers.Input(shape=(None, 1), sparse=True, name="a"),
+            "b":
+            keras.layers.Input(shape=(None, 1),
+                               sparse=True,
+                               name="b",
+                               dtype="string"),
         }
 
         fc_layer, _ = feature_column_lib.SequenceFeatures(cols)(input_layers)
@@ -111,16 +115,14 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
         values_a = np.arange(10, dtype=np.float32)
         indices_a = np.zeros((10, 3), dtype=np.int64)
         indices_a[:, 0] = np.arange(10)
-        inputs_a = sparse_tensor.SparseTensor(
-            indices_a, values_a, (batch_size, timesteps, 1)
-        )
+        inputs_a = sparse_tensor.SparseTensor(indices_a, values_a,
+                                              (batch_size, timesteps, 1))
 
         values_b = np.zeros(10, dtype=np.str)
         indices_b = np.zeros((10, 3), dtype=np.int64)
         indices_b[:, 0] = np.arange(10)
-        inputs_b = sparse_tensor.SparseTensor(
-            indices_b, values_b, (batch_size, timesteps, 1)
-        )
+        inputs_b = sparse_tensor.SparseTensor(indices_b, values_b,
+                                              (batch_size, timesteps, 1))
 
         with self.cached_session():
             # Initialize tables for V1 lookup.
@@ -128,7 +130,10 @@ class TestSaveModel(test.TestCase, parameterized.TestCase):
                 self.evaluate(lookup_ops.tables_initializer())
 
             self.assertLen(
-                loaded_model.predict({"a": inputs_a, "b": inputs_b}, steps=1),
+                loaded_model.predict({
+                    "a": inputs_a,
+                    "b": inputs_b
+                }, steps=1),
                 batch_size,
             )
 

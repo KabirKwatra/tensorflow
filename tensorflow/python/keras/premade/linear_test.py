@@ -55,9 +55,9 @@ class LinearModelTest(keras_parameterized.TestCase):
         model.fit([input_a, input_b], output, epochs=5)
 
     def test_linear_model_as_layer(self):
-        input_a = input_layer.Input(shape=(1,), name="a")
+        input_a = input_layer.Input(shape=(1, ), name="a")
         output_a = linear.LinearModel()(input_a)
-        input_b = input_layer.Input(shape=(1,), name="b")
+        input_b = input_layer.Input(shape=(1, ), name="b")
         output_b = core.Dense(units=1)(input_b)
         output = output_a + output_b
         model = training.Model(inputs=[input_a, input_b], outputs=[output])
@@ -68,9 +68,8 @@ class LinearModelTest(keras_parameterized.TestCase):
         model.fit([input_a_np, input_b_np], output_np, epochs=5)
 
     def test_linear_model_with_sparse_input(self):
-        indices = constant_op.constant(
-            [[0, 0], [0, 2], [1, 0], [1, 1]], dtype=dtypes.int64
-        )
+        indices = constant_op.constant([[0, 0], [0, 2], [1, 0], [1, 1]],
+                                       dtype=dtypes.int64)
         values = constant_op.constant([0.4, 0.6, 0.8, 0.5])
         shape = constant_op.constant([2, 3], dtype=dtypes.int64)
         model = linear.LinearModel()
@@ -120,7 +119,8 @@ class LinearModelTest(keras_parameterized.TestCase):
             for _ in range(20):
                 with backprop.GradientTape() as t:
                     output = model(inp)
-                    loss = backend.mean(losses.mean_squared_error(target, output))
+                    loss = backend.mean(
+                        losses.mean_squared_error(target, output))
                 grads = t.gradient(loss, model.trainable_variables)
                 grads_and_vars = zip(grads, model.trainable_variables)
                 opt.apply_gradients(grads_and_vars)

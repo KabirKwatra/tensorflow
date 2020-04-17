@@ -55,10 +55,10 @@ class WideDeepModelTest(keras_parameterized.TestCase):
 
     def test_wide_deep_model_backprop(self):
         with self.cached_session():
-            linear_model = linear.LinearModel(units=1, kernel_initializer="zeros")
+            linear_model = linear.LinearModel(units=1,
+                                              kernel_initializer="zeros")
             dnn_model = sequential.Sequential(
-                [core.Dense(units=1, kernel_initializer="zeros")]
-            )
+                [core.Dense(units=1, kernel_initializer="zeros")])
             wide_deep_model = wide_deep.WideDeepModel(linear_model, dnn_model)
             linear_inp = np.array([1.0])
             dnn_inp = np.array([1.0])
@@ -76,11 +76,12 @@ class WideDeepModelTest(keras_parameterized.TestCase):
             wide_deep_model.fit(inputs, output, epochs=1)
             self.assertAllClose(
                 [[0.6]],
-                self.evaluate(wide_deep_model.linear_model.dense_layers[0].kernel),
+                self.evaluate(
+                    wide_deep_model.linear_model.dense_layers[0].kernel),
             )
             self.assertAllClose(
-                [[1.8]], self.evaluate(wide_deep_model.dnn_model.layers[0].kernel)
-            )
+                [[1.8]],
+                self.evaluate(wide_deep_model.dnn_model.layers[0].kernel))
 
     def test_wide_deep_model_with_single_input(self):
         linear_model = linear.LinearModel(units=1)
@@ -98,7 +99,7 @@ class WideDeepModelTest(keras_parameterized.TestCase):
 
     def test_wide_deep_model_with_multi_outputs(self):
         with context.eager_mode():
-            inp = input_layer.Input(shape=(1,), name="linear")
+            inp = input_layer.Input(shape=(1, ), name="linear")
             l = linear.LinearModel(units=2, use_bias=False)(inp)
             l1, l2 = array_ops.split(l, num_or_size_splits=2, axis=1)
             linear_model = training.Model(inp, [l1, l2])
@@ -114,9 +115,9 @@ class WideDeepModelTest(keras_parameterized.TestCase):
             self.assertAllClose([[0.6]], out1)
             self.assertAllClose([[-0.2]], out2)
 
-            wide_deep_model = wide_deep.WideDeepModel(
-                linear_model, dnn_model, activation="relu"
-            )
+            wide_deep_model = wide_deep.WideDeepModel(linear_model,
+                                                      dnn_model,
+                                                      activation="relu")
             out1, out2 = wide_deep_model(inp_np)
             # output should be relu((0.5 + 0.1)), and relu((0.3 - 0.5))
             self.assertAllClose([[0.6]], out1)
@@ -142,11 +143,11 @@ class WideDeepModelTest(keras_parameterized.TestCase):
     def test_wide_deep_model_as_layer(self):
         linear_model = linear.LinearModel(units=1)
         dnn_model = sequential.Sequential([core.Dense(units=1)])
-        linear_input = input_layer.Input(shape=(3,), name="linear")
-        dnn_input = input_layer.Input(shape=(5,), name="dnn")
+        linear_input = input_layer.Input(shape=(3, ), name="linear")
+        dnn_input = input_layer.Input(shape=(5, ), name="dnn")
         wide_deep_model = wide_deep.WideDeepModel(linear_model, dnn_model)
         wide_deep_output = wide_deep_model((linear_input, dnn_input))
-        input_b = input_layer.Input(shape=(1,), name="b")
+        input_b = input_layer.Input(shape=(1, ), name="b")
         output_b = core.Dense(units=1)(input_b)
         model = training.Model(
             inputs=[linear_input, dnn_input, input_b],
@@ -154,15 +155,18 @@ class WideDeepModelTest(keras_parameterized.TestCase):
         )
         linear_input_np = np.random.uniform(low=-5, high=5, size=(64, 3))
         dnn_input_np = np.random.uniform(low=-5, high=5, size=(64, 5))
-        input_b_np = np.random.uniform(low=-5, high=5, size=(64,))
-        output_np = linear_input_np[:, 0] + 0.2 * dnn_input_np[:, 1] + input_b_np
+        input_b_np = np.random.uniform(low=-5, high=5, size=(64, ))
+        output_np = linear_input_np[:,
+                                    0] + 0.2 * dnn_input_np[:, 1] + input_b_np
         model.compile(
             optimizer="sgd",
             loss="mse",
             metrics=[],
             run_eagerly=testing_utils.should_run_eagerly(),
         )
-        model.fit([linear_input_np, dnn_input_np, input_b_np], output_np, epochs=5)
+        model.fit([linear_input_np, dnn_input_np, input_b_np],
+                  output_np,
+                  epochs=5)
 
     def test_wide_deep_model_with_sub_model_trained(self):
         linear_model = linear.LinearModel(units=1)
@@ -203,10 +207,10 @@ class WideDeepModelTest(keras_parameterized.TestCase):
         wide_deep_model = wide_deep.WideDeepModel(linear_model, dnn_model)
         config = wide_deep_model.get_config()
         cloned_wide_deep_model = wide_deep.WideDeepModel.from_config(config)
-        self.assertEqual(linear_model.units, cloned_wide_deep_model.linear_model.units)
-        self.assertEqual(
-            dnn_model.layers[0].units, cloned_wide_deep_model.dnn_model.layers[0].units
-        )
+        self.assertEqual(linear_model.units,
+                         cloned_wide_deep_model.linear_model.units)
+        self.assertEqual(dnn_model.layers[0].units,
+                         cloned_wide_deep_model.dnn_model.layers[0].units)
 
     def test_config_with_custom_objects(self):
         def my_activation(x):
@@ -214,13 +218,12 @@ class WideDeepModelTest(keras_parameterized.TestCase):
 
         linear_model = linear.LinearModel(units=1)
         dnn_model = sequential.Sequential([core.Dense(units=1, input_dim=3)])
-        wide_deep_model = wide_deep.WideDeepModel(
-            linear_model, dnn_model, activation=my_activation
-        )
+        wide_deep_model = wide_deep.WideDeepModel(linear_model,
+                                                  dnn_model,
+                                                  activation=my_activation)
         config = wide_deep_model.get_config()
         cloned_wide_deep_model = wide_deep.WideDeepModel.from_config(
-            config, custom_objects={"my_activation": my_activation}
-        )
+            config, custom_objects={"my_activation": my_activation})
         self.assertEqual(cloned_wide_deep_model.activation, my_activation)
 
 
