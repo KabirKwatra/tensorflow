@@ -6,8 +6,8 @@ delegates.**
 For a given model, this binary compares TensorFlow Lite execution (in terms of
 latency & output-value deviation) in two settings:
 
-*   Single-threaded CPU Inference
-*   User-defined Inference
+- Single-threaded CPU Inference
+- User-defined Inference
 
 To do so, the tool generates random gaussian data and passes it through two
 TFLite Interpreters - one running single-threaded CPU kernels and the other
@@ -36,33 +36,32 @@ mentioned above. The reference setting is always single-threaded CPU).
 
 The binary takes the following parameters:
 
-*   `model_file` : `string` \
-    Path to the TFlite model file.
+- `model_file` : `string` \
+  Path to the TFlite model file.
 
 and the following optional parameters:
 
-*   `num_runs`: `int` \
-    How many runs to perform to compare execution in reference and test setting.
-    Default: 50. The binary performs runs 3 invocations per 'run', to get more
-    accurate latency numbers.
+- `num_runs`: `int` \
+  How many runs to perform to compare execution in reference and test setting. Default: 50.
+  The binary performs runs 3 invocations per 'run', to get more accurate latency
+  numbers.
 
-*   `num_interpreter_threads`: `int` (default=1) \
-    This modifies the number of threads used by the test Interpreter for
-    inference.
+- `num_interpreter_threads`: `int` (default=1) \
+  This modifies the number of threads used by the test Interpreter for inference.
 
-*   `delegate`: `string` \
-    If provided, tries to use the specified delegate on the test Interpreter.
-    Valid values: "nnapi", "gpu", "hexagon".
+- `delegate`: `string` \
+  If provided, tries to use the specified delegate on the test Interpreter. Valid
+  values: "nnapi", "gpu", "hexagon".
 
-    NOTE: Please refer to the
-    [Hexagon delegate documentation](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/hexagon_delegate.md)
-    for instructions on how to set it up for the Hexagon delegate. The tool
-    assumes that `libhexagon_interface.so` and Qualcomm libraries lie in
-    `/data/local/tmp`.
+  NOTE: Please refer to the
+  [Hexagon delegate documentation](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/hexagon_delegate.md)
+  for instructions on how to set it up for the Hexagon delegate. The tool
+  assumes that `libhexagon_interface.so` and Qualcomm libraries lie in
+  `/data/local/tmp`.
 
-*   `output_file_path`: `string` \
-    The final metrics are dumped into `output_file_path` as a serialized
-    instance of `tflite::evaluation::EvaluationStageMetrics`
+- `output_file_path`: `string` \
+  The final metrics are dumped into `output_file_path` as a serialized instance of
+  `tflite::evaluation::EvaluationStageMetrics`
 
 This script also supports all applicable runtime/delegate arguments supported on
 the `benchmark_model` tool. If there is any conflict (for example, `num_threads`

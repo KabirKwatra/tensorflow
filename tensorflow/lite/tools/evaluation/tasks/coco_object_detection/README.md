@@ -4,10 +4,10 @@ This binary evaluates the following parameters of TFLite models trained for the
 **bounding box-based**
 [COCO Object Detection](http://cocodataset.org/#detection-eval) task:
 
-*   Native pre-processing latency
-*   Inference latency
-*   mean Average Precision (mAP) averaged across IoU thresholds from 0.5 to 0.95
-    (in increments of 0.05) and all object categories.
+- Native pre-processing latency
+- Inference latency
+- mean Average Precision (mAP) averaged across IoU thresholds from 0.5 to 0.95
+  (in increments of 0.05) and all object categories.
 
 The binary takes the path to validation images and a ground truth proto file as
 inputs, along with the model and inference-specific parameters such as delegate
@@ -39,49 +39,47 @@ and then execute the commands in the
 
 The binary takes the following parameters:
 
-*   `model_file` : `string` \
-    Path to the TFlite model file. It should accept images preprocessed in the
-    Inception format, and the output signature should be similar to the
-    [SSD MobileNet model](https://www.tensorflow.org/lite/models/object_detection/overview#output.):
+- `model_file` : `string` \
+  Path to the TFlite model file. It should accept images preprocessed in the Inception
+  format, and the output signature should be similar to the [SSD MobileNet model](https://www.tensorflow.org/lite/models/object_detection/overview#output.):
 
-*   `model_output_labels`: `string` \
-    Path to labels that correspond to output of model. E.g. in case of
-    COCO-trained SSD model, this is the path to a file where each line contains
-    a class detected by the model in correct order, starting from 'background'.
+- `model_output_labels`: `string` \
+  Path to labels that correspond to output of model. E.g. in case of COCO-trained
+  SSD model, this is the path to a file where each line contains a class detected
+  by the model in correct order, starting from 'background'.
 
 A sample model & label-list combination for COCO can be downloaded from the
 TFLite
 [Hosted models page](https://www.tensorflow.org/lite/guide/hosted_models#object_detection).
 
-*   `ground_truth_images_path`: `string` \
-    The path to the directory containing ground truth images.
+- `ground_truth_images_path`: `string` \
+  The path to the directory containing ground truth images.
 
-*   `ground_truth_proto`: `string` \
-    Path to file containing tflite::evaluation::ObjectDetectionGroundTruth proto
-    in text format. If left empty, mAP numbers are not provided.
+- `ground_truth_proto`: `string` \
+  Path to file containing tflite::evaluation::ObjectDetectionGroundTruth proto in
+  text format. If left empty, mAP numbers are not provided.
 
 The above two parameters can be prepared using the `preprocess_coco_minival`
 script included in this folder.
 
-*   `output_file_path`: `string` \
-    The final metrics are dumped into `output_file_path` as a string-serialized
-    instance of `tflite::evaluation::EvaluationStageMetrics`.
+- `output_file_path`: `string` \
+  The final metrics are dumped into `output_file_path` as a string-serialized instance
+  of `tflite::evaluation::EvaluationStageMetrics`.
 
 The following optional parameters can be used to modify the inference runtime:
 
-*   `num_interpreter_threads`: `int` (default=1) \
-    This modifies the number of threads used by the TFLite Interpreter for
-    inference.
+- `num_interpreter_threads`: `int` (default=1) \
+  This modifies the number of threads used by the TFLite Interpreter for inference.
 
-*   `delegate`: `string` \
-    If provided, tries to use the specified delegate for accuracy evaluation.
-    Valid values: "nnapi", "gpu", "hexagon".
+- `delegate`: `string` \
+  If provided, tries to use the specified delegate for accuracy evaluation. Valid
+  values: "nnapi", "gpu", "hexagon".
 
-    NOTE: Please refer to the
-    [Hexagon delegate documentation](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/hexagon_delegate.md)
-    for instructions on how to set it up for the Hexagon delegate. The tool
-    assumes that `libhexagon_interface.so` and Qualcomm libraries lie in
-    `/data/local/tmp`.
+  NOTE: Please refer to the
+  [Hexagon delegate documentation](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/hexagon_delegate.md)
+  for instructions on how to set it up for the Hexagon delegate. The tool
+  assumes that `libhexagon_interface.so` and Qualcomm libraries lie in
+  `/data/local/tmp`.
 
 This script also supports all applicable runtime/delegate arguments supported on
 the `benchmark_model` tool. If there is any conflict (for example, `num_threads`
@@ -92,9 +90,9 @@ script are given precedence.
 
 The script also supports a debug mode with the following parameter:
 
-*   `debug_mode`: `boolean` \
-    Whether to enable debug mode. Per-image predictions are written to std-out
-    along with metrics.
+- `debug_mode`: `boolean` \
+  Whether to enable debug mode. Per-image predictions are written to std-out along
+  with metrics.
 
 Image-wise predictions are output as follows:
 
@@ -138,12 +136,12 @@ COCO 'minival' dataset that is mentioned in the
 
 The links to download the components of the validation set are:
 
-*   [2014 COCO Validation Images](http://images.cocodataset.org/zips/val2014.zip)
-*   [2014 COCO Train/Val annotations](http://images.cocodataset.org/annotations/annotations_trainval2014.zip):
-    Out of the files from this zip, we only require `instances_val2014.json`.
-*   [minival Image IDs](https://github.com/tensorflow/models/blob/master/research/object_detection/data/mscoco_minival_ids.txt) :
-    Only applies to the 2014 validation set. You would need to copy the contents
-    into a text file.
+- [2014 COCO Validation Images](http://images.cocodataset.org/zips/val2014.zip)
+- [2014 COCO Train/Val annotations](http://images.cocodataset.org/annotations/annotations_trainval2014.zip):
+  Out of the files from this zip, we only require `instances_val2014.json`.
+- [minival Image IDs](https://github.com/tensorflow/models/blob/master/research/object_detection/data/mscoco_minival_ids.txt)
+  : Only applies to the 2014 validation set. You would need to copy the contents
+  into a text file.
 
 Since evaluation has to be performed on-device, we first filter the above data
 and extract a subset that only contains the images & ground-truth bounding boxes
@@ -165,11 +163,11 @@ Optionally, you can specify a `--num_images=N` argument, to preprocess the first
 
 The script generates the following within the output folder:
 
-*   `images/`: the resulting subset of the 2014 COCO Validation images.
+- `images/`: the resulting subset of the 2014 COCO Validation images.
 
-*   `ground_truth.pb`: a `.pb` (binary-format proto) file holding
-    `tflite::evaluation::ObjectDetectionGroundTruth` corresponding to image
-    subset.
+- `ground_truth.pb`: a `.pb` (binary-format proto) file holding
+  `tflite::evaluation::ObjectDetectionGroundTruth` corresponding to image
+  subset.
 
 ## Running the binary
 
