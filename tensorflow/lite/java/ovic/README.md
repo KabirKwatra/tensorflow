@@ -29,14 +29,14 @@ Bazel. In case they are not, you can manually install them as below.
 Note: all commands should be called from your tensorflow installation folder
 (under this folder you should find `tensorflow/lite`).
 
-*   Download the
-    [testdata package](https://storage.googleapis.com/download.tensorflow.org/data/ovic_2019_04_30.zip):
+- Download the
+  [testdata package](https://storage.googleapis.com/download.tensorflow.org/data/ovic_2019_04_30.zip):
 
 ```sh
 curl -L https://storage.googleapis.com/download.tensorflow.org/data/ovic_2019_04_30.zip -o /tmp/ovic.zip
 ```
 
-*   Unzip the package into the testdata folder:
+- Unzip the package into the testdata folder:
 
 ```sh
 unzip -j /tmp/ovic.zip -d tensorflow/lite/java/ovic/src/testdata/
@@ -87,21 +87,20 @@ You can go a step further to verify that the model produces results as expected.
 This helps you catch bugs during TFLite conversion (e.g. using the wrong mean
 and std values).
 
-*   Move your submission to the testdata folder:
+- Move your submission to the testdata folder:
 
 ```sh
 cp /path/to/my_model.lite tensorflow/lite/java/ovic/src/testdata/
 ```
 
-*   Resize the test image to the resolutions that are expected by your
-    submission:
+- Resize the test image to the resolutions that are expected by your submission:
 
 The test images can be found at
 `tensorflow/lite/java/ovic/src/testdata/test_image_*.jpg`. You may reuse these
 images if your image resolutions are 128x128 or 224x224.
 
-*   Add your model and test image to the BUILD rule at
-    `tensorflow/lite/java/ovic/src/testdata/BUILD`:
+- Add your model and test image to the BUILD rule at
+  `tensorflow/lite/java/ovic/src/testdata/BUILD`:
 
 ```JSON
 filegroup(
@@ -119,24 +118,22 @@ filegroup(
     ...
 ```
 
-*   For classification models, modify `OvicClassifierTest.java`:
+- For classification models, modify `OvicClassifierTest.java`:
 
-    *   change `TEST_IMAGE_PATH` to `my_test_image.jpg`.
+  - change `TEST_IMAGE_PATH` to `my_test_image.jpg`.
 
-    *   change either `FLOAT_MODEL_PATH` or `QUANTIZED_MODEL_PATH` to
-        `my_model.lite` depending on whether your model runs inference in float
-        or
-        [8-bit](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/quantize).
+  - change either `FLOAT_MODEL_PATH` or `QUANTIZED_MODEL_PATH` to
+    `my_model.lite` depending on whether your model runs inference in float or
+    [8-bit](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/quantize).
 
-    *   change `TEST_IMAGE_GROUNDTRUTH` (ImageNet class ID) to be consistent
-        with your test image.
+  - change `TEST_IMAGE_GROUNDTRUTH` (ImageNet class ID) to be consistent with
+    your test image.
 
-*   For detection models, modify `OvicDetectorTest.java`:
+- For detection models, modify `OvicDetectorTest.java`:
 
-    *   change `TEST_IMAGE_PATH` to `my_test_image.jpg`.
-    *   change `MODEL_PATH` to `my_model.lite`.
-    *   change `GROUNDTRUTH` (COCO class ID) to be consistent with your test
-        image.
+  - change `TEST_IMAGE_PATH` to `my_test_image.jpg`.
+  - change `MODEL_PATH` to `my_model.lite`.
+  - change `GROUNDTRUTH` (COCO class ID) to be consistent with your test image.
 
 Now you can run the bazel tests to catch any runtime issues with the submission.
 
@@ -161,8 +158,8 @@ testdata folder and to the corresponding build rules.
 
 Modify `tensorflow/lite/java/ovic/demo/app/OvicBenchmarkerActivity.java`:
 
-*   Add your model to the benchmarker apk by changing `modelPath` and
-    `testImagePath` to your submission and test image.
+- Add your model to the benchmarker apk by changing `modelPath` and
+  `testImagePath` to your submission and test image.
 
 ```
   if (benchmarkClassification) {
@@ -176,7 +173,7 @@ Modify `tensorflow/lite/java/ovic/demo/app/OvicBenchmarkerActivity.java`:
 If you are adding a detection model, simply modify `modelPath` and
 `testImagePath` in the else block above.
 
-*   Adjust the benchmark parameters when needed:
+- Adjust the benchmark parameters when needed:
 
 You can change the length of each experiment, and the processor affinity below.
 `BIG_CORE_MASK` is an integer whose binary encoding represents the set of used
@@ -198,7 +195,7 @@ mask 16 because the big cores are interchangeable.
 
 Note: You'll need ROOT access to the phone to change processor affinity.
 
-*   Build and install the app.
+- Build and install the app.
 
 ```
 bazel build -c opt --cxxopt=-Wno-all //tensorflow/lite/java/ovic/demo/app:ovic_benchmarker_binary
@@ -221,17 +218,17 @@ background processes running on the phone. A few things that help stabilize the
 app's readings are placing the phone on a cooling plate, restarting the phone,
 and shutting down internet access.
 
-Classification Model | Pixel 1 | Pixel 2 | Pixel 4
--------------------- | :-----: | ------: | :-----:
-float_model.lite     | 97      | 113     | 37
-quantized_model.lite | 73      | 61      | 13
-low_res_model.lite   | 3       | 3       | 1
+| Classification Model | Pixel 1 | Pixel 2 | Pixel 4 |
+| -------------------- | :-----: | ------: | :-----: |
+| float_model.lite     |   97    |     113 |   37    |
+| quantized_model.lite |   73    |      61 |   13    |
+| low_res_model.lite   |    3    |       3 |    1    |
 
-Detection Model        | Pixel 2 | Pixel 4
----------------------- | :-----: | :-----:
-detect.lite            | 248     | 82
-quantized_detect.lite  | 59      | 17
-quantized_fpnlite.lite | 96      | 29
+| Detection Model        | Pixel 2 | Pixel 4 |
+| ---------------------- | :-----: | :-----: |
+| detect.lite            |   248   |   82    |
+| quantized_detect.lite  |   59    |   17    |
+| quantized_fpnlite.lite |   96    |   29    |
 
 All latency numbers are in milliseconds. The Pixel 1 and Pixel 2 latency numbers
 are measured on `Oct 17 2019` (Github commit hash
@@ -245,7 +242,7 @@ recommend you to check out the
 [Post-Training Quantization tutorial](https://www.tensorflow.org/lite/performance/post_training_quantization).
 
 The detection models above are both single-shot models (i.e. no object proposal
-generation) using TfLite's *fast* version of Non-Max-Suppression (NMS). The fast
+generation) using TfLite's _fast_ version of Non-Max-Suppression (NMS). The fast
 NMS is significant faster than the regular NMS (used by the ObjectDetectionAPI
 in training) at the expense of about 1% mAP for the listed models.
 
@@ -255,7 +252,7 @@ We have compiled a latency table for common neural network operators such as
 convolutions, separable convolutions, and matrix multiplications. The table of
 results is available here:
 
-*   https://storage.cloud.google.com/ovic-data/
+- https://storage.cloud.google.com/ovic-data/
 
 The results were generated by creating a small network containing a single
 operation, and running the op under the test harness. For more details see the
@@ -266,56 +263,56 @@ newer OS releases and updates to Tensorflow Lite.
 
 Below are the baseline models (MobileNetV2, MnasNet, and MobileNetV3) used to
 compute the reference accuracy for ImageNet classification. The naming
-convention of the models are `[precision]_[model
-class]_[resolution]_[multiplier]`. Pixel 2 Latency (ms) is measured on a single
-Pixel 2 big core using the competition server on `Oct 17 2019`, while Pixel 4
-latency (ms) is measured on a single Pixel 4 big core using the competition
-server on `Apr 14 2020`. You can find these models on TFLite's
+convention of the models are
+`[precision]_[model class]_[resolution]_[multiplier]`. Pixel 2 Latency (ms) is
+measured on a single Pixel 2 big core using the competition server on
+`Oct 17 2019`, while Pixel 4 latency (ms) is measured on a single Pixel 4 big
+core using the competition server on `Apr 14 2020`. You can find these models on
+TFLite's
 [hosted model page](https://www.tensorflow.org/lite/guide/hosted_models#image_classification).
 
-Model                               | Pixel 2 | Pixel 4 | Top-1 Accuracy
-:---------------------------------: | :-----: | :-----: | :------------:
-quant_mobilenetv2_96_35             | 4       | 1       | 0.420
-quant_mobilenetv2_96_50             | 5       | 1       | 0.478
-quant_mobilenetv2_128_35            | 6       | 2       | 0.474
-quant_mobilenetv2_128_50            | 8       | 2       | 0.546
-quant_mobilenetv2_160_35            | 9       | 2       | 0.534
-quant_mobilenetv2_96_75             | 8       | 2       | 0.560
-quant_mobilenetv2_96_100            | 10      | 3       | 0.579
-quant_mobilenetv2_160_50            | 12      | 3       | 0.583
-quant_mobilenetv2_192_35            | 12      | 3       | 0.557
-quant_mobilenetv2_128_75            | 13      | 3       | 0.611
-quant_mobilenetv2_192_50            | 16      | 4       | 0.616
-quant_mobilenetv2_128_100           | 16      | 4       | 0.629
-quant_mobilenetv2_224_35            | 17      | 5       | 0.581
-quant_mobilenetv2_160_75            | 20      | 5       | 0.646
-float_mnasnet_96_100                | 21      | 7       | 0.625
-quant_mobilenetv2_224_50            | 22      | 6       | 0.637
-quant_mobilenetv2_160_100           | 25      | 6       | 0.674
-quant_mobilenetv2_192_75            | 29      | 7       | 0.674
-quant_mobilenetv2_192_100           | 35      | 9       | 0.695
-float_mnasnet_224_50                | 35      | 12      | 0.679
-quant_mobilenetv2_224_75            | 39      | 10      | 0.684
-float_mnasnet_160_100               | 45      | 15      | 0.706
-quant_mobilenetv2_224_100           | 48      | 12      | 0.704
-float_mnasnet_224_75                | 55      | 18      | 0.718
-float_mnasnet_192_100               | 62      | 20      | 0.724
-float_mnasnet_224_100               | 84      | 27      | 0.742
-float_mnasnet_224_130               | 126     | 40      | 0.758
-float_v3-small-minimalistic_224_100 | -       | 5       | 0.620
-quant_v3-small_224_100              | -       | 5       | 0.641
-float_v3-small_224_75               | -       | 5       | 0.656
-float_v3-small_224_100              | -       | 7       | 0.677
-quant_v3-large_224_100              | -       | 12      | 0.728
-float_v3-large_224_75               | -       | 15      | 0.735
-float_v3-large-minimalistic_224_100 | -       | 17      | 0.722
-float_v3-large_224_100              | -       | 20      | 0.753
+|                Model                | Pixel 2 | Pixel 4 | Top-1 Accuracy |
+| :---------------------------------: | :-----: | :-----: | :------------: |
+|       quant_mobilenetv2_96_35       |    4    |    1    |     0.420      |
+|       quant_mobilenetv2_96_50       |    5    |    1    |     0.478      |
+|      quant_mobilenetv2_128_35       |    6    |    2    |     0.474      |
+|      quant_mobilenetv2_128_50       |    8    |    2    |     0.546      |
+|      quant_mobilenetv2_160_35       |    9    |    2    |     0.534      |
+|       quant_mobilenetv2_96_75       |    8    |    2    |     0.560      |
+|      quant_mobilenetv2_96_100       |   10    |    3    |     0.579      |
+|      quant_mobilenetv2_160_50       |   12    |    3    |     0.583      |
+|      quant_mobilenetv2_192_35       |   12    |    3    |     0.557      |
+|      quant_mobilenetv2_128_75       |   13    |    3    |     0.611      |
+|      quant_mobilenetv2_192_50       |   16    |    4    |     0.616      |
+|      quant_mobilenetv2_128_100      |   16    |    4    |     0.629      |
+|      quant_mobilenetv2_224_35       |   17    |    5    |     0.581      |
+|      quant_mobilenetv2_160_75       |   20    |    5    |     0.646      |
+|        float_mnasnet_96_100         |   21    |    7    |     0.625      |
+|      quant_mobilenetv2_224_50       |   22    |    6    |     0.637      |
+|      quant_mobilenetv2_160_100      |   25    |    6    |     0.674      |
+|      quant_mobilenetv2_192_75       |   29    |    7    |     0.674      |
+|      quant_mobilenetv2_192_100      |   35    |    9    |     0.695      |
+|        float_mnasnet_224_50         |   35    |   12    |     0.679      |
+|      quant_mobilenetv2_224_75       |   39    |   10    |     0.684      |
+|        float_mnasnet_160_100        |   45    |   15    |     0.706      |
+|      quant_mobilenetv2_224_100      |   48    |   12    |     0.704      |
+|        float_mnasnet_224_75         |   55    |   18    |     0.718      |
+|        float_mnasnet_192_100        |   62    |   20    |     0.724      |
+|        float_mnasnet_224_100        |   84    |   27    |     0.742      |
+|        float_mnasnet_224_130        |   126   |   40    |     0.758      |
+| float_v3-small-minimalistic_224_100 |    -    |    5    |     0.620      |
+|       quant_v3-small_224_100        |    -    |    5    |     0.641      |
+|        float_v3-small_224_75        |    -    |    5    |     0.656      |
+|       float_v3-small_224_100        |    -    |    7    |     0.677      |
+|       quant_v3-large_224_100        |    -    |   12    |     0.728      |
+|        float_v3-large_224_75        |    -    |   15    |     0.735      |
+| float_v3-large-minimalistic_224_100 |    -    |   17    |     0.722      |
+|       float_v3-large_224_100        |    -    |   20    |     0.753      |
 
 ### References
 
 1.  **NetAdapt: Platform-Aware Neural Network Adaptation for Mobile
-    Applications**<br />
-    Yang, Tien-Ju, Andrew Howard, Bo Chen, Xiao Zhang, Alec Go, Mark Sandler,
-    Vivienne Sze, and Hartwig Adam. In Proceedings of the European Conference
-    on Computer Vision (ECCV), pp. 285-300. 2018<br />
+    Applications**<br /> Yang, Tien-Ju, Andrew Howard, Bo Chen, Xiao Zhang, Alec
+    Go, Mark Sandler, Vivienne Sze, and Hartwig Adam. In Proceedings of the
+    European Conference on Computer Vision (ECCV), pp. 285-300. 2018<br />
     [[link]](https://arxiv.org/abs/1804.03230) arXiv:1804.03230, 2018.
