@@ -42,7 +42,8 @@ def checkpoint_exists(filepath):
     if filepath.endswith(".h5"):
         return file_io.file_exists(filepath)
     tf_saved_model_exists = file_io.file_exists(filepath)
-    tf_weights_only_checkpoint_exists = file_io.file_exists(filepath + ".index")
+    tf_weights_only_checkpoint_exists = file_io.file_exists(filepath +
+                                                            ".index")
     return tf_saved_model_exists or tf_weights_only_checkpoint_exists
 
 
@@ -64,9 +65,8 @@ def _get_backup_filepath(original_filepath):
 
 
 def _get_temp_filepath(original_filepath):
-    temp_dir = os.path.join(
-        os.path.dirname(original_filepath), "temp_training_states", str(uuid.uuid4())
-    )
+    temp_dir = os.path.join(os.path.dirname(original_filepath),
+                            "temp_training_states", str(uuid.uuid4()))
     return temp_dir, os.path.join(temp_dir, "training_state")
 
 
@@ -83,21 +83,20 @@ class MultiWorkerTrainingState(object):
 
         # The directory and filepath that store the training state backup file.
         self._backup_dir, self._backup_filepath = _get_backup_filepath(
-            original_filepath
-        )
+            original_filepath)
 
         # For those who should not checkpoint (e.g. non-chief worker in sync
         # training), create a temporary directory to write to (that will be
         # removed later).
         if not multi_worker_util.should_save_checkpoint():
-            self._temp_dir, self._temp_filepath = _get_temp_filepath(original_filepath)
+            self._temp_dir, self._temp_filepath = _get_temp_filepath(
+                original_filepath)
 
         # The epoch at which the checkpoint is saved. Used for fault-tolerance.
         # GPU device only has int64 dtype registered VarHandleOp.
         self._ckpt_saved_epoch = variables.Variable(
-            initial_value=constant_op.constant(
-                CKPT_SAVED_EPOCH_UNUSED_VALUE, dtype=dtypes.int64
-            ),
+            initial_value=constant_op.constant(CKPT_SAVED_EPOCH_UNUSED_VALUE,
+                                               dtype=dtypes.int64),
             name="ckpt_saved_epoch",
         )
 
@@ -108,9 +107,8 @@ class MultiWorkerTrainingState(object):
         # model (which is done in `Layer.__setattr__`), which breaks saving/loading
         # in hdf5 format. Once becomes an attr of `model`, _ckpt_saved_epoch gets
         # tracked and will be included in the checkpoint file when backing up.
-        tracking.AutoTrackable.__setattr__(
-            self._model, CKPT_SAVED_EPOCH, self._ckpt_saved_epoch
-        )
+        tracking.AutoTrackable.__setattr__(self._model, CKPT_SAVED_EPOCH,
+                                           self._ckpt_saved_epoch)
 
     def back_up(self, epoch):
         """Back up the current state of training into a checkpoint file.
@@ -165,9 +163,7 @@ class MultiWorkerTrainingState(object):
             except (IOError, ValueError) as e:
                 raise ValueError(
                     "Error loading file from {}. Reason: {}".format(
-                        self._backup_filepath, e
-                    )
-                )
+                        self._backup_filepath, e))
         return False
 
     def delete_backup(self):
@@ -228,9 +224,8 @@ class MultiWorkerTrainingState(object):
         """
         tracking.AutoTrackable.__delattr__(self._model, CKPT_SAVED_EPOCH)
         yield
-        tracking.AutoTrackable.__setattr__(
-            self._model, CKPT_SAVED_EPOCH, self._ckpt_saved_epoch
-        )
+        tracking.AutoTrackable.__setattr__(self._model, CKPT_SAVED_EPOCH,
+                                           self._ckpt_saved_epoch)
 
     def _assert_in_multi_worker_mode(self):
         # pylint: disable=protected-access
@@ -239,5 +234,4 @@ class MultiWorkerTrainingState(object):
                 "MultiWorkerTrainingState is only supposed to be used "
                 "in multi-worker training. This indicates some error "
                 "that needs to be fixed. Please submit a bug issue to "
-                "tf.keras team."
-            )
+                "tf.keras team.")
