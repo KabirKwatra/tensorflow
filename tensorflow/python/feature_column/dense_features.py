@@ -28,7 +28,7 @@ from tensorflow.python.util import serialization
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export(v1=['keras.layers.DenseFeatures'])
+@keras_export(v1=["keras.layers.DenseFeatures"])
 class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
     """A layer that produces a dense `Tensor` based on given `feature_columns`.
 
@@ -67,12 +67,9 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
     ```
     """
 
-    def __init__(self,
-                 feature_columns,
-                 trainable=True,
-                 name=None,
-                 partitioner=None,
-                 **kwargs):
+    def __init__(
+        self, feature_columns, trainable=True, name=None, partitioner=None, **kwargs
+    ):
         """Constructs a DenseFeatures layer.
 
         Args:
@@ -97,7 +94,8 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
             name=name,
             partitioner=partitioner,
             expected_column_type=fc.DenseColumn,
-            **kwargs)
+            **kwargs
+        )
 
     @property
     def _is_feature_layer(self):
@@ -111,7 +109,7 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
           A serialized JSON storing information necessary for recreating this layer.
         """
         metadata = json.loads(super(DenseFeatures, self)._tracking_metadata)
-        metadata['_is_feature_layer'] = True
+        metadata["_is_feature_layer"] = True
         return json.dumps(metadata, default=serialization.get_json_type)
 
     def _target_shape(self, input_shape, total_elements):
@@ -156,18 +154,21 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
         if training is None:
             training = backend.learning_phase()
         if not isinstance(features, dict):
-            raise ValueError('We expected a dictionary here. Instead we got: ',
-                             features)
+            raise ValueError(
+                "We expected a dictionary here. Instead we got: ", features
+            )
         transformation_cache = fc.FeatureTransformationCache(features)
         output_tensors = []
         for column in self._feature_columns:
             with ops.name_scope(column.name):
                 try:
                     tensor = column.get_dense_tensor(
-                        transformation_cache, self._state_manager, training=training)
+                        transformation_cache, self._state_manager, training=training
+                    )
                 except TypeError:
-                    tensor = column.get_dense_tensor(transformation_cache,
-                                                     self._state_manager)
+                    tensor = column.get_dense_tensor(
+                        transformation_cache, self._state_manager
+                    )
                 processed_tensors = self._process_dense_tensor(column, tensor)
                 if cols_to_output_tensors is not None:
                     cols_to_output_tensors[column] = processed_tensors
@@ -175,5 +176,4 @@ class DenseFeatures(fc._BaseFeaturesLayer):  # pylint: disable=protected-access
         return self._verify_and_concat_tensors(output_tensors)
 
 
-layer_serialization.inject_feature_column_v1_objects(
-    'DenseFeatures', DenseFeatures)
+layer_serialization.inject_feature_column_v1_objects("DenseFeatures", DenseFeatures)

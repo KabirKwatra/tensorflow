@@ -25,7 +25,7 @@ from tensorflow.python.keras.layers import serialization as layer_serialization
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export('keras.layers.DenseFeatures', v1=[])
+@keras_export("keras.layers.DenseFeatures", v1=[])
 class DenseFeatures(dense_features.DenseFeatures):
     """A layer that produces a dense `Tensor` based on given `feature_columns`.
 
@@ -58,11 +58,7 @@ class DenseFeatures(dense_features.DenseFeatures):
     ```
     """
 
-    def __init__(self,
-                 feature_columns,
-                 trainable=True,
-                 name=None,
-                 **kwargs):
+    def __init__(self, feature_columns, trainable=True, name=None, **kwargs):
         """Creates a DenseFeatures object.
 
         Args:
@@ -81,12 +77,11 @@ class DenseFeatures(dense_features.DenseFeatures):
           ValueError: if an item in `feature_columns` is not a `DenseColumn`.
         """
         super(DenseFeatures, self).__init__(
-            feature_columns=feature_columns,
-            trainable=trainable,
-            name=name,
-            **kwargs)
+            feature_columns=feature_columns, trainable=trainable, name=name, **kwargs
+        )
         self._state_manager = fc._StateManagerImplV2(
-            self, self.trainable)  # pylint: disable=protected-access
+            self, self.trainable
+        )  # pylint: disable=protected-access
 
     def build(self, _):
         for column in self._feature_columns:
@@ -94,9 +89,7 @@ class DenseFeatures(dense_features.DenseFeatures):
                 column.create_state(self._state_manager)
         # We would like to call Layer.build and not _DenseFeaturesHelper.build.
         # pylint: disable=protected-access
-        super(fc._BaseFeaturesLayer, self).build(
-            None)  # pylint: disable=bad-super-call
+        super(fc._BaseFeaturesLayer, self).build(None)  # pylint: disable=bad-super-call
 
 
-layer_serialization.inject_feature_column_v2_objects(
-    'DenseFeatures', DenseFeatures)
+layer_serialization.inject_feature_column_v2_objects("DenseFeatures", DenseFeatures)

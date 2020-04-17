@@ -39,12 +39,11 @@ from tensorflow.python.platform import test
 
 @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class LinearModelTest(keras_parameterized.TestCase):
-
     def test_linear_model_with_single_input(self):
         model = linear.LinearModel()
         inp = np.random.uniform(low=-5, high=5, size=(64, 2))
-        output = .3 * inp[:, 0] + .2 * inp[:, 1]
-        model.compile('sgd', 'mse', [])
+        output = 0.3 * inp[:, 0] + 0.2 * inp[:, 1]
+        model.compile("sgd", "mse", [])
         model.fit(inp, output, epochs=5)
         self.assertTrue(model.built)
 
@@ -52,27 +51,28 @@ class LinearModelTest(keras_parameterized.TestCase):
         model = linear.LinearModel()
         input_a = np.random.uniform(low=-5, high=5, size=(64, 1))
         input_b = np.random.uniform(low=-5, high=5, size=(64, 1))
-        output = .3 * input_a + .2 * input_b
-        model.compile('sgd', 'mse', [])
+        output = 0.3 * input_a + 0.2 * input_b
+        model.compile("sgd", "mse", [])
         model.fit([input_a, input_b], output, epochs=5)
 
     def test_linear_model_as_layer(self):
-        input_a = input_layer.Input(shape=(1,), name='a')
+        input_a = input_layer.Input(shape=(1,), name="a")
         output_a = linear.LinearModel()(input_a)
-        input_b = input_layer.Input(shape=(1,), name='b')
+        input_b = input_layer.Input(shape=(1,), name="b")
         output_b = core.Dense(units=1)(input_b)
         output = output_a + output_b
         model = training.Model(inputs=[input_a, input_b], outputs=[output])
         input_a_np = np.random.uniform(low=-5, high=5, size=(64, 1))
         input_b_np = np.random.uniform(low=-5, high=5, size=(64, 1))
-        output_np = .3 * input_a_np + .2 * input_b_np
-        model.compile('sgd', 'mse', [])
+        output_np = 0.3 * input_a_np + 0.2 * input_b_np
+        model.compile("sgd", "mse", [])
         model.fit([input_a_np, input_b_np], output_np, epochs=5)
 
     def test_linear_model_with_sparse_input(self):
-        indices = constant_op.constant([[0, 0], [0, 2], [1, 0], [1, 1]],
-                                       dtype=dtypes.int64)
-        values = constant_op.constant([.4, .6, .8, .5])
+        indices = constant_op.constant(
+            [[0, 0], [0, 2], [1, 0], [1, 1]], dtype=dtypes.int64
+        )
+        values = constant_op.constant([0.4, 0.6, 0.8, 0.5])
         shape = constant_op.constant([2, 3], dtype=dtypes.int64)
         model = linear.LinearModel()
         inp = sparse_tensor.SparseTensor(indices, values, shape)
@@ -83,7 +83,7 @@ class LinearModelTest(keras_parameterized.TestCase):
             weights[0] = np.ones((3, 1))
             model.set_weights(weights)
             output = model(inp)
-            self.assertAllClose([[1.], [1.3]], self.evaluate(output))
+            self.assertAllClose([[1.0], [1.3]], self.evaluate(output))
 
     def test_linear_model_with_sparse_input_and_custom_training(self):
         batch_size = 64
@@ -121,8 +121,7 @@ class LinearModelTest(keras_parameterized.TestCase):
             for _ in range(20):
                 with backprop.GradientTape() as t:
                     output = model(inp)
-                    loss = backend.mean(
-                        losses.mean_squared_error(target, output))
+                    loss = backend.mean(losses.mean_squared_error(target, output))
                 grads = t.gradient(loss, model.trainable_variables)
                 grads_and_vars = zip(grads, model.trainable_variables)
                 opt.apply_gradients(grads_and_vars)
@@ -134,5 +133,5 @@ class LinearModelTest(keras_parameterized.TestCase):
         self.assertEqual(linear_model.units, cloned_linear_model.units)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
