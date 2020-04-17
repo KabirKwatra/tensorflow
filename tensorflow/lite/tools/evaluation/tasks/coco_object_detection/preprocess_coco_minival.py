@@ -25,7 +25,6 @@ image ID whitelist and produces the following in the specified output folder:
 A subfolder for whitelisted images (images/), and a file (ground_truth.pbtxt)
 containing an instance of tflite::evaluation::ObjectDetectionGroundTruth.
 """
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -36,6 +35,7 @@ import collections
 import os
 import shutil
 import sys
+
 from tensorflow.lite.tools.evaluation.proto import evaluation_stages_pb2
 
 
