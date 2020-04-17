@@ -45,19 +45,19 @@ config.test_source_root = config.mlir_test_dir
 config.test_exec_root = os.environ['RUNFILES_DIR']
 
 if platform.system() == 'Windows':
-  tool_patterns = [
-      ToolSubst('FileCheck.exe', unresolved='fatal'),
-      #  Handle these specially as they are strings searched for during testing.
-      ToolSubst('count.exe', unresolved='fatal'),
-      ToolSubst('not.exe', unresolved='fatal')]
+    tool_patterns = [
+        ToolSubst('FileCheck.exe', unresolved='fatal'),
+        #  Handle these specially as they are strings searched for during testing.
+        ToolSubst('count.exe', unresolved='fatal'),
+        ToolSubst('not.exe', unresolved='fatal')]
 
-  llvm_config.config.substitutions.append(
-      ('%python', '"%s"' % (sys.executable)))
+    llvm_config.config.substitutions.append(
+        ('%python', '"%s"' % (sys.executable)))
 
-  llvm_config.add_tool_substitutions(
-      tool_patterns, [llvm_config.config.llvm_tools_dir])
+    llvm_config.add_tool_substitutions(
+        tool_patterns, [llvm_config.config.llvm_tools_dir])
 else:
-  llvm_config.use_default_substitutions()
+    llvm_config.use_default_substitutions()
 
 llvm_config.config.substitutions.append(
     ('%tfrt_bindir', 'tensorflow/compiler/aot'))

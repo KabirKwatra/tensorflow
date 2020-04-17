@@ -23,12 +23,12 @@ import lit.llvm
 
 # Handle the test srcdir for platforms. On windows, things are weird with bazel.
 if platform.system() == 'Windows':
-  srcdir = os.environ['TEST_SRCDIR']
-  real_test_srcdir = srcdir[:srcdir.find('tensorflow/compiler/mlir')]
-  external_srcdir = os.path.join(real_test_srcdir, 'external')
+    srcdir = os.environ['TEST_SRCDIR']
+    real_test_srcdir = srcdir[:srcdir.find('tensorflow/compiler/mlir')]
+    external_srcdir = os.path.join(real_test_srcdir, 'external')
 else:
-  real_test_srcdir = os.environ['TEST_SRCDIR']
-  external_srcdir = real_test_srcdir
+    real_test_srcdir = os.environ['TEST_SRCDIR']
+    external_srcdir = real_test_srcdir
 
 # Lint for undefined variables is disabled as config is not defined inside this
 # file, instead config is injected by lit.py. The structure is common for lit
@@ -58,8 +58,8 @@ config.mlir_test_dir = os.path.join(real_test_srcdir,
                                     os.environ['TEST_WORKSPACE'], test_dir)
 
 if platform.system() == 'Windows':
-  # Configure this to work with msys2, TF's preferred windows bash.
-  config.lit_tools_dir = '/usr/bin'
+    # Configure this to work with msys2, TF's preferred windows bash.
+    config.lit_tools_dir = '/usr/bin'
 
 lit.llvm.initialize(lit_config, config)
 
