@@ -39,7 +39,9 @@ import sys
 from tensorflow.lite.tools.evaluation.proto import evaluation_stages_pb2
 
 
-def _get_ground_truth_detections(instances_file, whitelist_file=None, num_images=None):
+def _get_ground_truth_detections(instances_file,
+                                 whitelist_file=None,
+                                 num_images=None):
     """Processes the annotations JSON file and returns ground truth data corresponding to whitelisted image IDs.
 
     Args:
@@ -113,12 +115,9 @@ def _get_ground_truth_detections(instances_file, whitelist_file=None, num_images
         left = bbox[0]
         bottom = top + bbox[3]
         right = left + bbox[2]
-        if (
-            top > image_data_dict["height"]
-            or left > image_data_dict["width"]
-            or bottom > image_data_dict["height"]
-            or right > image_data_dict["width"]
-        ):
+        if (top > image_data_dict["height"] or left > image_data_dict["width"]
+                or bottom > image_data_dict["height"]
+                or right > image_data_dict["width"]):
             continue
         object_d = {}
         object_d["bbox"] = [
@@ -133,7 +132,8 @@ def _get_ground_truth_detections(instances_file, whitelist_file=None, num_images
     return image_data
 
 
-def _dump_data(ground_truth_detections, images_folder_path, output_folder_path):
+def _dump_data(ground_truth_detections, images_folder_path,
+               output_folder_path):
     """Dumps images & data from ground-truth objects into output_folder_path.
 
     The following are created in output_folder_path:
@@ -163,10 +163,14 @@ def _dump_data(ground_truth_detections, images_folder_path, output_folder_path):
         detection_result.image_name = image_dict["file_name"]
         for detection_dict in image_dict["detections"]:
             object_instance = detection_result.objects.add()
-            object_instance.bounding_box.normalized_top = detection_dict["bbox"][0]
-            object_instance.bounding_box.normalized_left = detection_dict["bbox"][1]
-            object_instance.bounding_box.normalized_bottom = detection_dict["bbox"][2]
-            object_instance.bounding_box.normalized_right = detection_dict["bbox"][3]
+            object_instance.bounding_box.normalized_top = detection_dict[
+                "bbox"][0]
+            object_instance.bounding_box.normalized_left = detection_dict[
+                "bbox"][1]
+            object_instance.bounding_box.normalized_bottom = detection_dict[
+                "bbox"][2]
+            object_instance.bounding_box.normalized_right = detection_dict[
+                "bbox"][3]
             object_instance.class_id = detection_dict["category_id"]
         # Copy image.
         shutil.copy2(
@@ -186,8 +190,7 @@ def _parse_args():
       A namespace parsed from command line arguments.
     """
     parser = argparse.ArgumentParser(
-        description="preprocess_coco_minival: Preprocess COCO minival dataset"
-    )
+        description="preprocess_coco_minival: Preprocess COCO minival dataset")
     parser.add_argument(
         "--images_folder",
         type=str,
@@ -209,7 +212,8 @@ def _parse_args():
     parser.add_argument(
         "--num_images",
         type=int,
-        help="Number of whitelisted images to preprocess into the output folder.",
+        help=
+        "Number of whitelisted images to preprocess into the output folder.",
         required=False,
     )
     parser.add_argument(
@@ -223,7 +227,7 @@ def _parse_args():
 
 if __name__ == "__main__":
     args = _parse_args()
-    ground_truths = _get_ground_truth_detections(
-        args.instances_file, args.whitelist_file, args.num_images
-    )
+    ground_truths = _get_ground_truth_detections(args.instances_file,
+                                                 args.whitelist_file,
+                                                 args.num_images)
     _dump_data(ground_truths, args.images_folder, args.output_folder)
