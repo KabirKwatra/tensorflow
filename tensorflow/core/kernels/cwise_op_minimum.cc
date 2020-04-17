@@ -26,22 +26,22 @@ REGISTER5(BinaryOp, GPU, "Minimum", functor::minimum, float, Eigen::half,
 // TODO(b/25387198): Also enable int32 in device memory. This kernel
 // registration requires all int32 inputs and outputs to be in host memory.
 REGISTER_KERNEL_BUILDER(Name("Minimum")
-                        .Device(DEVICE_GPU)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_GPU)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::minimum<int32>>);
 #endif
 
 #ifdef TENSORFLOW_USE_SYCL
 REGISTER3(BinaryOp, SYCL, "Minimum", functor::minimum, float, double, int64);
 REGISTER_KERNEL_BUILDER(Name("Minimum")
-                        .Device(DEVICE_SYCL)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_SYCL)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::minimum<int32>>);
 #endif  // TENSORFLOW_USE_SYCL
 

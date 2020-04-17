@@ -44,89 +44,89 @@ namespace tensorflow {
 namespace {
 
 class UnaryOpsCompositionTest : public OpsTestBase {
-protected:
-    template <typename T>
-    void RunComposedOp(const std::vector<string> op_names, T input_scalar_value,
-                       T expected_scalar_value) {
-        string xla_device_name =
-            tensorflow::IsGoogleCudaEnabled() ? DEVICE_XLA_GPU : DEVICE_XLA_CPU;
-        SetDevice(DeviceType(xla_device_name),
-                  std::unique_ptr<tensorflow::Device>(DeviceFactory::NewDevice(
-                              xla_device_name, {}, "/job:a/replica:0/task:0")));
+ protected:
+  template <typename T>
+  void RunComposedOp(const std::vector<string> op_names, T input_scalar_value,
+                     T expected_scalar_value) {
+    string xla_device_name =
+        tensorflow::IsGoogleCudaEnabled() ? DEVICE_XLA_GPU : DEVICE_XLA_CPU;
+    SetDevice(DeviceType(xla_device_name),
+              std::unique_ptr<tensorflow::Device>(DeviceFactory::NewDevice(
+                  xla_device_name, {}, "/job:a/replica:0/task:0")));
 
-        TF_ASSERT_OK(NodeDefBuilder("unary_op_composition", "_UnaryOpsComposition")
+    TF_ASSERT_OK(NodeDefBuilder("unary_op_composition", "_UnaryOpsComposition")
                      .Input(FakeInput(DataTypeToEnum<T>::v()))
                      .Attr("T", DataTypeToEnum<T>::v())
                      .Attr("op_names", op_names)
                      .Finalize(node_def()));
-        TF_ASSERT_OK(InitOp());
+    TF_ASSERT_OK(InitOp());
 
-        // We're using an XLA device here which allocates XlaTensors.  We can't
-        // inspect XlaTensors directly so we create the input on the host and copy
-        // it over to the XLA device.  We do the inverse on the output.
+    // We're using an XLA device here which allocates XlaTensors.  We can't
+    // inspect XlaTensors directly so we create the input on the host and copy
+    // it over to the XLA device.  We do the inverse on the output.
 
-        TensorShape shape({});
+    TensorShape shape({});
 
-        AllocatorAttributes host_alloc_attrs;
-        host_alloc_attrs.set_gpu_compatible(true);
-        host_alloc_attrs.set_on_host(true);
-        Allocator* cpu_allocator = device_->GetAllocator(host_alloc_attrs);
+    AllocatorAttributes host_alloc_attrs;
+    host_alloc_attrs.set_gpu_compatible(true);
+    host_alloc_attrs.set_on_host(true);
+    Allocator* cpu_allocator = device_->GetAllocator(host_alloc_attrs);
 
-        DataType dtype = DataTypeToEnum<T>::value;
+    DataType dtype = DataTypeToEnum<T>::value;
 
-        Tensor input_on_host(cpu_allocator, dtype, shape);
-        test::FillValues<T>(&input_on_host, {input_scalar_value});
+    Tensor input_on_host(cpu_allocator, dtype, shape);
+    test::FillValues<T>(&input_on_host, {input_scalar_value});
 
-        Tensor* input = AddInput(dtype, shape);
+    Tensor* input = AddInput(dtype, shape);
 
-        DeviceContext* device_context =
-            device_->tensorflow_gpu_device_info()->default_context;
+    DeviceContext* device_context =
+        device_->tensorflow_gpu_device_info()->default_context;
 
-        TF_CHECK_OK(device_context->CopyCPUTensorToDeviceSync(&input_on_host,
-                    device_, input));
+    TF_CHECK_OK(device_context->CopyCPUTensorToDeviceSync(&input_on_host,
+                                                          device_, input));
 
-        TF_ASSERT_OK(RunOpKernel());
+    TF_ASSERT_OK(RunOpKernel());
 
-        Tensor expected_tensor(cpu_allocator, dtype, shape);
-        test::FillValues<T>(&expected_tensor, {expected_scalar_value});
+    Tensor expected_tensor(cpu_allocator, dtype, shape);
+    test::FillValues<T>(&expected_tensor, {expected_scalar_value});
 
-        Tensor* output = GetOutput(0);
-        Tensor output_on_host(cpu_allocator, output->dtype(), output->shape());
+    Tensor* output = GetOutput(0);
+    Tensor output_on_host(cpu_allocator, output->dtype(), output->shape());
 
-        TF_CHECK_OK(device_context->CopyDeviceTensorToCPUSync(
-                        output, "output 0", device_, &output_on_host));
+    TF_CHECK_OK(device_context->CopyDeviceTensorToCPUSync(
+        output, "output 0", device_, &output_on_host));
 
-        test::ExpectClose(expected_tensor, output_on_host, /*atol=*/1e-5,
-                          /*rtol=*/1e-5);
-    }
+    test::ExpectClose(expected_tensor, output_on_host, /*atol=*/1e-5,
+                      /*rtol=*/1e-5);
+  }
 };
 
 TEST_F(UnaryOpsCompositionTest, Compose_Sqrt_Sqrt_F) {
-    RunComposedOp<float>({"Sqrt", "Sqrt"}, 81.0, 3.0);
+  RunComposedOp<float>({"Sqrt", "Sqrt"}, 81.0, 3.0);
 }
 
 TEST_F(UnaryOpsCompositionTest, Compose_Sqrt_Sqrt_D) {
-    RunComposedOp<double>({"Sqrt", "Sqrt"}, 81.0, 3.0);
+  RunComposedOp<double>({"Sqrt", "Sqrt"}, 81.0, 3.0);
 }
 
 TEST_F(UnaryOpsCompositionTest, Compose_Sqrt_Sin_F) {
-    RunComposedOp<float>({"Sqrt", "Sin"}, 81.0, std::sin(9.0f));
+  RunComposedOp<float>({"Sqrt", "Sin"}, 81.0, std::sin(9.0f));
 }
 
 TEST_F(UnaryOpsCompositionTest, Compose_Cos_Acos_F) {
-    RunComposedOp<float>({"Cos", "Acos"}, 0.5, std::acos(std::cos(0.5f)));
+  RunComposedOp<float>({"Cos", "Acos"}, 0.5, std::acos(std::cos(0.5f)));
 }
 
 TEST_F(UnaryOpsCompositionTest, Compose_Tanh_Relu_F) {
-    RunComposedOp<float>({"Tanh", "Relu"}, 0.5, std::max(0.0f, std::tanh(0.5f)));
+  RunComposedOp<float>({"Tanh", "Relu"}, 0.5, std::max(0.0f, std::tanh(0.5f)));
 }
 
 TEST_F(UnaryOpsCompositionTest, Compose_Tanh_Relu_D) {
-    RunComposedOp<double>({"Tanh", "Relu"}, 0.5, std::max(0.0, std::tanh(0.5)));
+  RunComposedOp<double>({"Tanh", "Relu"}, 0.5, std::max(0.0, std::tanh(0.5)));
 }
 
 TEST_F(UnaryOpsCompositionTest, Compose_Tanh_Relu6_F) {
-    RunComposedOp<float>({"Relu6"}, 11.0f, 6.0f);
+  RunComposedOp<float>({"Relu6"}, 11.0f, 6.0f);
 }
 }  // namespace
 }  // end namespace tensorflow
