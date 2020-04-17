@@ -37,12 +37,12 @@ OpBuilder* CreateSoftmaxBuilder(GraphBuilder* graph_builder, int op_type);
 OpBuilder* CreateReduceBuilder(GraphBuilder* graph_builder, int op_type);
 OpBuilder* CreatePadBuilder(GraphBuilder* graph_builder, int op_type);
 OpBuilder* CreateResizeNearestNeighborBuilder(GraphBuilder* graph_builder,
-        int op_type);
+                                              int op_type);
 OpBuilder* CreateL2NormalizationBuilder(GraphBuilder* graph_builder,
                                         int op_type);
 OpBuilder* CreateSplitBuilder(GraphBuilder* graph_builder, int op_type);
 OpBuilder* CreateResizeBilinearOpBuilder(GraphBuilder* graph_builder,
-        int op_type);
+                                         int op_type);
 OpBuilder* CreateNegOpBuilder(GraphBuilder* graph_builder, int op_type);
 OpBuilder* CreateTransposeBuilder(GraphBuilder* graph_builder, int op_type);
 OpBuilder* CreateSpaceToDepthBuilder(GraphBuilder* graph_builder, int op_type);

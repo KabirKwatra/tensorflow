@@ -49,107 +49,107 @@ constexpr char kModePassthrough[] = "passthrough";
 enum Mode { READER = 0, WRITER = 1, PASSTHROUGH = 2 };
 
 class Writer {
-public:
-    static constexpr const size_t kHeaderSize = sizeof(uint64);
+ public:
+  static constexpr const size_t kHeaderSize = sizeof(uint64);
 
-    static constexpr const char* const kClassName = "SnapshotWriter";
-    static constexpr const char* const kWriteStringPiece = "WriteStringPiece";
-    static constexpr const char* const kWriteCord = "WriteCord";
-    static constexpr const char* const kSeparator = "::";
+  static constexpr const char* const kClassName = "SnapshotWriter";
+  static constexpr const char* const kWriteStringPiece = "WriteStringPiece";
+  static constexpr const char* const kWriteCord = "WriteCord";
+  static constexpr const char* const kSeparator = "::";
 
-    static Status Create(Env* env, const std::string& filename,
-                         const std::string& compression_type, int version,
-                         const DataTypeVector& dtypes,
-                         std::unique_ptr<Writer>* out_writer);
+  static Status Create(Env* env, const std::string& filename,
+                       const std::string& compression_type, int version,
+                       const DataTypeVector& dtypes,
+                       std::unique_ptr<Writer>* out_writer);
 
-    Status WriteTensors(const std::vector<Tensor>& tensors);
+  Status WriteTensors(const std::vector<Tensor>& tensors);
 
-    Status Sync();
+  Status Sync();
 
-    Status Close();
+  Status Close();
 
-    ~Writer();
+  ~Writer();
 
-private:
-    explicit Writer(const std::string& filename,
-                    const std::string& compression_type, int version,
-                    const DataTypeVector& dtypes);
+ private:
+  explicit Writer(const std::string& filename,
+                  const std::string& compression_type, int version,
+                  const DataTypeVector& dtypes);
 
-    Status Initialize(tensorflow::Env* env);
+  Status Initialize(tensorflow::Env* env);
 
-    Status WriteRecord(const StringPiece& data);
+  Status WriteRecord(const StringPiece& data);
 
 #if defined(PLATFORM_GOOGLE)
-    Status WriteRecord(const absl::Cord& data);
+  Status WriteRecord(const absl::Cord& data);
 #endif  // PLATFORM_GOOGLE
 
-    std::unique_ptr<WritableFile> dest_;
-    const std::string filename_;
-    const std::string compression_type_;
-    const int version_;
-    const DataTypeVector dtypes_;
-    // We hold zlib_dest_ because we may create a ZlibOutputBuffer and put that
-    // in dest_ if we want compression. ZlibOutputBuffer doesn't own the original
-    // dest_ and so we need somewhere to store the original one.
-    std::unique_ptr<WritableFile> zlib_underlying_dest_;
-    std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
-    int num_simple_ = 0;
-    int num_complex_ = 0;
+  std::unique_ptr<WritableFile> dest_;
+  const std::string filename_;
+  const std::string compression_type_;
+  const int version_;
+  const DataTypeVector dtypes_;
+  // We hold zlib_dest_ because we may create a ZlibOutputBuffer and put that
+  // in dest_ if we want compression. ZlibOutputBuffer doesn't own the original
+  // dest_ and so we need somewhere to store the original one.
+  std::unique_ptr<WritableFile> zlib_underlying_dest_;
+  std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
+  int num_simple_ = 0;
+  int num_complex_ = 0;
 };
 
 class Reader {
-public:
-    // The reader input buffer size is deliberately large because the input reader
-    // will throw an error if the compressed block length cannot fit in the input
-    // buffer.
-    static constexpr const int64 kSnappyReaderInputBufferSizeBytes =
-        1 << 30;  // 1 GiB
-    // TODO(b/148804377): Set this in a smarter fashion.
-    static constexpr const int64 kSnappyReaderOutputBufferSizeBytes =
-        32 << 20;  // 32 MiB
-    static constexpr const size_t kHeaderSize = sizeof(uint64);
+ public:
+  // The reader input buffer size is deliberately large because the input reader
+  // will throw an error if the compressed block length cannot fit in the input
+  // buffer.
+  static constexpr const int64 kSnappyReaderInputBufferSizeBytes =
+      1 << 30;  // 1 GiB
+  // TODO(b/148804377): Set this in a smarter fashion.
+  static constexpr const int64 kSnappyReaderOutputBufferSizeBytes =
+      32 << 20;  // 32 MiB
+  static constexpr const size_t kHeaderSize = sizeof(uint64);
 
-    static constexpr const char* const kClassName = "SnapshotReader";
-    static constexpr const char* const kReadString = "ReadString";
-    static constexpr const char* const kReadCord = "ReadCord";
-    static constexpr const char* const kSeparator = "::";
+  static constexpr const char* const kClassName = "SnapshotReader";
+  static constexpr const char* const kReadString = "ReadString";
+  static constexpr const char* const kReadCord = "ReadCord";
+  static constexpr const char* const kSeparator = "::";
 
-    static Status Create(Env* env, const std::string& filename,
-                         const string& compression_type, int version,
-                         const DataTypeVector& dtypes,
-                         std::unique_ptr<Reader>* out_reader);
+  static Status Create(Env* env, const std::string& filename,
+                       const string& compression_type, int version,
+                       const DataTypeVector& dtypes,
+                       std::unique_ptr<Reader>* out_reader);
 
-    Status ReadTensors(std::vector<Tensor>* read_tensors);
+  Status ReadTensors(std::vector<Tensor>* read_tensors);
 
-private:
-    explicit Reader(const std::string& filename, const string& compression_type,
-                    int version, const DataTypeVector& dtypes);
+ private:
+  explicit Reader(const std::string& filename, const string& compression_type,
+                  int version, const DataTypeVector& dtypes);
 
-    Status Initialize(Env* env);
+  Status Initialize(Env* env);
 
-    Status ReadTensorsV0(std::vector<Tensor>* read_tensors);
+  Status ReadTensorsV0(std::vector<Tensor>* read_tensors);
 
-    Status SnappyUncompress(
-        const experimental::SnapshotTensorMetadata* metadata,
-        std::vector<Tensor>* simple_tensors,
-        std::vector<std::pair<std::unique_ptr<char[]>, size_t>>*
-        tensor_proto_strs);
+  Status SnappyUncompress(
+      const experimental::SnapshotTensorMetadata* metadata,
+      std::vector<Tensor>* simple_tensors,
+      std::vector<std::pair<std::unique_ptr<char[]>, size_t>>*
+          tensor_proto_strs);
 
-    Status ReadRecord(tstring* record);
+  Status ReadRecord(tstring* record);
 
 #if defined(PLATFORM_GOOGLE)
-    Status ReadRecord(absl::Cord* record);
+  Status ReadRecord(absl::Cord* record);
 #endif
 
-    std::string filename_;
-    std::unique_ptr<RandomAccessFile> file_;
-    std::unique_ptr<io::InputStreamInterface> input_stream_;
-    const string compression_type_;
-    const int version_;
-    const DataTypeVector dtypes_;
-    int num_simple_ = 0;
-    int num_complex_ = 0;
-    std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
+  std::string filename_;
+  std::unique_ptr<RandomAccessFile> file_;
+  std::unique_ptr<io::InputStreamInterface> input_stream_;
+  const string compression_type_;
+  const int version_;
+  const DataTypeVector dtypes_;
+  int num_simple_ = 0;
+  int num_complex_ = 0;
+  std::vector<bool> simple_tensor_mask_;  // true for simple, false for complex.
 };
 
 Status WriteMetadataFile(const string& hash_dir,
