@@ -32,7 +32,7 @@ export TF_CUDNN_VERSION=7
 export TF_NEED_TENSORRT=1
 export TENSORRT_INSTALL_PATH=/usr/local/tensorrt
 export CC_OPT_FLAGS='-mavx'
-export PYTHON_BIN_PATH=$(which python3.6)
+export PYTHON_BIN_PATH="$(which python3.6)"
 export LD_LIBRARY_PATH="/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:$TENSORRT_INSTALL_PATH/lib"
 export TF_CUDA_COMPUTE_CAPABILITIES=3.5,3.7,5.2,6.0,6.1,7.0
 
@@ -46,11 +46,11 @@ bazel build --config=opt \
   tensorflow/tools/pip_package:build_pip_package
 
 PIP_WHL_DIR=whl
-mkdir -p ${PIP_WHL_DIR}
-PIP_WHL_DIR=$(readlink -f ${PIP_WHL_DIR})  # Get absolute path
-bazel-bin/tensorflow/tools/pip_package/build_pip_package "${PIP_WHL_DIR}"
-WHL_PATH=$(ls "${PIP_WHL_DIR}"/*.whl)
+mkdir -p "$PIP_WHL_DIR"
+PIP_WHL_DIR=$(readlink -f "$PIP_WHL_DIR")  # Get absolute path
+bazel-bin/tensorflow/tools/pip_package/build_pip_package "$PIP_WHL_DIR"
+WHL_PATH=$(ls "$PIP_WHL_DIR"/*.whl)
 
-cp "${WHL_PATH}" "$(pwd)"/.
+cp "$WHL_PATH" "$PWD"/.
 chmod +x tensorflow/tools/ci_build/builds/docker_cpu_pip.sh
-docker run -e "BAZEL_VERSION=${BAZEL_VERSION}" -e "CI_BUILD_USER=$(id -u -n)" -e "CI_BUILD_UID=$(id -u)"  -e "CI_BUILD_GROUP=$(id -g -n)" -e "CI_BUILD_GID=$(id -g)"  -e "CI_BUILD_HOME=/bazel_pip" -v "$(pwd)":/bazel_pip tensorflow/tensorflow:devel "./bazel_pip/tensorflow/tools/ci_build/builds/with_the_same_user" "./bazel_pip/tensorflow/tools/ci_build/builds/docker_cpu_pip.sh"
+docker run -e "BAZEL_VERSION=$BAZEL_VERSION" -e "CI_BUILD_USER=$(id -u -n)" -e "CI_BUILD_UID=$(id -u)"  -e "CI_BUILD_GROUP=$(id -g -n)" -e "CI_BUILD_GID=$(id -g)"  -e "CI_BUILD_HOME=/bazel_pip" -v "$PWD":/bazel_pip tensorflow/tensorflow:devel "./bazel_pip/tensorflow/tools/ci_build/builds/with_the_same_user" "./bazel_pip/tensorflow/tools/ci_build/builds/docker_cpu_pip.sh"
