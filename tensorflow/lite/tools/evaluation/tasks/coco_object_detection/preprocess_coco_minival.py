@@ -39,9 +39,7 @@ import sys
 from tensorflow.lite.tools.evaluation.proto import evaluation_stages_pb2
 
 
-def _get_ground_truth_detections(instances_file,
-                                 whitelist_file=None,
-                                 num_images=None):
+def _get_ground_truth_detections(instances_file, whitelist_file=None, num_images=None):
     """Processes the annotations JSON file and returns ground truth data corresponding to whitelisted image IDs.
 
     Args:
@@ -64,7 +62,7 @@ def _get_ground_truth_detections(instances_file,
           bounding-box values.
     """
     # Read JSON data into a dict.
-    with open(instances_file, 'r') as annotation_dump:
+    with open(instances_file, "r") as annotation_dump:
         data_dict = ast.literal_eval(annotation_dump.readline())
 
     image_data = collections.OrderedDict()
@@ -72,23 +70,23 @@ def _get_ground_truth_detections(instances_file,
 
     # Read whitelist.
     if whitelist_file is not None:
-        with open(whitelist_file, 'r') as whitelist:
+        with open(whitelist_file, "r") as whitelist:
             image_id_whitelist = set([int(x) for x in whitelist.readlines()])
     else:
-        image_id_whitelist = [image['id'] for image in data_dict['images']]
+        image_id_whitelist = [image["id"] for image in data_dict["images"]]
 
     # Get image names and dimensions.
-    for image_dict in data_dict['images']:
-        image_id = image_dict['id']
+    for image_dict in data_dict["images"]:
+        image_id = image_dict["id"]
         if image_id not in image_id_whitelist:
             continue
         image_data_dict = {}
-        image_data_dict['id'] = image_dict['id']
-        image_data_dict['file_name'] = image_dict['file_name']
-        all_file_names.append(image_data_dict['file_name'])
-        image_data_dict['height'] = image_dict['height']
-        image_data_dict['width'] = image_dict['width']
-        image_data_dict['detections'] = []
+        image_data_dict["id"] = image_dict["id"]
+        image_data_dict["file_name"] = image_dict["file_name"]
+        all_file_names.append(image_data_dict["file_name"])
+        image_data_dict["height"] = image_dict["height"]
+        image_data_dict["width"] = image_dict["width"]
+        image_data_dict["detections"] = []
         image_data[image_id] = image_data_dict
 
     if num_images:
@@ -97,35 +95,40 @@ def _get_ground_truth_detections(instances_file,
     all_file_names = set(all_file_names)
 
     # Get detected object annotations per image.
-    for annotation_dict in data_dict['annotations']:
-        image_id = annotation_dict['image_id']
+    for annotation_dict in data_dict["annotations"]:
+        image_id = annotation_dict["image_id"]
         if image_id not in image_id_whitelist:
             continue
         if image_id not in image_data:
             continue
         image_data_dict = image_data[image_id]
-        if image_data_dict['file_name'] not in all_file_names:
+        if image_data_dict["file_name"] not in all_file_names:
             del image_data[image_id]
             continue
 
-        bbox = annotation_dict['bbox']
+        bbox = annotation_dict["bbox"]
         # bbox format is [x, y, width, height]
         # Refer: http://cocodataset.org/#format-data
         top = bbox[1]
         left = bbox[0]
         bottom = top + bbox[3]
         right = left + bbox[2]
-        if (top > image_data_dict['height'] or left > image_data_dict['width'] or
-                bottom > image_data_dict['height'] or right > image_data_dict['width']):
+        if (
+            top > image_data_dict["height"]
+            or left > image_data_dict["width"]
+            or bottom > image_data_dict["height"]
+            or right > image_data_dict["width"]
+        ):
             continue
         object_d = {}
-        object_d['bbox'] = [
-            top / image_data_dict['height'], left / image_data_dict['width'],
-            bottom / image_data_dict['height'], right /
-            image_data_dict['width']
+        object_d["bbox"] = [
+            top / image_data_dict["height"],
+            left / image_data_dict["width"],
+            bottom / image_data_dict["height"],
+            right / image_data_dict["width"],
         ]
-        object_d['category_id'] = annotation_dict['category_id']
-        image_data_dict['detections'].append(object_d)
+        object_d["category_id"] = annotation_dict["category_id"]
+        image_data_dict["detections"].append(object_d)
 
     return image_data
 
@@ -147,31 +150,32 @@ def _dump_data(ground_truth_detections, images_folder_path, output_folder_path):
     # Ensure output folders exist.
     if not os.path.exists(output_folder_path):
         os.makedirs(output_folder_path)
-    output_images_folder = os.path.join(output_folder_path, 'images')
+    output_images_folder = os.path.join(output_folder_path, "images")
     if not os.path.exists(output_images_folder):
         os.makedirs(output_images_folder)
-    output_proto_file = os.path.join(output_folder_path, 'ground_truth.pb')
+    output_proto_file = os.path.join(output_folder_path, "ground_truth.pb")
 
     ground_truth_data = evaluation_stages_pb2.ObjectDetectionGroundTruth()
     for image_dict in ground_truth_detections.values():
         # Create an ObjectsSet proto for this file's ground truth.
         detection_result = ground_truth_data.detection_results.add()
-        detection_result.image_id = image_dict['id']
-        detection_result.image_name = image_dict['file_name']
-        for detection_dict in image_dict['detections']:
+        detection_result.image_id = image_dict["id"]
+        detection_result.image_name = image_dict["file_name"]
+        for detection_dict in image_dict["detections"]:
             object_instance = detection_result.objects.add()
-            object_instance.bounding_box.normalized_top = detection_dict['bbox'][0]
-            object_instance.bounding_box.normalized_left = detection_dict['bbox'][1]
-            object_instance.bounding_box.normalized_bottom = detection_dict['bbox'][2]
-            object_instance.bounding_box.normalized_right = detection_dict['bbox'][3]
-            object_instance.class_id = detection_dict['category_id']
+            object_instance.bounding_box.normalized_top = detection_dict["bbox"][0]
+            object_instance.bounding_box.normalized_left = detection_dict["bbox"][1]
+            object_instance.bounding_box.normalized_bottom = detection_dict["bbox"][2]
+            object_instance.bounding_box.normalized_right = detection_dict["bbox"][3]
+            object_instance.class_id = detection_dict["category_id"]
         # Copy image.
         shutil.copy2(
-            os.path.join(images_folder_path, image_dict['file_name']),
-            output_images_folder)
+            os.path.join(images_folder_path, image_dict["file_name"]),
+            output_images_folder,
+        )
 
     # Dump proto.
-    with open(output_proto_file, 'wb') as proto_file:
+    with open(output_proto_file, "wb") as proto_file:
         proto_file.write(ground_truth_data.SerializeToString())
 
 
@@ -182,38 +186,44 @@ def _parse_args():
       A namespace parsed from command line arguments.
     """
     parser = argparse.ArgumentParser(
-        description='preprocess_coco_minival: Preprocess COCO minival dataset')
+        description="preprocess_coco_minival: Preprocess COCO minival dataset"
+    )
     parser.add_argument(
-        '--images_folder',
+        "--images_folder",
         type=str,
-        help='Full path of the validation images folder.',
-        required=True)
+        help="Full path of the validation images folder.",
+        required=True,
+    )
     parser.add_argument(
-        '--instances_file',
+        "--instances_file",
         type=str,
-        help='Full path of the input JSON file, like instances_val20xx.json.',
-        required=True)
+        help="Full path of the input JSON file, like instances_val20xx.json.",
+        required=True,
+    )
     parser.add_argument(
-        '--whitelist_file',
+        "--whitelist_file",
         type=str,
-        help='File with COCO image ids to preprocess, one on each line.',
-        required=False)
+        help="File with COCO image ids to preprocess, one on each line.",
+        required=False,
+    )
     parser.add_argument(
-        '--num_images',
+        "--num_images",
         type=int,
-        help='Number of whitelisted images to preprocess into the output folder.',
-        required=False)
+        help="Number of whitelisted images to preprocess into the output folder.",
+        required=False,
+    )
     parser.add_argument(
-        '--output_folder',
+        "--output_folder",
         type=str,
-        help='Full path to output images & text proto files into.',
-        required=True)
+        help="Full path to output images & text proto files into.",
+        required=True,
+    )
     return parser.parse_known_args(args=sys.argv[1:])[0]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = _parse_args()
-    ground_truths = _get_ground_truth_detections(args.instances_file,
-                                                 args.whitelist_file,
-                                                 args.num_images)
+    ground_truths = _get_ground_truth_detections(
+        args.instances_file, args.whitelist_file, args.num_images
+    )
     _dump_data(ground_truths, args.images_folder, args.output_folder)
