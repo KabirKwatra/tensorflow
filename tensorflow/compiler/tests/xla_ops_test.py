@@ -13,13 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for XLA op wrappers."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 
 from tensorflow.compiler.tests import xla_test
 from tensorflow.compiler.tf2xla.python import xla
