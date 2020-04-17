@@ -25,76 +25,76 @@ using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
 
 REGISTER_OP("AddN")
-    .Input("inputs: N * T")
-    .Output("sum: T")
-    .Attr("N: int >= 1")
-    .Attr("T: {numbertype, variant}")
-    .SetIsCommutative()
-    .SetIsAggregate()
-    .SetShapeFn([](InferenceContext* c) {
-      ShapeHandle cur = c->input(c->num_inputs() - 1);
-      for (int i = c->num_inputs() - 2; i >= 0; --i) {
+.Input("inputs: N * T")
+.Output("sum: T")
+.Attr("N: int >= 1")
+.Attr("T: {numbertype, variant}")
+.SetIsCommutative()
+.SetIsAggregate()
+.SetShapeFn([](InferenceContext* c) {
+    ShapeHandle cur = c->input(c->num_inputs() - 1);
+    for (int i = c->num_inputs() - 2; i >= 0; --i) {
         TF_RETURN_WITH_CONTEXT_IF_ERROR(c->Merge(c->input(i), cur, &cur),
                                         "From merging shape ", i,
                                         " with other shapes.");
-      }
-      c->set_output(0, cur);
+    }
+    c->set_output(0, cur);
 
-      DataType dtype;
-      TF_RETURN_IF_ERROR(c->GetAttr("T", &dtype));
+    DataType dtype;
+    TF_RETURN_IF_ERROR(c->GetAttr("T", &dtype));
 
-      if (dtype != DT_VARIANT) {
+    if (dtype != DT_VARIANT) {
         // Exit early if not DT_VARIANT.
         return Status::OK();
-      } else {
+    } else {
         // DT_VARIANT shape handle shape inference.  All sizes and dtypes must
         // be the same; all shapes must be compatible via Merge.
         std::vector<shape_inference::ShapeAndType> cur_shapes_and_types;
         auto* shapes_and_types =
             c->input_handle_shapes_and_types(c->num_inputs() - 1);
         if (shapes_and_types) {
-          cur_shapes_and_types = *shapes_and_types;
+            cur_shapes_and_types = *shapes_and_types;
         }
 
         for (int i = c->num_inputs() - 2; i >= 0; --i) {
-          auto shapes_and_types_i = c->input_handle_shapes_and_types(i);
-          if (!shapes_and_types && shapes_and_types_i) {
-            // TODO(ebrevdo): Find cases where this happens and fix their shape
-            // inference.  If we are calling AddN on variant types, they should
-            // all have consistent shape_and_type info.
-            shapes_and_types = shapes_and_types_i;
-          } else if (shapes_and_types && shapes_and_types_i) {
-            if (shapes_and_types_i->size() != shapes_and_types->size()) {
-              return errors::InvalidArgument(
-                  "shapes_and_types[", i,
-                  "].size() == ", shapes_and_types_i->size(),
-                  " != shapes_and_types[0].size() == ",
-                  shapes_and_types->size());
+            auto shapes_and_types_i = c->input_handle_shapes_and_types(i);
+            if (!shapes_and_types && shapes_and_types_i) {
+                // TODO(ebrevdo): Find cases where this happens and fix their shape
+                // inference.  If we are calling AddN on variant types, they should
+                // all have consistent shape_and_type info.
+                shapes_and_types = shapes_and_types_i;
+            } else if (shapes_and_types && shapes_and_types_i) {
+                if (shapes_and_types_i->size() != shapes_and_types->size()) {
+                    return errors::InvalidArgument(
+                               "shapes_and_types[", i,
+                               "].size() == ", shapes_and_types_i->size(),
+                               " != shapes_and_types[0].size() == ",
+                               shapes_and_types->size());
+                }
+                for (int j = 0; j < shapes_and_types->size(); ++j) {
+                    if (shapes_and_types->at(j).dtype !=
+                            shapes_and_types_i->at(j).dtype) {
+                        return errors::InvalidArgument(
+                                   "shapes_and_types[", i, "][", j, "].dtype() == ",
+                                   DataTypeString(shapes_and_types_i->at(j).dtype),
+                                   " != shapes_and_types[0][", j, "].dtype == ",
+                                   DataTypeString(shapes_and_types->at(j).dtype));
+                    }
+                    TF_RETURN_WITH_CONTEXT_IF_ERROR(
+                        c->Merge(shapes_and_types_i->at(j).shape,
+                                 cur_shapes_and_types.at(j).shape,
+                                 &cur_shapes_and_types.at(j).shape),
+                        "From merging shapes_and_types[", i, "][", j, "].shape with ",
+                        "shapes_and_types[0][", j, "].shape");
+                }
             }
-            for (int j = 0; j < shapes_and_types->size(); ++j) {
-              if (shapes_and_types->at(j).dtype !=
-                  shapes_and_types_i->at(j).dtype) {
-                return errors::InvalidArgument(
-                    "shapes_and_types[", i, "][", j, "].dtype() == ",
-                    DataTypeString(shapes_and_types_i->at(j).dtype),
-                    " != shapes_and_types[0][", j, "].dtype == ",
-                    DataTypeString(shapes_and_types->at(j).dtype));
-              }
-              TF_RETURN_WITH_CONTEXT_IF_ERROR(
-                  c->Merge(shapes_and_types_i->at(j).shape,
-                           cur_shapes_and_types.at(j).shape,
-                           &cur_shapes_and_types.at(j).shape),
-                  "From merging shapes_and_types[", i, "][", j, "].shape with ",
-                  "shapes_and_types[0][", j, "].shape");
-            }
-          }
         }
         if (shapes_and_types) {
-          c->set_output_handle_shapes_and_types(0, cur_shapes_and_types);
+            c->set_output_handle_shapes_and_types(0, cur_shapes_and_types);
         }
         return Status::OK();
-      }
-    });
+    }
+});
 
 // --------------------------------------------------------------------------
 
@@ -104,61 +104,61 @@ REGISTER_OP("AddN")
 // The Python code that generates instances of this op is currently in
 // contrib/framework/python/ops/accumulate_n_v2.py
 REGISTER_OP("AccumulateNV2")
-    .Input("inputs: N * T")
-    .Output("sum: T")
-    .Attr("N: int >= 1")
-    .Attr("T: numbertype")
-    .Attr("shape: shape")
-    .SetIsCommutative()
-    .SetIsAggregate()
-    .SetShapeFn(shape_inference::ExplicitShape);
+.Input("inputs: N * T")
+.Output("sum: T")
+.Attr("N: int >= 1")
+.Attr("T: numbertype")
+.Attr("shape: shape")
+.SetIsCommutative()
+.SetIsAggregate()
+.SetShapeFn(shape_inference::ExplicitShape);
 
 // --------------------------------------------------------------------------
 
 REGISTER_OP("BatchMatMul")
-    .Input("x: T")
-    .Input("y: T")
-    .Output("output: T")
-    .Attr(
-        "T: {bfloat16, half, float, double, int32, int64, complex64, "
-        "complex128}")
-    .Attr("adj_x: bool = false")
-    .Attr("adj_y: bool = false")
-    .SetShapeFn(shape_inference::BatchMatMulShape);
+.Input("x: T")
+.Input("y: T")
+.Output("output: T")
+.Attr(
+    "T: {bfloat16, half, float, double, int32, int64, complex64, "
+    "complex128}")
+.Attr("adj_x: bool = false")
+.Attr("adj_y: bool = false")
+.SetShapeFn(shape_inference::BatchMatMulShape);
 
 REGISTER_OP("BatchMatMulV2")
-    .Input("x: T")
-    .Input("y: T")
-    .Output("output: T")
-    .Attr(
-        "T: {bfloat16, half, float, double, int32, int64, complex64, "
-        "complex128}")
-    .Attr("adj_x: bool = false")
-    .Attr("adj_y: bool = false")
-    .SetShapeFn(shape_inference::BatchMatMulV2Shape);
+.Input("x: T")
+.Input("y: T")
+.Output("output: T")
+.Attr(
+    "T: {bfloat16, half, float, double, int32, int64, complex64, "
+    "complex128}")
+.Attr("adj_x: bool = false")
+.Attr("adj_y: bool = false")
+.SetShapeFn(shape_inference::BatchMatMulV2Shape);
 
 #ifdef INTEL_MKL
 REGISTER_OP("_MklBatchMatMul")
-    .Input("x: T")
-    .Input("y: T")
-    .Output("output: T")
-    .Attr(
-        "T: {bfloat16, half, float, double, int32, int64, complex64, "
-        "complex128}")
-    .Attr("adj_x: bool = false")
-    .Attr("adj_y: bool = false")
-    .SetShapeFn(shape_inference::BatchMatMulShape);
+.Input("x: T")
+.Input("y: T")
+.Output("output: T")
+.Attr(
+    "T: {bfloat16, half, float, double, int32, int64, complex64, "
+    "complex128}")
+.Attr("adj_x: bool = false")
+.Attr("adj_y: bool = false")
+.SetShapeFn(shape_inference::BatchMatMulShape);
 
 REGISTER_OP("_MklBatchMatMulV2")
-    .Input("x: T")
-    .Input("y: T")
-    .Output("output: T")
-    .Attr(
-        "T: {bfloat16, half, float, double, int32, int64, complex64, "
-        "complex128}")
-    .Attr("adj_x: bool = false")
-    .Attr("adj_y: bool = false")
-    .SetShapeFn(shape_inference::BatchMatMulV2Shape);
+.Input("x: T")
+.Input("y: T")
+.Output("output: T")
+.Attr(
+    "T: {bfloat16, half, float, double, int32, int64, complex64, "
+    "complex128}")
+.Attr("adj_x: bool = false")
+.Attr("adj_y: bool = false")
+.SetShapeFn(shape_inference::BatchMatMulV2Shape);
 #endif  // INTEL_MKL
 
 // --------------------------------------------------------------------------
@@ -169,21 +169,21 @@ REGISTER_OP("_MklBatchMatMulV2")
 // implementation uses C++ static cast rules for numeric
 // types, which may be changed in the future.
 REGISTER_OP("Cast")
-    .Input("x: SrcT")
-    .Output("y: DstT")
-    .Attr("SrcT: type")
-    .Attr("DstT: type")
-    .Attr("Truncate: bool = false")
-    .SetShapeFn(shape_inference::UnchangedShape);
+.Input("x: SrcT")
+.Output("y: DstT")
+.Attr("SrcT: type")
+.Attr("DstT: type")
+.Attr("Truncate: bool = false")
+.SetShapeFn(shape_inference::UnchangedShape);
 
 REGISTER_OP("_HostCast")
-    .Input("x: SrcT")
-    .Output("y: DstT")
-    .Attr("SrcT: type")
-    .Attr("DstT: type")
-    .Attr("Truncate: bool = false")
-    .SetShapeFn(shape_inference::UnchangedShape)
-    .Doc(R"doc(
+.Input("x: SrcT")
+.Output("y: DstT")
+.Attr("SrcT: type")
+.Attr("DstT: type")
+.Attr("Truncate: bool = false")
+.SetShapeFn(shape_inference::UnchangedShape)
+.Doc(R"doc(
 Cast x of type SrcT to y of DstT.
 
 _HostCast requires its input and produces its output in host memory.

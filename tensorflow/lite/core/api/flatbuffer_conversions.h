@@ -28,22 +28,22 @@ namespace tflite {
 
 // Interface class for builtin data allocations.
 class BuiltinDataAllocator {
- public:
-  virtual void* Allocate(size_t size) = 0;
-  virtual void Deallocate(void* data) = 0;
+public:
+    virtual void* Allocate(size_t size) = 0;
+    virtual void Deallocate(void* data) = 0;
 
-  // Allocate a structure, but make sure it is a POD structure that doesn't
-  // require constructors to run. The reason we do this, is that Interpreter's C
-  // extension part will take ownership so destructors  will not be run during
-  // deallocation.
-  template <typename T>
-  T* AllocatePOD() {
-    static_assert(std::is_pod<T>::value, "Builtin data structure must be POD.");
-    void* allocated_memory = this->Allocate(sizeof(T));
-    return new (allocated_memory) T;
-  }
+    // Allocate a structure, but make sure it is a POD structure that doesn't
+    // require constructors to run. The reason we do this, is that Interpreter's C
+    // extension part will take ownership so destructors  will not be run during
+    // deallocation.
+    template <typename T>
+    T* AllocatePOD() {
+        static_assert(std::is_pod<T>::value, "Builtin data structure must be POD.");
+        void* allocated_memory = this->Allocate(sizeof(T));
+        return new (allocated_memory) T;
+    }
 
-  virtual ~BuiltinDataAllocator() {}
+    virtual ~BuiltinDataAllocator() {}
 };
 
 // Parse the appropriate data out of the op.
