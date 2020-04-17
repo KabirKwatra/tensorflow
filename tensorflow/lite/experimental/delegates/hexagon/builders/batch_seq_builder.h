@@ -22,44 +22,44 @@ namespace delegates {
 namespace hexagon {
 
 class BatchSeqBuilder : public OpBuilder {
- public:
-  explicit BatchSeqBuilder(GraphBuilder* graph_builder, int op_type)
-      : OpBuilder(graph_builder, op_type) {}
+public:
+    explicit BatchSeqBuilder(GraphBuilder* graph_builder, int op_type)
+        : OpBuilder(graph_builder, op_type) {}
 
-  TfLiteStatus PopulateSubGraph(const TfLiteIntArray* inputs,
-                                const TfLiteIntArray* outputs,
-                                TfLiteContext* context) override;
+    TfLiteStatus PopulateSubGraph(const TfLiteIntArray* inputs,
+                                  const TfLiteIntArray* outputs,
+                                  TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override {
-    // BatchSeqConfig doesn't have any outputs.
-    return kTfLiteOk;
-  }
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override {
+        // BatchSeqConfig doesn't have any outputs.
+        return kTfLiteOk;
+    }
 
-  void SetMaxSizeForBatch(int max_size_for_batch) {
-    max_size_for_batch_ = max_size_for_batch;
-  }
+    void SetMaxSizeForBatch(int max_size_for_batch) {
+        max_size_for_batch_ = max_size_for_batch;
+    }
 
-  void SetInputBatchDimensions(TfLiteIntArray* input_batch_dimensions) {
-    input_batch_dims_ = input_batch_dimensions;
-  }
+    void SetInputBatchDimensions(TfLiteIntArray* input_batch_dimensions) {
+        input_batch_dims_ = input_batch_dimensions;
+    }
 
-  void SetOutputBatchDimensions(TfLiteIntArray* output_batch_dimensions) {
-    output_batch_dims_ = output_batch_dimensions;
-  }
+    void SetOutputBatchDimensions(TfLiteIntArray* output_batch_dimensions) {
+        output_batch_dims_ = output_batch_dimensions;
+    }
 
- private:
-  // Maximum size for the batch dimension in a single run.
-  // The graph can have input with larger batch, internally
-  // multiple runs will happen each won't have more than 'max_size_for_batch_'
-  // in batch dimension.
-  int max_size_for_batch_ = 1;
-  // Input dimension for each input in the graph.
-  // Input with fixed batch should have -1.
-  TfLiteIntArray* input_batch_dims_;
-  // Output dimension for each output in the graph.
-  // Output with fixed batch should have -1.
-  TfLiteIntArray* output_batch_dims_;
+private:
+    // Maximum size for the batch dimension in a single run.
+    // The graph can have input with larger batch, internally
+    // multiple runs will happen each won't have more than 'max_size_for_batch_'
+    // in batch dimension.
+    int max_size_for_batch_ = 1;
+    // Input dimension for each input in the graph.
+    // Input with fixed batch should have -1.
+    TfLiteIntArray* input_batch_dims_;
+    // Output dimension for each output in the graph.
+    // Output with fixed batch should have -1.
+    TfLiteIntArray* output_batch_dims_;
 };
 
 }  // namespace hexagon
