@@ -24,7 +24,7 @@ import lit.llvm
 # Handle the test srcdir for platforms. On windows, things are weird with bazel.
 if platform.system() == "Windows":
     srcdir = os.environ["TEST_SRCDIR"]
-    real_test_srcdir = srcdir[: srcdir.find("tensorflow/compiler/mlir")]
+    real_test_srcdir = srcdir[:srcdir.find("tensorflow/compiler/mlir")]
     external_srcdir = os.path.join(real_test_srcdir, "external")
 else:
     real_test_srcdir = os.environ["TEST_SRCDIR"]
@@ -54,9 +54,8 @@ config.mlir_tf_tools_dirs = [
 ]
 test_dir = os.environ["TEST_TARGET"]
 test_dir = test_dir.strip("/").rsplit(":", 1)[0]
-config.mlir_test_dir = os.path.join(
-    real_test_srcdir, os.environ["TEST_WORKSPACE"], test_dir
-)
+config.mlir_test_dir = os.path.join(real_test_srcdir,
+                                    os.environ["TEST_WORKSPACE"], test_dir)
 
 if platform.system() == "Windows":
     # Configure this to work with msys2, TF's preferred windows bash.
@@ -72,7 +71,6 @@ lit_config.load_config(
             real_test_srcdir,
             os.environ["TEST_WORKSPACE"],
             "tensorflow/compiler/mlir/runlit.cfg.py",
-        )
-    ),
+        )),
 )
 # pylint: enable=undefined-variable
