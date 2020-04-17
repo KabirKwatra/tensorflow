@@ -31,43 +31,43 @@ namespace mlir_gpu {
 
 // Prints the IR created by the MLIR GPU backend at a certain lowering stage.
 class XlaGpuOpt {
-public:
-    using LoweringStage = MlirCompiler::IRHook::LoweringStage;
-    XlaGpuOpt() {
-        backend_ = std::move(Backend::CreateDefaultBackend().ValueOrDie());
-    }
+ public:
+  using LoweringStage = MlirCompiler::IRHook::LoweringStage;
+  XlaGpuOpt() {
+    backend_ = std::move(Backend::CreateDefaultBackend().ValueOrDie());
+  }
 
-    // Compiles the HLO module given in 'hlo_text' to a GpuExecutable and prints
-    // the IR at the lowering stage 'printing_stage' to the 'os' stream.
-    //
-    // This function invokes the JIT compiler.
-    Status CompileAndOutputIr(const std::string& hlo_text, llvm::raw_ostream& os,
-                              LoweringStage printing_stage = LoweringStage::LHLO);
+  // Compiles the HLO module given in 'hlo_text' to a GpuExecutable and prints
+  // the IR at the lowering stage 'printing_stage' to the 'os' stream.
+  //
+  // This function invokes the JIT compiler.
+  Status CompileAndOutputIr(const std::string& hlo_text, llvm::raw_ostream& os,
+                            LoweringStage printing_stage = LoweringStage::LHLO);
 
-    // Adds the InjectErrorsForTestingPass to MLIRCompiler on the provided
-    // lowering stage 'breaking_stage', parses and compiles `hlo_text`, and prints
-    // the resulting errors to the 'os' stream.
-    Status CompileAndExpectErrors(const std::string& hlo_text,
-                                  llvm::raw_ostream& os,
-                                  LoweringStage breaking_stage);
+  // Adds the InjectErrorsForTestingPass to MLIRCompiler on the provided
+  // lowering stage 'breaking_stage', parses and compiles `hlo_text`, and prints
+  // the resulting errors to the 'os' stream.
+  Status CompileAndExpectErrors(const std::string& hlo_text,
+                                llvm::raw_ostream& os,
+                                LoweringStage breaking_stage);
 
-private:
-    std::unique_ptr<Backend> backend_;
-    StatusOr<std::unique_ptr<VerifiedHloModule>> GetVerifiedHloModule(
-                const std::string& hlo_text_filename);
+ private:
+  std::unique_ptr<Backend> backend_;
+  StatusOr<std::unique_ptr<VerifiedHloModule>> GetVerifiedHloModule(
+      const std::string& hlo_text_filename);
 
-    Status CompileAndOutputIr(std::unique_ptr<HloModule> hlo_module,
-                              llvm::raw_ostream& os,
-                              LoweringStage printing_stage);
-    Status CompileIr(std::unique_ptr<HloModule> hlo_module,
-                     const MlirCompiler::IRHook& ir_hook);
-    StatusOr<std::string> CompileIr(std::unique_ptr<HloModule> hlo_module,
-                                    LoweringStage printing_stage);
-    MlirCompiler::IRHook GetIRHookBreakingLoweringStage(
-        LoweringStage breaking_stage);
-    StatusOr<std::string> CompileAndInjectErrors(
-        std::unique_ptr<HloModule> hlo_module, LoweringStage breaking_stage);
-    MlirCompiler* GetMLIRCompiler();
+  Status CompileAndOutputIr(std::unique_ptr<HloModule> hlo_module,
+                            llvm::raw_ostream& os,
+                            LoweringStage printing_stage);
+  Status CompileIr(std::unique_ptr<HloModule> hlo_module,
+                   const MlirCompiler::IRHook& ir_hook);
+  StatusOr<std::string> CompileIr(std::unique_ptr<HloModule> hlo_module,
+                                  LoweringStage printing_stage);
+  MlirCompiler::IRHook GetIRHookBreakingLoweringStage(
+      LoweringStage breaking_stage);
+  StatusOr<std::string> CompileAndInjectErrors(
+      std::unique_ptr<HloModule> hlo_module, LoweringStage breaking_stage);
+  MlirCompiler* GetMLIRCompiler();
 };
 
 }  // namespace mlir_gpu
