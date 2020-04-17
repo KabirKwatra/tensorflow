@@ -32,4 +32,3 @@ ENTRY %FusedReduce (x: f32[100,10]) -> f32[10] {
 //  CHECK:   tensor_store %[[RED]], %[[RESULT]] : [[RTYPE]]
 //  CHECK:   "xla_lhlo.terminator"()
 //  CHECK-NEXT: })
-

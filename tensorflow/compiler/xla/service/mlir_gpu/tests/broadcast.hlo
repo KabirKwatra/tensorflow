@@ -11,4 +11,3 @@ ENTRY %Broadcast (x: f32[10]) -> f32[10, 5] {
 //  CHECK:   {broadcast_dimensions = dense<0> : tensor<1xi64>}
 //  CHECK:   : ([[IN_T]], [[OUT_T]]) -> ()
 //  CHECK: }
-

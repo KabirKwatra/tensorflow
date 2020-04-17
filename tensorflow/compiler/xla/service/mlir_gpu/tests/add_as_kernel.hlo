@@ -60,4 +60,3 @@ ENTRY %Add (x: f32[2,2], y: f32[2,2]) -> f32[2,2] {
 //  CHECK: %[[DESC25:.*]] = llvm.insertvalue %[[STRIDE20]], %[[DESC24]][4, 0] : !llvm<"{ float*, float*, i64, [2 x i64], [2 x i64] }">
 //  CHECK: %[[DESC26:.*]] = llvm.insertvalue %[[SIZE21]], %[[DESC25]][3, 1] : !llvm<"{ float*, float*, i64, [2 x i64], [2 x i64] }">
 //  CHECK: %{{.*}} = llvm.insertvalue %[[STRIDE21]], %[[DESC26]][4, 1] : !llvm<"{ float*, float*, i64, [2 x i64], [2 x i64] }">
-
