@@ -13,11 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Basic tests for gradients."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 
 from tensorflow.python.eager import backprop
 from tensorflow.python.eager import context
@@ -29,11 +27,10 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import custom_gradient
 from tensorflow.python.ops import gradients_impl
 from tensorflow.python.ops import math_ops
-
-# Importing nn_grad for the registration functions.
 from tensorflow.python.ops import nn_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import variables
+# Importing nn_grad for the registration functions.
 
 
 @custom_gradient.custom_gradient

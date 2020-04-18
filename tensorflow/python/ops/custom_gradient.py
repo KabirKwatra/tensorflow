@@ -13,10 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Decorator to overrides the gradient for a function."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 from tensorflow.python.client import pywrap_tf_session
 from tensorflow.python.eager import backprop
 from tensorflow.python.eager import context
