@@ -28,9 +28,9 @@ limitations under the License.
 #include "tensorflow/core/lib/gtl/inlined_vector.h"
 
 typedef tensorflow::gtl::InlinedVector<TFE_TensorHandle*, 4>
-    TFE_InputTensorHandles;
+TFE_InputTensorHandles;
 typedef tensorflow::gtl::InlinedVector<TFE_TensorHandle*, 2>
-    TFE_OutputTensorHandles;
+TFE_OutputTensorHandles;
 
 // Execute a TensorFlow operation.
 //
@@ -214,9 +214,9 @@ PyObject* TFE_Py_TapeSetRecordOperation(PyObject* op_type,
 //
 // Same arguments as TFE_Py_TapeSetRecordOperation.
 PyObject* TFE_Py_TapeSetRecordOperationBackprop(PyObject* op_type,
-                                                PyObject* output_tensors,
-                                                PyObject* input_tensors,
-                                                PyObject* backward_function);
+        PyObject* output_tensors,
+        PyObject* input_tensors,
+        PyObject* backward_function);
 
 // Records an operation only for forwardprop (forward accumulators).
 //
