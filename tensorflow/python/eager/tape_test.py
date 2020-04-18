@@ -29,6 +29,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import custom_gradient
 from tensorflow.python.ops import gradients_impl
 from tensorflow.python.ops import math_ops
+
 # Importing nn_grad for the registration functions.
 from tensorflow.python.ops import nn_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import nn_ops
@@ -42,10 +43,10 @@ def two_outputs(a, b):
 
     def grad(dmm, dr):
         return [
-            math_ops.matmul(dmm, b, transpose_b=True) +
-            math_ops.matmul(array_ops.ones_like(b * dr), b, transpose_b=True),
-            math_ops.matmul(a, dmm, transpose_b=True) +
-            math_ops.matmul(a, array_ops.ones_like(a) * dr, transpose_b=True)
+            math_ops.matmul(dmm, b, transpose_b=True)
+            + math_ops.matmul(array_ops.ones_like(b * dr), b, transpose_b=True),
+            math_ops.matmul(a, dmm, transpose_b=True)
+            + math_ops.matmul(a, array_ops.ones_like(a) * dr, transpose_b=True),
         ]
 
     return [mm, r], grad
@@ -62,17 +63,15 @@ def gradient_is_constant(x):
 
 
 class TapeTest(test.TestCase):
-
     def testMultiOutput(self):
-
         def fn(x, y):
             c = x + y
             # Multiple outputs from split.
             d, f = array_ops.split(c, 2)
             return d + f
 
-        a = constant_op.constant([[1., 0.], [0., 1.]])
-        b = constant_op.constant([[1., 2.], [3., 4.]])
+        a = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
+        b = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
         da, db = backprop.gradients_function(fn, [0, 1])(a, b)
         with context.graph_mode(), self.cached_session():
             tf_a = constant_op.constant([[1, 0], [0, 1]], dtype=dtypes.float32)
@@ -86,56 +85,51 @@ class TapeTest(test.TestCase):
             self.assertAllEqual(db, self.evaluate(tf_db))
 
     def testBasicFunctional(self):
-
         def forward(a, b):
             mm = math_ops.matmul(a, b)
             return math_ops.reduce_sum(mm)
 
-        aa = constant_op.constant([[1., 0.], [0., 1.]])
-        bb = constant_op.constant([[1., 2.], [3., 4.]])
-        da, = backprop.gradients_function(forward, ['a'])(aa, bb)
-        self.assertAllEqual(da,
-                            math_ops.matmul(
-                                array_ops.ones_like(aa),
-                                array_ops.transpose(bb)).numpy())
+        aa = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
+        bb = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
+        (da,) = backprop.gradients_function(forward, ["a"])(aa, bb)
+        self.assertAllEqual(
+            da,
+            math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb)).numpy(),
+        )
 
     def testBasicFunctionalPositionalArg(self):
-
         def forward(a, b):
             mm = math_ops.matmul(a, b)
             return math_ops.reduce_sum(mm)
 
-        aa = constant_op.constant([[1., 0.], [0., 1.]])
-        bb = constant_op.constant([[1., 2.], [3., 4.]])
-        da, = backprop.gradients_function(forward, [0])(aa, bb)
-        self.assertAllEqual(da,
-                            math_ops.matmul(
-                                array_ops.ones_like(aa),
-                                array_ops.transpose(bb)).numpy())
+        aa = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
+        bb = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
+        (da,) = backprop.gradients_function(forward, [0])(aa, bb)
+        self.assertAllEqual(
+            da,
+            math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb)).numpy(),
+        )
 
     def testBasicFunctionalWithValue(self):
-
         def forward(a, b):
             mm = math_ops.matmul(a, b)
             return math_ops.reduce_sum(mm)
 
-        aa = constant_op.constant([[1., 0.], [0., 1.]])
-        bb = constant_op.constant([[1., 2.], [3., 4.]])
-        val, (da,) = backprop.val_and_grad_function(forward, ['a'])(aa, bb)
-        self.assertAllEqual(da,
-                            math_ops.matmul(
-                                array_ops.ones_like(aa),
-                                array_ops.transpose(bb)))
+        aa = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
+        bb = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
+        val, (da,) = backprop.val_and_grad_function(forward, ["a"])(aa, bb)
+        self.assertAllEqual(
+            da, math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb))
+        )
         self.assertAllEqual(val, forward(aa, bb))
 
     def testTwoOutputs(self):
-
         def fn(x, y):
             mm, r = two_outputs(x, y)
             return r + math_ops.reduce_sum(mm)
 
-        a = constant_op.constant([[1., 0.], [0., 1.]])
-        b = constant_op.constant([[1., 2.], [3., 4.]])
+        a = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
+        b = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
         da, db = backprop.gradients_function(fn, [0, 1])(a, b)
         with context.graph_mode(), self.cached_session():
             tf_a = constant_op.constant([[1, 0], [0, 1]], dtype=dtypes.float32)
@@ -148,28 +142,26 @@ class TapeTest(test.TestCase):
             self.assertAllEqual(db, self.evaluate(tf_db))
 
     def testGcTwoOutputs(self):
-
         def fn(x, y):
-            return nn_ops.sparse_softmax_cross_entropy_with_logits(logits=x,
-                                                                   labels=y)[0]
+            return nn_ops.sparse_softmax_cross_entropy_with_logits(logits=x, labels=y)[
+                0
+            ]
 
         labels = constant_op.constant([0])
         logits = constant_op.constant([[0.0]])
-        grad, = backprop.gradients_function(fn, [0])(logits, labels)
+        (grad,) = backprop.gradients_function(fn, [0])(logits, labels)
         self.assertAllEqual(grad, [[0.0]])
 
     def testTfTensor(self):
-
         def fn(x):
             return x
 
         t = constant_op.constant(1.0)
-        g, = backprop.gradients_function(fn, [0])(t)
+        (g,) = backprop.gradients_function(fn, [0])(t)
         self.assertAllEqual(g, 1.0)
 
 
 class VariableWatcherTest(test.TestCase):
-
     def testBasic(self):
         var1 = variables.Variable(0.0)
         var2 = variables.Variable(1.0)
@@ -198,8 +190,7 @@ class VariableWatcherTest(test.TestCase):
 
         # variable_watcher1 should see both vars and variable_watcher2 only sees
         # var2
-        self.assertAllEqual(
-            variable_watcher1.watched_variables(), (var1, var2))
+        self.assertAllEqual(variable_watcher1.watched_variables(), (var1, var2))
         self.assertAllEqual(variable_watcher2.watched_variables(), (var2,))
 
     def testCreateVariables(self):
@@ -212,5 +203,5 @@ class VariableWatcherTest(test.TestCase):
         self.assertAllEqual(variable_watcher.watched_variables(), (var1, var2))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

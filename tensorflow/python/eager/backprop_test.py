@@ -53,10 +53,8 @@ from tensorflow.python.training import training
 
 
 class BackpropTest(test.TestCase, parameterized.TestCase):
-
     @test_util.run_in_graph_and_eager_modes
     def testAggregateGradients(self):
-
         def fn(x):
             ind1 = constant_op.constant(np.array([0, 1]))
             ind2 = constant_op.constant(np.array([2, 3]))
@@ -83,13 +81,13 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             tf_grad = gradients.gradients(tf_y, [tf_var])[0]
 
             tf_dense_grad = math_ops.unsorted_segment_sum(
-                tf_grad.values, tf_grad.indices, tf_grad.dense_shape[0])
+                tf_grad.values, tf_grad.indices, tf_grad.dense_shape[0]
+            )
 
             self.assertAllClose(grad, self.evaluate(tf_dense_grad))
 
     @test_util.run_in_graph_and_eager_modes
     def testAggregateGradientsWithTensor(self):
-
         def fn(x):
             ind1 = constant_op.constant(np.array([0, 1]))
             # A mixture of IndexedSlices and dense tensor to aggregate.
@@ -114,7 +112,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     def testImplicitGradWithResourceVariable(self):
         x = resource_variable_ops.ResourceVariable(
-            initial_value=constant_op.constant(1.0), name='x')
+            initial_value=constant_op.constant(1.0), name="x"
+        )
 
         def fn():
             b = constant_op.constant(2.0)
@@ -126,10 +125,9 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(id(grads_and_vars[0][1]), id(x))
 
     @parameterized.named_parameters(
-        [('Function', def_function.function),
-         ('NoFunction', lambda f: f)])
+        [("Function", def_function.function), ("NoFunction", lambda f: f)]
+    )
     def testNoOpBehaviorConsistent(self, decorator):
-
         @decorator
         def f(x):
             # Test all different types of no-ops
@@ -143,15 +141,15 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
                 t.watch(x2)
                 t.watch(x3)
                 t.watch(x4)
-                y1 = x * 2.
-                y2 = x1 * 3.
-                y3 = x2 * 3.
-                y4 = x3 * 3.
-                y5 = x4 * 3.
+                y1 = x * 2.0
+                y2 = x1 * 3.0
+                y3 = x2 * 3.0
+                y4 = x3 * 3.0
+                y5 = x4 * 3.0
                 loss = y1 + y2 + y3 + y4 + y5
             return t.gradient(loss, [x, x1, x2, x3, x4])
 
-        self.assertAllClose([2., 3., 3., 3., 3.], f(constant_op.constant(10.)))
+        self.assertAllClose([2.0, 3.0, 3.0, 3.0, 3.0], f(constant_op.constant(10.0)))
 
     def testGradientInsideLoop(self):
         with ops.Graph().as_default():
@@ -175,8 +173,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
         g = backprop.gradients_function(f)
 
-        self.assertAllEqual(g(5.)[0], 1.0)
-        self.assertAllEqual(g(50.)[0], 100.0)
+        self.assertAllEqual(g(5.0)[0], 1.0)
+        self.assertAllEqual(g(50.0)[0], 100.0)
 
     def testTwoTargets(self):
         with backprop.GradientTape() as t:
@@ -190,11 +188,11 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(dy, 3.0)
 
     def testCustomGradientEmptyError(self):
-
         @custom_gradient.custom_gradient
         def identity(x):
             def grad(_):
                 return []  # This return value is wrong!
+
             return x, grad
 
         x = variables.Variable(1.0)
@@ -209,19 +207,17 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             y = constant_op.constant(2.0)
             t.watch([x, y])
             loss = x * y
-        dx, = t.gradient([loss, x], [x], output_gradients=[1.0, 2.0])
+        (dx,) = t.gradient([loss, x], [x], output_gradients=[1.0, 2.0])
         self.assertAllEqual(dx, 4.0)
 
     def testDy(self):
-
         def f(x):
             return x
 
         grad_fn = backprop.gradients_function(f)
-        self.assertAllEqual(2., grad_fn(1., dy=2.)[0])
+        self.assertAllEqual(2.0, grad_fn(1.0, dy=2.0)[0])
 
     def testGradientInteger(self):
-
         def f(x):
             return x + x
 
@@ -229,11 +225,11 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(backprop.gradients_function(f)(int_tensor)[0], None)
 
     def testErrors(self):
-
         @custom_gradient.custom_gradient
         def f(x):
             def grad(_):
-                raise RuntimeError('x')
+                raise RuntimeError("x")
+
             return x, grad
 
         # TODO(apassos) raise the right error here
@@ -241,7 +237,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             backprop.gradients_function(f)(constant_op.constant(1.0))
 
     def testGradientsFunctionInCustomGradient(self):
-
         @custom_gradient.custom_gradient
         def f(x):
             (y,) = backprop.gradients_function(lambda x: x * x)(x)
@@ -262,7 +257,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
         x = array_ops.ones((batch_size), dtypes.int64)
         embedding = resource_variable_ops.ResourceVariable(
-            initial_value=random_init, dtype=dtypes.float32, name='embedding')
+            initial_value=random_init, dtype=dtypes.float32, name="embedding"
+        )
 
         def f():
             embedded_x = embedding_ops.embedding_lookup(embedding, x)
@@ -274,8 +270,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         with ops.Graph().as_default(), self.cached_session():
             tf_x = array_ops.ones((batch_size), dtypes.int64)
             # TODO(ashankar,apassos): Change to ResourceVariable.
-            tf_embedding = variables.Variable(
-                random_init.numpy(), name='tf_embedding')
+            tf_embedding = variables.Variable(random_init.numpy(), name="tf_embedding")
             tf_embedded_x = embedding_ops.embedding_lookup(tf_embedding, tf_x)
             tf_y = 1.0 - tf_embedded_x
             tf_grad = gradients.gradients(tf_y, [tf_embedding])[0]
@@ -319,7 +314,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(t.gradient(y, x).numpy(), 1.0)
 
     def testFunctionIndexedSlicesGradient(self):
-
         @def_function.function
         def f(x):
             return x + 1
@@ -335,7 +329,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         x = constant_op.constant(2.0)
         with backprop.GradientTape() as t:
             t.watch(x)
-            y = x*x
+            y = x * x
         self.assertEqual(t.gradient([x, y], x).numpy(), 5.0)
 
     def testTapeNoOpGradientWithMultiTargetAllSource(self):
@@ -355,7 +349,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(t.gradient([x, y, z], [x, y]), [1.0, 11.0])
 
     def testTapeGradientStringTarget(self):
-        s = constant_op.constant('unknown', dtype=dtypes.string)
+        s = constant_op.constant("unknown", dtype=dtypes.string)
         x = constant_op.constant(3.0)
 
         with backprop.GradientTape() as t:
@@ -365,7 +359,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(grads, None)
 
     def testTapeNoOpGradientStringSourceAndTarget(self):
-        s = constant_op.constant('unknown', dtype=dtypes.string)
+        s = constant_op.constant("unknown", dtype=dtypes.string)
 
         with backprop.GradientTape() as t:
             t.watch(s)
@@ -375,7 +369,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     def testTapeNoOpGradientWithMultiTargetMultiSourceIncludeString(self):
         x = constant_op.constant(3.0)
         y = constant_op.constant(5.0)
-        s = constant_op.constant('unknown', dtype=dtypes.string)
+        s = constant_op.constant("unknown", dtype=dtypes.string)
 
         with backprop.GradientTape() as t:
             t.watch(x)
@@ -399,8 +393,9 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         with backprop.GradientTape(persistent=True) as tape:
             tape.watch(a_2_by_2)
         dy_dy = tape.gradient(a_2_by_2, [a_2_by_2])[0]
-        self.assertAllEqual(dy_dy.numpy(),
-                            constant_op.constant(1.0, shape=[2, 2]).numpy())
+        self.assertAllEqual(
+            dy_dy.numpy(), constant_op.constant(1.0, shape=[2, 2]).numpy()
+        )
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testTapeNoOpGradientMultiTarget2By2(self):
@@ -408,8 +403,9 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         with backprop.GradientTape(persistent=True) as tape:
             tape.watch(a_2_by_2)
         dy_dy = tape.gradient([a_2_by_2, a_2_by_2], [a_2_by_2])[0]
-        self.assertAllEqual(dy_dy.numpy(),
-                            constant_op.constant(2.0, shape=[2, 2]).numpy())
+        self.assertAllEqual(
+            dy_dy.numpy(), constant_op.constant(2.0, shape=[2, 2]).numpy()
+        )
 
     def testTapeStopRecording(self):
         with backprop.GradientTape() as t:
@@ -439,13 +435,15 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(t.gradient(loss, v), 2.0)
 
     def testPythonMax(self):
-        x = [resource_variable_ops.ResourceVariable(2.),
-             resource_variable_ops.ResourceVariable(3.),
-             resource_variable_ops.ResourceVariable(5.)]
+        x = [
+            resource_variable_ops.ResourceVariable(2.0),
+            resource_variable_ops.ResourceVariable(3.0),
+            resource_variable_ops.ResourceVariable(5.0),
+        ]
         with backprop.GradientTape() as t:
             f = max(x)
         grad = t.gradient(f, x)
-        self.assertAllEqual(self.evaluate(f), 5.)
+        self.assertAllEqual(self.evaluate(f), 5.0)
         self.assertAllEqual(self.evaluate(grad), [None, None, 1.0])
 
     def testAutomaticWatchedVariables(self):
@@ -474,22 +472,22 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testGradientNone(self):
-
         def loss(x, l):
             return math_ops.reduce_mean(
                 nn_ops.softmax_cross_entropy_with_logits(logits=x, labels=l),
-                constant_op.constant([0]))
+                constant_op.constant([0]),
+            )
 
         logits = constant_op.constant([[0.0, 0.0]])
         labels = constant_op.constant([[1.0, 0.0]])
         # softmax_cross_entropy_with_logits returns two outputs and in this case the
         # gradient wrt the second is None.
-        g, = backprop.gradients_function(loss, [0])(logits, labels)
+        (g,) = backprop.gradients_function(loss, [0])(logits, labels)
         self.assertAllEqual(g.numpy(), [[-0.5, 0.5]])
 
     @test_util.run_in_graph_and_eager_modes
     def testGradientWithinTapeBlock(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
         self.evaluate(v1.initializer)
         with backprop.GradientTape() as t:
             loss = 2 * v1
@@ -503,7 +501,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.run_in_graph_and_eager_modes
     def testNestedSelfContexts(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
         self.evaluate(v1.initializer)
         with backprop.GradientTape() as t:
             with self.assertRaises(ValueError):
@@ -512,7 +510,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testSecondGrad(self):
-
         def first(x):
             l = constant_op.constant([[0.0]])
             x = nn_ops.softmax_cross_entropy_with_logits(labels=l, logits=x)
@@ -547,7 +544,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testMakeVJP(self):
-
         def f(x):
             return x * x
 
@@ -557,7 +553,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(vjp(2.0)[0], 12.0)
 
     def testPersistentMakeVJP(self):
-
         def f(x):
             return x * x
 
@@ -569,7 +564,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testGradGrad(self):
-
         def sq(x):
             return x * x
 
@@ -583,7 +577,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testGradGradExp(self):
-
         def grad(x):
             value = backprop.gradients_function(math_ops.exp, [0])(x)[0]
             return value
@@ -595,7 +588,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     @test_util.assert_no_new_tensors
     def testStopGradient(self):
         grad = backprop.gradients_function(
-            lambda x: array_ops.stop_gradient(math_ops.argmax(x)))
+            lambda x: array_ops.stop_gradient(math_ops.argmax(x))
+        )
         self.assertAllEqual(grad([0.0])[0], None)
 
     @test_util.assert_no_new_tensors
@@ -611,41 +605,38 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     @test_util.assert_no_new_tensors
     def testGPU(self):
         def fn(x):
-            with context.device('/gpu:0'):
+            with context.device("/gpu:0"):
                 b = constant_op.constant(2.0)
                 c = math_ops.add(x.gpu(), b)
                 # TODO(apassos): remove cpu below by making TensorVSPace aware
                 # of devices.
                 return math_ops.add(c, constant_op.constant(3.0)).cpu()
 
-        grad = backprop.gradients_function(
-            fn, [0])(constant_op.constant(1.0))[0]
+        grad = backprop.gradients_function(fn, [0])(constant_op.constant(1.0))[0]
         self.assertAllEqual(grad, 1.0)
 
     @test_util.run_gpu_only
     @test_util.assert_no_new_tensors
     def testGPUImplicitGrad(self):
-        with context.device('gpu:0'):
+        with context.device("gpu:0"):
             v = resource_variable_ops.ResourceVariable(
-                constant_op.constant(1.0), name='v')
+                constant_op.constant(1.0), name="v"
+            )
 
         def f():
-            with context.device('gpu:0'):
+            with context.device("gpu:0"):
                 return v.read_value()
 
-        self.assertEqual(
-            backprop.implicit_grad(f)()[0][0].cpu().numpy(), 1.0)
+        self.assertEqual(backprop.implicit_grad(f)()[0][0].cpu().numpy(), 1.0)
 
     @test_util.assert_no_new_tensors
     def testCPU(self):
-
         def fn(x):
             b = constant_op.constant(2.0)
             c = math_ops.add(x, b)
             return math_ops.add(c, constant_op.constant(3.0))
 
-        grad = backprop.gradients_function(
-            fn, [0])(constant_op.constant(1.0))[0]
+        grad = backprop.gradients_function(fn, [0])(constant_op.constant(1.0))[0]
         self.assertAllEqual(grad, 1.0)
 
     @test_util.run_gpu_only
@@ -654,7 +645,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         def f(a, b):
             return a.cpu() + b.cpu()
 
-        with context.device('/gpu:0'):
+        with context.device("/gpu:0"):
             a = constant_op.constant(1.0)
             b = constant_op.constant(2.0)
 
@@ -663,7 +654,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testEmptyParams(self):
-
         def fn(a, b):
             return a * b
 
@@ -675,8 +665,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testUnconnectedNone(self):
-        v = resource_variable_ops.ResourceVariable(
-            1.0, name='testUnconnectedNone')
+        v = resource_variable_ops.ResourceVariable(1.0, name="testUnconnectedNone")
 
         def f():
             v.read_value()
@@ -690,9 +679,9 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         with g:
             x = constant_op.constant(3.0)
             g.watch(x)
-            y = 2*x
+            y = 2 * x
         with g:
-            z = 2*y
+            z = 2 * y
         grad = g.gradient(target=z, sources=[x])
         self.assertEqual(self.evaluate(grad), [4.0])
 
@@ -736,12 +725,16 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(self.evaluate(g.gradient(y, x1)), [1.0])
         self.assertEqual(self.evaluate(g.gradient(y, (x1,))), (1.0,))
         self.assertEqual(self.evaluate(g.gradient(y, (x1, x2))), (1.0, 2.0))
-        self.assertEqual(self.evaluate(g.gradient(y, [(x1, x2), (x2, x3)])),
-                         [(1.0, 2.0), (2.0, 3.0)])
-        self.assertEqual(self.evaluate(g.gradient(y, (x1, x2, [x1, x3]))),
-                         (1.0, 2.0, [1.0, 3.0]))
-        self.assertEqual(self.evaluate(g.gradient(y, [x1, {'x2': x2, 'x3': x3}])),
-                         [1.0, {'x2': 2.0, 'x3': 3.0}])
+        self.assertEqual(
+            self.evaluate(g.gradient(y, [(x1, x2), (x2, x3)])), [(1.0, 2.0), (2.0, 3.0)]
+        )
+        self.assertEqual(
+            self.evaluate(g.gradient(y, (x1, x2, [x1, x3]))), (1.0, 2.0, [1.0, 3.0])
+        )
+        self.assertEqual(
+            self.evaluate(g.gradient(y, [x1, {"x2": x2, "x3": x3}])),
+            [1.0, {"x2": 2.0, "x3": 3.0}],
+        )
 
     @test_util.assert_no_new_tensors
     @test_util.run_in_graph_and_eager_modes
@@ -769,7 +762,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(grad, None)
 
     @test_util.run_in_graph_and_eager_modes
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testGradientTapeWithCond(self):
         x = constant_op.constant(3.0)
 
@@ -784,17 +777,17 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             y = control_flow_ops.cond(x < x, true_fn, false_fn)
 
         if not context.executing_eagerly():
-            with self.assertRaisesRegexp(NotImplementedError, 'tf.gradients'):
+            with self.assertRaisesRegexp(NotImplementedError, "tf.gradients"):
                 dy = g.gradient(y, [x])[0]
         else:
             dy = g.gradient(y, [x])[0]
             self.assertEqual(self.evaluate(dy), 6.0)
 
     @test_util.run_in_graph_and_eager_modes
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testGradientTapeWithWhileLoop(self):
         i = constant_op.constant(1)
-        x = constant_op.constant(2.)
+        x = constant_op.constant(2.0)
 
         def cond(i, _):
             return i < 3
@@ -807,7 +800,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             _, y = control_flow_ops.while_loop(cond, body, [i, x])
 
         if not context.executing_eagerly():
-            with self.assertRaisesRegexp(NotImplementedError, 'tf.gradients'):
+            with self.assertRaisesRegexp(NotImplementedError, "tf.gradients"):
                 dy = g.gradient(y, [x])[0]
         else:
             dy = g.gradient(y, [x])[0]
@@ -822,12 +815,13 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             z = y * y
         g.gradient(z, [x])
         with self.assertRaisesRegexp(
-                RuntimeError, 'GradientTape.gradient can only be called once'):
+            RuntimeError, "GradientTape.gradient can only be called once"
+        ):
             g.gradient(y, [x])
 
     @test_util.assert_no_new_tensors
     @test_util.run_in_graph_and_eager_modes
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testPersistentTape(self):
         with backprop.GradientTape(persistent=True) as g:
             x = constant_op.constant(3.0)
@@ -846,8 +840,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         with backprop.GradientTape(persistent=True) as g:
             x = constant_op.constant(3.0)
             g.watch(x)
-            y = x ** 3                      # y       := x^3
-            dy_dx = g.gradient(y, x)        # dy/dx   := 3x^2
+            y = x ** 3  # y       := x^3
+            dy_dx = g.gradient(y, x)  # dy/dx   := 3x^2
             d2y_dx2 = g.gradient(dy_dx, x)  # d2y/dx2 := 6x
         d3y_dx3 = g.gradient(d2y_dx2, x)  # d3y/dx3 := 6
         x = 3
@@ -881,7 +875,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     @test_util.assert_no_new_tensors
     @test_util.run_in_graph_and_eager_modes
     def testGradientTapeVariable(self):
-        v = resource_variable_ops.ResourceVariable(1.0, name='v')
+        v = resource_variable_ops.ResourceVariable(1.0, name="v")
         self.evaluate(v.initializer)
         with backprop.GradientTape() as g:
             y = v * v
@@ -919,21 +913,22 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         with backprop.GradientTape() as g:
             g.watch([x, y])
             z = y * 2
-        dz_dx = g.gradient(z, x, unconnected_gradients='zero')
+        dz_dx = g.gradient(z, x, unconnected_gradients="zero")
         self.assertAllEqual([[0.0, 0.0], [0.0, 0.0]], self.evaluate(dz_dx))
 
     @test_util.assert_no_new_tensors
     @test_util.run_in_graph_and_eager_modes
     def testUnconnectedGradientsVariablesZeros(self):
         x = resource_variable_ops.ResourceVariable(
-            constant_op.constant(1., shape=[2, 2]))
+            constant_op.constant(1.0, shape=[2, 2])
+        )
         self.evaluate(x.initializer)
-        y = resource_variable_ops.ResourceVariable(constant_op.constant(3.))
+        y = resource_variable_ops.ResourceVariable(constant_op.constant(3.0))
         self.evaluate(y.initializer)
         with backprop.GradientTape() as g:
             g.watch([x, y])
             z = y * 2
-        dz_dx = g.gradient(z, x, unconnected_gradients='zero')
+        dz_dx = g.gradient(z, x, unconnected_gradients="zero")
         self.assertAllEqual([[0.0, 0.0], [0.0, 0.0]], self.evaluate(dz_dx))
 
     @test_util.run_in_graph_and_eager_modes
@@ -944,12 +939,12 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             g.watch([x, y])
             z = y * 2
         with self.assertRaisesRegexp(
-                ValueError, "Unknown value for unconnected_gradients: 'nonsense'"):
-            g.gradient(z, x, unconnected_gradients='nonsense')
+            ValueError, "Unknown value for unconnected_gradients: 'nonsense'"
+        ):
+            g.gradient(z, x, unconnected_gradients="nonsense")
 
     @test_util.run_in_graph_and_eager_modes
     def testUnconnectedGradientsNestedDefunZeros(self):
-
         @function.defun
         def f(x):
             return x * x
@@ -962,30 +957,28 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         x = constant_op.constant(1.0)
         with backprop.GradientTape() as g:
             g.watch(x)
-            k = x + 2.
+            k = x + 2.0
             y = h(k)
 
-        dy_dx = g.gradient(y, x, unconnected_gradients='zero')
+        dy_dx = g.gradient(y, x, unconnected_gradients="zero")
         self.assertEqual(0.0, self.evaluate(dy_dx))
 
     def testInvalidRecordOperationMessage(self):
-        y = constant_op.constant(2.)
-        x = constant_op.constant(1.)
+        y = constant_op.constant(2.0)
+        x = constant_op.constant(1.0)
         with backprop.GradientTape() as g:
             g.watch(x)
-            tape_lib.record_operation(
-                'InvalidBackprop',
-                [y],
-                [x],
-                lambda dy: [])
+            tape_lib.record_operation("InvalidBackprop", [y], [x], lambda dy: [])
         with self.assertRaisesRegexp(
-                errors_impl.InternalError, 'InvalidBackprop.*too few gradients'):
+            errors_impl.InternalError, "InvalidBackprop.*too few gradients"
+        ):
             g.gradient(y, x)
 
     @test_util.assert_no_new_tensors
     def testEmptyParamsForValueAndGradFunction(self):
         def fn(a, b):
             return a * b
+
         val_and_grads_fn = backprop.val_and_grad_function(fn)
 
         x = 2.0
@@ -999,6 +992,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     def testNonEmptyParamsForValueAndGradFunction(self):
         def fn(a, b):
             return a * b
+
         val_and_grad_fn = backprop.val_and_grad_function(fn, params=[1])
 
         x = 2.0
@@ -1014,11 +1008,11 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         # forward: a (cpu->gpu) -> add (gpu) -> c (gpu->cpu) -> add (cpu) -> e (cpu)
         # back: e (cpu) -> add (cpu) -> c (cpu->gpu) -> add (gpu) -> grad (gpu->cpu)
         def f(a, b):
-            with context.device('/gpu:0'):
+            with context.device("/gpu:0"):
                 c = math_ops.add(a.gpu(0), b.gpu(0))
             return math_ops.add(c.cpu(), constant_op.constant(3.0))
 
-        with context.device('/cpu:0'):
+        with context.device("/cpu:0"):
             a = constant_op.constant(1.0)
             b = constant_op.constant(2.0)
 
@@ -1026,29 +1020,28 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(grad, 1.0)
 
     def testGetAttrType(self):
-        typ = backprop.op_attr_type('Add', 'T')
+        typ = backprop.op_attr_type("Add", "T")
         self.assertEqual(typ, int(pywrap_tfe.TF_ATTR_TYPE))
 
     def testGetAttrList(self):
-        typ = backprop.op_attr_type('MaxPool', 'ksize')
+        typ = backprop.op_attr_type("MaxPool", "ksize")
         self.assertEqual(typ, [int(pywrap_tfe.TF_ATTR_INT)])
 
     def testMakeAttrType(self):
-        self.assertEqual(dtypes.float32,
-                         backprop.make_attr(int(pywrap_tfe.TF_ATTR_TYPE), 1))
+        self.assertEqual(
+            dtypes.float32, backprop.make_attr(int(pywrap_tfe.TF_ATTR_TYPE), 1)
+        )
 
     def testMakeAttrTypeList(self):
-        self.assertEqual([dtypes.float32],
-                         backprop.make_attr([int(pywrap_tfe.TF_ATTR_TYPE)], [1]))
+        self.assertEqual(
+            [dtypes.float32], backprop.make_attr([int(pywrap_tfe.TF_ATTR_TYPE)], [1])
+        )
 
     def testMulType(self):
-
         def mul(x):
             return math_ops._mul_dispatch(x, x)  # pylint: disable=protected-access
 
-        self.assertAllEqual(
-            backprop.gradients_function(mul)(3.0)[0].numpy(),
-            6.0)
+        self.assertAllEqual(backprop.gradients_function(mul)(3.0)[0].numpy(), 6.0)
 
     def testMakeAttrShape(self):
         for s in ([], None, [1, 2, 3], [None, None], [1, None, 3]):
@@ -1057,17 +1050,17 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             self.assertEqual(
                 expected,
                 actual,
-                msg=('For shape %r, expected %r != %r actual' % (s, expected,
-                                                                 actual)))
+                msg=("For shape %r, expected %r != %r actual" % (s, expected, actual)),
+            )
 
     def testMakeAttrShapeList(self):
         shape_list = [[], None, [1, 2, 3], [None, None], [1, None, 3]]
         self.assertEqual(
             [tensor_shape.TensorShape(s).as_proto() for s in shape_list],
-            backprop.make_attr([int(pywrap_tfe.TF_ATTR_SHAPE)], shape_list))
+            backprop.make_attr([int(pywrap_tfe.TF_ATTR_SHAPE)], shape_list),
+        )
 
     def testArgsGradientFunction(self):
-
         def f(*args):
             return args[0] * args[0]
 
@@ -1075,17 +1068,15 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(grad(1.0)[0], 2.0)
 
     def testPartial(self):
-
         def f(x, y):
             return x * y
 
         part = functools.partial(f, constant_op.constant(2.0))
         self.assertAllEqual(
-            backprop.gradients_function(part)(constant_op.constant(1.0))[0],
-            2.0)
+            backprop.gradients_function(part)(constant_op.constant(1.0))[0], 2.0
+        )
 
     def testReturnSameThing(self):
-
         def f(x):
             return x, 2 * x
 
@@ -1093,7 +1084,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testExceptionSafety(self):
-
         def f(unused_x):
             raise ValueError()
 
@@ -1110,7 +1100,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     @test_util.assert_no_new_tensors
     def testMultiValueConvertToTensor(self):
         x = resource_variable_ops.ResourceVariable(
-            initial_value=array_ops.constant([1.0]), name='x')
+            initial_value=array_ops.constant([1.0]), name="x"
+        )
 
         def fn():
             a = math_ops.add(x.value(), 1.0)
@@ -1122,7 +1113,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual([1.0], grad)
 
     def testOutput(self):
-
         def multiout(x):
             return x + 2, x * x
 
@@ -1132,9 +1122,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual([1.0, 3.0, 5.0], grad)
 
     def testMultiValuePreservesIfNotDiffedAgainst(self):
-
         def tfe_conv2d(timage, tkernel, conv2dstrides):
-            return nn_ops.conv2d(timage, tkernel, conv2dstrides, 'SAME')
+            return nn_ops.conv2d(timage, tkernel, conv2dstrides, "SAME")
 
         i = constant_op.constant([[[[1.0]]]])
         k = constant_op.constant([[[[2.0]]]])
@@ -1144,7 +1133,6 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual([[[[2.0]]]], grad)
 
     def testSameObjectForMultipleArguments(self):
-
         def f(x, y):
             return math_ops.multiply(x, y)
 
@@ -1154,22 +1142,22 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             dx, dy = g(x, y)
             return [dx.numpy(), dy.numpy()]
 
-        x = constant_op.constant(1.)
-        self.assertAllEqual([1., 1.], np_g(x, x))
-        x = 1.
-        self.assertAllEqual([1., 1.], np_g(x, x))
-        x = constant_op.constant([[1.]])
-        self.assertAllEqual([[[1.]], [[1.]]], np_g(x, x))
-        x = [[1.]]
-        self.assertAllEqual([[[1.]], [[1.]]], np_g(x, x))
+        x = constant_op.constant(1.0)
+        self.assertAllEqual([1.0, 1.0], np_g(x, x))
+        x = 1.0
+        self.assertAllEqual([1.0, 1.0], np_g(x, x))
+        x = constant_op.constant([[1.0]])
+        self.assertAllEqual([[[1.0]], [[1.0]]], np_g(x, x))
+        x = [[1.0]]
+        self.assertAllEqual([[[1.0]], [[1.0]]], np_g(x, x))
 
         v = resource_variable_ops.ResourceVariable(
-            initial_value=1., name='testSameObjectForMultipleArguments.Variable')
-        self.assertAllEqual([1., 1.], np_g(v, v))
+            initial_value=1.0, name="testSameObjectForMultipleArguments.Variable"
+        )
+        self.assertAllEqual([1.0, 1.0], np_g(v, v))
 
     @test_util.assert_no_new_tensors
     def testImplicitGradientsCustomGradientAndCachedVariableValue(self):
-
         @custom_gradient.custom_gradient
         def my_square(x):
             result = math_ops.square(x)
@@ -1180,7 +1168,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             return result, grad
 
         x = resource_variable_ops.ResourceVariable(
-            initial_value=3., name='X.' + self.id())
+            initial_value=3.0, name="X." + self.id()
+        )
 
         def f():
             return my_square(x)
@@ -1194,20 +1183,17 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(x, var)
 
     def testJacobianCustomGradient(self):
-
         class MyCallable(object):
-
             def __init__(self):
-                self.a = variables.Variable(1.)
-                self.b = variables.Variable(2.)
-                self.c = variables.Variable(3.)
+                self.a = variables.Variable(1.0)
+                self.b = variables.Variable(2.0)
+                self.c = variables.Variable(3.0)
 
             def __call__(self, x):
                 return self.a * x * x + self.b * x + self.c
 
         @def_function.function
         def call(c, x):
-
             @custom_gradient.custom_gradient
             def _call():
                 y = c(x)
@@ -1217,7 +1203,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
                         g.watch(variables)
                         y = c(x)
                     grad_vars = [
-                        2 * math_ops.reduce_sum(dy * g.jacobian(y, v)) for v in variables
+                        2 * math_ops.reduce_sum(dy * g.jacobian(y, v))
+                        for v in variables
                     ]
                     del g
                     return (), grad_vars
@@ -1227,7 +1214,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             return _call()
 
         c = MyCallable()
-        x = constant_op.constant([1., 2., 3.])
+        x = constant_op.constant([1.0, 2.0, 3.0])
         with backprop.GradientTape(persistent=True) as g:
             g.watch([c.a, c.b, c.c])
             y = call(c, x)
@@ -1235,20 +1222,20 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     @test_util.assert_no_new_tensors
     def testCustomGradient(self):
-
         @custom_gradient.custom_gradient
         def my_mul(x, y):
-            result = x*y
+            result = x * y
 
             def grad(dr):
-                return [dr*y, dr*x]
+                return [dr * y, dr * x]
+
             return result, grad
 
         lr = 0.25
-        x = resource_variable_ops.ResourceVariable(2., name='x')
+        x = resource_variable_ops.ResourceVariable(2.0, name="x")
 
         def loss(x):
-            return my_mul(2., x.read_value())
+            return my_mul(2.0, x.read_value())
 
         loss_grads_fn = backprop.implicit_val_and_grad(loss)
 
@@ -1257,56 +1244,54 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             loss, grads_and_vars = loss_grads_fn(x)
             losses.append(loss.numpy())
             for (grad, var) in grads_and_vars:
-                var.assign_sub(lr*grad)
-        self.assertAllEqual(losses, [4.0, 3., 2., 1., 0.])
+                var.assign_sub(lr * grad)
+        self.assertAllEqual(losses, [4.0, 3.0, 2.0, 1.0, 0.0])
 
     @test_util.assert_no_new_tensors
     def testCustomGradientIdentity(self):
-
         @custom_gradient.custom_gradient
         def my_identity(x):
-
             def grad(dresult):
                 return [2 * dresult]
 
             return x, grad
 
-        self.assertAllEqual(
-            backprop.gradients_function(my_identity)(1.0)[0], 2.0)
+        self.assertAllEqual(backprop.gradients_function(my_identity)(1.0)[0], 2.0)
 
     def testDifferentiatingFunctionThatReturnsNone(self):
-
         def fn(x, y):
-            result = x*y  # pylint: disable=unused-variable
+            result = x * y  # pylint: disable=unused-variable
 
         x = constant_op.constant(1)
         y = constant_op.constant(2)
 
         loss_grads_fn = backprop.implicit_val_and_grad(fn)
         with self.assertRaisesRegexp(
-                ValueError, 'Cannot differentiate a function that returns None; '
-                'did you forget to return a value from fn?'):
+            ValueError,
+            "Cannot differentiate a function that returns None; "
+            "did you forget to return a value from fn?",
+        ):
             loss_grads_fn(x, y)
 
         val_and_grads_fn = backprop.val_and_grad_function(fn)
         with self.assertRaisesRegexp(
-                ValueError, 'Cannot differentiate a function that returns None; '
-                'did you forget to return a value from fn?'):
+            ValueError,
+            "Cannot differentiate a function that returns None; "
+            "did you forget to return a value from fn?",
+        ):
             val_and_grads_fn(x, y)
 
     def testZerosCacheDoesntLeakAcrossGraphs(self):
         with ops.Graph().as_default():
+
             def get_grad():
                 with ops.Graph().as_default(), self.cached_session():
-                    t = constant_op.constant(
-                        1, dtype=dtypes.float32, shape=(10, 4))
-                    x = constant_op.constant(
-                        2, dtype=dtypes.float32, shape=(10, 4))
+                    t = constant_op.constant(1, dtype=dtypes.float32, shape=(10, 4))
+                    x = constant_op.constant(2, dtype=dtypes.float32, shape=(10, 4))
                     with backprop.GradientTape() as tape:
                         tape.watch(x)
-                        x1, _ = array_ops.split(
-                            x, num_or_size_splits=2, axis=1)
-                        y1 = x1**2
+                        x1, _ = array_ops.split(x, num_or_size_splits=2, axis=1)
+                        y1 = x1 ** 2
                         y = array_ops.concat([y1, t], axis=1)
                     return self.evaluate(tape.gradient(y, x))
 
@@ -1321,8 +1306,8 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         x2 = resource_variable_ops.ResourceVariable(1.0)
         with backprop.GradientTape(watch_accessed_variables=False) as tape:
             tape.watch(x2)
-            y = x1**2
-            z = x2**3
+            y = x1 ** 2
+            z = x2 ** 3
         self.assertTupleEqual(tape.watched_variables(), (x2,))
         dy, dz = tape.gradient([y, z], [x1, x2])
         self.evaluate([x1.initializer, x2.initializer])
@@ -1357,15 +1342,17 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         def get_grads(a, b):
             with backprop.GradientTape() as tape:
                 tape.watch([a, b])
-                y = a**3
-                z = b**2
+                y = a ** 3
+                z = b ** 2
             return tape.gradient([y, z], [a, b])
 
         gradients_constants = get_grads(
-            constant_op.constant(2.0), constant_op.constant(2.0))
+            constant_op.constant(2.0), constant_op.constant(2.0)
+        )
         gradients_variables = get_grads(
             resource_variable_ops.ResourceVariable(2.0),
-            resource_variable_ops.ResourceVariable(2.0))
+            resource_variable_ops.ResourceVariable(2.0),
+        )
         self.assertAllEqual(gradients_constants, gradients_variables)
 
     def testUnknownShapes(self):
@@ -1373,13 +1360,12 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             with backprop.GradientTape() as tape:
                 a = array_ops.placeholder(dtype=dtypes.float32, shape=None)
                 tape.watch(a)
-                b = a**3
+                b = a ** 3
 
             db_da = tape.gradient(b, a)
 
             with self.cached_session() as sess:
-                self.assertEqual((8.0, 12.0), sess.run(
-                    (b, db_da), feed_dict={a: 2.0}))
+                self.assertEqual((8.0, 12.0), sess.run((b, db_da), feed_dict={a: 2.0}))
 
     @test_util.run_in_graph_and_eager_modes
     def testCustomGradientInEagerAndGraph(self):
@@ -1401,55 +1387,58 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     def testOverrideSecondOrderWithCustomGradient(self):
         @custom_gradient.custom_gradient
         def f(x):
-
             def first_order_grad(dz):
                 @custom_gradient.custom_gradient
                 def first_order_custom(unused_x):
-
                     def h(ddz):
                         return -2.1 * ddz
 
                     return -1.1, h
+
                 return dz * first_order_custom(x)
 
-            return x + 10., first_order_grad
+            return x + 10.0, first_order_grad
 
-        c = constant_op.constant(1.)
+        c = constant_op.constant(1.0)
         with backprop.GradientTape() as outer:
             outer.watch(c)
             with backprop.GradientTape() as inner:
                 inner.watch(c)
-                d = f(c) ** 4.
+                d = f(c) ** 4.0
             dd = inner.gradient(d, c)
-            self.assertAllClose(4. * f(c) ** 3. * -1.1, dd)
-        self.assertAllClose(3. * 4. * f(c) ** 2. * -1.1 * -1.1
-                            + 4. * f(c) ** 3. * -2.1,
-                            outer.gradient(dd, c))
+            self.assertAllClose(4.0 * f(c) ** 3.0 * -1.1, dd)
+        self.assertAllClose(
+            3.0 * 4.0 * f(c) ** 2.0 * -1.1 * -1.1 + 4.0 * f(c) ** 3.0 * -2.1,
+            outer.gradient(dd, c),
+        )
 
     @test_util.run_in_graph_and_eager_modes
     def testCustomGradientForwardprop(self):
         @custom_gradient.custom_gradient
         def f(x):
-            z = 2. * tensor_util.constant_value(x)
+            z = 2.0 * tensor_util.constant_value(x)
 
             def g(dz):
                 @custom_gradient.custom_gradient
                 def first_order(unused_x, unused_dz):
                     def second_order_and_transpose(unused_ddz):
                         return 2.2, 3.1
+
                     return 2.1, second_order_and_transpose
+
                 return first_order(x, dz)
+
             return z, g
 
         with backprop.GradientTape(persistent=True) as t:
             with backprop.GradientTape() as tt:
-                c = constant_op.constant(1.)
+                c = constant_op.constant(1.0)
                 t.watch(c)
                 tt.watch(c)
                 output_grad = array_ops.ones([])
                 t.watch(output_grad)
                 output = f(c)
-                self.assertAllClose(2., output)
+                self.assertAllClose(2.0, output)
             gc = tt.gradient(output, c, output_gradients=output_grad)
             self.assertAllClose(2.1, gc)
         ggc = t.gradient(gc, c)
@@ -1464,11 +1453,10 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
     def testMaxPooling3DGradient(self):
 
         if test.is_built_with_rocm():
-            self.skipTest('Pooling with 3D tensors is not supported in ROCm')
+            self.skipTest("Pooling with 3D tensors is not supported in ROCm")
 
         def forward(a):
-            r = max_pooling3d(a, pool_size=pool_size,
-                              strides=strides, padding='SAME')
+            r = max_pooling3d(a, pool_size=pool_size, strides=strides, padding="SAME")
             return r
 
         input_sizes = [1, 3, 2, 4, 1]
@@ -1481,18 +1469,18 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
         da = backprop.gradients_function(forward)(aa)
 
         if not context.executing_eagerly():
-            tf_aa = constant_op.constant(
-                x, shape=input_sizes, dtype=dtypes.float32)
+            tf_aa = constant_op.constant(x, shape=input_sizes, dtype=dtypes.float32)
             tf_max = max_pooling3d(
-                tf_aa, pool_size=pool_size, strides=strides, padding='SAME')
+                tf_aa, pool_size=pool_size, strides=strides, padding="SAME"
+            )
             tf_da = gradients.gradients(tf_max, [tf_aa])
             self.assertAllEqual(da[0], tf_da[0].eval())
 
     @test_util.run_in_graph_and_eager_modes
     def testWatchBadThing(self):
         g = backprop.GradientTape()
-        with self.assertRaisesRegexp(ValueError, 'ndarray'):
-            g.watch(np.array(1.))
+        with self.assertRaisesRegexp(ValueError, "ndarray"):
+            g.watch(np.array(1.0))
 
     def testWatchedVariablesAfterNonPersistentGradientCall(self):
         with backprop.GradientTape(persistent=False) as tape:
@@ -1525,7 +1513,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
     def testNameScope(self):
         def fn(x):
-            with ops.name_scope('my_scope'):
+            with ops.name_scope("my_scope"):
                 a = math_ops.cos(x)
                 b = math_ops.cos(x)
                 return math_ops.add(a, b)
@@ -1535,31 +1523,34 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
             return backprop.gradients_function(fn)(x)
 
         grad_ops = grad_fn.get_concrete_function(
-            constant_op.constant(1.0)).graph.get_operations()
+            constant_op.constant(1.0)
+        ).graph.get_operations()
         num_sin_ops_found = 0
         for op in grad_ops:
-            if op.type == 'Sin':
+            if op.type == "Sin":
                 num_sin_ops_found += 1
-                self.assertIn('gradient_tape/my_scope/', op.name)
+                self.assertIn("gradient_tape/my_scope/", op.name)
         self.assertEqual(num_sin_ops_found, 2)
 
     @test_util.assert_no_new_pyobjects_executing_eagerly
     def testRecomputeGradWithNestedFunctionAndWhileLoop(self):
-
         @custom_gradient.recompute_grad
         @def_function.function
         def outer(x):
-
             @def_function.function
             def middle(y):
-
                 @def_function.function
                 def inner(z):
                     return z + 1
 
                 i = constant_op.constant(0.0)
-                def c(y, i): return i < 10.
-                def b(y, i): return (inner(y), i + 1.0)
+
+                def c(y, i):
+                    return i < 10.0
+
+                def b(y, i):
+                    return (inner(y), i + 1.0)
+
                 y, i = control_flow_ops.while_loop(c, b, [y, i])
 
                 return y
@@ -1568,7 +1559,7 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
         with MemoryChecker() as memory_checker:
             for _ in range(5):
-                x = variables.Variable(1.0, name='x')
+                x = variables.Variable(1.0, name="x")
                 with backprop.GradientTape():
                     y = outer(x)
                     self.assertAllEqual(y, 11.0)
@@ -1578,35 +1569,32 @@ class BackpropTest(test.TestCase, parameterized.TestCase):
 
 
 class JacobianTest(test.TestCase):
-
     def _jacobian(self, experimental_use_pfor):
         persistent = context.executing_eagerly and not experimental_use_pfor
         with backprop.GradientTape(persistent=persistent) as g:
-            x = constant_op.constant([1., 2.])
-            y = constant_op.constant([3., 4.])
+            x = constant_op.constant([1.0, 2.0])
+            y = constant_op.constant([3.0, 4.0])
             g.watch(x)
             g.watch(y)
             z = x * x * y
-        jacobian = g.jacobian(z, [x, y],
-                              experimental_use_pfor=experimental_use_pfor)
+        jacobian = g.jacobian(z, [x, y], experimental_use_pfor=experimental_use_pfor)
         answer = [array_ops.diag(2 * x * y), array_ops.diag(x * x)]
         return jacobian, answer
 
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testPfor(self):
         jacobian, answer = self._jacobian(experimental_use_pfor=True)
         for j, a in zip(jacobian, answer):
             self.assertAllEqual(a, j)
 
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testWhileLoop(self):
         jacobian, answer = self._jacobian(experimental_use_pfor=False)
         for j, a in zip(jacobian, answer):
             self.assertAllEqual(a, j)
 
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testPforDefun(self):
-
         @function.defun
         def _f():
             return self._jacobian(experimental_use_pfor=True)
@@ -1615,9 +1603,8 @@ class JacobianTest(test.TestCase):
         for j, a in zip(jacobian, answer):
             self.assertAllEqual(a, j)
 
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testWhileLoopDefun(self):
-
         @function.defun
         def _f():
             return self._jacobian(experimental_use_pfor=False)
@@ -1626,7 +1613,7 @@ class JacobianTest(test.TestCase):
         for j, a in zip(jacobian, answer):
             self.assertAllEqual(a, j)
 
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def testPersistentTape(self):
         if not context.executing_eagerly():
             return
@@ -1634,23 +1621,25 @@ class JacobianTest(test.TestCase):
             x = constant_op.constant([1.0, 2.0])
             g.watch(x)
             y = x * x
-        with self.assertRaisesRegexp(RuntimeError, 'persistent'):
+        with self.assertRaisesRegexp(RuntimeError, "persistent"):
             g.jacobian(y, x, experimental_use_pfor=False)
 
-    @test_util.run_v1_only('b/120545219')
+    @test_util.run_v1_only("b/120545219")
     def test_parallel_iterations(self):
         with backprop.GradientTape(persistent=True) as g:
-            x = constant_op.constant([[1., 2], [3, 4]])
+            x = constant_op.constant([[1.0, 2], [3, 4]])
             g.watch(x)
             y = math_ops.matmul(x, x)
-        self.assertAllClose(g.jacobian(y, x, parallel_iterations=2),
-                            g.jacobian(y, x, parallel_iterations=3))
+        self.assertAllClose(
+            g.jacobian(y, x, parallel_iterations=2),
+            g.jacobian(y, x, parallel_iterations=3),
+        )
 
     @test_util.run_in_graph_and_eager_modes
     def test_nested_jacobian(self):
         if context.executing_eagerly():
             # TODO(agarwal): b/128842926
-            self.skipTest('Conversion of function calls not implemented yet.')
+            self.skipTest("Conversion of function calls not implemented yet.")
         x = array_ops.ones((10, 2))
         with backprop.GradientTape(persistent=False) as g:
             g.watch(x)
@@ -1659,7 +1648,7 @@ class JacobianTest(test.TestCase):
                 y = math_ops.reduce_sum(math_ops.square(x))
             dy_x = gg.jacobian(y, x)
         dy_xx = g.batch_jacobian(dy_x, x)
-        dy_xx_answer = [[[2., 0], [0, 2.]]] * 10
+        dy_xx_answer = [[[2.0, 0], [0, 2.0]]] * 10
         self.assertAllClose(dy_xx_answer, self.evaluate(dy_xx))
 
     @test_util.run_in_graph_and_eager_modes
@@ -1670,37 +1659,36 @@ class JacobianTest(test.TestCase):
             output = nn.embedding_lookup(inp, [0, 2])
         self.assertAllClose(
             g.jacobian(output, inp, experimental_use_pfor=True),
-            g.jacobian(output, inp, experimental_use_pfor=False))
+            g.jacobian(output, inp, experimental_use_pfor=False),
+        )
 
 
 @test_util.run_all_in_graph_and_eager_modes
 class BatchJacobianTest(test.TestCase, parameterized.TestCase):
-
     def _batch_jacobian(self, experimental_use_pfor):
         persistent = context.executing_eagerly and not experimental_use_pfor
         with backprop.GradientTape(persistent=persistent) as g:
-            x = constant_op.constant([[1., 2.], [3., 4.]])
-            y = constant_op.constant([[3., 4.], [5., 6.]])
+            x = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
+            y = constant_op.constant([[3.0, 4.0], [5.0, 6.0]])
             g.watch(x)
             z = x * x * y
         batch_jacobian = g.batch_jacobian(
-            z, x, experimental_use_pfor=experimental_use_pfor)
-        answer = array_ops.stack([array_ops.diag(2 * x[0] * y[0]),
-                                  array_ops.diag(2 * x[1] * y[1])])
+            z, x, experimental_use_pfor=experimental_use_pfor
+        )
+        answer = array_ops.stack(
+            [array_ops.diag(2 * x[0] * y[0]), array_ops.diag(2 * x[1] * y[1])]
+        )
         return batch_jacobian, answer
 
     def testPfor(self):
-        batch_jacobian, answer = self._batch_jacobian(
-            experimental_use_pfor=True)
+        batch_jacobian, answer = self._batch_jacobian(experimental_use_pfor=True)
         self.assertAllEqual(answer, batch_jacobian)
 
     def testWhileLoop(self):
-        batch_jacobian, answer = self._batch_jacobian(
-            experimental_use_pfor=False)
+        batch_jacobian, answer = self._batch_jacobian(experimental_use_pfor=False)
         self.assertAllEqual(answer, batch_jacobian)
 
     def testPforDefun(self):
-
         @function.defun
         def _f():
             return self._batch_jacobian(experimental_use_pfor=True)
@@ -1709,7 +1697,6 @@ class BatchJacobianTest(test.TestCase, parameterized.TestCase):
         self.assertAllEqual(answer, batch_jacobian)
 
     def testWhileLoopDefun(self):
-
         @function.defun
         def _f():
             return self._batch_jacobian(experimental_use_pfor=False)
@@ -1724,101 +1711,105 @@ class BatchJacobianTest(test.TestCase, parameterized.TestCase):
             x = constant_op.constant([[1.0, 2.0]])
             g.watch(x)
             y = x * x
-        with self.assertRaisesRegexp(RuntimeError, 'persistent'):
+        with self.assertRaisesRegexp(RuntimeError, "persistent"):
             g.batch_jacobian(y, x, experimental_use_pfor=False)
 
     def testBadShape(self):
         x = random_ops.random_uniform([2, 3])
         with backprop.GradientTape() as g:
             y = array_ops.concat([x, x], axis=0)
-        with self.assertRaisesRegexp(ValueError, 'Need first dimension'):
+        with self.assertRaisesRegexp(ValueError, "Need first dimension"):
             g.batch_jacobian(y, x)
 
     def testBadInputRank(self):
         x = random_ops.random_uniform([2])
         with backprop.GradientTape() as g:
             y = random_ops.random_uniform([2, 2])
-        with self.assertRaisesRegexp(ValueError, 'must have rank at least 2'):
+        with self.assertRaisesRegexp(ValueError, "must have rank at least 2"):
             g.batch_jacobian(y, x)
 
     def testBadOutputRank(self):
         x = random_ops.random_uniform([2, 2])
         with backprop.GradientTape() as g:
             y = random_ops.random_uniform([2])
-        with self.assertRaisesRegexp(ValueError, 'must have rank at least 2'):
+        with self.assertRaisesRegexp(ValueError, "must have rank at least 2"):
             g.batch_jacobian(y, x)
 
     def test_parallel_iterations(self):
         with backprop.GradientTape(persistent=True) as g:
-            x = constant_op.constant([[1., 2], [3, 4]])
+            x = constant_op.constant([[1.0, 2], [3, 4]])
             g.watch(x)
-            w = constant_op.constant([[1., 2, 3, 4], [5, 6, 7, 8]])
+            w = constant_op.constant([[1.0, 2, 3, 4], [5, 6, 7, 8]])
             y = math_ops.matmul(x, w)
-        self.assertAllClose(g.batch_jacobian(y, x, parallel_iterations=2),
-                            g.batch_jacobian(y, x, parallel_iterations=3))
+        self.assertAllClose(
+            g.batch_jacobian(y, x, parallel_iterations=2),
+            g.batch_jacobian(y, x, parallel_iterations=3),
+        )
 
     @parameterized.parameters(
-        (True, True),
-        (True, False),
-        (False, True),
-        (False, False))
+        (True, True), (True, False), (False, True), (False, False)
+    )
     def test_degenerate_shape(self, use_function, use_pfor):
-
         def f(x):
             with backprop.GradientTape(persistent=True) as tape:
                 tape.watch(x)
-                y = x**2
+                y = x ** 2
             return tape.batch_jacobian(y, x, experimental_use_pfor=use_pfor)
 
         if use_function:
             f = def_function.function(f)
-        self.assertAllEqual([1, 0, 0], array_ops.shape(
-            f(array_ops.zeros([1, 0]))))
+        self.assertAllEqual([1, 0, 0], array_ops.shape(f(array_ops.zeros([1, 0]))))
 
 
 class AggregateIndexedSlicesGradientsTest(test_util.TensorFlowTestCase):
-
     def _assert_indexed_slices_equal(self, left, right):
         self.assertAllEqual(
             self.evaluate(ops.convert_to_tensor(left)),
-            self.evaluate(ops.convert_to_tensor(right)))
+            self.evaluate(ops.convert_to_tensor(right)),
+        )
 
     def testNoGradients(self):
         self.assertIsNone(backprop.aggregate_indexed_slices_gradients([]))
 
     def testOneGradient(self):
         t = math_ops._as_indexed_slices(
-            constant_op.constant([[1., 2.], [0, 0], [3., 4.]]))
+            constant_op.constant([[1.0, 2.0], [0, 0], [3.0, 4.0]])
+        )
         result = backprop.aggregate_indexed_slices_gradients([t])
         self._assert_indexed_slices_equal(t, result)
 
     def testMultipleGradients(self):
         t0 = math_ops._as_indexed_slices(
-            constant_op.constant([[1., 2.], [0, 0], [3., 4.]]))
+            constant_op.constant([[1.0, 2.0], [0, 0], [3.0, 4.0]])
+        )
         t1 = math_ops._as_indexed_slices(
-            constant_op.constant([[0., 0.], [5, 6], [7., 8.]]))
-        total = constant_op.constant([[1., 2.], [5, 6], [10., 12.]])
+            constant_op.constant([[0.0, 0.0], [5, 6], [7.0, 8.0]])
+        )
+        total = constant_op.constant([[1.0, 2.0], [5, 6], [10.0, 12.0]])
         result = backprop.aggregate_indexed_slices_gradients([t0, t1])
         self._assert_indexed_slices_equal(total, result)
 
     def testMultipleGradientsWithNones(self):
         t0 = math_ops._as_indexed_slices(
-            constant_op.constant([[1., 2.], [0, 0], [3., 4.]]))
+            constant_op.constant([[1.0, 2.0], [0, 0], [3.0, 4.0]])
+        )
         t1 = math_ops._as_indexed_slices(
-            constant_op.constant([[0., 0.], [5, 6], [7., 8.]]))
+            constant_op.constant([[0.0, 0.0], [5, 6], [7.0, 8.0]])
+        )
         t3 = None
-        total = constant_op.constant([[1., 2.], [5, 6], [10., 12.]])
+        total = constant_op.constant([[1.0, 2.0], [5, 6], [10.0, 12.0]])
         result = backprop.aggregate_indexed_slices_gradients([t0, t1, t3])
         self._assert_indexed_slices_equal(total, result)
 
     def testMixedTensorAndIndexedSlices(self):
         t0 = math_ops._as_indexed_slices(
-            constant_op.constant([[1., 2.], [0, 0], [3., 4.]]))
-        t1 = constant_op.constant([[0., 0.], [5, 6], [7., 8.]])
-        total = constant_op.constant([[1., 2.], [5, 6], [10., 12.]])
+            constant_op.constant([[1.0, 2.0], [0, 0], [3.0, 4.0]])
+        )
+        t1 = constant_op.constant([[0.0, 0.0], [5, 6], [7.0, 8.0]])
+        total = constant_op.constant([[1.0, 2.0], [5, 6], [10.0, 12.0]])
         result = backprop.aggregate_indexed_slices_gradients([t0, t1])
         self._assert_indexed_slices_equal(total, result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
