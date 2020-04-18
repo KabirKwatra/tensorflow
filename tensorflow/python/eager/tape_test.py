@@ -40,10 +40,10 @@ def two_outputs(a, b):
 
     def grad(dmm, dr):
         return [
-            math_ops.matmul(dmm, b, transpose_b=True)
-            + math_ops.matmul(array_ops.ones_like(b * dr), b, transpose_b=True),
-            math_ops.matmul(a, dmm, transpose_b=True)
-            + math_ops.matmul(a, array_ops.ones_like(a) * dr, transpose_b=True),
+            math_ops.matmul(dmm, b, transpose_b=True) +
+            math_ops.matmul(array_ops.ones_like(b * dr), b, transpose_b=True),
+            math_ops.matmul(a, dmm, transpose_b=True) +
+            math_ops.matmul(a, array_ops.ones_like(a) * dr, transpose_b=True),
         ]
 
     return [mm, r], grad
@@ -88,10 +88,11 @@ class TapeTest(test.TestCase):
 
         aa = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
         bb = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
-        (da,) = backprop.gradients_function(forward, ["a"])(aa, bb)
+        (da, ) = backprop.gradients_function(forward, ["a"])(aa, bb)
         self.assertAllEqual(
             da,
-            math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb)).numpy(),
+            math_ops.matmul(array_ops.ones_like(aa),
+                            array_ops.transpose(bb)).numpy(),
         )
 
     def testBasicFunctionalPositionalArg(self):
@@ -101,10 +102,11 @@ class TapeTest(test.TestCase):
 
         aa = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
         bb = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
-        (da,) = backprop.gradients_function(forward, [0])(aa, bb)
+        (da, ) = backprop.gradients_function(forward, [0])(aa, bb)
         self.assertAllEqual(
             da,
-            math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb)).numpy(),
+            math_ops.matmul(array_ops.ones_like(aa),
+                            array_ops.transpose(bb)).numpy(),
         )
 
     def testBasicFunctionalWithValue(self):
@@ -114,10 +116,10 @@ class TapeTest(test.TestCase):
 
         aa = constant_op.constant([[1.0, 0.0], [0.0, 1.0]])
         bb = constant_op.constant([[1.0, 2.0], [3.0, 4.0]])
-        val, (da,) = backprop.val_and_grad_function(forward, ["a"])(aa, bb)
+        val, (da, ) = backprop.val_and_grad_function(forward, ["a"])(aa, bb)
         self.assertAllEqual(
-            da, math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb))
-        )
+            da,
+            math_ops.matmul(array_ops.ones_like(aa), array_ops.transpose(bb)))
         self.assertAllEqual(val, forward(aa, bb))
 
     def testTwoOutputs(self):
@@ -140,13 +142,12 @@ class TapeTest(test.TestCase):
 
     def testGcTwoOutputs(self):
         def fn(x, y):
-            return nn_ops.sparse_softmax_cross_entropy_with_logits(logits=x, labels=y)[
-                0
-            ]
+            return nn_ops.sparse_softmax_cross_entropy_with_logits(logits=x,
+                                                                   labels=y)[0]
 
         labels = constant_op.constant([0])
         logits = constant_op.constant([[0.0]])
-        (grad,) = backprop.gradients_function(fn, [0])(logits, labels)
+        (grad, ) = backprop.gradients_function(fn, [0])(logits, labels)
         self.assertAllEqual(grad, [[0.0]])
 
     def testTfTensor(self):
@@ -154,7 +155,7 @@ class TapeTest(test.TestCase):
             return x
 
         t = constant_op.constant(1.0)
-        (g,) = backprop.gradients_function(fn, [0])(t)
+        (g, ) = backprop.gradients_function(fn, [0])(t)
         self.assertAllEqual(g, 1.0)
 
 
@@ -175,7 +176,7 @@ class VariableWatcherTest(test.TestCase):
             var1.assign_add(1.0)
             var2.assign_add(2.0)
 
-        self.assertAllEqual(variable_watcher.watched_variables(), (var1,))
+        self.assertAllEqual(variable_watcher.watched_variables(), (var1, ))
 
     def testMultipleScopes(self):
         var1 = variables.Variable(0.0)
@@ -187,8 +188,9 @@ class VariableWatcherTest(test.TestCase):
 
         # variable_watcher1 should see both vars and variable_watcher2 only sees
         # var2
-        self.assertAllEqual(variable_watcher1.watched_variables(), (var1, var2))
-        self.assertAllEqual(variable_watcher2.watched_variables(), (var2,))
+        self.assertAllEqual(variable_watcher1.watched_variables(),
+                            (var1, var2))
+        self.assertAllEqual(variable_watcher2.watched_variables(), (var2, ))
 
     def testCreateVariables(self):
         with tape.VariableWatcher() as variable_watcher:

@@ -34,7 +34,6 @@ from tensorflow.python.util import tf_decorator
 from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import tf_export
 
-
 VAR_OP_TYPES = [
     "VariableV2",
     "VarHandleOp",
@@ -60,12 +59,10 @@ def copy_handle_data(source_t, target_t):
         if isinstance(source_t, ops.EagerTensor):
             handle_data = source_t._handle_data  # pylint: disable=protected-access
         else:
-            handle_data = resource_variable_ops.get_resource_handle_data(source_t)
-        if (
-            handle_data is not None
-            and handle_data.is_set
-            and handle_data.shape_and_type
-        ):
+            handle_data = resource_variable_ops.get_resource_handle_data(
+                source_t)
+        if (handle_data is not None and handle_data.is_set
+                and handle_data.shape_and_type):
             # pylint: disable=protected-access
             pywrap_tf_session.SetHandleShapeAndType(
                 target_t.graph._c_graph,
@@ -74,15 +71,12 @@ def copy_handle_data(source_t, target_t):
             )
             # pylint: enable=protected-access
             # Ensure that shapes and dtypes are propagated.
-            shapes, types = zip(
-                *[(pair.shape, pair.dtype) for pair in handle_data.shape_and_type]
-            )
+            shapes, types = zip(*[(pair.shape, pair.dtype)
+                                  for pair in handle_data.shape_and_type])
             ranks = [len(s.dim) if not s.unknown_rank else -1 for s in shapes]
             shapes = [
                 [d.size for d in s.dim]  # pylint: disable=g-complex-comprehension
-                if not s.unknown_rank
-                else None
-                for s in shapes
+                if not s.unknown_rank else None for s in shapes
             ]
             pywrap_tf_session.TF_GraphSetOutputHandleShapesAndTypes_wrapper(
                 target_t._op._graph._c_graph,  # pylint: disable=protected-access
@@ -222,9 +216,7 @@ def custom_gradient(f=None):
         else:
             return _graph_mode_decorator(wrapped, args, kwargs)
 
-    return tf_decorator.make_decorator(
-        f, decorated(f)
-    )  # pylint: disable=no-value-for-parameter
+    return tf_decorator.make_decorator(f, decorated(f))  # pylint: disable=no-value-for-parameter
 
 
 class Bind(object):
@@ -272,23 +264,22 @@ class Bind(object):
 def get_variable_by_name(var_name):
     """Given a variable name, retrieves a handle on the tensorflow Variable."""
 
-    candidate_vars = ops.get_collection(
-        ops.GraphKeys.GLOBAL_VARIABLES, scope="{}:0".format(var_name)
-    )
+    candidate_vars = ops.get_collection(ops.GraphKeys.GLOBAL_VARIABLES,
+                                        scope="{}:0".format(var_name))
     if len(candidate_vars) >= 1:
         # Filter out non-trainable variables.
         candidate_vars = [v for v in candidate_vars if v.trainable]
     else:
-        raise ValueError("Unsuccessful at finding variable {}.".format(var_name))
+        raise ValueError(
+            "Unsuccessful at finding variable {}.".format(var_name))
 
     if len(candidate_vars) == 1:
         return candidate_vars[0]
     elif len(candidate_vars) > 1:
-        raise ValueError(
-            "Unsuccessful at finding trainable variable {}. "
-            "Number of candidates: {}. "
-            "Candidates: {}".format(var_name, len(candidate_vars), candidate_vars)
-        )
+        raise ValueError("Unsuccessful at finding trainable variable {}. "
+                         "Number of candidates: {}. "
+                         "Candidates: {}".format(var_name, len(candidate_vars),
+                                                 candidate_vars))
     else:
         # The variable is not trainable.
         return None
@@ -318,30 +309,23 @@ def _graph_mode_decorator(f, args, kwargs):
     if kwargs:
         raise ValueError(
             "The custom_gradient decorator currently supports keywords "
-            "arguments only when eager execution is enabled."
-        )
+            "arguments only when eager execution is enabled.")
     name = "CustomGradient-%s" % ops.uid()
     args = [ops.convert_to_tensor(x) for x in args]
 
     # Checking global and local variables attempts to ensure that no non-resource
     # Variables are added to the graph.
     current_var_scope = variable_scope.get_variable_scope()
-    before_vars = set(
-        [
-            v.ref()
-            for v in current_var_scope.global_variables()
-            + current_var_scope.local_variables()
-        ]
-    )
+    before_vars = set([
+        v.ref() for v in current_var_scope.global_variables() +
+        current_var_scope.local_variables()
+    ])
     with tape_lib.VariableWatcher() as variable_watcher:
         result, grad_fn = f(*args)
-    after_vars = set(
-        [
-            v.ref()
-            for v in current_var_scope.global_variables()
-            + current_var_scope.local_variables()
-        ]
-    )
+    after_vars = set([
+        v.ref() for v in current_var_scope.global_variables() +
+        current_var_scope.local_variables()
+    ])
     new_vars = after_vars - before_vars
     new_vars_list = [v.deref() for v in new_vars]
     for v in new_vars_list:
@@ -349,42 +333,37 @@ def _graph_mode_decorator(f, args, kwargs):
             raise TypeError(
                 "All variables used by a function wrapped with @custom_gradient must "
                 "be `ResourceVariable`s. Ensure that no `variable_scope` is created "
-                "with `use_resource=False`."
-            )
+                "with `use_resource=False`.")
     # The variables that grad_fn needs to return gradients for are the set of
     # variables used that are *not* part of the inputs.
     inputs = args
-    variables_in_tape = frozenset(
-        [v.ref() for v in variable_watcher.watched_variables()]
-    ) - frozenset(v.ref() for v in inputs)
-    variables_in_subgraph = frozenset(
-        [v.ref() for v in get_dependent_variables(input_ops=inputs, output_ops=result)]
-    )
+    variables_in_tape = frozenset([
+        v.ref() for v in variable_watcher.watched_variables()
+    ]) - frozenset(v.ref() for v in inputs)
+    variables_in_subgraph = frozenset([
+        v.ref()
+        for v in get_dependent_variables(input_ops=inputs, output_ops=result)
+    ])
     variables = list(
-        [v.deref() for v in variables_in_subgraph.union(variables_in_tape)]
-    )
+        [v.deref() for v in variables_in_subgraph.union(variables_in_tape)])
 
     grad_argspec = tf_inspect.getfullargspec(grad_fn)
     variables_in_signature = "variables" in grad_argspec.args or grad_argspec.varkw
     if variables and not variables_in_signature:
-        raise TypeError(
-            "If using @custom_gradient with a function that "
-            "uses variables, then grad_fn must accept a keyword "
-            "argument 'variables'."
-        )
+        raise TypeError("If using @custom_gradient with a function that "
+                        "uses variables, then grad_fn must accept a keyword "
+                        "argument 'variables'.")
     if variables_in_signature and not variables:
         # User seems to intend to use variables but none were captured.
         if not variable_scope.get_variable_scope().use_resource:
             raise TypeError(
                 "If using @custom_gradient with a function that "
                 "uses variables, the enclosing variable scope must "
-                "have use_resource=True."
-            )
+                "have use_resource=True.")
         else:
             logging.warn(
                 "@custom_gradient grad_fn has 'variables' in signature, but "
-                "no ResourceVariables were used on the forward pass."
-            )
+                "no ResourceVariables were used on the forward pass.")
     flat_result = nest.flatten(result)
     flat_result_len = len(flat_result)
 
@@ -394,12 +373,11 @@ def _graph_mode_decorator(f, args, kwargs):
         """Custom grad fn wrapper."""
         result_grads = result_grads[:flat_result_len]
         if variables:
-            input_grads, variable_grads = grad_fn(*result_grads, variables=variables)
+            input_grads, variable_grads = grad_fn(*result_grads,
+                                                  variables=variables)
             if len(variable_grads) != len(variables):
-                raise ValueError(
-                    "Must return gradient for each variable from "
-                    "@custom_gradient grad_fn."
-                )
+                raise ValueError("Must return gradient for each variable from "
+                                 "@custom_gradient grad_fn.")
         else:
             input_grads = grad_fn(*result_grads)
             variable_grads = []
@@ -424,15 +402,13 @@ def _graph_mode_decorator(f, args, kwargs):
     # Propagate handle data for happier shape inference for resource variables.
     for i, t in enumerate(original_tensors):
         if t.dtype == dtypes.resource and hasattr(t, "_handle_data"):
-            all_tensors[
-                i
-            ]._handle_data = t._handle_data  # pylint: disable=protected-access
-    tape_lib.record_operation(f.__name__, all_tensors, original_tensors, tape_grad_fn)
+            all_tensors[i]._handle_data = t._handle_data  # pylint: disable=protected-access
+    tape_lib.record_operation(f.__name__, all_tensors, original_tensors,
+                              tape_grad_fn)
     for ot, t in zip(original_tensors, all_tensors):
         copy_handle_data(ot, t)
-    return nest.pack_sequence_as(
-        structure=result, flat_sequence=all_tensors[:flat_result_len]
-    )
+    return nest.pack_sequence_as(structure=result,
+                                 flat_sequence=all_tensors[:flat_result_len])
 
 
 def _eager_mode_decorator(f, args, kwargs):
@@ -448,17 +424,18 @@ def _eager_mode_decorator(f, args, kwargs):
         if all(v.deref() is not i for i in all_inputs)
     ]
     grad_argspec = tf_inspect.getfullargspec(grad_fn)
-    if variables and ("variables" not in grad_argspec.args) and not grad_argspec.varkw:
-        raise TypeError(
-            "If using @custom_gradient with a function that "
-            "uses variables, then grad_fn must accept a keyword "
-            "argument 'variables'."
-        )
+    if variables and (
+            "variables" not in grad_argspec.args) and not grad_argspec.varkw:
+        raise TypeError("If using @custom_gradient with a function that "
+                        "uses variables, then grad_fn must accept a keyword "
+                        "argument 'variables'.")
     flat_result = nest.flatten(result)
     # TODO(apassos) consider removing the identity below.
     flat_result = [gen_array_ops.identity(x) for x in flat_result]
 
-    input_tensors = [ops.convert_to_tensor(x) for x in list(args) + list(variables)]
+    input_tensors = [
+        ops.convert_to_tensor(x) for x in list(args) + list(variables)
+    ]
 
     recorded_inputs = input_tensors
     arg_count = len(args)
@@ -466,12 +443,11 @@ def _eager_mode_decorator(f, args, kwargs):
     def actual_grad_fn(*result_grads):
         """Custom grad fn wrapper."""
         if variables:
-            input_grads, variable_grads = grad_fn(*result_grads, variables=variables)
+            input_grads, variable_grads = grad_fn(*result_grads,
+                                                  variables=variables)
             if len(variable_grads) != len(variables):
-                raise ValueError(
-                    "Must return gradient for each variable from "
-                    "@custom_gradient grad_fn."
-                )
+                raise ValueError("Must return gradient for each variable from "
+                                 "@custom_gradient grad_fn.")
         else:
             input_grads = grad_fn(*result_grads)
             variable_grads = []
@@ -486,7 +462,8 @@ def _eager_mode_decorator(f, args, kwargs):
             )
         return nest.flatten(input_grads) + variable_grads
 
-    tape_lib.record_operation(f.__name__, flat_result, recorded_inputs, actual_grad_fn)
+    tape_lib.record_operation(f.__name__, flat_result, recorded_inputs,
+                              actual_grad_fn)
     flat_result = list(flat_result)
     return nest.pack_sequence_as(result, flat_result)
 
@@ -535,10 +512,10 @@ def recompute_grad(f):
             kw_vars = []
             if variables is not None:
                 kw_vars = list(variables)
-            grads = t.gradient(
-                result, list(id_args) + kw_vars, output_gradients=dresult
-            )
-            return grads[: len(id_args)], grads[len(id_args) :]
+            grads = t.gradient(result,
+                               list(id_args) + kw_vars,
+                               output_gradients=dresult)
+            return grads[:len(id_args)], grads[len(id_args):]
 
         return result, grad
 

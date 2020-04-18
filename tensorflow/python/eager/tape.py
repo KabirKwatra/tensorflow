@@ -28,7 +28,8 @@ from tensorflow.python.util.lazy_loader import LazyLoader
 distribution_strategy_context = LazyLoader(
     "distribution_strategy_context",
     globals(),
-    "tensorflow.python.distribute." "distribution_strategy_context",
+    "tensorflow.python.distribute."
+    "distribution_strategy_context",
 )
 
 
@@ -84,20 +85,20 @@ class VariableWatcher(object):
 
     def watched_variables(self):
         """Returns a tuple of variables accessed under this scope."""
-        return pywrap_tfe.TFE_Py_VariableWatcherWatchedVariables(self._variable_watcher)
+        return pywrap_tfe.TFE_Py_VariableWatcherWatchedVariables(
+            self._variable_watcher)
 
 
 def watch_variable(tape, variable):
     """Marks this variable to be watched by the given tape."""
-    strategy, context = distribution_strategy_context.get_strategy_and_replica_context()
+    strategy, context = distribution_strategy_context.get_strategy_and_replica_context(
+    )
     if context:
         variables = [strategy.extended.value_container(variable)]
     else:
         variables = strategy.experimental_local_results(variable)
     for var in variables:
-        pywrap_tfe.TFE_Py_TapeWatchVariable(
-            tape._tape, var
-        )  # pylint: disable=protected-access
+        pywrap_tfe.TFE_Py_TapeWatchVariable(tape._tape, var)  # pylint: disable=protected-access
         pywrap_tfe.TFE_Py_VariableWatcherVariableAccessed(var)
 
 
@@ -107,7 +108,8 @@ def variable_accessed(variable):
     Args:
       variable: variable to be watched.
     """
-    strategy, context = distribution_strategy_context.get_strategy_and_replica_context()
+    strategy, context = distribution_strategy_context.get_strategy_and_replica_context(
+    )
     if context:
         variables = [strategy.extended.value_container(variable)]
     else:
@@ -125,13 +127,13 @@ def variables_accessed(variables):
     Args:
       variables: iterable of variables to mark as accessed.
     """
-    strategy, context = distribution_strategy_context.get_strategy_and_replica_context()
+    strategy, context = distribution_strategy_context.get_strategy_and_replica_context(
+    )
     accessed = []
     if context:
         accessed = [
             strategy.extended.value_container(variable)
-            for variable in variables
-            if variable.trainable
+            for variable in variables if variable.trainable
         ]
     else:
         for variable in variables:
@@ -175,30 +177,31 @@ def should_record_backprop(tensors):
     return pywrap_tfe.TFE_Py_TapeSetShouldRecordBackprop(tensors)
 
 
-def record_operation(
-    op_type, output_tensors, input_tensors, backward_function, forward_function=None
-):
+def record_operation(op_type,
+                     output_tensors,
+                     input_tensors,
+                     backward_function,
+                     forward_function=None):
     """Records the operation on all tapes in the stack."""
-    pywrap_tfe.TFE_Py_TapeSetRecordOperation(
-        op_type, output_tensors, input_tensors, backward_function, forward_function
-    )
+    pywrap_tfe.TFE_Py_TapeSetRecordOperation(op_type, output_tensors,
+                                             input_tensors, backward_function,
+                                             forward_function)
 
 
-def record_operation_backprop_only(
-    op_type, output_tensors, input_tensors, backward_function
-):
+def record_operation_backprop_only(op_type, output_tensors, input_tensors,
+                                   backward_function):
     """Records the operation on all backward tapes in the stack."""
-    pywrap_tfe.TFE_Py_TapeSetRecordOperationBackprop(
-        op_type, output_tensors, input_tensors, backward_function
-    )
+    pywrap_tfe.TFE_Py_TapeSetRecordOperationBackprop(op_type, output_tensors,
+                                                     input_tensors,
+                                                     backward_function)
 
 
 def record_operation_forwardprop_only(
-    op_type,
-    output_tensors,
-    input_tensors,
-    backward_function,
-    forwardprop_output_indices,
+        op_type,
+        output_tensors,
+        input_tensors,
+        backward_function,
+        forwardprop_output_indices,
 ):
     """Records the operation on all forward accumulators in the stack.
 
