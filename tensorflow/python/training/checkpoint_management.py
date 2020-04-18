@@ -64,11 +64,13 @@ def _GetCheckpointFilename(save_dir, latest_filename):
 
 
 @tf_export(v1=["train.generate_checkpoint_state_proto"])
-def generate_checkpoint_state_proto(save_dir,
-                                    model_checkpoint_path,
-                                    all_model_checkpoint_paths=None,
-                                    all_model_checkpoint_timestamps=None,
-                                    last_preserved_timestamp=None):
+def generate_checkpoint_state_proto(
+    save_dir,
+    model_checkpoint_path,
+    all_model_checkpoint_paths=None,
+    all_model_checkpoint_timestamps=None,
+    last_preserved_timestamp=None,
+):
     """Generates a checkpoint state proto.
 
     Args:
@@ -96,26 +98,32 @@ def generate_checkpoint_state_proto(save_dir,
     if all_model_checkpoint_paths is None:
         all_model_checkpoint_paths = []
 
-    if (not all_model_checkpoint_paths or
-            all_model_checkpoint_paths[-1] != model_checkpoint_path):
-        logging.info("%s is not in all_model_checkpoint_paths. Manually adding it.",
-                     model_checkpoint_path)
+    if (
+        not all_model_checkpoint_paths
+        or all_model_checkpoint_paths[-1] != model_checkpoint_path
+    ):
+        logging.info(
+            "%s is not in all_model_checkpoint_paths. Manually adding it.",
+            model_checkpoint_path,
+        )
         all_model_checkpoint_paths.append(model_checkpoint_path)
 
-    if (all_model_checkpoint_timestamps
-        and (len(all_model_checkpoint_timestamps)
-             != len(all_model_checkpoint_paths))):
+    if all_model_checkpoint_timestamps and (
+        len(all_model_checkpoint_timestamps) != len(all_model_checkpoint_paths)
+    ):
         raise ValueError(
-            ("Checkpoint timestamps, if provided, must match checkpoint paths (got "
-             "paths %s and timestamps %s)")
-            % (all_model_checkpoint_paths, all_model_checkpoint_timestamps))
+            (
+                "Checkpoint timestamps, if provided, must match checkpoint paths (got "
+                "paths %s and timestamps %s)"
+            )
+            % (all_model_checkpoint_paths, all_model_checkpoint_timestamps)
+        )
 
     # Relative paths need to be rewritten to be relative to the "save_dir"
     # if model_checkpoint_path already contains "save_dir".
     if not os.path.isabs(save_dir):
         if not os.path.isabs(model_checkpoint_path):
-            model_checkpoint_path = os.path.relpath(
-                model_checkpoint_path, save_dir)
+            model_checkpoint_path = os.path.relpath(model_checkpoint_path, save_dir)
         for i, p in enumerate(all_model_checkpoint_paths):
             if not os.path.isabs(p):
                 all_model_checkpoint_paths[i] = os.path.relpath(p, save_dir)
@@ -124,22 +132,28 @@ def generate_checkpoint_state_proto(save_dir,
         model_checkpoint_path=model_checkpoint_path,
         all_model_checkpoint_paths=all_model_checkpoint_paths,
         all_model_checkpoint_timestamps=all_model_checkpoint_timestamps,
-        last_preserved_timestamp=last_preserved_timestamp)
+        last_preserved_timestamp=last_preserved_timestamp,
+    )
 
     return coord_checkpoint_proto
 
 
 @deprecation.deprecated(
     date=None,
-    instructions=("Use `tf.train.CheckpointManager` to manage checkpoints "
-                  "rather than manually editing the Checkpoint proto."))
+    instructions=(
+        "Use `tf.train.CheckpointManager` to manage checkpoints "
+        "rather than manually editing the Checkpoint proto."
+    ),
+)
 @tf_export(v1=["train.update_checkpoint_state"])
-def update_checkpoint_state(save_dir,
-                            model_checkpoint_path,
-                            all_model_checkpoint_paths=None,
-                            latest_filename=None,
-                            all_model_checkpoint_timestamps=None,
-                            last_preserved_timestamp=None):
+def update_checkpoint_state(
+    save_dir,
+    model_checkpoint_path,
+    all_model_checkpoint_paths=None,
+    latest_filename=None,
+    all_model_checkpoint_timestamps=None,
+    last_preserved_timestamp=None,
+):
     """Updates the content of the 'checkpoint' file.
 
     This updates the checkpoint file containing a CheckpointState
@@ -172,16 +186,19 @@ def update_checkpoint_state(save_dir,
         latest_filename=latest_filename,
         save_relative_paths=False,
         all_model_checkpoint_timestamps=all_model_checkpoint_timestamps,
-        last_preserved_timestamp=last_preserved_timestamp)
+        last_preserved_timestamp=last_preserved_timestamp,
+    )
 
 
-def update_checkpoint_state_internal(save_dir,
-                                     model_checkpoint_path,
-                                     all_model_checkpoint_paths=None,
-                                     latest_filename=None,
-                                     save_relative_paths=False,
-                                     all_model_checkpoint_timestamps=None,
-                                     last_preserved_timestamp=None):
+def update_checkpoint_state_internal(
+    save_dir,
+    model_checkpoint_path,
+    all_model_checkpoint_paths=None,
+    latest_filename=None,
+    save_relative_paths=False,
+    all_model_checkpoint_timestamps=None,
+    last_preserved_timestamp=None,
+):
     """Updates the content of the 'checkpoint' file.
 
     This updates the checkpoint file containing a CheckpointState
@@ -211,19 +228,16 @@ def update_checkpoint_state_internal(save_dir,
         containing CheckpointSate.
     """
     # Writes the "checkpoint" file for the coordinator for later restoration.
-    coord_checkpoint_filename = _GetCheckpointFilename(
-        save_dir, latest_filename)
+    coord_checkpoint_filename = _GetCheckpointFilename(save_dir, latest_filename)
     if save_relative_paths:
         if os.path.isabs(model_checkpoint_path):
-            rel_model_checkpoint_path = os.path.relpath(
-                model_checkpoint_path, save_dir)
+            rel_model_checkpoint_path = os.path.relpath(model_checkpoint_path, save_dir)
         else:
             rel_model_checkpoint_path = model_checkpoint_path
         rel_all_model_checkpoint_paths = []
         for p in all_model_checkpoint_paths:
             if os.path.isabs(p):
-                rel_all_model_checkpoint_paths.append(
-                    os.path.relpath(p, save_dir))
+                rel_all_model_checkpoint_paths.append(os.path.relpath(p, save_dir))
             else:
                 rel_all_model_checkpoint_paths.append(p)
         ckpt = generate_checkpoint_state_proto(
@@ -231,24 +245,29 @@ def update_checkpoint_state_internal(save_dir,
             rel_model_checkpoint_path,
             all_model_checkpoint_paths=rel_all_model_checkpoint_paths,
             all_model_checkpoint_timestamps=all_model_checkpoint_timestamps,
-            last_preserved_timestamp=last_preserved_timestamp)
+            last_preserved_timestamp=last_preserved_timestamp,
+        )
     else:
         ckpt = generate_checkpoint_state_proto(
             save_dir,
             model_checkpoint_path,
             all_model_checkpoint_paths=all_model_checkpoint_paths,
             all_model_checkpoint_timestamps=all_model_checkpoint_timestamps,
-            last_preserved_timestamp=last_preserved_timestamp)
+            last_preserved_timestamp=last_preserved_timestamp,
+        )
 
     if coord_checkpoint_filename == ckpt.model_checkpoint_path:
-        raise RuntimeError("Save path '%s' conflicts with path used for "
-                           "checkpoint state.  Please use a different save path." %
-                           model_checkpoint_path)
+        raise RuntimeError(
+            "Save path '%s' conflicts with path used for "
+            "checkpoint state.  Please use a different save path."
+            % model_checkpoint_path
+        )
 
     # Preventing potential read/write race condition by *atomically* writing to a
     # file.
-    file_io.atomic_write_string_to_file(coord_checkpoint_filename,
-                                        text_format.MessageToString(ckpt))
+    file_io.atomic_write_string_to_file(
+        coord_checkpoint_filename, text_format.MessageToString(ckpt)
+    )
 
 
 @tf_export("train.get_checkpoint_state")
@@ -271,29 +290,28 @@ def get_checkpoint_state(checkpoint_dir, latest_filename=None):
       ValueError: if the checkpoint read doesn't have model_checkpoint_path set.
     """
     ckpt = None
-    coord_checkpoint_filename = _GetCheckpointFilename(checkpoint_dir,
-                                                       latest_filename)
+    coord_checkpoint_filename = _GetCheckpointFilename(checkpoint_dir, latest_filename)
     f = None
     try:
         # Check that the file exists before opening it to avoid
         # many lines of errors from colossus in the logs.
         if file_io.file_exists(coord_checkpoint_filename):
-            file_content = file_io.read_file_to_string(
-                coord_checkpoint_filename)
+            file_content = file_io.read_file_to_string(coord_checkpoint_filename)
             ckpt = CheckpointState()
             text_format.Merge(file_content, ckpt)
             if not ckpt.model_checkpoint_path:
-                raise ValueError("Invalid checkpoint state loaded from "
-                                 + checkpoint_dir)
+                raise ValueError(
+                    "Invalid checkpoint state loaded from " + checkpoint_dir
+                )
             # For relative model_checkpoint_path and all_model_checkpoint_paths,
             # prepend checkpoint_dir.
             if not os.path.isabs(ckpt.model_checkpoint_path):
-                ckpt.model_checkpoint_path = os.path.join(checkpoint_dir,
-                                                          ckpt.model_checkpoint_path)
+                ckpt.model_checkpoint_path = os.path.join(
+                    checkpoint_dir, ckpt.model_checkpoint_path
+                )
             for i, p in enumerate(ckpt.all_model_checkpoint_paths):
                 if not os.path.isabs(p):
-                    ckpt.all_model_checkpoint_paths[i] = os.path.join(
-                        checkpoint_dir, p)
+                    ckpt.all_model_checkpoint_paths[i] = os.path.join(checkpoint_dir, p)
     except errors.OpError as e:
         # It's ok if the file cannot be read
         logging.warning("%s: %s", type(e).__name__, e)
@@ -355,16 +373,18 @@ def latest_checkpoint(checkpoint_dir, latest_filename=None):
     ckpt = get_checkpoint_state(checkpoint_dir, latest_filename)
     if ckpt and ckpt.model_checkpoint_path:
         # Look for either a V2 path or a V1 path, with priority for V2.
-        v2_path = _prefix_to_checkpoint_path(ckpt.model_checkpoint_path,
-                                             saver_pb2.SaverDef.V2)
-        v1_path = _prefix_to_checkpoint_path(ckpt.model_checkpoint_path,
-                                             saver_pb2.SaverDef.V1)
-        if file_io.get_matching_files(v2_path) or file_io.get_matching_files(
-                v1_path):
+        v2_path = _prefix_to_checkpoint_path(
+            ckpt.model_checkpoint_path, saver_pb2.SaverDef.V2
+        )
+        v1_path = _prefix_to_checkpoint_path(
+            ckpt.model_checkpoint_path, saver_pb2.SaverDef.V1
+        )
+        if file_io.get_matching_files(v2_path) or file_io.get_matching_files(v1_path):
             return ckpt.model_checkpoint_path
         else:
-            logging.error("Couldn't match files for checkpoint %s",
-                          ckpt.model_checkpoint_path)
+            logging.error(
+                "Couldn't match files for checkpoint %s", ckpt.model_checkpoint_path
+            )
     return None
 
 
@@ -382,8 +402,7 @@ def checkpoint_exists_internal(checkpoint_prefix):
     Returns:
       A bool, true if a checkpoint referred to by `checkpoint_prefix` exists.
     """
-    pathname = _prefix_to_checkpoint_path(checkpoint_prefix,
-                                          saver_pb2.SaverDef.V2)
+    pathname = _prefix_to_checkpoint_path(checkpoint_prefix, saver_pb2.SaverDef.V2)
     if file_io.get_matching_files(pathname):
         return True
     elif file_io.get_matching_files(checkpoint_prefix):
@@ -394,7 +413,8 @@ def checkpoint_exists_internal(checkpoint_prefix):
 
 @deprecation.deprecated(
     date=None,
-    instructions="Use standard file APIs to check for files with this prefix.")
+    instructions="Use standard file APIs to check for files with this prefix.",
+)
 @tf_export(v1=["train.checkpoint_exists"])
 def checkpoint_exists(checkpoint_prefix):
     """Checks whether a V1 or V2 checkpoint exists with the specified prefix.
@@ -415,8 +435,8 @@ def checkpoint_exists(checkpoint_prefix):
 
 
 @deprecation.deprecated(
-    date=None,
-    instructions="Use standard file utilities to get mtimes.")
+    date=None, instructions="Use standard file utilities to get mtimes."
+)
 @tf_export(v1=["train.get_checkpoint_mtimes"])
 def get_checkpoint_mtimes(checkpoint_prefixes):
     """Returns the mtimes (modification timestamps) of the checkpoints.
@@ -450,8 +470,7 @@ def get_checkpoint_mtimes(checkpoint_prefixes):
 
     for checkpoint_prefix in checkpoint_prefixes:
         # Tries V2's metadata file first.
-        pathname = _prefix_to_checkpoint_path(checkpoint_prefix,
-                                              saver_pb2.SaverDef.V2)
+        pathname = _prefix_to_checkpoint_path(checkpoint_prefix, saver_pb2.SaverDef.V2)
         if match_maybe_append(pathname):
             continue
         # Otherwise, tries V1, where the prefix is the complete pathname.
@@ -461,12 +480,14 @@ def get_checkpoint_mtimes(checkpoint_prefixes):
 
 
 @deprecation.deprecated(
-    date=None,
-    instructions="Use standard file APIs to delete files with this prefix.")
+    date=None, instructions="Use standard file APIs to delete files with this prefix."
+)
 @tf_export(v1=["train.remove_checkpoint"])
-def remove_checkpoint(checkpoint_prefix,
-                      checkpoint_format_version=saver_pb2.SaverDef.V2,
-                      meta_graph_suffix="meta"):
+def remove_checkpoint(
+    checkpoint_prefix,
+    checkpoint_format_version=saver_pb2.SaverDef.V2,
+    meta_graph_suffix="meta",
+):
     """Removes a checkpoint given by `checkpoint_prefix`.
 
     Args:
@@ -477,8 +498,7 @@ def remove_checkpoint(checkpoint_prefix,
         `SaverDef.V2`.
       meta_graph_suffix: Suffix for `MetaGraphDef` file. Defaults to 'meta'.
     """
-    _delete_file_if_exists(
-        meta_graph_filename(checkpoint_prefix, meta_graph_suffix))
+    _delete_file_if_exists(meta_graph_filename(checkpoint_prefix, meta_graph_suffix))
     if checkpoint_format_version == saver_pb2.SaverDef.V2:
         # V2 has a metadata file and some data files.
         _delete_file_if_exists(checkpoint_prefix + ".index")
@@ -535,15 +555,17 @@ class CheckpointManager(object):
     particular directory at a time.
     """
 
-    def __init__(self,
-                 checkpoint,
-                 directory,
-                 max_to_keep,
-                 keep_checkpoint_every_n_hours=None,
-                 checkpoint_name="ckpt",
-                 step_counter=None,
-                 checkpoint_interval=None,
-                 init_fn=None):
+    def __init__(
+        self,
+        checkpoint,
+        directory,
+        max_to_keep,
+        keep_checkpoint_every_n_hours=None,
+        checkpoint_name="ckpt",
+        step_counter=None,
+        checkpoint_interval=None,
+        init_fn=None,
+    ):
         """Configure a `CheckpointManager` for use in `directory`.
 
         If a `CheckpointManager` was previously used in `directory`, its
@@ -619,9 +641,9 @@ class CheckpointManager(object):
         self._save_counter_assign = None
         if max_to_keep is not None and max_to_keep <= 0:
             raise ValueError(
-                ("Expected a positive integer or `None` for `max_to_keep`, "
-                 "got %d.")
-                % (max_to_keep,))
+                ("Expected a positive integer or `None` for `max_to_keep`, " "got %d.")
+                % (max_to_keep,)
+            )
         self._max_to_keep = max_to_keep
         self._keep_checkpoint_every_n_hours = keep_checkpoint_every_n_hours
         self._directory = directory
@@ -630,8 +652,10 @@ class CheckpointManager(object):
 
         if checkpoint_interval is not None:
             if step_counter is None:
-                raise ValueError("`step_counter` should be passed if "
-                                 "`checkpoint_interval` is not None.")
+                raise ValueError(
+                    "`step_counter` should be passed if "
+                    "`checkpoint_interval` is not None."
+                )
             self._last_checkpoint_step = None
             self._step_counter = step_counter
         self._checkpoint_interval = checkpoint_interval
@@ -643,7 +667,7 @@ class CheckpointManager(object):
             self._latest_checkpoint = None
             # Set the clock back slightly to avoid race conditions when quickly
             # re-creating a CheckpointManager.
-            self._last_preserved_timestamp = current_clock - 1.
+            self._last_preserved_timestamp = current_clock - 1.0
         else:
             self._latest_checkpoint = recovered_state.model_checkpoint_path
             self._last_preserved_timestamp = recovered_state.last_preserved_timestamp
@@ -652,16 +676,18 @@ class CheckpointManager(object):
                 # min() saved checkpoint timestamps with the current time to ensure that
                 # old checkpoints don't get deleted accidentally.
                 logging.warning(
-                    ("time.time() returned a value %f seconds behind the last "
-                     "preserved checkpoint timestamp.")
-                    % (self._last_preserved_timestamp - current_clock,))
+                    (
+                        "time.time() returned a value %f seconds behind the last "
+                        "preserved checkpoint timestamp."
+                    )
+                    % (self._last_preserved_timestamp - current_clock,)
+                )
                 self._last_preserved_timestamp = current_clock
             all_timestamps = recovered_state.all_model_checkpoint_timestamps
             all_paths = recovered_state.all_model_checkpoint_paths
             del recovered_state  # Uses modified values from now on
             if not all_timestamps:
-                all_timestamps = [
-                    self._last_preserved_timestamp] * len(all_paths)
+                all_timestamps = [self._last_preserved_timestamp] * len(all_paths)
 
             for filename, timestamp in zip(all_paths, all_timestamps):
                 timestamp = min(timestamp, current_clock)
@@ -713,9 +739,10 @@ class CheckpointManager(object):
             # Even if we're keeping this checkpoint due to
             # keep_checkpoint_every_n_hours, we won't reference it to avoid
             # infinitely-growing CheckpointState protos.
-            if (self._keep_checkpoint_every_n_hours
-                and (timestamp - self._keep_checkpoint_every_n_hours * 3600.
-                     >= self._last_preserved_timestamp)):
+            if self._keep_checkpoint_every_n_hours and (
+                timestamp - self._keep_checkpoint_every_n_hours * 3600.0
+                >= self._last_preserved_timestamp
+            ):
                 self._last_preserved_timestamp = timestamp
                 continue
             _delete_file_if_exists(filename + ".index")
@@ -730,7 +757,8 @@ class CheckpointManager(object):
             all_model_checkpoint_paths=filenames,
             all_model_checkpoint_timestamps=timestamps,
             last_preserved_timestamp=self._last_preserved_timestamp,
-            save_relative_paths=True)
+            save_relative_paths=True,
+        )
 
     @property
     def _prefix(self):
@@ -779,7 +807,8 @@ class CheckpointManager(object):
                 if current_step == self._last_checkpoint_step:
                     return None
                 if check_interval and current_step < (
-                        self._last_checkpoint_step + self._checkpoint_interval):
+                    self._last_checkpoint_step + self._checkpoint_interval
+                ):
                     return None
             self._last_checkpoint_step = current_step
 
@@ -801,14 +830,14 @@ class CheckpointManager(object):
             with variable_scope.variable_creator_scope(_initializing_creator):
                 save_counter = self._checkpoint.save_counter
             if self._save_counter_assign is None:
-                self._save_counter_assign = save_counter.assign_add(
-                    1, read_value=False)
+                self._save_counter_assign = save_counter.assign_add(1, read_value=False)
             session.run(self._save_counter_assign)
         if checkpoint_number is None:
             checkpoint_number = save_counter
         if not isinstance(checkpoint_number, compat.integral_types):
             checkpoint_number = training_util.global_step(
-                sess=session, global_step_tensor=checkpoint_number)
+                sess=session, global_step_tensor=checkpoint_number
+            )
         prefix = "%s-%d" % (self._prefix, checkpoint_number)
         save_path = self._checkpoint.write(prefix)
         timestamp = time.time()
