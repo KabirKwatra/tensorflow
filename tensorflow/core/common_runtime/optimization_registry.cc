@@ -22,71 +22,71 @@ namespace tensorflow {
 
 // static
 OptimizationPassRegistry* OptimizationPassRegistry::Global() {
-    static OptimizationPassRegistry* global_optimization_registry =
-        new OptimizationPassRegistry;
-    return global_optimization_registry;
+  static OptimizationPassRegistry* global_optimization_registry =
+      new OptimizationPassRegistry;
+  return global_optimization_registry;
 }
 
 void OptimizationPassRegistry::Register(
     Grouping grouping, int phase, std::unique_ptr<GraphOptimizationPass> pass) {
-    groups_[grouping][phase].push_back(std::move(pass));
+  groups_[grouping][phase].push_back(std::move(pass));
 }
 
 Status OptimizationPassRegistry::RunGrouping(
     Grouping grouping, const GraphOptimizationPassOptions& options) {
-    auto group = groups_.find(grouping);
-    if (group != groups_.end()) {
-        for (auto& phase : group->second) {
-            VLOG(1) << "Running optimization phase " << phase.first;
-            for (auto& pass : phase.second) {
-                VLOG(1) << "Running optimization pass: " << pass->name();
-                const uint64 start_us = Env::Default()->NowMicros();
-                Status s = pass->Run(options);
-                const uint64 end_us = Env::Default()->NowMicros();
-                metrics::UpdateGraphOptimizationPassTime(pass->name(),
-                        end_us - start_us);
-                if (!s.ok()) return s;
-                if (VLOG_IS_ON(1)) {
-                    if (options.graph) {
-                        DumpGraphToFile(strings::StrCat("after_group_", grouping, "_phase_",
-                                                        phase.first, "_", pass->name(), "_",
-                                                        reinterpret_cast<uintptr_t>(
-                                                            (*options.graph).get())),
-                                        **options.graph, options.flib_def);
-                    }
-                    if (options.partition_graphs) {
-                        for (auto& part : *options.partition_graphs) {
-                            DumpGraphToFile(
-                                strings::StrCat(
-                                    "after_group_", grouping, "_phase_", phase.first, "_",
-                                    pass->name(), "_partition_", part.first, "_",
-                                    reinterpret_cast<uintptr_t>(part.second.get())),
-                                *part.second, options.flib_def);
-                        }
-                    }
-                }
+  auto group = groups_.find(grouping);
+  if (group != groups_.end()) {
+    for (auto& phase : group->second) {
+      VLOG(1) << "Running optimization phase " << phase.first;
+      for (auto& pass : phase.second) {
+        VLOG(1) << "Running optimization pass: " << pass->name();
+        const uint64 start_us = Env::Default()->NowMicros();
+        Status s = pass->Run(options);
+        const uint64 end_us = Env::Default()->NowMicros();
+        metrics::UpdateGraphOptimizationPassTime(pass->name(),
+                                                 end_us - start_us);
+        if (!s.ok()) return s;
+        if (VLOG_IS_ON(1)) {
+          if (options.graph) {
+            DumpGraphToFile(strings::StrCat("after_group_", grouping, "_phase_",
+                                            phase.first, "_", pass->name(), "_",
+                                            reinterpret_cast<uintptr_t>(
+                                                (*options.graph).get())),
+                            **options.graph, options.flib_def);
+          }
+          if (options.partition_graphs) {
+            for (auto& part : *options.partition_graphs) {
+              DumpGraphToFile(
+                  strings::StrCat(
+                      "after_group_", grouping, "_phase_", phase.first, "_",
+                      pass->name(), "_partition_", part.first, "_",
+                      reinterpret_cast<uintptr_t>(part.second.get())),
+                  *part.second, options.flib_def);
             }
+          }
         }
+      }
     }
-    return Status::OK();
+  }
+  return Status::OK();
 }
 
 void OptimizationPassRegistry::LogGrouping(Grouping grouping, int vlog_level) {
-    auto group = groups_.find(grouping);
-    if (group != groups_.end()) {
-        for (auto& phase : group->second) {
-            for (auto& pass : phase.second) {
-                VLOG(vlog_level) << "Registered optimization pass grouping " << grouping
-                                 << " phase " << phase.first << ": " << pass->name();
-            }
-        }
+  auto group = groups_.find(grouping);
+  if (group != groups_.end()) {
+    for (auto& phase : group->second) {
+      for (auto& pass : phase.second) {
+        VLOG(vlog_level) << "Registered optimization pass grouping " << grouping
+                         << " phase " << phase.first << ": " << pass->name();
+      }
     }
+  }
 }
 
 void OptimizationPassRegistry::LogAllGroupings(int vlog_level) {
-    for (auto group = groups_.begin(); group != groups_.end(); ++group) {
-        LogGrouping(group->first, vlog_level);
-    }
+  for (auto group = groups_.begin(); group != groups_.end(); ++group) {
+    LogGrouping(group->first, vlog_level);
+  }
 }
 
 }  // namespace tensorflow
