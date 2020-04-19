@@ -30,52 +30,52 @@ namespace xla {
 // Do an HLO pass to a fix point.
 template <typename Pass>
 class HloPassFix : public Pass {
- public:
-  template <typename... Args>
-  explicit HloPassFix(Args&&... args) : Pass(args...) {}
+public:
+    template <typename... Args>
+    explicit HloPassFix(Args&&... args) : Pass(args...) {}
 
-  StatusOr<bool> Run(HloModule* module) override {
-    bool changed = false;
-    bool changed_this_iteration = true;
-    int64 iteration_count = 0;
-    const int64 kLimit = 25;
-    VLOG(3) << "Running HloPassFix on " << Pass::name();
-    while (changed_this_iteration) {
-      TF_ASSIGN_OR_RETURN(changed_this_iteration, Pass::Run(module));
-      changed |= changed_this_iteration;
-      VLOG(3) << "changed_this_iteration: " << changed_this_iteration;
-      ++iteration_count;
-      if (iteration_count == kLimit) {
-        VLOG(1) << "Unexpectedly high number of iterations in HLO passes, "
-                   "exiting fixed point loop.";
-        // Return false in case this is fixed point is nested.
-        return false;
-      }
-    }
-    return changed;
-  }
-
-  StatusOr<bool> RunOnModuleGroup(HloModuleGroup* module_group) override {
-    bool changed = false;
-    bool changed_this_iteration = true;
-    int64 iteration_count = 0;
-    const int64 kLimit = 25;
-    VLOG(3) << "Running HloPassFix.";
-    while (changed_this_iteration) {
-      TF_ASSIGN_OR_RETURN(changed_this_iteration,
-                          Pass::RunOnModuleGroup(module_group));
-      changed |= changed_this_iteration;
-      VLOG(3) << "changed_this_iteration: " << changed_this_iteration;
-      ++iteration_count;
-      if (iteration_count == kLimit) {
-        LOG(WARNING) << "Unexpectedly high number of iterations in HLO passes, "
+    StatusOr<bool> Run(HloModule* module) override {
+        bool changed = false;
+        bool changed_this_iteration = true;
+        int64 iteration_count = 0;
+        const int64 kLimit = 25;
+        VLOG(3) << "Running HloPassFix on " << Pass::name();
+        while (changed_this_iteration) {
+            TF_ASSIGN_OR_RETURN(changed_this_iteration, Pass::Run(module));
+            changed |= changed_this_iteration;
+            VLOG(3) << "changed_this_iteration: " << changed_this_iteration;
+            ++iteration_count;
+            if (iteration_count == kLimit) {
+                VLOG(1) << "Unexpectedly high number of iterations in HLO passes, "
                         "exiting fixed point loop.";
-        // Return false in case this is fixed point is nested.
-        return false;
-      }
+                // Return false in case this is fixed point is nested.
+                return false;
+            }
+        }
+        return changed;
     }
-    return changed;
-  }
+
+    StatusOr<bool> RunOnModuleGroup(HloModuleGroup* module_group) override {
+        bool changed = false;
+        bool changed_this_iteration = true;
+        int64 iteration_count = 0;
+        const int64 kLimit = 25;
+        VLOG(3) << "Running HloPassFix.";
+        while (changed_this_iteration) {
+            TF_ASSIGN_OR_RETURN(changed_this_iteration,
+                                Pass::RunOnModuleGroup(module_group));
+            changed |= changed_this_iteration;
+            VLOG(3) << "changed_this_iteration: " << changed_this_iteration;
+            ++iteration_count;
+            if (iteration_count == kLimit) {
+                LOG(WARNING) << "Unexpectedly high number of iterations in HLO passes, "
+                             "exiting fixed point loop.";
+                // Return false in case this is fixed point is nested.
+                return false;
+            }
+        }
+        return changed;
+    }
 };
 
 }  // namespace xla
