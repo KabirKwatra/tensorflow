@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for random-number generation ops in the XLA JIT compiler."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
