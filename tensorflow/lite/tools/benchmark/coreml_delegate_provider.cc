@@ -28,64 +28,67 @@ namespace tflite {
 namespace benchmark {
 
 class CoreMlDelegateProvider : public DelegateProvider {
- public:
-  CoreMlDelegateProvider() {
+public:
+    CoreMlDelegateProvider() {
 #if defined(REAL_IPHONE_DEVICE)
-    default_params_.AddParam("use_coreml", BenchmarkParam::Create<bool>(true));
+        default_params_.AddParam("use_coreml", BenchmarkParam::Create<bool>(true));
 #endif
-  }
-  std::vector<Flag> CreateFlags(BenchmarkParams* params) const final;
+    }
+    std::vector<Flag> CreateFlags(BenchmarkParams* params) const final;
 
-  void LogParams(const BenchmarkParams& params) const final;
+    void LogParams(const BenchmarkParams& params) const final;
 
-  TfLiteDelegatePtr CreateTfLiteDelegate(
-      const BenchmarkParams& params) const final;
+    TfLiteDelegatePtr CreateTfLiteDelegate(
+        const BenchmarkParams& params) const final;
 
-  std::string GetName() const final { return "COREML"; }
+    std::string GetName() const final {
+        return "COREML";
+    }
 };
 REGISTER_DELEGATE_PROVIDER(CoreMlDelegateProvider);
 
 std::vector<Flag> CoreMlDelegateProvider::CreateFlags(
     BenchmarkParams* params) const {
 #if defined(REAL_IPHONE_DEVICE)
-  std::vector<Flag> flags = {
-      CreateFlag<bool>("use_coreml", params, "use Core ML"),
-  };
-  return flags;
+    std::vector<Flag> flags = {
+        CreateFlag<bool>("use_coreml", params, "use Core ML"),
+    };
+    return flags;
 #else
-  return {};
+    return {};
 #endif
 }
 
 void CoreMlDelegateProvider::LogParams(const BenchmarkParams& params) const {
 #if defined(REAL_IPHONE_DEVICE)
-  TFLITE_LOG(INFO) << "Use Core ML : [" << params.Get<bool>("use_coreml")
-                   << "]";
+    TFLITE_LOG(INFO) << "Use Core ML : [" << params.Get<bool>("use_coreml")
+                     << "]";
 #endif
 }
 
 TfLiteDelegatePtr CoreMlDelegateProvider::CreateTfLiteDelegate(
     const BenchmarkParams& params) const {
-  TfLiteDelegatePtr delegate(nullptr, [](TfLiteDelegate*) {});
+    TfLiteDelegatePtr delegate(nullptr, [](TfLiteDelegate*) {});
 
 #if defined(REAL_IPHONE_DEVICE)
-  if (params.Get<bool>("use_coreml")) {
-    TfLiteCoreMlDelegateOptions coreml_opts = {
-        .enabled_devices = TfLiteCoreMlDelegateAllDevices};
-    coreml_opts.max_delegated_partitions =
-        params.Get<int>("max_delegated_partitions");
-    coreml_opts.min_nodes_per_partition =
-        params.Get<int>("min_nodes_per_partition");
-    delegate = TfLiteDelegatePtr(TfLiteCoreMlDelegateCreate(&coreml_opts),
-                                 &TfLiteCoreMlDelegateDelete);
-    if (!delegate) {
-      TFLITE_LOG(WARN)
-          << "CoreML acceleration is unsupported on this platform.";
+    if (params.Get<bool>("use_coreml")) {
+        TfLiteCoreMlDelegateOptions coreml_opts = {
+            .enabled_devices = TfLiteCoreMlDelegateAllDevices
+        };
+        coreml_opts.max_delegated_partitions =
+            params.Get<int>("max_delegated_partitions");
+        coreml_opts.min_nodes_per_partition =
+            params.Get<int>("min_nodes_per_partition");
+        delegate = TfLiteDelegatePtr(TfLiteCoreMlDelegateCreate(&coreml_opts),
+                                     &TfLiteCoreMlDelegateDelete);
+        if (!delegate) {
+            TFLITE_LOG(WARN)
+                    << "CoreML acceleration is unsupported on this platform.";
+        }
     }
-  }
 #endif
 
-  return delegate;
+    return delegate;
 }
 
 }  // namespace benchmark
