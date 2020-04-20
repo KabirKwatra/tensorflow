@@ -37,112 +37,134 @@ namespace gpu {
 namespace cl {
 
 class Tensor {
- public:
-  Tensor()
-      : memory_(nullptr), image_buffer_memory_(nullptr), memory_owner_(true) {}
-  Tensor(cl_mem memory, bool memory_owner, const BHWC& shape,
-         const TensorDescriptor& descriptor);
-  Tensor(cl_mem memory, bool memory_owner, const BHWDC& shape,
-         const TensorDescriptor& descriptor);
-  Tensor(cl_mem memory, bool memory_owner, cl_mem image_buffer_memory,
-         const BHWC& shape, const TensorDescriptor& descriptor);
-  Tensor(cl_mem memory, bool memory_owner, cl_mem image_buffer_memory,
-         const BHWDC& shape, const TensorDescriptor& descriptor);
+public:
+    Tensor()
+        : memory_(nullptr), image_buffer_memory_(nullptr), memory_owner_(true) {}
+    Tensor(cl_mem memory, bool memory_owner, const BHWC& shape,
+           const TensorDescriptor& descriptor);
+    Tensor(cl_mem memory, bool memory_owner, const BHWDC& shape,
+           const TensorDescriptor& descriptor);
+    Tensor(cl_mem memory, bool memory_owner, cl_mem image_buffer_memory,
+           const BHWC& shape, const TensorDescriptor& descriptor);
+    Tensor(cl_mem memory, bool memory_owner, cl_mem image_buffer_memory,
+           const BHWDC& shape, const TensorDescriptor& descriptor);
 
-  // Move only
-  Tensor(Tensor&& tensor);
-  Tensor& operator=(Tensor&& tensor);
-  Tensor(const Tensor&) = delete;
-  Tensor& operator=(const Tensor&) = delete;
+    // Move only
+    Tensor(Tensor&& tensor);
+    Tensor& operator=(Tensor&& tensor);
+    Tensor(const Tensor&) = delete;
+    Tensor& operator=(const Tensor&) = delete;
 
-  virtual ~Tensor() { Release(); }
-
-  int Width() const { return shape_.w; }
-  int Height() const { return shape_.h; }
-  int Depth() const { return shape_.d; }
-  int Channels() const { return shape_.c; }
-  int Slices() const { return DivideRoundUp(shape_.c, 4); }
-  int Batch() const { return shape_.b; }
-
-  // returns int4(width * batch, height, slices, batch)
-  int4 GetWBatchedHSB() const {
-    return int4(shape_.w * shape_.b, shape_.h, Slices(), shape_.b);
-  }
-  int4 GetWBatchedHDS() const {
-    return int4(shape_.w * shape_.b, shape_.h, shape_.d, Slices());
-  }
-
-  int4 GetWHSB() const { return int4(shape_.w, shape_.h, Slices(), shape_.b); }
-  int4 GetWHDS() const { return int4(shape_.w, shape_.h, shape_.d, Slices()); }
-
-  enum DataType DataType() const { return descriptor_.data_type; }
-  TensorStorageType StorageType() const { return descriptor_.storage_type; }
-
-  // for profiling and memory statistics
-  uint64_t GetMemorySizeInBytes() const;
-
-  cl_mem GetMemoryPtr() const;
-
-  // This function returns buffer memory ptr for IMAGE_BUFFER instead of image
-  // memory ptr.
-  cl_mem GetMemoryPtrForWriting() const;
-
-  absl::Status WriteData(CLCommandQueue* queue, const TensorFloat32& src);
-  absl::Status WriteData(CLCommandQueue* queue, const Tensor5DFloat32& src);
-  absl::Status ReadData(CLCommandQueue* queue, TensorFloat32* dst) const;
-  absl::Status ReadData(CLCommandQueue* queue, Tensor5DFloat32* dst) const;
-
- private:
-  absl::Status IsValid(const BHWC& shape) const;
-  absl::Status IsValid(const BHWDC& shape) const;
-
-  int GetChannelsAlignment() const;
-  int GetAlignedChannels() const;
-
-  absl::Status WriteDataBHWDC(absl::Span<const float> in,
-                              CLCommandQueue* queue);
-  absl::Status ReadDataBHWDC(absl::Span<float> out,
-                             CLCommandQueue* queue) const;
-
-  template <typename T>
-  void DataFromBHWDC(absl::Span<const float> src, absl::Span<T> dst) const;
-  template <typename T>
-  void DataToBHWDC(absl::Span<const T> src, absl::Span<float> dst) const;
-
-  // TODO(sorokin) might be bad performance
-  int GetLinearIndex(int b, int x, int y, int d, int s, int sub_c) const {
-    switch (descriptor_.storage_type) {
-      case TensorStorageType::BUFFER:
-      case TensorStorageType::IMAGE_BUFFER:
-      case TensorStorageType::TEXTURE_ARRAY:
-      case TensorStorageType::TEXTURE_3D:
-        return ((((d * Slices() + s) * shape_.h + y) * shape_.w + x) *
-                    shape_.b +
-                b) *
-                   4 +
-               sub_c;  // DSHWBC4
-      case TensorStorageType::TEXTURE_2D:
-        return ((((y * Slices() + s) * shape_.w + x) * shape_.b + b) *
-                    shape_.d +
-                d) *
-                   4 +
-               sub_c;  // HSWBDC4
-      case TensorStorageType::SINGLE_TEXTURE_2D:
-        return (((y * shape_.w + x) * shape_.b + b) * shape_.d + d) * shape_.c +
-               sub_c;  // HWBDC
-      case TensorStorageType::UNKNOWN:
-        return -1;
+    virtual ~Tensor() {
+        Release();
     }
-  }
 
-  int3 GetFullTensorRegion() const;
-  void Release();
+    int Width() const {
+        return shape_.w;
+    }
+    int Height() const {
+        return shape_.h;
+    }
+    int Depth() const {
+        return shape_.d;
+    }
+    int Channels() const {
+        return shape_.c;
+    }
+    int Slices() const {
+        return DivideRoundUp(shape_.c, 4);
+    }
+    int Batch() const {
+        return shape_.b;
+    }
 
-  cl_mem memory_;
-  cl_mem image_buffer_memory_;  // for TensorStorageType::IMAGE_BUFFER only
-  bool memory_owner_;
-  BHWDC shape_;
-  TensorDescriptor descriptor_;
+    // returns int4(width * batch, height, slices, batch)
+    int4 GetWBatchedHSB() const {
+        return int4(shape_.w * shape_.b, shape_.h, Slices(), shape_.b);
+    }
+    int4 GetWBatchedHDS() const {
+        return int4(shape_.w * shape_.b, shape_.h, shape_.d, Slices());
+    }
+
+    int4 GetWHSB() const {
+        return int4(shape_.w, shape_.h, Slices(), shape_.b);
+    }
+    int4 GetWHDS() const {
+        return int4(shape_.w, shape_.h, shape_.d, Slices());
+    }
+
+    enum DataType DataType() const {
+        return descriptor_.data_type;
+    }
+    TensorStorageType StorageType() const {
+        return descriptor_.storage_type;
+    }
+
+    // for profiling and memory statistics
+    uint64_t GetMemorySizeInBytes() const;
+
+    cl_mem GetMemoryPtr() const;
+
+    // This function returns buffer memory ptr for IMAGE_BUFFER instead of image
+    // memory ptr.
+    cl_mem GetMemoryPtrForWriting() const;
+
+    absl::Status WriteData(CLCommandQueue* queue, const TensorFloat32& src);
+    absl::Status WriteData(CLCommandQueue* queue, const Tensor5DFloat32& src);
+    absl::Status ReadData(CLCommandQueue* queue, TensorFloat32* dst) const;
+    absl::Status ReadData(CLCommandQueue* queue, Tensor5DFloat32* dst) const;
+
+private:
+    absl::Status IsValid(const BHWC& shape) const;
+    absl::Status IsValid(const BHWDC& shape) const;
+
+    int GetChannelsAlignment() const;
+    int GetAlignedChannels() const;
+
+    absl::Status WriteDataBHWDC(absl::Span<const float> in,
+                                CLCommandQueue* queue);
+    absl::Status ReadDataBHWDC(absl::Span<float> out,
+                               CLCommandQueue* queue) const;
+
+    template <typename T>
+    void DataFromBHWDC(absl::Span<const float> src, absl::Span<T> dst) const;
+    template <typename T>
+    void DataToBHWDC(absl::Span<const T> src, absl::Span<float> dst) const;
+
+    // TODO(sorokin) might be bad performance
+    int GetLinearIndex(int b, int x, int y, int d, int s, int sub_c) const {
+        switch (descriptor_.storage_type) {
+        case TensorStorageType::BUFFER:
+        case TensorStorageType::IMAGE_BUFFER:
+        case TensorStorageType::TEXTURE_ARRAY:
+        case TensorStorageType::TEXTURE_3D:
+            return ((((d * Slices() + s) * shape_.h + y) * shape_.w + x) *
+                    shape_.b +
+                    b) *
+                   4 +
+                   sub_c;  // DSHWBC4
+        case TensorStorageType::TEXTURE_2D:
+            return ((((y * Slices() + s) * shape_.w + x) * shape_.b + b) *
+                    shape_.d +
+                    d) *
+                   4 +
+                   sub_c;  // HSWBDC4
+        case TensorStorageType::SINGLE_TEXTURE_2D:
+            return (((y * shape_.w + x) * shape_.b + b) * shape_.d + d) * shape_.c +
+                   sub_c;  // HWBDC
+        case TensorStorageType::UNKNOWN:
+            return -1;
+        }
+    }
+
+    int3 GetFullTensorRegion() const;
+    void Release();
+
+    cl_mem memory_;
+    cl_mem image_buffer_memory_;  // for TensorStorageType::IMAGE_BUFFER only
+    bool memory_owner_;
+    BHWDC shape_;
+    TensorDescriptor descriptor_;
 };
 
 using TensorPtr = std::shared_ptr<Tensor>;

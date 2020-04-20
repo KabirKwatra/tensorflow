@@ -23,51 +23,51 @@ namespace {
 
 // Combines the src OpMetrics into the dst OpMetrics.
 void CombineOpMetrics(const OpMetrics& src, OpMetrics* dst) {
-  DCHECK(dst != nullptr);
-  DCHECK_EQ(src.hlo_module_id(), dst->hlo_module_id());
-  DCHECK_EQ(src.name(), dst->name());
-  dst->set_category(src.category());
-  dst->set_provenance(src.provenance());
-  dst->set_is_eager(dst->is_eager() || src.is_eager());
-  dst->set_deduplicated_name(src.deduplicated_name());
-  if (!dst->has_layout() && src.has_layout()) {
-    *dst->mutable_layout() = src.layout();
-  }
-  if (!dst->has_children() && src.has_children()) {
-    *dst->mutable_children() = src.children();
-  }
-  dst->set_occurrences(src.occurrences() + dst->occurrences());
-  dst->set_time_ps(src.time_ps() + dst->time_ps());
-  dst->set_self_time_ps(src.self_time_ps() + dst->self_time_ps());
-  dst->set_flops(src.flops() + dst->flops());
-  dst->set_bytes_accessed(src.bytes_accessed() + dst->bytes_accessed());
-  dst->set_dma_stall_ps(src.dma_stall_ps() + dst->dma_stall_ps());
+    DCHECK(dst != nullptr);
+    DCHECK_EQ(src.hlo_module_id(), dst->hlo_module_id());
+    DCHECK_EQ(src.name(), dst->name());
+    dst->set_category(src.category());
+    dst->set_provenance(src.provenance());
+    dst->set_is_eager(dst->is_eager() || src.is_eager());
+    dst->set_deduplicated_name(src.deduplicated_name());
+    if (!dst->has_layout() && src.has_layout()) {
+        *dst->mutable_layout() = src.layout();
+    }
+    if (!dst->has_children() && src.has_children()) {
+        *dst->mutable_children() = src.children();
+    }
+    dst->set_occurrences(src.occurrences() + dst->occurrences());
+    dst->set_time_ps(src.time_ps() + dst->time_ps());
+    dst->set_self_time_ps(src.self_time_ps() + dst->self_time_ps());
+    dst->set_flops(src.flops() + dst->flops());
+    dst->set_bytes_accessed(src.bytes_accessed() + dst->bytes_accessed());
+    dst->set_dma_stall_ps(src.dma_stall_ps() + dst->dma_stall_ps());
 }
 
 void CombinePrecisionStats(const PrecisionStats& src, PrecisionStats* dst) {
-  dst->set_compute_16bit_ps(src.compute_16bit_ps() + dst->compute_16bit_ps());
-  dst->set_compute_32bit_ps(src.compute_32bit_ps() + dst->compute_32bit_ps());
+    dst->set_compute_16bit_ps(src.compute_16bit_ps() + dst->compute_16bit_ps());
+    dst->set_compute_32bit_ps(src.compute_32bit_ps() + dst->compute_32bit_ps());
 }
 
 }  // namespace
 
 void OpMetricsDbCombiner::Combine(const OpMetricsDb& src) {
-  OpMetricsDb* dst = db();
-  dst->set_total_host_infeed_enq_duration_ps(
-      src.total_host_infeed_enq_duration_ps() +
-      dst->total_host_infeed_enq_duration_ps());
-  dst->set_total_host_infeed_enq_start_timestamp_ps_diff(
-      src.total_host_infeed_enq_start_timestamp_ps_diff() +
-      dst->total_host_infeed_enq_start_timestamp_ps_diff());
-  dst->set_total_time_ps(src.total_time_ps() + dst->total_time_ps());
-  dst->set_total_op_time_ps(src.total_op_time_ps() + dst->total_op_time_ps());
-  CombinePrecisionStats(src.precision_stats(), dst->mutable_precision_stats());
+    OpMetricsDb* dst = db();
+    dst->set_total_host_infeed_enq_duration_ps(
+        src.total_host_infeed_enq_duration_ps() +
+        dst->total_host_infeed_enq_duration_ps());
+    dst->set_total_host_infeed_enq_start_timestamp_ps_diff(
+        src.total_host_infeed_enq_start_timestamp_ps_diff() +
+        dst->total_host_infeed_enq_start_timestamp_ps_diff());
+    dst->set_total_time_ps(src.total_time_ps() + dst->total_time_ps());
+    dst->set_total_op_time_ps(src.total_op_time_ps() + dst->total_op_time_ps());
+    CombinePrecisionStats(src.precision_stats(), dst->mutable_precision_stats());
 
-  for (const auto& src_metrics : src.metrics_db()) {
-    auto* dst_metrics = LookupOrInsertNewOpMetrics(src_metrics.hlo_module_id(),
-                                                   src_metrics.name());
-    CombineOpMetrics(src_metrics, dst_metrics);
-  }
+    for (const auto& src_metrics : src.metrics_db()) {
+        auto* dst_metrics = LookupOrInsertNewOpMetrics(src_metrics.hlo_module_id(),
+                            src_metrics.name());
+        CombineOpMetrics(src_metrics, dst_metrics);
+    }
 }
 
 }  // namespace profiler

@@ -25,22 +25,22 @@ namespace gpu {
 // @param divisor must be greater than zero
 template <typename T, typename N>
 T DivideRoundUp(T n, N divisor) {
-  const T div = static_cast<T>(divisor);
-  const T q = n / div;
-  return n % div == 0 ? q : q + 1;
+    const T div = static_cast<T>(divisor);
+    const T q = n / div;
+    return n % div == 0 ? q : q + 1;
 }
 
 template <>
 inline uint3 DivideRoundUp(uint3 n, uint3 divisor) {
-  return uint3(DivideRoundUp(n.x, divisor.x), DivideRoundUp(n.y, divisor.y),
-               DivideRoundUp(n.z, divisor.z));
+    return uint3(DivideRoundUp(n.x, divisor.x), DivideRoundUp(n.y, divisor.y),
+                 DivideRoundUp(n.z, divisor.z));
 }
 
 // @param number or its components must be greater than zero
 // @param n must be greater than zero
 template <typename T, typename N>
 T AlignByN(T number, N n) {
-  return DivideRoundUp(number, n) * n;
+    return DivideRoundUp(number, n) * n;
 }
 
 }  // namespace gpu

@@ -34,7 +34,7 @@ namespace gpu {
 namespace metal {
 namespace {
 std::string GetReshapeCode() {
-  std::string code = R"(
+    std::string code = R"(
 #include <metal_stdlib>
 using namespace metal;
 
@@ -73,11 +73,11 @@ kernel void ComputeFunction(
   $2
   dst_buffer[linear_index] = value;
 })";
-  return code;
+    return code;
 }
 
 std::string GetReshapex4Code() {
-  std::string code = R"(
+    std::string code = R"(
 #include <metal_stdlib>
 using namespace metal;
 
@@ -111,122 +111,128 @@ kernel void ComputeFunction(
   $2
   dst_buffer[linear_index] = value;
 })";
-  return code;
+    return code;
 }
 
 }  // namespace
 
 std::vector<ComputeTaskDescriptorPtr> Reshape(int id, ValueId input_id,
-                                              ValueId output_id,
-                                              const ReshapeAttributes& attr) {
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  desc->shader_source = GetReshapeCode();
+        ValueId output_id,
+        const ReshapeAttributes& attr) {
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    desc->shader_source = GetReshapeCode();
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+    };
 
-  desc->output_buffer = {
-      output_id, "device FLT4* dst_buffer",
-      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-        int batch = buffers.find(input_id)->second.b;
-        return BHWC{batch, attr.new_shape.h, attr.new_shape.w,
-                    attr.new_shape.c};
-      }};
+    desc->output_buffer = {
+        output_id, "device FLT4* dst_buffer",
+        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+            int batch = buffers.find(input_id)->second.b;
+            return BHWC{
+                batch, attr.new_shape.h, attr.new_shape.w,
+                attr.new_shape.c};
+        }
+    };
 
-  desc->uniform_buffers = {
-      {"constant uniforms& params",
-       [input_id, output_id](const std::map<ValueId, BHWC>& buffers) {
-         const auto& src_dim = buffers.find(input_id)->second;
-         const auto& dst_dim = buffers.find(output_id)->second;
-         std::vector<int> uniform_params{
-             // int4 src_size
-             src_dim.w,
-             src_dim.h,
-             src_dim.c,
-             src_dim.c * src_dim.w,
-             // int4 dst_size
-             dst_dim.w,
-             dst_dim.h,
-             dst_dim.c,
-             dst_dim.c * dst_dim.w,
-         };
-         return GetByteBuffer(uniform_params);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant uniforms& params",
+            [input_id, output_id](const std::map<ValueId, BHWC>& buffers) {
+                const auto& src_dim = buffers.find(input_id)->second;
+                const auto& dst_dim = buffers.find(output_id)->second;
+                std::vector<int> uniform_params{
+                    // int4 src_size
+                    src_dim.w,
+                    src_dim.h,
+                    src_dim.c,
+                    src_dim.c * src_dim.w,
+                    // int4 dst_size
+                    dst_dim.w,
+                    dst_dim.h,
+                    dst_dim.c,
+                    dst_dim.c * dst_dim.w,
+                };
+                return GetByteBuffer(uniform_params);
+            }
+        },
+    };
 
-  desc->resize_function = [attr](const std::map<ValueId, BHWC>& buffers) {
-    const uint3 grid = uint3(attr.new_shape.w, attr.new_shape.h,
-                             DivideRoundUp(attr.new_shape.c, 4));
-    const uint3 groups_size = GetWorkGroupSizeForGrid(grid);
-    int groups_x = DivideRoundUp(grid.x, groups_size.x);
-    int groups_y = DivideRoundUp(grid.y, groups_size.y);
-    int groups_z = DivideRoundUp(grid.z, groups_size.z);
-    return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
-  };
+    desc->resize_function = [attr](const std::map<ValueId, BHWC>& buffers) {
+        const uint3 grid = uint3(attr.new_shape.w, attr.new_shape.h,
+                                 DivideRoundUp(attr.new_shape.c, 4));
+        const uint3 groups_size = GetWorkGroupSizeForGrid(grid);
+        int groups_x = DivideRoundUp(grid.x, groups_size.x);
+        int groups_y = DivideRoundUp(grid.y, groups_size.y);
+        int groups_z = DivideRoundUp(grid.z, groups_size.z);
+        return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
+    };
 
-  return {desc};
+    return {desc};
 }
 
 std::vector<ComputeTaskDescriptorPtr> Reshapex4(int id, ValueId input_id,
-                                                ValueId output_id,
-                                                const ReshapeAttributes& attr) {
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  desc->shader_source = GetReshapex4Code();
+        ValueId output_id,
+        const ReshapeAttributes& attr) {
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    desc->shader_source = GetReshapex4Code();
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+    };
 
-  desc->output_buffer = {
-      output_id, "device FLT4* dst_buffer",
-      [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
-        int batch = buffers.find(input_id)->second.b;
-        return BHWC{batch, attr.new_shape.h, attr.new_shape.w,
-                    attr.new_shape.c};
-      }};
+    desc->output_buffer = {
+        output_id, "device FLT4* dst_buffer",
+        [input_id, attr](const std::map<ValueId, BHWC>& buffers) {
+            int batch = buffers.find(input_id)->second.b;
+            return BHWC{
+                batch, attr.new_shape.h, attr.new_shape.w,
+                attr.new_shape.c};
+        }
+    };
 
-  desc->uniform_buffers = {
-      {"constant uniforms& params",
-       [input_id, output_id](const std::map<ValueId, BHWC>& buffers) {
-         const auto& src_dim = buffers.find(input_id)->second;
-         const auto& dst_dim = buffers.find(output_id)->second;
-         std::vector<int32_t> uniform_params{
-             // int4 src_size
-             src_dim.w, src_dim.h, DivideRoundUp(src_dim.c, 4),
-             src_dim.w * src_dim.h,
-             // int4 dst_size
-             dst_dim.w, dst_dim.h, DivideRoundUp(dst_dim.c, 4),
-             dst_dim.w * dst_dim.h,
-             // int2 plane_xz
-             src_dim.w * DivideRoundUp(src_dim.c, 4),
-             dst_dim.w * DivideRoundUp(dst_dim.c, 4),
-             0,  // dummy, for alignment
-             0,  // dummy, for alignment
-             0,  // dummy, for alignment
-             0,  // dummy, for alignment
-             0,  // dummy, for alignment
-             0   // dummy, for alignment
-         };
-         return GetByteBuffer(uniform_params);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant uniforms& params",
+            [input_id, output_id](const std::map<ValueId, BHWC>& buffers) {
+                const auto& src_dim = buffers.find(input_id)->second;
+                const auto& dst_dim = buffers.find(output_id)->second;
+                std::vector<int32_t> uniform_params{
+                    // int4 src_size
+                    src_dim.w, src_dim.h, DivideRoundUp(src_dim.c, 4),
+                    src_dim.w * src_dim.h,
+                    // int4 dst_size
+                    dst_dim.w, dst_dim.h, DivideRoundUp(dst_dim.c, 4),
+                    dst_dim.w * dst_dim.h,
+                    // int2 plane_xz
+                    src_dim.w * DivideRoundUp(src_dim.c, 4),
+                    dst_dim.w * DivideRoundUp(dst_dim.c, 4),
+                    0,  // dummy, for alignment
+                    0,  // dummy, for alignment
+                    0,  // dummy, for alignment
+                    0,  // dummy, for alignment
+                    0,  // dummy, for alignment
+                    0   // dummy, for alignment
+                };
+                return GetByteBuffer(uniform_params);
+            }
+        },
+    };
 
-  desc->resize_function = [attr](const std::map<ValueId, BHWC>& buffers) {
-    const uint3 grid = uint3(attr.new_shape.w, attr.new_shape.h,
-                             DivideRoundUp(attr.new_shape.c, 4));
-    const uint3 groups_size = GetWorkGroupSizeForGrid(grid);
-    int groups_x = DivideRoundUp(grid.x, groups_size.x);
-    int groups_y = DivideRoundUp(grid.y, groups_size.y);
-    int groups_z = DivideRoundUp(grid.z, groups_size.z);
-    return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
-  };
+    desc->resize_function = [attr](const std::map<ValueId, BHWC>& buffers) {
+        const uint3 grid = uint3(attr.new_shape.w, attr.new_shape.h,
+                                 DivideRoundUp(attr.new_shape.c, 4));
+        const uint3 groups_size = GetWorkGroupSizeForGrid(grid);
+        int groups_x = DivideRoundUp(grid.x, groups_size.x);
+        int groups_y = DivideRoundUp(grid.y, groups_size.y);
+        int groups_z = DivideRoundUp(grid.z, groups_size.z);
+        return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
+    };
 
-  return {desc};
+    return {desc};
 }
 
 }  // namespace metal

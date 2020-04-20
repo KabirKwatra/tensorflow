@@ -36,74 +36,76 @@ namespace gl {
 namespace {
 
 class Convolution : public NodeShader {
- public:
-  absl::Status GenerateCode(const GenerationContext& ctx,
-                            GeneratedCode* generated_code) const final {
-    const auto& attr =
-        absl::any_cast<const Convolution2DAttributes&>(ctx.op_attr);
-    auto weights = attr.weights.shape;
-    const int offsets_count = weights.h * weights.w;
-    const bool offsets_count_too_large = offsets_count > kMaxConstArraySize;
-    std::vector<Variable> parameters;
-    if (offsets_count_too_large) {
-      parameters = {
-          {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
-          {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
-          {"padding_w", attr.padding.prepended.w},
-          {"padding_h", attr.padding.prepended.h},
-          {"dilation_w", attr.dilations.w},
-          {"dilation_h", attr.dilations.h},
-          {"kernel_w", weights.w},
-          {"kernel_h", weights.h},
-          {"src_depth", DivideRoundUp(weights.i, 4)},
-          {"stride", int2(attr.strides.w, attr.strides.h)},
-      };
-    } else {
-      std::vector<int2> offsets;
-      for (int h = 0; h < weights.h; ++h) {
-        for (int w = 0; w < weights.w; ++w) {
-          offsets.emplace_back(w * attr.dilations.w - attr.padding.prepended.w,
-                               h * attr.dilations.h - attr.padding.prepended.h);
+public:
+    absl::Status GenerateCode(const GenerationContext& ctx,
+                              GeneratedCode* generated_code) const final {
+        const auto& attr =
+            absl::any_cast<const Convolution2DAttributes&>(ctx.op_attr);
+        auto weights = attr.weights.shape;
+        const int offsets_count = weights.h * weights.w;
+        const bool offsets_count_too_large = offsets_count > kMaxConstArraySize;
+        std::vector<Variable> parameters;
+        if (offsets_count_too_large) {
+            parameters = {
+                {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
+                {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
+                {"padding_w", attr.padding.prepended.w},
+                {"padding_h", attr.padding.prepended.h},
+                {"dilation_w", attr.dilations.w},
+                {"dilation_h", attr.dilations.h},
+                {"kernel_w", weights.w},
+                {"kernel_h", weights.h},
+                {"src_depth", DivideRoundUp(weights.i, 4)},
+                {"stride", int2(attr.strides.w, attr.strides.h)},
+            };
+        } else {
+            std::vector<int2> offsets;
+            for (int h = 0; h < weights.h; ++h) {
+                for (int w = 0; w < weights.w; ++w) {
+                    offsets.emplace_back(w * attr.dilations.w - attr.padding.prepended.w,
+                                         h * attr.dilations.h - attr.padding.prepended.h);
+                }
+            }
+            parameters = {
+                {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
+                {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
+                {"offsets_count", offsets_count},
+                {"offsets", offsets},
+                {"src_depth", DivideRoundUp(weights.i, 4)},
+                {"stride", int2(attr.strides.w, attr.strides.h)},
+            };
         }
-      }
-      parameters = {
-          {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
-          {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
-          {"offsets_count", offsets_count},
-          {"offsets", offsets},
-          {"src_depth", DivideRoundUp(weights.i, 4)},
-          {"stride", int2(attr.strides.w, attr.strides.h)},
-      };
-    }
 
-    // at least one padding is not empty
-    bool non_empty_padding =
-        attr.padding.appended.h != 0 || attr.padding.appended.w != 0 ||
-        attr.padding.prepended.h != 0 || attr.padding.prepended.w != 0;
+        // at least one padding is not empty
+        bool non_empty_padding =
+            attr.padding.appended.h != 0 || attr.padding.appended.w != 0 ||
+            attr.padding.prepended.h != 0 || attr.padding.prepended.w != 0;
 
-    std::vector<std::pair<std::string, Object>> objects = {
-        {"weights", MakeReadonlyObject(Get3DSizeForPHWO4I4(attr.weights.shape),
-                                       ConvertToPHWO4I4(attr.weights))}};
+        std::vector<std::pair<std::string, Object>> objects = {
+            {   "weights", MakeReadonlyObject(Get3DSizeForPHWO4I4(attr.weights.shape),
+                                              ConvertToPHWO4I4(attr.weights))
+            }
+        };
 
-    std::string source;
-    if (offsets_count_too_large) {
-      source = R"(
+        std::string source;
+        if (offsets_count_too_large) {
+            source = R"(
       int i = 0;
       for (int ky = 0; ky < $kernel_h$; ky++) {
         for (int kx = 0; kx < $kernel_w$; kx++, i++) {
           ivec2 coord = gid.xy * $stride$ + ivec2(kx * $dilation_w$ - $padding_w$, ky * $dilation_h$ - $padding_h$);)";
-    } else {
-      source = R"(
+        } else {
+            source = R"(
         for (int i = 0; i < $offsets_count$; ++i) {
           ivec2 coord = gid.xy * $stride$ + $offsets[i]$;)";
-    }
-    if (non_empty_padding) {
-      source += R"(
+        }
+        if (non_empty_padding) {
+            source += R"(
         if (coord.x < 0 || coord.y < 0 || coord.x >= $input_data_0_w$ || coord.y >= $input_data_0_h$) {
           continue;
         })";
-    }
-    source += R"(
+        }
+        source += R"(
           for (int l = 0; l < $src_depth$; ++l) {
             vec4 input_ = $input_data_0[coord.x, coord.y, l]$;
             value_0.x += dot(input_, $weights[l * 4 + 0, i, gid.z]$);

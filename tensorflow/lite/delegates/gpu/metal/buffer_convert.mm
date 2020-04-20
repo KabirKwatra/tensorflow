@@ -26,16 +26,16 @@ using ::tflite::gpu::DivideRoundUp;
 using ::tflite::gpu::metal::CreateComputeProgram;
 
 @implementation TFLBufferConvert {
-  id<MTLComputePipelineState> _program;
+    id<MTLComputePipelineState> _program;
 }
 
 - (id)initWithDevice:(id<MTLDevice>)device
-           isFloat16:(bool)isFloat16
-     convertToPBHWC4:(bool)convertToPBHWC4 {
-  if (self = [super init]) {
-    std::string shaderSource;
-    if (convertToPBHWC4) {
-      shaderSource = R"(
+    isFloat16:(bool)isFloat16
+    convertToPBHWC4:(bool)convertToPBHWC4 {
+    if (self = [super init]) {
+        std::string shaderSource;
+        if (convertToPBHWC4) {
+            shaderSource = R"(
         #include <metal_stdlib>
         using namespace metal;
         kernel void ComputeFunction(device float* const input_buffer [[buffer(0)]],
@@ -56,8 +56,8 @@ using ::tflite::gpu::metal::CreateComputeProgram;
           output_buffer[bphwc4_index] = value;
         }
       )";
-    } else {
-      shaderSource = R"(
+        } else {
+            shaderSource = R"(
         #include <metal_stdlib>
         using namespace metal;
         kernel void ComputeFunction(device FLT4* const input_buffer [[buffer(0)]],
@@ -77,37 +77,37 @@ using ::tflite::gpu::metal::CreateComputeProgram;
           }
         }
       )";
+        }
+        NSDictionary* macros = @ {@"FLT4" : (isFloat16 ? @"half4" : @"float4")};
+        NSString* code = [NSString stringWithCString:shaderSource.c_str()
+                                   encoding:[NSString defaultCStringEncoding]];
+        id<MTLComputePipelineState> program;
+        if (CreateComputeProgram(device, code, @"ComputeFunction", macros, &program).ok()) {
+            _program = program;
+            return self;
+        }
     }
-    NSDictionary* macros = @{@"FLT4" : (isFloat16 ? @"half4" : @"float4")};
-    NSString* code = [NSString stringWithCString:shaderSource.c_str()
-                                        encoding:[NSString defaultCStringEncoding]];
-    id<MTLComputePipelineState> program;
-    if (CreateComputeProgram(device, code, @"ComputeFunction", macros, &program).ok()) {
-      _program = program;
-      return self;
-    }
-  }
-  return nil;
+    return nil;
 }
 
 - (void)convertWithEncoder:(id<MTLComputeCommandEncoder>)encoder
-                     shape:(const BHWC&)shape
-              sourceBuffer:(id<MTLBuffer>)sourceBuffer
-           convertedBuffer:(id<MTLBuffer>)convertedBuffer {
-  [encoder setComputePipelineState:_program];
-  [encoder setBuffer:sourceBuffer offset:0 atIndex:0];
-  [encoder setBuffer:convertedBuffer offset:0 atIndex:1];
+    shape:(const BHWC&)shape
+    sourceBuffer:(id<MTLBuffer>)sourceBuffer
+    convertedBuffer:(id<MTLBuffer>)convertedBuffer {
+    [encoder setComputePipelineState:_program];
+    [encoder setBuffer:sourceBuffer offset:0 atIndex:0];
+    [encoder setBuffer:convertedBuffer offset:0 atIndex:1];
 
-  std::vector<int> uniforms = {shape.w, shape.h, shape.c, shape.b};
-  [encoder setBytes:uniforms.data() length:uniforms.size() * sizeof(int) atIndex:2];
+    std::vector<int> uniforms = {shape.w, shape.h, shape.c, shape.b};
+    [encoder setBytes:uniforms.data() length:uniforms.size() * sizeof(int) atIndex:2];
 
-  MTLSize group_size = MTLSizeMake(16, 16, 1);
-  int layers = DivideRoundUp(shape.c, 4);
-  int groups_x = DivideRoundUp(shape.w, group_size.width);
-  int groups_y = DivideRoundUp(shape.h, group_size.height);
-  int groups_z = DivideRoundUp(layers, group_size.depth);
-  MTLSize groups_count = MTLSizeMake(groups_x, groups_y, groups_z);
-  [encoder dispatchThreadgroups:groups_count threadsPerThreadgroup:group_size];
+    MTLSize group_size = MTLSizeMake(16, 16, 1);
+    int layers = DivideRoundUp(shape.c, 4);
+    int groups_x = DivideRoundUp(shape.w, group_size.width);
+    int groups_y = DivideRoundUp(shape.h, group_size.height);
+    int groups_z = DivideRoundUp(layers, group_size.depth);
+    MTLSize groups_count = MTLSizeMake(groups_x, groups_y, groups_z);
+    [encoder dispatchThreadgroups:groups_count threadsPerThreadgroup:group_size];
 }
 
 @end

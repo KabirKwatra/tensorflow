@@ -25,27 +25,27 @@ namespace {
 using testing::Eq;
 
 TEST(UtilTest, DivideRoundUp) {
-  EXPECT_THAT(DivideRoundUp(0, 256), Eq(0));
-  EXPECT_THAT(DivideRoundUp(2u, 256), Eq(1));
-  EXPECT_THAT(DivideRoundUp(2, 256), Eq(1));
-  EXPECT_THAT(DivideRoundUp(255u, 256), Eq(1));
-  EXPECT_THAT(DivideRoundUp(255, 256), Eq(1));
-  EXPECT_THAT(DivideRoundUp(256u, 256), Eq(1));
-  EXPECT_THAT(DivideRoundUp(256, 256), Eq(1));
-  EXPECT_THAT(DivideRoundUp(257u, 256), Eq(2));
-  EXPECT_THAT(DivideRoundUp(257, 256), Eq(2));
+    EXPECT_THAT(DivideRoundUp(0, 256), Eq(0));
+    EXPECT_THAT(DivideRoundUp(2u, 256), Eq(1));
+    EXPECT_THAT(DivideRoundUp(2, 256), Eq(1));
+    EXPECT_THAT(DivideRoundUp(255u, 256), Eq(1));
+    EXPECT_THAT(DivideRoundUp(255, 256), Eq(1));
+    EXPECT_THAT(DivideRoundUp(256u, 256), Eq(1));
+    EXPECT_THAT(DivideRoundUp(256, 256), Eq(1));
+    EXPECT_THAT(DivideRoundUp(257u, 256), Eq(2));
+    EXPECT_THAT(DivideRoundUp(257, 256), Eq(2));
 }
 
 TEST(UtilTest, AlignByN) {
-  EXPECT_THAT(AlignByN(0u, 256), Eq(0));
-  EXPECT_THAT(AlignByN(1u, 256), Eq(256));
-  EXPECT_THAT(AlignByN(255u, 256), Eq(256));
-  EXPECT_THAT(AlignByN(256u, 256), Eq(256));
-  EXPECT_THAT(AlignByN(257u, 256), Eq(512));
+    EXPECT_THAT(AlignByN(0u, 256), Eq(0));
+    EXPECT_THAT(AlignByN(1u, 256), Eq(256));
+    EXPECT_THAT(AlignByN(255u, 256), Eq(256));
+    EXPECT_THAT(AlignByN(256u, 256), Eq(256));
+    EXPECT_THAT(AlignByN(257u, 256), Eq(512));
 
-  EXPECT_THAT(AlignByN(1, 4), Eq(4));
-  EXPECT_THAT(AlignByN(80, 4), Eq(80));
-  EXPECT_THAT(AlignByN(81, 4), Eq(84));
+    EXPECT_THAT(AlignByN(1, 4), Eq(4));
+    EXPECT_THAT(AlignByN(80, 4), Eq(80));
+    EXPECT_THAT(AlignByN(81, 4), Eq(84));
 }
 
 }  // namespace

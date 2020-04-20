@@ -35,7 +35,7 @@ namespace metal {
 namespace {
 
 std::string GetMaxUnpoolingCode(const HW& kernel_size) {
-  std::string shader_source = R"(
+    std::string shader_source = R"(
     #include <metal_stdlib>
     using namespace metal;
     constant int window_w = $0;
@@ -82,62 +82,64 @@ std::string GetMaxUnpoolingCode(const HW& kernel_size) {
       output_buffer[linear_index] = value;
     }
   )";
-  return absl::Substitute(shader_source, kernel_size.w);
+    return absl::Substitute(shader_source, kernel_size.w);
 }
 }  // namespace
 
 std::vector<ComputeTaskDescriptorPtr> MaxUnpooling(
     int id, ValueId input_id, ValueId input_indices_id, ValueId output_id,
     const MaxUnpooling2DAttributes& params) {
-  auto desc = std::make_shared<ComputeTaskDescriptor>();
-  desc->id = id;
-  desc->is_linkable = false;
-  desc->shader_source = GetMaxUnpoolingCode(params.kernel);
+    auto desc = std::make_shared<ComputeTaskDescriptor>();
+    desc->id = id;
+    desc->is_linkable = false;
+    desc->shader_source = GetMaxUnpoolingCode(params.kernel);
 
-  desc->input_buffers = {
-      {input_id, "device FLT4* const src_buffer"},
-      {input_indices_id, "device FLT4* const src_indices_buffer"},
-  };
+    desc->input_buffers = {
+        {input_id, "device FLT4* const src_buffer"},
+        {input_indices_id, "device FLT4* const src_indices_buffer"},
+    };
 
-  desc->output_buffer = {output_id, "device FLT4* output_buffer",
-                         [input_id, input_indices_id,
-                          params](const std::map<ValueId, BHWC>& buffers) {
-                           return CalculateOutputShape(
-                               buffers.find(input_id)->second, params);
-                         }};
+    desc->output_buffer = {output_id, "device FLT4* output_buffer",
+                           [input_id, input_indices_id,
+              params](const std::map<ValueId, BHWC>& buffers) {
+        return CalculateOutputShape(
+                   buffers.find(input_id)->second, params);
+    }
+                          };
 
-  desc->uniform_buffers = {
-      {"constant uniforms& params",
-       [input_id, input_indices_id, output_id,
-        params](const std::map<ValueId, BHWC>& buffers) {
-         const auto& dimension = buffers.find(input_id)->second;
-         const auto& output_dimension = buffers.find(output_id)->second;
-         std::vector<int> uniform_params{
-             dimension.w,
-             dimension.h,
-             output_dimension.w,
-             output_dimension.h,
-             params.strides.w,
-             params.strides.h,
-             params.padding.prepended.w,
-             params.padding.prepended.h,
-         };
-         return GetByteBuffer(uniform_params);
-       }},
-  };
+    desc->uniform_buffers = {
+        {   "constant uniforms& params",
+            [input_id, input_indices_id, output_id,
+                       params](const std::map<ValueId, BHWC>& buffers) {
+                const auto& dimension = buffers.find(input_id)->second;
+                const auto& output_dimension = buffers.find(output_id)->second;
+                std::vector<int> uniform_params{
+                    dimension.w,
+                    dimension.h,
+                    output_dimension.w,
+                    output_dimension.h,
+                    params.strides.w,
+                    params.strides.h,
+                    params.padding.prepended.w,
+                    params.padding.prepended.h,
+                };
+                return GetByteBuffer(uniform_params);
+            }
+        },
+    };
 
-  desc->resize_function = [input_id, input_indices_id,
-                           params](const std::map<ValueId, BHWC>& buffers) {
-    const auto& src_shape = buffers.find(input_id)->second;
-    BHWC dst_shape = CalculateOutputShape(src_shape, params);
-    const uint3 groups_size{16, 16, 1};
-    int groups_x = DivideRoundUp(dst_shape.w, groups_size.x);
-    int groups_y = DivideRoundUp(dst_shape.h, groups_size.y);
-    int groups_z = DivideRoundUp(dst_shape.c, 4);
-    return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
-  };
+    desc->resize_function = [input_id, input_indices_id,
+              params](const std::map<ValueId, BHWC>& buffers) {
+        const auto& src_shape = buffers.find(input_id)->second;
+        BHWC dst_shape = CalculateOutputShape(src_shape, params);
+        const uint3 groups_size{16, 16, 1};
+        int groups_x = DivideRoundUp(dst_shape.w, groups_size.x);
+        int groups_y = DivideRoundUp(dst_shape.h, groups_size.y);
+        int groups_z = DivideRoundUp(dst_shape.c, 4);
+        return std::make_pair(groups_size, uint3{groups_x, groups_y, groups_z});
+    };
 
-  return {desc};
+    return {desc};
 }
 
 }  // namespace metal

@@ -32,41 +32,41 @@ namespace gl {
 namespace {
 
 class AlignedConcatByChannels : public NodeShader {
- public:
-  static bool IsSupported(const GenerationContext& ctx) {
-    const auto& attr = absl::any_cast<const ConcatAttributes&>(ctx.op_attr);
+public:
+    static bool IsSupported(const GenerationContext& ctx) {
+        const auto& attr = absl::any_cast<const ConcatAttributes&>(ctx.op_attr);
 
-    // Implementation supports concatenation by channels only.
-    if (attr.axis != Axis::CHANNELS) return false;
+        // Implementation supports concatenation by channels only.
+        if (attr.axis != Axis::CHANNELS) return false;
 
-    // Implementation supports concatenation of 2 tensors only.
-    if (ctx.input_shapes.size() != 2) return false;
+        // Implementation supports concatenation of 2 tensors only.
+        if (ctx.input_shapes.size() != 2) return false;
 
-    // H and W must be the same for every concatenated tensor.
-    for (int i = 1; i < ctx.input_shapes.size(); i++) {
-      if (ctx.input_shapes[0][1] != ctx.input_shapes[i][1] ||
-          ctx.input_shapes[0][2] != ctx.input_shapes[i][2]) {
-        return false;
-      }
+        // H and W must be the same for every concatenated tensor.
+        for (int i = 1; i < ctx.input_shapes.size(); i++) {
+            if (ctx.input_shapes[0][1] != ctx.input_shapes[i][1] ||
+                    ctx.input_shapes[0][2] != ctx.input_shapes[i][2]) {
+                return false;
+            }
+        }
+
+        // Channels must be aligned by 4 for every concatenated tensor.
+        for (const auto& shape : ctx.input_shapes) {
+            if (shape[3] % 4 != 0) return false;
+        }
+
+        return true;
     }
 
-    // Channels must be aligned by 4 for every concatenated tensor.
-    for (const auto& shape : ctx.input_shapes) {
-      if (shape[3] % 4 != 0) return false;
-    }
+    absl::Status GenerateCode(const GenerationContext& ctx,
+                              GeneratedCode* generated_code) const final {
+        if (!IsSupported(ctx)) {
+            return absl::InvalidArgumentError(
+                       "This case is not supported by aligned concat");
+        }
 
-    return true;
-  }
-
-  absl::Status GenerateCode(const GenerationContext& ctx,
-                            GeneratedCode* generated_code) const final {
-    if (!IsSupported(ctx)) {
-      return absl::InvalidArgumentError(
-          "This case is not supported by aligned concat");
-    }
-
-    // Shader below concatenates 2 tensors which channels are aligned by 4
-    std::string source = R"(
+        // Shader below concatenates 2 tensors which channels are aligned by 4
+        std::string source = R"(
       if (gid.z < $border$) {
         value_0 = $input_data_0[gid.x, gid.y, gid.z]$;
       } else {
