@@ -13,9 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import functools
@@ -25,58 +23,31 @@ import sys
 import time
 import weakref
 
-from absl.testing import parameterized
 import numpy
-
-from tensorflow.core.protobuf import config_pb2
-from tensorflow.core.protobuf import rewriter_config_pb2
+from absl.testing import parameterized
+from tensorflow.core.protobuf import config_pb2, rewriter_config_pb2
 from tensorflow.python.autograph.core import ag_ctx
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import cancellation
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import function
-from tensorflow.python.framework import composite_tensor
-from tensorflow.python.framework import config
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import func_graph
+from tensorflow.python.eager import (backprop, cancellation, context,
+                                     def_function, function)
+from tensorflow.python.framework import (composite_tensor, config, constant_op,
+                                         dtypes, errors, func_graph)
 from tensorflow.python.framework import function as tf_function
-from tensorflow.python.framework import indexed_slices
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import random_seed
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import test_ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.framework import type_spec
+from tensorflow.python.framework import (indexed_slices, ops, random_seed,
+                                         sparse_tensor, tensor_shape,
+                                         tensor_spec, test_ops, test_util,
+                                         type_spec)
 from tensorflow.python.layers import convolutional
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import clip_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import data_flow_ops
-from tensorflow.python.ops import gen_functional_ops
-from tensorflow.python.ops import gen_random_ops
-from tensorflow.python.ops import gen_resource_variable_ops
-from tensorflow.python.ops import gradients_impl
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import list_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import string_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
-from tensorflow.python.ops.ragged import ragged_factory_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops import (array_ops, check_ops, clip_ops,
+                                   control_flow_ops, data_flow_ops,
+                                   gen_functional_ops, gen_random_ops,
+                                   gen_resource_variable_ops, gradients_impl,
+                                   init_ops, list_ops, math_ops, random_ops,
+                                   resource_variable_ops, string_ops,
+                                   variable_scope, variables)
+from tensorflow.python.ops.ragged import ragged_factory_ops, ragged_tensor
 from tensorflow.python.platform import test
 from tensorflow.python.training import training_ops
-from tensorflow.python.util import compat
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import compat, nest, tf_inspect
 
 try:
     import attr  # pylint:disable=g-import-not-at-top

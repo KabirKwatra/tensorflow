@@ -14,17 +14,13 @@
 # ==============================================================================
 """XLA LocalClient interface for interacting with TPUs via the TPU driver."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from absl import logging
-
 from tensorflow.compiler.xla.python import xla_client
 from tensorflow.compiler.xla.python import xla_extension as _xla
-from tensorflow.compiler.xla.python.tpu_driver.client import (
-    tpu_client_extension as _tpu_client,
-)
+from tensorflow.compiler.xla.python.tpu_driver.client import \
+    tpu_client_extension as _tpu_client
 
 
 class TpuBackend(xla_client.Backend):
