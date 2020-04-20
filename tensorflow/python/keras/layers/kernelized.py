@@ -146,36 +146,29 @@ class RandomFourierFeatures(base_layer.Layer):
       name: String, name to use for this layer.
     """
 
-    def __init__(
-        self,
-        output_dim,
-        kernel_initializer="gaussian",
-        scale=None,
-        trainable=False,
-        name=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 output_dim,
+                 kernel_initializer="gaussian",
+                 scale=None,
+                 trainable=False,
+                 name=None,
+                 **kwargs):
         if output_dim <= 0:
             raise ValueError(
                 "`output_dim` should be a positive integer. Given: {}.".format(
-                    output_dim
-                )
-            )
+                    output_dim))
         if isinstance(kernel_initializer, six.string_types):
             if kernel_initializer.lower() not in _SUPPORTED_RBF_KERNEL_TYPES:
                 raise ValueError(
-                    "Unsupported kernel type: '{}'. Supported kernel types: {}.".format(
-                        kernel_initializer, _SUPPORTED_RBF_KERNEL_TYPES
-                    )
-                )
+                    "Unsupported kernel type: '{}'. Supported kernel types: {}."
+                    .format(kernel_initializer, _SUPPORTED_RBF_KERNEL_TYPES))
         if scale is not None and scale <= 0.0:
             raise ValueError(
                 "When provided, `scale` should be a positive float. "
-                "Given: {}.".format(scale)
-            )
-        super(RandomFourierFeatures, self).__init__(
-            trainable=trainable, name=name, **kwargs
-        )
+                "Given: {}.".format(scale))
+        super(RandomFourierFeatures, self).__init__(trainable=trainable,
+                                                    name=name,
+                                                    **kwargs)
         self.output_dim = output_dim
         self.kernel_initializer = kernel_initializer
         self.scale = scale
@@ -186,23 +179,18 @@ class RandomFourierFeatures(base_layer.Layer):
         # to have shape [batch_size, dimension].
         if input_shape.rank != 2:
             raise ValueError(
-                "The rank of the input tensor should be 2. Got {} instead.".format(
-                    input_shape.ndims
-                )
-            )
+                "The rank of the input tensor should be 2. Got {} instead.".
+                format(input_shape.ndims))
         if input_shape.dims[1].value is None:
             raise ValueError(
                 "The last dimension of the inputs to `RandomFourierFeatures` "
-                "should be defined. Found `None`."
-            )
+                "should be defined. Found `None`.")
         self.input_spec = input_spec.InputSpec(
-            ndim=2, axes={1: input_shape.dims[1].value}
-        )
+            ndim=2, axes={1: input_shape.dims[1].value})
         input_dim = input_shape.dims[1].value
 
         kernel_initializer = _get_random_features_initializer(
-            self.kernel_initializer, shape=(input_dim, self.output_dim)
-        )
+            self.kernel_initializer, shape=(input_dim, self.output_dim))
 
         unscaled_kernel = self.add_weight(
             name="unscaled_random_features",
@@ -214,11 +202,10 @@ class RandomFourierFeatures(base_layer.Layer):
 
         self.bias = self.add_weight(
             name="random_features_bias",
-            shape=(self.output_dim,),
+            shape=(self.output_dim, ),
             dtype=dtypes.float32,
             initializer=init_ops.random_uniform_initializer(
-                minval=0.0, maxval=2 * np.pi, dtype=dtypes.float32
-            ),
+                minval=0.0, maxval=2 * np.pi, dtype=dtypes.float32),
             trainable=False,
         )
 
@@ -226,7 +213,7 @@ class RandomFourierFeatures(base_layer.Layer):
             self.scale = _get_default_scale(self.kernel_initializer, input_dim)
         scale = self.add_weight(
             name="random_features_scale",
-            shape=(1,),
+            shape=(1, ),
             dtype=dtypes.float32,
             initializer=init_ops.constant_initializer(self.scale),
             trainable=True,
@@ -248,14 +235,14 @@ class RandomFourierFeatures(base_layer.Layer):
         if input_shape.dims[-1].value is None:
             raise ValueError(
                 "The innermost dimension of input shape must be defined. Given: %s"
-                % input_shape
-            )
+                % input_shape)
         return input_shape[:-1].concatenate(self.output_dim)
 
     def get_config(self):
         kernel_initializer = self.kernel_initializer
         if isinstance(self.kernel_initializer, init_ops.Initializer):
-            kernel_initializer = initializers.serialize(self.kernel_initializer)
+            kernel_initializer = initializers.serialize(
+                self.kernel_initializer)
         config = {
             "output_dim": self.output_dim,
             "kernel_initializer": kernel_initializer,
@@ -275,22 +262,22 @@ def _get_random_features_initializer(initializer, shape):
     random_features_initializer = initializer
     if isinstance(initializer, six.string_types):
         if initializer.lower() == "gaussian":
-            random_features_initializer = init_ops.random_normal_initializer(stddev=1.0)
+            random_features_initializer = init_ops.random_normal_initializer(
+                stddev=1.0)
         elif initializer.lower() == "laplacian":
             random_features_initializer = init_ops.constant_initializer(
-                _get_cauchy_samples(loc=0.0, scale=1.0, shape=shape)
-            )
+                _get_cauchy_samples(loc=0.0, scale=1.0, shape=shape))
 
         else:
             raise ValueError(
-                "Unsupported kernel type: '{}'. Supported kernel types: {}.".format(
-                    random_features_initializer, _SUPPORTED_RBF_KERNEL_TYPES
-                )
-            )
+                "Unsupported kernel type: '{}'. Supported kernel types: {}.".
+                format(random_features_initializer,
+                       _SUPPORTED_RBF_KERNEL_TYPES))
     return random_features_initializer
 
 
 def _get_default_scale(initializer, input_dim):
-    if isinstance(initializer, six.string_types) and initializer.lower() == "gaussian":
+    if isinstance(initializer,
+                  six.string_types) and initializer.lower() == "gaussian":
         return np.sqrt(input_dim / 2.0)
     return 1.0
