@@ -13,7 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Python wrappers for Datasets."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import abc
 import functools
@@ -25,34 +27,49 @@ import weakref
 import numpy as np
 import six
 from six.moves import queue as Queue  # pylint: disable=redefined-builtin
+
 from tensorflow.core.framework import graph_pb2
 from tensorflow.python import tf2
 from tensorflow.python.compat import compat
-from tensorflow.python.data.experimental.ops import (distribute_options,
-                                                     optimization_options,
-                                                     stats_options,
-                                                     threading_options)
+from tensorflow.python.data.experimental.ops import distribute_options
+from tensorflow.python.data.experimental.ops import optimization_options
+from tensorflow.python.data.experimental.ops import stats_options
+from tensorflow.python.data.experimental.ops import threading_options
 from tensorflow.python.data.ops import iterator_ops
 from tensorflow.python.data.util import nest
 from tensorflow.python.data.util import options as options_lib
-from tensorflow.python.data.util import random_seed, structure, traverse
+from tensorflow.python.data.util import random_seed
+from tensorflow.python.data.util import structure
+from tensorflow.python.data.util import traverse
 from tensorflow.python.eager import context
 from tensorflow.python.eager import function as eager_function
 from tensorflow.python.framework import auto_control_deps
 from tensorflow.python.framework import auto_control_deps_utils as acd_utils
-from tensorflow.python.framework import (composite_tensor, constant_op, dtypes,
-                                         function, ops)
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import function
+from tensorflow.python.framework import ops
 from tensorflow.python.framework import random_seed as core_random_seed
 from tensorflow.python.framework import smart_cond
 from tensorflow.python.framework import sparse_tensor as sparse_tensor_lib
-from tensorflow.python.framework import (tensor_shape, tensor_spec,
-                                         tensor_util, type_spec)
-from tensorflow.python.ops import array_ops, control_flow_ops, gen_dataset_ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.framework import type_spec
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import gen_dataset_ops
 from tensorflow.python.ops import gen_experimental_dataset_ops as ged_ops
-from tensorflow.python.ops import gen_io_ops, math_ops, script_ops, string_ops
+from tensorflow.python.ops import gen_io_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import script_ops
+from tensorflow.python.ops import string_ops
 from tensorflow.python.training.tracking import base as tracking_base
 from tensorflow.python.training.tracking import tracking
-from tensorflow.python.util import deprecation, function_utils, lazy_loader
+from tensorflow.python.util import deprecation
+from tensorflow.python.util import function_utils
+from tensorflow.python.util import lazy_loader
 from tensorflow.python.util import nest as tf_nest
 from tensorflow.python.util.tf_export import tf_export
 

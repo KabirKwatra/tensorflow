@@ -14,18 +14,28 @@
 # ==============================================================================
 """Keras image preprocessing layers."""
 # pylint: disable=g-classes-have-attributes
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes, ops, tensor_shape, tensor_util
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_util
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.engine.input_spec import InputSpec
 from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
-                                   image_ops, math_ops, stateful_random_ops,
-                                   stateless_random_ops)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import check_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import image_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import stateful_random_ops
+from tensorflow.python.ops import stateless_random_ops
 from tensorflow.python.util.tf_export import keras_export
 
 ResizeMethod = image_ops.ResizeMethod

@@ -13,16 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for Keras callbacks in multi-worker training with TF2."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
 from absl.testing import parameterized
+
 from tensorflow.python.distribute import \
     collective_all_reduce_strategy as collective_strategy
-from tensorflow.python.distribute import (combinations, distributed_file_utils,
-                                          multi_process_runner)
+from tensorflow.python.distribute import combinations
+from tensorflow.python.distribute import distributed_file_utils
+from tensorflow.python.distribute import multi_process_runner
 from tensorflow.python.distribute import multi_worker_test_base as test_base
 from tensorflow.python.keras import callbacks
 from tensorflow.python.keras.distribute import multi_worker_testing_utils
