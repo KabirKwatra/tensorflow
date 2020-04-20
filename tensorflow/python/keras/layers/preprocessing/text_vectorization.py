@@ -30,7 +30,9 @@ from tensorflow.python.framework import tensor_shape
 from tensorflow.python.framework import tensor_spec
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine.base_preprocessing_layer import Combiner
-from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
+from tensorflow.python.keras.engine.base_preprocessing_layer import (
+    CombinerPreprocessingLayer,
+)
 from tensorflow.python.keras.layers.preprocessing import categorical_encoding
 from tensorflow.python.keras.layers.preprocessing import index_lookup
 from tensorflow.python.keras.utils import layer_utils
@@ -75,8 +77,7 @@ _ACCUMULATOR_DOCUMENT_COUNTS = "document_counts"
 _ACCUMULATOR_NUM_DOCUMENTS = "num_documents"
 
 
-@keras_export(
-    "keras.layers.experimental.preprocessing.TextVectorization", v1=[])
+@keras_export("keras.layers.experimental.preprocessing.TextVectorization", v1=[])
 class TextVectorization(CombinerPreprocessingLayer):
     """Text vectorization layer.
 
@@ -197,23 +198,25 @@ class TextVectorization(CombinerPreprocessingLayer):
     # can add whatever other layers you need to create your model.
     ```
     """
+
     # TODO(momernick): Add an examples section to the docstring.
 
-    def __init__(self,
-                 max_tokens=None,
-                 standardize=LOWER_AND_STRIP_PUNCTUATION,
-                 split=SPLIT_ON_WHITESPACE,
-                 ngrams=None,
-                 output_mode=INT,
-                 output_sequence_length=None,
-                 pad_to_max_tokens=True,
-                 **kwargs):
+    def __init__(
+        self,
+        max_tokens=None,
+        standardize=LOWER_AND_STRIP_PUNCTUATION,
+        split=SPLIT_ON_WHITESPACE,
+        ngrams=None,
+        output_mode=INT,
+        output_sequence_length=None,
+        pad_to_max_tokens=True,
+        **kwargs
+    ):
 
         # This layer only applies to string processing, and so should only have
         # a dtype of 'string'.
         if "dtype" in kwargs and kwargs["dtype"] != dtypes.string:
-            raise ValueError(
-                "TextVectorization may only have a dtype of string.")
+            raise ValueError("TextVectorization may only have a dtype of string.")
         elif "dtype" not in kwargs:
             kwargs["dtype"] = dtypes.string
 
@@ -224,7 +227,8 @@ class TextVectorization(CombinerPreprocessingLayer):
             layer_name="TextVectorization",
             arg_name="standardize",
             allow_none=True,
-            allow_callables=True)
+            allow_callables=True,
+        )
 
         # 'split' must be one of (None, SPLIT_ON_WHITESPACE, callable)
         layer_utils.validate_string_arg(
@@ -233,7 +237,8 @@ class TextVectorization(CombinerPreprocessingLayer):
             layer_name="TextVectorization",
             arg_name="split",
             allow_none=True,
-            allow_callables=True)
+            allow_callables=True,
+        )
 
         # 'output_mode' must be one of (None, INT, COUNT, BINARY, TFIDF)
         layer_utils.validate_string_arg(
@@ -241,27 +246,37 @@ class TextVectorization(CombinerPreprocessingLayer):
             allowable_strings=(INT, COUNT, BINARY, TFIDF),
             layer_name="TextVectorization",
             arg_name="output_mode",
-            allow_none=True)
+            allow_none=True,
+        )
 
         # 'ngrams' must be one of (None, int, tuple(int))
-        if not (ngrams is None or
-                isinstance(ngrams, int) or
-                isinstance(ngrams, tuple) and
-                all(isinstance(item, int) for item in ngrams)):
-            raise ValueError(("`ngrams` must be None, an integer, or a tuple of "
-                              "integers. Got %s") % (ngrams,))
+        if not (
+            ngrams is None
+            or isinstance(ngrams, int)
+            or isinstance(ngrams, tuple)
+            and all(isinstance(item, int) for item in ngrams)
+        ):
+            raise ValueError(
+                ("`ngrams` must be None, an integer, or a tuple of " "integers. Got %s")
+                % (ngrams,)
+            )
 
         # 'output_sequence_length' must be one of (None, int) and is only
         # set if output_mode is INT.
-        if (output_mode == INT and not (isinstance(output_sequence_length, int) or
-                                        (output_sequence_length is None))):
-            raise ValueError("`output_sequence_length` must be either None or an "
-                             "integer when `output_mode` is 'int'. "
-                             "Got %s" % output_sequence_length)
+        if output_mode == INT and not (
+            isinstance(output_sequence_length, int) or (output_sequence_length is None)
+        ):
+            raise ValueError(
+                "`output_sequence_length` must be either None or an "
+                "integer when `output_mode` is 'int'. "
+                "Got %s" % output_sequence_length
+            )
 
         if output_mode != INT and output_sequence_length is not None:
-            raise ValueError("`output_sequence_length` must not be set if "
-                             "`output_mode` is not 'int'.")
+            raise ValueError(
+                "`output_sequence_length` must not be set if "
+                "`output_mode` is not 'int'."
+            )
 
         # If max_tokens is set, the value must be greater than 1 - otherwise we
         # are creating a 0-element vocab, which doesn't make sense.
@@ -301,13 +316,16 @@ class TextVectorization(CombinerPreprocessingLayer):
 
         super(TextVectorization, self).__init__(
             combiner=_TextVectorizationCombiner(
-                self._max_vocab_size, compute_idf=output_mode == TFIDF),
-            **kwargs)
+                self._max_vocab_size, compute_idf=output_mode == TFIDF
+            ),
+            **kwargs
+        )
         self._supports_ragged_inputs = True
 
         reserve_zero = output_mode in [None, INT]
         self._index_lookup_layer = self._get_index_lookup_class()(
-            max_tokens=max_tokens, reserve_zero=reserve_zero, dtype=dtypes.string)
+            max_tokens=max_tokens, reserve_zero=reserve_zero, dtype=dtypes.string
+        )
 
         # If this layer is configured for string or integer output, we do not
         # create a vectorization layer (as the output is not vectorized).
@@ -319,7 +337,8 @@ class TextVectorization(CombinerPreprocessingLayer):
         else:
             max_elements = None
         self._vectorize_layer = self._get_vectorization_class()(
-            max_tokens=max_elements, output_mode=self._output_mode)
+            max_tokens=max_elements, output_mode=self._output_mode
+        )
 
     # These are V1/V2 shim points. There are V1 implementations in the V1 class.
     def _get_vectorization_class(self):
@@ -337,12 +356,15 @@ class TextVectorization(CombinerPreprocessingLayer):
         if isinstance(preprocessed_data, np.ndarray):
             return preprocessed_data
         return np.array(preprocessed_data.to_list())
+
     # End of V1/V2 shim points.
 
     def _assert_same_type(self, expected_type, values, value_name):
         if dtypes.as_dtype(expected_type) != dtypes.as_dtype(values.dtype):
-            raise RuntimeError("Expected %s type %s, got %s" %
-                               (value_name, expected_type, values.dtype))
+            raise RuntimeError(
+                "Expected %s type %s, got %s"
+                % (value_name, expected_type, values.dtype)
+            )
 
     def _convert_to_ndarray(self, x):
         return np.array(x) if isinstance(x, (list, tuple)) else x
@@ -378,8 +400,7 @@ class TextVectorization(CombinerPreprocessingLayer):
             this layer, which does not support repeated calls to `adapt`.
         """
         if not reset_state:
-            raise ValueError(
-                "TextVectorization does not support streaming adapts.")
+            raise ValueError("TextVectorization does not support streaming adapts.")
 
         # Build the layer explicitly with the original data shape instead of relying
         # on an implicit call to `build` in the base layer's `adapt`, since
@@ -393,17 +414,20 @@ class TextVectorization(CombinerPreprocessingLayer):
             # TODO(momernick): Replace this with a more V2-friendly API.
             shape = dataset_ops.get_legacy_output_shapes(data)
             if not isinstance(shape, tensor_shape.TensorShape):
-                raise ValueError("The dataset passed to 'adapt' must contain a single "
-                                 "tensor value.")
+                raise ValueError(
+                    "The dataset passed to 'adapt' must contain a single "
+                    "tensor value."
+                )
             if shape.rank == 1:
-                data = data.map(
-                    lambda tensor: array_ops.expand_dims(tensor, -1))
+                data = data.map(lambda tensor: array_ops.expand_dims(tensor, -1))
             self.build(dataset_ops.get_legacy_output_shapes(data))
             preprocessed_inputs = data.map(self._preprocess)
         else:
             raise ValueError(
                 "adapt() requires a Dataset or a Numpy array as input, got {}".format(
-                    type(data)))
+                    type(data)
+                )
+            )
         super(TextVectorization, self).adapt(preprocessed_inputs, reset_state)
 
     def get_vocabulary(self):
@@ -429,11 +453,7 @@ class TextVectorization(CombinerPreprocessingLayer):
         # abstraction for ease of saving!) we return 0.
         return 0
 
-    def set_vocabulary(self,
-                       vocab,
-                       df_data=None,
-                       oov_df_value=None,
-                       append=False):
+    def set_vocabulary(self, vocab, df_data=None, oov_df_value=None, append=False):
         """Sets vocabulary (and optionally document frequency) data for this layer.
 
         This method sets the vocabulary and DF data for this layer directly, instead
@@ -462,15 +482,24 @@ class TextVectorization(CombinerPreprocessingLayer):
             called.
         """
         if self._output_mode != TFIDF and df_data is not None:
-            raise ValueError("df_data should only be set if output_mode is TFIDF. "
-                             "output_mode is %s." % self._output_mode)
+            raise ValueError(
+                "df_data should only be set if output_mode is TFIDF. "
+                "output_mode is %s." % self._output_mode
+            )
 
-        if (self._output_mode in [BINARY, COUNT, TFIDF] and self._called and
-                not self._pad_to_max):
-            raise RuntimeError(("When using TextVectorization in {mode} mode and "
-                                "pad_to_max_tokens is False, the vocabulary cannot "
-                                "be changed after the layer is "
-                                "called.").format(mode=self._output_mode))
+        if (
+            self._output_mode in [BINARY, COUNT, TFIDF]
+            and self._called
+            and not self._pad_to_max
+        ):
+            raise RuntimeError(
+                (
+                    "When using TextVectorization in {mode} mode and "
+                    "pad_to_max_tokens is False, the vocabulary cannot "
+                    "be changed after the layer is "
+                    "called."
+                ).format(mode=self._output_mode)
+            )
 
         current_table_size = self._index_lookup_layer.vocab_size()
         self._index_lookup_layer.set_vocabulary(vocab, append)
@@ -493,21 +522,25 @@ class TextVectorization(CombinerPreprocessingLayer):
             if df_data is None:
                 raise ValueError("df_data must be set if output_mode is TFIDF")
             if len(vocab) != len(df_data):
-                raise ValueError("df_data must be the same length as vocab. "
-                                 "len(df_data) is %s, len(vocab) is %s" %
-                                 (len(vocab), len(df_data)))
+                raise ValueError(
+                    "df_data must be the same length as vocab. "
+                    "len(df_data) is %s, len(vocab) is %s" % (len(vocab), len(df_data))
+                )
             if not append and oov_df_value is None:
-                raise ValueError("You must pass an oov_df_value the first time "
-                                 "'set_vocabulary' is called when output_mode is "
-                                 "TFIDF.")
+                raise ValueError(
+                    "You must pass an oov_df_value the first time "
+                    "'set_vocabulary' is called when output_mode is "
+                    "TFIDF."
+                )
 
             df_data = self._convert_to_ndarray(df_data)
             if append:
                 # The existing IDF data is stored in a Keras weight, so we can get it
                 # by calling K.get_value() on the weight object. Take the first
                 # table_size+1 values in case we're padding the weight with zeros
-                existing_df_data = K.get_value(
-                    self._vectorize_layer.tf_idf_weights)[:current_table_size + 1]
+                existing_df_data = K.get_value(self._vectorize_layer.tf_idf_weights)[
+                    : current_table_size + 1
+                ]
                 df_data = np.append(existing_df_data, df_data, axis=0)
                 # If we are appending and need to replace the OOV DF value, we can
                 # assign it over the existing OOV DF value at index 0 of the (already-
@@ -528,21 +561,24 @@ class TextVectorization(CombinerPreprocessingLayer):
         # in None for undefined shape axes. If using 'and !=', this causes the
         # expression to evaluate to False instead of True if the shape is undefined;
         # the expression needs to evaluate to True in that case.
-        if self._split is not None and not input_shape[1] == 1:  # pylint: disable=g-comparison-negation
+        if (
+            self._split is not None and not input_shape[1] == 1
+        ):  # pylint: disable=g-comparison-negation
             raise RuntimeError(
                 "When using TextVectorization to tokenize strings, the first "
                 "dimension of the input array must be 1, got shape "
-                "{}".format(input_shape))
+                "{}".format(input_shape)
+            )
 
         super(TextVectorization, self).build(input_shape)
 
     def _set_state_variables(self, updates):
         if not self.built:
-            raise RuntimeError(
-                "_set_state_variables() must be called after build().")
+            raise RuntimeError("_set_state_variables() must be called after build().")
         if self._output_mode == TFIDF:
-            self.set_vocabulary(updates[_VOCAB_NAME], updates[_IDF_NAME],
-                                updates[_OOV_IDF_NAME])
+            self.set_vocabulary(
+                updates[_VOCAB_NAME], updates[_IDF_NAME], updates[_OOV_IDF_NAME]
+            )
         else:
             self.set_vocabulary(updates[_VOCAB_NAME])
 
@@ -550,7 +586,8 @@ class TextVectorization(CombinerPreprocessingLayer):
         if self._standardize == LOWER_AND_STRIP_PUNCTUATION:
             if ragged_tensor.is_ragged(inputs):
                 lowercase_inputs = ragged_functional_ops.map_flat_values(
-                    gen_string_ops.string_lower, inputs)
+                    gen_string_ops.string_lower, inputs
+                )
                 # Depending on configuration, we may never touch the non-data tensor
                 # in the ragged inputs tensor. If that is the case, and this is the
                 # only layer in the keras model, running it will throw an error.
@@ -558,16 +595,20 @@ class TextVectorization(CombinerPreprocessingLayer):
                 lowercase_inputs = array_ops.identity(lowercase_inputs)
             else:
                 lowercase_inputs = gen_string_ops.string_lower(inputs)
-            inputs = string_ops.regex_replace(lowercase_inputs, DEFAULT_STRIP_REGEX,
-                                              "")
+            inputs = string_ops.regex_replace(lowercase_inputs, DEFAULT_STRIP_REGEX, "")
         elif callable(self._standardize):
             inputs = self._standardize(inputs)
         elif self._standardize is not None:
-            raise ValueError(("%s is not a supported standardization. "
-                              "TextVectorization supports the following options "
-                              "for `standardize`: None, "
-                              "'lower_and_strip_punctuation', or a "
-                              "Callable.") % self._standardize)
+            raise ValueError(
+                (
+                    "%s is not a supported standardization. "
+                    "TextVectorization supports the following options "
+                    "for `standardize`: None, "
+                    "'lower_and_strip_punctuation', or a "
+                    "Callable."
+                )
+                % self._standardize
+            )
 
         if self._split is not None:
             # If we are splitting, we validate that the 1st axis is of dimension 1 and
@@ -582,16 +623,21 @@ class TextVectorization(CombinerPreprocessingLayer):
                 inputs = self._split(inputs)
             else:
                 raise ValueError(
-                    ("%s is not a supported splitting."
-                     "TextVectorization supports the following options "
-                     "for `split`: None, 'whitespace', or a Callable.") % self._split)
+                    (
+                        "%s is not a supported splitting."
+                        "TextVectorization supports the following options "
+                        "for `split`: None, 'whitespace', or a Callable."
+                    )
+                    % self._split
+                )
 
         # Note that 'inputs' here can be either ragged or dense depending on the
         # configuration choices for this Layer. The strings.ngrams op, however, does
         # support both ragged and dense inputs.
         if self._ngrams is not None:
             inputs = ragged_string_ops.ngrams(
-                inputs, ngram_width=self._ngrams, separator=" ")
+                inputs, ngram_width=self._ngrams, separator=" "
+            )
 
         return inputs
 
@@ -625,16 +671,21 @@ class TextVectorization(CombinerPreprocessingLayer):
             else:
                 sequence_len = K.shape(dense_data)[1]
                 pad_amt = self._output_sequence_length - sequence_len
-                def pad_fn(): return array_ops.pad(
-                    dense_data, [[0, 0], [0, pad_amt]])
-                def slice_fn(): return dense_data[:,
-                                                  :self._output_sequence_length]
+
+                def pad_fn():
+                    return array_ops.pad(dense_data, [[0, 0], [0, pad_amt]])
+
+                def slice_fn():
+                    return dense_data[:, : self._output_sequence_length]
+
                 output_tensor = control_flow_ops.cond(
                     sequence_len < self._output_sequence_length,
                     true_fn=pad_fn,
-                    false_fn=slice_fn)
+                    false_fn=slice_fn,
+                )
                 output_tensor.set_shape(
-                    tensor_shape.TensorShape((None, self._output_sequence_length)))
+                    tensor_shape.TensorShape((None, self._output_sequence_length))
+                )
                 return output_tensor
 
         # If we're not returning integers here, we rely on the vectorization layer
@@ -643,8 +694,11 @@ class TextVectorization(CombinerPreprocessingLayer):
 
 
 class _TextVectorizationAccumulator(
-    collections.namedtuple("_TextVectorizationAccumulator",
-                           ["count_dict", "per_doc_count_dict", "metadata"])):
+    collections.namedtuple(
+        "_TextVectorizationAccumulator",
+        ["count_dict", "per_doc_count_dict", "metadata"],
+    )
+):
     pass
 
 
@@ -676,8 +730,9 @@ class _TextVectorizationCombiner(Combiner):
     def compute(self, values, accumulator=None):
         """Compute a step in this computation, returning a new accumulator."""
         if dtypes.as_dtype(self._input_dtype) != dtypes.as_dtype(values.dtype):
-            raise RuntimeError("Expected input type %s, got %s" %
-                               (self._input_dtype, values.dtype))
+            raise RuntimeError(
+                "Expected input type %s, got %s" % (self._input_dtype, values.dtype)
+            )
         if ragged_tensor.is_ragged(values):
             values = values.to_list()
         if isinstance(values, ops.EagerTensor):
@@ -719,7 +774,9 @@ class _TextVectorizationCombiner(Combiner):
                     # per_doc_count_dict will have a last_doc_id of -1. This is always
                     # less than the next doc id (which are strictly positive), so any
                     # future occurrences are guaranteed to be counted.
-                    base_accumulator.per_doc_count_dict[token]["count"] += value["count"]
+                    base_accumulator.per_doc_count_dict[token]["count"] += value[
+                        "count"
+                    ]
 
         return base_accumulator
 
@@ -757,15 +814,16 @@ class _TextVectorizationCombiner(Combiner):
             vocab_counts, _, _ = accumulator
 
         sorted_counts = sorted(
-            vocab_counts.items(), key=operator.itemgetter(1, 0), reverse=True)
+            vocab_counts.items(), key=operator.itemgetter(1, 0), reverse=True
+        )
         vocab_data = (
-            sorted_counts[:self._vocab_size] if self._vocab_size else sorted_counts)
+            sorted_counts[: self._vocab_size] if self._vocab_size else sorted_counts
+        )
         vocab = [data[0] for data in vocab_data]
 
         if self._compute_idf:
             doc_counts = [document_counts[token]["count"] for token in vocab]
-            idf = self._inverse_document_frequency(
-                doc_counts, num_documents[0])
+            idf = self._inverse_document_frequency(doc_counts, num_documents[0])
             oov_idf = np.array([np.log(1 + num_documents[0])])
             return {_VOCAB_NAME: vocab, _IDF_NAME: idf, _OOV_IDF_NAME: oov_idf}
         else:
@@ -774,7 +832,8 @@ class _TextVectorizationCombiner(Combiner):
     def restore(self, output):
         """Create an accumulator based on 'output'."""
         raise NotImplementedError(
-            "TextVectorization does not restore or support streaming updates.")
+            "TextVectorization does not restore or support streaming updates."
+        )
 
     def serialize(self, accumulator):
         """Serialize an accumulator for a remote call."""
@@ -783,11 +842,9 @@ class _TextVectorizationCombiner(Combiner):
         output_dict["vocab"] = list(accumulator.count_dict.keys())
         output_dict["vocab_counts"] = list(accumulator.count_dict.values())
         if self._compute_idf:
-            output_dict["idf_vocab"] = list(
-                accumulator.per_doc_count_dict.keys())
+            output_dict["idf_vocab"] = list(accumulator.per_doc_count_dict.keys())
             output_dict["idf_counts"] = [
-                counter["count"]
-                for counter in accumulator.per_doc_count_dict.values()
+                counter["count"] for counter in accumulator.per_doc_count_dict.values()
             ]
         return compat.as_bytes(json.dumps(output_dict))
 
@@ -799,16 +856,19 @@ class _TextVectorizationCombiner(Combiner):
         accumulator.metadata[0] = accumulator_dict["metadata"][0]
 
         count_dict = dict(
-            zip(accumulator_dict["vocab"], accumulator_dict["vocab_counts"]))
+            zip(accumulator_dict["vocab"], accumulator_dict["vocab_counts"])
+        )
         accumulator.count_dict.update(count_dict)
 
         if self._compute_idf:
-            def create_dict(x): return {"count": x, "last_doc_id": -1}
+
+            def create_dict(x):
+                return {"count": x, "last_doc_id": -1}
+
             idf_count_dicts = [
                 create_dict(count) for count in accumulator_dict["idf_counts"]
             ]
-            idf_dict = dict(
-                zip(accumulator_dict["idf_vocab"], idf_count_dicts))
+            idf_dict = dict(zip(accumulator_dict["idf_vocab"], idf_count_dicts))
             accumulator.per_doc_count_dict.update(idf_dict)
 
         return accumulator
@@ -818,10 +878,12 @@ class _TextVectorizationCombiner(Combiner):
 
         count_dict = collections.defaultdict(int)
         if self._compute_idf:
-            def create_default_dict(): return {"count": 0, "last_doc_id": -1}
+
+            def create_default_dict():
+                return {"count": 0, "last_doc_id": -1}
+
             per_doc_count_dict = collections.defaultdict(create_default_dict)
         else:
             per_doc_count_dict = None
         metadata = [0]
-        return _TextVectorizationAccumulator(count_dict, per_doc_count_dict,
-                                             metadata)
+        return _TextVectorizationAccumulator(count_dict, per_doc_count_dict, metadata)
