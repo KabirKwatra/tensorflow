@@ -36,214 +36,214 @@ std::string GenerateConvCode(
     bool adreno4xx_optimization, bool stride_correction,
     bool different_weights_for_height, const CLDevice& device,
     const std::vector<ElementwiseOperation*>& linked_operations) {
-    std::string c = GetCommonDefines(op_def.precision);
-    TensorCodeGenerator src_tensor(
-        "src_data", WHSPoint{"src_size.x", "src_size.y", "src_size.z"},
-        op_def.src_tensors[0]);
-    TensorCodeGenerator dst_tensor(
-        "dst_data", WHSPoint{"dst_size.x", "dst_size.y", "dst_size.z"},
-        op_def.dst_tensors[0]);
+  std::string c = GetCommonDefines(op_def.precision);
+  TensorCodeGenerator src_tensor(
+      "src_data", WHSPoint{"src_size.x", "src_size.y", "src_size.z"},
+      op_def.src_tensors[0]);
+  TensorCodeGenerator dst_tensor(
+      "dst_data", WHSPoint{"dst_size.x", "dst_size.y", "dst_size.z"},
+      op_def.dst_tensors[0]);
 
-    const auto src_tensor_type = op_def.src_tensors[0].storage_type;
-    const bool is_buffer = src_tensor_type == TensorStorageType::IMAGE_BUFFER ||
-                           src_tensor_type == TensorStorageType::BUFFER;
+  const auto src_tensor_type = op_def.src_tensors[0].storage_type;
+  const bool is_buffer = src_tensor_type == TensorStorageType::IMAGE_BUFFER ||
+                         src_tensor_type == TensorStorageType::BUFFER;
 
-    std::vector<std::string> xs(block_size.x);
+  std::vector<std::string> xs(block_size.x);
+  for (int x = 0; x < block_size.x; ++x) {
+    xs[x] = std::to_string(x);
+  }
+
+  std::vector<std::string> ys(block_size.y);
+  for (int y = 0; y < block_size.y; ++y) {
+    ys[y] = std::to_string(y);
+  }
+
+  std::vector<std::string> zs(block_size.z);
+  for (int z = 0; z < block_size.z; ++z) {
+    zs[z] = std::to_string(z);
+  }
+
+  for (int z = 0; z < block_size.z; ++z) {
+    const std::string f0 = std::to_string(z * 4 + 0);
+    const std::string f1 = std::to_string(z * 4 + 1);
+    const std::string f2 = std::to_string(z * 4 + 2);
+    const std::string f3 = std::to_string(z * 4 + 3);
+    switch (op_def.precision) {
+      case CalculationsPrecision::F32:
+      case CalculationsPrecision::F16:
+        c += "#define CONV" + zs[z] + "(R, S)    \\\n";
+        c += "R += S.x * f" + f0 + "; \\\n";
+        c += "R += S.y * f" + f1 + "; \\\n";
+        c += "R += S.z * f" + f2 + "; \\\n";
+        c += "R += S.w * f" + f3 + ";   \n";
+        break;
+      case CalculationsPrecision::F32_F16:
+        c += "#define CONV" + zs[z] + "(R, S) \\\n";
+        c += "R += convert_float4(S.x * f" + f0 + " + S.y * f" + f1 +
+             " + S.z * f" + f2 + " + S.w * f" + f3 + ");\n";
+        break;
+    }
+  }
+
+  c += "__kernel void main_function(\n";
+  c += src_tensor.GetDeclaration(AccessType::READ) + ",\n";
+  c += "    __read_only image2d_t filters0,   \n";
+  c += "    __read_only image2d_t filters1,   \n";
+  c += "    __read_only image2d_t filters2,   \n";
+  c += "    __read_only image2d_t filters3,   \n";
+  c += "    __read_only image2d_t biases";
+  c += GetArgsDeclaration(linked_operations);
+  c += dst_tensor.GetDeclaration(AccessType::WRITE) + ",\n";
+  c += "    int4 src_size,                   \n";
+  c += "    int4 dst_size,                   \n";
+  if (!is1x1) {
+    c += "    int2 kernel_size,              \n";
+    c += "    int2 dilation,                 \n";
+  }
+  c += "    int2 stride,                     \n";
+  c += "    int2 padding                     \n";
+  c += ") {\n";
+  c += "  int X = get_global_id(0) * " + std::to_string(block_size.x) + ";\n";
+  c += "  int Y = get_global_id(1) * " + std::to_string(block_size.y) + ";\n";
+  c += "  int Z = get_global_id(2) * " + std::to_string(block_size.z) + ";\n";
+  c += "  if (X >= dst_size.x || Y >= dst_size.y || Z >= dst_size.z) return;\n";
+  std::vector<std::string> s_x(block_size.x);
+  std::vector<std::string> s_y(block_size.y);
+  for (int x = 0; x < block_size.x; ++x) {
+    if (stride_correction) {
+      c += "  int xc" + xs[x] + " = " +
+           GetXStrideCorrected("X + " + xs[x], "src_size.w", "stride.x",
+                               "padding.x") +
+           ";\n";
+    } else {
+      c += "  int xc" + xs[x] + " = (X +" + xs[x] +
+           ") * stride.x + padding.x;\n";
+    }
+    s_x[x] = is1x1 ? "xc" + xs[x] : "cx" + xs[x];
+  }
+  for (int y = 0; y < block_size.y; ++y) {
+    c += "  int yc" + ys[y] + " = (Y +" + ys[y] + ") * stride.y + padding.y;\n";
+    s_y[y] = is1x1 ? "yc" + ys[y] : "cy" + ys[y];
+  }
+  for (int i = 0; i < block_size.x * block_size.y * block_size.z; ++i) {
+    c += "  ACCUM_FLT4 r" + std::to_string(i) +
+         " = (ACCUM_FLT4)(0.0f, 0.0f, 0.0f, 0.0f);\n";
+  }
+  std::string f_y = is1x1 ? "s" : "filter_offset";
+  if (different_weights_for_height) {
+    f_y = "Y * src_size.z + s";
+  }
+  if (!is1x1) {
     for (int x = 0; x < block_size.x; ++x) {
-        xs[x] = std::to_string(x);
-    }
-
-    std::vector<std::string> ys(block_size.y);
-    for (int y = 0; y < block_size.y; ++y) {
-        ys[y] = std::to_string(y);
-    }
-
-    std::vector<std::string> zs(block_size.z);
-    for (int z = 0; z < block_size.z; ++z) {
-        zs[z] = std::to_string(z);
-    }
-
-    for (int z = 0; z < block_size.z; ++z) {
-        const std::string f0 = std::to_string(z * 4 + 0);
-        const std::string f1 = std::to_string(z * 4 + 1);
-        const std::string f2 = std::to_string(z * 4 + 2);
-        const std::string f3 = std::to_string(z * 4 + 3);
-        switch (op_def.precision) {
-        case CalculationsPrecision::F32:
-        case CalculationsPrecision::F16:
-            c += "#define CONV" + zs[z] + "(R, S)    \\\n";
-            c += "R += S.x * f" + f0 + "; \\\n";
-            c += "R += S.y * f" + f1 + "; \\\n";
-            c += "R += S.z * f" + f2 + "; \\\n";
-            c += "R += S.w * f" + f3 + ";   \n";
-            break;
-        case CalculationsPrecision::F32_F16:
-            c += "#define CONV" + zs[z] + "(R, S) \\\n";
-            c += "R += convert_float4(S.x * f" + f0 + " + S.y * f" + f1 +
-                 " + S.z * f" + f2 + " + S.w * f" + f3 + ");\n";
-            break;
-        }
-    }
-
-    c += "__kernel void main_function(\n";
-    c += src_tensor.GetDeclaration(AccessType::READ) + ",\n";
-    c += "    __read_only image2d_t filters0,   \n";
-    c += "    __read_only image2d_t filters1,   \n";
-    c += "    __read_only image2d_t filters2,   \n";
-    c += "    __read_only image2d_t filters3,   \n";
-    c += "    __read_only image2d_t biases";
-    c += GetArgsDeclaration(linked_operations);
-    c += dst_tensor.GetDeclaration(AccessType::WRITE) + ",\n";
-    c += "    int4 src_size,                   \n";
-    c += "    int4 dst_size,                   \n";
-    if (!is1x1) {
-        c += "    int2 kernel_size,              \n";
-        c += "    int2 dilation,                 \n";
-    }
-    c += "    int2 stride,                     \n";
-    c += "    int2 padding                     \n";
-    c += ") {\n";
-    c += "  int X = get_global_id(0) * " + std::to_string(block_size.x) + ";\n";
-    c += "  int Y = get_global_id(1) * " + std::to_string(block_size.y) + ";\n";
-    c += "  int Z = get_global_id(2) * " + std::to_string(block_size.z) + ";\n";
-    c += "  if (X >= dst_size.x || Y >= dst_size.y || Z >= dst_size.z) return;\n";
-    std::vector<std::string> s_x(block_size.x);
-    std::vector<std::string> s_y(block_size.y);
-    for (int x = 0; x < block_size.x; ++x) {
-        if (stride_correction) {
-            c += "  int xc" + xs[x] + " = " +
-                 GetXStrideCorrected("X + " + xs[x], "src_size.w", "stride.x",
-                                     "padding.x") +
-                 ";\n";
-        } else {
-            c += "  int xc" + xs[x] + " = (X +" + xs[x] +
-                 ") * stride.x + padding.x;\n";
-        }
-        s_x[x] = is1x1 ? "xc" + xs[x] : "cx" + xs[x];
+      c += "  int cx" + xs[x] + ";\n";
     }
     for (int y = 0; y < block_size.y; ++y) {
-        c += "  int yc" + ys[y] + " = (Y +" + ys[y] + ") * stride.y + padding.y;\n";
-        s_y[y] = is1x1 ? "yc" + ys[y] : "cy" + ys[y];
+      c += "  int cy" + ys[y] + ";\n";
     }
-    for (int i = 0; i < block_size.x * block_size.y * block_size.z; ++i) {
-        c += "  ACCUM_FLT4 r" + std::to_string(i) +
-             " = (ACCUM_FLT4)(0.0f, 0.0f, 0.0f, 0.0f);\n";
+    c += "  int filter_offset = 0;\n";
+    c += "  for (int y = 0; y < kernel_size.y; ++y) {\n";
+    for (int y = 0; y < block_size.y; ++y) {
+      c += "  cy" + ys[y] + " = y * dilation.y + yc" + ys[y] + ";\n";
     }
-    std::string f_y = is1x1 ? "s" : "filter_offset";
-    if (different_weights_for_height) {
-        f_y = "Y * src_size.z + s";
-    }
-    if (!is1x1) {
-        for (int x = 0; x < block_size.x; ++x) {
-            c += "  int cx" + xs[x] + ";\n";
-        }
-        for (int y = 0; y < block_size.y; ++y) {
-            c += "  int cy" + ys[y] + ";\n";
-        }
-        c += "  int filter_offset = 0;\n";
-        c += "  for (int y = 0; y < kernel_size.y; ++y) {\n";
-        for (int y = 0; y < block_size.y; ++y) {
-            c += "  cy" + ys[y] + " = y * dilation.y + yc" + ys[y] + ";\n";
-        }
-        if (is_buffer) {
-            for (int y = 0; y < block_size.y; ++y) {
-                c += "  bool in_y" + ys[y] + " = cy" + ys[y] + " >= 0 && cy" + ys[y] +
-                     " < src_size.y;\n";
-                if (src_tensor_type == TensorStorageType::BUFFER) {
-                    c += "    cy" + ys[y] + " = clamp(cy" + ys[y] +
-                         ", 0, src_size.y - 1);\n";
-                }
-            }
-        }
-        c += "  for (int x = 0; x < kernel_size.x; ++x) {\n";
-        for (int x = 0; x < block_size.x; ++x) {
-            c += "  cx" + xs[x] + " = x * dilation.x + xc" + xs[x] + ";\n";
-        }
-        if (is_buffer) {
-            for (int x = 0; x < block_size.x; ++x) {
-                c += "  bool in_x" + xs[x] + " = cx" + xs[x] + " >= 0 && cx" + xs[x] +
-                     " < src_size.x;\n";
-                if (src_tensor_type == TensorStorageType::BUFFER) {
-                    c += "    cx" + xs[x] + " = clamp(cx" + xs[x] +
-                         ", 0, src_size.x - 1);\n";
-                }
-            }
-            for (int x = 0; x < block_size.x; ++x) {
-                for (int y = 0; y < block_size.y; ++y) {
-                    const std::string id = std::to_string(y * block_size.x + x);
-                    if (src_tensor_type == TensorStorageType::IMAGE_BUFFER) {
-                        c += absl::Substitute(
-                                 "  int addr_$0 = select(-1, cy$2 * src_size.x + cx$1, (in_x$1 "
-                                 "&& "
-                                 "in_y$2));\n",
-                                 y * block_size.x + x, x, y);
-                        c += absl::Substitute(
-                                 "  int dz_$0 = select(0, src_size.x * src_size.y, (in_x$1 && "
-                                 "in_y$2));\n",
-                                 y * block_size.x + x, x, y);
-                    } else {
-                        c += absl::Substitute("  int addr_$0 = cy$2 * src_size.x + cx$1;\n",
-                                              y * block_size.x + x, x, y);
-                    }
-                }
-            }
-            if (src_tensor_type == TensorStorageType::BUFFER) {
-                c += "  int dz = src_size.x * src_size.y;\n";
-            }
-        }
-    } else if (is_buffer) {
-        for (int y = 0; y < block_size.y; ++y) {
-            c += "  bool in_y" + ys[y] + " = yc" + ys[y] + " >= 0 && yc" + ys[y] +
-                 " < src_size.y;\n";
-        }
-        for (int x = 0; x < block_size.x; ++x) {
-            c += "  bool in_x" + xs[x] + " = xc" + xs[x] + " >= 0 && xc" + xs[x] +
-                 " < src_size.x;\n";
-        }
-        for (int x = 0; x < block_size.x; ++x) {
-            for (int y = 0; y < block_size.y; ++y) {
-                const std::string id = std::to_string(y * block_size.x + x);
-                if (src_tensor_type == TensorStorageType::IMAGE_BUFFER) {
-                    c += absl::Substitute(
-                             "  int addr_$0 = select(-1, yc$2 * src_size.x + xc$1, (in_x$1 && "
-                             "in_y$2));\n",
-                             y * block_size.x + x, x, y);
-                    c += absl::Substitute(
-                             "  int dz_$0 = select(0, src_size.x * src_size.y, (in_x$1 && "
-                             "in_y$2));\n",
-                             y * block_size.x + x, x, y);
-                } else {
-                    c += absl::Substitute("  int addr_$0 = yc$2 * src_size.x + xc$1;\n",
-                                          y * block_size.x + x, x, y);
-                }
-            }
-        }
-        if (src_tensor_type == TensorStorageType::BUFFER) {
-            c += "  int dz = src_size.x * src_size.y;\n";
-        }
-    }
-    c += "  for (int s = 0; s < src_size.z; ++s) {\n";
     if (is_buffer) {
-        if (src_tensor_type == TensorStorageType::IMAGE_BUFFER) {
-            for (int index = 0; index < block_size.x * block_size.y; ++index) {
-                const std::string id = std::to_string(index);
-                c +=
-                    "    FLT4 src" + id + " = " + src_tensor.Read("addr_" + id) + ";\n";
-            }
-        } else {
-            for (int x = 0; x < block_size.x; ++x) {
-                for (int y = 0; y < block_size.y; ++y) {
-                    const std::string id = std::to_string(y * block_size.x + x);
-                    c += "    FLT4 src" + id + " = " + src_tensor.Read("addr_" + id) +
-                         " * (FLT)(in_x" + xs[x] + " && in_y" + ys[y] + "); addr_" + id +
-                         " += dz;\n";
-                }
-            }
+      for (int y = 0; y < block_size.y; ++y) {
+        c += "  bool in_y" + ys[y] + " = cy" + ys[y] + " >= 0 && cy" + ys[y] +
+             " < src_size.y;\n";
+        if (src_tensor_type == TensorStorageType::BUFFER) {
+          c += "    cy" + ys[y] + " = clamp(cy" + ys[y] +
+               ", 0, src_size.y - 1);\n";
         }
+      }
     }
-    for (int z = 0; z < block_size.z; ++z) {
-        const std::string fc = "(int2)(Z + " + zs[z] + ", " + f_y + ")";
-        c += absl::Substitute(R"(    FLT4 f$1 = READ_IMAGE(filters0, smp_none, $0);
+    c += "  for (int x = 0; x < kernel_size.x; ++x) {\n";
+    for (int x = 0; x < block_size.x; ++x) {
+      c += "  cx" + xs[x] + " = x * dilation.x + xc" + xs[x] + ";\n";
+    }
+    if (is_buffer) {
+      for (int x = 0; x < block_size.x; ++x) {
+        c += "  bool in_x" + xs[x] + " = cx" + xs[x] + " >= 0 && cx" + xs[x] +
+             " < src_size.x;\n";
+        if (src_tensor_type == TensorStorageType::BUFFER) {
+          c += "    cx" + xs[x] + " = clamp(cx" + xs[x] +
+               ", 0, src_size.x - 1);\n";
+        }
+      }
+      for (int x = 0; x < block_size.x; ++x) {
+        for (int y = 0; y < block_size.y; ++y) {
+          const std::string id = std::to_string(y * block_size.x + x);
+          if (src_tensor_type == TensorStorageType::IMAGE_BUFFER) {
+            c += absl::Substitute(
+                "  int addr_$0 = select(-1, cy$2 * src_size.x + cx$1, (in_x$1 "
+                "&& "
+                "in_y$2));\n",
+                y * block_size.x + x, x, y);
+            c += absl::Substitute(
+                "  int dz_$0 = select(0, src_size.x * src_size.y, (in_x$1 && "
+                "in_y$2));\n",
+                y * block_size.x + x, x, y);
+          } else {
+            c += absl::Substitute("  int addr_$0 = cy$2 * src_size.x + cx$1;\n",
+                                  y * block_size.x + x, x, y);
+          }
+        }
+      }
+      if (src_tensor_type == TensorStorageType::BUFFER) {
+        c += "  int dz = src_size.x * src_size.y;\n";
+      }
+    }
+  } else if (is_buffer) {
+    for (int y = 0; y < block_size.y; ++y) {
+      c += "  bool in_y" + ys[y] + " = yc" + ys[y] + " >= 0 && yc" + ys[y] +
+           " < src_size.y;\n";
+    }
+    for (int x = 0; x < block_size.x; ++x) {
+      c += "  bool in_x" + xs[x] + " = xc" + xs[x] + " >= 0 && xc" + xs[x] +
+           " < src_size.x;\n";
+    }
+    for (int x = 0; x < block_size.x; ++x) {
+      for (int y = 0; y < block_size.y; ++y) {
+        const std::string id = std::to_string(y * block_size.x + x);
+        if (src_tensor_type == TensorStorageType::IMAGE_BUFFER) {
+          c += absl::Substitute(
+              "  int addr_$0 = select(-1, yc$2 * src_size.x + xc$1, (in_x$1 && "
+              "in_y$2));\n",
+              y * block_size.x + x, x, y);
+          c += absl::Substitute(
+              "  int dz_$0 = select(0, src_size.x * src_size.y, (in_x$1 && "
+              "in_y$2));\n",
+              y * block_size.x + x, x, y);
+        } else {
+          c += absl::Substitute("  int addr_$0 = yc$2 * src_size.x + xc$1;\n",
+                                y * block_size.x + x, x, y);
+        }
+      }
+    }
+    if (src_tensor_type == TensorStorageType::BUFFER) {
+      c += "  int dz = src_size.x * src_size.y;\n";
+    }
+  }
+  c += "  for (int s = 0; s < src_size.z; ++s) {\n";
+  if (is_buffer) {
+    if (src_tensor_type == TensorStorageType::IMAGE_BUFFER) {
+      for (int index = 0; index < block_size.x * block_size.y; ++index) {
+        const std::string id = std::to_string(index);
+        c +=
+            "    FLT4 src" + id + " = " + src_tensor.Read("addr_" + id) + ";\n";
+      }
+    } else {
+      for (int x = 0; x < block_size.x; ++x) {
+        for (int y = 0; y < block_size.y; ++y) {
+          const std::string id = std::to_string(y * block_size.x + x);
+          c += "    FLT4 src" + id + " = " + src_tensor.Read("addr_" + id) +
+               " * (FLT)(in_x" + xs[x] + " && in_y" + ys[y] + "); addr_" + id +
+               " += dz;\n";
+        }
+      }
+    }
+  }
+  for (int z = 0; z < block_size.z; ++z) {
+    const std::string fc = "(int2)(Z + " + zs[z] + ", " + f_y + ")";
+    c += absl::Substitute(R"(    FLT4 f$1 = READ_IMAGE(filters0, smp_none, $0);
     FLT4 f$2 = READ_IMAGE(filters1, smp_none, $0);
     FLT4 f$3 = READ_IMAGE(filters2, smp_none, $0);
     FLT4 f$4 = READ_IMAGE(filters3, smp_none, $0);

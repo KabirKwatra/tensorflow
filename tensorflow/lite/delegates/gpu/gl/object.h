@@ -41,9 +41,9 @@ using ObjectRef = uint32_t;
 constexpr ObjectRef kInvalidObjectRef = ~0;
 
 enum class ObjectType : int {
-    UNKNOWN = 0,
-    TEXTURE = 1,
-    BUFFER = 2,
+  UNKNOWN = 0,
+  TEXTURE = 1,
+  BUFFER = 2,
 };
 
 using ObjectSize = absl::variant<size_t, uint2, uint3>;
@@ -52,34 +52,34 @@ using ObjectSize = absl::variant<size_t, uint2, uint3>;
 // Texture. NodeShader is supposed to set all fields but leave binding = 0
 // that will be set later by a compiler.
 struct Object {
-    AccessType access;
+  AccessType access;
 
-    DataType data_type;
+  DataType data_type;
 
-    ObjectType object_type;
+  ObjectType object_type;
 
-    // OpenGL-specific binding information
-    uint32_t binding;
+  // OpenGL-specific binding information
+  uint32_t binding;
 
-    // Indicates size of 1D, 2D or 3D object in elements, where single element
-    // consists of 4 values.
-    ObjectSize size;
+  // Indicates size of 1D, 2D or 3D object in elements, where single element
+  // consists of 4 values.
+  ObjectSize size;
 
-    absl::variant<ObjectData, ObjectRef> object;
+  absl::variant<ObjectData, ObjectRef> object;
 };
 
 // @return true if object is a reference.
 inline bool IsRef(const Object& object) {
-    return !absl::get_if<ObjectData>(&object.object);
+  return !absl::get_if<ObjectData>(&object.object);
 }
 
 inline ObjectRef GetRef(const Object& object) {
-    auto ref = absl::get_if<ObjectRef>(&object.object);
-    return ref ? *ref : kInvalidObjectRef;
+  auto ref = absl::get_if<ObjectRef>(&object.object);
+  return ref ? *ref : kInvalidObjectRef;
 }
 
 inline const ObjectData* GetData(const Object& object) {
-    return absl::get_if<ObjectData>(&object.object);
+  return absl::get_if<ObjectData>(&object.object);
 }
 
 inline size_t ByteSizeOf(const Object& object);
@@ -87,8 +87,8 @@ inline size_t ByteSizeOf(const Object& object);
 // @return object that references an object created externally.
 inline Object MakeObjectRef(ObjectRef unique_id, const ObjectSize& size,
                             AccessType access_type) {
-    return Object{access_type, DataType::FLOAT32, ObjectType::UNKNOWN, 0,
-                  size,        unique_id};
+  return Object{access_type, DataType::FLOAT32, ObjectType::UNKNOWN, 0,
+                size,        unique_id};
 }
 
 namespace internal_object {
@@ -96,92 +96,88 @@ namespace internal_object {
 template <typename T>
 std::vector<uint8_t> ToBytesVector(const std::vector<T>& data,
                                    size_t alignment) {
-    std::vector<uint8_t> t(AlignByN(data.size() * sizeof(T), alignment));
-    std::memcpy(t.data(), data.data(), data.size() * sizeof(T));
-    return t;
+  std::vector<uint8_t> t(AlignByN(data.size() * sizeof(T), alignment));
+  std::memcpy(t.data(), data.data(), data.size() * sizeof(T));
+  return t;
 }
 
 struct ObjectSizer {
-    size_t operator()(const uint3& size) const {
-        return size.x * size.y * size.z;
-    }
+  size_t operator()(const uint3& size) const {
+    return size.x * size.y * size.z;
+  }
 
-    size_t operator()(const uint2& size) const {
-        return size.x * size.y;
-    }
+  size_t operator()(const uint2& size) const { return size.x * size.y; }
 
-    size_t operator()(uint32_t size) const {
-        return size;
-    }
+  size_t operator()(uint32_t size) const { return size; }
 };
 
 }  // namespace internal_object
 
 inline size_t NumElements(const ObjectSize& size) {
-    return absl::visit(internal_object::ObjectSizer{}, size);
+  return absl::visit(internal_object::ObjectSizer{}, size);
 }
 
 inline size_t ByteSizeOf(const Object& object) {
-    return SizeOf(object.data_type) * /* vec4 */ 4 * NumElements(object.size);
+  return SizeOf(object.data_type) * /* vec4 */ 4 * NumElements(object.size);
 }
 
 inline Object MakeReadonlyObject(const ObjectSize& size,
                                  const std::vector<float>& data) {
-    return Object{AccessType::READ,
-                  DataType::FLOAT32,
-                  ObjectType::UNKNOWN,
-                  0,
-                  size,
-                  internal_object::ToBytesVector(data, 16)};
+  return Object{AccessType::READ,
+                DataType::FLOAT32,
+                ObjectType::UNKNOWN,
+                0,
+                size,
+                internal_object::ToBytesVector(data, 16)};
 }
 
 inline Object MakeReadonlyTexture(const ObjectSize& size,
                                   const std::vector<float>& data) {
-    return Object{AccessType::READ,
-                  DataType::FLOAT32,
-                  ObjectType::TEXTURE,
-                  0,
-                  size,
-                  internal_object::ToBytesVector(data, 16)};
+  return Object{AccessType::READ,
+                DataType::FLOAT32,
+                ObjectType::TEXTURE,
+                0,
+                size,
+                internal_object::ToBytesVector(data, 16)};
 }
 
 inline Object MakeReadonlyBuffer(const ObjectSize& size,
                                  const std::vector<float>& data) {
-    return Object{AccessType::READ,
-                  DataType::FLOAT32,
-                  ObjectType::BUFFER,
-                  0,
-                  size,
-                  internal_object::ToBytesVector(data, 16)};
+  return Object{AccessType::READ,
+                DataType::FLOAT32,
+                ObjectType::BUFFER,
+                0,
+                size,
+                internal_object::ToBytesVector(data, 16)};
 }
 
 inline Object MakeReadonlyObject(const std::vector<float>& data) {
-    return MakeReadonlyObject(
-               DivideRoundUp(static_cast<uint32_t>(data.size()), 4U), data);
+  return MakeReadonlyObject(
+      DivideRoundUp(static_cast<uint32_t>(data.size()), 4U), data);
 }
 
 inline Object MakeReadonlyTexture(const std::vector<float>& data) {
-    return MakeReadonlyTexture(
-               DivideRoundUp(static_cast<uint32_t>(data.size()), 4U), data);
+  return MakeReadonlyTexture(
+      DivideRoundUp(static_cast<uint32_t>(data.size()), 4U), data);
 }
 
 inline Object MakeReadonlyBuffer(const std::vector<float>& data) {
-    return MakeReadonlyBuffer(
-               DivideRoundUp(static_cast<uint32_t>(data.size()), 4U), data);
+  return MakeReadonlyBuffer(
+      DivideRoundUp(static_cast<uint32_t>(data.size()), 4U), data);
 }
 
 // TODO(akulik): find better place for functions below.
 
 inline uint3 GetPHWC4Size(const BHWC& shape) {
-    uint3 size;
-    size.x = shape.w;
-    size.y = shape.h;
-    size.z = shape.b * DivideRoundUp(shape.c, 4);
-    return size;
+  uint3 size;
+  size.x = shape.w;
+  size.y = shape.h;
+  size.z = shape.b * DivideRoundUp(shape.c, 4);
+  return size;
 }
 
 inline Object MakePHWC4Ref(uint32_t global_id, const BHWC& shape) {
-    return MakeObjectRef(global_id, GetPHWC4Size(shape), AccessType::READ_WRITE);
+  return MakeObjectRef(global_id, GetPHWC4Size(shape), AccessType::READ_WRITE);
 }
 
 }  // namespace gl

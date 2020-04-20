@@ -28,55 +28,55 @@ namespace cl {
 bool CanCreateTensorWithShape(const CLContext& context, const CLDevice& device,
                               const BHWDC& shape,
                               const TensorDescriptor& descriptor) {
-    const int slices = DivideRoundUp(shape.c, 4);
-    switch (descriptor.storage_type) {
+  const int slices = DivideRoundUp(shape.c, 4);
+  switch (descriptor.storage_type) {
     case TensorStorageType::BUFFER: {
-        const int flt4_size =
-            4 * (descriptor.data_type == DataType::FLOAT32 ? 4 : 2);
-        const int buffer_size =
-            shape.b * shape.w * shape.h * shape.d * slices * flt4_size;
-        return buffer_size <= device.GetInfo().buffer_max_size;
+      const int flt4_size =
+          4 * (descriptor.data_type == DataType::FLOAT32 ? 4 : 2);
+      const int buffer_size =
+          shape.b * shape.w * shape.h * shape.d * slices * flt4_size;
+      return buffer_size <= device.GetInfo().buffer_max_size;
     }
     case TensorStorageType::IMAGE_BUFFER:
-        return shape.b * shape.w * shape.h * shape.d * slices <=
-               device.GetInfo().image_buffer_max_size;
+      return shape.b * shape.w * shape.h * shape.d * slices <=
+             device.GetInfo().image_buffer_max_size;
     case TensorStorageType::TEXTURE_3D:
-        if (device.cl_version() < OpenCLVersion::CL_1_2 && slices == 1) {
-            // clCreateImage3D (that used in CL 1.0/1.1) can not create image with
-            // depth = 1 by specification;
-            return false;
-        }
-        return shape.w * shape.b <= device.GetInfo().image3d_max_width &&
-               shape.h <= device.GetInfo().image3d_max_height &&
-               slices * shape.d <= device.GetInfo().image3d_max_depth;
-    case TensorStorageType::TEXTURE_ARRAY:
-        // Bug on some Adreno. b/131099086
-        if (slices == 1 && !device.SupportsOneLayerTextureArray()) {
-            return false;
-        }
-        return shape.w * shape.b <= device.GetInfo().image2d_max_width &&
-               shape.h <= device.GetInfo().image2d_max_height &&
-               slices * shape.d <= device.GetInfo().image_array_max_layers;
-    case TensorStorageType::TEXTURE_2D:
-        return shape.w * shape.b * shape.d <=
-               device.GetInfo().image2d_max_width &&
-               shape.h * slices <= device.GetInfo().image2d_max_height;
-    case TensorStorageType::SINGLE_TEXTURE_2D:
-        return shape.c <= 4 &&
-               context.IsFloatTexture2DSupported(shape.c, descriptor.data_type) &&
-               shape.w * shape.b * shape.d <=
-               device.GetInfo().image2d_max_width &&
-               shape.h <= device.GetInfo().image2d_max_height;
-    default:
+      if (device.cl_version() < OpenCLVersion::CL_1_2 && slices == 1) {
+        // clCreateImage3D (that used in CL 1.0/1.1) can not create image with
+        // depth = 1 by specification;
         return false;
-    }
+      }
+      return shape.w * shape.b <= device.GetInfo().image3d_max_width &&
+             shape.h <= device.GetInfo().image3d_max_height &&
+             slices * shape.d <= device.GetInfo().image3d_max_depth;
+    case TensorStorageType::TEXTURE_ARRAY:
+      // Bug on some Adreno. b/131099086
+      if (slices == 1 && !device.SupportsOneLayerTextureArray()) {
+        return false;
+      }
+      return shape.w * shape.b <= device.GetInfo().image2d_max_width &&
+             shape.h <= device.GetInfo().image2d_max_height &&
+             slices * shape.d <= device.GetInfo().image_array_max_layers;
+    case TensorStorageType::TEXTURE_2D:
+      return shape.w * shape.b * shape.d <=
+                 device.GetInfo().image2d_max_width &&
+             shape.h * slices <= device.GetInfo().image2d_max_height;
+    case TensorStorageType::SINGLE_TEXTURE_2D:
+      return shape.c <= 4 &&
+             context.IsFloatTexture2DSupported(shape.c, descriptor.data_type) &&
+             shape.w * shape.b * shape.d <=
+                 device.GetInfo().image2d_max_width &&
+             shape.h <= device.GetInfo().image2d_max_height;
+    default:
+      return false;
+  }
 }
 
 bool CanCreateTensorWithShape(const CLContext& context, const CLDevice& device,
                               const BHWC& shape,
                               const TensorDescriptor& descriptor) {
-    const BHWDC shape5D(shape.b, shape.h, shape.w, 1, shape.c);
-    return CanCreateTensorWithShape(context, device, shape5D, descriptor);
+  const BHWDC shape5D(shape.b, shape.h, shape.w, 1, shape.c);
+  return CanCreateTensorWithShape(context, device, shape5D, descriptor);
 }
 
 TensorStorageType SelectBestStorageType(const CLContext& context,
@@ -85,56 +85,56 @@ TensorStorageType SelectBestStorageType(const CLContext& context,
                                         const TensorStorageType& desired,
                                         const DataType& data_type,
                                         const Layout& layout) {
-    if (CanCreateTensorWithShape(context, device, shape,
-                                 TensorDescriptor{data_type, desired, layout})) {
-        return desired;
+  if (CanCreateTensorWithShape(context, device, shape,
+                               TensorDescriptor{data_type, desired, layout})) {
+    return desired;
+  }
+  auto GetBestTypeAfterTextureArray = [&]() {
+    if (device.SupportsImageBuffer() &&
+        CanCreateTensorWithShape(
+            context, device, shape,
+            TensorDescriptor{data_type, TensorStorageType::IMAGE_BUFFER,
+                             layout})) {
+      return TensorStorageType::IMAGE_BUFFER;
+    } else {
+      return TensorStorageType::BUFFER;
     }
-    auto GetBestTypeAfterTextureArray = [&]() {
-        if (device.SupportsImageBuffer() &&
-                CanCreateTensorWithShape(
-                    context, device, shape,
-                    TensorDescriptor{data_type, TensorStorageType::IMAGE_BUFFER,
-                                     layout})) {
-            return TensorStorageType::IMAGE_BUFFER;
-        } else {
-            return TensorStorageType::BUFFER;
-        }
-    };
-    auto GetBestTypeAfterTexture2D = [&]() {
-        if (device.SupportsTextureArray() &&
-                CanCreateTensorWithShape(
-                    context, device, shape,
-                    TensorDescriptor{data_type, TensorStorageType::TEXTURE_ARRAY,
-                                     layout})) {
-            return TensorStorageType::TEXTURE_ARRAY;
-        } else {
-            return GetBestTypeAfterTextureArray();
-        }
-    };
-    auto GetBestTypeAfterTexture3D = [&]() {
-        if (CanCreateTensorWithShape(
-                    context, device, shape,
-                    TensorDescriptor{data_type, TensorStorageType::TEXTURE_2D,
-                                     layout})) {
-            return TensorStorageType::TEXTURE_2D;
-        } else {
-            return GetBestTypeAfterTexture2D();
-        }
-    };
-    switch (desired) {
+  };
+  auto GetBestTypeAfterTexture2D = [&]() {
+    if (device.SupportsTextureArray() &&
+        CanCreateTensorWithShape(
+            context, device, shape,
+            TensorDescriptor{data_type, TensorStorageType::TEXTURE_ARRAY,
+                             layout})) {
+      return TensorStorageType::TEXTURE_ARRAY;
+    } else {
+      return GetBestTypeAfterTextureArray();
+    }
+  };
+  auto GetBestTypeAfterTexture3D = [&]() {
+    if (CanCreateTensorWithShape(
+            context, device, shape,
+            TensorDescriptor{data_type, TensorStorageType::TEXTURE_2D,
+                             layout})) {
+      return TensorStorageType::TEXTURE_2D;
+    } else {
+      return GetBestTypeAfterTexture2D();
+    }
+  };
+  switch (desired) {
     case TensorStorageType::TEXTURE_2D:
     case TensorStorageType::SINGLE_TEXTURE_2D:
-        return GetBestTypeAfterTexture2D();
+      return GetBestTypeAfterTexture2D();
     case TensorStorageType::TEXTURE_ARRAY:
-        return GetBestTypeAfterTextureArray();
+      return GetBestTypeAfterTextureArray();
     case TensorStorageType::TEXTURE_3D:
-        return GetBestTypeAfterTexture3D();
+      return GetBestTypeAfterTexture3D();
     case TensorStorageType::IMAGE_BUFFER:
     case TensorStorageType::BUFFER:
-        return TensorStorageType::BUFFER;
+      return TensorStorageType::BUFFER;
     default:
-        return TensorStorageType::BUFFER;
-    }
+      return TensorStorageType::BUFFER;
+  }
 }
 
 }  // namespace cl

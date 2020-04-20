@@ -34,32 +34,29 @@ namespace gl {
 namespace {
 
 class ConvolutionTransposedBuffers : public NodeShader {
-public:
-    absl::Status GenerateCode(const GenerationContext& ctx,
-                              GeneratedCode* generated_code) const final {
-        const auto& attr =
-            absl::any_cast<const ConvolutionTransposedAttributes&>(ctx.op_attr);
-        auto weights = attr.weights.shape;
+ public:
+  absl::Status GenerateCode(const GenerationContext& ctx,
+                            GeneratedCode* generated_code) const final {
+    const auto& attr =
+        absl::any_cast<const ConvolutionTransposedAttributes&>(ctx.op_attr);
+    auto weights = attr.weights.shape;
 
-        std::vector<Variable> parameters = {
-            {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
-            {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
-            {"src_depth", DivideRoundUp(weights.i, 4)},
-            {"kernel_size", int2(weights.w, weights.h)},
-            {"stride", int2(attr.stride.w, attr.stride.h)},
-            {   "padding", int2(weights.w - 1 - attr.padding.prepended.w,
-                                weights.h - 1 - attr.padding.prepended.h)
-            },
-        };
+    std::vector<Variable> parameters = {
+        {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
+        {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
+        {"src_depth", DivideRoundUp(weights.i, 4)},
+        {"kernel_size", int2(weights.w, weights.h)},
+        {"stride", int2(attr.stride.w, attr.stride.h)},
+        {"padding", int2(weights.w - 1 - attr.padding.prepended.w,
+                         weights.h - 1 - attr.padding.prepended.h)},
+    };
 
-        std::vector<std::pair<std::string, Object>> objects = {
-            {   "weights",
-                MakeReadonlyObject(Get3DSizeForPHWO4I4(attr.weights.shape),
-                                   ConvertToPHWO4I4Transposed(attr.weights))
-            }
-        };
+    std::vector<std::pair<std::string, Object>> objects = {
+        {"weights",
+         MakeReadonlyObject(Get3DSizeForPHWO4I4(attr.weights.shape),
+                            ConvertToPHWO4I4Transposed(attr.weights))}};
 
-        std::string source = R"(
+    std::string source = R"(
     #define IN_BOUNDS(p, p0, p1) (all(greaterThanEqual(p, p0)) && all(lessThan(p, p1)))
 
     ivec2 p0 = ($padding$ + $stride$ - gid.xy % $stride$) % $stride$;

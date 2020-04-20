@@ -33,34 +33,33 @@ namespace gl {
 namespace {
 
 class Pad : public NodeShader {
-public:
-    absl::Status GenerateCode(const GenerationContext& ctx,
-                              GeneratedCode* generated_code) const final {
-        const auto& attr = absl::any_cast<const PadAttributes&>(ctx.op_attr);
+ public:
+  absl::Status GenerateCode(const GenerationContext& ctx,
+                            GeneratedCode* generated_code) const final {
+    const auto& attr = absl::any_cast<const PadAttributes&>(ctx.op_attr);
 
-        if (attr.type != PaddingContentType::ZEROS &&
-                attr.type != PaddingContentType::REFLECT) {
-            return absl::UnimplementedError(
-                       "Only ZERO and REFLECT padding types are supported.");
-        }
-        if (attr.appended.h < 0 || attr.appended.w < 0 || attr.appended.c < 0 ||
-                attr.prepended.h < 0 || attr.prepended.w < 0 || attr.prepended.c < 0) {
-            return absl::UnimplementedError("Negative padding is not supported.");
-        }
-        if (attr.appended.b != 0 || attr.prepended.b != 0) {
-            return absl::UnimplementedError("Padding for BATCH is not supported.");
-        }
-        std::vector<Variable> parameters = {
-            {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
-            {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
-            {"input_data_0_c", static_cast<int>(ctx.input_shapes[0][3])},
-            {   "prepended",
-                int4(attr.prepended.w, attr.prepended.h, attr.prepended.c, 0)
-            },
-        };
-        std::string source;
-        if (attr.type == PaddingContentType::REFLECT) {
-            source = R"(
+    if (attr.type != PaddingContentType::ZEROS &&
+        attr.type != PaddingContentType::REFLECT) {
+      return absl::UnimplementedError(
+          "Only ZERO and REFLECT padding types are supported.");
+    }
+    if (attr.appended.h < 0 || attr.appended.w < 0 || attr.appended.c < 0 ||
+        attr.prepended.h < 0 || attr.prepended.w < 0 || attr.prepended.c < 0) {
+      return absl::UnimplementedError("Negative padding is not supported.");
+    }
+    if (attr.appended.b != 0 || attr.prepended.b != 0) {
+      return absl::UnimplementedError("Padding for BATCH is not supported.");
+    }
+    std::vector<Variable> parameters = {
+        {"input_data_0_h", static_cast<int>(ctx.input_shapes[0][1])},
+        {"input_data_0_w", static_cast<int>(ctx.input_shapes[0][2])},
+        {"input_data_0_c", static_cast<int>(ctx.input_shapes[0][3])},
+        {"prepended",
+         int4(attr.prepended.w, attr.prepended.h, attr.prepended.c, 0)},
+    };
+    std::string source;
+    if (attr.type == PaddingContentType::REFLECT) {
+      source = R"(
   int src_x = gid.x - $prepended.x$;
   src_x = abs(src_x);
   src_x = $input_data_0_w$ - 1 - abs(src_x - $input_data_0_w$ + 1);

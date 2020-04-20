@@ -35,7 +35,7 @@ namespace metal {
 namespace {
 
 std::string GetMaxPoolingCode(const HW& kernel_size) {
-    std::string shader_source = R"(
+  std::string shader_source = R"(
     #include <metal_stdlib>
     using namespace metal;
     constant int window_w = $0;
@@ -76,11 +76,11 @@ std::string GetMaxPoolingCode(const HW& kernel_size) {
       output_buffer[linear_index] = value;
     }
   )";
-    return absl::Substitute(shader_source, kernel_size.w, kernel_size.h);
+  return absl::Substitute(shader_source, kernel_size.w, kernel_size.h);
 }
 
 std::string GetMaxPoolingIndicesCode(const HW& kernel_size) {
-    std::string shader_source = R"(
+  std::string shader_source = R"(
     #include <metal_stdlib>
     using namespace metal;
     constant int window_w = $0;
@@ -139,11 +139,11 @@ std::string GetMaxPoolingIndicesCode(const HW& kernel_size) {
       output_buffer[linear_index] = value;
     }
   )";
-    return absl::Substitute(shader_source, kernel_size.w, kernel_size.h);
+  return absl::Substitute(shader_source, kernel_size.w, kernel_size.h);
 }
 
 std::string GetAveragePoolingCode(const HW& kernel_size) {
-    std::string shader_source = R"(
+  std::string shader_source = R"(
   #include <metal_stdlib>
   using namespace metal;
   constant int window_w = $0;

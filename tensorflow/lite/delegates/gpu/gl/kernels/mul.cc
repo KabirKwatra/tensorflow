@@ -33,107 +33,107 @@ namespace gl {
 namespace {
 
 bool IsApplyMaskSupported(const NodeShader::GenerationContext& ctx) {
-    if (ctx.input_shapes.size() != 2) return false;
+  if (ctx.input_shapes.size() != 2) return false;
 
-    // [H, W, C] x [H, W, 0][0]
-    if (ctx.input_shapes[0][1] == ctx.input_shapes[1][1] &&
-            ctx.input_shapes[0][2] == ctx.input_shapes[1][2] &&
-            ctx.input_shapes[1][3] == 1) {
-        return true;
-    }
+  // [H, W, C] x [H, W, 0][0]
+  if (ctx.input_shapes[0][1] == ctx.input_shapes[1][1] &&
+      ctx.input_shapes[0][2] == ctx.input_shapes[1][2] &&
+      ctx.input_shapes[1][3] == 1) {
+    return true;
+  }
 
-    // [H, W, C] x [H, W, C]
-    if (ctx.input_shapes[0] == ctx.input_shapes[1]) return true;
+  // [H, W, C] x [H, W, C]
+  if (ctx.input_shapes[0] == ctx.input_shapes[1]) return true;
 
-    // [H, W, C] x [0, 0, C]
-    return ctx.input_shapes[1][1] == 1 && ctx.input_shapes[1][2] == 1 &&
-           ctx.input_shapes[0][3] == ctx.input_shapes[1][3];
+  // [H, W, C] x [0, 0, C]
+  return ctx.input_shapes[1][1] == 1 && ctx.input_shapes[1][2] == 1 &&
+         ctx.input_shapes[0][3] == ctx.input_shapes[1][3];
 }
 
 absl::Status GenerateApplyMaskCode(const NodeShader::GenerationContext& ctx,
                                    GeneratedCode* generated_code) {
-    std::string source = "value_0 = $input_data_0[gid.x, gid.y, gid.z]$ * ";
-    if (ctx.input_shapes[1][3] == 1) {
-        // [H, W, C] x [H, W, 0][0]
-        absl::StrAppend(&source, "$input_data_1[gid.x, gid.y, 0]$.x;");
-    } else if (ctx.input_shapes[0][1] == ctx.input_shapes[1][1] &&
-               ctx.input_shapes[0][2] == ctx.input_shapes[1][2]) {
-        // [H, W, C] x [H, W, C]
-        absl::StrAppend(&source, "$input_data_1[gid.x, gid.y, gid.z]$;");
-    } else {
-        // [H, W, C] x [0, 0, C]
-        absl::StrAppend(&source, "$input_data_1[0, 0, gid.z]$;");
-    }
+  std::string source = "value_0 = $input_data_0[gid.x, gid.y, gid.z]$ * ";
+  if (ctx.input_shapes[1][3] == 1) {
+    // [H, W, C] x [H, W, 0][0]
+    absl::StrAppend(&source, "$input_data_1[gid.x, gid.y, 0]$.x;");
+  } else if (ctx.input_shapes[0][1] == ctx.input_shapes[1][1] &&
+             ctx.input_shapes[0][2] == ctx.input_shapes[1][2]) {
+    // [H, W, C] x [H, W, C]
+    absl::StrAppend(&source, "$input_data_1[gid.x, gid.y, gid.z]$;");
+  } else {
+    // [H, W, C] x [0, 0, C]
+    absl::StrAppend(&source, "$input_data_1[0, 0, gid.z]$;");
+  }
 
-    *generated_code = {
-        /*parameters=*/{},
-        /*objects=*/{},
-        /*shared_variables=*/{},
-        /*workload=*/uint3(),
-        /*workgroup=*/uint3(),
-        /*source_code=*/std::move(source),
-        /*input=*/IOStructure::ONLY_DEFINITIONS,
-        /*output=*/IOStructure::AUTO,
-    };
-    return absl::OkStatus();
+  *generated_code = {
+      /*parameters=*/{},
+      /*objects=*/{},
+      /*shared_variables=*/{},
+      /*workload=*/uint3(),
+      /*workgroup=*/uint3(),
+      /*source_code=*/std::move(source),
+      /*input=*/IOStructure::ONLY_DEFINITIONS,
+      /*output=*/IOStructure::AUTO,
+  };
+  return absl::OkStatus();
 }
 
 absl::Status GenerateMultiplyScalarCode(
     const NodeShader::GenerationContext& ctx, GeneratedCode* generated_code) {
-    const auto& attr = absl::any_cast<const MultiplyAttributes&>(ctx.op_attr);
-    auto muls = absl::get_if<Tensor<Linear, DataType::FLOAT32>>(&attr.param);
-    auto scalar = absl::get_if<float>(&attr.param);
+  const auto& attr = absl::any_cast<const MultiplyAttributes&>(ctx.op_attr);
+  auto muls = absl::get_if<Tensor<Linear, DataType::FLOAT32>>(&attr.param);
+  auto scalar = absl::get_if<float>(&attr.param);
 
-    if (scalar) {
-        *generated_code = {
-            /*parameters=*/{{"scalar", *scalar}},
-            /*objects=*/{},
-            /*shared_variables=*/{},
-            /*workload=*/uint3(),
-            /*workgroup=*/uint3(),
-            /*source_code=*/"value_0 *= $scalar$;",
-            /*input=*/IOStructure::AUTO,
-            /*output=*/IOStructure::AUTO,
-        };
-    } else {
-        if (!muls) {
-            return absl::InvalidArgumentError("Empty parameters for Multiplication.");
-        }
-        *generated_code = {
-            /*parameters=*/{},
-            /*objects=*/{{"mul_buffer", MakeReadonlyObject(muls->data)}},
-            /*shared_variables=*/{},
-            // Declare workload explicitly because shader depends on gid.z.
-            /*workload=*/
-            uint3(static_cast<int>(ctx.input_shapes[0][2]),
-                  static_cast<int>(ctx.input_shapes[0][1]),
-                  DivideRoundUp(static_cast<int>(ctx.input_shapes[0][3]), 4)),
-            /*workgroup=*/uint3(),
-            /*source_code=*/"value_0 *= $mul_buffer[gid.z]$;",
-            /*input=*/IOStructure::AUTO,
-            /*output=*/IOStructure::AUTO,
-        };
+  if (scalar) {
+    *generated_code = {
+        /*parameters=*/{{"scalar", *scalar}},
+        /*objects=*/{},
+        /*shared_variables=*/{},
+        /*workload=*/uint3(),
+        /*workgroup=*/uint3(),
+        /*source_code=*/"value_0 *= $scalar$;",
+        /*input=*/IOStructure::AUTO,
+        /*output=*/IOStructure::AUTO,
+    };
+  } else {
+    if (!muls) {
+      return absl::InvalidArgumentError("Empty parameters for Multiplication.");
     }
+    *generated_code = {
+        /*parameters=*/{},
+        /*objects=*/{{"mul_buffer", MakeReadonlyObject(muls->data)}},
+        /*shared_variables=*/{},
+        // Declare workload explicitly because shader depends on gid.z.
+        /*workload=*/
+        uint3(static_cast<int>(ctx.input_shapes[0][2]),
+              static_cast<int>(ctx.input_shapes[0][1]),
+              DivideRoundUp(static_cast<int>(ctx.input_shapes[0][3]), 4)),
+        /*workgroup=*/uint3(),
+        /*source_code=*/"value_0 *= $mul_buffer[gid.z]$;",
+        /*input=*/IOStructure::AUTO,
+        /*output=*/IOStructure::AUTO,
+    };
+  }
 
-    return absl::OkStatus();
+  return absl::OkStatus();
 }
 
 class Multiply : public NodeShader {
-public:
-    absl::Status GenerateCode(const GenerationContext& ctx,
-                              GeneratedCode* generated_code) const final {
-        if (IsApplyMaskSupported(ctx)) {
-            return GenerateApplyMaskCode(ctx, generated_code);
-        } else {
-            return GenerateMultiplyScalarCode(ctx, generated_code);
-        }
+ public:
+  absl::Status GenerateCode(const GenerationContext& ctx,
+                            GeneratedCode* generated_code) const final {
+    if (IsApplyMaskSupported(ctx)) {
+      return GenerateApplyMaskCode(ctx, generated_code);
+    } else {
+      return GenerateMultiplyScalarCode(ctx, generated_code);
     }
+  }
 };
 
 }  // namespace
 
 std::unique_ptr<NodeShader> NewMultiplyNodeShader() {
-    return absl::make_unique<Multiply>();
+  return absl::make_unique<Multiply>();
 }
 
 }  // namespace gl

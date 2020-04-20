@@ -33,43 +33,43 @@ namespace gl {
 namespace {
 
 float4 GetMask(int num_channels) {
-    float4 mask(0.0f);
-    const int remainder = num_channels % 4 == 0 ? 4 : num_channels % 4;
-    for (int i = 0; i < remainder; ++i) mask[i] = 1.0f;
-    return mask;
+  float4 mask(0.0f);
+  const int remainder = num_channels % 4 == 0 ? 4 : num_channels % 4;
+  for (int i = 0; i < remainder; ++i) mask[i] = 1.0f;
+  return mask;
 }
 
 class Softmax : public NodeShader {
-public:
-    absl::Status GenerateCode(const GenerationContext& ctx,
-                              GeneratedCode* generated_code) const final {
-        const auto& attr = absl::any_cast<const SoftmaxAttributes&>(ctx.op_attr);
-        if (ctx.input_shapes[0] != ctx.output_shapes[0]) {
-            return absl::InvalidArgumentError(
-                       "Input and output shapes do not match.");
-        }
-        if (attr.axis != Axis::CHANNELS) {
-            return absl::UnimplementedError(
-                       "Softmax is only supported for channels axis.");
-        }
-        return ctx.input_shapes[0][1] == 1 && ctx.input_shapes[0][2] == 1
+ public:
+  absl::Status GenerateCode(const GenerationContext& ctx,
+                            GeneratedCode* generated_code) const final {
+    const auto& attr = absl::any_cast<const SoftmaxAttributes&>(ctx.op_attr);
+    if (ctx.input_shapes[0] != ctx.output_shapes[0]) {
+      return absl::InvalidArgumentError(
+          "Input and output shapes do not match.");
+    }
+    if (attr.axis != Axis::CHANNELS) {
+      return absl::UnimplementedError(
+          "Softmax is only supported for channels axis.");
+    }
+    return ctx.input_shapes[0][1] == 1 && ctx.input_shapes[0][2] == 1
                ? GenerateCodeFor1x1(ctx, generated_code)
                : GenerateCodeGeneral(ctx, generated_code);
-    }
+  }
 
-private:
-    absl::Status GenerateCodeFor1x1(const GenerationContext& ctx,
-                                    GeneratedCode* generated_code) const {
-        const int depth = DivideRoundUp(ctx.output_shapes[0][3], 4);
-        std::vector<Variable> shared_variables = {
-            {"partial_sum", std::vector<float4>(8)},
-        };
-        std::vector<Variable> uniform_parameters = {
-            {"depth", depth},
-            {"depth_div_32", DivideRoundUp(depth, 32)},
-            {"mask", GetMask(ctx.output_shapes[0][3])},
-        };
-        std::string source_code = R"(
+ private:
+  absl::Status GenerateCodeFor1x1(const GenerationContext& ctx,
+                                  GeneratedCode* generated_code) const {
+    const int depth = DivideRoundUp(ctx.output_shapes[0][3], 4);
+    std::vector<Variable> shared_variables = {
+        {"partial_sum", std::vector<float4>(8)},
+    };
+    std::vector<Variable> uniform_parameters = {
+        {"depth", depth},
+        {"depth_div_32", DivideRoundUp(depth, 32)},
+        {"mask", GetMask(ctx.output_shapes[0][3])},
+    };
+    std::string source_code = R"(
   highp vec4 kOnes = vec4(1.0);
   highp float sum = 0.0;
   int offset = 0;

@@ -33,32 +33,31 @@ namespace gl {
 namespace {
 
 class FullyConnectedBuffers : public NodeShader {
-public:
-    absl::Status GenerateCode(const GenerationContext& ctx,
-                              GeneratedCode* generated_code) const final {
-        const auto& attr =
-            absl::any_cast<const FullyConnectedAttributes&>(ctx.op_attr);
+ public:
+  absl::Status GenerateCode(const GenerationContext& ctx,
+                            GeneratedCode* generated_code) const final {
+    const auto& attr =
+        absl::any_cast<const FullyConnectedAttributes&>(ctx.op_attr);
 
-        const int src_depth = DivideRoundUp(attr.weights.shape.i, 4);
-        const int dst_depth = DivideRoundUp(attr.weights.shape.o, 4);
+    const int src_depth = DivideRoundUp(attr.weights.shape.i, 4);
+    const int dst_depth = DivideRoundUp(attr.weights.shape.o, 4);
 
-        // This shader can work with any workgroup size, the values below work well
-        // for OpenGL.
-        constexpr int kWorkgroupHintX = 4;
-        constexpr int kWorkgroupHintY = 4;
+    // This shader can work with any workgroup size, the values below work well
+    // for OpenGL.
+    constexpr int kWorkgroupHintX = 4;
+    constexpr int kWorkgroupHintY = 4;
 
-        // TODO(akulik): check that input has h,w == 1,1
-        std::vector<Variable> parameters = {
-            {"src_depth", src_depth},
-            {"dst_depth", dst_depth},
-        };
+    // TODO(akulik): check that input has h,w == 1,1
+    std::vector<Variable> parameters = {
+        {"src_depth", src_depth},
+        {"dst_depth", dst_depth},
+    };
 
-        // TODO(akulik): refactor indexed access to weights.
-        std::vector<std::pair<std::string, Object>> objects = {
-            {"weights", MakeReadonlyObject(ConvertToPHWO4I4(attr.weights))}
-        };
+    // TODO(akulik): refactor indexed access to weights.
+    std::vector<std::pair<std::string, Object>> objects = {
+        {"weights", MakeReadonlyObject(ConvertToPHWO4I4(attr.weights))}};
 
-        std::string source = R"(
+    std::string source = R"(
   const int threads = int(gl_WorkGroupSize.y);
   const int workers = int(gl_WorkGroupSize.x);
   ivec3 tid = ivec3(gl_LocalInvocationID);

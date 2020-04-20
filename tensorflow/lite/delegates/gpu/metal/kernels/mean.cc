@@ -38,9 +38,9 @@ namespace gpu {
 namespace metal {
 
 std::string GetMeanCode(const int3& work_group_size) {
-    const std::string wg_x = std::to_string(work_group_size.x);
-    const std::string wg_y = std::to_string(work_group_size.y);
-    std::string c = R"(
+  const std::string wg_x = std::to_string(work_group_size.x);
+  const std::string wg_y = std::to_string(work_group_size.y);
+  std::string c = R"(
     #include <metal_stdlib>
     using namespace metal;
     struct uniforms {
@@ -150,13 +150,13 @@ std::vector<ComputeTaskDescriptorPtr> Mean(int id, ValueId input_id,
        }},
   };
 
-  desc->resize_function = [output_id, work_group_size](
-                              const std::map<ValueId, BHWC>& buffers) {
-    BHWC dst_shape = buffers.find(output_id)->second;
-    const int dst_slices = DivideRoundUp(dst_shape.c, 4);
-    const int groups_z = DivideRoundUp(dst_slices, work_group_size.z);
-    return std::make_pair(work_group_size, uint3{1, 1, groups_z});
-  };
+  desc->resize_function =
+      [output_id, work_group_size](const std::map<ValueId, BHWC>& buffers) {
+        BHWC dst_shape = buffers.find(output_id)->second;
+        const int dst_slices = DivideRoundUp(dst_shape.c, 4);
+        const int groups_z = DivideRoundUp(dst_slices, work_group_size.z);
+        return std::make_pair(work_group_size, uint3{1, 1, groups_z});
+      };
   return {desc};
 }
 

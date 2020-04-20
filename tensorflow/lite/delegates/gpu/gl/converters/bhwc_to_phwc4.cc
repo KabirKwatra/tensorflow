@@ -32,8 +32,8 @@ namespace gpu {
 namespace gl {
 
 absl::Status ConverterBhwcToPhwc4::Create(ConverterBhwcToPhwc4* converter) {
-    uint3 workgroup_size = uint3(4, 4, 4);
-    std::string shader_source = GetShaderHeader(workgroup_size) + R"(
+  uint3 workgroup_size = uint3(4, 4, 4);
+  std::string shader_source = GetShaderHeader(workgroup_size) + R"(
     layout(std430) buffer;
 
     precision highp float;
@@ -63,44 +63,44 @@ absl::Status ConverterBhwcToPhwc4::Create(ConverterBhwcToPhwc4* converter) {
       output_data.elements[(gid.z * sizes_.y + gid.y) * sizes_.x + gid.x] = v;
     })";
 
-    GlShader shader;
-    RETURN_IF_ERROR(
-        GlShader::CompileShader(GL_COMPUTE_SHADER, shader_source, &shader));
-    GlProgram program;
-    RETURN_IF_ERROR(GlProgram::CreateWithShader(shader, &program));
-    *converter = ConverterBhwcToPhwc4(std::move(program), workgroup_size);
-    return absl::OkStatus();
+  GlShader shader;
+  RETURN_IF_ERROR(
+      GlShader::CompileShader(GL_COMPUTE_SHADER, shader_source, &shader));
+  GlProgram program;
+  RETURN_IF_ERROR(GlProgram::CreateWithShader(shader, &program));
+  *converter = ConverterBhwcToPhwc4(std::move(program), workgroup_size);
+  return absl::OkStatus();
 }
 
 absl::Status ConverterBhwcToPhwc4::Convert(const BHWC& shape,
-        const GlBuffer& source,
-        CommandQueue* command_queue,
-        GlBuffer* destination) {
-    if (source.bytes_size() < BytesForBHWC(shape)) {
-        return absl::InvalidArgumentError(
-                   "BhwcToPhwc4: Input data size does not match expected size.");
-    }
-    if (destination->bytes_size() < BytesForPHWC4(shape)) {
-        return absl::InvalidArgumentError(
-                   "BhwcToPhwc4: output data size does not match expected size.");
-    }
-    if (shape.b != 1) {
-        return absl::UnimplementedError(
-                   "BhwcToPhwc4: Batch size is not equal to 1.");
-    }
-    uint3 workload = uint3(shape.w, shape.h, DivideRoundUp(shape.c, 4));
-    uint3 num_workgroups = DivideRoundUp(workload, workgroup_size_);
+                                           const GlBuffer& source,
+                                           CommandQueue* command_queue,
+                                           GlBuffer* destination) {
+  if (source.bytes_size() < BytesForBHWC(shape)) {
+    return absl::InvalidArgumentError(
+        "BhwcToPhwc4: Input data size does not match expected size.");
+  }
+  if (destination->bytes_size() < BytesForPHWC4(shape)) {
+    return absl::InvalidArgumentError(
+        "BhwcToPhwc4: output data size does not match expected size.");
+  }
+  if (shape.b != 1) {
+    return absl::UnimplementedError(
+        "BhwcToPhwc4: Batch size is not equal to 1.");
+  }
+  uint3 workload = uint3(shape.w, shape.h, DivideRoundUp(shape.c, 4));
+  uint3 num_workgroups = DivideRoundUp(workload, workgroup_size_);
 
-    RETURN_IF_ERROR(program_.SetParameter(
-    {   "sizes_",
-        int4(static_cast<int32_t>(workload.x), static_cast<int32_t>(workload.y),
-             static_cast<int32_t>(workload.z), static_cast<int32_t>(shape.c))}));
-    RETURN_IF_ERROR(source.BindToIndex(0));
-    RETURN_IF_ERROR(destination->BindToIndex(1));
-    if (command_queue) {
-        return command_queue->Dispatch(program_, num_workgroups);
-    }
-    return program_.Dispatch(num_workgroups);
+  RETURN_IF_ERROR(program_.SetParameter(
+      {"sizes_",
+       int4(static_cast<int32_t>(workload.x), static_cast<int32_t>(workload.y),
+            static_cast<int32_t>(workload.z), static_cast<int32_t>(shape.c))}));
+  RETURN_IF_ERROR(source.BindToIndex(0));
+  RETURN_IF_ERROR(destination->BindToIndex(1));
+  if (command_queue) {
+    return command_queue->Dispatch(program_, num_workgroups);
+  }
+  return program_.Dispatch(num_workgroups);
 }
 
 }  // namespace gl
