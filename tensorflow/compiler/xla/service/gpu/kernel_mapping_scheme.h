@@ -74,185 +74,163 @@ namespace gpu {
 // for this purpose. A tile block is a three dimensional array of tiles, of
 // which some dimensions may be degenerated to only one tile.
 class KernelMappingScheme {
-public:
-    enum { DimZ = 0, DimY, DimX, DimTot };
-    enum IndexingOrder {
-        // Thread reads consecutive elements.
-        LinearIndexingX,
-        // Thread reads strided elements while keeping memory coalescing.
-        StridedIndexingX,
-        // Thread reads a few consecutive elements then take a strided
-        // step. This can trigger vectorized reads and keep memory
-        // coalescing.
-        StridedLinearIndexingX
-    };
-
-    KernelMappingScheme(absl::Span<const int64> dims_in_elems,
-                        absl::Span<const int64> tile_sizes, int64 num_threads_y,
-                        int64 num_threads_x, IndexingOrder indexing_order,
-                        int vector_size)
-        : dims_in_elems_{dims_in_elems[0], dims_in_elems[1], dims_in_elems[2]},
-          tile_sizes_{tile_sizes[0], tile_sizes[1], tile_sizes[2]},
-          num_threads_x_(num_threads_x),
-          num_threads_y_(num_threads_y),
-          indexing_order_(indexing_order),
-          vector_size_(vector_size) {
-        CHECK_EQ(tile_sizes[1] % num_threads_y_, 0);
-        CHECK_EQ(tile_sizes[2] % num_threads_x_, 0);
-        VLOG(10) << "dims_in_elems_ = " << absl::StrJoin(dims_in_elems_, ",");
-        if (indexing_order != LinearIndexingX) {
-            // StridedIndexingX, and StridedLinearIndexingX
-            // is for the purpose of vectorization, which requires
-            // GetTileSizeFor(DimX) to be a multiplier of num_threads_x_.
-            CHECK_EQ(GetTileSizeFor(DimX) % num_threads_x_, 0);
-        }
-    }
-
-    // Number of elements in each dimension (Z/Y/X respectively).
-    absl::Span<const int64> GetDimsInElems() const {
-        return dims_in_elems_;
-    }
-
-    int64 GetNumberOfBlocks() const {
-        return CeilOfRatio(dims_in_elems_[0], GetTileSizeZ()) *
-               CeilOfRatio(dims_in_elems_[1], GetTileSizeY()) *
-               CeilOfRatio(dims_in_elems_[2], GetTileSizeX());
-    }
-
-    // Tile size for a given dimensions. Tiles are assigned per thread block,
-    // and are processed by all threads in the block.
-    int64 GetTileSizeFor(int d) const {
-        return tile_sizes_.at(d);
-    }
-
-    int64 GetTileSizeZ() const {
-        return GetTileSizeFor(DimZ);
-    }
-    int64 GetTileSizeX() const {
-        return GetTileSizeFor(DimX);
-    }
-    int64 GetTileSizeY() const {
-        return GetTileSizeFor(DimY);
-    }
-
-    int64 GetNumThreadsX() const {
-        return num_threads_x_;
-    }
-    int64 GetNumThreadsY() const {
-        return num_threads_y_;
-    }
-
-    int64 GetThreadsPerBlock() const {
-        return GetNumThreadsX() * GetNumThreadsY();
-    }
-
-    IndexingOrder GetIndexingOrder() const {
-        return indexing_order_;
-    }
-    int GetVectorSize() const {
-        return vector_size_;
-    }
-
-private:
-    // The number of elements in each dimension.
-    const std::array<int64, 3> dims_in_elems_;
-
-    // The number of elements for each dimension of a tile.
-    const std::array<int64, 3> tile_sizes_;
-
-    // Number of threads used to process elements in the X direction of a tile.
-    const int64 num_threads_x_;
-
-    // Number of threads used to process elements in the Y direction of a tile.
-    const int64 num_threads_y_;
-
-    // When num_threads_x threads process a total of tile_size_x
-    // elements in the X dimension of a tile, each threads process
-    // n=tile_size_x/num_threads_x elements.
-    // indexing_order defines which tile's elements each thread reads.
-    const IndexingOrder indexing_order_;
-
-    // vector_size_ only supported for row reduction and must be a divisor
-    // of tile_sizes_[2]/num_threads_x.  Interesting values are 2 and 4
-    // to trigger vectorized loads on GPUs while keeping memory
+ public:
+  enum { DimZ = 0, DimY, DimX, DimTot };
+  enum IndexingOrder {
+    // Thread reads consecutive elements.
+    LinearIndexingX,
+    // Thread reads strided elements while keeping memory coalescing.
+    StridedIndexingX,
+    // Thread reads a few consecutive elements then take a strided
+    // step. This can trigger vectorized reads and keep memory
     // coalescing.
-    const int vector_size_;
+    StridedLinearIndexingX
+  };
+
+  KernelMappingScheme(absl::Span<const int64> dims_in_elems,
+                      absl::Span<const int64> tile_sizes, int64 num_threads_y,
+                      int64 num_threads_x, IndexingOrder indexing_order,
+                      int vector_size)
+      : dims_in_elems_{dims_in_elems[0], dims_in_elems[1], dims_in_elems[2]},
+        tile_sizes_{tile_sizes[0], tile_sizes[1], tile_sizes[2]},
+        num_threads_x_(num_threads_x),
+        num_threads_y_(num_threads_y),
+        indexing_order_(indexing_order),
+        vector_size_(vector_size) {
+    CHECK_EQ(tile_sizes[1] % num_threads_y_, 0);
+    CHECK_EQ(tile_sizes[2] % num_threads_x_, 0);
+    VLOG(10) << "dims_in_elems_ = " << absl::StrJoin(dims_in_elems_, ",");
+    if (indexing_order != LinearIndexingX) {
+      // StridedIndexingX, and StridedLinearIndexingX
+      // is for the purpose of vectorization, which requires
+      // GetTileSizeFor(DimX) to be a multiplier of num_threads_x_.
+      CHECK_EQ(GetTileSizeFor(DimX) % num_threads_x_, 0);
+    }
+  }
+
+  // Number of elements in each dimension (Z/Y/X respectively).
+  absl::Span<const int64> GetDimsInElems() const { return dims_in_elems_; }
+
+  int64 GetNumberOfBlocks() const {
+    return CeilOfRatio(dims_in_elems_[0], GetTileSizeZ()) *
+           CeilOfRatio(dims_in_elems_[1], GetTileSizeY()) *
+           CeilOfRatio(dims_in_elems_[2], GetTileSizeX());
+  }
+
+  // Tile size for a given dimensions. Tiles are assigned per thread block,
+  // and are processed by all threads in the block.
+  int64 GetTileSizeFor(int d) const { return tile_sizes_.at(d); }
+
+  int64 GetTileSizeZ() const { return GetTileSizeFor(DimZ); }
+  int64 GetTileSizeX() const { return GetTileSizeFor(DimX); }
+  int64 GetTileSizeY() const { return GetTileSizeFor(DimY); }
+
+  int64 GetNumThreadsX() const { return num_threads_x_; }
+  int64 GetNumThreadsY() const { return num_threads_y_; }
+
+  int64 GetThreadsPerBlock() const {
+    return GetNumThreadsX() * GetNumThreadsY();
+  }
+
+  IndexingOrder GetIndexingOrder() const { return indexing_order_; }
+  int GetVectorSize() const { return vector_size_; }
+
+ private:
+  // The number of elements in each dimension.
+  const std::array<int64, 3> dims_in_elems_;
+
+  // The number of elements for each dimension of a tile.
+  const std::array<int64, 3> tile_sizes_;
+
+  // Number of threads used to process elements in the X direction of a tile.
+  const int64 num_threads_x_;
+
+  // Number of threads used to process elements in the Y direction of a tile.
+  const int64 num_threads_y_;
+
+  // When num_threads_x threads process a total of tile_size_x
+  // elements in the X dimension of a tile, each threads process
+  // n=tile_size_x/num_threads_x elements.
+  // indexing_order defines which tile's elements each thread reads.
+  const IndexingOrder indexing_order_;
+
+  // vector_size_ only supported for row reduction and must be a divisor
+  // of tile_sizes_[2]/num_threads_x.  Interesting values are 2 and 4
+  // to trigger vectorized loads on GPUs while keeping memory
+  // coalescing.
+  const int vector_size_;
 };
 
 // Information to support the code generation for a tiled reduction kernel.
 using AddressVector = absl::InlinedVector<llvm::AllocaInst*, 1>;
 class ReductionCodegenInfo {
-public:
-    explicit ReductionCodegenInfo(KernelMappingScheme mapping_scheme,
-                                  int num_partial_results, bool is_row_reduction)
-        : mapping_scheme_(mapping_scheme),
-          num_partial_results_(num_partial_results),
-          is_row_reduction_(is_row_reduction) {
-        if (num_partial_results > 1) {
-            CHECK_EQ(num_partial_results, (mapping_scheme.GetTileSizeX() /
-                                           mapping_scheme.GetNumThreadsX()));
-        }
+ public:
+  explicit ReductionCodegenInfo(KernelMappingScheme mapping_scheme,
+                                int num_partial_results, bool is_row_reduction)
+      : mapping_scheme_(mapping_scheme),
+        num_partial_results_(num_partial_results),
+        is_row_reduction_(is_row_reduction) {
+    if (num_partial_results > 1) {
+      CHECK_EQ(num_partial_results, (mapping_scheme.GetTileSizeX() /
+                                     mapping_scheme.GetNumThreadsX()));
     }
+  }
 
-    const KernelMappingScheme& GetKernelMappingScheme() const {
-        return mapping_scheme_;
-    }
+  const KernelMappingScheme& GetKernelMappingScheme() const {
+    return mapping_scheme_;
+  }
 
-    // Gets writeable pointer to the address (or addresses) used to store
-    // reduction accumulators.
-    AddressVector* GetMutablePartialResultAddresses() {
-        return &partial_result_addresses_;
-    }
+  // Gets writeable pointer to the address (or addresses) used to store
+  // reduction accumulators.
+  AddressVector* GetMutablePartialResultAddresses() {
+    return &partial_result_addresses_;
+  }
 
-    // Returns the address (addresses) of the reduction accumulators.
-    absl::Span<llvm::AllocaInst* const> GetPartialResultAddresses() const {
-        return partial_result_addresses_;
-    }
+  // Returns the address (addresses) of the reduction accumulators.
+  absl::Span<llvm::AllocaInst* const> GetPartialResultAddresses() const {
+    return partial_result_addresses_;
+  }
 
-    // Mutable pointer to the address of the input element to perform the
-    // reduction with.
-    AddressVector* GetMutableReductionInputAddresses() {
-        return &reduction_input_addresses_;
-    }
+  // Mutable pointer to the address of the input element to perform the
+  // reduction with.
+  AddressVector* GetMutableReductionInputAddresses() {
+    return &reduction_input_addresses_;
+  }
 
-    std::vector<llvm::Value*>* GetMutableInitialValues() {
-        return &initial_values_;
-    }
+  std::vector<llvm::Value*>* GetMutableInitialValues() {
+    return &initial_values_;
+  }
 
-    absl::Span<llvm::Value* const> GetInitialValues() const {
-        return initial_values_;
-    }
+  absl::Span<llvm::Value* const> GetInitialValues() const {
+    return initial_values_;
+  }
 
-    // Returns the address of the input element to perform the reduction with.
-    absl::Span<llvm::AllocaInst* const> GetReductionInputAddresses() const {
-        return reduction_input_addresses_;
-    }
+  // Returns the address of the input element to perform the reduction with.
+  absl::Span<llvm::AllocaInst* const> GetReductionInputAddresses() const {
+    return reduction_input_addresses_;
+  }
 
-    int GetNumPartialResults() const {
-        return num_partial_results_;
-    }
-    bool IsRowReduction() const {
-        return is_row_reduction_;
-    }
+  int GetNumPartialResults() const { return num_partial_results_; }
+  bool IsRowReduction() const { return is_row_reduction_; }
 
-    // Gets a pointer to a mutable shared cache used by reduction.
-    std::vector<llvm::GlobalVariable*>* GetMutableSharedCache() {
-        return &shared_cache_;
-    }
+  // Gets a pointer to a mutable shared cache used by reduction.
+  std::vector<llvm::GlobalVariable*>* GetMutableSharedCache() {
+    return &shared_cache_;
+  }
 
-    // Shared cache used for reduction.
-    absl::Span<llvm::GlobalVariable* const> GetSharedCache() const {
-        return shared_cache_;
-    }
+  // Shared cache used for reduction.
+  absl::Span<llvm::GlobalVariable* const> GetSharedCache() const {
+    return shared_cache_;
+  }
 
-private:
-    std::vector<llvm::GlobalVariable*> shared_cache_;
-    std::vector<llvm::Value*> initial_values_;
-    const KernelMappingScheme mapping_scheme_;
-    AddressVector partial_result_addresses_;
-    AddressVector reduction_input_addresses_;
-    int num_partial_results_;
-    bool is_row_reduction_;
+ private:
+  std::vector<llvm::GlobalVariable*> shared_cache_;
+  std::vector<llvm::Value*> initial_values_;
+  const KernelMappingScheme mapping_scheme_;
+  AddressVector partial_result_addresses_;
+  AddressVector reduction_input_addresses_;
+  int num_partial_results_;
+  bool is_row_reduction_;
 };
 
 }  // end namespace gpu

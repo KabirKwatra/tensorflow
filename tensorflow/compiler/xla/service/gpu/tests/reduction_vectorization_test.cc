@@ -35,7 +35,7 @@ namespace {
 class ReductionVectorizationTest : public GpuCodegenTest {};
 
 TEST_F(ReductionVectorizationTest, Power2) {
-    const char* hlo_text = R"(
+  const char* hlo_text = R"(
 HloModule ReducePower2
 
 %max_ {
