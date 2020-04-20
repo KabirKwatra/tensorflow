@@ -1,9 +1,8 @@
 # Hexagon Delegate
 
-Experimental delegate which uses Hexagon SDK to delegate the processing
-to QC DSP.
-Note that we only support quantized models, since the DSP is efficient
-with quantized versions. So all op support is for quantized versions.
+Experimental delegate which uses Hexagon SDK to delegate the processing to QC
+DSP. Note that we only support quantized models, since the DSP is efficient with
+quantized versions. So all op support is for quantized versions.
 
 Usage:
 
@@ -33,70 +32,67 @@ Usage:
   TfLiteHexagonTearDown();  // Needed once at end of app/DSP usage.
 ```
 
-* Shared libraries:
+- Shared libraries:
   - 'libhexagon_interface.so' which holds the interface that the delegate uses.
-  It must be available if you linked the hexagon_delegate library to TFLite.
-  You can load it either from shell by overriding
-  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"path to the so",
-  or add it inside your apk in a way it is available.
-  - 'libhexagon_nn_skel(_v65/_v66).so' which holds the DSP code.
-  Use TfLiteHexagonInitWithPath(..) and provide the path to the directory
-  which holds the shared libraries for the Hexagon NN on device.
-  If you're using TfLiteHexagonInit() then
-  You will need to set environment variable "ADSP_LIBRARY_PATH" to
-  "path_to_the_lib";/system/lib/rfsa/adsp;/system/vendor/lib/rfsa/adsp;/dsp
-  Note that separator here is ';' not ':'
-  You can push all 3 files, and the library will pick the one needed based
-  on the runtime. Or if you are sure of what you will use on the device then
-  push only one of them.
-
-
+    It must be available if you linked the hexagon_delegate library to TFLite.
+    You can load it either from shell by overriding
+    LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:"path to the so", or add it inside your
+    apk in a way it is available.
+  - 'libhexagon_nn_skel(\_v65/\_v66).so' which holds the DSP code. Use
+    TfLiteHexagonInitWithPath(..) and provide the path to the directory which
+    holds the shared libraries for the Hexagon NN on device. If you're using
+    TfLiteHexagonInit() then You will need to set environment variable
+    "ADSP_LIBRARY_PATH" to
+    "path_to_the_lib";/system/lib/rfsa/adsp;/system/vendor/lib/rfsa/adsp;/dsp
+    Note that separator here is ';' not ':' You can push all 3 files, and the
+    library will pick the one needed based on the runtime. Or if you are sure of
+    what you will use on the device then push only one of them.
 
 ## Supported Ops
 
-Hexagon only supports ops that have inputs/outputs of <= 4 dimensions.
-The following operations have been implemented, with a few constraints that
-are verified in `IsNodeSupportedByHexagon`:
+Hexagon only supports ops that have inputs/outputs of <= 4 dimensions. The
+following operations have been implemented, with a few constraints that are
+verified in `IsNodeSupportedByHexagon`:
 
-* Add
-* ArgMax
-* ArgMin
-* AveragePool2D:
-  * Constraints:
+- Add
+- ArgMax
+- ArgMin
+- AveragePool2D:
+  - Constraints:
     - No Activation
-* Concat
-* Conv2D:
-  * Constraints:
+- Concat
+- Conv2D:
+  - Constraints:
     - stride width/height <= 3
-* DepthToSpace
-* DepthwiseConv2D:
-  * Constraints:
-      - Filter width == 3
-      - depth_multiplier == 1
-      - dilation only supported when stride == 1
-      - Otherwise, stride height/width <= 3
-* FullyConnected (without any activation)
-* L2Normalization (without any activation)
-* Logistic (aka Sigmoid)
-* MaxPool2D (without any activation) (b/129276536)
-* Mul (without any activation) (b/129276536)
-* Neg
-* Pad: Only supports 0 padding (b/139277813)
-* Quantize (8-bit inputs & outputs only)
-* Relu
-* Relu6
-* Reshape
-* Resize Bilinear:
-  * Constraints:
+- DepthToSpace
+- DepthwiseConv2D:
+  - Constraints:
+    - Filter width == 3
+    - depth_multiplier == 1
+    - dilation only supported when stride == 1
+    - Otherwise, stride height/width <= 3
+- FullyConnected (without any activation)
+- L2Normalization (without any activation)
+- Logistic (aka Sigmoid)
+- MaxPool2D (without any activation) (b/129276536)
+- Mul (without any activation) (b/129276536)
+- Neg
+- Pad: Only supports 0 padding (b/139277813)
+- Quantize (8-bit inputs & outputs only)
+- Relu
+- Relu6
+- Reshape
+- Resize Bilinear:
+  - Constraints:
     - Requested size <= 65 (b/143105433)
-* Resize Nearest Neighbor
-* SoftMax
-* SpaceToDepth
-* Split
-* Sub
-* Tanh
-* Transpose
-* TransposeConv2D:
-  * Constraints:
+- Resize Nearest Neighbor
+- SoftMax
+- SpaceToDepth
+- Split
+- Sub
+- Tanh
+- Transpose
+- TransposeConv2D:
+  - Constraints:
     - stride height/width <= 3
     - dilation height/width == 1
