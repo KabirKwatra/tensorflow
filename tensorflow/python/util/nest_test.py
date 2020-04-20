@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for utilities working with arbitrarily nested structures."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import time
@@ -22,8 +23,12 @@ import time
 import numpy as np
 from absl.testing import parameterized
 from six.moves import xrange  # pylint: disable=redefined-builtin
-from tensorflow.python.framework import constant_op, dtypes, test_util
-from tensorflow.python.ops import array_ops, math_ops
+
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.platform import test
 from tensorflow.python.util import nest
 from tensorflow.python.util.compat import collections_abc
