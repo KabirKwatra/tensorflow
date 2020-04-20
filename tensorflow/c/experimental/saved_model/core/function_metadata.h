@@ -19,7 +19,7 @@ limitations under the License.
 namespace tensorflow {
 
 class FunctionMetadata {
-  // TODO(bmzhao): Fill in with fields as necessary
+    // TODO(bmzhao): Fill in with fields as necessary
 };
 
 }  // namespace tensorflow

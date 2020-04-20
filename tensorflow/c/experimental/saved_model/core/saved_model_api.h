@@ -31,23 +31,23 @@ namespace tensorflow {
 // this class. Eventually we want to remove this virtual base class indirection
 // and have only a single implementation.
 class SavedModelAPI {
- public:
-  // Retrieve a function from the TF2 SavedModel, using the "path" to a function
-  // in a TF2 savedmodel.
-  // Note: `function` is a double pointer, so that implementations are
-  // able to return a pointer to an internal member.
-  virtual Status GetFunction(const std::string& function_path,
-                             ConcreteFunction** function) = 0;
+public:
+    // Retrieve a function from the TF2 SavedModel, using the "path" to a function
+    // in a TF2 savedmodel.
+    // Note: `function` is a double pointer, so that implementations are
+    // able to return a pointer to an internal member.
+    virtual Status GetFunction(const std::string& function_path,
+                               ConcreteFunction** function) = 0;
 
-  // Retrieve a function from a SavedModel, using the key of the
-  // SignatureDef map:
-  // https://github.com/tensorflow/tensorflow/blob/69b08900b1e991d84bce31f3b404f5ed768f339f/tensorflow/core/protobuf/meta_graph.proto#L89
-  virtual Status GetSignatureDefFunction(const std::string& signature_def_key,
-                                         ConcreteFunction** function) = 0;
+    // Retrieve a function from a SavedModel, using the key of the
+    // SignatureDef map:
+    // https://github.com/tensorflow/tensorflow/blob/69b08900b1e991d84bce31f3b404f5ed768f339f/tensorflow/core/protobuf/meta_graph.proto#L89
+    virtual Status GetSignatureDefFunction(const std::string& signature_def_key,
+                                           ConcreteFunction** function) = 0;
 
-  virtual const std::vector<ConcreteFunction*>& ListFunctions() = 0;
+    virtual const std::vector<ConcreteFunction*>& ListFunctions() = 0;
 
-  virtual ~SavedModelAPI() = default;
+    virtual ~SavedModelAPI() = default;
 };
 
 }  // namespace tensorflow

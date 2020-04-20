@@ -24,7 +24,7 @@ limitations under the License.
 // and should not be depended on.
 
 struct TF_SavedModel {
-  std::unique_ptr<tensorflow::SavedModelAPI> saved_model;
+    std::unique_ptr<tensorflow::SavedModelAPI> saved_model;
 };
 
 #endif  // TENSORFLOW_C_EXPERIMENTAL_SAVED_MODEL_INTERNAL_SAVED_MODEL_API_TYPE_H_
