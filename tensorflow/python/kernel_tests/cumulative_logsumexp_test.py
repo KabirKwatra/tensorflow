@@ -42,7 +42,8 @@ class CumulativeLogsumexpTest(test.TestCase):
             x = ops.convert_to_tensor(x, dtype=dtype)
 
             result_naive, result_fused = self.evaluate(
-                self._computeLogSumExp(x, **kwargs))
+                self._computeLogSumExp(x, **kwargs)
+            )
 
         self.assertAllClose(result_naive, result_fused)
 
@@ -51,12 +52,16 @@ class CumulativeLogsumexpTest(test.TestCase):
             for reverse in (True, False):
                 for exclusive in (True, False):
                     self._testLogSumExp(
-                        x, dtype=dtype, use_gpu=use_gpu,
-                        reverse=reverse, exclusive=exclusive,
-                        axis=axis)
+                        x,
+                        dtype=dtype,
+                        use_gpu=use_gpu,
+                        reverse=reverse,
+                        exclusive=exclusive,
+                        axis=axis,
+                    )
 
     def testMinusInfinity(self):
-        x = np.log([0., 0., 1., 1., 1., 1., 0., 0.])
+        x = np.log([0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0])
         self._testLogSumExpAllArgs(x, use_gpu=False)
         self._testLogSumExpAllArgs(x, use_gpu=True)
 
@@ -77,11 +82,11 @@ class CumulativeLogsumexpTest(test.TestCase):
             x = ops.convert_to_tensor(x, dtype=dtypes.float64)
 
             grad_naive_theoretical, _ = gradient_checker_v2.compute_gradient(
-                lambda y: math_ops.cumsum(math_ops.exp(y), **kwargs), [x])
+                lambda y: math_ops.cumsum(math_ops.exp(y), **kwargs), [x]
+            )
             grad_fused_theoretical, _ = gradient_checker_v2.compute_gradient(
-                lambda y: math_ops.exp(
-                    math_ops.cumulative_logsumexp(y, **kwargs)),
-                [x])
+                lambda y: math_ops.exp(math_ops.cumulative_logsumexp(y, **kwargs)), [x]
+            )
 
             self.assertAllClose(grad_fused_theoretical, grad_naive_theoretical)
 
@@ -90,16 +95,19 @@ class CumulativeLogsumexpTest(test.TestCase):
             for exclusive in (True, False):
                 x = np.arange(10) / 10.0 - 0.5
 
-                self._testGradient(x, use_gpu=False,
-                                   reverse=reverse, exclusive=exclusive)
-                self._testGradient(x, use_gpu=True,
-                                   reverse=reverse, exclusive=exclusive)
+                self._testGradient(
+                    x, use_gpu=False, reverse=reverse, exclusive=exclusive
+                )
+                self._testGradient(
+                    x, use_gpu=True, reverse=reverse, exclusive=exclusive
+                )
 
     def _logSumExpMap(self, x):
         return map_fn.map_fn(
-            lambda i: math_ops.reduce_logsumexp(x[:i + 1]),
+            lambda i: math_ops.reduce_logsumexp(x[: i + 1]),
             math_ops.range(array_ops.shape(x)[0]),
-            dtype=x.dtype)
+            dtype=x.dtype,
+        )
 
     def test1DLarge(self):
         # This test ensures that the operation is correct even when the naive
@@ -110,12 +118,11 @@ class CumulativeLogsumexpTest(test.TestCase):
             with self.cached_session(use_gpu=use_gpu):
                 x_tf = ops.convert_to_tensor(x_np, dtype=dtypes.float32)
 
-                result_fused = self.evaluate(
-                    math_ops.cumulative_logsumexp(x_tf))
+                result_fused = self.evaluate(math_ops.cumulative_logsumexp(x_tf))
                 result_map = self.evaluate(self._logSumExpMap(x_tf))
 
             self.assertAllClose(result_fused, result_map)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
