@@ -13,14 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """Tools for serializing `Function`s."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from tensorflow.core.protobuf import saved_object_graph_pb2
 from tensorflow.python.eager import function as defun
 from tensorflow.python.framework import func_graph as func_graph_module
 from tensorflow.python.saved_model import nested_structure_coder
-from tensorflow.python.util import compat, nest
+from tensorflow.python.util import compat
+from tensorflow.python.util import nest
 
 
 def _serialize_function_spec(function_spec, coder):

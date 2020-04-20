@@ -14,8 +14,9 @@
 # ==============================================================================
 # pylint: disable=unidiomatic-typecheck
 """Defun decorator for defining graph-mode functions."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import functools
@@ -27,28 +28,48 @@ import weakref
 import numpy as np
 import six
 from six.moves import map
-from tensorflow.core.framework import attr_value_pb2, function_pb2
-from tensorflow.python import _pywrap_utils, pywrap_tfe
+
+from tensorflow.core.framework import attr_value_pb2
+from tensorflow.core.framework import function_pb2
+from tensorflow.python import _pywrap_utils
+from tensorflow.python import pywrap_tfe
 from tensorflow.python.client import pywrap_tf_session
-from tensorflow.python.eager import (backprop, backprop_util, context, execute,
-                                     forwardprop_util, tape)
+from tensorflow.python.eager import backprop
+from tensorflow.python.eager import backprop_util
+from tensorflow.python.eager import context
+from tensorflow.python.eager import execute
+from tensorflow.python.eager import forwardprop_util
+from tensorflow.python.eager import tape
 from tensorflow.python.eager.graph_only_ops import graph_placeholder
-from tensorflow.python.framework import (c_api_util, composite_tensor,
-                                         constant_op)
+from tensorflow.python.framework import c_api_util
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import device as pydev
-from tensorflow.python.framework import dtypes, error_interpolation, errors
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import error_interpolation
+from tensorflow.python.framework import errors
 from tensorflow.python.framework import func_graph as func_graph_module
-from tensorflow.python.framework import (ops, tensor_shape, tensor_spec,
-                                         type_spec)
-from tensorflow.python.ops import (array_ops, control_flow_ops,
-                                   custom_gradient, default_gradient,
-                                   functional_ops, gradients_util,
-                                   resource_variable_ops)
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import type_spec
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import custom_gradient
+from tensorflow.python.ops import default_gradient
+from tensorflow.python.ops import functional_ops
+from tensorflow.python.ops import gradients_util
+from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.profiler import traceme
-from tensorflow.python.util import (compat, function_utils, lazy_loader,
-                                    memory, nest, object_identity,
-                                    tf_decorator, tf_inspect)
+from tensorflow.python.util import compat
+from tensorflow.python.util import function_utils
+from tensorflow.python.util import lazy_loader
+from tensorflow.python.util import memory
+from tensorflow.python.util import nest
+from tensorflow.python.util import object_identity
+from tensorflow.python.util import tf_decorator
+from tensorflow.python.util import tf_inspect
 
 # Loaded lazily due to a circular dependency (roughly
 # tf.function->autograph->->dataset->tf.function).

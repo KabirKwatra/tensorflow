@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Import a trackable object from a SavedModel."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 import os
@@ -23,18 +24,28 @@ from tensorflow.core.protobuf import graph_debug_info_pb2
 from tensorflow.python.distribute import \
     distribution_strategy_context as ds_context
 from tensorflow.python.distribute import values as ds_values
-from tensorflow.python.eager import context, function
-from tensorflow.python.framework import constant_op, dtypes, ops, tensor_util
-from tensorflow.python.ops import (array_ops, control_flow_ops,
-                                   custom_gradient, lookup_ops,
-                                   resource_variable_ops, variables)
-from tensorflow.python.saved_model import (function_deserialization,
-                                           load_v1_in_v2, loader_impl,
-                                           nested_structure_coder,
-                                           revived_types)
+from tensorflow.python.eager import context
+from tensorflow.python.eager import function
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import custom_gradient
+from tensorflow.python.ops import lookup_ops
+from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import variables
+from tensorflow.python.saved_model import function_deserialization
+from tensorflow.python.saved_model import load_v1_in_v2
+from tensorflow.python.saved_model import loader_impl
+from tensorflow.python.saved_model import nested_structure_coder
+from tensorflow.python.saved_model import revived_types
 from tensorflow.python.saved_model import utils_impl as saved_model_utils
-from tensorflow.python.training.tracking import (base, graph_view, tracking,
-                                                 util)
+from tensorflow.python.training.tracking import base
+from tensorflow.python.training.tracking import graph_view
+from tensorflow.python.training.tracking import tracking
+from tensorflow.python.training.tracking import util
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import tf_export
 
