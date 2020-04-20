@@ -27,8 +27,8 @@ limitations under the License.
 
 // NOLINTNEXTLINE
 static llvm::cl::opt<std::string> input_filename(llvm::cl::Positional,
-                                                 llvm::cl::desc("<input file>"),
-                                                 llvm::cl::init("-"));
+        llvm::cl::desc("<input file>"),
+        llvm::cl::init("-"));
 
 // NOLINTNEXTLINE
 static llvm::cl::opt<std::string> output_filename(
@@ -42,49 +42,49 @@ static llvm::cl::opt<bool> verify_errors(
     llvm::cl::init(false));
 
 static llvm::cl::opt<xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage>
-    // NOLINTNEXTLINE
-    lowering_stage(
-        "lowering-stage",
-        llvm::cl::desc(
-            "The lowering stage up to which the compiler will be run"),
-        llvm::cl::values(
-            clEnumValN(xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::LHLO,
-                       "LHLO", "LHLO"),
-            clEnumValN(xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::GPU,
-                       "GPU", "GPU"),
-            clEnumValN(xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::LLVM,
-                       "LLVM", "LLVM"),
-            clEnumValN(
-                xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::KERNEL,
-                "KERNEL", "Kernel")),
-        llvm::cl::init(
-            xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::LHLO));
+// NOLINTNEXTLINE
+lowering_stage(
+    "lowering-stage",
+    llvm::cl::desc(
+        "The lowering stage up to which the compiler will be run"),
+    llvm::cl::values(
+        clEnumValN(xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::LHLO,
+                   "LHLO", "LHLO"),
+        clEnumValN(xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::GPU,
+                   "GPU", "GPU"),
+        clEnumValN(xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::LLVM,
+                   "LLVM", "LLVM"),
+        clEnumValN(
+            xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::KERNEL,
+            "KERNEL", "Kernel")),
+    llvm::cl::init(
+        xla::mlir_gpu::MlirCompiler::IRHook::LoweringStage::LHLO));
 
 int main(int argc, char **argv) {
-  tensorflow::InitMlir y(&argc, &argv);
-  mlir::registerPassManagerCLOptions();
+    tensorflow::InitMlir y(&argc, &argv);
+    mlir::registerPassManagerCLOptions();
 
-  llvm::cl::ParseCommandLineOptions(argc, argv,
-                                    "XLA GPU modular optimizer driver\n");
+    llvm::cl::ParseCommandLineOptions(argc, argv,
+                                      "XLA GPU modular optimizer driver\n");
 
-  // Set up the input file.
-  std::string error_message;
-  auto file = mlir::openInputFile(input_filename, &error_message);
-  QCHECK(file) << error_message;
+    // Set up the input file.
+    std::string error_message;
+    auto file = mlir::openInputFile(input_filename, &error_message);
+    QCHECK(file) << error_message;
 
-  auto output = mlir::openOutputFile(output_filename, &error_message);
-  QCHECK(output) << error_message;
+    auto output = mlir::openOutputFile(output_filename, &error_message);
+    QCHECK(output) << error_message;
 
-  xla::mlir_gpu::XlaGpuOpt opt;
-  xla::Status status =
-      verify_errors ? opt.CompileAndExpectErrors(file->getBuffer().str(),
-                                                 output->os(), lowering_stage)
-                    : opt.CompileAndOutputIr(file->getBuffer().str(),
-                                             output->os(), lowering_stage);
-  if (!status.ok()) {
-    LOG(ERROR) << status.error_message();
-    return 1;
-  }
-  output->keep();
-  return 0;
+    xla::mlir_gpu::XlaGpuOpt opt;
+    xla::Status status =
+        verify_errors ? opt.CompileAndExpectErrors(file->getBuffer().str(),
+                output->os(), lowering_stage)
+        : opt.CompileAndOutputIr(file->getBuffer().str(),
+                                 output->os(), lowering_stage);
+    if (!status.ok()) {
+        LOG(ERROR) << status.error_message();
+        return 1;
+    }
+    output->keep();
+    return 0;
 }
