@@ -29,26 +29,26 @@ namespace grappler {
 namespace {
 
 TEST(MakeStateless, Shuffle) {
-  using test::function::NDef;
-  GrapplerItem item;
-  item.graph = test::function::GDef(
-      {NDef("start", "Const", {}, {{"value", 0}, {"dtype", DT_INT32}}),
-       NDef("stop", "Const", {}, {{"value", 10}, {"dtype", DT_INT32}}),
-       NDef("step", "Const", {}, {{"value", 1}, {"dtype", DT_INT32}}),
-       NDef("range", "RangeDataset", {"start", "stop", "step"}, {}),
-       NDef("buffer_size", "Const", {}, {{"value", 1}, {"dtype", DT_INT64}}),
-       NDef("handle", "Const", {}, {{"value", 1}, {"dtype", DT_RESOURCE}}),
-       graph_tests_utils::MakeShuffleV2Node("shuffle", "range", "buffer_size",
-                                            "handle")},
-      {});
+    using test::function::NDef;
+    GrapplerItem item;
+    item.graph = test::function::GDef(
+    {   NDef("start", "Const", {}, {{"value", 0}, {"dtype", DT_INT32}}),
+        NDef("stop", "Const", {}, {{"value", 10}, {"dtype", DT_INT32}}),
+        NDef("step", "Const", {}, {{"value", 1}, {"dtype", DT_INT32}}),
+        NDef("range", "RangeDataset", {"start", "stop", "step"}, {}),
+        NDef("buffer_size", "Const", {}, {{"value", 1}, {"dtype", DT_INT64}}),
+        NDef("handle", "Const", {}, {{"value", 1}, {"dtype", DT_RESOURCE}}),
+        graph_tests_utils::MakeShuffleV2Node("shuffle", "range", "buffer_size",
+                                             "handle")},
+    {});
 
-  MakeStateless optimizer;
-  GraphDef output;
-  TF_ASSERT_OK(optimizer.Optimize(nullptr, item, &output));
-  EXPECT_TRUE(graph_utils::ContainsGraphNodeWithName("shuffle", output));
-  int index = graph_utils::FindGraphNodeWithName("shuffle", output);
-  EXPECT_EQ(output.node(index).op(), "ShuffleDataset");
-  EXPECT_EQ(output.node(index).input_size(), 4);
+    MakeStateless optimizer;
+    GraphDef output;
+    TF_ASSERT_OK(optimizer.Optimize(nullptr, item, &output));
+    EXPECT_TRUE(graph_utils::ContainsGraphNodeWithName("shuffle", output));
+    int index = graph_utils::FindGraphNodeWithName("shuffle", output);
+    EXPECT_EQ(output.node(index).op(), "ShuffleDataset");
+    EXPECT_EQ(output.node(index).input_size(), 4);
 }
 
 }  // namespace

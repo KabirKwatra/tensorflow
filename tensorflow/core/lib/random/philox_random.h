@@ -48,24 +48,28 @@ namespace random {
 //   ElementCount: the fixed size of the array;
 template <typename T, int ElementCount>
 class Array {
- public:
-  static constexpr int kElementCount = ElementCount;
-  PHILOX_DEVICE_INLINE Array() {
-    for (int i = 0; i < ElementCount; ++i) {
-      data_[i] = T(0);
+public:
+    static constexpr int kElementCount = ElementCount;
+    PHILOX_DEVICE_INLINE Array() {
+        for (int i = 0; i < ElementCount; ++i) {
+            data_[i] = T(0);
+        }
     }
-  }
 
-  PHILOX_DEVICE_INLINE const T& operator[](int index) const {
-    return data_[index];
-  }
+    PHILOX_DEVICE_INLINE const T& operator[](int index) const {
+        return data_[index];
+    }
 
-  PHILOX_DEVICE_INLINE T& operator[](int index) { return data_[index]; }
+    PHILOX_DEVICE_INLINE T& operator[](int index) {
+        return data_[index];
+    }
 
-  size_t size() const { return ElementCount; }
+    size_t size() const {
+        return ElementCount;
+    }
 
- private:
-  T data_[ElementCount];
+private:
+    T data_[ElementCount];
 };
 
 // A class that encapsulates all the states for a random number generator using
@@ -101,155 +105,159 @@ class Array {
 // 1. PhiloxRandom is trivially copyable.
 // 2. PhiloxRandom is compilable by gcc and nvcc.
 class PhiloxRandom {
- public:
-  using ResultType = Array<uint32, 4>;
-  using ResultElementType = uint32;
-  // The number of elements that will be returned.
-  static constexpr int kResultElementCount = 4;
-  // Cost of generation of a single element (in cycles).
-  static constexpr int kElementCost = 10;
-  // The type for the 64-bit key stored in the form of two 32-bit uint
-  // that are used in the diffusion process.
-  using Key = Array<uint32, 2>;
+public:
+    using ResultType = Array<uint32, 4>;
+    using ResultElementType = uint32;
+    // The number of elements that will be returned.
+    static constexpr int kResultElementCount = 4;
+    // Cost of generation of a single element (in cycles).
+    static constexpr int kElementCost = 10;
+    // The type for the 64-bit key stored in the form of two 32-bit uint
+    // that are used in the diffusion process.
+    using Key = Array<uint32, 2>;
 
-  PHILOX_DEVICE_INLINE
-  PhiloxRandom() {}
+    PHILOX_DEVICE_INLINE
+    PhiloxRandom() {}
 
-  PHILOX_DEVICE_INLINE
-  explicit PhiloxRandom(uint64 seed) {
-    key_[0] = static_cast<uint32>(seed);
-    key_[1] = static_cast<uint32>(seed >> 32);
-  }
-
-  PHILOX_DEVICE_INLINE
-  explicit PhiloxRandom(uint64 seed_lo, uint64 seed_hi) {
-    key_[0] = static_cast<uint32>(seed_lo);
-    key_[1] = static_cast<uint32>(seed_lo >> 32);
-    counter_[2] = static_cast<uint32>(seed_hi);
-    counter_[3] = static_cast<uint32>(seed_hi >> 32);
-  }
-
-  PHILOX_DEVICE_INLINE
-  PhiloxRandom(ResultType counter, Key key) : counter_(counter), key_(key) {}
-
-  PHILOX_DEVICE_INLINE
-  ResultType const& counter() const { return counter_; }
-
-  PHILOX_DEVICE_INLINE
-  Key const& key() const { return key_; }
-
-  // Skip the specified number of samples of 128-bits in the current stream.
-  PHILOX_DEVICE_INLINE
-  void Skip(uint64 count) {
-    const uint32 count_lo = static_cast<uint32>(count);
-    uint32 count_hi = static_cast<uint32>(count >> 32);
-
-    counter_[0] += count_lo;
-    if (counter_[0] < count_lo) {
-      ++count_hi;
+    PHILOX_DEVICE_INLINE
+    explicit PhiloxRandom(uint64 seed) {
+        key_[0] = static_cast<uint32>(seed);
+        key_[1] = static_cast<uint32>(seed >> 32);
     }
 
-    counter_[1] += count_hi;
-    if (counter_[1] < count_hi) {
-      if (++counter_[2] == 0) {
-        ++counter_[3];
-      }
+    PHILOX_DEVICE_INLINE
+    explicit PhiloxRandom(uint64 seed_lo, uint64 seed_hi) {
+        key_[0] = static_cast<uint32>(seed_lo);
+        key_[1] = static_cast<uint32>(seed_lo >> 32);
+        counter_[2] = static_cast<uint32>(seed_hi);
+        counter_[3] = static_cast<uint32>(seed_hi >> 32);
     }
-  }
 
-  // Returns a group of four random numbers using the underlying Philox
-  // algorithm.
-  PHILOX_DEVICE_INLINE ResultType operator()() {
-    ResultType counter = counter_;
-    Key key = key_;
+    PHILOX_DEVICE_INLINE
+    PhiloxRandom(ResultType counter, Key key) : counter_(counter), key_(key) {}
 
-    // Run the single rounds for ten times. Manually unrolling the loop
-    // for better performance.
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
-    RaiseKey(&key);
-    counter = ComputeSingleRound(counter, key);
+    PHILOX_DEVICE_INLINE
+    ResultType const& counter() const {
+        return counter_;
+    }
 
-    SkipOne();
+    PHILOX_DEVICE_INLINE
+    Key const& key() const {
+        return key_;
+    }
 
-    return counter;
-  }
+    // Skip the specified number of samples of 128-bits in the current stream.
+    PHILOX_DEVICE_INLINE
+    void Skip(uint64 count) {
+        const uint32 count_lo = static_cast<uint32>(count);
+        uint32 count_hi = static_cast<uint32>(count >> 32);
 
- private:
-  // We use the same constants as recommended by the original paper.
-  static constexpr uint32 kPhiloxW32A = 0x9E3779B9;
-  static constexpr uint32 kPhiloxW32B = 0xBB67AE85;
-  static constexpr uint32 kPhiloxM4x32A = 0xD2511F53;
-  static constexpr uint32 kPhiloxM4x32B = 0xCD9E8D57;
-
-  // Helper function to skip the next sample of 128-bits in the current stream.
-  PHILOX_DEVICE_INLINE void SkipOne() {
-    if (++counter_[0] == 0) {
-      if (++counter_[1] == 0) {
-        if (++counter_[2] == 0) {
-          ++counter_[3];
+        counter_[0] += count_lo;
+        if (counter_[0] < count_lo) {
+            ++count_hi;
         }
-      }
+
+        counter_[1] += count_hi;
+        if (counter_[1] < count_hi) {
+            if (++counter_[2] == 0) {
+                ++counter_[3];
+            }
+        }
     }
-  }
 
-  // Helper function to return the lower and higher 32-bits from two 32-bit
-  // integer multiplications.
-  PHILOX_DEVICE_INLINE
-  static void MultiplyHighLow(uint32 a, uint32 b, uint32* result_low,
-                              uint32* result_high) {
+    // Returns a group of four random numbers using the underlying Philox
+    // algorithm.
+    PHILOX_DEVICE_INLINE ResultType operator()() {
+        ResultType counter = counter_;
+        Key key = key_;
+
+        // Run the single rounds for ten times. Manually unrolling the loop
+        // for better performance.
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+        RaiseKey(&key);
+        counter = ComputeSingleRound(counter, key);
+
+        SkipOne();
+
+        return counter;
+    }
+
+private:
+    // We use the same constants as recommended by the original paper.
+    static constexpr uint32 kPhiloxW32A = 0x9E3779B9;
+    static constexpr uint32 kPhiloxW32B = 0xBB67AE85;
+    static constexpr uint32 kPhiloxM4x32A = 0xD2511F53;
+    static constexpr uint32 kPhiloxM4x32B = 0xCD9E8D57;
+
+    // Helper function to skip the next sample of 128-bits in the current stream.
+    PHILOX_DEVICE_INLINE void SkipOne() {
+        if (++counter_[0] == 0) {
+            if (++counter_[1] == 0) {
+                if (++counter_[2] == 0) {
+                    ++counter_[3];
+                }
+            }
+        }
+    }
+
+    // Helper function to return the lower and higher 32-bits from two 32-bit
+    // integer multiplications.
+    PHILOX_DEVICE_INLINE
+    static void MultiplyHighLow(uint32 a, uint32 b, uint32* result_low,
+                                uint32* result_high) {
 #ifndef __CUDA_ARCH__
-    const uint64 product = static_cast<uint64>(a) * b;
-    *result_low = static_cast<uint32>(product);
-    *result_high = static_cast<uint32>(product >> 32);
+        const uint64 product = static_cast<uint64>(a) * b;
+        *result_low = static_cast<uint32>(product);
+        *result_high = static_cast<uint32>(product >> 32);
 #else
-    *result_low = a * b;
-    *result_high = __umulhi(a, b);
+        *result_low = a * b;
+        *result_high = __umulhi(a, b);
 #endif
-  }
+    }
 
-  // Helper function for a single round of the underlying Philox algorithm.
-  PHILOX_DEVICE_INLINE static ResultType ComputeSingleRound(
-      const ResultType& counter, const Key& key) {
-    uint32 lo0;
-    uint32 hi0;
-    MultiplyHighLow(kPhiloxM4x32A, counter[0], &lo0, &hi0);
+    // Helper function for a single round of the underlying Philox algorithm.
+    PHILOX_DEVICE_INLINE static ResultType ComputeSingleRound(
+        const ResultType& counter, const Key& key) {
+        uint32 lo0;
+        uint32 hi0;
+        MultiplyHighLow(kPhiloxM4x32A, counter[0], &lo0, &hi0);
 
-    uint32 lo1;
-    uint32 hi1;
-    MultiplyHighLow(kPhiloxM4x32B, counter[2], &lo1, &hi1);
+        uint32 lo1;
+        uint32 hi1;
+        MultiplyHighLow(kPhiloxM4x32B, counter[2], &lo1, &hi1);
 
-    ResultType result;
-    result[0] = hi1 ^ counter[1] ^ key[0];
-    result[1] = lo1;
-    result[2] = hi0 ^ counter[3] ^ key[1];
-    result[3] = lo0;
-    return result;
-  }
+        ResultType result;
+        result[0] = hi1 ^ counter[1] ^ key[0];
+        result[1] = lo1;
+        result[2] = hi0 ^ counter[3] ^ key[1];
+        result[3] = lo0;
+        return result;
+    }
 
-  PHILOX_DEVICE_INLINE void RaiseKey(Key* key) {
-    (*key)[0] += kPhiloxW32A;
-    (*key)[1] += kPhiloxW32B;
-  }
+    PHILOX_DEVICE_INLINE void RaiseKey(Key* key) {
+        (*key)[0] += kPhiloxW32A;
+        (*key)[1] += kPhiloxW32B;
+    }
 
- private:
-  ResultType counter_;
-  Key key_;
+private:
+    ResultType counter_;
+    Key key_;
 };
 
 }  // namespace random
