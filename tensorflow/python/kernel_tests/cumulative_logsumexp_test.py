@@ -14,18 +14,12 @@
 # ==============================================================================
 """Functional tests for cumulative_logsumexp op."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gradient_checker_v2
-from tensorflow.python.ops import map_fn
-from tensorflow.python.ops import math_ops
+from tensorflow.python.framework import dtypes, ops
+from tensorflow.python.ops import (array_ops, gradient_checker_v2, map_fn,
+                                   math_ops)
 from tensorflow.python.platform import test
 
 

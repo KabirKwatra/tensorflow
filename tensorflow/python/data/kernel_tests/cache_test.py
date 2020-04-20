@@ -13,26 +13,20 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for `tf.data.Dataset.cache()`."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
-from os import path
 import shutil
 import tempfile
+from os import path
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import context
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
+from tensorflow.python.framework import (combinations, constant_op, dtypes,
+                                         errors, ops)
 from tensorflow.python.ops import variables
 from tensorflow.python.platform import test
 
