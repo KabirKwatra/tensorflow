@@ -18,15 +18,15 @@ limitations under the License.
 
 // This could serve as the main function for all eval tools.
 int main(int argc, char* argv[]) {
-  auto task_executor = tflite::evaluation::CreateTaskExecutor(&argc, argv);
-  if (task_executor == nullptr) {
-    TFLITE_LOG(ERROR) << "Could not create the task evaluation!";
-    return EXIT_FAILURE;
-  }
-  const auto metrics = task_executor->Run();
-  if (!metrics.has_value()) {
-    TFLITE_LOG(ERROR) << "Could not run the task evaluation!";
-    return EXIT_FAILURE;
-  }
-  return EXIT_SUCCESS;
+    auto task_executor = tflite::evaluation::CreateTaskExecutor(&argc, argv);
+    if (task_executor == nullptr) {
+        TFLITE_LOG(ERROR) << "Could not create the task evaluation!";
+        return EXIT_FAILURE;
+    }
+    const auto metrics = task_executor->Run();
+    if (!metrics.has_value()) {
+        TFLITE_LOG(ERROR) << "Could not run the task evaluation!";
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
