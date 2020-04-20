@@ -14,7 +14,6 @@
 # ==============================================================================
 # pylint: disable=g-classes-have-attributes
 """Keras layers that implement explicit (approximate) kernel feature maps."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
