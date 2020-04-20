@@ -31,7 +31,8 @@ def _serialize_function_spec(function_spec, coder):
     if function_spec.is_method and not function_spec.fullargspec.args:
         raise NotImplementedError(
             "Missing support to serialize a method function without a named "
-            "'self' argument.")
+            "'self' argument."
+        )
     proto = saved_object_graph_pb2.FunctionSpec()
 
     # Intentionally skip encoding annotations of a function because function
@@ -40,12 +41,13 @@ def _serialize_function_spec(function_spec, coder):
     # https://www.python.org/dev/peps/pep-3107/
     # https://docs.python.org/3/library/inspect.html#inspect.getfullargspec
     proto.fullargspec.CopyFrom(
-        coder.encode_structure(
-            function_spec.fullargspec._replace(annotations={})))
+        coder.encode_structure(function_spec.fullargspec._replace(annotations={}))
+    )
 
     proto.is_method = function_spec.is_method
     proto.input_signature.CopyFrom(
-        coder.encode_structure(function_spec.input_signature))
+        coder.encode_structure(function_spec.input_signature)
+    )
     return proto
 
 
@@ -63,14 +65,18 @@ def serialize_concrete_function(concrete_function, node_ids, coder):
             "function depends on is not assigned to an attribute of the serialized "
             "trackable object "
             "(see SaveTest.test_captures_unreachable_variable)."
-            % (concrete_function.name, capture))
+            % (concrete_function.name, capture)
+        )
     concrete_function_proto = saved_object_graph_pb2.SavedConcreteFunction()
     structured_outputs = func_graph_module.convert_structure_to_signature(
-        concrete_function.structured_outputs)
+        concrete_function.structured_outputs
+    )
     concrete_function_proto.canonicalized_input_signature.CopyFrom(
-        coder.encode_structure(concrete_function.structured_input_signature))
+        coder.encode_structure(concrete_function.structured_input_signature)
+    )
     concrete_function_proto.output_signature.CopyFrom(
-        coder.encode_structure(structured_outputs))
+        coder.encode_structure(structured_outputs)
+    )
     concrete_function_proto.bound_inputs.extend(bound_inputs)
     return concrete_function_proto
 
@@ -82,12 +88,12 @@ def serialize_bare_concrete_function(concrete_function, name_map):
     # Update the serialization to include a function_spec.
 
     # pylint: disable=protected-access
-    name = name_map.get(compat.as_text(concrete_function.name),
-                        concrete_function.name)
+    name = name_map.get(compat.as_text(concrete_function.name), concrete_function.name)
     return saved_object_graph_pb2.SavedBareConcreteFunction(
         concrete_function_name=name,
         allowed_positional_arguments=concrete_function._num_positional_args,
-        argument_keywords=concrete_function._arg_keywords)
+        argument_keywords=concrete_function._arg_keywords,
+    )
     # pylint: enable=protected-access
 
 
@@ -96,16 +102,15 @@ def serialize_function(function, name_map):
     coder = nested_structure_coder.StructureCoder()
     proto = saved_object_graph_pb2.SavedFunction()
 
-    function_spec_proto = _serialize_function_spec(
-        function.function_spec, coder)
+    function_spec_proto = _serialize_function_spec(function.function_spec, coder)
     proto.function_spec.CopyFrom(function_spec_proto)
-    all_concrete_functions = \
-        function._list_all_concrete_functions_for_serialization(
-        )  # pylint: disable=protected-access
+    all_concrete_functions = (
+        function._list_all_concrete_functions_for_serialization()
+    )  # pylint: disable=protected-access
     for concrete_function in all_concrete_functions:
         proto.concrete_functions.append(
-            name_map.get(compat.as_text(concrete_function.name),
-                         concrete_function.name))
+            name_map.get(compat.as_text(concrete_function.name), concrete_function.name)
+        )
     return proto
 
 
@@ -126,7 +131,8 @@ def wrap_cached_variables(concrete_function):
       returned.
     """
     outer_graph = func_graph_module.FuncGraph(
-        "{}_no_cache".format(concrete_function.graph.name))
+        "{}_no_cache".format(concrete_function.graph.name)
+    )
     captures = concrete_function.graph._captures  # pylint: disable=protected-access
     mapped_captures = None
     remapped_captures = {}
@@ -150,17 +156,25 @@ def wrap_cached_variables(concrete_function):
     inner_concrete = defun.ConcreteFunction(concrete_function.graph)
 
     def wrap_function(*args):
-        return inner_concrete._call_flat(args, inner_concrete.captured_inputs)  # pylint:disable=protected-access
+        return inner_concrete._call_flat(
+            args, inner_concrete.captured_inputs
+        )  # pylint:disable=protected-access
 
-    args = nest.flatten(concrete_function.structured_input_signature,
-                        expand_composites=True)
+    args = nest.flatten(
+        concrete_function.structured_input_signature, expand_composites=True
+    )
     func_graph_module.func_graph_from_py_func(
-        None, wrap_function, args=tuple(args), kwargs={},
-        func_graph=outer_graph)
+        None, wrap_function, args=tuple(args), kwargs={}, func_graph=outer_graph
+    )
     fn = defun.ConcreteFunction(
-        outer_graph, function_spec=concrete_function._function_spec)  # pylint: disable=protected-access
-    fn._arg_keywords = concrete_function._arg_keywords  # pylint: disable=protected-access
-    fn._num_positional_args = concrete_function._num_positional_args  # pylint: disable=protected-access
+        outer_graph, function_spec=concrete_function._function_spec
+    )  # pylint: disable=protected-access
+    fn._arg_keywords = (
+        concrete_function._arg_keywords
+    )  # pylint: disable=protected-access
+    fn._num_positional_args = (
+        concrete_function._num_positional_args
+    )  # pylint: disable=protected-access
 
     # Return the captures to their original values
     for key, capture in remapped_captures.items():
