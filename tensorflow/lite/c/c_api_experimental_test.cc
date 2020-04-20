@@ -24,39 +24,42 @@ limitations under the License.
 namespace {
 
 TfLiteRegistration* GetDummyRegistration() {
-  static TfLiteRegistration registration = {
-      /*init=*/nullptr,
-      /*free=*/nullptr,
-      /*prepare=*/nullptr,
-      /*invoke=*/[](TfLiteContext*, TfLiteNode*) { return kTfLiteOk; }};
-  return &registration;
+    static TfLiteRegistration registration = {
+        /*init=*/nullptr,
+        /*free=*/nullptr,
+        /*prepare=*/nullptr,
+        /*invoke=*/[](TfLiteContext*, TfLiteNode*) {
+            return kTfLiteOk;
+        }
+    };
+    return &registration;
 }
 
 TEST(CApiExperimentalTest, Smoke) {
-  TfLiteModel* model =
-      TfLiteModelCreateFromFile("tensorflow/lite/testdata/add.bin");
-  ASSERT_NE(model, nullptr);
+    TfLiteModel* model =
+        TfLiteModelCreateFromFile("tensorflow/lite/testdata/add.bin");
+    ASSERT_NE(model, nullptr);
 
-  TfLiteInterpreterOptions* options = TfLiteInterpreterOptionsCreate();
-  TfLiteInterpreterOptionsAddBuiltinOp(options, kTfLiteBuiltinAdd,
-                                       GetDummyRegistration(), 1, 1);
-  TfLiteInterpreterOptionsSetUseNNAPI(options, true);
+    TfLiteInterpreterOptions* options = TfLiteInterpreterOptionsCreate();
+    TfLiteInterpreterOptionsAddBuiltinOp(options, kTfLiteBuiltinAdd,
+                                         GetDummyRegistration(), 1, 1);
+    TfLiteInterpreterOptionsSetUseNNAPI(options, true);
 
-  TfLiteInterpreter* interpreter = TfLiteInterpreterCreate(model, options);
-  ASSERT_NE(interpreter, nullptr);
-  ASSERT_EQ(TfLiteInterpreterAllocateTensors(interpreter), kTfLiteOk);
-  EXPECT_EQ(TfLiteInterpreterResetVariableTensors(interpreter), kTfLiteOk);
-  EXPECT_EQ(TfLiteInterpreterInvoke(interpreter), kTfLiteOk);
+    TfLiteInterpreter* interpreter = TfLiteInterpreterCreate(model, options);
+    ASSERT_NE(interpreter, nullptr);
+    ASSERT_EQ(TfLiteInterpreterAllocateTensors(interpreter), kTfLiteOk);
+    EXPECT_EQ(TfLiteInterpreterResetVariableTensors(interpreter), kTfLiteOk);
+    EXPECT_EQ(TfLiteInterpreterInvoke(interpreter), kTfLiteOk);
 
-  TfLiteInterpreterDelete(interpreter);
-  TfLiteInterpreterOptionsDelete(options);
-  TfLiteModelDelete(model);
+    TfLiteInterpreterDelete(interpreter);
+    TfLiteInterpreterOptionsDelete(options);
+    TfLiteModelDelete(model);
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
-  ::tflite::LogToStderr();
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    ::tflite::LogToStderr();
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

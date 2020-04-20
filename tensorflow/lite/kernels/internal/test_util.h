@@ -45,7 +45,7 @@ float UniformRandomFloat(float min, float max);
 // Returns a random element in |v|.
 template <typename T>
 const T& RandomElement(const std::vector<T>& v) {
-  return v[UniformRandomInt(0, v.size() - 1)];
+    return v[UniformRandomInt(0, v.size() - 1)];
 }
 
 // Returns a random exponentially distributed integer.
@@ -62,25 +62,25 @@ void FillRandom(std::vector<float>* vec, float min, float max);
 template <typename T>
 void FillRandom(typename std::vector<T>::iterator begin_it,
                 typename std::vector<T>::iterator end_it, T min, T max) {
-  // Workaround for compilers that don't support (u)int8_t uniform_distribution.
-  typedef typename std::conditional<sizeof(T) >= sizeof(int16_t), T,
-                                    std::int16_t>::type rand_type;
-  std::uniform_int_distribution<rand_type> dist(min, max);
-  // TODO(b/154540105): use std::ref to avoid copying the random engine.
-  auto gen = std::bind(dist, RandomEngine());
-  std::generate(begin_it, end_it, [&gen] { return static_cast<T>(gen()); });
+    // Workaround for compilers that don't support (u)int8_t uniform_distribution.
+    typedef typename std::conditional<sizeof(T) >= sizeof(int16_t), T,
+            std::int16_t>::type rand_type;
+    std::uniform_int_distribution<rand_type> dist(min, max);
+    // TODO(b/154540105): use std::ref to avoid copying the random engine.
+    auto gen = std::bind(dist, RandomEngine());
+    std::generate(begin_it, end_it, [&gen] { return static_cast<T>(gen()); });
 }
 
 // Fills a vector with random numbers between |min| and |max|.
 template <typename T>
 void FillRandom(std::vector<T>* vec, T min, T max) {
-  return FillRandom(std::begin(*vec), std::end(*vec), min, max);
+    return FillRandom(std::begin(*vec), std::end(*vec), min, max);
 }
 
 // Fills a vector with random numbers.
 template <typename T>
 void FillRandom(std::vector<T>* vec) {
-  FillRandom(vec, std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+    FillRandom(vec, std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
 }
 
 // Fill with a "skyscraper" pattern, in which there is a central section (across
@@ -89,16 +89,16 @@ template <typename T>
 void FillRandomSkyscraper(std::vector<T>* vec, int depth,
                           double middle_proportion, uint8 middle_min,
                           uint8 sides_max) {
-  for (auto base_it = std::begin(*vec); base_it != std::end(*vec);
-       base_it += depth) {
-    auto left_it = base_it + std::ceil(0.5 * depth * (1.0 - middle_proportion));
-    auto right_it =
-        base_it + std::ceil(0.5 * depth * (1.0 + middle_proportion));
-    FillRandom(base_it, left_it, std::numeric_limits<T>::min(), sides_max);
-    FillRandom(left_it, right_it, middle_min, std::numeric_limits<T>::max());
-    FillRandom(right_it, base_it + depth, std::numeric_limits<T>::min(),
-               sides_max);
-  }
+    for (auto base_it = std::begin(*vec); base_it != std::end(*vec);
+            base_it += depth) {
+        auto left_it = base_it + std::ceil(0.5 * depth * (1.0 - middle_proportion));
+        auto right_it =
+            base_it + std::ceil(0.5 * depth * (1.0 + middle_proportion));
+        FillRandom(base_it, left_it, std::numeric_limits<T>::min(), sides_max);
+        FillRandom(left_it, right_it, middle_min, std::numeric_limits<T>::max());
+        FillRandom(right_it, base_it + depth, std::numeric_limits<T>::min(),
+                   sides_max);
+    }
 }
 
 }  // namespace tflite

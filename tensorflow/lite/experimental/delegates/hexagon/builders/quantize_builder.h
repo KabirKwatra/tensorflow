@@ -22,23 +22,23 @@ namespace delegates {
 namespace hexagon {
 
 class QuantizeOpBuilder : public OpBuilder {
- public:
-  explicit QuantizeOpBuilder(GraphBuilder* graph_builder, int op_type)
-      : OpBuilder(graph_builder, op_type) {}
-  explicit QuantizeOpBuilder(GraphBuilder* graph_builder, int op_type,
-                             int relu_value)
-      : OpBuilder(graph_builder, op_type) {}
-  TfLiteStatus PopulateSubGraph(const TfLiteIntArray* inputs,
-                                const TfLiteIntArray* outputs,
-                                TfLiteContext* context) override;
+public:
+    explicit QuantizeOpBuilder(GraphBuilder* graph_builder, int op_type)
+        : OpBuilder(graph_builder, op_type) {}
+    explicit QuantizeOpBuilder(GraphBuilder* graph_builder, int op_type,
+                               int relu_value)
+        : OpBuilder(graph_builder, op_type) {}
+    TfLiteStatus PopulateSubGraph(const TfLiteIntArray* inputs,
+                                  const TfLiteIntArray* outputs,
+                                  TfLiteContext* context) override;
 
-  TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
-                               TfLiteContext* context) override;
+    TfLiteStatus RegisterOutputs(const TfLiteIntArray* outputs,
+                                 TfLiteContext* context) override;
 
-  ~QuantizeOpBuilder() override;
+    ~QuantizeOpBuilder() override;
 
- private:
-  TensorID node_output_;
+private:
+    TensorID node_output_;
 };
 
 }  // namespace hexagon
