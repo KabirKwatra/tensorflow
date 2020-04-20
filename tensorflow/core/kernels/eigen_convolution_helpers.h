@@ -43,43 +43,43 @@ namespace internal {
 //    vectorized part with full packets (see eigen_spatial_convolutions.h).
 template <typename TensorEvaluatorType, typename PacketType, typename IndexType>
 class TensorEvaluatorHasPartialPacket {
-public:
-    template <typename TensorEvaluatorT, typename PacketT, typename IndexT>
-    static auto functionExistsSfinae(
-        typename std::enable_if<
-        unpacket_traits<PacketT>::masked_load_available &&
-        std::is_same<PacketT,
-        decltype(std::declval<const TensorEvaluatorT>()
-                 .template partialPacket<PacketT>(
-                     std::declval<IndexT>(),
-                     std::declval<typename unpacket_traits<
-                     PacketT>::mask_t>()))>::value>::
-        type*) -> std::true_type;
+ public:
+  template <typename TensorEvaluatorT, typename PacketT, typename IndexT>
+  static auto functionExistsSfinae(
+      typename std::enable_if<
+          unpacket_traits<PacketT>::masked_load_available &&
+          std::is_same<PacketT,
+                       decltype(std::declval<const TensorEvaluatorT>()
+                                    .template partialPacket<PacketT>(
+                                        std::declval<IndexT>(),
+                                        std::declval<typename unpacket_traits<
+                                            PacketT>::mask_t>()))>::value>::
+          type*) -> std::true_type;
 
-    template <typename TensorEvaluatorT, typename PacketT, typename IndexT>
-    static auto functionExistsSfinae(...) -> std::false_type;
+  template <typename TensorEvaluatorT, typename PacketT, typename IndexT>
+  static auto functionExistsSfinae(...) -> std::false_type;
 
-    typedef decltype(
-        functionExistsSfinae<TensorEvaluatorType, PacketType, IndexType>(
-            nullptr)) status;
+  typedef decltype(
+      functionExistsSfinae<TensorEvaluatorType, PacketType, IndexType>(
+          nullptr)) status;
 
-    static constexpr bool value = status::value;
+  static constexpr bool value = status::value;
 };
 
 // Compute a mask for loading/storing coefficients in/from a packet in a
 // [from, to) range. If the mask bit is 1, element will be loaded/stored.
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
-typename std::enable_if<unpacket_traits<Packet>::masked_load_available,
-         typename unpacket_traits<Packet>::mask_t>::type
-mask(int from, int to) {
-    const Index packet_size = internal::unpacket_traits<Packet>::size;
-    eigen_assert(0 <= from && to <= (packet_size + 1) && from < to);
+    typename std::enable_if<unpacket_traits<Packet>::masked_load_available,
+                            typename unpacket_traits<Packet>::mask_t>::type
+    mask(int from, int to) {
+  const Index packet_size = internal::unpacket_traits<Packet>::size;
+  eigen_assert(0 <= from && to <= (packet_size + 1) && from < to);
 
-    using Mask = typename internal::unpacket_traits<Packet>::mask_t;
-    const Mask mask_max = std::numeric_limits<Mask>::max();
+  using Mask = typename internal::unpacket_traits<Packet>::mask_t;
+  const Mask mask_max = std::numeric_limits<Mask>::max();
 
-    return (mask_max >> (packet_size - to)) ^ (mask_max >> (packet_size - from));
+  return (mask_max >> (packet_size - to)) ^ (mask_max >> (packet_size - from));
 }
 
 }  // namespace internal
