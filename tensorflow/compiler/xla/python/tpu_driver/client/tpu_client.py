@@ -48,8 +48,7 @@ class TpuBackend(xla_client.Backend):
             raise ValueError(
                 "Failed to create TpuBackend. The `worker` parameter must not be "
                 "`None`. Use `local` to connect to a local TPU or "
-                "`grpc://host:port` to connect to a remote TPU."
-            )
+                "`grpc://host:port` to connect to a remote TPU.")
 
         if worker == "local" or "local://" in worker:
             # We usually want to cache for local backends to prevent double
@@ -61,8 +60,7 @@ class TpuBackend(xla_client.Backend):
             if TpuBackend._local_backend is None:
                 logging.info("Starting the local TPU driver.")
                 TpuBackend._local_backend = TpuBackend(
-                    _tpu_client.TpuClient.Get(worker)
-                )
+                    _tpu_client.TpuClient.Get(worker))
             return TpuBackend._local_backend
         else:
             # We do not cache for non-local backends.
@@ -111,7 +109,8 @@ class TpuBackend(xla_client.Backend):
 
     def get_default_device_assignment(self, num_replicas, num_partitions=None):
         if num_partitions is not None:
-            return self.client.GetDefaultDeviceAssignment(num_replicas, num_partitions)
+            return self.client.GetDefaultDeviceAssignment(
+                num_replicas, num_partitions)
         else:
             # TODO(henrytan): delete this case after all callers can handle 2D output
             return self.client.GetDefaultDeviceAssignment(num_replicas)
@@ -120,4 +119,5 @@ class TpuBackend(xla_client.Backend):
         return self.client.SerializeExecutable(executable)
 
     def deserialize(self, serialized_executable):
-        return self.client.DeserializeExecutable(serialized_executable, self.client)
+        return self.client.DeserializeExecutable(serialized_executable,
+                                                 self.client)
