@@ -13,25 +13,34 @@
 # limitations under the License.
 # ==============================================================================
 """Keras text vectorization preprocessing layer."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import json
 import operator
 
 import numpy as np
+
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.framework import dtypes, ops, tensor_shape, tensor_spec
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.engine.base_preprocessing_layer import (
-    Combiner, CombinerPreprocessingLayer)
-from tensorflow.python.keras.layers.preprocessing import (categorical_encoding,
-                                                          index_lookup)
+from tensorflow.python.keras.engine.base_preprocessing_layer import Combiner
+from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
+from tensorflow.python.keras.layers.preprocessing import categorical_encoding
+from tensorflow.python.keras.layers.preprocessing import index_lookup
 from tensorflow.python.keras.utils import layer_utils
-from tensorflow.python.ops import (array_ops, control_flow_ops, gen_string_ops,
-                                   string_ops)
-from tensorflow.python.ops.ragged import (ragged_functional_ops,
-                                          ragged_string_ops, ragged_tensor)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import gen_string_ops
+from tensorflow.python.ops import string_ops
+from tensorflow.python.ops.ragged import ragged_functional_ops
+from tensorflow.python.ops.ragged import ragged_string_ops
+from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.util import compat
 from tensorflow.python.util.tf_export import keras_export
 
