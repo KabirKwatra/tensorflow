@@ -35,107 +35,107 @@ class WritableFile;
 namespace io {
 
 class RecordWriterOptions {
-public:
-    enum CompressionType { NONE = 0, ZLIB_COMPRESSION = 1 };
-    CompressionType compression_type = NONE;
+ public:
+  enum CompressionType { NONE = 0, ZLIB_COMPRESSION = 1 };
+  CompressionType compression_type = NONE;
 
-    static RecordWriterOptions CreateRecordWriterOptions(
-        const string& compression_type);
+  static RecordWriterOptions CreateRecordWriterOptions(
+      const string& compression_type);
 
 // Options specific to zlib compression.
 #if !defined(IS_SLIM_BUILD)
-    tensorflow::io::ZlibCompressionOptions zlib_options;
+  tensorflow::io::ZlibCompressionOptions zlib_options;
 #endif  // IS_SLIM_BUILD
 };
 
 class RecordWriter {
-public:
-    // Format of a single record:
-    //  uint64    length
-    //  uint32    masked crc of length
-    //  byte      data[length]
-    //  uint32    masked crc of data
-    static constexpr size_t kHeaderSize = sizeof(uint64) + sizeof(uint32);
-    static constexpr size_t kFooterSize = sizeof(uint32);
+ public:
+  // Format of a single record:
+  //  uint64    length
+  //  uint32    masked crc of length
+  //  byte      data[length]
+  //  uint32    masked crc of data
+  static constexpr size_t kHeaderSize = sizeof(uint64) + sizeof(uint32);
+  static constexpr size_t kFooterSize = sizeof(uint32);
 
-    // Create a writer that will append data to "*dest".
-    // "*dest" must be initially empty.
-    // "*dest" must remain live while this Writer is in use.
-    RecordWriter(WritableFile* dest,
-                 const RecordWriterOptions& options = RecordWriterOptions());
+  // Create a writer that will append data to "*dest".
+  // "*dest" must be initially empty.
+  // "*dest" must remain live while this Writer is in use.
+  RecordWriter(WritableFile* dest,
+               const RecordWriterOptions& options = RecordWriterOptions());
 
-    // Calls Close() and logs if an error occurs.
-    //
-    // TODO(jhseu): Require that callers explicitly call Close() and remove the
-    // implicit Close() call in the destructor.
-    ~RecordWriter();
+  // Calls Close() and logs if an error occurs.
+  //
+  // TODO(jhseu): Require that callers explicitly call Close() and remove the
+  // implicit Close() call in the destructor.
+  ~RecordWriter();
 
-    Status WriteRecord(StringPiece slice);
-
-#if defined(PLATFORM_GOOGLE)
-    Status WriteRecord(const absl::Cord& data);
-#endif
-
-    // Flushes any buffered data held by underlying containers of the
-    // RecordWriter to the WritableFile. Does *not* flush the
-    // WritableFile.
-    Status Flush();
-
-    // Writes all output to the file. Does *not* close the WritableFile.
-    //
-    // After calling Close(), any further calls to `WriteRecord()` or `Flush()`
-    // are invalid.
-    Status Close();
-
-    // Utility method to populate TFRecord headers.  Populates record-header in
-    // "header[0,kHeaderSize-1]".  The record-header is based on data[0, n-1].
-    inline static void PopulateHeader(char* header, const char* data, size_t n);
-
-    // Utility method to populate TFRecord footers.  Populates record-footer in
-    // "footer[0,kFooterSize-1]".  The record-footer is based on data[0, n-1].
-    inline static void PopulateFooter(char* footer, const char* data, size_t n);
+  Status WriteRecord(StringPiece slice);
 
 #if defined(PLATFORM_GOOGLE)
-    inline static void PopulateHeader(char* header, const absl::Cord& data);
-    inline static void PopulateFooter(char* footer, const absl::Cord& data);
+  Status WriteRecord(const absl::Cord& data);
 #endif
 
-private:
-    WritableFile* dest_;
-    RecordWriterOptions options_;
+  // Flushes any buffered data held by underlying containers of the
+  // RecordWriter to the WritableFile. Does *not* flush the
+  // WritableFile.
+  Status Flush();
 
-    inline static uint32 MaskedCrc(const char* data, size_t n) {
-        return crc32c::Mask(crc32c::Value(data, n));
-    }
+  // Writes all output to the file. Does *not* close the WritableFile.
+  //
+  // After calling Close(), any further calls to `WriteRecord()` or `Flush()`
+  // are invalid.
+  Status Close();
+
+  // Utility method to populate TFRecord headers.  Populates record-header in
+  // "header[0,kHeaderSize-1]".  The record-header is based on data[0, n-1].
+  inline static void PopulateHeader(char* header, const char* data, size_t n);
+
+  // Utility method to populate TFRecord footers.  Populates record-footer in
+  // "footer[0,kFooterSize-1]".  The record-footer is based on data[0, n-1].
+  inline static void PopulateFooter(char* footer, const char* data, size_t n);
 
 #if defined(PLATFORM_GOOGLE)
-    inline static uint32 MaskedCrc(const absl::Cord& data) {
-        return crc32c::Mask(crc32c::Value(data));
-    }
+  inline static void PopulateHeader(char* header, const absl::Cord& data);
+  inline static void PopulateFooter(char* footer, const absl::Cord& data);
 #endif
 
-    TF_DISALLOW_COPY_AND_ASSIGN(RecordWriter);
+ private:
+  WritableFile* dest_;
+  RecordWriterOptions options_;
+
+  inline static uint32 MaskedCrc(const char* data, size_t n) {
+    return crc32c::Mask(crc32c::Value(data, n));
+  }
+
+#if defined(PLATFORM_GOOGLE)
+  inline static uint32 MaskedCrc(const absl::Cord& data) {
+    return crc32c::Mask(crc32c::Value(data));
+  }
+#endif
+
+  TF_DISALLOW_COPY_AND_ASSIGN(RecordWriter);
 };
 
 void RecordWriter::PopulateHeader(char* header, const char* data, size_t n) {
-    core::EncodeFixed64(header + 0, n);
-    core::EncodeFixed32(header + sizeof(uint64),
-                        MaskedCrc(header, sizeof(uint64)));
+  core::EncodeFixed64(header + 0, n);
+  core::EncodeFixed32(header + sizeof(uint64),
+                      MaskedCrc(header, sizeof(uint64)));
 }
 
 void RecordWriter::PopulateFooter(char* footer, const char* data, size_t n) {
-    core::EncodeFixed32(footer, MaskedCrc(data, n));
+  core::EncodeFixed32(footer, MaskedCrc(data, n));
 }
 
 #if defined(PLATFORM_GOOGLE)
 void RecordWriter::PopulateHeader(char* header, const absl::Cord& data) {
-    core::EncodeFixed64(header + 0, data.size());
-    core::EncodeFixed32(header + sizeof(uint64),
-                        MaskedCrc(header, sizeof(uint64)));
+  core::EncodeFixed64(header + 0, data.size());
+  core::EncodeFixed32(header + sizeof(uint64),
+                      MaskedCrc(header, sizeof(uint64)));
 }
 
 void RecordWriter::PopulateFooter(char* footer, const absl::Cord& data) {
-    core::EncodeFixed32(footer, MaskedCrc(data));
+  core::EncodeFixed32(footer, MaskedCrc(data));
 }
 #endif
 

@@ -22,11 +22,11 @@ namespace tensorflow {
 
 const std::vector<tensorflow::AbstractTensorHandleInterface*>&
 ConcreteFunction::GetCaptures() const {
-    return captures_;
+  return captures_;
 }
 
 const FunctionMetadata& ConcreteFunction::GetFunctionMetadata() const {
-    return metadata_;
+  return metadata_;
 }
 
 }  // namespace tensorflow

@@ -34,29 +34,29 @@ constexpr char kShuffleDatasetV2[] = "ShuffleDatasetV2";
 }  // namespace
 
 Status MakeStateless::OptimizeAndCollectStats(Cluster* cluster,
-        const GrapplerItem& item,
-        GraphDef* output,
-        OptimizationStats* stats) {
-    *output = item.graph;
-    MutableGraphView graph(output);
+                                              const GrapplerItem& item,
+                                              GraphDef* output,
+                                              OptimizationStats* stats) {
+  *output = item.graph;
+  MutableGraphView graph(output);
 
-    NodeDef* zero_node = graph_utils::AddScalarConstNode<int64>(0, &graph);
+  NodeDef* zero_node = graph_utils::AddScalarConstNode<int64>(0, &graph);
 
-    for (NodeDef& node : *output->mutable_node()) {
-        if (node.op() == kShuffleDatasetV2) {
-            *node.mutable_op() = kShuffleDataset;
-            // remove `seed_generator` input
-            node.mutable_input()->RemoveLast();
-            // add `seed` input
-            node.add_input(zero_node->name());
-            // add `seed2` input
-            node.add_input(zero_node->name());
-            // set `reshuffle_each_iteration` attr
-            (*node.mutable_attr())[kReshuffleEachIteration].set_b(true);
-        }
+  for (NodeDef& node : *output->mutable_node()) {
+    if (node.op() == kShuffleDatasetV2) {
+      *node.mutable_op() = kShuffleDataset;
+      // remove `seed_generator` input
+      node.mutable_input()->RemoveLast();
+      // add `seed` input
+      node.add_input(zero_node->name());
+      // add `seed2` input
+      node.add_input(zero_node->name());
+      // set `reshuffle_each_iteration` attr
+      (*node.mutable_attr())[kReshuffleEachIteration].set_b(true);
     }
+  }
 
-    return Status::OK();
+  return Status::OK();
 }
 
 REGISTER_GRAPH_OPTIMIZER_AS(MakeStateless, "make_stateless");

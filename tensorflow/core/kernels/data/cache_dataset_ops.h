@@ -21,29 +21,29 @@ namespace tensorflow {
 namespace data {
 
 class CacheDatasetOp : public UnaryDatasetOpKernel {
-public:
-    class FileDatasetBase;
-    class MemoryDatasetBase;
+ public:
+  class FileDatasetBase;
+  class MemoryDatasetBase;
 
-    static constexpr const char* const kDatasetType = "Cache";
-    static constexpr const char* const kInputDataset = "input_dataset";
-    static constexpr const char* const kFileName = "filename";
-    static constexpr const char* const kOutputTypes = "output_types";
-    static constexpr const char* const kOutputShapes = "output_shapes";
+  static constexpr const char* const kDatasetType = "Cache";
+  static constexpr const char* const kInputDataset = "input_dataset";
+  static constexpr const char* const kFileName = "filename";
+  static constexpr const char* const kOutputTypes = "output_types";
+  static constexpr const char* const kOutputShapes = "output_shapes";
 
-    explicit CacheDatasetOp(OpKernelConstruction* ctx);
+  explicit CacheDatasetOp(OpKernelConstruction* ctx);
 
-protected:
-    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                     DatasetBase** output) override;
+ protected:
+  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                   DatasetBase** output) override;
 
-private:
-    class FileDataset;
-    class FileDatasetV2;
-    class MemoryDataset;
-    class MemoryDatasetV2;
+ private:
+  class FileDataset;
+  class FileDatasetV2;
+  class MemoryDataset;
+  class MemoryDatasetV2;
 
-    const int op_version_;
+  const int op_version_;
 };
 
 }  // namespace data
