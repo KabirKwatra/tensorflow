@@ -14,9 +14,7 @@
 # ==============================================================================
 """Tools for deserializing `Function`s."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import re
@@ -25,18 +23,14 @@ from tensorflow.core.framework import function_pb2
 from tensorflow.python.eager import def_function
 from tensorflow.python.eager import function as function_lib
 from tensorflow.python.framework import func_graph as func_graph_lib
-from tensorflow.python.framework import function_def_to_graph as function_def_lib
-from tensorflow.python.framework import op_def_registry
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import type_spec
+from tensorflow.python.framework import \
+    function_def_to_graph as function_def_lib
+from tensorflow.python.framework import (op_def_registry, ops, tensor_spec,
+                                         type_spec)
 from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.saved_model import nested_structure_coder
-from tensorflow.python.util import compat
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_decorator
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import compat, nest, tf_decorator, tf_inspect
 
 
 def _is_tensor(t):
