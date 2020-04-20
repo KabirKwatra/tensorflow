@@ -21,13 +21,13 @@ limitations under the License.
 
 extern "C" {
 
-    size_t TF_ConcreteFunctionListNumOutputs(TF_ConcreteFunctionList* list) {
-        return tensorflow::unwrap(list)->size();
-    }
+size_t TF_ConcreteFunctionListNumOutputs(TF_ConcreteFunctionList* list) {
+  return tensorflow::unwrap(list)->size();
+}
 
-    TF_ConcreteFunction* TF_ConcreteFunctionListGet(TF_ConcreteFunctionList* list,
-            int i) {
-        return tensorflow::wrap((*tensorflow::unwrap(list))[i]);
-    }
+TF_ConcreteFunction* TF_ConcreteFunctionListGet(TF_ConcreteFunctionList* list,
+                                                int i) {
+  return tensorflow::wrap((*tensorflow::unwrap(list))[i]);
+}
 
 }  // end extern "C"

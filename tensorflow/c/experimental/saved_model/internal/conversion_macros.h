@@ -16,13 +16,13 @@ limitations under the License.
 #ifndef TENSORFLOW_C_EXPERIMENTAL_SAVED_MODEL_INTERNAL_CONVERSION_MACROS_H_
 #define TENSORFLOW_C_EXPERIMENTAL_SAVED_MODEL_INTERNAL_CONVERSION_MACROS_H_
 
-#define DEFINE_CONVERSION_FUNCTIONS(cpp_impl, wrapper)             \
-  inline cpp_impl *unwrap(wrapper *w) {                            \
-    return reinterpret_cast<cpp_impl *>(w);                        \
-  }                                                                \
-                                                                   \
-  inline wrapper *wrap(const cpp_impl *i) {                        \
-    return reinterpret_cast<wrapper *>(const_cast<cpp_impl *>(i)); \
+#define DEFINE_CONVERSION_FUNCTIONS(cpp_impl, wrapper)           \
+  inline cpp_impl* unwrap(wrapper* w) {                          \
+    return reinterpret_cast<cpp_impl*>(w);                       \
+  }                                                              \
+                                                                 \
+  inline wrapper* wrap(const cpp_impl* i) {                      \
+    return reinterpret_cast<wrapper*>(const_cast<cpp_impl*>(i)); \
   }
 
 #endif  // TENSORFLOW_C_EXPERIMENTAL_SAVED_MODEL_INTERNAL_CONVERSION_MACROS_H_

@@ -23,18 +23,18 @@ limitations under the License.
 
 extern "C" {
 
-    TF_FunctionMetadata* TF_ConcreteFunctionGetMetadata(TF_ConcreteFunction* func) {
-        return tensorflow::wrap(&tensorflow::unwrap(func)->GetFunctionMetadata());
-    }
+TF_FunctionMetadata* TF_ConcreteFunctionGetMetadata(TF_ConcreteFunction* func) {
+  return tensorflow::wrap(&tensorflow::unwrap(func)->GetFunctionMetadata());
+}
 
-    TF_OutputList* TF_ConcreteFunctionGetCaptures(TF_ConcreteFunction* func) {
-        // TODO(bmzhao): Refactor TF_OutputList struct definition into a separate
-        // internal header, and implement this function.
-        return nullptr;
-    }
+TF_OutputList* TF_ConcreteFunctionGetCaptures(TF_ConcreteFunction* func) {
+  // TODO(bmzhao): Refactor TF_OutputList struct definition into a separate
+  // internal header, and implement this function.
+  return nullptr;
+}
 
-    TFE_Op* TF_ConcreteFunctionGetOperation(TF_ConcreteFunction* func) {
-        return new TFE_Op{tensorflow::unwrap(func)->GetFunctionOp()};
-    }
+TFE_Op* TF_ConcreteFunctionGetOperation(TF_ConcreteFunction* func) {
+  return new TFE_Op{tensorflow::unwrap(func)->GetFunctionOp()};
+}
 
 }  // end extern "C"

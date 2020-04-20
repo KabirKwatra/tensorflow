@@ -34,20 +34,20 @@ namespace tensorflow {
 // this class. Eventually we want to remove this virtual base class indirection
 // and have only a single implementation.
 class ConcreteFunction {
-public:
-    virtual ~ConcreteFunction() = 0;
+ public:
+  virtual ~ConcreteFunction() = 0;
 
-    // This method returns the "Call" Op used to execute the function.
-    virtual AbstractOperationInterface* GetFunctionOp() = 0;
+  // This method returns the "Call" Op used to execute the function.
+  virtual AbstractOperationInterface* GetFunctionOp() = 0;
 
-    const std::vector<tensorflow::AbstractTensorHandleInterface*>& Captures()
-    const;
-    const FunctionMetadata& GetFunctionMetadata() const;
+  const std::vector<tensorflow::AbstractTensorHandleInterface*>& Captures()
+      const;
+  const FunctionMetadata& GetFunctionMetadata() const;
 
-private:
-    FunctionMetadata metadata_;
-    std::vector<tensorflow::AbstractTensorHandleInterface*> captures_;
-    FunctionDef* function_;
+ private:
+  FunctionMetadata metadata_;
+  std::vector<tensorflow::AbstractTensorHandleInterface*> captures_;
+  FunctionDef* function_;
 };
 
 }  // namespace tensorflow
