@@ -23,10 +23,10 @@ namespace evaluation {
 // A common task execution API to avoid boilerpolate code in defining the main
 // function.
 class TaskExecutor {
-public:
-    virtual ~TaskExecutor() {}
-    // If the run is successful, the latest metrics will be returned.
-    virtual absl::optional<EvaluationStageMetrics> Run() = 0;
+ public:
+  virtual ~TaskExecutor() {}
+  // If the run is successful, the latest metrics will be returned.
+  virtual absl::optional<EvaluationStageMetrics> Run() = 0;
 };
 
 // Just a declaration. In order to avoid the boilerpolate main-function code,

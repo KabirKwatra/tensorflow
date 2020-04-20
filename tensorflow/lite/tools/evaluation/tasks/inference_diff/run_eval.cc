@@ -36,109 +36,109 @@ constexpr char kInterpreterThreadsFlag[] = "num_interpreter_threads";
 constexpr char kDelegateFlag[] = "delegate";
 
 class InferenceDiff : public TaskExecutor {
-public:
-    InferenceDiff(int* argc, char* argv[]);
-    ~InferenceDiff() override {}
+ public:
+  InferenceDiff(int* argc, char* argv[]);
+  ~InferenceDiff() override {}
 
-    // If the run is successful, the latest metrics will be returned.
-    absl::optional<EvaluationStageMetrics> Run() final;
+  // If the run is successful, the latest metrics will be returned.
+  absl::optional<EvaluationStageMetrics> Run() final;
 
-private:
-    void OutputResult(const EvaluationStageMetrics& latest_metrics) const;
-    std::string model_file_path_;
-    std::string output_file_path_;
-    std::string delegate_;
-    int num_runs_;
-    int num_interpreter_threads_;
-    DelegateProviders delegate_providers_;
+ private:
+  void OutputResult(const EvaluationStageMetrics& latest_metrics) const;
+  std::string model_file_path_;
+  std::string output_file_path_;
+  std::string delegate_;
+  int num_runs_;
+  int num_interpreter_threads_;
+  DelegateProviders delegate_providers_;
 };
 
 InferenceDiff::InferenceDiff(int* argc, char* argv[])
     : num_runs_(50), num_interpreter_threads_(1) {
-    // Command Line Flags.
-    std::vector<tflite::Flag> flag_list = {
-        tflite::Flag::CreateFlag(kModelFileFlag, &model_file_path_,
-                                 "Path to test tflite model file."),
-        tflite::Flag::CreateFlag(kOutputFilePathFlag, &output_file_path_,
-                                 "File to output metrics proto to."),
-        tflite::Flag::CreateFlag(kNumRunsFlag, &num_runs_,
-                                 "Number of runs of test & reference inference "
-                                 "each. Default value: 50"),
-        tflite::Flag::CreateFlag(
-            kInterpreterThreadsFlag, &num_interpreter_threads_,
-            "Number of interpreter threads to use for test inference."),
-        tflite::Flag::CreateFlag(
-            kDelegateFlag, &delegate_,
-            "Delegate to use for test inference, if available. "
-            "Must be one of {'nnapi', 'gpu', 'hexagon', 'xnnpack'}"),
-    };
-    tflite::Flags::Parse(argc, const_cast<const char**>(argv), flag_list);
-    delegate_providers_.InitFromCmdlineArgs(argc, const_cast<const char**>(argv));
+  // Command Line Flags.
+  std::vector<tflite::Flag> flag_list = {
+      tflite::Flag::CreateFlag(kModelFileFlag, &model_file_path_,
+                               "Path to test tflite model file."),
+      tflite::Flag::CreateFlag(kOutputFilePathFlag, &output_file_path_,
+                               "File to output metrics proto to."),
+      tflite::Flag::CreateFlag(kNumRunsFlag, &num_runs_,
+                               "Number of runs of test & reference inference "
+                               "each. Default value: 50"),
+      tflite::Flag::CreateFlag(
+          kInterpreterThreadsFlag, &num_interpreter_threads_,
+          "Number of interpreter threads to use for test inference."),
+      tflite::Flag::CreateFlag(
+          kDelegateFlag, &delegate_,
+          "Delegate to use for test inference, if available. "
+          "Must be one of {'nnapi', 'gpu', 'hexagon', 'xnnpack'}"),
+  };
+  tflite::Flags::Parse(argc, const_cast<const char**>(argv), flag_list);
+  delegate_providers_.InitFromCmdlineArgs(argc, const_cast<const char**>(argv));
 }
 
 absl::optional<EvaluationStageMetrics> InferenceDiff::Run() {
-    // Initialize evaluation stage.
-    EvaluationStageConfig eval_config;
-    eval_config.set_name("inference_profiling");
-    auto* inference_params =
-        eval_config.mutable_specification()->mutable_tflite_inference_params();
-    inference_params->set_model_file_path(model_file_path_);
-    inference_params->set_num_threads(num_interpreter_threads_);
-    // This ensures that latency measurement isn't hampered by the time spent in
-    // generating random data.
-    inference_params->set_invocations_per_run(3);
-    inference_params->set_delegate(ParseStringToDelegateType(delegate_));
-    if (!delegate_.empty() &&
-            inference_params->delegate() == TfliteInferenceParams::NONE) {
-        TFLITE_LOG(WARN) << "Unsupported TFLite delegate: " << delegate_;
-        return absl::nullopt;
-    }
+  // Initialize evaluation stage.
+  EvaluationStageConfig eval_config;
+  eval_config.set_name("inference_profiling");
+  auto* inference_params =
+      eval_config.mutable_specification()->mutable_tflite_inference_params();
+  inference_params->set_model_file_path(model_file_path_);
+  inference_params->set_num_threads(num_interpreter_threads_);
+  // This ensures that latency measurement isn't hampered by the time spent in
+  // generating random data.
+  inference_params->set_invocations_per_run(3);
+  inference_params->set_delegate(ParseStringToDelegateType(delegate_));
+  if (!delegate_.empty() &&
+      inference_params->delegate() == TfliteInferenceParams::NONE) {
+    TFLITE_LOG(WARN) << "Unsupported TFLite delegate: " << delegate_;
+    return absl::nullopt;
+  }
 
-    InferenceProfilerStage eval(eval_config);
-    if (eval.Init(&delegate_providers_) != kTfLiteOk) return absl::nullopt;
+  InferenceProfilerStage eval(eval_config);
+  if (eval.Init(&delegate_providers_) != kTfLiteOk) return absl::nullopt;
 
-    // Run inference & check diff for specified number of runs.
-    for (int i = 0; i < num_runs_; ++i) {
-        if (eval.Run() != kTfLiteOk) return absl::nullopt;
-    }
+  // Run inference & check diff for specified number of runs.
+  for (int i = 0; i < num_runs_; ++i) {
+    if (eval.Run() != kTfLiteOk) return absl::nullopt;
+  }
 
-    const auto latest_metrics = eval.LatestMetrics();
-    OutputResult(latest_metrics);
-    return absl::make_optional(latest_metrics);
+  const auto latest_metrics = eval.LatestMetrics();
+  OutputResult(latest_metrics);
+  return absl::make_optional(latest_metrics);
 }
 
 void InferenceDiff::OutputResult(
     const EvaluationStageMetrics& latest_metrics) const {
-    // Output latency & diff metrics.
-    if (!output_file_path_.empty()) {
-        std::ofstream metrics_ofile;
-        metrics_ofile.open(output_file_path_, std::ios::out);
-        metrics_ofile << latest_metrics.SerializeAsString();
-        metrics_ofile.close();
-    }
+  // Output latency & diff metrics.
+  if (!output_file_path_.empty()) {
+    std::ofstream metrics_ofile;
+    metrics_ofile.open(output_file_path_, std::ios::out);
+    metrics_ofile << latest_metrics.SerializeAsString();
+    metrics_ofile.close();
+  }
 
-    TFLITE_LOG(INFO) << "Num evaluation runs: " << latest_metrics.num_runs();
-    const auto& metrics =
-        latest_metrics.process_metrics().inference_profiler_metrics();
-    const auto& ref_latency = metrics.reference_latency();
-    TFLITE_LOG(INFO) << "Reference run latency: avg=" << ref_latency.avg_us()
-                     << "(us), std_dev=" << ref_latency.std_deviation_us()
-                     << "(us)";
-    const auto& test_latency = metrics.test_latency();
-    TFLITE_LOG(INFO) << "Test run latency: avg=" << test_latency.avg_us()
-                     << "(us), std_dev=" << test_latency.std_deviation_us()
-                     << "(us)";
-    const auto& output_errors = metrics.output_errors();
-    for (int i = 0; i < output_errors.size(); ++i) {
-        const auto& error = output_errors.at(i);
-        TFLITE_LOG(INFO) << "OutputDiff[" << i
-                         << "]: avg_error=" << error.avg_value()
-                         << ", std_dev=" << error.std_deviation();
-    }
+  TFLITE_LOG(INFO) << "Num evaluation runs: " << latest_metrics.num_runs();
+  const auto& metrics =
+      latest_metrics.process_metrics().inference_profiler_metrics();
+  const auto& ref_latency = metrics.reference_latency();
+  TFLITE_LOG(INFO) << "Reference run latency: avg=" << ref_latency.avg_us()
+                   << "(us), std_dev=" << ref_latency.std_deviation_us()
+                   << "(us)";
+  const auto& test_latency = metrics.test_latency();
+  TFLITE_LOG(INFO) << "Test run latency: avg=" << test_latency.avg_us()
+                   << "(us), std_dev=" << test_latency.std_deviation_us()
+                   << "(us)";
+  const auto& output_errors = metrics.output_errors();
+  for (int i = 0; i < output_errors.size(); ++i) {
+    const auto& error = output_errors.at(i);
+    TFLITE_LOG(INFO) << "OutputDiff[" << i
+                     << "]: avg_error=" << error.avg_value()
+                     << ", std_dev=" << error.std_deviation();
+  }
 }
 
 std::unique_ptr<TaskExecutor> CreateTaskExecutor(int* argc, char* argv[]) {
-    return std::unique_ptr<TaskExecutor>(new InferenceDiff(argc, argv));
+  return std::unique_ptr<TaskExecutor>(new InferenceDiff(argc, argv));
 }
 
 }  // namespace evaluation
