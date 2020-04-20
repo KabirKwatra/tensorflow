@@ -14,8 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the Python extension-based XLA client."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 import itertools
@@ -23,8 +24,11 @@ import threading
 import unittest
 
 import numpy as np
-from absl.testing import absltest, parameterized
-from tensorflow.compiler.xla.python import custom_call_for_test, xla_client
+from absl.testing import absltest
+from absl.testing import parameterized
+
+from tensorflow.compiler.xla.python import custom_call_for_test
+from tensorflow.compiler.xla.python import xla_client
 
 # pylint: disable=g-import-not-at-top
 try:

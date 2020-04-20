@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Utilities for V2 control flow."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.distribute import distribution_strategy_context
-from tensorflow.python.eager import context, function
-from tensorflow.python.framework import function_def_to_graph, ops
+from tensorflow.python.eager import context
+from tensorflow.python.eager import function
+from tensorflow.python.framework import function_def_to_graph
+from tensorflow.python.framework import ops
 from tensorflow.python.framework.func_graph import FuncGraph
-from tensorflow.python.ops import (control_flow_util,
-                                   control_flow_v2_func_graphs)
+from tensorflow.python.ops import control_flow_util
+from tensorflow.python.ops import control_flow_v2_func_graphs
 from tensorflow.python.util import tf_contextlib
 
 _EXPERIMENTAL_OUTPUT_ALL_INTERMEDIATES_OVERRIDE = None
