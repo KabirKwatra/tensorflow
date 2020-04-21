@@ -13,14 +13,20 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for reaching_definitions module."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import six
-from tensorflow.python.autograph.pyct import (anno, cfg, naming, parser,
-                                              qual_names, transformer)
-from tensorflow.python.autograph.pyct.static_analysis import (
-    activity, reaching_definitions)
+
+from tensorflow.python.autograph.pyct import anno
+from tensorflow.python.autograph.pyct import cfg
+from tensorflow.python.autograph.pyct import naming
+from tensorflow.python.autograph.pyct import parser
+from tensorflow.python.autograph.pyct import qual_names
+from tensorflow.python.autograph.pyct import transformer
+from tensorflow.python.autograph.pyct.static_analysis import activity
+from tensorflow.python.autograph.pyct.static_analysis import reaching_definitions
 from tensorflow.python.platform import test
 
 global_a = 7

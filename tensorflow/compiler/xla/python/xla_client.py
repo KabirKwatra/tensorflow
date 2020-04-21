@@ -14,8 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """An XLA client in Python."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import abc
 import collections
@@ -23,10 +24,14 @@ import enum  # pylint: disable=g-bad-import-order
 import inspect
 import itertools
 import os
-from typing import List, Sequence, Tuple, Union
+from typing import List
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 from absl import logging
+
 from tensorflow.compiler.xla.python import xla_extension as _xla
 from tensorflow.compiler.xla.python.xla_extension import ops
 

@@ -13,17 +13,21 @@
 # limitations under the License.
 # ==============================================================================
 """Reader class for tfdbg v2 debug events."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import os
 import threading
 
 import six
+
 from tensorflow.core.protobuf import debug_event_pb2
-from tensorflow.python.framework import errors, tensor_util
-from tensorflow.python.lib.io import file_io, tf_record
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.lib.io import file_io
+from tensorflow.python.lib.io import tf_record
 from tensorflow.python.util import compat
 
 DebugEventWithOffset = collections.namedtuple(

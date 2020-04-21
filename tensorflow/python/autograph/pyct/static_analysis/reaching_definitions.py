@@ -23,13 +23,17 @@ control flow statements.
 
 Requires activity analysis.
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import weakref
 
 import gast
-from tensorflow.python.autograph.pyct import anno, cfg, transformer
+
+from tensorflow.python.autograph.pyct import anno
+from tensorflow.python.autograph.pyct import cfg
+from tensorflow.python.autograph.pyct import transformer
 
 
 class Definition(object):
