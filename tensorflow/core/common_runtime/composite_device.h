@@ -30,32 +30,34 @@ extern const char* const kCompositeDeviceType;
 // A virtual device which represents a set of devices. We don't execute any
 // op on this virtial device.
 class CompositeDevice : public Device {
- public:
-  Status Sync() override {
-    return errors::Internal(
-        "Sync() should never been invoked on CompositeDevice.");
-  }
+public:
+    Status Sync() override {
+        return errors::Internal(
+                   "Sync() should never been invoked on CompositeDevice.");
+    }
 
-  Allocator* GetAllocator(AllocatorAttributes) override { return nullptr; }
+    Allocator* GetAllocator(AllocatorAttributes) override {
+        return nullptr;
+    }
 
-  const std::vector<string>* underlying_devices() const {
-    return &underlying_devices_;
-  }
+    const std::vector<string>* underlying_devices() const {
+        return &underlying_devices_;
+    }
 
-  // Helper for creating a CompositeDevice.
-  static std::unique_ptr<CompositeDevice> MakeDevice(
-      const std::vector<string>& underlying_devices, const int unique_device_id,
-      Status* status);
+    // Helper for creating a CompositeDevice.
+    static std::unique_ptr<CompositeDevice> MakeDevice(
+        const std::vector<string>& underlying_devices, const int unique_device_id,
+        Status* status);
 
- private:
-  CompositeDevice(const DeviceAttributes& device_attributes,
-                  const std::vector<string>& underlying_devices)
-      : Device(/*env=*/nullptr, device_attributes),
-        underlying_devices_(underlying_devices) {}
+private:
+    CompositeDevice(const DeviceAttributes& device_attributes,
+                    const std::vector<string>& underlying_devices)
+        : Device(/*env=*/nullptr, device_attributes),
+          underlying_devices_(underlying_devices) {}
 
-  const std::vector<string> underlying_devices_;
+    const std::vector<string> underlying_devices_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(CompositeDevice);
+    TF_DISALLOW_COPY_AND_ASSIGN(CompositeDevice);
 };
 
 }  // namespace tensorflow
