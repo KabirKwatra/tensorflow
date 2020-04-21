@@ -24,8 +24,7 @@ from tensorflow.python.platform import test
 
 
 class ReachingDefinitionsAnalyzerTest(
-    reaching_definitions_test.ReachingDefinitionsAnalyzerTestBase
-):
+        reaching_definitions_test.ReachingDefinitionsAnalyzerTestBase):
     """Tests which can only run in Python 3."""
 
     def test_nonlocal(self):

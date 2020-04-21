@@ -49,9 +49,8 @@ class ReachingDefinitionsAnalyzerTestBase(test.TestCase):
         ctx = transformer.Context(entity_info, namer, None)
         node = activity.resolve(node, ctx)
         graphs = cfg.build(node)
-        node = reaching_definitions.resolve(
-            node, ctx, graphs, reaching_definitions.Definition
-        )
+        node = reaching_definitions.resolve(node, ctx, graphs,
+                                            reaching_definitions.Definition)
         return node
 
     def assertHasDefs(self, node, num):
@@ -66,7 +65,7 @@ class ReachingDefinitionsAnalyzerTestBase(test.TestCase):
         if not expected:
             expected = ()
         if not isinstance(expected, tuple):
-            expected = (expected,)
+            expected = (expected, )
         self.assertSetEqual(defined_in_str, set(expected))
 
     def assertSameDef(self, first, second):
@@ -156,7 +155,8 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefinedIn(fn_body[1], ("a", "b"))
         self.assertHasDefinedIn(fn_body[1].body[0], ("a", "b"))
         # Note: `TestException` and `e` are not tracked.
-        self.assertHasDefinedIn(fn_body[1].body[0].handlers[0].body[0], ("a", "b"))
+        self.assertHasDefinedIn(fn_body[1].body[0].handlers[0].body[0],
+                                ("a", "b"))
 
     def test_while(self):
         def test_fn(a):
@@ -384,7 +384,7 @@ class ReachingDefinitionsAnalyzerTest(ReachingDefinitionsAnalyzerTestBase):
         self.assertHasDefs(fn_body[1].body[0].targets[0], 1)
         self.assertHasDefs(fn_body[2].value, 2)
 
-        self.assertHasDefinedIn(fn_body[1], ("a",))
+        self.assertHasDefinedIn(fn_body[1], ("a", ))
 
     def test_global(self):
         def test_fn():

@@ -41,11 +41,10 @@ class ActivityAnalyzerTest(activity_test.ActivityAnalyzerTestBase):
         node, _ = self._parse_and_analyze(test_fn)
         fn_node = node
         body_scope = anno.getanno(fn_node, NodeAnno.BODY_SCOPE)
-        self.assertScopeIs(
-            body_scope, ("nonlocal_a", "nonlocal_b", "c"), ("nonlocal_a",)
-        )
+        self.assertScopeIs(body_scope, ("nonlocal_a", "nonlocal_b", "c"),
+                           ("nonlocal_a", ))
         nonlocal_a_scope = anno.getanno(fn_node.body[0], anno.Static.SCOPE)
-        self.assertScopeIs(nonlocal_a_scope, ("nonlocal_a",), ())
+        self.assertScopeIs(nonlocal_a_scope, ("nonlocal_a", ), ())
 
     def test_annotated_assign(self):
         b = int
@@ -57,9 +56,9 @@ class ActivityAnalyzerTest(activity_test.ActivityAnalyzerTestBase):
         node, _ = self._parse_and_analyze(test_fn)
         fn_node = node
         body_scope = anno.getanno(fn_node, NodeAnno.BODY_SCOPE)
-        self.assertScopeIs(body_scope, ("b", "c", "a"), ("a",))
+        self.assertScopeIs(body_scope, ("b", "c", "a"), ("a", ))
         ann_assign_scope = anno.getanno(fn_node.body[0], anno.Static.SCOPE)
-        self.assertScopeIs(ann_assign_scope, ("b", "c"), ("a",))
+        self.assertScopeIs(ann_assign_scope, ("b", "c"), ("a", ))
 
 
 if __name__ == "__main__":
