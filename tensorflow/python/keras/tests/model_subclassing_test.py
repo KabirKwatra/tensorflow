@@ -13,24 +13,31 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for Model subclassing."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 import os
 
 import numpy as np
 from absl.testing import parameterized
+
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import context
-from tensorflow.python.framework import ops, tensor_shape, test_util
-from tensorflow.python.keras import (combinations, keras_parameterized,
-                                     testing_utils)
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import test_util
+from tensorflow.python.keras import combinations
+from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.tests import \
     model_subclassing_test_util as model_util
-from tensorflow.python.ops import (array_ops, embedding_ops, init_ops,
-                                   resource_variable_ops)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import embedding_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.ops import variables as variables_lib
 from tensorflow.python.platform import test
 from tensorflow.python.training.tracking import data_structures

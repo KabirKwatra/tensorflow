@@ -15,22 +15,30 @@
 # pylint: disable=protected-access
 """Home of the `Sequential` model.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 
 from tensorflow.python import tf2
-from tensorflow.python.framework import ops, tensor_util
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_util
 from tensorflow.python.keras import layers as layer_module
-from tensorflow.python.keras.engine import (base_layer, input_layer, training,
-                                            training_utils)
+from tensorflow.python.keras.engine import base_layer
+from tensorflow.python.keras.engine import input_layer
+from tensorflow.python.keras.engine import training
+from tensorflow.python.keras.engine import training_utils
 from tensorflow.python.keras.saving.saved_model import model_serialization
-from tensorflow.python.keras.utils import generic_utils, layer_utils, tf_utils
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import layer_utils
+from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.training.tracking import \
     layer_utils as trackable_layer_utils
-from tensorflow.python.util import nest, tf_inspect
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.deprecation import deprecated
 from tensorflow.python.util.tf_export import keras_export
 

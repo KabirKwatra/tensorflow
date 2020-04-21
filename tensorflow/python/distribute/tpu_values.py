@@ -17,15 +17,18 @@
 Note that the tests are in values_test.py .
 
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import contextlib
 
 from tensorflow.python.distribute import values
-from tensorflow.python.eager import context, tape
+from tensorflow.python.eager import context
+from tensorflow.python.eager import tape
 from tensorflow.python.framework import ops
-from tensorflow.python.ops import gen_resource_variable_ops, math_ops
+from tensorflow.python.ops import gen_resource_variable_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.tpu import tpu
 
 

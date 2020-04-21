@@ -16,15 +16,19 @@
 
 Requires qualified name annotations (see qual_names.py).
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 import weakref
 
 import gast
 import six
-from tensorflow.python.autograph.pyct import anno, qual_names, transformer
+
+from tensorflow.python.autograph.pyct import anno
+from tensorflow.python.autograph.pyct import qual_names
+from tensorflow.python.autograph.pyct import transformer
 from tensorflow.python.autograph.pyct.static_analysis.annos import NodeAnno
 
 
