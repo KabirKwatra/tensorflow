@@ -126,8 +126,9 @@ NOTE: The new feature columns are being developed in feature_column_v2.py and
 are a somewhat duplicate of the code here. Please make sure to update logic
 in both places.
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import abc
 import collections
@@ -135,19 +136,30 @@ import math
 
 import numpy as np
 import six
+
 from tensorflow.python.eager import context
 from tensorflow.python.feature_column import utils as fc_utils
-from tensorflow.python.framework import dtypes, ops
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor as sparse_tensor_lib
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.keras.engine import training
 from tensorflow.python.layers import base
-from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
-                                   embedding_ops, init_ops, lookup_ops,
-                                   math_ops, nn_ops, parsing_ops,
-                                   resource_variable_ops, sparse_ops,
-                                   string_ops, template, variable_scope,
-                                   variables)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import check_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import embedding_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import lookup_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import parsing_ops
+from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import sparse_ops
+from tensorflow.python.ops import string_ops
+from tensorflow.python.ops import template
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variables
 from tensorflow.python.platform import gfile
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import checkpoint_utils
