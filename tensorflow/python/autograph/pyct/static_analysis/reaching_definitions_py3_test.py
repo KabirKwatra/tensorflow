@@ -24,7 +24,8 @@ from tensorflow.python.platform import test
 
 
 class ReachingDefinitionsAnalyzerTest(
-        reaching_definitions_test.ReachingDefinitionsAnalyzerTestBase):
+    reaching_definitions_test.ReachingDefinitionsAnalyzerTestBase
+):
     """Tests which can only run in Python 3."""
 
     def test_nonlocal(self):
@@ -49,7 +50,7 @@ class ReachingDefinitionsAnalyzerTest(
 
         self.assertSameDef(fn_body[2].test, fn_body[3].value.elts[0])
 
-        self.assertHasDefinedIn(fn_body[2], ('a', 'b'))
+        self.assertHasDefinedIn(fn_body[2], ("a", "b"))
 
     def test_nonlocal_in_nested_function(self):
 
@@ -78,8 +79,8 @@ class ReachingDefinitionsAnalyzerTest(
 
         self.assertSameDef(local_body[1].test, local_body[2].value.elts[0])
 
-        self.assertHasDefinedIn(local_body[1], ('a', 'b'))
+        self.assertHasDefinedIn(local_body[1], ("a", "b"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

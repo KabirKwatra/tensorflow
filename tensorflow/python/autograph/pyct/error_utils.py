@@ -25,9 +25,17 @@ from tensorflow.python.autograph.pyct import origin_info
 
 class FrameInfo(
     collections.namedtuple(
-        'FrameInfo',
-        ('filename', 'lineno', 'function_name', 'code', 'is_converted',
-         'is_whitelisted'))):
+        "FrameInfo",
+        (
+            "filename",
+            "lineno",
+            "function_name",
+            "code",
+            "is_converted",
+            "is_whitelisted",
+        ),
+    )
+):
 
     __slots__ = ()
 
@@ -93,7 +101,8 @@ def _stack_trace_inside_mapped_code(tb, source_map, converter_filename):
                 function_name=origin.function_name,
                 code=origin.source_code_line,
                 is_converted=True,
-                is_whitelisted=False)
+                is_whitelisted=False,
+            )
             result_frames.append(fi)
             break
 
@@ -107,7 +116,8 @@ def _stack_trace_inside_mapped_code(tb, source_map, converter_filename):
                     function_name=prev.function_name,
                     code=prev.code,
                     is_converted=False,
-                    is_whitelisted=True)
+                    is_whitelisted=True,
+                )
                 result_frames[-1] = fi
             continue
 
@@ -117,7 +127,8 @@ def _stack_trace_inside_mapped_code(tb, source_map, converter_filename):
             function_name=function_name,
             code=text,
             is_converted=False,
-            is_whitelisted=False)
+            is_whitelisted=False,
+        )
         result_frames.append(fi)
 
     return tuple(result_frames)
@@ -140,7 +151,6 @@ KNOWN_STRING_CONSTRUCTOR_ERRORS = (
 # that doesn't do that. Overriding the name for display purposes; hopefully
 # that won't create too many surprises.
 class MultilineMessageKeyError(KeyError):
-
     def __init__(self, message, original_key):
         super(MultilineMessageKeyError, self).__init__(original_key)
         self.__message = message
@@ -160,55 +170,58 @@ class ErrorMetadataBase(object):
     code from which the generated code originated.
     """
 
-    __slots__ = ('translated_stack', 'cause_message')
+    __slots__ = ("translated_stack", "cause_message")
 
-    def __init__(self, callsite_tb, cause_metadata, cause_message, source_map,
-                 converter_filename):
+    def __init__(
+        self, callsite_tb, cause_metadata, cause_message, source_map, converter_filename
+    ):
         translated_stack = _stack_trace_inside_mapped_code(
-            callsite_tb, source_map, converter_filename)
+            callsite_tb, source_map, converter_filename
+        )
 
         if cause_metadata is None:
             self.translated_stack = translated_stack
             self.cause_message = cause_message
         else:
             # Daisy chain the translated stacks.
-            self.translated_stack = (
-                cause_metadata.translated_stack + (translated_stack[-1],))
+            self.translated_stack = cause_metadata.translated_stack + (
+                translated_stack[-1],
+            )
             self.cause_message = cause_metadata.cause_message
 
     def get_message(self):
         """Returns the message for the underlying exception."""
         lines = []
 
-        lines.append('in user code:')
-        lines.append('')
+        lines.append("in user code:")
+        lines.append("")
 
         for frame_info in reversed(self.translated_stack):
-            formatted_line = '    {}:{} {}'.format(frame_info.filename,
-                                                   frame_info.lineno,
-                                                   frame_info.function_name)
+            formatted_line = "    {}:{} {}".format(
+                frame_info.filename, frame_info.lineno, frame_info.function_name
+            )
             if frame_info.is_converted:
-                formatted_line += '  *'
+                formatted_line += "  *"
             elif frame_info.is_whitelisted:
-                formatted_line += '  **'
+                formatted_line += "  **"
             lines.append(formatted_line)
 
             if frame_info.code is None:
-                code_snippet = '<source unavailable>'
+                code_snippet = "<source unavailable>"
             else:
                 code_snippet = frame_info.code.strip()
-            lines.append('        {}'.format(code_snippet))
+            lines.append("        {}".format(code_snippet))
 
-        lines.append('')
+        lines.append("")
 
-        message_lines = self.cause_message.split('\n')
+        message_lines = self.cause_message.split("\n")
         for i in range(len(message_lines)):
-            message_lines[i] = '    ' + message_lines[i]
+            message_lines[i] = "    " + message_lines[i]
         lines.extend(message_lines)
 
-        lines.append('')
+        lines.append("")
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def create_exception(self, source_error):
         preferred_type = type(source_error)
