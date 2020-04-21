@@ -38,4 +38,3 @@ readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TAGS="$TAGS" 
 # TODO(b/149597202): Disabled until we can get Docker running inside Docker.
 # Parallell builds doesn't work very well with this
 #readable_run make -f tensorflow/lite/micro/tools/make/Makefile TAGS=${TAGS} TARGET=${TARGET} test
-
