@@ -82,7 +82,8 @@ class WorkerServer(object):
           port: The port to bind to.
         """
         self._server = _pywrap_server_lib.TF_DATA_NewWorkerServer(
-            port, protocol, master_address)
+            port, protocol, master_address
+        )
         self._running = True
 
     @property

@@ -30,7 +30,6 @@ class MicroBenchmarksBase(test.Benchmark):
         mean_us = total_time * 1e6 / num_iters
         extras = {
             "examples_per_sec": float("{0:.3f}".format(num_iters / total_time)),
-            "us_per_example": float("{0:.3f}".format(total_time * 1e6 / num_iters))
+            "us_per_example": float("{0:.3f}".format(total_time * 1e6 / num_iters)),
         }
-        self.report_benchmark(
-            iters=num_iters, wall_time=mean_us, extras=extras)
+        self.report_benchmark(iters=num_iters, wall_time=mean_us, extras=extras)

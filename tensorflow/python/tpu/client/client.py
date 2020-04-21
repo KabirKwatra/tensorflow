@@ -34,12 +34,12 @@ try:
 except ImportError:
     _GOOGLE_API_CLIENT_INSTALLED = False
 
-_GKE_ENV_VARIABLE = 'KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS'
-_ENDPOINTS_SEPARATOR = ','
-_DEFAULT_ENV_VARIABLE = 'TPU_NAME'
-_DISCOVERY_SERVICE_URL_ENV_VARIABLE = 'TPU_API_DISCOVERY_URL'
-_GCE_METADATA_ENDPOINT = 'http://metadata.google.internal'
-_DEFAULT_ENDPOINT_PORT = '8470'
+_GKE_ENV_VARIABLE = "KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS"
+_ENDPOINTS_SEPARATOR = ","
+_DEFAULT_ENV_VARIABLE = "TPU_NAME"
+_DISCOVERY_SERVICE_URL_ENV_VARIABLE = "TPU_API_DISCOVERY_URL"
+_GCE_METADATA_ENDPOINT = "http://metadata.google.internal"
+_DEFAULT_ENDPOINT_PORT = "8470"
 
 
 def _environment_discovery_url():
@@ -48,27 +48,25 @@ def _environment_discovery_url():
 
 def _request_compute_metadata(path):
     req = request.Request(
-        '%s/computeMetadata/v1/%s' % (_GCE_METADATA_ENDPOINT, path),
-        headers={'Metadata-Flavor': 'Google'})
+        "%s/computeMetadata/v1/%s" % (_GCE_METADATA_ENDPOINT, path),
+        headers={"Metadata-Flavor": "Google"},
+    )
     resp = request.urlopen(req)
     return _as_text(resp.read())
 
 
 def _environment_var_to_network_endpoints(endpoints):
     """Yields a dict with ip address and port."""
-    for endpoint in endpoints.split(','):
-        grpc_prefix = 'grpc://'
+    for endpoint in endpoints.split(","):
+        grpc_prefix = "grpc://"
         if endpoint.startswith(grpc_prefix):
             endpoint = endpoint.split(grpc_prefix)[1]
-        parts = endpoint.split(':')
+        parts = endpoint.split(":")
         ip_address = parts[0]
         port = _DEFAULT_ENDPOINT_PORT
         if len(parts) > 1:
             port = parts[1]
-        yield {
-            'ipAddress': ip_address,
-            'port': port
-        }
+        yield {"ipAddress": ip_address, "port": port}
 
 
 def _get_tpu_name(tpu):
@@ -83,7 +81,7 @@ def _get_tpu_name(tpu):
 
 def _as_text(s):
     if isinstance(s, bytes):
-        return s.decode('utf-8')
+        return s.decode("utf-8")
     return s
 
 
@@ -96,29 +94,32 @@ class Client(object):
     functionality.
     """
 
-    def __init__(self,
-                 tpu=None,
-                 zone=None,
-                 project=None,
-                 credentials='default',
-                 service=None,
-                 discovery_url=None):
+    def __init__(
+        self,
+        tpu=None,
+        zone=None,
+        project=None,
+        credentials="default",
+        service=None,
+        discovery_url=None,
+    ):
         if isinstance(tpu, list):
             if not tpu:
-                raise ValueError('At least one TPU must be specified.')
+                raise ValueError("At least one TPU must be specified.")
             if len(tpu) != 1:
                 raise NotImplementedError(
-                    'Using multiple TPUs in a single session is not yet implemented')
+                    "Using multiple TPUs in a single session is not yet implemented"
+                )
             tpu = tpu[0]
 
         tpu = _get_tpu_name(tpu)
 
         if tpu is None:
-            raise ValueError('Please provide a TPU Name to connect to.')
+            raise ValueError("Please provide a TPU Name to connect to.")
 
         self._tpu = _as_text(tpu)
 
-        self._use_api = not self._tpu.startswith('grpc://')
+        self._use_api = not self._tpu.startswith("grpc://")
         self._service = service
 
         self._credentials = None
@@ -126,18 +127,18 @@ class Client(object):
         self._zone = None
         self._discovery_url = None
         if self._use_api:
-            if credentials != 'default':
+            if credentials != "default":
                 self._credentials = credentials
             # Automatically detect project and zone if unspecified.
             if project:
                 self._project = _as_text(project)
             else:
-                self._project = _request_compute_metadata('project/project-id')
+                self._project = _request_compute_metadata("project/project-id")
             if zone:
                 self._zone = _as_text(zone)
             else:
-                zone_path = _request_compute_metadata('instance/zone')
-                self._zone = zone_path.split('/')[-1]
+                zone_path = _request_compute_metadata("instance/zone")
+                self._zone = zone_path.split("/")[-1]
             self._discovery_url = _environment_discovery_url() or discovery_url
 
     def _tpu_service(self):
@@ -158,28 +159,35 @@ class Client(object):
             return self._service
 
         if not _GOOGLE_API_CLIENT_INSTALLED:
-            raise RuntimeError('Missing runtime dependency on the Google API client. '
-                               'Run `pip install cloud-tpu-client` to fix.')
+            raise RuntimeError(
+                "Missing runtime dependency on the Google API client. "
+                "Run `pip install cloud-tpu-client` to fix."
+            )
 
         credentials = self._credentials
-        if credentials is None or credentials == 'default':
+        if credentials is None or credentials == "default":
             credentials = client.GoogleCredentials.get_application_default()
 
         if self._discovery_url:
             return discovery.build(
-                'tpu',
-                'v1',
+                "tpu",
+                "v1",
                 credentials=credentials,
                 discoveryServiceUrl=self._discovery_url,
-                cache_discovery=False)
+                cache_discovery=False,
+            )
         else:
             return discovery.build(
-                'tpu', 'v1', credentials=credentials, cache_discovery=False)
+                "tpu", "v1", credentials=credentials, cache_discovery=False
+            )
 
     def _full_name(self):
         """Returns the full Cloud name for this TPU."""
-        return 'projects/%s/locations/%s/nodes/%s' % (
-            self._project, self._zone, self._tpu)
+        return "projects/%s/locations/%s/nodes/%s" % (
+            self._project,
+            self._zone,
+            self._tpu,
+        )
 
     def _fetch_cloud_tpu_metadata(self):
         """Returns the TPU metadata object from the TPU Get API call."""
@@ -188,9 +196,11 @@ class Client(object):
             r = service.projects().locations().nodes().get(name=self._full_name())
             return r.execute()
         except Exception as e:
-            raise ValueError("Could not lookup TPU metadata from name '%s'. Please "
-                             'doublecheck the tpu argument in the TPUClusterResolver '
-                             'constructor. Exception: %s' % (self._tpu, e))
+            raise ValueError(
+                "Could not lookup TPU metadata from name '%s'. Please "
+                "doublecheck the tpu argument in the TPUClusterResolver "
+                "constructor. Exception: %s" % (self._tpu, e)
+            )
 
     def _get_tpu_property(self, key):
         if self._use_api:
@@ -211,25 +221,25 @@ class Client(object):
         If false the TPU is in a unrecoverable state and should be recreated.
         """
         state = self.state()
-        if state and state in ['TERMINATED', 'PREEMPTED']:
+        if state and state in ["TERMINATED", "PREEMPTED"]:
             return False
         return True
 
     def state(self):
         """Return state of the TPU."""
-        return self._get_tpu_property('state')
+        return self._get_tpu_property("state")
 
     def health(self):
         """Return health of the TPU."""
-        return self._get_tpu_property('health')
+        return self._get_tpu_property("health")
 
     def runtime_version(self):
         """Return runtime version of the TPU."""
-        return self._get_tpu_property('tensorflowVersion')
+        return self._get_tpu_property("tensorflowVersion")
 
     def accelerator_type(self):
         """Return accelerator type of the TPU."""
-        return self._get_tpu_property('acceleratorType')
+        return self._get_tpu_property("acceleratorType")
 
     def api_available(self):
         """Return if the Cloud TPU API is available, if not certain features will not work."""
@@ -241,7 +251,7 @@ class Client(object):
 
     def get_local_ip(self):
         """Return the local ip address of the Google Cloud VM the workload is running on."""
-        return _request_compute_metadata('instance/network-interfaces/0/ip')
+        return _request_compute_metadata("instance/network-interfaces/0/ip")
 
     def network_endpoints(self):
         """Return a list of tpu endpoints."""
@@ -249,13 +259,15 @@ class Client(object):
             return list(_environment_var_to_network_endpoints(self._tpu))
         response = self._fetch_cloud_tpu_metadata()
 
-        if response.get('state') != 'READY':
-            raise RuntimeError('TPU "%s" is not yet ready; state: "%s"' %
-                               (self._tpu, response.get('state')))
-        if 'networkEndpoints' in response:
-            return response['networkEndpoints']
+        if response.get("state") != "READY":
+            raise RuntimeError(
+                'TPU "%s" is not yet ready; state: "%s"'
+                % (self._tpu, response.get("state"))
+            )
+        if "networkEndpoints" in response:
+            return response["networkEndpoints"]
         else:
-            return [{'ipAddress': response['ipAddress'], 'port': response['port']}]
+            return [{"ipAddress": response["ipAddress"], "port": response["port"]}]
 
     def wait_for_healthy(self, timeout_s=1200, interval=30):
         """Wait for TPU to become healthy or raise error if timeout reached.
@@ -268,19 +280,25 @@ class Client(object):
           RuntimeError: If the TPU doesn't become healthy by the timeout.
         """
         timeout = time.time() + timeout_s
-        while self.health() != 'HEALTHY':
+        while self.health() != "HEALTHY":
             logging.warning(
-                ('Waiting for TPU "%s" with state "%s" '
-                 'and health "%s" to become healthy'),
-                self.name(), self.state(), self.health())
+                (
+                    'Waiting for TPU "%s" with state "%s" '
+                    'and health "%s" to become healthy'
+                ),
+                self.name(),
+                self.state(),
+                self.health(),
+            )
             if time.time() + interval > timeout:
                 raise RuntimeError(
-                    'Timed out waiting for TPU "%s" to become healthy' % self.name())
+                    'Timed out waiting for TPU "%s" to become healthy' % self.name()
+                )
             time.sleep(interval)
 
         logging.warning('TPU "%s" is healthy.', self.name())
 
-    def configure_tpu_version(self, version, restart_type='always'):
+    def configure_tpu_version(self, version, restart_type="always"):
         """Configure TPU software version.
 
         Args:
@@ -297,23 +315,24 @@ class Client(object):
               worker: A dict with the field ipAddress where the configure request will
                 be sent.
             """
-            ip_address = worker['ipAddress']
-            url = 'http://{}:8475/requestversion/{}?restartType={}'.format(
-                ip_address, version, restart_type)
-            req = request.Request(url, data=b'')
+            ip_address = worker["ipAddress"]
+            url = "http://{}:8475/requestversion/{}?restartType={}".format(
+                ip_address, version, restart_type
+            )
+            req = request.Request(url, data=b"")
             try:
                 request.urlopen(req)
             except HTTPError as e:
                 status_code = e.code
                 if status_code == 404:
                     raise Exception(
-                        'Tensorflow version {} is not available on Cloud TPU, '
-                        'try a previous nightly version or refer to '
-                        'https://cloud.google.com/tpu/docs/release-notes for '
-                        'the latest official version.'.format(version))
+                        "Tensorflow version {} is not available on Cloud TPU, "
+                        "try a previous nightly version or refer to "
+                        "https://cloud.google.com/tpu/docs/release-notes for "
+                        "the latest official version.".format(version)
+                    )
                 else:
-                    raise Exception(
-                        'Failed to configure worker {}'.format(ip_address))
+                    raise Exception("Failed to configure worker {}".format(ip_address))
 
         workers = self.network_endpoints()
 
