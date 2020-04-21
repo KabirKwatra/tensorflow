@@ -17,24 +17,22 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_MLIR_XLA_IR_CHLO_OPS_H_
 
 #include "llvm/ADT/StringRef.h"
-#include "mlir/IR/Dialect.h"  // from @llvm-project
+#include "mlir/IR/Dialect.h"                // from @llvm-project
 #include "mlir/IR/DialectImplementation.h"  // from @llvm-project
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/OpDefinition.h"  // from @llvm-project
-#include "mlir/IR/Operation.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/IR/Types.h"  // from @llvm-project
-#include "mlir/Interfaces/SideEffects.h"  // from @llvm-project
+#include "mlir/IR/MLIRContext.h"            // from @llvm-project
+#include "mlir/IR/OpDefinition.h"           // from @llvm-project
+#include "mlir/IR/Operation.h"              // from @llvm-project
+#include "mlir/IR/StandardTypes.h"          // from @llvm-project
+#include "mlir/IR/Types.h"                  // from @llvm-project
+#include "mlir/Interfaces/SideEffects.h"    // from @llvm-project
 
 namespace mlir {
 namespace xla_chlo {
 
 class XlaHloClientDialect : public Dialect {
-public:
-    explicit XlaHloClientDialect(MLIRContext *context);
-    static StringRef getDialectNamespace() {
-        return "xla_chlo";
-    }
+ public:
+  explicit XlaHloClientDialect(MLIRContext* context);
+  static StringRef getDialectNamespace() { return "xla_chlo"; }
 };
 
 #define GET_OP_CLASSES
