@@ -94,13 +94,13 @@ class Client(object):
     """
 
     def __init__(
-        self,
-        tpu=None,
-        zone=None,
-        project=None,
-        credentials="default",
-        service=None,
-        discovery_url=None,
+            self,
+            tpu=None,
+            zone=None,
+            project=None,
+            credentials="default",
+            service=None,
+            discovery_url=None,
     ):
         if isinstance(tpu, list):
             if not tpu:
@@ -160,8 +160,7 @@ class Client(object):
         if not _GOOGLE_API_CLIENT_INSTALLED:
             raise RuntimeError(
                 "Missing runtime dependency on the Google API client. "
-                "Run `pip install cloud-tpu-client` to fix."
-            )
+                "Run `pip install cloud-tpu-client` to fix.")
 
         credentials = self._credentials
         if credentials is None or credentials == "default":
@@ -176,9 +175,10 @@ class Client(object):
                 cache_discovery=False,
             )
         else:
-            return discovery.build(
-                "tpu", "v1", credentials=credentials, cache_discovery=False
-            )
+            return discovery.build("tpu",
+                                   "v1",
+                                   credentials=credentials,
+                                   cache_discovery=False)
 
     def _full_name(self):
         """Returns the full Cloud name for this TPU."""
@@ -192,14 +192,14 @@ class Client(object):
         """Returns the TPU metadata object from the TPU Get API call."""
         service = self._tpu_service()
         try:
-            r = service.projects().locations().nodes().get(name=self._full_name())
+            r = service.projects().locations().nodes().get(
+                name=self._full_name())
             return r.execute()
         except Exception as e:
             raise ValueError(
                 "Could not lookup TPU metadata from name '%s'. Please "
                 "doublecheck the tpu argument in the TPUClusterResolver "
-                "constructor. Exception: %s" % (self._tpu, e)
-            )
+                "constructor. Exception: %s" % (self._tpu, e))
 
     def _get_tpu_property(self, key):
         if self._use_api:
@@ -259,14 +259,15 @@ class Client(object):
         response = self._fetch_cloud_tpu_metadata()
 
         if response.get("state") != "READY":
-            raise RuntimeError(
-                'TPU "%s" is not yet ready; state: "%s"'
-                % (self._tpu, response.get("state"))
-            )
+            raise RuntimeError('TPU "%s" is not yet ready; state: "%s"' %
+                               (self._tpu, response.get("state")))
         if "networkEndpoints" in response:
             return response["networkEndpoints"]
         else:
-            return [{"ipAddress": response["ipAddress"], "port": response["port"]}]
+            return [{
+                "ipAddress": response["ipAddress"],
+                "port": response["port"]
+            }]
 
     def wait_for_healthy(self, timeout_s=1200, interval=30):
         """Wait for TPU to become healthy or raise error if timeout reached.
@@ -281,18 +282,16 @@ class Client(object):
         timeout = time.time() + timeout_s
         while self.health() != "HEALTHY":
             logging.warning(
-                (
-                    'Waiting for TPU "%s" with state "%s" '
-                    'and health "%s" to become healthy'
-                ),
+                ('Waiting for TPU "%s" with state "%s" '
+                 'and health "%s" to become healthy'),
                 self.name(),
                 self.state(),
                 self.health(),
             )
             if time.time() + interval > timeout:
                 raise RuntimeError(
-                    'Timed out waiting for TPU "%s" to become healthy' % self.name()
-                )
+                    'Timed out waiting for TPU "%s" to become healthy' %
+                    self.name())
             time.sleep(interval)
 
         logging.warning('TPU "%s" is healthy.', self.name())
@@ -316,8 +315,7 @@ class Client(object):
             """
             ip_address = worker["ipAddress"]
             url = "http://{}:8475/requestversion/{}?restartType={}".format(
-                ip_address, version, restart_type
-            )
+                ip_address, version, restart_type)
             req = request.Request(url, data=b"")
             try:
                 request.urlopen(req)
@@ -328,10 +326,10 @@ class Client(object):
                         "Tensorflow version {} is not available on Cloud TPU, "
                         "try a previous nightly version or refer to "
                         "https://cloud.google.com/tpu/docs/release-notes for "
-                        "the latest official version.".format(version)
-                    )
+                        "the latest official version.".format(version))
                 else:
-                    raise Exception("Failed to configure worker {}".format(ip_address))
+                    raise Exception(
+                        "Failed to configure worker {}".format(ip_address))
 
         workers = self.network_endpoints()
 

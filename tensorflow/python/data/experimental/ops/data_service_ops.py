@@ -42,22 +42,20 @@ class ProcessingMode(object):
         if mode not in valid_modes:
             raise TypeError(
                 "{0} is not a valid processing mode. Valid modes: {1}".format(
-                    mode, valid_modes
-                )
-            )
+                    mode, valid_modes))
 
 
 class _DataServiceDatasetV2(dataset_ops.DatasetSource):
     """A `Dataset` that reads elements from the tf.data service."""
 
     def __init__(
-        self,
-        input_dataset,
-        dataset_id,
-        address,
-        protocol,
-        max_outstanding_requests=None,
-        task_refresh_interval_hint_ms=None,
+            self,
+            input_dataset,
+            dataset_id,
+            address,
+            protocol,
+            max_outstanding_requests=None,
+            task_refresh_interval_hint_ms=None,
     ):
         """Constructs a _DataServiceDatasetV2.
 
@@ -93,8 +91,7 @@ class _DataServiceDatasetV2(dataset_ops.DatasetSource):
             protocol=protocol,
             max_outstanding_requests=max_outstanding_requests,
             task_refresh_interval_hint_ms=task_refresh_interval_hint_ms,
-            **self._flat_structure
-        )
+            **self._flat_structure)
         super(_DataServiceDatasetV2, self).__init__(variant_tensor)
 
     @property
@@ -119,13 +116,13 @@ class _DataServiceDatasetV1(dataset_ops.DatasetV1Adapter):
 
     @functools.wraps(_DataServiceDatasetV2.__init__)
     def __init__(
-        self,
-        input_dataset,
-        dataset_id,
-        address,
-        protocol,
-        max_outstanding_requests,
-        task_refresh_interval_hint_ms,
+            self,
+            input_dataset,
+            dataset_id,
+            address,
+            protocol,
+            max_outstanding_requests,
+            task_refresh_interval_hint_ms,
     ):
 
         self._wrapped = _DataServiceDatasetV2(
@@ -157,9 +154,9 @@ else:
     _DataServiceDataset = _DataServiceDatasetV1
 
 
-def _distribute(
-    service, max_outstanding_requests=None, task_refresh_interval_hint_ms=None
-):
+def _distribute(service,
+                max_outstanding_requests=None,
+                task_refresh_interval_hint_ms=None):
     """A transformation that moves dataset processing to the tf.data service.
 
     This transformation is similar to `distribute`, but supports additional
@@ -181,27 +178,30 @@ def _distribute(
     """
     if not isinstance(service, six.string_types):
         raise ValueError(
-            "service must be a string, but service was of type {0}. service={1}".format(
-                type(service), service
-            )
-        )
+            "service must be a string, but service was of type {0}. service={1}"
+            .format(type(service), service))
     if not service:
         raise ValueError("service must not be empty")
     parts = service.split("://")
     if len(parts) == 1:
-        raise ValueError(
-            "service string %s does not begin with a protocol. "
-            "The service should be in the format "
-            "<protocol>://<address>, e.g. grpc://localhost:5000" % service
-        )
+        raise ValueError("service string %s does not begin with a protocol. "
+                         "The service should be in the format "
+                         "<protocol>://<address>, e.g. grpc://localhost:5000" %
+                         service)
     if len(parts) > 2:
-        raise ValueError("malformed service string has multiple '://': %s" % service)
+        raise ValueError("malformed service string has multiple '://': %s" %
+                         service)
     protocol, address = parts
-    address = ops.convert_to_tensor(address, dtype=dtypes.string, name="address")
-    protocol = ops.convert_to_tensor(protocol, dtype=dtypes.string, name="protocol")
+    address = ops.convert_to_tensor(address,
+                                    dtype=dtypes.string,
+                                    name="address")
+    protocol = ops.convert_to_tensor(protocol,
+                                     dtype=dtypes.string,
+                                     name="protocol")
 
     def _apply_fn(dataset):
-        external_state_policy = dataset.options().experimental_external_state_policy
+        external_state_policy = dataset.options(
+        ).experimental_external_state_policy
         if external_state_policy is None:
             external_state_policy = ExternalStatePolicy.WARN
         dataset_id = gen_experimental_dataset_ops.register_dataset(
@@ -302,11 +302,11 @@ def create_job(dataset, processing_mode):
     datasets = _find_data_service_datasets(dataset)
     if len(datasets) > 1:
         raise ValueError(
-            "Datasets containing multiple calls to .distribute(...) are "
-            + "not supported"
-        )
+            "Datasets containing multiple calls to .distribute(...) are " +
+            "not supported")
     if not datasets:
-        raise ValueError("Dataset does not contain any distribute() transformations")
+        raise ValueError(
+            "Dataset does not contain any distribute() transformations")
     ProcessingMode.validate(processing_mode)
     data_service_dataset = datasets[0]
     return gen_experimental_dataset_ops.create_job(
@@ -333,10 +333,8 @@ def create_iterator(dataset, job_token):
     if context.executing_eagerly() or ops.inside_function():
         return iterator_ops.OwnedIterator(dataset, job_token=job_token)
     else:
-        raise RuntimeError(
-            "create_iterator() is only supported inside of "
-            "tf.function or when eager execution is enabled."
-        )
+        raise RuntimeError("create_iterator() is only supported inside of "
+                           "tf.function or when eager execution is enabled.")
 
 
 def _find_data_service_datasets(dataset):
@@ -354,7 +352,8 @@ def _find_data_service_datasets(dataset):
         d = to_check.pop()
         if isinstance(d, dataset_ops.DatasetV1Adapter):
             d = d._dataset  # pylint: disable=protected-access
-        if isinstance(d, _DataServiceDatasetV1) or isinstance(d, _DataServiceDatasetV2):
+        if isinstance(d, _DataServiceDatasetV1) or isinstance(
+                d, _DataServiceDatasetV2):
             result.append(d)
         to_check.extend(d._inputs())  # pylint: disable=protected-access
     return result

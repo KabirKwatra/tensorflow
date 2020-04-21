@@ -55,7 +55,8 @@ class Analyzer(cfg.GraphVisitor):
         if anno.hasanno(node.ast_node, anno.Static.SCOPE):
             node_scope = anno.getanno(node.ast_node, anno.Static.SCOPE)
 
-            gen = node_scope.read | self.extra_gen.get(node.ast_node, frozenset())
+            gen = node_scope.read | self.extra_gen.get(node.ast_node,
+                                                       frozenset())
             if not self.include_annotations:
                 gen -= node_scope.annotations
             # TODO(mdan): verify whether composites' parents need to be added.
@@ -140,7 +141,7 @@ class WholeTreeAnalyzer(transformer.Base):
                 #
                 # Hence we use discard and not remove below.
                 child_in_state.discard(qn)
-            parent_analyzer.extra_gen[node] = frozenset(child_in_state,)
+            parent_analyzer.extra_gen[node] = frozenset(child_in_state, )
 
         self.analyzers[node] = analyzer
         self.current_analyzer = parent_analyzer
@@ -159,11 +160,8 @@ class Annotator(transformer.Base):
 
     def visit(self, node):
         node = super(Annotator, self).visit(node)
-        if (
-            self.current_analyzer is not None
-            and isinstance(node, gast.stmt)
-            and node in self.current_analyzer.graph.index
-        ):
+        if (self.current_analyzer is not None and isinstance(node, gast.stmt)
+                and node in self.current_analyzer.graph.index):
             cfg_node = self.current_analyzer.graph.index[node]
             anno.setanno(
                 node,
@@ -195,8 +193,7 @@ class Annotator(transformer.Base):
         else:
             assert anno.hasanno(entry_node, anno.Static.LIVE_VARS_IN), (
                 "If not matching a CFG node, must be a block statement:"
-                " {}".format(entry_node)
-            )
+                " {}".format(entry_node))
             stmt_live_in = anno.getanno(entry_node, anno.Static.LIVE_VARS_IN)
         anno.setanno(node, anno.Static.LIVE_VARS_IN, stmt_live_in)
         return node
@@ -254,9 +251,8 @@ def resolve(node, source_info, graphs, include_annotations=True):
     Returns:
       ast.AST
     """
-    cross_function_analyzer = WholeTreeAnalyzer(
-        source_info, graphs, include_annotations
-    )
+    cross_function_analyzer = WholeTreeAnalyzer(source_info, graphs,
+                                                include_annotations)
     node = cross_function_analyzer.visit(node)
     visitor = Annotator(source_info, cross_function_analyzer)
     node = visitor.visit(node)
