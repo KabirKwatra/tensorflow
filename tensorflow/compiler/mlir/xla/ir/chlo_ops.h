@@ -30,9 +30,11 @@ namespace mlir {
 namespace xla_chlo {
 
 class XlaHloClientDialect : public Dialect {
- public:
-  explicit XlaHloClientDialect(MLIRContext *context);
-  static StringRef getDialectNamespace() { return "xla_chlo"; }
+public:
+    explicit XlaHloClientDialect(MLIRContext *context);
+    static StringRef getDialectNamespace() {
+        return "xla_chlo";
+    }
 };
 
 #define GET_OP_CLASSES

@@ -30,42 +30,42 @@ namespace {
 template <typename ChloOpTy, typename HloOpTy>
 struct ConvertTrivialNonBroadcastBinaryOp
     : public OpConversionPattern<ChloOpTy> {
-  using OpConversionPattern<ChloOpTy>::OpConversionPattern;
-  LogicalResult matchAndRewrite(
-      ChloOpTy op, ArrayRef<Value> operands,
-      ConversionPatternRewriter &rewriter) const override {
-    // Only rewrite for statically determinable non-broadcasting cases.
-    auto lhs = operands[0].getType().dyn_cast<RankedTensorType>();
-    auto rhs = operands[1].getType().dyn_cast<RankedTensorType>();
-    if (!lhs || !rhs) return failure();
+    using OpConversionPattern<ChloOpTy>::OpConversionPattern;
+    LogicalResult matchAndRewrite(
+        ChloOpTy op, ArrayRef<Value> operands,
+        ConversionPatternRewriter &rewriter) const override {
+        // Only rewrite for statically determinable non-broadcasting cases.
+        auto lhs = operands[0].getType().dyn_cast<RankedTensorType>();
+        auto rhs = operands[1].getType().dyn_cast<RankedTensorType>();
+        if (!lhs || !rhs) return failure();
 
-    // Requires rank broadcast.
-    if (lhs.getRank() != rhs.getRank()) return failure();
-    // Any dynamic dimension may require broadcasting and requires more
-    // analysis.
-    if (!lhs.hasStaticShape() || !rhs.hasStaticShape()) return failure();
+        // Requires rank broadcast.
+        if (lhs.getRank() != rhs.getRank()) return failure();
+        // Any dynamic dimension may require broadcasting and requires more
+        // analysis.
+        if (!lhs.hasStaticShape() || !rhs.hasStaticShape()) return failure();
 
-    for (auto extents : llvm::zip(lhs.getShape(), rhs.getShape())) {
-      auto lhs_extent = std::get<0>(extents);
-      auto rhs_extent = std::get<1>(extents);
-      if (lhs_extent != rhs_extent) {
-        return failure();
-      }
+        for (auto extents : llvm::zip(lhs.getShape(), rhs.getShape())) {
+            auto lhs_extent = std::get<0>(extents);
+            auto rhs_extent = std::get<1>(extents);
+            if (lhs_extent != rhs_extent) {
+                return failure();
+            }
+        }
+
+        rewriter.replaceOp(op, rewriter.createOrFold<HloOpTy>(
+                               op.getLoc(), operands[0], operands[1], nullptr));
+        return success();
     }
 
-    rewriter.replaceOp(op, rewriter.createOrFold<HloOpTy>(
-                               op.getLoc(), operands[0], operands[1], nullptr));
-    return success();
-  }
-
-  StringRef hlo_op_name_;
+    StringRef hlo_op_name_;
 };
 
 template <typename ChloOpTy, typename HloOpTy>
 void PopulateForBinaryOp(MLIRContext *context,
                          OwningRewritePatternList *patterns) {
-  patterns->insert<ConvertTrivialNonBroadcastBinaryOp<ChloOpTy, HloOpTy>>(
-      context, 10);
+    patterns->insert<ConvertTrivialNonBroadcastBinaryOp<ChloOpTy, HloOpTy>>(
+                context, 10);
 }
 
 }  // namespace
@@ -75,21 +75,21 @@ void PopulateLegalizeChloToHloPatterns(MLIRContext *context,
 #define POPULATE_BCAST(ChloOp, HloOp) \
   PopulateForBinaryOp<ChloOp, xla_hlo::HloOp>(context, patterns);
 
-  POPULATE_BCAST(BroadcastAddOp, AddOp);
-  POPULATE_BCAST(BroadcastAtan2Op, Atan2Op);
-  POPULATE_BCAST(BroadcastDivOp, DivOp);
-  POPULATE_BCAST(BroadcastMaxOp, MaxOp);
-  POPULATE_BCAST(BroadcastMinOp, MinOp);
-  POPULATE_BCAST(BroadcastMulOp, MulOp);
-  POPULATE_BCAST(BroadcastPowOp, PowOp);
-  POPULATE_BCAST(BroadcastRemOp, RemOp);
-  POPULATE_BCAST(BroadcastShiftLeftOp, ShiftLeftOp);
-  POPULATE_BCAST(BroadcastShiftRightArithmeticOp, ShiftRightArithmeticOp);
-  POPULATE_BCAST(BroadcastShiftRightLogicalOp, ShiftRightLogicalOp);
-  POPULATE_BCAST(BroadcastSubOp, SubOp);
-  POPULATE_BCAST(BroadcastAndOp, AndOp);
-  POPULATE_BCAST(BroadcastOrOp, OrOp);
-  POPULATE_BCAST(BroadcastXorOp, XorOp);
+    POPULATE_BCAST(BroadcastAddOp, AddOp);
+    POPULATE_BCAST(BroadcastAtan2Op, Atan2Op);
+    POPULATE_BCAST(BroadcastDivOp, DivOp);
+    POPULATE_BCAST(BroadcastMaxOp, MaxOp);
+    POPULATE_BCAST(BroadcastMinOp, MinOp);
+    POPULATE_BCAST(BroadcastMulOp, MulOp);
+    POPULATE_BCAST(BroadcastPowOp, PowOp);
+    POPULATE_BCAST(BroadcastRemOp, RemOp);
+    POPULATE_BCAST(BroadcastShiftLeftOp, ShiftLeftOp);
+    POPULATE_BCAST(BroadcastShiftRightArithmeticOp, ShiftRightArithmeticOp);
+    POPULATE_BCAST(BroadcastShiftRightLogicalOp, ShiftRightLogicalOp);
+    POPULATE_BCAST(BroadcastSubOp, SubOp);
+    POPULATE_BCAST(BroadcastAndOp, AndOp);
+    POPULATE_BCAST(BroadcastOrOp, OrOp);
+    POPULATE_BCAST(BroadcastXorOp, XorOp);
 }
 
 }  // namespace xla_chlo
