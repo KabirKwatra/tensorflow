@@ -35,9 +35,7 @@ TODO(mdan): Consider adding the edges above. They'd only add ~O(n) edges.
 # They should rather be called 'block statements', because they include
 # statements that may have a body, e.g. if and while.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import weakref
@@ -45,9 +43,7 @@ from enum import Enum
 
 import gast
 import six
-
-from tensorflow.python.autograph.pyct import anno
-from tensorflow.python.autograph.pyct import parser
+from tensorflow.python.autograph.pyct import anno, parser
 
 
 class Node(object):

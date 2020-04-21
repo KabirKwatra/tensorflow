@@ -14,9 +14,7 @@
 # ==============================================================================
 """Tests for the debug events writer Python class."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import glob
 import json as json_lib
@@ -25,14 +23,11 @@ import threading
 import time
 
 from absl.testing import parameterized
-
 from tensorflow.core.protobuf import debug_event_pb2
-from tensorflow.python.debug.lib import debug_events_reader
-from tensorflow.python.debug.lib import debug_events_writer
-from tensorflow.python.debug.lib import dumping_callback_test_lib
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.framework import versions
+from tensorflow.python.debug.lib import (debug_events_reader,
+                                         debug_events_writer,
+                                         dumping_callback_test_lib)
+from tensorflow.python.framework import ops, test_util, versions
 from tensorflow.python.platform import googletest
 
 
