@@ -40,54 +40,56 @@ namespace evaluation {
 // TODO(b/133772912): Generalize support for other types of object detection
 // models.
 class ObjectDetectionStage : public EvaluationStage {
- public:
-  explicit ObjectDetectionStage(const EvaluationStageConfig& config)
-      : EvaluationStage(config) {}
+public:
+    explicit ObjectDetectionStage(const EvaluationStageConfig& config)
+        : EvaluationStage(config) {}
 
-  TfLiteStatus Init() override { return Init(nullptr); }
-  TfLiteStatus Init(const DelegateProviders* delegate_providers);
+    TfLiteStatus Init() override {
+        return Init(nullptr);
+    }
+    TfLiteStatus Init(const DelegateProviders* delegate_providers);
 
-  TfLiteStatus Run() override;
+    TfLiteStatus Run() override;
 
-  EvaluationStageMetrics LatestMetrics() override;
+    EvaluationStageMetrics LatestMetrics() override;
 
-  // Call before Init(). all_labels should contain all possible object labels
-  // that can be detected by the model, in the correct order. all_labels should
-  // outlive the call to Init().
-  void SetAllLabels(const std::vector<std::string>& all_labels) {
-    all_labels_ = &all_labels;
-  }
+    // Call before Init(). all_labels should contain all possible object labels
+    // that can be detected by the model, in the correct order. all_labels should
+    // outlive the call to Init().
+    void SetAllLabels(const std::vector<std::string>& all_labels) {
+        all_labels_ = &all_labels;
+    }
 
-  // Call before Run().
-  // ground_truth_objects instance should outlive the call to Run().
-  void SetInputs(const std::string& image_path,
-                 const ObjectDetectionResult& ground_truth_objects) {
-    image_path_ = image_path;
-    ground_truth_objects_ = &ground_truth_objects;
-  }
+    // Call before Run().
+    // ground_truth_objects instance should outlive the call to Run().
+    void SetInputs(const std::string& image_path,
+                   const ObjectDetectionResult& ground_truth_objects) {
+        image_path_ = image_path;
+        ground_truth_objects_ = &ground_truth_objects;
+    }
 
-  // Provides a pointer to the underlying TfLiteInferenceStage.
-  // Returns non-null value only if this stage has been initialized.
-  TfliteInferenceStage* const GetInferenceStage() {
-    return inference_stage_.get();
-  }
+    // Provides a pointer to the underlying TfLiteInferenceStage.
+    // Returns non-null value only if this stage has been initialized.
+    TfliteInferenceStage* const GetInferenceStage() {
+        return inference_stage_.get();
+    }
 
-  // Returns a const pointer to the latest inference output.
-  const ObjectDetectionResult* GetLatestPrediction() {
-    return &predicted_objects_;
-  }
+    // Returns a const pointer to the latest inference output.
+    const ObjectDetectionResult* GetLatestPrediction() {
+        return &predicted_objects_;
+    }
 
- private:
-  const std::vector<std::string>* all_labels_ = nullptr;
-  std::unique_ptr<ImagePreprocessingStage> preprocessing_stage_;
-  std::unique_ptr<TfliteInferenceStage> inference_stage_;
-  std::unique_ptr<ObjectDetectionAveragePrecisionStage> eval_stage_;
-  std::string image_path_;
+private:
+    const std::vector<std::string>* all_labels_ = nullptr;
+    std::unique_ptr<ImagePreprocessingStage> preprocessing_stage_;
+    std::unique_ptr<TfliteInferenceStage> inference_stage_;
+    std::unique_ptr<ObjectDetectionAveragePrecisionStage> eval_stage_;
+    std::string image_path_;
 
-  // Obtained from SetInputs(...).
-  const ObjectDetectionResult* ground_truth_objects_;
-  // Reflects the outputs generated from the latest call to Run().
-  ObjectDetectionResult predicted_objects_;
+    // Obtained from SetInputs(...).
+    const ObjectDetectionResult* ground_truth_objects_;
+    // Reflects the outputs generated from the latest call to Run().
+    ObjectDetectionResult predicted_objects_;
 };
 
 // Reads a tflite::evaluation::ObjectDetectionGroundTruth instance from a
@@ -99,7 +101,7 @@ class ObjectDetectionStage : public EvaluationStage {
 TfLiteStatus PopulateGroundTruth(
     const std::string& grouth_truth_proto_file,
     absl::flat_hash_map<std::string, ObjectDetectionResult>*
-        ground_truth_mapping);
+    ground_truth_mapping);
 
 }  // namespace evaluation
 }  // namespace tflite
