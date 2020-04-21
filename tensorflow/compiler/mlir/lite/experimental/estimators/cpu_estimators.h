@@ -29,137 +29,121 @@ constexpr float kCPUDefaultFixedValuedCost = 10000.0;
 // tfl.add
 template <>
 class TFLiteCostEstimator<AddOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t count;
-        if (ArithmeticCountUtilHelper::GetArithmeticCountForBroadcastableOp(op,
-                &count))
-            return kCPUArithmeticUnitCost * count;
-        return kCPUDefaultFixedValuedCost;
-    }
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t count;
+    if (ArithmeticCountUtilHelper::GetArithmeticCountForBroadcastableOp(op,
+                                                                        &count))
+      return kCPUArithmeticUnitCost * count;
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.concatenation
 template <>
 class TFLiteCostEstimator<ConcatenationOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t count;
-        if (ArithmeticCountUtilHelper::GetInputTensorTotalSize(op, &count))
-            return kCPUCopyUnitCost * count;
-        return kCPUDefaultFixedValuedCost;
-    }
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t count;
+    if (ArithmeticCountUtilHelper::GetInputTensorTotalSize(op, &count))
+      return kCPUCopyUnitCost * count;
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.conv_2d
 template <>
 class TFLiteCostEstimator<Conv2DOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t arithmetic_count;
-        if (ArithmeticCountUtilHelper::GetArithmeticCountForConvAndFullyconnectedOp(
-                    op, &arithmetic_count)) {
-            return arithmetic_count * kCPUArithmeticUnitCost;
-        }
-        return kCPUDefaultFixedValuedCost;
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t arithmetic_count;
+    if (ArithmeticCountUtilHelper::GetArithmeticCountForConvAndFullyconnectedOp(
+            op, &arithmetic_count)) {
+      return arithmetic_count * kCPUArithmeticUnitCost;
     }
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.depthwise_conv_2d
 template <>
 class TFLiteCostEstimator<DepthwiseConv2DOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t arithmetic_count;
-        if (ArithmeticCountUtilHelper::GetArithmeticCountForConvAndFullyconnectedOp(
-                    op, &arithmetic_count)) {
-            return arithmetic_count * kCPUArithmeticUnitCost;
-        }
-        return kCPUDefaultFixedValuedCost;
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t arithmetic_count;
+    if (ArithmeticCountUtilHelper::GetArithmeticCountForConvAndFullyconnectedOp(
+            op, &arithmetic_count)) {
+      return arithmetic_count * kCPUArithmeticUnitCost;
     }
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.fully_connected
 template <>
 class TFLiteCostEstimator<FullyConnectedOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t arithmetic_count;
-        if (ArithmeticCountUtilHelper::GetArithmeticCountForConvAndFullyconnectedOp(
-                    op, &arithmetic_count)) {
-            return arithmetic_count * kCPUArithmeticUnitCost;
-        }
-        return kCPUDefaultFixedValuedCost;
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t arithmetic_count;
+    if (ArithmeticCountUtilHelper::GetArithmeticCountForConvAndFullyconnectedOp(
+            op, &arithmetic_count)) {
+      return arithmetic_count * kCPUArithmeticUnitCost;
     }
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.mul
 template <>
 class TFLiteCostEstimator<MulOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t count;
-        if (ArithmeticCountUtilHelper::GetArithmeticCountForBroadcastableOp(op,
-                &count))
-            return kCPUArithmeticUnitCost * count;
-        return kCPUDefaultFixedValuedCost;
-    }
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t count;
+    if (ArithmeticCountUtilHelper::GetArithmeticCountForBroadcastableOp(op,
+                                                                        &count))
+      return kCPUArithmeticUnitCost * count;
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.pack
 template <>
 class TFLiteCostEstimator<PackOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t count;
-        if (ArithmeticCountUtilHelper::GetInputTensorTotalSize(op, &count))
-            return kCPUCopyUnitCost * count;
-        return kCPUDefaultFixedValuedCost;
-    }
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t count;
+    if (ArithmeticCountUtilHelper::GetInputTensorTotalSize(op, &count))
+      return kCPUCopyUnitCost * count;
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 // tfl.reshape
 template <>
 class TFLiteCostEstimator<ReshapeOp, hardware::CPU> {
-public:
-    static double GetCost(mlir::Operation* op) {
-        int64_t count;
-        if (ArithmeticCountUtilHelper::GetInputTensorTotalSize(op, &count))
-            return kCPUCopyUnitCost * count;
-        return kCPUDefaultFixedValuedCost;
-    }
+ public:
+  static double GetCost(mlir::Operation* op) {
+    int64_t count;
+    if (ArithmeticCountUtilHelper::GetInputTensorTotalSize(op, &count))
+      return kCPUCopyUnitCost * count;
+    return kCPUDefaultFixedValuedCost;
+  }
 
-    static bool IsSupported(mlir::Operation* op) {
-        return true;
-    }
+  static bool IsSupported(mlir::Operation* op) { return true; }
 };
 
 #endif  // TENSORFLOW_COMPILER_MLIR_LITE_EXPERIMENTAL_ESTIMATORS_CPU_ESTIMATORS_H_
