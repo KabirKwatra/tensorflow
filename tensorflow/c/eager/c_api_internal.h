@@ -30,16 +30,16 @@ limitations under the License.
 // TODO(b/154564140): Move this to its own header. This requires splitting
 // c_api_experimental.h
 struct TFE_ContextOptions {
-  TF_SessionOptions session_options;
-  // true if async execution is enabled.
-  bool async = false;
-  TFE_ContextDevicePlacementPolicy device_placement_policy{
-      TFE_DEVICE_PLACEMENT_SILENT};
-  TFE_ContextMirroringPolicy mirroring_policy{TFE_MIRRORING_NONE};
-  // If true, lazily copy the remote inputs of a function to the target devices.
-  bool lazy_remote_inputs_copy = true;
-  // If true, use TFRT backend
-  bool use_tfrt = false;
+    TF_SessionOptions session_options;
+    // true if async execution is enabled.
+    bool async = false;
+    TFE_ContextDevicePlacementPolicy device_placement_policy{
+        TFE_DEVICE_PLACEMENT_SILENT};
+    TFE_ContextMirroringPolicy mirroring_policy{TFE_MIRRORING_NONE};
+    // If true, lazily copy the remote inputs of a function to the target devices.
+    bool lazy_remote_inputs_copy = true;
+    // If true, use TFRT backend
+    bool use_tfrt = false;
 };
 
 #endif  // TENSORFLOW_C_EAGER_C_API_INTERNAL_H_

@@ -33,42 +33,48 @@ namespace tflite {
 namespace xnnpack {
 
 class SoftmaxTester {
- public:
-  SoftmaxTester() = default;
-  SoftmaxTester(const SoftmaxTester&) = delete;
-  SoftmaxTester& operator=(const SoftmaxTester&) = delete;
+public:
+    SoftmaxTester() = default;
+    SoftmaxTester(const SoftmaxTester&) = delete;
+    SoftmaxTester& operator=(const SoftmaxTester&) = delete;
 
-  inline SoftmaxTester& Shape(std::initializer_list<int32_t> shape) {
-    EXPECT_GT(shape.size(), 0);
-    for (auto it = shape.begin(); it != shape.end(); ++it) {
-      EXPECT_GT(*it, 0);
+    inline SoftmaxTester& Shape(std::initializer_list<int32_t> shape) {
+        EXPECT_GT(shape.size(), 0);
+        for (auto it = shape.begin(); it != shape.end(); ++it) {
+            EXPECT_GT(*it, 0);
+        }
+        shape_ = std::vector<int32_t>(shape.begin(), shape.end());
+        size_ = SoftmaxTester::ComputeSize(shape_);
+        return *this;
     }
-    shape_ = std::vector<int32_t>(shape.begin(), shape.end());
-    size_ = SoftmaxTester::ComputeSize(shape_);
-    return *this;
-  }
 
-  const std::vector<int32_t>& Shape() const { return shape_; }
+    const std::vector<int32_t>& Shape() const {
+        return shape_;
+    }
 
-  int32_t Size() const { return size_; }
+    int32_t Size() const {
+        return size_;
+    }
 
-  inline SoftmaxTester& Beta(float beta) {
-    beta_ = beta;
-    return *this;
-  }
+    inline SoftmaxTester& Beta(float beta) {
+        beta_ = beta;
+        return *this;
+    }
 
-  float Beta() const { return beta_; }
+    float Beta() const {
+        return beta_;
+    }
 
-  void Test(TfLiteDelegate* delegate) const;
+    void Test(TfLiteDelegate* delegate) const;
 
- private:
-  std::vector<char> CreateTfLiteModel() const;
+private:
+    std::vector<char> CreateTfLiteModel() const;
 
-  static int32_t ComputeSize(const std::vector<int32_t>& shape);
+    static int32_t ComputeSize(const std::vector<int32_t>& shape);
 
-  std::vector<int32_t> shape_;
-  int32_t size_;
-  float beta_ = 1.0f;
+    std::vector<int32_t> shape_;
+    int32_t size_;
+    float beta_ = 1.0f;
 };
 
 }  // namespace xnnpack

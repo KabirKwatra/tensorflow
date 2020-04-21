@@ -23,26 +23,28 @@ namespace gpu {
 namespace cl {
 
 struct ModelHints {
-  using ModelHint = uint64_t;
+    using ModelHint = uint64_t;
 
-  // By default we want the fastest inference
-  static constexpr ModelHint kFastestInference = 0x00000000;
-  // Can improve compilation time, but inference can be slower
-  static constexpr ModelHint kReduceKernelsCount = 0x00000001;
-  // Can improve tuning time, but inference can be slower
-  static constexpr ModelHint kFastTuning = 0x00000002;
+    // By default we want the fastest inference
+    static constexpr ModelHint kFastestInference = 0x00000000;
+    // Can improve compilation time, but inference can be slower
+    static constexpr ModelHint kReduceKernelsCount = 0x00000001;
+    // Can improve tuning time, but inference can be slower
+    static constexpr ModelHint kFastTuning = 0x00000002;
 
-  void Add(ModelHint hint) {
-    if (hint == kFastestInference) {
-      hints = kFastestInference;
-    } else {
-      hints |= hint;
+    void Add(ModelHint hint) {
+        if (hint == kFastestInference) {
+            hints = kFastestInference;
+        } else {
+            hints |= hint;
+        }
     }
-  }
 
-  bool Check(ModelHint hint) const { return hints & hint; }
+    bool Check(ModelHint hint) const {
+        return hints & hint;
+    }
 
-  uint64_t hints = kFastestInference;
+    uint64_t hints = kFastestInference;
 };
 
 }  // namespace cl

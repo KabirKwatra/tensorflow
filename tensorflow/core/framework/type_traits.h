@@ -26,10 +26,10 @@ namespace tensorflow {
 
 // Functions to define quantization attribute of types.
 struct true_type {
-  static constexpr bool value = true;
+    static constexpr bool value = true;
 };
 struct false_type {
-  static constexpr bool value = false;
+    static constexpr bool value = false;
 };
 
 // Default is_quantized is false.
@@ -65,10 +65,10 @@ struct is_complex<std::complex<double>> : true_type {};
 // without running their default ctors and dtors.
 template <typename T>
 struct is_simple_type {
-  static constexpr bool value =
-      std::is_trivial<T>::value || std::is_same<T, Eigen::half>::value ||
-      std::is_same<T, complex64>::value || std::is_same<T, complex128>::value ||
-      is_quantized<T>::value || std::is_same<T, bfloat16>::value;
+    static constexpr bool value =
+        std::is_trivial<T>::value || std::is_same<T, Eigen::half>::value ||
+        std::is_same<T, complex64>::value || std::is_same<T, complex128>::value ||
+        is_quantized<T>::value || std::is_same<T, bfloat16>::value;
 };
 
 }  // namespace tensorflow

@@ -24,7 +24,7 @@ limitations under the License.
 // TFE_DeleteTensorHandle who calls Release() on the handle pointer and deletes
 // the TFE_TensorHandle structure.
 struct TFE_TensorHandle {
-  tensorflow::AbstractTensorHandleInterface* handle;
+    tensorflow::AbstractTensorHandleInterface* handle;
 };
 
 #endif  // TENSORFLOW_C_EAGER_TFE_TENSORHANDLE_INTERNAL_H_
