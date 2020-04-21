@@ -21,40 +21,43 @@ namespace tflite {
 namespace tools {
 
 class XnnpackDelegateProvider : public DelegateProvider {
- public:
-  XnnpackDelegateProvider() {
-    default_params_.AddParam("use_xnnpack", ToolParam::Create<bool>(false));
-  }
+public:
+    XnnpackDelegateProvider() {
+        default_params_.AddParam("use_xnnpack", ToolParam::Create<bool>(false));
+    }
 
-  std::vector<Flag> CreateFlags(ToolParams* params) const final;
+    std::vector<Flag> CreateFlags(ToolParams* params) const final;
 
-  void LogParams(const ToolParams& params) const final;
+    void LogParams(const ToolParams& params) const final;
 
-  TfLiteDelegatePtr CreateTfLiteDelegate(const ToolParams& params) const final;
+    TfLiteDelegatePtr CreateTfLiteDelegate(const ToolParams& params) const final;
 
-  std::string GetName() const final { return "XNNPACK"; }
+    std::string GetName() const final {
+        return "XNNPACK";
+    }
 };
 REGISTER_DELEGATE_PROVIDER(XnnpackDelegateProvider);
 
 std::vector<Flag> XnnpackDelegateProvider::CreateFlags(
     ToolParams* params) const {
-  std::vector<Flag> flags = {
-      CreateFlag<bool>("use_xnnpack", params, "use XNNPack")};
-  return flags;
+    std::vector<Flag> flags = {
+        CreateFlag<bool>("use_xnnpack", params, "use XNNPack")
+    };
+    return flags;
 }
 
 void XnnpackDelegateProvider::LogParams(const ToolParams& params) const {
-  TFLITE_LOG(INFO) << "Use xnnpack : [" << params.Get<bool>("use_xnnpack")
-                   << "]";
+    TFLITE_LOG(INFO) << "Use xnnpack : [" << params.Get<bool>("use_xnnpack")
+                     << "]";
 }
 
 TfLiteDelegatePtr XnnpackDelegateProvider::CreateTfLiteDelegate(
     const ToolParams& params) const {
-  if (params.Get<bool>("use_xnnpack")) {
-    return evaluation::CreateXNNPACKDelegate(
-        params.Get<int32_t>("num_threads"));
-  }
-  return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
+    if (params.Get<bool>("use_xnnpack")) {
+        return evaluation::CreateXNNPACKDelegate(
+                   params.Get<int32_t>("num_threads"));
+    }
+    return TfLiteDelegatePtr(nullptr, [](TfLiteDelegate*) {});
 }
 
 }  // namespace tools
