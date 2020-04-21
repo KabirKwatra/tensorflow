@@ -22,8 +22,8 @@ limitations under the License.
 
 #include <map>
 
-#include "tensorflow/stream_executor/platform/port.h"
 #include "tensorflow/stream_executor/platform/logging.h"
+#include "tensorflow/stream_executor/platform/port.h"
 
 namespace stream_executor {
 
@@ -34,57 +34,53 @@ namespace stream_executor {
 // using devices on the underlying platform. Presently, if the option requested
 // is not available on the target platform, a warning will be emitted.
 struct DeviceOptions {
-public:
-    // When it is observed that more memory has to be allocated for thread stacks,
-    // this flag prevents it from ever being deallocated. Potentially saves
-    // thrashing the thread stack memory allocation, but at the potential cost of
-    // some memory space.
-    static constexpr unsigned kDoNotReclaimStackAllocation = 0x1;
+ public:
+  // When it is observed that more memory has to be allocated for thread stacks,
+  // this flag prevents it from ever being deallocated. Potentially saves
+  // thrashing the thread stack memory allocation, but at the potential cost of
+  // some memory space.
+  static constexpr unsigned kDoNotReclaimStackAllocation = 0x1;
 
-    // The following options refer to synchronization options when
-    // using SynchronizeStream or SynchronizeContext.
+  // The following options refer to synchronization options when
+  // using SynchronizeStream or SynchronizeContext.
 
-    // Synchronize with spinlocks.
-    static constexpr unsigned kScheduleSpin = 0x02;
-    // Synchronize with spinlocks that also call CPU yield instructions.
-    static constexpr unsigned kScheduleYield = 0x04;
-    // Synchronize with a "synchronization primitive" (e.g. mutex).
-    static constexpr unsigned kScheduleBlockingSync = 0x08;
+  // Synchronize with spinlocks.
+  static constexpr unsigned kScheduleSpin = 0x02;
+  // Synchronize with spinlocks that also call CPU yield instructions.
+  static constexpr unsigned kScheduleYield = 0x04;
+  // Synchronize with a "synchronization primitive" (e.g. mutex).
+  static constexpr unsigned kScheduleBlockingSync = 0x08;
 
-    static constexpr unsigned kMask = 0xf;  // Mask of all available flags.
+  static constexpr unsigned kMask = 0xf;  // Mask of all available flags.
 
-    // Constructs an or-d together set of device options.
-    explicit DeviceOptions(unsigned flags) : flags_(flags) {
-        CHECK((flags & kMask) == flags);
-    }
+  // Constructs an or-d together set of device options.
+  explicit DeviceOptions(unsigned flags) : flags_(flags) {
+    CHECK((flags & kMask) == flags);
+  }
 
-    // Factory for the default set of device options.
-    static DeviceOptions Default() {
-        return DeviceOptions(0);
-    }
+  // Factory for the default set of device options.
+  static DeviceOptions Default() { return DeviceOptions(0); }
 
-    unsigned flags() const {
-        return flags_;
-    }
+  unsigned flags() const { return flags_; }
 
-    bool operator==(const DeviceOptions& other) const {
-        return flags_ == other.flags_;
-    }
+  bool operator==(const DeviceOptions& other) const {
+    return flags_ == other.flags_;
+  }
 
-    bool operator!=(const DeviceOptions& other) const {
-        return !(*this == other);
-    }
+  bool operator!=(const DeviceOptions& other) const {
+    return !(*this == other);
+  }
 
-    std::string ToString() {
-        return flags_ == 0 ? "none" : "kDoNotReclaimStackAllocation";
-    }
+  std::string ToString() {
+    return flags_ == 0 ? "none" : "kDoNotReclaimStackAllocation";
+  }
 
-    // Platform-specific device options. Expressed as key-value pairs to avoid
-    // DeviceOptions subclass proliferation.
-    std::map<std::string, std::string> non_portable_tags;
+  // Platform-specific device options. Expressed as key-value pairs to avoid
+  // DeviceOptions subclass proliferation.
+  std::map<std::string, std::string> non_portable_tags;
 
-private:
-    unsigned flags_;
+ private:
+  unsigned flags_;
 };
 
 }  // namespace stream_executor

@@ -24,7 +24,7 @@ limitations under the License.
 // TFE_DeleteOp who calls Release() on the operation pointer and deletes
 // the TFE_Op structure.
 struct TFE_Op {
-    tensorflow::AbstractOperationInterface* operation;
+  tensorflow::AbstractOperationInterface* operation;
 };
 
 #endif  // TENSORFLOW_C_EAGER_TFE_OP_INTERNAL_H_

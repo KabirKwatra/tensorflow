@@ -18,7 +18,7 @@ limitations under the License.
 #include "tensorflow/core/framework/cancellation.h"
 
 struct TFE_CancellationManager {
-    tensorflow::CancellationManager cancellation_manager;
+  tensorflow::CancellationManager cancellation_manager;
 };
 
 #endif  // TENSORFLOW_C_EAGER_TFE_CANCELLATION_MANAGER_INTERNAL_H_

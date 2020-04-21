@@ -24,7 +24,7 @@ limitations under the License.
 // TFE_DeleteContext who calls Release() on the context pointer and deletes
 // the TFE_Context structure.
 struct TFE_Context {
-    tensorflow::AbstractContextInterface* context;
+  tensorflow::AbstractContextInterface* context;
 };
 
 #endif  // TENSORFLOW_C_EAGER_TFE_CONTEXT_INTERNAL_H_

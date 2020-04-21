@@ -27,11 +27,11 @@ REGISTER4(BinaryOp, GPU, "NotEqual", functor::not_equal_to, float, Eigen::half,
 // TODO(b/25387198): Also enable int32 in device memory. This kernel
 // registration requires all int32 inputs and outputs to be in host memory.
 REGISTER_KERNEL_BUILDER(Name("NotEqual")
-                        .Device(DEVICE_GPU)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_GPU)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::not_equal_to<int32>>);
 #endif
 
@@ -39,11 +39,11 @@ REGISTER_KERNEL_BUILDER(Name("NotEqual")
 REGISTER2(BinaryOp, SYCL, "NotEqual", functor::not_equal_to, float, double);
 
 REGISTER_KERNEL_BUILDER(Name("NotEqual")
-                        .Device(DEVICE_SYCL)
-                        .HostMemory("x")
-                        .HostMemory("y")
-                        .HostMemory("z")
-                        .TypeConstraint<int32>("T"),
+                            .Device(DEVICE_SYCL)
+                            .HostMemory("x")
+                            .HostMemory("y")
+                            .HostMemory("z")
+                            .TypeConstraint<int32>("T"),
                         BinaryOp<CPUDevice, functor::not_equal_to<int32>>);
 #endif  // TENSORFLOW_USE_SYCL
 
