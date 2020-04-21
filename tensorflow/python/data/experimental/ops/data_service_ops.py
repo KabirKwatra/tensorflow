@@ -13,23 +13,17 @@
 # limitations under the License.
 # ==============================================================================
 """Python API for executing a tf.data.Dataset using a tf.data service."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 
 import six
-
 from tensorflow.python import tf2
-from tensorflow.python.data.experimental.ops.distribute_options import (
-    ExternalStatePolicy,
-)
-from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.data.ops import iterator_ops
+from tensorflow.python.data.experimental.ops.distribute_options import \
+    ExternalStatePolicy
+from tensorflow.python.data.ops import dataset_ops, iterator_ops
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
+from tensorflow.python.framework import dtypes, ops
 from tensorflow.python.ops import gen_experimental_dataset_ops
 
 

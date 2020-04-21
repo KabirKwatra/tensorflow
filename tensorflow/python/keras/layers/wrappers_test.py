@@ -14,36 +14,27 @@
 # ==============================================================================
 """Tests for layer wrappers."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import keras
 from tensorflow.python.eager import context
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import constant_op, dtypes, tensor_shape
 from tensorflow.python.framework import test_util as tf_test_util
-from tensorflow.python.keras import combinations
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import testing_utils
+from tensorflow.python.keras import (combinations, keras_parameterized,
+                                     testing_utils)
 from tensorflow.python.keras.engine import base_layer_utils
 from tensorflow.python.keras.layers.rnn_cell_wrapper_v2 import ResidualWrapper
 from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops.ragged import ragged_concat_ops
-from tensorflow.python.ops.ragged import ragged_factory_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops import array_ops, math_ops
+from tensorflow.python.ops.ragged import (ragged_concat_ops,
+                                          ragged_factory_ops, ragged_tensor)
 from tensorflow.python.platform import test
 from tensorflow.python.training.tracking import util as trackable_util
-from tensorflow.python.util import nest
-from tensorflow.python.util import object_identity
+from tensorflow.python.util import nest, object_identity
 
 
 class _RNNCellWithConstants(keras.layers.Layer):

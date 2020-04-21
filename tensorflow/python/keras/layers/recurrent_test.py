@@ -17,38 +17,25 @@
 See also: lstm_test.py, gru_test.py, simplernn_test.py.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import keras
 from tensorflow.python.eager import context
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import random_seed
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import test_util
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import testing_utils
+from tensorflow.python.framework import (constant_op, dtypes, ops, random_seed,
+                                         tensor_shape, test_util)
+from tensorflow.python.keras import keras_parameterized, testing_utils
 from tensorflow.python.keras.engine import base_layer_utils
 from tensorflow.python.keras.layers import recurrent as rnn_v1
 from tensorflow.python.keras.layers import recurrent_v2 as rnn_v2
 from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import rnn_cell
-from tensorflow.python.ops import special_math_ops
-from tensorflow.python.ops import state_ops
+from tensorflow.python.ops import (array_ops, init_ops, math_ops, rnn_cell,
+                                   special_math_ops, state_ops)
 from tensorflow.python.ops import variables as variables_lib
-from tensorflow.python.ops.ragged import ragged_factory_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops.ragged import ragged_factory_ops, ragged_tensor
 from tensorflow.python.platform import test
 from tensorflow.python.training.tracking import util as trackable_util
 from tensorflow.python.util import nest

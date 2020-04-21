@@ -28,41 +28,23 @@ to the regular expression is executed.
 e.g. --benchmarks=".*matmul*." will run all matmul related benchmarks.
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import time
 
 import numpy as np
 import six
 from six.moves import xrange  # pylint: disable=redefined-builtin
-
 from tensorflow.python import pywrap_tfe
 from tensorflow.python.eager import backprop  # pylint: disable=unused-import
-from tensorflow.python.eager import benchmarks_test_base
-from tensorflow.python.eager import context
-from tensorflow.python.eager import core
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import forwardprop
-from tensorflow.python.eager import function
-from tensorflow.python.eager import test
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import functional_ops
-from tensorflow.python.ops import gen_array_ops
-from tensorflow.python.ops import gen_math_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn_ops
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.eager import (benchmarks_test_base, context, core,
+                                     def_function, forwardprop, function, test)
+from tensorflow.python.framework import (constant_op, dtypes, ops, tensor_spec,
+                                         test_util)
+from tensorflow.python.ops import (array_ops, control_flow_ops, functional_ops,
+                                   gen_array_ops, gen_math_ops, math_ops,
+                                   nn_ops, random_ops, resource_variable_ops)
 from tensorflow.python.util import tf_inspect
-
 
 CPU = "/device:CPU:0"
 GPU = "/device:GPU:0"

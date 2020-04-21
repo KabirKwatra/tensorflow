@@ -14,20 +14,16 @@
 # ==============================================================================
 """Integration tests for Keras."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 import random
 
 import numpy as np
-
 from tensorflow.python import keras
 from tensorflow.python.eager import context
 from tensorflow.python.framework import dtypes
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import testing_utils
+from tensorflow.python.keras import keras_parameterized, testing_utils
 from tensorflow.python.keras.utils import np_utils
 from tensorflow.python.layers import base as base_layer
 from tensorflow.python.ops import nn_ops as nn

@@ -14,31 +14,21 @@
 # ==============================================================================
 """Tests for normalization layers."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import keras
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import wrap_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import ops
+from tensorflow.python.eager import (backprop, context, def_function,
+                                     wrap_function)
+from tensorflow.python.framework import constant_op, ops
 from tensorflow.python.framework import test_util as tf_test_util
-from tensorflow.python.keras import combinations
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import testing_utils
-from tensorflow.python.keras.layers import normalization
-from tensorflow.python.keras.layers import normalization_v2
+from tensorflow.python.keras import (combinations, keras_parameterized,
+                                     testing_utils)
+from tensorflow.python.keras.layers import normalization, normalization_v2
 from tensorflow.python.keras.mixed_precision.experimental import policy
 from tensorflow.python.keras.optimizer_v2 import rmsprop as rmsprop_v2
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gradient_checker_v2
-from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import array_ops, gradient_checker_v2, math_ops
 from tensorflow.python.platform import test
 from tensorflow.python.training import gradient_descent
 

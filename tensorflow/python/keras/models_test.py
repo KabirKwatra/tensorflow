@@ -14,28 +14,20 @@
 # ==============================================================================
 """Tests for `models.py` (model cloning, mainly)."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import os
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import keras
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
+from tensorflow.python.framework import dtypes, ops
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import metrics
-from tensorflow.python.keras import models
-from tensorflow.python.keras import testing_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.keras import (keras_parameterized, metrics, models,
+                                     testing_utils)
+from tensorflow.python.ops import array_ops, math_ops, resource_variable_ops
 from tensorflow.python.platform import test
 from tensorflow.python.training import adam
 

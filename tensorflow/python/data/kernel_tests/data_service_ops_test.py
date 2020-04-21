@@ -13,25 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tf.data service ops."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import time
 
 from absl.testing import parameterized
-
-from tensorflow.python.data.experimental.ops import data_service_ops
-from tensorflow.python.data.experimental.ops import distribute_options
+from tensorflow.python.data.experimental.ops import (data_service_ops,
+                                                     distribute_options)
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.service import server_lib
 from tensorflow.python.eager import def_function
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.framework import combinations, dtypes, errors
+from tensorflow.python.ops import random_ops, tensor_array_ops
 from tensorflow.python.platform import test
 
 PROTOCOL = "grpc"
