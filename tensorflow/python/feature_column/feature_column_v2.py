@@ -123,9 +123,7 @@ NOTE: Functions prefixed with "_" indicate experimental or private parts of
 the API subject to change, and should not be relied upon!
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import abc
 import collections
@@ -134,44 +132,30 @@ import re
 
 import numpy as np
 import six
-
 from tensorflow.python.eager import context
 from tensorflow.python.feature_column import feature_column as fc_old
 from tensorflow.python.feature_column import utils as fc_utils
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
+from tensorflow.python.framework import dtypes, ops
 from tensorflow.python.framework import sparse_tensor as sparse_tensor_lib
 from tensorflow.python.framework import tensor_shape
-
 # TODO(b/118385027): Dependency on keras can be problematic if Keras moves out
 # of the main repo.
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.engine import training as keras_training
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import embedding_ops
-from tensorflow.python.ops import lookup_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn_ops
-from tensorflow.python.ops import parsing_ops
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops import string_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
+from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
+                                   embedding_ops, lookup_ops, math_ops, nn_ops,
+                                   parsing_ops, sparse_ops, string_ops,
+                                   variable_scope, variables)
 from tensorflow.python.platform import gfile
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import checkpoint_utils
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.training.tracking import data_structures
-from tensorflow.python.training.tracking import tracking
-from tensorflow.python.util import deprecation
-from tensorflow.python.util import nest
+from tensorflow.python.training.tracking import data_structures, tracking
+from tensorflow.python.util import deprecation, nest
 from tensorflow.python.util.compat import collections_abc
 from tensorflow.python.util.tf_export import tf_export
-
 
 _FEATURE_COLUMN_DEPRECATION_DATE = None
 _FEATURE_COLUMN_DEPRECATION = (
