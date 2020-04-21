@@ -26,94 +26,94 @@ namespace tflite {
 namespace xnnpack {
 
 TEST(Relu6, 4D) {
-  std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
-      xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
-                       TfLiteXNNPackDelegateDelete);
+    std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
+    xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
+                     TfLiteXNNPackDelegateDelete);
 
-  std::random_device random_device;
-  auto rng = std::mt19937(random_device());
-  auto shape_rng =
-      std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
-  const auto batch = shape_rng();
-  const auto height = shape_rng();
-  const auto width = shape_rng();
-  const auto channels = shape_rng();
+    std::random_device random_device;
+    auto rng = std::mt19937(random_device());
+    auto shape_rng =
+        std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
+    const auto batch = shape_rng();
+    const auto height = shape_rng();
+    const auto width = shape_rng();
+    const auto channels = shape_rng();
 
-  UnaryElementwiseTester()
-      .Shape({batch, height, width, channels})
-      .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
+    UnaryElementwiseTester()
+    .Shape({batch, height, width, channels})
+    .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
 }
 
 TEST(Relu6, 3D) {
-  std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
-      xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
-                       TfLiteXNNPackDelegateDelete);
+    std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
+    xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
+                     TfLiteXNNPackDelegateDelete);
 
-  std::random_device random_device;
-  auto rng = std::mt19937(random_device());
-  auto shape_rng =
-      std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
-  const auto batch = shape_rng();
-  const auto width = shape_rng();
-  const auto channels = shape_rng();
+    std::random_device random_device;
+    auto rng = std::mt19937(random_device());
+    auto shape_rng =
+        std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
+    const auto batch = shape_rng();
+    const auto width = shape_rng();
+    const auto channels = shape_rng();
 
-  UnaryElementwiseTester()
-      .Shape({batch, width, channels})
-      .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
+    UnaryElementwiseTester()
+    .Shape({batch, width, channels})
+    .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
 }
 
 TEST(Relu6, 2D) {
-  std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
-      xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
-                       TfLiteXNNPackDelegateDelete);
+    std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
+    xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
+                     TfLiteXNNPackDelegateDelete);
 
-  std::random_device random_device;
-  auto rng = std::mt19937(random_device());
-  auto shape_rng =
-      std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
-  const auto batch = shape_rng();
-  const auto channels = shape_rng();
+    std::random_device random_device;
+    auto rng = std::mt19937(random_device());
+    auto shape_rng =
+        std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
+    const auto batch = shape_rng();
+    const auto channels = shape_rng();
 
-  UnaryElementwiseTester()
-      .Shape({batch, channels})
-      .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
+    UnaryElementwiseTester()
+    .Shape({batch, channels})
+    .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
 }
 
 TEST(Relu6, 1D) {
-  std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
-      xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
-                       TfLiteXNNPackDelegateDelete);
+    std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
+    xnnpack_delegate(TfLiteXNNPackDelegateCreate(nullptr),
+                     TfLiteXNNPackDelegateDelete);
 
-  std::random_device random_device;
-  auto rng = std::mt19937(random_device());
-  auto shape_rng =
-      std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
-  const auto batch = shape_rng();
+    std::random_device random_device;
+    auto rng = std::mt19937(random_device());
+    auto shape_rng =
+        std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
+    const auto batch = shape_rng();
 
-  UnaryElementwiseTester().Shape({batch}).Test(BuiltinOperator_RELU6,
-                                               xnnpack_delegate.get());
+    UnaryElementwiseTester().Shape({batch}).Test(BuiltinOperator_RELU6,
+            xnnpack_delegate.get());
 }
 
 TEST(Relu6, MultiThreading) {
-  TfLiteXNNPackDelegateOptions delegate_options =
-      TfLiteXNNPackDelegateOptionsDefault();
-  delegate_options.num_threads = 2;
-  std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
-      xnnpack_delegate(TfLiteXNNPackDelegateCreate(&delegate_options),
-                       TfLiteXNNPackDelegateDelete);
+    TfLiteXNNPackDelegateOptions delegate_options =
+        TfLiteXNNPackDelegateOptionsDefault();
+    delegate_options.num_threads = 2;
+    std::unique_ptr<TfLiteDelegate, decltype(&TfLiteXNNPackDelegateDelete)>
+    xnnpack_delegate(TfLiteXNNPackDelegateCreate(&delegate_options),
+                     TfLiteXNNPackDelegateDelete);
 
-  std::random_device random_device;
-  auto rng = std::mt19937(random_device());
-  auto shape_rng =
-      std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
-  const auto batch = shape_rng();
-  const auto height = shape_rng();
-  const auto width = shape_rng();
-  const auto channels = shape_rng();
+    std::random_device random_device;
+    auto rng = std::mt19937(random_device());
+    auto shape_rng =
+        std::bind(std::uniform_int_distribution<int32_t>(2, 5), std::ref(rng));
+    const auto batch = shape_rng();
+    const auto height = shape_rng();
+    const auto width = shape_rng();
+    const auto channels = shape_rng();
 
-  UnaryElementwiseTester()
-      .Shape({batch, height, width, channels})
-      .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
+    UnaryElementwiseTester()
+    .Shape({batch, height, width, channels})
+    .Test(BuiltinOperator_RELU6, xnnpack_delegate.get());
 }
 
 }  // namespace xnnpack
