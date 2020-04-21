@@ -19,38 +19,22 @@
 See also `tf.sparse.SparseTensor`.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numbers
 
 import numpy as np
-
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import gen_sparse_ops
-from tensorflow.python.ops import math_ops
-
-# go/tf-wildcard-import
-# pylint: disable=wildcard-import
+from tensorflow.python.framework import (constant_op, dtypes, ops,
+                                         sparse_tensor, tensor_shape,
+                                         tensor_util)
+from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
+                                   gen_sparse_ops, math_ops)
 from tensorflow.python.ops.gen_sparse_ops import *
-
 # pylint: enable=wildcard-import
-from tensorflow.python.util import compat
-from tensorflow.python.util import deprecation
-from tensorflow.python.util import dispatch
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import compat, deprecation, dispatch, tf_inspect
 from tensorflow.python.util.compat import collections_abc
-from tensorflow.python.util.tf_export import get_canonical_name_for_symbol
-from tensorflow.python.util.tf_export import tf_export
+from tensorflow.python.util.tf_export import (get_canonical_name_for_symbol,
+                                              tf_export)
 
 
 def _convert_to_sparse_tensor(sp_input):

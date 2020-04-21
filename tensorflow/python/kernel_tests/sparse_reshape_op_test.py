@@ -14,20 +14,13 @@
 # ==============================================================================
 """Tests for SparseReshape."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import numpy as np
-
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import sparse_ops
+from absl.testing import parameterized
+from tensorflow.python.framework import (constant_op, dtypes, errors,
+                                         sparse_tensor, test_util)
+from tensorflow.python.ops import array_ops, sparse_ops
 from tensorflow.python.platform import test
 
 
