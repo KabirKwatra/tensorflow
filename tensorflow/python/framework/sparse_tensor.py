@@ -14,17 +14,27 @@
 # ==============================================================================
 """Sparse tensors."""
 # pylint: disable=g-bad-name
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 
 import numpy as np
+
+from tensorflow.python import _pywrap_utils
 from tensorflow.python import \
     pywrap_tensorflow  # pylint: disable=unused-import
-from tensorflow.python import _pywrap_utils, tf2
-from tensorflow.python.framework import (composite_tensor, constant_op, dtypes,
-                                         ops, tensor_like, tensor_shape,
-                                         tensor_spec, tensor_util, type_spec)
+from tensorflow.python import tf2
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_like
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.framework import type_spec
 from tensorflow.python.ops import gen_sparse_ops
 from tensorflow.python.util.tf_export import tf_export
 
