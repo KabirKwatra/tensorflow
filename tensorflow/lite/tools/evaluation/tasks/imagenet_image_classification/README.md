@@ -3,9 +3,9 @@
 This binary evaluates the following parameters of TFLite models trained for the
 [ILSVRC 2012 image classification task](http://www.image-net.org/challenges/LSVRC/2012/):
 
-*   Native pre-processing latency
-*   Inference latency
-*   Top-K (1 to 10) accuracy values
+- Native pre-processing latency
+- Inference latency
+- Top-K (1 to 10) accuracy values
 
 The binary takes the path to validation images and labels as inputs, along with
 the model and inference-specific parameters such as delegate and number of
@@ -36,67 +36,62 @@ generate the ground truth labels.
 
 The binary takes the following parameters:
 
-*   `model_file` : `string` \
-    Path to the TFlite model file.
+- `model_file` : `string` \
+  Path to the TFlite model file.
 
-*   `ground_truth_images_path`: `string` \
-    The path to the directory containing ground truth images.
+- `ground_truth_images_path`: `string` \
+  The path to the directory containing ground truth images.
 
-*   `ground_truth_labels`: `string` \
-    Path to ground truth labels file. This file should contain the same number
-    of labels as the number images in the ground truth directory. The labels are
-    assumed to be in the same order as the sorted filename of images. See
-    [ground truth label generation](#ground-truth-label-generation) section for
-    more information about how to generate labels for images.
+- `ground_truth_labels`: `string` \
+  Path to ground truth labels file. This file should contain the same number of labels
+  as the number images in the ground truth directory. The labels are assumed to be
+  in the same order as the sorted filename of images. See [ground truth label generation](#ground-truth-label-generation)
+  section for more information about how to generate labels for images.
 
-*   `model_output_labels`: `string` \
-    Path to the file containing labels, that is used to interpret the output of
-    the model. E.g. in case of mobilenets, this is the path to
-    `mobilenet_labels.txt` where each label is in the same order as the output
-    1001 dimension tensor.
+- `model_output_labels`: `string` \
+  Path to the file containing labels, that is used to interpret the output of the
+  model. E.g. in case of mobilenets, this is the path to `mobilenet_labels.txt` where
+  each label is in the same order as the output 1001 dimension tensor.
 
 and the following optional parameters:
 
-*   `blacklist_file_path`: `string` \
-    Path to blacklist file. This file contains the indices of images that are
-    blacklisted for evaluation. 1762 images are blacklisted in ILSVRC dataset.
-    For details please refer to readme.txt of ILSVRC2014 devkit.
+- `blacklist_file_path`: `string` \
+  Path to blacklist file. This file contains the indices of images that are blacklisted
+  for evaluation. 1762 images are blacklisted in ILSVRC dataset. For details please
+  refer to readme.txt of ILSVRC2014 devkit.
 
-*   `num_images`: `int` (default=0) \
-    The number of images to process, if 0, all images in the directory are
-    processed otherwise only num_images will be processed.
+- `num_images`: `int` (default=0) \
+  The number of images to process, if 0, all images in the directory are processed
+  otherwise only num_images will be processed.
 
-*   `num_threads`: `int` (default=4) \
-    The number of threads to use for evaluation. Note: This does not change the
-    number of TFLite Interpreter threads, but shards the dataset to speed up
-    evaluation.
+- `num_threads`: `int` (default=4) \
+  The number of threads to use for evaluation. Note: This does not change the number
+  of TFLite Interpreter threads, but shards the dataset to speed up evaluation.
 
-*   `output_file_path`: `string` \
-    The final metrics are dumped into `output_file_path` as a string-serialized
-    instance of `tflite::evaluation::EvaluationStageMetrics`.
+- `output_file_path`: `string` \
+  The final metrics are dumped into `output_file_path` as a string-serialized instance
+  of `tflite::evaluation::EvaluationStageMetrics`.
 
 The following optional parameters can be used to modify the inference runtime:
 
-*   `num_interpreter_threads`: `int` (default=1) \
-    This modifies the number of threads used by the TFLite Interpreter for
-    inference.
+- `num_interpreter_threads`: `int` (default=1) \
+  This modifies the number of threads used by the TFLite Interpreter for inference.
 
-*   `delegate`: `string` \
-    If provided, tries to use the specified delegate for accuracy evaluation.
-    Valid values: "nnapi", "gpu", "hexagon".
+- `delegate`: `string` \
+  If provided, tries to use the specified delegate for accuracy evaluation. Valid
+  values: "nnapi", "gpu", "hexagon".
 
-    NOTE: Please refer to the
-    [Hexagon delegate documentation](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/hexagon_delegate.md)
-    for instructions on how to set it up for the Hexagon delegate. The tool
-    assumes that `libhexagon_interface.so` and Qualcomm libraries lie in
-    `/data/local/tmp`.
+  NOTE: Please refer to the
+  [Hexagon delegate documentation](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/hexagon_delegate.md)
+  for instructions on how to set it up for the Hexagon delegate. The tool
+  assumes that `libhexagon_interface.so` and Qualcomm libraries lie in
+  `/data/local/tmp`.
 
 This script also supports runtime/delegate arguments introduced by the
-[delegate registrar]
-(https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/delegates).
+[delegate registrar](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/delegates).
 If there is any conflict (for example, `num_threads` vs
-`num_interpreter_threads` here), the parameters of this
-script are given precedence.
+`num_interpreter_threads` here), the parameters of this script are given
+precedence.
 
 ## Downloading ILSVRC
 
