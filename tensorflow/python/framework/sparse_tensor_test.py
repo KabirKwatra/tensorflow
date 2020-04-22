@@ -14,24 +14,14 @@
 # ==============================================================================
 
 """Tests for tensorflow.python.framework.sparse_tensor."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import numpy as np
-
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import sparse_ops
+from absl.testing import parameterized
+from tensorflow.python.eager import context, def_function
+from tensorflow.python.framework import (dtypes, ops, sparse_tensor,
+                                         tensor_shape, tensor_spec, test_util)
+from tensorflow.python.ops import array_ops, math_ops, sparse_ops
 from tensorflow.python.platform import googletest
 
 
