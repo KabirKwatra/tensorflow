@@ -13,12 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for flatbuffer_utils.py."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 import os
 
-from tensorflow.lite.tools import flatbuffer_utils, test_utils
+from tensorflow.lite.tools import flatbuffer_utils
+from tensorflow.lite.tools import test_utils
 from tensorflow.python.framework import test_util
 from tensorflow.python.platform import test
 

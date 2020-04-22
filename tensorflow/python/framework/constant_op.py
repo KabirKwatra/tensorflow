@@ -16,15 +16,20 @@
 
 See the [constants guide](https://tensorflow.org/api_guides/python/constant_op).
 """
-
 # Must be separate from array_ops to avoid a cyclic dependency.
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-from __future__ import absolute_import, division, print_function
-
-from tensorflow.core.framework import attr_value_pb2, types_pb2
-from tensorflow.python.eager import context, execute
-from tensorflow.python.framework import (dtypes, op_callbacks, ops,
-                                         tensor_shape, tensor_util)
+from tensorflow.core.framework import attr_value_pb2
+from tensorflow.core.framework import types_pb2
+from tensorflow.python.eager import context
+from tensorflow.python.eager import execute
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import op_callbacks
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_util
 from tensorflow.python.util.tf_export import tf_export
 
 

@@ -13,15 +13,23 @@
 # limitations under the License.
 # ==============================================================================
 """Utilities to create TensorProtos."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 import six
-from tensorflow.core.framework import tensor_pb2, tensor_shape_pb2
+
+from tensorflow.core.framework import tensor_pb2
+from tensorflow.core.framework import tensor_shape_pb2
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes, ops, tensor_like, tensor_shape
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_like
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.types import core
-from tensorflow.python.util import compat, nest
+from tensorflow.python.util import compat
+from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import tf_export
 
 # Fallback in case fast_tensor_util is not properly compiled.

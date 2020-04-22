@@ -13,18 +13,24 @@
 # limitations under the License.
 # ==============================================================================
 """Type specifications for TensorFlow APIs."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import abc
 import collections
 
 import numpy as np
 import six
+
 from tensorflow.python import _pywrap_utils
-from tensorflow.python.framework import composite_tensor, dtypes, tensor_shape
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.util import compat, nest, tf_decorator
+from tensorflow.python.util import compat
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_decorator
 from tensorflow.python.util.lazy_loader import LazyLoader
 from tensorflow.python.util.tf_export import tf_export
 
