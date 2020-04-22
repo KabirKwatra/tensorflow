@@ -14,33 +14,18 @@
 # ==============================================================================
 """Unit tests for op_callback."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import threading
 
 import numpy as np
-
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import test
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import op_callbacks
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import script_ops
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.eager import backprop, context, def_function, test
+from tensorflow.python.framework import (constant_op, dtypes, op_callbacks,
+                                         ops, sparse_tensor, test_util)
+from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
+                                   script_ops, sparse_ops, variables)
 from tensorflow.python.util import compat
-
 
 # Keep all the hard-coded op type strings in one place so they are easy to
 # change all at once in the face of any possible future op type name changes.

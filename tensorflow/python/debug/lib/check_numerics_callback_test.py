@@ -13,31 +13,20 @@
 # limitations under the License.
 # ==============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import re
 
 import numpy as np
-
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.debug.lib import check_numerics_callback
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
+from tensorflow.python.eager import backprop, context, def_function
+from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
+                                         test_util)
 from tensorflow.python.ops import array_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import custom_gradient
-from tensorflow.python.ops import gen_nn_ops
-from tensorflow.python.ops import gradient_checker_v2
 from tensorflow.python.ops import math_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.ops import (custom_gradient, gen_nn_ops,
+                                   gradient_checker_v2, math_ops, variables)
 from tensorflow.python.platform import googletest
 
 

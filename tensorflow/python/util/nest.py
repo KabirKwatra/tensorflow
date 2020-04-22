@@ -38,20 +38,16 @@ Example structures: `((3, 4), 5, (6, 7, (9, 10), 8))`, `(np.array(0),
   (np.array([3, 4]), tf.constant([3, 4])))`
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections as _collections
 
 import six as _six
 import wrapt as _wrapt
-
 from tensorflow.python import _pywrap_utils
+from tensorflow.python.platform import tf_logging
 from tensorflow.python.util.compat import collections_abc as _collections_abc
 from tensorflow.python.util.tf_export import tf_export
-from tensorflow.python.platform import tf_logging
-
 
 _SHALLOW_TREE_HAS_INVALID_KEYS = (
     "The shallow_tree's keys are not a subset of the input_tree's keys. The "

@@ -14,20 +14,15 @@
 # ==============================================================================
 """Tests for `tf.data.DatasetSpec`."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import def_function
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import (combinations, dtypes, tensor_shape,
+                                         tensor_spec)
 from tensorflow.python.platform import test
 
 

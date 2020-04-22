@@ -14,9 +14,7 @@
 # ==============================================================================
 """Dumping op callbacks: Enables dump-based features in tfdbg v2."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import atexit
 import os
@@ -26,24 +24,16 @@ import threading
 import uuid
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
-
 from tensorflow.core.framework import tensor_pb2
-from tensorflow.core.protobuf import debug_event_pb2
-from tensorflow.core.protobuf import graph_debug_info_pb2
-from tensorflow.python.debug.lib import debug_events_writer
-from tensorflow.python.debug.lib import op_callbacks_common
-from tensorflow.python.debug.lib import source_utils
+from tensorflow.core.protobuf import debug_event_pb2, graph_debug_info_pb2
+from tensorflow.python.debug.lib import (debug_events_writer,
+                                         op_callbacks_common, source_utils)
 from tensorflow.python.eager import function as function_lib
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import op_callbacks
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_debug_ops
+from tensorflow.python.framework import (constant_op, dtypes, op_callbacks,
+                                         ops, tensor_util)
+from tensorflow.python.ops import array_ops, gen_debug_ops
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.util import compat
-from tensorflow.python.util import tf_stack
+from tensorflow.python.util import compat, tf_stack
 from tensorflow.python.util.tf_export import tf_export
 
 _state = threading.local()

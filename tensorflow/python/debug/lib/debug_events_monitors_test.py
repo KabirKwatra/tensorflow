@@ -13,28 +13,18 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the debug events writer Python class."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-from absl.testing import parameterized
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.core.protobuf import debug_event_pb2
-from tensorflow.python.debug.lib import debug_events_monitors
-from tensorflow.python.debug.lib import debug_events_reader
-from tensorflow.python.debug.lib import dumping_callback
-from tensorflow.python.debug.lib import dumping_callback_test_lib
+from tensorflow.python.debug.lib import (debug_events_monitors,
+                                         debug_events_reader, dumping_callback,
+                                         dumping_callback_test_lib)
 from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.platform import googletest
-from tensorflow.python.platform import test
+from tensorflow.python.framework import constant_op, dtypes, ops, test_util
+from tensorflow.python.ops import array_ops, math_ops
+from tensorflow.python.platform import googletest, test
 
 
 class TestMonitor(debug_events_monitors.BaseMonitor):
