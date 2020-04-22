@@ -36,7 +36,6 @@ from tensorflow.python.platform import googletest
 
 
 class SparseTensorTest(test_util.TensorFlowTestCase):
-
     def testPythonConstruction(self):
         indices = [[1, 2], [2, 0], [3, 4]]
         values = [b"a", b"b", b"c"]
@@ -46,7 +45,9 @@ class SparseTensorTest(test_util.TensorFlowTestCase):
             sparse_tensor.SparseTensor(indices, values, shape),
             sparse_tensor.SparseTensor.from_value(sp_value),
             sparse_tensor.SparseTensor.from_value(
-                sparse_tensor.SparseTensor(indices, values, shape))]:
+                sparse_tensor.SparseTensor(indices, values, shape)
+            ),
+        ]:
             self.assertEqual(sp.indices.dtype, dtypes.int64)
             self.assertEqual(sp.values.dtype, dtypes.string)
             self.assertEqual(sp.dense_shape.dtype, dtypes.int64)
@@ -60,11 +61,9 @@ class SparseTensorTest(test_util.TensorFlowTestCase):
                 sess_run_value = self.evaluate(sp)
                 self.assertAllEqual(sess_run_value.indices, value.indices)
                 self.assertAllEqual(sess_run_value.values, value.values)
-                self.assertAllEqual(
-                    sess_run_value.dense_shape, value.dense_shape)
+                self.assertAllEqual(sess_run_value.dense_shape, value.dense_shape)
 
     def testShape(self):
-
         @def_function.function
         def test_fn(tensor):
             tensor = sparse_ops.sparse_transpose(tensor)
@@ -72,7 +71,8 @@ class SparseTensorTest(test_util.TensorFlowTestCase):
             return tensor
 
         tensor = sparse_tensor.SparseTensor(
-            indices=[[0, 0], [1, 2]], values=[1., 2], dense_shape=[3, 4])
+            indices=[[0, 0], [1, 2]], values=[1.0, 2], dense_shape=[3, 4]
+        )
         test_fn(tensor)
 
     def testIsSparse(self):
@@ -80,15 +80,15 @@ class SparseTensorTest(test_util.TensorFlowTestCase):
         self.assertFalse(sparse_tensor.is_sparse("foo"))
         self.assertFalse(sparse_tensor.is_sparse(np.array(3)))
         self.assertTrue(
-            sparse_tensor.is_sparse(sparse_tensor.SparseTensor([[0]], [0], [1])))
+            sparse_tensor.is_sparse(sparse_tensor.SparseTensor([[0]], [0], [1]))
+        )
         self.assertTrue(
-            sparse_tensor.is_sparse(
-                sparse_tensor.SparseTensorValue([[0]], [0], [1])))
+            sparse_tensor.is_sparse(sparse_tensor.SparseTensorValue([[0]], [0], [1]))
+        )
 
     def testConsumers(self):
         with context.graph_mode():
-            sp = sparse_tensor.SparseTensor(
-                [[0, 0], [1, 2]], [1.0, 3.0], [3, 4])
+            sp = sparse_tensor.SparseTensor([[0, 0], [1, 2]], [1.0, 3.0], [3, 4])
             w = ops.convert_to_tensor(np.ones([4, 1], np.float32))
             out = sparse_ops.sparse_tensor_dense_matmul(sp, w)
             self.assertEqual(len(sp.consumers()), 1)
@@ -101,12 +101,10 @@ class SparseTensorTest(test_util.TensorFlowTestCase):
 
 
 class ConvertToTensorOrSparseTensorTest(test_util.TensorFlowTestCase):
-
     def test_convert_dense(self):
         with self.cached_session():
             value = [42, 43]
-            from_value = sparse_tensor.convert_to_tensor_or_sparse_tensor(
-                value)
+            from_value = sparse_tensor.convert_to_tensor_or_sparse_tensor(value)
             self.assertAllEqual(value, self.evaluate(from_value))
 
     @test_util.run_deprecated_v1
@@ -116,23 +114,22 @@ class ConvertToTensorOrSparseTensorTest(test_util.TensorFlowTestCase):
             values = [42, 43]
             shape = [2, 2]
             sparse_tensor_value = sparse_tensor.SparseTensorValue(
-                indices, values, shape)
+                indices, values, shape
+            )
             st = sparse_tensor.SparseTensor.from_value(sparse_tensor_value)
             from_value = sparse_tensor.convert_to_tensor_or_sparse_tensor(
-                sparse_tensor_value).eval()
-            from_tensor = sparse_tensor.convert_to_tensor_or_sparse_tensor(
-                st).eval()
+                sparse_tensor_value
+            ).eval()
+            from_tensor = sparse_tensor.convert_to_tensor_or_sparse_tensor(st).eval()
             for convertee in [from_value, from_tensor]:
+                self.assertAllEqual(sparse_tensor_value.indices, convertee.indices)
+                self.assertAllEqual(sparse_tensor_value.values, convertee.values)
                 self.assertAllEqual(
-                    sparse_tensor_value.indices, convertee.indices)
-                self.assertAllEqual(
-                    sparse_tensor_value.values, convertee.values)
-                self.assertAllEqual(
-                    sparse_tensor_value.dense_shape, convertee.dense_shape)
+                    sparse_tensor_value.dense_shape, convertee.dense_shape
+                )
 
 
 class SparseTensorShapeTest(test_util.TensorFlowTestCase):
-
     def test_simple(self):
         indices = [[0, 2]]
         values = [1]
@@ -144,7 +141,6 @@ class SparseTensorShapeTest(test_util.TensorFlowTestCase):
         self.assertEqual(sp.shape.as_list(), [5, 5])
 
     def test_unknown_shape(self):
-
         @def_function.function
         def my_func(dense_shape):
             indices = [[0, 2]]
@@ -154,11 +150,10 @@ class SparseTensorShapeTest(test_util.TensorFlowTestCase):
             return sp
 
         my_func.get_concrete_function(
-            dense_shape=tensor_spec.TensorSpec(
-                dtype=dtypes.int64, shape=[2, ]))
+            dense_shape=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[2,])
+        )
 
     def test_partial_shape(self):
-
         @def_function.function
         def my_func(x):
             indices = [[0, 2]]
@@ -170,7 +165,8 @@ class SparseTensorShapeTest(test_util.TensorFlowTestCase):
             return sp
 
         my_func.get_concrete_function(
-            x=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[]))
+            x=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[])
+        )
 
     def test_neg_shape(self):
         indices = [[0, 2]]
@@ -180,7 +176,6 @@ class SparseTensorShapeTest(test_util.TensorFlowTestCase):
         self.assertEqual(sp.shape.as_list(), [None, 5])
 
     def test_unknown_tensor_shape(self):
-
         @def_function.function
         def my_func(x):
             indices = [[0, 0]]
@@ -193,10 +188,10 @@ class SparseTensorShapeTest(test_util.TensorFlowTestCase):
             return sp
 
         my_func.get_concrete_function(
-            x=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[None, None]))
+            x=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[None, None])
+        )
 
     def test_unknown_rank(self):
-
         @def_function.function
         def my_func(dense_shape):
             indices = [[0, 0]]
@@ -206,13 +201,12 @@ class SparseTensorShapeTest(test_util.TensorFlowTestCase):
             return sp
 
         my_func.get_concrete_function(
-            dense_shape=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[None]))
+            dense_shape=tensor_spec.TensorSpec(dtype=dtypes.int64, shape=[None])
+        )
 
 
 @test_util.run_all_in_graph_and_eager_modes
-class SparseTensorSpecTest(test_util.TensorFlowTestCase,
-                           parameterized.TestCase):
-
+class SparseTensorSpecTest(test_util.TensorFlowTestCase, parameterized.TestCase):
     def assertAllTensorsEqual(self, list1, list2):
         self.assertLen(list1, len(list2))
         for (t1, t2) in zip(list1, list2):
@@ -231,14 +225,22 @@ class SparseTensorSpecTest(test_util.TensorFlowTestCase,
         spec1 = sparse_tensor.SparseTensorSpec()
         self.assertEqual(spec1.value_type, sparse_tensor.SparseTensor)
 
-    @parameterized.parameters([
-        (sparse_tensor.SparseTensorSpec(),
-         (tensor_shape.TensorShape(None), dtypes.float32)),
-        (sparse_tensor.SparseTensorSpec(shape=[5, None, None]),
-         (tensor_shape.TensorShape([5, None, None]), dtypes.float32)),
-        (sparse_tensor.SparseTensorSpec(dtype=dtypes.int32),
-         (tensor_shape.TensorShape(None), dtypes.int32)),
-    ])  # pyformat: disable
+    @parameterized.parameters(
+        [
+            (
+                sparse_tensor.SparseTensorSpec(),
+                (tensor_shape.TensorShape(None), dtypes.float32),
+            ),
+            (
+                sparse_tensor.SparseTensorSpec(shape=[5, None, None]),
+                (tensor_shape.TensorShape([5, None, None]), dtypes.float32),
+            ),
+            (
+                sparse_tensor.SparseTensorSpec(dtype=dtypes.int32),
+                (tensor_shape.TensorShape(None), dtypes.int32),
+            ),
+        ]
+    )  # pyformat: disable
     def testSerialize(self, st_spec, expected):
         serialization = st_spec._serialize()
         # TensorShape has an unconventional definition of equality, so we can't use
@@ -246,40 +248,49 @@ class SparseTensorSpecTest(test_util.TensorFlowTestCase,
         # the expected values, so we can use that instead.
         self.assertEqual(repr(serialization), repr(expected))
 
-    @parameterized.parameters([
-        (sparse_tensor.SparseTensorSpec(dtype=dtypes.string), [
-            tensor_spec.TensorSpec([None, None], dtypes.int64),
-            tensor_spec.TensorSpec([None], dtypes.string),
-            tensor_spec.TensorSpec([None], dtypes.int64)
-        ]),
-        (sparse_tensor.SparseTensorSpec(shape=[5, None, None]), [
-            tensor_spec.TensorSpec([None, 3], dtypes.int64),
-            tensor_spec.TensorSpec([None], dtypes.float32),
-            tensor_spec.TensorSpec([3], dtypes.int64)
-        ]),
-    ])
+    @parameterized.parameters(
+        [
+            (
+                sparse_tensor.SparseTensorSpec(dtype=dtypes.string),
+                [
+                    tensor_spec.TensorSpec([None, None], dtypes.int64),
+                    tensor_spec.TensorSpec([None], dtypes.string),
+                    tensor_spec.TensorSpec([None], dtypes.int64),
+                ],
+            ),
+            (
+                sparse_tensor.SparseTensorSpec(shape=[5, None, None]),
+                [
+                    tensor_spec.TensorSpec([None, 3], dtypes.int64),
+                    tensor_spec.TensorSpec([None], dtypes.float32),
+                    tensor_spec.TensorSpec([3], dtypes.int64),
+                ],
+            ),
+        ]
+    )
     def testComponentSpecs(self, st_spec, expected):
         self.assertEqual(st_spec._component_specs, expected)
 
-    @parameterized.parameters([
-        {
-            "st_spec": sparse_tensor.SparseTensorSpec(),
-            "indices": [[0, 1], [10, 8]],
-            "values": [3.0, 5.0],
-            "dense_shape": [100, 100]
-        },
-        {
-            "st_spec": sparse_tensor.SparseTensorSpec([100, None, None]),
-            "indices": [[0, 1, 3], [10, 8, 2]],
-            "values": [3.0, 5.0],
-            "dense_shape": [100, 20, 20]
-        },
-    ])
+    @parameterized.parameters(
+        [
+            {
+                "st_spec": sparse_tensor.SparseTensorSpec(),
+                "indices": [[0, 1], [10, 8]],
+                "values": [3.0, 5.0],
+                "dense_shape": [100, 100],
+            },
+            {
+                "st_spec": sparse_tensor.SparseTensorSpec([100, None, None]),
+                "indices": [[0, 1, 3], [10, 8, 2]],
+                "values": [3.0, 5.0],
+                "dense_shape": [100, 20, 20],
+            },
+        ]
+    )
     def testToFromComponents(self, st_spec, indices, values, dense_shape):
         st = sparse_tensor.SparseTensor(indices, values, dense_shape)
         actual_components = st_spec._to_components(st)
-        self.assertAllTensorsEqual(actual_components,
-                                   [indices, values, dense_shape])
+        self.assertAllTensorsEqual(actual_components, [indices, values, dense_shape])
         st_reconstructed = st_spec._from_components(actual_components)
         self.assertAllEqual(st.indices, st_reconstructed.indices)
         self.assertAllEqual(st.values, st_reconstructed.values)
@@ -297,28 +308,33 @@ class SparseTensorSpecTest(test_util.TensorFlowTestCase,
         self.assertAllEqual(st.values, values)
         self.assertAllEqual(st.dense_shape, dense_shape)
 
-    @parameterized.parameters([
-        sparse_tensor.SparseTensorSpec(dtype=dtypes.string),
-        sparse_tensor.SparseTensorSpec(shape=[5, None, None]),
-    ])
+    @parameterized.parameters(
+        [
+            sparse_tensor.SparseTensorSpec(dtype=dtypes.string),
+            sparse_tensor.SparseTensorSpec(shape=[5, None, None]),
+        ]
+    )
     def testFlatTensorSpecs(self, st_spec):
-        self.assertEqual(st_spec._flat_tensor_specs,
-                         [tensor_spec.TensorSpec(None, dtypes.variant)])
+        self.assertEqual(
+            st_spec._flat_tensor_specs, [tensor_spec.TensorSpec(None, dtypes.variant)]
+        )
 
-    @parameterized.parameters([
-        {
-            "st_spec": sparse_tensor.SparseTensorSpec(),
-            "indices": [[0, 1], [10, 8]],
-            "values": [3.0, 5.0],
-            "dense_shape": [100, 100]
-        },
-        {
-            "st_spec": sparse_tensor.SparseTensorSpec([100, None, None]),
-            "indices": [[0, 1, 3], [10, 8, 2]],
-            "values": [3.0, 5.0],
-            "dense_shape": [100, 20, 20]
-        },
-    ])
+    @parameterized.parameters(
+        [
+            {
+                "st_spec": sparse_tensor.SparseTensorSpec(),
+                "indices": [[0, 1], [10, 8]],
+                "values": [3.0, 5.0],
+                "dense_shape": [100, 100],
+            },
+            {
+                "st_spec": sparse_tensor.SparseTensorSpec([100, None, None]),
+                "indices": [[0, 1, 3], [10, 8, 2]],
+                "values": [3.0, 5.0],
+                "dense_shape": [100, 20, 20],
+            },
+        ]
+    )
     def testToFromTensorList(self, st_spec, indices, values, dense_shape):
         st = sparse_tensor.SparseTensor(indices, values, dense_shape)
         tensor_list = st_spec._to_tensor_list(st)
@@ -327,25 +343,44 @@ class SparseTensorSpecTest(test_util.TensorFlowTestCase,
         self.assertAllEqual(st.values, st_reconstructed.values)
         self.assertAllEqual(st.dense_shape, st_reconstructed.dense_shape)
 
-    @parameterized.parameters([
-        (sparse_tensor.SparseTensorSpec([2, None], dtypes.float32), 32,
-         sparse_tensor.SparseTensorSpec([32, 2, None], dtypes.float32)),
-        (sparse_tensor.SparseTensorSpec([4, None], dtypes.float32), None,
-         sparse_tensor.SparseTensorSpec([None, 4, None], dtypes.float32)),
-        (sparse_tensor.SparseTensorSpec([2], dtypes.float32), 32,
-         sparse_tensor.SparseTensorSpec([32, 2], dtypes.float32)),
-    ])
+    @parameterized.parameters(
+        [
+            (
+                sparse_tensor.SparseTensorSpec([2, None], dtypes.float32),
+                32,
+                sparse_tensor.SparseTensorSpec([32, 2, None], dtypes.float32),
+            ),
+            (
+                sparse_tensor.SparseTensorSpec([4, None], dtypes.float32),
+                None,
+                sparse_tensor.SparseTensorSpec([None, 4, None], dtypes.float32),
+            ),
+            (
+                sparse_tensor.SparseTensorSpec([2], dtypes.float32),
+                32,
+                sparse_tensor.SparseTensorSpec([32, 2], dtypes.float32),
+            ),
+        ]
+    )
     def testBatch(self, spec, batch_size, expected):
         self.assertEqual(spec._batch(batch_size), expected)
 
-    @parameterized.parameters([
-        (sparse_tensor.SparseTensorSpec([32, None, None], dtypes.float32),
-         sparse_tensor.SparseTensorSpec([None, None], dtypes.float32)),
-        (sparse_tensor.SparseTensorSpec([None, None, None], dtypes.float32),
-         sparse_tensor.SparseTensorSpec([None, None], dtypes.float32)),
-        (sparse_tensor.SparseTensorSpec([32, 2], dtypes.float32),
-         sparse_tensor.SparseTensorSpec([2], dtypes.float32)),
-    ])
+    @parameterized.parameters(
+        [
+            (
+                sparse_tensor.SparseTensorSpec([32, None, None], dtypes.float32),
+                sparse_tensor.SparseTensorSpec([None, None], dtypes.float32),
+            ),
+            (
+                sparse_tensor.SparseTensorSpec([None, None, None], dtypes.float32),
+                sparse_tensor.SparseTensorSpec([None, None], dtypes.float32),
+            ),
+            (
+                sparse_tensor.SparseTensorSpec([32, 2], dtypes.float32),
+                sparse_tensor.SparseTensorSpec([2], dtypes.float32),
+            ),
+        ]
+    )
     def testUnbatch(self, spec, expected):
         self.assertEqual(spec._unbatch(), expected)
 

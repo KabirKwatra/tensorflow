@@ -26,7 +26,6 @@ from tensorflow.python.platform import test
 
 
 class CountingVisitor(cfg.GraphVisitor):
-
     def __init__(self, graph):
         super(CountingVisitor, self).__init__(graph)
         self.counts = {}
@@ -40,14 +39,12 @@ class CountingVisitor(cfg.GraphVisitor):
 
 
 class GraphVisitorTest(test.TestCase):
-
     def _build_cfg(self, fn):
         node, _ = parser.parse_entity(fn, future_features=())
         cfgs = cfg.build(node)
         return cfgs, node
 
     def test_basic_coverage_forward(self):
-
         def test_fn(a):
             while a > 0:
                 a = 1
@@ -56,7 +53,7 @@ class GraphVisitorTest(test.TestCase):
             a = 2
 
         graphs, node = self._build_cfg(test_fn)
-        graph, = graphs.values()
+        (graph,) = graphs.values()
         visitor = CountingVisitor(graph)
         visitor.visit_forward()
 
@@ -69,7 +66,6 @@ class GraphVisitorTest(test.TestCase):
         self.assertEqual(visitor.counts[node.body[1]], 1)
 
     def test_basic_coverage_reverse(self):
-
         def test_fn(a):
             while a > 0:
                 a = 1
@@ -78,7 +74,7 @@ class GraphVisitorTest(test.TestCase):
             a = 2
 
         graphs, node = self._build_cfg(test_fn)
-        graph, = graphs.values()
+        (graph,) = graphs.values()
         visitor = CountingVisitor(graph)
         visitor.visit_reverse()
 
@@ -91,7 +87,6 @@ class GraphVisitorTest(test.TestCase):
 
 
 class AstToCfgTest(test.TestCase):
-
     def _build_cfg(self, fn):
         node, _ = parser.parse_entity(fn, future_features=())
         cfgs = cfg.build(node)
@@ -114,19 +109,20 @@ class AstToCfgTest(test.TestCase):
             matched = False
             for cfg_node in graph.index.values():
                 if repr(cfg_node) == node_repr:
-                    if (self._as_set(prev) == frozenset(map(repr, cfg_node.prev)) and
-                            self._as_set(next_) == frozenset(map(repr, cfg_node.next))):
+                    if self._as_set(prev) == frozenset(
+                        map(repr, cfg_node.prev)
+                    ) and self._as_set(next_) == frozenset(map(repr, cfg_node.next)):
                         matched = True
                         break
             if not matched:
                 self.fail(
-                    'match failed for node "%s" in graph:\n%s' % (node_repr, graph))
+                    'match failed for node "%s" in graph:\n%s' % (node_repr, graph)
+                )
 
     def assertGraphEnds(self, graph, entry_repr, exit_reprs):
         """Tests whether the CFG has the specified entry and exits."""
         self.assertEqual(repr(graph.entry), entry_repr)
-        self.assertSetEqual(frozenset(map(repr, graph.exit)),
-                            frozenset(exit_reprs))
+        self.assertSetEqual(frozenset(map(repr, graph.exit)), frozenset(exit_reprs))
 
     def assertStatementEdges(self, graph, edges):
         """Tests whether the CFG contains the specified statement edges."""
@@ -134,107 +130,95 @@ class AstToCfgTest(test.TestCase):
             matched = False
             partial_matches = []
             self.assertSetEqual(
-                frozenset(graph.stmt_next.keys()), frozenset(graph.stmt_prev.keys()))
+                frozenset(graph.stmt_next.keys()), frozenset(graph.stmt_prev.keys())
+            )
             for stmt_ast_node in graph.stmt_next:
-                ast_repr = '%s:%s' % (stmt_ast_node.__class__.__name__,
-                                      stmt_ast_node.lineno)
+                ast_repr = "%s:%s" % (
+                    stmt_ast_node.__class__.__name__,
+                    stmt_ast_node.lineno,
+                )
                 if ast_repr == node_repr:
-                    actual_next = frozenset(
-                        map(repr, graph.stmt_next[stmt_ast_node]))
-                    actual_prev = frozenset(
-                        map(repr, graph.stmt_prev[stmt_ast_node]))
-                    partial_matches.append(
-                        (actual_prev, node_repr, actual_next))
-                    if (self._as_set(prev_node_reprs) == actual_prev and
-                            self._as_set(next_node_reprs) == actual_next):
+                    actual_next = frozenset(map(repr, graph.stmt_next[stmt_ast_node]))
+                    actual_prev = frozenset(map(repr, graph.stmt_prev[stmt_ast_node]))
+                    partial_matches.append((actual_prev, node_repr, actual_next))
+                    if (
+                        self._as_set(prev_node_reprs) == actual_prev
+                        and self._as_set(next_node_reprs) == actual_next
+                    ):
                         matched = True
                         break
             if not matched:
-                self.fail('edges mismatch for %s: %s' %
-                          (node_repr, partial_matches))
+                self.fail("edges mismatch for %s: %s" % (node_repr, partial_matches))
 
     def test_straightline(self):
-
         def test_fn(a):
             a += 1
             a = 2
             a = 3
             return
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (None, 'a', 'a += 1'),
-                ('a += 1', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', 'return'),
-                ('a = 3', 'return', None),
+                (None, "a", "a += 1"),
+                ("a += 1", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", "return"),
+                ("a = 3", "return", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('return',))
+        self.assertGraphEnds(graph, "a", ("return",))
 
     def test_straightline_no_return(self):
-
         def test_fn(a, b):
             a = b + 1
             a += max(a)
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
-            (
-                (None, 'a, b', 'a = (b + 1)'),
-                ('a = (b + 1)', 'a += max(a)', None),
-            ),
+            ((None, "a, b", "a = (b + 1)"), ("a = (b + 1)", "a += max(a)", None),),
         )
-        self.assertGraphEnds(graph, 'a, b', ('a += max(a)',))
+        self.assertGraphEnds(graph, "a, b", ("a += max(a)",))
 
     def test_unreachable_code(self):
-
         def test_fn(a):
             return
             a += 1  # pylint:disable=unreachable
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
-            (
-                (None, 'a', 'return'),
-                ('a', 'return', None),
-                (None, 'a += 1', None),
-            ),
+            ((None, "a", "return"), ("a", "return", None), (None, "a += 1", None),),
         )
-        self.assertGraphEnds(graph, 'a', ('return', 'a += 1'))
+        self.assertGraphEnds(graph, "a", ("return", "a += 1"))
 
     def test_if_straightline(self):
-
         def test_fn(a):
             if a > 0:
                 a = 1
             else:
                 a += -1
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (None, 'a', '(a > 0)'),
-                ('(a > 0)', 'a = 1', None),
-                ('(a > 0)', 'a += (- 1)', None),
+                (None, "a", "(a > 0)"),
+                ("(a > 0)", "a = 1", None),
+                ("(a > 0)", "a += (- 1)", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'If:2', None),),
+            graph, (("a", "If:2", None),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 1', 'a += (- 1)'))
+        self.assertGraphEnds(graph, "a", ("a = 1", "a += (- 1)"))
 
     def test_branch_nested(self):
-
         def test_fn(a):
             if a > 0:
                 if a > 1:
@@ -247,55 +231,52 @@ class AstToCfgTest(test.TestCase):
                 else:
                     a = 4
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (None, 'a', '(a > 0)'),
-                ('a', '(a > 0)', ('(a > 1)', '(a > 2)')),
-                ('(a > 0)', '(a > 1)', ('a = 1', 'a = 2')),
-                ('(a > 1)', 'a = 1', None),
-                ('(a > 1)', 'a = 2', None),
-                ('(a > 0)', '(a > 2)', ('a = 3', 'a = 4')),
-                ('(a > 2)', 'a = 3', None),
-                ('(a > 2)', 'a = 4', None),
+                (None, "a", "(a > 0)"),
+                ("a", "(a > 0)", ("(a > 1)", "(a > 2)")),
+                ("(a > 0)", "(a > 1)", ("a = 1", "a = 2")),
+                ("(a > 1)", "a = 1", None),
+                ("(a > 1)", "a = 2", None),
+                ("(a > 0)", "(a > 2)", ("a = 3", "a = 4")),
+                ("(a > 2)", "a = 3", None),
+                ("(a > 2)", "a = 4", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'If:2', None),
-                ('(a > 0)', 'If:3', None),
-                ('(a > 0)', 'If:8', None),
+                ("a", "If:2", None),
+                ("(a > 0)", "If:3", None),
+                ("(a > 0)", "If:8", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 1', 'a = 2', 'a = 3', 'a = 4'))
+        self.assertGraphEnds(graph, "a", ("a = 1", "a = 2", "a = 3", "a = 4"))
 
     def test_branch_straightline_unbalanced(self):
-
         def test_fn(a):
             if a > 0:
                 a = 1
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (None, 'a', '(a > 0)'),
-                ('a', '(a > 0)', 'a = 1'),
-                ('(a > 0)', 'a = 1', None),
+                (None, "a", "(a > 0)"),
+                ("a", "(a > 0)", "a = 1"),
+                ("(a > 0)", "a = 1", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'If:2', None),),
+            graph, (("a", "If:2", None),),
         )
-        self.assertGraphEnds(graph, 'a', ('(a > 0)', 'a = 1'))
+        self.assertGraphEnds(graph, "a", ("(a > 0)", "a = 1"))
 
     def test_branch_return(self):
-
         def test_fn(a):
             if a > 0:
                 return
@@ -303,25 +284,23 @@ class AstToCfgTest(test.TestCase):
                 a = 1
             a = 2
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', '(a > 0)', ('return', 'a = 1')),
-                ('(a > 0)', 'a = 1', 'a = 2'),
-                ('(a > 0)', 'return', None),
-                ('a = 1', 'a = 2', None),
+                ("a", "(a > 0)", ("return", "a = 1")),
+                ("(a > 0)", "a = 1", "a = 2"),
+                ("(a > 0)", "return", None),
+                ("a = 1", "a = 2", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'If:2', 'a = 2'),),
+            graph, (("a", "If:2", "a = 2"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 2', 'return'))
+        self.assertGraphEnds(graph, "a", ("a = 2", "return"))
 
     def test_branch_raise(self):
-
         def test_fn(a):
             if a > 0:
                 raise a
@@ -329,69 +308,59 @@ class AstToCfgTest(test.TestCase):
                 a = 1
             a = 2
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', '(a > 0)', ('raise a', 'a = 1')),
-                ('(a > 0)', 'a = 1', 'a = 2'),
-                ('(a > 0)', 'raise a', None),
-                ('a = 1', 'a = 2', None),
+                ("a", "(a > 0)", ("raise a", "a = 1")),
+                ("(a > 0)", "a = 1", "a = 2"),
+                ("(a > 0)", "raise a", None),
+                ("a = 1", "a = 2", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'If:2', 'a = 2'),),
+            graph, (("a", "If:2", "a = 2"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 2', 'raise a'))
+        self.assertGraphEnds(graph, "a", ("a = 2", "raise a"))
 
     def test_branch_return_minimal(self):
-
         def test_fn(a):
             if a > 0:
                 return
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
-            graph,
-            (
-                ('a', '(a > 0)', 'return'),
-                ('(a > 0)', 'return', None),
-            ),
+            graph, (("a", "(a > 0)", "return"), ("(a > 0)", "return", None),),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'If:2', None),),
+            graph, (("a", "If:2", None),),
         )
-        self.assertGraphEnds(graph, 'a', ('(a > 0)', 'return'))
+        self.assertGraphEnds(graph, "a", ("(a > 0)", "return"))
 
     def test_while_straightline(self):
-
         def test_fn(a):
             while a > 0:
                 a = 1
             a = 2
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), '(a > 0)', ('a = 1', 'a = 2')),
-                ('(a > 0)', 'a = 1', '(a > 0)'),
-                ('(a > 0)', 'a = 2', None),
+                (("a", "a = 1"), "(a > 0)", ("a = 1", "a = 2")),
+                ("(a > 0)", "a = 1", "(a > 0)"),
+                ("(a > 0)", "a = 2", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'While:2', 'a = 2'),),
+            graph, (("a", "While:2", "a = 2"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 2',))
+        self.assertGraphEnds(graph, "a", ("a = 2",))
 
     def test_while_else_straightline(self):
-
         def test_fn(a):
             while a > 0:
                 a = 1
@@ -399,25 +368,23 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), '(a > 0)', ('a = 1', 'a = 2')),
-                ('(a > 0)', 'a = 1', '(a > 0)'),
-                ('(a > 0)', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                (("a", "a = 1"), "(a > 0)", ("a = 1", "a = 2")),
+                ("(a > 0)", "a = 1", "(a > 0)"),
+                ("(a > 0)", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'While:2', 'a = 3'),),
+            graph, (("a", "While:2", "a = 3"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_while_else_continue(self):
-
         def test_fn(a):
             while a > 0:
                 if a > 1:
@@ -429,30 +396,26 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'continue', 'a = 1'), '(a > 0)', ('(a > 1)', 'a = 2')),
-                ('(a > 0)', '(a > 1)', ('continue', 'a = 0')),
-                ('(a > 1)', 'continue', '(a > 0)'),
-                ('a = 0', 'a = 1', '(a > 0)'),
-                ('(a > 0)', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                (("a", "continue", "a = 1"), "(a > 0)", ("(a > 1)", "a = 2")),
+                ("(a > 0)", "(a > 1)", ("continue", "a = 0")),
+                ("(a > 1)", "continue", "(a > 0)"),
+                ("a = 0", "a = 1", "(a > 0)"),
+                ("(a > 0)", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'While:2', 'a = 3'),
-                ('(a > 0)', 'If:3', ('a = 1', '(a > 0)')),
-            ),
+            (("a", "While:2", "a = 3"), ("(a > 0)", "If:3", ("a = 1", "(a > 0)")),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_while_else_break(self):
-
         def test_fn(a):
             while a > 0:
                 if a > 1:
@@ -462,30 +425,26 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), '(a > 0)', ('(a > 1)', 'a = 2')),
-                ('(a > 0)', '(a > 1)', ('break', 'a = 1')),
-                ('(a > 1)', 'break', 'a = 3'),
-                ('(a > 1)', 'a = 1', '(a > 0)'),
-                ('(a > 0)', 'a = 2', 'a = 3'),
-                (('break', 'a = 2'), 'a = 3', None),
+                (("a", "a = 1"), "(a > 0)", ("(a > 1)", "a = 2")),
+                ("(a > 0)", "(a > 1)", ("break", "a = 1")),
+                ("(a > 1)", "break", "a = 3"),
+                ("(a > 1)", "a = 1", "(a > 0)"),
+                ("(a > 0)", "a = 2", "a = 3"),
+                (("break", "a = 2"), "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'While:2', 'a = 3'),
-                ('(a > 0)', 'If:3', ('a = 1', 'a = 3')),
-            ),
+            (("a", "While:2", "a = 3"), ("(a > 0)", "If:3", ("a = 1", "a = 3")),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_while_else_return(self):
-
         def test_fn(a):
             while a > 0:
                 if a > 1:
@@ -495,30 +454,25 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), '(a > 0)', ('(a > 1)', 'a = 2')),
-                ('(a > 0)', '(a > 1)', ('return', 'a = 1')),
-                ('(a > 1)', 'return', None),
-                ('(a > 1)', 'a = 1', '(a > 0)'),
-                ('(a > 0)', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                (("a", "a = 1"), "(a > 0)", ("(a > 1)", "a = 2")),
+                ("(a > 0)", "(a > 1)", ("return", "a = 1")),
+                ("(a > 1)", "return", None),
+                ("(a > 1)", "a = 1", "(a > 0)"),
+                ("(a > 0)", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (
-                ('a', 'While:2', 'a = 3'),
-                ('(a > 0)', 'If:3', 'a = 1'),
-            ),
+            graph, (("a", "While:2", "a = 3"), ("(a > 0)", "If:3", "a = 1"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3', 'return'))
+        self.assertGraphEnds(graph, "a", ("a = 3", "return"))
 
     def test_while_nested_straightline(self):
-
         def test_fn(a):
             while a > 0:
                 while a > 1:
@@ -526,29 +480,24 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 2'), '(a > 0)', ('(a > 1)', 'a = 3')),
-                (('(a > 0)', 'a = 1'), '(a > 1)', ('a = 1', 'a = 2')),
-                ('(a > 1)', 'a = 1', '(a > 1)'),
-                ('(a > 1)', 'a = 2', '(a > 0)'),
-                ('(a > 0)', 'a = 3', None),
+                (("a", "a = 2"), "(a > 0)", ("(a > 1)", "a = 3")),
+                (("(a > 0)", "a = 1"), "(a > 1)", ("a = 1", "a = 2")),
+                ("(a > 1)", "a = 1", "(a > 1)"),
+                ("(a > 1)", "a = 2", "(a > 0)"),
+                ("(a > 0)", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (
-                ('a', 'While:2', 'a = 3'),
-                ('(a > 0)', 'While:3', 'a = 2'),
-            ),
+            graph, (("a", "While:2", "a = 3"), ("(a > 0)", "While:3", "a = 2"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_while_nested_continue(self):
-
         def test_fn(a):
             while a > 0:
                 while a > 1:
@@ -558,33 +507,31 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 2'), '(a > 0)', ('(a > 1)', 'a = 3')),
-                (('(a > 0)', 'continue', 'a = 1'),
-                 '(a > 1)', ('(a > 3)', 'a = 2')),
-                ('(a > 1)', '(a > 3)', ('continue', 'a = 1')),
-                ('(a > 3)', 'continue', '(a > 1)'),
-                ('(a > 3)', 'a = 1', '(a > 1)'),
-                ('(a > 1)', 'a = 2', '(a > 0)'),
-                ('(a > 0)', 'a = 3', None),
+                (("a", "a = 2"), "(a > 0)", ("(a > 1)", "a = 3")),
+                (("(a > 0)", "continue", "a = 1"), "(a > 1)", ("(a > 3)", "a = 2")),
+                ("(a > 1)", "(a > 3)", ("continue", "a = 1")),
+                ("(a > 3)", "continue", "(a > 1)"),
+                ("(a > 3)", "a = 1", "(a > 1)"),
+                ("(a > 1)", "a = 2", "(a > 0)"),
+                ("(a > 0)", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'While:2', 'a = 3'),
-                ('(a > 0)', 'While:3', 'a = 2'),
-                ('(a > 1)', 'If:4', ('a = 1', '(a > 1)')),
+                ("a", "While:2", "a = 3"),
+                ("(a > 0)", "While:3", "a = 2"),
+                ("(a > 1)", "If:4", ("a = 1", "(a > 1)")),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_while_nested_break(self):
-
         def test_fn(a):
             while a > 0:
                 while a > 1:
@@ -594,52 +541,52 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
-        self.assertGraphMatches(graph, (
-            (('a', 'a = 2'), '(a > 0)', ('(a > 1)', 'a = 3')),
-            (('(a > 0)', 'a = 1'), '(a > 1)', ('(a > 2)', 'a = 2')),
-            ('(a > 1)', '(a > 2)', ('break', 'a = 1')),
-            ('(a > 2)', 'break', 'a = 2'),
-            ('(a > 2)', 'a = 1', '(a > 1)'),
-            (('(a > 1)', 'break'), 'a = 2', '(a > 0)'),
-            ('(a > 0)', 'a = 3', None),
-        ))
+        self.assertGraphMatches(
+            graph,
+            (
+                (("a", "a = 2"), "(a > 0)", ("(a > 1)", "a = 3")),
+                (("(a > 0)", "a = 1"), "(a > 1)", ("(a > 2)", "a = 2")),
+                ("(a > 1)", "(a > 2)", ("break", "a = 1")),
+                ("(a > 2)", "break", "a = 2"),
+                ("(a > 2)", "a = 1", "(a > 1)"),
+                (("(a > 1)", "break"), "a = 2", "(a > 0)"),
+                ("(a > 0)", "a = 3", None),
+            ),
+        )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'While:2', 'a = 3'),
-                ('(a > 0)', 'While:3', 'a = 2'),
-                ('(a > 1)', 'If:4', ('a = 1', 'a = 2')),
+                ("a", "While:2", "a = 3"),
+                ("(a > 0)", "While:3", "a = 2"),
+                ("(a > 1)", "If:4", ("a = 1", "a = 2")),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_for_straightline(self):
-
         def test_fn(a):
             for a in range(0, a):
                 a = 1
             a = 2
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), 'range(0, a)', ('a = 1', 'a = 2')),
-                ('range(0, a)', 'a = 1', 'range(0, a)'),
-                ('range(0, a)', 'a = 2', None),
+                (("a", "a = 1"), "range(0, a)", ("a = 1", "a = 2")),
+                ("range(0, a)", "a = 1", "range(0, a)"),
+                ("range(0, a)", "a = 2", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'For:2', 'a = 2'),),
+            graph, (("a", "For:2", "a = 2"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 2',))
+        self.assertGraphEnds(graph, "a", ("a = 2",))
 
     def test_for_else_straightline(self):
-
         def test_fn(a):
             for a in range(0, a):
                 a = 1
@@ -647,25 +594,23 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), 'range(0, a)', ('a = 1', 'a = 2')),
-                ('range(0, a)', 'a = 1', 'range(0, a)'),
-                ('range(0, a)', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                (("a", "a = 1"), "range(0, a)", ("a = 1", "a = 2")),
+                ("range(0, a)", "a = 1", "range(0, a)"),
+                ("range(0, a)", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (('a', 'For:2', 'a = 3'),),
+            graph, (("a", "For:2", "a = 3"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_for_else_continue(self):
-
         def test_fn(a):
             for a in range(0, a):
                 if a > 1:
@@ -677,31 +622,30 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'continue', 'a = 1'), 'range(0, a)', ('(a > 1)', 'a = 2')),
-                ('range(0, a)', '(a > 1)', ('continue', 'a = 0')),
-                ('(a > 1)', 'continue', 'range(0, a)'),
-                ('(a > 1)', 'a = 0', 'a = 1'),
-                ('a = 0', 'a = 1', 'range(0, a)'),
-                ('range(0, a)', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                (("a", "continue", "a = 1"), "range(0, a)", ("(a > 1)", "a = 2")),
+                ("range(0, a)", "(a > 1)", ("continue", "a = 0")),
+                ("(a > 1)", "continue", "range(0, a)"),
+                ("(a > 1)", "a = 0", "a = 1"),
+                ("a = 0", "a = 1", "range(0, a)"),
+                ("range(0, a)", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'For:2', 'a = 3'),
-                ('range(0, a)', 'If:3', ('a = 1', 'range(0, a)')),
+                ("a", "For:2", "a = 3"),
+                ("range(0, a)", "If:3", ("a = 1", "range(0, a)")),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_for_else_break(self):
-
         def test_fn(a):
             for a in range(0, a):
                 if a > 1:
@@ -711,30 +655,26 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), 'range(0, a)', ('(a > 1)', 'a = 2')),
-                ('range(0, a)', '(a > 1)', ('break', 'a = 1')),
-                ('(a > 1)', 'break', 'a = 3'),
-                ('(a > 1)', 'a = 1', 'range(0, a)'),
-                ('range(0, a)', 'a = 2', 'a = 3'),
-                (('break', 'a = 2'), 'a = 3', None),
+                (("a", "a = 1"), "range(0, a)", ("(a > 1)", "a = 2")),
+                ("range(0, a)", "(a > 1)", ("break", "a = 1")),
+                ("(a > 1)", "break", "a = 3"),
+                ("(a > 1)", "a = 1", "range(0, a)"),
+                ("range(0, a)", "a = 2", "a = 3"),
+                (("break", "a = 2"), "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'For:2', 'a = 3'),
-                ('range(0, a)', 'If:3', ('a = 1', 'a = 3')),
-            ),
+            (("a", "For:2", "a = 3"), ("range(0, a)", "If:3", ("a = 1", "a = 3")),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_for_else_return(self):
-
         def test_fn(a):
             for a in range(0, a):
                 if a > 1:
@@ -744,30 +684,25 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), 'range(0, a)', ('(a > 1)', 'a = 2')),
-                ('range(0, a)', '(a > 1)', ('return', 'a = 1')),
-                ('(a > 1)', 'return', None),
-                ('(a > 1)', 'a = 1', 'range(0, a)'),
-                ('range(0, a)', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                (("a", "a = 1"), "range(0, a)", ("(a > 1)", "a = 2")),
+                ("range(0, a)", "(a > 1)", ("return", "a = 1")),
+                ("(a > 1)", "return", None),
+                ("(a > 1)", "a = 1", "range(0, a)"),
+                ("range(0, a)", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (
-                ('a', 'For:2', 'a = 3'),
-                ('range(0, a)', 'If:3', 'a = 1'),
-            ),
+            graph, (("a", "For:2", "a = 3"), ("range(0, a)", "If:3", "a = 1"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3', 'return'))
+        self.assertGraphEnds(graph, "a", ("a = 3", "return"))
 
     def test_for_nested_straightline(self):
-
         def test_fn(a):
             for a in range(0, a):
                 for b in range(1, a):
@@ -775,29 +710,24 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 2'), 'range(0, a)', ('range(1, a)', 'a = 3')),
-                (('range(0, a)', 'b += 1'), 'range(1, a)', ('b += 1', 'a = 2')),
-                ('range(1, a)', 'b += 1', 'range(1, a)'),
-                ('range(1, a)', 'a = 2', 'range(0, a)'),
-                ('range(0, a)', 'a = 3', None),
+                (("a", "a = 2"), "range(0, a)", ("range(1, a)", "a = 3")),
+                (("range(0, a)", "b += 1"), "range(1, a)", ("b += 1", "a = 2")),
+                ("range(1, a)", "b += 1", "range(1, a)"),
+                ("range(1, a)", "a = 2", "range(0, a)"),
+                ("range(0, a)", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (
-                ('a', 'For:2', 'a = 3'),
-                ('range(0, a)', 'For:3', 'a = 2'),
-            ),
+            graph, (("a", "For:2", "a = 3"), ("range(0, a)", "For:3", "a = 2"),),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_for_nested_continue(self):
-
         def test_fn(a):
             for a in range(0, a):
                 for b in range(1, a):
@@ -807,33 +737,35 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 2'), 'range(0, a)', ('range(1, a)', 'a = 3')),
-                (('range(0, a)', 'continue', 'b += 1'), 'range(1, a)',
-                 ('(a > 3)', 'a = 2')),
-                ('range(1, a)', '(a > 3)', ('continue', 'b += 1')),
-                ('(a > 3)', 'continue', 'range(1, a)'),
-                ('(a > 3)', 'b += 1', 'range(1, a)'),
-                ('range(1, a)', 'a = 2', 'range(0, a)'),
-                ('range(0, a)', 'a = 3', None),
+                (("a", "a = 2"), "range(0, a)", ("range(1, a)", "a = 3")),
+                (
+                    ("range(0, a)", "continue", "b += 1"),
+                    "range(1, a)",
+                    ("(a > 3)", "a = 2"),
+                ),
+                ("range(1, a)", "(a > 3)", ("continue", "b += 1")),
+                ("(a > 3)", "continue", "range(1, a)"),
+                ("(a > 3)", "b += 1", "range(1, a)"),
+                ("range(1, a)", "a = 2", "range(0, a)"),
+                ("range(0, a)", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'For:2', 'a = 3'),
-                ('range(0, a)', 'For:3', 'a = 2'),
-                ('range(1, a)', 'If:4', ('b += 1', 'range(1, a)')),
+                ("a", "For:2", "a = 3"),
+                ("range(0, a)", "For:3", "a = 2"),
+                ("range(1, a)", "If:4", ("b += 1", "range(1, a)")),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_for_nested_break(self):
-
         def test_fn(a):
             for a in range(0, a):
                 for b in range(1, a):
@@ -843,32 +775,31 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 2'), 'range(0, a)', ('range(1, a)', 'a = 3')),
-                (('range(0, a)', 'b += 1'), 'range(1, a)', ('(a > 2)', 'a = 2')),
-                ('range(1, a)', '(a > 2)', ('break', 'b += 1')),
-                ('(a > 2)', 'break', 'a = 2'),
-                ('(a > 2)', 'b += 1', 'range(1, a)'),
-                (('range(1, a)', 'break'), 'a = 2', 'range(0, a)'),
-                ('range(0, a)', 'a = 3', None),
+                (("a", "a = 2"), "range(0, a)", ("range(1, a)", "a = 3")),
+                (("range(0, a)", "b += 1"), "range(1, a)", ("(a > 2)", "a = 2")),
+                ("range(1, a)", "(a > 2)", ("break", "b += 1")),
+                ("(a > 2)", "break", "a = 2"),
+                ("(a > 2)", "b += 1", "range(1, a)"),
+                (("range(1, a)", "break"), "a = 2", "range(0, a)"),
+                ("range(0, a)", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'For:2', 'a = 3'),
-                ('range(0, a)', 'For:3', 'a = 2'),
-                ('range(1, a)', 'If:4', ('b += 1', 'a = 2')),
+                ("a", "For:2", "a = 3"),
+                ("range(0, a)", "For:3", "a = 2"),
+                ("range(1, a)", "If:4", ("b += 1", "a = 2")),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_complex(self):
-
         def test_fn(a):
             b = 0
             while a > 0:
@@ -889,47 +820,46 @@ class AstToCfgTest(test.TestCase):
                 return b
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('b = 0', 'a = 2'), '(a > 0)', ('range(0, a)', 'range(1, a)')),
+                (("b = 0", "a = 2"), "(a > 0)", ("range(0, a)", "range(1, a)")),
                 (
-                    ('(a > 0)', 'continue', 'b += 1'),
-                    'range(0, a)',
-                    ('(a > 2)', 'return a'),
+                    ("(a > 0)", "continue", "b += 1"),
+                    "range(0, a)",
+                    ("(a > 2)", "return a"),
                 ),
-                ('range(0, a)', '(a > 2)', ('(a > 3)', 'break')),
-                ('(a > 2)', 'break', 'a = 2'),
-                ('(a > 2)', '(a > 3)', ('(a > 4)', 'b += 1')),
-                ('(a > 3)', '(a > 4)', ('continue', 'max(a)')),
-                ('(a > 4)', 'max(a)', 'break'),
-                ('max(a)', 'break', 'a = 2'),
-                ('(a > 4)', 'continue', 'range(0, a)'),
-                ('(a > 3)', 'b += 1', 'range(0, a)'),
-                ('range(0, a)', 'return a', None),
-                ('break', 'a = 2', '(a > 0)'),
-                ('(a > 0)', 'range(1, a)', ('return b', 'a = 3')),
-                ('range(1, a)', 'return b', None),
-                ('range(1, a)', 'a = 3', None),
+                ("range(0, a)", "(a > 2)", ("(a > 3)", "break")),
+                ("(a > 2)", "break", "a = 2"),
+                ("(a > 2)", "(a > 3)", ("(a > 4)", "b += 1")),
+                ("(a > 3)", "(a > 4)", ("continue", "max(a)")),
+                ("(a > 4)", "max(a)", "break"),
+                ("max(a)", "break", "a = 2"),
+                ("(a > 4)", "continue", "range(0, a)"),
+                ("(a > 3)", "b += 1", "range(0, a)"),
+                ("range(0, a)", "return a", None),
+                ("break", "a = 2", "(a > 0)"),
+                ("(a > 0)", "range(1, a)", ("return b", "a = 3")),
+                ("range(1, a)", "return b", None),
+                ("range(1, a)", "a = 3", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('b = 0', 'While:3', 'range(1, a)'),
-                ('(a > 0)', 'For:4', 'a = 2'),
-                ('range(0, a)', 'If:5', ('(a > 3)', 'a = 2')),
-                ('(a > 2)', 'If:7', ('b += 1', 'a = 2', 'range(0, a)')),
-                ('(a > 3)', 'If:8', ('a = 2', 'range(0, a)')),
-                ('(a > 0)', 'For:17', 'a = 3'),
+                ("b = 0", "While:3", "range(1, a)"),
+                ("(a > 0)", "For:4", "a = 2"),
+                ("range(0, a)", "If:5", ("(a > 3)", "a = 2")),
+                ("(a > 2)", "If:7", ("b += 1", "a = 2", "range(0, a)")),
+                ("(a > 3)", "If:8", ("a = 2", "range(0, a)")),
+                ("(a > 0)", "For:17", "a = 3"),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3', 'return a', 'return b'))
+        self.assertGraphEnds(graph, "a", ("a = 3", "return a", "return b"))
 
     def test_finally_straightline(self):
-
         def test_fn(a):
             try:
                 a += 1
@@ -937,20 +867,19 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             a = 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a += 1', 'a = 2'),
-                ('a += 1', 'a = 2', 'a = 3'),
-                ('a = 2', 'a = 3', None),
+                ("a", "a += 1", "a = 2"),
+                ("a += 1", "a = 2", "a = 3"),
+                ("a = 2", "a = 3", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 3',))
+        self.assertGraphEnds(graph, "a", ("a = 3",))
 
     def test_return_finally(self):
-
         def test_fn(a):
             try:
                 return a
@@ -958,21 +887,20 @@ class AstToCfgTest(test.TestCase):
                 a = 1
             a = 2
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'return a', 'a = 1'),
-                ('return a', 'a = 1', None),
-                (None, 'a = 2', None),
+                ("a", "return a", "a = 1"),
+                ("return a", "a = 1", None),
+                (None, "a = 2", None),
             ),
         )
         # Note, `a = 1` executes after `return a`.
-        self.assertGraphEnds(graph, 'a', ('a = 2', 'a = 1'))
+        self.assertGraphEnds(graph, "a", ("a = 2", "a = 1"))
 
     def test_break_finally(self):
-
         def test_fn(a):
             while a > 0:
                 try:
@@ -980,20 +908,19 @@ class AstToCfgTest(test.TestCase):
                 finally:
                     a = 1
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', '(a > 0)', 'break'),
-                ('(a > 0)', 'break', 'a = 1'),
-                ('break', 'a = 1', None),
+                ("a", "(a > 0)", "break"),
+                ("(a > 0)", "break", "a = 1"),
+                ("break", "a = 1", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('(a > 0)', 'a = 1'))
+        self.assertGraphEnds(graph, "a", ("(a > 0)", "a = 1"))
 
     def test_continue_finally(self):
-
         def test_fn(a):
             while a > 0:
                 try:
@@ -1001,41 +928,41 @@ class AstToCfgTest(test.TestCase):
                 finally:
                     a = 1
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                (('a', 'a = 1'), '(a > 0)', 'continue'),
-                ('(a > 0)', 'continue', 'a = 1'),
-                ('continue', 'a = 1', '(a > 0)'),
+                (("a", "a = 1"), "(a > 0)", "continue"),
+                ("(a > 0)", "continue", "a = 1"),
+                ("continue", "a = 1", "(a > 0)"),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('(a > 0)',))
+        self.assertGraphEnds(graph, "a", ("(a > 0)",))
 
     def test_with_straightline(self):
-
         def test_fn(a):
             with max(a) as b:
                 a = 0
                 return b
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'max(a)', 'a = 0'),
-                ('max(a)', 'a = 0', 'return b'),
-                ('a = 0', 'return b', None),
+                ("a", "max(a)", "a = 0"),
+                ("max(a)", "a = 0", "return b"),
+                ("a = 0", "return b", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('return b',))
+        self.assertGraphEnds(graph, "a", ("return b",))
 
     def test_lambda_basic(self):
-
         def test_fn(a):
-            def a(b): return a + b
+            def a(b):
+                return a + b
+
             return a
 
         graphs = self._build_cfg(test_fn)
@@ -1048,22 +975,18 @@ class AstToCfgTest(test.TestCase):
         self.assertGraphMatches(
             fn_graph,
             (
-                ('a', '(lambda b: (a + b))', 'a = (lambda b: (a + b))'),
-                ('(lambda b: (a + b))', 'a = (lambda b: (a + b))', 'return a'),
-                ('a = (lambda b: (a + b))', 'return a', None),
+                ("a", "(lambda b: (a + b))", "a = (lambda b: (a + b))"),
+                ("(lambda b: (a + b))", "a = (lambda b: (a + b))", "return a"),
+                ("a = (lambda b: (a + b))", "return a", None),
             ),
         )
-        self.assertGraphEnds(fn_graph, 'a', ('return a',))
+        self.assertGraphEnds(fn_graph, "a", ("return a",))
         self.assertGraphMatches(
-            lam_graph,
-            (
-                ('b', '(a + b)', None),
-            ),
+            lam_graph, (("b", "(a + b)", None),),
         )
-        self.assertGraphEnds(lam_graph, 'b', ('(a + b)',))
+        self.assertGraphEnds(lam_graph, "b", ("(a + b)",))
 
     def test_lambda_in_return(self):
-
         def test_fn(a):
             return lambda b: a + b
 
@@ -1077,36 +1000,28 @@ class AstToCfgTest(test.TestCase):
         self.assertGraphMatches(
             fn_graph,
             (
-                ('a', '(lambda b: (a + b))', 'return (lambda b: (a + b))'),
-                ('(lambda b: (a + b))', 'return (lambda b: (a + b))', None),
+                ("a", "(lambda b: (a + b))", "return (lambda b: (a + b))"),
+                ("(lambda b: (a + b))", "return (lambda b: (a + b))", None),
             ),
         )
-        self.assertGraphEnds(fn_graph, 'a', ('return (lambda b: (a + b))',))
+        self.assertGraphEnds(fn_graph, "a", ("return (lambda b: (a + b))",))
         self.assertGraphMatches(
-            lam_graph,
-            (
-                ('b', '(a + b)', None),
-            ),
+            lam_graph, (("b", "(a + b)", None),),
         )
-        self.assertGraphEnds(lam_graph, 'b', ('(a + b)',))
+        self.assertGraphEnds(lam_graph, "b", ("(a + b)",))
 
     def test_pass(self):
-
         def test_fn(a):  # pylint:disable=unused-argument
             pass
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
-            graph,
-            (
-                ('a', 'pass', None),
-            ),
+            graph, (("a", "pass", None),),
         )
-        self.assertGraphEnds(graph, 'a', ('pass',))
+        self.assertGraphEnds(graph, "a", ("pass",))
 
     def test_try_finally(self):
-
         def test_fn(a):
             try:
                 a = 1
@@ -1114,26 +1029,22 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', 'a = 2'),
-                ('a = 1', 'a = 2', 'return a'),
-                ('a = 2', 'return a', None),
+                ("a", "a = 1", "a = 2"),
+                ("a = 1", "a = 2", "return a"),
+                ("a = 2", "return a", None),
             ),
         )
         self.assertStatementEdges(
-            graph,
-            (
-                ('a', 'Try:2', 'return a'),
-            ),
+            graph, (("a", "Try:2", "return a"),),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_except_single_bare(self):
-
         def test_fn(a):
             try:
                 a = 1
@@ -1142,27 +1053,23 @@ class AstToCfgTest(test.TestCase):
                 a = 3
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', 'a = 2'),
-                ('a = 2', 'a = 3', 'return a'),
-                (('a = 2', 'a = 3'), 'return a', None),
+                ("a", "a = 1", "a = 2"),
+                ("a = 2", "a = 3", "return a"),
+                (("a = 2", "a = 3"), "return a", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'Try:2', 'return a'),
-                ('a = 2', 'ExceptHandler:5', 'return a'),
-            ),
+            (("a", "Try:2", "return a"), ("a = 2", "ExceptHandler:5", "return a"),),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_except_single(self):
-
         def test_fn(a):
             try:
                 a = 1
@@ -1171,27 +1078,23 @@ class AstToCfgTest(test.TestCase):
                 a = 3
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', 'a = 2'),
-                ('a = 2', 'a = 3', 'return a'),
-                (('a = 2', 'a = 3'), 'return a', None),
+                ("a", "a = 1", "a = 2"),
+                ("a = 2", "a = 3", "return a"),
+                (("a = 2", "a = 3"), "return a", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'Try:2', 'return a'),
-                ('a = 2', 'ExceptHandler:5', 'return a'),
-            ),
+            (("a", "Try:2", "return a"), ("a = 2", "ExceptHandler:5", "return a"),),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_except_single_aliased(self):
-
         def test_fn(a):
             try:
                 a = 1
@@ -1199,53 +1102,48 @@ class AstToCfgTest(test.TestCase):
                 a = 2
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', ('a = 2', 'return a')),
-                (('a = 1', 'a = 2'), 'return a', None),
+                ("a", "a = 1", ("a = 2", "return a")),
+                (("a = 1", "a = 2"), "return a", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'Try:2', 'return a'),
-                ('a = 1', 'ExceptHandler:4', 'return a'),
-            ),
+            (("a", "Try:2", "return a"), ("a = 1", "ExceptHandler:4", "return a"),),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_except_single_tuple_aliased(self):
-
         def test_fn(a):
             try:
                 a = 1
-            except (Exception1, Exception2) as e:  # pylint:disable=undefined-variable,unused-variable
+            except (
+                Exception1,
+                Exception2,
+            ) as e:  # pylint:disable=undefined-variable,unused-variable
                 a = 2
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', ('a = 2', 'return a')),
-                (('a = 1', 'a = 2'), 'return a', None),
+                ("a", "a = 1", ("a = 2", "return a")),
+                (("a = 1", "a = 2"), "return a", None),
             ),
         )
         self.assertStatementEdges(
             graph,
-            (
-                ('a', 'Try:2', 'return a'),
-                ('a = 1', 'ExceptHandler:4', 'return a'),
-            ),
+            (("a", "Try:2", "return a"), ("a = 1", "ExceptHandler:4", "return a"),),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_except_multiple(self):
-
         def test_fn(a):
             try:
                 a = 1
@@ -1255,27 +1153,26 @@ class AstToCfgTest(test.TestCase):
                 a = 3
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', ('a = 2', 'a = 3', 'return a')),
-                (('a = 1', 'a = 2', 'a = 3'), 'return a', None),
+                ("a", "a = 1", ("a = 2", "a = 3", "return a")),
+                (("a = 1", "a = 2", "a = 3"), "return a", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'Try:2', 'return a'),
-                ('a = 1', 'ExceptHandler:4', 'return a'),
-                ('a = 1', 'ExceptHandler:6', 'return a'),
+                ("a", "Try:2", "return a"),
+                ("a = 1", "ExceptHandler:4", "return a"),
+                ("a = 1", "ExceptHandler:6", "return a"),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_except_finally(self):
-
         def test_fn(a):
             try:
                 a = 1
@@ -1287,28 +1184,27 @@ class AstToCfgTest(test.TestCase):
                 a = 4
             return a
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'a = 1', ('a = 2', 'a = 3', 'a = 4')),
-                (('a = 1', 'a = 2', 'a = 3'), 'a = 4', 'return a'),
-                ('a = 4', 'return a', None),
+                ("a", "a = 1", ("a = 2", "a = 3", "a = 4")),
+                (("a = 1", "a = 2", "a = 3"), "a = 4", "return a"),
+                ("a = 4", "return a", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'Try:2', 'return a'),
-                ('a = 1', 'ExceptHandler:4', 'a = 4'),
-                ('a = 1', 'ExceptHandler:6', 'a = 4'),
+                ("a", "Try:2", "return a"),
+                ("a = 1", "ExceptHandler:4", "a = 4"),
+                ("a = 1", "ExceptHandler:6", "a = 4"),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('return a',))
+        self.assertGraphEnds(graph, "a", ("return a",))
 
     def test_try_in_if(self):
-
         def test_fn(a):
             try:
                 if a > 0:
@@ -1319,30 +1215,29 @@ class AstToCfgTest(test.TestCase):
                 a = 3
             a = 4
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', '(a > 0)', ('a = 1', 'a = 2')),
-                ('(a > 0)', 'a = 1', ('a = 3', 'a = 4')),
-                ('(a > 0)', 'a = 2', ('a = 3', 'a = 4')),
-                (('a = 1', 'a = 2'), 'a = 3', 'a = 4'),
-                (('a = 1', 'a = 2', 'a = 3'), 'a = 4', None),
+                ("a", "(a > 0)", ("a = 1", "a = 2")),
+                ("(a > 0)", "a = 1", ("a = 3", "a = 4")),
+                ("(a > 0)", "a = 2", ("a = 3", "a = 4")),
+                (("a = 1", "a = 2"), "a = 3", "a = 4"),
+                (("a = 1", "a = 2", "a = 3"), "a = 4", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a', 'Try:2', 'a = 4'),
-                ('a', 'If:3', ('a = 3', 'a = 4')),
-                (('a = 1', 'a = 2'), 'ExceptHandler:7', 'a = 4'),
+                ("a", "Try:2", "a = 4"),
+                ("a", "If:3", ("a = 3", "a = 4")),
+                (("a = 1", "a = 2"), "ExceptHandler:7", "a = 4"),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('a = 4',))
+        self.assertGraphEnds(graph, "a", ("a = 4",))
 
     def test_try_in_if_all_branches_exit(self):
-
         def test_fn(a, b):
             try:
                 if a > 0:
@@ -1352,47 +1247,40 @@ class AstToCfgTest(test.TestCase):
             except b:
                 return 1
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a, b', '(a > 0)', ('raise b', 'return 0')),
-                ('(a > 0)', 'raise b', 'return 1'),
-                ('(a > 0)', 'return 0', None),
-                ('raise b', 'return 1', None),
+                ("a, b", "(a > 0)", ("raise b", "return 0")),
+                ("(a > 0)", "raise b", "return 1"),
+                ("(a > 0)", "return 0", None),
+                ("raise b", "return 1", None),
             ),
         )
         self.assertStatementEdges(
             graph,
             (
-                ('a, b', 'Try:2', None),
-                ('a, b', 'If:3', 'return 1'),
-                ('raise b', 'ExceptHandler:7', None),
+                ("a, b", "Try:2", None),
+                ("a, b", "If:3", "return 1"),
+                ("raise b", "ExceptHandler:7", None),
             ),
         )
-        self.assertGraphEnds(
-            graph, 'a, b', ('return 0', 'return 1', 'raise b'))
+        self.assertGraphEnds(graph, "a, b", ("return 0", "return 1", "raise b"))
 
     def test_raise_exits(self):
-
         def test_fn(a, b):
             raise b
             return a  # pylint:disable=unreachable
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
-            graph,
-            (
-                ('a, b', 'raise b', None),
-                (None, 'return a', None),
-            ),
+            graph, (("a, b", "raise b", None), (None, "return a", None),),
         )
-        self.assertGraphEnds(graph, 'a, b', ('raise b', 'return a'))
+        self.assertGraphEnds(graph, "a, b", ("raise b", "return a"))
 
     def test_raise_triggers_enclosing_finally(self):
-
         def test_fn(a):
             try:
                 try:
@@ -1405,24 +1293,22 @@ class AstToCfgTest(test.TestCase):
                 b = 2
             return b
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'raise a', 'b = 1'),
-                (('raise a', 'return 1'), 'b = 1', 'b = 2'),
-                (None, 'return 1', 'b = 1'),
-                (None, 'return 2', 'b = 2'),
-                (('return 2', 'b = 1'), 'b = 2', None),
-                (None, 'return b', None),
+                ("a", "raise a", "b = 1"),
+                (("raise a", "return 1"), "b = 1", "b = 2"),
+                (None, "return 1", "b = 1"),
+                (None, "return 2", "b = 2"),
+                (("return 2", "b = 1"), "b = 2", None),
+                (None, "return b", None),
             ),
         )
-        self.assertGraphEnds(
-            graph, 'a', ('return b', 'b = 2'))
+        self.assertGraphEnds(graph, "a", ("return b", "b = 2"))
 
     def test_raise_adds_finally_sortcuts(self):
-
         def test_fn(a):
             try:
                 try:
@@ -1436,25 +1322,23 @@ class AstToCfgTest(test.TestCase):
                 b = 2
             return b, c
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', '(a > 0)', ('raise a', 'c = 1')),
-                ('(a > 0)', 'raise a', 'b = 1'),
-                ('(a > 0)', 'c = 1', 'b = 1'),
-                (('raise a', 'c = 1'), 'b = 1', ('c = 2', 'b = 2')),
-                ('b = 1', 'c = 2', 'b = 2'),
-                (('b = 1', 'c = 2'), 'b = 2', 'return (b, c)'),
-                ('b = 2', 'return (b, c)', None),
+                ("a", "(a > 0)", ("raise a", "c = 1")),
+                ("(a > 0)", "raise a", "b = 1"),
+                ("(a > 0)", "c = 1", "b = 1"),
+                (("raise a", "c = 1"), "b = 1", ("c = 2", "b = 2")),
+                ("b = 1", "c = 2", "b = 2"),
+                (("b = 1", "c = 2"), "b = 2", "return (b, c)"),
+                ("b = 2", "return (b, c)", None),
             ),
         )
-        self.assertGraphEnds(
-            graph, 'a', ('return (b, c)', 'b = 2'))
+        self.assertGraphEnds(graph, "a", ("return (b, c)", "b = 2"))
 
     def test_raise_exits_via_except(self):
-
         def test_fn(a, b):
             try:
                 raise b
@@ -1465,89 +1349,80 @@ class AstToCfgTest(test.TestCase):
             finally:
                 c += 3
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a, b', 'raise b', ('c = 1', 'c = 2', 'c += 3')),
-                ('raise b', 'c = 1', 'c += 3'),
-                ('raise b', 'c = 2', 'c += 3'),
-                (('raise b', 'c = 1', 'c = 2'), 'c += 3', None),
+                ("a, b", "raise b", ("c = 1", "c = 2", "c += 3")),
+                ("raise b", "c = 1", "c += 3"),
+                ("raise b", "c = 2", "c += 3"),
+                (("raise b", "c = 1", "c = 2"), "c += 3", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a, b', ('c += 3',))
+        self.assertGraphEnds(graph, "a, b", ("c += 3",))
 
     def test_list_comprehension(self):
-
         def test_fn(a):
             c = [b for b in a]
             return c
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('a', 'c = [b for b in a]', 'return c'),
-                ('c = [b for b in a]', 'return c', None),
+                ("a", "c = [b for b in a]", "return c"),
+                ("c = [b for b in a]", "return c", None),
             ),
         )
-        self.assertGraphEnds(graph, 'a', ('return c',))
+        self.assertGraphEnds(graph, "a", ("return c",))
 
     def test_class_definition_empty(self):
-
         def test_fn(a, b):
             class C(a(b)):
                 pass
+
             return C
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
-            graph,
-            (
-                ('a, b', 'class C', 'return C'),
-                ('class C', 'return C', None),
-            ),
+            graph, (("a, b", "class C", "return C"), ("class C", "return C", None),),
         )
-        self.assertGraphEnds(graph, 'a, b', ('return C',))
+        self.assertGraphEnds(graph, "a, b", ("return C",))
 
     def test_class_definition_with_members(self):
-
         def test_fn(a, b):
             class C(a(b)):
                 d = 1
+
             return C
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
-            graph,
-            (
-                ('a, b', 'class C', 'return C'),
-                ('class C', 'return C', None),
-            ),
+            graph, (("a, b", "class C", "return C"), ("class C", "return C", None),),
         )
-        self.assertGraphEnds(graph, 'a, b', ('return C',))
+        self.assertGraphEnds(graph, "a, b", ("return C",))
 
     def test_import(self):
-
         def test_fn():
             from a import b  # pylint:disable=g-import-not-at-top
+
             return b
 
-        graph, = self._build_cfg(test_fn).values()
+        (graph,) = self._build_cfg(test_fn).values()
 
         self.assertGraphMatches(
             graph,
             (
-                ('', 'from a import b', 'return b'),
-                ('from a import b', 'return b', None),
+                ("", "from a import b", "return b"),
+                ("from a import b", "return b", None),
             ),
         )
-        self.assertGraphEnds(graph, '', ('return b',))
+        self.assertGraphEnds(graph, "", ("return b",))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
