@@ -33,22 +33,22 @@ from tensorflow.python.platform import test
 
 class DatasetSpecTest(test_base.DatasetTestBase, parameterized.TestCase):
 
-  @combinations.generate(test_base.default_test_combinations())
-  def testInputSignature(self):
-    dataset = dataset_ops.Dataset.from_tensor_slices(
-        np.arange(10).astype(np.int32)).batch(5)
+    @combinations.generate(test_base.default_test_combinations())
+    def testInputSignature(self):
+        dataset = dataset_ops.Dataset.from_tensor_slices(
+            np.arange(10).astype(np.int32)).batch(5)
 
-    @def_function.function(input_signature=[
-        dataset_ops.DatasetSpec(
-            tensor_spec.TensorSpec(
-                shape=(None,), dtype=dtypes.int32, name=None),
-            tensor_shape.TensorShape([]))
-    ])
-    def fn(_):
-      pass
+        @def_function.function(input_signature=[
+            dataset_ops.DatasetSpec(
+                tensor_spec.TensorSpec(
+                    shape=(None,), dtype=dtypes.int32, name=None),
+                tensor_shape.TensorShape([]))
+        ])
+        def fn(_):
+            pass
 
-    fn(dataset)
+        fn(dataset)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
