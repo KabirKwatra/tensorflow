@@ -55,162 +55,164 @@ static std::array<bool, 2> use_bf16_params{true, false};
 //
 // In bf16 mode, all f32 shapes are converted to bf16 before running.
 class HloEvaluatorTest : public HloTestBase {
- public:
-  HloEvaluatorTest() : use_bfloat16_(false) { InitializeFftData(); }
-
-  StatusOr<Literal> Evaluate(
-      absl::Span<const Literal* const> arg_literals = {}) {
-    if (use_bfloat16_) {
-      HloElementTypeConverter(F32, BF16).Run(m_.get()).ValueOrDie();
+public:
+    HloEvaluatorTest() : use_bfloat16_(false) {
+        InitializeFftData();
     }
-    return evaluator_.Evaluate(*m_->entry_computation(), arg_literals);
-  }
 
-  // Evaluate function that takes in a local module instead of using m_
-  // that is in HloTestBase. Once m_ in HloTestBase is
-  // removed, this should be the default Evaluate function.
-  Literal EvaluateWithModule(
-      HloModule* module, absl::Span<const Literal* const> arg_literals = {}) {
-    if (use_bfloat16_) {
-      HloElementTypeConverter(F32, BF16).Run(m_.get()).ValueOrDie();
+    StatusOr<Literal> Evaluate(
+        absl::Span<const Literal* const> arg_literals = {}) {
+        if (use_bfloat16_) {
+            HloElementTypeConverter(F32, BF16).Run(m_.get()).ValueOrDie();
+        }
+        return evaluator_.Evaluate(*m_->entry_computation(), arg_literals);
     }
-    return evaluator_.Evaluate(*module->entry_computation(), arg_literals)
-        .ConsumeValueOrDie();
-  }
 
-  void TestUnaryOp(HloOpcode opcode, Literal expected, Literal input,
-                   float aabs = 0) {
-    HloComputation::Builder b(TestName());
-    auto c1 =
-        b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
-    b.AddInstruction(HloInstruction::CreateUnary(expected.shape(), opcode, c1));
-    m_->AddEntryComputation(b.Build());
-
-    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
-
-    auto element_type = expected.shape().element_type();
-    if (element_type == F32 || element_type == F64) {
-      ErrorSpec error(aabs);
-      EXPECT_TRUE(LiteralTestUtil::Near(expected, result, error));
-    } else {
-      EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    // Evaluate function that takes in a local module instead of using m_
+    // that is in HloTestBase. Once m_ in HloTestBase is
+    // removed, this should be the default Evaluate function.
+    Literal EvaluateWithModule(
+        HloModule* module, absl::Span<const Literal* const> arg_literals = {}) {
+        if (use_bfloat16_) {
+            HloElementTypeConverter(F32, BF16).Run(m_.get()).ValueOrDie();
+        }
+        return evaluator_.Evaluate(*module->entry_computation(), arg_literals)
+               .ConsumeValueOrDie();
     }
-  }
 
-  void TestBinaryOp(HloOpcode opcode, Literal expected, Literal lhs,
-                    Literal rhs) {
-    HloComputation::Builder b(TestName());
-    auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs)));
-    auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs)));
-    b.AddInstruction(
-        HloInstruction::CreateBinary(expected.shape(), opcode, c1, c2));
-    m_->AddEntryComputation(b.Build());
+    void TestUnaryOp(HloOpcode opcode, Literal expected, Literal input,
+                     float aabs = 0) {
+        HloComputation::Builder b(TestName());
+        auto c1 =
+            b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
+        b.AddInstruction(HloInstruction::CreateUnary(expected.shape(), opcode, c1));
+        m_->AddEntryComputation(b.Build());
 
-    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+        TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
-  }
+        auto element_type = expected.shape().element_type();
+        if (element_type == F32 || element_type == F64) {
+            ErrorSpec error(aabs);
+            EXPECT_TRUE(LiteralTestUtil::Near(expected, result, error));
+        } else {
+            EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+        }
+    }
 
-  void TestTernaryOp(HloOpcode opcode, Literal expected, Literal src0,
-                     Literal src1, Literal src2) {
-    HloComputation::Builder b(TestName());
-    auto operand0 =
-        b.AddInstruction(HloInstruction::CreateConstant(std::move(src0)));
-    auto operand1 =
-        b.AddInstruction(HloInstruction::CreateConstant(std::move(src1)));
-    auto operand2 =
-        b.AddInstruction(HloInstruction::CreateConstant(std::move(src2)));
-    b.AddInstruction(HloInstruction::CreateTernary(
-        expected.shape(), opcode, operand0, operand1, operand2));
-    m_->AddEntryComputation(b.Build());
+    void TestBinaryOp(HloOpcode opcode, Literal expected, Literal lhs,
+                      Literal rhs) {
+        HloComputation::Builder b(TestName());
+        auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs)));
+        auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs)));
+        b.AddInstruction(
+            HloInstruction::CreateBinary(expected.shape(), opcode, c1, c2));
+        m_->AddEntryComputation(b.Build());
 
-    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+        TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
-  }
+        EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    }
 
-  std::unique_ptr<HloComputation> MaxComputationScalarF32() {
-    HloComputation::Builder max_computation("max");
-    Shape scalar_shape = ShapeUtil::MakeShape(F32, {});
-    auto param_lhs = max_computation.AddInstruction(
-        HloInstruction::CreateParameter(0, scalar_shape, "lhs"));
-    auto param_rhs = max_computation.AddInstruction(
-        HloInstruction::CreateParameter(1, scalar_shape, "rhs"));
-    max_computation.AddInstruction(HloInstruction::CreateBinary(
-        scalar_shape, HloOpcode::kMaximum, param_lhs, param_rhs));
-    return max_computation.Build();
-  }
+    void TestTernaryOp(HloOpcode opcode, Literal expected, Literal src0,
+                       Literal src1, Literal src2) {
+        HloComputation::Builder b(TestName());
+        auto operand0 =
+            b.AddInstruction(HloInstruction::CreateConstant(std::move(src0)));
+        auto operand1 =
+            b.AddInstruction(HloInstruction::CreateConstant(std::move(src1)));
+        auto operand2 =
+            b.AddInstruction(HloInstruction::CreateConstant(std::move(src2)));
+        b.AddInstruction(HloInstruction::CreateTernary(
+                             expected.shape(), opcode, operand0, operand1, operand2));
+        m_->AddEntryComputation(b.Build());
 
-  void ReduceWindowMaxIotaTest(int window_size, int padding, int stride,
-                               int window_dilation, int base_dilation,
-                               const Literal& expected) {
-    HloComputation::Builder b(TestName());
+        TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-    // arg:
-    // f32[4,4] {
-    //  {  0,  1,  2,  3 },
-    //  {  4,  5,  6,  7 },
-    //  {  8,  9, 10, 11 },
-    //  { 12, 13, 14, 15 }
-    // }
-    auto arg_array = absl::make_unique<Array2D<float>>(4, 4);
-    arg_array->FillIota(0);
-    auto arg_literal = LiteralUtil::CreateR2FromArray2D<float>(*arg_array);
+        EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    }
 
-    HloInstruction* arg_instruction = b.AddInstruction(
-        HloInstruction::CreateConstant(std::move(arg_literal)));
-    auto init_value = b.AddInstruction(
-        HloInstruction::CreateConstant(LiteralUtil::CreateR0<float>(0.f)));
-    auto max_func = m_->AddEmbeddedComputation(MaxComputationScalarF32());
+    std::unique_ptr<HloComputation> MaxComputationScalarF32() {
+        HloComputation::Builder max_computation("max");
+        Shape scalar_shape = ShapeUtil::MakeShape(F32, {});
+        auto param_lhs = max_computation.AddInstruction(
+                             HloInstruction::CreateParameter(0, scalar_shape, "lhs"));
+        auto param_rhs = max_computation.AddInstruction(
+                             HloInstruction::CreateParameter(1, scalar_shape, "rhs"));
+        max_computation.AddInstruction(HloInstruction::CreateBinary(
+                                           scalar_shape, HloOpcode::kMaximum, param_lhs, param_rhs));
+        return max_computation.Build();
+    }
 
-    Window window;
-    WindowDimension dim;
-    dim.set_size(window_size);
-    dim.set_stride(stride);
-    dim.set_padding_low(padding);
-    dim.set_padding_high(padding);
-    dim.set_window_dilation(window_dilation);
-    dim.set_base_dilation(base_dilation);
-    *window.add_dimensions() = dim;
-    *window.add_dimensions() = dim;
+    void ReduceWindowMaxIotaTest(int window_size, int padding, int stride,
+                                 int window_dilation, int base_dilation,
+                                 const Literal& expected) {
+        HloComputation::Builder b(TestName());
 
-    int dim0 = expected.shape().dimensions(0);
-    int dim1 = expected.shape().dimensions(1);
-    Shape shape = ShapeUtil::MakeShape(F32, {dim0, dim1});
-    b.AddInstruction(HloInstruction::CreateReduceWindow(
-        shape, arg_instruction, init_value, window, max_func));
+        // arg:
+        // f32[4,4] {
+        //  {  0,  1,  2,  3 },
+        //  {  4,  5,  6,  7 },
+        //  {  8,  9, 10, 11 },
+        //  { 12, 13, 14, 15 }
+        // }
+        auto arg_array = absl::make_unique<Array2D<float>>(4, 4);
+        arg_array->FillIota(0);
+        auto arg_literal = LiteralUtil::CreateR2FromArray2D<float>(*arg_array);
 
-    m_->AddEntryComputation(b.Build());
-    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
-    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
-  }
+        HloInstruction* arg_instruction = b.AddInstruction(
+                                              HloInstruction::CreateConstant(std::move(arg_literal)));
+        auto init_value = b.AddInstruction(
+                              HloInstruction::CreateConstant(LiteralUtil::CreateR0<float>(0.f)));
+        auto max_func = m_->AddEmbeddedComputation(MaxComputationScalarF32());
 
- protected:
-  explicit HloEvaluatorTest(bool use_bfloat16) : use_bfloat16_(use_bfloat16) {
-    InitializeFftData();
-  }
+        Window window;
+        WindowDimension dim;
+        dim.set_size(window_size);
+        dim.set_stride(stride);
+        dim.set_padding_low(padding);
+        dim.set_padding_high(padding);
+        dim.set_window_dilation(window_dilation);
+        dim.set_base_dilation(base_dilation);
+        *window.add_dimensions() = dim;
+        *window.add_dimensions() = dim;
 
-  // Initializes data sets used in FFT tests below.
-  void InitializeFftData();
+        int dim0 = expected.shape().dimensions(0);
+        int dim1 = expected.shape().dimensions(1);
+        Shape shape = ShapeUtil::MakeShape(F32, {dim0, dim1});
+        b.AddInstruction(HloInstruction::CreateReduceWindow(
+                             shape, arg_instruction, init_value, window, max_func));
 
-  HloEvaluator evaluator_;
+        m_->AddEntryComputation(b.Build());
+        TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+        EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    }
 
-  const bool use_bfloat16_;
-  std::unique_ptr<HloModule> m_ = CreateNewVerifiedModule();
+protected:
+    explicit HloEvaluatorTest(bool use_bfloat16) : use_bfloat16_(use_bfloat16) {
+        InitializeFftData();
+    }
 
-  // Data sets used in FFT tests below.
-  ErrorSpec fft_error_ = ErrorSpec(1e-4, 1e-5);
-  Literal fft_c64x2x4x8_;
-  Literal fft_c64x2x4x8_1d_;
-  Literal fft_c64x2x4x8_2d_;
-  Literal fft_c64x2x4x8_3d_;
+    // Initializes data sets used in FFT tests below.
+    void InitializeFftData();
+
+    HloEvaluator evaluator_;
+
+    const bool use_bfloat16_;
+    std::unique_ptr<HloModule> m_ = CreateNewVerifiedModule();
+
+    // Data sets used in FFT tests below.
+    ErrorSpec fft_error_ = ErrorSpec(1e-4, 1e-5);
+    Literal fft_c64x2x4x8_;
+    Literal fft_c64x2x4x8_1d_;
+    Literal fft_c64x2x4x8_2d_;
+    Literal fft_c64x2x4x8_3d_;
 };
 
 // Lets you write TEST_Ps that run twice, once with and once without bf16.
 class HloEvaluatorBf16Test : public ::testing::WithParamInterface<bool>,
-                             public HloEvaluatorTest {
- protected:
-  HloEvaluatorBf16Test() : HloEvaluatorTest(/*use_bfloat16=*/GetParam()) {}
+    public HloEvaluatorTest {
+protected:
+    HloEvaluatorBf16Test() : HloEvaluatorTest(/*use_bfloat16=*/GetParam()) {}
 };
 
 INSTANTIATE_TEST_SUITE_P(HloEvaluatorTest_Instantiation, HloEvaluatorBf16Test,
@@ -219,1369 +221,1421 @@ INSTANTIATE_TEST_SUITE_P(HloEvaluatorTest_Instantiation, HloEvaluatorBf16Test,
 // Verifies that HloEvaluator evaluates a HLO instruction that performs clamp
 // with 3 operands.
 TEST_P(HloEvaluatorBf16Test, DoesClamp) {
-  auto low = LiteralUtil::CreateR2<float>({{0.f, 2.f}, {2.f, 4.f}});
-  auto value = LiteralUtil::CreateR2<float>({{0.f, 5.f}, {0.f, 4.f}});
-  auto high = LiteralUtil::CreateR2<float>({{2.f, 4.f}, {4.f, 4.f}});
+    auto low = LiteralUtil::CreateR2<float>({{0.f, 2.f}, {2.f, 4.f}});
+    auto value = LiteralUtil::CreateR2<float>({{0.f, 5.f}, {0.f, 4.f}});
+    auto high = LiteralUtil::CreateR2<float>({{2.f, 4.f}, {4.f, 4.f}});
 
-  Shape shape = low.shape();
-  HloComputation::Builder b(TestName());
-  auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(low)));
-  auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(value)));
-  auto c3 = b.AddInstruction(HloInstruction::CreateConstant(std::move(high)));
-  b.AddInstruction(
-      HloInstruction::CreateTernary(shape, HloOpcode::kClamp, c1, c2, c3));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = low.shape();
+    HloComputation::Builder b(TestName());
+    auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(low)));
+    auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(value)));
+    auto c3 = b.AddInstruction(HloInstruction::CreateConstant(std::move(high)));
+    b.AddInstruction(
+        HloInstruction::CreateTernary(shape, HloOpcode::kClamp, c1, c2, c3));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected = LiteralUtil::CreateR2<float>({{0, 4}, {2, 4}});
+    auto expected = LiteralUtil::CreateR2<float>({{0, 4}, {2, 4}});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 // Verifies that clamping of int64 does not cause loss of precision
 TEST_P(HloEvaluatorBf16Test, DoesClampInt64) {
-  auto ones = [](int bits) { return (int64{1} << bits) - 1; };
+    auto ones = [](int bits) {
+        return (int64{1} << bits) - 1;
+    };
 
-  auto low =
-      LiteralUtil::CreateR2<int64>({{0, ones(54)}, {ones(54), ones(58)}});
-  auto value = LiteralUtil::CreateR2<int64>({{0, ones(56)}, {0, ones(58)}});
-  auto high = LiteralUtil::CreateR2<int64>(
-      {{ones(54), ones(55)}, {ones(56), ones(58)}});
+    auto low =
+    LiteralUtil::CreateR2<int64>({{0, ones(54)}, {ones(54), ones(58)}});
+    auto value = LiteralUtil::CreateR2<int64>({{0, ones(56)}, {0, ones(58)}});
+    auto high = LiteralUtil::CreateR2<int64>(
+    {{ones(54), ones(55)}, {ones(56), ones(58)}});
 
-  Shape shape = low.shape();
-  HloComputation::Builder b(TestName());
-  auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(low)));
-  auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(value)));
-  auto c3 = b.AddInstruction(HloInstruction::CreateConstant(std::move(high)));
-  b.AddInstruction(
-      HloInstruction::CreateTernary(shape, HloOpcode::kClamp, c1, c2, c3));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = low.shape();
+    HloComputation::Builder b(TestName());
+    auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(low)));
+    auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(value)));
+    auto c3 = b.AddInstruction(HloInstruction::CreateConstant(std::move(high)));
+    b.AddInstruction(
+        HloInstruction::CreateTernary(shape, HloOpcode::kClamp, c1, c2, c3));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected =
-      LiteralUtil::CreateR2<int64>({{0, ones(55)}, {ones(54), ones(58)}});
+    auto expected =
+    LiteralUtil::CreateR2<int64>({{0, ones(55)}, {ones(54), ones(58)}});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DISABLED_DoesClampSpecialBroadcast) {
-  auto low = LiteralUtil::CreateR0<float>(0.f);
-  auto value = LiteralUtil::CreateR2<float>({{-1.f, 0.f}, {1.f, 2.f}});
-  auto high = LiteralUtil::CreateR0<float>(1.f);
+    auto low = LiteralUtil::CreateR0<float>(0.f);
+    auto value = LiteralUtil::CreateR2<float>({{-1.f, 0.f}, {1.f, 2.f}});
+    auto high = LiteralUtil::CreateR0<float>(1.f);
 
-  Shape shape = value.shape();
-  HloComputation::Builder b(TestName());
-  auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(low)));
-  auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(value)));
-  auto c3 = b.AddInstruction(HloInstruction::CreateConstant(std::move(high)));
-  b.AddInstruction(
-      HloInstruction::CreateTernary(shape, HloOpcode::kClamp, c1, c2, c3));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = value.shape();
+    HloComputation::Builder b(TestName());
+    auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(low)));
+    auto c2 = b.AddInstruction(HloInstruction::CreateConstant(std::move(value)));
+    auto c3 = b.AddInstruction(HloInstruction::CreateConstant(std::move(high)));
+    b.AddInstruction(
+        HloInstruction::CreateTernary(shape, HloOpcode::kClamp, c1, c2, c3));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected = LiteralUtil::CreateR2<float>({{0, 0}, {1, 1}});
+    auto expected = LiteralUtil::CreateR2<float>({{0, 0}, {1, 1}});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 // Verifies that HloEvaluator evaluates a HLO instruction that performs select
 // with 3 operands.
 TEST_P(HloEvaluatorBf16Test, DoesSelect) {
-  auto pred = LiteralUtil::CreateR2<bool>({{true, false}, {false, true}});
-  auto on_true = LiteralUtil::CreateR2<float>({{2.f, 4.f}, {4.f, 4.f}});
-  auto on_false = LiteralUtil::CreateR2<float>({{0.f, 5.f}, {0.f, 4.f}});
+    auto pred = LiteralUtil::CreateR2<bool>({{true, false}, {false, true}});
+    auto on_true = LiteralUtil::CreateR2<float>({{2.f, 4.f}, {4.f, 4.f}});
+    auto on_false = LiteralUtil::CreateR2<float>({{0.f, 5.f}, {0.f, 4.f}});
 
-  Shape shape = on_true.shape();
-  HloComputation::Builder b(TestName());
-  auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(pred)));
-  auto c2 =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(on_true)));
-  auto c3 =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(on_false)));
-  b.AddInstruction(
-      HloInstruction::CreateTernary(shape, HloOpcode::kSelect, c1, c2, c3));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = on_true.shape();
+    HloComputation::Builder b(TestName());
+    auto c1 = b.AddInstruction(HloInstruction::CreateConstant(std::move(pred)));
+    auto c2 =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(on_true)));
+    auto c3 =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(on_false)));
+    b.AddInstruction(
+        HloInstruction::CreateTernary(shape, HloOpcode::kSelect, c1, c2, c3));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
 
-  auto expected = LiteralUtil::CreateR2<float>({{2, 5}, {0, 4}});
+    auto expected = LiteralUtil::CreateR2<float>({{2, 5}, {0, 4}});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise addition with 2 operands.
 TEST_F(HloEvaluatorTest, DoesAdd) {
-  auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
-  auto expected = LiteralUtil::CreateR2<int64>({{3, 4}, {-96, 8}});
-  TestBinaryOp(HloOpcode::kAdd, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
+    auto expected = LiteralUtil::CreateR2<int64>({{3, 4}, {-96, 8}});
+    TestBinaryOp(HloOpcode::kAdd, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise and with 2 operands.
 TEST_P(HloEvaluatorBf16Test, DoesAnd) {
-  auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
-  auto expected = LiteralUtil::CreateR2<int64>({{0, 0}, {4, 4}});
-  TestBinaryOp(HloOpcode::kAnd, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
+    auto expected = LiteralUtil::CreateR2<int64>({{0, 0}, {4, 4}});
+    TestBinaryOp(HloOpcode::kAnd, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise or with 2 operands.
 TEST_F(HloEvaluatorTest, DoesOr) {
-  auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
-  auto expected = LiteralUtil::CreateR2<int64>({{3, 4}, {-100, 4}});
-  TestBinaryOp(HloOpcode::kOr, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
+    auto expected = LiteralUtil::CreateR2<int64>({{3, 4}, {-100, 4}});
+    TestBinaryOp(HloOpcode::kOr, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise or with 2 operands.
 TEST_F(HloEvaluatorTest, DoesXor) {
-  auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
-  auto expected = LiteralUtil::CreateR2<int64>({{3, 4}, {-104, 0}});
-  TestBinaryOp(HloOpcode::kXor, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
+    auto expected = LiteralUtil::CreateR2<int64>({{3, 4}, {-104, 0}});
+    TestBinaryOp(HloOpcode::kXor, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise multiply with 2 operands.
 TEST_F(HloEvaluatorTest, DoesMultiply) {
-  auto lhs = LiteralUtil::CreateR2<int32>({{-1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int32>(
-      {{std::numeric_limits<int32>::min(), 4}, {4, 4}});
-  auto expected = LiteralUtil::CreateR2<int32>(
-      {{std::numeric_limits<int32>::min(), 0}, {-400, 16}});
-  TestBinaryOp(HloOpcode::kMultiply, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<int32>({{-1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int32>(
+    {{std::numeric_limits<int32>::min(), 4}, {4, 4}});
+    auto expected = LiteralUtil::CreateR2<int32>(
+    {{std::numeric_limits<int32>::min(), 0}, {-400, 16}});
+    TestBinaryOp(HloOpcode::kMultiply, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise divide with 2 operands.
 TEST_F(HloEvaluatorTest, DoesDivideInt64) {
-  auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
-  auto expected = LiteralUtil::CreateR2<int64>({{0, 0}, {-25, 1}});
-  TestBinaryOp(HloOpcode::kDivide, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
+    auto expected = LiteralUtil::CreateR2<int64>({{0, 0}, {-25, 1}});
+    TestBinaryOp(HloOpcode::kDivide, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 
 TEST_F(HloEvaluatorTest, DoesClampS64) {
-  auto low = LiteralUtil::CreateR1<int64>(
-      {-8616761059752331528LL, 6780561065411491190LL, -8616761059752331528LL});
-  auto value = LiteralUtil::CreateR1<int64>(
-      {-6780561065411491190LL, 6780561065411491180LL, 4241131823772864090LL});
-  auto high = LiteralUtil::CreateR1<int64>(
-      {-6780561065411491180LL, 8616761059752331528LL, 3832151243857508051LL});
-  auto expected = LiteralUtil::CreateR1<int64>(
-      {-6780561065411491190LL, 6780561065411491190LL, 3832151243857508051LL});
-  TestTernaryOp(HloOpcode::kClamp, std::move(expected), std::move(low),
-                std::move(value), std::move(high));
+    auto low = LiteralUtil::CreateR1<int64>(
+    {-8616761059752331528LL, 6780561065411491190LL, -8616761059752331528LL});
+    auto value = LiteralUtil::CreateR1<int64>(
+    {-6780561065411491190LL, 6780561065411491180LL, 4241131823772864090LL});
+    auto high = LiteralUtil::CreateR1<int64>(
+    {-6780561065411491180LL, 8616761059752331528LL, 3832151243857508051LL});
+    auto expected = LiteralUtil::CreateR1<int64>(
+    {-6780561065411491190LL, 6780561065411491190LL, 3832151243857508051LL});
+    TestTernaryOp(HloOpcode::kClamp, std::move(expected), std::move(low),
+                  std::move(value), std::move(high));
 }
 
 TEST_P(HloEvaluatorBf16Test, DoesDivideDouble) {
-  auto lhs = LiteralUtil::CreateR2<double>({{1.0, 0.0}, {-100.0, 4.0}});
-  auto rhs = LiteralUtil::CreateR2<double>({{2.2, 4.0}, {4.0, 4.0}});
-  auto expected =
-      LiteralUtil::CreateR2<double>({{0.45454545454545453, 0}, {-25, 1}});
-  TestBinaryOp(HloOpcode::kDivide, std::move(expected), std::move(lhs),
-               std::move(rhs));
+    auto lhs = LiteralUtil::CreateR2<double>({{1.0, 0.0}, {-100.0, 4.0}});
+    auto rhs = LiteralUtil::CreateR2<double>({{2.2, 4.0}, {4.0, 4.0}});
+    auto expected =
+    LiteralUtil::CreateR2<double>({{0.45454545454545453, 0}, {-25, 1}});
+    TestBinaryOp(HloOpcode::kDivide, std::move(expected), std::move(lhs),
+                 std::move(rhs));
 }
 
 // Verifies that HloEvaluator evaluates a HLO instruction that performs
 // element-wise abs op with 1 operand.
 TEST_F(HloEvaluatorTest, DoesAbsR2) {
-  auto operand = LiteralUtil::CreateR2<int64>({{1, -20}, {-100, 4}});
-  auto expected = LiteralUtil::CreateR2<int64>({{1, 20}, {100, 4}});
-  TestUnaryOp(HloOpcode::kAbs, std::move(expected), std::move(operand));
+    auto operand = LiteralUtil::CreateR2<int64>({{1, -20}, {-100, 4}});
+    auto expected = LiteralUtil::CreateR2<int64>({{1, 20}, {100, 4}});
+    TestUnaryOp(HloOpcode::kAbs, std::move(expected), std::move(operand));
 }
 TEST_P(HloEvaluatorBf16Test, DoesAbsR0) {
-  auto operand = LiteralUtil::CreateR0<float>(-1.0f);
-  auto expected = LiteralUtil::CreateR0<float>(1.0f);
-  TestUnaryOp(HloOpcode::kAbs, std::move(expected), std::move(operand));
+    auto operand = LiteralUtil::CreateR0<float>(-1.0f);
+    auto expected = LiteralUtil::CreateR0<float>(1.0f);
+    TestUnaryOp(HloOpcode::kAbs, std::move(expected), std::move(operand));
 }
 TEST_P(HloEvaluatorBf16Test, DoesAbsR1WithZeroSize) {
-  auto operand = LiteralUtil::CreateR1<float>({});
-  auto expected = LiteralUtil::CreateR1<float>({});
-  TestUnaryOp(HloOpcode::kAbs, std::move(expected), std::move(operand));
+    auto operand = LiteralUtil::CreateR1<float>({});
+    auto expected = LiteralUtil::CreateR1<float>({});
+    TestUnaryOp(HloOpcode::kAbs, std::move(expected), std::move(operand));
 }
 
 TEST_F(HloEvaluatorTest, DoesAbsC128) {
-  auto x = LiteralUtil::CreateR0<complex128>({1, 2});
-  auto expected_real = LiteralUtil::CreateR0<double>(2.23607);
-  TestUnaryOp(HloOpcode::kAbs, std::move(expected_real), std::move(x), 3e-06);
+    auto x = LiteralUtil::CreateR0<complex128>({1, 2});
+    auto expected_real = LiteralUtil::CreateR0<double>(2.23607);
+    TestUnaryOp(HloOpcode::kAbs, std::move(expected_real), std::move(x), 3e-06);
 }
 
 TEST_F(HloEvaluatorTest, DoesNegateR2) {
-  auto operand = LiteralUtil::CreateR2<int32>(
-      {{0, std::numeric_limits<int32>::min()}, {-1, 4}});
-  auto expected = LiteralUtil::CreateR2<int32>(
-      {{0, std::numeric_limits<int>::min()}, {1, -4}});
-  TestUnaryOp(HloOpcode::kNegate, std::move(expected), std::move(operand));
+    auto operand = LiteralUtil::CreateR2<int32>(
+    {{0, std::numeric_limits<int32>::min()}, {-1, 4}});
+    auto expected = LiteralUtil::CreateR2<int32>(
+    {{0, std::numeric_limits<int>::min()}, {1, -4}});
+    TestUnaryOp(HloOpcode::kNegate, std::move(expected), std::move(operand));
 }
 TEST_P(HloEvaluatorBf16Test, DoesCosR2) {
-  auto operand = LiteralUtil::CreateR2<float>({{0, M_PI}, {-M_PI, 2 * M_PI}});
-  auto expected = LiteralUtil::CreateR2<float>({{1, -1}, {-1, 1}});
-  TestUnaryOp(HloOpcode::kCos, std::move(expected), std::move(operand),
-              use_bfloat16_ ? 0.031250 : 9.5367431640625E-7);
+    auto operand = LiteralUtil::CreateR2<float>({{0, M_PI}, {-M_PI, 2 * M_PI}});
+    auto expected = LiteralUtil::CreateR2<float>({{1, -1}, {-1, 1}});
+    TestUnaryOp(HloOpcode::kCos, std::move(expected), std::move(operand),
+                use_bfloat16_ ? 0.031250 : 9.5367431640625E-7);
 }
 TEST_P(HloEvaluatorBf16Test, DoesSinR2) {
-  auto operand = LiteralUtil::CreateR2<float>({{0, M_PI}, {-M_PI, 2 * M_PI}});
-  auto expected = LiteralUtil::CreateR2<float>({{0, 0}, {0, 0}});
-  TestUnaryOp(HloOpcode::kSin, std::move(expected), std::move(operand),
-              use_bfloat16_ ? 0.031250 : 9.5367431640625E-7);
+    auto operand = LiteralUtil::CreateR2<float>({{0, M_PI}, {-M_PI, 2 * M_PI}});
+    auto expected = LiteralUtil::CreateR2<float>({{0, 0}, {0, 0}});
+    TestUnaryOp(HloOpcode::kSin, std::move(expected), std::move(operand),
+                use_bfloat16_ ? 0.031250 : 9.5367431640625E-7);
 }
 TEST_F(HloEvaluatorTest, DoesNotR2) {
-  auto operand =
-      LiteralUtil::CreateR2<int32>({{0, std::numeric_limits<int>::min()},
-                                    {-1, std::numeric_limits<int>::max()}});
-  auto expected =
-      LiteralUtil::CreateR2<int32>({{-1, std::numeric_limits<int>::max()},
-                                    {0, std::numeric_limits<int>::min()}});
-  TestUnaryOp(HloOpcode::kNot, std::move(expected), std::move(operand));
+    auto operand =
+    LiteralUtil::CreateR2<int32>({{0, std::numeric_limits<int>::min()},
+        {-1, std::numeric_limits<int>::max()}});
+    auto expected =
+    LiteralUtil::CreateR2<int32>({{-1, std::numeric_limits<int>::max()},
+        {0, std::numeric_limits<int>::min()}});
+    TestUnaryOp(HloOpcode::kNot, std::move(expected), std::move(operand));
 }
 
 TEST_F(HloEvaluatorTest, DoesRealC128) {
-  auto x = LiteralUtil::CreateR1<complex128>({{1, 0}, {-100, 4}});
-  auto expected_real = LiteralUtil::CreateR1<double>({1, -100});
-  TestUnaryOp(HloOpcode::kReal, std::move(expected_real), std::move(x));
+    auto x = LiteralUtil::CreateR1<complex128>({{1, 0}, {-100, 4}});
+    auto expected_real = LiteralUtil::CreateR1<double>({1, -100});
+    TestUnaryOp(HloOpcode::kReal, std::move(expected_real), std::move(x));
 }
 
 TEST_F(HloEvaluatorTest, DoesImagC128) {
-  auto x = LiteralUtil::CreateR1<complex128>({{1, 0}, {-100, 4}});
-  auto expected_imag = LiteralUtil::CreateR1<double>({0, 4});
-  TestUnaryOp(HloOpcode::kImag, std::move(expected_imag), std::move(x));
+    auto x = LiteralUtil::CreateR1<complex128>({{1, 0}, {-100, 4}});
+    auto expected_imag = LiteralUtil::CreateR1<double>({0, 4});
+    TestUnaryOp(HloOpcode::kImag, std::move(expected_imag), std::move(x));
 }
 
 // Verifies that HloEvaluator evaluates a HLO Computation with non-parameter nor
 // constant operands.
 TEST_F(HloEvaluatorTest, DoesTraverseInstructions) {
-  auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
-  auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
-  auto rhs2 = LiteralUtil::CreateR2<int64>({{1, -20}, {-100, 4}});
-  std::vector<const Literal*> args = {&lhs, &rhs, &rhs2};
+    auto lhs = LiteralUtil::CreateR2<int64>({{1, 0}, {-100, 4}});
+    auto rhs = LiteralUtil::CreateR2<int64>({{2, 4}, {4, 4}});
+    auto rhs2 = LiteralUtil::CreateR2<int64>({{1, -20}, {-100, 4}});
+    std::vector<const Literal*> args = {&lhs, &rhs, &rhs2};
 
-  Shape shape = ShapeUtil::MakeShape(S64, {2, 2});
+    Shape shape = ShapeUtil::MakeShape(S64, {2, 2});
 
-  HloComputation::Builder b(TestName());
-  auto param_lhs =
-      b.AddInstruction(HloInstruction::CreateParameter(0, shape, "lhs"));
-  auto param_rhs =
-      b.AddInstruction(HloInstruction::CreateParameter(1, shape, "rhs"));
-  auto lhs_instruction = b.AddInstruction(HloInstruction::CreateBinary(
-      shape, HloOpcode::kAdd, param_lhs, param_rhs));
+    HloComputation::Builder b(TestName());
+    auto param_lhs =
+        b.AddInstruction(HloInstruction::CreateParameter(0, shape, "lhs"));
+    auto param_rhs =
+        b.AddInstruction(HloInstruction::CreateParameter(1, shape, "rhs"));
+    auto lhs_instruction = b.AddInstruction(HloInstruction::CreateBinary(
+            shape, HloOpcode::kAdd, param_lhs, param_rhs));
 
-  auto param_rhs2 =
-      b.AddInstruction(HloInstruction::CreateParameter(2, shape, "rhs2"));
-  b.AddInstruction(HloInstruction::CreateBinary(shape, HloOpcode::kAdd,
-                                                lhs_instruction, param_rhs2));
-  m_->AddEntryComputation(b.Build());
+    auto param_rhs2 =
+        b.AddInstruction(HloInstruction::CreateParameter(2, shape, "rhs2"));
+    b.AddInstruction(HloInstruction::CreateBinary(shape, HloOpcode::kAdd,
+                     lhs_instruction, param_rhs2));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate(args));
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate(args));
 
-  auto expected = LiteralUtil::CreateR2<int64>({{4, -16}, {-196, 12}});
+    auto expected = LiteralUtil::CreateR2<int64>({{4, -16}, {-196, 12}});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 // Verifies Reshape operation is correctly evaluated.
 TEST_F(HloEvaluatorTest, DoesReshape) {
-  HloComputation::Builder b(TestName());
-  const int64 dimensions[] = {11, 8, 7, 5, 9};
-  TF_ASSERT_OK_AND_ASSIGN(auto literal,
-                          LiteralUtil::CreateRandomLiteral<F32>(
-                              ShapeUtil::MakeShape(F32, dimensions), 0.0, 1.0));
-  auto literal_clone = literal.Clone();
-  HloInstruction* literal_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(literal)));
+    HloComputation::Builder b(TestName());
+    const int64 dimensions[] = {11, 8, 7, 5, 9};
+    TF_ASSERT_OK_AND_ASSIGN(auto literal,
+                            LiteralUtil::CreateRandomLiteral<F32>(
+                                ShapeUtil::MakeShape(F32, dimensions), 0.0, 1.0));
+    auto literal_clone = literal.Clone();
+    HloInstruction* literal_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(literal)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {8, 7, 11, 9, 5});
-  const int64 permutation[] = {1, 2, 0, 4, 3};
-  b.AddInstruction(
-      HloInstruction::CreateTranspose(shape, literal_instruction, permutation));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {8, 7, 11, 9, 5});
+    const int64 permutation[] = {1, 2, 0, 4, 3};
+    b.AddInstruction(
+        HloInstruction::CreateTranspose(shape, literal_instruction, permutation));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
 
-  using NativeT = typename primitive_util::PrimitiveTypeToNative<F32>::type;
-  result.EachCell<NativeT>([&](absl::Span<const int64> indices, NativeT value) {
-    std::vector<int64> rindexes = Permute(permutation, indices);
-    EXPECT_NEAR(value, literal_clone.Get<NativeT>(rindexes), 0.031250);
-  });
+    using NativeT = typename primitive_util::PrimitiveTypeToNative<F32>::type;
+    result.EachCell<NativeT>([&](absl::Span<const int64> indices, NativeT value) {
+        std::vector<int64> rindexes = Permute(permutation, indices);
+        EXPECT_NEAR(value, literal_clone.Get<NativeT>(rindexes), 0.031250);
+    });
 }
 
 // Verifies Broadcast operation is correctly evaluated.
 TEST_F(HloEvaluatorTest, DoesBroadcast) {
-  HloComputation::Builder b(TestName());
-  auto input_literal = LiteralUtil::CreateR2<int32>({{1, 2}, {3, 4}, {5, 6}});
-  auto output_literal = LiteralUtil::CreateR3<int32>(
-      {{{1, 2}, {3, 4}, {5, 6}}, {{1, 2}, {3, 4}, {5, 6}}});
-  HloInstruction* literal_instruction = b.AddInstruction(
-      HloInstruction::CreateConstant(std::move(input_literal)));
-  b.AddInstruction(HloInstruction::CreateBroadcast(
-      output_literal.shape(), literal_instruction, {1, 2}));
-  m_->AddEntryComputation(b.Build());
+    HloComputation::Builder b(TestName());
+    auto input_literal = LiteralUtil::CreateR2<int32>({{1, 2}, {3, 4}, {5, 6}});
+    auto output_literal = LiteralUtil::CreateR3<int32>(
+    {{{1, 2}, {3, 4}, {5, 6}}, {{1, 2}, {3, 4}, {5, 6}}});
+    HloInstruction* literal_instruction = b.AddInstruction(
+            HloInstruction::CreateConstant(std::move(input_literal)));
+    b.AddInstruction(HloInstruction::CreateBroadcast(
+                         output_literal.shape(), literal_instruction, {1, 2}));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(result, output_literal));
+    EXPECT_TRUE(LiteralTestUtil::Equal(result, output_literal));
 }
 
 TEST_F(HloEvaluatorTest, DoesBroadcastScalar) {
-  HloComputation::Builder b(TestName());
-  auto input_literal = LiteralUtil::CreateR0<int32>(111);
-  auto output_literal = LiteralUtil::CreateR2<int32>(
-      {{111, 111}, {111, 111}, {111, 111}, {111, 111}, {111, 111}, {111, 111}});
+    HloComputation::Builder b(TestName());
+    auto input_literal = LiteralUtil::CreateR0<int32>(111);
+    auto output_literal = LiteralUtil::CreateR2<int32>(
+    {{111, 111}, {111, 111}, {111, 111}, {111, 111}, {111, 111}, {111, 111}});
 
-  HloInstruction* literal_instruction = b.AddInstruction(
-      HloInstruction::CreateConstant(std::move(input_literal)));
-  // Broadcast dimension should be empty in the case of scalars.
-  b.AddInstruction(HloInstruction::CreateBroadcast(
-      output_literal.shape(), literal_instruction,
-      /*broadcast_dimensions=*/{}));
-  m_->AddEntryComputation(b.Build());
+    HloInstruction* literal_instruction = b.AddInstruction(
+            HloInstruction::CreateConstant(std::move(input_literal)));
+    // Broadcast dimension should be empty in the case of scalars.
+    b.AddInstruction(HloInstruction::CreateBroadcast(
+                         output_literal.shape(), literal_instruction,
+                         /*broadcast_dimensions=*/ {}));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate({}));
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(result, output_literal));
+    EXPECT_TRUE(LiteralTestUtil::Equal(result, output_literal));
 }
 
 TEST_F(HloEvaluatorTest, DoesConcatenateSimple) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  HloInstruction* operand1 = b.AddInstruction(HloInstruction::CreateConstant(
-      LiteralUtil::CreateR2<int64>({{-1, -2}, {100, 200}})));
-  HloInstruction* operand2 = b.AddInstruction(HloInstruction::CreateConstant(
-      LiteralUtil::CreateR2<int64>({{-2, -3}, {-100, -200}})));
+    HloInstruction* operand1 = b.AddInstruction(HloInstruction::CreateConstant(
+    LiteralUtil::CreateR2<int64>({{-1, -2}, {100, 200}})));
+    HloInstruction* operand2 = b.AddInstruction(HloInstruction::CreateConstant(
+    LiteralUtil::CreateR2<int64>({{-2, -3}, {-100, -200}})));
 
-  std::vector<HloInstruction*> operands = {operand1, operand2};
+    std::vector<HloInstruction*> operands = {operand1, operand2};
 
-  Shape shape = ShapeUtil::MakeShape(S64, {4, 2});
-  b.AddInstruction(HloInstruction::CreateConcatenate(shape, operands, 0));
+    Shape shape = ShapeUtil::MakeShape(S64, {4, 2});
+    b.AddInstruction(HloInstruction::CreateConcatenate(shape, operands, 0));
 
-  m_->AddEntryComputation(b.Build());
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected = LiteralUtil::CreateR2<int64>(
-      {{-1, -2}, {100, 200}, {-2, -3}, {-100, -200}});
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    auto expected = LiteralUtil::CreateR2<int64>(
+    {{-1, -2}, {100, 200}, {-2, -3}, {-100, -200}});
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_F(HloEvaluatorTest, ConcatenateHandlesShapeWithZeroElement) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  HloInstruction* operand1 = b.AddInstruction(
-      HloInstruction::CreateConstant(LiteralUtil::CreateR1<int64>({100, 200})));
-  HloInstruction* operand2 = b.AddInstruction(
-      HloInstruction::CreateConstant(LiteralUtil::CreateR1<int64>({})));
+    HloInstruction* operand1 = b.AddInstruction(
+                                   HloInstruction::CreateConstant(LiteralUtil::CreateR1<int64>({100, 200})));
+    HloInstruction* operand2 = b.AddInstruction(
+                                   HloInstruction::CreateConstant(LiteralUtil::CreateR1<int64>({})));
 
-  std::vector<HloInstruction*> operands = {operand1, operand2};
+    std::vector<HloInstruction*> operands = {operand1, operand2};
 
-  Shape shape = ShapeUtil::MakeShape(S64, {2});
-  b.AddInstruction(HloInstruction::CreateConcatenate(shape, operands, 0));
+    Shape shape = ShapeUtil::MakeShape(S64, {2});
+    b.AddInstruction(HloInstruction::CreateConcatenate(shape, operands, 0));
 
-  m_->AddEntryComputation(b.Build());
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected = LiteralUtil::CreateR1<int64>({100, 200});
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    auto expected = LiteralUtil::CreateR1<int64>({100, 200});
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, ConvertWithSameLayout) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  auto input_literal = LiteralUtil::CreateR2<int32>({{1, 2}, {3, 4}, {5, 6}});
-  auto expected =
-      LiteralUtil::CreateR2<float>({{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}});
-  ASSERT_TRUE(LayoutUtil::LayoutsInShapesEqual(input_literal.shape(),
-                                               expected.shape()));
+    auto input_literal = LiteralUtil::CreateR2<int32>({{1, 2}, {3, 4}, {5, 6}});
+    auto expected =
+    LiteralUtil::CreateR2<float>({{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}});
+    ASSERT_TRUE(LayoutUtil::LayoutsInShapesEqual(input_literal.shape(),
+                expected.shape()));
 
-  HloInstruction* constant = b.AddInstruction(
-      HloInstruction::CreateConstant(std::move(input_literal)));
-  b.AddInstruction(HloInstruction::CreateConvert(expected.shape(), constant));
-  m_->AddEntryComputation(b.Build());
+    HloInstruction* constant = b.AddInstruction(
+                                   HloInstruction::CreateConstant(std::move(input_literal)));
+    b.AddInstruction(HloInstruction::CreateConvert(expected.shape(), constant));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(result, expected));
+    EXPECT_TRUE(LiteralTestUtil::Equal(result, expected));
 }
 
 TEST_P(HloEvaluatorBf16Test, ConvertWithDifferentLayout) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  auto input_literal = LiteralUtil::CreateR2WithLayout<int32>(
-      {{1, 2}, {3, 4}, {5, 6}}, LayoutUtil::MakeLayout({0, 1}));
-  auto expected = LiteralUtil::CreateR2WithLayout<float>(
-      {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}, LayoutUtil::MakeLayout({1, 0}));
-  ASSERT_FALSE(LayoutUtil::LayoutsInShapesEqual(input_literal.shape(),
-                                                expected.shape()));
+    auto input_literal = LiteralUtil::CreateR2WithLayout<int32>(
+    {{1, 2}, {3, 4}, {5, 6}}, LayoutUtil::MakeLayout({0, 1}));
+    auto expected = LiteralUtil::CreateR2WithLayout<float>(
+    {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}, LayoutUtil::MakeLayout({1, 0}));
+    ASSERT_FALSE(LayoutUtil::LayoutsInShapesEqual(input_literal.shape(),
+                 expected.shape()));
 
-  HloInstruction* constant = b.AddInstruction(
-      HloInstruction::CreateConstant(std::move(input_literal)));
-  b.AddInstruction(HloInstruction::CreateConvert(expected.shape(), constant));
-  m_->AddEntryComputation(b.Build());
+    HloInstruction* constant = b.AddInstruction(
+                                   HloInstruction::CreateConstant(std::move(input_literal)));
+    b.AddInstruction(HloInstruction::CreateConvert(expected.shape(), constant));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(result, expected));
+    EXPECT_TRUE(LiteralTestUtil::Equal(result, expected));
 }
 
 PaddingConfig CreatePaddingConfig(
     std::initializer_list<std::array<int64, 3>> padding_dimensions) {
-  PaddingConfig padding_config;
+    PaddingConfig padding_config;
 
-  for (auto& paddings_per_dim : padding_dimensions) {
-    auto dimension = padding_config.add_dimensions();
-    dimension->set_edge_padding_low(paddings_per_dim[0]);
-    dimension->set_edge_padding_high(paddings_per_dim[1]);
-    dimension->set_interior_padding(paddings_per_dim[2]);
-  }
-  return padding_config;
+    for (auto& paddings_per_dim : padding_dimensions) {
+        auto dimension = padding_config.add_dimensions();
+        dimension->set_edge_padding_low(paddings_per_dim[0]);
+        dimension->set_edge_padding_high(paddings_per_dim[1]);
+        dimension->set_interior_padding(paddings_per_dim[2]);
+    }
+    return padding_config;
 }
 
 TEST_F(HloEvaluatorTest, Pad2DIntegerArrayWithZeroDimension) {
-  auto operand = LiteralUtil::CreateR2<int32>({{}, {}});
-  HloComputation::Builder b(TestName());
-  auto operand_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(operand)));
+    auto operand = LiteralUtil::CreateR2<int32>({{}, {}});
+    HloComputation::Builder b(TestName());
+    auto operand_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(operand)));
 
-  constexpr int32 kPadValue = 10;
-  auto pad_value = LiteralUtil::CreateR0<int32>(kPadValue);
-  auto padding_value_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(pad_value)));
+    constexpr int32 kPadValue = 10;
+    auto pad_value = LiteralUtil::CreateR0<int32>(kPadValue);
+    auto padding_value_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(pad_value)));
 
-  auto padding_config = CreatePaddingConfig({{{1, 0, 2}}, {{0, 2, 1}}});
-  Shape shape = ShapeUtil::MakeShape(S32, {5, 2});
-  b.AddInstruction(HloInstruction::CreatePad(
-      shape, operand_instruction, padding_value_instruction, padding_config));
-  m_->AddEntryComputation(b.Build());
+    auto padding_config = CreatePaddingConfig({{{1, 0, 2}}, {{0, 2, 1}}});
+    Shape shape = ShapeUtil::MakeShape(S32, {5, 2});
+    b.AddInstruction(HloInstruction::CreatePad(
+                         shape, operand_instruction, padding_value_instruction, padding_config));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected = LiteralUtil::CreateR2<int32>(
-      {{10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}});
+    auto expected = LiteralUtil::CreateR2<int32>(
+    {{10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, Pad4DFloatArrayWithInteriorPadding) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  Array4D<float> input_array(3, 2, 1, 1, {1, 2, 3, 4, 5, 6});
-  auto input = LiteralUtil::CreateR4FromArray4D<float>(input_array);
-  HloInstruction* input_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
-  constexpr float kPadValue = 1.5;
-  auto pad_value = LiteralUtil::CreateR0<float>(kPadValue);
-  HloInstruction* pad_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(pad_value)));
+    Array4D<float> input_array(3, 2, 1, 1, {1, 2, 3, 4, 5, 6});
+    auto input = LiteralUtil::CreateR4FromArray4D<float>(input_array);
+    HloInstruction* input_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
+    constexpr float kPadValue = 1.5;
+    auto pad_value = LiteralUtil::CreateR0<float>(kPadValue);
+    HloInstruction* pad_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(pad_value)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {8, 5, 1, 1});
-  auto r4_padding_on_dim0_dim1 =
-      CreatePaddingConfig({{{1, 0, 2}}, {{0, 2, 1}}, {{0, 0, 0}}, {{0, 0, 0}}});
-  b.AddInstruction(HloInstruction::CreatePad(
-      shape, input_instruction, pad_instruction, r4_padding_on_dim0_dim1));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {8, 5, 1, 1});
+    auto r4_padding_on_dim0_dim1 =
+    CreatePaddingConfig({{{1, 0, 2}}, {{0, 2, 1}}, {{0, 0, 0}}, {{0, 0, 0}}});
+    b.AddInstruction(HloInstruction::CreatePad(
+                         shape, input_instruction, pad_instruction, r4_padding_on_dim0_dim1));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected_array = absl::make_unique<Array4D<float>>(8, 5, 1, 1);
-  expected_array->Fill(kPadValue);
-  (*expected_array)(1, 0, 0, 0) = 1.0f;
-  (*expected_array)(1, 2, 0, 0) = 2.0f;
-  (*expected_array)(4, 0, 0, 0) = 3.0f;
-  (*expected_array)(4, 2, 0, 0) = 4.0f;
-  (*expected_array)(7, 0, 0, 0) = 5.0f;
-  (*expected_array)(7, 2, 0, 0) = 6.0f;
+    auto expected_array = absl::make_unique<Array4D<float>>(8, 5, 1, 1);
+    expected_array->Fill(kPadValue);
+    (*expected_array)(1, 0, 0, 0) = 1.0f;
+    (*expected_array)(1, 2, 0, 0) = 2.0f;
+    (*expected_array)(4, 0, 0, 0) = 3.0f;
+    (*expected_array)(4, 2, 0, 0) = 4.0f;
+    (*expected_array)(7, 0, 0, 0) = 5.0f;
+    (*expected_array)(7, 2, 0, 0) = 6.0f;
 
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(*expected_array);
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(*expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, NegativePadding2D) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // input_array:
-  // f32[4,3] {
-  //  { 1, 2, 3 },
-  //  { 5, 6, 7 },
-  //  { 9, 10, 11 },
-  //  { 13, 14, 15 },
-  // }
-  auto input_array = absl::make_unique<Array2D<float>>(4, 3);
-  input_array->FillUnique(1.0f);
-  auto input = LiteralUtil::CreateR2FromArray2D<float>(*input_array);
-  HloInstruction* input_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
+    // input_array:
+    // f32[4,3] {
+    //  { 1, 2, 3 },
+    //  { 5, 6, 7 },
+    //  { 9, 10, 11 },
+    //  { 13, 14, 15 },
+    // }
+    auto input_array = absl::make_unique<Array2D<float>>(4, 3);
+    input_array->FillUnique(1.0f);
+    auto input = LiteralUtil::CreateR2FromArray2D<float>(*input_array);
+    HloInstruction* input_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
 
-  auto pad_value_instruction = b.AddInstruction(
-      HloInstruction::CreateConstant(LiteralUtil::CreateR0<float>(2.718f)));
+    auto pad_value_instruction = b.AddInstruction(
+                                     HloInstruction::CreateConstant(LiteralUtil::CreateR0<float>(2.718f)));
 
-  auto r2_padding_on_dim0_dim1 =
-      CreatePaddingConfig({{{-1, -2, 0}}, {{-2, 4, 0}}});
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 5});
-  b.AddInstruction(HloInstruction::CreatePad(shape, input_instruction,
-                                             pad_value_instruction,
-                                             r2_padding_on_dim0_dim1));
+    auto r2_padding_on_dim0_dim1 =
+    CreatePaddingConfig({{{-1, -2, 0}}, {{-2, 4, 0}}});
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 5});
+    b.AddInstruction(HloInstruction::CreatePad(shape, input_instruction,
+                     pad_value_instruction,
+                     r2_padding_on_dim0_dim1));
 
-  m_->AddEntryComputation(b.Build());
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  // f32[1,5] { 7.0, 2.718, 2.718, 2.718, 2.718 }
-  auto expected_array = absl::make_unique<Array2D<float>>(1, 5);
-  (*expected_array)(0, 0) = 7.0f;
-  (*expected_array)(0, 1) = 2.718f;
-  (*expected_array)(0, 2) = 2.718f;
-  (*expected_array)(0, 3) = 2.718f;
-  (*expected_array)(0, 4) = 2.718f;
-  auto expected = LiteralUtil::CreateR2FromArray2D<float>(*expected_array);
+    // f32[1,5] { 7.0, 2.718, 2.718, 2.718, 2.718 }
+    auto expected_array = absl::make_unique<Array2D<float>>(1, 5);
+    (*expected_array)(0, 0) = 7.0f;
+    (*expected_array)(0, 1) = 2.718f;
+    (*expected_array)(0, 2) = 2.718f;
+    (*expected_array)(0, 3) = 2.718f;
+    (*expected_array)(0, 4) = 2.718f;
+    auto expected = LiteralUtil::CreateR2FromArray2D<float>(*expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Near(expected, result, ErrorSpec(0.031250)));
+    EXPECT_TRUE(LiteralTestUtil::Near(expected, result, ErrorSpec(0.031250)));
 }
 
 TEST_P(HloEvaluatorBf16Test, NegativeAndInteriorPadding2D) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // f32[4,3] {
-  //  { 1, 2, 3 },
-  //  { 5, 6, 7 },
-  //  { 9, 10, 11 },
-  //  { 13, 14, 15 },
-  // }
-  auto input_array = absl::make_unique<Array2D<float>>(4, 3);
-  input_array->FillUnique(1.0f);
-  auto input = LiteralUtil::CreateR2FromArray2D<float>(*input_array);
-  HloInstruction* input_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
+    // f32[4,3] {
+    //  { 1, 2, 3 },
+    //  { 5, 6, 7 },
+    //  { 9, 10, 11 },
+    //  { 13, 14, 15 },
+    // }
+    auto input_array = absl::make_unique<Array2D<float>>(4, 3);
+    input_array->FillUnique(1.0f);
+    auto input = LiteralUtil::CreateR2FromArray2D<float>(*input_array);
+    HloInstruction* input_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(input)));
 
-  auto pad_value_instruction = b.AddInstruction(
-      HloInstruction::CreateConstant(LiteralUtil::CreateR0<float>(2.718f)));
+    auto pad_value_instruction = b.AddInstruction(
+                                     HloInstruction::CreateConstant(LiteralUtil::CreateR0<float>(2.718f)));
 
-  PaddingConfig padding_config = MakeNoPaddingConfig(2);
+    PaddingConfig padding_config = MakeNoPaddingConfig(2);
 
-  // Negative padding that results in zero dimensions.
-  auto r2_padding_on_dim0_dim1 =
-      CreatePaddingConfig({{{-2, -5, 1}}, {{-2, 4, 2}}});
+    // Negative padding that results in zero dimensions.
+    auto r2_padding_on_dim0_dim1 =
+    CreatePaddingConfig({{{-2, -5, 1}}, {{-2, 4, 2}}});
 
-  Shape shape = ShapeUtil::MakeShape(F32, {0, 9});
-  b.AddInstruction(HloInstruction::CreatePad(shape, input_instruction,
-                                             pad_value_instruction,
-                                             r2_padding_on_dim0_dim1));
+    Shape shape = ShapeUtil::MakeShape(F32, {0, 9});
+    b.AddInstruction(HloInstruction::CreatePad(shape, input_instruction,
+                     pad_value_instruction,
+                     r2_padding_on_dim0_dim1));
 
-  m_->AddEntryComputation(b.Build());
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected_array = absl::make_unique<Array2D<float>>(0, 9);
-  auto expected = LiteralUtil::CreateR2FromArray2D<float>(*expected_array);
+    auto expected_array = absl::make_unique<Array2D<float>>(0, 9);
+    auto expected = LiteralUtil::CreateR2FromArray2D<float>(*expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DotRank2AndRank1) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // lhs:
-  // f32[4,1] {
-  //  { 1 },
-  //  { 2 },
-  //  { 3 },
-  //  { 4 },
-  // }
-  auto lhs_array = absl::make_unique<Array2D<float>>(4, 1);
-  lhs_array->FillUnique(1.0f);
-  auto lhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    // lhs:
+    // f32[4,1] {
+    //  { 1 },
+    //  { 2 },
+    //  { 3 },
+    //  { 4 },
+    // }
+    auto lhs_array = absl::make_unique<Array2D<float>>(4, 1);
+    lhs_array->FillUnique(1.0f);
+    auto lhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  // rhs:
-  // f32[2] { 1, 2 },
-  auto rhs_literal = LiteralUtil::CreateR2<float>({{1, 2}});
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    // rhs:
+    // f32[2] { 1, 2 },
+    auto rhs_literal = LiteralUtil::CreateR2<float>({{1, 2}});
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {4, 2});
-  DotDimensionNumbers dot_dnums;
-  dot_dnums.add_lhs_contracting_dimensions(1);
-  dot_dnums.add_rhs_contracting_dimensions(0);
-  b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
-                                             rhs_instruction, dot_dnums,
-                                             DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {4, 2});
+    DotDimensionNumbers dot_dnums;
+    dot_dnums.add_lhs_contracting_dimensions(1);
+    dot_dnums.add_rhs_contracting_dimensions(0);
+    b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
+                     rhs_instruction, dot_dnums,
+                     DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  // clang-format off
-  auto expected_array = Array2D<float>({
-      {1.f, 2.f},
-      {2.f, 4.f},
-      {3.f, 6.f},
-      {4.f, 8.f},
-  });
-  // clang-format on
-  auto expected = LiteralUtil::CreateR2FromArray2D<float>(expected_array);
+    // clang-format off
+    auto expected_array = Array2D<float>({
+        {1.f, 2.f},
+        {2.f, 4.f},
+        {3.f, 6.f},
+        {4.f, 8.f},
+    });
+    // clang-format on
+    auto expected = LiteralUtil::CreateR2FromArray2D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DotRank1AndRank2) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // lhs:
-  // f32[3]
-  //  { 1, 2, 3 },
-  auto lhs_literal = LiteralUtil::CreateR1<float>({1, 2, 3});
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    // lhs:
+    // f32[3]
+    //  { 1, 2, 3 },
+    auto lhs_literal = LiteralUtil::CreateR1<float>({1, 2, 3});
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  // rhs:
-  // f32[3,2] {
-  //  { 1, 2 },
-  //  { 3, 4 },
-  //  { 5, 6 },
-  // }
-  auto rhs_array = absl::make_unique<Array2D<float>>(3, 2);
-  rhs_array->FillUnique(1.0f);
-  auto rhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    // rhs:
+    // f32[3,2] {
+    //  { 1, 2 },
+    //  { 3, 4 },
+    //  { 5, 6 },
+    // }
+    auto rhs_array = absl::make_unique<Array2D<float>>(3, 2);
+    rhs_array->FillUnique(1.0f);
+    auto rhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {2});
-  DotDimensionNumbers dot_dnums;
-  dot_dnums.add_lhs_contracting_dimensions(0);
-  dot_dnums.add_rhs_contracting_dimensions(0);
-  b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
-                                             rhs_instruction, dot_dnums,
-                                             DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {2});
+    DotDimensionNumbers dot_dnums;
+    dot_dnums.add_lhs_contracting_dimensions(0);
+    dot_dnums.add_rhs_contracting_dimensions(0);
+    b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
+                     rhs_instruction, dot_dnums,
+                     DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected = LiteralUtil::CreateR1<float>({22.f, 28.f});
+    auto expected = LiteralUtil::CreateR1<float>({22.f, 28.f});
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DotRank2AndRank2) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // lhs:
-  // f32[4,3] {
-  //  { 1, 2, 3 },
-  //  { 5, 6, 7 },
-  //  { 9, 10, 11 },
-  //  { 13, 14, 15 },
-  // }
-  auto lhs_array = absl::make_unique<Array2D<float>>(4, 3);
-  lhs_array->FillUnique(1.0f);
-  auto lhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    // lhs:
+    // f32[4,3] {
+    //  { 1, 2, 3 },
+    //  { 5, 6, 7 },
+    //  { 9, 10, 11 },
+    //  { 13, 14, 15 },
+    // }
+    auto lhs_array = absl::make_unique<Array2D<float>>(4, 3);
+    lhs_array->FillUnique(1.0f);
+    auto lhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  // rhs:
-  // f32[3,2] {
-  //  { 1, 2 },
-  //  { 3, 4 },
-  //  { 5, 6 },
-  // }
-  auto rhs_array = absl::make_unique<Array2D<float>>(3, 2);
-  rhs_array->FillUnique(1.0f);
-  auto rhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    // rhs:
+    // f32[3,2] {
+    //  { 1, 2 },
+    //  { 3, 4 },
+    //  { 5, 6 },
+    // }
+    auto rhs_array = absl::make_unique<Array2D<float>>(3, 2);
+    rhs_array->FillUnique(1.0f);
+    auto rhs_literal = LiteralUtil::CreateR2FromArray2D<float>(*rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {4, 2});
-  DotDimensionNumbers dot_dnums;
-  dot_dnums.add_lhs_contracting_dimensions(1);
-  dot_dnums.add_rhs_contracting_dimensions(0);
-  b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
-                                             rhs_instruction, dot_dnums,
-                                             DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {4, 2});
+    DotDimensionNumbers dot_dnums;
+    dot_dnums.add_lhs_contracting_dimensions(1);
+    dot_dnums.add_rhs_contracting_dimensions(0);
+    b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
+                     rhs_instruction, dot_dnums,
+                     DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  auto expected_array = Array2D<float>({
-      {22.f, 28.f},
-      {58.f, 76.f},
-      {94.f, 124.f},
-      {130.f, 172.f},
-  });
-  auto expected = LiteralUtil::CreateR2FromArray2D<float>(expected_array);
+    auto expected_array = Array2D<float>({
+        {22.f, 28.f},
+        {58.f, 76.f},
+        {94.f, 124.f},
+        {130.f, 172.f},
+    });
+    auto expected = LiteralUtil::CreateR2FromArray2D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DotRank4AndRank4) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  auto lhs_array = absl::make_unique<Array4D<float>>(2, 2, 3, 1);
-  lhs_array->FillIota(1.0f);
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(*lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    auto lhs_array = absl::make_unique<Array4D<float>>(2, 2, 3, 1);
+    lhs_array->FillIota(1.0f);
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(*lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  auto rhs_array = absl::make_unique<Array4D<float>>(2, 2, 3, 1);
-  rhs_array->FillIota(2.0f);
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(*rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    auto rhs_array = absl::make_unique<Array4D<float>>(2, 2, 3, 1);
+    rhs_array->FillIota(2.0f);
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(*rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {2, 1, 1});
-  DotDimensionNumbers dot_dnums;
+    Shape shape = ShapeUtil::MakeShape(F32, {2, 1, 1});
+    DotDimensionNumbers dot_dnums;
 
-  dot_dnums.add_lhs_batch_dimensions(0);
-  dot_dnums.add_rhs_batch_dimensions(0);
-  dot_dnums.add_lhs_contracting_dimensions(1);
-  dot_dnums.add_lhs_contracting_dimensions(2);
-  dot_dnums.add_rhs_contracting_dimensions(1);
-  dot_dnums.add_rhs_contracting_dimensions(2);
-  b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
-                                             rhs_instruction, dot_dnums,
-                                             DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    dot_dnums.add_lhs_batch_dimensions(0);
+    dot_dnums.add_rhs_batch_dimensions(0);
+    dot_dnums.add_lhs_contracting_dimensions(1);
+    dot_dnums.add_lhs_contracting_dimensions(2);
+    dot_dnums.add_rhs_contracting_dimensions(1);
+    dot_dnums.add_rhs_contracting_dimensions(2);
+    b.AddInstruction(HloInstruction::CreateDot(shape, lhs_instruction,
+                     rhs_instruction, dot_dnums,
+                     DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  float expected_1 = 0;
-  for (float i = 1.0f; i < 7.0f; ++i) {
-    expected_1 += i * i + i;
-  }
-  float expected_2 = 0;
-  for (float i = 7.0f; i < 13.0f; ++i) {
-    expected_2 += i * i + i;
-  }
-  auto expected_array = Array3D<float>({{{expected_1}}, {{expected_2}}});
-  auto expected = LiteralUtil::CreateR3FromArray3D<float>(expected_array);
+    float expected_1 = 0;
+    for (float i = 1.0f; i < 7.0f; ++i) {
+        expected_1 += i * i + i;
+    }
+    float expected_2 = 0;
+    for (float i = 7.0f; i < 13.0f; ++i) {
+        expected_2 += i * i + i;
+    }
+    auto expected_array = Array3D<float>({{{expected_1}}, {{expected_2}}});
+    auto expected = LiteralUtil::CreateR3FromArray3D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, SimpleConv1D) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  Array3D<float> lhs_array = {{{1, 2, 3}}};
-  auto lhs_literal = LiteralUtil::CreateR3FromArray3D<float>(lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    Array3D<float> lhs_array = {{{1, 2, 3}}};
+    auto lhs_literal = LiteralUtil::CreateR3FromArray3D<float>(lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  Array3D<float> rhs_array = {{{3.f, 4.f}}};
-  auto rhs_literal = LiteralUtil::CreateR3FromArray3D<float>(rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    Array3D<float> rhs_array = {{{3.f, 4.f}}};
+    auto rhs_literal = LiteralUtil::CreateR3FromArray3D<float>(rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(2);
-  dim.set_stride(1);
-  dim.set_padding_low(0);
-  dim.set_padding_high(1);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(1);
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(2);
+    dim.set_stride(1);
+    dim.set_padding_low(0);
+    dim.set_padding_high(1);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(1);
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums;
-  dnums.set_input_batch_dimension(0);
-  dnums.set_output_batch_dimension(0);
-  dnums.set_input_feature_dimension(1);
-  dnums.set_output_feature_dimension(1);
-  dnums.add_input_spatial_dimensions(2);
-  dnums.add_output_spatial_dimensions(2);
+    ConvolutionDimensionNumbers dnums;
+    dnums.set_input_batch_dimension(0);
+    dnums.set_output_batch_dimension(0);
+    dnums.set_input_feature_dimension(1);
+    dnums.set_output_feature_dimension(1);
+    dnums.add_input_spatial_dimensions(2);
+    dnums.add_output_spatial_dimensions(2);
 
-  dnums.set_kernel_output_feature_dimension(0);
-  dnums.set_kernel_input_feature_dimension(1);
-  dnums.add_kernel_spatial_dimensions(2);
+    dnums.set_kernel_output_feature_dimension(0);
+    dnums.set_kernel_input_feature_dimension(1);
+    dnums.add_kernel_spatial_dimensions(2);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 3});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 3});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  Array3D<float> expected_array = {{{11.f, 18.f, 9.f}}};
-  auto expected = LiteralUtil::CreateR3FromArray3D<float>(expected_array);
+    Array3D<float> expected_array = {{{11.f, 18.f, 9.f}}};
+    auto expected = LiteralUtil::CreateR3FromArray3D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, Simple4x4Conv2DWith2x2Kernel) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  Array4D<float> lhs_array(1, 1, 4, 4);
-  // clang-format off
-  lhs_array.FillWithYX(Array2D<float>({
-    {1,  2,  3,  4 },
-    {5,  6,  7,  8 },
-    {9,  10, 11, 12},
-    {13, 14, 15, 16},
-  }));
-  // clang-format on
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    Array4D<float> lhs_array(1, 1, 4, 4);
+    // clang-format off
+    lhs_array.FillWithYX(Array2D<float>({
+        {1,  2,  3,  4 },
+        {5,  6,  7,  8 },
+        {9,  10, 11, 12},
+        {13, 14, 15, 16},
+    }));
+    // clang-format on
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  Array4D<float> rhs_array(1, 1, 2, 2);
-  // clang-format off
-  rhs_array.FillWithYX(Array2D<float>({
-    {5, 6},
-    {7, 8},
-  }));
-  // clang-format on
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    Array4D<float> rhs_array(1, 1, 2, 2);
+    // clang-format off
+    rhs_array.FillWithYX(Array2D<float>({
+        {5, 6},
+        {7, 8},
+    }));
+    // clang-format on
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(2);
-  dim.set_stride(1);
-  dim.set_padding_low(0);
-  dim.set_padding_high(1);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(1);
-  *window.add_dimensions() = dim;
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(2);
+    dim.set_stride(1);
+    dim.set_padding_low(0);
+    dim.set_padding_high(1);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(1);
+    *window.add_dimensions() = dim;
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums =
-      XlaBuilder::CreateDefaultConvDimensionNumbers(2);
+    ConvolutionDimensionNumbers dnums =
+        XlaBuilder::CreateDefaultConvDimensionNumbers(2);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 4, 4});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 4, 4});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  Array4D<float> expected_array(1, 1, 4, 4);
-  // clang-format off
-  expected_array.FillWithYX(Array2D<float>({
-    {100, 126, 152,  76},
-    {204, 230, 256, 124},
-    {308, 334, 360, 172},
-    {149, 160, 171,  80},
-  }));
-  // clang-format on
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
+    Array4D<float> expected_array(1, 1, 4, 4);
+    // clang-format off
+    expected_array.FillWithYX(Array2D<float>({
+        {100, 126, 152,  76},
+        {204, 230, 256, 124},
+        {308, 334, 360, 172},
+        {149, 160, 171,  80},
+    }));
+    // clang-format on
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, Conv2DGeneralDimensionsReversed) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // clang-format off
-  // Input dimensions: [feature=2, height=3, batch=1, width=4]
-  Array4D<float> input({
-    {{{1, 2, 3, 4}},
-     {{5, 6, 7, 8}},
-     {{9, 10, 11, 12}}},
-    {{{13, 14, 15, 16}},
-     {{17, 18, 19, 20}},
-     {{21, 22, 23, 24}}}
-  });
-  // Weight dimensions:
-  // [kernel_output_feature=1, width=3, kernel_input_feature=2, height=3]
-  Array4D<float> weight({{
-    {{1, 7, 13},
-     {4, 10, 16}},
-    {{2, 8, 14},
-     {5, 11, 17}},
-    {{3, 9, 15},
-     {6, 12, 18}}
-  }});
-  // clang-format on
+    // clang-format off
+    // Input dimensions: [feature=2, height=3, batch=1, width=4]
+    Array4D<float> input({
+        {   {{1, 2, 3, 4}},
+            {{5, 6, 7, 8}},
+            {{9, 10, 11, 12}}
+        },
+        {   {{13, 14, 15, 16}},
+            {{17, 18, 19, 20}},
+            {{21, 22, 23, 24}}
+        }
+    });
+    // Weight dimensions:
+    // [kernel_output_feature=1, width=3, kernel_input_feature=2, height=3]
+    Array4D<float> weight({{
+            {   {1, 7, 13},
+                {4, 10, 16}
+            },
+            {   {2, 8, 14},
+                {5, 11, 17}
+            },
+            {   {3, 9, 15},
+                {6, 12, 18}
+            }
+        }});
+    // clang-format on
 
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(input);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(input);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(weight);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
-  rhs_instruction = b.AddInstruction(HloInstruction::CreateReverse(
-      rhs_instruction->shape(), rhs_instruction, {3, 1}));
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(weight);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    rhs_instruction = b.AddInstruction(HloInstruction::CreateReverse(
+                                           rhs_instruction->shape(), rhs_instruction, {3, 1}));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(3);
-  dim.set_stride(1);
-  dim.set_padding_low(0);
-  dim.set_padding_high(0);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(1);
-  dim.set_window_reversal(true);
-  *window.add_dimensions() = dim;
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(3);
+    dim.set_stride(1);
+    dim.set_padding_low(0);
+    dim.set_padding_high(0);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(1);
+    dim.set_window_reversal(true);
+    *window.add_dimensions() = dim;
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums;
-  dnums.set_input_batch_dimension(2);
-  dnums.set_output_batch_dimension(2);
-  dnums.set_input_feature_dimension(0);
-  dnums.set_output_feature_dimension(0);
-  dnums.add_input_spatial_dimensions(1);
-  dnums.add_output_spatial_dimensions(1);
-  dnums.add_input_spatial_dimensions(3);
-  dnums.add_output_spatial_dimensions(3);
+    ConvolutionDimensionNumbers dnums;
+    dnums.set_input_batch_dimension(2);
+    dnums.set_output_batch_dimension(2);
+    dnums.set_input_feature_dimension(0);
+    dnums.set_output_feature_dimension(0);
+    dnums.add_input_spatial_dimensions(1);
+    dnums.add_output_spatial_dimensions(1);
+    dnums.add_input_spatial_dimensions(3);
+    dnums.add_output_spatial_dimensions(3);
 
-  dnums.set_kernel_output_feature_dimension(0);
-  dnums.set_kernel_input_feature_dimension(2);
-  dnums.add_kernel_spatial_dimensions(3);
-  dnums.add_kernel_spatial_dimensions(1);
+    dnums.set_kernel_output_feature_dimension(0);
+    dnums.set_kernel_input_feature_dimension(2);
+    dnums.add_kernel_spatial_dimensions(3);
+    dnums.add_kernel_spatial_dimensions(1);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 1, 2});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 1, 2});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  // clang-format off
-  // Result dimensions: [feature=1, height=1, batch=1, width=2]
-  Array4D<float> expected_array({{{{2514, 2685}}}});
-  Array4D<float> expected_array_bf16({{{{2512, 2688}}}});
-  // clang-format on
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(
-      use_bfloat16_ ? expected_array_bf16 : expected_array);
+    // clang-format off
+    // Result dimensions: [feature=1, height=1, batch=1, width=2]
+    Array4D<float> expected_array({{{{2514, 2685}}}});
+    Array4D<float> expected_array_bf16({{{{2512, 2688}}}});
+    // clang-format on
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(
+                        use_bfloat16_ ? expected_array_bf16 : expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, Conv2DGeneralDimensions) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  // clang-format off
-  // Input dimensions: [feature=2, height=3, batch=1, width=4]
-  Array4D<float> input({
-    {{{1, 2, 3, 4}},
-     {{5, 6, 7, 8}},
-     {{9, 10, 11, 12}}},
-    {{{13, 14, 15, 16}},
-     {{17, 18, 19, 20}},
-     {{21, 22, 23, 24}}}
-  });
-  // Weight dimensions:
-  // [kernel_output_feature=1, width=3, kernel_input_feature=2, height=3]
-  Array4D<float> weight({{
-    {{1, 7, 13},
-     {4, 10, 16}},
-    {{2, 8, 14},
-     {5, 11, 17}},
-    {{3, 9, 15},
-     {6, 12, 18}}
-  }});
-  // clang-format on
+    // clang-format off
+    // Input dimensions: [feature=2, height=3, batch=1, width=4]
+    Array4D<float> input({
+        {   {{1, 2, 3, 4}},
+            {{5, 6, 7, 8}},
+            {{9, 10, 11, 12}}
+        },
+        {   {{13, 14, 15, 16}},
+            {{17, 18, 19, 20}},
+            {{21, 22, 23, 24}}
+        }
+    });
+    // Weight dimensions:
+    // [kernel_output_feature=1, width=3, kernel_input_feature=2, height=3]
+    Array4D<float> weight({{
+            {   {1, 7, 13},
+                {4, 10, 16}
+            },
+            {   {2, 8, 14},
+                {5, 11, 17}
+            },
+            {   {3, 9, 15},
+                {6, 12, 18}
+            }
+        }});
+    // clang-format on
 
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(input);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(input);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(weight);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(weight);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(3);
-  dim.set_stride(1);
-  dim.set_padding_low(0);
-  dim.set_padding_high(0);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(1);
-  *window.add_dimensions() = dim;
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(3);
+    dim.set_stride(1);
+    dim.set_padding_low(0);
+    dim.set_padding_high(0);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(1);
+    *window.add_dimensions() = dim;
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums;
-  dnums.set_input_batch_dimension(2);
-  dnums.set_output_batch_dimension(2);
-  dnums.set_input_feature_dimension(0);
-  dnums.set_output_feature_dimension(0);
-  dnums.add_input_spatial_dimensions(1);
-  dnums.add_output_spatial_dimensions(1);
-  dnums.add_input_spatial_dimensions(3);
-  dnums.add_output_spatial_dimensions(3);
+    ConvolutionDimensionNumbers dnums;
+    dnums.set_input_batch_dimension(2);
+    dnums.set_output_batch_dimension(2);
+    dnums.set_input_feature_dimension(0);
+    dnums.set_output_feature_dimension(0);
+    dnums.add_input_spatial_dimensions(1);
+    dnums.add_output_spatial_dimensions(1);
+    dnums.add_input_spatial_dimensions(3);
+    dnums.add_output_spatial_dimensions(3);
 
-  dnums.set_kernel_output_feature_dimension(0);
-  dnums.set_kernel_input_feature_dimension(2);
-  dnums.add_kernel_spatial_dimensions(3);
-  dnums.add_kernel_spatial_dimensions(1);
+    dnums.set_kernel_output_feature_dimension(0);
+    dnums.set_kernel_input_feature_dimension(2);
+    dnums.add_kernel_spatial_dimensions(3);
+    dnums.add_kernel_spatial_dimensions(1);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 1, 2});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 1, 2});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  // clang-format off
-  // Result dimensions: [feature=1, height=1, batch=1, width=2]
-  Array4D<float> expected_array({{{{2514, 2685}}}});
-  Array4D<float> expected_array_bf16({{{{2512, 2688}}}});
-  // clang-format on
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(
-      use_bfloat16_ ? expected_array_bf16 : expected_array);
+    // clang-format off
+    // Result dimensions: [feature=1, height=1, batch=1, width=2]
+    Array4D<float> expected_array({{{{2514, 2685}}}});
+    Array4D<float> expected_array_bf16({{{{2512, 2688}}}});
+    // clang-format on
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(
+                        use_bfloat16_ ? expected_array_bf16 : expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DilatedBaseConv2DWithHighPadding) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  Array4D<float> lhs_array(1, 1, 4, 4);
-  // clang-format off
-  lhs_array.FillWithYX(Array2D<float>({
-    {1,  2,  3,  4 },
-    {5,  6,  7,  8 },
-    {9,  10, 11, 12},
-    {13, 14, 15, 16},
-  }));
-  // clang-format on
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    Array4D<float> lhs_array(1, 1, 4, 4);
+    // clang-format off
+    lhs_array.FillWithYX(Array2D<float>({
+        {1,  2,  3,  4 },
+        {5,  6,  7,  8 },
+        {9,  10, 11, 12},
+        {13, 14, 15, 16},
+    }));
+    // clang-format on
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  Array4D<float> rhs_array(1, 1, 2, 2);
-  // clang-format off
-  rhs_array.FillWithYX(Array2D<float>({
-    {5, 6},
-    {7, 8},
-  }));
-  // clang-format on
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    Array4D<float> rhs_array(1, 1, 2, 2);
+    // clang-format off
+    rhs_array.FillWithYX(Array2D<float>({
+        {5, 6},
+        {7, 8},
+    }));
+    // clang-format on
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(2);
-  dim.set_stride(1);
-  dim.set_padding_low(0);
-  dim.set_padding_high(1);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(2);
-  *window.add_dimensions() = dim;
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(2);
+    dim.set_stride(1);
+    dim.set_padding_low(0);
+    dim.set_padding_high(1);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(2);
+    *window.add_dimensions() = dim;
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums =
-      XlaBuilder::CreateDefaultConvDimensionNumbers(2);
+    ConvolutionDimensionNumbers dnums =
+        XlaBuilder::CreateDefaultConvDimensionNumbers(2);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 7, 7});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 7, 7});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  Array4D<float> expected_array(1, 1, 7, 7);
-  expected_array.FillWithYX(Array2D<float>({
-      {5, 12, 10, 18, 15, 24, 20},
-      {35, 48, 42, 56, 49, 64, 56},
-      {25, 36, 30, 42, 35, 48, 40},
-      {63, 80, 70, 88, 77, 96, 84},
-      {45, 60, 50, 66, 55, 72, 60},
-      {91, 112, 98, 120, 105, 128, 112},
-      {65, 84, 70, 90, 75, 96, 80},
-  }));
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
+    Array4D<float> expected_array(1, 1, 7, 7);
+    expected_array.FillWithYX(Array2D<float>({
+        {5, 12, 10, 18, 15, 24, 20},
+        {35, 48, 42, 56, 49, 64, 56},
+        {25, 36, 30, 42, 35, 48, 40},
+        {63, 80, 70, 88, 77, 96, 84},
+        {45, 60, 50, 66, 55, 72, 60},
+        {91, 112, 98, 120, 105, 128, 112},
+        {65, 84, 70, 90, 75, 96, 80},
+    }));
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, DilatedBaseConv2DWithLowAndHighPadding) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  Array4D<float> lhs_array(1, 1, 4, 4);
-  // clang-format off
-  lhs_array.FillWithYX(Array2D<float>({
-    {1,  2,  3,  4 },
-    {5,  6,  7,  8 },
-    {9,  10, 11, 12},
-    {13, 14, 15, 16},
-  }));
-  // clang-format on
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    Array4D<float> lhs_array(1, 1, 4, 4);
+    // clang-format off
+    lhs_array.FillWithYX(Array2D<float>({
+        {1,  2,  3,  4 },
+        {5,  6,  7,  8 },
+        {9,  10, 11, 12},
+        {13, 14, 15, 16},
+    }));
+    // clang-format on
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  Array4D<float> rhs_array(1, 1, 2, 2);
-  // clang-format off
-  rhs_array.FillWithYX(Array2D<float>({
-    {5, 6},
-    {7, 8},
-  }));
-  // clang-format on
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    Array4D<float> rhs_array(1, 1, 2, 2);
+    // clang-format off
+    rhs_array.FillWithYX(Array2D<float>({
+        {5, 6},
+        {7, 8},
+    }));
+    // clang-format on
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(2);
-  dim.set_stride(1);
-  dim.set_padding_low(1);
-  dim.set_padding_high(1);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(2);
-  *window.add_dimensions() = dim;
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(2);
+    dim.set_stride(1);
+    dim.set_padding_low(1);
+    dim.set_padding_high(1);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(2);
+    *window.add_dimensions() = dim;
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums =
-      XlaBuilder::CreateDefaultConvDimensionNumbers(2);
+    ConvolutionDimensionNumbers dnums =
+        XlaBuilder::CreateDefaultConvDimensionNumbers(2);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 8, 8});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 8, 8});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  Array4D<float> expected_array(1, 1, 8, 8);
-  expected_array.FillWithYX(Array2D<float>({
-      {8, 7, 16, 14, 24, 21, 32, 28},
-      {6, 5, 12, 10, 18, 15, 24, 20},
-      {40, 35, 48, 42, 56, 49, 64, 56},
-      {30, 25, 36, 30, 42, 35, 48, 40},
-      {72, 63, 80, 70, 88, 77, 96, 84},
-      {54, 45, 60, 50, 66, 55, 72, 60},
-      {104, 91, 112, 98, 120, 105, 128, 112},
-      {78, 65, 84, 70, 90, 75, 96, 80},
-  }));
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
+    Array4D<float> expected_array(1, 1, 8, 8);
+    expected_array.FillWithYX(Array2D<float>({
+        {8, 7, 16, 14, 24, 21, 32, 28},
+        {6, 5, 12, 10, 18, 15, 24, 20},
+        {40, 35, 48, 42, 56, 49, 64, 56},
+        {30, 25, 36, 30, 42, 35, 48, 40},
+        {72, 63, 80, 70, 88, 77, 96, 84},
+        {54, 45, 60, 50, 66, 55, 72, 60},
+        {104, 91, 112, 98, 120, 105, 128, 112},
+        {78, 65, 84, 70, 90, 75, 96, 80},
+    }));
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test,
        DilatedWindowAndBaseConv2DWithDifferentLowAndHighPaddingAndStrides) {
-  HloComputation::Builder b(TestName());
+    HloComputation::Builder b(TestName());
 
-  Array4D<float> lhs_array(1, 1, 4, 4);
-  // clang-format off
-  lhs_array.FillWithYX(Array2D<float>({
-    {1,  2,  3,  4 },
-    {5,  6,  7,  8 },
-    {9,  10, 11, 12},
-    {13, 14, 15, 16},
-  }));
-  // clang-format on
-  auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
+    Array4D<float> lhs_array(1, 1, 4, 4);
+    // clang-format off
+    lhs_array.FillWithYX(Array2D<float>({
+        {1,  2,  3,  4 },
+        {5,  6,  7,  8 },
+        {9,  10, 11, 12},
+        {13, 14, 15, 16},
+    }));
+    // clang-format on
+    auto lhs_literal = LiteralUtil::CreateR4FromArray4D<float>(lhs_array);
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(lhs_literal)));
 
-  Array4D<float> rhs_array(1, 1, 2, 3);
-  // clang-format off
-  rhs_array.FillWithYX(Array2D<float>({
-    {5, 6, 7},
-    {8, 9, 10},
-  }));
-  // clang-format on
-  auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
+    Array4D<float> rhs_array(1, 1, 2, 3);
+    // clang-format off
+    rhs_array.FillWithYX(Array2D<float>({
+        {5, 6, 7},
+        {8, 9, 10},
+    }));
+    // clang-format on
+    auto rhs_literal = LiteralUtil::CreateR4FromArray4D<float>(rhs_array);
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(rhs_literal)));
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(2);
-  dim.set_stride(1);
-  dim.set_padding_low(2);
-  dim.set_padding_high(2);
-  dim.set_window_dilation(2);
-  dim.set_base_dilation(2);
-  *window.add_dimensions() = dim;
-  dim.set_size(3);
-  dim.set_stride(3);
-  dim.set_padding_low(2);
-  dim.set_padding_high(-1);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(3);
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(2);
+    dim.set_stride(1);
+    dim.set_padding_low(2);
+    dim.set_padding_high(2);
+    dim.set_window_dilation(2);
+    dim.set_base_dilation(2);
+    *window.add_dimensions() = dim;
+    dim.set_size(3);
+    dim.set_stride(3);
+    dim.set_padding_low(2);
+    dim.set_padding_high(-1);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(3);
+    *window.add_dimensions() = dim;
 
-  ConvolutionDimensionNumbers dnums =
-      XlaBuilder::CreateDefaultConvDimensionNumbers(2);
+    ConvolutionDimensionNumbers dnums =
+        XlaBuilder::CreateDefaultConvDimensionNumbers(2);
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 9, 3});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
-      /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 9, 3});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction, /*feature_group_count=*/1,
+                         /*batch_group_count=*/1, window, dnums, DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  Array4D<float> expected_array(1, 1, 9, 3);
-  expected_array.FillWithYX(Array2D<float>({
-      {10, 20, 30},
-      {0, 0, 0},
-      {57, 74, 91},
-      {0, 0, 0},
-      {125, 142, 159},
-      {0, 0, 0},
-      {193, 210, 227},
-      {0, 0, 0},
-      {91, 98, 105},
-  }));
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
+    Array4D<float> expected_array(1, 1, 9, 3);
+    expected_array.FillWithYX(Array2D<float>({
+        {10, 20, 30},
+        {0, 0, 0},
+        {57, 74, 91},
+        {0, 0, 0},
+        {125, 142, 159},
+        {0, 0, 0},
+        {193, 210, 227},
+        {0, 0, 0},
+        {91, 98, 105},
+    }));
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
 
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_P(HloEvaluatorBf16Test, Conv2DGroupedConvolution) {
-  HloComputation::Builder b(TestName());
-  std::vector<int64> input_dims = {1, 2, 2, 4};
-  std::vector<int64> filter_dims = {2, 2, 2, 8};
-  Shape input_shape = ShapeUtil::MakeShapeWithType<float>(input_dims);
-  Shape filter_shape = ShapeUtil::MakeShapeWithType<float>(filter_dims);
-  // Tensorflow dimension numbers for 2D convolution.
-  ConvolutionDimensionNumbers dnums;
-  dnums.set_input_batch_dimension(0);
-  dnums.set_output_batch_dimension(0);
-  dnums.add_input_spatial_dimensions(1);
-  dnums.add_output_spatial_dimensions(1);
-  dnums.add_input_spatial_dimensions(2);
-  dnums.add_output_spatial_dimensions(2);
-  dnums.set_input_feature_dimension(3);
-  dnums.set_output_feature_dimension(3);
-  dnums.add_kernel_spatial_dimensions(0);
-  dnums.add_kernel_spatial_dimensions(1);
-  dnums.set_kernel_input_feature_dimension(2);
-  dnums.set_kernel_output_feature_dimension(3);
+    HloComputation::Builder b(TestName());
+    std::vector<int64> input_dims = {1, 2, 2, 4};
+    std::vector<int64> filter_dims = {2, 2, 2, 8};
+    Shape input_shape = ShapeUtil::MakeShapeWithType<float>(input_dims);
+    Shape filter_shape = ShapeUtil::MakeShapeWithType<float>(filter_dims);
+    // Tensorflow dimension numbers for 2D convolution.
+    ConvolutionDimensionNumbers dnums;
+    dnums.set_input_batch_dimension(0);
+    dnums.set_output_batch_dimension(0);
+    dnums.add_input_spatial_dimensions(1);
+    dnums.add_output_spatial_dimensions(1);
+    dnums.add_input_spatial_dimensions(2);
+    dnums.add_output_spatial_dimensions(2);
+    dnums.set_input_feature_dimension(3);
+    dnums.set_output_feature_dimension(3);
+    dnums.add_kernel_spatial_dimensions(0);
+    dnums.add_kernel_spatial_dimensions(1);
+    dnums.set_kernel_input_feature_dimension(2);
+    dnums.set_kernel_output_feature_dimension(3);
 
-  Window window;
-  WindowDimension dim;
-  dim.set_size(2);
-  dim.set_stride(1);
-  dim.set_padding_low(0);
-  dim.set_padding_high(0);
-  dim.set_window_dilation(1);
-  dim.set_base_dilation(1);
-  *window.add_dimensions() = dim;
-  *window.add_dimensions() = dim;
+    Window window;
+    WindowDimension dim;
+    dim.set_size(2);
+    dim.set_stride(1);
+    dim.set_padding_low(0);
+    dim.set_padding_high(0);
+    dim.set_window_dilation(1);
+    dim.set_base_dilation(1);
+    *window.add_dimensions() = dim;
+    *window.add_dimensions() = dim;
 
-  std::vector<float> input_elems(ShapeUtil::ElementsIn(input_shape));
-  std::iota(input_elems.begin(), input_elems.end(), -7);
-  auto input_r1 = LiteralUtil::CreateR1<float>(input_elems);
-  auto input_r4 = input_r1.Reshape(input_dims).ConsumeValueOrDie();
-  HloInstruction* lhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(input_r4)));
+    std::vector<float> input_elems(ShapeUtil::ElementsIn(input_shape));
+    std::iota(input_elems.begin(), input_elems.end(), -7);
+    auto input_r1 = LiteralUtil::CreateR1<float>(input_elems);
+    auto input_r4 = input_r1.Reshape(input_dims).ConsumeValueOrDie();
+    HloInstruction* lhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(input_r4)));
 
-  std::vector<float> filter_elems(ShapeUtil::ElementsIn(filter_shape));
-  std::iota(filter_elems.begin(), filter_elems.end(), -31);
-  auto filter_r1 = LiteralUtil::CreateR1<float>(filter_elems);
-  auto filter_r4 = filter_r1.Reshape(filter_dims).ConsumeValueOrDie();
-  HloInstruction* rhs_instruction =
-      b.AddInstruction(HloInstruction::CreateConstant(std::move(filter_r4)));
+    std::vector<float> filter_elems(ShapeUtil::ElementsIn(filter_shape));
+    std::iota(filter_elems.begin(), filter_elems.end(), -31);
+    auto filter_r1 = LiteralUtil::CreateR1<float>(filter_elems);
+    auto filter_r4 = filter_r1.Reshape(filter_dims).ConsumeValueOrDie();
+    HloInstruction* rhs_instruction =
+        b.AddInstruction(HloInstruction::CreateConstant(std::move(filter_r4)));
 
-  Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 1, 8});
-  b.AddInstruction(HloInstruction::CreateConvolve(
-      shape, lhs_instruction, rhs_instruction,
-      /*feature_group_count=*/2, /*batch_group_count=*/1, window, dnums,
-      DefaultPrecisionConfig(2)));
-  m_->AddEntryComputation(b.Build());
+    Shape shape = ShapeUtil::MakeShape(F32, {1, 1, 1, 8});
+    b.AddInstruction(HloInstruction::CreateConvolve(
+                         shape, lhs_instruction, rhs_instruction,
+                         /*feature_group_count=*/2, /*batch_group_count=*/1, window, dnums,
+                         DefaultPrecisionConfig(2)));
+    m_->AddEntryComputation(b.Build());
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
+    TF_ASSERT_OK_AND_ASSIGN(Literal result, Evaluate());
 
-  Array4D<float> expected_array(1, 1, 1, 8);
-  expected_array.FillWithYX(
-      Array2D<float>({{668, 664, 660, 656, 668, 680, 692, 704}}));
-  auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    Array4D<float> expected_array(1, 1, 1, 8);
+    expected_array.FillWithYX(
+    Array2D<float>({{668, 664, 660, 656, 668, 680, 692, 704}}));
+    auto expected = LiteralUtil::CreateR4FromArray4D<float>(expected_array);
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 // Initialization of data sets for FFT tests:
 
 void HloEvaluatorTest::InitializeFftData() {
-  // clang-format off
-  fft_c64x2x4x8_ = LiteralUtil::CreateR3<complex64>({
-    {{{0.0, 0.0}, {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0},
-      {4.0, 0.0}, {5.0, 0.0}, {6.0, 0.0}, {7.0, 0.0}},
-     {{0.0, 0.0}, {0.0, 1.0}, {0.0, 2.0}, {0.0, 3.0},
-      {0.0, 4.0}, {0.0, 5.0}, {0.0, 6.0}, {0.0, 7.0}},
-     {{0.0, 7.0}, {1.0, 6.0}, {2.0, 5.0}, {3.0, 4.0},
-      {4.0, 3.0}, {5.0, 2.0}, {6.0, 1.0}, {7.0, 0.0}},
-     {{7.0, 0.0}, {6.0, 1.0}, {5.0, 2.0}, {4.0, 3.0},
-      {3.0, 4.0}, {2.0, 5.0}, {1.0, 6.0}, {0.0, 7.0}}},
-    {{{-4.0, 0.0}, {-3.0, 0.0}, {-2.0, 0.0}, {-1.0, 0.0},
-      {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}, {4.0, 0.0}},
-     {{0.0, -4.0}, {0.0, -3.0}, {0.0, -2.0}, {0.0, -1.0},
-      {0.0, 1.0}, {0.0, 2.0}, {0.0, 3.0}, {0.0, 4.0}},
-     {{3.5, 3.5}, {-1.707107, -0.707107}, {-1.0, -0.0}, {-0.707107, 0.292893},
-      {-0.5, 0.5}, {-0.292893, 0.707107}, {0.0, 1.0}, {0.707107, 1.707107}},
-     {{3.5, 3.5}, {1.707107, 0.707107}, {1.0, 0.0}, {0.707107, -0.292893},
-      {0.5, -0.5}, {0.292893, -0.707107}, {-0.0, -1.0}, {-0.707107, -1.707107}}}
-  });
-  fft_c64x2x4x8_1d_ = LiteralUtil::CreateR3<complex64>({
-    {{{28.0, 0.0}, {-4.0, 9.656854}, {-4.0, 4.0}, {-4.0, 1.656854},
-      {-4.0, 0.0}, {-4.0, -1.656854}, {-4.0, -4.0}, {-4.0, -9.656854}},
-     {{0.0, 28.0}, {-9.656854, -4.0}, {-4.0, -4.0}, {-1.656854, -4.0},
-      {0.0, -4.0}, {1.656854, -4.0}, {4.0, -4.0}, {9.656854, -4.0}},
-     {{28.0, 28.0}, {5.656854, 13.656854}, {0.0, 8.0}, {-2.343146, 5.656854},
-      {-4.0, 4.0}, {-5.656854, 2.343146}, {-8.0, -0.0}, {-13.656854, -5.656854}},  // NOLINT
-     {{28.0, 28.0}, {-5.656854, -13.656854}, {-0.0, -8.0}, {2.343146, -5.656854},  // NOLINT
-      {4.0, -4.0}, {5.656854, -2.343146}, {8.0, 0.0}, {13.656854, 5.656854}}},
-    {{{0.0, 0.0}, {-5.0, 12.071068}, {-4.0, 4.0}, {-5.0, 2.071068},
-      {-4.0, 0.0}, {-5.0, -2.071068}, {-4.0, -4.0}, {-5.0, -12.071068}},
-     {{0.0, 0.0}, {-12.071068, -5.0}, {-4.0, -4.0}, {-2.071068, -5.0},
-      {0.0, -4.0}, {2.071068, -5.0}, {4.0, -4.0}, {12.071068, -5.0}},
-     {{0.0, 7.0}, {1.0, 6.0}, {2.0, 5.0}, {3.0, 4.0},
-      {4.0, 3.0}, {5.0, 2.0}, {6.0, 1.0}, {7.0, 0.0}},
-     {{7.0, 0.0}, {6.0, 1.0}, {5.0, 2.0}, {4.0, 3.0},
-      {3.0, 4.0}, {2.0, 5.0}, {1.0, 6.0}, {0.0, 7.0}}}
-  });
-  fft_c64x2x4x8_2d_ = LiteralUtil::CreateR3<complex64>({
-    {{{84.0, 84.0}, {-13.656854, 5.656854}, {-8.0, 0.0}, {-5.656854, -2.343146},
-      {-4.0, -4.0}, {-2.343146, -5.656854}, {0.0, -8.0}, {5.656854, -13.656854}},  // NOLINT
-     {{0.0, 0.0}, {0.0, -0.0}, {0.0, 0.0}, {0.0, 0.0},
-      {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}},
-     {{28.0, -28.0}, {16.970562, 40.970562}, {0.0, 24.0}, {-7.029438, 16.970562},      // NOLINT
-      {-12.0, 12.0}, {-16.970562, 7.029438}, {-24.0, 0.0}, {-40.970562, -16.970562}},  // NOLINT
-     {{0.0, -56.0}, {-19.313708, -8.0}, {-8.0, -8.0}, {-3.313708, -8.0},
-      {0.0, -8.0}, {3.313708, -8.0}, {8.0, -8.0}, {19.313708, -8.0}}},
-    {{{7.0, 7.0}, {-10.071068, 14.071068}, {-1.0, 7.0}, {-0.071068, 4.071068},
-      {3.0, 3.0}, {4.071068, -0.071068}, {7.0, -1.0}, {14.071068, -10.071068}},
-     {{0.0, 0.0}, {-12.0, 24.142136}, {-12.0, 8.0}, {-16.0, 4.142136},
-      {-16.0, 0.0}, {-20.0, -4.142136}, {-20.0, -8.0}, {-24.0, -24.142136}},
-     {{-7.0, 7.0}, {2.071068, 22.071068}, {-3.0, 11.0}, {-3.928932, 8.071068},
-      {-3.0, 3.0}, {-4.071068, -0.071068}, {-3.0, -5.0}, {-10.071068, -14.071068}},  // NOLINT
-     {{0.0, -14.0}, {0.0, -12.0}, {0.0, -10.0}, {0.0, -8.0},
-      {0.0, -6.0}, {0.0, -4.0}, {0.0, -2.0}, {0.0, 0.0}}}
-  });
-  fft_c64x2x4x8_3d_ = LiteralUtil::CreateR3<complex64>({
-    {{{91.0, 91.0}, {-23.727922, 19.727922}, {-9.0, 7.0}, {-5.727922, 1.727922},
-      {-1.0, -1.0}, {1.727922, -5.727922}, {7.0, -9}, {19.727922, -23.727922}},
-     {{0.0, 0.0}, {-12.0, 24.142136}, {-12.0, 8.0}, {-16.0, 4.142136},
-      {-16.0, 0.0}, {-20.0, -4.142136}, {-20.0, -8.0}, {-24.0, -24.142136}},
-     {{21.0, -21.0}, {19.041630, 63.041630}, {-3.0, 35.0}, {-10.958370, 25.041630},     // NOLINT
-      {-15.0, 15.0}, {-21.041630, 6.958370}, {-27.0, -5.0}, {-51.041630, -31.041630}},  // NOLINT
-     {{0.0, -70.0}, {-19.313708, -20.0}, {-8.0, -18.0}, {-3.313708, -16.0},
-      {0.0, -14.0}, {3.313708, -12.0}, {8.0, -10.0}, {19.313708, -8.0}}},
-    {{{77.0, 77.0}, {-3.585786, -8.414214}, {-7.0, -7.0}, {-5.585786, -6.414214},   // NOLINT
-      {-7.0, -7.0}, {-6.414214, -5.585786}, {-7.0, -7.0}, {-8.414214, -3.585786}},  // NOLINT
-     {{0.0, 0.0}, {12.0, -24.142136}, {12.0, -8.0}, {16.0, -4.142136},
-      {16.0, 0.0}, {20.0, 4.142136}, {20.0, 8.0}, {24.0, 24.142136}},
-     {{35.0, -35.0}, {14.899494, 18.899494}, {3.0, 13.0}, {-3.100506, 8.899494},
-      {-9.0, 9.0}, {-12.899494, 7.100506}, {-21.0, 5.0}, {-30.899494, -2.899494}},  // NOLINT
-     {{0.0, -42.0}, {-19.313708, 4.0}, {-8.0, 2.0}, {-3.313708, 0.0},
-      {0.0, -2.0}, {3.313708, -4.0}, {8.0, -6.0}, {19.313708, -8.0}}}
-  });
-  // clang-format on
+    // clang-format off
+    fft_c64x2x4x8_ = LiteralUtil::CreateR3<complex64>({
+        {   {   {0.0, 0.0}, {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0},
+                {4.0, 0.0}, {5.0, 0.0}, {6.0, 0.0}, {7.0, 0.0}
+            },
+            {   {0.0, 0.0}, {0.0, 1.0}, {0.0, 2.0}, {0.0, 3.0},
+                {0.0, 4.0}, {0.0, 5.0}, {0.0, 6.0}, {0.0, 7.0}
+            },
+            {   {0.0, 7.0}, {1.0, 6.0}, {2.0, 5.0}, {3.0, 4.0},
+                {4.0, 3.0}, {5.0, 2.0}, {6.0, 1.0}, {7.0, 0.0}
+            },
+            {   {7.0, 0.0}, {6.0, 1.0}, {5.0, 2.0}, {4.0, 3.0},
+                {3.0, 4.0}, {2.0, 5.0}, {1.0, 6.0}, {0.0, 7.0}
+            }
+        },
+        {   {   {-4.0, 0.0}, {-3.0, 0.0}, {-2.0, 0.0}, {-1.0, 0.0},
+                {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}, {4.0, 0.0}
+            },
+            {   {0.0, -4.0}, {0.0, -3.0}, {0.0, -2.0}, {0.0, -1.0},
+                {0.0, 1.0}, {0.0, 2.0}, {0.0, 3.0}, {0.0, 4.0}
+            },
+            {   {3.5, 3.5}, {-1.707107, -0.707107}, {-1.0, -0.0}, {-0.707107, 0.292893},
+                {-0.5, 0.5}, {-0.292893, 0.707107}, {0.0, 1.0}, {0.707107, 1.707107}
+            },
+            {   {3.5, 3.5}, {1.707107, 0.707107}, {1.0, 0.0}, {0.707107, -0.292893},
+                {0.5, -0.5}, {0.292893, -0.707107}, {-0.0, -1.0}, {-0.707107, -1.707107}
+            }
+        }
+    });
+    fft_c64x2x4x8_1d_ = LiteralUtil::CreateR3<complex64>({
+        {   {   {28.0, 0.0}, {-4.0, 9.656854}, {-4.0, 4.0}, {-4.0, 1.656854},
+                {-4.0, 0.0}, {-4.0, -1.656854}, {-4.0, -4.0}, {-4.0, -9.656854}
+            },
+            {   {0.0, 28.0}, {-9.656854, -4.0}, {-4.0, -4.0}, {-1.656854, -4.0},
+                {0.0, -4.0}, {1.656854, -4.0}, {4.0, -4.0}, {9.656854, -4.0}
+            },
+            {   {28.0, 28.0}, {5.656854, 13.656854}, {0.0, 8.0}, {-2.343146, 5.656854},
+                {-4.0, 4.0}, {-5.656854, 2.343146}, {-8.0, -0.0}, {-13.656854, -5.656854}
+            },  // NOLINT
+            {   {28.0, 28.0}, {-5.656854, -13.656854}, {-0.0, -8.0}, {2.343146, -5.656854},  // NOLINT
+                {4.0, -4.0}, {5.656854, -2.343146}, {8.0, 0.0}, {13.656854, 5.656854}
+            }
+        },
+        {   {   {0.0, 0.0}, {-5.0, 12.071068}, {-4.0, 4.0}, {-5.0, 2.071068},
+                {-4.0, 0.0}, {-5.0, -2.071068}, {-4.0, -4.0}, {-5.0, -12.071068}
+            },
+            {   {0.0, 0.0}, {-12.071068, -5.0}, {-4.0, -4.0}, {-2.071068, -5.0},
+                {0.0, -4.0}, {2.071068, -5.0}, {4.0, -4.0}, {12.071068, -5.0}
+            },
+            {   {0.0, 7.0}, {1.0, 6.0}, {2.0, 5.0}, {3.0, 4.0},
+                {4.0, 3.0}, {5.0, 2.0}, {6.0, 1.0}, {7.0, 0.0}
+            },
+            {   {7.0, 0.0}, {6.0, 1.0}, {5.0, 2.0}, {4.0, 3.0},
+                {3.0, 4.0}, {2.0, 5.0}, {1.0, 6.0}, {0.0, 7.0}
+            }
+        }
+    });
+    fft_c64x2x4x8_2d_ = LiteralUtil::CreateR3<complex64>({
+        {   {   {84.0, 84.0}, {-13.656854, 5.656854}, {-8.0, 0.0}, {-5.656854, -2.343146},
+                {-4.0, -4.0}, {-2.343146, -5.656854}, {0.0, -8.0}, {5.656854, -13.656854}
+            },  // NOLINT
+            {   {0.0, 0.0}, {0.0, -0.0}, {0.0, 0.0}, {0.0, 0.0},
+                {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}
+            },
+            {   {28.0, -28.0}, {16.970562, 40.970562}, {0.0, 24.0}, {-7.029438, 16.970562},      // NOLINT
+                {-12.0, 12.0}, {-16.970562, 7.029438}, {-24.0, 0.0}, {-40.970562, -16.970562}
+            },  // NOLINT
+            {   {0.0, -56.0}, {-19.313708, -8.0}, {-8.0, -8.0}, {-3.313708, -8.0},
+                {0.0, -8.0}, {3.313708, -8.0}, {8.0, -8.0}, {19.313708, -8.0}
+            }
+        },
+        {   {   {7.0, 7.0}, {-10.071068, 14.071068}, {-1.0, 7.0}, {-0.071068, 4.071068},
+                {3.0, 3.0}, {4.071068, -0.071068}, {7.0, -1.0}, {14.071068, -10.071068}
+            },
+            {   {0.0, 0.0}, {-12.0, 24.142136}, {-12.0, 8.0}, {-16.0, 4.142136},
+                {-16.0, 0.0}, {-20.0, -4.142136}, {-20.0, -8.0}, {-24.0, -24.142136}
+            },
+            {   {-7.0, 7.0}, {2.071068, 22.071068}, {-3.0, 11.0}, {-3.928932, 8.071068},
+                {-3.0, 3.0}, {-4.071068, -0.071068}, {-3.0, -5.0}, {-10.071068, -14.071068}
+            },  // NOLINT
+            {   {0.0, -14.0}, {0.0, -12.0}, {0.0, -10.0}, {0.0, -8.0},
+                {0.0, -6.0}, {0.0, -4.0}, {0.0, -2.0}, {0.0, 0.0}
+            }
+        }
+    });
+    fft_c64x2x4x8_3d_ = LiteralUtil::CreateR3<complex64>({
+        {   {   {91.0, 91.0}, {-23.727922, 19.727922}, {-9.0, 7.0}, {-5.727922, 1.727922},
+                {-1.0, -1.0}, {1.727922, -5.727922}, {7.0, -9}, {19.727922, -23.727922}
+            },
+            {   {0.0, 0.0}, {-12.0, 24.142136}, {-12.0, 8.0}, {-16.0, 4.142136},
+                {-16.0, 0.0}, {-20.0, -4.142136}, {-20.0, -8.0}, {-24.0, -24.142136}
+            },
+            {   {21.0, -21.0}, {19.041630, 63.041630}, {-3.0, 35.0}, {-10.958370, 25.041630},     // NOLINT
+                {-15.0, 15.0}, {-21.041630, 6.958370}, {-27.0, -5.0}, {-51.041630, -31.041630}
+            },  // NOLINT
+            {   {0.0, -70.0}, {-19.313708, -20.0}, {-8.0, -18.0}, {-3.313708, -16.0},
+                {0.0, -14.0}, {3.313708, -12.0}, {8.0, -10.0}, {19.313708, -8.0}
+            }
+        },
+        {   {   {77.0, 77.0}, {-3.585786, -8.414214}, {-7.0, -7.0}, {-5.585786, -6.414214},   // NOLINT
+                {-7.0, -7.0}, {-6.414214, -5.585786}, {-7.0, -7.0}, {-8.414214, -3.585786}
+            },  // NOLINT
+            {   {0.0, 0.0}, {12.0, -24.142136}, {12.0, -8.0}, {16.0, -4.142136},
+                {16.0, 0.0}, {20.0, 4.142136}, {20.0, 8.0}, {24.0, 24.142136}
+            },
+            {   {35.0, -35.0}, {14.899494, 18.899494}, {3.0, 13.0}, {-3.100506, 8.899494},
+                {-9.0, 9.0}, {-12.899494, 7.100506}, {-21.0, 5.0}, {-30.899494, -2.899494}
+            },  // NOLINT
+            {   {0.0, -42.0}, {-19.313708, 4.0}, {-8.0, 2.0}, {-3.313708, 0.0},
+                {0.0, -2.0}, {3.313708, -4.0}, {8.0, -6.0}, {19.313708, -8.0}
+            }
+        }
+    });
+    // clang-format on
 }
 
 // Simple FFT tests:
 
 TEST_F(HloEvaluatorTest, 1D_FFT_4_on_c64x4) {
-  const char* hlo_text = R"(
+    const char* hlo_text = R"(
 HloModule Fft
 
 ENTRY main {
@@ -4247,15 +4301,15 @@ TEST_F(HloEvaluatorTest, PreserveFusionInputLayout) {
         kind=kLoop, calls=fused_computation
     })";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
 
-  TF_ASSERT_OK_AND_ASSIGN(Literal actual, Evaluate({&args[0]}));
-  EXPECT_TRUE(absl::c_equal(args[0].data<float>(), actual.data<float>()));
+    TF_ASSERT_OK_AND_ASSIGN(Literal actual, Evaluate({&args[0]}));
+    EXPECT_TRUE(absl::c_equal(args[0].data<float>(), actual.data<float>()));
 }
 
 TEST_F(HloEvaluatorTest, PreserveFusionOutputLayout) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
     HloModule FusionOutputLayout
 
     fused_computation {
@@ -4269,14 +4323,14 @@ TEST_F(HloEvaluatorTest, PreserveFusionOutputLayout) {
         kind=kLoop, calls=fused_computation
     })";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
-  TF_ASSERT_OK_AND_ASSIGN(Literal actual, Evaluate({&args[0]}));
-  EXPECT_TRUE(absl::c_equal(args[0].data<float>(), actual.data<float>()));
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
+    TF_ASSERT_OK_AND_ASSIGN(Literal actual, Evaluate({&args[0]}));
+    EXPECT_TRUE(absl::c_equal(args[0].data<float>(), actual.data<float>()));
 }
 
 TEST_F(HloEvaluatorTest, PreserveMOFusionOutputLayout) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
     HloModule MOFusionOutputLayout
 
     fused_computation {
@@ -4291,17 +4345,17 @@ TEST_F(HloEvaluatorTest, PreserveMOFusionOutputLayout) {
         kind=kLoop, calls=fused_computation
     })";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
-  TF_ASSERT_OK_AND_ASSIGN(Literal actual_tuple, Evaluate({&args[0]}));
-  std::vector<Literal> actual_literals = actual_tuple.DecomposeTuple();
-  EXPECT_TRUE(
-      absl::c_equal(args[0].data<float>(), actual_literals[0].data<float>()));
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
+    TF_ASSERT_OK_AND_ASSIGN(Literal actual_tuple, Evaluate({&args[0]}));
+    std::vector<Literal> actual_literals = actual_tuple.DecomposeTuple();
+    EXPECT_TRUE(
+        absl::c_equal(args[0].data<float>(), actual_literals[0].data<float>()));
 }
 
 // Tests that custom_calls fail to evaluate when no handler is specified.
 TEST_F(HloEvaluatorTest, EvaluateCustomCall_NoHandler) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
     HloModule EvaluateCustomCall_NoHandler
     ENTRY kernel_entry {
       parameter.0 = u32[2,2]{1,0} parameter(0)
@@ -4310,15 +4364,15 @@ TEST_F(HloEvaluatorTest, EvaluateCustomCall_NoHandler) {
     }
   )";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
-  EXPECT_EQ(HloEvaluator().Evaluate(*m_, {&args[0]}).status().code(),
-            ::tensorflow::error::UNIMPLEMENTED);
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
+    EXPECT_EQ(HloEvaluator().Evaluate(*m_, {&args[0]}).status().code(),
+              ::tensorflow::error::UNIMPLEMENTED);
 }
 
 // Tests when a custom_call handler returns an error.
 TEST_F(HloEvaluatorTest, EvaluateCustomCall_HandlerError) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
     HloModule EvaluateCustomCall_HandlerError
     ENTRY kernel_entry {
       parameter.0 = u32[2,2]{1,0} parameter(0)
@@ -4327,22 +4381,22 @@ TEST_F(HloEvaluatorTest, EvaluateCustomCall_HandlerError) {
     }
   )";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
-  HloEvaluator evaluator;
-  evaluator.set_custom_call_handler(
-      [](HloInstruction* custom_call, absl::Span<const Literal*> operands) {
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
+    HloEvaluator evaluator;
+    evaluator.set_custom_call_handler(
+    [](HloInstruction* custom_call, absl::Span<const Literal*> operands) {
         return InternalError("Test error");
-      });
-  EXPECT_EQ(evaluator.Evaluate(*m_, {&args[0]}).status().code(),
-            ::tensorflow::error::INTERNAL);
+    });
+    EXPECT_EQ(evaluator.Evaluate(*m_, {&args[0]}).status().code(),
+              ::tensorflow::error::INTERNAL);
 }
 
 // Tests the custom_call handler on calls with many inputs.
 // We sum the operands so that we can verify the operand and output literals
 // are properly mapped for access.
 TEST_F(HloEvaluatorTest, EvaluateCustomCall_ManyInputs) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
     HloModule EvaluateCustomCall_ManyInputs
     ENTRY kernel_entry {
       parameter.0 = u32[1]{0} parameter(0)
@@ -4352,11 +4406,11 @@ TEST_F(HloEvaluatorTest, EvaluateCustomCall_ManyInputs) {
     }
   )";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
-  HloEvaluator evaluator;
-  evaluator.set_custom_call_handler(
-      [](HloInstruction* custom_call, absl::Span<const Literal*> operands) {
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    auto args = MakeFakeArguments(m_.get()).ConsumeValueOrDie();
+    HloEvaluator evaluator;
+    evaluator.set_custom_call_handler(
+    [](HloInstruction* custom_call, absl::Span<const Literal*> operands) {
         EXPECT_EQ(HloOpcode::kCustomCall, custom_call->opcode());
         EXPECT_EQ("_my_custom_call", custom_call->custom_call_target());
         EXPECT_EQ(2, custom_call->operand_count());
@@ -4367,18 +4421,18 @@ TEST_F(HloEvaluatorTest, EvaluateCustomCall_ManyInputs) {
         auto output_data = output.data<uint32>();
         output_data[0] = operand0_data[0] + operand1_data[0];
         return output;
-      });
-  TF_ASSERT_OK_AND_ASSIGN(
-      Literal actual_literal,
-      evaluator.Evaluate(*m_->entry_computation(), {&args[0], &args[1]}));
-  auto arg0_data = args[0].data<uint32>();
-  auto arg1_data = args[1].data<uint32>();
-  std::vector<uint32> expected_data = {arg0_data[0] + arg1_data[0]};
-  EXPECT_TRUE(absl::c_equal(expected_data, actual_literal.data<uint32>()));
+    });
+    TF_ASSERT_OK_AND_ASSIGN(
+        Literal actual_literal,
+        evaluator.Evaluate(*m_->entry_computation(), {&args[0], &args[1]}));
+    auto arg0_data = args[0].data<uint32>();
+    auto arg1_data = args[1].data<uint32>();
+    std::vector<uint32> expected_data = {arg0_data[0] + arg1_data[0]};
+    EXPECT_TRUE(absl::c_equal(expected_data, actual_literal.data<uint32>()));
 }
 
 TEST_F(HloEvaluatorTest, IsFiniteF16) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
   HloModule test
 
   ENTRY IsFiniteTest {
@@ -4386,16 +4440,16 @@ TEST_F(HloEvaluatorTest, IsFiniteF16) {
     ROOT is-finite = pred[6] is-finite(c)
   })";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  TF_ASSERT_OK_AND_ASSIGN(
-      Literal actual_literal,
-      HloEvaluator().Evaluate(*m_->entry_computation(), {}));
-  EXPECT_THAT(actual_literal.data<bool>(),
-              ::testing::ElementsAre(false, true, false, true, false, false));
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    TF_ASSERT_OK_AND_ASSIGN(
+        Literal actual_literal,
+        HloEvaluator().Evaluate(*m_->entry_computation(), {}));
+    EXPECT_THAT(actual_literal.data<bool>(),
+                ::testing::ElementsAre(false, true, false, true, false, false));
 }
 
 TEST_F(HloEvaluatorTest, IsFiniteBf16) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
   HloModule test
 
   ENTRY IsFiniteTest {
@@ -4403,31 +4457,31 @@ TEST_F(HloEvaluatorTest, IsFiniteBf16) {
     ROOT is-finite = pred[6] is-finite(c)
   })";
 
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  TF_ASSERT_OK_AND_ASSIGN(
-      Literal actual_literal,
-      HloEvaluator().Evaluate(*m_->entry_computation(), {}));
-  EXPECT_THAT(actual_literal.data<bool>(),
-              ::testing::ElementsAre(false, true, false, true, false, false));
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    TF_ASSERT_OK_AND_ASSIGN(
+        Literal actual_literal,
+        HloEvaluator().Evaluate(*m_->entry_computation(), {}));
+    EXPECT_THAT(actual_literal.data<bool>(),
+                ::testing::ElementsAre(false, true, false, true, false, false));
 }
 
 // Check that evaluating `f32[<huge>, 0] iota` doesn't oom (it's an empty
 // array!).
 TEST_F(HloEvaluatorTest, ZeroSizedIotaWithHugeDimension) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
   HloModule test
   ENTRY t {
     ROOT i = f32[1000000000000, 0] iota(), iota_dimension=0
   })";
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  TF_ASSERT_OK_AND_ASSIGN(
-      Literal actual_literal,
-      HloEvaluator().Evaluate(*m_->entry_computation(), {}));
-  EXPECT_THAT(actual_literal.data<float>(), ::testing::IsEmpty());
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    TF_ASSERT_OK_AND_ASSIGN(
+        Literal actual_literal,
+        HloEvaluator().Evaluate(*m_->entry_computation(), {}));
+    EXPECT_THAT(actual_literal.data<float>(), ::testing::IsEmpty());
 }
 
 TEST_F(HloEvaluatorTest, CopyStartCopyDone) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
   HloModule test
   ENTRY CopyStartCopyDone {
     init = f32[] constant(42.0)
@@ -4435,15 +4489,15 @@ TEST_F(HloEvaluatorTest, CopyStartCopyDone) {
     ROOT copy-done = f32[] copy-done(copy-start)
   }
   )";
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  Literal expected = LiteralUtil::CreateR0<float>(42.0f);
-  TF_ASSERT_OK_AND_ASSIGN(
-      Literal result, HloEvaluator().Evaluate(*m_->entry_computation(), {}));
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    Literal expected = LiteralUtil::CreateR0<float>(42.0f);
+    TF_ASSERT_OK_AND_ASSIGN(
+        Literal result, HloEvaluator().Evaluate(*m_->entry_computation(), {}));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 TEST_F(HloEvaluatorTest, MapBF16) {
-  const absl::string_view hlo_text = R"(
+    const absl::string_view hlo_text = R"(
   HloModule test
 
   map_computation {
@@ -4457,11 +4511,11 @@ TEST_F(HloEvaluatorTest, MapBF16) {
     ROOT map = f32[3] map(c), to_apply=map_computation
   }
   )";
-  TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
-  Literal expected = LiteralUtil::CreateR1<float>({2.f, 4.f, 6.f});
-  TF_ASSERT_OK_AND_ASSIGN(
-      Literal result, HloEvaluator().Evaluate(*m_->entry_computation(), {}));
-  EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
+    TF_ASSERT_OK_AND_ASSIGN(m_, ParseAndReturnVerifiedModule(hlo_text));
+    Literal expected = LiteralUtil::CreateR1<float>({2.f, 4.f, 6.f});
+    TF_ASSERT_OK_AND_ASSIGN(
+        Literal result, HloEvaluator().Evaluate(*m_->entry_computation(), {}));
+    EXPECT_TRUE(LiteralTestUtil::Equal(expected, result));
 }
 
 }  // namespace
