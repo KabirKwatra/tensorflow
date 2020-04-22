@@ -36,10 +36,15 @@ from tensorflow.python.util.tf_export import tf_export
 def _eager_reshape(tensor, shape, ctx):
     """Eager-only version of Reshape op; requires tensor is an eager Tensor."""
     attr_t = tensor._datatype_enum()  # pylint: disable=protected-access
-    attr_tshape, (shape,) = execute.args_to_matching_eager([shape], ctx, dtypes.int32)
+    attr_tshape, (shape, ) = execute.args_to_matching_eager([shape], ctx,
+                                                            dtypes.int32)
     inputs_flat = [tensor, shape]
     attrs = ("T", attr_t, "Tshape", attr_tshape)
-    (result,) = execute.execute(b"Reshape", 1, inputs=inputs_flat, attrs=attrs, ctx=ctx)
+    (result, ) = execute.execute(b"Reshape",
+                                 1,
+                                 inputs=inputs_flat,
+                                 attrs=attrs,
+                                 ctx=ctx)
     return result
 
 
@@ -49,14 +54,22 @@ def _eager_fill(dims, value, ctx):
     dims = convert_to_eager_tensor(dims, ctx, dtypes.int32)
     inputs_flat = [dims, value]
     attrs = ("T", attr_t, "index_type", types_pb2.DT_INT32)
-    (result,) = execute.execute(b"Fill", 1, inputs=inputs_flat, attrs=attrs, ctx=ctx)
+    (result, ) = execute.execute(b"Fill",
+                                 1,
+                                 inputs=inputs_flat,
+                                 attrs=attrs,
+                                 ctx=ctx)
     return result
 
 
 def _eager_identity(tensor, ctx):
     """Eager-only version of Identity op; requires tensor is an eager Tensor."""
     attrs = ("T", tensor.dtype.as_datatype_enum)
-    (result,) = execute.execute(b"Identity", 1, inputs=[tensor], attrs=attrs, ctx=ctx)
+    (result, ) = execute.execute(b"Identity",
+                                 1,
+                                 inputs=[tensor],
+                                 attrs=attrs,
+                                 ctx=ctx)
     return result
 
 
@@ -79,9 +92,8 @@ def convert_to_eager_tensor(value, ctx, dtype=None):
     """
     if isinstance(value, ops.EagerTensor):
         if dtype is not None and value.dtype != dtype:
-            raise TypeError(
-                "Expected tensor with type %r not %r" % (dtype, value.dtype)
-            )
+            raise TypeError("Expected tensor with type %r not %r" %
+                            (dtype, value.dtype))
         return value
     if dtype is not None:
         try:
@@ -93,7 +105,11 @@ def convert_to_eager_tensor(value, ctx, dtype=None):
 
 
 @tf_export(v1=["constant"])
-def constant_v1(value, dtype=None, shape=None, name="Const", verify_shape=False):
+def constant_v1(value,
+                dtype=None,
+                shape=None,
+                name="Const",
+                verify_shape=False):
     """Creates a constant tensor.
 
     The resulting tensor is populated with values of type `dtype`, as
@@ -152,9 +168,12 @@ def constant_v1(value, dtype=None, shape=None, name="Const", verify_shape=False)
     Raises:
       TypeError: if shape is incorrectly specified or unsupported.
     """
-    return _constant_impl(
-        value, dtype, shape, name, verify_shape=verify_shape, allow_broadcast=False
-    )
+    return _constant_impl(value,
+                          dtype,
+                          shape,
+                          name,
+                          verify_shape=verify_shape,
+                          allow_broadcast=False)
 
 
 @tf_export("constant", v1=[])
@@ -254,9 +273,12 @@ def constant(value, dtype=None, shape=None, name="Const"):
       TypeError: if shape is incorrectly specified or unsupported.
       ValueError: if called on a symbolic tensor.
     """
-    return _constant_impl(
-        value, dtype, shape, name, verify_shape=False, allow_broadcast=True
-    )
+    return _constant_impl(value,
+                          dtype,
+                          shape,
+                          name,
+                          verify_shape=False,
+                          allow_broadcast=True)
 
 
 def _constant_impl(value, dtype, shape, name, verify_shape, allow_broadcast):
@@ -270,9 +292,8 @@ def _constant_impl(value, dtype, shape, name, verify_shape, allow_broadcast):
         if shape == t.shape:
             return t
         if verify_shape:
-            raise TypeError(
-                "Expected Tensor's shape: %s, got %s." % (tuple(shape), tuple(t.shape))
-            )
+            raise TypeError("Expected Tensor's shape: %s, got %s." %
+                            (tuple(shape), tuple(t.shape)))
         num_t = t.shape.num_elements()
         # TODO(josh11b): Implement shape -> eager tensor conversion.
         if num_t == shape.num_elements():
@@ -282,15 +303,15 @@ def _constant_impl(value, dtype, shape, name, verify_shape, allow_broadcast):
                 # We don't have a Fill kernel for bool dtype on GPU. So we first run
                 # Fill on CPU and then copy to GPU if needed.
                 with ops.device("/device:CPU:0"):
-                    x = _eager_fill(shape.as_list(), _eager_identity(t, ctx), ctx)
+                    x = _eager_fill(shape.as_list(), _eager_identity(t, ctx),
+                                    ctx)
                 return _eager_identity(x, ctx)
             else:
                 return _eager_fill(shape.as_list(), t, ctx)
         raise TypeError(
             "Eager execution of tf.constant with unsupported shape "
-            "(value has %d elements, shape is %s with %d elements)."
-            % (num_t, shape, shape.num_elements())
-        )
+            "(value has %d elements, shape is %s with %d elements)." %
+            (num_t, shape, shape.num_elements()))
     g = ops.get_default_graph()
     tensor_value = attr_value_pb2.AttrValue()
     tensor_value.tensor.CopyFrom(
@@ -300,22 +321,25 @@ def _constant_impl(value, dtype, shape, name, verify_shape, allow_broadcast):
             shape=shape,
             verify_shape=verify_shape,
             allow_broadcast=allow_broadcast,
-        )
-    )
+        ))
     dtype_value = attr_value_pb2.AttrValue(type=tensor_value.tensor.dtype)
     attrs = {"value": tensor_value, "dtype": dtype_value}
     const_tensor = g._create_op_internal(  # pylint: disable=protected-access
-        "Const", [], [dtype_value.type], attrs=attrs, name=name
-    ).outputs[0]
+        "Const", [], [dtype_value.type],
+        attrs=attrs,
+        name=name).outputs[0]
 
     if op_callbacks.should_invoke_op_callbacks():
         # TODO(b/147670703): Once the special-op creation code paths
         # are unified. Remove this `if` block.
-        callback_outputs = op_callbacks.invoke_op_callbacks(
-            "Const", tuple(), attrs, (const_tensor,), op_name=name, graph=g
-        )
+        callback_outputs = op_callbacks.invoke_op_callbacks("Const",
+                                                            tuple(),
+                                                            attrs,
+                                                            (const_tensor, ),
+                                                            op_name=name,
+                                                            graph=g)
         if callback_outputs is not None:
-            (const_tensor,) = callback_outputs
+            (const_tensor, ) = callback_outputs
     return const_tensor
 
 
@@ -327,41 +351,44 @@ def is_constant(tensor_or_op):
     return op.type == "Const"
 
 
-def _constant_tensor_conversion_function(v, dtype=None, name=None, as_ref=False):
+def _constant_tensor_conversion_function(v,
+                                         dtype=None,
+                                         name=None,
+                                         as_ref=False):
     _ = as_ref
     return constant(v, dtype=dtype, name=name)
 
 
 ops.register_tensor_conversion_function(
-    (list, tuple), _constant_tensor_conversion_function, 100
-)
-ops.register_tensor_conversion_function(
-    object, _constant_tensor_conversion_function, 200
-)
+    (list, tuple), _constant_tensor_conversion_function, 100)
+ops.register_tensor_conversion_function(object,
+                                        _constant_tensor_conversion_function,
+                                        200)
 
 
-def _tensor_shape_tensor_conversion_function(s, dtype=None, name=None, as_ref=False):
+def _tensor_shape_tensor_conversion_function(s,
+                                             dtype=None,
+                                             name=None,
+                                             as_ref=False):
     """Function to convert TensorShape to Tensor."""
     _ = as_ref
     if not s.is_fully_defined():
         raise ValueError(
-            "Cannot convert a partially known TensorShape to a Tensor: %s" % s
-        )
+            "Cannot convert a partially known TensorShape to a Tensor: %s" % s)
     s_list = s.as_list()
     int64_value = 0
     for dim in s_list:
-        if dim >= 2 ** 31:
+        if dim >= 2**31:
             int64_value = dim
             break
 
     if dtype is not None:
         if dtype not in (dtypes.int32, dtypes.int64):
-            raise TypeError("Cannot convert a TensorShape to dtype: %s" % dtype)
+            raise TypeError("Cannot convert a TensorShape to dtype: %s" %
+                            dtype)
         if dtype == dtypes.int32 and int64_value:
-            raise ValueError(
-                "Cannot convert a TensorShape to dtype int32; "
-                "a dimension is too large (%s)" % int64_value
-            )
+            raise ValueError("Cannot convert a TensorShape to dtype int32; "
+                             "a dimension is too large (%s)" % int64_value)
     else:
         dtype = dtypes.int64 if int64_value else dtypes.int32
     if name is None:
@@ -370,18 +397,22 @@ def _tensor_shape_tensor_conversion_function(s, dtype=None, name=None, as_ref=Fa
 
 
 ops.register_tensor_conversion_function(
-    tensor_shape.TensorShape, _tensor_shape_tensor_conversion_function, 100
-)
+    tensor_shape.TensorShape, _tensor_shape_tensor_conversion_function, 100)
 
 
-def _dimension_tensor_conversion_function(d, dtype=None, name=None, as_ref=False):
+def _dimension_tensor_conversion_function(d,
+                                          dtype=None,
+                                          name=None,
+                                          as_ref=False):
     """Function to convert Dimension to Tensor."""
     _ = as_ref
     if d.value is None:
-        raise ValueError("Cannot convert an unknown Dimension to a Tensor: %s" % d)
+        raise ValueError(
+            "Cannot convert an unknown Dimension to a Tensor: %s" % d)
     if dtype is not None:
         if dtype not in (dtypes.int32, dtypes.int64):
-            raise TypeError("Cannot convert a TensorShape to dtype: %s" % dtype)
+            raise TypeError("Cannot convert a TensorShape to dtype: %s" %
+                            dtype)
     else:
         dtype = dtypes.int32
     if name is None:
@@ -389,6 +420,6 @@ def _dimension_tensor_conversion_function(d, dtype=None, name=None, as_ref=False
     return constant(d.value, dtype=dtype, name=name)
 
 
-ops.register_tensor_conversion_function(
-    tensor_shape.Dimension, _dimension_tensor_conversion_function, 100
-)
+ops.register_tensor_conversion_function(tensor_shape.Dimension,
+                                        _dimension_tensor_conversion_function,
+                                        100)
