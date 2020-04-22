@@ -36,7 +36,8 @@ class VisualizeTest(test_util.TensorFlowTestCase):
     def testFlatbufferToDict(self):
         model = test_utils.build_mock_flatbuffer_model()
         model_dict = visualize.CreateDictFromFlatbuffer(model)
-        self.assertEqual(test_utils.TFLITE_SCHEMA_VERSION, model_dict["version"])
+        self.assertEqual(test_utils.TFLITE_SCHEMA_VERSION,
+                         model_dict["version"])
         self.assertEqual(1, len(model_dict["subgraphs"]))
         self.assertEqual(1, len(model_dict["operator_codes"]))
         self.assertEqual(3, len(model_dict["buffers"]))
@@ -59,15 +60,15 @@ class VisualizeTest(test_util.TensorFlowTestCase):
         # It's hard to test debug output without doing a full HTML parse,
         # but at least sanity check that expected identifiers are present.
         self.assertRegex(
-            html_text, re.compile(r"%s" % model_filename, re.MULTILINE | re.DOTALL)
-        )
+            html_text,
+            re.compile(r"%s" % model_filename, re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text,
+                         re.compile(r"input_tensor", re.MULTILINE | re.DOTALL))
         self.assertRegex(
-            html_text, re.compile(r"input_tensor", re.MULTILINE | re.DOTALL)
-        )
-        self.assertRegex(
-            html_text, re.compile(r"constant_tensor", re.MULTILINE | re.DOTALL)
-        )
-        self.assertRegex(html_text, re.compile(r"ADD", re.MULTILINE | re.DOTALL))
+            html_text, re.compile(r"constant_tensor",
+                                  re.MULTILINE | re.DOTALL))
+        self.assertRegex(html_text, re.compile(r"ADD",
+                                               re.MULTILINE | re.DOTALL))
 
 
 if __name__ == "__main__":

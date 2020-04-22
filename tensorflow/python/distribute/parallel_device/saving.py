@@ -32,7 +32,8 @@ from tensorflow.python.training.saving import saveable_object
 def _read_component(handle, dtype, replica_id, parallel_device):
     """Read one component of a parallel variable and discard the rest."""
     with ops.device(handle.device):
-        read = gen_resource_variable_ops.read_variable_op(resource=handle, dtype=dtype)
+        read = gen_resource_variable_ops.read_variable_op(resource=handle,
+                                                          dtype=dtype)
     all_components = parallel_device.unpack(read)
     # We're pretending that parallel variables have a first axis with length
     # num_components, so we need to add a dummy first axis to the shape that gets
@@ -60,17 +61,15 @@ class _ParallelDeviceSaveable(saveable_object.SaveableObject):
                         parallel_device=parallel_device,
                     ),
                     slice_spec=variables.Variable.SaveSliceInfo(
-                        full_shape=(
-                            [len(parallel_device.components)] + component_shape
-                        ),
+                        full_shape=([len(parallel_device.components)] +
+                                    component_shape),
                         var_offset=[replica_id] + [0] * len(component_shape),
                         var_shape=[1] + component_shape,
                     ).spec,
                     device=device_name,
                     dtype=dtype,
                     name=name,
-                )
-            )
+                ))
         self._handle = handle
         self._parallel_device = parallel_device
         self._component_shape = component_shape
@@ -105,20 +104,19 @@ class VariableWithFixedCheckpointing(resource_variable_ops.ResourceVariable):
         # doing restore-on-create (which has shape issues), and (b) the saved
         # variables won't be compatible with regular variables. Both of those are
         # good in this case.
-        return dict(
-            PARALLEL_VARIABLE_VALUE=functools.partial(
-                _ParallelDeviceSaveable,
-                handle=self.handle,
-                dtype=self.dtype,
-                component_shape=self.shape,
-                parallel_device=self._parallel_device,
-            )
-        )
+        return dict(PARALLEL_VARIABLE_VALUE=functools.partial(
+            _ParallelDeviceSaveable,
+            handle=self.handle,
+            dtype=self.dtype,
+            component_shape=self.shape,
+            parallel_device=self._parallel_device,
+        ))
 
 
 def _variable_creator(next_creator, parallel_device, **kwargs):
     del next_creator
-    return VariableWithFixedCheckpointing(parallel_device=parallel_device, **kwargs)
+    return VariableWithFixedCheckpointing(parallel_device=parallel_device,
+                                          **kwargs)
 
 
 @contextlib.contextmanager
@@ -135,6 +133,6 @@ def independent_buffers(parallel_device):
       Nothing.
     """
     with variable_scope.variable_creator_scope(
-        functools.partial(_variable_creator, parallel_device=parallel_device)
-    ):
+            functools.partial(_variable_creator,
+                              parallel_device=parallel_device)):
         yield

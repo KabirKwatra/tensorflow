@@ -141,20 +141,20 @@ class UniqueWithCountsTest(test.TestCase):
         for i in range(len(x)):
             self.assertEqual(x[i], tf_y[tf_idx[i]].decode("ascii"))
         for value, count in zip(tf_y, tf_count):
-            v = [1 if x[i] == value.decode("ascii") else 0 for i in range(7000)]
+            v = [
+                1 if x[i] == value.decode("ascii") else 0 for i in range(7000)
+            ]
             self.assertEqual(count, sum(v))
 
     def testInt32Axis(self):
         for dtype in [np.int32, np.int64]:
             x = np.array([[1, 0, 0], [1, 0, 0], [2, 0, 0]])
             y0, idx0, count0 = gen_array_ops.unique_with_counts_v2(
-                x, axis=np.array([0], dtype)
-            )
+                x, axis=np.array([0], dtype))
             self.assertEqual(y0.shape.rank, 2)
             tf_y0, tf_idx0, tf_count0 = self.evaluate([y0, idx0, count0])
             y1, idx1, count1 = gen_array_ops.unique_with_counts_v2(
-                x, axis=np.array([1], dtype)
-            )
+                x, axis=np.array([1], dtype))
             self.assertEqual(y1.shape.rank, 2)
             tf_y1, tf_idx1, tf_count1 = self.evaluate([y1, idx1, count1])
             self.assertAllEqual(tf_y0, np.array([[1, 0, 0], [2, 0, 0]]))
@@ -168,9 +168,9 @@ class UniqueWithCountsTest(test.TestCase):
         # This test is only temporary, once V2 is used
         # by default, the axis will be wrapped to allow `axis=None`.
         x = np.random.randint(2, high=10, size=7000)
-        y, idx, count = gen_array_ops.unique_with_counts_v2(
-            x, axis=np.array([], np.int32)
-        )
+        y, idx, count = gen_array_ops.unique_with_counts_v2(x,
+                                                            axis=np.array(
+                                                                [], np.int32))
         tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
 
         self.assertEqual(len(x), len(tf_idx))
@@ -194,9 +194,9 @@ class UniqueWithCountsTest(test.TestCase):
 
     def testBoolV2(self):
         x = np.random.choice([True, False], size=7000)
-        y, idx, count = gen_array_ops.unique_with_counts_v2(
-            x, axis=np.array([], np.int32)
-        )
+        y, idx, count = gen_array_ops.unique_with_counts_v2(x,
+                                                            axis=np.array(
+                                                                [], np.int32))
         tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
 
         self.assertEqual(len(x), len(tf_idx))
@@ -211,9 +211,9 @@ class UniqueWithCountsTest(test.TestCase):
         # `std::unordered_map<float, ...>`: each NaN becomes a unique key in the
         # map.
         x = [0.0, 1.0, np.nan, np.nan]
-        y, idx, count = gen_array_ops.unique_with_counts_v2(
-            x, axis=np.array([], np.int32)
-        )
+        y, idx, count = gen_array_ops.unique_with_counts_v2(x,
+                                                            axis=np.array(
+                                                                [], np.int32))
         tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
 
         self.assertEqual(len(x), len(tf_idx))

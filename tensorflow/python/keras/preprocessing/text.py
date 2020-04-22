@@ -30,9 +30,10 @@ Tokenizer = text.Tokenizer
 
 
 @keras_export("keras.preprocessing.text.text_to_word_sequence")
-def text_to_word_sequence(
-    input_text, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=" "
-):
+def text_to_word_sequence(input_text,
+                          filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
+                          lower=True,
+                          split=" "):
     """Converts a text to a sequence of words (or tokens).
 
     This function transforms a string of text into a list of words
@@ -53,15 +54,18 @@ def text_to_word_sequence(
     Returns:
         A list of words (or tokens).
     """
-    return text.text_to_word_sequence(
-        input_text, filters=filters, lower=lower, split=split
-    )
+    return text.text_to_word_sequence(input_text,
+                                      filters=filters,
+                                      lower=lower,
+                                      split=split)
 
 
 @keras_export("keras.preprocessing.text.one_hot")
-def one_hot(
-    input_text, n, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=" "
-):
+def one_hot(input_text,
+            n,
+            filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
+            lower=True,
+            split=" "):
     """One-hot encodes a text into a list of word indexes of size `n`.
 
     This function receives as input a string of text and returns a
@@ -81,13 +85,18 @@ def one_hot(
         List of integers in `[1, n]`. Each integer encodes a word
         (unicity non-guaranteed).
     """
-    return text.one_hot(input_text, n, filters=filters, lower=lower, split=split)
+    return text.one_hot(input_text,
+                        n,
+                        filters=filters,
+                        lower=lower,
+                        split=split)
 
 
 # text.tokenizer_from_json is only available if keras_preprocessing >= 1.1.0
 try:
     tokenizer_from_json = text.tokenizer_from_json
-    keras_export("keras.preprocessing.text.tokenizer_from_json")(tokenizer_from_json)
+    keras_export("keras.preprocessing.text.tokenizer_from_json")(
+        tokenizer_from_json)
 except AttributeError:
     pass
 

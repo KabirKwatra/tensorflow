@@ -62,7 +62,9 @@ def _collective_reduce(inputs, operation, num_replicas):
 
 
 def _collective_sum(inputs, num_replicas):
-    return _collective_reduce(inputs=inputs, operation="Add", num_replicas=num_replicas)
+    return _collective_reduce(inputs=inputs,
+                              operation="Add",
+                              num_replicas=num_replicas)
 
 
 class _Dense(module.Module):
@@ -75,9 +77,8 @@ class _Dense(module.Module):
         if self.kernel is None:
             self.kernel = variables.Variable(
                 array_ops.ones(
-                    array_ops.stack([self.output_size, array_ops.shape(x)[-1]])
-                )
-            )
+                    array_ops.stack([self.output_size,
+                                     array_ops.shape(x)[-1]])))
             self.bias = variables.Variable(array_ops.ones([self.output_size]))
         return math_ops.matmul(x, self.kernel, transpose_b=True) + self.bias
 
@@ -121,8 +122,8 @@ class ParallelDeviceTests(_VirtualDeviceTestCase):
     def test_collective_reduce(self):
         with ops.device(self.device.name):
             x = self.device.pack(
-                [constant_op.constant(-1.5), constant_op.constant(3.5)]
-            )
+                [constant_op.constant(-1.5),
+                 constant_op.constant(3.5)])
             reduced = _collective_sum(x, num_replicas=2)
             outputs = self.device.unpack(reduced)
         self.assertAllClose([2.0, 2.0], outputs)
@@ -133,8 +134,8 @@ class ParallelDeviceTests(_VirtualDeviceTestCase):
         prefix = os.path.join(self.get_temp_dir(), "ckpt")
         with self.device.scope():
             different_values = self.device.pack(
-                [constant_op.constant(-1.0), constant_op.constant(3.0)]
-            )
+                [constant_op.constant(-1.0),
+                 constant_op.constant(3.0)])
             v = variables.Variable(different_values)
             checkpoint = tracking.Checkpoint(v=v)
         save_path = checkpoint.save(prefix)
@@ -162,14 +163,14 @@ class LayerTests(_VirtualDeviceTestCase):
 
         # With different Layer inputs we get different outputs
         with ops.device(self.device.name):
-            x = self.device.pack(
-                [constant_op.constant([[-0.5]]), constant_op.constant([[0.5]])]
-            )
+            x = self.device.pack([
+                constant_op.constant([[-0.5]]),
+                constant_op.constant([[0.5]])
+            ])
             y = layer(x)
             outputs = self.device.unpack(y)
         self.assertGreater(
-            math_ops.reduce_max(math_ops.abs(outputs[0] - outputs[1])), 1e-5
-        )
+            math_ops.reduce_max(math_ops.abs(outputs[0] - outputs[1])), 1e-5)
         self.assertIn(self.device.components[0], outputs[0].backing_device)
         self.assertIn(self.device.components[1], outputs[1].backing_device)
 
@@ -178,39 +179,41 @@ class LayerTests(_VirtualDeviceTestCase):
             layer = _Dense(5)
 
             with backprop.GradientTape() as tape:
-                x = self.device.pack(
-                    [constant_op.constant([[-0.5]]), constant_op.constant([[0.5]])]
-                )
+                x = self.device.pack([
+                    constant_op.constant([[-0.5]]),
+                    constant_op.constant([[0.5]])
+                ])
                 y = layer(x)
-                loss = (y - math_ops.range(5.0)) ** 2.0
+                loss = (y - math_ops.range(5.0))**2.0
             parameters = layer.trainable_variables
             unreduced_gradients = tape.gradient(loss, parameters)
-            reduced_gradients = _collective_sum(unreduced_gradients, num_replicas=2)
+            reduced_gradients = _collective_sum(unreduced_gradients,
+                                                num_replicas=2)
             for grad, param in zip(reduced_gradients, parameters):
                 param.assign_sub(0.01 * grad)
         final_kernels = self.device.unpack(layer.kernel)
         self.assertAllClose(final_kernels[0], final_kernels[1])
         final_bias = self.device.unpack(layer.bias)
-        expected_bias = (
-            1.0
-            - 0.01 * 2.0 * (1.0 + 0.5 - math_ops.range(5.0))
-            - 0.01 * 2.0 * (1.0 - 0.5 - math_ops.range(5.0))
-        )
+        expected_bias = (1.0 - 0.01 * 2.0 * (1.0 + 0.5 - math_ops.range(5.0)) -
+                         0.01 * 2.0 * (1.0 - 0.5 - math_ops.range(5.0)))
         self.assertAllClose(expected_bias, final_bias[0])
         self.assertAllClose(expected_bias, final_bias[1])
-        self.assertIn(self.device.components[0], final_kernels[0].backing_device)
-        self.assertIn(self.device.components[1], final_kernels[1].backing_device)
+        self.assertIn(self.device.components[0],
+                      final_kernels[0].backing_device)
+        self.assertIn(self.device.components[1],
+                      final_kernels[1].backing_device)
 
     def test_layer_divergent_buffer_training(self):
         with ops.device(self.device.name):
             layer = _Dense(5)
 
             with backprop.GradientTape() as tape:
-                x = self.device.pack(
-                    [constant_op.constant([[-0.5]]), constant_op.constant([[0.5]])]
-                )
+                x = self.device.pack([
+                    constant_op.constant([[-0.5]]),
+                    constant_op.constant([[0.5]])
+                ])
                 y = layer(x)
-                loss = (y - math_ops.range(5.0)) ** 2.0
+                loss = (y - math_ops.range(5.0))**2.0
             parameters = layer.trainable_variables
             unreduced_gradients = tape.gradient(loss, parameters)
             for grad, param in zip(unreduced_gradients, parameters):
@@ -219,39 +222,38 @@ class LayerTests(_VirtualDeviceTestCase):
         self.assertNotAllClose(final_kernels[0], final_kernels[1])
         final_bias = self.device.unpack(layer.bias)
         self.assertAllClose(
-            1.0 - 0.01 * 2.0 * (1.0 - 0.5 - math_ops.range(5.0)), final_bias[0]
-        )
+            1.0 - 0.01 * 2.0 * (1.0 - 0.5 - math_ops.range(5.0)),
+            final_bias[0])
         self.assertAllClose(
-            1.0 - 0.01 * 2.0 * (1.0 + 0.5 - math_ops.range(5.0)), final_bias[1]
-        )
-        self.assertIn(self.device.components[0], final_kernels[0].backing_device)
-        self.assertIn(self.device.components[1], final_kernels[1].backing_device)
+            1.0 - 0.01 * 2.0 * (1.0 + 0.5 - math_ops.range(5.0)),
+            final_bias[1])
+        self.assertIn(self.device.components[0],
+                      final_kernels[0].backing_device)
+        self.assertIn(self.device.components[1],
+                      final_kernels[1].backing_device)
 
     def test_training_loop(self):
         for _ in range(5):
             layer = _Dense(5)
             checkpoint = tracking.Checkpoint(layer=layer)
             manager = checkpoint_management.CheckpointManager(
-                checkpoint, directory=self.get_temp_dir(), max_to_keep=5
-            )
+                checkpoint, directory=self.get_temp_dir(), max_to_keep=5)
             manager.restore_or_initialize()
 
             for _ in range(10):
                 with self.device.scope():
                     with backprop.GradientTape() as tape:
-                        x = self.device.pack(
-                            [
-                                constant_op.constant([[-0.5]]),
-                                constant_op.constant([[0.5]]),
-                            ]
-                        )
+                        x = self.device.pack([
+                            constant_op.constant([[-0.5]]),
+                            constant_op.constant([[0.5]]),
+                        ])
                         y = layer(x)
-                        loss = (y - math_ops.range(5.0)) ** 2.0
+                        loss = (y - math_ops.range(5.0))**2.0
                     parameters = layer.trainable_variables
                     unreduced_gradients = tape.gradient(loss, parameters)
                     reduced_gradients = _collective_sum(
-                        unreduced_gradients, num_replicas=len(self.device.components)
-                    )
+                        unreduced_gradients,
+                        num_replicas=len(self.device.components))
                     for grad, param in zip(reduced_gradients, parameters):
                         param.assign_sub(0.01 * grad)
 
