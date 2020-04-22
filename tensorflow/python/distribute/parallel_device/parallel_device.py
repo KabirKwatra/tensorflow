@@ -53,10 +53,12 @@ class ParallelDevice(object):
             # TODO(allenl): Better names for parallel devices (right now "CUSTOM" is
             # special-cased).
             self.name = "{}/device:CUSTOM:{}".format(
-                ctx.host_address_space(), _next_device_number)
+                ctx.host_address_space(), _next_device_number
+            )
             _next_device_number += 1
         device, device_info = _pywrap_parallel_device.GetParallelDeviceCapsules(
-            self.name, self.components)
+            self.name, self.components
+        )
         context.register_custom_device(device, self.name, device_info)
 
     def pack(self, tensors):
@@ -82,7 +84,8 @@ class ParallelDevice(object):
         """
         with ops.device(self.name):
             return tpu_ops.tpu_replicated_output(
-                parallel_tensor, num_replicas=len(self.components))
+                parallel_tensor, num_replicas=len(self.components)
+            )
 
     # TODO(allenl): Fixing saving in Python is a bit odd. One alternative would be
     # to provide a hook for the custom device to create save specs/etc., then call

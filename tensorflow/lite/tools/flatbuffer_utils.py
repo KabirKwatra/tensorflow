@@ -31,7 +31,7 @@ import random
 from flatbuffers.python import flatbuffers
 from tensorflow.lite.python import schema_py_generated as schema_fb
 
-TFLITE_FILE_IDENTIFIER = b'TFL3'
+TFLITE_FILE_IDENTIFIER = b"TFL3"
 
 
 def read_model(input_tflite_file):
@@ -48,8 +48,8 @@ def read_model(input_tflite_file):
       A python flatbuffer object corresponding to the input tflite file.
     """
     if not os.path.exists(input_tflite_file):
-        raise RuntimeError('Input file not found at %r\n' % input_tflite_file)
-    with open(input_tflite_file, 'rb') as file_handle:
+        raise RuntimeError("Input file not found at %r\n" % input_tflite_file)
+    with open(input_tflite_file, "rb") as file_handle:
         file_data = bytearray(file_handle.read())
     model_obj = schema_fb.Model.GetRootAsModel(file_data, 0)
     return schema_fb.ModelT.InitFromObj(model_obj)
@@ -70,7 +70,7 @@ def write_model(model, output_tflite_file):
     model_offset = model.Pack(builder)
     builder.Finish(model_offset, file_identifier=TFLITE_FILE_IDENTIFIER)
     model_data = builder.Output()
-    with open(output_tflite_file, 'wb') as out_file:
+    with open(output_tflite_file, "wb") as out_file:
         out_file.write(model_data)
 
 
@@ -89,11 +89,11 @@ def strip_strings(model):
 
     """
 
-    model.description = ''
+    model.description = ""
     for subgraph in model.subgraphs:
-        subgraph.name = ''
+        subgraph.name = ""
         for tensor in subgraph.tensors:
-            tensor.name = ''
+            tensor.name = ""
 
 
 def randomize_weights(model, random_seed=0):
