@@ -7,8 +7,8 @@ both on desktop machines and on Android. The binary takes a TFLite model,
 generates random inputs and then repeatedly runs the model for specified number
 of runs. Aggregate latency statistics are reported after running the benchmark.
 
-The instructions below are for running the binary on Desktop and Android,
-for iOS please use the
+The instructions below are for running the binary on Desktop and Android, for
+iOS please use the
 [iOS benchmark app](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/benchmark/ios).
 
 An experimental Android APK wrapper for the benchmark model utility offers more
@@ -20,83 +20,92 @@ located
 
 The binary takes the following required parameters:
 
-*   `graph`: `string` \
-    The path to the TFLite model file.
+- `graph`: `string` \
+  The path to the TFLite model file.
 
 and the following optional parameters:
 
-*   `num_threads`: `int` (default=1) \
-    The number of threads to use for running TFLite interpreter.
-*   `warmup_runs`: `int` (default=1) \
-    The number of warmup runs to do before starting the benchmark.
-*   `num_runs`: `int` (default=50) \
-    The number of runs. Increase this to reduce variance.
-*   `run_delay`: `float` (default=-1.0) \
-    The delay in seconds between subsequent benchmark runs. Non-positive values
-    mean use no delay.
-*   `use_legacy_nnapi`: `bool` (default=false) \
-    Whether to use the legacy
-    [Android NNAPI](https://developer.android.com/ndk/guides/neuralnetworks/)
-    TFLite path, which requires the graph to be fully compatible with NNAPI.
-    This is available on recent Android devices. Note that some Android P
-    devices will fail to use NNAPI for models in `/data/local/tmp/` and this
-    benchmark tool will not correctly use NNAPI.
-*   `enable_op_profiling`: `bool` (default=false) \
-    Whether to enable per-operator profiling measurement.
-*   `enable_platform_tracing`: `bool` (default=false) \
-    Whether to enable platform-wide tracing. Needs to be combined with
-    'enable_op_profiling'. Note, the platform-wide tracing might not work if the
-    tool runs as a commandline native binary. For example, on Android, the
-    ATrace-based tracing only works when the tool is launched as an APK.
+- `num_threads`: `int` (default=1) \
+  The number of threads to use for running TFLite interpreter.
+- `warmup_runs`: `int` (default=1) \
+  The number of warmup runs to do before starting the benchmark.
+- `num_runs`: `int` (default=50) \
+  The number of runs. Increase this to reduce variance.
+- `run_delay`: `float` (default=-1.0) \
+  The delay in seconds between subsequent benchmark runs. Non-positive values mean
+  use no delay.
+- `use_legacy_nnapi`: `bool` (default=false) \
+  Whether to use the legacy [Android NNAPI](https://developer.android.com/ndk/guides/neuralnetworks/)
+  TFLite path, which requires the graph to be fully compatible with NNAPI. This is
+  available on recent Android devices. Note that some Android P devices will fail
+  to use NNAPI for models in `/data/local/tmp/` and this benchmark tool will not
+  correctly use NNAPI.
+- `enable_op_profiling`: `bool` (default=false) \
+  Whether to enable per-operator profiling measurement.
+- `enable_platform_tracing`: `bool` (default=false) \
+  Whether to enable platform-wide tracing. Needs to be combined with 'enable_op_profiling'.
+  Note, the platform-wide tracing might not work if the tool runs as a commandline
+  native binary. For example, on Android, the ATrace-based tracing only works when
+  the tool is launched as an APK.
 
 ### TFLite delegate parameters
+
 The tool supports all runtime/delegate parameters introduced by
 [the delegate registrar](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/delegates).
 The following simply lists the names of all of them w/ additional notes where
 applicable:
+
 #### Common parameters
-* `max_delegated_partitions`: `int` (default=0) \
-Note when `use_legacy_nnapi` is selected, this parameter won't work.
-* `min_nodes_per_partition`:`int` (default=0)
+
+- `max_delegated_partitions`: `int` (default=0) \
+  Note when `use_legacy_nnapi` is selected, this parameter won't work.
+- `min_nodes_per_partition`:`int` (default=0)
 
 #### GPU delegate provider
-* `use_gpu`: `bool` (default=false)
-* `gpu_precision_loss_allowed`: `bool` (default=true)
-* `gpu_experimental_enable_quant`: `bool` (default=true)
-* `gpu_backend`: `string` (default="")
-* `gpu_wait_type`: `str` (default="")
+
+- `use_gpu`: `bool` (default=false)
+- `gpu_precision_loss_allowed`: `bool` (default=true)
+- `gpu_experimental_enable_quant`: `bool` (default=true)
+- `gpu_backend`: `string` (default="")
+- `gpu_wait_type`: `str` (default="")
 
 ### NNAPI delegate provider
 
-*   `use_nnapi`: `bool` (default=false) \
-    Note some Android P devices will fail to use NNAPI for models in
-    `/data/local/tmp/` and this benchmark tool will not correctly use NNAPI.
-*   `nnapi_accelerator_name`: `str` (default="")
-*   `disable_nnapi_cpu`: `bool` (default=false)
+- `use_nnapi`: `bool` (default=false) \
+  Note some Android P devices will fail to use NNAPI for models in `/data/local/tmp/`
+  and this benchmark tool will not correctly use NNAPI.
+- `nnapi_accelerator_name`: `str` (default="")
+- `disable_nnapi_cpu`: `bool` (default=false)
 
 #### Hexagon delegate provider
-* `use_hexagon`: `bool` (default=false)
-* `hexagon_profiling`: `bool` (default=false) \
-Note enabling this option will not produce profiling results outputs unless
-`enable_op_profiling` is also turned on. When both parameters are set to true,
-the profile of ops on hexagon DSP will be added to the profile table. Note that,
-the reported data on hexagon is in cycles, not in ms like on cpu.
+
+- `use_hexagon`: `bool` (default=false)
+- `hexagon_profiling`: `bool` (default=false) \
+  Note enabling this option will not produce profiling results outputs unless `enable_op_profiling`
+  is also turned on. When both parameters are set to true, the profile of ops on
+  hexagon DSP will be added to the profile table. Note that, the reported data on
+  hexagon is in cycles, not in ms like on cpu.
 
 #### XNNPACK delegate provider
-*   `use_xnnpack`: `bool` (default=false)
+
+- `use_xnnpack`: `bool` (default=false)
 
 #### CoreML delegate provider
-*   `use_coreml`: `bool` (default=false)
+
+- `use_coreml`: `bool` (default=false)
 
 #### External delegate provider
-*   `external_delegate_path`: `string` (default="")
-*   `external_delegate_options`: `string` (default="")
+
+- `external_delegate_path`: `string` (default="")
+- `external_delegate_options`: `string` (default="")
 
 ## To build/install/run
 
 ### On Android:
 
-(0) Refer to https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/android to edit the `WORKSPACE` to configure the android NDK/SDK.
+(0) Refer to
+https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/android
+to edit the `WORKSPACE` to configure the android NDK/SDK.
 
 (1) Build for your specific platform, e.g.:
 
@@ -106,8 +115,8 @@ bazel build -c opt \
   tensorflow/lite/tools/benchmark:benchmark_model
 ```
 
-(2) Connect your phone. Push the binary to your phone with adb push
-     (make the directory if required):
+(2) Connect your phone. Push the binary to your phone with adb push (make the
+directory if required):
 
 ```
 adb push bazel-bin/tensorflow/lite/tools/benchmark/benchmark_model /data/local/tmp
@@ -145,14 +154,15 @@ adb shell /data/local/tmp/benchmark_model \
 ```
 
 ### On desktop:
+
 (1) build the binary
 
 ```
 bazel build -c opt tensorflow/lite/tools/benchmark:benchmark_model
 ```
 
-(2) Run on your compute graph, similar to the Android case but without the need of adb shell.
-For example:
+(2) Run on your compute graph, similar to the Android case but without the need
+of adb shell. For example:
 
 ```
 bazel-bin/tensorflow/lite/tools/benchmark/benchmark_model \
@@ -160,20 +170,20 @@ bazel-bin/tensorflow/lite/tools/benchmark/benchmark_model \
   --num_threads=4
 ```
 
-The MobileNet graph used as an example here may be downloaded from [here](https://storage.googleapis.com/download.tensorflow.org/models/tflite/mobilenet_v1_224_android_quant_2017_11_08.zip).
-
+The MobileNet graph used as an example here may be downloaded from
+[here](https://storage.googleapis.com/download.tensorflow.org/models/tflite/mobilenet_v1_224_android_quant_2017_11_08.zip).
 
 ## Reducing variance between runs on Android.
 
-Most modern Android phones use [ARM big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE)
-architecture where some cores are more power hungry but faster than other cores.
-When running benchmarks on these phones there can be significant variance
-between different runs of the benchmark. One way to reduce variance between runs
-is to set the [CPU affinity](https://en.wikipedia.org/wiki/Processor_affinity)
-before running the benchmark. On Android this can be done using the `taskset`
-command.
-E.g. for running the benchmark on big cores on Pixel 2 with a single thread one
-can use the following command:
+Most modern Android phones use
+[ARM big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE) architecture
+where some cores are more power hungry but faster than other cores. When running
+benchmarks on these phones there can be significant variance between different
+runs of the benchmark. One way to reduce variance between runs is to set the
+[CPU affinity](https://en.wikipedia.org/wiki/Processor_affinity) before running
+the benchmark. On Android this can be done using the `taskset` command. E.g. for
+running the benchmark on big cores on Pixel 2 with a single thread one can use
+the following command:
 
 ```
 adb shell taskset f0 /data/local/tmp/benchmark_model \
@@ -181,10 +191,11 @@ adb shell taskset f0 /data/local/tmp/benchmark_model \
   --num_threads=1
 ```
 
-where `f0` is the affinity mask for big cores on Pixel 2.
-Note: The affinity mask varies with the device.
+where `f0` is the affinity mask for big cores on Pixel 2. Note: The affinity
+mask varies with the device.
 
 ## Profiling model operators
+
 The benchmark model binary also allows you to profile operators and give
 execution times of each operator. To do this, pass the flag
 `--enable_op_profiling=true` to `benchmark_model` during invocation, e.g.,
@@ -274,11 +285,11 @@ target name of this binary is `benchmark_model_performance_options` and it takes
 some additional parameters as detailed below.
 
 ### Additional Parameters
-*   `perf_options_list`: `string` (default='all') \
-    A comma-separated list of TFLite performance options to benchmark.
-*   `option_benchmark_run_delay`: `float` (default=-1.0) \
-    The delay between two consecutive runs of benchmarking performance options
-    in seconds.
-*   `random_shuffle_benchmark_runs`: `bool` (default=true) \
-    Whether to perform all benchmark runs, each of which has different
-    performance options, in a random order.
+
+- `perf_options_list`: `string` (default='all') \
+  A comma-separated list of TFLite performance options to benchmark.
+- `option_benchmark_run_delay`: `float` (default=-1.0) \
+  The delay between two consecutive runs of benchmarking performance options in seconds.
+- `random_shuffle_benchmark_runs`: `bool` (default=true) \
+  Whether to perform all benchmark runs, each of which has different performance
+  options, in a random order.
