@@ -14,15 +14,11 @@
 # ==============================================================================
 """Tests for tensorflow.kernels.unique_op."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
 from tensorflow.python.framework import dtypes
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_array_ops
+from tensorflow.python.ops import array_ops, gen_array_ops
 from tensorflow.python.platform import test
 
 

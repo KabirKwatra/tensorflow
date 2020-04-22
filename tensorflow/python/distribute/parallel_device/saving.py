@@ -14,19 +14,15 @@
 # ==============================================================================
 """Special-cased checkpointing for variables on a parallel device."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import contextlib
 import functools
 
 from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_resource_variable_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
+from tensorflow.python.ops import (array_ops, gen_resource_variable_ops,
+                                   resource_variable_ops, variable_scope,
+                                   variables)
 from tensorflow.python.training.saving import saveable_object
 
 
