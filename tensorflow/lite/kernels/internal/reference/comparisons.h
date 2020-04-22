@@ -26,41 +26,41 @@ namespace reference_ops {
 
 template <typename T>
 inline bool EqualFn(T lhs, T rhs) {
-    return lhs == rhs;
+  return lhs == rhs;
 }
 
 template <typename T>
 inline bool NotEqualFn(T lhs, T rhs) {
-    return lhs != rhs;
+  return lhs != rhs;
 }
 
 template <typename T>
 inline bool GreaterFn(T lhs, T rhs) {
-    return lhs > rhs;
+  return lhs > rhs;
 }
 template <typename T>
 inline bool GreaterEqualFn(T lhs, T rhs) {
-    return lhs >= rhs;
+  return lhs >= rhs;
 }
 template <typename T>
 inline bool LessFn(T lhs, T rhs) {
-    return lhs < rhs;
+  return lhs < rhs;
 }
 template <typename T>
 inline bool LessEqualFn(T lhs, T rhs) {
-    return lhs <= rhs;
+  return lhs <= rhs;
 }
 
 inline bool StringRefEqualFn(const StringRef& lhs, const StringRef& rhs) {
-    if (lhs.len != rhs.len) return false;
-    for (int i = 0; i < lhs.len; ++i) {
-        if (lhs.str[i] != rhs.str[i]) return false;
-    }
-    return true;
+  if (lhs.len != rhs.len) return false;
+  for (int i = 0; i < lhs.len; ++i) {
+    if (lhs.str[i] != rhs.str[i]) return false;
+  }
+  return true;
 }
 
 inline bool StringRefNotEqualFn(const StringRef& lhs, const StringRef& rhs) {
-    return !StringRefEqualFn(lhs, rhs);
+  return !StringRefEqualFn(lhs, rhs);
 }
 
 template <typename T>
@@ -71,11 +71,11 @@ inline void ComparisonImpl(
     const ComparisonParams& op_params, const RuntimeShape& input1_shape,
     const T* input1_data, const RuntimeShape& input2_shape,
     const T* input2_data, const RuntimeShape& output_shape, bool* output_data) {
-    const int64_t flatsize =
-        MatchingFlatSize(input1_shape, input2_shape, output_shape);
-    for (int64_t i = 0; i < flatsize; ++i) {
-        output_data[i] = F(input1_data[i], input2_data[i]);
-    }
+  const int64_t flatsize =
+      MatchingFlatSize(input1_shape, input2_shape, output_shape);
+  for (int64_t i = 0; i < flatsize; ++i) {
+    output_data[i] = F(input1_data[i], input2_data[i]);
+  }
 }
 
 template <bool (*F)(const StringRef&, const StringRef&)>
@@ -85,13 +85,13 @@ inline void ComparisonStringImpl(const RuntimeShape& input1_shape,
                                  const TfLiteTensor* input2,
                                  const RuntimeShape& output_shape,
                                  bool* output_data) {
-    const int64_t flatsize =
-        MatchingFlatSize(input1_shape, input2_shape, output_shape);
-    for (int64_t i = 0; i < flatsize; ++i) {
-        const auto lhs = GetString(input1, i);
-        const auto rhs = GetString(input2, i);
-        output_data[i] = F(lhs, rhs);
-    }
+  const int64_t flatsize =
+      MatchingFlatSize(input1_shape, input2_shape, output_shape);
+  for (int64_t i = 0; i < flatsize; ++i) {
+    const auto lhs = GetString(input1, i);
+    const auto rhs = GetString(input2, i);
+    output_data[i] = F(lhs, rhs);
+  }
 }
 
 template <ComparisonFn<float> F>
@@ -101,8 +101,8 @@ inline void Comparison(const ComparisonParams& op_params,
                        const RuntimeShape& input2_shape,
                        const float* input2_data,
                        const RuntimeShape& output_shape, bool* output_data) {
-    ComparisonImpl<float, F>(op_params, input1_shape, input1_data, input2_shape,
-                             input2_data, output_shape, output_data);
+  ComparisonImpl<float, F>(op_params, input1_shape, input1_data, input2_shape,
+                           input2_data, output_shape, output_data);
 }
 
 template <typename T, ComparisonFn<int32> F>
@@ -110,50 +110,50 @@ inline void ComparisonWithScaling(
     const ComparisonParams& op_params, const RuntimeShape& input1_shape,
     const T* input1_data, const RuntimeShape& input2_shape,
     const T* input2_data, const RuntimeShape& output_shape, bool* output_data) {
-    int left_shift = op_params.left_shift;
-    int32 input1_offset = op_params.input1_offset;
-    int32 input1_multiplier = op_params.input1_multiplier;
-    int input1_shift = op_params.input1_shift;
-    int32 input2_offset = op_params.input2_offset;
-    int32 input2_multiplier = op_params.input2_multiplier;
-    int input2_shift = op_params.input2_shift;
+  int left_shift = op_params.left_shift;
+  int32 input1_offset = op_params.input1_offset;
+  int32 input1_multiplier = op_params.input1_multiplier;
+  int input1_shift = op_params.input1_shift;
+  int32 input2_offset = op_params.input2_offset;
+  int32 input2_multiplier = op_params.input2_multiplier;
+  int input2_shift = op_params.input2_shift;
 
-    const int64_t flatsize =
-        MatchingFlatSize(input1_shape, input2_shape, output_shape);
-    for (int64_t i = 0; i < flatsize; ++i) {
-        const int32 input1_val = input1_offset + input1_data[i];
-        const int32 input2_val = input2_offset + input2_data[i];
-        const int32 shifted_input1_val = input1_val * (1 << left_shift);
-        const int32 shifted_input2_val = input2_val * (1 << left_shift);
-        const int32 scaled_input1_val =
-            MultiplyByQuantizedMultiplierSmallerThanOneExp(
-                shifted_input1_val, input1_multiplier, input1_shift);
-        const int32 scaled_input2_val =
-            MultiplyByQuantizedMultiplierSmallerThanOneExp(
-                shifted_input2_val, input2_multiplier, input2_shift);
-        output_data[i] = F(scaled_input1_val, scaled_input2_val);
-    }
+  const int64_t flatsize =
+      MatchingFlatSize(input1_shape, input2_shape, output_shape);
+  for (int64_t i = 0; i < flatsize; ++i) {
+    const int32 input1_val = input1_offset + input1_data[i];
+    const int32 input2_val = input2_offset + input2_data[i];
+    const int32 shifted_input1_val = input1_val * (1 << left_shift);
+    const int32 shifted_input2_val = input2_val * (1 << left_shift);
+    const int32 scaled_input1_val =
+        MultiplyByQuantizedMultiplierSmallerThanOneExp(
+            shifted_input1_val, input1_multiplier, input1_shift);
+    const int32 scaled_input2_val =
+        MultiplyByQuantizedMultiplierSmallerThanOneExp(
+            shifted_input2_val, input2_multiplier, input2_shift);
+    output_data[i] = F(scaled_input1_val, scaled_input2_val);
+  }
 }
 
 struct BroadcastComparison4DSlowCommon {
-    const RuntimeShape output_shape;
-    NdArrayDesc<4> desc1;
-    NdArrayDesc<4> desc2;
+  const RuntimeShape output_shape;
+  NdArrayDesc<4> desc1;
+  NdArrayDesc<4> desc2;
 };
 
 inline BroadcastComparison4DSlowCommon BroadcastComparison4DSlowPreprocess(
     const RuntimeShape& unextended_input1_shape,
     const RuntimeShape& unextended_input2_shape,
     const RuntimeShape& unextended_output_shape) {
-    TFLITE_DCHECK_LE(unextended_input1_shape.DimensionsCount(), 4);
-    TFLITE_DCHECK_LE(unextended_input2_shape.DimensionsCount(), 4);
-    TFLITE_DCHECK_LE(unextended_output_shape.DimensionsCount(), 4);
-    NdArrayDesc<4> desc1;
-    NdArrayDesc<4> desc2;
-    NdArrayDescsForElementwiseBroadcast(unextended_input1_shape,
-                                        unextended_input2_shape, &desc1, &desc2);
-    return {RuntimeShape::ExtendedShape(4, unextended_output_shape), desc1,
-            desc2};
+  TFLITE_DCHECK_LE(unextended_input1_shape.DimensionsCount(), 4);
+  TFLITE_DCHECK_LE(unextended_input2_shape.DimensionsCount(), 4);
+  TFLITE_DCHECK_LE(unextended_output_shape.DimensionsCount(), 4);
+  NdArrayDesc<4> desc1;
+  NdArrayDesc<4> desc2;
+  NdArrayDescsForElementwiseBroadcast(unextended_input1_shape,
+                                      unextended_input2_shape, &desc1, &desc2);
+  return {RuntimeShape::ExtendedShape(4, unextended_output_shape), desc1,
+          desc2};
 }
 
 template <typename T, ComparisonFn<T> F>
@@ -162,22 +162,22 @@ inline void BroadcastComparison4DSlowImpl(
     const RuntimeShape& unextended_input1_shape, const T* input1_data,
     const RuntimeShape& unextended_input2_shape, const T* input2_data,
     const RuntimeShape& unextended_output_shape, bool* output_data) {
-    const BroadcastComparison4DSlowCommon dims =
-        BroadcastComparison4DSlowPreprocess(unextended_input1_shape,
-                                            unextended_input2_shape,
-                                            unextended_output_shape);
+  const BroadcastComparison4DSlowCommon dims =
+      BroadcastComparison4DSlowPreprocess(unextended_input1_shape,
+                                          unextended_input2_shape,
+                                          unextended_output_shape);
 
-    for (int b = 0; b < dims.output_shape.Dims(0); ++b) {
-        for (int y = 0; y < dims.output_shape.Dims(1); ++y) {
-            for (int x = 0; x < dims.output_shape.Dims(2); ++x) {
-                for (int c = 0; c < dims.output_shape.Dims(3); ++c) {
-                    output_data[Offset(dims.output_shape, b, y, x, c)] =
-                        F(input1_data[SubscriptToIndex(dims.desc1, b, y, x, c)],
-                          input2_data[SubscriptToIndex(dims.desc2, b, y, x, c)]);
-                }
-            }
+  for (int b = 0; b < dims.output_shape.Dims(0); ++b) {
+    for (int y = 0; y < dims.output_shape.Dims(1); ++y) {
+      for (int x = 0; x < dims.output_shape.Dims(2); ++x) {
+        for (int c = 0; c < dims.output_shape.Dims(3); ++c) {
+          output_data[Offset(dims.output_shape, b, y, x, c)] =
+              F(input1_data[SubscriptToIndex(dims.desc1, b, y, x, c)],
+                input2_data[SubscriptToIndex(dims.desc2, b, y, x, c)]);
         }
+      }
     }
+  }
 }
 
 template <bool (*F)(const StringRef&, const StringRef&)>
@@ -185,24 +185,24 @@ inline void BroadcastComparison4DSlowStringImpl(
     const RuntimeShape& unextended_input1_shape, const TfLiteTensor* input1,
     const RuntimeShape& unextended_input2_shape, const TfLiteTensor* input2,
     const RuntimeShape& unextended_output_shape, bool* output_data) {
-    const BroadcastComparison4DSlowCommon dims =
-        BroadcastComparison4DSlowPreprocess(unextended_input1_shape,
-                                            unextended_input2_shape,
-                                            unextended_output_shape);
+  const BroadcastComparison4DSlowCommon dims =
+      BroadcastComparison4DSlowPreprocess(unextended_input1_shape,
+                                          unextended_input2_shape,
+                                          unextended_output_shape);
 
-    for (int b = 0; b < dims.output_shape.Dims(0); ++b) {
-        for (int y = 0; y < dims.output_shape.Dims(1); ++y) {
-            for (int x = 0; x < dims.output_shape.Dims(2); ++x) {
-                for (int c = 0; c < dims.output_shape.Dims(3); ++c) {
-                    const auto lhs =
-                        GetString(input1, SubscriptToIndex(dims.desc1, b, y, x, c));
-                    const auto rhs =
-                        GetString(input2, SubscriptToIndex(dims.desc2, b, y, x, c));
-                    output_data[Offset(dims.output_shape, b, y, x, c)] = F(lhs, rhs);
-                }
-            }
+  for (int b = 0; b < dims.output_shape.Dims(0); ++b) {
+    for (int y = 0; y < dims.output_shape.Dims(1); ++y) {
+      for (int x = 0; x < dims.output_shape.Dims(2); ++x) {
+        for (int c = 0; c < dims.output_shape.Dims(3); ++c) {
+          const auto lhs =
+              GetString(input1, SubscriptToIndex(dims.desc1, b, y, x, c));
+          const auto rhs =
+              GetString(input2, SubscriptToIndex(dims.desc2, b, y, x, c));
+          output_data[Offset(dims.output_shape, b, y, x, c)] = F(lhs, rhs);
         }
+      }
     }
+  }
 }
 
 template <ComparisonFn<float> F>
@@ -213,9 +213,9 @@ inline void BroadcastComparison4DSlow(const ComparisonParams& op_params,
                                       const float* input2_data,
                                       const RuntimeShape& output_shape,
                                       bool* output_data) {
-    BroadcastComparison4DSlowImpl<float, F>(op_params, input1_shape, input1_data,
-                                            input2_shape, input2_data,
-                                            output_shape, output_data);
+  BroadcastComparison4DSlowImpl<float, F>(op_params, input1_shape, input1_data,
+                                          input2_shape, input2_data,
+                                          output_shape, output_data);
 }
 
 template <typename T, ComparisonFn<int32> F>
@@ -224,43 +224,43 @@ inline void BroadcastComparison4DSlowWithScaling(
     const RuntimeShape& unextended_input1_shape, const T* input1_data,
     const RuntimeShape& unextended_input2_shape, const T* input2_data,
     const RuntimeShape& unextended_output_shape, bool* output_data) {
-    const BroadcastComparison4DSlowCommon dims =
-        BroadcastComparison4DSlowPreprocess(unextended_input1_shape,
-                                            unextended_input2_shape,
-                                            unextended_output_shape);
+  const BroadcastComparison4DSlowCommon dims =
+      BroadcastComparison4DSlowPreprocess(unextended_input1_shape,
+                                          unextended_input2_shape,
+                                          unextended_output_shape);
 
-    int left_shift = op_params.left_shift;
-    int32 input1_offset = op_params.input1_offset;
-    int32 input1_multiplier = op_params.input1_multiplier;
-    int input1_shift = op_params.input1_shift;
-    int32 input2_offset = op_params.input2_offset;
-    int32 input2_multiplier = op_params.input2_multiplier;
-    int input2_shift = op_params.input2_shift;
+  int left_shift = op_params.left_shift;
+  int32 input1_offset = op_params.input1_offset;
+  int32 input1_multiplier = op_params.input1_multiplier;
+  int input1_shift = op_params.input1_shift;
+  int32 input2_offset = op_params.input2_offset;
+  int32 input2_multiplier = op_params.input2_multiplier;
+  int input2_shift = op_params.input2_shift;
 
-    for (int b = 0; b < dims.output_shape.Dims(0); ++b) {
-        for (int y = 0; y < dims.output_shape.Dims(1); ++y) {
-            for (int x = 0; x < dims.output_shape.Dims(2); ++x) {
-                for (int c = 0; c < dims.output_shape.Dims(3); ++c) {
-                    const int32 input1_val =
-                        input1_offset +
-                        input1_data[SubscriptToIndex(dims.desc1, b, y, x, c)];
-                    const int32 input2_val =
-                        input2_offset +
-                        input2_data[SubscriptToIndex(dims.desc2, b, y, x, c)];
-                    const int32 shifted_input1_val = input1_val * (1 << left_shift);
-                    const int32 shifted_input2_val = input2_val * (1 << left_shift);
-                    const int32 scaled_input1_val =
-                        MultiplyByQuantizedMultiplierSmallerThanOneExp(
-                            shifted_input1_val, input1_multiplier, input1_shift);
-                    const int32 scaled_input2_val =
-                        MultiplyByQuantizedMultiplierSmallerThanOneExp(
-                            shifted_input2_val, input2_multiplier, input2_shift);
-                    output_data[Offset(dims.output_shape, b, y, x, c)] =
-                        F(scaled_input1_val, scaled_input2_val);
-                }
-            }
+  for (int b = 0; b < dims.output_shape.Dims(0); ++b) {
+    for (int y = 0; y < dims.output_shape.Dims(1); ++y) {
+      for (int x = 0; x < dims.output_shape.Dims(2); ++x) {
+        for (int c = 0; c < dims.output_shape.Dims(3); ++c) {
+          const int32 input1_val =
+              input1_offset +
+              input1_data[SubscriptToIndex(dims.desc1, b, y, x, c)];
+          const int32 input2_val =
+              input2_offset +
+              input2_data[SubscriptToIndex(dims.desc2, b, y, x, c)];
+          const int32 shifted_input1_val = input1_val * (1 << left_shift);
+          const int32 shifted_input2_val = input2_val * (1 << left_shift);
+          const int32 scaled_input1_val =
+              MultiplyByQuantizedMultiplierSmallerThanOneExp(
+                  shifted_input1_val, input1_multiplier, input1_shift);
+          const int32 scaled_input2_val =
+              MultiplyByQuantizedMultiplierSmallerThanOneExp(
+                  shifted_input2_val, input2_multiplier, input2_shift);
+          output_data[Offset(dims.output_shape, b, y, x, c)] =
+              F(scaled_input1_val, scaled_input2_val);
         }
+      }
     }
+  }
 }
 
 #define TFLITE_COMPARISON_OP(name)                                             \

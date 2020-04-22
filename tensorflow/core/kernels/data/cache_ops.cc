@@ -31,63 +31,59 @@ constexpr char kMemoryCache[] = "MemoryCache";
 
 }  // namespace
 
-string MemoryCacheManager::DebugString() const {
-    return kMemoryCache;
-}
+string MemoryCacheManager::DebugString() const { return kMemoryCache; }
 
 void MemoryCache::Complete(std::vector<std::vector<Tensor>>&& cache) {
-    mutex_lock l(mu_);
-    if (!completed_) {
-        cache_ = std::move(cache);
-        completed_ = true;
-    }
+  mutex_lock l(mu_);
+  if (!completed_) {
+    cache_ = std::move(cache);
+    completed_ = true;
+  }
 }
 
 bool MemoryCache::IsCompleted() {
-    tf_shared_lock l(mu_);
-    return completed_;
+  tf_shared_lock l(mu_);
+  return completed_;
 }
 
 void MemoryCache::Reset() {
-    mutex_lock l(mu_);
-    completed_ = false;
-    cache_.clear();
+  mutex_lock l(mu_);
+  completed_ = false;
+  cache_.clear();
 }
 
 const std::vector<Tensor>& MemoryCache::at(int64 index) {
-    tf_shared_lock l(mu_);
-    DCHECK(index < cache_.size());
-    return cache_[index];
+  tf_shared_lock l(mu_);
+  DCHECK(index < cache_.size());
+  return cache_[index];
 }
 
 size_t MemoryCache::size() {
-    tf_shared_lock l(mu_);
-    return cache_.size();
+  tf_shared_lock l(mu_);
+  return cache_.size();
 }
 
 AnonymousMemoryCacheHandleOp::AnonymousMemoryCacheHandleOp(
     OpKernelConstruction* ctx)
     : AnonymousResourceOp<MemoryCacheManager>(ctx) {}
 
-string AnonymousMemoryCacheHandleOp::name() {
-    return kMemoryCache;
-}
+string AnonymousMemoryCacheHandleOp::name() { return kMemoryCache; }
 
 Status AnonymousMemoryCacheHandleOp::CreateResource(
     OpKernelContext* ctx, std::unique_ptr<FunctionLibraryDefinition> flib_def,
     std::unique_ptr<ProcessFunctionLibraryRuntime> pflr,
     FunctionLibraryRuntime* lib, MemoryCacheManager** manager) {
-    *manager = new MemoryCacheManager();
-    return Status::OK();
+  *manager = new MemoryCacheManager();
+  return Status::OK();
 }
 
 void DeleteMemoryCacheOp::Compute(OpKernelContext* ctx) {
-    const ResourceHandle& handle = ctx->input(0).flat<ResourceHandle>()(0);
-    // The resource might have been already deleted by the dataset.
-    Status s = ctx->resource_manager()->Delete(handle);
-    if (!errors::IsNotFound(s)) {
-        OP_REQUIRES_OK(ctx, s);
-    }
+  const ResourceHandle& handle = ctx->input(0).flat<ResourceHandle>()(0);
+  // The resource might have been already deleted by the dataset.
+  Status s = ctx->resource_manager()->Delete(handle);
+  if (!errors::IsNotFound(s)) {
+    OP_REQUIRES_OK(ctx, s);
+  }
 }
 
 namespace {

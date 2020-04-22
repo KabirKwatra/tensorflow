@@ -16,8 +16,8 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_PROFILER_CONVERT_OP_STATS_TO_INPUT_PIPELINE_ANALYSIS_H_
 #define TENSORFLOW_CORE_PROFILER_CONVERT_OP_STATS_TO_INPUT_PIPELINE_ANALYSIS_H_
 
-#include "google/protobuf/any.pb.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/any.pb.h"
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/profiler/protobuf/hardware_types.pb.h"
@@ -31,7 +31,7 @@ namespace profiler {
 // Computes the summary of step time in milliseconds.
 StepSummary ComputeStepTimeSummaryInMs(
     const ::tensorflow::protobuf::RepeatedPtrField<PerCoreStepInfo>&
-    grouped_by_step);
+        grouped_by_step);
 
 void GenerateHostResult(const OpMetricsDb& host_tf_metrics_db,
                         InputPipelineAnalysisResult* result);
@@ -42,7 +42,7 @@ InputPipelineAnalysisRecommendation GenerateRecommendation();
 BottleneckAnalysis ComputeBottleneckAnalysis(
     const InputTimeBreakdown& input_time_breakdown,
     const ::tensorflow::protobuf::RepeatedPtrField<::google::protobuf::Any>&
-    any_step_details);
+        any_step_details);
 
 InputPipelineAnalysisResult ConvertOpStatsToInputPipelineAnalysis(
     const OpStats& op_stats, const HardwareType& hardware_type);
